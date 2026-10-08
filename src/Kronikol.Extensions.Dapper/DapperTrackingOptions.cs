@@ -20,6 +20,11 @@ public record DapperTrackingOptions
     public bool LogParameters { get; set; }
     public bool LogSqlText { get; set; } = true;
     public HashSet<DapperOperation> ExcludedOperations { get; set; } = [];
+    /// <summary>
+    /// Has no effect: nothing in this package reads it. The HTTP handler's option of the same name drives its
+    /// implicit start of the action phase, a step this tracker does not have. Its removal is an open question for
+    /// v5 (plans/V5_PLAN.md).
+    /// </summary>
     public Func<string?>? CurrentStepTypeFetcher { get; set; }
     public DapperTrackingVerbosity? SetupVerbosity { get; set; }
     public DapperTrackingVerbosity? ActionVerbosity { get; set; }

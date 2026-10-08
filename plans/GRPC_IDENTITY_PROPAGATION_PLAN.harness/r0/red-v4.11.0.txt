@@ -1,0 +1,230 @@
+=== tests/Kronikol.Tests :: FullyQualifiedName~IdentityHeaderEncodingTests|FullyQualifiedName~DiagnosticReportGeneratorTests
+Build succeeded.
+  Failed Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_accessor_cell_counts_the_instances_that_hold_one(accessors: [True, False], invoked: False, expected: "1 of 2") [12 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_accessor_cell_counts_the_instances_that_hold_one(accessors: [True, True, True], invoked: True, expected: "<span class=\"info\">✓ 3 of 3</span>") [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_accessor_cell_counts_the_instances_that_hold_one(accessors: [False, False, False], invoked: True, expected: "<span class=\"warn\">⚠ 0 of 3</span>") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_accessor_cell_counts_the_instances_that_hold_one(accessors: [True, True, True], invoked: False, expected: "<span class=\"info\">✓ 3 of 3</span>") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_accessor_cell_counts_the_instances_that_hold_one(accessors: [False, True, True], invoked: True, expected: "2 of 3") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_accessor_cell_counts_the_instances_that_hold_one(accessors: [True, True, False], invoked: True, expected: "2 of 3") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_same_instances_registered_in_either_order_read_the_same [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.Each_instance_of_a_group_shows_whether_it_holds_an_accessor [1 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+  Failed Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.Tracking_components_table_warns_for_an_active_component_without_accessor [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.Tracking_components_table_shows_HttpContextAccessor_column [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_server_bridge_decodes_the_request_headers [18 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_with_a_line_feed_reaches_a_host_in_memory_exactly [112 ms]
+  Error Message:
+   System.FormatException : New-line or NUL characters are not allowed in header values.
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_lone_surrogate_comes_back_as_the_replacement_character [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_value_that_is_not_plain_ascii_is_written_in_the_rfc8187_form(value: "UTF-8''x", wire: "UTF-8''UTF-8%27%27x") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_value_that_is_not_plain_ascii_is_written_in_the_rfc8187_form(value: "Theory(a\nb)", wire: "UTF-8''Theory%28a%0Ab%29") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_value_that_is_not_plain_ascii_is_written_in_the_rfc8187_form(value: " Place an order ", wire: "UTF-8''%20Place%20an%20order%20") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_value_that_is_not_plain_ascii_is_written_in_the_rfc8187_form(value: "Order a coffee ☕", wire: "UTF-8''Order%20a%20coffee%20%E2%98%95") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_value_that_is_not_plain_ascii_is_written_in_the_rfc8187_form(value: "Café order", wire: "UTF-8''Caf%C3%A9%20order") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.Any_other_value_is_sent_as_printable_ascii_with_no_space_after_the_prefix(value: "Order a coffee ☕") [< 1 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.Any_other_value_is_sent_as_printable_ascii_with_no_space_after_the_prefix(value: " ") [< 1 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.Any_other_value_is_sent_as_printable_ascii_with_no_space_after_the_prefix(value: "Café order") [< 1 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.Any_other_value_is_sent_as_printable_ascii_with_no_space_after_the_prefix(value: " Place an order ") [< 1 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.Any_other_value_is_sent_as_printable_ascii_with_no_space_after_the_prefix(value: "Ns.Klass.Prüfung") [< 1 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.Any_other_value_is_sent_as_printable_ascii_with_no_space_after_the_prefix(value: "Places_an_order(text: \"aaaaaaaaaaaaaaaaaaaaaaaaaa"···) [< 1 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.Any_other_value_is_sent_as_printable_ascii_with_no_space_after_the_prefix(value: "Theory(a\nb)") [< 1 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.Any_other_value_is_sent_as_printable_ascii_with_no_space_after_the_prefix(value: "tab\there") [< 1 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Café order", id: "6f6533df-0546-4107-a213-738eb8d38d5b") [109 ms]
+  Error Message:
+   System.Net.Http.HttpRequestException : Request headers must contain only ASCII characters.
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Places_an_order(text: \"aaaaaaaaaaaaaaaaaaaaaaaaaa"···, id: "8813f89c-b461-46d4-9e03-94fcde2707c3") [17 ms]
+  Error Message:
+   System.Net.Http.HttpRequestException : Request headers must contain only ASCII characters.
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Place an order", id: "Ns.Klass.Prüfung") [16 ms]
+  Error Message:
+   System.Net.Http.HttpRequestException : Request headers must contain only ASCII characters.
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Order a coffee ☕", id: "f158c1e6-fd3d-44e7-afc1-c4faab2eddc2") [8 ms]
+  Error Message:
+   System.Net.Http.HttpRequestException : Request headers must contain only ASCII characters.
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: " Place an order ", id: "0811bab5-781d-405f-9c00-01dadc44b5b2") [85 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Theory(a\nb)", id: "46a23b37-e6c1-4769-b3c6-ba201e2be7bf") [5 ms]
+  Error Message:
+   System.FormatException : New-line or NUL characters are not allowed in header values.
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_handler_decodes_the_identity_of_the_request_it_is_serving [1 ms]
+  Error Message:
+   System.InvalidOperationException : Sequence contains no matching element
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_resolver_decodes_the_request_headers [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_malformed_escape_is_left_as_written_and_nothing_throws [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_handler_gives_a_call_whose_inbound_trace_id_is_not_a_guid_a_trace_id_of_its_own [< 1 ms]
+  Error Message:
+   System.FormatException : Unrecognized Guid format.
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_handler_sends_a_name_and_id_that_are_not_plain_ascii_encoded(name: "Theory(a\nb)") [< 1 ms]
+  Error Message:
+   System.FormatException : New-line or NUL characters are not allowed in header values.
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_handler_sends_a_name_and_id_that_are_not_plain_ascii_encoded(name: " Place an order ") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_handler_sends_a_name_and_id_that_are_not_plain_ascii_encoded(name: "Café order") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_message_tracker_decodes_the_request_headers [3 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_message_tracker_keeps_the_header_identity_when_the_trace_id_is_not_a_guid [< 1 ms]
+  Error Message:
+   System.FormatException : Unrecognized Guid format.
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_long_non_ascii_value_round_trips [3 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_middleware_decodes_the_identity_it_puts_in_scope [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Failed!  - Failed:    43, Passed:    50, Skipped:     0, Total:    93, Duration: 1 s - Kronikol.Tests.dll (net10.0)
+=== tests/Kronikol.Tests.Grpc :: FullyQualifiedName~CallMetadataTests
+Build succeeded.
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_is_left_as_it_was_and_each_call_sends_one_traceparent(kind: Duplex) [1 s]
+  Error Message:
+   Assert.NotSame() Failure: Values are the same instance
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_is_left_as_it_was_and_each_call_sends_one_traceparent(kind: ServerStreaming) [2 ms]
+  Error Message:
+   Assert.NotSame() Failure: Values are the same instance
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_is_left_as_it_was_and_each_call_sends_one_traceparent(kind: BlockingUnary) [1 ms]
+  Error Message:
+   Assert.NotSame() Failure: Values are the same instance
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_is_left_as_it_was_and_each_call_sends_one_traceparent(kind: ClientStreaming) [1 ms]
+  Error Message:
+   Assert.NotSame() Failure: Values are the same instance
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_is_left_as_it_was_and_each_call_sends_one_traceparent(kind: AsyncUnary) [2 ms]
+  Error Message:
+   Assert.NotSame() Failure: Values are the same instance
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_call_whose_headers_are_Metadata_Empty_is_sent_with_a_traceparent(kind: BlockingUnary) [< 1 ms]
+  Error Message:
+   System.InvalidOperationException : Object is read only
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_call_whose_headers_are_Metadata_Empty_is_sent_with_a_traceparent(kind: Duplex) [< 1 ms]
+  Error Message:
+   System.InvalidOperationException : Object is read only
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_call_whose_headers_are_Metadata_Empty_is_sent_with_a_traceparent(kind: ServerStreaming) [< 1 ms]
+  Error Message:
+   System.InvalidOperationException : Object is read only
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_call_whose_headers_are_Metadata_Empty_is_sent_with_a_traceparent(kind: AsyncUnary) [< 1 ms]
+  Error Message:
+   System.InvalidOperationException : Object is read only
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_call_whose_headers_are_Metadata_Empty_is_sent_with_a_traceparent(kind: ClientStreaming) [< 1 ms]
+  Error Message:
+   System.InvalidOperationException : Object is read only
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.After_an_awaited_unary_call_Activity_Current_is_what_it_was_before [10 ms]
+  Error Message:
+   Assert.Same() Failure: Values are not the same instance
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_traceparent_the_caller_set_is_sent_unchanged_and_no_second_one_is_added(kind: ServerStreaming) [3 ms]
+  Error Message:
+   Assert.Single() Failure: The collection contained 2 matching items
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_traceparent_the_caller_set_is_sent_unchanged_and_no_second_one_is_added(kind: BlockingUnary) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection contained 2 matching items
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_traceparent_the_caller_set_is_sent_unchanged_and_no_second_one_is_added(kind: Duplex) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection contained 2 matching items
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_traceparent_the_caller_set_is_sent_unchanged_and_no_second_one_is_added(kind: AsyncUnary) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection contained 2 matching items
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_traceparent_the_caller_set_is_sent_unchanged_and_no_second_one_is_added(kind: ClientStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection contained 2 matching items
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_puts_the_called_hosts_span_in_the_callers_trace_every_time [312 ms]
+  Error Message:
+   Assert.Single() Failure: The collection contained 2 items
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.Two_unary_calls_in_a_row_with_no_ambient_span_are_two_traces [5 ms]
+  Error Message:
+   Assert.NotEqual() Failure: Strings are equal
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.The_flags_say_sampled_when_another_listener_records_the_span [3 ms]
+  Error Message:
+   Assert.EndsWith() Failure: String end does not match
+  Failed Kronikol.Tests.Grpc.CallMetadataTests.After_an_awaited_unary_call_an_outer_span_is_current_again [3 ms]
+  Error Message:
+   Assert.Same() Failure: Values are not the same instance
+Failed!  - Failed:    20, Passed:     5, Skipped:     0, Total:    25, Duration: 1 s - Kronikol.Tests.Grpc.dll (net10.0)
+=== tests/Kronikol.Tests.ProxyTap :: FullyQualifiedName~ProxyTapTests
+Build succeeded.
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTests.Reads_an_identity_sent_in_the_utf8_form_exactly [7 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTests.Reinjects_an_identity_that_is_not_plain_ascii_in_the_utf8_form_whole [11 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Failed!  - Failed:     2, Passed:    20, Skipped:     0, Total:    22, Duration: 9 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+=== tests/Kronikol.Tests.Playwright :: FullyQualifiedName~Kronikol.Tests.Playwright
+Build succeeded.
+  Failed Kronikol.Tests.Playwright.TestTrackingIdentityTests.A_name_and_id_that_are_not_plain_ascii_reach_a_kronikol_host_exactly [65 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.Playwright.TestTrackingIdentityTests.Headers_carry_the_four_tracking_headers_and_a_traceparent_rooted_at_the_trace_id [173 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Playwright.TestTrackingIdentityTests.Traceparent_can_be_omitted_and_a_long_name_is_sent_whole [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Playwright.PlaywrightBrowserTests.Tracked_context_stamps_the_headers_on_page_navigations_and_xhr [25 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Playwright.PlaywrightBrowserTests.UseTestTrackingAsync_on_an_existing_context_and_a_proxy_tap_attributes_the_browser_call [877 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Failed!  - Failed:     5, Passed:     4, Skipped:     0, Total:     9, Duration: 26 s - Kronikol.Tests.Playwright.dll (net10.0)
+=== tests/Kronikol.Tests.EndToEnd :: FullyQualifiedName~DiagnosticPageAccessorColumnTests
+Build succeeded.
+  Failed Kronikol.Tests.EndToEnd.DiagnosticPageAccessorColumnTests.Two_handlers_of_one_caller_one_with_an_accessor_paint_one_of_two [5 s]
+  Error Message:
+   Microsoft.Playwright.PlaywrightException : Locator expected to have text '1 of 2'
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 5 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+(The E2E leg was run again on its own: its first run failed to build when the disk filled.)
+=== done

@@ -1,0 +1,91 @@
+# BreakfastProvider (scratch clone of origin at 0ee43e8, its 27 Kronikol pins moved to each version), xUnit and ReqNRoll
+# lanes in memory (KRONIKOL_SUITE=xunit-in-memory / reqnroll-in-memory, as CI sets it), read with the query.cs beside each report.
+# 4.11.0 from nuget.org is the control; 4.11.2-local.r0 is packed from R0's commit (released as 4.12.1).
+
+## Lanes
+reqnroll 4.11.0: exit 0 in 162s; Test run summary: Passed! 
+xunit 4.11.2-local.r0: exit 0 in 327s; Test run summary: Passed! 
+reqnroll 4.11.2-local.r0: exit 0 in 111s; Test run summary: Passed! 
+xunit 4.11.0: passed (first run, same clone)
+control rerun 1: reqnroll 4.11.0: exit 0 in 196s; Test run summary: Passed! 
+control rerun 2: reqnroll 4.11.0: exit 0 in 238s; Test run summary: Passed! 
+
+## xUnit: summary line of each report
+4.11.0: 212 scenarios · 0 failed · 2650 interactions · 941 distinct bodies
+4.11.2-local.r0: 212 scenarios · 0 failed · 2650 interactions · 941 distinct bodies
+
+$ query diff <xunit 4.11.0> <xunit 4.11.2-local.r0>
+- reports-xunit-4.11.0\TestRunReport.json  2026-10-08T10:20:14Z  212 scenarios, 0 failed
++ reports-xunit-4.11.2-local.r0\TestRunReport.json  2026-10-08T10:38:36Z  212 scenarios, 0 failed
+
+Slower (3):
+  s44 0.1s → 0.17s  Listing feedback for an order should return the feedback
+  s66 0.1s → 0.16s  Creating an order should emit a structured log entry
+  s74 0.19s → 0.33s  Listing waste by recipe should return matching records
+
+matched on stableId · compare s3 s7 for two scenarios in one run
+
+## ReqNRoll: summary line of each report
+4.11.0: 214 scenarios · 0 failed · 2578 interactions · 927 distinct bodies
+4.11.2-local.r0: 214 scenarios · 0 failed · 2576 interactions · 925 distinct bodies
+
+$ query diff <reqnroll 4.11.0> <reqnroll 4.11.2-local.r0>
+- reports-reqnroll-4.11.0\TestRunReport.json  2026-10-08T10:35:13Z  214 scenarios, 0 failed
++ reports-reqnroll-4.11.2-local.r0\TestRunReport.json  2026-10-08T10:43:37Z  214 scenarios, 0 failed
+
+Slower (10):
+  s11 0.13s → 0.41s  Audit logs should be filterable by entity type
+  s17 0.17s → 0.52s  Creating an order should write an outbox message that gets p…
+  s26 0.26s → 0.42s  An order should progress through all status transitions to c…
+  s81 0.16s → 1.02s  Deleting an inventory item should return no content
+  s121 0.14s → 0.3s  Recording a timing with zero prep seconds should return bad …
+  s145 0.2s → 0.32s  Listing reviews by recipe should return matching reviews
+  s154 0.14s → 1.13s  Ingredient shipments should be recorded when delivered via e…
+  s158 0.17s → 0.5s  Deleting a reservation should return no content
+  s163 0.1s → 0.15s  The GraphQL schema definition endpoint should return the sch…
+  s170 0.23s → 0.68s  The Grpc UI endpoint should return a page describing the ser…
+
+Tracking (2):
+  total  1289 → 1288 calls  (-1)
+  CosmosDB  194 → 193 calls  (-1)
+
+matched on stableId · compare s3 s7 for two scenarios in one run
+
+## The one call that differs: CosmosDB calls per scenario and operation, only the differing rows
+45c45
+<       4 s128 Query /orders
+---
+>       3 s128 Query /orders
+
+$ query flow <reqnroll 4.11.0> s128
+s128  An outbox message should transition to failed after exhausting retries  [Passed]
+
+── 1  And a pending outbox message with a test-specific destination
+  s128/i0   Breakfast Provider → CosmosDB  Create /orders  Created  0 ms
+── 2  Then the outbox message should be in a failed state
+  s128/i2   Breakfast Provider → CosmosDB  Query /orders  OK  2 ms  b:47f76092 38 B
+  s128/i4   Breakfast Provider → CosmosDB  Query /orders  OK  0 ms  b:47f76092 38 B
+  s128/i6   Breakfast Provider → CosmosDB  Replace /orders  OK  0 ms
+  s128/i8   Breakfast Provider → CosmosDB  Replace /orders  OK  0 ms
+  s128/i10  Breakfast Provider → CosmosDB  Query /orders  OK  0 ms  b:47f76092 38 B
+  s128/i12  Breakfast Provider → CosmosDB  Replace /orders  OK  0 ms
+  s128/i14  Breakfast Provider → CosmosDB  Query /orders  OK  0 ms  b:47f76092 38 B
+8 calls shown · http s128/iN --keys for a payload
+
+$ query flow <reqnroll 4.11.2-local.r0> s128
+s128  An outbox message should transition to failed after exhausting retries  [Passed]
+
+── 1  And a pending outbox message with a test-specific destination
+  s128/i0   Breakfast Provider → CosmosDB  Create /orders  Created  30 ms
+── 2  Then the outbox message should be in a failed state
+  s128/i2   Breakfast Provider → CosmosDB  Query /orders  OK  12 ms  b:47f76092 38 B
+  s128/i4   Breakfast Provider → CosmosDB  Query /orders  OK  1 ms  b:47f76092 38 B
+  s128/i6   Breakfast Provider → CosmosDB  Replace /orders  OK  8 ms
+  s128/i8   Breakfast Provider → CosmosDB  Replace /orders  OK  0 ms
+  s128/i10  Breakfast Provider → CosmosDB  Replace /orders  OK  1 ms
+  s128/i12  Breakfast Provider → CosmosDB  Query /orders  OK  1 ms  b:47f76092 38 B
+7 calls shown · http s128/iN --keys for a payload
+
+## s128's CosmosDB calls in two more ReqNRoll runs on 4.11.0: the polling count moves on the control too
+rerun 1:       1 Create       4 Query       3 Replace  total 194
+rerun 2:       1 Create       3 Query       3 Replace  total 193

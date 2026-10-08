@@ -203,12 +203,7 @@ public static class DiagnosticReportGenerator
                         ? $"<span class=\"warn\">0 of {totalCount}</span>"
                         : $"{activeCount} of {totalCount}";
 
-                // HttpContextAccessor status — pick from first instance
-                var accessorStatus = instances[0].HasHttpContextAccessor
-                    ? "<span class=\"info\">✓ configured</span>"
-                    : instances.Any(c => c.InvocationCount > 0)
-                        ? "<span class=\"warn\">⚠ null</span>"
-                        : "—";
+                var accessorStatus = AccessorCell(instances);
 
                 if (totalCount == 1)
                 {
@@ -216,9 +211,9 @@ public static class DiagnosticReportGenerator
                 }
                 else
                 {
-                    sb.AppendLine($"<tr><td><details><summary>{Escape(g.Key)} ({totalCount} instances)</summary><table><tr><th>#</th><th>Invocations</th></tr>");
+                    sb.AppendLine($"<tr><td><details><summary>{Escape(g.Key)} ({totalCount} instances)</summary><table><tr><th>#</th><th>Invocations</th><th>HttpContextAccessor</th></tr>");
                     for (var i = 0; i < instances.Length; i++)
-                        sb.AppendLine($"<tr><td>{i + 1}</td><td>{instances[i].InvocationCount}</td></tr>");
+                        sb.AppendLine($"<tr><td>{i + 1}</td><td>{instances[i].InvocationCount}</td><td>{(instances[i].HasHttpContextAccessor ? "✓" : "—")}</td></tr>");
                     sb.AppendLine("</table></details></td>");
                     sb.AppendLine($"<td>{totalCount}</td><td>{totalInvocations}</td><td>{activeLabel}</td><td>{accessorStatus}</td></tr>");
                 }
@@ -292,6 +287,26 @@ public static class DiagnosticReportGenerator
     private static void AppendRow(StringBuilder sb, string key, object? value)
     {
         sb.AppendLine($"<tr><td><code>{Escape(key)}</code></td><td>{Escape(value?.ToString() ?? "<null>")}</td></tr>");
+    }
+
+    /// <summary>
+    /// The HttpContextAccessor cell of a component group: how many of its instances hold an accessor, counted as the
+    /// Active cell beside it counts invoked instances. Every instance has one: <c>✓ M of M</c>. None has one and one
+    /// was invoked: <c>⚠ 0 of M</c>, since such a component cannot read the identity of the request a host is
+    /// serving. Some have one: <c>N of M</c>, plain, since test-side clients without one are normal. None has one and
+    /// none was invoked: <c>—</c>. The registry is an unordered bag, so the cell reads every instance, never one.
+    /// </summary>
+    internal static string AccessorCell(IReadOnlyCollection<ITrackingComponent> instances)
+    {
+        var total = instances.Count;
+        var withAccessor = instances.Count(c => c.HasHttpContextAccessor);
+        if (withAccessor == total && total > 0)
+            return $"<span class=\"info\">✓ {withAccessor} of {total}</span>";
+        if (withAccessor > 0)
+            return $"{withAccessor} of {total}";
+        return instances.Any(c => c.WasInvoked)
+            ? $"<span class=\"warn\">⚠ 0 of {total}</span>"
+            : "—";
     }
 
     private static string Escape(string s) => System.Net.WebUtility.HtmlEncode(s);

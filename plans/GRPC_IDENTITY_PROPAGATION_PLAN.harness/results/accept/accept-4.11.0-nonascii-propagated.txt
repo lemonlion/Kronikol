@@ -1,0 +1,6 @@
+kronikol 4.11.0+709b3afc637640cb16bc33aaf3daf8719035b9ea probe=nonascii variant=propagated
+R1 name "Place an order": call ok; B's call to C: not under this test (recorded under another id)
+R1 name "Caf‚ order": call ok; B's call to C: not under this test (recorded under another id)
+R1 name "Order a coffee ?": call ok; B's call to C: not under this test (recorded under another id)
+R1 name "Theory(text: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"úúú)": call ok; B's call to C: not under this test (recorded under another id)
+R1 name "Theory(a<LF>b)": call ok; B's call to C: not under this test (recorded under another id)

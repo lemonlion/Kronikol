@@ -13,9 +13,9 @@ namespace Kronikol.Playwright;
 /// </summary>
 /// <remarks>
 /// Create one per test with <see cref="Create"/> (or <see cref="FromCurrentScope"/> inside a Kronikol-aware
-/// test framework), then apply it with the <see cref="PlaywrightTestTrackingExtensions"/>. Header values are
-/// ISO-8859-1-safe and bounded (<see cref="HeaderSafe"/>); the <em>id</em> is the correlation key and must be
-/// used byte-for-byte as the report's <c>Scenario.Id</c>.
+/// test framework), then apply it with the <see cref="PlaywrightTestTrackingExtensions"/>. Header values that are
+/// not plain printable ASCII are sent in the RFC 8187 <c>UTF-8''</c> form, which Kronikol's readers decode, so the
+/// <em>id</em>, the correlation key, arrives byte-for-byte and must be used so as the report's <c>Scenario.Id</c>.
 /// </remarks>
 public sealed record TestTrackingIdentity
 {
@@ -70,16 +70,18 @@ public sealed record TestTrackingIdentity
 
     /// <summary>
     /// The headers to stamp on every browser request: the four <see cref="TestTrackingHttpHeaders"/> and
-    /// (when <see cref="IncludeTraceparent"/>) a <c>traceparent</c>. Merge these into
+    /// (when <see cref="IncludeTraceparent"/>) a <c>traceparent</c>. A name, id or caller name that is not plain
+    /// printable ASCII (or that begins or ends with a space) is sent in the RFC 8187 form <c>UTF-8''</c> followed by
+    /// its percent-encoded UTF-8 bytes, which every Kronikol reader decodes, so it arrives exactly. Merge these into
     /// <c>BrowserNewContextOptions.ExtraHTTPHeaders</c> or pass to <c>SetExtraHTTPHeadersAsync</c>.
     /// </summary>
     public Dictionary<string, string> ToHeaders()
     {
         var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            [TestTrackingHttpHeaders.CurrentTestNameHeader] = HeaderSafe(TestName),
-            [TestTrackingHttpHeaders.CurrentTestIdHeader] = HeaderSafe(TestId),
-            [TestTrackingHttpHeaders.CallerNameHeader] = HeaderSafe(CallerName),
+            [TestTrackingHttpHeaders.CurrentTestNameHeader] = TrackingHeaderValue.Encode(TestName),
+            [TestTrackingHttpHeaders.CurrentTestIdHeader] = TrackingHeaderValue.Encode(TestId),
+            [TestTrackingHttpHeaders.CallerNameHeader] = TrackingHeaderValue.Encode(CallerName),
             [TestTrackingHttpHeaders.TraceIdHeader] = TraceId.ToString(),
         };
 
@@ -98,7 +100,10 @@ public sealed record TestTrackingIdentity
     /// </summary>
     public IDisposable BeginScope() => TestIdentityScope.Begin(TestName, TestId);
 
-    /// <summary>Makes a value safe for an HTTP header: printable ASCII only, at most 512 characters.</summary>
+    /// <summary>
+    /// Makes a value safe for an HTTP header: printable ASCII only, at most 512 characters, with every other character
+    /// replaced by <c>?</c>. Lossy; <see cref="ToHeaders"/> no longer uses it, since it encodes the values instead.
+    /// </summary>
     public static string HeaderSafe(string value)
     {
         var sb = new StringBuilder(Math.Min(value.Length, 512));

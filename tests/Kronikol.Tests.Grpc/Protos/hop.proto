@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+option csharp_namespace = "Kronikol.Tests.Grpc.Hop";
+
+package kronikol.tests.hop;
+
+// The service every host in the multi-host facts serves. Each method reports what its call carried and what the
+// host saw while serving it, then calls the host's next hop, if it has one.
+service HopService {
+  rpc Call (HopRequest) returns (HopReply);
+  rpc Stream (HopRequest) returns (stream HopReply);
+  rpc Upload (stream HopRequest) returns (HopReply);
+  rpc Chat (stream HopRequest) returns (stream HopReply);
+}
+
+message HopRequest {
+  string text = 1;
+  // Streams: how many replies to send before ending or failing.
+  int32 replies = 2;
+  // When not zero, the call fails with this gRPC status code (after the replies, for a stream).
+  int32 fail_with = 3;
+}
+
+message HopReply {
+  // The identity metadata as it arrived.
+  string seen_test_name = 1;
+  string seen_test_id = 2;
+  string seen_trace_id = 3;
+  string seen_caller_name = 4;
+  // Every traceparent value that arrived, joined with " | ".
+  string seen_traceparents = 5;
+  // TestIdentityScope.Current while the call was served (what the middleware began).
+  string scope_test_name = 6;
+  string scope_test_id = 7;
+  // The host's server span (Activity.Current while the call was served).
+  string server_trace_id = 8;
+  string server_parent_span_id = 9;
+  bool server_recorded = 10;
+}

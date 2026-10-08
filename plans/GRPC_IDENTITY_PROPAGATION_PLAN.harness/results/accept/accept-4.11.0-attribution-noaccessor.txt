@@ -1,0 +1,5 @@
+kronikol 4.11.0+709b3afc637640cb16bc33aaf3daf8719035b9ea probe=attribution variant=noaccessor
+B saw (test id|test name|traceparents): (none)|(none)|00-a8bb20708008cc69fd03452f7558367a-7844f4906a15f993-00
+  Test       -> Service A  test=id-1     source=TestContext
+  Service A  -> Service B  test=id-1     source=Scope
+  Service B  -> Stub C     test=unknown  source=None

@@ -198,7 +198,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         TestIdentity currentTestInfo;
         if (hasCurrentTestNameHeader && hasCurrentTestIdHeader)
         {
-            currentTestInfo = new TestIdentity(currentTestNameHeaders.First()!, currentTestIdHeaders.First()!, AttributionSource.RequestHeader);
+            currentTestInfo = new TestIdentity(TrackingHeaderValue.Decode(currentTestNameHeaders.First()!), TrackingHeaderValue.Decode(currentTestIdHeaders.First()!), AttributionSource.RequestHeader);
         }
         else
         {
@@ -208,19 +208,20 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             currentTestInfo = resolved.Value;
         }
 
-        var traceId = hasTraceIdHeader ? Guid.Parse(traceIdHeaders.First()!) : Guid.NewGuid();
+        // A trace id another tool wrote in some other form must not fail the application's call.
+        var traceId = hasTraceIdHeader && Guid.TryParse(traceIdHeaders.First(), out var inboundTraceId) ? inboundTraceId : Guid.NewGuid();
 
         if (!hasTraceIdHeader)
             request.Headers.Add(TestTrackingHttpHeaders.TraceIdHeader, new[] { traceId.ToString() });
 
         if (!hasCurrentTestNameHeader)
-            request.Headers.Add(TestTrackingHttpHeaders.CurrentTestNameHeader, new[] { currentTestInfo.Name });
+            request.Headers.Add(TestTrackingHttpHeaders.CurrentTestNameHeader, new[] { TrackingHeaderValue.Encode(currentTestInfo.Name) });
 
         if (!hasCurrentTestIdHeader)
-            request.Headers.Add(TestTrackingHttpHeaders.CurrentTestIdHeader, new[] { currentTestInfo.Id.ToString() });
+            request.Headers.Add(TestTrackingHttpHeaders.CurrentTestIdHeader, new[] { TrackingHeaderValue.Encode(currentTestInfo.Id) });
 
         if (!hasCallerNameHeader)
-            request.Headers.Add(TestTrackingHttpHeaders.CallerNameHeader, new[] { _callerName! });
+            request.Headers.Add(TestTrackingHttpHeaders.CallerNameHeader, new[] { TrackingHeaderValue.Encode(_callerName!) });
 
         var serviceName = ResolveServiceName(request.RequestUri!.Port);
 

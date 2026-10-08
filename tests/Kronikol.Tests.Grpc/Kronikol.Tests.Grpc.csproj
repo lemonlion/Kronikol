@@ -11,6 +11,12 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <!-- A real gRPC server for the multi-host facts (MultiHost/). Kronikol.Extensions.Grpc floats Grpc.Net.Client 2.*,
+         so this must be at least the version that resolves to, or restore fails with NU1605 (#97). -->
+    <PackageReference Include="Grpc.AspNetCore" Version="2.84.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="Protos\hop.proto" GrpcServices="Both" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Grpc\Kronikol.Extensions.Grpc.csproj" />

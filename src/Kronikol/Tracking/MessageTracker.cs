@@ -361,13 +361,15 @@ public class MessageTracker : ITrackingComponent
             headers.TryGetValue(TestTrackingHttpHeaders.CurrentTestIdHeader, out var testIdValues);
             headers.TryGetValue(TestTrackingHttpHeaders.TraceIdHeader, out var traceIdValues);
 
+            // A trace id another tool wrote in some other form must not fail the call: the identity still
+            // holds, and the call gets a trace id of its own.
             var hasHeaders = testNameValues.Count > 0 && testIdValues.Count > 0 && traceIdValues.Count > 0;
             if (hasHeaders)
             {
                 return (
-                    testNameValues.First()!,
-                    testIdValues.First()!,
-                    Guid.Parse(traceIdValues.First()!),
+                    TrackingHeaderValue.Decode(testNameValues.First()!),
+                    TrackingHeaderValue.Decode(testIdValues.First()!),
+                    Guid.TryParse(traceIdValues.First(), out var inboundTraceId) ? inboundTraceId : Guid.NewGuid(),
                     AttributionSource.RequestHeader
                 );
             }

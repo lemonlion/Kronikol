@@ -3,7 +3,8 @@
 **Written:** 2026-10-07, at 4.9.0 (`417c8e58`). #134 was filed the same day against 4.6.0 (`a074cf14`) and links one
 line, `GrpcTrackingInterceptor.cs` L353 (its `traceparent`), which is unchanged at `417c8e58`. 4.9.1 (`f6bf1d03`) was
 tagged later the same day and touches none of the files this plan edits; at its tip only `CHANGELOG.md`'s line numbers
-move (by 27). **Status: not green-lit.** Nothing in `src/` has changed. Evidence labels: **RUN** (measured here),
+move (by 27). **Status: green-lit on 2026-10-08 with Q1 and Q4 as recommended, and executing: R0 is 4.12.1 (§11).**
+Evidence labels: **RUN** (measured here),
 **READ** (in the source, `file:line` at `417c8e58`), **INFERRED** (reasoned from facts, stated by none), **ISSUE** (taken
 from #134, not re-measured). The probe behind every RUN line, and its output, are in
 [`GRPC_IDENTITY_PROPAGATION_PLAN.harness/`](GRPC_IDENTITY_PROPAGATION_PLAN.harness/README.md).
@@ -628,6 +629,11 @@ Version numbers are claimed with a "taking X now" message when each release is r
   2.34.0, a minor that turned identity propagation on for five messaging packages (`CHANGELOG.md:6290-6293`). No
   existing option's default changes, so it is not major (Q4).
 - **R2, a patch.** The recorded outcome of a streaming call changes; nothing is added.
+- **R3, a patch, added when the owner settled Q1 as recommended.** The HTTP handler puts the identity of the request it
+  is serving on every request it sends, whether or not it holds an accessor, and adds each header only when the request
+  lacks it. It also takes §8's first finding: it sends the current span's `traceparent` when its transport has no
+  `DiagnosticsHandler` (TestServer's in-memory handler), so an HTTP hop between in-process hosts stays in the trace.
+  Both change what a host sends downstream, and neither adds anything to call.
 
 R0 and R1 can ship the same day; R1 needs R0's encoding.
 
@@ -842,6 +848,34 @@ against the recommendation.
     stream;
   - T15 depending on R1;
   - a 32 KB limit that is 16 KB per field over HTTP/2.
+- **2026-10-08.** Green-lit by the owner ("Can you implement the plan in full, in a separate worktree so you don't
+  interfere with the other sessions. Fix any other problems you found"), with Q1 and Q4 as recommended. Q1 became R3, a
+  patch after R2, and R3 also takes §8's first finding (the HTTP handler sends no `traceparent` from inside a TestServer
+  host). Executed by kronikol-94 in worktrees `C:/Code/Kronikol-grpc134-impl` (R0) and `C:/Code/Kronikol-grpc134-r1`
+  (R1 to R3). Other plans released first, so the numbers moved: R0 was claimed as 4.11.2 and shipped as 4.12.1, after
+  4.11.1 and 4.12.0 (`XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md`).
+  - **R0 = 4.12.1.** Its proofs are in the harness (`README.md`, "Execution"):
+    - `r0/red-v4.11.0.txt`: with the facts copied onto v4.11.0 and `TrackingHeaderValue` stubbed to pass values
+      through, 71 facts failed (core 43 of 93, gRPC 20 of 25, ProxyTap 2 of 22, Playwright 5 of 9, and the browser
+      fact), each for its own reason. The guards that pass there are the plain-ASCII facts, the flags-`00` facts and
+      the idle `—` cell. The first red run, on v4.10.0 (`r0/red-v4.10.0.txt`), found reader facts and a writer theory
+      that took their expected wire form from `TrackingHeaderValue` itself, so the stub made them pass; they now take
+      it from an independent RFC 8187 oracle.
+    - `r0/mutations.txt`: 16 of 16 killed.
+    - `results/accept/`: on R0's local packages, against 4.11.0 from nuget.org, P2, P3, P4, P5 and P10's handler cells
+      flip, and nothing else does. One effect the plan did not predict: an HTTP call made on TestServer after a gRPC
+      call now carries the handler's `traceparent`. The leaked gRPC span had made the handler leave the header to a
+      framework `DiagnosticsHandler`, which TestServer does not have.
+    - `results/accept/breakfastprovider-r0.txt`: BreakfastProvider, in a scratch clone at `0ee43e8` with its pins moved
+      to each version. The xUnit lane passes 212 of 212 on both, with the same 2,650 calls and 941 distinct bodies, and
+      `kronikol query diff` finds no scenario whose result or calls changed. The ReqNRoll lane passes 214 of 214 on
+      both, and R0's run drew one CosmosDB query fewer, in s128 ("An outbox message should transition to failed after
+      exhausting retries"), whose background outbox processor is polled until the message fails. Two more runs on
+      4.11.0 drew 4 and 3 such queries, so the count is the scenario's own timing.
+    - `r0/suite.txt`: the full suite on R0's commit before its rebase. `r0/suite-rebased.txt`: the full suite on the
+      rebased commit.
+  - The disk filled at about 10:25 UTC while several sessions built at once. The runs it broke (one mutation's build,
+    the red proof's browser leg) were run again, and each file says so.
 
 ## Appendix A. Edit sites at `417c8e58`
 

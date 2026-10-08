@@ -76,3 +76,20 @@ CosmosDB calls grouped by method. The report itself is kept in another session's
   - `attribution httpchain`, `httpchain-forward` and `httpchain-noaccessor`;
   - `streaming`;
   - `nonascii`.
+
+## Execution
+
+Each release's proofs, added as it was made:
+
+- `r0/red.sh <worktree> <out>` runs R0's new and changed facts on the previous release's source: a worktree at that tag
+  with the facts copied in and `TrackingHeaderValue` stubbed to pass values through. The stub cannot make a fact
+  vacuous, since the facts take their expected wire form from an independent RFC 8187 oracle, never from
+  `TrackingHeaderValue`. Output: `r0/red-v4.10.0.txt` and `r0/red-v4.11.0.txt`.
+- `r0/mutate.py <worktree> <out>` applies 16 mutations of R0's product code one at a time and runs the facts that should
+  catch each. Output: `r0/mutations.txt`.
+- `suite.sh <worktree> <out>` runs every test project in Release. Output: `r0/suite.txt`.
+- `accept.sh <version> <package dir, or -> <results dir> <scratch>` runs every probe on one version, restoring into an
+  empty package folder of its own. Output: `results/accept/accept-<version>-<probe>-<variant>.txt`, with 4.11.0 from
+  nuget.org as the control and `4.11.2-local.r0` packed from R0's commit (released as 4.12.1, after 4.11.1 and 4.12.0 took the numbers before it). The `nonascii propagated` variant (added for
+  R1) sends each name through a host that calls `AddTestTrackingContextPropagation()` and reads the next call from the
+  log.

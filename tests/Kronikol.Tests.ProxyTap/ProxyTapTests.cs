@@ -209,6 +209,53 @@ public class ProxyTapTests
     }
 
     [Fact]
+    public async Task Reads_an_identity_sent_in_the_utf8_form_exactly()
+    {
+        await using var upstream = new StubUpstream(JsonOk);
+        var sink = new ListSink();
+        await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(Options(upstream, sink));
+        await tap.StartAsync();
+        using var client = new HttpClient();
+
+        // What a Kronikol writer sends for "Café order" and an MSTest id naming a method "Prüfung".
+        using (var request = Request(HttpMethod.Get, tap.ListenUri, "/a", null,
+                   (TestTrackingHttpHeaders.CurrentTestNameHeader, "UTF-8''Caf%C3%A9%20order"),
+                   (TestTrackingHttpHeaders.CurrentTestIdHeader, "UTF-8''Ns.Klass.Pr%C3%BCfung")))
+            await client.SendAsync(request);
+
+        await tap.DisposeAsync();
+        var logged = sink.Logs[0];
+        Assert.Equal("Café order", logged.TestName);
+        Assert.Equal("Ns.Klass.Prüfung", logged.TestId);
+        // Forwarded as they came: the next Kronikol reader decodes them too.
+        Assert.Equal("UTF-8''Caf%C3%A9%20order", upstream.Seen[0].Headers[TestTrackingHttpHeaders.CurrentTestNameHeader]);
+    }
+
+    [Fact]
+    public async Task Reinjects_an_identity_that_is_not_plain_ascii_in_the_utf8_form_whole()
+    {
+        await using var upstream = new StubUpstream(JsonOk);
+        var sink = new ListSink();
+        var longName = "Café order " + new string('n', 600);
+        await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(Options(upstream, sink, o =>
+        {
+            o.ServiceName = "graphql ☕";
+            o.IdentityResolver = (_, _) => (longName, "Ns.Klass.Prüfung");
+        }));
+        await tap.StartAsync();
+        using var client = new HttpClient();
+
+        using (var request = Request(HttpMethod.Get, tap.ListenUri, "/a", null))
+            await client.SendAsync(request);
+
+        var sent = upstream.Seen[0].Headers;
+        Assert.Equal("UTF-8''Caf%C3%A9%20order%20" + new string('n', 600), sent[TestTrackingHttpHeaders.CurrentTestNameHeader]);
+        Assert.Equal("UTF-8''Ns.Klass.Pr%C3%BCfung", sent[TestTrackingHttpHeaders.CurrentTestIdHeader]);
+        Assert.Equal("UTF-8''graphql%20%E2%98%95", sent[TestTrackingHttpHeaders.CallerNameHeader]);
+        await tap.DisposeAsync();
+    }
+
+    [Fact]
     public async Task Falls_back_to_the_traceparent_trace_id_as_test_id_and_forwards_the_same_trace()
     {
         await using var upstream = new StubUpstream(JsonOk);

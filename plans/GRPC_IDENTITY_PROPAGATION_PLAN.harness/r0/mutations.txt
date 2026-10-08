@@ -1,0 +1,98 @@
+KILLED: write into the caller's Metadata again (T1)
+  ['Failed!  - Failed:    11, Passed:    14, Skipped:     0, Total:    25, Duration: 775 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_is_left_as_it_was_and_each_call_sends_one_traceparent(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_is_left_as_it_was_and_each_call_sends_one_traceparent(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_is_left_as_it_was_and_each_call_sends_one_traceparent(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_is_left_as_it_was_and_each_call_sends_one_traceparent(kind: Duplex)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_is_left_as_it_was_and_each_call_sends_one_traceparent(kind: ServerStreaming)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_Metadata_reused_for_three_calls_puts_the_called_hosts_span_in_the_callers_trace_every_time
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_call_whose_headers_are_Metadata_Empty_is_sent_with_a_traceparent(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_call_whose_headers_are_Metadata_Empty_is_sent_with_a_traceparent(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_call_whose_headers_are_Metadata_Empty_is_sent_with_a_traceparent(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_call_whose_headers_are_Metadata_Empty_is_sent_with_a_traceparent(kind: Duplex)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_call_whose_headers_are_Metadata_Empty_is_sent_with_a_traceparent(kind: ServerStreaming)
+KILLED: drop the Activity.Current restore (T4)
+  ['Failed!  - Failed:     3, Passed:    22, Skipped:     0, Total:    25, Duration: 575 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.CallMetadataTests.After_an_awaited_unary_call_Activity_Current_is_what_it_was_before
+    red: Kronikol.Tests.Grpc.CallMetadataTests.After_an_awaited_unary_call_an_outer_span_is_current_again
+    red: Kronikol.Tests.Grpc.CallMetadataTests.Two_unary_calls_in_a_row_with_no_ambient_span_are_two_traces
+KILLED: hard-code the flags 00 (T6)
+  ['Failed!  - Failed:     1, Passed:    24, Skipped:     0, Total:    25, Duration: 982 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.CallMetadataTests.The_flags_say_sampled_when_another_listener_records_the_span
+KILLED: add a second traceparent when the caller set one (T3)
+  ['Failed!  - Failed:     5, Passed:    20, Skipped:     0, Total:    25, Duration: 1 s - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_traceparent_the_caller_set_is_sent_unchanged_and_no_second_one_is_added(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_traceparent_the_caller_set_is_sent_unchanged_and_no_second_one_is_added(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_traceparent_the_caller_set_is_sent_unchanged_and_no_second_one_is_added(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_traceparent_the_caller_set_is_sent_unchanged_and_no_second_one_is_added(kind: Duplex)
+    red: Kronikol.Tests.Grpc.CallMetadataTests.A_traceparent_the_caller_set_is_sent_unchanged_and_no_second_one_is_added(kind: ServerStreaming)
+KILLED: "?" in place of the encoding (T7, T9)
+  ['Failed!  - Failed:    33, Passed:    31, Skipped:     0, Total:    64, Duration: 699 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_lone_surrogate_comes_back_as_the_replacement_character
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_long_non_ascii_value_round_trips
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: " Place an order ", id: "928c0c80-a415-4676-8be5-3aedcc3ed59d")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Café order", id: "6c876c8b-92f8-46ac-8721-1c5bf877d1f5")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Order a coffee ☕", id: "8873d3bf-6d88-4772-ab04-23f667ab62de")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Place an order", id: "Ns.Klass.Prüfung")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Places_an_order(text: \"aaaaaaaaaaaaaaaaaaaaaaaaaa"···, id: "f4352e13-f04e-4422-b064-70323fa6cced")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Theory(a\nb)", id: "e16d3d28-8856-48a9-b3fb-6005eeb55798")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_with_a_line_feed_reaches_a_host_in_memory_exactly
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_value_that_is_not_plain_ascii_is_written_in_the_rfc8187_form(value: " Place an order ", wire: "UTF-8''%20Place%20an%20order%20")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_value_that_is_not_plain_ascii_is_written_in_the_rfc8187_form(value: "Café order", wire: "UTF-8''Caf%C3%A9%20order")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_value_that_is_not_plain_ascii_is_written_in_the_rfc8187_form(value: "Order a coffee ☕", wire: "UTF-8''Order%20a%20coffee%20%E2%98%95")
+KILLED: leave surrounding spaces unencoded (T7, T9)
+  ['Failed!  - Failed:     5, Passed:    59, Skipped:     0, Total:    64, Duration: 406 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: " Place an order ", id: "d889040e-dbc9-4715-833c-541bc6ce200d")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_value_that_is_not_plain_ascii_is_written_in_the_rfc8187_form(value: " Place an order ", wire: "UTF-8''%20Place%20an%20order%20")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.Any_other_value_is_sent_as_printable_ascii_with_no_space_after_the_prefix(value: " ")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.Any_other_value_is_sent_as_printable_ascii_with_no_space_after_the_prefix(value: " Place an order ")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_handler_sends_a_name_and_id_that_are_not_plain_ascii_encoded(name: " Place an order ")
+KILLED: decode a value that lacks the prefix (T7)
+  ['Failed!  - Failed:     2, Passed:    62, Skipped:     0, Total:    64, Duration: 487 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_plain_printable_ascii_value_is_sent_and_read_unchanged(value: "a%20b")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.Decode_gives_back_exactly_what_Encode_was_given(value: "a%20b")
+KILLED: skip decoding: middleware (T10)
+  ['Failed!  - Failed:     8, Passed:    56, Skipped:     0, Total:    64, Duration: 469 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: " Place an order ", id: "817bb01a-b8a1-45f1-a6e6-9e3043a8864f")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Café order", id: "6bdb601d-920a-474d-aac2-1b28edfb3b44")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Order a coffee ☕", id: "8eed59d2-e155-4443-86d7-c44590df2e19")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Place an order", id: "Ns.Klass.Prüfung")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Places_an_order(text: \"aaaaaaaaaaaaaaaaaaaaaaaaaa"···, id: "e42a38e1-2743-440c-9eb4-2f34f076241d")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Theory(a\nb)", id: "af00bcc0-246e-4011-a064-b3d494d8d151")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_with_a_line_feed_reaches_a_host_in_memory_exactly
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_middleware_decodes_the_identity_it_puts_in_scope
+KILLED: skip decoding: resolver (T10)
+  ['Failed!  - Failed:     1, Passed:    63, Skipped:     0, Total:    64, Duration: 451 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_resolver_decodes_the_request_headers
+(The first run of the next mutation failed to build when the disk filled; it was run again on its own:)
+KILLED: skip decoding: handler inbound (T10)
+  ['Failed!  - Failed:     1, Passed:    63, Skipped:     0, Total:    64, Duration: 320 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_handler_decodes_the_identity_of_the_request_it_is_serving
+KILLED: skip decoding: message tracker (T10)
+  ['Failed!  - Failed:     1, Passed:    63, Skipped:     0, Total:    64, Duration: 444 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_message_tracker_decodes_the_request_headers
+KILLED: skip decoding: server bridge (T10)
+  ['Failed!  - Failed:     1, Passed:    63, Skipped:     0, Total:    64, Duration: 473 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_server_bridge_decodes_the_request_headers
+KILLED: skip decoding: ProxyTap (T10)
+  ['Failed!  - Failed:     1, Passed:    21, Skipped:     0, Total:    22, Duration: 9 s - Kronikol.Tests.ProxyTap.dll (net10.0)']
+    red: Kronikol.Tests.ProxyTap.ProxyTapTests.Reads_an_identity_sent_in_the_utf8_form_exactly
+KILLED: skip encoding: handler writes the raw name (T8, T9)
+  ['Failed!  - Failed:     9, Passed:    55, Skipped:     0, Total:    64, Duration: 567 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: " Place an order ", id: "4335fb61-595a-4783-8469-bdffe3faff7e")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Café order", id: "86e8284f-4255-477e-b1ca-30477043a8cd")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Order a coffee ☕", id: "d154b300-1760-4291-9a04-354f246fe4cf")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Places_an_order(text: \"aaaaaaaaaaaaaaaaaaaaaaaaaa"···, id: "ec01fb7a-a9fe-4eb7-884c-fc1cac5696da")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_or_id_that_is_not_plain_ascii_reaches_a_host_over_a_real_socket_exactly(name: "Theory(a\nb)", id: "72c8c9ab-98f4-4813-89a7-d690d51feaeb")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.A_name_with_a_line_feed_reaches_a_host_in_memory_exactly
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_handler_sends_a_name_and_id_that_are_not_plain_ascii_encoded(name: " Place an order ")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_handler_sends_a_name_and_id_that_are_not_plain_ascii_encoded(name: "Café order")
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_handler_sends_a_name_and_id_that_are_not_plain_ascii_encoded(name: "Theory(a\nb)")
+KILLED: Guid.Parse for the inbound trace id again (T12)
+  ['Failed!  - Failed:     1, Passed:    63, Skipped:     0, Total:    64, Duration: 467 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.IdentityHeaderEncodingTests.The_handler_gives_a_call_whose_inbound_trace_id_is_not_a_guid_a_trace_id_of_its_own
+KILLED: read instances[0] (T13, T14)
+  ['Failed!  - Failed:     4, Passed:    25, Skipped:     0, Total:    29, Duration: 119 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_accessor_cell_counts_the_instances_that_hold_one(accessors:
+    red: Kronikol.Tests.Reports.DiagnosticReportGeneratorTests.The_same_instances_registered_in_either_order_read_the_same
+done

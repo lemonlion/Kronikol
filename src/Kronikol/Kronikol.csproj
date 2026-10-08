@@ -17,6 +17,9 @@
 		<InternalsVisibleTo Include="Kronikol.Tests.PlantUml.Ikvm" />
 		<InternalsVisibleTo Include="Kronikol.Tool" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.Grpc" />
+		<!-- TrackingHeaderValue: the identity headers' UTF-8'' form, written and read by these two as well -->
+		<InternalsVisibleTo Include="Kronikol.Extensions.ProxyTap" />
+		<InternalsVisibleTo Include="Kronikol.Playwright" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.ClickHouse.Driver" />
 		<!-- search-index bench harness (tools/search-bench/formatter-probe), query-bench precedent -->
 		<InternalsVisibleTo Include="formatter-probe" />

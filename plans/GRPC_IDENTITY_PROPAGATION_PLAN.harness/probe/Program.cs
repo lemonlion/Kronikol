@@ -71,6 +71,7 @@ switch (probe)
     case "activity": await ActivityProbe(); break;
     case "accessor": AccessorProbe(); break;
     case "streaming": await StreamingProbe(); break;
+    case "nonascii" when variant == "propagated": await PropagatedNonAsciiProbe(); break;
     case "nonascii": await NonAsciiProbe(); break;
     default: Console.WriteLine("unknown probe"); break;
 }
@@ -325,6 +326,49 @@ async Task NonAsciiProbe()
         Console.WriteLine($"  gRPC identity metadata over h2c: {grpcOutcome}");
         Console.WriteLine($"  HTTP handler in memory (TestServer): {memHttpOutcome}");
         Console.WriteLine($"  gRPC identity metadata in memory (TestServer): {memGrpcOutcome}");
+    }
+    await app.StopAsync();
+}
+
+// R1's acceptance (plan section 6.6): the five names over a real h2c socket through the interceptor alone, no
+// workaround. A Kestrel host that registers AddTestTrackingContextPropagation() calls stub C through Kronikol's HTTP
+// handler with its own accessor; the line reads that call from the log: whose it is, and through what.
+async Task PropagatedNonAsciiProbe()
+{
+    var builder = WebApplication.CreateBuilder(new WebApplicationOptions { ApplicationName = typeof(HopService).Assembly.GetName().Name });
+    builder.Logging.ClearProviders();
+    builder.WebHost.ConfigureKestrel(k =>
+        k.Listen(System.Net.IPAddress.Loopback, 0, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2));
+    builder.Services.AddGrpc();
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddTestTrackingContextPropagation();
+    builder.Services.AddSingleton(sp => new HttpClient(new TestTrackingMessageHandler(
+        new TestTrackingMessageHandlerOptions { CallerName = "Kestrel B", FixedNameForReceivingService = "Stub C via Kestrel" },
+        sp.GetRequiredService<IHttpContextAccessor>()) { InnerHandler = cServer.CreateHandler() })
+        { BaseAddress = cServer.BaseAddress });
+    var app = builder.Build();
+    app.MapGrpcService<HopService>();
+    await app.StartAsync();
+    var h2c = app.Urls.First();
+
+    var n = 0;
+    foreach (var name in new[] { "Place an order", "Café order", "Order a coffee ☕", "Theory(text: \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"···)", "Theory(a" + (char)10 + "b)" })
+    {
+        var id = $"id-p{++n}";
+        var client = new Hop.HopClient(GrpcChannel.ForAddress(h2c).Intercept(new GrpcTrackingInterceptor(new GrpcTrackingOptions
+        {
+            ServiceName = "Kestrel B", CallerName = "Test", CurrentTestInfoFetcher = () => (name, id),
+        })));
+        string outcome;
+        try { await client.CallAsync(new HopRequest()); outcome = "ok"; }
+        catch (Exception ex) { outcome = $"{ex.GetType().Name}: {ex.Message.Split(Environment.NewLine)[0]}"; }
+        var bToC = RequestResponseLogger.RequestAndResponseLogs
+            .LastOrDefault(l => l.ServiceName == "Stub C via Kestrel" && l.Type == RequestResponseType.Request && l.TestId == id);
+        var seen = bToC is null
+            ? "B's call to C: not under this test (" + (RequestResponseLogger.RequestAndResponseLogs
+                .Count(l => l.ServiceName == "Stub C via Kestrel" && l.Type == RequestResponseType.Request && l.TestId != id) > 0 ? "recorded under another id" : "not recorded") + ")"
+            : $"B's call to C: {bToC.TestId}, {bToC.AttributionSource}, name {(bToC.TestName == name ? "exact" : "differs: " + bToC.TestName)}";
+        Console.WriteLine($"R1 name \"{name.Replace(((char)10).ToString(), "<LF>")}\": call {outcome}; {seen}");
     }
     await app.StopAsync();
 }

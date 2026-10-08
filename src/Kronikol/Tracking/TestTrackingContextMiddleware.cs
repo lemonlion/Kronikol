@@ -9,8 +9,10 @@ namespace Kronikol.Tracking;
 /// This ensures test identity flows into background tasks spawned by <c>Task.Run</c>
 /// or <c>ThreadPool.QueueUserWorkItem</c> via <see cref="AsyncLocal{T}"/>.
 /// <para>
-/// Register via <c>app.UseTestTrackingContext()</c> or automatically using
-/// <see cref="TestTrackingContextStartupFilter"/>.
+/// Registered by <c>services.AddTestTrackingContextPropagation()</c>, which adds it ahead of the host's own
+/// middleware through <see cref="TestTrackingContextStartupFilter"/>, or by hand with
+/// <c>app.UseMiddleware&lt;TestTrackingContextMiddleware&gt;()</c>. Header values in the <c>UTF-8''</c> form that
+/// Kronikol's writers use for a value that is not plain ASCII are decoded.
 /// </para>
 /// </summary>
 public class TestTrackingContextMiddleware
@@ -28,7 +30,7 @@ public class TestTrackingContextMiddleware
             context.Request.Headers.TryGetValue(TestTrackingHttpHeaders.CurrentTestIdHeader, out var id) &&
             name.Count > 0 && id.Count > 0)
         {
-            using (TestIdentityScope.Begin(name[0]!, id[0]!))
+            using (TestIdentityScope.Begin(TrackingHeaderValue.Decode(name[0]!), TrackingHeaderValue.Decode(id[0]!)))
             {
                 await _next(context);
             }

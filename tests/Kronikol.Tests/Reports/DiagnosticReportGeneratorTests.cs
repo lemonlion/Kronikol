@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 
@@ -219,12 +220,12 @@ public class DiagnosticReportGeneratorTests : IDisposable
             [],
             new ReportConfigurationOptions());
 
-        Assert.Contains("HttpContextAccessor", html);
-        Assert.Contains("✓ configured", html);
+        Assert.Contains("<th>HttpContextAccessor</th>", html);
+        Assert.Equal("<span class=\"info\">✓ 1 of 1</span>", AccessorCellOf(html, "Handler (CosmosDB)"));
     }
 
     [Fact]
-    public void Tracking_components_table_shows_null_warning_for_active_component_without_accessor()
+    public void Tracking_components_table_warns_for_an_active_component_without_accessor()
     {
         TrackingComponentRegistry.Register(
             new StubComponentWithAccessor("Handler (CosmosDB)", wasInvoked: true, hasAccessor: false));
@@ -234,7 +235,8 @@ public class DiagnosticReportGeneratorTests : IDisposable
             [],
             new ReportConfigurationOptions());
 
-        Assert.Contains("⚠ null", html);
+        Assert.Equal("<span class=\"warn\">⚠ 0 of 1</span>", AccessorCellOf(html, "Handler (CosmosDB)"));
+        Assert.DoesNotContain("null", AccessorCellOf(html, "Handler (CosmosDB)"));
     }
 
     [Fact]
@@ -248,7 +250,79 @@ public class DiagnosticReportGeneratorTests : IDisposable
             [],
             new ReportConfigurationOptions());
 
+        Assert.Equal("—", AccessorCellOf(html, "Handler (SomeQueue)"));
+    }
+
+    // ─── The accessor column counts instances (#134 R0, #137 section 2) ──
+    // Until 4.9.1 the cell read one instance of an unordered bag (instances[0]) and printed "✓ configured" or a
+    // literal "⚠ null", so a group of clients with and without an accessor read either way by registration order.
+
+    public static readonly TheoryData<bool[], bool, string> AccessorCounts = new()
+    {
+        { new[] { true, true, false }, true, "2 of 3" },
+        { new[] { false, true, true }, true, "2 of 3" },
+        { new[] { true, true, true }, true, "<span class=\"info\">✓ 3 of 3</span>" },
+        { new[] { true, true, true }, false, "<span class=\"info\">✓ 3 of 3</span>" },
+        { new[] { false, false, false }, true, "<span class=\"warn\">⚠ 0 of 3</span>" },
+        { new[] { false, false, false }, false, "—" },
+        { new[] { true, false }, false, "1 of 2" },
+    };
+
+    [Theory]
+    [MemberData(nameof(AccessorCounts))]
+    public void The_accessor_cell_counts_the_instances_that_hold_one(bool[] accessors, bool invoked, string expected)
+    {
+        foreach (var hasAccessor in accessors)
+            TrackingComponentRegistry.Register(new StubComponentWithAccessor("Client (Orders)", invoked, hasAccessor));
+
+        var html = DiagnosticReportGenerator.BuildHtml([MakeLog("t1", RequestResponseType.Request, Guid.NewGuid())], [], new ReportConfigurationOptions());
+
+        Assert.Equal(expected, AccessorCellOf(html, "Client (Orders)"));
         Assert.DoesNotContain("⚠ null", html);
+        Assert.DoesNotContain("✓ configured", html);
+    }
+
+    [Fact]
+    public void The_same_instances_registered_in_either_order_read_the_same()
+    {
+        string CellFor(bool[] order)
+        {
+            TrackingComponentRegistry.Clear();
+            foreach (var hasAccessor in order)
+                TrackingComponentRegistry.Register(new StubComponentWithAccessor("Client (Orders)", true, hasAccessor));
+            return AccessorCellOf(DiagnosticReportGenerator.BuildHtml([MakeLog("t1", RequestResponseType.Request, Guid.NewGuid())], [], new ReportConfigurationOptions()), "Client (Orders)");
+        }
+
+        Assert.Equal("2 of 3", CellFor([true, true, false]));
+        Assert.Equal("2 of 3", CellFor([false, true, true]));
+    }
+
+    [Fact]
+    public void Each_instance_of_a_group_shows_whether_it_holds_an_accessor()
+    {
+        TrackingComponentRegistry.Register(new StubComponentWithAccessor("Client (Orders)", true, true));
+        TrackingComponentRegistry.Register(new StubComponentWithAccessor("Client (Orders)", true, false));
+        TrackingComponentRegistry.Register(new StubComponentWithAccessor("Client (Orders)", true, true));
+
+        var html = DiagnosticReportGenerator.BuildHtml([MakeLog("t1", RequestResponseType.Request, Guid.NewGuid())], [], new ReportConfigurationOptions());
+
+        var details = Regex.Match(html, @"<summary>Client \(Orders\) \(3 instances\)</summary>(?<rows>.*?)</details>", RegexOptions.Singleline);
+        Assert.True(details.Success);
+        Assert.Contains("<tr><th>#</th><th>Invocations</th><th>HttpContextAccessor</th></tr>", details.Groups["rows"].Value);
+        Assert.Equal(2, Regex.Matches(details.Groups["rows"].Value, @"<td>1</td><td>✓</td></tr>").Count);
+        Assert.Single(Regex.Matches(details.Groups["rows"].Value, @"<td>1</td><td>—</td></tr>"));
+    }
+
+    /// <summary>The HttpContextAccessor cell of a component group's row in the Tracking Components table.</summary>
+    private static string AccessorCellOf(string html, string componentName)
+    {
+        var name = Regex.Escape(System.Net.WebUtility.HtmlEncode(componentName));
+        var single = Regex.Match(html, $@"<tr><td>{name}</td><td>1</td><td>\d+</td><td>.*?</td><td>(?<cell>.*?)</td></tr>");
+        if (single.Success)
+            return single.Groups["cell"].Value;
+        var group = Regex.Match(html, $@"<summary>{name} \(\d+ instances\)</summary>.*?</details></td>\s*<td>\d+</td><td>\d+</td><td>.*?</td><td>(?<cell>.*?)</td></tr>", RegexOptions.Singleline);
+        Assert.True(group.Success, $"no row for {componentName}");
+        return group.Groups["cell"].Value;
     }
 
     // ─── Unmatched client names (#10) ──────────────────────────

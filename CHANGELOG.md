@@ -4,6 +4,78 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.12.1] - 2026-10-08
+
+**Patch - test names and ids no longer fail the calls that carry them, and the gRPC interceptor leaves the caller's
+metadata and trace alone (#134).** `plans/GRPC_IDENTITY_PROPAGATION_PLAN.md` R0. Bug fixes, corrected doc comments and
+one internal helper, nothing new for a consumer to call, so the patch part moves (4.12.0 to 4.12.1). Two outputs change on
+purpose, as fixes: the wire form of an identity value that is not plain ASCII, and the text of the diagnostic page's
+HttpContextAccessor column. The report itself does not change. The history action's `VERSION` installs `Kronikol.Tool`
+4.12.1, and the templates pin 4.12.0.
+
+### Fixed
+
+- **A test name that is not plain ASCII failed the test's own call.** `TestTrackingMessageHandler` wrote the name and id
+  raw, so over a real socket any character above U+007F failed the request ("Request headers must contain only ASCII
+  characters"), and a line feed failed it in memory too ("New-line characters are not allowed in header values"). That
+  took in every xUnit v3 theory whose long string argument xUnit shortens with `···`, and MSTest ids naming a method
+  with such a letter; a name that began or ended with a space arrived without it. Such values, and only such values,
+  now travel in the RFC 8187 form `Content-Disposition: filename*=` uses: `UTF-8''` followed by the percent-encoded
+  UTF-8 bytes, so `Café order` travels as `UTF-8''Caf%C3%A9%20order`. Every Kronikol reader decodes it: the middleware
+  `AddTestTrackingContextPropagation()` installs, `TestInfoResolver`, the handler itself, `MessageTracker`,
+  `TestTrackingServerBridge.GetCurrentTestInfo` and ProxyTap. A value that is printable ASCII, without surrounding
+  spaces, is sent byte for byte as before, which covers every GUID, xUnit, NUnit and TUnit id. Behaviour change: a
+  reader of your own that takes the raw header sees the encoded text; `TestTrackingServerBridge` decodes it.
+- **ProxyTap and Playwright's `TestTrackingIdentity.ToHeaders()` replaced such characters with `?` and cut values at
+  512 characters,** which could merge two ids (`Café` and `Cafè` both became `Caf?`) and broke an MSTest id. They now
+  send the same `UTF-8''` form, whole, and ProxyTap decodes it, so a browser-driven name reaches the report exactly.
+  The public `TestTrackingIdentity.HeaderSafe` is unchanged and no longer used by `ToHeaders()`.
+- **The gRPC interceptor wrote into the caller's `Metadata`.** A `Metadata` reused for several calls (to carry an
+  authorization header, say) gained one `traceparent` per call; the called host received them joined into one value it
+  could not parse, so from the second call on its server span left the caller's trace, and each call logged the
+  previous calls' entries as its own request headers. `Metadata.Empty` made the call throw ("Object is read only").
+  The interceptor now copies the caller's entries into metadata of its own.
+- **It added a second `traceparent` when the caller had set one;** it now keeps the caller's.
+- **Its trace flags said `00` even when the call's span was recorded,** so a called host sampling with OpenTelemetry's
+  default `ParentBased` sampler dropped its server span for every call. They now say `01` when the span is recorded.
+  Kronikol's own listener samples without recording, so by default the wire still says `00`.
+- **An awaited unary call left its span as the caller's `Activity.Current`,** so the next call the test made became its
+  child and joined its trace, and an HTTP call made after it through `TestTrackingMessageHandler` on TestServer sent no
+  `traceparent` (the handler leaves that header to the framework while a span is current, and TestServer's in-memory
+  transport adds none). The caller's own `Activity.Current` is given back when the call starts; the span still ends
+  when the response arrives, and the transport's spans are still its children.
+- **A `test-tracking-trace-id` that is not a GUID failed the call that received it** (`Guid.Parse` in the HTTP handler
+  and in `MessageTracker`). The call now gets a trace id of its own and keeps the identity.
+- **The diagnostic page's HttpContextAccessor column read one arbitrary instance of each component** (the first of an
+  unordered bag) and printed `✓ configured` or a literal `⚠ null`, so a group of test-side clients without an accessor
+  and host-side ones with one read either way by registration order. It now counts, as the Active column beside it
+  does: `✓ 2 of 2`, `⚠ 0 of 2` when none has one and the component was invoked, a plain `1 of 2`, or `—`; a group's
+  instance list shows each instance's accessor (#137, section 2).
+
+### Documentation
+
+- `ITrackingComponent.HasHttpContextAccessor` promised `null` from a `bool`; it now says what `true` and `false` mean,
+  and that `true` says only that an accessor is held.
+- `TestTrackingContextMiddleware` told users to call `app.UseTestTrackingContext()`, which does not exist; it names
+  `AddTestTrackingContextPropagation()` and `UseMiddleware`.
+- `TestTrackingServerBridge.GetCurrentTestInfo` and `TestTrackingIdentity.ToHeaders()` say they decode and encode.
+- `CurrentStepTypeFetcher` has no effect on `GrpcTrackingOptions`, `MessageTrackerOptions`,
+  `SqlTrackingInterceptorOptions` and the options of 21 other extension packages (MongoDB's has said so since 4.10.0): nothing reads it there (only the
+  HTTP handler's drives its implicit start of the action phase). Each now says so, and its removal is open question 9
+  of `plans/V5_PLAN.md`.
+
+### Tests
+
+- `IdentityHeaderEncodingTests`: the encoding against an independent RFC 8187 oracle, each reader in core, the handler's
+  writes, a line-feed name through a TestServer host, and six names and ids over Kestrel. ProxyTap's and Playwright's
+  facts for the encoded form; four Playwright facts that pinned the `?` form and the 512-character cut now pin the
+  encoded form.
+- `tests/Kronikol.Tests.Grpc` hosts a real gRPC server (`Grpc.AspNetCore` and `Protos/hop.proto`, on TestServer or on
+  Kestrel over h2c), the first in the repository. `CallMetadataTests` covers the reused `Metadata` on all five call
+  kinds and through a host, `Metadata.Empty`, the caller's `traceparent`, `Activity.Current` and the flags.
+- `DiagnosticReportGeneratorTests` counts the column for every mix and both registration orders, and
+  `DiagnosticPageAccessorColumnTests` reads the painted cell of a real `DiagnosticReport.html` in a browser.
+
 ## [4.12.0] - 2026-10-08
 
 **Minor - Kronikol.xUnit2's reports under another test framework (#132).** `plans/XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md`

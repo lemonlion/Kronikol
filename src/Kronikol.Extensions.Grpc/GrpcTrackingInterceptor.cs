@@ -58,18 +58,38 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         var requestResponseId = Guid.NewGuid();
 
         EnsureListenerStarted();
+        // The span lasts until the response arrives (WrapUnaryResponse completes it), but this method returns as
+        // soon as the call starts: the caller's own Activity.Current is given back then, or the span would stay
+        // current in the caller's flow and parent every call it makes next.
+        var callerActivity = Activity.Current;
         var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
-        var (activityTraceId, activitySpanId) = CaptureActivityContext();
+        AsyncUnaryCall<TResponse> call;
+        Task<TResponse> wrappedResponseAsync;
+        string? activityTraceId, activitySpanId;
+        try
+        {
+            (activityTraceId, activitySpanId, var recorded) = CaptureActivityContext();
 
-        context = InjectTraceParent(context, activityTraceId, activitySpanId);
+            context = WithCallMetadata(context, activityTraceId, activitySpanId, recorded);
 
-        LogRequest(testInfo.Value, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+            LogRequest(testInfo.Value, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
-        var call = continuation(request, context);
+            // Started under the span, so the transport's own spans are its children.
+            call = continuation(request, context);
 
-        var wrappedResponseAsync = WrapUnaryResponse(
-            call.ResponseAsync, testInfo.Value, label, uri, serviceName, traceId, requestResponseId, effectiveVerbosity,
-            activityTraceId, activitySpanId, activity, opInfo);
+            wrappedResponseAsync = WrapUnaryResponse(
+                call.ResponseAsync, testInfo.Value, label, uri, serviceName, traceId, requestResponseId, effectiveVerbosity,
+                activityTraceId, activitySpanId, activity, opInfo);
+        }
+        catch
+        {
+            InternalFlowSpanStore.Complete(activity);
+            throw;
+        }
+        finally
+        {
+            Activity.Current = callerActivity;
+        }
 
         return new AsyncUnaryCall<TResponse>(
             wrappedResponseAsync,
@@ -106,9 +126,9 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
         EnsureListenerStarted();
         using var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
-        var (activityTraceId, activitySpanId) = CaptureActivityContext();
+        var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
 
-        context = InjectTraceParent(context, activityTraceId, activitySpanId);
+        context = WithCallMetadata(context, activityTraceId, activitySpanId, recorded);
 
         LogRequest(testInfo.Value, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
@@ -154,9 +174,9 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
         EnsureListenerStarted();
         using var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
-        var (activityTraceId, activitySpanId) = CaptureActivityContext();
+        var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
 
-        context = InjectTraceParent(context, activityTraceId, activitySpanId);
+        context = WithCallMetadata(context, activityTraceId, activitySpanId, recorded);
 
         LogRequest(testInfo.Value, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
@@ -192,9 +212,9 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
         EnsureListenerStarted();
         using var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
-        var (activityTraceId, activitySpanId) = CaptureActivityContext();
+        var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
 
-        context = InjectTraceParent(context, activityTraceId, activitySpanId);
+        context = WithCallMetadata(context, activityTraceId, activitySpanId, recorded);
 
         LogRequest(testInfo.Value, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
@@ -230,9 +250,9 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
         EnsureListenerStarted();
         using var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
-        var (activityTraceId, activitySpanId) = CaptureActivityContext();
+        var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
 
-        context = InjectTraceParent(context, activityTraceId, activitySpanId);
+        context = WithCallMetadata(context, activityTraceId, activitySpanId, recorded);
 
         LogRequest(testInfo.Value, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
@@ -332,28 +352,52 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         _listenerStarted = true;
     }
 
-    private static (string? TraceId, string? SpanId) CaptureActivityContext()
+    private static (string? TraceId, string? SpanId, bool Recorded) CaptureActivityContext()
     {
-        if (Activity.Current != null)
-            return (Activity.Current.TraceId.ToString(), Activity.Current.SpanId.ToString());
+        if (Activity.Current is { } current)
+            return (current.TraceId.ToString(), current.SpanId.ToString(), current.Recorded);
 
-        return (ActivityTraceId.CreateRandom().ToString(), ActivitySpanId.CreateRandom().ToString());
+        return (ActivityTraceId.CreateRandom().ToString(), ActivitySpanId.CreateRandom().ToString(), false);
     }
 
-    private static ClientInterceptorContext<TRequest, TResponse> InjectTraceParent<TRequest, TResponse>(
+    /// <summary>
+    /// The call's options with metadata of its own. The caller's <see cref="Metadata"/> is never written to: it may be
+    /// reused for other calls (each would add one more <c>traceparent</c>, and the server would receive them joined
+    /// into one value it cannot parse), or be the frozen <see cref="Metadata.Empty"/>. Its entries are copied, and a
+    /// <c>traceparent</c> for the span is added unless the caller set one. Its flags say sampled (<c>01</c>) when the
+    /// span is recorded, so a parent-based sampler in the called host keeps the server span.
+    /// </summary>
+    private static ClientInterceptorContext<TRequest, TResponse> WithCallMetadata<TRequest, TResponse>(
         ClientInterceptorContext<TRequest, TResponse> context,
-        string? activityTraceId, string? activitySpanId)
+        string? activityTraceId, string? activitySpanId, bool recorded)
         where TRequest : class
         where TResponse : class
     {
-        if (activityTraceId is null || activitySpanId is null)
-            return context;
+        var headers = new Metadata();
+        if (context.Options.Headers is { } callerHeaders)
+        {
+            foreach (var entry in callerHeaders)
+                headers.Add(entry);
+        }
 
-        var headers = context.Options.Headers ?? new Metadata();
-        headers.Add("traceparent", $"00-{activityTraceId}-{activitySpanId}-00");
+        if (activityTraceId is not null && activitySpanId is not null && !HasEntry(headers, TraceParentKey))
+            headers.Add(TraceParentKey, $"00-{activityTraceId}-{activitySpanId}-{(recorded ? "01" : "00")}");
 
         var newOptions = context.Options.WithHeaders(headers);
         return new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, newOptions);
+    }
+
+    private const string TraceParentKey = "traceparent";
+
+    private static bool HasEntry(Metadata headers, string key)
+    {
+        foreach (var entry in headers)
+        {
+            if (string.Equals(entry.Key, key, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 
     private static GrpcOperationInfo Classify<TRequest, TResponse>(

@@ -26,7 +26,8 @@ public class TestTrackingIdentityTests
 
         var headers = identity.ToHeaders();
 
-        Assert.Equal("overview ? renders", headers[TestTrackingHttpHeaders.CurrentTestNameHeader]); // ISO-8859-1 safe
+        // Not plain ASCII, so sent in the RFC 8187 UTF-8'' form, which every Kronikol reader decodes.
+        Assert.Equal("UTF-8''overview%20%E2%80%BA%20renders", headers[TestTrackingHttpHeaders.CurrentTestNameHeader]);
         Assert.Equal("explicit-id", headers[TestTrackingHttpHeaders.CurrentTestIdHeader]);
         Assert.Equal("SPA", headers[TestTrackingHttpHeaders.CallerNameHeader]);
         Assert.Equal(identity.TraceId.ToString(), headers[TestTrackingHttpHeaders.TraceIdHeader]);
@@ -38,12 +39,28 @@ public class TestTrackingIdentityTests
     }
 
     [Fact]
-    public void Traceparent_can_be_omitted_and_long_values_are_bounded()
+    public void Traceparent_can_be_omitted_and_a_long_name_is_sent_whole()
     {
         var identity = TestTrackingIdentity.Create(new string('n', 1000)) with { IncludeTraceparent = false };
         var headers = identity.ToHeaders();
         Assert.False(headers.ContainsKey("traceparent"));
-        Assert.Equal(512, headers[TestTrackingHttpHeaders.CurrentTestNameHeader].Length);
+        Assert.Equal(new string('n', 1000), headers[TestTrackingHttpHeaders.CurrentTestNameHeader]);
+    }
+
+    [Fact]
+    public void A_name_and_id_that_are_not_plain_ascii_reach_a_kronikol_host_exactly()
+    {
+        var identity = TestTrackingIdentity.Create("Café order ☕", "Ns.Klass.Prüfung", "Browser ☕");
+        var context = new Microsoft.AspNetCore.Http.DefaultHttpContext();
+        foreach (var (key, value) in identity.ToHeaders())
+        {
+            Assert.All(value, c => Assert.InRange(c, (char)0x20, (char)0x7E));
+            context.Request.Headers[key] = value;
+        }
+
+        var seen = TestTrackingServerBridge.GetCurrentTestInfo(new Microsoft.AspNetCore.Http.HttpContextAccessor { HttpContext = context });
+
+        Assert.Equal(("Café order ☕", "Ns.Klass.Prüfung"), seen);
     }
 
     [Fact]
@@ -162,7 +179,8 @@ public class PlaywrightBrowserTests : IAsyncLifetime
         Assert.Equal(2, server.Seen.Count);
         foreach (var request in server.Seen)
         {
-            Assert.Equal("playwright ? headers arrive", request[TestTrackingHttpHeaders.CurrentTestNameHeader]);
+            // On the wire in the RFC 8187 UTF-8'' form, since the name is not plain ASCII; Kronikol readers decode it.
+            Assert.Equal("UTF-8''playwright%20%E2%80%BA%20headers%20arrive", request[TestTrackingHttpHeaders.CurrentTestNameHeader]);
             Assert.Equal(identity.TestId, request[TestTrackingHttpHeaders.CurrentTestIdHeader]);
             Assert.Equal(TestTrackingIdentity.DefaultCallerName, request[TestTrackingHttpHeaders.CallerNameHeader]);
             Assert.Equal(identity.TraceId.ToString(), request[TestTrackingHttpHeaders.TraceIdHeader]);
@@ -195,7 +213,7 @@ public class PlaywrightBrowserTests : IAsyncLifetime
 
         var request = sink.Logs.First(l => l.Type == RequestResponseType.Request);
         Assert.Equal(identity.TestId, request.TestId);
-        Assert.Equal("playwright ? through the tap", request.TestName);
+        Assert.Equal("playwright › through the tap", request.TestName); // the tap decodes the name exactly
         Assert.Equal("/api/data", request.Uri.PathAndQuery);
     }
 

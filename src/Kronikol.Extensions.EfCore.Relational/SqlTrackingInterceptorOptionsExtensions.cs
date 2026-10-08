@@ -12,7 +12,8 @@ public static class SqlTrackingInterceptorOptionsExtensions
     /// <see cref="TestTrackingMessageHandlerOptions.CurrentStepTypeFetcher"/>, and
     /// <see cref="TestTrackingMessageHandlerOptions.CallerName"/> from an existing
     /// HTTP tracking options instance so that SQL and HTTP tracking share the same test context, and its
-    /// <see cref="TestTrackingMessageHandlerOptions.HttpContextAccessor"/> when the SQL options carry none.
+    /// <see cref="TestTrackingMessageHandlerOptions.HttpContextAccessor"/> when the SQL options carry none. (The step
+    /// type fetcher is copied but has no effect on SQL tracking.)
     /// </summary>
     public static SqlTrackingInterceptorOptions WithTestInfoFrom(
         this SqlTrackingInterceptorOptions sqlOptions,

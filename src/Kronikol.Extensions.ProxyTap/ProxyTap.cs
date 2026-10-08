@@ -328,14 +328,15 @@ public sealed class ProxyTap : IAsyncDisposable
                 return custom;
         }
 
-        var name = FirstValue(headers, TestTrackingHttpHeaders.CurrentTestNameHeader);
+        // Kronikol's own headers carry a value that is not plain ASCII in the UTF-8'' form (TrackingHeaderValue).
+        var name = TrackingHeaderValue.Decode(FirstValue(headers, TestTrackingHttpHeaders.CurrentTestNameHeader));
         foreach (var fallback in _options.TestNameHeaderFallbacks)
         {
             if (name is not null) break;
             name = FirstValue(headers, fallback);
         }
 
-        var id = FirstValue(headers, TestTrackingHttpHeaders.CurrentTestIdHeader);
+        var id = TrackingHeaderValue.Decode(FirstValue(headers, TestTrackingHttpHeaders.CurrentTestIdHeader));
         foreach (var fallback in _options.TestIdHeaderFallbacks)
         {
             if (id is not null) break;
@@ -354,26 +355,13 @@ public sealed class ProxyTap : IAsyncDisposable
     private void Reinject(HttpRequestMessage message, IReadOnlyDictionary<string, string[]> inbound, (string Name, string Id) identity, Guid traceId)
     {
         if (!inbound.ContainsKey(TestTrackingHttpHeaders.CurrentTestNameHeader))
-            message.Headers.TryAddWithoutValidation(TestTrackingHttpHeaders.CurrentTestNameHeader, HeaderSafe(identity.Name));
+            message.Headers.TryAddWithoutValidation(TestTrackingHttpHeaders.CurrentTestNameHeader, TrackingHeaderValue.Encode(identity.Name));
         if (!inbound.ContainsKey(TestTrackingHttpHeaders.CurrentTestIdHeader))
-            message.Headers.TryAddWithoutValidation(TestTrackingHttpHeaders.CurrentTestIdHeader, HeaderSafe(identity.Id));
+            message.Headers.TryAddWithoutValidation(TestTrackingHttpHeaders.CurrentTestIdHeader, TrackingHeaderValue.Encode(identity.Id));
         if (!inbound.ContainsKey(TestTrackingHttpHeaders.CallerNameHeader))
-            message.Headers.TryAddWithoutValidation(TestTrackingHttpHeaders.CallerNameHeader, HeaderSafe(_options.ServiceName));
+            message.Headers.TryAddWithoutValidation(TestTrackingHttpHeaders.CallerNameHeader, TrackingHeaderValue.Encode(_options.ServiceName));
         if (!inbound.ContainsKey(TestTrackingHttpHeaders.TraceIdHeader))
             message.Headers.TryAddWithoutValidation(TestTrackingHttpHeaders.TraceIdHeader, traceId.ToString());
-    }
-
-    /// <summary>ISO-8859-1-safe, bounded header value.</summary>
-    internal static string HeaderSafe(string value)
-    {
-        var sb = new StringBuilder(Math.Min(value.Length, 512));
-        foreach (var c in value)
-        {
-            if (sb.Length >= 512) break;
-            sb.Append(c is >= (char)0x20 and <= (char)0x7e ? c : '?');
-        }
-
-        return sb.ToString();
     }
 
     // ------------------------------------------------------------------ capture

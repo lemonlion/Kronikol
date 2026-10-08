@@ -237,3 +237,12 @@ flip, a CLI flag and an end-to-end proof. The text as it stood is `git show a8ab
    4.5.1 their docs say they have no effect. Remove them here (breaking), unless the owner's `ROADMAP.md` Appendix C
    choice restores relationship stats in reports first, in which case `LowCoverageThreshold` could be wired to
    `ComputeRelationshipStats` instead. Recommendation: remove the other four either way.
+9. **The `CurrentStepTypeFetcher` options nothing reads** (from `GRPC_IDENTITY_PROPAGATION_PLAN.md` Q8 and section 8).
+   Only `TestTrackingMessageHandlerOptions.CurrentStepTypeFetcher` is read: it drives the HTTP handler's implicit start
+   of the action phase, and the BDDfy, LightBDD and ReqNRoll handler options set it. The property of the same name on
+   `GrpcTrackingOptions`, `MessageTrackerOptions` and `SqlTrackingInterceptorOptions` (which
+   `SqlTrackingInterceptorOptionsExtensions` copies from the HTTP options), and on the options of 22 other extension
+   packages (AtlasDataApi, BigQuery, Bigtable, BlobStorage, CloudStorage, CosmosDB, Dapper, DynamoDB, Elasticsearch,
+   EventBridge, EventHubs, Kafka, MassTransit, MongoDB, PubSub, Redis, S3, SNS, SQS, ServiceBus, Spanner and
+   StorageQueues), does nothing; their docs say so. Remove them here (breaking), unless one of those trackers gains
+   the implicit action start first. Recommendation: remove them.

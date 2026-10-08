@@ -172,7 +172,7 @@ public static class TestInfoResolver
                 httpContext.Request.Headers.TryGetValue(TestTrackingHttpHeaders.CurrentTestIdHeader, out var testId) &&
                 testName.Count > 0 && testId.Count > 0)
             {
-                result = (testName[0]!, testId[0]!);
+                result = (TrackingHeaderValue.Decode(testName[0]!), TrackingHeaderValue.Decode(testId[0]!));
                 return true;
             }
         }

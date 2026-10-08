@@ -19,7 +19,14 @@ public record GrpcTrackingOptions
 
     public GrpcTrackingVerbosity Verbosity { get; set; } = GrpcTrackingVerbosity.Detailed;
     public Func<(string Name, string Id)>? CurrentTestInfoFetcher { get; set; }
+
+    /// <summary>
+    /// Has no effect: no part of the gRPC package reads it. (The HTTP handler's option of the same name drives its
+    /// implicit start of the action phase; the gRPC interceptor has no such step.) Its removal is an open question
+    /// for v5 (plans/V5_PLAN.md).
+    /// </summary>
     public Func<string?>? CurrentStepTypeFetcher { get; set; }
+
     public bool UseProtoServiceNameInDiagram { get; set; } = false;
     public GrpcTrackingVerbosity? SetupVerbosity { get; set; }
     public GrpcTrackingVerbosity? ActionVerbosity { get; set; }
