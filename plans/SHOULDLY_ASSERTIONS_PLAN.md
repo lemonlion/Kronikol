@@ -1,7 +1,9 @@
 # Shouldly assertions in assertion tracking (#141)
 
 **Date:** 2026-10-07 · **Repo version:** 4.9.0 (`main` at 417c8e58; line numbers are for that commit) · **Status:**
-**not green-lit.** Drafted from #141, with its two siblings from the same suite and the same day, #144 and #145.
+**green-lit in full by the owner on 2026-10-08** ("implement the plan in full", and "also fix the bugs you
+found": the §8 findings), with §11's recommendations taken; ROADMAP row 1.23. Drafted from #141, with its two siblings
+from the same suite and the same day, #144 and #145.
 
 Evidence labels: **RUN** (measured on 2026-10-07 with the published 4.9.0 packages, Shouldly 4.3.0 and
 AwesomeAssertions 9.6.0 on net8.0, built by SDK 10.0.300; inputs, scripts and saved output in
@@ -726,9 +728,8 @@ this table missed, and the skill references under `.claude/skills/` and `templat
 ## 7. Where it sits in the roadmap
 
 - **R1:** stage 1, the patch train, by rule 1. A failed assertion drawn as a green pass (F12) is the worst kind of
-  defect a report can have: it says the opposite of the run. The next free stage 1 row at green-light, claimed by
-  `SendMessage` when the owner places it: other sessions are placing plans today (#135's took row 1.21 and D37 on
-  2026-10-07, and #132 and #134 are in flight). No decision number unless a question needs one.
+  defect a report can have: it says the opposite of the run. **Row 1.23**, taken by `SendMessage` on 2026-10-08
+  when the owner green-lit the plan (1.21 is #135's, 1.22 #136's and 1.24 #132's). No decision number.
 - **R2:** breadth for the bar (rule 9: a visitor whose library is missing writes the product off), and the owner's
   placement. By rule 5 it follows R1, which edits the same files (`AssertionWeaver.cs`, the formatter).
 - **#145:** in R2's row if Q1 takes it; otherwise its own row, a minor for its field.
