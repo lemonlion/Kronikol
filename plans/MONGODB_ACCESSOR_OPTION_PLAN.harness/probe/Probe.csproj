@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- net8.0 and MongoDB.Driver 2.30.0 are what #136 was found on -->
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- 4.9.0 measures the issue as it stands: the MongoDB extension and TestInfoResolver are unchanged since 4.6.0,
+         the version #136 was filed on. A local build of the fix: -p:KronikolVersion=<version> with a local feed. -->
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">4.9.0</KronikolVersion>
+    <DefineConstants Condition="'$(AccessorOption)' == 'true'">$(DefineConstants);ACCESSOR_OPTION</DefineConstants>
+  </PropertyGroup>
+  <!-- -p:Driver=3 measures Kronikol.Extensions.MongoDB on MongoDB.Driver 3.x instead (same source, other package) -->
+  <ItemGroup Condition="'$(Driver)' != '3'">
+    <PackageReference Include="Kronikol.Extensions.MongoDB.V2" Version="$(KronikolVersion)" />
+    <PackageReference Include="MongoDB.Driver" Version="2.30.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Driver)' == '3'">
+    <PackageReference Include="Kronikol.Extensions.MongoDB" Version="$(KronikolVersion)" />
+    <PackageReference Include="MongoDB.Driver" Version="3.*" />
+  </ItemGroup>
+</Project>

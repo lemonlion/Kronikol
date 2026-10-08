@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.10.0] - 2026-10-08
+
+**Minor - MongoDB tracking takes an `IHttpContextAccessor` through its options (#136).**
+`plans/MONGODB_ACCESSOR_OPTION_PLAN.md` R1. `MongoDbTrackingOptions.HttpContextAccessor` is new public surface, so the
+minor part moves (4.9.1 to 4.10.0). Code that does not set it behaves as before, and the report output does not change,
+so Kronikol4J's ledger gets no line. The history action's `VERSION` installs `Kronikol.Tool` 4.10.0, and the templates
+pin 4.9.1.
+
+### Added
+
+- **`MongoDbTrackingOptions.HttpContextAccessor`**, in `Kronikol.Extensions.MongoDB` and `Kronikol.Extensions.MongoDB.V2`.
+  `MongoClientSettings.WithTestTracking` hands it to the subscriber it builds, so the commands a host runs while it
+  serves a request land in the scenario the request's headers name, as the HTTP, gRPC, BigQuery and Cloud Storage
+  options already allowed. Pass the host's own accessor (`sp.GetService<IHttpContextAccessor>()`): ASP.NET Core fills
+  one only in a host that registers it, which `TrackDependenciesForDiagrams` does. Measured on 4.9.0 in TestServer
+  hosts with MongoDB.Driver 2.30.0 and 3.12.0 against MongoDB 7.0: through `WithTestTracking`, a host's commands were
+  lost unless the host registered `AddTestTrackingContextPropagation()`, and went to a test id no scenario has when the
+  fetcher answered one outside a test (#133). With the host's accessor in the options, all 8 commands landed in their
+  scenarios in each of the six configurations, on both drivers. An accessor passed to the `MongoDbTrackingSubscriber`
+  constructor still takes precedence, and `AddMongoDbTestTracking` now uses the options' accessor before the container's.
+
+### Documentation
+
+- The eight `MongoDbTrackingOptions` members that had no XML doc have one. `WithTestTracking`,
+  `AddMongoDbTestTracking` and the subscriber's constructor document their parameters. `AddMongoDbTestTracking` says
+  that the subscriber it registers records nothing until a client subscribes it, and shows the line that does.
+  `CurrentStepTypeFetcher` says that the MongoDB subscriber does not read it.
+- The wiki's MongoDB page names `Kronikol.Extensions.MongoDB.V2` for MongoDB.Driver 2.x (#142, item 6). Its
+  WebApplicationFactory setup passes the host's accessor, and it no longer calls `AddMongoDbTestTracking` "the simplest
+  approach": on its own, that recorded nothing.
+
+### Tests
+
+- A host lane: `MongoDbHostAttributionTests` starts a TestServer host that wires tracking through `WithTestTracking`,
+  against a real MongoDB (the server `KRONIKOL_TEST_MONGO` names, or one Testcontainers starts), in both MongoDB test
+  projects. Its four scenarios' eight commands land in their own scenarios through the request headers; without the
+  accessor they went to the fetcher's test.
+- `WithTestTracking_PreservesExistingClusterConfigurator` asserted only that the configurator was replaced, so it
+  passed with the earlier configurator dropped. It now runs the configurator and asserts the earlier one ran.
+- The MongoDB test classes that read or clear the process-wide `TrackingComponentRegistry` share one collection, so a
+  class clearing it can no longer run beside one reading it.
+
 ## [4.9.1] - 2026-10-07
 
 **Patch - the warm-up's tooltip and its call names read as the rest of the report does (#113).**

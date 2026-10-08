@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Kronikol.Extensions.MongoDB;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.MongoDB;
 
+// Clears the process-wide TrackingComponentRegistry, which other classes read: they share one collection.
+[Collection("TestCorrelationStore")]
 public class MongoDbServiceCollectionExtensionsTests : IDisposable
 {
     public MongoDbServiceCollectionExtensionsTests()
@@ -63,5 +66,38 @@ public class MongoDbServiceCollectionExtensionsTests : IDisposable
         var result = services.AddMongoDbTestTracking();
 
         Assert.Same(services, result);
+    }
+
+    [Fact]
+    public void AddMongoDbTestTracking_prefers_the_options_accessor_to_the_containers()
+    {
+        var optionsTestId = Guid.NewGuid().ToString();
+        var containerTestId = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddSingleton<IHttpContextAccessor>(HeaderAccessor.For("Container Test", containerTestId));
+        services.AddMongoDbTestTracking(o => o.HttpContextAccessor = HeaderAccessor.For("Options Test", optionsTestId));
+
+        var subscriber = services.BuildServiceProvider().GetRequiredService<MongoDbTrackingSubscriber>();
+        subscriber.OnCommandStarted(HeaderAccessor.FindStarted());
+
+        var log = Assert.Single(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == optionsTestId);
+        Assert.Equal(AttributionSource.RequestHeader, log.AttributionSource);
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == containerTestId);
+    }
+
+    [Fact]
+    public void AddMongoDbTestTracking_uses_the_containers_accessor_when_the_options_carry_none()
+    {
+        var containerTestId = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddSingleton<IHttpContextAccessor>(HeaderAccessor.For("Container Test", containerTestId));
+        services.AddMongoDbTestTracking();
+
+        var subscriber = services.BuildServiceProvider().GetRequiredService<MongoDbTrackingSubscriber>();
+        subscriber.OnCommandStarted(HeaderAccessor.FindStarted());
+
+        Assert.True(subscriber.HasHttpContextAccessor);
+        var log = Assert.Single(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == containerTestId);
+        Assert.Equal(AttributionSource.RequestHeader, log.AttributionSource);
     }
 }

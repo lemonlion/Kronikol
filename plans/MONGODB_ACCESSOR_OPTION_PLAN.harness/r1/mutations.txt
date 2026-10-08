@@ -1,0 +1,26 @@
+M1 (the subscriber ignores the options' accessor): CAUGHT
+  expected red: Subscriber_reads_HttpContextAccessor_from_options_when_not_passed_directly, WithTestTracking_passes_the_options_accessor_to_its_subscriber, A_hosts_commands_land_in_the_scenario_its_request_names
+  red: A_hosts_commands_land_in_the_scenario_its_request_names, Subscriber_reads_HttpContextAccessor_from_options_when_not_passed_directly, WithTestTracking_passes_the_options_accessor_to_its_subscriber
+  Failed!  - Failed:     3, Passed:   174, Skipped:     0, Total:   177, Duration: 565 ms - Kronikol.Tests.MongoDB.dll (net10.0)
+M2 (the options' accessor outranks the constructor's): CAUGHT
+  expected red: Subscriber_explicit_accessor_takes_precedence_over_options
+  red: Subscriber_explicit_accessor_takes_precedence_over_options
+  Failed!  - Failed:     1, Passed:   176, Skipped:     0, Total:   177, Duration: 579 ms - Kronikol.Tests.MongoDB.dll (net10.0)
+M3 (WithTestTracking drops the earlier configurator): CAUGHT
+  expected red: WithTestTracking_PreservesExistingClusterConfigurator
+  red: WithTestTracking_PreservesExistingClusterConfigurator
+  Failed!  - Failed:     1, Passed:   176, Skipped:     0, Total:   177, Duration: 602 ms - Kronikol.Tests.MongoDB.dll (net10.0)
+M4 (AddMongoDbTestTracking prefers the container's accessor): CAUGHT
+  expected red: AddMongoDbTestTracking_prefers_the_options_accessor_to_the_containers
+  red: AddMongoDbTestTracking_prefers_the_options_accessor_to_the_containers
+  Failed!  - Failed:     1, Passed:   176, Skipped:     0, Total:   177, Duration: 503 ms - Kronikol.Tests.MongoDB.dll (net10.0)
+M5 (AddMongoDbTestTracking passes only the options' accessor): CAUGHT
+  expected red: AddMongoDbTestTracking_uses_the_containers_accessor_when_the_options_carry_none
+  red: AddMongoDbTestTracking_uses_the_containers_accessor_when_the_options_carry_none
+  Failed!  - Failed:     1, Passed:   176, Skipped:     0, Total:   177, Duration: 546 ms - Kronikol.Tests.MongoDB.dll (net10.0)
+M6 (WithTestTracking never subscribes its subscriber): CAUGHT
+  expected red: A_hosts_commands_land_in_the_scenario_its_request_names
+  red: A_hosts_commands_land_in_the_scenario_its_request_names
+  Failed!  - Failed:     1, Passed:   176, Skipped:     0, Total:   177, Duration: 528 ms - Kronikol.Tests.MongoDB.dll (net10.0)
+Restored tree: Passed!  - Failed:     0, Passed:   177, Skipped:     0, Total:   177, Duration: 481 ms - Kronikol.Tests.MongoDB.dll (net10.0)
+exit 0

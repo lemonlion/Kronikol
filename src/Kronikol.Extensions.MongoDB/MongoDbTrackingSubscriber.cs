@@ -20,10 +20,18 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
     private readonly ConcurrentDictionary<int, PendingOperation> _pending = new();
     private int _invocationCount;
 
+    /// <summary>
+    /// Creates a subscriber that tracks commands with <paramref name="options"/>.
+    /// </summary>
+    /// <param name="options">The tracking options.</param>
+    /// <param name="httpContextAccessor">
+    /// Resolves the scenario from the request headers when a command runs inside a host's request pipeline. Takes
+    /// precedence over <see cref="MongoDbTrackingOptions.HttpContextAccessor"/>, which is used when this is null.
+    /// </param>
     public MongoDbTrackingSubscriber(MongoDbTrackingOptions options, IHttpContextAccessor? httpContextAccessor = null)
     {
         _options = options;
-        _httpContextAccessor = httpContextAccessor;
+        _httpContextAccessor = httpContextAccessor ?? options.HttpContextAccessor;
         TrackingComponentRegistry.Register(this);
     }
 

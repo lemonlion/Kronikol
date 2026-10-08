@@ -13,6 +13,8 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <!-- A real MongoDB for the host lane (MongoDbHostAttributionTests), as Kronikol.Tests.TcpTap starts one. -->
+    <PackageReference Include="Testcontainers.MongoDb" Version="4.8.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.MongoDB.V2\Kronikol.Extensions.MongoDB.V2.csproj" />
@@ -23,5 +25,8 @@
     <Compile Include="..\Kronikol.Tests.MongoDB\MongoClientSettingsExtensionsTests.cs" Link="MongoClientSettingsExtensionsTests.cs" />
     <Compile Include="..\Kronikol.Tests.MongoDB\MongoDbServiceCollectionExtensionsTests.cs" Link="MongoDbServiceCollectionExtensionsTests.cs" />
     <Compile Include="..\Kronikol.Tests.MongoDB\ChangeStreamCorrelationTests.cs" Link="ChangeStreamCorrelationTests.cs" />
+    <Compile Include="..\Kronikol.Tests.MongoDB\HeaderAccessor.cs" Link="HeaderAccessor.cs" />
+    <Compile Include="..\Kronikol.Tests.MongoDB\MongoServerFixture.cs" Link="MongoServerFixture.cs" />
+    <Compile Include="..\Kronikol.Tests.MongoDB\MongoDbHostAttributionTests.cs" Link="MongoDbHostAttributionTests.cs" />
   </ItemGroup>
 </Project>

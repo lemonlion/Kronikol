@@ -1,0 +1,12 @@
+C:\Code\Kronikol-mongo136-impl\tests\Kronikol.Tests.MongoDB\Kronikol.Tests.MongoDB.csproj : warning NU1903: Package 'SSH.NET' 2024.2.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-mggc-4xg6-vcxf
+C:\Code\Kronikol-mongo136-impl\tests\Kronikol.Tests.MongoDB\Kronikol.Tests.MongoDB.csproj : warning NU1903: Package 'SSH.NET' 2024.2.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-q939-rpr3-3284
+C:\Code\Kronikol-mongo136-impl\tests\Kronikol.Tests.MongoDB\Kronikol.Tests.MongoDB.csproj : warning NU1903: Package 'SSH.NET' 2024.2.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-mggc-4xg6-vcxf
+C:\Code\Kronikol-mongo136-impl\tests\Kronikol.Tests.MongoDB\Kronikol.Tests.MongoDB.csproj : warning NU1903: Package 'SSH.NET' 2024.2.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-q939-rpr3-3284
+Test run for C:\Code\Kronikol-mongo136-impl\tests\Kronikol.Tests.MongoDB\bin\Debug\net10.0\Kronikol.Tests.MongoDB.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:04.05]     Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.Subscriber_reads_HttpContextAccessor_from_options_when_not_passed_directly [FAIL]
+[xUnit.net 00:00:04.39]     Kronikol.Tests.MongoDB.MongoClientSettingsExtensionsTests.WithTestTracking_passes_the_options_accessor_to_its_subscriber [FAIL]
+[xUnit.net 00:00:05.46]     Kronikol.Tests.MongoDB.MongoDbHostAttributionTests.A_hosts_commands_land_in_the_scenario_its_request_names [FAIL]
+[xUnit.net 00:00:05.47]     Kronikol.Tests.MongoDB.MongoDbServiceCollectionExtensionsTests.AddMongoDbTestTracking_prefers_the_options_accessor_to_the_containers [FAIL]
+
+Failed!  - Failed:     4, Passed:   173, Skipped:     0, Total:   177, Duration: 2 s - Kronikol.Tests.MongoDB.dll (net10.0)

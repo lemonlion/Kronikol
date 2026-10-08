@@ -6,6 +6,10 @@ namespace Kronikol.Extensions.MongoDB;
 /// </summary>
 public record MongoDbTrackingOptions
 {
+    /// <summary>
+    /// The participant name for the MongoDB server in diagrams, and the name the subscriber registers under.
+    /// Default: <c>"MongoDB"</c>.
+    /// </summary>
     public string ServiceName { get; set; } = "MongoDB";
 
     /// <summary>The participant name for the calling service in diagrams.</summary>
@@ -15,9 +19,33 @@ public record MongoDbTrackingOptions
     [Obsolete("Use CallerName instead. CallingServiceName will be removed in a future version.")]
     public string CallingServiceName { get => CallerName; set => CallerName = value; }
 
+    /// <summary>How much of each command the diagrams show. Default: <see cref="MongoDbTrackingVerbosity.Detailed"/>.</summary>
     public MongoDbTrackingVerbosity Verbosity { get; set; } = MongoDbTrackingVerbosity.Detailed;
+
+    /// <summary>
+    /// Callback that returns the current test name and ID, such as a framework adapter's <c>CurrentTestInfo.Fetcher</c>.
+    /// A command takes its scenario from the request headers first, when <see cref="HttpContextAccessor"/> sees a
+    /// request, and then from this callback.
+    /// </summary>
     public Func<(string Name, string Id)>? CurrentTestInfoFetcher { get; set; }
+
+    /// <summary>
+    /// Callback that returns the current test step type (e.g. "Given", "When", "Then"). The MongoDB subscriber does not
+    /// read it: <see cref="SetupVerbosity"/>, <see cref="ActionVerbosity"/>, <see cref="TrackDuringSetup"/> and
+    /// <see cref="TrackDuringAction"/> act on the phase <see cref="Kronikol.Tracking.TestPhaseContext"/> holds, which the
+    /// framework adapters set.
+    /// </summary>
     public Func<string?>? CurrentStepTypeFetcher { get; set; }
+
+    /// <summary>
+    /// Resolves the scenario from the test-tracking request headers when a command runs inside a host's request
+    /// pipeline (a host <c>WebApplicationFactory</c> starts, or any other host in the test process). Pass the host's own
+    /// (<c>sp.GetService&lt;IHttpContextAccessor&gt;()</c>): ASP.NET Core fills an accessor only in a host that registers
+    /// one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c> calls).
+    /// <see cref="MongoDbServiceCollectionExtensions.AddMongoDbTestTracking"/> uses the container's when this is null, and
+    /// an accessor passed to the <see cref="MongoDbTrackingSubscriber"/> constructor takes precedence.
+    /// </summary>
+    public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; set; }
 
     /// <summary>
     /// Commands to ignore (e.g., monitoring noise like "isMaster", "hello", "ping").
@@ -34,9 +62,17 @@ public record MongoDbTrackingOptions
     /// Disabled by default as they add noise.
     /// </summary>
     public bool TrackGetMore { get; set; } = false;
+
+    /// <summary>Verbosity override for the Setup phase. <c>null</c> = use <see cref="Verbosity"/>.</summary>
     public MongoDbTrackingVerbosity? SetupVerbosity { get; set; }
+
+    /// <summary>Verbosity override for the Action phase. <c>null</c> = use <see cref="Verbosity"/>.</summary>
     public MongoDbTrackingVerbosity? ActionVerbosity { get; set; }
+
+    /// <summary>When <c>false</c>, commands run during the Setup phase are not tracked. Default: <c>true</c>.</summary>
     public bool TrackDuringSetup { get; set; } = true;
+
+    /// <summary>When <c>false</c>, commands run during the Action phase are not tracked. Default: <c>true</c>.</summary>
     public bool TrackDuringAction { get; set; } = true;
 
     /// <summary>

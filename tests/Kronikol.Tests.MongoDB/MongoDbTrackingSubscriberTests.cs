@@ -429,6 +429,50 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         Assert.Contains(registered, c => c.ComponentName == subscriber.ComponentName);
     }
 
+    // ─── HttpContextAccessor (#136) ──────────────────────────
+
+    [Fact]
+    public void Subscriber_reads_HttpContextAccessor_from_options_when_not_passed_directly()
+    {
+        var headerTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = HeaderAccessor.For("Header Test", headerTestId);
+        var subscriber = new MongoDbTrackingSubscriber(options);
+
+        subscriber.OnCommandStarted(MakeStartedEvent("find"));
+
+        // The request's headers outrank the fetcher, which answers this class's own test.
+        var log = Assert.Single(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == headerTestId);
+        Assert.Equal("Header Test", log.TestName);
+        Assert.Equal(AttributionSource.RequestHeader, log.AttributionSource);
+        Assert.Empty(GetLogsFromThisTest());
+        Assert.True(subscriber.HasHttpContextAccessor);
+    }
+
+    [Fact]
+    public void Subscriber_explicit_accessor_takes_precedence_over_options()
+    {
+        var explicitTestId = Guid.NewGuid().ToString();
+        var optionsTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = HeaderAccessor.For("Options Test", optionsTestId);
+        var subscriber = new MongoDbTrackingSubscriber(options, HeaderAccessor.For("Explicit Test", explicitTestId));
+
+        subscriber.OnCommandStarted(MakeStartedEvent("find"));
+
+        var log = Assert.Single(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == explicitTestId);
+        Assert.Equal(AttributionSource.RequestHeader, log.AttributionSource);
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == optionsTestId);
+    }
+
+    [Fact]
+    public void Subscriber_has_no_accessor_when_neither_options_nor_parameter()
+    {
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
+
+        Assert.False(subscriber.HasHttpContextAccessor);
+    }
+
     // ─── ExcludedOperations ──────────────────────────────────
 
     [Fact]
