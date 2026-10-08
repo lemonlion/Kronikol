@@ -9,6 +9,12 @@ namespace Kronikol.Tracking;
 /// A <see cref="DelegatingHandler"/> that intercepts HTTP requests and responses,
 /// logging them as <see cref="RequestResponseLog"/> entries for inclusion in test sequence diagrams.
 /// This is the primary mechanism for tracking HTTP dependencies in tests.
+/// <para>
+/// Each request it sends carries the test identity in the four <see cref="TestTrackingHttpHeaders"/> (name, id, trace
+/// id and caller name), so a host that calls <c>AddTestTrackingContextPropagation()</c> attributes its own calls to
+/// the scenario. That holds on every hop: a handler in a host serving a request passes that request's identity and
+/// Kronikol trace id on. A header the request already carries is left as it is.
+/// </para>
 /// </summary>
 public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
 {
@@ -146,17 +152,24 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
 
         // Ensure trace context propagation for in-process (TestServer) scenarios
         // where no framework DiagnosticsHandler exists in the pipeline.
-        // When Activity.Current IS present, a framework handler (e.g.
-        // DiagnosticsHandler inside SocketsHttpHandler) will create a proper
-        // child Activity and inject traceparent itself — pre-empting it here
-        // would inject the PARENT's span ID, breaking AI SDK dependency
-        // correlation. We therefore only inject when no ambient Activity exists.
+        // When Activity.Current IS present and the transport is SocketsHttpHandler
+        // or HttpClientHandler, the framework's DiagnosticsHandler inside it will
+        // create a proper child Activity and inject traceparent itself — pre-empting
+        // it here would inject the PARENT's span ID, breaking AI SDK dependency
+        // correlation. Any other transport (TestServer's in-memory handler) has no
+        // such handler, and without a traceparent the called host's spans would
+        // leave the caller's trace, so the current span's goes on the request then.
         string? activityTraceId;
         string? activitySpanId;
-        if (Activity.Current != null)
+        if (Activity.Current is { } current)
         {
-            activityTraceId = Activity.Current.TraceId.ToString();
-            activitySpanId = Activity.Current.SpanId.ToString();
+            activityTraceId = current.TraceId.ToString();
+            activitySpanId = current.SpanId.ToString();
+            if (!request.Headers.Contains("traceparent") && !TransportPropagatesTraceContext())
+            {
+                request.Headers.TryAddWithoutValidation("traceparent",
+                    $"00-{activityTraceId}-{activitySpanId}-{(current.Recorded ? "01" : "00")}");
+            }
         }
         else
         {
@@ -178,9 +191,6 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         StringValues currentTestIdHeaders = new();
         var hasCurrentTestIdHeader = false;
 
-        StringValues callerNameHeaders = new();
-        var hasCallerNameHeader = false;
-
         StringValues traceIdHeaders = new();
         var hasTraceIdHeader = false;
 
@@ -189,7 +199,6 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             hasTraceIdHeader = _httpContextAccessor.HttpContext.Request.Headers.TryGetValue(TestTrackingHttpHeaders.TraceIdHeader, out traceIdHeaders);
             hasCurrentTestNameHeader = _httpContextAccessor.HttpContext.Request.Headers.TryGetValue(TestTrackingHttpHeaders.CurrentTestNameHeader, out currentTestNameHeaders);
             hasCurrentTestIdHeader = _httpContextAccessor.HttpContext.Request.Headers.TryGetValue(TestTrackingHttpHeaders.CurrentTestIdHeader, out currentTestIdHeaders);
-            hasCallerNameHeader = _httpContextAccessor.HttpContext.Request.Headers.TryGetValue(TestTrackingHttpHeaders.CallerNameHeader, out callerNameHeaders);
         }
 
         // Resolve test info once. A request that carries the scenario's own headers is that scenario's
@@ -211,17 +220,14 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         // A trace id another tool wrote in some other form must not fail the application's call.
         var traceId = hasTraceIdHeader && Guid.TryParse(traceIdHeaders.First(), out var inboundTraceId) ? inboundTraceId : Guid.NewGuid();
 
-        if (!hasTraceIdHeader)
-            request.Headers.Add(TestTrackingHttpHeaders.TraceIdHeader, new[] { traceId.ToString() });
-
-        if (!hasCurrentTestNameHeader)
-            request.Headers.Add(TestTrackingHttpHeaders.CurrentTestNameHeader, new[] { TrackingHeaderValue.Encode(currentTestInfo.Name) });
-
-        if (!hasCurrentTestIdHeader)
-            request.Headers.Add(TestTrackingHttpHeaders.CurrentTestIdHeader, new[] { TrackingHeaderValue.Encode(currentTestInfo.Id) });
-
-        if (!hasCallerNameHeader)
-            request.Headers.Add(TestTrackingHttpHeaders.CallerNameHeader, new[] { TrackingHeaderValue.Encode(_callerName!) });
+        // The identity goes on every outgoing request, whether this handler resolved it or took it from the request the
+        // host is serving, so a host passes its scenario on to the next host as the gRPC interceptor does. Each header
+        // is added only when the request lacks it: one the caller set, or that HeadersToForward copied, is left as it
+        // is, and a request sent again (a retry) is not stamped twice.
+        AddIfAbsent(request, TestTrackingHttpHeaders.TraceIdHeader, traceId.ToString());
+        AddIfAbsent(request, TestTrackingHttpHeaders.CurrentTestNameHeader, TrackingHeaderValue.Encode(currentTestInfo.Name));
+        AddIfAbsent(request, TestTrackingHttpHeaders.CurrentTestIdHeader, TrackingHeaderValue.Encode(currentTestInfo.Id));
+        AddIfAbsent(request, TestTrackingHttpHeaders.CallerNameHeader, TrackingHeaderValue.Encode(_callerName));
 
         var serviceName = ResolveServiceName(request.RequestUri!.Port);
 
@@ -337,6 +343,24 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             if (contextHeaders.TryGetValue(header, out var value))
                 request.Headers.Add(header, (IEnumerable<string?>)value);
         }
+    }
+
+    /// <summary>
+    /// Whether the transport at the end of this handler's chain injects the trace context itself: SocketsHttpHandler,
+    /// and HttpClientHandler on top of it, run the framework's DiagnosticsHandler.
+    /// </summary>
+    private bool TransportPropagatesTraceContext()
+    {
+        HttpMessageHandler? handler = InnerHandler;
+        while (handler is DelegatingHandler delegating)
+            handler = delegating.InnerHandler;
+        return handler is SocketsHttpHandler or HttpClientHandler;
+    }
+
+    private static void AddIfAbsent(HttpRequestMessage request, string name, string? value)
+    {
+        if (value is not null && !request.Headers.Contains(name))
+            request.Headers.Add(name, value);
     }
 
     private void InjectImplicitActionStartIfNeeded(TestIdentity currentTestInfo)

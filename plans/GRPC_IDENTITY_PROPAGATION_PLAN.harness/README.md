@@ -98,8 +98,16 @@ Each release's proofs, added as it was made:
   compile; neither stub does anything. Output: `r1/red-v4.12.1.txt` and `r1/mutations.txt`.
 - `r2/red.sh` and `r2/mutate.py`, the same for R2, with nothing stubbed: R2's facts use only public members. Output:
   `r2/red-v4.13.0.txt` and `r2/mutations.txt`.
-- `r1/suite.txt` and `r2/suite.txt`: `suite.sh` on each release's commit before its rebase, and `r1/rebased-check.txt` and
-  `r2/rebased-check.txt` the Release build and the projects the rebase could touch, on the commit that was pushed.
-- `results/accept/breakfastprovider-r0.txt`, `-r1.txt` and `-r2.txt`: BreakfastProvider's xUnit and ReqNRoll
+- `r3/red.sh` and `r3/mutate.py`, the same for R3, with nothing stubbed. Output: `r3/red-v4.13.2.txt` and
+  `r3/mutations.txt`. `r3/listener-red.txt` and `r3/listener-green.txt`: the listener facts on R3's code before and after
+  the `EnsureStarted` fix, with only the `IsStarted` probe added before it, which changes nothing.
+- `r4/probe/`, an MSTest project on the published packages (`-p:KronikolVersion=`), with three `[DataRow]`s, the second
+  failing, a test with a `DisplayName` and no data, two `[DynamicData]` rows, and two methods whose one row each has the
+  same `DisplayName` of its own, one failing; `r4/probe-<version>.txt` holds what `dotnet test` printed and the report as
+  its `query.cs` reads it.
+- `r1/suite.txt`, `r2/suite.txt` and `r3/suite.txt`: `suite.sh` on each release's commit before its rebase, and
+  `r1/rebased-check.txt`, `r2/rebased-check.txt` and `r3/rebased-check.txt` the Release build and the projects the
+  rebase could touch, on the commit that was pushed.
+- `results/accept/breakfastprovider-r0.txt`, `-r1.txt`, `-r2.txt` and `-r3.txt`: BreakfastProvider's xUnit and ReqNRoll
   lanes on each release's local packages, compared with the release before, and `breakfastprovider-grpc-flows-4.11.0.txt`
   the four gRPC scenarios before R1.

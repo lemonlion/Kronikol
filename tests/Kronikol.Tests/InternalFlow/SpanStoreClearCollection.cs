@@ -1,7 +1,8 @@
 namespace Kronikol.Tests.InternalFlow;
 
 /// <summary>
-/// Tests that clear <see cref="Kronikol.InternalFlow.InternalFlowSpanStore"/> run here, after every parallel collection.
+/// Tests that clear <see cref="Kronikol.InternalFlow.InternalFlowSpanStore"/>, or reset the process-wide
+/// <see cref="Kronikol.InternalFlow.InternalFlowActivityListener"/>, run here, after every parallel collection.
 /// </summary>
 /// <remarks>
 /// The store is one per process, and every report a test generates with internal flow on reads it. A clear made while

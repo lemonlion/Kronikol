@@ -813,7 +813,7 @@ public class TestTrackingMessageHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Uses_caller_name_from_http_context_when_header_present()
+    public async Task Sends_its_own_caller_name_on_a_hop_whatever_the_request_being_served_named()
     {
         var accessor = CreateHttpContextAccessor(
             (TestTrackingHttpHeaders.CallerNameHeader, "UpstreamCaller"),
@@ -823,13 +823,9 @@ public class TestTrackingMessageHandlerTests : IDisposable
 
         await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
 
-        // When caller name header is present, it does NOT add a new one to the outgoing request
-        // (the hasCallerNameHeader flag suppresses the add)
-        var callerHeaders = _innerHandler.CapturedRequest!.Headers
-            .Where(h => h.Key == TestTrackingHttpHeaders.CallerNameHeader)
-            .SelectMany(h => h.Value)
-            .ToList();
-        Assert.DoesNotContain("TestCaller", callerHeaders);
+        // The next host's caller is this host (before R3 of plans/GRPC_IDENTITY_PROPAGATION_PLAN.md a hop sent no caller
+        // name at all when the request being served carried one, and no identity either).
+        Assert.Equal(["TestCaller"], _innerHandler.CapturedRequest!.Headers.GetValues(TestTrackingHttpHeaders.CallerNameHeader));
     }
 
     [Fact]
@@ -967,10 +963,13 @@ public class TestTrackingMessageHandlerTests : IDisposable
         Assert.Equal("created-item", body);
     }
 
-    // ─── Context headers suppress adding new ones ───────────────
+    // ─── A hop passes the identity of the request being served on ──
+    // Before R3 of the gRPC identity plan the handler added the identity only when the request the host was serving
+    // lacked it, so a host's own HTTP calls carried none unless HeadersToForward named them, and a third host recorded
+    // its calls under no scenario (plans/GRPC_IDENTITY_PROPAGATION_PLAN.md F8 and Q1).
 
     [Fact]
-    public async Task Does_not_add_test_name_header_when_already_in_context()
+    public async Task Passes_on_the_test_name_of_the_request_being_served()
     {
         var accessor = CreateHttpContextAccessor(
             (TestTrackingHttpHeaders.CurrentTestNameHeader, "Existing Name"),
@@ -979,32 +978,48 @@ public class TestTrackingMessageHandlerTests : IDisposable
 
         await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
 
-        // When context has the header, the handler skips adding it to the outgoing request.
-        // The header from context is NOT auto-forwarded to HttpRequestMessage headers
-        // (unless explicitly listed in HeadersToForward), so it won't appear.
-        Assert.False(_innerHandler.CapturedRequest!.Headers.Contains(TestTrackingHttpHeaders.CurrentTestNameHeader));
-
-        // But the log still uses the value from context
+        Assert.Equal(["Existing Name"], _innerHandler.CapturedRequest!.Headers.GetValues(TestTrackingHttpHeaders.CurrentTestNameHeader));
         var requestLog = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Request);
         Assert.Equal("Existing Name", requestLog.TestName);
     }
 
     [Fact]
-    public async Task Does_not_add_test_id_header_when_already_in_context()
+    public async Task Passes_on_the_test_id_and_trace_id_of_the_request_being_served()
+    {
+        var inboundTraceId = Guid.NewGuid();
+        var accessor = CreateHttpContextAccessor(
+            (TestTrackingHttpHeaders.CurrentTestNameHeader, "Test"),
+            (TestTrackingHttpHeaders.CurrentTestIdHeader, _testId),
+            (TestTrackingHttpHeaders.TraceIdHeader, inboundTraceId.ToString()));
+        using var invoker = CreateInvoker(DefaultOptions(), accessor);
+
+        await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
+
+        Assert.Equal([_testId], _innerHandler.CapturedRequest!.Headers.GetValues(TestTrackingHttpHeaders.CurrentTestIdHeader));
+        Assert.Equal([inboundTraceId.ToString()], _innerHandler.CapturedRequest!.Headers.GetValues(TestTrackingHttpHeaders.TraceIdHeader));
+        var requestLog = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Request);
+        Assert.Equal(_testId, requestLog.TestId);
+        Assert.Equal(inboundTraceId, requestLog.TraceId);
+    }
+
+    [Fact]
+    public async Task Leaves_identity_headers_the_request_already_carries_and_stamps_a_resent_request_once()
     {
         var accessor = CreateHttpContextAccessor(
             (TestTrackingHttpHeaders.CurrentTestNameHeader, "Test"),
             (TestTrackingHttpHeaders.CurrentTestIdHeader, _testId));
         using var invoker = CreateInvoker(DefaultOptions(), accessor);
+        var request = MakeGetRequest();
+        request.Headers.Add(TestTrackingHttpHeaders.CurrentTestNameHeader, "Set by the caller");
 
-        await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
+        await invoker.SendAsync(request, CancellationToken.None);
+        await invoker.SendAsync(request, CancellationToken.None); // a retry handler outside sends the same message again
 
-        // Same as test name: context header suppresses adding, but isn't auto-forwarded
-        Assert.False(_innerHandler.CapturedRequest!.Headers.Contains(TestTrackingHttpHeaders.CurrentTestIdHeader));
-
-        // But the log still uses the value from context
-        var requestLog = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Request);
-        Assert.Equal(_testId, requestLog.TestId);
+        var sent = _innerHandler.CapturedRequest!.Headers;
+        Assert.Equal(["Set by the caller"], sent.GetValues(TestTrackingHttpHeaders.CurrentTestNameHeader));
+        Assert.Single(sent.GetValues(TestTrackingHttpHeaders.CurrentTestIdHeader));
+        Assert.Single(sent.GetValues(TestTrackingHttpHeaders.TraceIdHeader));
+        Assert.Single(sent.GetValues(TestTrackingHttpHeaders.CallerNameHeader));
     }
 
     // ─── Port-based service name with multiple mappings ─────────
@@ -1702,20 +1717,51 @@ public class TestTrackingMessageHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Traceparent_uses_existing_activity_current_when_present()
+    public async Task Traceparent_carries_the_current_span_when_the_transport_injects_none()
     {
+        // A transport with no DiagnosticsHandler (TestServer's in-memory handler; here the stub) would send no
+        // traceparent at all, and the called host's spans would leave the caller's trace. Until the gRPC identity
+        // plan's R3 the handler sent none whenever an Activity was current (plans/GRPC_IDENTITY_PROPAGATION_PLAN.md
+        // section 8, measured as P8).
         using var invoker = CreateInvoker(DefaultOptions());
+        using var existingActivity = new Activity("ExistingTest");
+        existingActivity.SetIdFormat(ActivityIdFormat.W3C);
+        existingActivity.ActivityTraceFlags = ActivityTraceFlags.Recorded;
+        existingActivity.Start();
+
+        await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
+
+        Assert.Equal([$"00-{existingActivity.TraceId}-{existingActivity.SpanId}-01"], _innerHandler.CapturedRequest!.Headers.GetValues("traceparent"));
+        existingActivity.Stop();
+    }
+
+    [Fact]
+    public async Task Traceparent_is_left_to_the_framework_when_the_transport_is_SocketsHttpHandler()
+    {
+        // SocketsHttpHandler runs the framework's DiagnosticsHandler, which makes a child span and injects its own
+        // traceparent; injecting the parent's here would break App Insights' dependency correlation.
+        var capture = new CapturingDelegatingHandler { InnerHandler = new SocketsHttpHandler() };
+        using var invoker = new HttpMessageInvoker(new TestTrackingMessageHandler(DefaultOptions()) { InnerHandler = capture });
         using var existingActivity = new Activity("ExistingTest");
         existingActivity.SetIdFormat(ActivityIdFormat.W3C);
         existingActivity.Start();
 
         await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
 
-        // When an ambient Activity exists, TTD should NOT inject traceparent —
-        // the framework's own DiagnosticsHandler handles trace propagation.
-        Assert.False(_innerHandler.CapturedRequest!.Headers.Contains("traceparent"));
-
+        Assert.False(capture.CapturedRequest!.Headers.Contains("traceparent"));
         existingActivity.Stop();
+    }
+
+    /// <summary>Answers without calling its inner handler, so the chain can end in a real transport that is never used.</summary>
+    private sealed class CapturingDelegatingHandler : DelegatingHandler
+    {
+        public HttpRequestMessage? CapturedRequest { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            CapturedRequest = request;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("ok") });
+        }
     }
 
     [Fact]

@@ -737,6 +737,9 @@ public class HistoryLedgerTests : IDisposable
         File.WriteAllText(LedgerPath, builder.ToString());
 
         HistoryLedgerReader.Read(LedgerPath, 50); // warm
+        // Measured now, beside the reads: other suites on this machine slow both alike (ContentionScale).
+        var stretch = ContentionScale.Measure();
+        var budget = 1500 * stretch;
         // The fastest of three reads, not one read. The budget is here to catch a regression to "parse the
         // whole ledger", which is a property of the reader and shows in every read; a single wall-clock
         // sample in a parallel suite also measures whatever else this machine was doing, and measured
@@ -754,6 +757,6 @@ public class HistoryLedgerTests : IDisposable
 
         Assert.Equal(50, read.Ledger!.Runs("Suite").Count);
         Assert.True(read.Ledger.Stats.LinesParsed <= 51, $"parsed {read.Ledger.Stats.LinesParsed}");
-        Assert.True(elapsed < 1500, $"the fastest of three reads took {elapsed} ms (budget is generous here; the measured figure is ~100 ms)");
+        Assert.True(elapsed < budget, $"the fastest of three reads took {elapsed} ms against {budget:F0} (1,500 stretched {stretch:F2} times by this machine's load; the measured figure is ~100 ms)");
     }
 }

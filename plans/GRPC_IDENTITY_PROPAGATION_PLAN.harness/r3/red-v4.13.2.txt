@@ -1,0 +1,22 @@
+=== tests/Kronikol.Tests :: FullyQualifiedName~HttpHopTests|FullyQualifiedName~TestTrackingMessageHandlerTests|FullyQualifiedName~HttpContextAccessorOptionsTests
+Build succeeded.
+  Failed Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Passes_on_the_test_id_and_trace_id_of_the_request_being_served [6 ms]
+  Error Message:
+   System.InvalidOperationException : The given header was not found.
+  Failed Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Traceparent_carries_the_current_span_when_the_transport_injects_none [1 ms]
+  Error Message:
+   System.InvalidOperationException : The given header was not found.
+  Failed Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Sends_its_own_caller_name_on_a_hop_whatever_the_request_being_served_named [< 1 ms]
+  Error Message:
+   System.InvalidOperationException : The given header was not found.
+  Failed Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Leaves_identity_headers_the_request_already_carries_and_stamps_a_resent_request_once [4 ms]
+  Error Message:
+   System.InvalidOperationException : The given header was not found.
+  Failed Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Passes_on_the_test_name_of_the_request_being_served [< 1 ms]
+  Error Message:
+   System.InvalidOperationException : The given header was not found.
+  Failed Kronikol.Tests.Tracking.HttpHopTests.The_third_host_in_an_HTTP_chain_records_its_calls_under_the_scenario [141 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+Failed!  - Failed:     6, Passed:   115, Skipped:     0, Total:   121, Duration: 650 ms - Kronikol.Tests.dll (net10.0)
+=== done

@@ -1,0 +1,5 @@
+kronikol 4.13.3-local.r3+4fe00a78f692208ae3dfac9b13fc65aaac807270 probe=attribution variant=httpchain-noaccessor
+B saw (test id|test name|traceparents): id-1|Scenario one|00-2feea1a8a15a8a52841190ae6cbc3d3e-0737bdccdecd86c1-00
+  Test       -> Service A  test=id-1     source=TestContext
+  Service A  -> Service B  test=id-1     source=Scope
+  Service B  -> Stub C     test=id-1     source=RequestHeader

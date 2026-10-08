@@ -4,6 +4,64 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.14.3] - 2026-10-08
+
+**Patch - every HTTP hop carries the test identity and the trace (#134 follow-up).**
+`plans/GRPC_IDENTITY_PROPAGATION_PLAN.md` R3: the plan's question 1, which the owner settled as recommended, and the
+first finding of its section 8, and a race found while releasing 4.13.2. Bug fixes with no new surface, so the patch
+part moves (4.14.2 to 4.14.3); they change what a host sends downstream, called out below. The history action's `VERSION`
+installs `Kronikol.Tool` 4.14.3, and the templates pin 4.14.2.
+
+### Fixed
+
+- **A host's own HTTP calls carried no test identity.** `TestTrackingMessageHandler` added the four `test-tracking-*`
+  headers only when the request the host was serving lacked them, so a handler holding an accessor, which every
+  handler the DI filter builds does, sent none on a hop unless `HeadersToForward` named them. In a chain test, A, B, C,
+  host B's calls were recorded under no scenario (measured on 4.9.0 in TestServer hosts, the plan's P8). The handler
+  now puts the identity, and the Kronikol trace id, of the request being served on every request it sends, as the
+  gRPC interceptor does since 4.13.0 and as Kronikol4J's HTTP clients always did. The caller name it sends is its own,
+  the next host's caller. The wiki's `Tracking-Dependencies` and `Integration-Playwright` pages described this already.
+  Behaviour change: a host's downstream HTTP calls now carry the four headers, as the test's own calls always did.
+- **A header the request already carried was added a second time,** and a request sent again (a retry handler outside
+  Kronikol's sends the same message) was stamped twice, so the next host read a joined value. Each header is now added
+  only when the request lacks it.
+- **An HTTP call made from inside a host on TestServer carried no `traceparent`,** so the called host's server span,
+  and every call made under it, started a new trace, and `kronikol query trace` and the internal-flow view broke at each
+  in-process hop. The handler left the header to the framework's `DiagnosticsHandler` whenever a span was current, and
+  TestServer's in-memory handler has none. It now sends the current span's `traceparent` when its chain ends in any
+  handler other than `SocketsHttpHandler` or `HttpClientHandler`. Over those two, the framework still makes the child
+  span and injects its own, which Application Insights' dependency correlation relies on.
+- **A span started as a run began could go unrecorded.** When two calls started the process-wide activity listener at
+  once, `InternalFlowActivityListener.EnsureStarted` returned to the second as soon as it saw the first had begun,
+  before the listener was registered, so the span the second started next was not sampled: its call was logged with a
+  trace id no span carried, and the internal-flow view had nothing under it. A gRPC fact failed this way on 4.13.1's
+  and 4.14.1's CI. A caller now waits until the listener is registered, for at most a second, still without taking a lock
+  (#70).
+### Documentation
+
+- `TestTrackingMessageHandler`'s summary says what it sends, and `HeadersToForward` says the identity headers need not
+  be listed.
+
+### Tests
+
+- `HttpHopTests` runs a three-host chain on TestServer: the third host's call is the scenario's, through the request
+  headers, with one Kronikol trace id across the chain. The two facts that pinned "does not add the header when the
+  request being served has it" and one that pinned no caller name on a hop now pin the hop's identity, trace id and
+  caller name, and a fact sends one request twice.
+- The fact that an accessor passed to the handler's constructor wins over the options' one asserted only that the
+  handler was made. It now gives each accessor a request from a different scenario and reads which one the logged call
+  belongs to.
+- `InternalFlowActivityListenerStartTests` starts the listener from eight threads at once, fifty times, and finds it
+  registered whenever a call returns. Its facts, and #70's, which moves there, reset the process-wide listener, so they
+  run in `SpanStoreClearCollection` after every parallel class (#70's ran beside them), and `ProcessGlobalStoreTests`
+  keeps every reset there.
+- `CultureInvariantPipelineTests` compares two runs of the whole pipeline, and the component diagram draws every call
+  the process logged, so a call another class logged between the two runs failed it, as it did once under ar-SA in a
+  full run of the core suite. It now runs alone, in `WholeRunComparisonCollection`.
+- `HistoryLedgerTests`' 1,500 ms read budget failed at 1,795 and 2,372 ms while other suites ran on the same machine,
+  for a read that takes about 100 ms alone, and `RelationshipStatsTests`' 2,000 ms budget at 3,601 ms. A probe of the
+  machine's load now stretches both, at most five times, as the Playwright project's render budgets are
+  (`ContentionScale`), and the stats fact takes the fastest of three runs, as the ledger's does.
 ## [4.14.2] - 2026-10-08
 
 **Patch - MSTest keeps a data row's method in its scenario id when the row has a display name of its own, and a class that

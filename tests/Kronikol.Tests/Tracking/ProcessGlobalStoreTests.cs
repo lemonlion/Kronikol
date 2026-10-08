@@ -113,6 +113,35 @@ public class ProcessGlobalStoreTests
     }
 
     /// <summary>
+    /// <c>InternalFlowActivityListener.ResetForTesting</c> disposes the one listener every handler and gRPC interceptor
+    /// starts, and each of them starts it once, on first use: a class running in parallel whose handler had started it
+    /// records no span from the reset until another handler starts it again. A test that resets it runs in
+    /// <see cref="InternalFlow.SpanStoreClearCollection"/>, as a test that clears the store does.
+    /// </summary>
+    [Fact]
+    public void No_test_resets_the_process_wide_activity_listener_while_other_classes_are_recording_spans()
+    {
+        var resetters = Directory.EnumerateFiles(TestsRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")
+                        && !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .Select(f => (Path: f, Code: WithoutComments(File.ReadAllText(f))))
+            .Where(s => Regex.IsMatch(s.Code, @"\bInternalFlowActivityListener\s*\.\s*ResetForTesting\s*\("))
+            .ToList();
+        // Not vacuous: the listener's start has facts that reset it.
+        Assert.NotEmpty(resetters);
+
+        var offenders = resetters
+            .Where(s => !Regex.IsMatch(s.Code, @"\[Collection\(SpanStoreClearCollection\.Name\)\]"))
+            .Select(s => Path.GetRelativePath(TestsRoot, s.Path).Replace('\\', '/'))
+            .OrderBy(p => p, StringComparer.Ordinal)
+            .ToList();
+        Assert.True(offenders.Count == 0,
+            "these test sources reset the process-wide activity listener outside SpanStoreClearCollection, while classes "
+            + "running in parallel rely on it to record their spans: " + string.Join(", ", offenders)
+            + ". Make a listener of the test's own, or put the class in [Collection(SpanStoreClearCollection.Name)].");
+    }
+
+    /// <summary>
     /// <c>DefaultDiagramsFetcher</c> keeps the diagrams it draws for the life of the process, whatever logs the next
     /// report is given, and an ingest resets it before drawing its own. A report generated in a parallel collection
     /// could read the log before an ingest replayed its run and keep what it drew after the ingest's reset, and the
@@ -131,14 +160,22 @@ public class ProcessGlobalStoreTests
             .ToList();
         Assert.True(drawers.Count >= 10, $"the scan found {drawers.Count} classes that draw diagrams, too few for it to be looking at the right thing");
 
+        // A class in WholeRunComparisonCollection runs alone, so no ingest resets the cache while it draws.
         var elsewhere = drawers
-            .Where(s => !Regex.IsMatch(s.Code, @"\[Collection\(""DiagramsFetcher""\)\]"))
+            .Where(s => !Regex.IsMatch(s.Code, @"\[Collection\((?:""DiagramsFetcher""|(?:Reports\.)?WholeRunComparisonCollection\.Name)\)\]"))
             .Select(s => Path.GetRelativePath(TestsRoot, s.Path).Replace('\\', '/'))
             .OrderBy(p => p, StringComparer.Ordinal)
             .ToList();
         Assert.True(elsewhere.Count == 0,
             "these test sources draw diagrams through the process-wide cache outside the DiagramsFetcher collection, "
-            + "where an ingest resets it: " + string.Join(", ", elsewhere) + ". Put the class in [Collection(\"DiagramsFetcher\")].");
+            + "where an ingest resets it: " + string.Join(", ", elsewhere) + ". Put the class in [Collection(\"DiagramsFetcher\")], "
+            + "or, when it compares whole runs, in [Collection(WholeRunComparisonCollection.Name)].");
+
+        var alone = typeof(Reports.WholeRunComparisonCollection)
+            .GetCustomAttributes(typeof(CollectionDefinitionAttribute), false)
+            .Cast<CollectionDefinitionAttribute>()
+            .Single();
+        Assert.True(alone.DisableParallelization, "WholeRunComparisonCollection runs after every parallel collection");
     }
 
     private static string WithoutComments(string source) =>

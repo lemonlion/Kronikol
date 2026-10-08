@@ -1,0 +1,34 @@
+Build succeeded.
+  Failed Kronikol.Tests.Tracking.ProcessGlobalStoreTests.No_test_resets_the_process_wide_activity_listener_while_other_classes_are_recording_spans [18 s]
+   these test sources reset the process-wide activity listener outside SpanStoreClearCollection, while classes running in parallel rely on it to record their spans: Kronikol.Tests/InternalFlow/InternalFlowActivityListenerTests.cs. Make a listener of the test's
+  Failed Kronikol.Tests.InternalFlow.InternalFlowActivityListenerStartTests.EnsureStarted_returns_to_each_concurrent_caller_once_the_listener_is_registered [25 ms]
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+Failed!  - Failed:     2, Passed:     5, Skipped:     0, Total:     7, Duration: 19 s - Kronikol.Tests.dll (net10.0)
+  Failed Kronikol.Tests.Tracking.ProcessGlobalStoreTests.No_test_resets_the_process_wide_activity_listener_while_other_classes_are_recording_spans [80 ms]
+   these test sources reset the process-wide activity listener outside SpanStoreClearCollection, while classes running in parallel rely on it to record their spans: Kronikol.Tests/InternalFlow/InternalFlowActivityListenerTests.cs. Make a listener of the test's
+  Failed Kronikol.Tests.InternalFlow.InternalFlowActivityListenerStartTests.EnsureStarted_returns_to_each_concurrent_caller_once_the_listener_is_registered [7 ms]
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+Failed!  - Failed:     2, Passed:     5, Skipped:     0, Total:     7, Duration: 300 ms - Kronikol.Tests.dll (net10.0)
+  Failed Kronikol.Tests.Tracking.ProcessGlobalStoreTests.No_test_resets_the_process_wide_activity_listener_while_other_classes_are_recording_spans [96 ms]
+   these test sources reset the process-wide activity listener outside SpanStoreClearCollection, while classes running in parallel rely on it to record their spans: Kronikol.Tests/InternalFlow/InternalFlowActivityListenerTests.cs. Make a listener of the test's
+  Failed Kronikol.Tests.InternalFlow.InternalFlowActivityListenerStartTests.EnsureStarted_returns_to_each_concurrent_caller_once_the_listener_is_registered [8 ms]
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+     Error: round 0: EnsureStarted returned before the listener was registered
+Failed!  - Failed:     2, Passed:     5, Skipped:     0, Total:     7, Duration: 362 ms - Kronikol.Tests.dll (net10.0)

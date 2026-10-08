@@ -14,7 +14,7 @@ namespace Kronikol.Tests.Reports;
 /// calls and spans. The facts in <see cref="CultureInvariantOutputTests"/> name each defect; this one finds the ones
 /// nobody named, in any writer, now or later.
 /// </summary>
-[Collection("DiagramsFetcher")]
+[Collection(WholeRunComparisonCollection.Name)]
 public class CultureInvariantPipelineTests : IDisposable
 {
     private static readonly DateTimeOffset At = new(2026, 1, 1, 10, 5, 7, TimeSpan.Zero);

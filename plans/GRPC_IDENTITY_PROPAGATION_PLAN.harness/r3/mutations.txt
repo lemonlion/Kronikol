@@ -1,0 +1,43 @@
+KILLED: stamp the id only when the request being served lacks it, the old rule
+  ['Failed!  - Failed:     3, Passed:   109, Skipped:     0, Total:   112, Duration: 915 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.HttpHopTests.The_third_host_in_an_HTTP_chain_records_its_calls_under_the_scenario
+    red: Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Leaves_identity_headers_the_request_already_carries_and_stamps_a_resent_request_once
+    red: Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Passes_on_the_test_id_and_trace_id_of_the_request_being_served
+KILLED: add a header the request already carries
+  ['Failed!  - Failed:     1, Passed:   111, Skipped:     0, Total:   112, Duration: 457 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Leaves_identity_headers_the_request_already_carries_and_stamps_a_resent_request_once
+KILLED: a new trace id on every hop
+  ['Failed!  - Failed:     4, Passed:   108, Skipped:     0, Total:   112, Duration: 364 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.HttpHopTests.The_third_host_in_an_HTTP_chain_records_its_calls_under_the_scenario
+    red: Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Does_not_add_trace_id_header_when_already_present_in_context
+    red: Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Passes_on_the_test_id_and_trace_id_of_the_request_being_served
+    red: Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Uses_trace_id_from_http_context_when_header_present
+KILLED: send no caller name on a hop
+  ['Failed!  - Failed:     3, Passed:   109, Skipped:     0, Total:   112, Duration: 356 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Adds_caller_name_header_to_outgoing_request
+    red: Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Leaves_identity_headers_the_request_already_carries_and_stamps_a_resent_request_once
+    red: Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Sends_its_own_caller_name_on_a_hop_whatever_the_request_being_served_named
+KILLED: no traceparent while a span is current, the old rule
+  ['Failed!  - Failed:     2, Passed:   110, Skipped:     0, Total:   112, Duration: 389 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.HttpHopTests.The_third_host_in_an_HTTP_chain_records_its_calls_under_the_scenario
+    red: Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Traceparent_carries_the_current_span_when_the_transport_injects_none
+KILLED: pre-empt the framework on SocketsHttpHandler
+  ['Failed!  - Failed:     1, Passed:   111, Skipped:     0, Total:   112, Duration: 339 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Traceparent_is_left_to_the_framework_when_the_transport_is_SocketsHttpHandler
+KILLED: the options' accessor wins over the one passed in
+  ['Failed!  - Failed:     1, Passed:     8, Skipped:     0, Total:     9, Duration: 673 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.Tracking.HttpContextAccessorOptionsTests.TestTrackingMessageHandler_explicit_accessor_takes_precedence_over_options
+KILLED: a caller that loses the race returns at once, the #70 rule
+  ['Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 261 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.InternalFlow.InternalFlowActivityListenerStartTests.EnsureStarted_returns_to_each_concurrent_caller_once_the_listener_is_registered
+KILLED: a caller waits no time for the registration
+  ['Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 42 ms - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.InternalFlow.InternalFlowActivityListenerStartTests.EnsureStarted_returns_to_each_concurrent_caller_once_the_listener_is_registered
+KILLED: a ledger read eight seconds slower, more than the budget stretched to its cap
+  ['Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 36 s - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.History.HistoryLedgerTests.Ledger_for_5000_scenarios_over_50_runs_stays_under_the_budget
+done
+KILLED: relationship stats eleven seconds slower, more than the budget stretched to its cap
+  ['Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 45 s - Kronikol.Tests.dll (net10.0)']
+    red: Kronikol.Tests.ComponentDiagram.RelationshipStatsTests.ComputeRelationshipStats_scales_to_1500_tests
+done

@@ -1,0 +1,19 @@
+# BreakfastProvider (scratch clone of origin at 0ee43e8, its 27 Kronikol pins moved to each version), xUnit and ReqNRoll
+# lanes in memory, read with the query.cs beside each report. 4.13.3-local.r3 is packed from R3's commit (on 4.13.2);
+# the control is 4.13.2-local.r2 (breakfastprovider-r2.txt).
+
+## Lanes
+xunit 4.13.3-local.r3: Test run summary: Passed! total: 212 failed: 0 succeeded: 212 skipped: 0 
+reqnroll 4.13.3-local.r3: Test run summary: Passed! total: 214 failed: 0 succeeded: 214 skipped: 0 
+
+## Calls, errors and statuses per service (query services), R2 then R3, timings left out
+-- xunit: the same for all 16 services
+-- reqnroll: the same for 15 of 16; CosmosDB 196 -> 197 calls (OK 97 -> 98), s128's polling, which moved the same way
+   between R1 and R2 and between two runs of 4.11.0
+
+## What a hop sends is not what is logged
+The API's own calls (Breakfast Provider -> Cow Service, s0/i1 in each lane, 'query http s0/i1 --headers') log the same
+two headers under R2 and R3, X-ComponentTest-RequestId and X-Correlation-Id, and 'query grep test-tracking --in headers'
+finds none in either run: the identity headers R3 puts on the request are not added to its logged headers. The Cow
+Service listens on a socket (localhost:5141), so R3 leaves that call's traceparent to the framework, as before.
+BreakfastProvider's fakes record nothing of their own, so no call changes scenario.

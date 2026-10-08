@@ -29,7 +29,10 @@ public record TestTrackingMessageHandlerOptions
     [Obsolete("Use CallerName instead. CallingServiceName will be removed in a future version.")]
     public string CallingServiceName { get => CallerName; set => CallerName = value; }
 
-    /// <summary>HTTP headers to forward from the test context to outgoing requests.</summary>
+    /// <summary>
+    /// Headers to copy from the request the host is serving onto each outgoing request. The four test identity
+    /// headers need not be listed: the handler puts them on every request it sends.
+    /// </summary>
     public IEnumerable<string> HeadersToForward { get; set; } = [];
 
     /// <summary>Callback that returns the current test name and ID. Set automatically by framework adapters.</summary>

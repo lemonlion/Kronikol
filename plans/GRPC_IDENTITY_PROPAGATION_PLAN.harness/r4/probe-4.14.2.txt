@@ -1,0 +1,62 @@
+# The MSTest probe (r4/probe) on the published Kronikol.MSTest 4.14.2: three [DataRow]s, the second failing, a test with a
+# DisplayName and no data, two [DynamicData] rows, and two methods whose one row each is named "small", one failing.
+# dotnet test, then the report read with its query.cs.
+
+## dotnet test
+PROBE row 1: TestName=Row | TestDisplayName=Row (1) | TestData=[1] | Fetcher id=ProbeMSTest.RowsTests.Row (1)
+PROBE row 2: TestName=Row | TestDisplayName=Row (2) | TestData=[2] | Fetcher id=ProbeMSTest.RowsTests.Row (2)
+PROBE row 3: TestName=Row | TestDisplayName=Row (3) | TestData=[3] | Fetcher id=ProbeMSTest.RowsTests.Row (3)
+PROBE plain: TestName=Plain | TestDisplayName=A plain test with a display name | TestData=null | Fetcher id=ProbeMSTest.RowsTests.Plain
+PROBE place small: TestName=Place | TestDisplayName=small | TestData=[1] | Fetcher id=ProbeMSTest.RowsTests.Place (small)
+PROBE cancel small: TestName=Cancel | TestDisplayName=small | TestData=[1] | Fetcher id=ProbeMSTest.RowsTests.Cancel (small)
+PROBE dynamic a: TestName=Dynamic | TestDisplayName=Dynamic ("a") | TestData=[a] | Fetcher id=ProbeMSTest.RowsTests.Dynamic ("a")
+PROBE dynamic b: TestName=Dynamic | TestDisplayName=Dynamic ("b") | TestData=[b] | Fetcher id=ProbeMSTest.RowsTests.Dynamic ("b")
+Total tests: 8
+Passed: 6
+Failed: 2
+
+## query summary
+8 scenarios · 2 failed · 16 interactions · 1 distinct bodies
+
+Rows Tests  6 passed, 2 FAILED
+
+Failed:
+  s0  Small  — Assert.Fail failed. cancel fails on purpose
+  s6  Row [2]  — Assert.AreNotEqual failed. Expected any value except:<2>. Actual:<2>. 'notExpected' expres…
+  → failures
+
+Slowest:
+  s6  0.02s  Row [2]
+  s5  0.02s  Row [1]
+  s0  0s  Small
+
+Diagnostics (1):
+  HistoryUnavailable ×1  no history ledger: no .git or .kronikol directory above <scratch>
+next: failures
+
+## query scenarios
+s0    FAIL      0s     2 calls  Small  ×2
+        Assert.Fail failed. cancel fails on purpose
+s1    pass      0s     2 calls  Dynamic ["a"]
+s2    pass      0s     2 calls  Dynamic ["b"]
+s3    pass      0s     2 calls  Small  ×2
+s4    pass      0s     2 calls  A plain test with a display name
+s5    pass   0.02s     2 calls  Row [1]
+s6    FAIL   0.02s     2 calls  Row [2]
+        Assert.AreNotEqual failed. Expected any value except:<2>. Actual:<2>. 'notExpected' expression: '2',…
+s7    pass      0s     2 calls  Row [3]
+8 scenarios
+
+## query interactions
+s0/i0     Target           GET /cancel/small                                              OK         0 ms  → 0 B b:da39a3ee
+s1/i0     Target           GET /letters/a                                                 OK         0 ms  → 0 B b:da39a3ee
+s2/i0     Target           GET /letters/b                                                 OK         0 ms  → 0 B b:da39a3ee
+s3/i0     Target           GET /place/small                                               OK         0 ms  → 0 B b:da39a3ee
+s4/i0     Target           GET /plain                                                     OK         0 ms  → 0 B b:da39a3ee
+s5/i0     Target           GET /rows/1                                                    OK         3 ms  → 0 B b:da39a3ee
+s6/i0     Target           GET /rows/2                                                    OK         0 ms  → 0 B b:da39a3ee
+s7/i0     Target           GET /rows/3                                                    OK         0 ms  → 0 B b:da39a3ee
+8 calls
+
+## Failures.md (first line)
+# Failures — 2 of 8 scenarios

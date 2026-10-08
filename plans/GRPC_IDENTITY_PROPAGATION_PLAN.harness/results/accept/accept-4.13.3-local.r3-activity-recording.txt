@@ -1,0 +1,7 @@
+kronikol 4.13.3-local.r3+4fe00a78f692208ae3dfac9b13fc65aaac807270 probe=activity variant=recording
+P4 before: Activity.Current = test span ce49f44411d37b4e
+P4 after call 1: Activity.Current = test span ce49f44411d37b4e
+P5b the interceptor's own activity: Recorded=True ActivityTraceFlags=Recorded
+P4 after call 2: Activity.Current = test
+P5 call 1 traceparent(s) at B: 00-533ae668734fb5c1f78a09eed4877847-273c1cdb0662618e-01; B's server activity: Microsoft.AspNetCore.Hosting.HttpRequestIn recorded=True parent=00-533ae668734fb5c1f78a09eed4877847-273c1cdb0662618e-01 trace=533ae668734fb5c1f78a09eed4877847 parentSpan=273c1cdb0662618e format=W3C
+P5 call 2 traceparent(s) at B: 00-533ae668734fb5c1f78a09eed4877847-980bbd91c1476223-01; B's server activity: Microsoft.AspNetCore.Hosting.HttpRequestIn recorded=True parent=00-533ae668734fb5c1f78a09eed4877847-980bbd91c1476223-01 trace=533ae668734fb5c1f78a09eed4877847 parentSpan=980bbd91c1476223 format=W3C

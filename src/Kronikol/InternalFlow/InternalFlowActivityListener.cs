@@ -59,14 +59,31 @@ public sealed class InternalFlowActivityListener : IDisposable
     /// Called automatically by <see cref="Tracking.TestTrackingMessageHandler"/>.
     /// Subsequent calls are no-ops (first caller's sources win).
     /// Uses lock-free initialization to avoid thread-pool starvation on constrained
-    /// runners where multiple handlers race on first use (issue #70).
+    /// runners where multiple handlers race on first use (issue #70). A caller that arrives while another is
+    /// registering the listener waits for it, for at most <see cref="RegistrationWait"/>: one that returned at once
+    /// started its next span before the listener was registered, so the span was not sampled and no store held it.
     /// </summary>
     internal static void EnsureStarted(string[]? additionalActivitySources = null)
     {
         if (_autoStarted != null) return;
-        if (Interlocked.CompareExchange(ref _starting, 1, 0) != 0) return;
+        if (Interlocked.CompareExchange(ref _starting, 1, 0) != 0)
+        {
+            SpinWait.SpinUntil(() => _autoStarted != null, RegistrationWait);
+            return;
+        }
         _autoStarted = new InternalFlowActivityListener(additionalActivitySources ?? []);
     }
+
+    /// <summary>
+    /// How long a caller waits for another to register the listener. Registering takes microseconds; the bound is there
+    /// so a caller never waits on a registration that does not finish.
+    /// </summary>
+    private static readonly TimeSpan RegistrationWait = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    /// Whether the listener <see cref="EnsureStarted"/> starts is registered.
+    /// </summary>
+    internal static bool IsStarted => _autoStarted is not null;
 
     /// <summary>
     /// Resets the auto-started singleton for test isolation. Not for production use.

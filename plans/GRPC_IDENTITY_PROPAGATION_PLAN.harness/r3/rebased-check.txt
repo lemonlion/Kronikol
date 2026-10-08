@@ -1,0 +1,14 @@
+R3 rebased onto 47646b61 (4.14.2), at 224242f2, 2026-10-08T19:24:55Z
+release.slnf:     0 Error(s)
+release.slnf: Build succeeded.
+EndToEnd build: Build succeeded.
+Kronikol.Tests.EndToEnd: Failed!  - Failed:    31, Passed:   972, Skipped:    28, Total:  1031, Duration: 9 m 59 s - Kronikol.Tests.EndToEnd.dll (net10.0) 
+  (that run overlapped the disk falling to 488 MB at about 20:31 local; run again alone:)
+Kronikol.Tests.EndToEnd, again: Passed!  - Failed:     0, Passed:  1003, Skipped:    28, Total:  1031, Duration: 8 m 45 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+(the unit projects below were rebuilt at this commit and run in Release)
+Kronikol.Tests: Passed!  - Failed:     0, Passed:  7108, Skipped:     2, Total:  7110, Duration: 4 m 31 s - Kronikol.Tests.dll (net10.0) 
+Kronikol.Tests.AssertionTracking: Passed!  - Failed:     0, Passed:   230, Skipped:    84, Total:   314, Duration: 1 m 47 s - Kronikol.Tests.AssertionTracking.dll (net8.0) Passed!  - Failed:     0, Passed:   258, Skipped:    56, Total:   314, Duration: 2 m 41 s - Kronikol.Tests.AssertionTracking.dll (net9.0) Passed!  - Failed:     0, Passed:   286, Skipped:    28, Total:   314, Duration: 3 m 32 s - Kronikol.Tests.AssertionTracking.dll (net10.0) 
+Kronikol.Tests.LightBDD.xUnit3: Passed!  - Failed:     0, Passed:    26, Skipped:     0, Total:    26, Duration: 432 ms - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0) 
+Kronikol.Tests.MSTest: Passed!  - Failed:     0, Passed:    66, Skipped:     0, Total:    66, Duration: 302 ms - Kronikol.Tests.MSTest.dll (net10.0) 
+Kronikol.Tests.Grpc: Passed!  - Failed:     0, Passed:   189, Skipped:     0, Total:   189, Duration: 662 ms - Kronikol.Tests.Grpc.dll (net10.0) 
+Kronikol.Tests.LightBDD.TUnit: Total: 25, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0 (xUnit v3 in-process runner, through dotnet run)

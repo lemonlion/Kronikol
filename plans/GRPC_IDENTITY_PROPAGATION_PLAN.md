@@ -931,6 +931,55 @@ against the recommendation.
       caller that loses the race to start the listener returns at once, before the winner has registered it, so the
       span the loser starts next is not sampled, and its gRPC call logs a trace id no span carries. R2's and R1's test
       classes add parallel first callers. The fix is R3's.
+  - **R2 published the same day.** Release run 37788719687 and CI 37788717005 passed on `494265b5`, nuget.org lists
+    all 62 ids at 4.13.2, the wiki has R2's edit (`853df17`, the call-kinds table of `Integration-Grpc-Extension.md`),
+    and Kronikol4J's ledger its line (`1c470e6`: the port has always recorded a call in `onClose` with its status, so
+    the two now agree).
+  - **R3 = 4.14.3.** It also fixes the three defects found while releasing R2, each of which failed a full run now and
+    then:
+    - The listener race: a caller of `InternalFlowActivityListener.EnsureStarted` that loses the race waits until the
+      listener is registered, for at most a second and still without a lock (#70). `r3/listener-red.txt`: on R3's code
+      before the fix, with only the `IsStarted` probe added, 7 of the 8 concurrent callers returned before the listener
+      was registered in the first round, in three runs of three, and the new guard named
+      `InternalFlowActivityListenerTests`, whose #70 fact reset the listener from a parallel collection.
+      `r3/listener-green.txt`: the same facts, three runs, and the 199 internal-flow facts, after.
+    - `CultureInvariantPipelineTests` compares two runs of the whole pipeline, and the component diagram draws every
+      call the process logged: one call logged under another test's id between the two runs failed it under every
+      culture (an experiment, not kept). It now runs alone, in `WholeRunComparisonCollection`, which the
+      diagram-cache guard accepts.
+    - `HistoryLedgerTests`' read budget, and `RelationshipStatsTests`' budget, which kronikol-50 saw fail at 3,601 ms
+      against 2,000 under load, are stretched by a probe of the machine's load (`ContentionScale`, as the Playwright
+      project's render budgets are), at most five times. A read eight seconds slower, or a stats run eleven seconds
+      slower, still fails them.
+    Its proofs:
+    - `r3/red-v4.13.2.txt`: with R3's facts copied onto v4.13.2, the five handler facts that pin a hop's identity,
+      trace id, `traceparent` and caller name, and the three-host chain, fail; the 115 that pass there include the
+      precedence fact, which held already and now reads which scenario the call belongs to (its mutation is killed).
+    - `r3/mutations.txt`: 11 of 11 killed, the new ones among them: a losing caller that returns at once, one that
+      waits no time, and a ledger read and a stats run slower than their budgets stretched to the cap.
+    - `results/accept/accept-4.13.3-local.r3-*`: against R2's results, P8 flips (host B sees the scenario's identity
+      and a `traceparent`, and its call to C is `id-1`, through the request header, where it was `unknown`), P8b and P8c
+      gain the `traceparent` they lacked, and nothing else moves.
+    - `results/accept/breakfastprovider-r3.txt`: both lanes pass, with the same calls, errors and statuses per service
+      as R2's but one CosmosDB polling query, and the same logged headers: the identity headers a hop now sends are not
+      added to what it logs, and BreakfastProvider's fakes record nothing of their own.
+    - `r3/suite.txt`: the full suite on R3 rebased onto 4.13.3 (`e3e46160`), all 50 projects: the core passes 7,069
+      with 2 skipped and the Playwright project 997 with 28 skipped, alone. A first run, at `4fe00a78`, failed 36
+      Playwright facts while another session's Playwright suite ran beside it, and every other project passed.
+      `r3/rebased-check.txt`: on the commit pushed, rebased onto 4.14.0, 4.14.1 and 4.14.2, release.slnf builds in
+      Release, the Playwright project passes 1,003 with 28 skipped alone (a run during which the disk fell to 488 MB
+      failed 31), and the core (7,108 with 2 skipped), assertion-tracking, LightBDD, MSTest and gRPC projects, rebuilt
+      there, pass.
+  - **Section 8's MSTest finding, measured and handed on.** `r4/probe/` is an MSTest project on the published packages,
+    and `r4/probe-4.13.2.txt` its run on 4.13.2, read with its `query.cs`. Every row of a data-driven test had its
+    method's id, so with the second of three `[DataRow]`s failing, `dotnet test` failed while the report said 3 scenarios
+    and 0 failed, `Failures.md` said "No failures", and the later rows' calls were background calls. This plan's fix was
+    written and red-proved, then dropped unreleased: kronikol-1c's 4.13.3 (ADAPTER_CAPTURE_GAPS_PLAN R1) gave each row an
+    id of its own the same day, in another format, and a row's id should change once. A collision that format left (two
+    methods whose rows share a `DisplayName` of their own) and this plan's facts went to that session, which fixes and
+    adopts them in 4.14.2, with an overload defect it found on the way. Run with the same probe on the published
+    packages, 4.13.2 reports 5 scenarios and 1 failed, the second row's failure missing, and 4.14.2 reports 8 and 2
+    failed, every row and both rows named "small" apart (`r4/probe-4.13.2.txt`, `r4/probe-4.14.2.txt`).
 
 ## Appendix A. Edit sites at `417c8e58`
 
