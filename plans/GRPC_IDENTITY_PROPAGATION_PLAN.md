@@ -980,6 +980,10 @@ against the recommendation.
     adopts them in 4.14.2, with an overload defect it found on the way. Run with the same probe on the published
     packages, 4.13.2 reports 5 scenarios and 1 failed, the second row's failure missing, and 4.14.2 reports 8 and 2
     failed, every row and both rows named "small" apart (`r4/probe-4.13.2.txt`, `r4/probe-4.14.2.txt`).
+  - **R3 published the same day; the plan is complete.** Release run 37837642849, CI 37837639629 (the unit-test job
+    that failed on the listener race on 4.13.1's and 4.14.1's CI passed on its first attempt) and CodeQL 37837639639
+    passed on `f9c67188`, nuget.org lists all 62 ids at 4.14.3, the wiki has R3's edits (`0b8eb20`), and Kronikol4J's
+    ledger its line (`aab0cb9`). What the plan left is in `ROADMAP.md` Appendix C.
 
 ## Appendix A. Edit sites at `417c8e58`
 
