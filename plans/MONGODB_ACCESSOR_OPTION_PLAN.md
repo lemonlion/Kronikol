@@ -2,9 +2,9 @@
 
 **Written:** 2026-10-07, at 4.9.0 (`417c8e58`), the day #136 was filed. **Status: green-lit 2026-10-08, executing**
 (the owner: "implement the plan in full", and "also fix the problems you found"; roadmap row 1.22). R1, a minor, is
-4.10.0, published 2026-10-08 (§6). The problems found (§3) come with it: R2, a minor, the plan's Q1, is 4.11.0. It gives
-the property to the five other options types without it, and makes Kafka's producer stamp the scenario its produce is
-recorded under. The log (§11) records what was run.
+4.10.0 (§6). The problems found (§3) come with it: R2, a minor, the plan's Q1, is 4.11.0. It gives the property to the
+five other options types without it, and makes Kafka's producer stamp the scenario its produce is recorded under. **Both
+were published on 2026-10-08**, with the wiki (`289a25a`); #136 is closed. The log (§11) records what was run.
 
 Evidence levels: **RUN** measured here, with the harness; **READ** read in the source at `417c8e58` (`file:line`);
 **DOC** the wiki at `db4e473`; **ISSUE** the issue's own report; **INFERRED** reasoned, not measured.
@@ -366,3 +366,16 @@ plan is green-lit, because several sessions are writing plans for the same batch
   caught by exactly the facts it names and no other. The restored tree passed in all five projects.
 - The wiki's Option D recipe (subscribe `AddMongoDbTestTracking`'s subscriber in the client's registration) is held by
   the host lane, now a theory over Options C and D as the page writes them.
+- R2 published 2026-10-08 as 4.11.0 (`709b3afc`, tag `v4.11.0`): Release 37754946619 pushed all 62 packages, and CI
+  37754943415 and CodeQL 37754943411 passed (R1's CodeQL, 37750367337, passed too). nuget.org listed all 62 ids at 4.10.0 by 09:22 UTC: its pages answered 404 for about 25 minutes
+  after the 08:42 push while nuget.org validated them. 4.11.0's Release finished at 09:22 and nuget.org listed all 62
+  ids at 09:34.
+- The probe on the published 4.10.0 packages, restored from nuget.org (`--no-http-cache`, since the local cache still
+  held the old version list): row N reads right 8 with `RequestHeader:8` in all six cells on MongoDB.Driver 2.30.0 and
+  3.12.0, and rows A, D, W and X are identical to 4.9.0's (`results/probe-4.10.0.txt`, `results/probe-4.10.0-driver3.txt`).
+- The wiki edits (`wiki/wiki_136.py ... 4.10.0 4.11.0`) went in as `289a25a`: eight pages, 48 lines added and 19
+  removed. `tools/wiki-links` finds no dead or reversed link on the result. #136 is closed with a comment naming both
+  releases, and #142 has a comment saying item 6 is done.
+- Left to peers, as agreed by message: F9 and the diagnostic accessor column (kronikol-94, #134/#137), #133
+  (kronikol-28), the stale resolver order in HTTP-Tracking-Setup's "How It Works Internally" (kronikol-94, whose #134
+  changes the resolver), and Multi-Host-Test-Architectures' Cosmos-only wiring section (#142).

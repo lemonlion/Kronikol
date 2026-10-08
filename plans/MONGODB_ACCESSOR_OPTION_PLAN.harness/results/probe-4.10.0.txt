@@ -1,0 +1,34 @@
+Kronikol.Extensions.MongoDB.V2 4.10.0+47a0203b4db6928dacb779bcce66bf3d3455c679, MongoDB.Driver 2.30.0+1453cff72eeef73f4325be9e6c9082d24993c7e6, 8.0.27, mongodb://127.0.0.1:27017
+Each row: 8 commands, an insert and a find for each of scenarios A and B in turn, then C and D at once.
+right: the scenario whose request ran it. wrong: any other id. lost: not recorded.
+
+A WithTestTracking (wiki Options A and C)        | no propagation | no fetcher                               | right 0 wrong 0 lost 8 | - | accessor: no
+A WithTestTracking (wiki Options A and C)        | no propagation | fetcher: 'unknown' outside a test        | right 0 wrong 0 lost 8 | - | accessor: no
+A WithTestTracking (wiki Options A and C)        | no propagation | fetcher: a new id outside a test (#133)  | right 0 wrong 8 lost 0 | TestContext:8 | accessor: no
+A WithTestTracking (wiki Options A and C)        | propagation    | no fetcher                               | right 8 wrong 0 lost 0 | Scope:8 | accessor: no
+A WithTestTracking (wiki Options A and C)        | propagation    | fetcher: 'unknown' outside a test        | right 8 wrong 0 lost 0 | Scope:8 | accessor: no
+A WithTestTracking (wiki Options A and C)        | propagation    | fetcher: a new id outside a test (#133)  | right 0 wrong 8 lost 0 | TestContext:8 | accessor: no
+D AddMongoDbTestTracking (wiki Option D)         | no propagation | no fetcher                               | right 0 wrong 0 lost 8 | - | accessor: none built
+D AddMongoDbTestTracking (wiki Option D)         | no propagation | fetcher: 'unknown' outside a test        | right 0 wrong 0 lost 8 | - | accessor: none built
+D AddMongoDbTestTracking (wiki Option D)         | no propagation | fetcher: a new id outside a test (#133)  | right 0 wrong 0 lost 8 | - | accessor: none built
+D AddMongoDbTestTracking (wiki Option D)         | propagation    | no fetcher                               | right 0 wrong 0 lost 8 | - | accessor: none built
+D AddMongoDbTestTracking (wiki Option D)         | propagation    | fetcher: 'unknown' outside a test        | right 0 wrong 0 lost 8 | - | accessor: none built
+D AddMongoDbTestTracking (wiki Option D)         | propagation    | fetcher: a new id outside a test (#133)  | right 0 wrong 0 lost 8 | - | accessor: none built
+W subscriber + accessor (the #136 workaround)    | no propagation | no fetcher                               | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
+W subscriber + accessor (the #136 workaround)    | no propagation | fetcher: 'unknown' outside a test        | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
+W subscriber + accessor (the #136 workaround)    | no propagation | fetcher: a new id outside a test (#133)  | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
+W subscriber + accessor (the #136 workaround)    | propagation    | no fetcher                               | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
+W subscriber + accessor (the #136 workaround)    | propagation    | fetcher: 'unknown' outside a test        | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
+W subscriber + accessor (the #136 workaround)    | propagation    | fetcher: a new id outside a test (#133)  | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
+X subscriber + new HttpContextAccessor(), host has none | no propagation | no fetcher                               | right 0 wrong 0 lost 8 | - | accessor: yes
+X subscriber + new HttpContextAccessor(), host has none | no propagation | fetcher: 'unknown' outside a test        | right 0 wrong 0 lost 8 | - | accessor: yes
+X subscriber + new HttpContextAccessor(), host has none | no propagation | fetcher: a new id outside a test (#133)  | right 0 wrong 8 lost 0 | TestContext:8 | accessor: yes
+X subscriber + new HttpContextAccessor(), host has none | propagation    | no fetcher                               | right 8 wrong 0 lost 0 | Scope:8 | accessor: yes
+X subscriber + new HttpContextAccessor(), host has none | propagation    | fetcher: 'unknown' outside a test        | right 8 wrong 0 lost 0 | Scope:8 | accessor: yes
+X subscriber + new HttpContextAccessor(), host has none | propagation    | fetcher: a new id outside a test (#133)  | right 0 wrong 8 lost 0 | TestContext:8 | accessor: yes
+N WithTestTracking, options.HttpContextAccessor  | no propagation | no fetcher                               | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
+N WithTestTracking, options.HttpContextAccessor  | no propagation | fetcher: 'unknown' outside a test        | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
+N WithTestTracking, options.HttpContextAccessor  | no propagation | fetcher: a new id outside a test (#133)  | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
+N WithTestTracking, options.HttpContextAccessor  | propagation    | no fetcher                               | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
+N WithTestTracking, options.HttpContextAccessor  | propagation    | fetcher: 'unknown' outside a test        | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
+N WithTestTracking, options.HttpContextAccessor  | propagation    | fetcher: a new id outside a test (#133)  | right 8 wrong 0 lost 0 | RequestHeader:8 | accessor: yes
