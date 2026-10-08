@@ -1,6 +1,6 @@
 # Identity outside a test (#133)
 
-**Status: EXECUTED as 4.13.1 (2026-10-08).** The owner asked for #133 to be assessed critically, "what I don't want is
+**Status: EXECUTED and PUBLISHED as 4.13.1 (2026-10-08).** The owner asked for #133 to be assessed critically, "what I don't want is
 for this to be 'fixed' and then another consumer breaks", then to "implement the plan in full, in a separate worktree"
 and "fix any other problems you found". The assessment was given in a session on 2026-10-07 (kronikol-28) and is
 recorded here with what the execution measured. Harness: `IDENTITY_OUTSIDE_A_TEST_PLAN.harness/`.
@@ -99,3 +99,12 @@ a suite, and the fetcher, both `TestIdResolver`s and the override read it.
   rebased onto each, and the suites in section 4 ran on the last. The cross-framework probe found F6 and F7 and Q2 to Q3. Peers: kronikol-1c took F9;
   kronikol-50 (#141) and kronikol-f1 (#136) shared no lines; kronikol-94 (#134) rebases its MSTest data-row work on
   this release's override.
+- **2026-10-08, published.** 4.13.1's Release run 37779632646 passed on 78f62e12, with CodeQL 37779628620 and CI Summary
+  Preview 37779628625. CI 37779628618 failed its first attempt on one gRPC test outside this change
+  (GrpcTrackingInterceptorTests.AsyncUnaryCall_activity_spans_from_request_to_response: no span carried the call's trace
+  id, because InternalFlowActivityListener.EnsureStarted lets a concurrent first caller return before the listener is
+  registered, a product race kronikol-94 found and fixes in its R3) and passed on the second, whose auto-discovered lane
+  ran Kronikol.Tests.NUnit4 on Linux, 11 of 11 (the first attempt stopped before it). nuget.org lists all 62 ids at
+  4.13.1. The wiki has the 23 edits (ec03999; the link check reads the same before and after), and #133 is closed with a
+  comment naming the release. kronikol-1c's next patch adds its NUnit facts and the adapter's InternalsVisibleTo to the
+  new project.
