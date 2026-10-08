@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The #132 workaround as a prototype: AssemblyFixtureFramework subclass whose executor is wrapped by probe/Prototype. -->
+  <ItemGroup>
+    <PackageReference Include="Xunit.Extensions.AssemblyFixture" Version="2.6.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/*.cs" />
+    <Compile Include="../AssemblyFixtureShared/*.cs" />
+    <Compile Include="../Prototype/*.cs" />
+  </ItemGroup>
+</Project>

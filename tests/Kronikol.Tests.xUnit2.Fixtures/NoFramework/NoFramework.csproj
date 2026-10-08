@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- No test framework of Kronikol's: the wiki's collection-fixture alternative, which writes the reports from
+       the fixture's Dispose through the public XUnit2ReportGenerator overload that takes no scenarios. -->
+</Project>

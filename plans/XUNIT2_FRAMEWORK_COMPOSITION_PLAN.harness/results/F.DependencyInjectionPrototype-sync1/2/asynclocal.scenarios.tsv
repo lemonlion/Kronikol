@@ -1,0 +1,21 @@
+test	sawStarting	result	executionSeconds	beforeAttributes	trackingId	ownId
+Probe.Theories.Rows(row: 6, ms: 20)	True	Passed	0.055987	TestTrackingAttribute,PrototypeTrackingAttribute	662a8c46-5126-46f7-95d3-2cfb3fe3f3f6	468f380f-5d22-40e4-b2c8-d7bf94eb2e32
+Probe.FixtureThrows.Never_runs	True	Failed	0.000000		-	4f8ab30a-804d-4b6f-b84b-6fef59a1232d
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })	True	Passed	0.019654	TestTrackingAttribute,PrototypeTrackingAttribute	f9901891-4a17-439b-9bf4-655ee884978e	250de82b-4bbf-44d3-965d-520f45bfee83
+Probe.Di.DiInjected.Receives_the_injected_service	True	Passed	0.020769	TestTrackingAttribute,PrototypeTrackingAttribute	b0f5331e-ff91-4e7d-b710-5f6f82f2276d	a7165914-2674-4f77-bcfb-ca428827f557
+Probe.Facts.Fails	True	Failed	0.021702	TestTrackingAttribute,PrototypeTrackingAttribute	d9338d50-99be-4978-9048-036eda46d234	98b3e440-aaa7-45b5-9303-de8c828b08c5
+Probe.CtorThrows.Never_runs	True	Failed	0.000000		-	537cad82-88f7-489b-8101-8e38ca0678fc
+Probe.InitThrows.Never_runs	True	Failed	0.000000		-	dc0fdb09-eea9-4b30-96f0-88f678a13e61
+Does the thing.	True	Passed	0.019664	TestTrackingAttribute,PrototypeTrackingAttribute	b256e207-6c59-43eb-be7c-43ec38c718b0	b82def63-97d1-41e6-b7c5-6cdd735df0a0
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })	True	Passed	0.001169	TestTrackingAttribute,PrototypeTrackingAttribute	1428edbe-c131-4c3b-9043-1bd095c606d3	2130a224-62a2-4eb9-8782-757c463d93e9
+Order API returns 404 for v1.2	True	Passed	0.001032	TestTrackingAttribute,PrototypeTrackingAttribute	59ed84b5-0368-44b7-b46c-843629f6f401	c8be5500-d6e4-4f87-8ac8-9b1c608aa547
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })	True	Passed	0.000138	TestTrackingAttribute,PrototypeTrackingAttribute	d3500077-93f7-4fae-9c8a-e17e3fbf32b6	4d50bfd4-ee03-47b7-96fd-84186bac1f05
+A failing fact with a display name	True	Failed	0.000581	TestTrackingAttribute,PrototypeTrackingAttribute	1e1488bd-7e9c-4042-9a5e-380d5d5bfbc9	b8bce296-52e9-4c23-9630-0cd87edaebf1
+Probe.Facts.Skipped	True	Skipped	0.000000		-	52c747dc-2f96-4784-a629-47077e5976e8
+A passing fact with a display name	True	Passed	0.000121	TestTrackingAttribute,PrototypeTrackingAttribute	d6ce4d59-e9a5-4439-a3ab-a4c7ea4473b5	c11412dd-4a6f-4617-b1bd-7bcc24a52409
+Probe.Facts.Passes	True	Passed	0.000106	TestTrackingAttribute,PrototypeTrackingAttribute	6643716b-276e-4883-a4af-1f92a8399ba3	935ecb19-147e-4131-87c7-7981b3b4037a
+Probe.Theories.Rows(row: 2, ms: 400)	True	Passed	0.413488	TestTrackingAttribute,PrototypeTrackingAttribute	0d78071c-74c5-4afd-aa79-01ebb7945e26	b0b74921-dd0c-4f63-bd1c-91969e941037
+Probe.Theories.Rows(row: 3, ms: 100)	True	Passed	0.110045	TestTrackingAttribute,PrototypeTrackingAttribute	48c328df-daa1-417d-8cb6-6e644bfbe9ee	62fc7813-a2c0-4311-b4af-266a9c36c828
+Probe.Theories.Rows(row: 5, ms: 200)	True	Passed	0.213951	TestTrackingAttribute,PrototypeTrackingAttribute	b54f83ad-f45f-4cc6-8687-72df9d74f0c5	4a5d088b-96b6-4e7b-8ab3-4ddf602a536c
+Probe.Theories.Rows(row: 4, ms: 800)	True	Failed	0.811065	TestTrackingAttribute,PrototypeTrackingAttribute	bcee0ade-88d7-430c-8504-92fbf2e4f4f5	cb24fcf2-ebdf-4ab0-b9df-809bfee10175
+Probe.Theories.Rows(row: 1, ms: 50)	True	Passed	0.060178	TestTrackingAttribute,PrototypeTrackingAttribute	468c90df-c8de-4339-8348-b7dbbb17ade9	01d8772d-6e7c-4c00-ab6f-4ceb9e6e022c

@@ -1,0 +1,49 @@
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_failing_fact_with_a_display_name_is_reported_failed_with_its_error_and_duration_under_its_display_name(fixture: "OwnFramework.Vs3") [2 ms]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_failing_fact_with_a_display_name_is_reported_failed_with_its_error_and_duration_under_its_display_name(fixture: "OwnFramework") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework", attempt: 1) [2 ms]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework.Vs3", attempt: 3) [3 s]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework", attempt: 2) [3 s]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework.Vs3", attempt: 1) [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework.Vs3", attempt: 2) [3 s]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework", attempt: 3) [4 s]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.With_no_options_set_the_run_starts_before_its_first_scenario_and_ends_after_its_last(fixture: "OwnFramework.Vs3") [2 ms]
+  Error Message:
+   The run started 2026-10-08T08:49:48.0000000+00:00, its first scenario 2026-10-08T08:49:46.0000000+00:00
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.With_no_options_set_the_run_starts_before_its_first_scenario_and_ends_after_its_last(fixture: "OwnFramework") [< 1 ms]
+  Error Message:
+   The run started 2026-10-08T08:50:00.0000000+00:00, its first scenario 2026-10-08T08:49:58.0000000+00:00
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Under_method_display_every_test_keeps_its_own_result(fixture: "OwnFramework.Vs3") [4 s]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Under_method_display_every_test_keeps_its_own_result(fixture: "OwnFramework") [4 s]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.The_reports_are_complete_when_dotnet_test_returns_even_when_slow_to_write(fixture: "OwnFramework") [4 s]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.The_reports_are_complete_when_dotnet_test_returns_even_when_slow_to_write(fixture: "OwnFramework.Vs3") [12 s]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_tracked_skipped_test_is_reported_skipped_and_untracked_tests_are_not_reported(fixture: "OwnFramework.Vs3") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_tracked_skipped_test_is_reported_skipped_and_untracked_tests_are_not_reported(fixture: "OwnFramework") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_row_of_a_theory_whose_data_cannot_be_serialized_carries_its_own_name_and_call(fixture: "OwnFramework.Vs3") [5 ms]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Every_tracked_test_is_one_scenario_with_its_own_result_duration_error_and_calls(fixture: "OwnFramework.Vs3") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Every_tracked_test_is_one_scenario_with_its_own_result_duration_error_and_calls(fixture: "OwnFramework") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Tests_that_fail_before_their_first_line_are_reported_failed_with_the_error_and_no_calls(fixture: "OwnFramework") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Tests_that_fail_before_their_first_line_are_reported_failed_with_the_error_and_no_calls(fixture: "OwnFramework.Vs3") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.NoFrameworkLaneTests.The_specifications_are_not_written_as_for_a_passing_run [29 s]
+  Error Message:
+  Failed Kronikol.Tests.xUnit2.Lane.NoFrameworkLaneTests.Every_scenario_is_reported_as_a_default_not_a_verdict [174 ms]
+  Error Message:
+Failed!  - Failed:    23, Passed:     7, Skipped:     0, Total:    30, Duration: 2 m - Kronikol.Tests.xUnit2.dll (net10.0)

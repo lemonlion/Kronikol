@@ -1,0 +1,10 @@
+{
+  "lane": "E.CollectionFixtureOnly",
+  "project": "E.CollectionFixtureOnly",
+  "run": 3,
+  "vars": {},
+  "artifacts": "main",
+  "startedUtc": "2026-10-07T17:45:20.9327798Z",
+  "wallSeconds": 2.899,
+  "exitCode": 1
+}

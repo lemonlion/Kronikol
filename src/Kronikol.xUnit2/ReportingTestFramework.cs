@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Reflection;
 using Kronikol.Reports;
 using Xunit;
@@ -10,6 +9,13 @@ namespace Kronikol.xUnit2;
 /// <summary>
 /// Custom xUnit v2 test framework that generates Kronikol reports
 /// after all tests complete but before the testhost process exits.
+/// <para>
+/// Each test's result reaches its own scenario: the framework makes the scenario when xUnit starts the test and
+/// pairs the result with it by the test itself, so every row of a theory and every <c>[Fact(DisplayName = …)]</c>
+/// gets its own verdict, duration and calls. Tests <see cref="TestTrackingAttribute"/> applies to that are skipped,
+/// or that fail before their first line runs (in the constructor, <c>InitializeAsync</c> or a fixture), are
+/// reported too. The reports are written when the test assembly finishes, before the runner hears that it has.
+/// </para>
 /// <para>
 /// This is necessary because <c>Environment.Exit</c> (called by the testhost)
 /// terminates foreground threads and gives <c>ProcessExit</c> only ~2 seconds,
@@ -29,8 +35,9 @@ public class ReportingTestFramework : XunitTestFramework
 }
 
 /// <summary>
-/// Custom executor that wraps the execution message sink to capture test results,
-/// then generates reports after all tests in the assembly have finished executing.
+/// The executor of <see cref="ReportingTestFramework"/>. It runs the assembly with Kronikol's results sink between
+/// xUnit's message bus and the runner's sink, which pairs each test's result with its own scenario by the test's
+/// identity, and writes the reports when the assembly finishes, before the runner hears that it has.
 /// </summary>
 public class ReportingTestFrameworkExecutor : XunitTestFrameworkExecutor
 {
@@ -45,136 +52,22 @@ public class ReportingTestFrameworkExecutor : XunitTestFrameworkExecutor
         IMessageSink executionMessageSink,
         ITestFrameworkExecutionOptions executionOptions)
     {
-        var resultSink = new TestResultCapturingSink(executionMessageSink);
+        using var resultsSink = new KronikolResultsSink(executionMessageSink, ReportLifecycle.GenerateReports);
 
-        using (var assemblyRunner = new XunitTestAssemblyRunner(
-            TestAssembly, testCases, DiagnosticMessageSink, resultSink, executionOptions))
-        {
-            assemblyRunner.RunAsync().GetAwaiter().GetResult();
-        }
-
-        // Update collected scenarios with actual test results
-        resultSink.ApplyResults();
-
-        // Generate reports
-        ReportLifecycle.GenerateReports();
+        // Synchronous message reporting, on a copy of the runner's options, so the sink sees each test start on
+        // the test's own flow and can hand its scenario to TestTrackingAttribute.Before.
+        using var assemblyRunner = new XunitTestAssemblyRunner(
+            TestAssembly, testCases, DiagnosticMessageSink, resultsSink, SynchronousReportingOptions.Over(executionOptions));
+        assemblyRunner.RunAsync().GetAwaiter().GetResult();
     }
 }
 
 /// <summary>
-/// Wraps an <see cref="IMessageSink"/> to intercept test result messages
-/// (<see cref="ITestFailed"/>, <see cref="ITestSkipped"/>) and record outcomes
-/// so that <see cref="ScenarioInfo.Result"/> can be updated after execution.
-/// </summary>
-internal sealed class TestResultCapturingSink : IMessageSink
-{
-    private readonly IMessageSink _inner;
-
-    internal readonly ConcurrentBag<TestOutcome> Outcomes = [];
-
-    public TestResultCapturingSink(IMessageSink inner) => _inner = inner;
-
-    public bool OnMessage(IMessageSinkMessage message)
-    {
-        switch (message)
-        {
-            case ITestPassed passed:
-                Outcomes.Add(new TestOutcome
-                {
-                    DisplayName = passed.Test.DisplayName,
-                    Result = ExecutionResult.Passed,
-                    ExecutionTime = passed.ExecutionTime,
-                    FinishedAt = DateTimeOffset.UtcNow,
-                });
-                break;
-
-            case ITestFailed failed:
-                Outcomes.Add(new TestOutcome
-                {
-                    DisplayName = failed.Test.DisplayName,
-                    Result = ExecutionResult.Failed,
-                    ErrorMessage = string.Join(Environment.NewLine, failed.Messages),
-                    ErrorStackTrace = string.Join(Environment.NewLine, failed.StackTraces),
-                    ExecutionTime = failed.ExecutionTime,
-                    FinishedAt = DateTimeOffset.UtcNow,
-                });
-                break;
-
-            case ITestSkipped skipped:
-                Outcomes.Add(new TestOutcome
-                {
-                    DisplayName = skipped.Test.DisplayName,
-                    Result = ExecutionResult.Skipped,
-                    FinishedAt = DateTimeOffset.UtcNow,
-                });
-                break;
-        }
-
-        return _inner.OnMessage(message);
-    }
-
-    /// <summary>
-    /// Matches captured test outcomes back to the <see cref="ScenarioInfo"/> entries
-    /// collected by <see cref="TestTrackingAttribute"/>. Matching uses the
-    /// <see cref="ScenarioInfo.MethodMatchKey"/> as a prefix of the xUnit display name.
-    /// </summary>
-    internal void ApplyResults()
-    {
-        var matchedTestIds = new HashSet<string>();
-
-        foreach (var outcome in Outcomes)
-        {
-            // Find the matching scenario(s) by prefix match on the xUnit display name
-            foreach (var (testId, scenario) in XUnit2TestTrackingContext.CollectedScenarios)
-            {
-                if (matchedTestIds.Contains(testId))
-                    continue;
-
-                if (outcome.DisplayName == scenario.MethodMatchKey ||
-                    outcome.DisplayName.StartsWith(scenario.MethodMatchKey + "("))
-                {
-                    scenario.Result = outcome.Result;
-                    scenario.ErrorMessage = outcome.ErrorMessage;
-                    scenario.ErrorStackTrace = outcome.ErrorStackTrace;
-                    scenario.Duration = outcome.ExecutionTime > 0
-                        ? TimeSpan.FromSeconds((double)outcome.ExecutionTime)
-                        : null;
-
-                    scenario.EndedAt = outcome.FinishedAt;
-
-                    // Update scenario name from the full xUnit display name so that
-                    // [InlineData] / [Theory] test cases include their parameters
-                    // (e.g. "Loads successfully [type: \"Purchase\"]") instead of
-                    // all sharing the bare method name.
-                    scenario.ScenarioName = ScenarioTitleResolver.FormatScenarioDisplayName(outcome.DisplayName);
-
-                    matchedTestIds.Add(testId);
-                    break;
-                }
-            }
-        }
-    }
-}
-
-internal record TestOutcome
-{
-    public required string DisplayName { get; init; }
-    public required ExecutionResult Result { get; init; }
-    public string? ErrorMessage { get; init; }
-    public string? ErrorStackTrace { get; init; }
-    public decimal ExecutionTime { get; init; }
-
-    /// <summary>When the result message arrived, which is as close to the finish as xUnit v2 lets a sink get.</summary>
-    public DateTimeOffset? FinishedAt { get; init; }
-}
-
-/// <summary>
-/// Lifecycle helper that generates reports exactly once.
-/// Called by <see cref="ReportingTestFrameworkExecutor"/> after all tests complete.
+/// Where Kronikol.xUnit2's reports take their options from, and the once-per-process report writing of
+/// <see cref="ReportingTestFramework"/>.
 /// </summary>
 public static class ReportLifecycle
 {
-    private static readonly DateTime StartTime = DateTime.UtcNow;
     private static int _reported;
 
     /// <summary>
@@ -184,26 +77,40 @@ public static class ReportLifecycle
     /// </summary>
     public static ReportConfigurationOptions? Options { get; set; }
 
-    internal static void GenerateReports()
+    /// <summary>
+    /// Writes the reports for a run of <see cref="ReportingTestFramework"/>, once per process. The results sink
+    /// that calls it writes any failure to <c>kronikol-error.log</c> beside the test assembly, so none reaches the
+    /// test run.
+    /// </summary>
+    internal static void GenerateReports(IReadOnlyList<ScenarioInfo> scenarios, DateTime start, DateTime end)
     {
         if (Interlocked.Exchange(ref _reported, 1) != 0)
             return;
 
+        WriteReports(scenarios, start, end);
+    }
+
+    /// <summary>Writes the reports for <paramref name="scenarios"/> with <see cref="Options"/>, or nothing for a run with none.</summary>
+    internal static void WriteReports(IReadOnlyList<ScenarioInfo> scenarios, DateTime start, DateTime end)
+    {
+        if (scenarios.Count == 0)
+            return;
+
+        XUnit2ReportGenerator.Write(scenarios, start, end, Options ?? new ReportConfigurationOptions(),
+            "xUnit sent no result for them (a cancelled run sends none)");
+    }
+
+    /// <summary>Appends <paramref name="exception"/> to <c>kronikol-error.log</c> beside the test assembly. Never throws.</summary>
+    internal static void WriteErrorLog(Exception exception)
+    {
         try
         {
-            var scenarios = XUnit2TestTrackingContext.GetAllScenarios();
-            if (scenarios.Length == 0)
-                return;
-
-            var options = Options ?? new ReportConfigurationOptions();
-
-            XUnit2ReportGenerator.CreateStandardReportsWithDiagrams(
-                scenarios, StartTime, DateTime.UtcNow, options);
-        }
-        catch (Exception ex)
-        {
             var errorPath = Path.Combine(AppContext.BaseDirectory, "kronikol-error.log");
-            File.WriteAllText(errorPath, $"[{DateTime.UtcNow:O}] {ex}");
+            File.AppendAllText(errorPath, $"[{DateTime.UtcNow:O}] {exception}{Environment.NewLine}");
+        }
+        catch
+        {
+            // Nowhere left to say it: a message sink that throws stops the test run.
         }
     }
 }

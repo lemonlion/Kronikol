@@ -1,0 +1,99 @@
+# compare F.DependencyInjectionPrototype-sync1 run 2
+TRX: 20 test results; report: 20 scenarios
+
+flags: RESULT, NAME, DURATION, ERROR-TEXT = the scenario disagrees with the test; FOREIGN-CALLS = it holds another test's call;
+       CALL-IN-BACKGROUND = the test's call is listed as a background call; CALL-MISSING = matched by names, its call is in no
+       scenario; NO-SCENARIO = no scenario holds the test's call, and none has its feature and name
+xUnit test (TRX)                                               outcome       secs  via                        scenario (report)                              result     secs  flags
+Probe.CtorThrows.Never_runs                                    Failed       0.001  names (test made no call)  Never runs                                     Failed    0.000  ok  (error-type-not-in-report)
+Probe.Di.DiInjected.Receives_the_injected_service              Passed       0.021  call                       Receives the injected service                  Passed    0.021  ok
+Order API returns 404 for v1.2                                 Passed       0.001  call                       2                                              Passed    0.001  NAME
+Does the thing.                                                Passed       0.020  call                       Does the thing.                                Passed    0.020  ok
+Probe.Facts.Fails                                              Failed       0.022  call                       Fails                                          Failed    0.022  ok
+A failing fact with a display name                             Failed       0.001  call                       A failing fact with a display name             Failed    0.001  ok
+Probe.Facts.Passes                                             Passed       0.000  call                       Passes                                         Passed    0.000  ok
+A passing fact with a display name                             Passed       0.000  call                       A passing fact with a display name             Passed    0.000  ok
+Probe.Facts.Skipped                                            NotExecuted  0.001  names (test made no call)  Skipped                                        Skipped   0.000  ok
+Probe.FixtureThrows.Never_runs                                 Failed       0.001  names (test made no call)  Never runs                                     Failed    0.000  ok  (error-type-not-in-report)
+Probe.InitThrows.Never_runs                                    Failed       0.001  names (test made no call)  Never runs                                     Failed    0.000  ok  (error-type-not-in-report)
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonS Passed       0.020  call                       Non serializable rows [item: NonSer { I = 1 }] Passed    0.020  ok
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonS Passed       0.001  call                       Non serializable rows [item: NonSer { I = 2 }] Passed    0.001  ok
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonS Passed       0.000  call                       Non serializable rows [item: NonSer { I = 3 }] Passed    0.000  ok
+Probe.Theories.Rows(row: 1, ms: 50)                            Passed       0.060  call                       Rows [row: 1, ms: 50]                          Passed    0.060  ok
+Probe.Theories.Rows(row: 2, ms: 400)                           Passed       0.413  call                       Rows [row: 2, ms: 400]                         Passed    0.413  ok
+Probe.Theories.Rows(row: 3, ms: 100)                           Passed       0.110  call                       Rows [row: 3, ms: 100]                         Passed    0.110  ok
+Probe.Theories.Rows(row: 4, ms: 800)                           Failed       0.811  call                       Rows [row: 4, ms: 800]                         Failed    0.811  ok
+Probe.Theories.Rows(row: 5, ms: 200)                           Passed       0.214  call                       Rows [row: 5, ms: 200]                         Passed    0.214  ok
+Probe.Theories.Rows(row: 6, ms: 20)                            Passed       0.056  call                       Rows [row: 6, ms: 20]                          Passed    0.056  ok
+
+Per test: the call it made, the calls under its scenario, and the first line of each error
+- Probe.CtorThrows.Never_runs  [Probe.CtorThrows.Never_runs]
+    test call: (none: never reached its body); scenario: Ctor Throws > Never runs, calls (none)
+    TRX error: System.InvalidOperationException : the test class constructor throws on purpose
+    report error: the test class constructor throws on purpose
+- Probe.Di.DiInjected.Receives_the_injected_service  [Probe.Di.DiInjected.Receives_the_injected_service]
+    test call: /di/injected; scenario: Di Injected > Receives the injected service, calls /di/injected
+    injected service: instance fd8f38b1-9907-49e7-96f6-1a8797c203de, says "hello probe"
+- Order API returns 404 for v1.2  [Probe.DisplayNameDots.DottedVersion]
+    test call: /dots/version-1-2; scenario: Display Name Dots > 2, calls /dots/version-1-2
+- Does the thing.  [Probe.DisplayNameDots.TrailingDot]
+    test call: /dots/trailing-dot; scenario: Display Name Dots > Does the thing., calls /dots/trailing-dot
+- Probe.Facts.Fails  [Probe.Facts.Fails]
+    test call: /facts/fails; scenario: Facts > Fails, calls /facts/fails
+    TRX error: Assert.Equal() Failure: Values differ
+    report error: Assert.Equal() Failure: Values differ
+- A failing fact with a display name  [Probe.Facts.FailsWithDisplayName]
+    test call: /facts/displayname-fails; scenario: Facts > A failing fact with a display name, calls /facts/displayname-fails
+    TRX error: Assert.Equal() Failure: Values differ
+    report error: Assert.Equal() Failure: Values differ
+- Probe.Facts.Passes  [Probe.Facts.Passes]
+    test call: /facts/passes; scenario: Facts > Passes, calls /facts/passes
+- A passing fact with a display name  [Probe.Facts.PassesWithDisplayName]
+    test call: /facts/displayname-passes; scenario: Facts > A passing fact with a display name, calls /facts/displayname-passes
+- Probe.Facts.Skipped  [Probe.Facts.Skipped]
+    test call: (none: never reached its body); scenario: Facts > Skipped, calls (none)
+    TRX error: skipped on purpose
+    report error: -
+- Probe.FixtureThrows.Never_runs  [Probe.FixtureThrows.Never_runs]
+    test call: (none: never reached its body); scenario: Fixture Throws > Never runs, calls (none)
+    TRX error: System.InvalidOperationException : the class fixture constructor throws on purpose
+    report error: the class fixture constructor throws on purpose
+- Probe.InitThrows.Never_runs  [Probe.InitThrows.Never_runs]
+    test call: (none: never reached its body); scenario: Init Throws > Never runs, calls (none)
+    TRX error: System.InvalidOperationException : InitializeAsync throws on purpose
+    report error: InitializeAsync throws on purpose
+- Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })  [Probe.MemberDataNotSerializable.NonSerializableRows]
+    test call: /nonser/1; scenario: Member Data Not Serializable > Non serializable rows [item: NonSer { I = 1 }], calls /nonser/1
+- Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })  [Probe.MemberDataNotSerializable.NonSerializableRows]
+    test call: /nonser/2; scenario: Member Data Not Serializable > Non serializable rows [item: NonSer { I = 2 }], calls /nonser/2
+- Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })  [Probe.MemberDataNotSerializable.NonSerializableRows]
+    test call: /nonser/3; scenario: Member Data Not Serializable > Non serializable rows [item: NonSer { I = 3 }], calls /nonser/3
+- Probe.Theories.Rows(row: 1, ms: 50)  [Probe.Theories.Rows]
+    test call: /row/1/slept/50; scenario: Theories > Rows [row: 1, ms: 50], calls /row/1/slept/50
+- Probe.Theories.Rows(row: 2, ms: 400)  [Probe.Theories.Rows]
+    test call: /row/2/slept/400; scenario: Theories > Rows [row: 2, ms: 400], calls /row/2/slept/400
+- Probe.Theories.Rows(row: 3, ms: 100)  [Probe.Theories.Rows]
+    test call: /row/3/slept/100; scenario: Theories > Rows [row: 3, ms: 100], calls /row/3/slept/100
+- Probe.Theories.Rows(row: 4, ms: 800)  [Probe.Theories.Rows]
+    test call: /row/4/slept/800; scenario: Theories > Rows [row: 4, ms: 800], calls /row/4/slept/800
+    TRX error: Assert.NotEqual() Failure: Values are equal
+    report error: Assert.NotEqual() Failure: Values are equal
+- Probe.Theories.Rows(row: 5, ms: 200)  [Probe.Theories.Rows]
+    test call: /row/5/slept/200; scenario: Theories > Rows [row: 5, ms: 200], calls /row/5/slept/200
+- Probe.Theories.Rows(row: 6, ms: 20)  [Probe.Theories.Rows]
+    test call: /row/6/slept/20; scenario: Theories > Rows [row: 6, ms: 20], calls /row/6/slept/20
+
+xUnit tests with no scenario (0):
+Scenarios with no xUnit test (0):
+
+Scenario results in the report: Failed 3, Failed (no duration) 3, Passed 13, Skipped (no duration) 1
+
+Run times (UTC):
+  TRX run:            start 17:57:20.376Z  finish 17:57:22.714Z  (2.338s)
+  TRX tests:          first start 17:57:20.782Z  last end 17:57:22.459Z
+  report:             start 2026-10-07T17:57:20Z  end 2026-10-07T17:57:22Z  (end - start = 2.0s; the report writes whole seconds)
+  report scenarios:   earliest endedAt 2026-10-07T17:57:20.779Z  latest endedAt 2026-10-07T17:57:22.458Z
+  scenarios whose endedAt is before the report's start: 0 of 20
+
+Background section: 0 call(s)
+Report diagnostics: none

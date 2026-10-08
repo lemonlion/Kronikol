@@ -1,0 +1,536 @@
+{
+ "label": "F.DependencyInjectionPrototype-sync0 run 1",
+ "trxStart": "17:57:17.261Z",
+ "trxFinish": "17:57:19.540Z",
+ "trxFirstTestStart": "17:57:17.662Z",
+ "trxLastTestEnd": "17:57:19.318Z",
+ "reportStart": "2026-10-07T17:57:17Z",
+ "reportEnd": "2026-10-07T17:57:19Z",
+ "reportWritten": true,
+ "scenarioCount": 20,
+ "scenarioResults": {
+  "Failed (no duration)": 3,
+  "Passed": 13,
+  "Failed": 3,
+  "Skipped (no duration)": 1
+ },
+ "earliestEndedAt": "2026-10-07T17:57:17.659Z",
+ "rows": [
+  {
+   "test": "Probe.CtorThrows.Never_runs",
+   "fqn": "Probe.CtorThrows.Never_runs",
+   "outcome": "Failed",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "System.InvalidOperationException : the test class constructor throws on purpose",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [
+    "error-type-not-in-report"
+   ],
+   "scenario": {
+    "id": "a343b382-6134-4078-bdaf-aac210feca11",
+    "feature": "Ctor Throws",
+    "name": "Never runs",
+    "result": "Failed",
+    "seconds": 0,
+    "error": "the test class constructor throws on purpose",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.Di.DiInjected.Receives_the_injected_service",
+   "fqn": "Probe.Di.DiInjected.Receives_the_injected_service",
+   "outcome": "Passed",
+   "seconds": 0.0237324,
+   "path": "/di/injected",
+   "testError": "",
+   "sharedThing": null,
+   "diService": [
+    "f683bd7a-0f8a-4688-849f-2b5c9b554650",
+    "hello probe\r"
+   ],
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "900763a8-af19-4f24-9f71-d63b8f42ca2e",
+    "feature": "Di Injected",
+    "name": "Receives the injected service",
+    "result": "Passed",
+    "seconds": 0.0237324,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Order API returns 404 for v1.2",
+   "fqn": "Probe.DisplayNameDots.DottedVersion",
+   "outcome": "Passed",
+   "seconds": 0.0011106,
+   "path": "/dots/version-1-2",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": null,
+   "flags": [
+    "NO-SCENARIO"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": null
+  },
+  {
+   "test": "Does the thing.",
+   "fqn": "Probe.DisplayNameDots.TrailingDot",
+   "outcome": "Passed",
+   "seconds": 0.0237478,
+   "path": "/dots/trailing-dot",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "8eac9a4d-f4d2-4def-b02a-4cee1605473f",
+    "feature": "Display Name Dots",
+    "name": "Does the thing.",
+    "result": "Passed",
+    "seconds": 0.0237478,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.Facts.Fails",
+   "fqn": "Probe.Facts.Fails",
+   "outcome": "Failed",
+   "seconds": 0.0257954,
+   "path": "/facts/fails",
+   "testError": "Assert.Equal() Failure: Values differ",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "a55fa677-ccd9-4f51-9081-83222035f873",
+    "feature": "Facts",
+    "name": "Fails",
+    "result": "Failed",
+    "seconds": 0.0257954,
+    "error": "Assert.Equal() Failure: Values differ",
+    "calls": []
+   }
+  },
+  {
+   "test": "A failing fact with a display name",
+   "fqn": "Probe.Facts.FailsWithDisplayName",
+   "outcome": "Failed",
+   "seconds": 0.0005603,
+   "path": "/facts/displayname-fails",
+   "testError": "Assert.Equal() Failure: Values differ",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "64d2b31a-a6a4-43a2-a9db-2745eeaf07bc",
+    "feature": "Facts",
+    "name": "A failing fact with a display name",
+    "result": "Failed",
+    "seconds": 0.0005603,
+    "error": "Assert.Equal() Failure: Values differ",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.Facts.Passes",
+   "fqn": "Probe.Facts.Passes",
+   "outcome": "Passed",
+   "seconds": 8.29e-05,
+   "path": "/facts/passes",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "9ab04c58-8a95-4511-9e72-9fd33669893b",
+    "feature": "Facts",
+    "name": "Passes",
+    "result": "Passed",
+    "seconds": 8.29e-05,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "A passing fact with a display name",
+   "fqn": "Probe.Facts.PassesWithDisplayName",
+   "outcome": "Passed",
+   "seconds": 0.0001247,
+   "path": "/facts/displayname-passes",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "8d8fccc1-341e-4e10-a5a4-5d22385b0d1f",
+    "feature": "Facts",
+    "name": "A passing fact with a display name",
+    "result": "Passed",
+    "seconds": 0.0001247,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.Facts.Skipped",
+   "fqn": "Probe.Facts.Skipped",
+   "outcome": "NotExecuted",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "skipped on purpose",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "5b768e01-2bc6-43a1-965a-ff72acda8901",
+    "feature": "Facts",
+    "name": "Skipped",
+    "result": "Skipped",
+    "seconds": 0,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.FixtureThrows.Never_runs",
+   "fqn": "Probe.FixtureThrows.Never_runs",
+   "outcome": "Failed",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "System.InvalidOperationException : the class fixture constructor throws on purpose",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [
+    "error-type-not-in-report"
+   ],
+   "scenario": {
+    "id": "144e5e37-b77b-4ac3-a61e-f6f4096d299d",
+    "feature": "Fixture Throws",
+    "name": "Never runs",
+    "result": "Failed",
+    "seconds": 0,
+    "error": "the class fixture constructor throws on purpose",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.InitThrows.Never_runs",
+   "fqn": "Probe.InitThrows.Never_runs",
+   "outcome": "Failed",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "System.InvalidOperationException : InitializeAsync throws on purpose",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [
+    "error-type-not-in-report"
+   ],
+   "scenario": {
+    "id": "77d8115a-2772-467d-a72b-8b4154e2d0d9",
+    "feature": "Init Throws",
+    "name": "Never runs",
+    "result": "Failed",
+    "seconds": 0,
+    "error": "InitializeAsync throws on purpose",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })",
+   "fqn": "Probe.MemberDataNotSerializable.NonSerializableRows",
+   "outcome": "Passed",
+   "seconds": 0.0238027,
+   "path": "/nonser/1",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "de5ad158-13c6-42bf-87a4-8b0ed15c6ba8",
+    "feature": "Member Data Not Serializable",
+    "name": "Non serializable rows [item: NonSer { I = 1 }]",
+    "result": "Passed",
+    "seconds": 0.0238027,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })",
+   "fqn": "Probe.MemberDataNotSerializable.NonSerializableRows",
+   "outcome": "Passed",
+   "seconds": 0.0011551,
+   "path": "/nonser/2",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "2c67ab43-5e80-41ba-9806-d10695b98bb2",
+    "feature": "Member Data Not Serializable",
+    "name": "Non serializable rows [item: NonSer { I = 2 }]",
+    "result": "Passed",
+    "seconds": 0.0011551,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })",
+   "fqn": "Probe.MemberDataNotSerializable.NonSerializableRows",
+   "outcome": "Passed",
+   "seconds": 0.0003271,
+   "path": "/nonser/3",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "7c669e48-1098-4efa-8cd4-db29ac484872",
+    "feature": "Member Data Not Serializable",
+    "name": "Non serializable rows [item: NonSer { I = 3 }]",
+    "result": "Passed",
+    "seconds": 0.0003271,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 1, ms: 50)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Passed",
+   "seconds": 0.060658,
+   "path": "/row/1/slept/50",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "cddcf808-2ddb-4772-b4f4-7fb31b36c232",
+    "feature": "Theories",
+    "name": "Rows [row: 1, ms: 50]",
+    "result": "Passed",
+    "seconds": 0.060658,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 2, ms: 400)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Passed",
+   "seconds": 0.4092679,
+   "path": "/row/2/slept/400",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "6b1ee2d9-aa2b-4482-9cd8-1567a245640d",
+    "feature": "Theories",
+    "name": "Rows [row: 2, ms: 400]",
+    "result": "Passed",
+    "seconds": 0.4092679,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 3, ms: 100)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Passed",
+   "seconds": 0.1064225,
+   "path": "/row/3/slept/100",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "f4cf8d2b-c455-481b-8db9-1f2a21d8db01",
+    "feature": "Theories",
+    "name": "Rows [row: 3, ms: 100]",
+    "result": "Passed",
+    "seconds": 0.1064225,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 4, ms: 800)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Failed",
+   "seconds": 0.8107284,
+   "path": "/row/4/slept/800",
+   "testError": "Assert.NotEqual() Failure: Values are equal",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "a3348614-da4f-40db-8630-417568ec8501",
+    "feature": "Theories",
+    "name": "Rows [row: 4, ms: 800]",
+    "result": "Failed",
+    "seconds": 0.8107284,
+    "error": "Assert.NotEqual() Failure: Values are equal",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 5, ms: 200)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Passed",
+   "seconds": 0.2157045,
+   "path": "/row/5/slept/200",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "e351e99f-19e8-417f-b373-468bf1dbb8fe",
+    "feature": "Theories",
+    "name": "Rows [row: 5, ms: 200]",
+    "result": "Passed",
+    "seconds": 0.2157045,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 6, ms: 20)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Passed",
+   "seconds": 0.0547925,
+   "path": "/row/6/slept/20",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (its call is in no scenario)",
+   "flags": [
+    "CALL-MISSING"
+   ],
+   "notes": [
+    "call-nowhere-in-TestRunReport.json"
+   ],
+   "scenario": {
+    "id": "20ef419e-7b21-4ef0-a757-3aa0620a4d74",
+    "feature": "Theories",
+    "name": "Rows [row: 6, ms: 20]",
+    "result": "Passed",
+    "seconds": 0.0547925,
+    "error": "",
+    "calls": []
+   }
+  }
+ ],
+ "unmatchedScenarios": [
+  {
+   "feature": "Display Name Dots",
+   "name": "2",
+   "result": "Passed",
+   "seconds": 0.0011106,
+   "calls": []
+  }
+ ],
+ "background": [],
+ "diagnostics": {}
+}

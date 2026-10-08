@@ -236,6 +236,111 @@ public class ScenarioTitleResolverTests
         Assert.StartsWith("Test method [", result);
     }
 
+    // A display name that is a sentence, not a method path: xUnit's [Fact(DisplayName = …)], MSTest's
+    // DisplayName, TUnit's. Its last '.' is punctuation, not a namespace separator (#132, #123).
+
+    [Fact]
+    public void FormatScenarioDisplayName_KeepsASentenceWithADottedVersionWhole()
+    {
+        var result = ScenarioTitleResolver.FormatScenarioDisplayName("Order API returns 404 for v1.2");
+        Assert.Equal("Order api returns 404 for v1.2", result);
+    }
+
+    [Fact]
+    public void FormatScenarioDisplayName_KeepsASentenceEndingInAFullStop()
+    {
+        var result = ScenarioTitleResolver.FormatScenarioDisplayName("Does the thing.");
+        Assert.Equal("Does the thing.", result);
+    }
+
+    [Fact]
+    public void FormatScenarioDisplayName_GivesAnEmptyNameForAnEmptyDisplayName()
+    {
+        var result = ScenarioTitleResolver.FormatScenarioDisplayName("");
+        Assert.Equal("", result);
+    }
+
+    [Fact]
+    public void FormatScenarioDisplayName_KeepsTheClosingParenthesisOfAnArgument()
+    {
+        var result = ScenarioTitleResolver.FormatScenarioDisplayName("Ns.Class.M(x: Foo())");
+        Assert.Equal("M [x: Foo()]", result);
+    }
+
+    [Fact]
+    public void FormatScenarioDisplayName_StillStripsTheNamespaceFromATheoryRow()
+    {
+        var result = ScenarioTitleResolver.FormatScenarioDisplayName("Ns.Class.Method(row: 1)");
+        Assert.Equal("Method [row: 1]", result);
+    }
+
+    [Fact]
+    public void FormatScenarioDisplayName_KeepsAVersionNumberThatIsNotAMethodPath()
+    {
+        // No whitespace, but "2" cannot be a method name, so "v1" is no namespace.
+        var result = ScenarioTitleResolver.FormatScenarioDisplayName("v1.2");
+        Assert.Equal("V1.2", result);
+    }
+
+    [Fact]
+    public void FormatScenarioDisplayName_ReadsParenthesesInsideASentenceAsText()
+    {
+        // Arguments are what a test framework appends at the end; this name has none.
+        var result = ScenarioTitleResolver.FormatScenarioDisplayName("Returns 404 (not found) for a missing order");
+        Assert.Equal("Returns 404 (not found) for a missing order", result);
+    }
+
+    [Fact]
+    public void FormatScenarioDisplayName_TakesTheArgumentsOfATheoryWithADisplayName()
+    {
+        // xUnit appends a row's arguments to the theory's own DisplayName.
+        var result = ScenarioTitleResolver.FormatScenarioDisplayName("Order total(qty: 1)");
+        Assert.Equal("Order total [qty: 1]", result);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(".")]
+    [InlineData("..")]
+    [InlineData("a.")]
+    [InlineData(".a")]
+    [InlineData("Ns.Class.")]
+    [InlineData("_")]
+    [InlineData("__")]
+    [InlineData("(")]
+    [InlineData(")")]
+    [InlineData("()")]
+    [InlineData("(x: 1)")]
+    [InlineData("a(")]
+    [InlineData("a)")]
+    [InlineData("Ns.C.M(")]
+    [InlineData("x(y(z))")]
+    [InlineData("1.2.3")]
+    [InlineData("Does the thing. ")]
+    [InlineData("…")]
+    [InlineData("Ünïcode.Prüfung")]
+    [InlineData("日本語のテスト.")]
+    public void FormatScenarioDisplayName_NeverThrows(string displayName)
+    {
+        var result = ScenarioTitleResolver.FormatScenarioDisplayName(displayName);
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void ResolveScenarioTitle_KeepsTheTitleWhenTheMethodNameIsEmpty()
+    {
+        var result = ScenarioTitleResolver.ResolveScenarioTitle("SomeTests", "SomeTests", "");
+        Assert.Equal("SomeTests", result);
+    }
+
+    [Fact]
+    public void AppendTestParameters_KeepsTheClosingParenthesisOfAnArgument()
+    {
+        var result = ScenarioTitleResolver.AppendTestParameters("Some title", "Ns.C.M(x: Foo())");
+        Assert.Equal("Some title [x: Foo()]", result);
+    }
+
     // ── FormatFeatureName ──
 
     [Theory]

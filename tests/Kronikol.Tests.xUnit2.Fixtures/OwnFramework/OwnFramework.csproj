@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Kronikol.xUnit2's own ReportingTestFramework, under xunit.runner.visualstudio 2.8.2. -->
+</Project>

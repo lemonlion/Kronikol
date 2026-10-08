@@ -1248,7 +1248,7 @@ public static class ReportGenerator
         bool showScenarioHistory = false,
         WarmUpResult? warmUp = null)
     {
-        if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
+        if (generateBlankOnFailedTests && CannotVouchForSpecifications(features))
             return WriteFile(string.Empty, fileName);
 
         // The run's first-call warm-up (plans/WARM_UP_PLAN.md R2): a run hands in what it found once for every output, a
@@ -2546,7 +2546,7 @@ public static class ReportGenerator
         string title,
         bool generateBlankOnFailedTests = false)
     {
-        if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
+        if (generateBlankOnFailedTests && CannotVouchForSpecifications(features))
             return WriteFile(string.Empty, fileName);
 
         var yml = new StringBuilder();
@@ -5777,9 +5777,16 @@ public static class ReportGenerator
         }
     }
 
+    /// <summary>
+    /// Whether the specifications are written blank: a scenario failed, or its result is a default rather than a
+    /// verdict (<see cref="Scenario.ResultDefaulted"/>), so the run cannot say the system does what they describe.
+    /// </summary>
+    private static bool CannotVouchForSpecifications(Feature[] features) =>
+        features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed || y.ResultDefaulted));
+
     public static string GenerateSpecificationsData(Feature[] features, string fileName, string title, DataFormat format, bool generateBlankOnFailedTests = false)
     {
-        if (generateBlankOnFailedTests && features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed)))
+        if (generateBlankOnFailedTests && CannotVouchForSpecifications(features))
             return WriteFile(string.Empty, fileName);
 
         return format switch

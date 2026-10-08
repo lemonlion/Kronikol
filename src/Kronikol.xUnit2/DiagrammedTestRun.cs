@@ -13,6 +13,11 @@ namespace Kronikol.xUnit2;
 /// is not strictly required. It remains useful for starting/stopping HTTP fakes
 /// and other shared test resources.
 /// </para>
+/// <para>
+/// Reports written from <c>Dispose</c> carry no test's result: xUnit v2 shows results only to the test
+/// framework. Every scenario is reported as passed and marked as a default rather than a verdict, and the
+/// specifications are written blank.
+/// </para>
 /// </summary>
 public class DiagrammedTestRun
 {

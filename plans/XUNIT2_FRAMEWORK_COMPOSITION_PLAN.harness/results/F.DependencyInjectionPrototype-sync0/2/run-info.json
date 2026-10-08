@@ -1,0 +1,13 @@
+{
+  "lane": "F.DependencyInjectionPrototype-sync0",
+  "project": "F.DependencyInjectionPrototype",
+  "run": 2,
+  "vars": {
+    "PROBE_SYNC": "0",
+    "PROBE_FORMAT_GUARD": "1"
+  },
+  "artifacts": "main",
+  "startedUtc": "2026-10-07T17:57:22.9731991Z",
+  "wallSeconds": 2.904,
+  "exitCode": 1
+}

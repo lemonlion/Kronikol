@@ -1,0 +1,1 @@
+no Reports directory in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness/.build/main/bin/B.AssemblyFixtureOnly/debug

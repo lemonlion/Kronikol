@@ -29,10 +29,14 @@ internal static class ScenarioInfoCollectionExtensions
                                 Result = x.Result,
                                 DisplayName = x.ScenarioName,
                                 IsHappyPath = x.IsHappyPath,
-                                ErrorMessage = x.ErrorMessage ?? string.Empty,
-                                ErrorStackTrace = x.ErrorStackTrace ?? string.Empty,
+                                // Null when there is nothing to report, the rule every failure field follows
+                                // (FailureText.OrNull): an empty string here gave every passing xUnit v2
+                                // scenario an errorMessage of "".
+                                ErrorMessage = FailureText.OrNull(x.ErrorMessage),
+                                ErrorStackTrace = FailureText.OrNull(x.ErrorStackTrace),
                                 Duration = x.Duration,
                                 EndedAt = x.EndedAt,
+                                ResultDefaulted = x.ResultDefaulted,
                                 Steps = StepCollector.GetSteps(x.Id) is { Length: > 0 } steps ? steps : null,
                                 Attachments = StepCollector.GetScenarioAttachments(x.Id),
                                 OutlineId = parsed is { Count: > 0 } ? ParameterParser.ExtractBaseName(x.ScenarioName) : null,

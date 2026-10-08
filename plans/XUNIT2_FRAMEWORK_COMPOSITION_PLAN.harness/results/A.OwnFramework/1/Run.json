@@ -1,0 +1,22 @@
+{
+  "runManifestVersion": 1,
+  "run": "local:20261007T174449Z:f05b3ba2",
+  "at": "2026-10-07T17:44:49Z",
+  "suite": null,
+  "scenarios": 15,
+  "failed": 2,
+  "partial": null,
+  "kronikolVersion": "4.9.0\u002B417c8e5855adb837099c9bb7f98b3a7606a79fbe",
+  "files": [
+    "ComponentDiagram.html",
+    "Failures.jsonl",
+    "Failures.md",
+    "Specifications.html",
+    "Specifications.yml",
+    "TestRunReport.html",
+    "TestRunReport.json",
+    "TestRunReport.labs.html",
+    "TestRunReport.schema.json"
+  ],
+  "attachments": []
+}

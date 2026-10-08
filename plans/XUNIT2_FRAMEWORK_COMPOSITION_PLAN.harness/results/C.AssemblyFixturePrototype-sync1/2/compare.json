@@ -1,0 +1,531 @@
+{
+ "label": "C.AssemblyFixturePrototype-sync1 run 2",
+ "trxStart": "17:45:02.926Z",
+ "trxFinish": "17:45:05.241Z",
+ "trxFirstTestStart": "17:45:03.312Z",
+ "trxLastTestEnd": "17:45:04.995Z",
+ "reportStart": "2026-10-07T17:45:03Z",
+ "reportEnd": "2026-10-07T17:45:05Z",
+ "reportWritten": true,
+ "scenarioCount": 21,
+ "scenarioResults": {
+  "Passed": 14,
+  "Failed (no duration)": 3,
+  "Failed": 3,
+  "Skipped (no duration)": 1
+ },
+ "earliestEndedAt": "2026-10-07T17:45:03.311Z",
+ "rows": [
+  {
+   "test": "Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture",
+   "fqn": "Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture",
+   "outcome": "Passed",
+   "seconds": 0.026152,
+   "path": "/assemblyfixture/a",
+   "testError": "",
+   "sharedThing": [
+    "056aabf5-4fa3-45b6-a968-be0b8a463d7e",
+    "1"
+   ],
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "e224c325-3280-443d-911a-bf31efa0112e",
+    "feature": "Assembly Fixture User A",
+    "name": "Receives the assembly fixture",
+    "result": "Passed",
+    "seconds": 0.026152,
+    "error": "",
+    "calls": [
+     "/assemblyfixture/a"
+    ]
+   }
+  },
+  {
+   "test": "Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture",
+   "fqn": "Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture",
+   "outcome": "Passed",
+   "seconds": 0.0262228,
+   "path": "/assemblyfixture/b",
+   "testError": "",
+   "sharedThing": [
+    "056aabf5-4fa3-45b6-a968-be0b8a463d7e",
+    "1"
+   ],
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "44aab6f1-2c01-495c-961c-f890abaa6f12",
+    "feature": "Assembly Fixture User B",
+    "name": "Receives the assembly fixture",
+    "result": "Passed",
+    "seconds": 0.0262228,
+    "error": "",
+    "calls": [
+     "/assemblyfixture/b"
+    ]
+   }
+  },
+  {
+   "test": "Probe.CtorThrows.Never_runs",
+   "fqn": "Probe.CtorThrows.Never_runs",
+   "outcome": "Failed",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "System.InvalidOperationException : the test class constructor throws on purpose",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [
+    "error-type-not-in-report"
+   ],
+   "scenario": {
+    "id": "d6260573-2869-439a-b73a-908532d57b20",
+    "feature": "Ctor Throws",
+    "name": "Never runs",
+    "result": "Failed",
+    "seconds": 0,
+    "error": "the test class constructor throws on purpose",
+    "calls": []
+   }
+  },
+  {
+   "test": "Order API returns 404 for v1.2",
+   "fqn": "Probe.DisplayNameDots.DottedVersion",
+   "outcome": "Passed",
+   "seconds": 0.0003197,
+   "path": "/dots/version-1-2",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [
+    "NAME"
+   ],
+   "notes": [],
+   "scenario": {
+    "id": "7693b231-c794-42cc-81fe-4848c51d0a38",
+    "feature": "Display Name Dots",
+    "name": "2",
+    "result": "Passed",
+    "seconds": 0.0003197,
+    "error": "",
+    "calls": [
+     "/dots/version-1-2"
+    ]
+   }
+  },
+  {
+   "test": "Does the thing.",
+   "fqn": "Probe.DisplayNameDots.TrailingDot",
+   "outcome": "Passed",
+   "seconds": 0.0247549,
+   "path": "/dots/trailing-dot",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "17a4218f-90e3-40db-b5eb-03ca1376b0af",
+    "feature": "Display Name Dots",
+    "name": "Does the thing.",
+    "result": "Passed",
+    "seconds": 0.0247549,
+    "error": "",
+    "calls": [
+     "/dots/trailing-dot"
+    ]
+   }
+  },
+  {
+   "test": "Probe.Facts.Fails",
+   "fqn": "Probe.Facts.Fails",
+   "outcome": "Failed",
+   "seconds": 0.0013956,
+   "path": "/facts/fails",
+   "testError": "Assert.Equal() Failure: Values differ",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "5d5c6534-f679-4127-b000-0ac9324849b5",
+    "feature": "Facts",
+    "name": "Fails",
+    "result": "Failed",
+    "seconds": 0.0013956,
+    "error": "Assert.Equal() Failure: Values differ",
+    "calls": [
+     "/facts/fails"
+    ]
+   }
+  },
+  {
+   "test": "A failing fact with a display name",
+   "fqn": "Probe.Facts.FailsWithDisplayName",
+   "outcome": "Failed",
+   "seconds": 0.0004168,
+   "path": "/facts/displayname-fails",
+   "testError": "Assert.Equal() Failure: Values differ",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "34a408c5-f1a8-41f2-8549-41f2f93214e4",
+    "feature": "Facts",
+    "name": "A failing fact with a display name",
+    "result": "Failed",
+    "seconds": 0.0004168,
+    "error": "Assert.Equal() Failure: Values differ",
+    "calls": [
+     "/facts/displayname-fails"
+    ]
+   }
+  },
+  {
+   "test": "Probe.Facts.Passes",
+   "fqn": "Probe.Facts.Passes",
+   "outcome": "Passed",
+   "seconds": 0.0246116,
+   "path": "/facts/passes",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "44ec85fc-035c-4b84-937e-e56b901226d4",
+    "feature": "Facts",
+    "name": "Passes",
+    "result": "Passed",
+    "seconds": 0.0246116,
+    "error": "",
+    "calls": [
+     "/facts/passes"
+    ]
+   }
+  },
+  {
+   "test": "A passing fact with a display name",
+   "fqn": "Probe.Facts.PassesWithDisplayName",
+   "outcome": "Passed",
+   "seconds": 0.0001702,
+   "path": "/facts/displayname-passes",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "1a37d2ac-f04c-471d-b236-763be72d1598",
+    "feature": "Facts",
+    "name": "A passing fact with a display name",
+    "result": "Passed",
+    "seconds": 0.0001702,
+    "error": "",
+    "calls": [
+     "/facts/displayname-passes"
+    ]
+   }
+  },
+  {
+   "test": "Probe.Facts.Skipped",
+   "fqn": "Probe.Facts.Skipped",
+   "outcome": "NotExecuted",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "skipped on purpose",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "670fc9d1-df44-406c-b7d7-4708bdc6b8d5",
+    "feature": "Facts",
+    "name": "Skipped",
+    "result": "Skipped",
+    "seconds": 0,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.FixtureThrows.Never_runs",
+   "fqn": "Probe.FixtureThrows.Never_runs",
+   "outcome": "Failed",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "Class fixture type 'Probe.ThrowingFixture' threw in its constructor",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "f12e18aa-5a49-4a55-a59e-c3e84e63c2d6",
+    "feature": "Fixture Throws",
+    "name": "Never runs",
+    "result": "Failed",
+    "seconds": 0,
+    "error": "Class fixture type 'Probe.ThrowingFixture' threw in its constructor",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.InitThrows.Never_runs",
+   "fqn": "Probe.InitThrows.Never_runs",
+   "outcome": "Failed",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "System.InvalidOperationException : InitializeAsync throws on purpose",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [
+    "error-type-not-in-report"
+   ],
+   "scenario": {
+    "id": "e3d1a78d-f518-47c5-bbc5-928419da6f7f",
+    "feature": "Init Throws",
+    "name": "Never runs",
+    "result": "Failed",
+    "seconds": 0,
+    "error": "InitializeAsync throws on purpose",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })",
+   "fqn": "Probe.MemberDataNotSerializable.NonSerializableRows",
+   "outcome": "Passed",
+   "seconds": 0.0252506,
+   "path": "/nonser/1",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "62f14938-f5d6-4ec4-8f56-573a47647cd8",
+    "feature": "Member Data Not Serializable",
+    "name": "Non serializable rows [item: NonSer { I = 1 }]",
+    "result": "Passed",
+    "seconds": 0.0252506,
+    "error": "",
+    "calls": [
+     "/nonser/1"
+    ]
+   }
+  },
+  {
+   "test": "Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })",
+   "fqn": "Probe.MemberDataNotSerializable.NonSerializableRows",
+   "outcome": "Passed",
+   "seconds": 0.0006177,
+   "path": "/nonser/2",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "64ade546-00a3-497e-9e00-e97735d6a50b",
+    "feature": "Member Data Not Serializable",
+    "name": "Non serializable rows [item: NonSer { I = 2 }]",
+    "result": "Passed",
+    "seconds": 0.0006177,
+    "error": "",
+    "calls": [
+     "/nonser/2"
+    ]
+   }
+  },
+  {
+   "test": "Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })",
+   "fqn": "Probe.MemberDataNotSerializable.NonSerializableRows",
+   "outcome": "Passed",
+   "seconds": 8.31e-05,
+   "path": "/nonser/3",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "0289d71b-dcad-4530-9e35-b7fab0298b25",
+    "feature": "Member Data Not Serializable",
+    "name": "Non serializable rows [item: NonSer { I = 3 }]",
+    "result": "Passed",
+    "seconds": 8.31e-05,
+    "error": "",
+    "calls": [
+     "/nonser/3"
+    ]
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 1, ms: 50)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Passed",
+   "seconds": 0.0615293,
+   "path": "/row/1/slept/50",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "b62276c6-acdc-42b4-a24e-e3bb00dbe048",
+    "feature": "Theories",
+    "name": "Rows [row: 1, ms: 50]",
+    "result": "Passed",
+    "seconds": 0.0615293,
+    "error": "",
+    "calls": [
+     "/row/1/slept/50"
+    ]
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 2, ms: 400)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Passed",
+   "seconds": 0.4092045,
+   "path": "/row/2/slept/400",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "e0b2d204-c5d7-48a8-ae48-11cfbbb55dcb",
+    "feature": "Theories",
+    "name": "Rows [row: 2, ms: 400]",
+    "result": "Passed",
+    "seconds": 0.4092045,
+    "error": "",
+    "calls": [
+     "/row/2/slept/400"
+    ]
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 3, ms: 100)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Passed",
+   "seconds": 0.1070394,
+   "path": "/row/3/slept/100",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "8369247d-9b9a-4f2b-86e2-beac2b242cd6",
+    "feature": "Theories",
+    "name": "Rows [row: 3, ms: 100]",
+    "result": "Passed",
+    "seconds": 0.1070394,
+    "error": "",
+    "calls": [
+     "/row/3/slept/100"
+    ]
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 4, ms: 800)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Failed",
+   "seconds": 0.8126913,
+   "path": "/row/4/slept/800",
+   "testError": "Assert.NotEqual() Failure: Values are equal",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "6db3834b-a4f8-4756-b3dc-caf88fd1b52d",
+    "feature": "Theories",
+    "name": "Rows [row: 4, ms: 800]",
+    "result": "Failed",
+    "seconds": 0.8126913,
+    "error": "Assert.NotEqual() Failure: Values are equal",
+    "calls": [
+     "/row/4/slept/800"
+    ]
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 5, ms: 200)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Passed",
+   "seconds": 0.2124438,
+   "path": "/row/5/slept/200",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "ebe81992-7384-41f3-960f-ee6d1b1caed2",
+    "feature": "Theories",
+    "name": "Rows [row: 5, ms: 200]",
+    "result": "Passed",
+    "seconds": 0.2124438,
+    "error": "",
+    "calls": [
+     "/row/5/slept/200"
+    ]
+   }
+  },
+  {
+   "test": "Probe.Theories.Rows(row: 6, ms: 20)",
+   "fqn": "Probe.Theories.Rows",
+   "outcome": "Passed",
+   "seconds": 0.0511792,
+   "path": "/row/6/slept/20",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "12374c7b-f55f-48c7-979d-34aa648117bd",
+    "feature": "Theories",
+    "name": "Rows [row: 6, ms: 20]",
+    "result": "Passed",
+    "seconds": 0.0511792,
+    "error": "",
+    "calls": [
+     "/row/6/slept/20"
+    ]
+   }
+  }
+ ],
+ "unmatchedScenarios": [],
+ "background": [],
+ "diagnostics": {}
+}

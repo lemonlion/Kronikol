@@ -4,6 +4,86 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.11.1] - 2026-10-08
+
+**Patch - xUnit v2 results reach the right scenario, and the tests the report dropped appear (#123).**
+`plans/XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md` R1 (S0 to S4), decision D38, roadmap row 1.24. Bug fixes, and nothing new for
+a consumer to call, so the patch part moves (4.11.0 to 4.11.1). What readers will see change is listed under Changed
+below. The history action's `VERSION` installs `Kronikol.Tool` 4.11.1, and the templates pin 4.11.0.
+
+### Fixed
+
+- **Kronikol.xUnit2 paired each test's result with its scenario by method name (#123).** A failing
+  `[Fact(DisplayName = ...)]` was reported as passed, with no error and no duration, under its method's name, and the
+  rows of a theory swapped verdicts, durations and calls, differently on each run; a row's own call could land in the
+  background section, because its scenario carried another row's earlier end. `ReportingTestFramework` now makes each
+  tracked test's scenario when xUnit sends the test's `ITestStarting`, keyed by the test's `ITest` object, hands it to
+  `TestTrackingAttribute.Before` on the test's own flow, and gives each result message to the scenario of the test it
+  names. Every row of a theory, rows whose data cannot be serialized included, and every `DisplayName` fact gets its own
+  verdict, duration, error and calls. Measured on 4.9.0 (the plan's harness, probe A): every run swapped 3 to 6 of a
+  six-row theory's rows.
+- **A suite that set xUnit's `methodDisplay` to `method` got no results at all.** Its display names lack the class, so
+  no name matched, and every scenario read Passed with no duration. Results no longer depend on the display name's text.
+- **A tracked test that never reached its first line was missing from the report.** A skipped test is now reported
+  Skipped, and a test whose constructor, `InitializeAsync`, class fixture or constructor arguments fail is reported
+  Failed with the error and no calls, as the runner reports them. A test `TestTrackingAttribute` does not apply to is
+  still left out.
+- **The run's start could be its end.** It came from a static field set when `ReportLifecycle` was first touched, which
+  in a suite that never set `ReportLifecycle.Options` was the moment the reports were written: start equalled end in
+  8 of 8 measured runs. It is now the time the test assembly started.
+- **A scenario with no verdict read as a plain pass.** A test xUnit sent no result for (a cancelled run sends none) is
+  reported Passed with `ResultDefaulted` set and a `ResultDefaulted` diagnostic, as `kronikol ingest` reports one, so
+  `Failures.md` and `kronikol query` say the verdict was not measured. The wiki's collection-fixture alternative, which
+  writes the reports through `XUnit2ReportGenerator.CreateStandardReportsWithDiagrams(start, end, options)`, sees no
+  result at all: every scenario on that path is now reported the same way, where all of them read Passed while the
+  runner counted failures.
+- **`Specifications.html` was written in full for a run whose verdicts were defaults.** The specifications are written
+  blank when a scenario failed, and now also when a scenario's result is a default rather than a verdict. This reaches
+  every producer that marks one: `kronikol ingest` with its default `ResultWhenUnknown` and a test that never ended, too.
+- **`ScenarioTitleResolver.FormatScenarioDisplayName` cut a sentence at its last `.`, and two inputs made it throw.**
+  "Order API returns 404 for v1.2" was named "2", and "Does the thing." or an empty name threw
+  `IndexOutOfRangeException`, which inside a message sink would have stopped the run. A dotted prefix is now removed only
+  from a method path (no whitespace, and a last part that can name a method), parameters are read only from a name that
+  ends in `)`, so "Returns 404 (not found) for a missing order" is no longer cut into a parameter list, and an argument's
+  own closing parenthesis is kept (`M(x: Foo())` gives `M [x: Foo()]`, where it gave `M [x: Foo(]`). No input throws.
+  The xUnit v3, MSTest, NUnit and TUnit adapters pass display names to it too, so their reports change the same way;
+  casing is left as it is (#139). `ResolveScenarioTitle` keeps the title for an empty method name, where it threw, and
+  `AppendTestParameters` keeps an argument's closing parenthesis.
+- **A passing xUnit v2 scenario carried an empty `errorMessage` and `errorStackTrace`** where the field should be absent,
+  the defect 3.1.0 removed from xUnit v3.
+- **The runner's sink gets its messages as it would without Kronikol.** The framework turns on xUnit's synchronous
+  message reporting, on a copy of the runner's options, so that it sees each test start on the test's own flow. Its
+  sink then passes every message to the runner's sink from one thread, in order, as xUnit's own message bus does: a
+  `false` from the runner cancels the run and an exception from it becomes an `ErrorMessage`. A failure while writing the
+  reports never reaches the run; it is appended to `kronikol-error.log` beside the test assembly.
+
+### Changed
+
+- A `[Fact(DisplayName = ...)]` scenario is named after its display name, where it was named after its method.
+- A run's xUnit v2 report can hold more scenarios than before: its skipped tests and its early failures.
+- The report's start time moves to the start of the test assembly, which also changes its duration.
+- The collection-fixture path's results read as defaults, with a diagnostic, and its specifications are blank.
+- `kronikol-error.log` is appended to, where it was overwritten.
+- `ReportingTestFramework`'s reports are written when the test assembly finishes, as its last message passes, where they
+  were written after the runner had finished. While `ReportingTestFrameworkExecutor` blocks, as it always has, nothing
+  a reader can see depends on the difference.
+
+### Tests
+
+- **A fixture lane.** `tests/Kronikol.Tests.xUnit2.Fixtures` holds test assemblies that fail on purpose: Kronikol's own
+  framework under xunit.runner.visualstudio 2.8.2 and 3.1.5, and the collection-fixture path. Kronikol.Tests.xUnit2's
+  lane facts run each with `dotnet test` in a child process and compare its TRX with its report: every tracked test is
+  one scenario with its own name, verdict, duration, error and calls; a failing `DisplayName` fact; three runs of a
+  six-row theory under each adapter; rows that cannot be serialized; a skipped test and untracked ones; four early
+  failures; `methodDisplay=method`; the run's start; a report slow to write; a report that cannot be written; `--list-tests`;
+  a call in a test class's constructor; the defaults and blank specifications of the collection-fixture path. The
+  fixtures are on CI's auto-discovery skip list. Nothing in the repo ran the framework before (the plan's F9).
+- Unit facts drive the sink with xUnit's own message types, the ordered queue from 20 threads at once, and the options
+  copy through Kronikol's executor. The formatter's facts cover the inputs above and 22 that must not throw.
+- With the tests copied onto v4.9.1, every new fact failed for its own reason or did not compile, except six guards,
+  which hold behaviour that was already right, and a theory fact that 4.9.1's pairing got right by chance in that run.
+  Each of 15 mutations turned a fact red. The plan's log lists them, and the one mutation not run and why.
+
 ## [4.11.0] - 2026-10-08
 
 **Minor - every extension options type takes an `IHttpContextAccessor`.** `plans/MONGODB_ACCESSOR_OPTION_PLAN.md` R2,

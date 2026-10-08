@@ -1,0 +1,213 @@
+{
+ "extractOf": "TestRunReport.json",
+ "startText": "2026-10-07T17:53:19Z",
+ "endText": "2026-10-07T17:53:19Z",
+ "scenarios": [
+  {
+   "id": "adc23070-3077-4a9b-ad49-f6a59dfbaf36",
+   "feature": "Display Name Dots",
+   "name": "Dotted version",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/dots/version-1-2"
+   ]
+  },
+  {
+   "id": "40aaf067-d337-4c1b-b670-0b5ca8365164",
+   "feature": "Display Name Dots",
+   "name": "Trailing dot",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/dots/trailing-dot"
+   ]
+  },
+  {
+   "id": "7be0aa17-12f9-41b9-bca7-262e047df881",
+   "feature": "Facts",
+   "name": "Fails",
+   "result": "Failed",
+   "seconds": 0.0004089,
+   "endedAt": "2026-10-07T17:53:17.600Z",
+   "error": "Assert.Equal() Failure: Values differ",
+   "calls": [
+    "/facts/fails"
+   ]
+  },
+  {
+   "id": "c940750e-4b66-401d-8c58-d5b8568d8c2e",
+   "feature": "Facts",
+   "name": "Fails with display name",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/facts/displayname-fails"
+   ]
+  },
+  {
+   "id": "3ab078e4-852b-4b80-9381-97838a8a8a3f",
+   "feature": "Facts",
+   "name": "Passes",
+   "result": "Passed",
+   "seconds": 0.0002848,
+   "endedAt": "2026-10-07T17:53:17.600Z",
+   "error": "",
+   "calls": [
+    "/facts/passes"
+   ]
+  },
+  {
+   "id": "99437a40-df2a-4895-a8da-789179d2d518",
+   "feature": "Facts",
+   "name": "Passes with display name",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/facts/displayname-passes"
+   ]
+  },
+  {
+   "id": "6d5caa98-0233-4c00-a1e8-cbfb2a708f18",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 1 }]",
+   "result": "Passed",
+   "seconds": 0.0232854,
+   "endedAt": "2026-10-07T17:53:17.586Z",
+   "error": "",
+   "calls": [
+    "/nonser/3"
+   ]
+  },
+  {
+   "id": "c7806178-063a-45be-8d6c-d290af74d88f",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 2 }]",
+   "result": "Passed",
+   "seconds": 0.0004121,
+   "endedAt": "2026-10-07T17:53:17.600Z",
+   "error": "",
+   "calls": [
+    "/nonser/1"
+   ]
+  },
+  {
+   "id": "e6e1218d-d37e-449c-bba3-6e2ea1b2fd98",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 3 }]",
+   "result": "Passed",
+   "seconds": 8.46e-05,
+   "endedAt": "2026-10-07T17:53:17.600Z",
+   "error": "",
+   "calls": [
+    "/nonser/2"
+   ]
+  },
+  {
+   "id": "3a60129c-a026-480b-903c-76c06aec3b51",
+   "feature": "Theories",
+   "name": "Rows [row: 1, ms: 50]",
+   "result": "Passed",
+   "seconds": 0.0883314,
+   "endedAt": "2026-10-07T17:53:17.649Z",
+   "error": "",
+   "calls": [
+    "/row/1/slept/50"
+   ]
+  },
+  {
+   "id": "a9755ff0-dc7c-434e-9f4a-af37f0a607d6",
+   "feature": "Theories",
+   "name": "Rows [row: 2, ms: 400]",
+   "result": "Passed",
+   "seconds": 0.4135719,
+   "endedAt": "2026-10-07T17:53:18.306Z",
+   "error": "",
+   "calls": [
+    "/row/6/slept/20"
+   ]
+  },
+  {
+   "id": "f6042fb6-caf5-480c-8b82-75d52032bd1d",
+   "feature": "Theories",
+   "name": "Rows [row: 3, ms: 100]",
+   "result": "Passed",
+   "seconds": 0.1028879,
+   "endedAt": "2026-10-07T17:53:19.227Z",
+   "error": "",
+   "calls": [
+    "/row/2/slept/400"
+   ]
+  },
+  {
+   "id": "c1302bb1-95e5-49d9-956e-5bcf07153c9f",
+   "feature": "Theories",
+   "name": "Rows [row: 4, ms: 800]",
+   "result": "Failed",
+   "seconds": 0.8159501,
+   "endedAt": "2026-10-07T17:53:19.123Z",
+   "error": "Assert.NotEqual() Failure: Values are equal",
+   "calls": [
+    "/row/4/slept/800"
+   ]
+  },
+  {
+   "id": "fce31261-4fab-49d6-84f5-a8ab668197d8",
+   "feature": "Theories",
+   "name": "Rows [row: 5, ms: 200]",
+   "result": "Passed",
+   "seconds": 0.2121352,
+   "endedAt": "2026-10-07T17:53:17.862Z",
+   "error": "",
+   "calls": [
+    "/row/5/slept/200"
+   ]
+  },
+  {
+   "id": "ecb391b0-b2ec-46da-9590-3891db995647",
+   "feature": "Theories",
+   "name": "Rows [row: 6, ms: 20]",
+   "result": "Passed",
+   "seconds": 0.0293768,
+   "endedAt": "2026-10-07T17:53:17.892Z",
+   "error": "",
+   "calls": []
+  }
+ ],
+ "background": [
+  {
+   "path": "/row/3/slept/100",
+   "expiredFrom": "ecb391b0-b2ec-46da-9590-3891db995647",
+   "attribution": "Expired"
+  }
+ ],
+ "backgroundCount": 1,
+ "diagnostics": {
+  "BackgroundCalls": 1
+ },
+ "pathOccurrences": {
+  "/dots/trailing-dot": 5,
+  "/dots/version-1-2": 5,
+  "/facts/displayname-fails": 5,
+  "/facts/displayname-passes": 5,
+  "/facts/fails": 5,
+  "/facts/passes": 5,
+  "/nonser/1": 5,
+  "/nonser/2": 5,
+  "/nonser/3": 5,
+  "/row/1/slept/50": 5,
+  "/row/2/slept/400": 5,
+  "/row/3/slept/100": 3,
+  "/row/4/slept/800": 5,
+  "/row/5/slept/200": 5,
+  "/row/6/slept/20": 5
+ }
+}

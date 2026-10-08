@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A with xunit.runner.json {"methodDisplay": "method"}: display names lose the namespace and class. -->
+  <ItemGroup>
+    <Compile Include="../Shared/*.cs" />
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

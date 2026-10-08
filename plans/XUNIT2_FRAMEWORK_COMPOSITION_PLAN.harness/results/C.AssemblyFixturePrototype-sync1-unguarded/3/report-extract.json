@@ -1,0 +1,150 @@
+{
+ "extractOf": "TestRunReport.json",
+ "startText": "2026-10-07T17:53:28Z",
+ "endText": "2026-10-07T17:53:28Z",
+ "scenarios": [
+  {
+   "id": "cfcc9fe4-cb39-4a99-963c-ab277f0bd98d",
+   "feature": "Assembly Fixture User A",
+   "name": "Receives the assembly fixture",
+   "result": "Passed",
+   "seconds": 0.0237604,
+   "endedAt": "2026-10-07T17:53:28.372Z",
+   "error": "",
+   "calls": [
+    "/assemblyfixture/a"
+   ]
+  },
+  {
+   "id": "23d2bd5f-a178-4aee-bf01-ff8c446e7d0c",
+   "feature": "Assembly Fixture User B",
+   "name": "Receives the assembly fixture",
+   "result": "Passed",
+   "seconds": 0.0237076,
+   "endedAt": "2026-10-07T17:53:28.372Z",
+   "error": "",
+   "calls": [
+    "/assemblyfixture/b"
+   ]
+  },
+  {
+   "id": "56cc4ce6-1557-466b-a30d-e52e11894155",
+   "feature": "Ctor Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:53:28.332Z",
+   "error": "the test class constructor throws on purpose",
+   "calls": []
+  },
+  {
+   "id": "75fbb87a-8ed2-42f7-b81b-f2a2f4ddcbc8",
+   "feature": "Facts",
+   "name": "Fails",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/facts/fails"
+   ]
+  },
+  {
+   "id": "2290ee81-1716-4b38-8806-079185ac2ea6",
+   "feature": "Facts",
+   "name": "Passes",
+   "result": "Passed",
+   "seconds": 0.0218528,
+   "endedAt": "2026-10-07T17:53:28.358Z",
+   "error": "",
+   "calls": [
+    "/facts/passes"
+   ]
+  },
+  {
+   "id": "e3447f83-8e49-48e1-b009-7a1ded71d27a",
+   "feature": "Facts",
+   "name": "Skipped",
+   "result": "Skipped",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:53:28.328Z",
+   "error": "",
+   "calls": []
+  },
+  {
+   "id": "9d43db51-cdb4-4649-a60f-78599fc57070",
+   "feature": "Fixture Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:53:28.332Z",
+   "error": "Class fixture type 'Probe.ThrowingFixture' threw in its constructor",
+   "calls": []
+  },
+  {
+   "id": "4cec0638-a7b9-4e0e-902d-66d88f01a30e",
+   "feature": "Init Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:53:28.335Z",
+   "error": "InitializeAsync throws on purpose",
+   "calls": []
+  },
+  {
+   "id": "91caf020-0acf-4505-8081-2ea779e7ccaf",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 1 }]",
+   "result": "Passed",
+   "seconds": 0.021895,
+   "endedAt": "2026-10-07T17:53:28.358Z",
+   "error": "",
+   "calls": [
+    "/nonser/1"
+   ]
+  },
+  {
+   "id": "45cdbd89-4492-4905-802e-82793ba24b3e",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 2 }]",
+   "result": "Passed",
+   "seconds": 0.0005106,
+   "endedAt": "2026-10-07T17:53:28.373Z",
+   "error": "",
+   "calls": [
+    "/nonser/2"
+   ]
+  },
+  {
+   "id": "fdc9434d-92fd-46cf-9b0a-6fb753695eba",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 3 }]",
+   "result": "Passed",
+   "seconds": 7.48e-05,
+   "endedAt": "2026-10-07T17:53:28.373Z",
+   "error": "",
+   "calls": [
+    "/nonser/3"
+   ]
+  },
+  {
+   "id": "0592716f-36c4-4923-8a03-88d119587f0f",
+   "feature": "Theories",
+   "name": "Rows [row: 6, ms: 20]",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/row/6/slept/20"
+   ]
+  }
+ ],
+ "background": [],
+ "backgroundCount": 0,
+ "diagnostics": {},
+ "pathOccurrences": {
+  "/facts/passes": 5,
+  "/nonser/1": 5
+ }
+}

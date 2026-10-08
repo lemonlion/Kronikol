@@ -1,0 +1,12 @@
+      9201  AGENTS.md
+      9201  CLAUDE.md
+    167203  ComponentDiagram.html
+      2693  Failures.jsonl
+      2345  Failures.md
+      6740  query.cs
+       497  Run.json
+         0  Specifications.html
+         0  Specifications.yml
+    557016  TestRunReport.html
+     21379  TestRunReport.json
+     52394  TestRunReport.schema.json

@@ -1,0 +1,149 @@
+Test run for C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\C.AssemblyFixturePrototype.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.27)
+[xUnit.net 00:00:00.05]   Discovering: C.AssemblyFixturePrototype
+[xUnit.net 00:00:00.08]   Discovered:  C.AssemblyFixturePrototype
+[xUnit.net 00:00:00.08]   Starting:    C.AssemblyFixturePrototype
+[xUnit.net 00:00:00.12]     Probe.Facts.Skipped [SKIP]
+[xUnit.net 00:00:00.12]       skipped on purpose
+  Skipped Probe.Facts.Skipped [1 ms]
+[xUnit.net 00:00:00.13]     Probe.FixtureThrows.Never_runs [FAIL]
+[xUnit.net 00:00:00.13]       Class fixture type 'Probe.ThrowingFixture' threw in its constructor
+[xUnit.net 00:00:00.13]       ---- System.InvalidOperationException : the class fixture constructor throws on purpose
+[xUnit.net 00:00:00.13]       Stack Trace:
+[xUnit.net 00:00:00.14]         
+[xUnit.net 00:00:00.14]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:00.14]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\FixtureThrows.cs(8,0): at Probe.ThrowingFixture..ctor()
+[xUnit.net 00:00:00.14]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:00.14]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.14]       System.InvalidOperationException : the test class constructor throws on purpose
+[xUnit.net 00:00:00.14]     Probe.CtorThrows.Never_runs [FAIL]
+[xUnit.net 00:00:00.14]       Stack Trace:
+[xUnit.net 00:00:00.14]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\CtorThrows.cs(13,0): at Probe.CtorThrows..ctor(ITestOutputHelper output)
+[xUnit.net 00:00:00.14]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:00.14]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.14]     Probe.InitThrows.Never_runs [FAIL]
+[xUnit.net 00:00:00.14]       System.InvalidOperationException : InitializeAsync throws on purpose
+[xUnit.net 00:00:00.14]       Stack Trace:
+[xUnit.net 00:00:00.14]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\InitThrows.cs(11,0): at Probe.InitThrows.InitializeAsync()
+  Failed Probe.FixtureThrows.Never_runs [1 ms]
+  Error Message:
+   Class fixture type 'Probe.ThrowingFixture' threw in its constructor
+---- System.InvalidOperationException : the class fixture constructor throws on purpose
+  Stack Trace:
+  
+----- Inner Stack Trace -----
+   at Probe.ThrowingFixture..ctor() in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\FixtureThrows.cs:line 8
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Probe.CtorThrows.Never_runs [1 ms]
+  Error Message:
+   System.InvalidOperationException : the test class constructor throws on purpose
+  Stack Trace:
+     at Probe.CtorThrows..ctor(ITestOutputHelper output) in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\CtorThrows.cs:line 13
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Probe.InitThrows.Never_runs [1 ms]
+  Error Message:
+   System.InvalidOperationException : InitializeAsync throws on purpose
+  Stack Trace:
+     at Probe.InitThrows.InitializeAsync() in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\InitThrows.cs:line 11
+  Passed Probe.Facts.Passes [27 ms]
+  Passed Does the thing. [27 ms]
+  Passed Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 }) [27 ms]
+  Passed Order API returns 404 for v1.2 [< 1 ms]
+  Passed Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 }) [< 1 ms]
+  Passed Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 }) [< 1 ms]
+[xUnit.net 00:00:00.14]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:00.14]       Expected: 1
+[xUnit.net 00:00:00.14]       Actual:   2
+[xUnit.net 00:00:00.14]       Stack Trace:
+[xUnit.net 00:00:00.14]     Probe.Facts.Fails [FAIL]
+[xUnit.net 00:00:00.14]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Facts.cs(15,0): at Probe.Facts.Fails()
+[xUnit.net 00:00:00.14]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.14]       Output:
+[xUnit.net 00:00:00.14]         probe-call: GET /facts/fails
+[xUnit.net 00:00:00.14]     A failing fact with a display name [FAIL]
+[xUnit.net 00:00:00.14]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:00.14]       Expected: 1
+[xUnit.net 00:00:00.14]       Actual:   2
+[xUnit.net 00:00:00.14]       Stack Trace:
+[xUnit.net 00:00:00.14]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Facts.cs(22,0): at Probe.Facts.FailsWithDisplayName()
+[xUnit.net 00:00:00.14]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.14]       Output:
+[xUnit.net 00:00:00.14]         probe-call: GET /facts/displayname-fails
+[xUnit.net 00:00:01.48]     Probe.Theories.Rows(row: 4, ms: 800) [FAIL]
+[xUnit.net 00:00:01.48]       Assert.NotEqual() Failure: Values are equal
+[xUnit.net 00:00:01.48]       Expected: Not 4
+[xUnit.net 00:00:01.48]       Actual:       4
+[xUnit.net 00:00:01.48]       Stack Trace:
+[xUnit.net 00:00:01.48]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Theories.cs(21,0): at Probe.Theories.Rows(Int32 row, Int32 ms)
+[xUnit.net 00:00:01.48]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:01.48]       Output:
+[xUnit.net 00:00:01.48]         probe-call: GET /row/4/slept/800
+  Passed Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture [28 ms]
+  Passed Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture [28 ms]
+  Failed Probe.Facts.Fails [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   2
+  Stack Trace:
+     at Probe.Facts.Fails() in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Facts.cs:line 15
+--- End of stack trace from previous location ---
+  Standard Output Messages:
+ probe-call: GET /facts/fails
+
+
+  Passed A passing fact with a display name [< 1 ms]
+  Failed A failing fact with a display name [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   2
+  Stack Trace:
+     at Probe.Facts.FailsWithDisplayName() in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Facts.cs:line 22
+--- End of stack trace from previous location ---
+  Standard Output Messages:
+ probe-call: GET /facts/displayname-fails
+
+
+  Passed Probe.Theories.Rows(row: 6, ms: 20) [50 ms]
+  Passed Probe.Theories.Rows(row: 2, ms: 400) [403 ms]
+  Passed Probe.Theories.Rows(row: 3, ms: 100) [107 ms]
+  Failed Probe.Theories.Rows(row: 4, ms: 800) [801 ms]
+  Error Message:
+   Assert.NotEqual() Failure: Values are equal
+Expected: Not 4
+Actual:       4
+  Stack Trace:
+     at Probe.Theories.Rows(Int32 row, Int32 ms) in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Theories.cs:line 21
+--- End of stack trace from previous location ---
+  Standard Output Messages:
+ probe-call: GET /row/4/slept/800
+
+
+Report diagnostics: 34 log entries across 17 test(s).
+Warning: 17 orphaned test ID(s) in logs do not match any feature scenario.
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\Reports  (TestRunReport.html � TestRunReport.json 28.8 KB � Failures.md)
+  6 failed - kronikol query failures C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\Reports
+    91f25064bdab77be  Ctor Throws > Never runs
+    0c235432d485c052  Facts > A failing fact with a display name
+    b5fddf80a71881e4  Facts > Fails
+    565673b7aa175985  Fixture Throws > Never runs
+    00c50259d4a62c66  Init Throws > Never runs
+    892e2a8cccd8610c  Theories > Rows [row: 4, ms: 800]
+  agents: read C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\Reports\CLAUDE.md first; never open TestRunReport.json
+  no tool: dotnet run --file C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\Reports\query.cs -- failures C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\Reports
+[xUnit.net 00:00:01.93]   Finished:    C.AssemblyFixturePrototype
+  Passed Probe.Theories.Rows(row: 5, ms: 200) [215 ms]
+  Passed Probe.Theories.Rows(row: 1, ms: 50) [59 ms]
+Results File: C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\results\C.AssemblyFixturePrototype-sync0\2\run.trx
+
+Test Run Failed.
+Total tests: 21
+     Passed: 14
+     Failed: 6
+    Skipped: 1
+ Total time: 2.2299 Seconds

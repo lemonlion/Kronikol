@@ -1,0 +1,13 @@
+{
+  "lane": "C.AssemblyFixturePrototype-sync1",
+  "project": "C.AssemblyFixturePrototype",
+  "run": 3,
+  "vars": {
+    "PROBE_SYNC": "1",
+    "PROBE_FORMAT_GUARD": "1"
+  },
+  "artifacts": "main",
+  "startedUtc": "2026-10-07T17:45:14.6895342Z",
+  "wallSeconds": 2.926,
+  "exitCode": 1
+}

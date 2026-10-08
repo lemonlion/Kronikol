@@ -1,0 +1,218 @@
+{
+ "label": "C.AssemblyFixturePrototype-sync1-unguarded run 3",
+ "trxStart": "17:53:27.952Z",
+ "trxFinish": "17:53:28.591Z",
+ "trxFirstTestStart": "17:53:28.329Z",
+ "trxLastTestEnd": "17:53:28.359Z",
+ "reportStart": "2026-10-07T17:53:28Z",
+ "reportEnd": "2026-10-07T17:53:28Z",
+ "reportWritten": true,
+ "scenarioCount": 12,
+ "scenarioResults": {
+  "Passed": 6,
+  "Failed (no duration)": 3,
+  "Passed (no duration)": 2,
+  "Skipped (no duration)": 1
+ },
+ "earliestEndedAt": "2026-10-07T17:53:28.328Z",
+ "rows": [
+  {
+   "test": "Probe.CtorThrows.Never_runs",
+   "fqn": "Probe.CtorThrows.Never_runs",
+   "outcome": "Failed",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "System.InvalidOperationException : the test class constructor throws on purpose",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [
+    "error-type-not-in-report"
+   ],
+   "scenario": {
+    "id": "56cc4ce6-1557-466b-a30d-e52e11894155",
+    "feature": "Ctor Throws",
+    "name": "Never runs",
+    "result": "Failed",
+    "seconds": 0,
+    "error": "the test class constructor throws on purpose",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.Facts.Passes",
+   "fqn": "Probe.Facts.Passes",
+   "outcome": "Passed",
+   "seconds": 0.0218528,
+   "path": "/facts/passes",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "2290ee81-1716-4b38-8806-079185ac2ea6",
+    "feature": "Facts",
+    "name": "Passes",
+    "result": "Passed",
+    "seconds": 0.0218528,
+    "error": "",
+    "calls": [
+     "/facts/passes"
+    ]
+   }
+  },
+  {
+   "test": "Probe.Facts.Skipped",
+   "fqn": "Probe.Facts.Skipped",
+   "outcome": "NotExecuted",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "skipped on purpose",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "e3447f83-8e49-48e1-b009-7a1ded71d27a",
+    "feature": "Facts",
+    "name": "Skipped",
+    "result": "Skipped",
+    "seconds": 0,
+    "error": "",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.FixtureThrows.Never_runs",
+   "fqn": "Probe.FixtureThrows.Never_runs",
+   "outcome": "Failed",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "Class fixture type 'Probe.ThrowingFixture' threw in its constructor",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "9d43db51-cdb4-4649-a60f-78599fc57070",
+    "feature": "Fixture Throws",
+    "name": "Never runs",
+    "result": "Failed",
+    "seconds": 0,
+    "error": "Class fixture type 'Probe.ThrowingFixture' threw in its constructor",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.InitThrows.Never_runs",
+   "fqn": "Probe.InitThrows.Never_runs",
+   "outcome": "Failed",
+   "seconds": 0.001,
+   "path": null,
+   "testError": "System.InvalidOperationException : InitializeAsync throws on purpose",
+   "sharedThing": null,
+   "diService": null,
+   "via": "names (test made no call)",
+   "flags": [],
+   "notes": [
+    "error-type-not-in-report"
+   ],
+   "scenario": {
+    "id": "4cec0638-a7b9-4e0e-902d-66d88f01a30e",
+    "feature": "Init Throws",
+    "name": "Never runs",
+    "result": "Failed",
+    "seconds": 0,
+    "error": "InitializeAsync throws on purpose",
+    "calls": []
+   }
+  },
+  {
+   "test": "Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })",
+   "fqn": "Probe.MemberDataNotSerializable.NonSerializableRows",
+   "outcome": "Passed",
+   "seconds": 0.021895,
+   "path": "/nonser/1",
+   "testError": "",
+   "sharedThing": null,
+   "diService": null,
+   "via": "call",
+   "flags": [],
+   "notes": [],
+   "scenario": {
+    "id": "91caf020-0acf-4505-8081-2ea779e7ccaf",
+    "feature": "Member Data Not Serializable",
+    "name": "Non serializable rows [item: NonSer { I = 1 }]",
+    "result": "Passed",
+    "seconds": 0.021895,
+    "error": "",
+    "calls": [
+     "/nonser/1"
+    ]
+   }
+  }
+ ],
+ "unmatchedScenarios": [
+  {
+   "feature": "Assembly Fixture User A",
+   "name": "Receives the assembly fixture",
+   "result": "Passed",
+   "seconds": 0.0237604,
+   "calls": [
+    "/assemblyfixture/a"
+   ]
+  },
+  {
+   "feature": "Assembly Fixture User B",
+   "name": "Receives the assembly fixture",
+   "result": "Passed",
+   "seconds": 0.0237076,
+   "calls": [
+    "/assemblyfixture/b"
+   ]
+  },
+  {
+   "feature": "Facts",
+   "name": "Fails",
+   "result": "Passed",
+   "seconds": 0,
+   "calls": [
+    "/facts/fails"
+   ]
+  },
+  {
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 2 }]",
+   "result": "Passed",
+   "seconds": 0.0005106,
+   "calls": [
+    "/nonser/2"
+   ]
+  },
+  {
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 3 }]",
+   "result": "Passed",
+   "seconds": 7.48e-05,
+   "calls": [
+    "/nonser/3"
+   ]
+  },
+  {
+   "feature": "Theories",
+   "name": "Rows [row: 6, ms: 20]",
+   "result": "Passed",
+   "seconds": 0,
+   "calls": [
+    "/row/6/slept/20"
+   ]
+  }
+ ],
+ "background": [],
+ "diagnostics": {}
+}

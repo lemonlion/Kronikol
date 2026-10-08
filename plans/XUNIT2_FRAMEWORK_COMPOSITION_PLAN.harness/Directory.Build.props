@@ -1,0 +1,37 @@
+<Project>
+  <!--
+    Isolation. MSBuild imports the first Directory.Build.props it finds walking up from a project, so
+    this file stops the search here: the repo root's Directory.Build.props (Version 4.9.0, LangVersion
+    preview, GenerateDocumentationFile, the LICENSE/readme/icon pack items) would otherwise apply to every
+    probe under plans/. The repo has no Directory.Packages.props or Directory.Build.targets, so nothing
+    else needs stopping. The referenced src/Kronikol.xUnit2 project still builds with the repo's own
+    props, which is the shipped 4.9.0 build.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- 2.8.2 unless a lane asks for another (run.ps1 builds A once more with 3.1.5). -->
+    <ProbeRunnerVersion Condition="'$(ProbeRunnerVersion)' == ''">2.8.2</ProbeRunnerVersion>
+    <KronikolXUnit2Project>$(MSBuildThisFileDirectory)..\..\src\Kronikol.xUnit2\Kronikol.xUnit2.csproj</KronikolXUnit2Project>
+    <NoWarn>$(NoWarn);xUnit1004;xUnit1045;xUnit1031;CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- Item conditions are evaluated after every property, so a project that sets IsTestProject=false
+       (G.FormatterProbe, a console) gets none of the test packages. -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(ProbeRunnerVersion)">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(KronikolXUnit2Project)" />
+  </ItemGroup>
+</Project>

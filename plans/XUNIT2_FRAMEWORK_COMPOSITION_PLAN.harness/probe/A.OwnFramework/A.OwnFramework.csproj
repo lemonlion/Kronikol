@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Today's baseline: Kronikol.xUnit2's own ReportingTestFramework. Sets no ReportLifecycle.Options. -->
+  <ItemGroup>
+    <Compile Include="../Shared/*.cs" />
+  </ItemGroup>
+</Project>

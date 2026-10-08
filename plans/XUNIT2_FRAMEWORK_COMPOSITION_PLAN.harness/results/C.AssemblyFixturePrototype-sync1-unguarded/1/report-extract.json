@@ -1,0 +1,114 @@
+{
+ "extractOf": "TestRunReport.json",
+ "startText": "2026-10-07T17:53:12Z",
+ "endText": "2026-10-07T17:53:13Z",
+ "scenarios": [
+  {
+   "id": "fc81ab6b-c8e9-4017-b327-876c510d2b83",
+   "feature": "Assembly Fixture User A",
+   "name": "Receives the assembly fixture",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/assemblyfixture/a"
+   ]
+  },
+  {
+   "id": "7258c1f1-f0ee-4b92-a0f1-8c9054b16641",
+   "feature": "Assembly Fixture User B",
+   "name": "Receives the assembly fixture",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/assemblyfixture/b"
+   ]
+  },
+  {
+   "id": "ade39866-6f89-4de0-a969-9efd5054108e",
+   "feature": "Ctor Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:53:13.025Z",
+   "error": "the test class constructor throws on purpose",
+   "calls": []
+  },
+  {
+   "id": "601e2b73-3a93-47e8-8601-782778915dad",
+   "feature": "Facts",
+   "name": "Passes",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/facts/passes"
+   ]
+  },
+  {
+   "id": "d655fed4-dd77-44cb-8e79-b38c57040974",
+   "feature": "Facts",
+   "name": "Skipped",
+   "result": "Skipped",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:53:13.021Z",
+   "error": "",
+   "calls": []
+  },
+  {
+   "id": "0035eca7-4f7c-4247-a1e0-39b7eab0e230",
+   "feature": "Fixture Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:53:13.025Z",
+   "error": "Class fixture type 'Probe.ThrowingFixture' threw in its constructor",
+   "calls": []
+  },
+  {
+   "id": "2d8a72c1-84cf-4d85-9bf6-076fcf2a1e45",
+   "feature": "Init Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:53:13.030Z",
+   "error": "InitializeAsync throws on purpose",
+   "calls": []
+  },
+  {
+   "id": "940ce6d4-03a6-40b3-a02c-66c2ac5347f9",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 1 }]",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/nonser/1"
+   ]
+  },
+  {
+   "id": "7d8aee3b-7c18-4f1a-a674-be7449f7efd6",
+   "feature": "Theories",
+   "name": "Rows [row: 6, ms: 20]",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/row/6/slept/20"
+   ]
+  }
+ ],
+ "background": [],
+ "backgroundCount": 0,
+ "diagnostics": {},
+ "pathOccurrences": {
+  "/facts/passes": 2,
+  "/nonser/1": 2
+ }
+}

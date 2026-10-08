@@ -1,0 +1,10 @@
+{
+  "lane": "B.AssemblyFixtureOnly",
+  "project": "B.AssemblyFixtureOnly",
+  "run": 1,
+  "vars": {},
+  "artifacts": "main",
+  "startedUtc": "2026-10-07T17:45:30.1088521Z",
+  "wallSeconds": 2.723,
+  "exitCode": 1
+}

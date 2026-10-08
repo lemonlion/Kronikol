@@ -1,0 +1,10 @@
+{
+  "lane": "A2.MethodDisplay",
+  "project": "A2.MethodDisplay",
+  "run": 1,
+  "vars": {},
+  "artifacts": "main",
+  "startedUtc": "2026-10-07T17:45:27.0605633Z",
+  "wallSeconds": 2.9,
+  "exitCode": 1
+}

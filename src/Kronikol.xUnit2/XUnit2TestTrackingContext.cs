@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Reflection;
 
 namespace Kronikol.xUnit2;
 
@@ -12,6 +13,13 @@ namespace Kronikol.xUnit2;
 public static class XUnit2TestTrackingContext
 {
     private static readonly AsyncLocal<(string Name, string Id)?> CurrentTest = new();
+
+    /// <summary>
+    /// The scenario Kronikol's results sink made for the test running on this flow, set when xUnit sent its
+    /// <c>ITestStarting</c>. Only a bus that delivers on the test's own flow (synchronous message reporting) gets it
+    /// here, before the test's constructor; it is gone once the test's runner returns.
+    /// </summary>
+    private static readonly AsyncLocal<HandedOverScenario?> HandedOver = new();
 
     internal static readonly ConcurrentDictionary<string, ScenarioInfo> CollectedScenarios = new();
 
@@ -35,4 +43,21 @@ public static class XUnit2TestTrackingContext
     }
 
     internal static ScenarioInfo[] GetAllScenarios() => CollectedScenarios.Values.ToArray();
+
+    internal static void HandOver(ScenarioInfo scenario, MethodInfo method) =>
+        HandedOver.Value = new HandedOverScenario(scenario, method);
+
+    /// <summary>
+    /// The scenario handed over for <paramref name="methodUnderTest"/>, or null when none was, or when the one on
+    /// this flow is for another method. Compared by metadata token, so a generic method's constructed form and a
+    /// method reflected through a derived class still match.
+    /// </summary>
+    internal static ScenarioInfo? HandedOverScenarioFor(MethodInfo methodUnderTest) =>
+        HandedOver.Value is { } handedOver
+        && handedOver.Method.MetadataToken == methodUnderTest.MetadataToken
+        && handedOver.Method.Module == methodUnderTest.Module
+            ? handedOver.Scenario
+            : null;
+
+    private sealed record HandedOverScenario(ScenarioInfo Scenario, MethodInfo Method);
 }

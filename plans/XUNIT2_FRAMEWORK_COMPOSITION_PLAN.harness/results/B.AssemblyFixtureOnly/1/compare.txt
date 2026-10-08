@@ -1,0 +1,117 @@
+# compare B.AssemblyFixtureOnly run 1
+TRX: 21 test results; report: NO TestRunReport.json
+
+flags: RESULT, NAME, DURATION, ERROR-TEXT = the scenario disagrees with the test; FOREIGN-CALLS = it holds another test's call;
+       CALL-IN-BACKGROUND = the test's call is listed as a background call; CALL-MISSING = matched by names, its call is in no
+       scenario; NO-SCENARIO = no scenario holds the test's call, and none has its feature and name
+xUnit test (TRX)                                               outcome       secs  via                        scenario (report)                              result     secs  flags
+Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture       Passed       0.031  -                          -                                              -             -  NO-SCENARIO
+Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture       Passed       0.031  -                          -                                              -             -  NO-SCENARIO
+Probe.CtorThrows.Never_runs                                    Failed       0.001  -                          -                                              -             -  NO-SCENARIO
+Order API returns 404 for v1.2                                 Passed       0.029  -                          -                                              -             -  NO-SCENARIO
+Does the thing.                                                Passed       0.000  -                          -                                              -             -  NO-SCENARIO
+Probe.Facts.Fails                                              Failed       0.000  -                          -                                              -             -  NO-SCENARIO
+A failing fact with a display name                             Failed       0.033  -                          -                                              -             -  NO-SCENARIO
+Probe.Facts.Passes                                             Passed       0.000  -                          -                                              -             -  NO-SCENARIO
+A passing fact with a display name                             Passed       0.000  -                          -                                              -             -  NO-SCENARIO
+Probe.Facts.Skipped                                            NotExecuted  0.001  -                          -                                              -             -  NO-SCENARIO
+Probe.FixtureThrows.Never_runs                                 Failed       0.001  -                          -                                              -             -  NO-SCENARIO
+Probe.InitThrows.Never_runs                                    Failed       0.001  -                          -                                              -             -  NO-SCENARIO
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonS Passed       0.029  -                          -                                              -             -  NO-SCENARIO
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonS Passed       0.000  -                          -                                              -             -  NO-SCENARIO
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonS Passed       0.000  -                          -                                              -             -  NO-SCENARIO
+Probe.Theories.Rows(row: 1, ms: 50)                            Passed       0.087  -                          -                                              -             -  NO-SCENARIO
+Probe.Theories.Rows(row: 2, ms: 400)                           Passed       0.401  -                          -                                              -             -  NO-SCENARIO
+Probe.Theories.Rows(row: 3, ms: 100)                           Passed       0.109  -                          -                                              -             -  NO-SCENARIO
+Probe.Theories.Rows(row: 4, ms: 800)                           Failed       0.815  -                          -                                              -             -  NO-SCENARIO
+Probe.Theories.Rows(row: 5, ms: 200)                           Passed       0.212  -                          -                                              -             -  NO-SCENARIO
+Probe.Theories.Rows(row: 6, ms: 20)                            Passed       0.030  -                          -                                              -             -  NO-SCENARIO
+
+Per test: the call it made, the calls under its scenario, and the first line of each error
+- Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture  [Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture]
+    test call: /assemblyfixture/a; scenario: (none)
+    assembly fixture: instance b7a98642-ed14-4b11-8cc6-a19c8b5344e9, created 1 time(s)
+- Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture  [Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture]
+    test call: /assemblyfixture/b; scenario: (none)
+    assembly fixture: instance b7a98642-ed14-4b11-8cc6-a19c8b5344e9, created 1 time(s)
+- Probe.CtorThrows.Never_runs  [Probe.CtorThrows.Never_runs]
+    test call: (none: never reached its body); scenario: (none)
+    TRX error: System.InvalidOperationException : the test class constructor throws on purpose
+    report error: -
+- Order API returns 404 for v1.2  [Probe.DisplayNameDots.DottedVersion]
+    test call: /dots/version-1-2; scenario: (none)
+- Does the thing.  [Probe.DisplayNameDots.TrailingDot]
+    test call: /dots/trailing-dot; scenario: (none)
+- Probe.Facts.Fails  [Probe.Facts.Fails]
+    test call: /facts/fails; scenario: (none)
+    TRX error: Assert.Equal() Failure: Values differ
+    report error: -
+- A failing fact with a display name  [Probe.Facts.FailsWithDisplayName]
+    test call: /facts/displayname-fails; scenario: (none)
+    TRX error: Assert.Equal() Failure: Values differ
+    report error: -
+- Probe.Facts.Passes  [Probe.Facts.Passes]
+    test call: /facts/passes; scenario: (none)
+- A passing fact with a display name  [Probe.Facts.PassesWithDisplayName]
+    test call: /facts/displayname-passes; scenario: (none)
+- Probe.Facts.Skipped  [Probe.Facts.Skipped]
+    test call: (none: never reached its body); scenario: (none)
+    TRX error: skipped on purpose
+    report error: -
+- Probe.FixtureThrows.Never_runs  [Probe.FixtureThrows.Never_runs]
+    test call: (none: never reached its body); scenario: (none)
+    TRX error: Class fixture type 'Probe.ThrowingFixture' threw in its constructor
+    report error: -
+- Probe.InitThrows.Never_runs  [Probe.InitThrows.Never_runs]
+    test call: (none: never reached its body); scenario: (none)
+    TRX error: System.InvalidOperationException : InitializeAsync throws on purpose
+    report error: -
+- Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })  [Probe.MemberDataNotSerializable.NonSerializableRows]
+    test call: /nonser/1; scenario: (none)
+- Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })  [Probe.MemberDataNotSerializable.NonSerializableRows]
+    test call: /nonser/2; scenario: (none)
+- Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })  [Probe.MemberDataNotSerializable.NonSerializableRows]
+    test call: /nonser/3; scenario: (none)
+- Probe.Theories.Rows(row: 1, ms: 50)  [Probe.Theories.Rows]
+    test call: /row/1/slept/50; scenario: (none)
+- Probe.Theories.Rows(row: 2, ms: 400)  [Probe.Theories.Rows]
+    test call: /row/2/slept/400; scenario: (none)
+- Probe.Theories.Rows(row: 3, ms: 100)  [Probe.Theories.Rows]
+    test call: /row/3/slept/100; scenario: (none)
+- Probe.Theories.Rows(row: 4, ms: 800)  [Probe.Theories.Rows]
+    test call: /row/4/slept/800; scenario: (none)
+    TRX error: Assert.NotEqual() Failure: Values are equal
+    report error: -
+- Probe.Theories.Rows(row: 5, ms: 200)  [Probe.Theories.Rows]
+    test call: /row/5/slept/200; scenario: (none)
+- Probe.Theories.Rows(row: 6, ms: 20)  [Probe.Theories.Rows]
+    test call: /row/6/slept/20; scenario: (none)
+
+xUnit tests with no scenario (21):
+  - Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture
+  - Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture
+  - Probe.CtorThrows.Never_runs
+  - Order API returns 404 for v1.2
+  - Does the thing.
+  - Probe.Facts.Fails
+  - A failing fact with a display name
+  - Probe.Facts.Passes
+  - A passing fact with a display name
+  - Probe.Facts.Skipped
+  - Probe.FixtureThrows.Never_runs
+  - Probe.InitThrows.Never_runs
+  - Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })
+  - Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })
+  - Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })
+  - Probe.Theories.Rows(row: 1, ms: 50)
+  - Probe.Theories.Rows(row: 2, ms: 400)
+  - Probe.Theories.Rows(row: 3, ms: 100)
+  - Probe.Theories.Rows(row: 4, ms: 800)
+  - Probe.Theories.Rows(row: 5, ms: 200)
+  - Probe.Theories.Rows(row: 6, ms: 20)
+Scenarios with no xUnit test (0):
+
+Run times (UTC):
+  TRX run:            start 17:45:30.690Z  finish 17:45:32.782Z  (2.092s)
+  TRX tests:          first start 17:45:31.072Z  last end 17:45:32.730Z
+

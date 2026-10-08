@@ -1,0 +1,76 @@
+seq	micros	thread	event	test	detail
+1	32459	4	options	-	entry=RunTests runnerValue=unset value=unset
+2	83299	16	starting	Probe.Facts.Fails	previous=null
+3	83392	16	starting	Probe.InitThrows.Never_runs	previous=Probe.Facts.Fails
+4	83422	16	starting	Probe.Di.DiInjected.Receives_the_injected_service	previous=Probe.InitThrows.Never_runs
+5	83435	16	starting	Probe.FixtureThrows.Never_runs	previous=Probe.Di.DiInjected.Receives_the_injected_service
+6	83444	16	starting	Probe.CtorThrows.Never_runs	previous=Probe.FixtureThrows.Never_runs
+7	83808	18	before	?	visible=0 trackingIdSeen=1 trackingId=2b4710a0-5b17-47eb-ac7d-ce5359f2e33c method=DisplayNameDots.TrailingDot
+8	83809	11	before	?	visible=0 trackingIdSeen=1 trackingId=a1d783f8-df4d-445b-b56d-66278e2f3c2a method=DiInjected.Receives_the_injected_service
+9	83845	21	before	?	visible=0 trackingIdSeen=1 trackingId=19ff9cac-7706-407d-90d2-bbda0533b88d method=MemberDataNotSerializable.NonSerializableRows
+10	83880	22	before	?	visible=0 trackingIdSeen=1 trackingId=87519492-26c4-4a15-88ec-83d73d7fc449 method=Theories.Rows
+11	83882	19	before	?	visible=0 trackingIdSeen=1 trackingId=ee628ede-7e57-4278-b8bc-35ff6a1710cb method=Facts.Fails
+12	84710	16	formatter-threw	Does the thing.	IndexOutOfRangeException
+13	84739	16	starting	Does the thing.	previous=Probe.CtorThrows.Never_runs
+14	84794	16	starting	Probe.Theories.Rows(row: 6, ms: 20)	previous=Does the thing.
+15	84846	16	starting	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })	previous=Probe.Theories.Rows(row: 6, ms: 20)
+16	85263	16	result	Probe.FixtureThrows.Never_runs	visible=other:Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })
+17	88764	21	body	?	visible=0 path=/nonser/1 trackingId=19ff9cac-7706-407d-90d2-bbda0533b88d
+18	88775	19	body	?	visible=0 path=/facts/fails trackingId=ee628ede-7e57-4278-b8bc-35ff6a1710cb
+19	88800	18	body	?	visible=0 path=/dots/trailing-dot trackingId=2b4710a0-5b17-47eb-ac7d-ce5359f2e33c
+20	88821	22	body	?	visible=0 path=/row/6/slept/20 trackingId=87519492-26c4-4a15-88ec-83d73d7fc449
+21	88892	11	body	?	visible=0 path=/di/injected trackingId=a1d783f8-df4d-445b-b56d-66278e2f3c2a
+22	90848	16	result	Probe.CtorThrows.Never_runs	visible=other:Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })
+23	91425	16	result	Probe.InitThrows.Never_runs	visible=other:Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })
+24	106901	16	result	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })	visible=same
+25	107104	21	before	?	visible=0 trackingIdSeen=1 trackingId=08a16d17-7248-40a7-bf52-82bea37246ad method=MemberDataNotSerializable.NonSerializableRows
+26	107214	18	before	?	visible=0 trackingIdSeen=1 trackingId=41538941-7cd9-4892-9c78-0ac9b7ef71cc method=DisplayNameDots.DottedVersion
+27	107480	16	result	Probe.Di.DiInjected.Receives_the_injected_service	visible=other:Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })
+28	107527	18	body	?	visible=0 path=/dots/version-1-2 trackingId=41538941-7cd9-4892-9c78-0ac9b7ef71cc
+29	107567	21	body	?	visible=0 path=/nonser/2 trackingId=08a16d17-7248-40a7-bf52-82bea37246ad
+30	107568	16	starting	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })	previous=Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })
+31	107601	16	result	Does the thing.	visible=other:Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })
+32	107664	16	starting	Order API returns 404 for v1.2	previous=Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })
+33	108147	16	result	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })	visible=other:Order API returns 404 for v1.2
+34	108161	21	before	?	visible=0 trackingIdSeen=1 trackingId=3ba32479-1fd5-4ef7-b15e-20851d8ea6bb method=MemberDataNotSerializable.NonSerializableRows
+35	108408	21	body	?	visible=0 path=/nonser/3 trackingId=3ba32479-1fd5-4ef7-b15e-20851d8ea6bb
+36	109281	19	before	?	visible=0 trackingIdSeen=1 trackingId=d5489ed1-2d18-4050-b930-74a246b480d5 method=Facts.FailsWithDisplayName
+37	109518	19	body	?	visible=0 path=/facts/displayname-fails trackingId=d5489ed1-2d18-4050-b930-74a246b480d5
+38	109932	19	before	?	visible=0 trackingIdSeen=1 trackingId=5668492e-dd51-437f-9569-dd2b3ed7cffc method=Facts.PassesWithDisplayName
+39	109993	19	body	?	visible=0 path=/facts/displayname-passes trackingId=5668492e-dd51-437f-9569-dd2b3ed7cffc
+40	110081	19	before	?	visible=0 trackingIdSeen=1 trackingId=9cd41f15-3af0-4fad-9c9a-ad7d2ffb849a method=Facts.Passes
+41	110121	19	body	?	visible=0 path=/facts/passes trackingId=9cd41f15-3af0-4fad-9c9a-ad7d2ffb849a
+42	121988	16	starting	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })	previous=Order API returns 404 for v1.2
+43	122012	16	result	Order API returns 404 for v1.2	visible=other:Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })
+44	122138	16	result	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })	visible=same
+45	122157	16	result	Probe.Facts.Fails	visible=other:Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })
+46	122467	16	starting	A failing fact with a display name	previous=Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })
+47	122504	16	result	A failing fact with a display name	visible=same
+48	122814	16	starting	Probe.Facts.Skipped	previous=A failing fact with a display name
+49	122830	16	result	Probe.Facts.Skipped	visible=same
+50	123405	16	starting	A passing fact with a display name	previous=Probe.Facts.Skipped
+51	123438	16	result	A passing fact with a display name	visible=same
+52	123471	16	starting	Probe.Facts.Passes	previous=A passing fact with a display name
+53	123496	16	result	Probe.Facts.Passes	visible=same
+54	136830	16	result	Probe.Theories.Rows(row: 6, ms: 20)	visible=other:Probe.Facts.Passes
+55	136990	16	starting	Probe.Theories.Rows(row: 2, ms: 400)	previous=Probe.Facts.Passes
+56	137090	30	before	?	visible=0 trackingIdSeen=1 trackingId=5a6f0e5c-66be-474b-9fdf-2e34a06bdab2 method=Theories.Rows
+57	137275	30	body	?	visible=0 path=/row/2/slept/400 trackingId=5a6f0e5c-66be-474b-9fdf-2e34a06bdab2
+58	545523	16	result	Probe.Theories.Rows(row: 2, ms: 400)	visible=same
+59	545741	36	before	?	visible=0 trackingIdSeen=1 trackingId=1e99ccef-6b17-40e1-872f-ea81379d613f method=Theories.Rows
+60	545801	36	body	?	visible=0 path=/row/3/slept/100 trackingId=1e99ccef-6b17-40e1-872f-ea81379d613f
+61	546492	16	starting	Probe.Theories.Rows(row: 3, ms: 100)	previous=Probe.Theories.Rows(row: 2, ms: 400)
+62	652802	16	result	Probe.Theories.Rows(row: 3, ms: 100)	visible=same
+63	653206	16	starting	Probe.Theories.Rows(row: 5, ms: 200)	previous=Probe.Theories.Rows(row: 3, ms: 100)
+64	653214	42	before	?	visible=0 trackingIdSeen=1 trackingId=cfa23b82-f4cc-405e-8efb-b136081a36ea method=Theories.Rows
+65	653329	42	body	?	visible=0 path=/row/5/slept/200 trackingId=cfa23b82-f4cc-405e-8efb-b136081a36ea
+66	867637	16	result	Probe.Theories.Rows(row: 5, ms: 200)	visible=same
+67	867857	48	before	?	visible=0 trackingIdSeen=1 trackingId=f3761c1d-0a99-4094-a3ca-82d13f30886a method=Theories.Rows
+68	867862	16	starting	Probe.Theories.Rows(row: 4, ms: 800)	previous=Probe.Theories.Rows(row: 5, ms: 200)
+69	867912	48	body	?	visible=0 path=/row/4/slept/800 trackingId=f3761c1d-0a99-4094-a3ca-82d13f30886a
+70	1669601	16	result	Probe.Theories.Rows(row: 4, ms: 800)	visible=same
+71	1669814	54	before	?	visible=0 trackingIdSeen=1 trackingId=83f49f89-149b-4feb-b74b-92fe58c4759d method=Theories.Rows
+72	1669857	54	body	?	visible=0 path=/row/1/slept/50 trackingId=83f49f89-149b-4feb-b74b-92fe58c4759d
+73	1670185	16	starting	Probe.Theories.Rows(row: 1, ms: 50)	previous=Probe.Theories.Rows(row: 4, ms: 800)
+74	1730864	16	result	Probe.Theories.Rows(row: 1, ms: 50)	visible=same
+75	1899334	16	report	-	assemblyExecutionSeconds=1.676 reportMilliseconds=165 scenarios=20

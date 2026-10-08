@@ -1,0 +1,11 @@
+exit code: 1
+--- AssemblyInfo.cs ---
+using Kronikol.xUnit2;
+using Xunit;
+
+[assembly: TestFramework("Xunit.Extensions.AssemblyFixture.AssemblyFixtureFramework", "Xunit.Extensions.AssemblyFixture")]
+[assembly: TestFramework("Kronikol.xUnit2.ReportingTestFramework", "Kronikol.xUnit2")]
+[assembly: TestTracking]
+--- errors ---
+<harness>\.build\scratch\B.BothFrameworks\AssemblyInfo.cs(5,12): error CS0579: Duplicate 'TestFramework' attribute [<harness>\.build\scratch\B.BothFrameworks\B.BothFrameworks.csproj]
+    1 Error(s)

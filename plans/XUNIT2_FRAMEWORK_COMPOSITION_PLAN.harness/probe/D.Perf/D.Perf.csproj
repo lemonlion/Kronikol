@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 2,000 trivial facts (Generated/, made by tools/gen_perf.py) under the prototype framework. -->
+  <ItemGroup>
+    <PackageReference Include="Xunit.Extensions.AssemblyFixture" Version="2.6.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/ProbeHttp.cs" />
+    <Compile Include="../Prototype/*.cs" />
+  </ItemGroup>
+</Project>

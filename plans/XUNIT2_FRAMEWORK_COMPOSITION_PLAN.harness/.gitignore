@@ -1,0 +1,5 @@
+# Build output of every probe and of the src projects they reference (run.ps1 and perf.ps1 pass
+# --artifacts-path .build/<lane>, so nothing is written under src/).
+.build/
+# Made by tools/gen_perf.py before each perf build.
+probe/D.Perf/Generated/

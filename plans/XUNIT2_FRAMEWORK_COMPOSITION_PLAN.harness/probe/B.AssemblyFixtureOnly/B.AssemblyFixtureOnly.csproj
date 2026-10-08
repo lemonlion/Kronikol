@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Issue #132's suite today: Xunit.Extensions.AssemblyFixture's framework, Kronikol's TestTracking, nothing else. -->
+  <ItemGroup>
+    <PackageReference Include="Xunit.Extensions.AssemblyFixture" Version="2.6.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/*.cs" />
+    <Compile Include="../AssemblyFixtureShared/*.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The documented fallback: no [assembly: TestFramework], a DiagrammedTestRun collection fixture writes the reports. -->
+  <ItemGroup>
+    <Compile Include="../Shared/*.cs" />
+  </ItemGroup>
+</Project>

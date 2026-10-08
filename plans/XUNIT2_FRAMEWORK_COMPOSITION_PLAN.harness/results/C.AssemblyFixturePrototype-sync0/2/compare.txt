@@ -1,0 +1,122 @@
+# compare C.AssemblyFixturePrototype-sync0 run 2
+TRX: 21 test results; report: 21 scenarios
+
+flags: RESULT, NAME, DURATION, ERROR-TEXT = the scenario disagrees with the test; FOREIGN-CALLS = it holds another test's call;
+       CALL-IN-BACKGROUND = the test's call is listed as a background call; CALL-MISSING = matched by names, its call is in no
+       scenario; NO-SCENARIO = no scenario holds the test's call, and none has its feature and name
+xUnit test (TRX)                                               outcome       secs  via                        scenario (report)                              result     secs  flags
+Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture       Passed       0.029  names (its call is in no s Receives the assembly fixture                  Passed    0.029  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture       Passed       0.029  names (its call is in no s Receives the assembly fixture                  Passed    0.029  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.CtorThrows.Never_runs                                    Failed       0.001  names (test made no call)  Never runs                                     Failed    0.000  ok  (error-type-not-in-report)
+Order API returns 404 for v1.2                                 Passed       0.000  -                          -                                              -             -  NO-SCENARIO  (call-nowhere-in-TestRunReport.json)
+Does the thing.                                                Passed       0.027  names (its call is in no s Does the thing.                                Passed    0.027  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.Facts.Fails                                              Failed       0.002  names (its call is in no s Fails                                          Failed    0.002  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+A failing fact with a display name                             Failed       0.000  names (its call is in no s A failing fact with a display name             Failed    0.000  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.Facts.Passes                                             Passed       0.027  names (its call is in no s Passes                                         Passed    0.027  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+A passing fact with a display name                             Passed       0.000  names (its call is in no s A passing fact with a display name             Passed    0.000  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.Facts.Skipped                                            NotExecuted  0.001  names (test made no call)  Skipped                                        Skipped   0.000  ok
+Probe.FixtureThrows.Never_runs                                 Failed       0.001  names (test made no call)  Never runs                                     Failed    0.000  ok
+Probe.InitThrows.Never_runs                                    Failed       0.001  names (test made no call)  Never runs                                     Failed    0.000  ok  (error-type-not-in-report)
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonS Passed       0.027  names (its call is in no s Non serializable rows [item: NonSer { I = 1 }] Passed    0.027  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonS Passed       0.001  names (its call is in no s Non serializable rows [item: NonSer { I = 2 }] Passed    0.001  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonS Passed       0.000  names (its call is in no s Non serializable rows [item: NonSer { I = 3 }] Passed    0.000  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.Theories.Rows(row: 1, ms: 50)                            Passed       0.059  names (its call is in no s Rows [row: 1, ms: 50]                          Passed    0.059  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.Theories.Rows(row: 2, ms: 400)                           Passed       0.403  names (its call is in no s Rows [row: 2, ms: 400]                         Passed    0.403  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.Theories.Rows(row: 3, ms: 100)                           Passed       0.107  names (its call is in no s Rows [row: 3, ms: 100]                         Passed    0.107  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.Theories.Rows(row: 4, ms: 800)                           Failed       0.802  names (its call is in no s Rows [row: 4, ms: 800]                         Failed    0.802  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.Theories.Rows(row: 5, ms: 200)                           Passed       0.215  names (its call is in no s Rows [row: 5, ms: 200]                         Passed    0.215  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+Probe.Theories.Rows(row: 6, ms: 20)                            Passed       0.051  names (its call is in no s Rows [row: 6, ms: 20]                          Passed    0.051  CALL-MISSING  (call-nowhere-in-TestRunReport.json)
+
+Per test: the call it made, the calls under its scenario, and the first line of each error
+- Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture  [Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture]
+    test call: /assemblyfixture/a; scenario: Assembly Fixture User A > Receives the assembly fixture, calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+    assembly fixture: instance a3d13078-6a4f-4ab1-839c-a8b82f03f751, created 1 time(s)
+- Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture  [Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture]
+    test call: /assemblyfixture/b; scenario: Assembly Fixture User B > Receives the assembly fixture, calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+    assembly fixture: instance a3d13078-6a4f-4ab1-839c-a8b82f03f751, created 1 time(s)
+- Probe.CtorThrows.Never_runs  [Probe.CtorThrows.Never_runs]
+    test call: (none: never reached its body); scenario: Ctor Throws > Never runs, calls (none)
+    TRX error: System.InvalidOperationException : the test class constructor throws on purpose
+    report error: the test class constructor throws on purpose
+- Order API returns 404 for v1.2  [Probe.DisplayNameDots.DottedVersion]
+    test call: /dots/version-1-2; scenario: (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+- Does the thing.  [Probe.DisplayNameDots.TrailingDot]
+    test call: /dots/trailing-dot; scenario: Display Name Dots > Does the thing., calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+- Probe.Facts.Fails  [Probe.Facts.Fails]
+    test call: /facts/fails; scenario: Facts > Fails, calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+    TRX error: Assert.Equal() Failure: Values differ
+    report error: Assert.Equal() Failure: Values differ
+- A failing fact with a display name  [Probe.Facts.FailsWithDisplayName]
+    test call: /facts/displayname-fails; scenario: Facts > A failing fact with a display name, calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+    TRX error: Assert.Equal() Failure: Values differ
+    report error: Assert.Equal() Failure: Values differ
+- Probe.Facts.Passes  [Probe.Facts.Passes]
+    test call: /facts/passes; scenario: Facts > Passes, calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+- A passing fact with a display name  [Probe.Facts.PassesWithDisplayName]
+    test call: /facts/displayname-passes; scenario: Facts > A passing fact with a display name, calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+- Probe.Facts.Skipped  [Probe.Facts.Skipped]
+    test call: (none: never reached its body); scenario: Facts > Skipped, calls (none)
+    TRX error: skipped on purpose
+    report error: -
+- Probe.FixtureThrows.Never_runs  [Probe.FixtureThrows.Never_runs]
+    test call: (none: never reached its body); scenario: Fixture Throws > Never runs, calls (none)
+    TRX error: Class fixture type 'Probe.ThrowingFixture' threw in its constructor
+    report error: Class fixture type 'Probe.ThrowingFixture' threw in its constructor
+- Probe.InitThrows.Never_runs  [Probe.InitThrows.Never_runs]
+    test call: (none: never reached its body); scenario: Init Throws > Never runs, calls (none)
+    TRX error: System.InvalidOperationException : InitializeAsync throws on purpose
+    report error: InitializeAsync throws on purpose
+- Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })  [Probe.MemberDataNotSerializable.NonSerializableRows]
+    test call: /nonser/1; scenario: Member Data Not Serializable > Non serializable rows [item: NonSer { I = 1 }], calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+- Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })  [Probe.MemberDataNotSerializable.NonSerializableRows]
+    test call: /nonser/2; scenario: Member Data Not Serializable > Non serializable rows [item: NonSer { I = 2 }], calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+- Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })  [Probe.MemberDataNotSerializable.NonSerializableRows]
+    test call: /nonser/3; scenario: Member Data Not Serializable > Non serializable rows [item: NonSer { I = 3 }], calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+- Probe.Theories.Rows(row: 1, ms: 50)  [Probe.Theories.Rows]
+    test call: /row/1/slept/50; scenario: Theories > Rows [row: 1, ms: 50], calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+- Probe.Theories.Rows(row: 2, ms: 400)  [Probe.Theories.Rows]
+    test call: /row/2/slept/400; scenario: Theories > Rows [row: 2, ms: 400], calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+- Probe.Theories.Rows(row: 3, ms: 100)  [Probe.Theories.Rows]
+    test call: /row/3/slept/100; scenario: Theories > Rows [row: 3, ms: 100], calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+- Probe.Theories.Rows(row: 4, ms: 800)  [Probe.Theories.Rows]
+    test call: /row/4/slept/800; scenario: Theories > Rows [row: 4, ms: 800], calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+    TRX error: Assert.NotEqual() Failure: Values are equal
+    report error: Assert.NotEqual() Failure: Values are equal
+- Probe.Theories.Rows(row: 5, ms: 200)  [Probe.Theories.Rows]
+    test call: /row/5/slept/200; scenario: Theories > Rows [row: 5, ms: 200], calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+- Probe.Theories.Rows(row: 6, ms: 20)  [Probe.Theories.Rows]
+    test call: /row/6/slept/20; scenario: Theories > Rows [row: 6, ms: 20], calls (none)
+    the call's path occurs 0 time(s) anywhere in TestRunReport.json
+
+xUnit tests with no scenario (1):
+  - Order API returns 404 for v1.2
+Scenarios with no xUnit test (1):
+  - Display Name Dots > 2 [Passed, 0.000s, calls: none]
+
+Scenario results in the report: Failed 3, Failed (no duration) 3, Passed 14, Skipped (no duration) 1
+
+Run times (UTC):
+  TRX run:            start 17:45:06.087Z  finish 17:45:08.327Z  (2.241s)
+  TRX tests:          first start 17:45:06.466Z  last end 17:45:08.099Z
+  report:             start 2026-10-07T17:45:06Z  end 2026-10-07T17:45:08Z  (end - start = 2.0s; the report writes whole seconds)
+  report scenarios:   earliest endedAt 2026-10-07T17:45:06.465Z  latest endedAt 2026-10-07T17:45:08.099Z
+  scenarios whose endedAt is before the report's start: 0 of 21
+
+Background section: 0 call(s)
+Report diagnostics: none

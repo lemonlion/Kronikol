@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The OwnFramework fixture under xunit.runner.visualstudio 3.1.5 (T19). -->
+  <PropertyGroup>
+    <FixtureRunnerVersion>3.1.5</FixtureRunnerVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\OwnFramework\*.cs" LinkBase="OwnFramework" />
+  </ItemGroup>
+</Project>

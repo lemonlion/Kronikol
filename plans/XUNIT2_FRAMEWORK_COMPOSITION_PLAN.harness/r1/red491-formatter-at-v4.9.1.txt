@@ -1,0 +1,43 @@
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: "()") [2 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: "(x: 1)") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: "..") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: "日本語のテスト.") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: "") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: "Does the thing. ") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: " ") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: ".") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: "(") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: "_") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: "Ns.Class.") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: "a.") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_NeverThrows(displayName: "__") [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_GivesAnEmptyNameForAnEmptyDisplayName [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_KeepsAVersionNumberThatIsNotAMethodPath [3 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_ReadsParenthesesInsideASentenceAsText [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_KeepsASentenceEndingInAFullStop [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.AppendTestParameters_KeepsTheClosingParenthesisOfAnArgument [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.ResolveScenarioTitle_KeepsTheTitleWhenTheMethodNameIsEmpty [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_KeepsTheClosingParenthesisOfAnArgument [< 1 ms]
+  Error Message:
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatScenarioDisplayName_KeepsASentenceWithADottedVersionWhole [< 1 ms]
+  Error Message:
+Failed!  - Failed:    21, Passed:    38, Skipped:     0, Total:    59, Duration: 651 ms - Kronikol.Tests.dll (net10.0)

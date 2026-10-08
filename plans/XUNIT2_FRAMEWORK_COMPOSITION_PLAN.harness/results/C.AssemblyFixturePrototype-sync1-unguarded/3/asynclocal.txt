@@ -1,0 +1,25 @@
+options: entry=RunTests runnerValue=unset value=True
+test                                                                   start thr before thr  vis us after start body thr  vis result thr result sees  before attributes
+A failing fact with a display name                                            21         21  yes             35       21  yes         21        same  TestTrackingAttribute,PrototypeTrackingAttribute
+A passing fact with a display name                                            21         21  yes             55       21  yes         21        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture                      11         11  yes          10020       11  yes         11        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture                      22         22  yes           9991       22  yes         22        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.CtorThrows.Never_runs                                                    8          -    -              -        -    -          8        same  (no Before)
+Probe.Facts.Fails                                                             21         21  yes            316       21  yes         21        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Facts.Passes                                                            21         21  yes           5631       21  yes         21        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Facts.Skipped                                                           21          -    -              -        -    -         21        same  (no Before)
+Probe.FixtureThrows.Never_runs                                                18          -    -              -        -    -         18        same  (no Before)
+Probe.InitThrows.Never_runs                                                   17          -    -              -        -    -         16        same  (no Before)
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I =        20         20  yes           9481       20  yes         20        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I =        20         20  yes          13381       20  yes         20        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I =        20         20  yes             51       20  yes         20        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Theories.Rows(row: 2, ms: 400)                                          28         28  yes            273       28  yes          -           -  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Theories.Rows(row: 6, ms: 20)                                           19         19  yes           9891       19  yes         28        same  TestTrackingAttribute,PrototypeTrackingAttribute
+
+tests with ITestStarting: 15
+Before:  11 of 11 saw the scenario set on ITestStarting; 11 ran on the thread ITestStarting was delivered on; 11 saw TestTracking's id (it ran first)
+body:    11 of 11 saw it
+result:  14 of 14 saw the same scenario, 0 saw none, 0 saw another test's; 12 delivered on the ITestStarting thread
+ITestStarting found another test's scenario already on its flow: 0
+tests with ITestStarting and no Before (4): Probe.CtorThrows.Never_runs, Probe.Facts.Skipped, Probe.FixtureThrows.Never_runs, Probe.InitThrows.Never_runs
+Before after ITestStarting, microseconds: min 35, median 5631, max 13381

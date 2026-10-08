@@ -1,0 +1,10 @@
+{
+  "lane": "A3.StartTimeProbe",
+  "project": "A3.StartTimeProbe",
+  "run": 2,
+  "vars": {},
+  "artifacts": "main",
+  "startedUtc": "2026-10-07T17:53:16.6212956Z",
+  "wallSeconds": 2.902,
+  "exitCode": 1
+}

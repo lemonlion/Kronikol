@@ -279,8 +279,9 @@ jobs:
         run: |
           # Runs every tests/* project (with a csproj — legacy TestTrackingDiagrams.*
           # residue folders have none) that has no dedicated matrix entry. Keep SKIP in
-          # sync with the entries above.
-          SKIP="Kronikol.Tests Kronikol.Tests.MSTest Kronikol.Tests.xUnit2 Kronikol.Tests.xUnit3 Kronikol.Tests.LightBDD.xUnit3 Kronikol.Tests.TUnit Kronikol.Tests.LightBDD.TUnit Kronikol.Tests.CosmosDB Kronikol.Tests.EfCore.Relational Kronikol.Tests.Redis Kronikol.Tests.ProxyTap Kronikol.Tests.Playwright Kronikol.Tests.PlantUml.Ikvm Kronikol.Tests.EndToEnd Kronikol.Tests.AssertionTracking"
+          # sync with the entries above. Kronikol.Tests.xUnit2.Fixtures holds test assemblies
+          # that fail on purpose; Kronikol.Tests.xUnit2's lane facts run them in a child process.
+          SKIP="Kronikol.Tests Kronikol.Tests.MSTest Kronikol.Tests.xUnit2 Kronikol.Tests.xUnit2.Fixtures Kronikol.Tests.xUnit3 Kronikol.Tests.LightBDD.xUnit3 Kronikol.Tests.TUnit Kronikol.Tests.LightBDD.TUnit Kronikol.Tests.CosmosDB Kronikol.Tests.EfCore.Relational Kronikol.Tests.Redis Kronikol.Tests.ProxyTap Kronikol.Tests.Playwright Kronikol.Tests.PlantUml.Ikvm Kronikol.Tests.EndToEnd Kronikol.Tests.AssertionTracking"
           for dir in tests/*/; do
             name=$(basename "$dir")
             case " $SKIP " in *" $name "*) continue;; esac

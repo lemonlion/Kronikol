@@ -1,0 +1,260 @@
+{
+ "extractOf": "TestRunReport.json",
+ "startText": "2026-10-07T17:57:14Z",
+ "endText": "2026-10-07T17:57:16Z",
+ "scenarios": [
+  {
+   "id": "f80c6cc4-7c52-4512-9f1b-9e885431ef87",
+   "feature": "Ctor Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:57:14.481Z",
+   "error": "the test class constructor throws on purpose",
+   "calls": []
+  },
+  {
+   "id": "d204b41c-cb90-4e22-a3b5-415314c74910",
+   "feature": "Di Injected",
+   "name": "Receives the injected service",
+   "result": "Passed",
+   "seconds": 0.0210556,
+   "endedAt": "2026-10-07T17:57:14.505Z",
+   "error": "",
+   "calls": [
+    "/di/injected"
+   ]
+  },
+  {
+   "id": "87da0be6-d201-4ea4-9911-f8116ab15376",
+   "feature": "Display Name Dots",
+   "name": "2",
+   "result": "Passed",
+   "seconds": 0.0010386,
+   "endedAt": "2026-10-07T17:57:14.507Z",
+   "error": "",
+   "calls": [
+    "/dots/version-1-2"
+   ]
+  },
+  {
+   "id": "c253aba8-708a-4958-a8ec-b808ea4a6ac0",
+   "feature": "Display Name Dots",
+   "name": "Does the thing.",
+   "result": "Passed",
+   "seconds": 0.0206405,
+   "endedAt": "2026-10-07T17:57:14.505Z",
+   "error": "",
+   "calls": [
+    "/dots/trailing-dot"
+   ]
+  },
+  {
+   "id": "4a4b9c16-1e83-4ed3-9968-9d29fe022f68",
+   "feature": "Facts",
+   "name": "A failing fact with a display name",
+   "result": "Failed",
+   "seconds": 0.000508,
+   "endedAt": "2026-10-07T17:57:14.522Z",
+   "error": "Assert.Equal() Failure: Values differ",
+   "calls": [
+    "/facts/displayname-fails"
+   ]
+  },
+  {
+   "id": "85986831-cf15-46c7-85e7-daa372535d12",
+   "feature": "Facts",
+   "name": "A passing fact with a display name",
+   "result": "Passed",
+   "seconds": 0.0001257,
+   "endedAt": "2026-10-07T17:57:14.523Z",
+   "error": "",
+   "calls": [
+    "/facts/displayname-passes"
+   ]
+  },
+  {
+   "id": "688a367b-5a02-4e19-a3e9-9b4e407e614c",
+   "feature": "Facts",
+   "name": "Fails",
+   "result": "Failed",
+   "seconds": 0.0230356,
+   "endedAt": "2026-10-07T17:57:14.507Z",
+   "error": "Assert.Equal() Failure: Values differ",
+   "calls": [
+    "/facts/fails"
+   ]
+  },
+  {
+   "id": "6cd68418-9a1f-40d4-b73c-3868eacf642a",
+   "feature": "Facts",
+   "name": "Passes",
+   "result": "Passed",
+   "seconds": 9.43e-05,
+   "endedAt": "2026-10-07T17:57:14.523Z",
+   "error": "",
+   "calls": [
+    "/facts/passes"
+   ]
+  },
+  {
+   "id": "bdaf2ed3-9651-4fc9-941d-941f484cd611",
+   "feature": "Facts",
+   "name": "Skipped",
+   "result": "Skipped",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:57:14.522Z",
+   "error": "",
+   "calls": []
+  },
+  {
+   "id": "e08232a5-517c-4ea2-8490-063737624321",
+   "feature": "Fixture Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:57:14.475Z",
+   "error": "the class fixture constructor throws on purpose",
+   "calls": []
+  },
+  {
+   "id": "3e61ab32-039d-4ac2-81b4-b15a31d9df6c",
+   "feature": "Init Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-07T17:57:14.486Z",
+   "error": "InitializeAsync throws on purpose",
+   "calls": []
+  },
+  {
+   "id": "5a87f1c1-42d6-49d0-a187-b258b81e6f2d",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 1 }]",
+   "result": "Passed",
+   "seconds": 0.021168,
+   "endedAt": "2026-10-07T17:57:14.505Z",
+   "error": "",
+   "calls": [
+    "/nonser/1"
+   ]
+  },
+  {
+   "id": "696bb2e8-07a4-4027-96ef-807abdd22630",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 2 }]",
+   "result": "Passed",
+   "seconds": 0.0011584,
+   "endedAt": "2026-10-07T17:57:14.507Z",
+   "error": "",
+   "calls": [
+    "/nonser/2"
+   ]
+  },
+  {
+   "id": "90fc21c8-dd0c-4d3b-87ce-23ee7eb81877",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 3 }]",
+   "result": "Passed",
+   "seconds": 0.0001526,
+   "endedAt": "2026-10-07T17:57:14.521Z",
+   "error": "",
+   "calls": [
+    "/nonser/3"
+   ]
+  },
+  {
+   "id": "3ce46734-b110-4211-9721-1f6ace5691f7",
+   "feature": "Theories",
+   "name": "Rows [row: 1, ms: 50]",
+   "result": "Passed",
+   "seconds": 0.060038,
+   "endedAt": "2026-10-07T17:57:16.144Z",
+   "error": "",
+   "calls": [
+    "/row/1/slept/50"
+   ]
+  },
+  {
+   "id": "e2caca3b-481a-49c4-8a59-c6ef0305f877",
+   "feature": "Theories",
+   "name": "Rows [row: 2, ms: 400]",
+   "result": "Passed",
+   "seconds": 0.4100376,
+   "endedAt": "2026-10-07T17:57:14.950Z",
+   "error": "",
+   "calls": [
+    "/row/2/slept/400"
+   ]
+  },
+  {
+   "id": "c3a8e770-e069-4ac5-a83f-ea9e9bd5060b",
+   "feature": "Theories",
+   "name": "Rows [row: 3, ms: 100]",
+   "result": "Passed",
+   "seconds": 0.1078092,
+   "endedAt": "2026-10-07T17:57:15.058Z",
+   "error": "",
+   "calls": [
+    "/row/3/slept/100"
+   ]
+  },
+  {
+   "id": "60044a96-c055-4cc1-91aa-263a836f1fad",
+   "feature": "Theories",
+   "name": "Rows [row: 4, ms: 800]",
+   "result": "Failed",
+   "seconds": 0.8061341,
+   "endedAt": "2026-10-07T17:57:16.082Z",
+   "error": "Assert.NotEqual() Failure: Values are equal",
+   "calls": [
+    "/row/4/slept/800"
+   ]
+  },
+  {
+   "id": "e64434d4-8c7d-4fb2-bdb3-a67c5b0fe6e1",
+   "feature": "Theories",
+   "name": "Rows [row: 5, ms: 200]",
+   "result": "Passed",
+   "seconds": 0.2142165,
+   "endedAt": "2026-10-07T17:57:15.274Z",
+   "error": "",
+   "calls": [
+    "/row/5/slept/200"
+   ]
+  },
+  {
+   "id": "1f3e62fd-acc4-496c-b1a0-7fa2f4933661",
+   "feature": "Theories",
+   "name": "Rows [row: 6, ms: 20]",
+   "result": "Passed",
+   "seconds": 0.0547401,
+   "endedAt": "2026-10-07T17:57:14.539Z",
+   "error": "",
+   "calls": [
+    "/row/6/slept/20"
+   ]
+  }
+ ],
+ "background": [],
+ "backgroundCount": 0,
+ "diagnostics": {},
+ "pathOccurrences": {
+  "/di/injected": 5,
+  "/dots/trailing-dot": 5,
+  "/dots/version-1-2": 5,
+  "/facts/displayname-fails": 5,
+  "/facts/displayname-passes": 5,
+  "/facts/fails": 5,
+  "/facts/passes": 5,
+  "/nonser/1": 5,
+  "/nonser/2": 5,
+  "/nonser/3": 5,
+  "/row/1/slept/50": 5,
+  "/row/2/slept/400": 5,
+  "/row/3/slept/100": 5,
+  "/row/4/slept/800": 5,
+  "/row/5/slept/200": 5,
+  "/row/6/slept/20": 5
+ }
+}

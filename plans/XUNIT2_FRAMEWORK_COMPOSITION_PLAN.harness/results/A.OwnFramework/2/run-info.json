@@ -1,0 +1,10 @@
+{
+  "lane": "A.OwnFramework",
+  "project": "A.OwnFramework",
+  "run": 2,
+  "vars": {},
+  "artifacts": "main",
+  "startedUtc": "2026-10-07T17:44:59.2500033Z",
+  "wallSeconds": 2.966,
+  "exitCode": 1
+}

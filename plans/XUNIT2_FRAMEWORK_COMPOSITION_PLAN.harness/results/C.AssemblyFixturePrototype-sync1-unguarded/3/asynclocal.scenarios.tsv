@@ -1,0 +1,16 @@
+test	sawStarting	result	executionSeconds	beforeAttributes	trackingId	ownId
+Probe.InitThrows.Never_runs	True	Failed	0.000000		-	4cec0638-a7b9-4e0e-902d-66d88f01a30e
+Probe.Theories.Rows(row: 6, ms: 20)	True	Passed	0.055339	TestTrackingAttribute,PrototypeTrackingAttribute	0592716f-36c4-4923-8a03-88d119587f0f	f71b6b03-e1f6-48bf-8b3a-dd9c8e5e40e4
+Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture	True	Passed	0.023708	TestTrackingAttribute,PrototypeTrackingAttribute	23d2bd5f-a178-4aee-bf01-ff8c446e7d0c	90c2ee8a-8127-4470-a2ce-5e7f95de45a7
+Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture	True	Passed	0.023760	TestTrackingAttribute,PrototypeTrackingAttribute	cfcc9fe4-cb39-4a99-963c-ab277f0bd98d	b71e864e-e062-4070-b8b6-5ba93f0cc12e
+Probe.Facts.Skipped	True	Skipped	0.000000		-	e3447f83-8e49-48e1-b009-7a1ded71d27a
+Probe.CtorThrows.Never_runs	True	Failed	0.000000		-	56cc4ce6-1557-466b-a30d-e52e11894155
+Probe.FixtureThrows.Never_runs	True	Failed	0.000000		-	9d43db51-cdb4-4649-a60f-78599fc57070
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })	True	Passed	0.021895	TestTrackingAttribute,PrototypeTrackingAttribute	91caf020-0acf-4505-8081-2ea779e7ccaf	65d5521a-549e-4b41-b631-0c4b33b66498
+Probe.Facts.Passes	True	Passed	0.021853	TestTrackingAttribute,PrototypeTrackingAttribute	2290ee81-1716-4b38-8806-079185ac2ea6	286d20ac-660c-433e-9858-4572a0428152
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })	True	Passed	0.000511	TestTrackingAttribute,PrototypeTrackingAttribute	45cdbd89-4492-4905-802e-82793ba24b3e	e4d50424-9a11-4914-9c08-e8d3c0103ac8
+Probe.Facts.Fails	True	Failed	0.001474	TestTrackingAttribute,PrototypeTrackingAttribute	75fbb87a-8ed2-42f7-b81b-f2a2f4ddcbc8	a026b848-e235-4462-9eba-46ba750c32dd
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })	True	Passed	0.000075	TestTrackingAttribute,PrototypeTrackingAttribute	fdc9434d-92fd-46cf-9b0a-6fb753695eba	2c4dac3c-6d2f-4c6a-a522-18b86c749d91
+A passing fact with a display name	True	Passed	0.000135	TestTrackingAttribute,PrototypeTrackingAttribute	7f3992aa-a8dd-413b-b5e5-2bc45d88e5df	8f657875-5036-4c53-b766-aafb86cd53b9
+A failing fact with a display name	True	Failed	0.000345	TestTrackingAttribute,PrototypeTrackingAttribute	0b69b0b0-135b-4e28-99ff-8dc191f67e3e	01129547-62d8-4290-8204-fdae98941dd2
+Probe.Theories.Rows(row: 2, ms: 400)	True	none	0.000000	TestTrackingAttribute,PrototypeTrackingAttribute	f09a06d4-8824-46f6-b00b-e201f3501cc7	93b26f34-a2d0-4c5d-b5ae-d4c7e5541554

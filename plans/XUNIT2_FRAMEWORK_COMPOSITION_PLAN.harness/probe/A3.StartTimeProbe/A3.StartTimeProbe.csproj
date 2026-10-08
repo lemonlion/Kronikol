@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A, plus a ProcessExit hook that reads ReportLifecycle.StartTime after the run (StartTimeProbe.cs). -->
+  <ItemGroup>
+    <Compile Include="../Shared/*.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,4 @@
+FormatScenarioDisplayName("Order API returns 404 for v1.2") => "2"
+FormatScenarioDisplayName("Does the thing.") THROWS System.IndexOutOfRangeException: Index was outside the bounds of the array.
+FormatScenarioDisplayName("Ns.Class.M(x: Foo())") => "M [x: Foo(]"
+FormatScenarioDisplayName("") THROWS System.IndexOutOfRangeException: Index was outside the bounds of the array.

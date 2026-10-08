@@ -1,0 +1,55 @@
+seq	micros	thread	event	test	detail
+1	34275	4	options	-	entry=RunTests runnerValue=unset value=True
+2	66252	22	starting	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })	previous=null
+3	66253	19	starting	Probe.InitThrows.Never_runs	previous=null
+4	66253	17	starting	Probe.Facts.Skipped	previous=null
+5	66254	21	starting	Probe.FixtureThrows.Never_runs	previous=null
+6	66275	16	starting	Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture	previous=null
+7	66319	20	starting	Probe.Theories.Rows(row: 6, ms: 20)	previous=null
+8	66328	18	starting	Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture	previous=null
+9	66371	8	starting	Probe.CtorThrows.Never_runs	previous=null
+10	66811	17	result	Probe.Facts.Skipped	visible=same
+11	67310	11	formatter-threw	Does the thing.	IndexOutOfRangeException
+12	69931	17	starting	Probe.Facts.Passes	previous=null
+13	70887	8	result	Probe.CtorThrows.Never_runs	visible=same
+14	70909	21	result	Probe.FixtureThrows.Never_runs	visible=same
+15	74893	18	before	Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture	visible=1 trackingIdSeen=1 trackingId=fc81ab6b-c8e9-4017-b327-876c510d2b83 method=AssemblyFixtureUserA.Receives_the_assembly_fixture
+16	75033	17	before	Probe.Facts.Passes	visible=1 trackingIdSeen=1 trackingId=601e2b73-3a93-47e8-8601-782778915dad method=Facts.Passes
+17	75038	16	before	Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture	visible=1 trackingIdSeen=1 trackingId=7258c1f1-f0ee-4b92-a0f1-8c9054b16641 method=AssemblyFixtureUserB.Receives_the_assembly_fixture
+18	75100	20	before	Probe.Theories.Rows(row: 6, ms: 20)	visible=1 trackingIdSeen=1 trackingId=7d8aee3b-7c18-4f1a-a674-be7449f7efd6 method=Theories.Rows
+19	75152	22	before	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })	visible=1 trackingIdSeen=1 trackingId=940ce6d4-03a6-40b3-a02c-66c2ac5347f9 method=MemberDataNotSerializable.NonSerializableRows
+20	75495	11	result	Probe.InitThrows.Never_runs	visible=same
+21	78715	17	body	Probe.Facts.Passes	visible=1 path=/facts/passes trackingId=601e2b73-3a93-47e8-8601-782778915dad
+22	78718	22	body	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })	visible=1 path=/nonser/1 trackingId=940ce6d4-03a6-40b3-a02c-66c2ac5347f9
+23	78723	16	body	Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture	visible=1 path=/assemblyfixture/b trackingId=7258c1f1-f0ee-4b92-a0f1-8c9054b16641
+24	78729	18	body	Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture	visible=1 path=/assemblyfixture/a trackingId=fc81ab6b-c8e9-4017-b327-876c510d2b83
+25	78783	20	body	Probe.Theories.Rows(row: 6, ms: 20)	visible=1 path=/row/6/slept/20 trackingId=7d8aee3b-7c18-4f1a-a674-be7449f7efd6
+26	97713	17	result	Probe.Facts.Passes	visible=same
+27	97715	22	result	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })	visible=same
+28	98272	22	starting	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })	previous=null
+29	112106	17	starting	Probe.Facts.Fails	previous=null
+30	112131	18	result	Probe.AssemblyFixtureUserA.Receives_the_assembly_fixture	visible=same
+31	112279	16	result	Probe.AssemblyFixtureUserB.Receives_the_assembly_fixture	visible=same
+32	112322	17	before	Probe.Facts.Fails	visible=1 trackingIdSeen=1 trackingId=4a28c60f-2e8a-4c46-a5c3-8ace9dbc8e2a method=Facts.Fails
+33	112330	22	before	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })	visible=1 trackingIdSeen=1 trackingId=7fa30234-554a-4b62-8d63-decf1c244f23 method=MemberDataNotSerializable.NonSerializableRows
+34	112585	17	body	Probe.Facts.Fails	visible=1 path=/facts/fails trackingId=4a28c60f-2e8a-4c46-a5c3-8ace9dbc8e2a
+35	112641	22	body	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })	visible=1 path=/nonser/2 trackingId=7fa30234-554a-4b62-8d63-decf1c244f23
+36	112724	22	result	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })	visible=same
+37	112787	22	starting	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })	previous=null
+38	112829	22	before	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })	visible=1 trackingIdSeen=1 trackingId=7d3f60f0-38b4-4ce1-b839-968fa1df1128 method=MemberDataNotSerializable.NonSerializableRows
+39	112846	22	body	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })	visible=1 path=/nonser/3 trackingId=7d3f60f0-38b4-4ce1-b839-968fa1df1128
+40	112883	22	result	Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })	visible=same
+41	114195	17	result	Probe.Facts.Fails	visible=same
+42	114637	17	starting	A passing fact with a display name	previous=null
+43	114682	17	before	A passing fact with a display name	visible=1 trackingIdSeen=1 trackingId=097765e4-077d-4688-92bb-9ee7ea2c2b2a method=Facts.PassesWithDisplayName
+44	114752	17	body	A passing fact with a display name	visible=1 path=/facts/displayname-passes trackingId=097765e4-077d-4688-92bb-9ee7ea2c2b2a
+45	114815	17	result	A passing fact with a display name	visible=same
+46	114899	17	starting	A failing fact with a display name	previous=null
+47	114939	17	before	A failing fact with a display name	visible=1 trackingIdSeen=1 trackingId=5f46019b-7f1c-4ff1-a724-8c7cbe2a1be1 method=Facts.FailsWithDisplayName
+48	115172	17	body	A failing fact with a display name	visible=1 path=/facts/displayname-fails trackingId=5f46019b-7f1c-4ff1-a724-8c7cbe2a1be1
+49	115389	17	result	A failing fact with a display name	visible=same
+50	134160	32	result	Probe.Theories.Rows(row: 6, ms: 20)	visible=same
+51	134360	32	starting	Probe.Theories.Rows(row: 2, ms: 400)	previous=null
+52	134587	32	before	Probe.Theories.Rows(row: 2, ms: 400)	visible=1 trackingIdSeen=1 trackingId=aaf410e6-c65e-4b5b-ac7a-111c274df6f3 method=Theories.Rows
+53	134747	32	body	Probe.Theories.Rows(row: 2, ms: 400)	visible=1 path=/row/2/slept/400 trackingId=aaf410e6-c65e-4b5b-ac7a-111c274df6f3
+54	249565	8	report	-	assemblyExecutionSeconds=0.000 reportMilliseconds=172 scenarios=15

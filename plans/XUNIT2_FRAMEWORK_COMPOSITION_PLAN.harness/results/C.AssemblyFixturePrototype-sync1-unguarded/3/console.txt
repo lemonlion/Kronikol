@@ -1,0 +1,134 @@
+Test run for C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\C.AssemblyFixturePrototype.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.27)
+[xUnit.net 00:00:00.05]   Discovering: C.AssemblyFixturePrototype
+[xUnit.net 00:00:00.08]   Discovered:  C.AssemblyFixturePrototype
+[xUnit.net 00:00:00.08]   Starting:    C.AssemblyFixturePrototype
+[xUnit.net 00:00:00.12]     Probe.Facts.Skipped [SKIP]
+[xUnit.net 00:00:00.12]       skipped on purpose
+[xUnit.net 00:00:00.12]     Probe.FixtureThrows.Never_runs [FAIL]
+[xUnit.net 00:00:00.12]       Class fixture type 'Probe.ThrowingFixture' threw in its constructor
+[xUnit.net 00:00:00.12]       ---- System.InvalidOperationException : the class fixture constructor throws on purpose
+[xUnit.net 00:00:00.12]       Stack Trace:
+[xUnit.net 00:00:00.12]         
+[xUnit.net 00:00:00.12]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:00.12]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\FixtureThrows.cs(8,0): at Probe.ThrowingFixture..ctor()
+[xUnit.net 00:00:00.12]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:00.12]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.12]     Probe.CtorThrows.Never_runs [FAIL]
+[xUnit.net 00:00:00.12]       System.InvalidOperationException : the test class constructor throws on purpose
+[xUnit.net 00:00:00.12]       Stack Trace:
+[xUnit.net 00:00:00.12]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\CtorThrows.cs(13,0): at Probe.CtorThrows..ctor(ITestOutputHelper output)
+[xUnit.net 00:00:00.12]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:00.12]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.12]     Probe.InitThrows.Never_runs [FAIL]
+[xUnit.net 00:00:00.12]       System.InvalidOperationException : InitializeAsync throws on purpose
+[xUnit.net 00:00:00.12]       Stack Trace:
+[xUnit.net 00:00:00.12]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\InitThrows.cs(11,0): at Probe.InitThrows.InitializeAsync()
+  Skipped Probe.Facts.Skipped [1 ms]
+  Failed Probe.FixtureThrows.Never_runs [1 ms]
+  Error Message:
+   Class fixture type 'Probe.ThrowingFixture' threw in its constructor
+---- System.InvalidOperationException : the class fixture constructor throws on purpose
+  Stack Trace:
+  
+----- Inner Stack Trace -----
+   at Probe.ThrowingFixture..ctor() in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\FixtureThrows.cs:line 8
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Probe.CtorThrows.Never_runs [1 ms]
+  Error Message:
+   System.InvalidOperationException : the test class constructor throws on purpose
+  Stack Trace:
+     at Probe.CtorThrows..ctor(ITestOutputHelper output) in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\CtorThrows.cs:line 13
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Probe.InitThrows.Never_runs [1 ms]
+  Error Message:
+   System.InvalidOperationException : InitializeAsync throws on purpose
+  Stack Trace:
+     at Probe.InitThrows.InitializeAsync() in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\InitThrows.cs:line 11
+  Passed Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 }) [21 ms]
+  Passed Probe.Facts.Passes [21 ms]
+[xUnit.net 00:00:00.16]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:00.16]     Probe.Facts.Fails [FAIL]
+[xUnit.net 00:00:00.16]       Expected: 1
+[xUnit.net 00:00:00.16]       Actual:   2
+[xUnit.net 00:00:00.16]       Stack Trace:
+[xUnit.net 00:00:00.16]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Facts.cs(15,0): at Probe.Facts.Fails()
+[xUnit.net 00:00:00.16]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.16]       Output:
+[xUnit.net 00:00:00.16]         probe-call: GET /facts/fails
+[xUnit.net 00:00:00.16]     A failing fact with a display name [FAIL]
+[xUnit.net 00:00:00.16]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:00.16]       Expected: 1
+[xUnit.net 00:00:00.16]       Actual:   2
+[xUnit.net 00:00:00.16]       Stack Trace:
+[xUnit.net 00:00:00.16]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Facts.cs(22,0): at Probe.Facts.FailsWithDisplayName()
+[xUnit.net 00:00:00.16]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.16]       Output:
+[xUnit.net 00:00:00.16]         probe-call: GET /facts/displayname-fails
+Report diagnostics: 20 log entries across 10 test(s).
+Warning: 2 orphaned test ID(s) in logs do not match any feature scenario.
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\Reports  (TestRunReport.html � TestRunReport.json 38.8 KB � Failures.md)
+  3 failed - kronikol query failures C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\Reports
+    91f25064bdab77be  Ctor Throws > Never runs
+    565673b7aa175985  Fixture Throws > Never runs
+    00c50259d4a62c66  Init Throws > Never runs
+  agents: read C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\Reports\CLAUDE.md first; never open TestRunReport.json
+  no tool: dotnet run --file C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\Reports\query.cs -- failures C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\C.AssemblyFixturePrototype\debug\Reports
+[xUnit.net 00:00:00.35]   Finished:    C.AssemblyFixturePrototype
+Unhandled exception. System.IndexOutOfRangeException: Index was outside the bounds of the array.
+   at System.String.get_Chars(Int32 index)
+   at Kronikol.ScenarioTitleResolver.FormatScenarioDisplayName(String testDisplayName) in C:\Code\Kronikol-xunit2fw132\src\Kronikol\ScenarioTitleResolver.cs:line 92
+   at Probe.Prototype.ProbeScenario.FormatName(String displayName) in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Prototype\Prototype.cs:line 123
+   at Probe.Prototype.ProbeScenario.For(ITest test, Boolean sawStarting) in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Prototype\Prototype.cs:line 100
+   at Probe.Prototype.ScenarioSink.OnMessage(IMessageSinkMessage message) in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Prototype\Prototype.cs:line 168
+   at Xunit.Sdk.SynchronousMessageBus.QueueMessage(IMessageSinkMessage message) in /_/src/xunit.execution/Sdk/SynchronousMessageBus.cs:line 37
+   at Xunit.Sdk.TestRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestRunner.cs:line 130
+   at Xunit.Sdk.TestCaseRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestCaseRunner.cs:line 82
+   at Xunit.Sdk.TestMethodRunner`1.RunTestCasesAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestMethodRunner.cs:line 136
+   at Xunit.Sdk.TestMethodRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestMethodRunner.cs:line 106
+   at Xunit.Sdk.TestClassRunner`1.RunTestMethodsAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestClassRunner.cs:line 227
+   at Xunit.Sdk.TestClassRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestClassRunner.cs:line 175
+   at Xunit.Sdk.TestCollectionRunner`1.RunTestClassesAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestCollectionRunner.cs:line 130
+   at Xunit.Sdk.TestCollectionRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestCollectionRunner.cs:line 101
+   at Xunit.Extensions.AssemblyFixture.TestAssemblyRunner.RunTestCollectionAsync(IMessageBus messageBus, ITestCollection testCollection, IEnumerable`1 testCases, CancellationTokenSource cancellationTokenSource)
+   at Xunit.Sdk.XunitTestAssemblyRunner.RunTestCollectionsAsync(IMessageBus messageBus, CancellationTokenSource cancellationTokenSource) in /_/src/xunit.execution/Sdk/Frameworks/Runners/XunitTestAssemblyRunner.cs:line 271
+   at Xunit.Sdk.TestAssemblyRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestAssemblyRunner.cs:line 210
+   at Xunit.Extensions.AssemblyFixture.TestFrameworkExecutor.RunTestCases(IEnumerable`1 testCases, IMessageSink executionMessageSink, ITestFrameworkExecutionOptions executionOptions)
+   at System.Threading.Tasks.Task.<>c.<ThrowAsync>b__128_1(Object state)
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+The active test run was aborted. Reason: Test host process crashed : Unhandled exception. System.IndexOutOfRangeException: Index was outside the bounds of the array.
+   at System.String.get_Chars(Int32 index)
+   at Kronikol.ScenarioTitleResolver.FormatScenarioDisplayName(String testDisplayName) in C:\Code\Kronikol-xunit2fw132\src\Kronikol\ScenarioTitleResolver.cs:line 92
+   at Probe.Prototype.ProbeScenario.FormatName(String displayName) in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Prototype\Prototype.cs:line 123
+   at Probe.Prototype.ProbeScenario.For(ITest test, Boolean sawStarting) in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Prototype\Prototype.cs:line 100
+   at Probe.Prototype.ScenarioSink.OnMessage(IMessageSinkMessage message) in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Prototype\Prototype.cs:line 168
+   at Xunit.Sdk.SynchronousMessageBus.QueueMessage(IMessageSinkMessage message) in /_/src/xunit.execution/Sdk/SynchronousMessageBus.cs:line 37
+   at Xunit.Sdk.TestRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestRunner.cs:line 130
+   at Xunit.Sdk.TestCaseRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestCaseRunner.cs:line 82
+   at Xunit.Sdk.TestMethodRunner`1.RunTestCasesAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestMethodRunner.cs:line 136
+   at Xunit.Sdk.TestMethodRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestMethodRunner.cs:line 106
+   at Xunit.Sdk.TestClassRunner`1.RunTestMethodsAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestClassRunner.cs:line 227
+   at Xunit.Sdk.TestClassRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestClassRunner.cs:line 175
+   at Xunit.Sdk.TestCollectionRunner`1.RunTestClassesAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestCollectionRunner.cs:line 130
+   at Xunit.Sdk.TestCollectionRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestCollectionRunner.cs:line 101
+   at Xunit.Extensions.AssemblyFixture.TestAssemblyRunner.RunTestCollectionAsync(IMessageBus messageBus, ITestCollection testCollection, IEnumerable`1 testCases, CancellationTokenSource cancellationTokenSource)
+   at Xunit.Sdk.XunitTestAssemblyRunner.RunTestCollectionsAsync(IMessageBus messageBus, CancellationTokenSource cancellationTokenSource) in /_/src/xunit.execution/Sdk/Frameworks/Runners/XunitTestAssemblyRunner.cs:line 271
+   at Xunit.Sdk.TestAssemblyRunner`1.RunAsync() in /_/src/xunit.execution/Sdk/Frameworks/Runners/TestAssemblyRunner.cs:line 210
+   at Xunit.Extensions.AssemblyFixture.TestFrameworkExecutor.RunTestCases(IEnumerable`1 testCases, IMessageSink executionMessageSink, ITestFrameworkExecutionOptions executionOptions)
+   at System.Threading.Tasks.Task.<>c.<ThrowAsync>b__128_1(Object state)
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+
+Results File: C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\results\C.AssemblyFixturePrototype-sync1-unguarded\3\run.trx
+
+Test Run Aborted.
+Total tests: Unknown
+     Passed: 2
+     Failed: 3
+    Skipped: 1
+ Total time: 0.6271 Seconds

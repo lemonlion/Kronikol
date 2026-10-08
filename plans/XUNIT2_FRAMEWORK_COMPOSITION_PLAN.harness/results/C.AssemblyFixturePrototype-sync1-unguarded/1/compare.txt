@@ -1,0 +1,53 @@
+# compare C.AssemblyFixturePrototype-sync1-unguarded run 1
+TRX: 6 test results; report: 9 scenarios
+
+flags: RESULT, NAME, DURATION, ERROR-TEXT = the scenario disagrees with the test; FOREIGN-CALLS = it holds another test's call;
+       CALL-IN-BACKGROUND = the test's call is listed as a background call; CALL-MISSING = matched by names, its call is in no
+       scenario; NO-SCENARIO = no scenario holds the test's call, and none has its feature and name
+xUnit test (TRX)                                               outcome       secs  via                        scenario (report)                              result     secs  flags
+Probe.CtorThrows.Never_runs                                    Failed       0.001  names (test made no call)  Never runs                                     Failed    0.000  ok  (error-type-not-in-report)
+Probe.Facts.Passes                                             Passed       0.022  call                       Passes                                         Passed    0.000  DURATION
+Probe.Facts.Skipped                                            NotExecuted  0.001  names (test made no call)  Skipped                                        Skipped   0.000  ok
+Probe.FixtureThrows.Never_runs                                 Failed       0.001  names (test made no call)  Never runs                                     Failed    0.000  ok
+Probe.InitThrows.Never_runs                                    Failed       0.001  names (test made no call)  Never runs                                     Failed    0.000  ok  (error-type-not-in-report)
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonS Passed       0.022  call                       Non serializable rows [item: NonSer { I = 1 }] Passed    0.000  DURATION
+
+Per test: the call it made, the calls under its scenario, and the first line of each error
+- Probe.CtorThrows.Never_runs  [Probe.CtorThrows.Never_runs]
+    test call: (none: never reached its body); scenario: Ctor Throws > Never runs, calls (none)
+    TRX error: System.InvalidOperationException : the test class constructor throws on purpose
+    report error: the test class constructor throws on purpose
+- Probe.Facts.Passes  [Probe.Facts.Passes]
+    test call: /facts/passes; scenario: Facts > Passes, calls /facts/passes
+- Probe.Facts.Skipped  [Probe.Facts.Skipped]
+    test call: (none: never reached its body); scenario: Facts > Skipped, calls (none)
+    TRX error: skipped on purpose
+    report error: -
+- Probe.FixtureThrows.Never_runs  [Probe.FixtureThrows.Never_runs]
+    test call: (none: never reached its body); scenario: Fixture Throws > Never runs, calls (none)
+    TRX error: Class fixture type 'Probe.ThrowingFixture' threw in its constructor
+    report error: Class fixture type 'Probe.ThrowingFixture' threw in its constructor
+- Probe.InitThrows.Never_runs  [Probe.InitThrows.Never_runs]
+    test call: (none: never reached its body); scenario: Init Throws > Never runs, calls (none)
+    TRX error: System.InvalidOperationException : InitializeAsync throws on purpose
+    report error: InitializeAsync throws on purpose
+- Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })  [Probe.MemberDataNotSerializable.NonSerializableRows]
+    test call: /nonser/1; scenario: Member Data Not Serializable > Non serializable rows [item: NonSer { I = 1 }], calls /nonser/1
+
+xUnit tests with no scenario (0):
+Scenarios with no xUnit test (3):
+  - Assembly Fixture User A > Receives the assembly fixture [Passed, 0.000s, calls: /assemblyfixture/a]
+  - Assembly Fixture User B > Receives the assembly fixture [Passed, 0.000s, calls: /assemblyfixture/b]
+  - Theories > Rows [row: 6, ms: 20] [Passed, 0.000s, calls: /row/6/slept/20]
+
+Scenario results in the report: Failed (no duration) 3, Passed (no duration) 5, Skipped (no duration) 1
+
+Run times (UTC):
+  TRX run:            start 17:53:12.629Z  finish 17:53:13.241Z  (0.612s)
+  TRX tests:          first start 17:53:13.022Z  last end 17:53:13.052Z
+  report:             start 2026-10-07T17:53:12Z  end 2026-10-07T17:53:13Z  (end - start = 1.0s; the report writes whole seconds)
+  report scenarios:   earliest endedAt 2026-10-07T17:53:13.021Z  latest endedAt 2026-10-07T17:53:13.030Z
+  scenarios whose endedAt is before the report's start: 0 of 4
+
+Background section: 0 call(s)
+Report diagnostics: none

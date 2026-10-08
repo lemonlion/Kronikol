@@ -1,0 +1,317 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="f08411ab-c706-402b-8506-52a7004e54bd" name="cex@DESKTOP-MDG4S9B 2026-10-07 18:45:10" runUser="DESKTOP-MDG4S9B\cex" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-07T18:45:10.7236110+01:00" queuing="2026-10-07T18:45:10.7236112+01:00" start="2026-10-07T18:45:09.1629187+01:00" finish="2026-10-07T18:45:11.4462078+01:00" />
+  <TestSettings name="default" id="93358150-e29e-49d1-9867-68e4f7cca16b">
+    <Deployment runDeploymentRoot="cex_DESKTOP-MDG4S9B_2026-10-07_18_45_10" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="7e812716-74ac-4eb0-9101-9410ac5a5bc2" testId="85dd3acf-cfe3-ae33-ae24-9e33f6a8f0ee" testName="Probe.Theories.Rows(row: 1, ms: 50)" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0620366" startTime="2026-10-07T18:45:10.6820058+01:00" endTime="2026-10-07T18:45:10.6820064+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7e812716-74ac-4eb0-9101-9410ac5a5bc2">
+      <Output>
+        <StdOut>probe-call: GET /row/1/slept/50</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="ba177007-973f-4cb0-b224-5934d2b2696f" testId="d93f929d-fd42-583e-84af-e0f3405bfaed" testName="A failing fact with a display name" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0286879" startTime="2026-10-07T18:45:09.5693051+01:00" endTime="2026-10-07T18:45:09.5693151+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ba177007-973f-4cb0-b224-5934d2b2696f">
+      <Output>
+        <StdOut>probe-call: GET /facts/displayname-fails</StdOut>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 1&#xD;
+Actual:   2</Message>
+          <StackTrace>   at Probe.Facts.FailsWithDisplayName() in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Facts.cs:line 22&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="76e77db9-9331-4541-b0de-8a2f12de5a4d" testId="2ec86fe5-b292-851e-8f9a-92e1c31c0690" testName="Probe.Facts.Skipped" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0010000" startTime="2026-10-07T18:45:09.5724941+01:00" endTime="2026-10-07T18:45:09.5724942+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="NotExecuted" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="76e77db9-9331-4541-b0de-8a2f12de5a4d">
+      <Output>
+        <ErrorInfo>
+          <Message>skipped on purpose</Message>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="efe06725-7d7b-455a-8b7c-f8bc61501a26" testId="3170c7ac-4daf-26e9-d8ca-a020d7cf1fa8" testName="Does the thing." computerName="DESKTOP-MDG4S9B" duration="00:00:00.0002203" startTime="2026-10-07T18:45:11.2157019+01:00" endTime="2026-10-07T18:45:11.2157019+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="efe06725-7d7b-455a-8b7c-f8bc61501a26">
+      <Output>
+        <StdOut>probe-call: GET /dots/trailing-dot</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="aa75be02-9fa5-43c7-93bb-0fcbf2469093" testId="ff867a43-737d-019d-3c47-984d609c66c8" testName="Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 1 })" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0003290" startTime="2026-10-07T18:45:11.2132610+01:00" endTime="2026-10-07T18:45:11.2132611+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aa75be02-9fa5-43c7-93bb-0fcbf2469093">
+      <Output>
+        <StdOut>probe-call: GET /nonser/1</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="17763343-dc13-4f6a-8104-4e9b665467bc" testId="f07f461b-c0a9-a2cc-28cf-f5cdb03a3206" testName="Probe.Facts.Fails" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0003532" startTime="2026-10-07T18:45:09.5717532+01:00" endTime="2026-10-07T18:45:09.5717533+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="17763343-dc13-4f6a-8104-4e9b665467bc">
+      <Output>
+        <StdOut>probe-call: GET /facts/fails</StdOut>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 1&#xD;
+Actual:   2</Message>
+          <StackTrace>   at Probe.Facts.Fails() in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Facts.cs:line 15&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="3e58dd32-d797-4b10-8982-1d7272437cd3" testId="c2593562-3f01-1333-ef3e-96d35819af43" testName="Probe.InitThrows.Never_runs" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0010000" startTime="2026-10-07T18:45:11.2080219+01:00" endTime="2026-10-07T18:45:11.2080220+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3e58dd32-d797-4b10-8982-1d7272437cd3">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : InitializeAsync throws on purpose</Message>
+          <StackTrace>   at Probe.InitThrows.InitializeAsync() in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\InitThrows.cs:line 11</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="762d8eca-09cf-4a2e-b642-97bf944d9c45" testId="da0dc62d-1380-984a-6f20-d6da18faee07" testName="Probe.Theories.Rows(row: 6, ms: 20)" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0270355" startTime="2026-10-07T18:45:10.6191699+01:00" endTime="2026-10-07T18:45:10.6191702+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="762d8eca-09cf-4a2e-b642-97bf944d9c45">
+      <Output>
+        <StdOut>probe-call: GET /row/6/slept/20</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e55b51af-fdc3-4b0c-b20e-23b741c27414" testId="f3502b49-e43d-cdb1-e3c8-34050e04667a" testName="Probe.Theories.Rows(row: 2, ms: 400)" computerName="DESKTOP-MDG4S9B" duration="00:00:00.4161598" startTime="2026-10-07T18:45:11.2047323+01:00" endTime="2026-10-07T18:45:11.2047325+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e55b51af-fdc3-4b0c-b20e-23b741c27414">
+      <Output>
+        <StdOut>probe-call: GET /row/2/slept/400</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="8f053f14-e88d-46b4-9de9-b8e67a378c25" testId="3ee349aa-6c97-0bb9-f97c-929f96809099" testName="A passing fact with a display name" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0001450" startTime="2026-10-07T18:45:09.5719811+01:00" endTime="2026-10-07T18:45:09.5719811+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8f053f14-e88d-46b4-9de9-b8e67a378c25">
+      <Output>
+        <StdOut>probe-call: GET /facts/displayname-passes</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="ce1f03e6-eb1a-4eb8-9a50-223c93b5bf03" testId="ff867a43-737d-019d-3c47-984d609c66c8" testName="Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 3 })" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0001292" startTime="2026-10-07T18:45:11.2137437+01:00" endTime="2026-10-07T18:45:11.2137441+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ce1f03e6-eb1a-4eb8-9a50-223c93b5bf03">
+      <Output>
+        <StdOut>probe-call: GET /nonser/3</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="f0324d7f-8d0b-4743-aec6-b2c56d408755" testId="5ed68c93-1973-c69a-6f8c-a58483539b49" testName="Order API returns 404 for v1.2" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0001843" startTime="2026-10-07T18:45:11.2147766+01:00" endTime="2026-10-07T18:45:11.2147767+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f0324d7f-8d0b-4743-aec6-b2c56d408755">
+      <Output>
+        <StdOut>probe-call: GET /dots/version-1-2</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e33b0b52-d17f-41db-a4dc-b4c3f26f9a51" testId="f6c48cd3-c462-65b2-d5a6-7554e3fba90a" testName="Probe.CtorThrows.Never_runs" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0010000" startTime="2026-10-07T18:45:11.2068413+01:00" endTime="2026-10-07T18:45:11.2068414+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e33b0b52-d17f-41db-a4dc-b4c3f26f9a51">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : the test class constructor throws on purpose</Message>
+          <StackTrace>   at Probe.CtorThrows..ctor(ITestOutputHelper output) in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\CtorThrows.cs:line 13&#xD;
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="f9eff26e-8420-4cc9-ba81-8759f2b6e293" testId="d8f30b74-91b2-087d-832e-f26a1074d978" testName="Probe.Facts.Passes" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0004369" startTime="2026-10-07T18:45:09.5713505+01:00" endTime="2026-10-07T18:45:09.5713505+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f9eff26e-8420-4cc9-ba81-8759f2b6e293">
+      <Output>
+        <StdOut>probe-call: GET /facts/passes</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="aed7fe90-bf85-4833-a418-ae8bfc3ae835" testId="e1a150f4-6676-db79-ba1a-2f9362f2c5d9" testName="Probe.Theories.Rows(row: 5, ms: 200)" computerName="DESKTOP-MDG4S9B" duration="00:00:00.2072992" startTime="2026-10-07T18:45:09.7771219+01:00" endTime="2026-10-07T18:45:09.7771223+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aed7fe90-bf85-4833-a418-ae8bfc3ae835">
+      <Output>
+        <StdOut>probe-call: GET /row/5/slept/200</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="297fc4dd-ce30-4052-86a7-ed10d7d4c5e3" testId="c766c735-95a6-7f74-5659-131ed6239ed8" testName="Probe.FixtureThrows.Never_runs" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0010000" startTime="2026-10-07T18:45:11.2096321+01:00" endTime="2026-10-07T18:45:11.2096322+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="297fc4dd-ce30-4052-86a7-ed10d7d4c5e3">
+      <Output>
+        <ErrorInfo>
+          <Message>Class fixture type 'Probe.ThrowingFixture' threw in its constructor&#xD;
+---- System.InvalidOperationException : the class fixture constructor throws on purpose</Message>
+          <StackTrace>&#xD;
+----- Inner Stack Trace -----&#xD;
+   at Probe.ThrowingFixture..ctor() in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\FixtureThrows.cs:line 8&#xD;
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="7885cc89-123d-49be-bfab-88e4a791308f" testId="ff867a43-737d-019d-3c47-984d609c66c8" testName="Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I = 2 })" computerName="DESKTOP-MDG4S9B" duration="00:00:00.0002910" startTime="2026-10-07T18:45:11.2135908+01:00" endTime="2026-10-07T18:45:11.2135909+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7885cc89-123d-49be-bfab-88e4a791308f">
+      <Output>
+        <StdOut>probe-call: GET /nonser/2</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="7c7218d2-3f16-4a66-9c9a-1f7b43458421" testId="1db9fb59-88a5-814f-966f-f678dcd73b2a" testName="Probe.Theories.Rows(row: 4, ms: 800)" computerName="DESKTOP-MDG4S9B" duration="00:00:00.8125506" startTime="2026-10-07T18:45:10.5926923+01:00" endTime="2026-10-07T18:45:10.5926924+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7c7218d2-3f16-4a66-9c9a-1f7b43458421">
+      <Output>
+        <StdOut>probe-call: GET /row/4/slept/800</StdOut>
+        <ErrorInfo>
+          <Message>Assert.NotEqual() Failure: Values are equal&#xD;
+Expected: Not 4&#xD;
+Actual:       4</Message>
+          <StackTrace>   at Probe.Theories.Rows(Int32 row, Int32 ms) in C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Theories.cs:line 21&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="41225baf-820c-46ad-81e2-64a12e26870f" testId="900e81d5-436d-b947-1bb9-111ba0920186" testName="Probe.Theories.Rows(row: 3, ms: 100)" computerName="DESKTOP-MDG4S9B" duration="00:00:00.1056514" startTime="2026-10-07T18:45:10.7880173+01:00" endTime="2026-10-07T18:45:10.7880178+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="41225baf-820c-46ad-81e2-64a12e26870f">
+      <Output>
+        <StdOut>probe-call: GET /row/3/slept/100</StdOut>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="A failing fact with a display name" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="d93f929d-fd42-583e-84af-e0f3405bfaed">
+      <Execution id="ba177007-973f-4cb0-b224-5934d2b2696f" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.Facts" name="FailsWithDisplayName" />
+    </UnitTest>
+    <UnitTest name="Probe.MemberDataNotSerializable.NonSerializableRows" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="ff867a43-737d-019d-3c47-984d609c66c8">
+      <Execution id="aa75be02-9fa5-43c7-93bb-0fcbf2469093" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.MemberDataNotSerializable" name="NonSerializableRows" />
+    </UnitTest>
+    <UnitTest name="A passing fact with a display name" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="3ee349aa-6c97-0bb9-f97c-929f96809099">
+      <Execution id="8f053f14-e88d-46b4-9de9-b8e67a378c25" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.Facts" name="PassesWithDisplayName" />
+    </UnitTest>
+    <UnitTest name="Probe.FixtureThrows.Never_runs" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="c766c735-95a6-7f74-5659-131ed6239ed8">
+      <Execution id="297fc4dd-ce30-4052-86a7-ed10d7d4c5e3" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.FixtureThrows" name="Never_runs" />
+    </UnitTest>
+    <UnitTest name="Probe.CtorThrows.Never_runs" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="f6c48cd3-c462-65b2-d5a6-7554e3fba90a">
+      <Execution id="e33b0b52-d17f-41db-a4dc-b4c3f26f9a51" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.CtorThrows" name="Never_runs" />
+    </UnitTest>
+    <UnitTest name="Does the thing." storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="3170c7ac-4daf-26e9-d8ca-a020d7cf1fa8">
+      <Execution id="efe06725-7d7b-455a-8b7c-f8bc61501a26" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.DisplayNameDots" name="TrailingDot" />
+    </UnitTest>
+    <UnitTest name="Probe.Facts.Passes" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="d8f30b74-91b2-087d-832e-f26a1074d978">
+      <Execution id="f9eff26e-8420-4cc9-ba81-8759f2b6e293" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.Facts" name="Passes" />
+    </UnitTest>
+    <UnitTest name="Probe.Theories.Rows(row: 3, ms: 100)" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="900e81d5-436d-b947-1bb9-111ba0920186">
+      <Execution id="41225baf-820c-46ad-81e2-64a12e26870f" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.Theories" name="Rows" />
+    </UnitTest>
+    <UnitTest name="Probe.Theories.Rows(row: 6, ms: 20)" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="da0dc62d-1380-984a-6f20-d6da18faee07">
+      <Execution id="762d8eca-09cf-4a2e-b642-97bf944d9c45" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.Theories" name="Rows" />
+    </UnitTest>
+    <UnitTest name="Probe.Theories.Rows(row: 1, ms: 50)" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="85dd3acf-cfe3-ae33-ae24-9e33f6a8f0ee">
+      <Execution id="7e812716-74ac-4eb0-9101-9410ac5a5bc2" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.Theories" name="Rows" />
+    </UnitTest>
+    <UnitTest name="Probe.Theories.Rows(row: 4, ms: 800)" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="1db9fb59-88a5-814f-966f-f678dcd73b2a">
+      <Execution id="7c7218d2-3f16-4a66-9c9a-1f7b43458421" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.Theories" name="Rows" />
+    </UnitTest>
+    <UnitTest name="Probe.InitThrows.Never_runs" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="c2593562-3f01-1333-ef3e-96d35819af43">
+      <Execution id="3e58dd32-d797-4b10-8982-1d7272437cd3" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.InitThrows" name="Never_runs" />
+    </UnitTest>
+    <UnitTest name="Probe.Theories.Rows(row: 5, ms: 200)" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="e1a150f4-6676-db79-ba1a-2f9362f2c5d9">
+      <Execution id="aed7fe90-bf85-4833-a418-ae8bfc3ae835" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.Theories" name="Rows" />
+    </UnitTest>
+    <UnitTest name="Probe.Theories.Rows(row: 2, ms: 400)" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="f3502b49-e43d-cdb1-e3c8-34050e04667a">
+      <Execution id="e55b51af-fdc3-4b0c-b20e-23b741c27414" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.Theories" name="Rows" />
+    </UnitTest>
+    <UnitTest name="Order API returns 404 for v1.2" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="5ed68c93-1973-c69a-6f8c-a58483539b49">
+      <Execution id="f0324d7f-8d0b-4743-aec6-b2c56d408755" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.DisplayNameDots" name="DottedVersion" />
+    </UnitTest>
+    <UnitTest name="Probe.Facts.Fails" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="f07f461b-c0a9-a2cc-28cf-f5cdb03a3206">
+      <Execution id="17763343-dc13-4f6a-8104-4e9b665467bc" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.Facts" name="Fails" />
+    </UnitTest>
+    <UnitTest name="Probe.Facts.Skipped" storage="c:\code\kronikol-xunit2fw132\plans\xunit2_framework_composition_plan.harness\.build\main\bin\e.collectionfixtureonly\debug\e.collectionfixtureonly.dll" id="2ec86fe5-b292-851e-8f9a-92e1c31c0690">
+      <Execution id="76e77db9-9331-4541-b0de-8a2f12de5a4d" />
+      <TestMethod codeBase="C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\E.CollectionFixtureOnly.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Probe.Facts" name="Skipped" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="85dd3acf-cfe3-ae33-ae24-9e33f6a8f0ee" executionId="7e812716-74ac-4eb0-9101-9410ac5a5bc2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d93f929d-fd42-583e-84af-e0f3405bfaed" executionId="ba177007-973f-4cb0-b224-5934d2b2696f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2ec86fe5-b292-851e-8f9a-92e1c31c0690" executionId="76e77db9-9331-4541-b0de-8a2f12de5a4d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3170c7ac-4daf-26e9-d8ca-a020d7cf1fa8" executionId="efe06725-7d7b-455a-8b7c-f8bc61501a26" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ff867a43-737d-019d-3c47-984d609c66c8" executionId="aa75be02-9fa5-43c7-93bb-0fcbf2469093" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f07f461b-c0a9-a2cc-28cf-f5cdb03a3206" executionId="17763343-dc13-4f6a-8104-4e9b665467bc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c2593562-3f01-1333-ef3e-96d35819af43" executionId="3e58dd32-d797-4b10-8982-1d7272437cd3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="da0dc62d-1380-984a-6f20-d6da18faee07" executionId="762d8eca-09cf-4a2e-b642-97bf944d9c45" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f3502b49-e43d-cdb1-e3c8-34050e04667a" executionId="e55b51af-fdc3-4b0c-b20e-23b741c27414" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3ee349aa-6c97-0bb9-f97c-929f96809099" executionId="8f053f14-e88d-46b4-9de9-b8e67a378c25" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ff867a43-737d-019d-3c47-984d609c66c8" executionId="ce1f03e6-eb1a-4eb8-9a50-223c93b5bf03" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5ed68c93-1973-c69a-6f8c-a58483539b49" executionId="f0324d7f-8d0b-4743-aec6-b2c56d408755" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f6c48cd3-c462-65b2-d5a6-7554e3fba90a" executionId="e33b0b52-d17f-41db-a4dc-b4c3f26f9a51" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d8f30b74-91b2-087d-832e-f26a1074d978" executionId="f9eff26e-8420-4cc9-ba81-8759f2b6e293" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e1a150f4-6676-db79-ba1a-2f9362f2c5d9" executionId="aed7fe90-bf85-4833-a418-ae8bfc3ae835" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c766c735-95a6-7f74-5659-131ed6239ed8" executionId="297fc4dd-ce30-4052-86a7-ed10d7d4c5e3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ff867a43-737d-019d-3c47-984d609c66c8" executionId="7885cc89-123d-49be-bfab-88e4a791308f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1db9fb59-88a5-814f-966f-f678dcd73b2a" executionId="7c7218d2-3f16-4a66-9c9a-1f7b43458421" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="900e81d5-436d-b947-1bb9-111ba0920186" executionId="41225baf-820c-46ad-81e2-64a12e26870f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="19" executed="18" passed="12" failed="6" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.27)&#xD;
+[xUnit.net 00:00:00.05]   Discovering: E.CollectionFixtureOnly&#xD;
+[xUnit.net 00:00:00.08]   Discovered:  E.CollectionFixtureOnly&#xD;
+[xUnit.net 00:00:00.08]   Starting:    E.CollectionFixtureOnly&#xD;
+[xUnit.net 00:00:00.14]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.14]       Expected: 1&#xD;
+[xUnit.net 00:00:00.14]       Actual:   2&#xD;
+[xUnit.net 00:00:00.14]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.14]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Facts.cs(22,0): at Probe.Facts.FailsWithDisplayName()&#xD;
+[xUnit.net 00:00:00.14]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:00.14]       Output:&#xD;
+[xUnit.net 00:00:00.14]         probe-call: GET /facts/displayname-fails&#xD;
+[xUnit.net 00:00:00.14]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.14]       Expected: 1&#xD;
+[xUnit.net 00:00:00.14]       Actual:   2&#xD;
+[xUnit.net 00:00:00.14]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.14]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Facts.cs(15,0): at Probe.Facts.Fails()&#xD;
+[xUnit.net 00:00:00.14]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:00.14]       Output:&#xD;
+[xUnit.net 00:00:00.14]         probe-call: GET /facts/fails&#xD;
+[xUnit.net 00:00:00.14]       skipped on purpose&#xD;
+[xUnit.net 00:00:01.16]       Assert.NotEqual() Failure: Values are equal&#xD;
+[xUnit.net 00:00:01.16]       Expected: Not 4&#xD;
+[xUnit.net 00:00:01.16]       Actual:       4&#xD;
+[xUnit.net 00:00:01.16]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.16]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\Theories.cs(21,0): at Probe.Theories.Rows(Int32 row, Int32 ms)&#xD;
+[xUnit.net 00:00:01.16]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:01.16]       Output:&#xD;
+[xUnit.net 00:00:01.16]         probe-call: GET /row/4/slept/800&#xD;
+Test 'Probe.Facts.Skipped' was skipped in the test run.&#xD;
+[xUnit.net 00:00:01.77]       System.InvalidOperationException : the test class constructor throws on purpose&#xD;
+[xUnit.net 00:00:01.77]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.77]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\CtorThrows.cs(13,0): at Probe.CtorThrows..ctor(ITestOutputHelper output)&#xD;
+[xUnit.net 00:00:01.77]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+[xUnit.net 00:00:01.78]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:01.78]       System.InvalidOperationException : InitializeAsync throws on purpose&#xD;
+[xUnit.net 00:00:01.78]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.78]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\InitThrows.cs(11,0): at Probe.InitThrows.InitializeAsync()&#xD;
+[xUnit.net 00:00:01.78]       Class fixture type 'Probe.ThrowingFixture' threw in its constructor&#xD;
+[xUnit.net 00:00:01.78]       ---- System.InvalidOperationException : the class fixture constructor throws on purpose&#xD;
+[xUnit.net 00:00:01.78]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.78]         &#xD;
+[xUnit.net 00:00:01.78]         ----- Inner Stack Trace -----&#xD;
+[xUnit.net 00:00:01.78]         C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\probe\Shared\FixtureThrows.cs(8,0): at Probe.ThrowingFixture..ctor()&#xD;
+[xUnit.net 00:00:01.78]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+[xUnit.net 00:00:01.78]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+Report diagnostics: 30 log entries across 15 test(s).&#xD;
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.&#xD;
+Kronikol: reports written to C:\Code\Kronikol-xunit2fw132\plans\XUNIT2_FRAMEWORK_COMPOSITION_PLAN.harness\.build\main\bin\E.CollectionFixtureOnly\debug\Reports  (TestRunReport.html � TestRunReport.json 59.1 KB � Failures.md)&#xD;
+[xUnit.net 00:00:01.97]   Finished:    E.CollectionFixtureOnly&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-MDG4S9B" outcome="Error" timestamp="2026-10-07T18:45:09.5679023+01:00">
+        <Text>[xUnit.net 00:00:00.14]     A failing fact with a display name [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-MDG4S9B" outcome="Error" timestamp="2026-10-07T18:45:09.5718228+01:00">
+        <Text>[xUnit.net 00:00:00.14]     Probe.Facts.Fails [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-MDG4S9B" outcome="Warning" timestamp="2026-10-07T18:45:09.5723561+01:00">
+        <Text>[xUnit.net 00:00:00.14]     Probe.Facts.Skipped [SKIP]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-MDG4S9B" outcome="Error" timestamp="2026-10-07T18:45:10.5930464+01:00">
+        <Text>[xUnit.net 00:00:01.16]     Probe.Theories.Rows(row: 4, ms: 800) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-MDG4S9B" outcome="Error" timestamp="2026-10-07T18:45:11.2070714+01:00">
+        <Text>[xUnit.net 00:00:01.77]     Probe.CtorThrows.Never_runs [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-MDG4S9B" outcome="Error" timestamp="2026-10-07T18:45:11.2079281+01:00">
+        <Text>[xUnit.net 00:00:01.78]     Probe.InitThrows.Never_runs [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-MDG4S9B" outcome="Error" timestamp="2026-10-07T18:45:11.2093011+01:00">
+        <Text>[xUnit.net 00:00:01.78]     Probe.FixtureThrows.Never_runs [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

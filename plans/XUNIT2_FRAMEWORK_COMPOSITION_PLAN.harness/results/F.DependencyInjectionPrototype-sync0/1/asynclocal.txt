@@ -1,0 +1,30 @@
+options: entry=RunTests runnerValue=unset value=unset
+test                                                                   start thr before thr  vis us after start body thr  vis result thr result sees  before attributes
+A failing fact with a display name                                            16         22   no         -13239       22   no         16        same  TestTrackingAttribute,PrototypeTrackingAttribute
+A passing fact with a display name                                            16         22   no         -13423       22   no         16        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Does the thing.                                                               16         21   no           -821       21   no         16       other  TestTrackingAttribute,PrototypeTrackingAttribute
+Order API returns 404 for v1.2                                                16         21   no           -379       21   no         16        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.CtorThrows.Never_runs                                                   16          -    -              -        -    -         16       other  (no Before)
+Probe.Di.DiInjected.Receives_the_injected_service                             16         18   no            572       18   no         16       other  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Facts.Fails                                                             16         22   no            428       22   no         16       other  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Facts.Passes                                                            16         22   no         -13346       22   no         16        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Facts.Skipped                                                           16          -    -              -        -    -         16        same  (no Before)
+Probe.FixtureThrows.Never_runs                                                16          -    -              -        -    -         16       other  (no Before)
+Probe.InitThrows.Never_runs                                                   16          -    -              -        -    -         16       other  (no Before)
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I =        16         17   no          -6054       17   no         16        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I =        16         17   no           -347       17   no         16       other  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.MemberDataNotSerializable.NonSerializableRows(item: NonSer { I =        16         17   no         -13754       17   no         16        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Theories.Rows(row: 1, ms: 50)                                           16         54   no           -503       54   no         16        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Theories.Rows(row: 2, ms: 400)                                          16         30   no            128       30   no         16        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Theories.Rows(row: 3, ms: 100)                                          16         36   no              3       36   no         16        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Theories.Rows(row: 4, ms: 800)                                          16         48   no            -23       48   no         16        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Theories.Rows(row: 5, ms: 200)                                          16         42   no          -1331       42   no         16        same  TestTrackingAttribute,PrototypeTrackingAttribute
+Probe.Theories.Rows(row: 6, ms: 20)                                           16         10   no            409       10   no         16       other  TestTrackingAttribute,PrototypeTrackingAttribute
+
+tests with ITestStarting: 20
+Before:  0 of 16 saw the scenario set on ITestStarting; 0 ran on the thread ITestStarting was delivered on; 16 saw TestTracking's id (it ran first)
+body:    0 of 16 saw it
+result:  12 of 20 saw the same scenario, 0 saw none, 8 saw another test's; 20 delivered on the ITestStarting thread
+ITestStarting found another test's scenario already on its flow: 19
+tests with ITestStarting and no Before (4): Probe.CtorThrows.Never_runs, Probe.Facts.Skipped, Probe.FixtureThrows.Never_runs, Probe.InitThrows.Never_runs
+Before after ITestStarting, microseconds: min -13754, median -379, max 572

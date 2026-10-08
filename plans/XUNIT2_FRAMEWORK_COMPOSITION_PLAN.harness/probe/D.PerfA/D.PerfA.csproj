@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The same 2,000 facts under Kronikol.xUnit2's own ReportingTestFramework, for reference. -->
+  <ItemGroup>
+    <Compile Include="../Shared/ProbeHttp.cs" />
+    <Compile Include="../D.Perf/Generated/*.cs" />
+  </ItemGroup>
+</Project>

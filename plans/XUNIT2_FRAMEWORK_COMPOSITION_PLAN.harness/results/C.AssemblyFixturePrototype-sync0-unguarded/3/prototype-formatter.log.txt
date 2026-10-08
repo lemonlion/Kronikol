@@ -1,0 +1,2 @@
+2026-10-07T17:53:29.8165499Z	guard=0	Does the thing.	System.IndexOutOfRangeException: Index was outside the bounds of the array.
+2026-10-07T17:53:29.8242971Z	guard=0	Does the thing.	System.IndexOutOfRangeException: Index was outside the bounds of the array.
