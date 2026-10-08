@@ -872,3 +872,7 @@ this table missed, and the skill references under `.claude/skills/` and `templat
     `First should be 1`, `Second should be 2` and the scope's `✗` then `✓` (`harness/r1/acceptance/`). The scope
     probe draws the same on FluentAssertions 6.12.2, 7.2.0 and 8.9.0 and AwesomeAssertions 8.2.0 and 9.6.0: the
     scope's failure `✗`, a nested scope's failure once, a failing inspector `✗` (`harness/r1/scope/`).
+- 2026-10-08: 4.12.3 published. Release run 37773060613 passed, with CI 37773056595, CodeQL 37773056778 and CI
+  Summary Preview 37773056576 on `3ac6ac5c`; nuget.org lists all 62 ids at 4.12.3. The wiki has R1's edits
+  (`44170c9`, with a sentence the draft missed: TUnit's `Assert.Multiple()` is read as a scope too) and Kronikol4J's
+  ledger its line (`864e5f4`).
