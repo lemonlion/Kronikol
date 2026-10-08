@@ -14,12 +14,18 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
     protected override int ViewportWidth => 1280;
     protected override int ViewportHeight => 900;
 
+    // How long every diagram of the page may take to draw, as BrowserRenderWorkerTests allows. A wait for readiness, not a
+    // budget: on 2026-10-08 one of the merged report's two internal-flow diagrams, four activities long, drew 12.3 s after
+    // the render began on a quiet machine, against 2 s for the rest (the page's further worker starts after the first
+    // render), and the 60 s this wait had ran out in four runs of the suite or of this class under load.
+    private const int AllDrawnTimeout = 300000;
+
     private async Task OpenAndDraw(string uri)
     {
         await Page.GotoAsync(uri);
         await ExpandFirstScenarioWithDiagram();
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
-        await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null, new() { Timeout = 60000, PollingInterval = 200 });
+        await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null, new() { Timeout = AllDrawnTimeout, PollingInterval = 200 });
     }
 
     /// <summary>
@@ -113,7 +119,7 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
         await Page.GotoAsync(new Uri(written).AbsoluteUri);
         await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
-        await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null, new() { Timeout = 60000, PollingInterval = 200 });
+        await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null, new() { Timeout = AllDrawnTimeout, PollingInterval = 200 });
 
         // Each shard's diagram: its arrow with spans bound, its arrow without none, and a click opens the segment.
         foreach (var (shard, path) in new[] { ("Shard A", "/with-flow-0"), ("Shard B", "/with-flow-1") })

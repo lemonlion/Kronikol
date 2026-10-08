@@ -1,7 +1,7 @@
 # Adapter capture gaps: the tests xUnit v3, MSTest, NUnit 4 and TUnit leave out of their reports
 
 **Written:** 2026-10-08, at 4.12.0, by kronikol-1c, from a probe of the four adapters run that day at 4.11.0 (`a81d5e03`).
-**Status: R1 released as 4.13.3; R2 next**, both at the owner's "fix any other problems you found" (the instruction that executed
+**Status: R1 released as 4.13.3, with a follow-up in 4.14.2; R2 next**, both at the owner's "fix any other problems you found" (the instruction that executed
 `XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md`, whose section 8 inferred the first of these gaps). **Q1 to Q5 await the owner**:
 each needs new public surface or a design choice. Evidence labels: **RUN** (measured by the probe), **READ** (in the source,
 `file:line` at `a81d5e03`), **INFERRED**. The probe, its outputs and its feasibility dumps are in the session scratchpad
@@ -103,3 +103,11 @@ run from compiling source that changed while the suite ran.
   text, since gating it would drop the only trace of the warning (Q5); the templates moved to R3 (section 4); the
   integration facts CI never ran and the runner's build before every run (section 5) joined R1. The red proofs and each
   adapter's probe before and after are in `ADAPTER_CAPTURE_GAPS_PLAN.harness/r1/`. Checks: on 4.13.1, before the rebase onto 4.13.2, every example component suite and all 254 integration facts passed, the TUnit rows among them, in 30 minutes; on 4.13.2 the TUnit, MSTest, xUnit v3, NUnit 4 and xUnit v2 adapter projects and both LightBDD ones pass (29, 60, 17, 19, 91, 25 and 26), the core suite 7,059 with 2 skipped, the full Playwright suite 997 with 28 skipped when run alone (a run under load timed out one fact waiting for diagrams to render, ArrowLinkOpensPopupTests' merged report, which passes alone), and release.slnf builds in Release for every target.
+- **2026-10-08.** 4.13.3 published: Release run 37808467272 passed, and so did CI 37808458586, whose new Integration
+  (Remainder) job ran the 38 TUnit facts on Linux while E2E (Remainder) still selected 451; nuget.org listed all 62
+  ids at 17:46, the wiki has the adapter pages' edits (`d0feec3`) and Kronikol4J's ledger its line (`93f30da`). The
+  same day kronikol-94 found that a row with a display name of its own lost its method in its id, so rows of two
+  methods with the same display name shared one. Fixed in 4.14.2 with a class that overloads a test method, which
+  failed every overload in clean-up (`GetMethod(name)`); a row MSTest names after its method keeps 4.13.3's id. At
+  4.14.2 the MSTest project passes 66 of 66, the core suite 7,098 with 2 skipped, the full Playwright suite 1,003 with
+  28 skipped when run alone, and release.slnf builds in Release for every target.

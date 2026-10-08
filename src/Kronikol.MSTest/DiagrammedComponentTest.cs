@@ -36,7 +36,7 @@ public abstract class DiagrammedComponentTest
         _stopwatch?.Stop();
         var type = GetType();
         var endpoint = type.GetCustomAttribute<EndpointAttribute>()?.Endpoint;
-        var methodInfo = type.GetMethod(TestContext.TestName!);
+        var methodInfo = TestMethodOf(type, TestContext);
         var isHappyPath = methodInfo?.GetCustomAttribute<HappyPathAttribute>() is not null;
         var parameterNames = methodInfo?.GetParameters().Select(p => p.Name).ToArray();
         var failed = TestContext.CurrentTestOutcome.ToExecutionResult() == ExecutionResult.Failed;
@@ -75,17 +75,36 @@ public abstract class DiagrammedComponentTest
     internal static string? GetCurrentTestId() => CurrentTestId.Value;
 
     /// <summary>
-    /// A test's scenario id: <c>{class}.{method}</c>, and for a data row <c>{class}.{display name}</c>. Every row of a
-    /// <c>[DataRow]</c> test has the same method name, so with the method's id the report kept the first row and dropped
-    /// the rest, a failing row included. A test without data keeps the id it always had, and with it its history, even
-    /// when it has a display name of its own.
+    /// A test's scenario id: <c>{class}.{method}</c>, and for a data row <c>{class}.{display name}</c> when MSTest named
+    /// the row after its method (<c>Place (1)</c>), or <c>{class}.{method} ({display name})</c> when the row has a display
+    /// name of its own. Every row of a <c>[DataRow]</c> test has the same method name, so with the method's id the report
+    /// kept the first row and dropped the rest, a failing row included; and a display name of its own, without the method,
+    /// gave rows of two methods with the same display name one id (4.13.3). A test without data keeps the id it always had,
+    /// and with it its history, even when it has a display name of its own.
     /// </summary>
     internal static string TestIdOf(Type testClass, TestContext context)
     {
-        var method = context.TestName is { } name ? testClass.GetMethod(name) : null;
-        var isDataRow = method?.GetParameters().Length > 0;
-        return isDataRow && !string.IsNullOrEmpty(context.TestDisplayName) && context.TestDisplayName != context.TestName
-            ? $"{context.FullyQualifiedTestClassName}.{context.TestDisplayName}"
-            : $"{context.FullyQualifiedTestClassName}.{context.TestName}";
+        var name = context.TestName;
+        var display = context.TestDisplayName;
+        var isDataRow = TestMethodOf(testClass, context)?.GetParameters().Length > 0;
+        if (!isDataRow || name is null || string.IsNullOrEmpty(display) || display == name)
+            return $"{context.FullyQualifiedTestClassName}.{name}";
+        return display.StartsWith(name + " (", StringComparison.Ordinal) || display.StartsWith(name + "(", StringComparison.Ordinal)
+            ? $"{context.FullyQualifiedTestClassName}.{display}"
+            : $"{context.FullyQualifiedTestClassName}.{name} ({display})";
+    }
+
+    /// <summary>
+    /// The running test's method. By name and by the number of arguments its row passes (<c>TestData</c>, null without
+    /// data), where <c>GetMethod(name)</c> threw <c>AmbiguousMatchException</c> for a class that overloads a test method,
+    /// failing each overload in <c>[TestCleanup]</c> (measured on 4.13.3).
+    /// </summary>
+    internal static MethodInfo? TestMethodOf(Type testClass, TestContext context)
+    {
+        var candidates = testClass.GetMethods().Where(m => m.Name == context.TestName).ToArray();
+        if (candidates.Length <= 1)
+            return candidates.FirstOrDefault();
+        var arguments = context.TestData?.Length ?? 0;
+        return candidates.FirstOrDefault(m => m.GetParameters().Length == arguments) ?? candidates[0];
     }
 }

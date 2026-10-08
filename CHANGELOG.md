@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.14.2] - 2026-10-08
+
+**Patch - MSTest keeps a data row's method in its scenario id when the row has a display name of its own, and a class that
+overloads a test method no longer fails it (`plans/ADAPTER_CAPTURE_GAPS_PLAN.md`, R1's follow-up).** Bug fixes, and
+nothing new for a consumer to call, so the patch part moves (4.14.1 to 4.14.2). The history action's `VERSION` installs
+`Kronikol.Tool` 4.14.2, and the templates pin 4.13.3.
+
+### Fixed
+
+- **MSTest: rows of two test methods with the same display name had one scenario id.** 4.13.3 gave a data row the id
+  `{class}.{display name}`, so a row with a display name of its own (`[DataRow(1, DisplayName = "small")]`) lost its
+  method, and rows of two methods in one class with the same display name shared an id: the report kept one of them, so a
+  failure in the other was hidden, and their calls shared a scenario. Found by kronikol-94 the day 4.13.3 shipped. A row
+  that MSTest names after its method (`Place (1)`) keeps the id 4.13.3 gave it; a row with a display name of its own is
+  now `{class}.{method} ({display name})`. Behaviour change: the ids of such rows, which key their history, change once
+  more.
+- **MSTest: a class that overloads a test method failed every overload.** `DiagrammedComponentTest`'s `[TestCleanup]`
+  looked the method up with `GetMethod(name)`, which throws `AmbiguousMatchException` when the name is overloaded, so each
+  overload failed in clean-up, passing or not (measured on 4.13.3). The method is now found by its name and the number of
+  arguments its row passes (`TestContext.TestData`), for the scenario id as well.
+
+### Tests
+
+- `DataRowScenarioIdTests`: a row with a display name of its own keeps its method (on 4.13.3 it resolved `{class}.small`);
+  a string row; one id from every place the adapter names a row (the fetcher, the assertion tracker's resolver and the
+  diagram override's markers); and `DiagrammedTestRun.Setup`'s own resolver, which no fact reached. The last three follow
+  facts kronikol-94 wrote for the same fix.
+- `OverloadedTestMethodTests`: an overloaded pair, without data and with a row; on 4.13.3 both failed in clean-up.
+- `ArrowLinkOpensPopupTests` waits up to 300 s for its page's diagrams to draw, as `BrowserRenderWorkerTests` does, where
+  it waited 60 s. Its 60 s ran out in four runs on 2026-10-08, of the full Playwright suite and of the class alone; one
+  of the merged report's two internal-flow diagrams, four activities long, drew 12.3 s after the render began on a quiet
+  machine, against 2 s for the rest of the page.
+
 ## [4.14.1] - 2026-10-08
 
 **Patch - 4.14.0 reaches NuGet.** The patch part moved because nothing is new to call. 4.14.0 was tagged, but its
