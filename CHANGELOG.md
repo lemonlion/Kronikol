@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Documentation
+
+- **The template package's README said to delete the placeholder `Program.cs`,** which since 4.14.4 leaves
+  `PlaceholderApiFactory` without its `Program`; it now says to delete both and create the factory from the API's own
+  entry point. It also names the file to configure for the ReqNRoll and BDDfy templates, and says the TUnit templates
+  run with `dotnet run`.
+
 ## [4.14.4] - 2026-10-08
 
 **Patch - NUnit 4 and TUnit report the tests their tear-down never sees, and every template's sample test passes as

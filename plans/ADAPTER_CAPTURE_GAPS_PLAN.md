@@ -133,3 +133,8 @@ run from compiling source that changed while the suite ran.
   run alone, release.slnf builds in Release for every target, and the core suite passes 7,110 with 2 skipped before
   the version bump and after it. On 4.14.2, the LightBDD TUnit project passed 25, the example NUnit 4 and TUnit
   component suites 2 and 12, and the integration facts that run them 30 and 38.
+- **2026-10-08.** 4.14.4 published: Release run 37842750716 and CI 37842747718 passed, and CI's template job ran the
+  twelve scaffolds' sample tests for the first time, all passing; nuget.org listed all 62 ids at 22:15, the wiki
+  has the NUnit, TUnit and project-template pages' edits (`83e5802`) and Kronikol4J's ledger its two lines (`0e1a3d6`).
+  The template package's README still said to delete only `Program.cs`, which now leaves `PlaceholderApiFactory`
+  without its `Program`; it is fixed under the changelog's `[Unreleased]`, for the next release to carry.

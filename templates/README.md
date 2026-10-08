@@ -81,9 +81,12 @@ Copy the folder into `.github/actions/`, keeping its `.gitattributes`. Its READM
 ## After Scaffolding
 
 1. Add a `<ProjectReference>` to your API project in the generated `.csproj`
-2. Remove the placeholder `Program.cs` file
-3. Update `BaseFixture.cs` to configure services specific to your API
-4. Run tests: `dotnet test`
+2. Remove the placeholder: delete `Program.cs` and the `PlaceholderApiFactory` class, and create the factory from your
+   API's own entry point, `new WebApplicationFactory<YourApi.Program>()`. Until then the sample test runs against the
+   placeholder, in a solution or not.
+3. Update `BaseFixture.cs` (`Hooks/TestSetupHooks.cs` for ReqNRoll, `Infrastructure/BDDfyTestSetup.cs` for BDDfy) to
+   configure services specific to your API
+4. Run tests: `dotnet test`, or `dotnet run` for the TUnit templates, which run on Microsoft.Testing.Platform
 5. Find reports in: `bin/Debug/{framework}/Reports/`
 
 ## Assertion Tracking (Beta — Opt-in)
