@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- The issue's suite is net8.0; -p:KronikolVersion=4.6.0 measures the version it was filed against -->
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <!-- Kronikol.Extensions.Grpc floats Grpc.Net.Client (#97): 4.9.0 needs 2.84.0 or later; the issue ran 2.76.0 on 4.6.0 -->
+    <GrpcVersion Condition="'$(GrpcVersion)' == ''">2.84.0</GrpcVersion>
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">4.9.0</KronikolVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Kronikol.Extensions.Grpc" Version="$(KronikolVersion)" />
+    <PackageReference Include="Grpc.AspNetCore" Version="$(GrpcVersion)" />
+    <PackageReference Include="Grpc.Net.Client" Version="$(GrpcVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.26" />
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="Protos\hop.proto" GrpcServices="Both" />
+  </ItemGroup>
+</Project>

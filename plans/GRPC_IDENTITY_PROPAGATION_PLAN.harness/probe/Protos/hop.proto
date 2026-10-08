@@ -1,0 +1,16 @@
+syntax = "proto3";
+option csharp_namespace = "Probe.Hop";
+package hop;
+
+service Hop {
+  rpc Call (HopRequest) returns (HopReply);
+  rpc Stream (HopRequest) returns (stream HopReply);
+}
+
+message HopRequest { string text = 1; }
+message HopReply {
+  string seen_test_id = 1;
+  string seen_test_name = 2;
+  string seen_traceparents = 3;
+  string server_activity_flags = 4;
+}

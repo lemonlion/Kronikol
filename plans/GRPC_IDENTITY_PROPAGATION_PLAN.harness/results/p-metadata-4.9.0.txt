@@ -1,0 +1,12 @@
+kronikol 4.9.0+417c8e5855adb837099c9bb7f98b3a7606a79fbe probe=metadata variant=control
+P2 after call 1: shared Metadata holds 2 entries, 1 traceparent; B received 1 traceparent; the call logged 0 traceparent among its own request headers
+    B's traceparent value(s): 00-dfcf398a173eb49b4ffe522dfa5a2792-a4bfd8541b8c0c23-00
+    B's server span: Microsoft.AspNetCore.Hosting.HttpRequestIn recorded=False parent=00-dfcf398a173eb49b4ffe522dfa5a2792-a4bfd8541b8c0c23-00 trace=dfcf398a173eb49b4ffe522dfa5a2792 parentSpan=a4bfd8541b8c0c23 format=W3C
+P2 after call 2: shared Metadata holds 3 entries, 2 traceparent; B received 1 traceparent; the call logged 1 traceparent among its own request headers
+    B's traceparent value(s): 00-dfcf398a173eb49b4ffe522dfa5a2792-a4bfd8541b8c0c23-00,00-dfcf398a173eb49b4ffe522dfa5a2792-0e3301b6f74ffccf-00
+    B's server span: Microsoft.AspNetCore.Hosting.HttpRequestIn recorded=False parent=00-dfcf398a173eb49b4ffe522dfa5a2792-a4bfd8541b8c0c23-00,00-dfcf398a173eb49b4ffe522dfa5a2792-0e3301b6f74ffccf-00 trace=00000000000000000000000000000000 parentSpan=0000000000000000 format=Hierarchical
+P2 after call 3: shared Metadata holds 4 entries, 3 traceparent; B received 1 traceparent; the call logged 2 traceparent among its own request headers
+    B's traceparent value(s): 00-dfcf398a173eb49b4ffe522dfa5a2792-a4bfd8541b8c0c23-00,00-dfcf398a173eb49b4ffe522dfa5a2792-0e3301b6f74ffccf-00,00-dfcf398a173eb49b4ffe522dfa5a2792-b8ad30dce328e0e8-00
+    B's server span: Microsoft.AspNetCore.Hosting.HttpRequestIn recorded=False parent=00-dfcf398a173eb49b4ffe522dfa5a2792-a4bfd8541b8c0c23-00,00-dfcf398a173eb49b4ffe522dfa5a2792-0e3301b6f74ffccf-00,00-dfcf398a173eb49b4ffe522dfa5a2792-b8ad30dce328e0e8-00 trace=00000000000000000000000000000000 parentSpan=0000000000000000 format=Hierarchical
+P3 Metadata.Empty: InvalidOperationException: Object is read only
+P2b 64 concurrent calls on one Metadata: 65 entries afterwards, 0 calls threw

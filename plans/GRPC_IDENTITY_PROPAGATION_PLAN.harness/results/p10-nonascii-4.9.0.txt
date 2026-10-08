@@ -1,0 +1,37 @@
+kronikol 4.9.0+417c8e5855adb837099c9bb7f98b3a7606a79fbe probe=nonascii variant=control
+P10 name "Place an order"
+  encoded (section 4.1), HTTP over a socket: ok, the exact name after decoding
+  encoded (section 4.1), gRPC over h2c: ok, the exact name after decoding
+  HTTP handler over a socket: ok, server saw name=Place an order
+  gRPC identity metadata over h2c: ok, server saw name=Place an order
+  HTTP handler in memory (TestServer): ok, B saw id-2|Place an order|
+  gRPC identity metadata in memory (TestServer): ok, B saw name=Place an order
+P10 name "Café order"
+  encoded (section 4.1), HTTP over a socket: ok, the exact name after decoding
+  encoded (section 4.1), gRPC over h2c: ok, the exact name after decoding
+  HTTP handler over a socket: HttpRequestException: Request headers must contain only ASCII characters.
+  gRPC identity metadata over h2c: RpcException: Status(StatusCode="Internal", Detail="Error starting gRPC call. HttpRequestException: Request headers must contain only ASCII characters.", DebugException="System.Net.Http.HttpRequestException: Request headers must contain only ASCII characters.")
+  HTTP handler in memory (TestServer): ok, B saw id-2|Café order|
+  gRPC identity metadata in memory (TestServer): ok, B saw name=Café order
+P10 name "Order a coffee ☕"
+  encoded (section 4.1), HTTP over a socket: ok, the exact name after decoding
+  encoded (section 4.1), gRPC over h2c: ok, the exact name after decoding
+  HTTP handler over a socket: HttpRequestException: Request headers must contain only ASCII characters.
+  gRPC identity metadata over h2c: RpcException: Status(StatusCode="Internal", Detail="Error starting gRPC call. HttpRequestException: Request headers must contain only ASCII characters.", DebugException="System.Net.Http.HttpRequestException: Request headers must contain only ASCII characters.")
+  HTTP handler in memory (TestServer): ok, B saw id-2|Order a coffee ☕|
+  gRPC identity metadata in memory (TestServer): ok, B saw name=Order a coffee ☕
+P10 name "Theory(text: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"···)"
+  encoded (section 4.1), HTTP over a socket: ok, the exact name after decoding
+  encoded (section 4.1), gRPC over h2c: ok, the exact name after decoding
+  HTTP handler over a socket: HttpRequestException: Request headers must contain only ASCII characters.
+  gRPC identity metadata over h2c: RpcException: Status(StatusCode="Internal", Detail="Error starting gRPC call. HttpRequestException: Request headers must contain only ASCII characters.", DebugException="System.Net.Http.HttpRequestException: Request headers must contain only ASCII characters.")
+  HTTP handler in memory (TestServer): ok, B saw id-2|Theory(text: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"···)|
+  gRPC identity metadata in memory (TestServer): ok, B saw name=Theory(text: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"···)
+P10 name "Theory(a<LF>b)"
+  encoded (section 4.1), HTTP over a socket: ok, the exact name after decoding
+  encoded (section 4.1), gRPC over h2c: ok, the exact name after decoding
+  HTTP handler over a socket: FormatException: New-line characters are not allowed in header values.
+  gRPC identity metadata over h2c: RpcException: Status(StatusCode="Unavailable", Detail="Error starting gRPC call. HttpRequestException: The response ended prematurely while waiting for the next frame from the server. (ResponseEnded) HttpIOException: The response ended prematurely while waiting for the next frame from the server. (ResponseEnded)", DebugException="System.Net.Http.HttpRequestException: The response ended prematurely while waiting for the next frame from the server. (ResponseEnded)")
+  HTTP handler in memory (TestServer): FormatException: New-line characters are not allowed in header values.
+  gRPC identity metadata in memory (TestServer): ok, B saw name=Theory(a
+b)

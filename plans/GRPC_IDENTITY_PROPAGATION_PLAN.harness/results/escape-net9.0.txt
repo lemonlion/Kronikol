@@ -1,0 +1,16 @@
+runtime 9.0.16
+ascii name                   unchanged=True  printable=True  roundtrip=True  encoded=Place an order
+e-acute                      unchanged=False printable=True  roundtrip=True  encoded=UTF-8''Caf%C3%A9%20order
+emoji                        unchanged=False printable=True  roundtrip=True  encoded=UTF-8''Order%20a%20coffee%20%E2%98%95
+xUnit v3 shortened argument  unchanged=False printable=True  roundtrip=True  encoded=UTF-8''Theory%28text%3A%20%22aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa... (103 chars)
+line feed                    unchanged=False printable=True  roundtrip=True  encoded=UTF-8''Theory%28a%0Ab%29
+tab                          unchanged=False printable=True  roundtrip=True  encoded=UTF-8''Theory%28a%09b%29
+leading space                unchanged=False printable=True  roundtrip=True  encoded=UTF-8''%20Place%20an%20order
+trailing space               unchanged=False printable=True  roundtrip=True  encoded=UTF-8''Place%20an%20order%20
+literal prefix               unchanged=False printable=True  roundtrip=True  encoded=UTF-8''UTF-8%27%27not%20encoded
+empty                        unchanged=True  printable=True  roundtrip=True  encoded=
+MSTest id                    unchanged=False printable=True  roundtrip=True  encoded=UTF-8''Tests.Caf%C3%A9.Order
+GUID id                      unchanged=True  printable=True  roundtrip=True  encoded=0f8fad5b-d9cb-469f-a165-70867728950e
+lone surrogate               unchanged=False printable=True  roundtrip=False encoded=UTF-8''a%EF%BF%BDb
+70,000 e-acute               unchanged=False printable=True  roundtrip=True  encoded=UTF-8''%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A... (420007 chars)
+malformed escape: Decode("UTF-8''%E9%ZZ") = %E9%ZZ

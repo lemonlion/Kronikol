@@ -1,0 +1,4 @@
+kronikol 4.9.0+417c8e5855adb837099c9bb7f98b3a7606a79fbe probe=attribution variant=direct
+B saw (test id|test name|traceparents): (none)|(none)|00-afad6ae367501b394fce8fb6a60e4da2-b4c73fd64161b089-00
+  Test       -> Service B  test=id-1     source=TestContext
+  Service B  -> Stub C     test=unknown  source=None

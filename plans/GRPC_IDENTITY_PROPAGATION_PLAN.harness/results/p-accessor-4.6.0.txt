@@ -1,0 +1,2 @@
+kronikol 4.6.0+a074cf14e2fc6aec72d5e8ea201807d902da2347 probe=accessor variant=control
+P7 constructed with an accessor: HasHttpContextAccessor = False

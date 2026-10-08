@@ -1,0 +1,142 @@
+# BreakfastProvider xUnit lane, CI run #307 (main @106702b, 2026-10-05), written by Kronikol 4.0.2
+# GrpcTrackingInterceptor, TestTrackingContextMiddleware and TestInfoResolver are unchanged from v4.0.2 to v4.9.0
+# Read with 'kronikol query' only (Kronikol.Tool built at 4.6.0).
+
+$ kronikol query summary <report> (first 4 lines)
+TestRunReport.json  4483 KB  Kronikol 4.0.2+e3093c36731b87e716c5421c245288c13ff0b365
+2026-10-05T09:48:00Z → 2026-10-05T09:48:19Z
+run: main @106702b  lemonlion/BreakfastProvider  GitHubActions #307
+212 scenarios · 0 failed · 2648 interactions · 940 distinct bodies
+
+## Every gRPC call into the API in the run
+$ kronikol query interactions <report> --grep breakfast.BreakfastGrpc
+s49/i44   Breakfast Provider GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus         OK         7 ms  body 53 B b:7966ad50  → 186 B b:6cb5a4bf
+s50/i0    Breakfast Provider GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus         NotFound   126 ms  body 53 B b:827ad601  → 102 B b:e360d2e2
+s51/i0    Breakfast Provider GetRecipeSummary /breakfast.BreakfastGrpc/GetRecipeSummary     OK         2 ms  body 28 B b:95d2d63a  → 148 B b:49ed01c4
+s52/i0    Breakfast Provider GetRecipeSummary /breakfast.BreakfastGrpc/GetRecipeSummary     OK         1 ms  body 27 B b:0b7ae56b  → 157 B b:eab596ee
+s53/i0    Breakfast Provider GetRecipeSummary /breakfast.BreakfastGrpc/GetRecipeSummary     OK         9 ms  body 27 B b:06f002ed  → 77 B b:49e6c931
+s54/i44   Breakfast Provider StreamOrderUpdates (server-stream) /breakfast.BreakfastGrpc/St… OK         0 ms  body 53 B b:c3149141
+s55/i0    Breakfast Provider StreamOrderUpdates (server-stream) /breakfast.BreakfastGrpc/St… OK         0 ms  body 53 B b:f1c5752d
+7 calls
+
+## What each of those scenarios records
+$ kronikol query flow <report> s49
+s49  Order status via grpc should return order details  [Passed]
+
+  s49/i0    Caller → Breakfast Provider  GET /milk  OK  82 ms
+    s49/i1    Breakfast Provider → Cow Service  GET /milk  OK  9 ms
+  s49/i4    Caller → Breakfast Provider  GET /eggs  OK  4 ms
+  s49/i6    Caller → Breakfast Provider  GET /flour  OK  4 ms
+  s49/i8    Caller → Breakfast Provider  POST /pancakes  Created  446 ms  b:2195078e 80 B
+    s49/i9    Breakfast Provider → CosmosDB  Create /orders  Created  13 ms
+    s49/i11   Kafka Broker → Breakfast Provider  Consume (Kafka) /breakfast_recipe_logs  Ack  0 ms  b:d4650a3f 189 B
+    s49/i13   Breakfast Provider → Reporting Database (SQL Server)  Insert /RecipeReports  OK  26 ms
+    s49/i15   Breakfast Provider → Kafka Broker  Produce  0 ms
+    s49/i17   Google Cloud Pub/Sub → Breakfast Provider  Consume (Pub/Sub) /breakfast_batch_completions  Ack  0 ms  b:3a49ac73 168 B
+    s49/i19   Breakfast Provider → Reporting Database (SQL Server)  Insert /BatchCompletionRecords  OK  1 ms
+    s49/i21   Breakfast Provider → Google Cloud Pub/Sub  Publish (Pub/Sub) /PancakeBatchCompletedEvent  Responded  0 ms
+    s49/i23   Azure Event Hub → Breakfast Provider  Consume (Event Hub) /breakfast-equipment-alerts  Ack  0 ms  b:f14a1ae5 202 B
+    s49/i25   Breakfast Provider → Reporting Database (SQL Server)  Insert /EquipmentAlerts  OK  1 ms
+  s49/i28   Caller → Breakfast Provider  POST /orders  Created  661 ms  b:5532248d 162 B
+    s49/i29   Breakfast Provider → CosmosDB  Create /orders  OK  129 ms
+    s49/i31   Breakfast Provider → Event Grid  Publish (Event Grid) /OrderCreatedEvent  Responded  0 ms
+    s49/i33   Breakfast Provider → CosmosDB  Create /orders  Created  0 ms
+    s49/i35   Breakfast Provider → Kitchen Service  POST /prepare  OK  3 ms  b:8e9ce0ae 97 B
+    s49/i37   Breakfast Provider → Notification Service (gRPC)  SendOrderConfirmation /notifications.NotificationGrpc/SendOr…  OK  17 ms  b:25dadc2c 140 B
+    s49/i39   Breakfast Provider → Reporting Database (SQL Server)  Select /OrderSummaries  OK  1 ms
+    s49/i41   Breakfast Provider → Reporting Database (SQL Server)  Insert /OrderSummaries  OK  2 ms
+  s49/i44   Caller → Breakfast Provider  GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus  OK  7 ms  b:7966ad50 53 B
+23 calls shown · http s49/iN --keys for a payload · indented calls ran inside the call above them
+
+$ kronikol query flow <report> s50
+s50  Order status for non existent order should return not found  [Passed]
+
+  s50/i0    Caller → Breakfast Provider  GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus  NotFound  126 ms  b:827ad601 53 B
+1 calls shown · http s50/iN --keys for a payload
+
+$ kronikol query flow <report> s51
+s51  Pancake recipe summary should return correct data  [Passed]
+
+  s51/i0    Caller → Breakfast Provider  GetRecipeSummary /breakfast.BreakfastGrpc/GetRecipeSummary  OK  2 ms  b:95d2d63a 28 B
+1 calls shown · http s51/iN --keys for a payload
+
+$ kronikol query flow <report> s52
+s52  Waffle recipe summary should return correct data  [Passed]
+
+  s52/i0    Caller → Breakfast Provider  GetRecipeSummary /breakfast.BreakfastGrpc/GetRecipeSummary  OK  1 ms  b:0b7ae56b 27 B
+1 calls shown · http s52/iN --keys for a payload
+
+$ kronikol query flow <report> s53
+s53  Unknown recipe type should return zero batches  [Passed]
+
+  s53/i0    Caller → Breakfast Provider  GetRecipeSummary /breakfast.BreakfastGrpc/GetRecipeSummary  OK  9 ms  b:06f002ed 27 B
+1 calls shown · http s53/iN --keys for a payload
+
+$ kronikol query flow <report> s54
+s54  Streaming order updates should return the current status  [Passed]
+
+  s54/i0    Caller → Breakfast Provider  GET /milk  OK  3 ms
+    s54/i1    Breakfast Provider → Cow Service  GET /milk  OK  2 ms
+  s54/i4    Caller → Breakfast Provider  GET /eggs  OK  0 ms
+  s54/i6    Caller → Breakfast Provider  GET /flour  OK  0 ms
+  s54/i8    Caller → Breakfast Provider  POST /pancakes  Created  29 ms  b:2195078e 80 B
+    s54/i9    Breakfast Provider → CosmosDB  Create /orders  Created  23 ms
+    s54/i11   Kafka Broker → Breakfast Provider  Consume (Kafka) /breakfast_recipe_logs  Ack  0 ms  b:50ad5a18 189 B
+    s54/i13   Breakfast Provider → Reporting Database (SQL Server)  Insert /RecipeReports  OK  0 ms
+    s54/i15   Breakfast Provider → Kafka Broker  Produce  0 ms
+    s54/i17   Google Cloud Pub/Sub → Breakfast Provider  Consume (Pub/Sub) /breakfast_batch_completions  Ack  0 ms  b:26df89cf 168 B
+    s54/i19   Breakfast Provider → Reporting Database (SQL Server)  Insert /BatchCompletionRecords  OK  0 ms
+    s54/i21   Breakfast Provider → Google Cloud Pub/Sub  Publish (Pub/Sub) /PancakeBatchCompletedEvent  Responded  0 ms
+    s54/i23   Azure Event Hub → Breakfast Provider  Consume (Event Hub) /breakfast-equipment-alerts  Ack  0 ms  b:da96d90a 202 B
+    s54/i25   Breakfast Provider → Reporting Database (SQL Server)  Insert /EquipmentAlerts  OK  0 ms
+  s54/i28   Caller → Breakfast Provider  POST /orders  Created  10 ms  b:a1ba4442 163 B
+    s54/i29   Breakfast Provider → CosmosDB  Create /orders  OK  1 ms
+    s54/i31   Breakfast Provider → Event Grid  Publish (Event Grid) /OrderCreatedEvent  Responded  0 ms
+    s54/i33   Breakfast Provider → CosmosDB  Create /orders  Created  0 ms
+    s54/i35   Breakfast Provider → Kitchen Service  POST /prepare  OK  1 ms  b:2eb23f61 97 B
+    s54/i37   Breakfast Provider → Notification Service (gRPC)  SendOrderConfirmation /notifications.NotificationGrpc/SendOr…  OK  1 ms  b:6f6fe182 141 B
+    s54/i39   Breakfast Provider → Reporting Database (SQL Server)  Select /OrderSummaries  OK  0 ms
+    s54/i41   Breakfast Provider → Reporting Database (SQL Server)  Insert /OrderSummaries  OK  0 ms
+  s54/i44   Caller → Breakfast Provider  StreamOrderUpdates (server-stream) /breakfast.BreakfastGrpc/…  OK  0 ms  b:c3149141 53 B
+23 calls shown · http s54/iN --keys for a payload · indented calls ran inside the call above them
+
+$ kronikol query flow <report> s55
+s55  Streaming updates for non existent order should return not found  [Passed]
+
+  s55/i0    Caller → Breakfast Provider  StreamOrderUpdates (server-stream) /breakfast.BreakfastGrpc/…  OK  0 ms  b:f1c5752d 53 B
+1 calls shown · http s55/iN --keys for a payload
+
+## The scenarios whose names mention gRPC but call no gRPC method of the API
+$ kronikol query scenarios <report> --grep gRPC
+s49   pass   1.27s    46 calls  Order status via grpc should return order details
+s170  pass   0.24s     2 calls  The grpc contract endpoint should return a valid specification
+s171  pass   0.01s     2 calls  The grpc proto endpoint should return the proto file
+s172  pass   0.02s     2 calls  Grpc server reflection should describe the breakfast service
+s173  pass   0.04s     2 calls  Grpc server reflection should list the breakfast service
+s174  pass   0.05s     2 calls  The grpc ui endpoint should return a page describing the service
+6 scenarios
+$ kronikol query flow <report> s170
+  s170/i0   Caller → Breakfast Provider  GET /grpc/v1.json  OK  62 ms
+$ kronikol query flow <report> s171
+  s171/i0   Caller → Breakfast Provider  GET /grpc/protos/breakfast.proto  OK  3 ms
+$ kronikol query flow <report> s172
+  s172/i0   Caller → Breakfast Provider  ServerReflectionInfo (duplex-stream) /grpc.reflection.v1.Ser…  OK  0 ms
+$ kronikol query flow <report> s173
+  s173/i0   Caller → Breakfast Provider  ServerReflectionInfo (duplex-stream) /grpc.reflection.v1.Ser…  OK  2 ms
+$ kronikol query flow <report> s174
+  s174/i0   Caller → Breakfast Provider  GET /grpc/  OK  35 ms
+
+## CosmosDB calls in the whole run, by method
+$ kronikol query interactions <report> --service CosmosDB --group-by method,path
+method   path     calls errors   median      max bodies
+Create   /orders    128      0     0 ms   129 ms    128
+Read     /orders     34      5     0 ms     0 ms     30
+Upsert   /orders     18      0     0 ms     3 ms     18
+Query    /orders     15      0     3 ms    35 ms     13
+Replace  /orders      3      0     0 ms     1 ms      3
+5 buckets
+
+# BreakfastProvider.Api/Grpc/BreakfastGrpcService.cs (local clone 0d29537; the same at 106702b):
+#   GetRecipeSummary (L10-35) returns hard-coded data and calls nothing.
+#   GetOrderStatus (L36-56) awaits orderRepository.GetByIdAsync (L42); NotFound at L54.
+#   StreamOrderUpdates (L58-) awaits orderRepository.GetByIdAsync (L65); NotFound at L77.
