@@ -102,8 +102,12 @@ public class RunRotationTests : IDisposable
         Action<ReportConfigurationOptions>? configure = null,
         Func<string, string?>? env = null,
         bool sameProcess = false,
-        Feature[]? features = null)
+        Feature[]? features = null,
+        bool ownLog = true)
     {
+        // Its own log (ownLog): other tests' calls in the process-wide one would read as this run's calls under an
+        // unknown id. A fact that logs before it runs, to see what a pass with no scenarios does with them, keeps the shared one.
+        using var isolation = ownLog ? RequestResponseLogger.IsolateForTests() : null;
         var ordinal = ++_runs;
         if (!sameProcess)
             RunRotation.ForgetForTests(Reports);
@@ -902,7 +906,7 @@ public class RunRotationTests : IDisposable
     {
         RequestResponseLogger.LogPair("Discovery", "discovery-" + Guid.NewGuid().ToString("N"), HttpMethod.Get, new Uri("http://payments/health"), "payments", "Test");
 
-        Run(ExecutionResult.Passed, o => o.DiagnosticMode = true, features: []);
+        Run(ExecutionResult.Passed, o => o.DiagnosticMode = true, features: [], ownLog: false);
 
         Assert.True(File.Exists(Path.Combine(Reports, "DiagnosticReport.html")));
         Assert.False(File.Exists(Path.Combine(Reports, RunManifest.FileName)), "a pass with no scenarios is no run, and writes no manifest");
@@ -914,7 +918,7 @@ public class RunRotationTests : IDisposable
         Directory.CreateDirectory(Path.Combine(Reports, "DiagnosticReport.html"));
         RequestResponseLogger.LogPair("Discovery", "discovery-" + Guid.NewGuid().ToString("N"), HttpMethod.Get, new Uri("http://payments/health"), "payments", "Test");
 
-        var (_, diagnostics) = Run(ExecutionResult.Passed, o => o.DiagnosticMode = true, features: []);
+        var (_, diagnostics) = Run(ExecutionResult.Passed, o => o.DiagnosticMode = true, features: [], ownLog: false);
 
         var failure = Assert.Single(diagnostics, d => d.Kind == DiagnosticKind.OutputFailure);
         Assert.StartsWith("Could not write DiagnosticReport.html: ", failure.Message);

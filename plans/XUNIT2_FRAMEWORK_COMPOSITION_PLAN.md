@@ -560,3 +560,13 @@ follows R1 directly, since it reuses R1's sink.
     `run.ps1` the `-Package` lanes; restoring a release minutes old needed `RestoreNoHttpCache`, since NuGet's cached
     version list did not have it yet.
   - **Still open:** R2's last done criterion is the reporter's: #132's own suite on the wrapper.
+- **2026-10-08. F7 fixed in 4.12.2** (section 8), at the owner's "fix any other problems you found"; kronikol-28 confirmed it
+  was not part of #133. A run records the calls it logged under a test id that names no scenario as one
+  `UnattributedInteractions` diagnostic, before its outputs, so the data files, the labs page and `kronikol query` say so
+  (`OrphanedCalls`, internal). #133 makes such calls rarer, not impossible: a custom fetcher or an id from a foreign header
+  still logs them (kronikol-28). Red first: `OrphanedCallsTests` did not compile, and with the finder in place and the
+  flow not calling it, the flow's fact failed. Nine report-flow facts then failed, because the test process's log holds
+  every other test's calls; they run with a log of their own (`RequestResponseLogger.IsolateForTests`, internal). On 4.12.1
+  the core suite passes 7,016 with 2 skipped; the Playwright suite passed 995 of 995 on 4.12.0, before the rebase.
+  - **The other adapters (section 8's third row), measured.** A probe of the xUnit v3, MSTest, NUnit 4 and TUnit adapters
+    confirmed the inference for all four and found more: `plans/ADAPTER_CAPTURE_GAPS_PLAN.md`.

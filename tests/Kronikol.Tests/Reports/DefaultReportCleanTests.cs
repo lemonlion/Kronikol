@@ -70,6 +70,8 @@ public class DefaultReportCleanTests : IDisposable
         for (var i = 0; i < diagnostics; i++)
             collector.Add(DiagnosticKind.CaptureDegraded, $"a tap dropped {i + 3} segments");
         DefaultDiagramsFetcher.Reset();
+        // Its own log: other tests' calls in the process-wide one would read as this run's calls under an unknown id.
+        using (RequestResponseLogger.IsolateForTests())
         using (ReportDiagnosticsScope.Begin(collector))
             ReportGenerator.CreateStandardReportsWithDiagrams(_features, Start, Start.AddMinutes(1), options);
     }

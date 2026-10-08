@@ -77,7 +77,9 @@ public class HistoryOutputsTests : IDisposable
     {
         var options = Options(run, runId);
         configure?.Invoke(options);
-        ReportGenerator.CreateStandardReportsWithDiagrams(features, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
+        // Its own log: other tests' calls in the process-wide one would read as this run's calls under an unknown id.
+        using (RequestResponseLogger.IsolateForTests())
+            ReportGenerator.CreateStandardReportsWithDiagrams(features, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
     }
 
     [Fact]
@@ -274,6 +276,7 @@ public class HistoryOutputsTests : IDisposable
         var options = Options("r1", "test:1:1");
         options.HistoryFilePath = null;
 
+        using (RequestResponseLogger.IsolateForTests())
         using (ReportDiagnosticsScope.Begin(collector))
             ReportGenerator.CreateStandardReportsWithDiagrams(Features(ExecutionResult.Failed), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
 

@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.12.2] - 2026-10-08
+
+**Patch - calls under a test id that names no scenario are reported (F7).** Found while planning #132
+(`plans/XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md` section 8, F7) and fixed at the owner's "fix any other problems you found".
+A bug fix that changes what a run records, and nothing new for a consumer to call, so the patch part moves (4.12.1 to
+4.12.2). The history action's `VERSION` installs `Kronikol.Tool` 4.12.2, and the templates pin 4.12.1.
+
+### Fixed
+
+- **A call logged under a test id that names no scenario of the run was in no report, and only a console line said
+  so.** A call is drawn under the scenario whose id it carries, and a call that carries none is a background call; a
+  call under any other id was in neither, and the only trace was `Warning: N orphaned test ID(s) in logs do not match any
+  feature scenario.` on the console, which `dotnet test` does not show at its default verbosity. The run now records an
+  `UnattributedInteractions` diagnostic before it writes its outputs, so `TestRunReport.json`'s diagnostics, the labs page
+  and `kronikol query` say so. The message counts the calls and the ids and names the id with the most calls. A test that
+  is not tracked, or a test-info fetcher that answers with an id the adapter does not report, logs such calls.
+
+### Changed
+
+- A run with such calls records a diagnostic, so `TestRunReport.labs.html` is written for it (the page is written
+  whenever a run records a diagnostic), and `kronikol query`'s answers carry the diagnostic's `!` line.
+
+### Tests
+
+- `OrphanedCallsTests`: the finder (a call under a scenario's id or the background id is not counted, a request and its
+  response count once, the ids are ordered by their calls, a diagram marker is not a call), the message, and the standard
+  flow writing the diagnostic into the data file. Red first: they did not compile on v4.12.1, and with the finder in
+  place and the flow not calling it, the flow's fact failed.
+- The report-flow facts that assert what a run without such calls writes now run with a log of their own
+  (`RequestResponseLogger.IsolateForTests`, internal). The process-wide log holds every other test's calls, which each
+  run would otherwise report as calls under an unknown id; nine facts failed that way before they had one.
+
 ## [4.12.1] - 2026-10-08
 
 **Patch - test names and ids no longer fail the calls that carry them, and the gRPC interceptor leaves the caller's

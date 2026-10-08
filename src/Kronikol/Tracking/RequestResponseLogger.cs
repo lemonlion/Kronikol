@@ -12,6 +12,12 @@ public static class RequestResponseLogger
 {
     private static readonly ConcurrentQueue<RequestResponseLog> RequestsAndResponses = new();
 
+    // A test's own store (IsolateForTests). The report flows read the whole process's log, so a test asserting what a
+    // run writes would otherwise read every other test's calls, which a run now reports as calls under an unknown id.
+    private static readonly AsyncLocal<ConcurrentQueue<RequestResponseLog>?> IsolatedStore = new();
+
+    private static ConcurrentQueue<RequestResponseLog> Store => IsolatedStore.Value ?? RequestsAndResponses;
+
     /// <summary>
     /// When set, content longer than this value is truncated at capture time.
     /// The truncated content includes a marker showing the original size.
@@ -70,18 +76,34 @@ public static class RequestResponseLogger
             };
         }
 
-        RequestsAndResponses.Enqueue(log);
+        Store.Enqueue(log);
     }
 
     /// <summary>Stores an entry that has been through <see cref="Log"/> once already: a held call, confirmed or dropped.</summary>
-    internal static void Enqueue(RequestResponseLog log) => RequestsAndResponses.Enqueue(log);
+    internal static void Enqueue(RequestResponseLog log) => Store.Enqueue(log);
 
-    public static RequestResponseLog[] RequestAndResponseLogs => RequestsAndResponses.ToArray();
+    public static RequestResponseLog[] RequestAndResponseLogs => Store.ToArray();
 
     public static void Clear()
     {
-        RequestsAndResponses.Clear();
+        Store.Clear();
         DetachedFlow.ForgetAll();
+    }
+
+    /// <summary>
+    /// For tests: until the returned scope is disposed, the calls logged on this flow, and the log a report reads on it,
+    /// are a store of their own, empty to begin with. The process-wide store holds every other test's calls.
+    /// </summary>
+    internal static IDisposable IsolateForTests()
+    {
+        var previous = IsolatedStore.Value;
+        IsolatedStore.Value = new ConcurrentQueue<RequestResponseLog>();
+        return new Isolation(previous);
+    }
+
+    private sealed class Isolation(ConcurrentQueue<RequestResponseLog>? previous) : IDisposable
+    {
+        public void Dispose() => IsolatedStore.Value = previous;
     }
 
     /// <summary>

@@ -254,6 +254,10 @@ public static class ReportGenerator
             ReportDiagnosticsScope.Record(DiagnosticKind.BackgroundCalls,
                 $"{group.Calls} call{(group.Calls == 1 ? "" : "s")} arrived after '{group.ScenarioName}' ended and are listed as background calls",
                 group.ScenarioId);
+        // Calls under an id no scenario has are in no scenario and not in the background section either: recorded
+        // here, before the outputs, so the data files, the labs page and kronikol query say so (F7).
+        if (OrphanedCalls.Describe(OrphanedCalls.Find(features, runLogs)) is { } orphaned)
+            ReportDiagnosticsScope.Record(DiagnosticKind.UnattributedInteractions, orphaned);
         RecordOptionDiagnostics(options);
 
         // Decided here rather than with the outputs, so the diagnostic reaches the data files: a reports

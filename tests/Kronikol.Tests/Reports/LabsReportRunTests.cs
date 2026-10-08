@@ -86,6 +86,9 @@ public class LabsReportRunTests : IDisposable
         try
         {
             Console.SetOut(captured);
+            // Its own log: the process-wide one holds other tests' calls, which this run would report as calls
+            // under an unknown id, a diagnostic that writes the page.
+            using (RequestResponseLogger.IsolateForTests())
             using (ReportDiagnosticsScope.Begin(collector))
                 ReportGenerator.CreateStandardReportsWithDiagrams(Features(pay), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
         }
