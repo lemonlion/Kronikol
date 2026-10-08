@@ -10,6 +10,7 @@ namespace Kronikol.Tests.History;
 /// third of its lines, a rewritten document dies to one <c>SIGKILL</c> - so the shape is pinned, not
 /// merely exercised.
 /// </summary>
+[Collection(HistoryReadBudgetCollection.Name)]
 public class HistoryLedgerTests : IDisposable
 {
     private readonly string _dir = Directory.CreateTempSubdirectory("kronikol-ledger").FullName;

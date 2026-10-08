@@ -25,7 +25,9 @@ public class DiagrammedTestRunTests
 
         DiagrammedTestRun.TestContexts.Enqueue(info);
 
-        Assert.IsTrue(DiagrammedTestRun.TestContexts.TryDequeue(out var dequeued));
-        Assert.AreEqual("TestClass", dequeued.TestClassSimpleName);
+        // The queue is process-wide: the test classes that derive from DiagrammedComponentTest enqueue their own
+        // scenarios at cleanup, so this one looks for its entry rather than taking the first.
+        Assert.IsTrue(DiagrammedTestRun.TestContexts.Contains(info));
+        Assert.AreEqual("TestClass", DiagrammedTestRun.TestContexts.Single(x => ReferenceEquals(x, info)).TestClassSimpleName);
     }
 }

@@ -1,0 +1,28 @@
+# Red proofs for R1's facts, 2026-10-08 (kronikol-1c)
+
+## NUnit 4: ScenarioOutcomeTests against the adapter's old mapping (the result's message and stack trace whatever the status)
+  Failed A_failure_with_a_blank_message_carries_none("") [23 ms]
+  Failed A_failure_with_a_blank_message_carries_none("   ") [< 1 ms]
+  Failed A_scenario_that_did_not_fail_carries_no_message_and_no_stack_trace(Passed) [< 1 ms]
+  Failed A_scenario_that_did_not_fail_carries_no_message_and_no_stack_trace(Skipped) [< 1 ms]
+  Failed A_scenario_that_did_not_fail_carries_no_message_and_no_stack_trace(Inconclusive) [< 1 ms]
+Failed!  - Failed:     5, Passed:     3, Skipped:     0, Total:     8, Duration: 30 ms - Kronikol.Tests.NUnit4.dll (net10.0)
+
+## TUnit: ScenarioOutcomeTests against the adapter's old mapping (the exception's text whatever the result, the duration unchecked)
+  Failed A_scenario_that_did_not_fail_carries_no_message_even_when_an_exception_came_with_it(result: Skipped)
+  Failed A_scenario_that_did_not_fail_carries_no_message_even_when_an_exception_came_with_it(result: Passed)
+  Failed A_failure_with_a_blank_message_carries_none(message: "   ")
+  Failed A_failure_with_a_blank_message_carries_none(message: "")
+  Failed A_duration_below_zero_is_no_duration
+Failed!  - Failed:     5, Passed:     3, Skipped:     0, Total:     8
+
+## MSTest: DataRowScenarioIdTests with src/Kronikol.MSTest as on 4.13.1 (78f62e12)
+  Failed Each_data_row_resolves_an_id_of_its_own (1)
+   Assert.AreEqual failed. Expected string length 88 but was 84. 'expected' expression: 'Id(TestContext.TestDisplayName!)', 'actual' expression: 'fetched'.
+  Failed Each_data_row_resolves_an_id_of_its_own (2)
+   Assert.AreEqual failed. Expected string length 88 but was 84. 'expected' expression: 'Id(TestContext.TestDisplayName!)', 'actual' expression: 'fetched'.
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4
+(the two that pass are the guards: a test without data, and one with a display name but no data, keep their method's id)
+
+## xUnit v3: AsyncLifetimeCaptureTests with CaptureTestArgumentsAttribute.After's override removed
+The IAsyncLifetime fact failed (captured 0 times, expected 1); the synchronous guard passed.

@@ -23,6 +23,7 @@
 		<InternalsVisibleTo Include="Kronikol.BDDfy.xUnit3" />
 		<InternalsVisibleTo Include="Kronikol.LightBDD.xUnit3" />
 		<InternalsVisibleTo Include="Kronikol.Tests" />
+		<InternalsVisibleTo Include="Kronikol.Tests.xUnit3" />
 	</ItemGroup>
 
 </Project>

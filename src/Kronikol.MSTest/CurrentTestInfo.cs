@@ -14,6 +14,6 @@ public static class CurrentTestInfo
         {
             var ctx = DiagrammedComponentTest.GetCurrentTestContext()
                 ?? throw new InvalidOperationException("Test context not available on this thread.");
-            return (ctx.TestName!, $"{ctx.FullyQualifiedTestClassName}.{ctx.TestName}");
+            return (ctx.TestName!, DiagrammedComponentTest.GetCurrentTestId() ?? $"{ctx.FullyQualifiedTestClassName}.{ctx.TestName}");
         };
 }

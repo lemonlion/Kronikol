@@ -16,4 +16,8 @@
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.NUnit4" />
+  </ItemGroup>
+
 </Project>

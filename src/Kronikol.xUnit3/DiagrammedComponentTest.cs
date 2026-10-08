@@ -27,9 +27,12 @@ public abstract class DiagrammedComponentTest : IDisposable
         Track.TestIdResolver ??= () => TestContext.Current.Test?.UniqueID;
     }
 
-    public void Dispose()
+    public void Dispose() => Capture(TestContext.Current);
+
+    /// <summary>Hands the test's context to the run's report; called once per test, from here or from
+    /// <see cref="CaptureTestArgumentsAttribute.After"/> for a class xUnit disposes asynchronously.</summary>
+    internal static void Capture(ITestContext context)
     {
-        var context = TestContext.Current;
         if (context.Test?.UniqueID is { } id)
             DiagrammedTestRun.TestEnds[id] = DateTimeOffset.UtcNow;
         DiagrammedTestRun.TestContexts.Enqueue(context);

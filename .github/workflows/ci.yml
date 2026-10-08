@@ -194,6 +194,14 @@ jobs:
             projects: examples/Example.Api/tests/Example.Api.Tests.Integration
             restore-first: examples/Example.Api/Example.Api.sln
             filter: Component.ReqNRoll.xUnit2|Component.ReqNRoll.xUnit3
+          # Every Integration fact no entry above names runs here, so a new project row or
+          # class is CI-covered by default: the TUnit rows of TestProjects.All and
+          # TUnitParameterizedRenderingTests, added in 2.22.27, matched no entry and never
+          # ran until this one. The filter-exclude list is the union of the filters above.
+          - name: Integration (Remainder)
+            projects: examples/Example.Api/tests/Example.Api.Tests.Integration
+            restore-first: examples/Example.Api/Example.Api.sln
+            filter-exclude: Component.xUnit2|Component.xUnit3|Component.NUnit4|Component.LightBDD|Component.BDDfy|Component.ReqNRoll.xUnit2|Component.ReqNRoll.xUnit3
     steps:
       - name: Free disk space (IKVM)
         if: matrix.needs-disk-cleanup
@@ -256,12 +264,14 @@ jobs:
             JOINED=$(IFS='|'; echo "${CLAUSES[*]}")
             FILTER_ARG="--filter \"$JOINED\""
           elif [ -n "${{ matrix.filter-exclude }}" ]; then
-            # Negative filter: split by | and create FullyQualifiedName!~ AND chain,
-            # so everything NOT named runs — new test classes are covered by default.
+            # Negative filter: split by | and create an AND chain, so everything NOT named
+            # runs — new test classes are covered by default. Each part excludes on BOTH
+            # names, the complement of the positive filter above: a theory argument is only
+            # in DisplayName, so the Integration remainder leaves out the rows its siblings run.
             IFS='|' read -ra PARTS <<< "${{ matrix.filter-exclude }}"
             CLAUSES=()
             for part in "${PARTS[@]}"; do
-              CLAUSES+=("FullyQualifiedName!~$part")
+              CLAUSES+=("FullyQualifiedName!~$part&DisplayName!~$part")
             done
             JOINED=$(IFS='&'; echo "${CLAUSES[*]}")
             FILTER_ARG="--filter \"$JOINED\""

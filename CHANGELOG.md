@@ -4,6 +4,66 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.13.3] - 2026-10-08
+
+**Patch - the xUnit v3, MSTest, NUnit 4 and TUnit adapters report the tests they saw as their runner did
+(`plans/ADAPTER_CAPTURE_GAPS_PLAN.md` R1).** Found by a probe of the four adapters' own templates, the runner's TRX
+against the report, while executing #132, and fixed at the owner's "fix any other problems you found". Bug fixes, and
+nothing new for a consumer to call, so the patch part moves (4.13.2 to 4.13.3). The history action's `VERSION` installs
+`Kronikol.Tool` 4.13.3, and the templates pin 4.13.2.
+
+### Fixed
+
+- **xUnit v3: every test of a class that implements `IAsyncLifetime` was missing from the report, passing ones
+  included.** xUnit v3 disposes an `IAsyncDisposable` class through `DisposeAsync` and never calls its `Dispose`, where
+  `DiagrammedComponentTest` captured the test. Such a class's test is now captured when `CaptureTestArgumentsAttribute`'s
+  `After` runs, where its result is already final (measured), and any other class's in `Dispose`, as before.
+- **MSTest: the rows of a `[DataRow]` test after the first were missing from the report, a failing row included, and
+  their calls were drawn as background calls.** Every row had the scenario id `{class}.{method}`, and the report kept the
+  first. A data row's id now carries its display name, `{class}.{TestDisplayName}`, at each of the five places the adapter
+  names a test, so each row is a scenario with its own calls. Behaviour change: the scenario ids of a data-row test, which
+  key its history, change once, on the first run of 4.13.3; a test without data keeps its id and its history.
+- **NUnit 4: every passing scenario carried an empty error message, and the reason given to `Assert.Pass`,
+  `Assert.Ignore` or `Assert.Inconclusive` was drawn as an error message with a stack trace,** so a passed or skipped
+  scenario read as a failure. Only a failed scenario carries a message and a stack trace now, and a blank one is none. A
+  warning (`Assert.Warn`, reported as passed) keeps its text, the only trace of it the report has; how a warning should
+  show is the plan's Q5.
+- **TUnit: a test skipped with `Skip.Test` carried its reason as an error message, and a test whose `[Before(Test)]` hook
+  threw had a negative duration.** The same rule applies, and a duration below zero is no duration.
+
+### CI
+
+- **The example integration facts for TUnit had never run in CI.** CI runs `Example.Api.Tests.Integration` once per
+  component project, filtered by name, and no entry named the TUnit rows of `TestProjects.All` (added in 2.22.27) or
+  `TUnitParameterizedRenderingTests`: 38 facts. An `Integration (Remainder)` entry runs every integration fact no other
+  entry names, as `E2E (Remainder)` does for the end-to-end classes. The negative filter now excludes on the display name
+  as well as the fully qualified name, as the positive filter matches on both, since a theory's arguments are only in
+  its display name.
+- **The integration runner built each component project before every run of it.** A build with nothing to do took 76 to
+  84 s on this machine against 2 s for the TUnit example's run, so under load a third of the TUnit rows hit the runner's
+  120 s timeout. Each project is now built once per test process and each run starts with `--no-build`; a failed build is
+  the result of every run of that project, with the build's own output, where `dotnet run` said only that the build
+  failed. The runner also reads a run's output to its end before it returns.
+
+### Tests
+
+- TUnit: `ScenarioOutcomeTests` (the rule on a failed, skipped and passed result, blank messages, no exception, and
+  durations).
+- MSTest: `DataRowScenarioIdTests`, a real `[DataRow]` test whose rows each resolve an id of their own through the fetcher
+  and the assertion tracker's resolver, and two guards (a test without data, and one with a display name but no data, keep
+  their method's id). `DiagrammedTestRunTests` find their own entry in the shared queue instead of taking the first.
+- xUnit v3: `AsyncLifetimeCaptureTests`, a class that implements `IAsyncLifetime` captured once by `After`, and a guard
+  (a class disposed synchronously is left to `Dispose`). It failed with the override removed.
+- NUnit 4: `ScenarioOutcomeTests` (the rule on each status, blank messages, and the warning's text kept).
+- `HistoryLedgerTests` runs in a collection of its own after the parallel ones (`HistoryReadBudgetCollection`). Its
+  ledger-read budget failed in both full local runs of the core suite made while this release was checked (the
+  fastest of three reads took 2,812 and 2,704 ms against 1,500) and passed when run alone; the reader has not changed
+  since 3.27.0.
+- Red first: against the old mapping the NUnit 4 and TUnit facts failed 5 of 8 each, and the MSTest data-row fact
+  failed for both rows with the adapter as on 4.13.1, its two guards passing (`r1/red-proofs.txt`).
+- Before and after: each adapter's probe, its own template running a suite that passes, fails and skips, run on 4.11.0
+  (the plan's measurement) and on this release's changes, in `plans/ADAPTER_CAPTURE_GAPS_PLAN.harness/r1/`.
+
 ## [4.13.2] - 2026-10-08
 
 **Patch - a streaming gRPC call's outcome is recorded when its stream ends (#134).**

@@ -1,0 +1,30 @@
+# xUnit v3 IAsyncLifetime classes, before (4.11.0, probe run2) and after R1 (capture in CaptureTestArgumentsAttribute.After)
+## before: the features present
+FEATURE 'Async Lifetime Forwarding Feature' endpoint=None scenarios=1
+FEATURE 'Outcome Feature' endpoint='/' scenarios=6
+TOTAL scenarios=7
+## after (run after-r1b, with a failing IAsyncLifetime test added to the probe)
+FEATURE 'Async Lifetime Control Feature' endpoint=None scenarios=1
+FEATURE 'Async Lifetime Failing Feature' endpoint=None scenarios=1
+FEATURE 'Async Lifetime Forwarding Feature' endpoint=None scenarios=1
+FEATURE 'Outcome Feature' endpoint='/' scenarios=6
+TOTAL scenarios=9
+FEATURE 'Async Lifetime Control Feature' endpoint=None scenarios=1
+  - name='Passing test in class with i async lifetime'
+      result=Passed durationSeconds=0.0015913 endedAt=2026-10-08T11:45:56.169Z calls=2 id='b3bbee237a7b5748542d25e70c40170e974203f6696a2d053fa51500361392ba'
+      errorMessage=null
+--
+FEATURE 'Async Lifetime Failing Feature' endpoint=None scenarios=1
+  - name='Failing test in class with i async lifetime'
+      result=Failed durationSeconds=0.2016338 endedAt=2026-10-08T11:45:56.147Z calls=2 id='d7853725f9a9a02a740ab6b1e1739887c780735e8f788c139536633b256f3552'
+      errorMessage=text(len=179): Expected response.StatusCode to be HttpStatusCode.NotFound {value: 404} because 
+--
+FEATURE 'Async Lifetime Forwarding Feature' endpoint=None scenarios=1
+  - name='Passing test in class whose dispose async calls dispose'
+      result=Passed durationSeconds=0.0007205 endedAt=2026-10-08T11:45:56.183Z calls=2 id='d526645fd47579d04b108f37f0676ceeaefc18416d8d39d25995b57293559a8d'
+      errorMessage=null
+## runner
+Passed         00:00:00.0016766  KronikolComponentTests.Scenarios.AsyncLifetimeControlFeature.Passing_test_in_class_with_IAsyncLifetime
+Failed         00:00:00.2052776  KronikolComponentTests.Scenarios.AsyncLifetimeFailingFeature.Failing_test_in_class_with_IAsyncLifetime
+               message=Expected response.StatusCode to be HttpStatusCode.NotFound {value: 404} because the IAsyncLifetime c
+Passed         00:00:00.0009574  KronikolComponentTests.Scenarios.AsyncLifetimeForwardingFeature.Passing_test_in_class_whose_DisposeAsync_calls_Dispose

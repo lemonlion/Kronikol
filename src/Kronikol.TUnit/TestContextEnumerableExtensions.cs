@@ -38,15 +38,17 @@ internal static class TestContextEnumerableExtensions
                             Dictionary<string, object?>? rawValues = structuredResult?.RawValues;
                             var parsed = structuredParams ?? ParameterParser.Parse(displayName);
 
+                            var result = x.Execution.Result?.State.ToExecutionResult() ?? ExecutionResult.Skipped;
+
                             return new Scenario
                             {
                                 Id = x.Id,
-                                Result = x.Execution.Result?.State.ToExecutionResult() ?? ExecutionResult.Skipped,
+                                Result = result,
                                 DisplayName = displayName,
                                 IsHappyPath = x.Metadata.TestDetails.Categories.Contains(HappyPathAttribute.HappyPathCategoryKey),
-                                ErrorMessage = x.Execution.Result?.Exception?.Message,
-                                ErrorStackTrace = x.Execution.Result?.Exception?.StackTrace,
-                                Duration = x.Execution.Result?.Duration,
+                                ErrorMessage = ScenarioOutcome.Message(result, x.Execution.Result?.Exception),
+                                ErrorStackTrace = ScenarioOutcome.StackTrace(result, x.Execution.Result?.Exception),
+                                Duration = ScenarioOutcome.Duration(x.Execution.Result?.Duration),
                                 EndedAt = x.Execution.Result?.End,
                                 OutlineId = parsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(displayName)) : null,
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null,

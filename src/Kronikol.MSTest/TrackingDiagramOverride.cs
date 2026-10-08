@@ -56,6 +56,8 @@ public static class TrackingDiagramOverride
 
     private static string? GetTestId()
     {
+        if (DiagrammedComponentTest.GetCurrentTestId() is { } id)
+            return id;
         var ctx = DiagrammedComponentTest.GetCurrentTestContext();
         return ctx is not null
             ? $"{ctx.FullyQualifiedTestClassName}.{ctx.TestName}"

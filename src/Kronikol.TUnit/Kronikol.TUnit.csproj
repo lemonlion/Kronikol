@@ -22,6 +22,7 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="Kronikol.LightBDD.TUnit" />
 		<InternalsVisibleTo Include="Kronikol.Tests" />
+		<InternalsVisibleTo Include="Kronikol.Tests.TUnit" />
 	</ItemGroup>
 
 </Project>

@@ -17,10 +17,6 @@ public class DiagrammedTestRun
         StartRunTime = DateTime.UtcNow;
 
         // Enable Track.That() assertions to resolve the current test ID.
-        Track.TestIdResolver ??= () =>
-        {
-            var ctx = DiagrammedComponentTest.GetCurrentTestContext();
-            return ctx is not null ? $"{ctx.FullyQualifiedTestClassName}.{ctx.TestName}" : null;
-        };
+        Track.TestIdResolver ??= DiagrammedComponentTest.GetCurrentTestId;
     }
 }

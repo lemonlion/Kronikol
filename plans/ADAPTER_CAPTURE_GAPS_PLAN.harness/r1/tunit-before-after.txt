@@ -1,0 +1,25 @@
+# TUnit, before (4.11.0, probe run1) and after R1 (776ccf09): the two scenarios R1 changes
+## before
+  - name='Test in class whose before test hook throws'
+      result=Failed durationSeconds=-8e-07 endedAt=2026-10-08T10:16:19.199Z calls=0 id='bddd15de-ea6e-4ce9-a09d-5a8a6caf363a'
+      errorMessage=text(len=50): BeforeTest hook failed: probe: Before(Test) throws
+      errorStackTrace=text(len=877):    at TUnit.Engine.Services.HookExecutor.ExecuteBeforeTestHo
+      failureCause=None outlineId=None exampleValues=None
+--
+  - name='Dynamically skipped test'
+      result=Skipped durationSeconds=0.0943896 endedAt=2026-10-08T10:16:19.283Z calls=2 id='463e0d73-300a-47a9-920c-81840794adc8'
+      errorMessage=text(len=19): dynamic skip reason
+      errorStackTrace=null
+      failureCause=None outlineId=None exampleValues=None
+## after
+  - name='Test in class whose before test hook throws'
+      result=Failed durationSeconds=0 endedAt=2026-10-08T11:38:12.217Z calls=0 id='bb478a9e-0a00-495a-918d-6778977148d3'
+      errorMessage=text(len=50): BeforeTest hook failed: probe: Before(Test) throws
+      errorStackTrace=text(len=877):    at TUnit.Engine.Services.HookExecutor.ExecuteBeforeTestHo
+      failureCause=None outlineId=None exampleValues=None
+--
+  - name='Dynamically skipped test'
+      result=Skipped durationSeconds=0.224359 endedAt=2026-10-08T11:38:12.421Z calls=2 id='8f6af035-52c6-4e96-bd6b-17f2da876843'
+      errorMessage=null
+      errorStackTrace=null
+      failureCause=None outlineId=None exampleValues=None

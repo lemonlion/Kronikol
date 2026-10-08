@@ -1,0 +1,84 @@
+# NUnit 4 messages, before (4.11.0, probe run1) and after R1 (63ce1992, on 4.13.1)
+# The runner's view: nunit4-run1/trx-summary.txt. Assert.Warn keeps its text after R1 by design (the plan's Q5).
+## before
+  - name='Passing test'
+      result=Passed durationSeconds=0.0011164 endedAt=2026-10-08T10:06:30.919Z calls=2 id='0-1002'
+      errorMessage=""
+      errorStackTrace=null
+  - name='Assert pass with message test'
+      result=Passed durationSeconds=0.2436259 endedAt=2026-10-08T10:06:30.845Z calls=2 id='0-1007'
+      errorMessage=text(len=9): a message
+      errorStackTrace=text(len=1114):    at KronikolComponentTests.Scenarios.OutcomeFeature.Assert
+  - name='Assert warn test'
+      result=Passed durationSeconds=0.0072112 endedAt=2026-10-08T10:06:30.854Z calls=2 id='0-1008'
+      errorMessage=text(len=12): warn message
+      errorStackTrace=text(len=239):    at KronikolComponentTests.Scenarios.OutcomeFeature.Assert
+  - name='Dynamically ignored test'
+      result=Skipped durationSeconds=0.0020661 endedAt=2026-10-08T10:06:30.857Z calls=2 id='0-1005'
+      errorMessage=text(len=21): dynamic ignore reason
+      errorStackTrace=text(len=1109):    at KronikolComponentTests.Scenarios.OutcomeFeature.Dynami
+  - name='Dynamically inconclusive test'
+      result=Skipped durationSeconds=0.0021722 endedAt=2026-10-08T10:06:30.859Z calls=2 id='0-1006'
+      errorMessage=text(len=27): dynamic inconclusive reason
+      errorStackTrace=text(len=1114):    at KronikolComponentTests.Scenarios.OutcomeFeature.Dynami
+  - name='Failing test'
+      result=Failed durationSeconds=0.0587159 endedAt=2026-10-08T10:06:30.918Z calls=2 id='0-1003'
+      errorMessage=text(len=150): Expected response.StatusCode to be HttpStatusCode.NotFound {value: 404} because 
+      errorStackTrace=text(len=1206):    at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum 
+  - name='Theory rows [1]'
+      result=Passed durationSeconds=0.0026172 endedAt=2026-10-08T10:06:30.922Z calls=2 id='0-1009'
+      errorMessage=""
+      errorStackTrace=null
+  - name='Theory rows [2]'
+      result=Failed durationSeconds=0.0028931 endedAt=2026-10-08T10:06:30.927Z calls=2 id='0-1010'
+      errorMessage=text(len=60): Did not expect row to be 2 because row 2 is the failing row.
+      errorStackTrace=text(len=1219):    at FluentAssertions.Numeric.NumericAssertionsBase`3.NotBe
+  - name='Theory rows [3]'
+      result=Passed durationSeconds=0.0006408 endedAt=2026-10-08T10:06:30.929Z calls=2 id='0-1011'
+      errorMessage=""
+      errorStackTrace=null
+  - name='Test in class whose set up throws'
+      result=Failed durationSeconds=0.0002777 endedAt=2026-10-08T10:06:30.930Z calls=0 id='0-1016'
+      errorMessage=text(len=62): SetUp : System.InvalidOperationException : probe: SetUp throws
+      errorStackTrace=text(len=438): --SetUp\r\n   at KronikolComponentTests.Scenarios.SetUpThrow
+## after
+  - name='Passing test'
+      result=Passed durationSeconds=0.0122377 endedAt=2026-10-08T13:54:58.126Z calls=2 id='0-1002'
+      errorMessage=null
+      errorStackTrace=null
+  - name='Assert pass with message test'
+      result=Passed durationSeconds=0.7851074 endedAt=2026-10-08T13:54:57.795Z calls=2 id='0-1007'
+      errorMessage=null
+      errorStackTrace=null
+  - name='Assert warn test'
+      result=Passed durationSeconds=0.0190853 endedAt=2026-10-08T13:54:57.826Z calls=2 id='0-1008'
+      errorMessage=text(len=12): warn message
+      errorStackTrace=text(len=239):    at KronikolComponentTests.Scenarios.OutcomeFeature.Assert
+  - name='Dynamically ignored test'
+      result=Skipped durationSeconds=0.0053553 endedAt=2026-10-08T13:54:57.836Z calls=2 id='0-1005'
+      errorMessage=null
+      errorStackTrace=null
+  - name='Dynamically inconclusive test'
+      result=Skipped durationSeconds=0.0061833 endedAt=2026-10-08T13:54:57.849Z calls=2 id='0-1006'
+      errorMessage=null
+      errorStackTrace=null
+  - name='Failing test'
+      result=Failed durationSeconds=0.2484363 endedAt=2026-10-08T13:54:58.104Z calls=2 id='0-1003'
+      errorMessage=text(len=150): Expected response.StatusCode to be HttpStatusCode.NotFound {value: 404} because 
+      errorStackTrace=text(len=1206):    at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum 
+  - name='Theory rows [1]'
+      result=Passed durationSeconds=0.017453 endedAt=2026-10-08T13:54:58.166Z calls=2 id='0-1009'
+      errorMessage=null
+      errorStackTrace=null
+  - name='Theory rows [2]'
+      result=Failed durationSeconds=0.0127614 endedAt=2026-10-08T13:54:58.193Z calls=2 id='0-1010'
+      errorMessage=text(len=60): Did not expect row to be 2 because row 2 is the failing row.
+      errorStackTrace=text(len=1219):    at FluentAssertions.Numeric.NumericAssertionsBase`3.NotBe
+  - name='Theory rows [3]'
+      result=Passed durationSeconds=0.0052274 endedAt=2026-10-08T13:54:58.209Z calls=2 id='0-1011'
+      errorMessage=null
+      errorStackTrace=null
+  - name='Test in class whose set up throws'
+      result=Failed durationSeconds=0.0008095 endedAt=2026-10-08T13:54:58.229Z calls=0 id='0-1016'
+      errorMessage=text(len=62): SetUp : System.InvalidOperationException : probe: SetUp throws
+      errorStackTrace=text(len=438): --SetUp\r\n   at KronikolComponentTests.Scenarios.SetUpThrow

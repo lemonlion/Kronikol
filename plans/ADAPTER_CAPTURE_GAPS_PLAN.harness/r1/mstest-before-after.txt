@@ -1,0 +1,36 @@
+# MSTest data rows, before (4.11.0, probe run1) and after R1 (f9131e2a)
+## before
+  - name='Theory rows [1]'
+      result=Passed durationSeconds=0.0018557 endedAt=2026-10-08T10:04:15.404Z calls=2 id='KronikolComponentTests.Scenarios.OutcomeFeature.Theory_rows'
+      errorMessage=null
+      errorStackTrace=null
+      failureCause=None outlineId='Theory rows' exampleValues={'row': '1'}
+FEATURE 'Test Initialize Throws Feature' endpoint=None scenarios=1
+  - name='Test in class whose test initialize throws'
+      result=Failed durationSeconds=0.0004286 endedAt=2026-10-08T10:04:15.413Z calls=0 id='KronikolComponentTests.Scenarios.TestInitializeThrowsFeature.Test_in_class_whose_TestInitialize_throws'
+      errorMessage=text(len=28): probe: TestInitialize throws
+--
+DIAG kind=BackgroundCalls scenarioId='KronikolComponentTests.Scenarios.OutcomeFeature.Theory_rows' message=2 calls arrived after 'Theory rows [1]' ended and are listed as background calls
+BACKGROUND calls=2 interactions=4 afterScenarioEnd=1
+DIAG kind=BackgroundCalls scenarioId='KronikolComponentTests.Scenarios.OutcomeFeature.Theory_rows' message=2 calls arrived after 'Theory rows [1]' ended and are listed as background calls
+## after
+  - name='Theory rows [1]'
+      result=Passed durationSeconds=0.00161 endedAt=2026-10-08T11:43:03.469Z calls=2 id='KronikolComponentTests.Scenarios.OutcomeFeature.Theory_rows (1)'
+      errorMessage=null
+      errorStackTrace=null
+      failureCause=None outlineId='Theory rows' exampleValues={'row': '1'}
+  - name='Theory rows [2]'
+      result=Failed durationSeconds=0.0016532 endedAt=2026-10-08T11:43:03.472Z calls=2 id='KronikolComponentTests.Scenarios.OutcomeFeature.Theory_rows (2)'
+      errorMessage=text(len=60): Did not expect row to be 2 because row 2 is the failing row.
+      errorStackTrace=text(len=613):    at FluentAssertions.Numeric.NumericAssertionsBase`3.NotBe
+      failureCause='AssertFailedException' outlineId='Theory rows' exampleValues={'row': '2'}
+  - name='Theory rows [3]'
+      result=Passed durationSeconds=0.0001908 endedAt=2026-10-08T11:43:03.472Z calls=2 id='KronikolComponentTests.Scenarios.OutcomeFeature.Theory_rows (3)'
+      errorMessage=null
+      errorStackTrace=null
+      failureCause=None outlineId='Theory rows' exampleValues={'row': '3'}
+FEATURE 'Test Initialize Throws Feature' endpoint=None scenarios=1
+  - name='Test in class whose test initialize throws'
+      result=Failed durationSeconds=0.0004104 endedAt=2026-10-08T11:43:03.478Z calls=0 id='KronikolComponentTests.Scenarios.TestInitializeThrowsFeature.Test_in_class_whose_TestInitialize_throws'
+      errorMessage=text(len=28): probe: TestInitialize throws
+BACKGROUND calls=0 interactions=0 afterScenarioEnd=0

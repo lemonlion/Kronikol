@@ -12,6 +12,10 @@ namespace Kronikol.MSTest;
 public abstract class DiagrammedComponentTest
 {
     private static readonly AsyncLocal<TestContext?> CurrentContext = new();
+
+    // The running test's scenario id, worked out once when it starts (TestIdOf) and read by every site that names it: the
+    // fetcher, the assertion tracker's resolver, the diagram override and the scenario this class enqueues.
+    private static readonly AsyncLocal<string?> CurrentTestId = new();
     private Stopwatch? _stopwatch;
 
     public TestContext TestContext { get; set; } = null!;
@@ -20,13 +24,10 @@ public abstract class DiagrammedComponentTest
     public void TestTrackingInitialize()
     {
         // Enable Track.That() assertions to resolve the current test ID.
-        Track.TestIdResolver ??= () =>
-        {
-            var ctx = GetCurrentTestContext();
-            return ctx is not null ? $"{ctx.FullyQualifiedTestClassName}.{ctx.TestName}" : null;
-        };
+        Track.TestIdResolver ??= GetCurrentTestId;
         _stopwatch = Stopwatch.StartNew();
         CurrentContext.Value = TestContext;
+        CurrentTestId.Value = TestIdOf(GetType(), TestContext);
     }
 
     [TestCleanup]
@@ -45,7 +46,7 @@ public abstract class DiagrammedComponentTest
             TestClassSimpleName = type.Name,
             TestMethodName = TestContext.TestName!,
             TestDisplayName = TestContext.TestDisplayName,
-            TestId = $"{TestContext.FullyQualifiedTestClassName}.{TestContext.TestName}",
+            TestId = CurrentTestId.Value ?? TestIdOf(type, TestContext),
             Outcome = TestContext.CurrentTestOutcome,
             // What was actually thrown. Until 3.1.0 this was the constant sentence "Test failed — see
             // ErrorStackTrace for details", which made every MSTest failure in a run identical to every
@@ -69,4 +70,22 @@ public abstract class DiagrammedComponentTest
     }
 
     internal static TestContext? GetCurrentTestContext() => CurrentContext.Value;
+
+    /// <summary>The running test's scenario id, or null outside a test.</summary>
+    internal static string? GetCurrentTestId() => CurrentTestId.Value;
+
+    /// <summary>
+    /// A test's scenario id: <c>{class}.{method}</c>, and for a data row <c>{class}.{display name}</c>. Every row of a
+    /// <c>[DataRow]</c> test has the same method name, so with the method's id the report kept the first row and dropped
+    /// the rest, a failing row included. A test without data keeps the id it always had, and with it its history, even
+    /// when it has a display name of its own.
+    /// </summary>
+    internal static string TestIdOf(Type testClass, TestContext context)
+    {
+        var method = context.TestName is { } name ? testClass.GetMethod(name) : null;
+        var isDataRow = method?.GetParameters().Length > 0;
+        return isDataRow && !string.IsNullOrEmpty(context.TestDisplayName) && context.TestDisplayName != context.TestName
+            ? $"{context.FullyQualifiedTestClassName}.{context.TestDisplayName}"
+            : $"{context.FullyQualifiedTestClassName}.{context.TestName}";
+    }
 }
