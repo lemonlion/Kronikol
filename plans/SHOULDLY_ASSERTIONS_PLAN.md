@@ -973,3 +973,10 @@ this table missed, and the skill references under `.claude/skills/` and `templat
   - **The lesson,** for the audit checklist: a behaviour gated on the running version needs the suites run again
     after the bump, and a change to a multi-target project needs a build of every target. 4.14.1's core suite passes 7,098 with 2 skipped and the weaver suite in Release on net8.0, net9.0
     and net10.0 230, 258 and 286, all at 4.14.1.
+- 2026-10-08, published: 4.14.1's Release run (37828952751) passed and pushed all 62 packages, with CodeQL
+  (37828949343) and CI Summary Preview (37828949440) on `33948042`. CI (37828949365) failed once, in the remainder
+  lane, on `GrpcTrackingInterceptorTests.AsyncUnaryCall_activity_spans_from_request_to_response`: a span the test
+  looked for was not sampled, the `InternalFlowActivityListener.EnsureStarted` race that #134's R3 fixes (4.14.3,
+  kronikol-94's); 4.14.1 touches neither gRPC nor the span store, and the job passed on its second attempt.
+  nuget.org lists all 62 ids at 4.14.1, the wiki has R2's edits (`af30baa`), Kronikol4J's ledger its line
+  (`57e8f91`), and #141, #144 and #145 are closed.
