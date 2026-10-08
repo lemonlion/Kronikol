@@ -11,7 +11,10 @@ namespace Kronikol.Extensions.Grpc;
 /// with test tracking. These handle the SUT-to-downstream direction where the
 /// application under test makes gRPC calls to downstream services and the
 /// <see cref="IHttpContextAccessor"/> is auto-resolved from DI so test identity
-/// flows through without manual wiring.
+/// flows through without manual wiring: the client's calls are attributed to the test whose request the
+/// application is serving, and carry that identity on to the downstream service
+/// (<see cref="GrpcTrackingOptions.PropagateTestIdentity"/>), which attributes its own calls to the same
+/// scenario when it calls <c>AddTestTrackingContextPropagation()</c>.
 /// </summary>
 public static class GrpcServiceCollectionExtensions
 {

@@ -39,6 +39,8 @@
     <ProjectReference Include="..\..\src\Kronikol\Kronikol.csproj" />
     <!-- The OTLP/JSON reader that kronikol ingest reads span files with (plans/INGEST_FIDELITY_PLAN.md T21). -->
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Otlp\Kronikol.Extensions.Otlp.csproj" />
+    <!-- The gRPC interceptor's row of the diagnostic page (plans/GRPC_IDENTITY_PROPAGATION_PLAN.md T36). -->
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.Grpc\Kronikol.Extensions.Grpc.csproj" />
   </ItemGroup>
 
 </Project>

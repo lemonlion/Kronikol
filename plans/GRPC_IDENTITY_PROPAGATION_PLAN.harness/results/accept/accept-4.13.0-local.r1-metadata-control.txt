@@ -1,0 +1,12 @@
+kronikol 4.13.0-local.r1+ba5d1d7fe9c537c0f89589c5dde549742f810857 probe=metadata variant=control
+P2 after call 1: shared Metadata holds 1 entries, 0 traceparent; B received 1 traceparent; the call logged 0 traceparent among its own request headers
+    B's traceparent value(s): 00-8ff0109a0819bd0f75c8a21c557387c9-0df78902a855a171-00
+    B's server span: Microsoft.AspNetCore.Hosting.HttpRequestIn recorded=False parent=00-8ff0109a0819bd0f75c8a21c557387c9-0df78902a855a171-00 trace=8ff0109a0819bd0f75c8a21c557387c9 parentSpan=0df78902a855a171 format=W3C
+P2 after call 2: shared Metadata holds 1 entries, 0 traceparent; B received 1 traceparent; the call logged 0 traceparent among its own request headers
+    B's traceparent value(s): 00-7805c733250e76c55d584cc8a95b24a5-8fc4a14f79076335-00
+    B's server span: Microsoft.AspNetCore.Hosting.HttpRequestIn recorded=False parent=00-7805c733250e76c55d584cc8a95b24a5-8fc4a14f79076335-00 trace=7805c733250e76c55d584cc8a95b24a5 parentSpan=8fc4a14f79076335 format=W3C
+P2 after call 3: shared Metadata holds 1 entries, 0 traceparent; B received 1 traceparent; the call logged 0 traceparent among its own request headers
+    B's traceparent value(s): 00-e40cd0aecb500eae37ea6868cb7982c1-312ff99b5c374d63-00
+    B's server span: Microsoft.AspNetCore.Hosting.HttpRequestIn recorded=False parent=00-e40cd0aecb500eae37ea6868cb7982c1-312ff99b5c374d63-00 trace=e40cd0aecb500eae37ea6868cb7982c1 parentSpan=312ff99b5c374d63 format=W3C
+P3 Metadata.Empty: call succeeded
+P2b 64 concurrent calls on one Metadata: 1 entries afterwards, 0 calls threw

@@ -22,6 +22,9 @@ public class S3TrackingMessageHandler : DelegatingHandler, ITrackingComponent
     }
 
     public string ComponentName => $"S3TrackingMessageHandler ({_options.ServiceName})";
+
+    /// <summary><c>true</c> when the tracker holds an <c>IHttpContextAccessor</c>, from its constructor or its options.</summary>
+    public bool HasHttpContextAccessor => _httpContextAccessor is not null;
     public bool WasInvoked => _invocationCount > 0;
     public int InvocationCount => _invocationCount;
 

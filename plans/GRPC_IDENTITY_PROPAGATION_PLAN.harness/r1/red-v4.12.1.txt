@@ -1,0 +1,196 @@
+=== tests/Kronikol.Tests.Grpc :: FullyQualifiedName~IdentityPropagation|FullyQualifiedName~MultiHostPropagationTests
+Build succeeded.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ClientStreaming, key: "test-tracking-trace-id") [457 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ClientStreaming, key: "test-tracking-caller-name") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: Duplex, key: "test-tracking-current-test-id") [2 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ServerStreaming, key: "test-tracking-current-test-id") [1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: AsyncUnary, key: "test-tracking-current-test-name") [2 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ServerStreaming, key: "test-tracking-caller-name") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: AsyncUnary, key: "test-tracking-current-test-id") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: Duplex, key: "test-tracking-current-test-name") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ClientStreaming, key: "test-tracking-current-test-name") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: BlockingUnary, key: "test-tracking-caller-name") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: BlockingUnary, key: "test-tracking-current-test-id") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: BlockingUnary, key: "test-tracking-trace-id") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: AsyncUnary, key: "test-tracking-caller-name") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ClientStreaming, key: "test-tracking-current-test-id") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: AsyncUnary, key: "test-tracking-trace-id") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ServerStreaming, key: "test-tracking-trace-id") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: Duplex, key: "test-tracking-caller-name") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: BlockingUnary, key: "test-tracking-current-test-name") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ServerStreaming, key: "test-tracking-current-test-name") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: Duplex, key: "test-tracking-trace-id") [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.Each_call_carries_the_four_identity_headers(kind: Duplex) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.Each_call_carries_the_four_identity_headers(kind: AsyncUnary) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.Each_call_carries_the_four_identity_headers(kind: ClientStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.Each_call_carries_the_four_identity_headers(kind: BlockingUnary) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.Each_call_carries_the_four_identity_headers(kind: ServerStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_with_no_accessor_passes_on_the_identity_its_middleware_put_in_scope(kind: BlockingUnary) [1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_with_no_accessor_passes_on_the_identity_its_middleware_put_in_scope(kind: ServerStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_with_no_accessor_passes_on_the_identity_its_middleware_put_in_scope(kind: ClientStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_with_no_accessor_passes_on_the_identity_its_middleware_put_in_scope(kind: AsyncUnary) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_with_no_accessor_passes_on_the_identity_its_middleware_put_in_scope(kind: Duplex) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: AsyncUnary) [1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: BlockingUnary) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: Duplex) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: ClientStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: ServerStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.HasHttpContextAccessor_reports_the_accessor_from_the_constructor_or_the_options [< 1 ms]
+  Error Message:
+   Assert.True() Failure
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_with_no_inbound_trace_id_is_logged_with_the_one_it_sends(kind: Duplex) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_with_no_inbound_trace_id_is_logged_with_the_one_it_sends(kind: ServerStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_with_no_inbound_trace_id_is_logged_with_the_one_it_sends(kind: BlockingUnary) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_with_no_inbound_trace_id_is_logged_with_the_one_it_sends(kind: AsyncUnary) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_with_no_inbound_trace_id_is_logged_with_the_one_it_sends(kind: ClientStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: AsyncUnary) [4 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: ServerStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: ClientStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: Duplex) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: BlockingUnary) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: AsyncUnary) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: BlockingUnary) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: ClientStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: ServerStreaming) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: Duplex) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.MultiHost.MultiHostPropagationTests.Two_gRPC_hops_carry_the_identity_to_the_third_host [704 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+  Failed Kronikol.Tests.Grpc.MultiHost.MultiHostPropagationTests.A_name_that_is_not_plain_ascii_reaches_a_host_over_h2c_exactly [80 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Grpc.MultiHost.MultiHostPropagationTests.The_called_hosts_calls_share_the_gRPC_calls_Kronikol_trace_id [20 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.Grpc.MultiHost.MultiHostPropagationTests.A_service_the_test_calls_over_gRPC_attributes_its_own_calls [7 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Grpc.MultiHost.MultiHostPropagationTests.A_host_called_over_gRPC_by_a_host_the_test_called_over_HTTP_attributes_its_own_calls [11 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+Failed!  - Failed:    56, Passed:    22, Skipped:     0, Total:    78, Duration: 852 ms - Kronikol.Tests.Grpc.dll (net10.0)
+=== tests/Kronikol.Tests.S3 :: FullyQualifiedName~HasHttpContextAccessorTests
+Build succeeded.
+  Failed Kronikol.Tests.S3.HasHttpContextAccessorTests.HasHttpContextAccessor_reports_the_accessor_from_the_constructor_or_the_options [309 ms]
+  Error Message:
+   Assert.True() Failure
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 327 ms - Kronikol.Tests.S3.dll (net10.0)
+=== tests/Kronikol.Tests.ServiceBus :: FullyQualifiedName~HasHttpContextAccessorTests
+Build succeeded.
+  Failed Kronikol.Tests.ServiceBus.HasHttpContextAccessorTests.HasHttpContextAccessor_reports_the_accessor_from_the_constructor_or_the_options [381 ms]
+  Error Message:
+   Assert.True() Failure
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 400 ms - Kronikol.Tests.ServiceBus.dll (net10.0)
+=== tests/Kronikol.Tests.Sqlite :: FullyQualifiedName~HasHttpContextAccessorTests
+Build succeeded.
+  Failed Kronikol.Tests.Sqlite.HasHttpContextAccessorTests.HasHttpContextAccessor_reports_the_accessor_from_the_constructor_or_the_options [603 ms]
+  Error Message:
+   Assert.True() Failure
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 619 ms - Kronikol.Tests.Sqlite.dll (net10.0)
+=== tests/Kronikol.Tests.EndToEnd :: FullyQualifiedName~DiagnosticPageAccessorColumnTests
+Build succeeded.
+  Failed Kronikol.Tests.EndToEnd.DiagnosticPageAccessorColumnTests.A_host_side_and_a_test_side_gRPC_interceptor_paint_one_of_two [5 s]
+  Error Message:
+   Microsoft.Playwright.PlaywrightException : Locator expected to have text '1 of 2'
+Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 5 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+=== done

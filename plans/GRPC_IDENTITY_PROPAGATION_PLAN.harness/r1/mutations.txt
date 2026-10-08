@@ -1,0 +1,109 @@
+KILLED: propagate only when the phase is tracked (T28)
+  ['Failed!  - Failed:     5, Passed:    58, Skipped:     0, Total:    63, Duration: 1 s - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: Duplex)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: ServerStreaming)
+KILLED: add the identity only when the inbound request lacks it, the HTTP rule (T21, T32)
+  ['Failed!  - Failed:    13, Passed:    50, Skipped:     0, Total:    63, Duration: 890 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: Duplex)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: ServerStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: Duplex)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: ServerStreaming)
+    red: Kronikol.Tests.Grpc.MultiHost.MultiHostPropagationTests.A_host_called_over_gRPC_by_a_host_the_test_called_over_HTTP_attributes_its_own_calls
+    red: Kronikol.Tests.Grpc.MultiHost.MultiHostPropagationTests.The_called_hosts_calls_share_the_gRPC_calls_Kronikol_trace_id
+KILLED: send the background identity (T24)
+  ['Failed!  - Failed:    10, Passed:    53, Skipped:     0, Total:    63, Duration: 928 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.IdentityPropagationGuardTests.A_detached_flow_sends_no_identity(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationGuardTests.A_detached_flow_sends_no_identity(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationGuardTests.A_detached_flow_sends_no_identity(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationGuardTests.A_detached_flow_sends_no_identity(kind: Duplex)
+    red: Kronikol.Tests.Grpc.IdentityPropagationGuardTests.A_detached_flow_sends_no_identity(kind: ServerStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationGuardTests.The_background_identity_is_not_sent(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationGuardTests.The_background_identity_is_not_sent(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationGuardTests.The_background_identity_is_not_sent(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationGuardTests.The_background_identity_is_not_sent(kind: Duplex)
+    red: Kronikol.Tests.Grpc.IdentityPropagationGuardTests.The_background_identity_is_not_sent(kind: ServerStreaming)
+KILLED: ignore PropagateTestIdentity (T22, T34)
+  ['Failed!  - Failed:     6, Passed:    57, Skipped:     0, Total:    63, Duration: 549 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.With_PropagateTestIdentity_off_no_identity_header_is_sent_and_the_traceparent_still_is(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.With_PropagateTestIdentity_off_no_identity_header_is_sent_and_the_traceparent_still_is(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.With_PropagateTestIdentity_off_no_identity_header_is_sent_and_the_traceparent_still_is(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.With_PropagateTestIdentity_off_no_identity_header_is_sent_and_the_traceparent_still_is(kind: Duplex)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.With_PropagateTestIdentity_off_no_identity_header_is_sent_and_the_traceparent_still_is(kind: ServerStreaming)
+    red: Kronikol.Tests.Grpc.MultiHost.MultiHostPropagationTests.With_PropagateTestIdentity_off_the_called_host_does_not_attribute_its_calls_to_the_scenario
+KILLED: a new GUID for the trace id (T26, T35)
+  ['Failed!  - Failed:    11, Passed:    52, Skipped:     0, Total:    63, Duration: 805 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: Duplex)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: ServerStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: Duplex)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.The_call_is_logged_with_the_inbound_trace_id_it_sends(kind: ServerStreaming)
+    red: Kronikol.Tests.Grpc.MultiHost.MultiHostPropagationTests.The_called_hosts_calls_share_the_gRPC_calls_Kronikol_trace_id
+SURVIVED: overwrite the name the caller set (T25)
+  ['Passed!  - Failed:     0, Passed:    63, Skipped:     0, Total:    63, Duration: 646 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+KILLED: send the name raw (T33)
+  ['Failed!  - Failed:    21, Passed:    42, Skipped:     0, Total:    63, Duration: 455 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: Duplex)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_call_not_tracked_in_the_action_phase_still_carries_the_identity(kind: ServerStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: BlockingUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: ClientStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: Duplex)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_host_passes_on_the_identity_of_the_request_it_is_serving(kind: ServerStreaming)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: AsyncUnary)
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: BlockingUnary)
+KILLED: the interceptor reports no accessor (T29)
+  ['Failed!  - Failed:     1, Passed:    62, Skipped:     0, Total:    63, Duration: 757 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.HasHttpContextAccessor_reports_the_accessor_from_the_constructor_or_the_options
+KILLED: S3 reports no accessor (T29)
+  ['Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 726 ms - Kronikol.Tests.S3.dll (net10.0)']
+    red: Kronikol.Tests.S3.HasHttpContextAccessorTests.HasHttpContextAccessor_reports_the_accessor_from_the_constructor_or_the_options
+
+(The name mutation survived: the fact set only the caller's id key, so nothing checked the other three. It is now a
+theory over each call kind and each of the four keys, which fails on R1 with the mutation applied and passes
+without it. Run again on the commit with that theory, the same mutation for each of the four keys:)
+KILLED: overwrite the name the caller set (T25)
+  ['Failed!  - Failed:     5, Passed:    73, Skipped:     0, Total:    78, Duration: 827 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: AsyncUnary, key: "test-tracking-current-test-name")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: BlockingUnary, key: "test-tracking-current-test-name")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ClientStreaming, key: "test-tracking-current-test-name")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: Duplex, key: "test-tracking-current-test-name")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ServerStreaming, key: "test-tracking-current-test-name")
+KILLED: overwrite the id the caller set (T25)
+  ['Failed!  - Failed:     5, Passed:    73, Skipped:     0, Total:    78, Duration: 578 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: AsyncUnary, key: "test-tracking-current-test-id")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: BlockingUnary, key: "test-tracking-current-test-id")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ClientStreaming, key: "test-tracking-current-test-id")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: Duplex, key: "test-tracking-current-test-id")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ServerStreaming, key: "test-tracking-current-test-id")
+KILLED: overwrite the trace id the caller set (T25)
+  ['Failed!  - Failed:     5, Passed:    73, Skipped:     0, Total:    78, Duration: 566 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: AsyncUnary, key: "test-tracking-trace-id")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: BlockingUnary, key: "test-tracking-trace-id")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ClientStreaming, key: "test-tracking-trace-id")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: Duplex, key: "test-tracking-trace-id")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ServerStreaming, key: "test-tracking-trace-id")
+KILLED: overwrite the caller name the caller set (T25)
+  ['Failed!  - Failed:     5, Passed:    73, Skipped:     0, Total:    78, Duration: 594 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: AsyncUnary, key: "test-tracking-caller-name")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: BlockingUnary, key: "test-tracking-caller-name")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ClientStreaming, key: "test-tracking-caller-name")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: Duplex, key: "test-tracking-caller-name")
+    red: Kronikol.Tests.Grpc.IdentityPropagationTests.A_key_the_caller_set_is_kept_and_not_doubled(kind: ServerStreaming, key: "test-tracking-caller-name")
+done

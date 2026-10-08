@@ -11,7 +11,9 @@ using Kronikol.Tracking;
 namespace Kronikol.Extensions.Grpc;
 
 /// <summary>
-/// A gRPC <see cref="Interceptor"/> that logs all gRPC calls for inclusion in test diagrams.
+/// A gRPC <see cref="Interceptor"/> that logs all gRPC calls for inclusion in test diagrams, and puts the test's identity
+/// into each call's metadata (<see cref="GrpcTrackingOptions.PropagateTestIdentity"/>), so a host that calls
+/// <c>AddTestTrackingContextPropagation()</c> attributes its own calls to the scenario.
 /// </summary>
 public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 {
@@ -32,6 +34,13 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     public bool WasInvoked => _invocationCount > 0;
     public int InvocationCount => _invocationCount;
 
+    /// <summary>
+    /// <c>true</c> when the interceptor holds an <see cref="IHttpContextAccessor"/>: the one its constructor was given,
+    /// else <see cref="GrpcTrackingOptions.HttpContextAccessor"/>. Through it, a call a host makes while it serves a
+    /// request takes the identity, and the Kronikol trace id, of that request.
+    /// </summary>
+    public bool HasHttpContextAccessor => _httpContextAccessor is not null;
+
     public override AsyncUnaryCall<TResponse> AsyncUnaryCall<TRequest, TResponse>(
         TRequest request,
         ClientInterceptorContext<TRequest, TResponse> context,
@@ -39,22 +48,22 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     {
         Interlocked.Increment(ref _invocationCount);
 
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
+        if (Plan(context) is not { } plan)
             return continuation(request, context);
+        if (!plan.Tracked)
+            return continuation(request, plan.Propagates ? WithCallMetadata(context, plan) : context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
-        if (testInfo is null)
-            return continuation(request, context);
+        var testInfo = plan.Identity;
 
         var opInfo = Classify(context);
         var label = GrpcOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity);
         var serviceName = ResolveServiceName(opInfo);
         var uri = BuildUri(opInfo, effectiveVerbosity);
         var requestContent = SerializeMessage(request, effectiveVerbosity);
-        var headers = GetCallHeaders(context);
+        var headers = plan.LoggedHeaders;
 
-        var traceId = Guid.NewGuid();
+        var traceId = plan.TraceId;
         var requestResponseId = Guid.NewGuid();
 
         EnsureListenerStarted();
@@ -70,15 +79,15 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         {
             (activityTraceId, activitySpanId, var recorded) = CaptureActivityContext();
 
-            context = WithCallMetadata(context, activityTraceId, activitySpanId, recorded);
+            context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-            LogRequest(testInfo.Value, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+            LogRequest(testInfo, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
             // Started under the span, so the transport's own spans are its children.
             call = continuation(request, context);
 
             wrappedResponseAsync = WrapUnaryResponse(
-                call.ResponseAsync, testInfo.Value, label, uri, serviceName, traceId, requestResponseId, effectiveVerbosity,
+                call.ResponseAsync, testInfo, label, uri, serviceName, traceId, requestResponseId, effectiveVerbosity,
                 activityTraceId, activitySpanId, activity, opInfo);
         }
         catch
@@ -106,42 +115,42 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     {
         Interlocked.Increment(ref _invocationCount);
 
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
+        if (Plan(context) is not { } plan)
             return continuation(request, context);
+        if (!plan.Tracked)
+            return continuation(request, plan.Propagates ? WithCallMetadata(context, plan) : context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
-        if (testInfo is null)
-            return continuation(request, context);
+        var testInfo = plan.Identity;
 
         var opInfo = Classify(context);
         var label = GrpcOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity);
         var serviceName = ResolveServiceName(opInfo);
         var uri = BuildUri(opInfo, effectiveVerbosity);
         var requestContent = SerializeMessage(request, effectiveVerbosity);
-        var headers = GetCallHeaders(context);
+        var headers = plan.LoggedHeaders;
 
-        var traceId = Guid.NewGuid();
+        var traceId = plan.TraceId;
         var requestResponseId = Guid.NewGuid();
 
         EnsureListenerStarted();
         using var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
         var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
 
-        context = WithCallMetadata(context, activityTraceId, activitySpanId, recorded);
+        context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-        LogRequest(testInfo.Value, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+        LogRequest(testInfo, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
         try
         {
             var response = continuation(request, context);
             var responseContent = SerializeMessage(response, effectiveVerbosity);
-            LogResponse(testInfo.Value, label, responseContent, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
+            LogResponse(testInfo, label, responseContent, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
             return response;
         }
         catch (RpcException ex)
         {
-            LogResponse(testInfo.Value, label, $"{ex.StatusCode}: {ex.Message}", uri, serviceName,
+            LogResponse(testInfo, label, $"{ex.StatusCode}: {ex.Message}", uri, serviceName,
                 traceId, requestResponseId, MapGrpcStatusToHttp(ex.StatusCode), activityTraceId, activitySpanId, opInfo);
             throw;
         }
@@ -154,35 +163,35 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     {
         Interlocked.Increment(ref _invocationCount);
 
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
+        if (Plan(context) is not { } plan)
             return continuation(request, context);
+        if (!plan.Tracked)
+            return continuation(request, plan.Propagates ? WithCallMetadata(context, plan) : context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
-        if (testInfo is null)
-            return continuation(request, context);
+        var testInfo = plan.Identity;
 
         var opInfo = Classify(context);
         var label = GrpcOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity);
         var serviceName = ResolveServiceName(opInfo);
         var uri = BuildUri(opInfo, effectiveVerbosity);
         var requestContent = SerializeMessage(request, effectiveVerbosity);
-        var headers = GetCallHeaders(context);
+        var headers = plan.LoggedHeaders;
 
-        var traceId = Guid.NewGuid();
+        var traceId = plan.TraceId;
         var requestResponseId = Guid.NewGuid();
 
         EnsureListenerStarted();
         using var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
         var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
 
-        context = WithCallMetadata(context, activityTraceId, activitySpanId, recorded);
+        context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-        LogRequest(testInfo.Value, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+        LogRequest(testInfo, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
         var call = continuation(request, context);
 
-        LogResponse(testInfo.Value, label, null, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
+        LogResponse(testInfo, label, null, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
 
         return call;
     }
@@ -193,34 +202,34 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     {
         Interlocked.Increment(ref _invocationCount);
 
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
+        if (Plan(context) is not { } plan)
             return continuation(context);
+        if (!plan.Tracked)
+            return continuation(plan.Propagates ? WithCallMetadata(context, plan) : context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
-        if (testInfo is null)
-            return continuation(context);
+        var testInfo = plan.Identity;
 
         var opInfo = Classify(context);
         var label = GrpcOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity);
         var serviceName = ResolveServiceName(opInfo);
         var uri = BuildUri(opInfo, effectiveVerbosity);
-        var headers = GetCallHeaders(context);
+        var headers = plan.LoggedHeaders;
 
-        var traceId = Guid.NewGuid();
+        var traceId = plan.TraceId;
         var requestResponseId = Guid.NewGuid();
 
         EnsureListenerStarted();
         using var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
         var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
 
-        context = WithCallMetadata(context, activityTraceId, activitySpanId, recorded);
+        context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-        LogRequest(testInfo.Value, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+        LogRequest(testInfo, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
         var call = continuation(context);
 
-        LogResponse(testInfo.Value, label, null, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
+        LogResponse(testInfo, label, null, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
 
         return call;
     }
@@ -231,34 +240,34 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     {
         Interlocked.Increment(ref _invocationCount);
 
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
+        if (Plan(context) is not { } plan)
             return continuation(context);
+        if (!plan.Tracked)
+            return continuation(plan.Propagates ? WithCallMetadata(context, plan) : context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
-        if (testInfo is null)
-            return continuation(context);
+        var testInfo = plan.Identity;
 
         var opInfo = Classify(context);
         var label = GrpcOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity);
         var serviceName = ResolveServiceName(opInfo);
         var uri = BuildUri(opInfo, effectiveVerbosity);
-        var headers = GetCallHeaders(context);
+        var headers = plan.LoggedHeaders;
 
-        var traceId = Guid.NewGuid();
+        var traceId = plan.TraceId;
         var requestResponseId = Guid.NewGuid();
 
         EnsureListenerStarted();
         using var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
         var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
 
-        context = WithCallMetadata(context, activityTraceId, activitySpanId, recorded);
+        context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-        LogRequest(testInfo.Value, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+        LogRequest(testInfo, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
         var call = continuation(context);
 
-        LogResponse(testInfo.Value, label, null, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
+        LogResponse(testInfo, label, null, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
 
         return call;
     }
@@ -360,16 +369,74 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         return (ActivityTraceId.CreateRandom().ToString(), ActivitySpanId.CreateRandom().ToString(), false);
     }
 
+    /// <summary>What one call carries and logs.</summary>
+    /// <param name="Identity">The identity the call resolved.</param>
+    /// <param name="TraceId">
+    /// The call's Kronikol trace id: the one the request being served carries, so the called host's calls share it and
+    /// <c>kronikol query flow</c> nests them under this call, else a new one.
+    /// </param>
+    /// <param name="LoggedHeaders">The caller's metadata, read before the interceptor adds any, so diagrams show no new lines.</param>
+    /// <param name="Tracked">Whether the call is logged in the current phase.</param>
+    /// <param name="Propagates">Whether the call carries the identity to the host it calls.</param>
+    private readonly record struct CallPlan(
+        TestIdentity Identity, Guid TraceId, (string Key, string? Value)[] LoggedHeaders, bool Tracked, bool Propagates);
+
+    /// <summary>
+    /// Resolves the call's identity, or null when nothing resolves (the call is then passed on untouched). It is resolved
+    /// before the phase is checked: a call not drawn in the current phase still carries its scenario to the next host,
+    /// as the HTTP handler's calls do. Only an identity that names a scenario travels; the background identity is not
+    /// sent, so the called host resolves its own, with the true source.
+    /// </summary>
+    private CallPlan? Plan<TRequest, TResponse>(ClientInterceptorContext<TRequest, TResponse> context)
+        where TRequest : class
+        where TResponse : class
+    {
+        var identity = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        if (identity is null)
+            return null;
+
+        return new CallPlan(
+            identity.Value,
+            InboundTraceId() ?? Guid.NewGuid(),
+            GetCallHeaders(context),
+            PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction),
+            _options.PropagateTestIdentity && identity.Value.IsAttributed);
+    }
+
+    /// <summary>The Kronikol trace id of the request the host is serving, when it carries one that is a GUID.</summary>
+    private Guid? InboundTraceId()
+    {
+        try
+        {
+            var headers = _httpContextAccessor?.HttpContext?.Request.Headers;
+            if (headers is not null &&
+                headers.TryGetValue(TestTrackingHttpHeaders.TraceIdHeader, out var values) &&
+                Guid.TryParse(values.FirstOrDefault(), out var traceId))
+                return traceId;
+        }
+        catch
+        {
+            // HttpContext access can fail in edge cases, as TestInfoResolver notes: the call gets a trace id of its own.
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// The call's options with metadata of its own. The caller's <see cref="Metadata"/> is never written to: it may be
     /// reused for other calls (each would add one more <c>traceparent</c>, and the server would receive them joined
-    /// into one value it cannot parse), or be the frozen <see cref="Metadata.Empty"/>. Its entries are copied, and a
-    /// <c>traceparent</c> for the span is added unless the caller set one. Its flags say sampled (<c>01</c>) when the
-    /// span is recorded, so a parent-based sampler in the called host keeps the server span.
+    /// into one value it cannot parse), or be the frozen <see cref="Metadata.Empty"/>. Its entries are copied, then:
+    /// <list type="bullet">
+    /// <item>when the call <see cref="CallPlan.Propagates"/>, the four identity headers the HTTP handler sends, each
+    /// only when the caller's metadata lacks it, with the name, id and caller name in the form
+    /// <see cref="TrackingHeaderValue"/> writes;</item>
+    /// <item>a <c>traceparent</c> for the span, unless the caller set one. Its flags say sampled (<c>01</c>) when the
+    /// span is recorded, so a parent-based sampler in the called host keeps the server span.</item>
+    /// </list>
     /// </summary>
-    private static ClientInterceptorContext<TRequest, TResponse> WithCallMetadata<TRequest, TResponse>(
-        ClientInterceptorContext<TRequest, TResponse> context,
-        string? activityTraceId, string? activitySpanId, bool recorded)
+    private ClientInterceptorContext<TRequest, TResponse> WithCallMetadata<TRequest, TResponse>(
+        ClientInterceptorContext<TRequest, TResponse> context, CallPlan plan,
+        string? activityTraceId = null, string? activitySpanId = null, bool recorded = false)
         where TRequest : class
         where TResponse : class
     {
@@ -380,11 +447,25 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
                 headers.Add(entry);
         }
 
-        if (activityTraceId is not null && activitySpanId is not null && !HasEntry(headers, TraceParentKey))
-            headers.Add(TraceParentKey, $"00-{activityTraceId}-{activitySpanId}-{(recorded ? "01" : "00")}");
+        if (plan.Propagates)
+        {
+            AddIfAbsent(headers, TestTrackingHttpHeaders.CurrentTestNameHeader, TrackingHeaderValue.Encode(plan.Identity.Name));
+            AddIfAbsent(headers, TestTrackingHttpHeaders.CurrentTestIdHeader, TrackingHeaderValue.Encode(plan.Identity.Id));
+            AddIfAbsent(headers, TestTrackingHttpHeaders.TraceIdHeader, plan.TraceId.ToString());
+            AddIfAbsent(headers, TestTrackingHttpHeaders.CallerNameHeader, TrackingHeaderValue.Encode(_options.CallerName));
+        }
+
+        if (activityTraceId is not null && activitySpanId is not null)
+            AddIfAbsent(headers, TraceParentKey, $"00-{activityTraceId}-{activitySpanId}-{(recorded ? "01" : "00")}");
 
         var newOptions = context.Options.WithHeaders(headers);
         return new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, newOptions);
+    }
+
+    private static void AddIfAbsent(Metadata headers, string key, string? value)
+    {
+        if (value is not null && !HasEntry(headers, key))
+            headers.Add(key, value);
     }
 
     private const string TraceParentKey = "traceparent";

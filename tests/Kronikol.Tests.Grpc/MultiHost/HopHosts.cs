@@ -102,6 +102,12 @@ internal sealed class HopHost : IAsyncDisposable
 
         var app = builder.Build();
         app.MapGrpcService<HopServiceImpl>();
+        // An HTTP entry point, for a host the test calls over HTTP: it calls the next hop and answers.
+        app.MapGet("/start", async (HopNext next, CancellationToken cancellationToken) =>
+        {
+            await next.CallAsync("start", cancellationToken);
+            return "ok";
+        });
         await app.StartAsync();
 
         var baseAddress = hostOptions.Kestrel

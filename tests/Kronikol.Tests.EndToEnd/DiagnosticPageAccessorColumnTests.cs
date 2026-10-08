@@ -1,3 +1,6 @@
+using Grpc.Core;
+using Grpc.Core.Interceptors;
+using Kronikol.Extensions.Grpc;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 using Microsoft.AspNetCore.Http;
@@ -39,6 +42,35 @@ public class DiagnosticPageAccessorColumnTests : PlaywrightTestBase
         await OpenDiagnosticPage(testId);
 
         var cell = AccessorCell($"TestTrackingMessageHandler ({caller}) (2 instances)");
+        await Expect(cell).ToBeVisibleAsync();
+        await Expect(cell).ToHaveTextAsync("1 of 2");
+    }
+
+    [Fact]
+    public async Task A_host_side_and_a_test_side_gRPC_interceptor_paint_one_of_two()
+    {
+        var service = "Orders gRPC " + Guid.NewGuid().ToString("N")[..8];
+        var testId = Guid.NewGuid().ToString();
+        GrpcTrackingOptions Options() => new()
+        {
+            ServiceName = service,
+            CallerName = "Caller",
+            CurrentTestInfoFetcher = () => ("Diagnostic column", testId),
+        };
+        var method = new Method<string, string>(MethodType.Unary, "orders.Orders", "Get",
+            Marshallers.StringMarshaller, Marshallers.StringMarshaller);
+
+        // The host's client holds the host's accessor; the test's holds none. Both are invoked.
+        foreach (var interceptor in new[] { new GrpcTrackingInterceptor(Options(), new HttpContextAccessor()), new GrpcTrackingInterceptor(Options()) })
+        {
+            await interceptor.AsyncUnaryCall("request", new ClientInterceptorContext<string, string>(method, null, new CallOptions()),
+                (_, _) => new AsyncUnaryCall<string>(Task.FromResult("response"), Task.FromResult(new Metadata()),
+                    () => Status.DefaultSuccess, () => new Metadata(), () => { })).ResponseAsync;
+        }
+
+        await OpenDiagnosticPage(testId);
+
+        var cell = AccessorCell($"GrpcTrackingInterceptor ({service}) (2 instances)");
         await Expect(cell).ToBeVisibleAsync();
         await Expect(cell).ToHaveTextAsync("1 of 2");
     }

@@ -32,6 +32,9 @@ public class TrackingSqliteConnection : DbConnection, ITrackingComponent
     public SqliteConnection InnerConnection => _inner;
 
     public string ComponentName => $"TrackingSqliteConnection ({_options.ServiceName})";
+
+    /// <summary><c>true</c> when the tracker holds an <c>IHttpContextAccessor</c>, from its constructor or its options.</summary>
+    public bool HasHttpContextAccessor => _httpContextAccessor is not null;
     public bool WasInvoked => _invocationCount > 0;
     public int InvocationCount => _invocationCount;
 

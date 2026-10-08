@@ -33,4 +33,18 @@ public record GrpcTrackingOptions
     public bool TrackDuringSetup { get; set; } = true;
     public bool TrackDuringAction { get; set; } = true;
     public IHttpContextAccessor? HttpContextAccessor { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, the interceptor puts the test identity into each call's metadata, and a host that calls
+    /// <c>AddTestTrackingContextPropagation()</c> establishes a <see cref="Kronikol.Tracking.TestIdentityScope"/> from it,
+    /// so that the called host's own tracking is attributed to the originating test. Defaults to <c>true</c>.
+    /// <para>
+    /// The metadata gains the four headers the HTTP handler sends (<c>test-tracking-current-test-name</c>,
+    /// <c>-current-test-id</c>, <c>-trace-id</c> and <c>-caller-name</c>), each only when the call's metadata lacks it.
+    /// They are sent on every hop: a host that received the identity passes it on with its own gRPC calls. Only an
+    /// identity that names a scenario is sent, whether or not the call itself is tracked in the current phase, and
+    /// the logged request headers do not include them.
+    /// </para>
+    /// </summary>
+    public bool PropagateTestIdentity { get; set; } = true;
 }

@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.13.0] - 2026-10-08
+
+**Minor - a host called over gRPC attributes its own calls to the scenario (#134).**
+`plans/GRPC_IDENTITY_PROPAGATION_PLAN.md` R1. `GrpcTrackingOptions.PropagateTestIdentity` and four
+`HasHttpContextAccessor` members are new public surface, so the minor part moves (4.12.3 to 4.13.0). The option is on by
+default, as 2.34.0's messaging propagation was, and no existing option's default changes. The history action's
+`VERSION` installs `Kronikol.Tool` 4.13.0, and the templates pin 4.12.2, the newest version nuget.org listed when
+this was pushed.
+
+### Added
+
+- **`GrpcTrackingInterceptor` puts the test identity into each call's metadata,** in the four headers
+  `TestTrackingMessageHandler` sends (`test-tracking-current-test-name`, `-current-test-id`, `-trace-id` and
+  `-caller-name`), so a host that calls `AddTestTrackingContextPropagation()` attributes the database, HTTP and
+  messaging calls it makes while serving a gRPC call to the scenario. Until now the interceptor sent only a
+  `traceparent`, and such a host recorded its calls under no scenario: measured on 4.6.0 and 4.9.0 in TestServer hosts,
+  both for a service the test calls over gRPC (`CreateTestTrackingGrpcClient`'s shape) and for one a host calls
+  (`AddTrackedGrpcClient`), and in BreakfastProvider's CI report, where four gRPC scenarios missed the CosmosDB read
+  behind their call. The identity travels on every hop: a host that received it, over HTTP or gRPC, passes it on with
+  its own gRPC calls. Only an identity that names a scenario is sent (not the background one, nor a detached flow's),
+  whether or not the call itself is tracked in the current phase; a header the call's metadata already holds is kept;
+  and the logged request headers are the caller's own, so diagrams gain no lines. The trace id is the Kronikol trace id of the request the
+  host is serving, when it has one, and the call is logged with it, so `kronikol query flow` nests the called host's
+  calls under the gRPC call even when the two sides name the service differently.
+- **`GrpcTrackingOptions.PropagateTestIdentity`** (default `true`) turns it off.
+- **`HasHttpContextAccessor`** on `GrpcTrackingInterceptor`, `S3TrackingMessageHandler`, `ServiceBusTracker` and
+  `TrackingSqliteConnection`, the four components the diagnostic page listed that took an accessor and reported none
+  (2.28.12's entry said it was implemented on all of them; it was not on these four). The page's
+  HttpContextAccessor column now counts them.
+
+### Documentation
+
+- `GrpcTrackingChannel`'s and `GrpcServiceCollectionExtensions`' summaries say the called service now receives the
+  identity.
+
+### Tests
+
+- `IdentityPropagationTests` covers the four headers on all five call kinds, a hop passing on the identity of the
+  request it serves and of its middleware's scope, the option, the caller's own headers, the trace id, the logged
+  headers, an untracked phase, and, alone in their collection since they turn the process-wide background capture on,
+  the background identity and a detached flow. `MultiHostPropagationTests` runs real hosts: a service the test calls
+  over gRPC, a gRPC hop behind an HTTP hop, two gRPC hops, a non-ASCII name over Kestrel h2c, the option off, and one
+  trace id across the hop. A Playwright fact reads the gRPC row of a real `DiagnosticReport.html`.
 ## [4.12.3] - 2026-10-08
 
 **Patch - assertion tracking draws what the run did.**

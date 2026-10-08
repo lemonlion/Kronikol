@@ -8,7 +8,10 @@ namespace Kronikol.Extensions.Grpc;
 /// Factory methods for creating gRPC <see cref="CallInvoker"/> instances that record
 /// interactions for diagram generation. Use these for the test-to-SUT (incoming)
 /// direction so that gRPC calls appear with rich protobuf-aware labels instead
-/// of raw HTTP/2 traffic.
+/// of raw HTTP/2 traffic. Each call also carries the test's identity
+/// (<see cref="GrpcTrackingOptions.PropagateTestIdentity"/>), so a service that calls
+/// <c>AddTestTrackingContextPropagation()</c> attributes its own database, HTTP and messaging
+/// calls to the scenario.
 /// </summary>
 public static class GrpcTrackingChannel
 {

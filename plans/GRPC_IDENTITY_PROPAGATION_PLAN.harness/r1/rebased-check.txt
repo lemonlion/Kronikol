@@ -1,0 +1,9 @@
+rebased check at f7b0bbd8 2026-10-08T11:57:38Z
+release.slnf: Build succeeded.
+Kronikol.Tests: Passed!  - Failed:     0, Passed:  7059, Skipped:     2, Total:  7061, Duration: 6 m 43 s - Kronikol.Tests.dll (net10.0) 
+Kronikol.Tests.Grpc: Passed!  - Failed:     0, Passed:   179, Skipped:     0, Total:   179, Duration: 889 ms - Kronikol.Tests.Grpc.dll (net10.0) 
+Kronikol.Tests.S3: Passed!  - Failed:     0, Passed:   115, Skipped:     0, Total:   115, Duration: 254 ms - Kronikol.Tests.S3.dll (net10.0) 
+Kronikol.Tests.ServiceBus: Passed!  - Failed:     0, Passed:   115, Skipped:     0, Total:   115, Duration: 256 ms - Kronikol.Tests.ServiceBus.dll (net10.0) 
+Kronikol.Tests.Sqlite: Passed!  - Failed:     0, Passed:    24, Skipped:     0, Total:    24, Duration: 285 ms - Kronikol.Tests.Sqlite.dll (net10.0) 
+EndToEnd (DiagnosticPageAccessorColumnTests): Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Kronikol.Tests.EndToEnd.dll (net10.0) 
+done 2026-10-08T12:06:35Z

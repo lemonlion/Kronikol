@@ -3,7 +3,7 @@
 **Written:** 2026-10-07, at 4.9.0 (`417c8e58`). #134 was filed the same day against 4.6.0 (`a074cf14`) and links one
 line, `GrpcTrackingInterceptor.cs` L353 (its `traceparent`), which is unchanged at `417c8e58`. 4.9.1 (`f6bf1d03`) was
 tagged later the same day and touches none of the files this plan edits; at its tip only `CHANGELOG.md`'s line numbers
-move (by 27). **Status: green-lit on 2026-10-08 with Q1 and Q4 as recommended, and executing: R0 is 4.12.1 (§11).**
+move (by 27). **Status: green-lit on 2026-10-08 with Q1 and Q4 as recommended, and executing: R0 is 4.12.1 and R1 4.13.0 (§11).**
 Evidence labels: **RUN** (measured here),
 **READ** (in the source, `file:line` at `417c8e58`), **INFERRED** (reasoned from facts, stated by none), **ISSUE** (taken
 from #134, not re-measured). The probe behind every RUN line, and its output, are in
@@ -876,6 +876,31 @@ against the recommendation.
       rebased commit.
   - The disk filled at about 10:25 UTC while several sessions built at once. The runs it broke (one mutation's build,
     the red proof's browser leg) were run again, and each file says so.
+  - **R0 published the same day.** Release run 37768391888 and CI 37768389028 passed on `e8b8141e`, nuget.org lists
+    all 62 ids at 4.12.1, the wiki has R0's edits (`35286a1`) and Kronikol4J's ledger its line (`688a64b`).
+  - **R1 = 4.13.0.** Its proofs:
+    - `r1/red-v4.12.1.txt`: with the facts copied onto v4.12.1, and `PropagateTestIdentity` and the interceptor's
+      `HasHttpContextAccessor` stubbed to do nothing, 56 of the 78 gRPC rows failed, the three `HasHttpContextAccessor`
+      facts of S3, ServiceBus and Sqlite failed, and the browser fact for the gRPC row did not read `1 of 2`. The 22
+      gRPC rows that pass there are six guards: no identity header with the option off (one fact on fakes, one on
+      real hosts), none for the background identity or for a detached flow, a call's logged request headers are the
+      caller's alone, and the option's default (stubbed). A first run found five rows failing with an
+      `ArgumentNullException`, because such a call sent no metadata at all and the fact read the missing collection;
+      they now read an empty `Metadata` then, and the file is the run after that change and T25's below.
+    - `r1/mutations.txt`: the first run killed 8 of 9. The survivor, a second name header beside the caller's own,
+      showed that T25 set only the caller's id key. T25 is now a theory over each call kind and each of the four
+      keys, and the same mutation for each key is killed: 12 of 12.
+    - `results/accept/accept-4.13.0-local.r1-*`: against R0's results, P1, P1b, P6 and P7 flip, and the
+      `nonascii propagated` variant now finds each of the five names on the next host's call, exactly, from the request
+      headers. P8 does not flip, as planned until R3, and nothing else moves.
+    - `results/accept/breakfastprovider-r1.txt`: s49, s50, s54 and s55 each gain the CosmosDB read behind their gRPC
+      call (four calls, two of them `NotFound`), in both lanes; on s49 and s50 it nests under the call, and on the two
+      streams it follows it, since a stream's response is logged when it starts until R2. Nothing else changed but s28,
+      whose `GET /menu` calls the Supplier Service and Pub/Sub only while the menu is not cached; a second run on
+      4.11.0 drew the same single call as R1.
+    - `r1/suite.txt`: the full suite on R1's commit, before its rebase onto 4.12.2 and 4.12.3. `r1/rebased-check.txt`:
+      on the rebased commit, the Release build and the core, gRPC, S3, ServiceBus, Sqlite and diagnostic-page
+      projects, since 4.12.2 changed how `RequestResponseLogger`'s store is reached.
 
 ## Appendix A. Edit sites at `417c8e58`
 
