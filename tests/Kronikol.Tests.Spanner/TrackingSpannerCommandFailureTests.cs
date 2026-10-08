@@ -2,10 +2,13 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using Kronikol.Extensions.Spanner;
+using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Spanner;
 
+// Clears the process-wide TrackingComponentRegistry, which SpannerConnectionStringBuilderExtensionTests reads.
+[Collection("TrackingComponentRegistry")]
 public class TrackingSpannerCommandFailureTests : IDisposable
 {
     private readonly string _testId = Guid.NewGuid().ToString();
@@ -65,6 +68,28 @@ public class TrackingSpannerCommandFailureTests : IDisposable
         Assert.Equal(logs[0].RequestResponseId, logs[1].RequestResponseId);
         Assert.Equal("Error", logs[1].StatusCode?.Value?.ToString());
         Assert.Equal(rejected.Message, logs[1].Content);
+    }
+
+    // #136's shape: WithTestTracking on a DbConnection takes no accessor, so the options carry it.
+    [Fact]
+    public void WithTestTracking_on_a_DbConnection_passes_the_options_accessor_to_its_commands()
+    {
+        var headerTestId = Guid.NewGuid().ToString();
+        var options = new SpannerTrackingOptions
+        {
+            CurrentTestInfoFetcher = () => ("TestMethod", _testId),
+            HttpContextAccessor = RequestHeaderAccessor.For("Header Test", headerTestId),
+        };
+        using var connection = new FailureFakeDbConnection().WithTestTracking(options);
+        using var cmd = new TrackingSpannerCommand(new FailureFakeDbCommand(new InvalidOperationException("rejected")), connection, options);
+        cmd.CommandText = "SELECT 1";
+
+        Assert.NotNull(Record.Exception(() => cmd.ExecuteNonQuery()));
+
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == headerTestId).ToArray();
+        Assert.Equal(2, logs.Length);
+        Assert.All(logs, l => Assert.Equal(AttributionSource.RequestHeader, l.AttributionSource));
+        Assert.Empty(GetLogsForTest());
     }
 }
 

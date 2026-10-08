@@ -1,0 +1,13 @@
+C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerTests.cs(249,15): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.Kafka\Kronikol.Tests.Kafka.csproj]
+C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerTests.cs(230,15): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.Kafka\Kronikol.Tests.Kafka.csproj]
+Test run for C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.Kafka\bin\Debug\net10.0\Kronikol.Tests.Kafka.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:03.74]     Kronikol.Tests.Kafka.TrackingKafkaProducerTests.ProduceAsync_injects_the_requests_identity_when_the_options_carry_an_accessor [FAIL]
+[xUnit.net 00:00:03.75]     Kronikol.Tests.Kafka.KafkaTrackerTests.Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly [FAIL]
+[xUnit.net 00:00:03.76]     Kronikol.Tests.Kafka.TrackingKafkaProducerTests.Produce_injects_the_requests_identity_when_the_tracker_was_given_an_accessor [FAIL]
+[xUnit.net 00:00:03.77]     Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers(registration: "consumer") [FAIL]
+[xUnit.net 00:00:03.78]     Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers(registration: "producer") [FAIL]
+[xUnit.net 00:00:03.78]     Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers(registration: "producer factory") [FAIL]
+[xUnit.net 00:00:03.78]     Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers(registration: "consumer factory") [FAIL]
+
+Failed!  - Failed:     7, Passed:   132, Skipped:     0, Total:   139, Duration: 461 ms - Kronikol.Tests.Kafka.dll (net10.0)

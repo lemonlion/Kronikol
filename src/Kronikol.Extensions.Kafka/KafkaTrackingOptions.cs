@@ -54,4 +54,15 @@ public record KafkaTrackingOptions
     /// Only invoked when <see cref="AutoCorrelateOnConsume"/> is <c>true</c>.
     /// </summary>
     public Func<string, string, string>? ConsumeKeyExtractor { get; set; }
+
+    /// <summary>
+    /// Resolves the scenario from the test-tracking request headers when a message is produced or consumed inside a host's request
+    /// pipeline (a host <c>WebApplicationFactory</c> starts, or any other host in the test process). Pass the host's own
+    /// (<c>sp.GetService&lt;IHttpContextAccessor&gt;()</c>): ASP.NET Core fills an accessor only in a host that registers
+    /// one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c> calls).
+    /// The <c>Add*TestTracking</c> registrations use the container's when this is null, and an accessor passed to the
+    /// <see cref="KafkaTracker"/> constructor or to <see cref="KafkaTrackingInterceptor"/> takes precedence. When
+    /// <see cref="PropagateTestIdentity"/> is on, a produced message carries the scenario the produce is recorded under.
+    /// </summary>
+    public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; set; }
 }

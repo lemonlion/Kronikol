@@ -15,7 +15,7 @@ public static class BigtableServiceCollectionExtensions
         var options = new BigtableTrackingOptions();
         configure?.Invoke(options);
 
-        services.AddSingleton(sp => new BigtableTracker(options, sp.GetService<IHttpContextAccessor>()));
+        services.AddSingleton(sp => new BigtableTracker(options, options.HttpContextAccessor ?? sp.GetService<IHttpContextAccessor>()));
 
         return services;
     }

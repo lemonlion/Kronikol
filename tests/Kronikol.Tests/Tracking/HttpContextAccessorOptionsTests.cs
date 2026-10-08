@@ -20,8 +20,7 @@ public class HttpContextAccessorOptionsTests
 
         var handler = new TestTrackingMessageHandler(options);
 
-        // The handler stores _httpContextAccessor privately — verify via ComponentName that it constructed
-        Assert.Equal("TestTrackingMessageHandler (Test)", handler.ComponentName);
+        Assert.True(handler.HasHttpContextAccessor);
     }
 
     [Fact]

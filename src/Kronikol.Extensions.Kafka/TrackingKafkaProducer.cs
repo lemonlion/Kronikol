@@ -105,7 +105,8 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
     {
         if (!_options.PropagateTestIdentity) return;
 
-        var testInfo = TestInfoResolver.ResolveWithSource(null, _options.CurrentTestInfoFetcher);
+        // The tracker's accessor, so that the message carries the scenario its produce is recorded under.
+        var testInfo = TestInfoResolver.ResolveWithSource(_tracker.HttpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         message.Headers ??= new Headers();

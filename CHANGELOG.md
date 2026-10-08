@@ -4,6 +4,54 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.11.0] - 2026-10-08
+
+**Minor - every extension options type takes an `IHttpContextAccessor`.** `plans/MONGODB_ACCESSOR_OPTION_PLAN.md` R2,
+the plan's Q1. Since v2.26.3 the wiki has said that every extension options class has an `HttpContextAccessor`
+property, and after 4.10.0 five still did not. Each gains one, which is new public surface, so the minor part moves
+(4.10.0 to 4.11.0). Code that does not set it behaves as before, except for the Kafka fix below, which changes the
+headers a produced message carries. The report output does not change, so Kronikol4J's ledger gets no line. The
+history action's `VERSION` installs `Kronikol.Tool` 4.11.0, and the templates pin 4.10.0.
+
+### Added
+
+- **`HttpContextAccessor` on `KafkaTrackingOptions`, `BigtableTrackingOptions`, `SpannerTrackingOptions`,
+  `MediatorTrackingOptions` and EF Core's `SqlTrackingInterceptorOptions`.** Each tracker falls back to it when its
+  constructor is given none, and each DI registration uses it before the container's (`AddKafkaProducerTestTracking`
+  and the other three Kafka registrations, `AddBigtableTestTracking`, `AddSpannerTestTracking`,
+  `TrackMediatorForDiagrams` and `AddSqlTestTracking`). Two extension methods had #136's shape, with no parameter for
+  an accessor: EF Core's `WithSqlTestTracking(builder, options)` and Spanner's `connection.WithTestTracking(options)`.
+  Both now carry the options' accessor, as does Spanner's `WithTestTracking(builder, options)`.
+  `WithTestInfoFrom(httpOptions)` also copies the HTTP options' `HttpContextAccessor` when the SQL options carry none.
+
+### Fixed
+
+- **A Kafka message carried a different scenario from the produce that sent it.** The producer recorded a produce
+  under the scenario its tracker's accessor resolved, but stamped the message's `kronikol-test-name` and
+  `kronikol-test-id` headers from the fetcher alone. So a host that produced while it served a request recorded the
+  produce in the request's scenario and sent the message under whatever the fetcher answered, or under nothing. The
+  consumer that handled the message then attributed its work there. It now stamps the scenario the produce is
+  recorded under. Behaviour change: with `AddKafkaProducerTestTracking` in a host that registers an
+  `IHttpContextAccessor`, a message produced while the host serves a request carries the request's scenario.
+
+### Tests
+
+- `Kronikol.Extensions.MediatR` gets its first test project (`Kronikol.Tests.MediatR`).
+- A guard reads the sources: every extension options type with a `CurrentTestInfoFetcher` has an
+  `HttpContextAccessor`, and the scan sees at least 25 such types.
+- The MongoDB host lane also runs the `AddMongoDbTestTracking` setup the wiki now shows, with a client subscribing
+  the registered subscriber.
+- `HttpContextAccessorOptionsTests.TestTrackingMessageHandler_reads_HttpContextAccessor_from_options_when_not_passed_directly`
+  asserted only the handler's name. It now asserts the handler has the accessor. The Kafka and Spanner test classes
+  that read the process-wide `TrackingComponentRegistry` share a collection with the classes that clear it.
+
+### Documentation
+
+- The wiki: HTTP-Tracking-Setup and Diagnostics-and-Debugging say which version gave each options type the property,
+  and their Kafka sample compiles. The Kafka, Bigtable, Spanner, MediatR and EF Core pages list the property, and the
+  EF Core page describes `WithSqlTestTracking(options)` and `WithTestInfoFrom` with it.
+- `README.md`'s extension table lists `Kronikol.Extensions.MongoDB.V2`, for MongoDB.Driver 2.x, which no page named.
+
 ## [4.10.0] - 2026-10-08
 
 **Minor - MongoDB tracking takes an `IHttpContextAccessor` through its options (#136).**

@@ -16,7 +16,7 @@ public class KafkaTracker : ITrackingComponent
     public KafkaTracker(KafkaTrackingOptions options, IHttpContextAccessor? httpContextAccessor = null)
     {
         _options = options;
-        _httpContextAccessor = httpContextAccessor;
+        _httpContextAccessor = httpContextAccessor ?? options.HttpContextAccessor;
         TrackingComponentRegistry.Register(this);
     }
 
@@ -24,6 +24,9 @@ public class KafkaTracker : ITrackingComponent
     public bool WasInvoked => _invocationCount > 0;
     public int InvocationCount => _invocationCount;
     public bool HasHttpContextAccessor => _httpContextAccessor is not null;
+
+    /// <summary>The accessor this tracker resolves the scenario through: the constructor's, else the options'.</summary>
+    internal IHttpContextAccessor? HttpContextAccessor => _httpContextAccessor;
 
     public void LogProduce(KafkaOperationInfo op, string? content)
     {

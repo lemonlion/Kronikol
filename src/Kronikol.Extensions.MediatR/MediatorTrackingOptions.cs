@@ -22,4 +22,13 @@ public record MediatorTrackingOptions
     public TrackingSerializerOptions? SerializerOptions { get; init; }
     public bool TrackDuringSetup { get; init; } = true;
     public bool TrackDuringAction { get; init; } = true;
+
+    /// <summary>
+    /// Resolves the scenario from the test-tracking request headers when a request or notification is sent inside a host's request
+    /// pipeline (a host <c>WebApplicationFactory</c> starts, or any other host in the test process). Pass the host's own
+    /// (<c>sp.GetService&lt;IHttpContextAccessor&gt;()</c>): ASP.NET Core fills an accessor only in a host that registers
+    /// one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c> calls).
+    /// <see cref="MediatorTrackingExtensions.TrackMediatorForDiagrams"/> uses the container's when this is null.
+    /// </summary>
+    public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; init; }
 }

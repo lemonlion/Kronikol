@@ -23,4 +23,14 @@ public record BigtableTrackingOptions
     public HashSet<BigtableOperation> ExcludedOperations { get; set; } = [];
     public bool TrackDuringSetup { get; set; } = true;
     public bool TrackDuringAction { get; set; } = true;
+
+    /// <summary>
+    /// Resolves the scenario from the test-tracking request headers when a call is tracked inside a host's request
+    /// pipeline (a host <c>WebApplicationFactory</c> starts, or any other host in the test process). Pass the host's own
+    /// (<c>sp.GetService&lt;IHttpContextAccessor&gt;()</c>): ASP.NET Core fills an accessor only in a host that registers
+    /// one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c> calls).
+    /// <see cref="BigtableServiceCollectionExtensions.AddBigtableTestTracking"/> uses the container's when this is null,
+    /// and an accessor passed to the <see cref="BigtableTracker"/> constructor takes precedence.
+    /// </summary>
+    public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; set; }
 }

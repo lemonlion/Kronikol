@@ -28,7 +28,8 @@ public static class MediatorTrackingExtensions
             UriScheme = "mock",
             SerializerOptions = options.SerializerOptions,
             TrackDuringSetup = options.TrackDuringSetup,
-            TrackDuringAction = options.TrackDuringAction
+            TrackDuringAction = options.TrackDuringAction,
+            HttpContextAccessor = options.HttpContextAccessor
         };
 
         // Store the options so we can resolve the real mediator later and wrap it
@@ -48,7 +49,10 @@ public static class MediatorTrackingExtensions
         {
             var reg = sp.GetRequiredService<MediatorTrackingRegistration>();
             var realMediator = ResolveInstance<IMediator>(sp, reg.OriginalDescriptor);
-            var opts = reg.ProxyOptions with { HttpContextAccessor = sp.GetService<IHttpContextAccessor>() };
+            var opts = reg.ProxyOptions with
+            {
+                HttpContextAccessor = reg.ProxyOptions.HttpContextAccessor ?? sp.GetService<IHttpContextAccessor>()
+            };
             return TrackingProxy<IMediator>.Create(realMediator, opts);
         });
 

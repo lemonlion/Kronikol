@@ -1,8 +1,11 @@
 using Kronikol.Extensions.Kafka;
+using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Kafka;
 
+// Clears the process-wide TrackingComponentRegistry, which KafkaServiceCollectionExtensionsTests reads.
+[Collection("TrackingComponentRegistry")]
 public class KafkaTrackerTests
 {
     private readonly string _testId = Guid.NewGuid().ToString();
@@ -427,5 +430,46 @@ public class KafkaTrackerTests
 
         var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Request);
         Assert.Null(log.Content);
+    }
+
+    // ─── HttpContextAccessor ────────────────────────────────
+
+    [Fact]
+    public void Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly()
+    {
+        var headerTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = RequestHeaderAccessor.For("Header Test", headerTestId);
+        var tracker = new KafkaTracker(options);
+
+        tracker.LogProduce(new KafkaOperationInfo(KafkaOperation.ProduceAsync, "orders-topic"), "hello");
+
+        // The request's headers outrank the fetcher, which answers this class's own test.
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == headerTestId).ToArray();
+        Assert.Equal(2, logs.Length);
+        Assert.All(logs, l => Assert.Equal(AttributionSource.RequestHeader, l.AttributionSource));
+        Assert.Empty(GetLogsFromThisTest());
+        Assert.True(tracker.HasHttpContextAccessor);
+    }
+
+    [Fact]
+    public void Tracker_explicit_accessor_takes_precedence_over_options()
+    {
+        var explicitTestId = Guid.NewGuid().ToString();
+        var optionsTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = RequestHeaderAccessor.For("Options Test", optionsTestId);
+        var tracker = new KafkaTracker(options, RequestHeaderAccessor.For("Explicit Test", explicitTestId));
+
+        tracker.LogProduce(new KafkaOperationInfo(KafkaOperation.ProduceAsync, "orders-topic"), "hello");
+
+        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == explicitTestId);
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == optionsTestId);
+    }
+
+    [Fact]
+    public void Tracker_has_no_accessor_when_neither_options_nor_parameter()
+    {
+        Assert.False(new KafkaTracker(MakeOptions()).HasHttpContextAccessor);
     }
 }

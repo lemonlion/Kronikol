@@ -17,4 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Bigtable\Kronikol.Extensions.Bigtable.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
+  </ItemGroup>
 </Project>

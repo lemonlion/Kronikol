@@ -46,4 +46,15 @@ public record SqlTrackingInterceptorOptions
     /// Set explicitly to pin a level regardless of verbosity.
     /// </summary>
     public Sql.SqlResponseDetail? ResponseDetail { get; set; }
+
+    /// <summary>
+    /// Resolves the scenario from the test-tracking request headers when a command runs inside a host's request
+    /// pipeline (a host <c>WebApplicationFactory</c> starts, or any other host in the test process). Pass the host's own
+    /// (<c>sp.GetService&lt;IHttpContextAccessor&gt;()</c>): ASP.NET Core fills an accessor only in a host that registers
+    /// one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c> calls).
+    /// <see cref="ServiceCollectionExtensions.AddSqlTestTracking"/> uses the container's when this is null,
+    /// <see cref="SqlTrackingInterceptorOptionsExtensions.WithTestInfoFrom"/> copies the HTTP options' when this is null,
+    /// and an accessor passed to the <see cref="SqlTrackingInterceptor"/> constructor takes precedence.
+    /// </summary>
+    public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; set; }
 }

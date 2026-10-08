@@ -16,7 +16,7 @@ public class BigtableTracker : ITrackingComponent
     public BigtableTracker(BigtableTrackingOptions options, IHttpContextAccessor? httpContextAccessor = null)
     {
         _options = options;
-        _httpContextAccessor = httpContextAccessor;
+        _httpContextAccessor = httpContextAccessor ?? options.HttpContextAccessor;
         TrackingComponentRegistry.Register(this);
     }
 

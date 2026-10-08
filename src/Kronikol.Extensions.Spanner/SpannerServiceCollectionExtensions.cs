@@ -15,7 +15,7 @@ public static class SpannerServiceCollectionExtensions
         var options = new SpannerTrackingOptions();
         configure?.Invoke(options);
 
-        services.AddSingleton(sp => new SpannerTracker(options, sp.GetService<IHttpContextAccessor>()));
+        services.AddSingleton(sp => new SpannerTracker(options, options.HttpContextAccessor ?? sp.GetService<IHttpContextAccessor>()));
 
         return services;
     }

@@ -2,6 +2,7 @@ using System.Data;
 using Microsoft.AspNetCore.Http;
 using Kronikol.Constants;
 using Kronikol.Extensions.EfCore.Relational;
+using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.EfCore.Relational;
@@ -247,5 +248,99 @@ public class SqlTrackingInterceptorHttpContextTests : IDisposable
         var logs = GetLogsFromThisTest();
         Assert.Single(logs);
         Assert.Equal("From Fetcher", logs[0].TestName);
+    }
+
+    // ─── HttpContextAccessor on the options ─────────────────
+
+    [Fact]
+    public void Interceptor_reads_HttpContextAccessor_from_options_when_not_passed_directly()
+    {
+        var headerTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = RequestHeaderAccessor.For("Header Test", headerTestId);
+        var interceptor = new SqlTrackingInterceptor(options);
+
+        interceptor.LogCommandExecuting(MakeCommand());
+
+        var log = Assert.Single(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == headerTestId);
+        Assert.Equal(AttributionSource.RequestHeader, log.AttributionSource);
+        Assert.Empty(GetLogsFromThisTest());
+        Assert.True(interceptor.HasHttpContextAccessor);
+    }
+
+    [Fact]
+    public void Interceptor_explicit_accessor_takes_precedence_over_options()
+    {
+        var explicitTestId = Guid.NewGuid().ToString();
+        var optionsTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = RequestHeaderAccessor.For("Options Test", optionsTestId);
+        var interceptor = new SqlTrackingInterceptor(options, RequestHeaderAccessor.For("Explicit Test", explicitTestId));
+
+        interceptor.LogCommandExecuting(MakeCommand());
+
+        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == explicitTestId);
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == optionsTestId);
+    }
+
+    [Fact]
+    public void Interceptor_has_no_accessor_when_neither_options_nor_parameter()
+    {
+        Assert.False(new SqlTrackingInterceptor(MakeOptions()).HasHttpContextAccessor);
+    }
+
+    // #136's shape in EF Core: WithSqlTestTracking(builder, options) takes no accessor, so the options carry it.
+    [Fact]
+    public void WithSqlTestTracking_passes_the_options_accessor_to_its_interceptor()
+    {
+        var headerTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = RequestHeaderAccessor.For("Header Test", headerTestId);
+        var builder = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder();
+
+        builder.WithSqlTestTracking(options);
+
+        var interceptor = builder.Options.FindExtension<Microsoft.EntityFrameworkCore.Infrastructure.CoreOptionsExtension>()!
+            .Interceptors!.OfType<SqlTrackingInterceptor>().Single();
+        interceptor.LogCommandExecuting(MakeCommand());
+        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs,
+            l => l.TestId == headerTestId && l.AttributionSource == AttributionSource.RequestHeader);
+    }
+
+    [Fact]
+    public void AddSqlTestTracking_prefers_the_options_accessor_to_the_containers()
+    {
+        var optionsTestId = Guid.NewGuid().ToString();
+        var containerTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = RequestHeaderAccessor.For("Options Test", optionsTestId);
+        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton<IHttpContextAccessor>(
+            services, RequestHeaderAccessor.For("Container Test", containerTestId));
+        services.AddSqlTestTracking(options);
+
+        var interceptor = (SqlTrackingInterceptor)Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions
+            .BuildServiceProvider(services).GetService(typeof(SqlTrackingInterceptor))!;
+        interceptor.LogCommandExecuting(MakeCommand());
+
+        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == optionsTestId);
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == containerTestId);
+    }
+
+    [Fact]
+    public void AddSqlTestTracking_uses_the_containers_accessor_when_the_options_carry_none()
+    {
+        var containerTestId = Guid.NewGuid().ToString();
+        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton<IHttpContextAccessor>(
+            services, RequestHeaderAccessor.For("Container Test", containerTestId));
+        services.AddSqlTestTracking(MakeOptions());
+
+        var interceptor = (SqlTrackingInterceptor)Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions
+            .BuildServiceProvider(services).GetService(typeof(SqlTrackingInterceptor))!;
+        interceptor.LogCommandExecuting(MakeCommand());
+
+        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs,
+            l => l.TestId == containerTestId && l.AttributionSource == AttributionSource.RequestHeader);
     }
 }

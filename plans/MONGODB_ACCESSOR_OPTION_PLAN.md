@@ -2,8 +2,9 @@
 
 **Written:** 2026-10-07, at 4.9.0 (`417c8e58`), the day #136 was filed. **Status: green-lit 2026-10-08, executing**
 (the owner: "implement the plan in full", and "also fix the problems you found"; roadmap row 1.22). R1, a minor, is
-4.10.0 (§6). The problems found (§3) come with it: R2, the plan's Q1, gives the property to the five other options types
-without it. The log (§11) records what was run.
+4.10.0, published 2026-10-08 (§6). The problems found (§3) come with it: R2, a minor, the plan's Q1, is 4.11.0. It gives
+the property to the five other options types without it, and makes Kafka's producer stamp the scenario its produce is
+recorded under. The log (§11) records what was run.
 
 Evidence levels: **RUN** measured here, with the harness; **READ** read in the source at `417c8e58` (`file:line`);
 **DOC** the wiki at `db4e473`; **ISSUE** the issue's own report; **INFERRED** reasoned, not measured.
@@ -301,6 +302,8 @@ plan is green-lit, because several sessions are writing plans for the same batch
 | #133: a fetcher that answers a new id outside a test outranks the scope the propagation middleware sets (rows A and X with propagation: wrong 8) | RUN | #133. kronikol-1c's xUnit2 plan (#132) names it |
 | The diagnostic report's accessor column reads `instances[0]` and says "configured" for an accessor that sees no request (F9). `ITrackingComponent.HasHttpContextAccessor`'s doc promises null from a `bool` | READ, RUN | #134 and #137: kronikol-94 owns `ITrackingComponent.cs` and the column (agreed by message, 2026-10-07) |
 | Multi-Host-Test-Architectures' "HttpContextAccessor Wiring Order" covers Cosmos only | DOC `:151-179` | #142 |
+| `MessageTrackerOptions` is the one core options type with a `CurrentTestInfoFetcher` and no `HttpContextAccessor`: `MessageTracker` takes an accessor by constructor only. R2's guard covers extension options types, since the wiki's claim is about those (found 2026-10-08) | READ `MessageTrackerOptions.cs`, `MessageTracker.cs:37-80` | kronikol-94, whose #134 edits `MessageTracker.cs`, keeps it out for now |
+| `HttpContextAccessorOptionsTests.TestTrackingMessageHandler_explicit_accessor_takes_precedence_over_options` asserts only that the handler is not null (found 2026-10-08; R2 strengthens the fallback fact beside it) | READ | kronikol-94: its #134 R3 changes how the handler reads the accessor |
 | `CurrentStepTypeFetcher` is declared by the options of 24 extensions and read by none (EF Core's `WithTestInfoFrom` copies it from the HTTP options, and nothing reads the copy): only the core HTTP handler and `MessageTracker` read theirs. The phase an extension acts on is `TestPhaseContext`'s, which the framework adapters set (found 2026-10-08, writing R1's doc comments) | READ: a grep of each extension's sources for the member | R1 documents MongoDB's as unread. Removing the member from the others is a breaking change, so it waits for the owner (v5) |
 | Eight `MongoDbTrackingOptions` members have no doc comment: `ServiceName`, `Verbosity`, both fetchers, `SetupVerbosity`, `ActionVerbosity`, `TrackDuringSetup` and `TrackDuringAction` | READ | Whenever they are next touched; not R1 |
 
@@ -308,7 +311,7 @@ plan is green-lit, because several sessions are writing plans for the same batch
 
 | # | Question | Recommendation |
 |---|---|---|
-| Q1 | Should the five other options types without the property get it (Kafka's, Bigtable's, Spanner's, MediatR's and EF Core's `SqlTrackingInterceptorOptions`)? That would make the wiki's "all options classes" (since v2.26.3) and its Kafka sample true. It would come with a guard fact: every in-process options type with a `CurrentTestInfoFetcher` has an `HttpContextAccessor` | Yes, as a separate minor after R1. EF Core's `WithSqlTestTracking` has #136's shape (F5); the other four take an accessor some other way today. Not in R1, since #136 names MongoDB. #135's plan (kronikol-cc) adds two other members to `KafkaTrackingOptions.cs`, so whichever ships second rebases onto the other |
+| Q1 | **Taken 2026-10-08 as R2 (4.11.0).** Should the five other options types without the property get it (Kafka's, Bigtable's, Spanner's, MediatR's and EF Core's `SqlTrackingInterceptorOptions`)? That would make the wiki's "all options classes" (since v2.26.3) and its Kafka sample true. It would come with a guard fact: every in-process options type with a `CurrentTestInfoFetcher` has an `HttpContextAccessor` | Yes, as a separate minor after R1. EF Core's `WithSqlTestTracking` has #136's shape (F5); the other four take an accessor some other way today. Not in R1, since #136 names MongoDB. #135's plan (kronikol-cc) adds two other members to `KafkaTrackingOptions.cs`, so whichever ships second rebases onto the other |
 | Q2 | Should `AddMongoDbTestTracking` record something on its own? The choices: (a) docs only; (b) a `WithTestTracking(this MongoClientSettings, MongoDbTrackingSubscriber)` overload, so a host writes `settings.WithTestTracking(sp.GetRequiredService<MongoDbTrackingSubscriber>())`; (c) have it rewrite `IMongoClient` registrations | (a) in R1, since the page is wrong. (b) only if asked. (c) no: a client's settings freeze when the client is built, so it would have to rebuild the user's client |
 | Q3 | Should every tracker without an accessor read the request through a static `HttpContextAccessor` in the resolver? | No. It would change the resolution order for every tracker whose user set no accessor, and row X shows it sees nothing in a host that registers no accessor anyway |
 | Q4 | Should there also be an overload `WithTestTracking(settings, options, IHttpContextAccessor)`, the issue's second suggestion? | No. The options property is how every other options type takes the accessor, and one way is enough |
@@ -346,4 +349,20 @@ plan is green-lit, because several sessions are writing plans for the same batch
   all six cells of row N, on MongoDB.Driver 2.30.0 and 3.12.0, and rows A, D, W and X are identical to 4.9.0's
   (`results/probe-r1-local.txt`, `results/probe-r1-local-driver3.txt`).
 - While writing R1's doc comments: `MongoDbTrackingOptions.CurrentStepTypeFetcher` is never read, nor is any extension
-  options type's (§8). R1's doc says so for MongoDB.
+  options type's (§8). R1's doc says so for MongoDB. kronikol-94 took the other 22 for its #134 R0 (doc comments) and
+  V5_PLAN open question 9.
+- R1 published 2026-10-08 as 4.10.0 (`47a0203b`, tag `v4.10.0`): Release 37750369225 pushed all 62 packages, and CI
+  37750367339 passed, the host lane among it in both MongoDB projects
+  (`Passed ... MongoDbHostAttributionTests.A_hosts_commands_land_in_the_scenario_its_request_names`, 518 ms and 387 ms,
+  against a Testcontainers MongoDB on ubuntu). Verified before the push: both MongoDB projects 177, TcpTap 265 with 4
+  skipped, the core suite 6,903 with 2 skipped, and `release.slnf` built and packed in Release (62 packages).
+- R2 (Q1), red first (harness `r2/`): the facts did not compile on 4.10.0. The source guard failed there, naming the
+  five types (`red-guard-4.10.0.txt`). With the properties added and nothing reading them, every fallback, options-first
+  and entry-point fact failed for its own reason, as did the two Kafka producer facts
+  (`red-property-only-<project>.txt`). The precedence, no-accessor and container facts passed: they hold behaviour that
+  was already right. Kafka's producer stamped a message from the fetcher alone, so a produce recorded under a request's
+  scenario sent a message carrying another one: fixed in R2, raised by kronikol-cc (#135), which rebases onto it.
+- R2 mutations (`r2/mutate.py`, `r2/mutations.txt`): 26, one per changed line (each Kafka registration separately), each
+  caught by exactly the facts it names and no other. The restored tree passed in all five projects.
+- The wiki's Option D recipe (subscribe `AddMongoDbTestTracking`'s subscriber in the client's registration) is held by
+  the host lane, now a theory over Options C and D as the page writes them.

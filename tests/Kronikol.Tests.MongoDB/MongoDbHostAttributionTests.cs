@@ -15,17 +15,25 @@ namespace Kronikol.Tests.MongoDB;
 
 /// <summary>
 /// #136: the commands a host runs while it serves a request land in the scenario the request's headers name. The host
-/// wires tracking as the wiki's WebApplicationFactory setup does, through <c>WithTestTracking</c>, and hands it the
-/// host's accessor. It registers no propagation middleware, and its fetcher answers a new id outside a test, as
-/// Kronikol.xUnit2's did (#133). Measured on 4.9.0 without the accessor, every command went to a test no scenario has.
+/// wires tracking as the wiki's MongoDB page shows: through <c>WithTestTracking</c> with the host's accessor in the
+/// options (Option C), or with the subscriber <c>AddMongoDbTestTracking</c> registers, subscribed by the client (Option D).
+/// It registers no propagation middleware, and its fetcher answers a new id outside a test, as Kronikol.xUnit2's did
+/// (#133). Measured on 4.9.0 without the accessor, every command went to a test no scenario has; Option D as 4.9.0's
+/// page wrote it, without the client's line, recorded none.
 /// </summary>
 [Collection("TestCorrelationStore")]
 public class MongoDbHostAttributionTests(MongoServerFixture mongo) : IClassFixture<MongoServerFixture>
 {
     private readonly string _run = Guid.NewGuid().ToString("N")[..8];
 
-    [Fact]
-    public async Task A_hosts_commands_land_in_the_scenario_its_request_names()
+    // The two setups the wiki's MongoDB page shows for a host, each as the page writes it.
+    public static TheoryData<string> Wirings => [OptionC, OptionD];
+    private const string OptionC = "WithTestTracking with the options' accessor (Option C)";
+    private const string OptionD = "AddMongoDbTestTracking, subscribed by the client (Option D)";
+
+    [Theory]
+    [MemberData(nameof(Wirings))]
+    public async Task A_hosts_commands_land_in_the_scenario_its_request_names(string wiring)
     {
         var connectionString = mongo.Require();
         var serviceName = "MongoDB " + _run;
@@ -35,14 +43,31 @@ public class MongoDbHostAttributionTests(MongoServerFixture mongo) : IClassFixtu
                 .ConfigureServices(services =>
                 {
                     services.AddHttpContextAccessor();
-                    services.AddSingleton<IMongoClient>(sp => new MongoClient(MongoClientSettings
-                        .FromConnectionString(connectionString)
-                        .WithTestTracking(new MongoDbTrackingOptions
-                        {
-                            ServiceName = serviceName,
-                            CurrentTestInfoFetcher = () => ("Not a scenario", Guid.NewGuid().ToString()),
-                            HttpContextAccessor = sp.GetService<IHttpContextAccessor>(),
-                        })));
+                    if (wiring == OptionC)
+                    {
+                        services.AddSingleton<IMongoClient>(sp => new MongoClient(MongoClientSettings
+                            .FromConnectionString(connectionString)
+                            .WithTestTracking(new MongoDbTrackingOptions
+                            {
+                                ServiceName = serviceName,
+                                CurrentTestInfoFetcher = NotAScenario,
+                                HttpContextAccessor = sp.GetService<IHttpContextAccessor>(),
+                            })));
+                        return;
+                    }
+                    services.AddMongoDbTestTracking(options =>
+                    {
+                        options.ServiceName = serviceName;
+                        options.CurrentTestInfoFetcher = NotAScenario;
+                    });
+                    services.AddSingleton<IMongoClient>(sp =>
+                    {
+                        var subscriber = sp.GetRequiredService<MongoDbTrackingSubscriber>();
+                        var settings = MongoClientSettings.FromConnectionString(connectionString);
+                        var existing = settings.ClusterConfigurator;
+                        settings.ClusterConfigurator = cb => { existing?.Invoke(cb); subscriber.Subscribe(cb); };
+                        return new MongoClient(settings);
+                    });
                 })
                 .Configure(app => app.Run(async context =>
                 {
@@ -78,6 +103,9 @@ public class MongoDbHostAttributionTests(MongoServerFixture mongo) : IClassFixtu
     }
 
     private string ScenarioId(string scenario) => $"scenario-{scenario}-{_run}";
+
+    // A new id on every call made outside a test, as Kronikol.xUnit2's fetcher answered (#133).
+    private static (string Name, string Id) NotAScenario() => ("Not a scenario", Guid.NewGuid().ToString());
 
     // Each scenario writes to a collection named for it, and a command's address names its collection.
     private static string ScenarioOf(Uri uri) => Regex.Match(uri.ToString(), "orders_([A-D])_").Groups[1].Value;

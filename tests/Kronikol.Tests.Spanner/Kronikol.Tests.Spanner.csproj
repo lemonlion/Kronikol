@@ -22,4 +22,7 @@
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\CultureRun.cs" Link="CultureRun.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
+  </ItemGroup>
 </Project>

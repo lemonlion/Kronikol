@@ -16,7 +16,8 @@ public static class KafkaServiceCollectionExtensions
     /// <see cref="TrackingKafkaProducer{TKey,TValue}"/> for test diagram tracking.
     /// <para>
     /// The <see cref="KafkaTracker"/> is created internally with the provided options and
-    /// an <see cref="IHttpContextAccessor"/> resolved from DI (if registered).
+    /// <see cref="KafkaTrackingOptions.HttpContextAccessor"/>, or, when that is null, an
+    /// <see cref="IHttpContextAccessor"/> resolved from DI (if registered).
     /// </para>
     /// <para>No-op when no matching registrations exist.</para>
     /// </summary>
@@ -29,7 +30,7 @@ public static class KafkaServiceCollectionExtensions
 
         services.DecorateAll<IProducer<TKey, TValue>>((sp, inner) =>
         {
-            var tracker = new KafkaTracker(options, sp.GetService<IHttpContextAccessor>());
+            var tracker = new KafkaTracker(options, options.HttpContextAccessor ?? sp.GetService<IHttpContextAccessor>());
             return new TrackingKafkaProducer<TKey, TValue>(inner, tracker, options);
         });
 
@@ -41,7 +42,8 @@ public static class KafkaServiceCollectionExtensions
     /// <see cref="TrackingKafkaConsumer{TKey,TValue}"/> for test diagram tracking.
     /// <para>
     /// The <see cref="KafkaTracker"/> is created internally with the provided options and
-    /// an <see cref="IHttpContextAccessor"/> resolved from DI (if registered).
+    /// <see cref="KafkaTrackingOptions.HttpContextAccessor"/>, or, when that is null, an
+    /// <see cref="IHttpContextAccessor"/> resolved from DI (if registered).
     /// </para>
     /// <para>No-op when no matching registrations exist.</para>
     /// </summary>
@@ -54,7 +56,7 @@ public static class KafkaServiceCollectionExtensions
 
         services.DecorateAll<IConsumer<TKey, TValue>>((sp, inner) =>
         {
-            var tracker = new KafkaTracker(options, sp.GetService<IHttpContextAccessor>());
+            var tracker = new KafkaTracker(options, options.HttpContextAccessor ?? sp.GetService<IHttpContextAccessor>());
             return new TrackingKafkaConsumer<TKey, TValue>(inner, tracker, options);
         });
 
@@ -80,7 +82,7 @@ public static class KafkaServiceCollectionExtensions
 
         services.DecorateAll<IKafkaConsumerFactory<TKey, TValue>>((sp, inner) =>
         {
-            var tracker = new KafkaTracker(options, sp.GetService<IHttpContextAccessor>());
+            var tracker = new KafkaTracker(options, options.HttpContextAccessor ?? sp.GetService<IHttpContextAccessor>());
             return new TrackingKafkaConsumerFactory<TKey, TValue>(inner, tracker, options);
         });
 
@@ -106,7 +108,7 @@ public static class KafkaServiceCollectionExtensions
 
         services.DecorateAll<IKafkaProducerFactory<TKey, TValue>>((sp, inner) =>
         {
-            var tracker = new KafkaTracker(options, sp.GetService<IHttpContextAccessor>());
+            var tracker = new KafkaTracker(options, options.HttpContextAccessor ?? sp.GetService<IHttpContextAccessor>());
             return new TrackingKafkaProducerFactory<TKey, TValue>(inner, tracker, options);
         });
 

@@ -2,9 +2,13 @@ using Confluent.Kafka;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Kronikol.Constants;
+using Kronikol.Tests.Tracking;
+using Kronikol.Tracking;
 
 namespace Kronikol.Extensions.Kafka.Tests;
 
+// Reads the process-wide TrackingComponentRegistry, which KafkaTrackerTests clears.
+[Collection("TrackingComponentRegistry")]
 public class KafkaServiceCollectionExtensionsTests
 {
     [Fact]
@@ -217,6 +221,78 @@ public class KafkaServiceCollectionExtensionsTests
     }
 
     #region Test Doubles
+
+    // ─── HttpContextAccessor: the options' first, then the container's ───
+
+    public static TheoryData<string> Registrations => ["producer", "consumer", "consumer factory", "producer factory"];
+
+    [Theory]
+    [MemberData(nameof(Registrations))]
+    public void Registration_prefers_the_options_accessor_to_the_containers(string registration)
+    {
+        var optionsTestId = Guid.NewGuid().ToString();
+        var containerTestId = Guid.NewGuid().ToString();
+
+        var tracker = TrackerBuiltBy(registration, RequestHeaderAccessor.For("Container Test", containerTestId),
+            RequestHeaderAccessor.For("Options Test", optionsTestId));
+        tracker.LogProduce(new KafkaOperationInfo(KafkaOperation.ProduceAsync, "orders"), "v");
+
+        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs,
+            l => l.TestId == optionsTestId && l.AttributionSource == AttributionSource.RequestHeader);
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == containerTestId);
+    }
+
+    [Theory]
+    [MemberData(nameof(Registrations))]
+    public void Registration_uses_the_containers_accessor_when_the_options_carry_none(string registration)
+    {
+        var containerTestId = Guid.NewGuid().ToString();
+
+        var tracker = TrackerBuiltBy(registration, RequestHeaderAccessor.For("Container Test", containerTestId), null);
+        tracker.LogProduce(new KafkaOperationInfo(KafkaOperation.ProduceAsync, "orders"), "v");
+
+        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs,
+            l => l.TestId == containerTestId && l.AttributionSource == AttributionSource.RequestHeader);
+    }
+
+    // Registers the service the registration decorates, resolves it so that the decorator builds its tracker, and
+    // returns that tracker from the registry by its unique service name.
+    private static KafkaTracker TrackerBuiltBy(string registration, IHttpContextAccessor container, IHttpContextAccessor? fromOptions)
+    {
+        var serviceName = "Kafka " + Guid.NewGuid();
+        Action<KafkaTrackingOptions> configure = o =>
+        {
+            o.ServiceName = serviceName;
+            o.HttpContextAccessor = fromOptions;
+        };
+        var services = new ServiceCollection();
+        services.AddSingleton(container);
+        switch (registration)
+        {
+            case "producer":
+                services.AddSingleton<IProducer<string, string>>(new FakeProducer<string, string>());
+                services.AddKafkaProducerTestTracking<string, string>(configure);
+                services.BuildServiceProvider().GetRequiredService<IProducer<string, string>>();
+                break;
+            case "consumer":
+                services.AddSingleton<IConsumer<string, string>>(new FakeConsumer<string, string>());
+                services.AddKafkaConsumerTestTracking<string, string>(configure);
+                services.BuildServiceProvider().GetRequiredService<IConsumer<string, string>>();
+                break;
+            case "consumer factory":
+                services.AddSingleton<IKafkaConsumerFactory<string, string>>(new FakeConsumerFactory<string, string>());
+                services.AddKafkaConsumerFactoryTestTracking<string, string>(configure);
+                services.BuildServiceProvider().GetRequiredService<IKafkaConsumerFactory<string, string>>();
+                break;
+            case "producer factory":
+                services.AddSingleton<IKafkaProducerFactory<string, string>>(new FakeProducerFactory<string, string>());
+                services.AddKafkaProducerFactoryTestTracking<string, string>(configure);
+                services.BuildServiceProvider().GetRequiredService<IKafkaProducerFactory<string, string>>();
+                break;
+        }
+        return TrackingComponentRegistry.GetRegisteredComponents().OfType<KafkaTracker>()
+            .Single(t => t.ComponentName == $"KafkaTracker ({serviceName})");
+    }
 
     private class FakeProducer<TKey, TValue> : IProducer<TKey, TValue>
     {

@@ -1,0 +1,5 @@
+Test run for C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.MediatR\bin\Debug\net10.0\Kronikol.Tests.MediatR.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:03.10]     Kronikol.Tests.MediatR.MediatorTrackingExtensionsTests.TrackMediatorForDiagrams_prefers_the_options_accessor_to_the_containers [FAIL]
+
+Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 804 ms - Kronikol.Tests.MediatR.dll (net10.0)

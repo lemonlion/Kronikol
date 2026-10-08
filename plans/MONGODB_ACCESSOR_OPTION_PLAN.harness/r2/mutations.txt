@@ -1,0 +1,110 @@
+K1 (KafkaTracker ignores the options' accessor): CAUGHT
+  expected red: Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly, ProduceAsync_injects_the_requests_identity_when_the_options_carry_an_accessor
+  red: ProduceAsync_injects_the_requests_identity_when_the_options_carry_an_accessor, Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly
+  Failed!  - Failed:     2, Passed:   137, Skipped:     0, Total:   139, Duration: 118 ms - Kronikol.Tests.Kafka.dll (net10.0)
+K2 (KafkaTracker prefers the options' accessor to the constructor's): CAUGHT
+  expected red: Tracker_explicit_accessor_takes_precedence_over_options
+  red: Tracker_explicit_accessor_takes_precedence_over_options
+  Failed!  - Failed:     1, Passed:   138, Skipped:     0, Total:   139, Duration: 145 ms - Kronikol.Tests.Kafka.dll (net10.0)
+K3a (the producer registration prefers the container's accessor): CAUGHT
+  expected red: Registration_prefers_the_options_accessor_to_the_containers(registration: "producer")
+  red: Registration_prefers_the_options_accessor_to_the_containers(registration: "producer")
+  Failed!  - Failed:     1, Passed:   138, Skipped:     0, Total:   139, Duration: 118 ms - Kronikol.Tests.Kafka.dll (net10.0)
+K3b (the consumer registration prefers the container's accessor): CAUGHT
+  expected red: Registration_prefers_the_options_accessor_to_the_containers(registration: "consumer")
+  red: Registration_prefers_the_options_accessor_to_the_containers(registration: "consumer")
+  Failed!  - Failed:     1, Passed:   138, Skipped:     0, Total:   139, Duration: 143 ms - Kronikol.Tests.Kafka.dll (net10.0)
+K3c (the consumer factory registration prefers the container's accessor): CAUGHT
+  expected red: Registration_prefers_the_options_accessor_to_the_containers(registration: "consumer factory")
+  red: Registration_prefers_the_options_accessor_to_the_containers(registration: "consumer factory")
+  Failed!  - Failed:     1, Passed:   138, Skipped:     0, Total:   139, Duration: 119 ms - Kronikol.Tests.Kafka.dll (net10.0)
+K3d (the producer factory registration prefers the container's accessor): CAUGHT
+  expected red: Registration_prefers_the_options_accessor_to_the_containers(registration: "producer factory")
+  red: Registration_prefers_the_options_accessor_to_the_containers(registration: "producer factory")
+  Failed!  - Failed:     1, Passed:   138, Skipped:     0, Total:   139, Duration: 147 ms - Kronikol.Tests.Kafka.dll (net10.0)
+K4 (the registrations pass only the options' accessor): CAUGHT
+  expected red: Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "producer"), Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "consumer"), Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "consumer factory"), Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "producer factory")
+  red: Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "consumer factory"), Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "consumer"), Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "producer factory"), Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "producer")
+  Failed!  - Failed:     4, Passed:   135, Skipped:     0, Total:   139, Duration: 116 ms - Kronikol.Tests.Kafka.dll (net10.0)
+K5 (the producer stamps a message without the tracker's accessor): CAUGHT
+  expected red: ProduceAsync_injects_the_requests_identity_when_the_options_carry_an_accessor, Produce_injects_the_requests_identity_when_the_tracker_was_given_an_accessor
+  red: ProduceAsync_injects_the_requests_identity_when_the_options_carry_an_accessor, Produce_injects_the_requests_identity_when_the_tracker_was_given_an_accessor
+  Failed!  - Failed:     2, Passed:   137, Skipped:     0, Total:   139, Duration: 100 ms - Kronikol.Tests.Kafka.dll (net10.0)
+B1 (BigtableTracker ignores the options' accessor): CAUGHT
+  expected red: Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly
+  red: Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly
+  Failed!  - Failed:     1, Passed:    49, Skipped:     0, Total:    50, Duration: 210 ms - Kronikol.Tests.Bigtable.dll (net10.0)
+B2 (BigtableTracker prefers the options' accessor to the constructor's): CAUGHT
+  expected red: Tracker_explicit_accessor_takes_precedence_over_options
+  red: Tracker_explicit_accessor_takes_precedence_over_options
+  Failed!  - Failed:     1, Passed:    49, Skipped:     0, Total:    50, Duration: 246 ms - Kronikol.Tests.Bigtable.dll (net10.0)
+B3 (AddBigtableTestTracking prefers the container's accessor): CAUGHT
+  expected red: Registration_prefers_the_options_accessor_to_the_containers
+  red: Registration_prefers_the_options_accessor_to_the_containers
+  Failed!  - Failed:     1, Passed:    49, Skipped:     0, Total:    50, Duration: 247 ms - Kronikol.Tests.Bigtable.dll (net10.0)
+B4 (AddBigtableTestTracking passes only the options' accessor): CAUGHT
+  expected red: Registration_uses_the_containers_accessor_when_the_options_carry_none
+  red: Registration_uses_the_containers_accessor_when_the_options_carry_none
+  Failed!  - Failed:     1, Passed:    49, Skipped:     0, Total:    50, Duration: 224 ms - Kronikol.Tests.Bigtable.dll (net10.0)
+S1 (SpannerTracker ignores the options' accessor): CAUGHT
+  expected red: Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly, WithTestTracking_on_a_DbConnection_passes_the_options_accessor_to_its_commands, WithTestTracking_without_an_accessor_passes_the_options_accessor_to_its_tracker
+  red: Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly, WithTestTracking_on_a_DbConnection_passes_the_options_accessor_to_its_commands, WithTestTracking_without_an_accessor_passes_the_options_accessor_to_its_tracker
+  Failed!  - Failed:     3, Passed:   171, Skipped:     0, Total:   174, Duration: 175 ms - Kronikol.Tests.Spanner.dll (net10.0)
+S2 (SpannerTracker prefers the options' accessor to the constructor's): CAUGHT
+  expected red: Tracker_explicit_accessor_takes_precedence_over_options
+  red: Tracker_explicit_accessor_takes_precedence_over_options
+  Failed!  - Failed:     1, Passed:   173, Skipped:     0, Total:   174, Duration: 150 ms - Kronikol.Tests.Spanner.dll (net10.0)
+S3 (AddSpannerTestTracking prefers the container's accessor): CAUGHT
+  expected red: Registration_prefers_the_options_accessor_to_the_containers
+  red: Registration_prefers_the_options_accessor_to_the_containers
+  Failed!  - Failed:     1, Passed:   173, Skipped:     0, Total:   174, Duration: 174 ms - Kronikol.Tests.Spanner.dll (net10.0)
+S4 (AddSpannerTestTracking passes only the options' accessor): CAUGHT
+  expected red: Registration_uses_the_containers_accessor_when_the_options_carry_none
+  red: Registration_uses_the_containers_accessor_when_the_options_carry_none
+  Failed!  - Failed:     1, Passed:   173, Skipped:     0, Total:   174, Duration: 171 ms - Kronikol.Tests.Spanner.dll (net10.0)
+M1 (the proxy options drop the options' accessor): CAUGHT
+  expected red: TrackMediatorForDiagrams_prefers_the_options_accessor_to_the_containers
+  red: TrackMediatorForDiagrams_prefers_the_options_accessor_to_the_containers
+  Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 243 ms - Kronikol.Tests.MediatR.dll (net10.0)
+M2 (the proxy prefers the container's accessor): CAUGHT
+  expected red: TrackMediatorForDiagrams_prefers_the_options_accessor_to_the_containers
+  red: TrackMediatorForDiagrams_prefers_the_options_accessor_to_the_containers
+  Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 259 ms - Kronikol.Tests.MediatR.dll (net10.0)
+M3 (the proxy takes only the options' accessor): CAUGHT
+  expected red: TrackMediatorForDiagrams_uses_the_containers_accessor_when_the_options_carry_none
+  red: TrackMediatorForDiagrams_uses_the_containers_accessor_when_the_options_carry_none
+  Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 359 ms - Kronikol.Tests.MediatR.dll (net10.0)
+E1 (SqlTrackingInterceptor ignores the options' accessor): CAUGHT
+  expected red: Interceptor_reads_HttpContextAccessor_from_options_when_not_passed_directly, WithSqlTestTracking_passes_the_options_accessor_to_its_interceptor
+  red: Interceptor_reads_HttpContextAccessor_from_options_when_not_passed_directly, WithSqlTestTracking_passes_the_options_accessor_to_its_interceptor
+  Failed!  - Failed:     2, Passed:   193, Skipped:     0, Total:   195, Duration: 490 ms - Kronikol.Tests.EfCore.Relational.dll (net10.0)
+E2 (SqlTrackingInterceptor prefers the options' accessor to the constructor's): CAUGHT
+  expected red: Interceptor_explicit_accessor_takes_precedence_over_options
+  red: Interceptor_explicit_accessor_takes_precedence_over_options
+  Failed!  - Failed:     1, Passed:   194, Skipped:     0, Total:   195, Duration: 425 ms - Kronikol.Tests.EfCore.Relational.dll (net10.0)
+E3 (AddSqlTestTracking prefers the container's accessor): CAUGHT
+  expected red: AddSqlTestTracking_prefers_the_options_accessor_to_the_containers
+  red: AddSqlTestTracking_prefers_the_options_accessor_to_the_containers
+  Failed!  - Failed:     1, Passed:   194, Skipped:     0, Total:   195, Duration: 414 ms - Kronikol.Tests.EfCore.Relational.dll (net10.0)
+E4 (AddSqlTestTracking passes only the options' accessor): CAUGHT
+  expected red: AddSqlTestTracking_uses_the_containers_accessor_when_the_options_carry_none
+  red: AddSqlTestTracking_uses_the_containers_accessor_when_the_options_carry_none
+  Failed!  - Failed:     1, Passed:   194, Skipped:     0, Total:   195, Duration: 482 ms - Kronikol.Tests.EfCore.Relational.dll (net10.0)
+E5 (WithTestInfoFrom does not carry the accessor): CAUGHT
+  expected red: WithTestInfoFrom_CopiesHttpContextAccessor_when_the_sql_options_carry_none
+  red: WithTestInfoFrom_CopiesHttpContextAccessor_when_the_sql_options_carry_none
+  Failed!  - Failed:     1, Passed:   194, Skipped:     0, Total:   195, Duration: 567 ms - Kronikol.Tests.EfCore.Relational.dll (net10.0)
+E6 (WithTestInfoFrom overwrites the SQL options' own accessor): CAUGHT
+  expected red: WithTestInfoFrom_keeps_the_sql_options_own_HttpContextAccessor
+  red: WithTestInfoFrom_keeps_the_sql_options_own_HttpContextAccessor
+  Failed!  - Failed:     1, Passed:   194, Skipped:     0, Total:   195, Duration: 482 ms - Kronikol.Tests.EfCore.Relational.dll (net10.0)
+G1 (an extension options type loses the property (the source guard)): CAUGHT
+  expected red: Every_extension_options_type_with_a_test_info_fetcher_has_an_HttpContextAccessor
+  red: Every_extension_options_type_with_a_test_info_fetcher_has_an_HttpContextAccessor
+  Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 272 ms - Kronikol.Tests.dll (net10.0)
+Restored tree, Kafka: Passed!  - Failed:     0, Passed:   139, Skipped:     0, Total:   139, Duration: 102 ms - Kronikol.Tests.Kafka.dll (net10.0)
+Restored tree, Bigtable: Passed!  - Failed:     0, Passed:    50, Skipped:     0, Total:    50, Duration: 213 ms - Kronikol.Tests.Bigtable.dll (net10.0)
+Restored tree, Spanner: Passed!  - Failed:     0, Passed:   174, Skipped:     0, Total:   174, Duration: 165 ms - Kronikol.Tests.Spanner.dll (net10.0)
+Restored tree, EfCore.Relational: Passed!  - Failed:     0, Passed:   195, Skipped:     0, Total:   195, Duration: 602 ms - Kronikol.Tests.EfCore.Relational.dll (net10.0)
+Restored tree, MediatR: Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 206 ms - Kronikol.Tests.MediatR.dll (net10.0)
+exit 0

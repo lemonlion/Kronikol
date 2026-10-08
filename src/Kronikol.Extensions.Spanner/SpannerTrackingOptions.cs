@@ -49,6 +49,16 @@ public record SpannerTrackingOptions
     /// </summary>
     public SpannerResponseDetail? ResponseDetail { get; set; }
 
+    /// <summary>
+    /// Resolves the scenario from the test-tracking request headers when a statement runs inside a host's request
+    /// pipeline (a host <c>WebApplicationFactory</c> starts, or any other host in the test process). Pass the host's own
+    /// (<c>sp.GetService&lt;IHttpContextAccessor&gt;()</c>): ASP.NET Core fills an accessor only in a host that registers
+    /// one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c> calls).
+    /// <see cref="SpannerServiceCollectionExtensions.AddSpannerTestTracking"/> uses the container's when this is null, and
+    /// an accessor passed to a constructor, or to the <c>WithTestTracking</c> overload that takes one, takes precedence.
+    /// </summary>
+    public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; set; }
+
     /// <summary>The effective response detail, applying any phase verbosity overrides in effect.</summary>
     internal SpannerResponseDetail ResolveResponseDetail()
     {

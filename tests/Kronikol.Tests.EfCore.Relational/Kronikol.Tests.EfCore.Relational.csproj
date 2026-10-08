@@ -33,4 +33,7 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
+  </ItemGroup>
 </Project>

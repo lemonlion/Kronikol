@@ -1,5 +1,6 @@
 using Confluent.Kafka;
 using Kronikol.Extensions.Kafka;
+using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Kafka;
@@ -265,6 +266,41 @@ public class TrackingKafkaProducerTests
         Assert.NotNull(message.Headers);
         var nameHeader = message.Headers.GetLastBytes("kronikol-test-name");
         Assert.Equal("My Kafka Test", System.Text.Encoding.UTF8.GetString(nameHeader));
+    }
+
+    // A produce made while a host serves a request is logged under the request's scenario, and the message it sends
+    // carries that scenario, so the consumer that handles it lands in the same one.
+    [Fact]
+    public async Task ProduceAsync_injects_the_requests_identity_when_the_options_carry_an_accessor()
+    {
+        var headerTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.PropagateTestIdentity = true;
+        options.HttpContextAccessor = RequestHeaderAccessor.For("Header Test", headerTestId);
+        var tracker = new KafkaTracker(options);
+        var producer = new TrackingKafkaProducer<string, string>(new FakeProducer<string, string>(), tracker, options);
+        var message = new Message<string, string> { Key = "key1", Value = "val1" };
+
+        await producer.ProduceAsync("topic", message, TestContext.Current.CancellationToken);
+
+        Assert.Equal("Header Test", System.Text.Encoding.UTF8.GetString(message.Headers.GetLastBytes("kronikol-test-name")));
+        Assert.Equal(headerTestId, System.Text.Encoding.UTF8.GetString(message.Headers.GetLastBytes("kronikol-test-id")));
+        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == headerTestId);
+    }
+
+    [Fact]
+    public void Produce_injects_the_requests_identity_when_the_tracker_was_given_an_accessor()
+    {
+        var headerTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.PropagateTestIdentity = true;
+        var tracker = new KafkaTracker(options, RequestHeaderAccessor.For("Header Test", headerTestId));
+        var producer = new TrackingKafkaProducer<string, string>(new FakeProducer<string, string>(), tracker, options);
+        var message = new Message<string, string> { Key = "key1", Value = "val1" };
+
+        producer.Produce("topic", message);
+
+        Assert.Equal(headerTestId, System.Text.Encoding.UTF8.GetString(message.Headers.GetLastBytes("kronikol-test-id")));
     }
 
     #region Test Double

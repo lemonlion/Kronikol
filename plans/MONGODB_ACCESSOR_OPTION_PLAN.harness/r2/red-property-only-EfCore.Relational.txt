@@ -1,0 +1,10 @@
+C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.EfCore.Relational\SqlTrackingInterceptorFailureTests.cs(46,50): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.EfCore.Relational\Kronikol.Tests.EfCore.Relational.csproj]
+C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.EfCore.Relational\SqlTrackingInterceptorFailureTests.cs(48,52): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.EfCore.Relational\Kronikol.Tests.EfCore.Relational.csproj]
+Test run for C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.EfCore.Relational\bin\Debug\net10.0\Kronikol.Tests.EfCore.Relational.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:03.09]     Kronikol.Tests.EfCore.Relational.SqlTrackingInterceptorHttpContextTests.AddSqlTestTracking_prefers_the_options_accessor_to_the_containers [FAIL]
+[xUnit.net 00:00:03.09]     Kronikol.Tests.EfCore.Relational.SqlTrackingInterceptorOptionsExtensionsTests.WithTestInfoFrom_CopiesHttpContextAccessor_when_the_sql_options_carry_none [FAIL]
+[xUnit.net 00:00:03.10]     Kronikol.Tests.EfCore.Relational.SqlTrackingInterceptorHttpContextTests.Interceptor_reads_HttpContextAccessor_from_options_when_not_passed_directly [FAIL]
+[xUnit.net 00:00:03.11]     Kronikol.Tests.EfCore.Relational.SqlTrackingInterceptorHttpContextTests.WithSqlTestTracking_passes_the_options_accessor_to_its_interceptor [FAIL]
+
+Failed!  - Failed:     4, Passed:   191, Skipped:     0, Total:   195, Duration: 1 s - Kronikol.Tests.EfCore.Relational.dll (net10.0)

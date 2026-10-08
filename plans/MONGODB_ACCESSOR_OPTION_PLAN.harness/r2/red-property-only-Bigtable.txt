@@ -1,0 +1,6 @@
+Test run for C:\Code\Kronikol-mongo136-r2\tests\Kronikol.Tests.Bigtable\bin\Debug\net10.0\Kronikol.Tests.Bigtable.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:02.72]     Kronikol.Tests.Bigtable.BigtableTrackerTests.Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly [FAIL]
+[xUnit.net 00:00:02.73]     Kronikol.Tests.Bigtable.BigtableServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers [FAIL]
+
+Failed!  - Failed:     2, Passed:    48, Skipped:     0, Total:    50, Duration: 497 ms - Kronikol.Tests.Bigtable.dll (net10.0)
