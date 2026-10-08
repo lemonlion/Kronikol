@@ -1,0 +1,37 @@
+Kronikol 4.11.1.0 · woven: True
+== ShouldBe_passes: passed
+   notes: 0
+== ShouldBe_fails: threw ShouldAssertException: 3;⏎        int expected = 5;⏎        result⏎    should be⏎5⏎    but was⏎3
+   notes: 0
+== ShouldNotBeNull_fails: threw ShouldAssertException: string? name = null;⏎        name⏎    should not be null but was
+   notes: 0
+== ShouldBeTrue_fails: threw ShouldAssertException: false;⏎        flag⏎    should be⏎True⏎    but was⏎False
+   notes: 0
+== ShouldNotBeEmpty_fails: threw ShouldAssertException: items⏎    should not be empty but was
+   notes: 0
+== ShouldBe_with_custom_message_fails: threw ShouldAssertException: 3;⏎        result⏎    should be⏎5⏎    but was⏎3⏎⏎Additional Info:⏎    custom message
+   notes: 0
+== ShouldBe_array_initializer_passes: passed
+   notes: 0
+== ShouldBe_null_conditional_passes: passed
+   notes: 0
+== ShouldSatisfyAllConditions_two_fail: threw ShouldAssertException: order⏎    should satisfy all the conditions specified, but does not.⏎The following errors were found ...⏎--------------- Error 1 ---------------⏎    order.Id⏎        should be⏎    2⏎        but was⏎    1⏎⏎--------------- Error 2 ---------------⏎    order.Name⏎        should be⏎    "b"⏎        but was⏎    "a"⏎        difference⏎    Difference     |  |   ⏎                   | \|/  ⏎    Index          | 0    ⏎    Expected Value | b    ⏎    Actual Value   | a    ⏎    Expected Code  | 98   ⏎    Actual Code    | 97   ⏎⏎-----------------------------------------
+   notes: 0
+== Should_Throw_passes: passed
+   notes: 0
+== Should_ThrowAsync_fails: threw ShouldAssertException: Task `async () => await Task.Yield()`⏎    should throw⏎System.InvalidOperationException⏎    but did not
+   notes: 0
+== Control_Should_Be_fails: threw InvalidProgramException: Common Language Runtime detected an invalid program.
+   notes: 0
+== Control_label_keeps_a_bang_in_a_literal: passed
+   notes: 1
+   | hnote across <<assertionNote>> #d4edda⏎✓ Greeting should be "Hi!"⏎end note⏎'__^*__:Program.cs:L123
+== Control_lambda_conditions: passed
+   notes: 3
+   | hnote across <<assertionNote>> #d4edda⏎✓ First should be 1⏎end note⏎'__^*__:Program.cs:L131
+   | hnote across <<assertionNote>> #d4edda⏎✓ Second should be 2⏎end note⏎'__^*__:Program.cs:L132
+   | hnote across <<assertionNote>> #d4edda⏎✓ Items should satisfy respectively [  first => first.Should().Be(1), second => second.Should().Be(2) ]⏎end note⏎'__^*__:Program.cs:L130
+== Control_AssertionScope_fails: threw AssertionFailedException: Expected result to be 5, but found 3.⏎
+   notes: 2
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Result should be 5⏎Expected result to be 5, but found 3.⏎end note⏎'__^*__:Program.cs:L141
+   | hnote across <<assertionNote>> #d4edda⏎✓ Result should be 3⏎end note⏎'__^*__:Program.cs:L142

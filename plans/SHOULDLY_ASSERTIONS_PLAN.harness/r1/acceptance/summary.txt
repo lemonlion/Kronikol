@@ -1,0 +1,12 @@
+build Debug exit 0
+Installed Kronikol.AssertionTracking 4.11.2-local.141 from C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\19eb1bc1-2d7b-43ae-8364-4eb3eecabfcc\scratchpad\nupkgs-r1 to C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\19eb1bc1-2d7b-43ae-8364-4eb3eecabfcc\scratchpad\nuget-r1\kronikol.assertiontracking\4.11.2-local.141 with content hash c8jkWMXa7GjosmO4DBjJIy8DS9ZVjuDHAaEIWkhFHgmROw1P7q587vlZ+3N9Hrvm70UGfyMubovU+K3quNmy+w==.
+Kronikol.AssertionTracking: Instrumented 7 assertion(s) in 6 method(s) (378ms)
+run Debug exit 0
+build Release exit 0
+Kronikol.AssertionTracking: Instrumented 7 assertion(s) in 6 method(s) (177ms)
+run Release exit 0
+embedded build exit 0
+Kronikol.AssertionTracking: Instrumented 7 assertion(s) in 6 method(s) (218ms)
+ls: cannot access 'bin/Debug/net8.0/Probe.pdb': No such file or directory
+embedded run exit 0
+DONE

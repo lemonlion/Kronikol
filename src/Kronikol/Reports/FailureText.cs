@@ -53,6 +53,31 @@ public static class FailureText
     }
 
     /// <summary>
+    /// What the failures digest, the HTML cluster panel and the history ledger group a failure by: its
+    /// <see cref="FirstLine"/>, and for a Shouldly message its second line as well. Shouldly writes the
+    /// subject's code on the first line and the check on the second, indented by four spaces
+    /// (<c>result</c>, <c>    should be</c>), so on the first line alone an equality and a comparison on one
+    /// variable read as one cause (SHOULDLY_ASSERTIONS_PLAN F15). The key stops before the values, so two
+    /// failures of one check on one subject still share it.
+    /// </summary>
+    internal static string ClusterKey(string? message)
+    {
+        var first = FirstLine(message);
+        if (first.Length == 0 || message is null)
+            return first;
+
+        var end = message.AsSpan().IndexOfAny('\r', '\n');
+        if (end < 0)
+            return first;
+        var rest = message.AsSpan(end + (message[end] == '\r' && end + 1 < message.Length && message[end + 1] == '\n' ? 2 : 1));
+        var secondEnd = rest.IndexOfAny('\r', '\n');
+        var second = (secondEnd < 0 ? rest : rest[..secondEnd]).ToString();
+        return second.StartsWith("    should ", StringComparison.Ordinal)
+            ? first + " " + CollapseWhitespace(second)
+            : first;
+    }
+
+    /// <summary>
     /// Cuts <paramref name="text"/> to at most <paramref name="limit"/> UTF-16 code units, marking the
     /// cut with an ellipsis, and never between the halves of a surrogate pair.
     ///

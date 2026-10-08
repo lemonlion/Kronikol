@@ -42,7 +42,7 @@ namespace Kronikol.Tracking
 
   </Target>
 
-  <!-- Run IL weaving AFTER compilation to instrument .Should() calls -->
+  <!-- Run IL weaving AFTER compilation to instrument assertion statements -->
   <Target Name="_WeaveAssertionTracking"
           AfterTargets="CoreCompile"
           Condition="'$(TrackAssertionsEnabled)' == 'true'"

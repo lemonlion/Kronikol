@@ -11,9 +11,9 @@ using Mono.Cecil.Rocks;
 namespace Kronikol.AssertionTracking;
 
 /// <summary>
-/// Core IL weaving logic. Opens a compiled assembly with Cecil, finds FluentAssertions/AwesomeAssertions
-/// .Should() call chains, wraps each assertion statement in try/catch that reports
-/// pass/fail to Track.AssertionPassed/Track.AssertionFailed.
+/// Core IL weaving logic. Opens a compiled assembly with Cecil, finds the assertion statements of
+/// FluentAssertions and AwesomeAssertions (<c>.Should()</c>) and TUnit (<c>Assert.That()</c>), and wraps each
+/// in a try/catch that reports pass/fail to Track.AssertionPassed/Track.AssertionFailed.
 /// </summary>
 public class AssertionWeaver
 {
@@ -27,7 +27,14 @@ public class AssertionWeaver
         _searchDirectories = searchDirectories ?? Array.Empty<string>();
     }
 
-    public WeaveResult Weave(string assemblyPath, string pdbPath)
+    /// <summary>
+    /// Weaves the assembly at <paramref name="assemblyPath"/> in place.
+    /// </summary>
+    /// <param name="assemblyPath">The compiled assembly.</param>
+    /// <param name="pdbPath">Its portable PDB file, or null when the assembly embeds its symbols
+    /// (<c>DebugType=embedded</c>) or has none; embedded symbols are read from the assembly and written
+    /// back into it.</param>
+    public WeaveResult Weave(string assemblyPath, string? pdbPath)
     {
         var result = new WeaveResult();
         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -35,7 +42,6 @@ public class AssertionWeaver
         // Read assembly from a byte array to avoid holding file locks (ReadWrite=true
         // can stall on Linux overlay filesystems used by CI runners).
         var assemblyBytes = File.ReadAllBytes(assemblyPath);
-        var pdbBytes = File.ReadAllBytes(pdbPath);
 
         var readerParams = new ReaderParameters
         {
@@ -44,7 +50,8 @@ public class AssertionWeaver
             ReadingMode = ReadingMode.Immediate,
             AssemblyResolver = CreateResolver(assemblyPath)
         };
-        readerParams.SymbolStream = new MemoryStream(pdbBytes);
+        if (pdbPath != null)
+            readerParams.SymbolStream = new MemoryStream(File.ReadAllBytes(pdbPath));
 
         using var assemblyStream = new MemoryStream(assemblyBytes);
         using var assembly = AssemblyDefinition.ReadAssembly(assemblyStream, readerParams);
@@ -55,6 +62,13 @@ public class AssertionWeaver
         if (!HasTrackAssertionsAttribute(assembly))
         {
             result.SkipReason = "No TrackAssertions attribute found";
+            return result;
+        }
+
+        // Without sequence points there is no statement to wrap (DebugType=none).
+        if (!assembly.MainModule.HasSymbols)
+        {
+            result.SkipReason = "No symbols: the build writes no PDB (DebugType none)";
             return result;
         }
 
@@ -130,22 +144,46 @@ public class AssertionWeaver
             // Add sentinel attribute to prevent double-weaving
             AddWeavedSentinel(assembly);
 
-            using var outputAssembly = new MemoryStream();
-            using var outputPdb = new MemoryStream();
-
-            var writerParams = new WriterParameters
+            // The symbols go back where they came from: into the assembly when it embedded them, so a stack
+            // trace through a woven method keeps its line numbers either way.
+            if (pdbPath != null)
             {
-                WriteSymbols = true,
-                SymbolWriterProvider = new PortablePdbWriterProvider(),
-                SymbolStream = outputPdb
-            };
-            assembly.Write(outputAssembly, writerParams);
+                using var outputAssembly = new MemoryStream();
+                using var outputPdb = new MemoryStream();
+
+                var writerParams = new WriterParameters
+                {
+                    WriteSymbols = true,
+                    SymbolWriterProvider = new PortablePdbWriterProvider(),
+                    SymbolStream = outputPdb
+                };
+                assembly.Write(outputAssembly, writerParams);
+
+                // Write back to disk
+                File.WriteAllBytes(assemblyPath, outputAssembly.ToArray());
+                File.WriteAllBytes(pdbPath, outputPdb.ToArray());
+            }
+            else
+            {
+                // Cecil's embedded writer refuses a stream without a file name, though it builds the PDB in
+                // memory, so the woven assembly is written to a file beside the original and copied over it.
+                var weavingPath = assemblyPath + ".weaving";
+                try
+                {
+                    assembly.Write(weavingPath, new WriterParameters
+                    {
+                        WriteSymbols = true,
+                        SymbolWriterProvider = new EmbeddedPortablePdbWriterProvider()
+                    });
+                    File.Copy(weavingPath, assemblyPath, overwrite: true);
+                }
+                finally
+                {
+                    File.Delete(weavingPath);
+                }
+            }
 
             var writeMs = sw.ElapsedMilliseconds;
-
-            // Write back to disk
-            File.WriteAllBytes(assemblyPath, outputAssembly.ToArray());
-            File.WriteAllBytes(pdbPath, outputPdb.ToArray());
 
             _log?.LogMessage(MessageImportance.Low,
                 "AssertionTracking timing: read={0}ms setup={1}ms weave={2}ms write={3}ms total={4}ms",
@@ -359,11 +397,6 @@ public class AssertionWeaver
     private List<AssertionStatement> FindAssertionStatements(MethodDefinition method, WeaveResult result)
     {
         var results = new List<AssertionStatement>();
-        if (!method.DebugInformation.HasSequencePoints)
-        {
-            result.DiagMessages.Add($"Method {method.Name}: no sequence points");
-            return results;
-        }
 
         // Fast-path: scan all instructions once for ANY assertion entry point.
         // This avoids the expensive per-sequence-point analysis for the vast majority
@@ -382,6 +415,14 @@ public class AssertionWeaver
 
         if (!hasAnyAssertionCall)
             return results;
+
+        // Only a method that calls an assertion is worth a word: most methods without sequence points are the
+        // compiler's own, and listing them all buried the one that mattered.
+        if (!method.DebugInformation.HasSequencePoints)
+        {
+            result.DiagMessages.Add($"{method.DeclaringType.FullName}.{method.Name} calls an assertion but has no sequence points, so it is left unwoven");
+            return results;
+        }
 
         var sequencePoints = method.DebugInformation.SequencePoints.ToList();
         var instructions = method.Body.Instructions;
@@ -675,6 +716,37 @@ public class AssertionWeaver
             if (sp.StartLine < 1 || sp.StartLine > lines.Length)
                 return $"assertion at line {sp.StartLine}";
 
+            // The statement is the sequence point's own columns, so an assertion that shares its line takes
+            // none of its neighbours' code: a condition lambda on its own line is "first.Should().Be(1)", not
+            // "first => first.Should().Be(1),".
+            if (CutColumns(lines, sp) is { } statement)
+            {
+                var text = statement.Trim().TrimEnd(';').TrimEnd();
+
+                // Strip expression-bodied method arrow (=> prefix) — this is the method body
+                // syntax, not part of the assertion expression itself.
+                if (text.StartsWith("=> "))
+                    text = text.Substring(3);
+
+                // A sequence point that ends before its statement does leaves a bracket open: read on, through
+                // the rest of its last line and then whole lines, until the brackets balance.
+                if (HasUnbalancedParens(text))
+                {
+                    var rest = lines[sp.EndLine - 1].Substring(sp.EndColumn - 1).Trim();
+                    if (rest.Length > 0)
+                        text += " " + rest;
+                    var lineIdx = sp.EndLine; // 0-based index of the next line
+                    while (HasUnbalancedParens(text) && lineIdx < lines.Length && lineIdx < sp.EndLine + 20)
+                    {
+                        text += " " + lines[lineIdx].Trim();
+                        lineIdx++;
+                    }
+                    text = text.TrimEnd().TrimEnd(';');
+                }
+
+                return text;
+            }
+
             // Single-line statement
             if (sp.StartLine == sp.EndLine)
             {
@@ -730,15 +802,92 @@ public class AssertionWeaver
         }
     }
 
+    /// <summary>
+    /// The source between the sequence point's start and end columns (1-based, the end exclusive), its lines
+    /// joined by a space; null when the columns do not fit the file, as with symbols from another revision of
+    /// the source, and the caller reads whole lines.
+    /// </summary>
+    private static string? CutColumns(string[] lines, SequencePoint sp)
+    {
+        if (sp.EndLine < sp.StartLine || sp.EndLine > lines.Length || sp.StartColumn < 1 || sp.EndColumn < 1)
+            return null;
+
+        var first = lines[sp.StartLine - 1];
+        var last = lines[sp.EndLine - 1];
+        if (sp.StartColumn - 1 > first.Length || sp.EndColumn - 1 > last.Length)
+            return null;
+
+        if (sp.StartLine == sp.EndLine)
+            return sp.EndColumn > sp.StartColumn ? first.Substring(sp.StartColumn - 1, sp.EndColumn - sp.StartColumn) : null;
+
+        var parts = new List<string> { first.Substring(sp.StartColumn - 1).Trim() };
+        for (var i = sp.StartLine + 1; i < sp.EndLine; i++)
+            parts.Add(lines[i - 1].Trim());
+        parts.Add(last.Substring(0, sp.EndColumn - 1).Trim());
+        return string.Join(" ", parts);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="text"/> opens more parentheses than it closes, outside string and character
+    /// literals: the "(" in <c>.Be("(")</c> is no unclosed call.
+    /// </summary>
     private static bool HasUnbalancedParens(string text)
     {
         var depth = 0;
-        foreach (var c in text)
+        for (var i = 0; i < text.Length; i++)
         {
-            if (c == '(') depth++;
-            else if (c == ')') depth--;
+            var c = text[i];
+            if (c == '"' || c == '\'')
+                i = EndOfLiteral(text, i);
+            else if (c == '(')
+                depth++;
+            else if (c == ')')
+                depth--;
         }
         return depth > 0;
+    }
+
+    /// <summary>
+    /// The index of the quote that closes the string or character literal opening at <paramref name="start"/>:
+    /// regular and verbatim strings, raw strings of three or more quotes, and characters. An unclosed literal
+    /// runs to the end of the text.
+    /// </summary>
+    private static int EndOfLiteral(string text, int start)
+    {
+        var quote = text[start];
+        var verbatim = false;
+        if (quote == '"')
+        {
+            var run = 0;
+            while (start + run < text.Length && text[start + run] == '"')
+                run++;
+            if (run >= 3)
+            {
+                var close = text.IndexOf(new string('"', run), start + run, StringComparison.Ordinal);
+                return close < 0 ? text.Length - 1 : close + run - 1;
+            }
+            if (run == 2)
+                return start + 1;
+            verbatim = start > 0 && (text[start - 1] == '@' || (start > 1 && text[start - 1] == '$' && text[start - 2] == '@'));
+        }
+
+        for (var i = start + 1; i < text.Length; i++)
+        {
+            if (text[i] == '\\' && !verbatim)
+            {
+                i++;
+                continue;
+            }
+            if (text[i] != quote)
+                continue;
+            if (verbatim && i + 1 < text.Length && text[i + 1] == '"')
+            {
+                i++;
+                continue;
+            }
+            return i;
+        }
+        return text.Length - 1;
     }
 
     /// <summary>

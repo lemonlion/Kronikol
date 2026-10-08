@@ -95,6 +95,23 @@ public class HistoryRunBuilderTests
     }
 
     [Fact]
+    public void Two_Shouldly_failures_on_one_subject_take_a_key_each()
+    {
+        // SHOULDLY_ASSERTIONS_PLAN F15: the ledger keys a failure as the digest clusters it, so an equality and
+        // a comparison on one variable are two errors, not one.
+        var features = Features();
+        features[0].Scenarios[0].Result = ExecutionResult.Failed;
+        features[0].Scenarios[0].ErrorMessage = "result\n    should be\n5\n    but was\n3";
+        features[0].Scenarios[1].ErrorMessage = "result\n    should be greater than\n10\n    but was\n3";
+
+        var (_, run) = HistoryRunBuilder.Build(features, [], "Suite", GitHub(), At, new HistoryBuildOptions());
+
+        Assert.Equal(["e1", "e2", null], run.Errors);
+        Assert.Equal("result should be", run.ErrorText["e1"]);
+        Assert.Equal("result should be greater than", run.ErrorText["e2"]);
+    }
+
+    [Fact]
     public void Error_keys_can_be_hashed_so_no_message_text_reaches_the_ledger()
     {
         // §9.1: a message can carry a payload. HistoryErrorKeys = false keeps the clustering and drops

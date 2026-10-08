@@ -824,3 +824,51 @@ this table missed, and the skill references under `.claude/skills/` and `templat
   prototype RUN on a copy of the weaver (`harness/proto/`), and part of S0b (F14, F15 and the warning's behaviour,
   `harness/s0b/`). Shouldly 4.3.0 and 5.0.0-preview.2 inventoried (`harness/shouldly/`). Nothing in `src/` is
   changed; not green-lit.
+- 2026-10-08: green-lit in full by the owner ("implement the plan in full", then "also fix the bugs you found":
+  the section 8 findings), §11 taken as recommended. ROADMAP row 1.23. Executed by kronikol-50 in worktree
+  `Kronikol-shouldly-impl`; five releases by other sessions (4.10.0 to 4.12.2) came first, so R1 is 4.12.3.
+- 2026-10-08, R1 (4.12.3): every fix §5 lists, and what execution found.
+  - **Q7 measured (S0b, summarised here):** no FluentAssertions or AwesomeAssertions version from 6.12.2 to 8.11.0
+    (AwesomeAssertions 8.2.0, 9.6.0) has a public read-only way to see a scope's failures; `HasFailures()` is a bool,
+    and the public `AssertionScope.Current` getter on FluentAssertions 8.9 and 8.11 stores a default scope that the
+    next scope then reports into. Every version keeps the open scope in a private static `AsyncLocal` `CurrentScope`
+    and its messages behind a private `assertionStrategy`, readable through the public
+    `IAssertionStrategy.FailureMessages`, with no side effect.
+  - **F12's fix is not the plan's fallback.** "Draw no note inside a scope" was built first and dropped: it hid every
+    inspector of `SatisfyRespectively`, because FluentAssertions runs each inspector in a scope of its own. That also
+    showed a second face of F12: a failing inspector was drawn as a pass with no scope in the test at all. The fix
+    claims, after each assertion, the scope's failures that no assertion has claimed yet, by reference
+    (`AssertionScopeProbe`), so a nested scope's failures handed to its parent are not claimed twice; it needs no new
+    public member, so it stays in the patch. Its one limit, a failure that uninstrumented code adds being drawn on
+    the next instrumented assertion, is pinned by a fact and stated in the wiki; R2's weaver can remove it.
+  - **TUnit's `Assert.Multiple()` has the same defect (found in execution, RUN):** on 4.9.1 and 4.10.0, with
+    TUnit.Assertions 1.73.5, both assertions in a multiple scope were drawn as passes, Debug and Release. TUnit keeps
+    the scope in an internal `AssertionScope` (private static `AsyncLocal` `CurrentScope`, private `_exceptions`),
+    with the same names from 1.0.0 to 1.73.5. The probe reads it the same way; the weaver's facts reference the real
+    TUnit.Assertions for it.
+  - **Found and fixed on the way:** a `(` in a string literal garbled the label (the weave and the formatter counted
+    brackets inside literals); the formatter's `?.` and line-join clean-ups also reached into literals; the weave's
+    unwoven-method note fired for every method without sequence points and was never printed (now only a method that
+    calls an assertion, logged at low importance); the wiki's API reference named methods that do not exist on
+    `FailureClusterer` and `ErrorDiffParser` and called the clustering Levenshtein; the skill's ledger sentence.
+  - **Section 8 item 1:** the source rewriter left the repository in its own no-bump commit.
+  - **Kronikol4J (§3.12):** F11 diverges (the port reads one whole line per frame and has no label formatter, so its
+    AssertJ agent keeps `first ->` and `if (ok)`); F13 has no counterpart (the port rewrites nothing in a label).
+    Found on the way, not fixed here: the port's `KronikolSoftAssertions` draws an empty label, since it cuts the
+    message at its first line break and AssertJ's message starts with one.
+  - **F21, found in R1's acceptance and left to R2 (RUN):** in Release, `int result = 3; int expected = 5;
+    result.Should().Be(expected);` throws `InvalidProgramException` once woven, on the published 4.11.0 as on R1
+    (`harness/r1/acceptance/published-4.11.0-release-run.txt`, `control-Release-run.txt`). The compiler keeps `result`
+    on the stack across `int expected = 5;`, and the weave's line-by-line depth misses it. It is the class §3.2's
+    stack analysis replaces the heuristics for, so the fix ships with it in R2, with a fact on this shape for
+    FluentAssertions and AwesomeAssertions in Debug and Release. R1 does not change the stack handling.
+  - **Proofs:** the new facts failed on 4.10.0 and on 4.11.0 for their own reasons (`harness/r1/`); 16 mutations,
+    each one fix undone, were each caught (`harness/r1/mutations.txt`). The weaver suite passes in Release on net8.0,
+    net9.0 and net10.0 (128, 142 and 156, the rest SDKs not installed), the core suite 7,059 with 2 skipped, and
+    release.slnf builds and packs in Release for every target (62 packages).
+  - **Acceptance on local packages** (an isolated NuGet cache, under a version label nuget.org never has): the plan's
+    probe with its controls weaves 7 statements in 6 methods in Debug, in Release and with
+    `<DebugType>embedded</DebugType>` (which 4.11.0 skipped), and draws `Greeting should be "Hi!"`,
+    `First should be 1`, `Second should be 2` and the scope's `✗` then `✓` (`harness/r1/acceptance/`). The scope
+    probe draws the same on FluentAssertions 6.12.2, 7.2.0 and 8.9.0 and AwesomeAssertions 8.2.0 and 9.6.0: the
+    scope's failure `✗`, a nested scope's failure once, a failing inspector `✗` (`harness/r1/scope/`).

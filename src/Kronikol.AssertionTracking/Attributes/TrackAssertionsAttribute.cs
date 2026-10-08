@@ -8,9 +8,9 @@ namespace Kronikol.Tracking
 {
     /// <summary>
     /// Activates IL-based assertion tracking for this assembly.
-    /// When present, the Kronikol.AssertionTracking MSBuild task will
-    /// instrument FluentAssertions <c>.Should()</c> call sites after compilation,
-    /// wrapping each assertion statement in a try/catch that reports pass/fail
+    /// When present, the Kronikol.AssertionTracking MSBuild task will instrument the assertion
+    /// statements of FluentAssertions and AwesomeAssertions (<c>.Should()</c>) and TUnit
+    /// (<c>Assert.That()</c>) after compilation, wrapping each in a try/catch that reports pass/fail
     /// to <c>Track.AssertionPassed</c>/<c>Track.AssertionFailed</c>.
     /// <para>
     /// This preserves full C# semantics — null propagation, ref parameters, and

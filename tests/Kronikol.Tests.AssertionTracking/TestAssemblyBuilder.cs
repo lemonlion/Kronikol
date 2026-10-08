@@ -46,7 +46,23 @@ public static class TestAssemblyBuilder
     /// Compiles source code into an assembly with PDB. Returns the assembly file path.
     /// The assembly references FluentAssertions and Kronikol for realistic assertion tracking.
     /// </summary>
-    public static string Build(string name, string source, OptimizationLevel optimization = OptimizationLevel.Debug)
+    public static string Build(string name, string source, OptimizationLevel optimization = OptimizationLevel.Debug) =>
+        Build(name, source, optimization, DebugInformationFormat.PortablePdb);
+
+    /// <summary>
+    /// Compiles source code with its symbols in the given form: a portable PDB file beside the assembly,
+    /// a portable PDB embedded in it (<c>DebugType=embedded</c>), or none at all when
+    /// <paramref name="symbols"/> is null (<c>DebugType=none</c>).
+    /// </summary>
+    public static string Build(string name, string source, OptimizationLevel optimization, DebugInformationFormat? symbols) =>
+        Build(name, source, optimization, symbols, []);
+
+    /// <summary>
+    /// Compiles source code that also references <paramref name="extraReferences"/> (assembly paths), such as the
+    /// real TUnit.Assertions, which the fixtures with TUnit stubs must not see.
+    /// </summary>
+    public static string Build(string name, string source, OptimizationLevel optimization, DebugInformationFormat? symbols,
+        IReadOnlyList<string> extraReferences)
     {
         var assemblyPath = Path.Combine(OutputDir, $"{name}.dll");
         var pdbPath = Path.ChangeExtension(assemblyPath, ".pdb");
@@ -65,7 +81,9 @@ public static class TestAssemblyBuilder
         var attrTree = CSharpSyntaxTree.ParseText(attrSourceText,
             new CSharpParseOptions(LanguageVersion.Latest));
 
-        var references = GetReferences();
+        var references = GetReferences()
+            .Concat(extraReferences.Select(path => (MetadataReference)MetadataReference.CreateFromFile(path)))
+            .ToArray();
 
         var compilation = CSharpCompilation.Create(
             name,
@@ -74,11 +92,22 @@ public static class TestAssemblyBuilder
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
                 .WithOptimizationLevel(optimization));
 
-        var emitOptions = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
-
         using var peStream = File.Create(assemblyPath);
-        using var pdbStream = File.Create(pdbPath);
-        var result = compilation.Emit(peStream, pdbStream, options: emitOptions);
+        EmitResult result;
+        if (symbols == DebugInformationFormat.PortablePdb)
+        {
+            using var pdbStream = File.Create(pdbPath);
+            result = compilation.Emit(peStream, pdbStream,
+                options: new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb));
+        }
+        else if (symbols is { } format)
+        {
+            result = compilation.Emit(peStream, options: new EmitOptions(debugInformationFormat: format));
+        }
+        else
+        {
+            result = compilation.Emit(peStream);
+        }
 
         if (!result.Success)
         {

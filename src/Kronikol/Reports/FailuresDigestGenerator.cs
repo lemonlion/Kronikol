@@ -496,7 +496,7 @@ public static class FailuresDigestGenerator
     /// messages and on which characters count as whitespace — so one report could group its failures two
     /// ways and give a reader no way to tell which grouping was the run.
     /// </summary>
-    private static string ClusterKey(string? errorMessage) => FailureText.FirstLine(errorMessage);
+    private static string ClusterKey(string? errorMessage) => FailureText.ClusterKey(errorMessage);
 
     // ─── Markdown ──────────────────────────────────────────────
 

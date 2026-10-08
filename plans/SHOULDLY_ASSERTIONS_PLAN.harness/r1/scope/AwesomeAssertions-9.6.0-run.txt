@@ -1,0 +1,19 @@
+build exit 0
+Kronikol.AssertionTracking: Instrumented 8 assertion(s) in 6 method(s) (152ms)
+AwesomeAssertions 9.6.0.0 · Kronikol 4.11.1.0 · woven: True
+== Scope_first_fails: threw AssertionFailedException: Expected result to be 5, but found 3.⏎
+   notes: 2
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Result should be 5⏎Expected result to be 5, but found 3.⏎end note⏎'__^*__:Program.cs:L55
+   | hnote across <<assertionNote>> #d4edda⏎✓ Result should be 3⏎end note⏎'__^*__:Program.cs:L56
+== Nested_scope_fails_once: threw AssertionFailedException: Expected result to be 4, but found 3.⏎
+   notes: 2
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Result should be 4⏎Expected result to be 4, but found 3.⏎end note⏎'__^*__:Program.cs:L68
+   | hnote across <<assertionNote>> #d4edda⏎✓ Result should be 3⏎end note⏎'__^*__:Program.cs:L70
+== Inspector_fails: threw AssertionFailedException: Expected items to satisfy all inspectors, but some inspectors are not satisfied:⏎	At index 1:⏎		Expected second to be 3, but found 2
+   notes: 3
+   | hnote across <<assertionNote>> #d4edda⏎✓ First should be 1⏎end note⏎'__^*__:Program.cs:L79
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Second should be 3⏎Expected second to be 3, but found 2.⏎end note⏎'__^*__:Program.cs:L80
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Items should satisfy respectively [  first => first.Should().Be(1), second => second.Should().Be(3) ]⏎Expected items to satisfy all inspectors, but some inspectors are not satisfied:⏎	At index 1:⏎		Expected second to be 3, but found 2⏎end note⏎'__^*__:Program.cs:L78
+== Plain_pass: passed
+   notes: 1
+   | hnote across <<assertionNote>> #d4edda⏎✓ Result should be 3⏎end note⏎'__^*__:Program.cs:L87

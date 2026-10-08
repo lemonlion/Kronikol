@@ -17,7 +17,7 @@ public static class FailureClusterer
         // the empty string here while the failures digest - which filters on the key - formed none.
         var failed = scenarios
             .Where(s => s.Result == ExecutionResult.Failed)
-            .Select(s => (Scenario: s, Key: FailureText.FirstLine(s.ErrorMessage)))
+            .Select(s => (Scenario: s, Key: FailureText.ClusterKey(s.ErrorMessage)))
             .Where(x => x.Key.Length > 0)
             .ToArray();
 

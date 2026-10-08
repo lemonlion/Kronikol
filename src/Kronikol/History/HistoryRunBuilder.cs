@@ -98,7 +98,7 @@ public static class HistoryRunBuilder
             {
                 // Truncate marks the cut with an ellipsis, so the cap leaves room for it: the key is never
                 // longer than the limit.
-                var line = FailureText.Truncate(FailureText.FirstLine(scenario.ErrorMessage), HistoryFormat.ErrorKeyLimit - 1);
+                var line = FailureText.Truncate(FailureText.ClusterKey(scenario.ErrorMessage), HistoryFormat.ErrorKeyLimit - 1);
                 var text = options.ErrorKeys ? line : "#" + InteractionShape.Hash8(line);
                 if (!errorKeys.TryGetValue(text, out var key))
                 {

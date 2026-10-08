@@ -5,7 +5,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <Title>Test Tracking Diagrams Assertion Tracking</Title>
-    <Description>IL weaver that automatically instruments FluentAssertions .Should() calls with assertion tracking. Unlike the source rewriter, this operates on compiled IL — preserving full C# semantics including null propagation, ref parameters, and expression evaluation order. Activated via [assembly: TrackAssertionsBeta].</Description>
+    <Description>IL weaver that draws each assertion in a test as a note in its Kronikol diagram and a sub-step in its step list, passed or failed, with the values it compared. It instruments the assertion statements of FluentAssertions and AwesomeAssertions (.Should()) and TUnit (Assert.That()) in the compiled IL, so C# semantics such as null propagation, ref parameters and evaluation order are unchanged. Turn it on with [assembly: TrackAssertions].</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 
     <!-- MSBuild task packaging: output DLLs to tasks/ folder in nupkg -->

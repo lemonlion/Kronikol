@@ -420,6 +420,16 @@ public static class Track
         if (testId is null)
             return;
 
+        // Inside an AssertionScope a failing assertion returns instead of throwing, and the scope throws at its
+        // end: an assertion that returned failed if the scope gathered a failure no assertion has claimed
+        // (SHOULDLY_ASSERTIONS_PLAN F12). One that threw owns what it gathered too.
+        var gathered = AssertionScopeProbe.ClaimNewFailures();
+        if (passed && gathered.Count > 0)
+        {
+            passed = false;
+            failureMessage = string.Join("\n", gathered);
+        }
+
         // If there's an active step, record this assertion as a sub-step
         if (StepCollector.HasActiveStep(testId))
         {

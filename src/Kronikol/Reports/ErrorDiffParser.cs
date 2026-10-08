@@ -21,10 +21,24 @@ public static class ErrorDiffParser
         // NUnit: Expected: value / But was: value
         new(@"Expected:\s*""?(.+?)""?\s*\r?\n\s*But was:\s*""?(.+?)""?\s*$", RegexOptions.Multiline),
 
+        // Shouldly: the subject's code, then "should be", the expected value, "but was" and the actual value,
+        // each marker on a line of its own indented by four spaces. A value is written bare (5, True,
+        // Colour.Green, null) unless it is a string, and can run over several lines; a "difference" table or
+        // the custom message's "Additional Info" may follow it.
+        new(@"^ {4}should be\r?\n(.*?)\r?\n {4}but was\r?\n(.*?)(?=\r?\n {4}difference(?:\r?\n|\z)|\r?\n\r?\nAdditional Info:|\s*\z)",
+            RegexOptions.Multiline | RegexOptions.Singleline),
+
+        // FluentAssertions, a string, whatever the subject is called:
+        // Expected text to be "b", but "a" differs near "a" (index 0).
+        new(@"^Expected .+? to be (?:equivalent to )?("".*?"")(?: with a length of \d+)?, but ("".*?"")", RegexOptions.Singleline),
+
+        // FluentAssertions, any other value: Expected result to be 5[ because ...], but found 3[ (difference of -2)].
+        new(@"^Expected .+? to be (.+?)(?: because .+?)?, but found (.+?)(?: \(difference of [^)]*\))?\.?\s*\z", RegexOptions.Singleline),
+
         // FluentAssertions: Expected string to be [equivalent to] "expected" ... but "actual"
         new(@"Expected string to be(?:\s+equivalent to)?\s+""(.+?)"".+?but\s+""(.+?)""", RegexOptions.Singleline),
 
-        // Shouldly: should be "expected" but was "actual"
+        // Shouldly, quoted and on any lines: should be "expected" but was "actual"
         new(@"should be\s+""(.+?)""\s*\r?\n\s*but was\s+""(.+?)""", RegexOptions.Singleline),
     ];
 
@@ -38,14 +52,18 @@ public static class ErrorDiffParser
             var match = pattern.Match(errorMessage);
             if (match.Success)
             {
-                var expected = match.Groups[1].Value.Trim().Trim('"');
-                var actual = match.Groups[2].Value.Trim().Trim('"');
+                var expected = Unquote(match.Groups[1].Value.Trim());
+                var actual = Unquote(match.Groups[2].Value.Trim());
                 return new DiffResult(expected, actual);
             }
         }
 
         return null;
     }
+
+    /// <summary>A string value without the one pair of quotes it was written in; any other value as it is.</summary>
+    private static string Unquote(string value) =>
+        value.Length >= 2 && value[0] == '"' && value[^1] == '"' ? value[1..^1] : value.Trim('"');
 
     public static string GenerateDiffHtml(string expected, string actual)
     {

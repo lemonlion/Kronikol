@@ -104,4 +104,45 @@ public class FailureClusterKeyTests
         Assert.Empty(FailureClusterer.Cluster(scenarios));
         Assert.Empty(DigestClusterHeadings(scenarios));
     }
+
+    private static Scenario Failed(string id, string message) =>
+        new() { Id = id, DisplayName = id, Result = ExecutionResult.Failed, ErrorMessage = message };
+
+    // SHOULDLY_ASSERTIONS_PLAN F15: Shouldly's first line is its subject's code, so on the first line alone
+    // every failure on one variable was one cause, an equality and a comparison together.
+    [Fact]
+    public void Two_Shouldly_failures_on_one_subject_cluster_apart()
+    {
+        Scenario[] scenarios =
+        [
+            Failed("t0", "result\n    should be\n5\n    but was\n3"),
+            Failed("t1", "result\n    should be\n6\n    but was\n3"),
+            Failed("t2", "result\n    should be greater than\n10\n    but was\n3"),
+            Failed("t3", "result\n    should be greater than\n12\n    but was\n3")
+        ];
+
+        var panel = FailureClusterer.Cluster(scenarios).Select(c => c.ClusterKey).Order(StringComparer.Ordinal).ToArray();
+
+        Assert.Equal(["result should be", "result should be greater than"], panel);
+        Assert.Equal(panel, DigestClusterHeadings(scenarios).Order(StringComparer.Ordinal).ToArray());
+    }
+
+    [Fact]
+    public void Two_identical_Shouldly_failures_cluster_together()
+    {
+        var scenarios = Pair("name\r\n    should not be null but was");
+
+        var cluster = Assert.Single(FailureClusterer.Cluster(scenarios));
+        Assert.Equal("name should not be null but was", cluster.ClusterKey);
+        Assert.Equal([cluster.ClusterKey], DigestClusterHeadings(scenarios));
+    }
+
+    [Fact]
+    public void A_second_line_that_only_looks_like_Shouldly_keeps_the_first_line_key()
+    {
+        // Shouldly indents its check by four spaces; a message whose second line merely starts with "should"
+        // is someone else's and keeps today's key.
+        var cluster = Assert.Single(FailureClusterer.Cluster(Pair("Connection refused\nshould retry")));
+        Assert.Equal("Connection refused", cluster.ClusterKey);
+    }
 }

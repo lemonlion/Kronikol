@@ -1,0 +1,25 @@
+  Failed Kronikol.Tests.AssertionTracking.StatementTextTests.A_lambda_condition_on_its_own_line_is_labelled_by_its_body(optimization: Release)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_uninstrumented_code_adds_to_a_scope_is_drawn_on_the_next_assertion(library: "AwesomeAssertions", optimization: Debug)
+  Failed Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_logs_a_method_it_leaves_unwoven
+  Failed Kronikol.Tests.AssertionTracking.StatementTextTests.A_lambda_condition_on_its_own_line_is_labelled_by_its_body(optimization: Debug)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_uninstrumented_code_adds_to_a_scope_is_drawn_on_the_next_assertion(library: "FluentAssertions", optimization: Release)
+  Failed Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_weaves_an_assembly_whose_pdb_is_embedded
+  Failed Kronikol.Tests.AssertionTracking.StatementTextTests.A_statement_sharing_its_line_is_labelled_by_its_own_columns
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_uninstrumented_code_adds_to_a_scope_is_drawn_on_the_next_assertion(library: "AwesomeAssertions", optimization: Release)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_uninstrumented_code_adds_to_a_scope_is_drawn_on_the_next_assertion(library: "FluentAssertions", optimization: Debug)
+  Failed Kronikol.Tests.AssertionTracking.StatementTextTests.A_bracket_inside_a_literal_does_not_pull_in_the_next_lines
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_assertion_in_an_AssertionScope_is_drawn_failed(library: "FluentAssertions", optimization: Debug)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_assertion_in_an_AssertionScope_is_drawn_failed(library: "FluentAssertions", optimization: Release)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_assertion_in_an_AssertionScope_is_drawn_failed(library: "AwesomeAssertions", optimization: Release)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_assertion_in_an_AssertionScope_is_drawn_failed(library: "AwesomeAssertions", optimization: Debug)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_inspector_is_drawn_failed(library: "FluentAssertions", optimization: Debug)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_inspector_is_drawn_failed(library: "AwesomeAssertions", optimization: Release)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_inspector_is_drawn_failed(library: "AwesomeAssertions", optimization: Debug)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_inspector_is_drawn_failed(library: "FluentAssertions", optimization: Release)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_a_nested_scope_hands_on_is_not_blamed_on_the_next_assertion(library: "AwesomeAssertions", optimization: Debug)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_a_nested_scope_hands_on_is_not_blamed_on_the_next_assertion(library: "AwesomeAssertions", optimization: Release)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_a_nested_scope_hands_on_is_not_blamed_on_the_next_assertion(library: "FluentAssertions", optimization: Debug)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_a_nested_scope_hands_on_is_not_blamed_on_the_next_assertion(library: "FluentAssertions", optimization: Release)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_TUnit_assertion_in_Assert_Multiple_is_drawn_failed(optimization: Release)
+  Failed Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_TUnit_assertion_in_Assert_Multiple_is_drawn_failed(optimization: Debug)
+Failed!  - Failed:    24, Passed:     7, Skipped:     0, Total:    31, Duration: 18 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

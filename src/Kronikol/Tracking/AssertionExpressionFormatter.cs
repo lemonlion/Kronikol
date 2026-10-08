@@ -42,14 +42,9 @@ public static partial class AssertionExpressionFormatter
                 expr = expr[(eqIdx + 3)..];
         }
 
-        // Remove null-forgiving operators (!)
-        expr = expr.Replace("!", "");
-
-        // Remove null-conditional operators (?.)
-        expr = expr.Replace("?.", ".");
-
-        // Normalize whitespace around dots (multi-line expressions from [CallerArgumentExpression])
-        expr = Regex.Replace(expr, @"\s+\.", ".");
+        // Remove null-forgiving operators (!) and null-conditional ones (?. reads as .), and the whitespace
+        // before a dot (multi-line expressions from [CallerArgumentExpression]): in the code, never in a literal.
+        expr = CleanCode(expr);
 
         // Split on .Should().
         var match = ShouldSplitRegex.Match(expr);
@@ -125,6 +120,102 @@ public static partial class AssertionExpressionFormatter
         }
     }
 
+    /// <summary>
+    /// The expression with its null-forgiving operators removed, each <c>?.</c> read as <c>.</c> and the
+    /// whitespace before a dot dropped, outside its string and character literals. Removing every <c>!</c>
+    /// took one from a literal (<c>"Hi!"</c> read <c>"Hi"</c>), turned <c>!=</c> into <c>=</c> and a negation
+    /// into its opposite; only a postfix <c>!</c>, after a name, a call or an index and not before <c>=</c>,
+    /// is the null-forgiving operator.
+    /// </summary>
+    private static string CleanCode(string expr)
+    {
+        var literal = LiteralMask(expr);
+        var sb = new StringBuilder(expr.Length);
+        for (var i = 0; i < expr.Length; i++)
+        {
+            var c = expr[i];
+            if (!literal[i])
+            {
+                var next = i + 1 < expr.Length ? expr[i + 1] : '\0';
+                if (c == '!' && i > 0 && (IsIdentifierChar(expr[i - 1]) || expr[i - 1] is ')' or ']') && next != '=')
+                    continue;
+                if (c == '?' && next == '.')
+                    continue;
+                if (char.IsWhiteSpace(c))
+                {
+                    var j = i;
+                    while (j < expr.Length && char.IsWhiteSpace(expr[j]))
+                        j++;
+                    if (j < expr.Length && expr[j] == '.' && !literal[j])
+                    {
+                        i = j - 1;
+                        continue;
+                    }
+                }
+            }
+            sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Marks each character of <paramref name="text"/> that belongs to a string or character literal, its
+    /// quotes included: regular, verbatim and interpolated strings, raw strings of three or more quotes, and
+    /// characters. An unclosed literal runs to the end of the text.
+    /// </summary>
+    internal static bool[] LiteralMask(string text)
+    {
+        var mask = new bool[text.Length];
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] is not ('"' or '\''))
+                continue;
+            var end = EndOfLiteral(text, i);
+            for (var j = i; j <= end; j++)
+                mask[j] = true;
+            i = end;
+        }
+        return mask;
+    }
+
+    private static int EndOfLiteral(string text, int start)
+    {
+        var quote = text[start];
+        var verbatim = false;
+        if (quote == '"')
+        {
+            var run = 0;
+            while (start + run < text.Length && text[start + run] == '"')
+                run++;
+            if (run >= 3)
+            {
+                var close = text.IndexOf(new string('"', run), start + run, StringComparison.Ordinal);
+                return close < 0 ? text.Length - 1 : close + run - 1;
+            }
+            if (run == 2)
+                return start + 1;
+            verbatim = start > 0 && (text[start - 1] == '@' || (start > 1 && text[start - 1] == '$' && text[start - 2] == '@'));
+        }
+
+        for (var i = start + 1; i < text.Length; i++)
+        {
+            if (text[i] == '\\' && !verbatim)
+            {
+                i++;
+                continue;
+            }
+            if (text[i] != quote)
+                continue;
+            if (verbatim && i + 1 < text.Length && text[i + 1] == '"')
+            {
+                i++;
+                continue;
+            }
+            return i;
+        }
+        return text.Length - 1;
+    }
+
     private static (string Method, string? Args) ParseMethodAndArgs(string assertionPart)
     {
         // Handle generic methods: BeOfType<string>()
@@ -133,9 +224,12 @@ public static partial class AssertionExpressionFormatter
         var methodEnd = -1;
         var argsStart = -1;
         var argsEnd = -1;
+        var literal = LiteralMask(assertionPart);
 
         for (var i = 0; i < assertionPart.Length; i++)
         {
+            if (literal[i])
+                continue;
             var c = assertionPart[i];
             switch (c)
             {
@@ -247,16 +341,7 @@ public static partial class AssertionExpressionFormatter
         return args;
     }
 
-    private static bool IsInsideQuotes(string text, int position)
-    {
-        var quoteCount = 0;
-        for (var i = 0; i < position; i++)
-        {
-            if (text[i] == '"' && (i == 0 || text[i - 1] != '\\'))
-                quoteCount++;
-        }
-        return quoteCount % 2 != 0;
-    }
+    private static bool IsInsideQuotes(string text, int position) => LiteralMask(text)[position];
 
     private static bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';
 
@@ -312,8 +397,11 @@ public static partial class AssertionExpressionFormatter
         var parts = new List<string>();
         var depth = 0;
         var start = 0;
+        var literal = LiteralMask(text);
         for (var i = 0; i < text.Length; i++)
         {
+            if (literal[i])
+                continue;
             switch (text[i])
             {
                 case '(' or '<': depth++; break;

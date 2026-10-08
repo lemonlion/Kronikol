@@ -4,6 +4,66 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.12.3] - 2026-10-08
+
+**Patch - assertion tracking draws what the run did.**
+`plans/SHOULDLY_ASSERTIONS_PLAN.md` R1: defects in shipped code, found while planning Shouldly support (#141). Bug
+fixes and corrected metadata, nothing new to call, so the patch part moves (4.12.2 to 4.12.3). Three fixes change what
+a report shows: the outcome of an assertion inside an `AssertionScope`, the text of some assertion labels, and the key
+a Shouldly failure is grouped by (below). Kronikol4J's ledger has a line for the labels. The history action's
+`VERSION` installs `Kronikol.Tool` 4.12.3, and the templates pin 4.12.2.
+
+### Fixed
+
+- **A failed assertion inside an assertion scope was drawn as a pass.** Inside a FluentAssertions or
+  AwesomeAssertions `AssertionScope`, or TUnit's `Assert.Multiple()`, a failing assertion does not throw: the scope
+  keeps the failure and throws it when it closes, outside any instrumented statement. So every assertion in a scope
+  was drawn `✓`, and a failing test's diagram said each of its checks passed. A failing inspector of
+  `SatisfyRespectively` and its kin was drawn `✓` too, with no scope in the test, since FluentAssertions runs each
+  inspector in a scope of its own. An assertion that adds a failure to a scope is now drawn `✗` with the scope's
+  message for it, on FluentAssertions 6.12 to 8.11, AwesomeAssertions 8 and 9 and TUnit.Assertions 1.0 to 1.73, and
+  what the scope throws is unchanged; `Track.That` reads a scope the same way. A failure that uninstrumented code
+  adds to a scope, such as an assertion in a helper from another assembly, is drawn on the next instrumented
+  assertion in that scope.
+- **A project that embeds its PDB was not instrumented.** With `<DebugType>embedded</DebugType>` there is no `.pdb`
+  file beside the assembly, and the weave skipped the project, saying so only at detailed build verbosity. It now
+  reads the embedded symbols and writes them back into the assembly, so a stack trace through a woven method keeps
+  its line numbers. A build with no symbols (`<DebugType>none</DebugType>`) is still left as it is.
+- **A label took code from its neighbours on the same line.** A statement's text was read by whole source lines, so a
+  condition lambda on its own line was labelled with its parameter and arrow (`First => first should be 1`), and
+  `if (ok) total.Should().Be(3);` read `If (ok) total should be 3`. A label is now the statement's own columns
+  (`First should be 1`, `Total should be 3`).
+- **A bracket inside a string garbled a label.** `open.Should().Be("(")` was labelled `Open should be`: the weave and
+  the label counted the `(` inside the literal as an unclosed call, and the weave joined the next lines to the text.
+  Brackets inside string and character literals are skipped.
+- **A `!` was dropped from labels.** The label removed every `!` to drop the null-forgiving operator, so
+  `greeting.Should().Be("Hi!")` read `should be "Hi"`, `(x != y)` read `(x = y)` and `(!flag)` read `(flag)`. Only
+  the null-forgiving `!` is removed now, and the clean-up that reads `?.` as `.` and joins a line break before a dot
+  leaves literals as they are written.
+- **A failure whose values are not quoted had no Expected and Actual.** The report's side-by-side diff,
+  `Failures.md` and `Failures.jsonl` read Shouldly's message only when both values were quoted strings, and
+  FluentAssertions' only when its subject was called `string`. So Shouldly's `should be` / `but was` with `5` and
+  `3`, `True`, an enum or `null`, and FluentAssertions' `Expected result to be 5, but found 3.` and
+  `Expected text to be "b", but "a" differs near "a"` got none. Both libraries' messages are read now, a value bare,
+  quoted or over several lines, without Shouldly's difference table or a custom message's `Additional Info`. A
+  comparison such as `should be greater than` still gets none: its value is not an expected one.
+- **Shouldly failures on one variable were one cluster.** Failures are grouped by their message's first line, and
+  Shouldly's first line is the subject's code, so an equality and a comparison on `result` read as one cause in
+  `Failures.md` and the report. A Shouldly message is now grouped by its subject and its check (`result should be`),
+  in both and in the history ledger's error keys. Behaviour change: a Shouldly failure's key in the ledger changes
+  once, on the first run of 4.12.3.
+- The weave notes each method that calls an assertion but has no sequence points, and is left unwoven, in the build
+  log at low importance. It collected that note for every method without sequence points and printed none.
+- **The package description named only FluentAssertions and an attribute renamed in 2.31.0,
+  `[assembly: TrackAssertionsBeta]`.** It names `[assembly: TrackAssertions]` and every library the weaver reads, as
+  do the task's and the attribute's doc comments.
+
+The unpublished source rewriter, `src/Kronikol.AssertionRewriter`, and its tests left the repository: 2.31.0 removed
+them from the solution, and 3.0.64 put them back as orphaned tests. No package changes with it.
+
+Each fix has a fact that failed on 4.11.0 for its own reason (`plans/SHOULDLY_ASSERTIONS_PLAN.harness/r1/`), and
+undoing the fix alone turns its fact red.
+
 ## [4.12.2] - 2026-10-08
 
 **Patch - calls under a test id that names no scenario are reported (F7).** Found while planning #132

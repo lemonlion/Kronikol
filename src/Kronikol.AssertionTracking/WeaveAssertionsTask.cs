@@ -8,10 +8,11 @@ using Microsoft.Build.Utilities;
 namespace Kronikol.AssertionTracking;
 
 /// <summary>
-/// MSBuild task that runs after compilation and uses Mono.Cecil to instrument
-/// FluentAssertions .Should() call sites with assertion tracking (try/catch around
-/// each assertion statement that calls Track.AssertionPassed/Track.AssertionFailed).
-/// Only activates if [assembly: TrackAssertionsBeta] is found in the compiled assembly.
+/// MSBuild task that runs after compilation and uses Mono.Cecil to instrument the assertion statements of
+/// FluentAssertions and AwesomeAssertions (<c>.Should()</c>) and TUnit (<c>Assert.That()</c>) with assertion
+/// tracking: a try/catch around each statement that calls Track.AssertionPassed/Track.AssertionFailed.
+/// Only activates if <c>[assembly: TrackAssertions]</c> is found in the compiled assembly. It reads the
+/// statements from the build's symbols, a portable PDB beside the assembly or one embedded in it.
 /// </summary>
 public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
 {
@@ -50,12 +51,11 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
             return true;
         }
 
-        var pdbPath = Path.ChangeExtension(AssemblyPath, ".pdb");
+        // A project that embeds its PDB (DebugType=embedded) has no file beside the assembly: the weaver reads
+        // the symbols from the assembly itself, and leaves one with none at all (DebugType=none) unwoven.
+        string? pdbPath = Path.ChangeExtension(AssemblyPath, ".pdb");
         if (!File.Exists(pdbPath))
-        {
-            Log.LogMessage(MessageImportance.Low, "AssertionTracking: PDB not found at {0}, skipping", pdbPath);
-            return true;
-        }
+            pdbPath = null;
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
         var searchDirectories = References
@@ -66,6 +66,9 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
         var weaver = new AssertionWeaver(Log, searchDirectories!);
         var result = weaver.Weave(AssemblyPath, pdbPath);
         sw.Stop();
+
+        foreach (var message in result.DiagMessages)
+            Log.LogMessage(MessageImportance.Low, "AssertionTracking: {0}", message);
 
         if (result.WeavedCount > 0)
         {

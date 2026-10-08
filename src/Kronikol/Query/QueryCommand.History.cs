@@ -576,7 +576,7 @@ internal static class ReportHistory
             durations[i] = scenario.DurationSeconds > 0 ? (int)Math.Round(scenario.DurationSeconds * 1000, MidpointRounding.AwayFromZero) : null;
             if (results[i] == HistoryFormat.Failed)
             {
-                var text = FailureText.Truncate(FailureText.FirstLine(scenario.ErrorMessage), HistoryFormat.ErrorKeyLimit - 1);
+                var text = FailureText.Truncate(FailureText.ClusterKey(scenario.ErrorMessage), HistoryFormat.ErrorKeyLimit - 1);
                 if (!errorKeys.TryGetValue(text, out var key))
                 {
                     key = "e" + (errorKeys.Count + 1).ToString(CultureInfo.InvariantCulture);

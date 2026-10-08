@@ -338,4 +338,38 @@ public class AssertionExpressionFormatterTests
         var result = AssertionExpressionFormatter.Format(expression);
         Assert.Equal(expected, result);
     }
+
+    // SHOULDLY_ASSERTIONS_PLAN F13: the formatter removed every '!' to drop the null-forgiving operator, so a
+    // literal lost its own ("Hi!" read "Hi"), "!=" read "=" and a negation read as its opposite. The cleanup
+    // that turns "?." into "." and joins " ." had the same reach into literals.
+    [Theory]
+    [InlineData("greeting.Should().Be(\"Hi!\")", "Greeting should be \"Hi!\"")]
+    [InlineData("mark.Should().Be('!')", "Mark should be '!'")]
+    [InlineData("path.Should().Be(\"a?.b\")", "Path should be \"a?.b\"")]
+    [InlineData("text.Should().Be(\"a .b\")", "Text should be \"a .b\"")]
+    [InlineData("text.Should().Be(@\"C:\\x!\")", "Text should be @\"C:\\x!\"")]
+    [InlineData("text.Should().Be(\"say \\\"hi!\\\"\")", "Text should be \"say \\\"hi!\\\"\"")]
+    public void A_bang_in_a_string_literal_survives_the_label(string expression, string expected)
+    {
+        Assert.Equal(expected, AssertionExpressionFormatter.Format(expression));
+    }
+
+    [Theory]
+    [InlineData("(x != y).Should().BeTrue()", "(x != y) should be true")]
+    [InlineData("(!flag).Should().BeTrue()", "(!flag) should be true")]
+    public void An_operator_bang_survives_the_label(string expression, string expected)
+    {
+        Assert.Equal(expected, AssertionExpressionFormatter.Format(expression));
+    }
+
+    [Theory]
+    [InlineData("order!.Name.Should().Be(\"a\")", "Order name should be \"a\"")]
+    [InlineData("result!.Should().BeTrue()", "Result should be true")]
+    [InlineData("items.First()!.Name.Should().Be(\"a\")", "First value of items name should be \"a\"")]
+    [InlineData("value.Should().Be(expected!)", "Value should be expected")]
+    [InlineData("value.Should().Be(map[key]!.Id)", "Value should be 'Id'")]
+    public void A_null_forgiving_bang_is_still_dropped(string expression, string expected)
+    {
+        Assert.Equal(expected, AssertionExpressionFormatter.Format(expression));
+    }
 }
