@@ -1,0 +1,20 @@
+=== Example.Api xUnit2 (before = 8f653f63, after = this branch)
+Total tests: 2  Passed: 2 Total tests: 2  Passed: 2 
+2 scenarios before, 2 after; 22 calls before, 22 after
+orphan warning before: none; after: none
+identical
+=== Example.Api NUnit4 (before = 8f653f63, after = this branch)
+Total tests: 2  Passed: 2 Total tests: 2  Passed: 2 
+2 scenarios before, 2 after; 22 calls before, 22 after
+orphan warning before: none; after: none
+identical
+=== Example.Api ReqNRoll.xUnit2 (before = 8f653f63, after = this branch)
+Total tests: 2  Passed: 2 Total tests: 2  Passed: 2 
+2 scenarios before, 2 after; 22 calls before, 22 after
+orphan warning before: none; after: none
+identical
+=== Example.Api LightBDD.xUnit2 (before = 8f653f63, after = this branch)
+Total tests: 3  Passed: 3 Total tests: 3  Passed: 3 
+3 scenarios before, 3 after; 36 calls before, 36 after
+orphan warning before: none; after: none
+identical

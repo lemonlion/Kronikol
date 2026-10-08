@@ -1,0 +1,71 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-xunit2-133\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.MSTest -> C:\Code\Kronikol-xunit2-133\src\Kronikol.MSTest\bin\Debug\net10.0\Kronikol.MSTest.dll
+C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.MSTest\HappyPathAttributeTests.cs(12,9): warning MSTEST0032: Review or remove the assertion as its condition is known to be always true (https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0032) [C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.MSTest\Kronikol.Tests.MSTest.csproj]
+C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.MSTest\EndpointAttributeTests.cs(20,9): warning MSTEST0032: Review or remove the assertion as its condition is known to be always true (https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0032) [C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.MSTest\Kronikol.Tests.MSTest.csproj]
+  Kronikol.Tests.MSTest -> C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.MSTest\bin\Debug\net10.0\Kronikol.Tests.MSTest.dll
+Test run for C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.MSTest\bin\Debug\net10.0\Kronikol.Tests.MSTest.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Passed Fetcher_Is_Not_Null [5 ms]
+  Passed Fetcher_Is_Same_Instance_As_Options_TestInfoFetcher [1 ms]
+  Passed Options_Constructor_Uses_Fetcher [< 1 ms]
+  Passed TestContexts_ShouldBeInitialized [< 1 ms]
+  Passed TestContexts_ShouldAcceptMSTestScenarioInfo [< 1 ms]
+  Passed ShouldStoreEndpointValue [< 1 ms]
+  Passed ShouldHaveEndpointPropertyKeyConstant [< 1 ms]
+  Passed ShouldOnlyTargetClasses [< 1 ms]
+  Passed ShouldHaveHappyPathPropertyKeyConstant [< 1 ms]
+  Passed ShouldOnlyTargetMethods [< 1 ms]
+  Passed ShouldBeInstantiable [< 1 ms]
+  Passed ShouldStoreAllProperties [1 ms]
+  Passed ShouldDefaultOptionalPropertiesToNull [< 1 ms]
+  Passed ShouldStoreErrorInformation [< 1 ms]
+  Passed ShouldGroupScenariosByTestClassSimpleName [17 ms]
+  Passed ShouldReplaceUnderscoresWithSpacesInFeatureDisplayName [< 1 ms]
+  Passed ShouldReplaceUnderscoresWithSpacesInScenarioDisplayName [< 1 ms]
+  Passed ShouldSetEndpointFromScenarioInfo [< 1 ms]
+  Passed ShouldSetEndpointToNullWhenNotProvided [< 1 ms]
+  Passed ShouldOrderHappyPathScenariosFirst [1 ms]
+  Passed ShouldMapPassedOutcomeCorrectly [< 1 ms]
+  Passed ShouldMapFailedOutcomeCorrectly [< 1 ms]
+  Passed ShouldDeduplicateByTestId [< 1 ms]
+  Passed ShouldSetTestIdOnScenario [< 1 ms]
+  Passed ShouldIncludeErrorStackTrace [< 1 ms]
+  Passed ShouldOrderFeaturesAlphabetically [< 1 ms]
+  Passed ShouldOrderNonHappyPathScenariosByMethodNameAlphabetically [< 1 ms]
+  Passed ShouldReturnEmptyArrayWhenNoScenarioInfos [< 1 ms]
+  Passed ShouldHumanizePascalCaseScenarioDisplayNames [< 1 ms]
+  Passed ShouldIncludeParametersFromTestDisplayName [1 ms]
+  Passed ShouldRebindPositionalParamsToNamedParamsWhenParameterNamesProvided [< 1 ms]
+  Passed ShouldLeaveNamedParamsUnchangedWhenParameterNamesProvided [< 1 ms]
+  Passed ShouldFallBackToStringParsingWhenParameterNamesNull [< 1 ms]
+  Passed ShouldNotRebindWhenParameterCountDoesNotMatchParsedCount [< 1 ms]
+  Passed ShouldPopulateStepsFromStepCollector [11 ms]
+  Passed ShouldLeaveStepsNullWhenStepCollectorEmpty [< 1 ms]
+  Passed ShouldCarryWhenTheTestEnded [1 ms]
+  Passed ShouldHaveCurrentTestInfoFetcherSet [< 1 ms]
+  Passed ShouldInheritFromTestTrackingMessageHandlerOptions [< 1 ms]
+  Passed ShouldAllowSettingCallerName [< 1 ms]
+  Passed ShouldAllowSettingPortsToServiceNames [< 1 ms]
+  Passed ShouldAllowSettingFixedNameForReceivingService [< 1 ms]
+  Passed Passed_ShouldMapToExecutionResultPassed [< 1 ms]
+  Passed Failed_ShouldMapToExecutionResultFailed [< 1 ms]
+  Passed Error_ShouldMapToExecutionResultFailed [< 1 ms]
+  Passed Timeout_ShouldMapToExecutionResultFailed [< 1 ms]
+  Passed Aborted_ShouldMapToExecutionResultFailed [< 1 ms]
+  Passed Inconclusive_ShouldMapToExecutionResultSkipped [< 1 ms]
+  Passed InProgress_ShouldMapToExecutionResultSkipped [< 1 ms]
+  Passed NotRunnable_ShouldMapToExecutionResultSkipped [< 1 ms]
+  Passed Unknown_ShouldMapToExecutionResultSkipped [< 1 ms]
+  Passed In_a_class_initializer_a_marker_is_dropped [< 1 ms]
+  Passed On_a_thread_the_test_did_not_reach_a_marker_goes_to_a_scope_begun_there [2 ms]
+  Passed On_a_thread_the_test_did_not_reach_a_marker_goes_to_the_global_fallback [1 ms]
+  Passed On_a_thread_the_test_did_not_reach_with_nothing_else_a_marker_is_dropped [< 1 ms]
+  Passed Inside_the_test_a_marker_goes_to_the_test [1 ms]
+
+Test Run Successful.
+Total tests: 56
+     Passed: 56
+ Total time: 0.6965 Seconds
+exit 0

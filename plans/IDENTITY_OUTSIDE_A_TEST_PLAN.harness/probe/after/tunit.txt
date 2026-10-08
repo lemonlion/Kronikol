@@ -1,0 +1,96 @@
+[Before(Assembly)]
+  context:        TestContext.Current=de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  fetcher:        (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18)
+  resolver:       (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18, TestContext)
+  TestIdResolver: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  override:       ok; marker logged under: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+[Before(Class)]
+  context:        TestContext.Current=de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  fetcher:        (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18)
+  resolver:       (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18, TestContext)
+  TestIdResolver: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  override:       ok; marker logged under: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+test class constructor
+  context:        TestContext.Current=de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  fetcher:        (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18)
+  resolver:       (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18, TestContext)
+  TestIdResolver: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  override:       ok; marker logged under: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+[Before(Test)]
+  context:        TestContext.Current=de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  fetcher:        (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18)
+  resolver:       (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18, TestContext)
+  TestIdResolver: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  override:       ok; marker logged under: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+Test_one body
+  context:        TestContext.Current=de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  fetcher:        (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18)
+  resolver:       (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18, TestContext)
+  TestIdResolver: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  override:       ok; marker logged under: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+Test_one: a thread with no flowed context
+  context:        TestContext.Current=null
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: null
+  override:       ok; marker logged under: nothing
+Test_one: a thread with no flowed context, inside TestIdentityScope.Begin(Scoped, scoped-id)
+  context:        TestContext.Current=null
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       (Scoped, scoped-id, Scope)
+  TestIdResolver: null
+  override:       ok; marker logged under: scoped-id
+Test_one: a thread with no flowed context, GlobalFallback set (fallback-id)
+  context:        TestContext.Current=null
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       (Fallback, fallback-id, GlobalFallback)
+  TestIdResolver: null
+  override:       ok; marker logged under: fallback-id
+Test_one: Task.Run (flows the context)
+  context:        TestContext.Current=de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  fetcher:        (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18)
+  resolver:       (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18, TestContext)
+  TestIdResolver: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  override:       ok; marker logged under: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+[After(Test)]
+  context:        TestContext.Current=de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  fetcher:        (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18)
+  resolver:       (Test_one, de22a88e-ab6f-44c7-b565-7ff21ef28c18, TestContext)
+  TestIdResolver: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+  override:       ok; marker logged under: de22a88e-ab6f-44c7-b565-7ff21ef28c18
+test class constructor
+  context:        TestContext.Current=cde32146-6ad9-4058-934c-b3f8a30560ee
+  fetcher:        (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee)
+  resolver:       (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee, TestContext)
+  TestIdResolver: cde32146-6ad9-4058-934c-b3f8a30560ee
+  override:       ok; marker logged under: cde32146-6ad9-4058-934c-b3f8a30560ee
+[Before(Test)]
+  context:        TestContext.Current=cde32146-6ad9-4058-934c-b3f8a30560ee
+  fetcher:        (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee)
+  resolver:       (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee, TestContext)
+  TestIdResolver: cde32146-6ad9-4058-934c-b3f8a30560ee
+  override:       ok; marker logged under: cde32146-6ad9-4058-934c-b3f8a30560ee
+Test_two body
+  context:        TestContext.Current=cde32146-6ad9-4058-934c-b3f8a30560ee
+  fetcher:        (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee)
+  resolver:       (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee, TestContext)
+  TestIdResolver: cde32146-6ad9-4058-934c-b3f8a30560ee
+  override:       ok; marker logged under: cde32146-6ad9-4058-934c-b3f8a30560ee
+[After(Test)]
+  context:        TestContext.Current=cde32146-6ad9-4058-934c-b3f8a30560ee
+  fetcher:        (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee)
+  resolver:       (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee, TestContext)
+  TestIdResolver: cde32146-6ad9-4058-934c-b3f8a30560ee
+  override:       ok; marker logged under: cde32146-6ad9-4058-934c-b3f8a30560ee
+[After(Class)]
+  context:        TestContext.Current=cde32146-6ad9-4058-934c-b3f8a30560ee
+  fetcher:        (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee)
+  resolver:       (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee, TestContext)
+  TestIdResolver: cde32146-6ad9-4058-934c-b3f8a30560ee
+  override:       ok; marker logged under: cde32146-6ad9-4058-934c-b3f8a30560ee
+[After(Assembly)]
+  context:        TestContext.Current=cde32146-6ad9-4058-934c-b3f8a30560ee
+  fetcher:        (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee)
+  resolver:       (Test_two, cde32146-6ad9-4058-934c-b3f8a30560ee, TestContext)
+  TestIdResolver: cde32146-6ad9-4058-934c-b3f8a30560ee
+  override:       ok; marker logged under: cde32146-6ad9-4058-934c-b3f8a30560ee

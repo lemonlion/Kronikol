@@ -1,0 +1,39 @@
+test class constructor (xUnit2 runs it before TestTrackingAttribute.Before)
+  fetcher:  (Unknown Test, 3d1f8135-677a-41a8-8042-cf8d977bbc15)
+  resolver: (Unknown Test, 371937ea-b1f1-4e0a-b80a-ed8a7906bf16, TestContext)
+  Track.TestIdResolver: <unset>
+constructor, a second time (a new id each call?)
+  fetcher:  (Unknown Test, ba2d2f7c-60cd-45e5-b379-1417ada108fe)
+  resolver: (Unknown Test, d88bc475-0a83-467d-b8a3-d91131d74606, TestContext)
+  Track.TestIdResolver: <unset>
+constructor, inside TestIdentityScope.Begin("Scoped", "scoped-id")
+  fetcher:  (Unknown Test, 58198327-239e-4fdd-bf21-04e8a23df9dd)
+  resolver: (Unknown Test, a76086ce-84a1-4cc9-9029-d55bc28c7431, TestContext)
+  Track.TestIdResolver: <unset>
+IAsyncLifetime.InitializeAsync
+  fetcher:  (Unknown Test, a56f46ac-e9b7-479f-8cce-7a6b05a59764)
+  resolver: (Unknown Test, 62d2f874-5c97-46d3-aee2-8b14aedfe2c1, TestContext)
+  Track.TestIdResolver: <unset>
+test method body
+  fetcher:  (A_Lifecycle.Test_one, f96bb323-b11b-4276-beb2-cf3d49d5fecf)
+  resolver: (A_Lifecycle.Test_one, f96bb323-b11b-4276-beb2-cf3d49d5fecf, TestContext)
+  Track.TestIdResolver: f96bb323-b11b-4276-beb2-cf3d49d5fecf
+thread started with no flowed context, GlobalFallback set ("fallback-id")
+  fetcher:  (Unknown Test, b0481040-136b-441c-871d-3ce57f37a185)
+  resolver: (Unknown Test, 8a88b460-8a2f-433a-93d9-c21eed739f11, TestContext)
+  Track.TestIdResolver: 941eb2e2-52a9-407f-ab6d-53af35090acb
+IAsyncLifetime.DisposeAsync
+  fetcher:  (Unknown Test, 2d14c817-d790-4e04-a416-9357b2774183)
+  resolver: (Unknown Test, 19ee1652-391e-44a7-a032-31aedb0bfda3, TestContext)
+  Track.TestIdResolver: beff9f67-9a75-46c6-8278-5df7daff8d6b
+Dispose
+  fetcher:  (Unknown Test, b342f42b-acd0-4a82-9911-1604dbacccc5)
+  resolver: (Unknown Test, 4341d8db-5ce6-4f6a-bef6-ea8863728b75, TestContext)
+  Track.TestIdResolver: 47a4fef7-eb63-4fd8-9ae9-7c12c37870d9
+-- request logs after the test:
+    /from-constructor      TestName=Unknown Test TestId=b41f21d9-d4b0-4310-8c6a-4558c08d0c60 Source=TestContext override=False
+    /                      TestName=5af20e04-4541-49fa-b5fe-84860cd07335 TestId=5af20e04-4541-49fa-b5fe-84860cd07335 Source= override=True
+    /from-test-method      TestName=A_Lifecycle.Test_one TestId=f96bb323-b11b-4276-beb2-cf3d49d5fecf Source=TestContext override=False
+-- headers the downstream service received:
+    /from-constructor: test-tracking-trace-id=e5b7b0c7-5eb7-482b-b4b8-add4340c2f40; test-tracking-current-test-name=Unknown Test; test-tracking-current-test-id=b41f21d9-d4b0-4310-8c6a-4558c08d0c60; test-tracking-caller-name=Tests
+    /from-test-method: test-tracking-trace-id=63c09004-c6e6-4d51-8456-cb376e8fbbe4; test-tracking-current-test-name=A_Lifecycle.Test_one; test-tracking-current-test-id=f96bb323-b11b-4276-beb2-cf3d49d5fecf; test-tracking-caller-name=Tests

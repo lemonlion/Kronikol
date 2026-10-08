@@ -1,0 +1,145 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-133-red\src\Kronikol.NUnit4\Kronikol.NUnit4.csproj (in 267 ms).
+  Restored C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\Kronikol.Tests.NUnit4.csproj (in 267 ms).
+  1 of 3 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-133-red\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.NUnit4 -> C:\Code\Kronikol-133-red\src\Kronikol.NUnit4\bin\Debug\net10.0\Kronikol.NUnit4.dll
+  Kronikol.Tests.NUnit4 -> C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\bin\Debug\net10.0\Kronikol.Tests.NUnit4.dll
+Test run for C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\bin\Debug\net10.0\Kronikol.Tests.NUnit4.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+NUnit Adapter 1.0.0.0: Test execution started
+Running all tests in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\bin\Debug\net10.0\Kronikol.Tests.NUnit4.dll
+   NUnit3TestExecutor discovered 11 of 11 NUnit test cases using Current Discovery mode, Non-Explicit run
+  Failed A_call_made_there_resolves_to_no_test [44 ms]
+  Error Message:
+     Assert.That(AssemblySetUp.InSetUpFixture.Resolved, Is.Null)
+  Expected: null
+  But was:  TestIdentity { Name = AssemblySetUp, Id = 0-1000, Source = TestContext, IsAttributed = True }
+
+  Stack Trace:
+     at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.A_call_made_there_resolves_to_no_test() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 60
+
+1)    at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.A_call_made_there_resolves_to_no_test() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 60
+
+
+  Failed A_diagram_marker_made_there_is_dropped [4 ms]
+  Error Message:
+     Assert.That(OutsideATest.MarkersHolding(AssemblySetUp.SetUpFixtureMarker), Is.Empty)
+  Expected: <empty>
+  But was:  < <RequestResponseLog { TestName = 0-1000, TestId = 0-1000, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://override.com/, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = , CallerName = , Type = Request, TraceId = 22e970dd-a30b-4458-af9d-493c962183c0, RequestResponseId = fcbc5274-d2d7-4354-ad90-94836b77f119, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = True, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = True, MarkerKind = Custom, PlantUml = 
+marker-db903569e5ef4b21bf961a5c70048a51
+
+, FocusFields = , Timestamp = 08/10/2026 10:39:16 +00:00, AttributionSource = , ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }> >
+
+  Stack Trace:
+     at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.A_diagram_marker_made_there_is_dropped() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 68
+
+1)    at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.A_diagram_marker_made_there_is_dropped() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 68
+
+
+  Passed Inside_the_test_every_reader_answers_the_test [12 ms]
+  Failed On_a_thread_the_test_did_not_reach_a_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere [4 ms]
+  Error Message:
+     Assert.That(OutsideATest.MarkersHolding(nowhere), Is.Empty)
+  Expected: <empty>
+  But was:  < <RequestResponseLog { TestName = 0-1017, TestId = 0-1017, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://override.com/, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = , CallerName = , Type = Request, TraceId = 0674ea77-9cc7-49c8-a87d-b598498db7e7, RequestResponseId = edf944cc-b479-4f76-9f13-0902f9ddab6f, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = True, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = True, MarkerKind = Custom, PlantUml = 
+marker-eecd4655420a4dab9901473196c08fee
+
+, FocusFields = , Timestamp = 08/10/2026 10:39:16 +00:00, AttributionSource = , ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }> >
+
+  Stack Trace:
+     at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_a_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 161
+
+1)    at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_a_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 161
+
+
+  Failed On_a_thread_the_test_did_not_reach_the_fetcher_throws [1 ms]
+  Error Message:
+     Assert.That(seen.FetcherThrew, Is.InstanceOf<InvalidOperationException>())
+  Expected: instance of <System.InvalidOperationException>
+  But was:  null
+
+  Stack Trace:
+     at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_the_fetcher_throws() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 78
+
+1)    at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_the_fetcher_throws() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 78
+
+
+  Failed On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_a_scope_begun_there [1 ms]
+  Error Message:
+     Assert.That(seen.Resolved, Is.EqualTo(new TestIdentity("Scoped", "scoped-id", AttributionSource.Scope)))
+  Expected: TestIdentity { Name = Scoped, Id = scoped-id, Source = Scope, IsAttributed = True }
+  But was:  TestIdentity { Name = TestExecutionContext+AdhocContext, Id = 0-1021, Source = TestContext, IsAttributed = True }
+
+  Stack Trace:
+     at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_a_scope_begun_there() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 90
+
+1)    at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_a_scope_begun_there() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 90
+
+
+  Failed On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_the_global_fallback [< 1 ms]
+  Error Message:
+     Assert.That(seen.Resolved, Is.EqualTo(new TestIdentity("Fallback", "fallback-id", AttributionSource.GlobalFallback)))
+  Expected: TestIdentity { Name = Fallback, Id = fallback-id, Source = GlobalFallback, IsAttributed = True }
+  But was:  TestIdentity { Name = TestExecutionContext+AdhocContext, Id = 0-1022, Source = TestContext, IsAttributed = True }
+
+  Stack Trace:
+     at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_the_global_fallback() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 101
+
+1)    at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_the_global_fallback() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 101
+
+
+  Failed On_a_thread_the_test_did_not_reach_Track_TestIdResolver_answers_no_test [2 ms]
+  Error Message:
+     Assert.That(OutsideATest.OnThreadWithNoFlow(() => Track.TestIdResolver!()), Is.Null)
+  Expected: null
+  But was:  "0-1023"
+
+  Stack Trace:
+     at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_Track_TestIdResolver_answers_no_test() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 135
+
+1)    at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_Track_TestIdResolver_answers_no_test() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 135
+
+
+  Failed On_a_thread_the_test_did_not_reach_with_nothing_else_the_resolver_answers_no_test_or_the_background [1 ms]
+  Error Message:
+     Assert.That(OutsideATest.OnThreadWithNoFlow(IdentityObservation.Take).Resolved, Is.Null)
+  Expected: null
+  But was:  TestIdentity { Name = TestExecutionContext+AdhocContext, Id = 0-1024, Source = TestContext, IsAttributed = True }
+
+  Stack Trace:
+     at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_with_nothing_else_the_resolver_answers_no_test_or_the_background() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 112
+
+1)    at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.On_a_thread_the_test_did_not_reach_with_nothing_else_the_resolver_answers_no_test_or_the_background() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 112
+
+
+  Failed The_fetcher_throws_in_a_set_up_fixture_a_fixture_constructor_and_a_one_time_set_up [< 1 ms]
+  Error Message:
+     Assert.That(AssemblySetUp.InSetUpFixture.FetcherThrew, Is.InstanceOf<InvalidOperationException>())
+  Expected: instance of <System.InvalidOperationException>
+  But was:  null
+
+  Stack Trace:
+     at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.The_fetcher_throws_in_a_set_up_fixture_a_fixture_constructor_and_a_one_time_set_up() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 52
+
+1)    at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.The_fetcher_throws_in_a_set_up_fixture_a_fixture_constructor_and_a_one_time_set_up() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 52
+
+
+  Failed The_resolver_DiagrammedTestRun_sets_answers_the_test_inside_it_and_no_test_outside_it [1 ms]
+  Error Message:
+     Assert.That(OutsideATest.OnThreadWithNoFlow(() => Track.TestIdResolver!()), Is.Null)
+  Expected: null
+  But was:  "0-1025"
+
+  Stack Trace:
+     at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.The_resolver_DiagrammedTestRun_sets_answers_the_test_inside_it_and_no_test_outside_it() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 176
+
+1)    at Kronikol.Tests.NUnit4.IdentityOutsideATestTests.The_resolver_DiagrammedTestRun_sets_answers_the_test_inside_it_and_no_test_outside_it() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.NUnit4\IdentityOutsideATestTests.cs:line 176
+
+
+
+Test Run Failed.
+Total tests: 11
+     Passed: 1
+     Failed: 10
+ Total time: 2.5962 Seconds

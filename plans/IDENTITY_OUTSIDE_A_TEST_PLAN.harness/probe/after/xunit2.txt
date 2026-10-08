@@ -1,0 +1,37 @@
+test class constructor (xUnit2 runs it before TestTrackingAttribute.Before)
+  fetcher:  throws InvalidOperationException
+  resolver: null
+  Track.TestIdResolver: <unset>
+constructor, a second time (a new id each call?)
+  fetcher:  throws InvalidOperationException
+  resolver: null
+  Track.TestIdResolver: <unset>
+constructor, inside TestIdentityScope.Begin("Scoped", "scoped-id")
+  fetcher:  throws InvalidOperationException
+  resolver: (Scoped, scoped-id, Scope)
+  Track.TestIdResolver: <unset>
+IAsyncLifetime.InitializeAsync
+  fetcher:  throws InvalidOperationException
+  resolver: null
+  Track.TestIdResolver: <unset>
+test method body
+  fetcher:  (A_Lifecycle.Test_one, bf2bbc36-3be3-49a9-8c82-f69975c6c96e)
+  resolver: (A_Lifecycle.Test_one, bf2bbc36-3be3-49a9-8c82-f69975c6c96e, TestContext)
+  Track.TestIdResolver: bf2bbc36-3be3-49a9-8c82-f69975c6c96e
+thread started with no flowed context, GlobalFallback set ("fallback-id")
+  fetcher:  throws InvalidOperationException
+  resolver: (Fallback, fallback-id, GlobalFallback)
+  Track.TestIdResolver: null
+IAsyncLifetime.DisposeAsync
+  fetcher:  throws InvalidOperationException
+  resolver: null
+  Track.TestIdResolver: null
+Dispose
+  fetcher:  throws InvalidOperationException
+  resolver: null
+  Track.TestIdResolver: null
+-- request logs after the test:
+    /from-test-method      TestName=A_Lifecycle.Test_one TestId=bf2bbc36-3be3-49a9-8c82-f69975c6c96e Source=TestContext override=False
+-- headers the downstream service received:
+    /from-constructor: 
+    /from-test-method: test-tracking-trace-id=1046ced0-9094-4f20-a120-52dab6604a57; test-tracking-current-test-name=A_Lifecycle.Test_one; test-tracking-current-test-id=bf2bbc36-3be3-49a9-8c82-f69975c6c96e; test-tracking-caller-name=Tests

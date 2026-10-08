@@ -4,6 +4,69 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.13.1] - 2026-10-08
+
+**Patch - outside a test, xUnit v2 and NUnit say there is no test, so a call there goes to a scope, the global fallback
+or the background, as on the other frameworks (#133).** `plans/IDENTITY_OUTSIDE_A_TEST_PLAN.md`. Bug fixes, and nothing
+new for a consumer to call, so the patch part moves (4.13.0 to 4.13.1). The behaviour a reader can see change is
+under Changed below. The history action's `VERSION` installs `Kronikol.Tool` 4.13.1, and the templates pin 4.13.0.
+
+### Fixed
+
+- **Kronikol.xUnit2 answered a call made outside a test with a new random test id (#133).** xUnit v2 runs a test class's
+  constructor and `IAsyncLifetime.InitializeAsync` before `TestTrackingAttribute.Before` and `DisposeAsync` and `Dispose`
+  after `After`, and fixtures and threads the test did not start have no test either. There
+  `XUnit2TestTrackingContext.GetCurrentTestInfo()` returns `("Unknown Test", <new GUID>)`, and `CurrentTestInfo.Fetcher`
+  passed that on: its check for `unknown` could never match. The resolver took the random id for the test, so it never
+  reached a `TestIdentityScope`, the global fallback or the background, and since no scenario owns the id the call was in
+  no report: its only traces were a console count line, printed at `normal` verbosity, and `DiagnosticReport.html` under
+  `DiagnosticMode`. The id also travelled on: in the `test-tracking-current-test-id` header to the service and its own
+  calls, on Kafka messages, and as the owner of a document the call wrote. `CurrentTestInfo.Fetcher` now throws there, as
+  the others have since 2.28.22, whose changelog said so of all eight adapters but was wrong about this one and NUnit's.
+  `Track.TestIdResolver` answers no test there (it answered the random id too, so `Track.That()` and step notes made
+  there were lost), and `TrackingDiagramOverride` goes to the
+  scope or the global fallback, or does nothing, as xUnit v3's has since 2.31.6 (it logged its marker under a random id).
+  `GetCurrentTestInfo()` itself is public and keeps its answer; its doc now says what it is. Measured on 4.9.1: every one
+  of the constructor, `InitializeAsync`, `DisposeAsync`, `Dispose` and a thread with no flowed context resolved to a new
+  random id, a `TestIdentityScope.Begin` in the constructor and the global fallback were ignored, and an HTTP call from the
+  constructor reached the service carrying its random id.
+- **Kronikol.NUnit4 did the same with NUnit's own contexts.** NUnit always answers `TestContext.CurrentContext`: in a
+  `[SetUpFixture]`, a fixture's constructor and its `[OneTimeSetUp]` and `[OneTimeTearDown]`, its test is the fixture,
+  with an id of its own, and on a thread that did not flow a test's execution context NUnit makes an ad hoc test with a
+  new id for each such flow. The fetcher, `Track.TestIdResolver` and `TrackingDiagramOverride` took those for tests
+  (measured on 4.9.1), with the effects above, so a scope or the global fallback set for a background thread or a host
+  started in a set-up fixture was never reached. They now answer no test there.
+- **`TrackingDiagramOverride` threw `NullReferenceException` outside a test on MSTest and TUnit**, inside a
+  `TestIdentityScope` or with the global fallback set too. It now goes to the test the scope or the fallback names, and
+  does nothing when neither names one, as on xUnit v3.
+
+### Changed
+
+- On xUnit v2 and NUnit, a call made outside a test (see above) goes where it goes on the other frameworks: to a
+  `TestIdentityScope` or the global fallback when one names a test, and otherwise nowhere, or to the Background calls
+  section with `RequestResponseLogger.CaptureBackground` on. A `GlobalFallback` an earlier test left set now catches such
+  calls, so clear it in teardown as its doc says.
+- Such an HTTP call's test headers no longer carry the adapter's id: they name the test a scope or the global fallback
+  names, the background identity (`unknown`) with `CaptureBackground` on, or nothing, and the service's own calls for
+  it, and the messages and documents it makes, are attributed the same way.
+- On xUnit v2 and NUnit, calls a `DeferredLogFlushHandler` holds now wait for the first call made inside a test, as on
+  the other frameworks; a flush outside a test filed them under the id the adapter answered there.
+- `TrackingDiagramOverride.StartAction()` called outside a test on xUnit v2 or NUnit no longer sets the phase on its
+  flow. It did, and logged a marker no scenario drew.
+
+### Tests
+
+- Kronikol.Tests.xUnit2 runs real xUnit v2 tests whose constructor and `InitializeAsync` call the fetcher, the resolver,
+  a tracked `HttpClient` and the override, and facts on a thread the test's execution context did not reach (where
+  `DisposeAsync` and `Dispose` are), the deferred flush, `DiagrammedTestRun`'s resolver and the wiki's custom-tracker
+  recipe. A new project, Kronikol.Tests.NUnit4, does the same in a set-up fixture, a fixture's constructor and
+  `[OneTimeSetUp]`; the NUnit adapter had no tests. MSTest's and TUnit's overrides get facts of their own.
+- With the tests copied onto v4.12.0, every new behaviour fact failed for its own reason (xUnit v2 14, NUnit 10, MSTest 4,
+  TUnit 3); the facts that passed are the controls inside a test and the guard on `GetCurrentTestInfo()`. Of 18
+  mutations, each undoing one part of the fix, 17 turned a named fact red. The one that did not, TUnit's override
+  ignoring the running test, survives because Kronikol.Tests.TUnit runs under xUnit v3, where TUnit has no current test,
+  and Example.Api's TUnit suite checks no marker; the plan's probe shows the path on a real TUnit run.
+
 ## [4.13.0] - 2026-10-08
 
 **Minor - a host called over gRPC attributes its own calls to the scenario (#134).**

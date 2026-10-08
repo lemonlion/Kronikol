@@ -1,0 +1,45 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-xunit2-133\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.xUnit2 -> C:\Code\Kronikol-xunit2-133\src\Kronikol.xUnit2\bin\Debug\net10.0\Kronikol.xUnit2.dll
+C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(203,72): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.xUnit2\Kronikol.Tests.xUnit2.csproj]
+  Kronikol.Tests.xUnit2 -> C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.xUnit2\bin\Debug\net10.0\Kronikol.Tests.xUnit2.dll
+Test run for C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.xUnit2\bin\Debug\net10.0\Kronikol.Tests.xUnit2.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.18]   Discovering: Kronikol.Tests.xUnit2
+[xUnit.net 00:00:00.21]   Discovered:  Kronikol.Tests.xUnit2
+[xUnit.net 00:00:00.22]   Starting:    Kronikol.Tests.xUnit2
+  Passed Kronikol.Tests.xUnit2.xUnit2.CurrentTestInfoTests.Options_Constructor_Uses_Fetcher [3 ms]
+  Passed Kronikol.Tests.xUnit2.xUnit2.CurrentTestInfoTests.Fetcher_Is_Not_Null [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.xUnit2.CurrentTestInfoTests.Fetcher_Is_Same_Instance_As_Options_TestInfoFetcher [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.ScenarioInfoCollectionExtensionsTests.ToFeatures_carries_when_the_scenario_ended [8 ms]
+  Passed Kronikol.Tests.xUnit2.ScenarioInfoCollectionExtensionsTests.ToFeatures_leaves_steps_null_when_StepCollector_empty [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.TestTrackingAttributeInheritanceTests.Two_concrete_subclasses_should_produce_different_features [16 ms]
+  Passed Kronikol.Tests.xUnit2.TestTrackingAttributeInheritanceTests.Endpoint_attribute_on_concrete_class_should_be_found [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.TestTrackingAttributeInheritanceTests.Inherited_test_should_use_concrete_class_name_as_feature [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.ApplyResultsTests.The_scenario_takes_the_finish_stamp_of_its_result [1 ms]
+  Passed Kronikol.Tests.xUnit2.ScenarioInfoCollectionExtensionsTests.ToFeatures_populates_steps_from_StepCollector [10 ms]
+  Passed Kronikol.Tests.xUnit2.ApplyResultsTests.InlineData_scenarios_get_unique_display_names_with_parameters [1 ms]
+  Passed Kronikol.Tests.xUnit2.ApplyResultsTests.Non_parameterised_scenario_keeps_original_name [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.GetCurrentTestInfoOutsideATestTests.It_still_answers_Unknown_Test_with_a_new_id_each_call [3 ms]
+  Passed Kronikol.Tests.xUnit2.DeferredLogFlushOutsideATestTests.Held_calls_wait_for_a_test_when_a_flush_comes_outside_one [8 ms]
+  Passed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.A_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere [7 ms]
+  Passed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_resolver_goes_on_to_the_global_fallback [4 ms]
+  Passed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_resolver_goes_on_to_a_scope_begun_there [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.Track_TestIdResolver_answers_no_test [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.A_diagram_marker_inside_the_test_goes_to_the_test [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_fetcher_throws [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.With_nothing_else_the_resolver_answers_no_test_or_the_background [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_diagram_marker_from_the_constructor_is_dropped [7 ms]
+  Passed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.The_fetcher_throws_in_the_constructor_and_in_InitializeAsync [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.The_test_itself_resolves_to_the_scenario_Before_filed [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_call_from_the_constructor_or_InitializeAsync_resolves_to_no_test [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_scope_begun_in_the_constructor_names_the_call [< 1 ms]
+[xUnit.net 00:00:00.31]   Finished:    Kronikol.Tests.xUnit2
+  Passed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.An_HTTP_call_from_the_constructor_is_sent_untracked_and_without_test_headers [1 ms]
+
+Test Run Successful.
+Total tests: 27
+     Passed: 27
+ Total time: 0.6642 Seconds

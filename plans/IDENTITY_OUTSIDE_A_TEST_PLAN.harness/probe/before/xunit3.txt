@@ -1,0 +1,84 @@
+assembly fixture constructor
+  context:        TestContext.Current.Test=null Stage=TestAssemblyExecution
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: <unset>
+  override:       ok; marker logged under: nothing
+assembly fixture InitializeAsync
+  context:        TestContext.Current.Test=null Stage=TestAssemblyExecution
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: <unset>
+  override:       ok; marker logged under: nothing
+class fixture constructor
+  context:        TestContext.Current.Test=null Stage=TestClassExecution
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: <unset>
+  override:       ok; marker logged under: nothing
+class fixture InitializeAsync
+  context:        TestContext.Current.Test=null Stage=TestClassExecution
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: <unset>
+  override:       ok; marker logged under: nothing
+test class constructor
+  context:        TestContext.Current.Test=Probe133.XUnit3Probe.Test_one Stage=TestExecution
+  fetcher:        (Probe133.XUnit3Probe.Test_one, 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c)
+  resolver:       (Probe133.XUnit3Probe.Test_one, 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c, TestContext)
+  TestIdResolver: 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c
+  override:       ok; marker logged under: 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c
+test class InitializeAsync
+  context:        TestContext.Current.Test=Probe133.XUnit3Probe.Test_one Stage=TestExecution
+  fetcher:        (Probe133.XUnit3Probe.Test_one, 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c)
+  resolver:       (Probe133.XUnit3Probe.Test_one, 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c, TestContext)
+  TestIdResolver: 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c
+  override:       ok; marker logged under: 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c
+Test_one body
+  context:        TestContext.Current.Test=Probe133.XUnit3Probe.Test_one Stage=TestExecution
+  fetcher:        (Probe133.XUnit3Probe.Test_one, 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c)
+  resolver:       (Probe133.XUnit3Probe.Test_one, 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c, TestContext)
+  TestIdResolver: 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c
+  override:       ok; marker logged under: 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c
+Test_one: a thread with no flowed context
+  context:        TestContext.Current.Test=null Stage=Unknown
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: null
+  override:       ok; marker logged under: nothing
+Test_one: a thread with no flowed context, inside TestIdentityScope.Begin(Scoped, scoped-id)
+  context:        TestContext.Current.Test=null Stage=Unknown
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       (Scoped, scoped-id, Scope)
+  TestIdResolver: null
+  override:       ok; marker logged under: scoped-id
+Test_one: a thread with no flowed context, GlobalFallback set (fallback-id)
+  context:        TestContext.Current.Test=null Stage=Unknown
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       (Fallback, fallback-id, GlobalFallback)
+  TestIdResolver: null
+  override:       ok; marker logged under: fallback-id
+Test_one: Task.Run (flows the context)
+  context:        TestContext.Current.Test=Probe133.XUnit3Probe.Test_one Stage=TestExecution
+  fetcher:        (Probe133.XUnit3Probe.Test_one, 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c)
+  resolver:       (Probe133.XUnit3Probe.Test_one, 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c, TestContext)
+  TestIdResolver: 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c
+  override:       ok; marker logged under: 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c
+test class DisposeAsync
+  context:        TestContext.Current.Test=Probe133.XUnit3Probe.Test_one Stage=TestExecution
+  fetcher:        (Probe133.XUnit3Probe.Test_one, 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c)
+  resolver:       (Probe133.XUnit3Probe.Test_one, 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c, TestContext)
+  TestIdResolver: 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c
+  override:       ok; marker logged under: 023c2f3bbae1991b4f81ce4641596f31a40e704dcdefa74733a36078b998d84c
+class fixture DisposeAsync
+  context:        TestContext.Current.Test=null Stage=TestClassExecution
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: null
+  override:       ok; marker logged under: nothing
+assembly fixture DisposeAsync
+  context:        TestContext.Current.Test=null Stage=TestAssemblyExecution
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: null
+  override:       ok; marker logged under: nothing

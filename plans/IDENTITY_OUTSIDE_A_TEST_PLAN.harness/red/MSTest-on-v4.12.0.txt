@@ -1,0 +1,123 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-133-red\src\Kronikol.MSTest\Kronikol.MSTest.csproj (in 321 ms).
+  Restored C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\Kronikol.Tests.MSTest.csproj (in 321 ms).
+  1 of 3 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-133-red\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.MSTest -> C:\Code\Kronikol-133-red\src\Kronikol.MSTest\bin\Debug\net10.0\Kronikol.MSTest.dll
+C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\HappyPathAttributeTests.cs(12,9): warning MSTEST0032: Review or remove the assertion as its condition is known to be always true (https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0032) [C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\Kronikol.Tests.MSTest.csproj]
+C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\EndpointAttributeTests.cs(20,9): warning MSTEST0032: Review or remove the assertion as its condition is known to be always true (https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0032) [C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\Kronikol.Tests.MSTest.csproj]
+  Kronikol.Tests.MSTest -> C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\bin\Debug\net10.0\Kronikol.Tests.MSTest.dll
+Test run for C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\bin\Debug\net10.0\Kronikol.Tests.MSTest.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Passed Fetcher_Is_Not_Null [4 ms]
+  Passed Fetcher_Is_Same_Instance_As_Options_TestInfoFetcher [253 ms]
+  Passed Options_Constructor_Uses_Fetcher [< 1 ms]
+  Passed TestContexts_ShouldBeInitialized [< 1 ms]
+  Passed TestContexts_ShouldAcceptMSTestScenarioInfo [< 1 ms]
+  Passed ShouldStoreEndpointValue [< 1 ms]
+  Passed ShouldHaveEndpointPropertyKeyConstant [< 1 ms]
+  Passed ShouldOnlyTargetClasses [< 1 ms]
+  Passed ShouldHaveHappyPathPropertyKeyConstant [< 1 ms]
+  Passed ShouldOnlyTargetMethods [< 1 ms]
+  Passed ShouldBeInstantiable [< 1 ms]
+  Passed ShouldStoreAllProperties [< 1 ms]
+  Passed ShouldDefaultOptionalPropertiesToNull [< 1 ms]
+  Passed ShouldStoreErrorInformation [< 1 ms]
+  Passed ShouldGroupScenariosByTestClassSimpleName [14 ms]
+  Passed ShouldReplaceUnderscoresWithSpacesInFeatureDisplayName [< 1 ms]
+  Passed ShouldReplaceUnderscoresWithSpacesInScenarioDisplayName [< 1 ms]
+  Passed ShouldSetEndpointFromScenarioInfo [< 1 ms]
+  Passed ShouldSetEndpointToNullWhenNotProvided [< 1 ms]
+  Passed ShouldOrderHappyPathScenariosFirst [< 1 ms]
+  Passed ShouldMapPassedOutcomeCorrectly [< 1 ms]
+  Passed ShouldMapFailedOutcomeCorrectly [< 1 ms]
+  Passed ShouldDeduplicateByTestId [< 1 ms]
+  Passed ShouldSetTestIdOnScenario [< 1 ms]
+  Passed ShouldIncludeErrorStackTrace [< 1 ms]
+  Passed ShouldOrderFeaturesAlphabetically [< 1 ms]
+  Passed ShouldOrderNonHappyPathScenariosByMethodNameAlphabetically [< 1 ms]
+  Passed ShouldReturnEmptyArrayWhenNoScenarioInfos [< 1 ms]
+  Passed ShouldHumanizePascalCaseScenarioDisplayNames [< 1 ms]
+  Passed ShouldIncludeParametersFromTestDisplayName [< 1 ms]
+  Passed ShouldRebindPositionalParamsToNamedParamsWhenParameterNamesProvided [< 1 ms]
+  Passed ShouldLeaveNamedParamsUnchangedWhenParameterNamesProvided [< 1 ms]
+  Passed ShouldFallBackToStringParsingWhenParameterNamesNull [< 1 ms]
+  Passed ShouldNotRebindWhenParameterCountDoesNotMatchParsedCount [< 1 ms]
+  Passed ShouldPopulateStepsFromStepCollector [9 ms]
+  Passed ShouldLeaveStepsNullWhenStepCollectorEmpty [< 1 ms]
+  Passed ShouldCarryWhenTheTestEnded [< 1 ms]
+  Passed ShouldHaveCurrentTestInfoFetcherSet [< 1 ms]
+  Passed ShouldInheritFromTestTrackingMessageHandlerOptions [< 1 ms]
+  Passed ShouldAllowSettingCallerName [< 1 ms]
+  Passed ShouldAllowSettingPortsToServiceNames [< 1 ms]
+  Passed ShouldAllowSettingFixedNameForReceivingService [< 1 ms]
+  Passed Passed_ShouldMapToExecutionResultPassed [< 1 ms]
+  Passed Failed_ShouldMapToExecutionResultFailed [< 1 ms]
+  Passed Error_ShouldMapToExecutionResultFailed [< 1 ms]
+  Passed Timeout_ShouldMapToExecutionResultFailed [< 1 ms]
+  Passed Aborted_ShouldMapToExecutionResultFailed [< 1 ms]
+  Passed Inconclusive_ShouldMapToExecutionResultSkipped [< 1 ms]
+  Passed InProgress_ShouldMapToExecutionResultSkipped [< 1 ms]
+  Passed NotRunnable_ShouldMapToExecutionResultSkipped [< 1 ms]
+  Passed Unknown_ShouldMapToExecutionResultSkipped [< 1 ms]
+  Failed In_a_class_initializer_a_marker_is_dropped [20 ms]
+  Error Message:
+   Assert.IsNull failed. 'value' expression: '_thrownInClassInitialize'.
+  Stack Trace:
+     at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowAssertIsNullFailed(String message) in /_/src/TestFramework/TestFramework/Assertions/Assert.IsNull.cs:line 162
+   at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNull(Object value, String message, String valueExpression) in /_/src/TestFramework/TestFramework/Assertions/Assert.IsNull.cs:line 155
+   at Kronikol.Tests.MSTest.TrackingDiagramOverrideTests.In_a_class_initializer_a_marker_is_dropped() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 35
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed On_a_thread_the_test_did_not_reach_a_marker_goes_to_a_scope_begun_there [14 ms]
+  Error Message:
+   Test method Kronikol.Tests.MSTest.TrackingDiagramOverrideTests.On_a_thread_the_test_did_not_reach_a_marker_goes_to_a_scope_begun_there threw exception:
+System.InvalidOperationException: The action failed on its thread. ---> System.NullReferenceException: Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.MSTest.TrackingDiagramOverride.GetTestId() in C:\Code\Kronikol-133-red\src\Kronikol.MSTest\TrackingDiagramOverride.cs:line 43
+   at Kronikol.MSTest.TrackingDiagramOverride.InsertPlantUml(String plantUml) in C:\Code\Kronikol-133-red\src\Kronikol.MSTest\TrackingDiagramOverride.cs:line 22
+   at Kronikol.Tests.MSTest.TrackingDiagramOverrideTests.<>c__DisplayClass8_0.<On_a_thread_the_test_did_not_reach_a_marker_goes_to_a_scope_begun_there>b__0() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 47
+   at Kronikol.Tests.MSTest.OutsideATest.<>c__DisplayClass0_0.<OnThreadWithNoFlow>b__0() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 115
+--- End of inner exception stack trace ---
+   at Kronikol.Tests.MSTest.OutsideATest.OnThreadWithNoFlow(Action action) in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 127
+   at Kronikol.Tests.MSTest.TrackingDiagramOverrideTests.On_a_thread_the_test_did_not_reach_a_marker_goes_to_a_scope_begun_there() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 44
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+  Failed On_a_thread_the_test_did_not_reach_a_marker_goes_to_the_global_fallback [1 ms]
+  Error Message:
+   Test method Kronikol.Tests.MSTest.TrackingDiagramOverrideTests.On_a_thread_the_test_did_not_reach_a_marker_goes_to_the_global_fallback threw exception:
+System.InvalidOperationException: The action failed on its thread. ---> System.NullReferenceException: Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.MSTest.TrackingDiagramOverride.GetTestId() in C:\Code\Kronikol-133-red\src\Kronikol.MSTest\TrackingDiagramOverride.cs:line 43
+   at Kronikol.MSTest.TrackingDiagramOverride.InsertPlantUml(String plantUml) in C:\Code\Kronikol-133-red\src\Kronikol.MSTest\TrackingDiagramOverride.cs:line 22
+   at Kronikol.Tests.MSTest.TrackingDiagramOverrideTests.<>c__DisplayClass9_0.<On_a_thread_the_test_did_not_reach_a_marker_goes_to_the_global_fallback>b__0() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 61
+   at Kronikol.Tests.MSTest.OutsideATest.<>c__DisplayClass0_0.<OnThreadWithNoFlow>b__0() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 115
+--- End of inner exception stack trace ---
+   at Kronikol.Tests.MSTest.OutsideATest.OnThreadWithNoFlow(Action action) in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 127
+   at Kronikol.Tests.MSTest.TrackingDiagramOverrideTests.On_a_thread_the_test_did_not_reach_a_marker_goes_to_the_global_fallback() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 61
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+  Failed On_a_thread_the_test_did_not_reach_with_nothing_else_a_marker_is_dropped [< 1 ms]
+  Error Message:
+   Test method Kronikol.Tests.MSTest.TrackingDiagramOverrideTests.On_a_thread_the_test_did_not_reach_with_nothing_else_a_marker_is_dropped threw exception:
+System.InvalidOperationException: The action failed on its thread. ---> System.NullReferenceException: Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.MSTest.TrackingDiagramOverride.GetTestId() in C:\Code\Kronikol-133-red\src\Kronikol.MSTest\TrackingDiagramOverride.cs:line 43
+   at Kronikol.MSTest.TrackingDiagramOverride.InsertPlantUml(String plantUml) in C:\Code\Kronikol-133-red\src\Kronikol.MSTest\TrackingDiagramOverride.cs:line 22
+   at Kronikol.Tests.MSTest.TrackingDiagramOverrideTests.<>c__DisplayClass10_0.<On_a_thread_the_test_did_not_reach_with_nothing_else_a_marker_is_dropped>b__0() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 76
+   at Kronikol.Tests.MSTest.OutsideATest.<>c__DisplayClass0_0.<OnThreadWithNoFlow>b__0() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 115
+--- End of inner exception stack trace ---
+   at Kronikol.Tests.MSTest.OutsideATest.OnThreadWithNoFlow(Action action) in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 127
+   at Kronikol.Tests.MSTest.TrackingDiagramOverrideTests.On_a_thread_the_test_did_not_reach_with_nothing_else_a_marker_is_dropped() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.MSTest\TrackingDiagramOverrideTests.cs:line 76
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+  Passed Inside_the_test_a_marker_goes_to_the_test [2 ms]
+
+Test Run Failed.
+Total tests: 56
+     Passed: 52
+     Failed: 4
+ Total time: 0.8891 Seconds

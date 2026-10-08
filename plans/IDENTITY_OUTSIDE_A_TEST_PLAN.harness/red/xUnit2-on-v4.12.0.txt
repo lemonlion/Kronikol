@@ -1,0 +1,361 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\Kronikol.Tests.xUnit2.csproj (in 320 ms).
+  Restored C:\Code\Kronikol-133-red\src\Kronikol.xUnit2\Kronikol.xUnit2.csproj (in 320 ms).
+  Restored C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj (in 320 ms).
+C:\Code\Kronikol-133-red\src\Kronikol\PlantUml\NodeJsPlantUmlRenderer.cs(54,118): warning CS8604: Possible null reference argument for parameter 'expectedIntegrity' in 'EngineCache.EngineCache(string directory, Func<string, byte[]> download, string cdnBase, IReadOnlyDictionary<string, string> expectedIntegrity)'. [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Reports\Merge\MergeableReportReader.cs(96,38): warning CS8604: Possible null reference argument for parameter 'testName' in 'void MergeableReportReader.ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into, Dictionary<string, List<string?>>? stepPaths, ParseNotes notes, Dictionary<Guid, WarmUpMark>? warmUpCalls = null)'. [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\PlantUml\PlantUmlCreator.cs(1500,48): warning CS8604: Possible null reference argument for parameter 'content' in 'string PlantUmlCreator.FormFieldLines(string content)'. [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Query\QueryCommand.History.cs(1090,55): warning CS1573: Parameter 'Verdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Query\QueryCommand.History.cs(1090,95): warning CS1573: Parameter 'Subjects' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Query\QueryCommand.History.cs(1090,112): warning CS1573: Parameter 'LedgerPath' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Query\QueryCommand.History.cs(1090,146): warning CS1573: Parameter 'LedgerSource' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Query\QueryCommand.History.cs(1091,10): warning CS1573: Parameter 'BehaviourVerdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Query\QueryCommand.History.cs(1091,67): warning CS1573: Parameter 'Analysis' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Query\QueryCommand.History.cs(1091,108): warning CS1573: Parameter 'Shapes' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Query\QueryCommand.History.cs(1107,48): warning CS1573: Parameter 'Subject' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Query\QueryCommand.History.cs(1107,73): warning CS1573: Parameter 'Entry' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Query\QueryCommand.History.cs(1107,117): warning CS1573: Parameter 'RunId' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-133-red\src\Kronikol\Query\QueryCommand.History.cs(1107,128): warning CS1573: Parameter 'RunsAgo' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [C:\Code\Kronikol-133-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+  Kronikol -> C:\Code\Kronikol-133-red\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.xUnit2 -> C:\Code\Kronikol-133-red\src\Kronikol.xUnit2\bin\Debug\net10.0\Kronikol.xUnit2.dll
+C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(203,72): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\Kronikol.Tests.xUnit2.csproj]
+C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\KronikolReportingExecutorTests.cs(138,25): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\Kronikol.Tests.xUnit2.csproj]
+C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\KronikolReportingExecutorTests.cs(170,32): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\Kronikol.Tests.xUnit2.csproj]
+C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\KronikolResultsSinkTests.cs(188,32): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\Kronikol.Tests.xUnit2.csproj]
+C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\KronikolResultsSinkTests.cs(214,32): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\Kronikol.Tests.xUnit2.csproj]
+  Kronikol.Tests.xUnit2 -> C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\bin\Debug\net10.0\Kronikol.Tests.xUnit2.dll
+Test run for C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\bin\Debug\net10.0\Kronikol.Tests.xUnit2.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.66]   Discovering: Kronikol.Tests.xUnit2
+[xUnit.net 00:00:00.70]   Discovered:  Kronikol.Tests.xUnit2
+[xUnit.net 00:00:00.73]   Starting:    Kronikol.Tests.xUnit2
+  Passed Kronikol.Tests.xUnit2.xUnit2.CurrentTestInfoTests.Options_Constructor_Uses_Fetcher [3 ms]
+  Passed Kronikol.Tests.xUnit2.xUnit2.CurrentTestInfoTests.Fetcher_Is_Not_Null [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.OrderedMessageForwarderTests.A_false_from_the_runner_reaches_the_bus_on_a_later_message_and_stays [5 ms]
+  Passed Kronikol.Tests.xUnit2.xUnit2.CurrentTestInfoTests.Fetcher_Is_Same_Instance_As_Options_TestInfoFetcher [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.ScenarioInfoCollectionExtensionsTests.ToFeatures_carries_when_the_scenario_ended [9 ms]
+  Passed Kronikol.Tests.xUnit2.ScenarioInfoCollectionExtensionsTests.ToFeatures_leaves_steps_null_when_StepCollector_empty [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.TestTrackingAttributeInheritanceTests.Two_concrete_subclasses_should_produce_different_features [18 ms]
+  Passed Kronikol.Tests.xUnit2.TestTrackingAttributeInheritanceTests.Endpoint_attribute_on_concrete_class_should_be_found [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.TestTrackingAttributeInheritanceTests.Inherited_test_should_use_concrete_class_name_as_feature [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.ScenarioInfoCollectionExtensionsTests.ToFeatures_populates_steps_from_StepCollector [10 ms]
+  Passed Kronikol.Tests.xUnit2.SynchronousReportingOptionsTests.The_copy_reports_synchronously_and_reads_everything_else_from_the_runners_options [2 ms]
+  Passed Kronikol.Tests.xUnit2.SynchronousReportingOptionsTests.Kronikols_executor_leaves_the_runners_options_as_it_found_them [7 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.Every_message_reaches_the_runner_in_order_whatever_the_sink_makes_of_it [6 ms]
+  Passed Kronikol.Tests.xUnit2.OrderedMessageForwarderTests.Twenty_threads_at_once_reach_the_runner_one_at_a_time_and_each_in_its_own_order [30 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.The_scenario_is_handed_over_on_the_tests_own_flow_and_is_gone_when_that_flow_returns [3 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.A_skipped_test_is_reported_skipped_with_no_error [4 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.A_test_the_attribute_does_not_apply_to_gets_no_scenario [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.Each_row_of_a_theory_is_its_own_scenario_with_its_own_name_and_result [6 ms]
+  Passed Kronikol.Tests.xUnit2.OrderedMessageForwarderTests.An_exception_from_the_runner_becomes_an_ErrorMessage_and_the_next_message_still_arrives [17 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.A_report_that_fails_to_write_still_lets_the_runner_hear_that_the_assembly_finished [3 ms]
+  Passed Kronikol.Tests.xUnit2.OrderedMessageForwarderTests.A_message_sent_after_the_run_finished_is_still_delivered [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.The_run_starts_when_the_assembly_starts [65 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.The_attribute_applies_from_the_method_and_from_a_base_class_as_xunit_applies_it [2 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.Messages_sent_from_many_test_threads_reach_the_runner_from_one_thread_one_at_a_time [8 ms]
+Report diagnostics: 4 log entries across 1 test(s).
+Warning: 1 orphaned test ID(s) in logs do not match any feature scenario.
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Users\cex\AppData\Local\Temp\kronikol-sink-946d6497551e4239a070c4fb4ff4919d  (TestRunReport.html � TestRunReport.json 2.4 KB � Failures.md � TestRunReport.labs.html)
+  history: 1 new (1 run recorded in the local stream; flakiness and duration verdicts need 5)
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.The_reports_are_written_before_the_runner_hears_that_the_assembly_finished [1 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.A_test_that_ends_with_no_result_is_reported_as_a_default [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.A_default_result_is_written_with_the_ResultDefaulted_diagnostic [225 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.TestTrackingAttribute_takes_the_handed_over_scenario_and_makes_none_of_its_own [1 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolReportingExecutorTests.When_nothing_is_handed_over_the_attributes_own_scenarios_take_their_results_by_test_method_in_order [4 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolReportingExecutorTests.The_framework_is_disposed_once_however_often_xunit_disposes_the_wrapper [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolReportingExecutorTests.RunAll_goes_through_Kronikols_sink_too [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolReportingExecutorTests.A_run_that_hands_its_scenarios_over_records_no_pairing [1 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolReportingExecutorTests.A_run_reaches_the_runner_through_Kronikols_sink_with_synchronous_reporting_on_a_copy_of_its_options [< 1 ms]
+[xUnit.net 00:00:01.14]     Kronikol.Tests.xUnit2.CustomTrackerRecipeTests.The_recipe_logs_a_call_inside_the_test_and_skips_one_outside_it [FAIL]
+[xUnit.net 00:00:01.14]       Assert.Empty() Failure: Collection was not empty
+[xUnit.net 00:00:01.14]       Collection: [RequestResponseLog { TestName = Unknown Test, TestId = 52403819-54c2-4ff6-80a8-6d20e8a08aa3, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = https://blob.core.windows.net/from-constructor-2b30199bf3e0455b92d564add27d281a, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Blob Storage, CallerName = My Service, Type = Request, TraceId = 703f50b8-e53d-4824-86cb-e189cbf0cca3, RequestResponseId = 2901452e-a1b0-498e-b50d-f07d871f3db9, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 08/10/2026 10:36:03 +00:00, AttributionSource = , ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }]
+[xUnit.net 00:00:01.14]       Stack Trace:
+[xUnit.net 00:00:01.14]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(274,0): at Kronikol.Tests.xUnit2.CustomTrackerRecipeTests.The_recipe_logs_a_call_inside_the_test_and_skips_one_outside_it()
+[xUnit.net 00:00:01.14]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.14]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.14]     Kronikol.Tests.xUnit2.DiagrammedTestRunResolverTests.The_resolver_DiagrammedTestRun_sets_answers_the_test_inside_it_and_no_test_outside_it [FAIL]
+[xUnit.net 00:00:01.14]       Assert.Null() Failure: Value is not null
+[xUnit.net 00:00:01.14]       Expected: null
+[xUnit.net 00:00:01.14]       Actual:   "c50bdecb-b24b-4368-bbe6-c721beeb53dc"
+[xUnit.net 00:00:01.14]       Stack Trace:
+[xUnit.net 00:00:01.14]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(250,0): at Kronikol.Tests.xUnit2.DiagrammedTestRunResolverTests.The_resolver_DiagrammedTestRun_sets_answers_the_test_inside_it_and_no_test_outside_it()
+[xUnit.net 00:00:01.14]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.14]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.14]     Kronikol.Tests.xUnit2.DeferredLogFlushOutsideATestTests.Held_calls_wait_for_a_test_when_a_flush_comes_outside_one [FAIL]
+[xUnit.net 00:00:01.14]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:01.14]       Expected: 1
+[xUnit.net 00:00:01.14]       Actual:   0
+[xUnit.net 00:00:01.14]       Stack Trace:
+[xUnit.net 00:00:01.14]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(223,0): at Kronikol.Tests.xUnit2.DeferredLogFlushOutsideATestTests.Held_calls_wait_for_a_test_when_a_flush_comes_outside_one()
+[xUnit.net 00:00:01.14]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:01.15]     Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.A_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere [FAIL]
+[xUnit.net 00:00:01.15]       Assert.Empty() Failure: Collection was not empty
+[xUnit.net 00:00:01.15]       Collection: [RequestResponseLog { TestName = 918575f7-e461-49c1-a3df-aad671ac1f00, TestId = 918575f7-e461-49c1-a3df-aad671ac1f00, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://override.com/, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = , CallerName = , Type = Request, TraceId = 84644daf-dfdd-4a5a-b65e-8098b3c6d60b, RequestResponseId = 9398730b-5818-43cb-a218-ae433beca8ec, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = True, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = True, MarkerKind = Custom, PlantUml = 
+marker-3b62a12a62d3494e9b3fc9db0b153e45
+
+, FocusFields = , Timestamp = 08/10/2026 10:36:03 +00:00, AttributionSource = , ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }]
+[xUnit.net 00:00:01.15]       Stack Trace:
+[xUnit.net 00:00:01.15]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(192,0): at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.A_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere()
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.15]     Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_resolver_goes_on_to_the_global_fallback [FAIL]
+[xUnit.net 00:00:01.15]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:01.15]       Expected: TestIdentity { Name = Fallback, Id = fallback-id, Source = GlobalFallback, IsAttributed = True }
+[xUnit.net 00:00:01.15]       Actual:   TestIdentity { Name = Unknown Test, Id = b43f4eaa-9715-4bc1-ac44-d6b2b4668a31, Source = TestContext, IsAttributed = True }
+[xUnit.net 00:00:01.15]       Stack Trace:
+[xUnit.net 00:00:01.15]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(133,0): at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_resolver_goes_on_to_the_global_fallback()
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.xUnit2.KronikolReportingExecutorTests.Kronikols_own_executor_is_not_wrapped [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolReportingExecutorTests.Wrapping_nothing_is_refused [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.KronikolReportingExecutorTests.Wrapping_twice_gives_the_first_wrapper_back [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.GetCurrentTestInfoOutsideATestTests.It_still_answers_Unknown_Test_with_a_new_id_each_call [2 ms]
+  Failed Kronikol.Tests.xUnit2.CustomTrackerRecipeTests.The_recipe_logs_a_call_inside_the_test_and_skips_one_outside_it [5 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: [RequestResponseLog { TestName = Unknown Test, TestId = 52403819-54c2-4ff6-80a8-6d20e8a08aa3, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = https://blob.core.windows.net/from-constructor-2b30199bf3e0455b92d564add27d281a, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Blob Storage, CallerName = My Service, Type = Request, TraceId = 703f50b8-e53d-4824-86cb-e189cbf0cca3, RequestResponseId = 2901452e-a1b0-498e-b50d-f07d871f3db9, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 08/10/2026 10:36:03 +00:00, AttributionSource = , ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }]
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.CustomTrackerRecipeTests.The_recipe_logs_a_call_inside_the_test_and_skips_one_outside_it() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 274
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.xUnit2.DiagrammedTestRunResolverTests.The_resolver_DiagrammedTestRun_sets_answers_the_test_inside_it_and_no_test_outside_it [1 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   "c50bdecb-b24b-4368-bbe6-c721beeb53dc"
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.DiagrammedTestRunResolverTests.The_resolver_DiagrammedTestRun_sets_answers_the_test_inside_it_and_no_test_outside_it() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 250
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.xUnit2.DeferredLogFlushOutsideATestTests.Held_calls_wait_for_a_test_when_a_flush_comes_outside_one [6 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.DeferredLogFlushOutsideATestTests.Held_calls_wait_for_a_test_when_a_flush_comes_outside_one() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 223
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.A_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere [3 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: [RequestResponseLog { TestName = 918575f7-e461-49c1-a3df-aad671ac1f00, TestId = 918575f7-e461-49c1-a3df-aad671ac1f00, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://override.com/, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = , CallerName = , Type = Request, TraceId = 84644daf-dfdd-4a5a-b65e-8098b3c6d60b, RequestResponseId = 9398730b-5818-43cb-a218-ae433beca8ec, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = True, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = True, MarkerKind = Custom, PlantUml = 
+marker-3b62a12a62d3494e9b3fc9db0b153e45
+
+, FocusFields = , Timestamp = 08/10/2026 10:36:03 +00:00, AttributionSource = , ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }]
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.A_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 192
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_resolver_goes_on_to_the_global_fallback [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: TestIdentity { Name = Fallback, Id = fallback-id, Source = GlobalFallback, IsAttributed = True }
+Actual:   TestIdentity { Name = Unknown Test, Id = b43f4eaa-9715-4bc1-ac44-d6b2b4668a31, Source = TestContext, IsAttributed = True }
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_resolver_goes_on_to_the_global_fallback() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 133
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.15]     Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_resolver_goes_on_to_a_scope_begun_there [FAIL]
+[xUnit.net 00:00:01.15]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:01.15]       Expected: TestIdentity { Name = Scoped, Id = scoped-id, Source = Scope, IsAttributed = True }
+[xUnit.net 00:00:01.15]       Actual:   TestIdentity { Name = Unknown Test, Id = 79640651-7afd-45d4-bad5-e8cca58b7d58, Source = TestContext, IsAttributed = True }
+[xUnit.net 00:00:01.15]       Stack Trace:
+[xUnit.net 00:00:01.15]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(122,0): at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_resolver_goes_on_to_a_scope_begun_there()
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.15]     Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.Track_TestIdResolver_answers_no_test [FAIL]
+[xUnit.net 00:00:01.15]       Assert.Null() Failure: Value is not null
+[xUnit.net 00:00:01.15]       Expected: null
+[xUnit.net 00:00:01.15]       Actual:   "5d175e28-0673-40b7-a06e-2447f73ddd87"
+[xUnit.net 00:00:01.15]       Stack Trace:
+[xUnit.net 00:00:01.15]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(166,0): at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.Track_TestIdResolver_answers_no_test()
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.15]     Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_fetcher_throws [FAIL]
+[xUnit.net 00:00:01.15]       Assert.IsType() Failure: Value is null
+[xUnit.net 00:00:01.15]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:01.15]       Actual:   null
+[xUnit.net 00:00:01.15]       Stack Trace:
+[xUnit.net 00:00:01.15]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(110,0): at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_fetcher_throws()
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.15]     Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.With_nothing_else_the_resolver_answers_no_test_or_the_background [FAIL]
+[xUnit.net 00:00:01.15]       Assert.Null() Failure: Value of type 'Nullable<TestIdentity>' has a value
+[xUnit.net 00:00:01.15]       Expected: null
+[xUnit.net 00:00:01.15]       Actual:   TestIdentity { Name = Unknown Test, Id = 9c8dbda6-d89a-4b55-990c-39896accd1e6, Source = TestContext, IsAttributed = True }
+[xUnit.net 00:00:01.15]       Stack Trace:
+[xUnit.net 00:00:01.15]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(144,0): at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.With_nothing_else_the_resolver_answers_no_test_or_the_background()
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.16]     Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_diagram_marker_from_the_constructor_is_dropped [FAIL]
+[xUnit.net 00:00:01.16]       Assert.Empty() Failure: Collection was not empty
+[xUnit.net 00:00:01.16]       Collection: [RequestResponseLog { TestName = 38e6df7c-7598-44e8-87d7-e8a1445f70ab, TestId = 38e6df7c-7598-44e8-87d7-e8a1445f70ab, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://override.com/, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = , CallerName = , Type = Request, TraceId = 754f9436-f1d6-4f76-8893-8c354de174e3, RequestResponseId = 1ae4f1da-64ce-4bf5-838b-3490f378059e, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = True, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = True, MarkerKind = Custom, PlantUml = 
+constructor-marker-51273c7a24b9412a8ba28fd778e2d241
+
+, FocusFields = , Timestamp = 08/10/2026 10:36:03 +00:00, AttributionSource = , ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }]
+[xUnit.net 00:00:01.16]       Stack Trace:
+[xUnit.net 00:00:01.16]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(83,0): at Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_diagram_marker_from_the_constructor_is_dropped()
+[xUnit.net 00:00:01.16]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.16]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.17]     Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.The_fetcher_throws_in_the_constructor_and_in_InitializeAsync [FAIL]
+[xUnit.net 00:00:01.17]       Assert.IsType() Failure: Value is null
+[xUnit.net 00:00:01.17]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:01.17]       Actual:   null
+[xUnit.net 00:00:01.17]       Stack Trace:
+[xUnit.net 00:00:01.17]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(55,0): at Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.The_fetcher_throws_in_the_constructor_and_in_InitializeAsync()
+[xUnit.net 00:00:01.17]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.17]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.17]     Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_call_from_the_constructor_or_InitializeAsync_resolves_to_no_test [FAIL]
+[xUnit.net 00:00:01.17]       Assert.Null() Failure: Value of type 'Nullable<TestIdentity>' has a value
+[xUnit.net 00:00:01.17]       Expected: null
+[xUnit.net 00:00:01.17]       Actual:   TestIdentity { Name = Unknown Test, Id = cbec7a4c-5a20-49b3-bcca-4d3b3c0619fe, Source = TestContext, IsAttributed = True }
+[xUnit.net 00:00:01.17]       Stack Trace:
+[xUnit.net 00:00:01.17]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(62,0): at Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_call_from_the_constructor_or_InitializeAsync_resolves_to_no_test()
+[xUnit.net 00:00:01.17]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.17]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_resolver_goes_on_to_a_scope_begun_there [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: TestIdentity { Name = Scoped, Id = scoped-id, Source = Scope, IsAttributed = True }
+Actual:   TestIdentity { Name = Unknown Test, Id = 79640651-7afd-45d4-bad5-e8cca58b7d58, Source = TestContext, IsAttributed = True }
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_resolver_goes_on_to_a_scope_begun_there() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 122
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.Track_TestIdResolver_answers_no_test [< 1 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   "5d175e28-0673-40b7-a06e-2447f73ddd87"
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.Track_TestIdResolver_answers_no_test() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 166
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.A_diagram_marker_inside_the_test_goes_to_the_test [< 1 ms]
+  Failed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_fetcher_throws [1 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is null
+Expected: typeof(System.InvalidOperationException)
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.The_fetcher_throws() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 110
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.With_nothing_else_the_resolver_answers_no_test_or_the_background [< 1 ms]
+  Error Message:
+   Assert.Null() Failure: Value of type 'Nullable<TestIdentity>' has a value
+Expected: null
+Actual:   TestIdentity { Name = Unknown Test, Id = 9c8dbda6-d89a-4b55-990c-39896accd1e6, Source = TestContext, IsAttributed = True }
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.AFlowTheTestDidNotReachTests.With_nothing_else_the_resolver_answers_no_test_or_the_background() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 144
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_diagram_marker_from_the_constructor_is_dropped [9 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: [RequestResponseLog { TestName = 38e6df7c-7598-44e8-87d7-e8a1445f70ab, TestId = 38e6df7c-7598-44e8-87d7-e8a1445f70ab, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://override.com/, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = , CallerName = , Type = Request, TraceId = 754f9436-f1d6-4f76-8893-8c354de174e3, RequestResponseId = 1ae4f1da-64ce-4bf5-838b-3490f378059e, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = True, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = True, MarkerKind = Custom, PlantUml = 
+constructor-marker-51273c7a24b9412a8ba28fd778e2d241
+
+, FocusFields = , Timestamp = 08/10/2026 10:36:03 +00:00, AttributionSource = , ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }]
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_diagram_marker_from_the_constructor_is_dropped() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 83
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.The_fetcher_throws_in_the_constructor_and_in_InitializeAsync [< 1 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is null
+Expected: typeof(System.InvalidOperationException)
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.The_fetcher_throws_in_the_constructor_and_in_InitializeAsync() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 55
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.The_test_itself_resolves_to_the_scenario_Before_filed [< 1 ms]
+  Failed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_call_from_the_constructor_or_InitializeAsync_resolves_to_no_test [< 1 ms]
+  Error Message:
+   Assert.Null() Failure: Value of type 'Nullable<TestIdentity>' has a value
+Expected: null
+Actual:   TestIdentity { Name = Unknown Test, Id = cbec7a4c-5a20-49b3-bcca-4d3b3c0619fe, Source = TestContext, IsAttributed = True }
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_call_from_the_constructor_or_InitializeAsync_resolves_to_no_test() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 62
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.17]     Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_scope_begun_in_the_constructor_names_the_call [FAIL]
+[xUnit.net 00:00:01.17]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:01.17]       Expected: TestIdentity { Name = Scoped, Id = scoped-id, Source = Scope, IsAttributed = True }
+[xUnit.net 00:00:01.17]       Actual:   TestIdentity { Name = Unknown Test, Id = 76940f6a-a7df-4877-affa-650e4bca53dd, Source = TestContext, IsAttributed = True }
+[xUnit.net 00:00:01.17]       Stack Trace:
+[xUnit.net 00:00:01.17]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(69,0): at Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_scope_begun_in_the_constructor_names_the_call()
+[xUnit.net 00:00:01.17]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.17]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.17]     Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.An_HTTP_call_from_the_constructor_is_sent_untracked_and_without_test_headers [FAIL]
+[xUnit.net 00:00:01.17]       Assert.Empty() Failure: Collection was not empty
+[xUnit.net 00:00:01.17]       Collection: [RequestResponseLog { TestName = Unknown Test, TestId = 404652c5-2109-46c8-85db-6319576adaa5, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://downstream.local/from-constructor-e5beb160de8c4cc9b8df914cca3b84bf, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Downstream, CallerName = Tests, Type = Request, TraceId = 9c81d38c-71b7-4220-9eeb-efe26b75ef5f, RequestResponseId = fbbf6bc3-2723-4b10-bd38-50eeec6cb495, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 08/10/2026 10:36:03 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = 0dea8149e550ef8c, ActivityTraceId = 0bc355f9693f88f57f280b70ad62fbc5, Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }, RequestResponseLog { TestName = Unknown Test, TestId = 404652c5-2109-46c8-85db-6319576adaa5, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://downstream.local/from-constructor-e5beb160de8c4cc9b8df914cca3b84bf, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Downstream, CallerName = Tests, Type = Response, TraceId = 9c81d38c-71b7-4220-9eeb-efe26b75ef5f, RequestResponseId = fbbf6bc3-2723-4b10-bd38-50eeec6cb495, TrackingIgnore = False, StatusCode = Kronikol.Tracking.OneOf`2[System.Net.HttpStatusCode,System.String], MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 08/10/2026 10:36:03 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = 0dea8149e550ef8c, ActivityTraceId = 0bc355f9693f88f57f280b70ad62fbc5, Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }]
+[xUnit.net 00:00:01.17]       Stack Trace:
+[xUnit.net 00:00:01.17]         C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs(75,0): at Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.An_HTTP_call_from_the_constructor_is_sent_untracked_and_without_test_headers()
+[xUnit.net 00:00:01.17]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.17]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_scope_begun_in_the_constructor_names_the_call [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: TestIdentity { Name = Scoped, Id = scoped-id, Source = Scope, IsAttributed = True }
+Actual:   TestIdentity { Name = Unknown Test, Id = 76940f6a-a7df-4877-affa-650e4bca53dd, Source = TestContext, IsAttributed = True }
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.A_scope_begun_in_the_constructor_names_the_call() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 69
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.An_HTTP_call_from_the_constructor_is_sent_untracked_and_without_test_headers [< 1 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: [RequestResponseLog { TestName = Unknown Test, TestId = 404652c5-2109-46c8-85db-6319576adaa5, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://downstream.local/from-constructor-e5beb160de8c4cc9b8df914cca3b84bf, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Downstream, CallerName = Tests, Type = Request, TraceId = 9c81d38c-71b7-4220-9eeb-efe26b75ef5f, RequestResponseId = fbbf6bc3-2723-4b10-bd38-50eeec6cb495, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 08/10/2026 10:36:03 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = 0dea8149e550ef8c, ActivityTraceId = 0bc355f9693f88f57f280b70ad62fbc5, Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }, RequestResponseLog { TestName = Unknown Test, TestId = 404652c5-2109-46c8-85db-6319576adaa5, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://downstream.local/from-constructor-e5beb160de8c4cc9b8df914cca3b84bf, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Downstream, CallerName = Tests, Type = Response, TraceId = 9c81d38c-71b7-4220-9eeb-efe26b75ef5f, RequestResponseId = fbbf6bc3-2723-4b10-bd38-50eeec6cb495, TrackingIgnore = False, StatusCode = Kronikol.Tracking.OneOf`2[System.Net.HttpStatusCode,System.String], MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 08/10/2026 10:36:03 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = 0dea8149e550ef8c, ActivityTraceId = 0bc355f9693f88f57f280b70ad62fbc5, Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }]
+  Stack Trace:
+     at Kronikol.Tests.xUnit2.ConstructorAndInitializeAsyncTests.An_HTTP_call_from_the_constructor_is_sent_untracked_and_without_test_headers() in C:\Code\Kronikol-133-red\tests\Kronikol.Tests.xUnit2\xUnit2\IdentityOutsideATestTests.cs:line 75
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_call_made_in_the_test_class_constructor_is_not_the_tests(fixture: "OwnFramework.Vs3") [25 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_call_made_in_the_test_class_constructor_is_not_the_tests(fixture: "OwnFramework") [20 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Listing_the_tests_writes_no_report_and_no_error_log(fixture: "OwnFramework.Vs3") [2 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Listing_the_tests_writes_no_report_and_no_error_log(fixture: "OwnFramework") [1 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_failing_fact_with_a_display_name_is_reported_failed_with_its_error_and_duration_under_its_display_name(fixture: "OwnFramework.Vs3") [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_failing_fact_with_a_display_name_is_reported_failed_with_its_error_and_duration_under_its_display_name(fixture: "OwnFramework") [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework", attempt: 1) [1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework.Vs3", attempt: 3) [3 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework", attempt: 2) [4 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework.Vs3", attempt: 1) [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework.Vs3", attempt: 2) [4 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_theory_row_carries_its_own_name_verdict_duration_and_call(fixture: "OwnFramework", attempt: 3) [3 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.With_no_options_set_the_run_starts_before_its_first_scenario_and_ends_after_its_last(fixture: "OwnFramework.Vs3") [5 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.With_no_options_set_the_run_starts_before_its_first_scenario_and_ends_after_its_last(fixture: "OwnFramework") [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_report_that_cannot_be_written_leaves_the_run_whole_and_writes_the_error_log(fixture: "OwnFramework") [3 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_report_that_cannot_be_written_leaves_the_run_whole_and_writes_the_error_log(fixture: "OwnFramework.Vs3") [3 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Under_method_display_every_test_keeps_its_own_result(fixture: "OwnFramework.Vs3") [3 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Under_method_display_every_test_keeps_its_own_result(fixture: "OwnFramework") [3 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.The_reports_are_complete_when_dotnet_test_returns_even_when_slow_to_write(fixture: "OwnFramework") [4 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.The_reports_are_complete_when_dotnet_test_returns_even_when_slow_to_write(fixture: "OwnFramework.Vs3") [11 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_tracked_skipped_test_is_reported_skipped_and_untracked_tests_are_not_reported(fixture: "OwnFramework.Vs3") [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.A_tracked_skipped_test_is_reported_skipped_and_untracked_tests_are_not_reported(fixture: "OwnFramework") [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_row_of_a_theory_whose_data_cannot_be_serialized_carries_its_own_name_and_call(fixture: "OwnFramework") [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Each_row_of_a_theory_whose_data_cannot_be_serialized_carries_its_own_name_and_call(fixture: "OwnFramework.Vs3") [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Every_tracked_test_is_one_scenario_with_its_own_result_duration_error_and_calls(fixture: "OwnFramework.Vs3") [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Every_tracked_test_is_one_scenario_with_its_own_result_duration_error_and_calls(fixture: "OwnFramework") [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Tests_that_fail_before_their_first_line_are_reported_failed_with_the_error_and_no_calls(fixture: "OwnFramework") [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OwnFrameworkLaneTests.Tests_that_fail_before_their_first_line_are_reported_failed_with_the_error_and_no_calls(fixture: "OwnFramework.Vs3") [< 1 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OtherFrameworksLaneTests.Under_AssemblyFixture_the_assembly_fixture_is_made_once_and_handed_to_each_test(fixture: "AssemblyFixture.Vs3") [15 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OtherFrameworksLaneTests.Under_AssemblyFixture_the_assembly_fixture_is_made_once_and_handed_to_each_test(fixture: "AssemblyFixture") [14 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OtherFrameworksLaneTests.Under_AssemblyFixture_the_reports_are_complete_when_dotnet_test_returns_even_when_slow_to_write(fixture: "AssemblyFixture.Vs3") [4 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OtherFrameworksLaneTests.Under_AssemblyFixture_the_reports_are_complete_when_dotnet_test_returns_even_when_slow_to_write(fixture: "AssemblyFixture") [4 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OtherFrameworksLaneTests.Under_AssemblyFixture_every_tracked_test_is_its_own_scenario(fixture: "AssemblyFixture.Vs3") [20 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OtherFrameworksLaneTests.Under_AssemblyFixture_every_tracked_test_is_its_own_scenario(fixture: "AssemblyFixture") [29 ms]
+  Passed Kronikol.Tests.xUnit2.Lane.OtherFrameworksLaneTests.Under_DependencyInjection_by_composition_injection_works_and_every_tracked_test_is_its_own_scenario [17 s]
+  Passed Kronikol.Tests.xUnit2.Lane.OtherFrameworksLaneTests.Under_a_framework_that_keeps_the_asynchronous_bus_results_are_paired_by_test_method_and_the_run_says_so [17 s]
+  Passed Kronikol.Tests.xUnit2.Lane.NoFrameworkLaneTests.The_specifications_are_not_written_as_for_a_passing_run [15 s]
+[xUnit.net 00:03:06.08]   Finished:    Kronikol.Tests.xUnit2
+  Passed Kronikol.Tests.xUnit2.Lane.NoFrameworkLaneTests.Every_scenario_is_reported_as_a_default_not_a_verdict [36 ms]
+
+Test Run Failed.
+Total tests: 91
+     Passed: 77
+     Failed: 14
+ Total time: 3.1084 Minutes

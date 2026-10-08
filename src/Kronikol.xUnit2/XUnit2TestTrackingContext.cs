@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using Kronikol.Tracking;
 
 namespace Kronikol.xUnit2;
 
@@ -9,6 +10,12 @@ namespace Kronikol.xUnit2;
 /// <see cref="AsyncLocal{T}"/> to store the current test's name and ID.
 /// The <see cref="TestTrackingAttribute"/> sets and clears this context
 /// before and after each test.
+/// <para>
+/// The identity covers what runs between the attribute's <c>Before</c> and <c>After</c>: the test method, and work it
+/// starts that flows its execution context. xUnit v2 runs a test class's constructor and <c>IAsyncLifetime.InitializeAsync</c>
+/// before <c>Before</c>, and <c>DisposeAsync</c> and <c>Dispose</c> after <c>After</c>, so they run outside the test, as
+/// fixtures do.
+/// </para>
 /// </summary>
 public static class XUnit2TestTrackingContext
 {
@@ -30,8 +37,22 @@ public static class XUnit2TestTrackingContext
     /// <summary>The last sequence number given out, so a run can tell the scenarios made since it started.</summary>
     internal static long CurrentSequence => Interlocked.Read(ref _sequence);
 
+    /// <summary>
+    /// The name and id of the test running on this flow. Outside a test it answers <c>"Unknown Test"</c> and a new random
+    /// id, a different one on every call, which no scenario owns, so a call logged under it appears in no report.
+    /// <para>
+    /// Kronikol's own readers do not use it: <see cref="CurrentTestInfo.Fetcher"/> throws outside a test, and
+    /// <see cref="Track.TestIdResolver"/> and <see cref="TrackingDiagramOverride"/> answer no test, so the call goes to a
+    /// <see cref="TestIdentityScope"/>, the global fallback or the background, as on the other frameworks. To log a call
+    /// yourself, take its identity from <c>TestInfoResolver.Resolve(null, CurrentTestInfo.Fetcher)</c> and skip the call
+    /// when that is null.
+    /// </para>
+    /// </summary>
     public static (string Name, string Id) GetCurrentTestInfo() =>
         CurrentTest.Value ?? ("Unknown Test", Guid.NewGuid().ToString());
+
+    /// <summary>The test running on this flow, or null outside a test.</summary>
+    internal static (string Name, string Id)? Current => CurrentTest.Value;
 
     internal static void SetCurrentTest(string name, string id) =>
         CurrentTest.Value = (name, id);

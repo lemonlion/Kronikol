@@ -1,0 +1,96 @@
+[AssemblyInitialize]
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: <unset>
+  override:       ok; marker logged under: nothing
+[ClassInitialize]
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: <unset>
+  override:       ok; marker logged under: nothing
+test class constructor
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: <unset>
+  override:       ok; marker logged under: nothing
+[TestInitialize] (the test's own, after the base's)
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        (Test_one, Probe133.MSTestProbe.Test_one)
+  resolver:       (Test_one, Probe133.MSTestProbe.Test_one, TestContext)
+  TestIdResolver: Probe133.MSTestProbe.Test_one
+  override:       ok; marker logged under: Probe133.MSTestProbe.Test_one
+Test_one body
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        (Test_one, Probe133.MSTestProbe.Test_one)
+  resolver:       (Test_one, Probe133.MSTestProbe.Test_one, TestContext)
+  TestIdResolver: Probe133.MSTestProbe.Test_one
+  override:       ok; marker logged under: Probe133.MSTestProbe.Test_one
+Test_one: a thread with no flowed context
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: null
+  override:       ok; marker logged under: nothing
+Test_one: a thread with no flowed context, inside TestIdentityScope.Begin(Scoped, scoped-id)
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       (Scoped, scoped-id, Scope)
+  TestIdResolver: null
+  override:       ok; marker logged under: scoped-id
+Test_one: a thread with no flowed context, GlobalFallback set (fallback-id)
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       (Fallback, fallback-id, GlobalFallback)
+  TestIdResolver: null
+  override:       ok; marker logged under: fallback-id
+Test_one: Task.Run (flows the context)
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        (Test_one, Probe133.MSTestProbe.Test_one)
+  resolver:       (Test_one, Probe133.MSTestProbe.Test_one, TestContext)
+  TestIdResolver: Probe133.MSTestProbe.Test_one
+  override:       ok; marker logged under: Probe133.MSTestProbe.Test_one
+[TestCleanup] (the test's own, before the base's)
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        (Test_one, Probe133.MSTestProbe.Test_one)
+  resolver:       (Test_one, Probe133.MSTestProbe.Test_one, TestContext)
+  TestIdResolver: Probe133.MSTestProbe.Test_one
+  override:       ok; marker logged under: Probe133.MSTestProbe.Test_one
+test class constructor
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: null
+  override:       ok; marker logged under: nothing
+[TestInitialize] (the test's own, after the base's)
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        (Test_two, Probe133.MSTestProbe.Test_two)
+  resolver:       (Test_two, Probe133.MSTestProbe.Test_two, TestContext)
+  TestIdResolver: Probe133.MSTestProbe.Test_two
+  override:       ok; marker logged under: Probe133.MSTestProbe.Test_two
+Test_two body
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        (Test_two, Probe133.MSTestProbe.Test_two)
+  resolver:       (Test_two, Probe133.MSTestProbe.Test_two, TestContext)
+  TestIdResolver: Probe133.MSTestProbe.Test_two
+  override:       ok; marker logged under: Probe133.MSTestProbe.Test_two
+[TestCleanup] (the test's own, before the base's)
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        (Test_two, Probe133.MSTestProbe.Test_two)
+  resolver:       (Test_two, Probe133.MSTestProbe.Test_two, TestContext)
+  TestIdResolver: Probe133.MSTestProbe.Test_two
+  override:       ok; marker logged under: Probe133.MSTestProbe.Test_two
+[ClassCleanup]
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: null
+  override:       ok; marker logged under: nothing
+[AssemblyCleanup]
+  context:        (MSTest: Kronikol's own AsyncLocal TestContext, read by the fetcher)
+  fetcher:        THROWS InvalidOperationException: Test context not available on this thread.
+  resolver:       null
+  TestIdResolver: null
+  override:       ok; marker logged under: nothing

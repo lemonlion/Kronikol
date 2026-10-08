@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <KronikolAdapter>Kronikol.TUnit</KronikolAdapter>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/Probe.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="TUnit" Version="1.53.0" />
+    <PackageReference Include="Kronikol.TUnit" Version="$(KronikolVersion)" />
+  </ItemGroup>
+</Project>

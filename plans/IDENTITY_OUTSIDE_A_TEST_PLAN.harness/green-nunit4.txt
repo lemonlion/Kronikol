@@ -1,0 +1,25 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-xunit2-133\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.NUnit4 -> C:\Code\Kronikol-xunit2-133\src\Kronikol.NUnit4\bin\Debug\net10.0\Kronikol.NUnit4.dll
+  Kronikol.Tests.NUnit4 -> C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.NUnit4\bin\Debug\net10.0\Kronikol.Tests.NUnit4.dll
+Test run for C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.NUnit4\bin\Debug\net10.0\Kronikol.Tests.NUnit4.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+NUnit Adapter 1.0.0.0: Test execution started
+Running all tests in C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.NUnit4\bin\Debug\net10.0\Kronikol.Tests.NUnit4.dll
+   NUnit3TestExecutor discovered 10 of 10 NUnit test cases using Current Discovery mode, Non-Explicit run
+  Passed A_call_made_there_resolves_to_no_test [8 ms]
+  Passed A_diagram_marker_made_there_is_dropped [2 ms]
+  Passed Inside_the_test_every_reader_answers_the_test [13 ms]
+  Passed On_a_thread_the_test_did_not_reach_a_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere [4 ms]
+  Passed On_a_thread_the_test_did_not_reach_the_fetcher_throws [4 ms]
+  Passed On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_a_scope_begun_there [1 ms]
+  Passed On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_the_global_fallback [< 1 ms]
+  Passed On_a_thread_the_test_did_not_reach_Track_TestIdResolver_answers_no_test [2 ms]
+  Passed On_a_thread_the_test_did_not_reach_with_nothing_else_the_resolver_answers_no_test_or_the_background [32 ms]
+  Passed The_fetcher_throws_in_a_set_up_fixture_a_fixture_constructor_and_a_one_time_set_up [< 1 ms]
+
+Test Run Successful.
+Total tests: 10
+     Passed: 10
+ Total time: 1.7652 Seconds

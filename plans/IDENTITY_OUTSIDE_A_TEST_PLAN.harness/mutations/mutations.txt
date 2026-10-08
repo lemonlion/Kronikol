@@ -1,0 +1,36 @@
+M1 xUnit v2 fetcher answers outside a test as GetCurrentTestInfo() does (a new random id)
+    caught by 10: A_call_from_the_constructor_or_InitializeAsync_resolves_to_no_test, A_scope_begun_in_the_constructor_names_the_call, An_HTTP_call_from_the_constructor_is_sent_untracked_and_without_test_headers, Held_calls_wait_for_a_test_when_a_flush_comes_outside_one, The_fetcher_throws, The_fetcher_throws_in_the_constructor_and_in_InitializeAsync, The_recipe_logs_a_call_inside_the_test_and_skips_one_outside_it, The_resolver_goes_on_to_a_scope_begun_there, The_resolver_goes_on_to_the_global_fallback, With_nothing_else_the_resolver_answers_no_test_or_the_background
+M2 TestTrackingAttribute's Track.TestIdResolver answers a random id outside a test
+    caught by 1: Track_TestIdResolver_answers_no_test
+M3 xUnit v2 DiagrammedTestRun's Track.TestIdResolver answers a random id outside a test
+    caught by 1: The_resolver_DiagrammedTestRun_sets_answers_the_test_inside_it_and_no_test_outside_it
+M4 xUnit v2 override back to GetCurrentTestInfo().Id (its 4.10.0 reading)
+    caught by 2: A_diagram_marker_from_the_constructor_is_dropped, A_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere
+M5 xUnit v2 override without the scope and the global fallback
+    caught by 1: A_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere
+M6 xUnit v2 override ignores the running test
+    caught by 1: A_diagram_marker_inside_the_test_goes_to_the_test
+M7 xUnit v2 InsertPlantUml without its no-test guard
+    caught by 2: A_diagram_marker_from_the_constructor_is_dropped, A_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere
+M8 NUnit RunningTest takes the ad hoc context as a test
+    caught by 7: On_a_thread_the_test_did_not_reach_Track_TestIdResolver_answers_no_test, On_a_thread_the_test_did_not_reach_a_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere, On_a_thread_the_test_did_not_reach_the_fetcher_throws, On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_a_scope_begun_there, On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_the_global_fallback, On_a_thread_the_test_did_not_reach_with_nothing_else_the_resolver_answers_no_test_or_the_background, The_resolver_DiagrammedTestRun_sets_answers_the_test_inside_it_and_no_test_outside_it
+M9 NUnit RunningTest takes a fixture (a suite) as a test
+    caught by 3: A_call_made_there_resolves_to_no_test, A_diagram_marker_made_there_is_dropped, The_fetcher_throws_in_a_set_up_fixture_a_fixture_constructor_and_a_one_time_set_up
+M10 NUnit fetcher reads TestContext.CurrentContext.Test (its 4.10.0 reading)
+    caught by 6: A_call_made_there_resolves_to_no_test, On_a_thread_the_test_did_not_reach_the_fetcher_throws, On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_a_scope_begun_there, On_a_thread_the_test_did_not_reach_the_resolver_goes_on_to_the_global_fallback, On_a_thread_the_test_did_not_reach_with_nothing_else_the_resolver_answers_no_test_or_the_background, The_fetcher_throws_in_a_set_up_fixture_a_fixture_constructor_and_a_one_time_set_up
+M11 NUnit DiagrammedComponentTest's Track.TestIdResolver back to TestContext.CurrentContext
+    caught by 1: On_a_thread_the_test_did_not_reach_Track_TestIdResolver_answers_no_test
+M12 NUnit DiagrammedTestRun's Track.TestIdResolver back to TestContext.CurrentContext
+    caught by 1: The_resolver_DiagrammedTestRun_sets_answers_the_test_inside_it_and_no_test_outside_it
+M13 NUnit override without the scope and the global fallback
+    caught by 1: On_a_thread_the_test_did_not_reach_a_diagram_marker_goes_to_the_scope_or_the_global_fallback_or_nowhere
+M14 NUnit override ignores the running test
+    caught by 1: Inside_the_test_every_reader_answers_the_test
+M15 MSTest override without the scope and the global fallback
+    caught by 2: On_a_thread_the_test_did_not_reach_a_marker_goes_to_a_scope_begun_there, On_a_thread_the_test_did_not_reach_a_marker_goes_to_the_global_fallback
+M16 MSTest override ignores the running test
+    caught by 1: Inside_the_test_a_marker_goes_to_the_test
+M17 TUnit override without the scope and the global fallback
+    caught by 2: With_no_TUnit_test_a_marker_goes_to_a_scope_begun_there, With_no_TUnit_test_a_marker_goes_to_the_global_fallback
+M18 TUnit override ignores the running test (no fact can catch it: the TUnit tests run under xUnit v3, with no TUnit test)
+    SURVIVED

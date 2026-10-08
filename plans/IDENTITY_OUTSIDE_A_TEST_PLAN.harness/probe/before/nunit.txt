@@ -1,0 +1,90 @@
+[SetUpFixture] OneTimeSetUp (assembly level, after DiagrammedTestRun.Setup)
+  context:        Test.ID=0-1000 Name=Probe133 MethodName=null ClassName=Probe133.Run
+  fetcher:        (Run, 0-1000)
+  resolver:       (Run, 0-1000, TestContext)
+  TestIdResolver: 0-1000
+  override:       ok; marker logged under: 0-1000
+fixture constructor
+  context:        Test.ID=0-1001 Name=NUnitProbe MethodName=null ClassName=Probe133.NUnitProbe
+  fetcher:        (NUnitProbe, 0-1001)
+  resolver:       (NUnitProbe, 0-1001, TestContext)
+  TestIdResolver: 0-1001
+  override:       ok; marker logged under: 0-1001
+[OneTimeSetUp] (fixture)
+  context:        Test.ID=0-1001 Name=NUnitProbe MethodName=null ClassName=Probe133.NUnitProbe
+  fetcher:        (NUnitProbe, 0-1001)
+  resolver:       (NUnitProbe, 0-1001, TestContext)
+  TestIdResolver: 0-1001
+  override:       ok; marker logged under: 0-1001
+[SetUp] (the test's own, after the base's)
+  context:        Test.ID=0-1002 Name=Test_one MethodName=Test_one ClassName=Probe133.NUnitProbe
+  fetcher:        (NUnitProbe, 0-1002)
+  resolver:       (NUnitProbe, 0-1002, TestContext)
+  TestIdResolver: 0-1002
+  override:       ok; marker logged under: 0-1002
+Test_one body
+  context:        Test.ID=0-1002 Name=Test_one MethodName=Test_one ClassName=Probe133.NUnitProbe
+  fetcher:        (NUnitProbe, 0-1002)
+  resolver:       (NUnitProbe, 0-1002, TestContext)
+  TestIdResolver: 0-1002
+  override:       ok; marker logged under: 0-1002
+Test_one: a thread with no flowed context
+  context:        Test.ID=0-1006 Name=AdhocTestMethod MethodName=AdhocTestMethod ClassName=NUnit.Framework.Internal.TestExecutionContext+AdhocContext
+  fetcher:        (TestExecutionContext+AdhocContext, 0-1006)
+  resolver:       (TestExecutionContext+AdhocContext, 0-1006, TestContext)
+  TestIdResolver: 0-1006
+  override:       ok; marker logged under: 0-1006
+Test_one: a thread with no flowed context, inside TestIdentityScope.Begin(Scoped, scoped-id)
+  context:        Test.ID=0-1007 Name=AdhocTestMethod MethodName=AdhocTestMethod ClassName=NUnit.Framework.Internal.TestExecutionContext+AdhocContext
+  fetcher:        (TestExecutionContext+AdhocContext, 0-1007)
+  resolver:       (TestExecutionContext+AdhocContext, 0-1007, TestContext)
+  TestIdResolver: 0-1007
+  override:       ok; marker logged under: 0-1007
+Test_one: a thread with no flowed context, GlobalFallback set (fallback-id)
+  context:        Test.ID=0-1008 Name=AdhocTestMethod MethodName=AdhocTestMethod ClassName=NUnit.Framework.Internal.TestExecutionContext+AdhocContext
+  fetcher:        (TestExecutionContext+AdhocContext, 0-1008)
+  resolver:       (TestExecutionContext+AdhocContext, 0-1008, TestContext)
+  TestIdResolver: 0-1008
+  override:       ok; marker logged under: 0-1008
+Test_one: Task.Run (flows the context)
+  context:        Test.ID=0-1002 Name=Test_one MethodName=Test_one ClassName=Probe133.NUnitProbe
+  fetcher:        (NUnitProbe, 0-1002)
+  resolver:       (NUnitProbe, 0-1002, TestContext)
+  TestIdResolver: 0-1002
+  override:       ok; marker logged under: 0-1002
+[TearDown] (the test's own, before the base's)
+  context:        Test.ID=0-1002 Name=Test_one MethodName=Test_one ClassName=Probe133.NUnitProbe
+  fetcher:        (NUnitProbe, 0-1002)
+  resolver:       (NUnitProbe, 0-1002, TestContext)
+  TestIdResolver: 0-1002
+  override:       ok; marker logged under: 0-1002
+[SetUp] (the test's own, after the base's)
+  context:        Test.ID=0-1003 Name=Test_two MethodName=Test_two ClassName=Probe133.NUnitProbe
+  fetcher:        (NUnitProbe, 0-1003)
+  resolver:       (NUnitProbe, 0-1003, TestContext)
+  TestIdResolver: 0-1003
+  override:       ok; marker logged under: 0-1003
+Test_two body
+  context:        Test.ID=0-1003 Name=Test_two MethodName=Test_two ClassName=Probe133.NUnitProbe
+  fetcher:        (NUnitProbe, 0-1003)
+  resolver:       (NUnitProbe, 0-1003, TestContext)
+  TestIdResolver: 0-1003
+  override:       ok; marker logged under: 0-1003
+[TearDown] (the test's own, before the base's)
+  context:        Test.ID=0-1003 Name=Test_two MethodName=Test_two ClassName=Probe133.NUnitProbe
+  fetcher:        (NUnitProbe, 0-1003)
+  resolver:       (NUnitProbe, 0-1003, TestContext)
+  TestIdResolver: 0-1003
+  override:       ok; marker logged under: 0-1003
+[OneTimeTearDown] (fixture)
+  context:        Test.ID=0-1001 Name=NUnitProbe MethodName=null ClassName=Probe133.NUnitProbe
+  fetcher:        (NUnitProbe, 0-1001)
+  resolver:       (NUnitProbe, 0-1001, TestContext)
+  TestIdResolver: 0-1001
+  override:       ok; marker logged under: 0-1001
+[SetUpFixture] OneTimeTearDown (assembly level)
+  context:        Test.ID=0-1000 Name=Probe133 MethodName=null ClassName=Probe133.Run
+  fetcher:        (Run, 0-1000)
+  resolver:       (Run, 0-1000, TestContext)
+  TestIdResolver: 0-1000
+  override:       ok; marker logged under: 0-1000

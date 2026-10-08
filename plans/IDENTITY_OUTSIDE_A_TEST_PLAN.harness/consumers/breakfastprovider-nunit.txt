@@ -1,0 +1,25 @@
+BreakfastProvider (0ee43e8, scratch clone), NUnit lane in memory. before/before2 = every Kronikol package 4.11.1 (nuget.org); after/after2 = Kronikol and Kronikol.NUnit4 packed from this branch as 4.11.2-local133, the rest 4.11.1.
+=== before vs after
+  before:  total: 212  failed: 0  succeeded: 212 
+  after:  total: 212  failed: 0  succeeded: 212 
+212 scenarios before, 212 after; 2648 calls before, 2650 after
+orphan warning before: none; after: none
+Orders Outbox Retry Exhaustion Tests / Outbox message should transition to failed after exhausting retries: calls 14 -> 16; gone {}; new {('Request', 'Query', '/orders', 'CosmosDB', 'Breakfast Provider', None, 'Unknown', 'TestContext'): 1, ('Response', 'Query', '/orders', 'CosmosDB', 'Breakfast Provider', 200, 'Unknown', 'TestContext'): 1}
+=== before vs before2
+  before:  total: 212  failed: 0  succeeded: 212 
+  before2:  total: 212  failed: 0  succeeded: 212 
+212 scenarios before, 212 after; 2648 calls before, 2648 after
+orphan warning before: none; after: none
+identical
+=== after vs after2
+  after:  total: 212  failed: 0  succeeded: 212 
+  after2:  total: 212  failed: 0  succeeded: 212 
+212 scenarios before, 212 after; 2650 calls before, 2648 after
+orphan warning before: none; after: none
+Orders Outbox Retry Exhaustion Tests / Outbox message should transition to failed after exhausting retries: calls 16 -> 14; gone {('Request', 'Query', '/orders', 'CosmosDB', 'Breakfast Provider', None, 'Unknown', 'TestContext'): 1, ('Response', 'Query', '/orders', 'CosmosDB', 'Breakfast Provider', 200, 'Unknown', 'TestContext'): 1}; new {}
+=== before2 vs after2
+  before2:  total: 212  failed: 0  succeeded: 212 
+  after2:  total: 212  failed: 0  succeeded: 212 
+212 scenarios before, 212 after; 2648 calls before, 2648 after
+orphan warning before: none; after: none
+identical

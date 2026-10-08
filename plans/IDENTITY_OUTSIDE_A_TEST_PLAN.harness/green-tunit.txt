@@ -1,0 +1,43 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-xunit2-133\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.TUnit -> C:\Code\Kronikol-xunit2-133\src\Kronikol.TUnit\bin\Debug\net10.0\Kronikol.TUnit.dll
+C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.TUnit\TabularAttributes\HeadInAttributeTests.cs(27,17): warning xUnit1013: Public method 'InputsOnly' on test class 'HeadInAttributeTests' should be marked as a Theory. Reduce the visibility of the method, or add a Theory attribute to the method. (https://xunit.net/xunit.analyzers/rules/xUnit1013) [C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.TUnit\Kronikol.Tests.TUnit.csproj]
+C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.TUnit\TabularAttributes\HeadInAttributeTests.cs(32,17): warning xUnit1013: Public method 'InputsAndOutputs' on test class 'HeadInAttributeTests' should be marked as a Theory. Reduce the visibility of the method, or add a Theory attribute to the method. (https://xunit.net/xunit.analyzers/rules/xUnit1013) [C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.TUnit\Kronikol.Tests.TUnit.csproj]
+C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.TUnit\TabularAttributes\HeadInAttributeTests.cs(37,17): warning xUnit1013: Public method 'InferredColumns' on test class 'HeadInAttributeTests' should be marked as a Theory. Reduce the visibility of the method, or add a Theory attribute to the method. (https://xunit.net/xunit.analyzers/rules/xUnit1013) [C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.TUnit\Kronikol.Tests.TUnit.csproj]
+C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.TUnit\TabularAttributes\HeadInAttributeTests.cs(41,17): warning xUnit1013: Public method 'SingleRow' on test class 'HeadInAttributeTests' should be marked as a Theory. Reduce the visibility of the method, or add a Theory attribute to the method. (https://xunit.net/xunit.analyzers/rules/xUnit1013) [C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.TUnit\Kronikol.Tests.TUnit.csproj]
+  Kronikol.Tests.TUnit -> C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.TUnit\bin\Debug\net10.0\Kronikol.Tests.TUnit.dll
+Test run for C:\Code\Kronikol-xunit2-133\tests\Kronikol.Tests.TUnit\bin\Debug\net10.0\Kronikol.Tests.TUnit.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:02.65]   Discovering: Kronikol.Tests.TUnit
+[xUnit.net 00:00:02.86]   Discovered:  Kronikol.Tests.TUnit
+[xUnit.net 00:00:03.06]   Starting:    Kronikol.Tests.TUnit
+  Passed Kronikol.Tests.TUnit.CurrentTestInfoTests.Options_Constructor_Uses_Fetcher [14 ms]
+  Passed Kronikol.Tests.TUnit.TestStateExtensionsTests.FailedShouldMapToExecutionResultFailed [15 ms]
+  Passed Kronikol.Tests.TUnit.StructuredParameterExtractionTests.ExtractStructured_is_accessible_from_adapter_test_project [15 ms]
+  Passed Kronikol.Tests.TUnit.CurrentTestInfoTests.Fetcher_Is_Same_Instance_As_Options_TestInfoFetcher [< 1 ms]
+  Passed Kronikol.Tests.TUnit.CurrentTestInfoTests.Fetcher_Is_Not_Null [< 1 ms]
+  Passed Kronikol.Tests.TUnit.TabularAttributes.HeadInAttributeTests.Single_row [26 ms]
+  Passed Kronikol.Tests.TUnit.TestStateExtensionsTests.UnexpectedStateShouldThrow(state: WaitingForDependencies) [2 ms]
+  Passed Kronikol.Tests.TUnit.TestStateExtensionsTests.UnexpectedStateShouldThrow(state: Queued) [< 1 ms]
+  Passed Kronikol.Tests.TUnit.TestStateExtensionsTests.UnexpectedStateShouldThrow(state: Running) [< 1 ms]
+  Passed Kronikol.Tests.TUnit.TestStateExtensionsTests.UnexpectedStateShouldThrow(state: NotStarted) [< 1 ms]
+  Passed Kronikol.Tests.TUnit.TestStateExtensionsTests.CancelledShouldMapToExecutionResultSkipped [< 1 ms]
+  Passed Kronikol.Tests.TUnit.TestStateExtensionsTests.PassedShouldMapToExecutionResultPassed [< 1 ms]
+  Passed Kronikol.Tests.TUnit.TestStateExtensionsTests.SkippedShouldMapToExecutionResultSkipped [< 1 ms]
+  Passed Kronikol.Tests.TUnit.TestStateExtensionsTests.TimeoutShouldMapToExecutionResultFailed [< 1 ms]
+  Passed Kronikol.Tests.TUnit.TabularAttributes.HeadInAttributeTests.Inferred_column_names [5 ms]
+  Passed Kronikol.Tests.TUnit.TabularAttributes.HeadInAttributeTests.Foreach_iterates_all_rows [4 ms]
+  Passed Kronikol.Tests.TUnit.TrackingDiagramOverrideTests.With_no_TUnit_test_a_marker_goes_to_a_scope_begun_there [37 ms]
+[xUnit.net 00:00:03.18]   Finished:    Kronikol.Tests.TUnit (ID = 'd967b620a38518f0804c3593ad9b81652c043536e6dd98dac13ec4695ad00e7e')
+  Passed Kronikol.Tests.TUnit.TrackingDiagramOverrideTests.With_no_TUnit_test_a_marker_goes_to_the_global_fallback [1 ms]
+  Passed Kronikol.Tests.TUnit.TrackingDiagramOverrideTests.With_no_TUnit_test_and_nothing_else_a_marker_is_dropped [< 1 ms]
+  Passed Kronikol.Tests.TUnit.TabularAttributes.HeadInAttributeTests.Inputs_and_outputs_resolved_together [3 ms]
+  Passed Kronikol.Tests.TUnit.TabularAttributes.HeadInAttributeTests.Inputs_are_resolved_correctly [< 1 ms]
+
+Test Run Successful.
+Total tests: 21
+     Passed: 21
+ Total time: 3.7903 Seconds
+exit 0

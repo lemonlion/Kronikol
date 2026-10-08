@@ -21,7 +21,8 @@ public class DiagrammedTestRun
     {
         StartRunTime = DateTime.UtcNow;
 
-        // Enable Track.That() assertions to resolve the current test ID.
-        Track.TestIdResolver ??= () => TestContext.CurrentContext?.Test?.ID;
+        // Enable Track.That() assertions to resolve the current test ID. Outside a test it answers null, and Track goes on
+        // to the scope and the global fallback.
+        Track.TestIdResolver ??= () => RunningTest.Current?.ID;
     }
 }
