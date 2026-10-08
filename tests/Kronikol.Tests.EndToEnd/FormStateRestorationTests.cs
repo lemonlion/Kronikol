@@ -35,7 +35,7 @@ public class FormStateRestorationTests : IAsyncLifetime
         try
         {
             _browser = await _playwright.Firefox.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-            _page = await _browser.NewPageAsync();
+            _page = await PlaywrightTestBase.OpenPageAsync(_browser);
         }
         catch (PlaywrightException)
         {

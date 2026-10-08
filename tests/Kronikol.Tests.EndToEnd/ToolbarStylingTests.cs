@@ -269,13 +269,13 @@ public class ToolbarStylingTests : PlaywrightTestBase
     [InlineData(false, Blue)]
     public async Task A_tapped_filter_on_a_phone_keeps_its_active_colour(bool violet, string active)
     {
-        await using var phone = await _fixture.Browser.NewContextAsync(new BrowserNewContextOptions
+        await using var phone = await OpenContextAsync(_fixture.Browser, new BrowserNewContextOptions
         {
             ViewportSize = new ViewportSize { Width = 390, Height = 844 },
             IsMobile = true,
             HasTouch = true
         });
-        var page = await phone.NewPageAsync();
+        var page = await OpenPageAsync(phone);
         await page.GotoAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, $"PhoneTap{violet}.html", _ => { },
             stylesheet: violet ? Stylesheets.VioletThemeStyleSheet : null));
         await page.Locator("details.feature").First.WaitForAsync();

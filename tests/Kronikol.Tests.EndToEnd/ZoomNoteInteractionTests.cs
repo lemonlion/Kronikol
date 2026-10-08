@@ -86,7 +86,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
             // Let any already-queued requestAnimationFrame callback run — then confirm it did not kick
             // off (or land in the middle of) another render. Without the re-check this could still
             // return against the *previous* render when the click's own work has not started yet.
-            await Page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))");
+            await TwoAnimationFramesAsync(Page);
             if (await Page.EvaluateAsync<bool>($"({RenderSettled})()"))
                 return;
 

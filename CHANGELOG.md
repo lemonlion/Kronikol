@@ -4,7 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.14.1] - 2026-10-08
+
+**Patch - 4.14.0 reaches NuGet.** The patch part moved because nothing is new to call. 4.14.0 was tagged, but its
+release run failed on a test, so no 4.14.0 package was published; this release carries everything listed under
+4.14.0. Template pins stay at 4.13.3, the last published release, and the history action's `VERSION` installs
+`Kronikol.Tool` 4.14.1.
+
+### Fixed
+
+- **Two query tests modelled a tracked assertion without its mark.** `kronikol query assertions` reads a report
+  from 4.14.0 on by the data file's `assertion` mark (#145), and the tests built their report with Track's sub-step
+  unmarked, so on the release build, which stamps 4.14.0, the step was not counted. The checks before 4.14.0 ran
+  at 4.13.x, which reads such a report by the old inference. The fixtures mark the sub-step as Track writes it, and
+  4.14.1's suites ran at the bumped version before it was tagged.
+- **A merge could drop an older shard's assertions.** A merged report takes its first shard's version, so a shard
+  written before 4.14.0, merged after one written since, had its tracked assertions read by a mark it never wrote.
+  A shard from before 4.14.0 is now read as a reader of its own version reads it: a step without a keyword is an
+  assertion, as `query` counted them, and the merge writes the mark for it.
+
+### Tests
+
+- **The Playwright suite could hang for ever.** Three full runs hung while 4.14.1 was checked. In the one dumped,
+  every browser of the run stopped answering at the same moment (a browser launched beside them later worked), and
+  two tests waited on Playwright's `NewPageAsync`, which has no timeout, with the rest of their collections queued
+  behind them. Opening a context or a page is now bounded at 60 seconds, and the shared fixture kills a browser that
+  opens no page in time and launches another, so one test fails and its collection runs on. A fact freezes a real
+  browser process to prove it, and another scans the tests for an unbounded open. The four waits for two animation
+  frames, the same kind of call, go through `TwoAnimationFramesAsync`, which fails after 15 seconds with a message.
+
 ## [4.14.0] - 2026-10-08
+
+**Tagged, never published.** Its release run failed on a test whose report fixture predates the
+assertion mark (see 4.14.1), so no 4.14.0 package reached NuGet. 4.14.1 carries everything below.
 
 **Minor - assertion tracking reads Shouldly.**
 `plans/SHOULDLY_ASSERTIONS_PLAN.md` R2: Shouldly support (#141), a warning when the weave instruments nothing

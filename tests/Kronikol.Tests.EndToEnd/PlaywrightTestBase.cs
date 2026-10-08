@@ -29,6 +29,9 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
     /// </summary>
     public const int PopupFirstDrawTimeout = 60000;
 
+    /// <summary>How long a browser may take to open a context and a page.</summary>
+    public const int PageOpenTimeout = 60000;
+
     protected PlaywrightTestBase(PlaywrightFixture fixture)
     {
         _fixture = fixture;
@@ -39,8 +42,8 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        _context = await _fixture.NewContextAsync(ViewportWidth, ViewportHeight);
-        Page = await _context.NewPageAsync();
+        (_context, var page) = await _fixture.OpenPageAsync(ViewportWidth, ViewportHeight);
+        Page = page;
     }
 
     public async ValueTask DisposeAsync()
@@ -70,6 +73,49 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
             }
             """,
             null, new() { PollingInterval = 200, Timeout = 10000 });
+
+    /// <summary>
+    /// Waits two animation frames, the time a change takes to reach layout and paint, and fails when they do not come
+    /// within <paramref name="timeoutMs"/>. Playwright's evaluate has no timeout of its own, and a busy machine can stall
+    /// a headless renderer's frames: awaited bare, two <c>requestAnimationFrame</c> callbacks held a test, and every test
+    /// queued behind it in its collection, for ever (<see cref="AnimationFrameWaitTests"/>).
+    /// </summary>
+    internal static Task TwoAnimationFramesAsync(IPage page, int timeoutMs = 15000) =>
+        WithinAsync(page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))"),
+            timeoutMs, $"The page painted no animation frame within {timeoutMs} ms.");
+
+    /// <summary>
+    /// A new page, failing when the browser has not opened it within <paramref name="timeoutMs"/>: Playwright's
+    /// NewPageAsync has no timeout of its own, and a browser that stopped answering held a test, and every test
+    /// queued behind it, for ever (<see cref="BrowserStallTests"/>).
+    /// </summary>
+    internal static Task<IPage> OpenPageAsync(IBrowserContext context, int timeoutMs = PageOpenTimeout) =>
+        WithinAsync(context.NewPageAsync(), timeoutMs, $"The browser opened no page within {timeoutMs} ms.");
+
+    /// <inheritdoc cref="OpenPageAsync(IBrowserContext, int)"/>
+    internal static Task<IPage> OpenPageAsync(IBrowser browser, BrowserNewPageOptions? options = null,
+        int timeoutMs = PageOpenTimeout) =>
+        WithinAsync(browser.NewPageAsync(options), timeoutMs, $"The browser opened no page within {timeoutMs} ms.");
+
+    /// <summary>A new context, failing as <see cref="OpenPageAsync(IBrowserContext, int)"/> does.</summary>
+    internal static Task<IBrowserContext> OpenContextAsync(IBrowser browser, BrowserNewContextOptions? options = null,
+        int timeoutMs = PageOpenTimeout) =>
+        WithinAsync(browser.NewContextAsync(options), timeoutMs, $"The browser opened no context within {timeoutMs} ms.");
+
+    /// <summary>
+    /// <paramref name="task"/>'s result, or a <see cref="TimeoutException"/> with <paramref name="failure"/> when it has
+    /// not finished within <paramref name="timeoutMs"/>.
+    /// </summary>
+    internal static async Task<T> WithinAsync<T>(Task<T> task, int timeoutMs, string failure)
+    {
+        if (await Task.WhenAny(task, Task.Delay(timeoutMs)) != task)
+        {
+            // The call stays pending until its page or browser closes, and then fails; observe that failure here.
+            _ = task.ContinueWith(t => t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+            throw new TimeoutException(failure);
+        }
+        return await task;
+    }
 
     /// <summary>
     /// Whether the summary line of the first element <paramref name="selector"/> matches (or the element

@@ -150,11 +150,11 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
         ReportTestHelper.GenerateReportWithEverySection(_tempDir, OutputDir, reportFileName, pageFileName);
         var url = new Uri(Path.Combine(_tempDir, pageFileName)).AbsoluteUri;
 
-        await using var context = await _browser.Browser.NewContextAsync(new BrowserNewContextOptions
+        await using var context = await PlaywrightTestBase.OpenContextAsync(_browser.Browser, new BrowserNewContextOptions
         {
             ViewportSize = new ViewportSize { Width = Widths[0], Height = 900 }
         });
-        var page = await context.NewPageAsync();
+        var page = await PlaywrightTestBase.OpenPageAsync(context);
         var problems = new List<string>();
         var loaded = false;
         foreach (var width in Widths)
@@ -166,7 +166,7 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
                 null, new() { Timeout = 30000, PollingInterval = 200 });
             await page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
             if (injectedCss is not null) await page.AddStyleTagAsync(new() { Content = injectedCss });
-            await page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))");
+            await PlaywrightTestBase.TwoAnimationFramesAsync(page);
 
             var json = await page.EvaluateAsync<string>(MeasureLabsPage);
             using var result = JsonDocument.Parse(json);
@@ -216,11 +216,11 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
 
     private async Task Sweep(string url, bool runReport, string? injectedCss = null)
     {
-        await using var context = await _browser.Browser.NewContextAsync(new BrowserNewContextOptions
+        await using var context = await PlaywrightTestBase.OpenContextAsync(_browser.Browser, new BrowserNewContextOptions
         {
             ViewportSize = new ViewportSize { Width = Widths[0], Height = 900 }
         });
-        var page = await context.NewPageAsync();
+        var page = await PlaywrightTestBase.OpenPageAsync(context);
         var problems = new List<string>();
         var scrollbars = new SortedSet<int>();
         var clock = Stopwatch.StartNew();
@@ -246,7 +246,7 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
             await page.Locator(".search-help-toggle").First.ClickAsync();
             var timeline = page.Locator("button.timeline-toggle", new() { HasTextString = "Scenario Timeline" });
             if (await timeline.CountAsync() > 0) await timeline.First.ClickAsync();
-            await page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))");
+            await PlaywrightTestBase.TwoAnimationFramesAsync(page);
 
             var json = await page.EvaluateAsync<string>(Measure, new { breakpoint = Breakpoint, runReport });
             using var result = JsonDocument.Parse(json);

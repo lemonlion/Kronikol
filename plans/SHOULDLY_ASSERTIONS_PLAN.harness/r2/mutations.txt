@@ -35,3 +35,6 @@ M7 the customMessage and [CallerArgumentExpression] arguments captured: KILLED [
 M18c #145 not set in process: KILLED ['Failed!  - Failed:     1, Passed:     7, Skipped:     0, Total:     8, Duration: 562 ms - Kronikol.Tests.dll (net10.0)'] ['Kronikol.Tests.Reports.AssertionMarkTests.A_tracked_assertion_is_marked_in_process']
 M28 unwoven statements listed at Low: KILLED ['Failed!  - Failed:     1, Passed:     9, Skipped:     0, Total:    10, Duration: 8 s - Kronikol.Tests.AssertionTracking.dll (net10.0)'] ['Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_lists_a_statement_it_leaves_unwoven_where_a_build_shows_it']
 DONE
+# 4.14.1: the merge reader's inference for a shard written before the mark (applied by hand, filter AssertionMarkTests)
+M29 a pre-mark shard's keyword-less steps never inferred: KILLED ['Failed!  - Failed:     2, Passed:     9'] [A_shard_from_before_the_mark_is_read_as_its_own_readers_read_it("4.13.3"), ("")]
+M29b every shard's unmarked keyword-less steps inferred: KILLED ['Failed!  - Failed:     2, Passed:     9'] [A_shard_from_before_the_mark_is_read_as_its_own_readers_read_it("4.14.0"), A_merged_report_keeps_the_mark]

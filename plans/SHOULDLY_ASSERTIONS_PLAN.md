@@ -942,3 +942,34 @@ this table missed, and the skill references under `.claude/skills/` and `templat
     its sentence and Shouldly's message, naming the subject in Release, and F21's control fails with its own message
     where 4.11.0 and 4.12.3 threw `InvalidProgramException`. With `<DebugType>none</DebugType>` the build warns
     `KRONIKOL001`, and `-warnaserror` fails it (`harness/r2/acceptance/`).
+- 2026-10-08, 4.14.1: 4.14.0 (`fc566a8f`) was tagged, and its Release run (37813361626) failed at Test, as CI
+  (37813344836) did, on `QueryCommandTests.Assertions_lists_them_flat_with_their_source`: its fixture built Track's
+  sub-step without the mark, and at the release version #145's gate reads a report by its marks. Every suite R2 ran
+  before the tag ran before the version bump, while reports were stamped 4.13.x, so none could see it; the core suite
+  at the bumped version fails that fact alone. Nothing was published, and as with 3.29.4 and 3.31.6 the tag stays and
+  4.14.1 carries 4.14.0.
+  - **Fixed:** the two fixtures (`QueryCommandTests`, `CountFlagTests`) mark the sub-step as Track writes it. A gap of
+    the same root: a merge whose first shard is from 4.14.0 or later read an older shard's assertions by a mark that
+    shard never wrote, so a shard from before 4.14.0 is now read by its own version's inference
+    (`A_shard_from_before_the_mark_is_read_as_its_own_readers_read_it`, red first on its two older rows); never
+    inferring and always inferring are each caught (`harness/r2/mutations.txt`, M29 and M29b).
+  - **Caught before this tag:** the merge fix first read the version through `ReportIndex`, which sits in `Query/`, a
+    folder Kronikol compiles for net10.0 only, while the merge reader builds for every target; the core suite builds
+    net10.0 alone, so it passed, and the weaver suite's net8.0 build failed. The check moved to
+    `Reports/AssertionMark.cs`, which both readers use, and release.slnf was built in Release for every target before
+    the tag.
+  - **Found while checking 4.14.1:** the full Playwright suite hung three times on this machine. The second was read
+    as four tests awaiting two `requestAnimationFrame` callbacks through Playwright's evaluate, which has no timeout,
+    from which tests had not finished; that was an inference, and those waits now go through `TwoAnimationFramesAsync`
+    (15 seconds; facts for a page that paints, one that never does and a scan). The third was dumped (`dotnet-dump`,
+    `dumpasync`): two tests in two collections waited in the test base's setup on `NewPageAsync`, which has no timeout
+    either, with both browsers idle and no renderer left. Every browser of the run had stopped answering at the same
+    moment, after two clicks timed out, while a browser launched beside them later worked; nothing in the event log
+    explains it. Opening a context or a page goes through bounded helpers (60 seconds), and `PlaywrightFixture` kills a
+    browser that opens no page in time (by the process id the browser reports over CDP) and launches another, so one
+    test fails and the collection runs on. `BrowserStallTests` freezes a real browser process (suspended on Windows,
+    SIGSTOP elsewhere): before the change the open never returned (the fact's own 90-second bound), after it the open
+    fails in 2 seconds and the next page paints on a new browser; a scan finds no unbounded open.
+  - **The lesson,** for the audit checklist: a behaviour gated on the running version needs the suites run again
+    after the bump, and a change to a multi-target project needs a build of every target. 4.14.1's core suite passes 7,098 with 2 skipped and the weaver suite in Release on net8.0, net9.0
+    and net10.0 230, 258 and 286, all at 4.14.1.

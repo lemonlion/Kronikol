@@ -84,7 +84,7 @@ public class AssertionMarkTests
 
         var yaml = Write(WithBoth(), DataFormat.Yaml).ReplaceLineEndings("\n");
         var lines = yaml.Split('\n');
-        var mark = Assert.Single(lines.Select((line, i) => (line, i)).Where(l => l.line.TrimStart() == "Assertion: true"));
+        var mark = Assert.Single(lines.Select((line, i) => (line, i)), l => l.line.TrimStart() == "Assertion: true");
         Assert.Equal("- Keyword: \"\"", lines[mark.i - 1].TrimStart());
         Assert.Contains("Total should be 3", lines[mark.i + 1]);
     }
@@ -101,6 +101,30 @@ public class AssertionMarkTests
 
         Assert.True(subSteps[0].IsAssertion);
         Assert.False(subSteps[1].IsAssertion);
+    }
+
+    [Theory]
+    [InlineData("4.13.3", true)]
+    [InlineData("", true)]
+    [InlineData("4.14.0", false)]
+    public void A_shard_from_before_the_mark_is_read_as_its_own_readers_read_it(string writtenBy, bool keywordLessStepIsOne)
+    {
+        // A merge keeps its first shard's version, so a shard written before the mark and merged after one written
+        // since lost its assertions: they carry no mark, and the merged report is read by the mark. Read as a reader of
+        // its own version reads it, every step without a keyword is one (the framework's own step too, as before).
+        var json = ReportGenerator.GenerateMergeableReportJson(
+            WithBoth(), DateTime.UtcNow, DateTime.UtcNow,
+            diagramLookup: null, componentRelationships: [], internalFlowSegmentData: null,
+            wholeTestFlow: null, WholeTestFlowVisualization.None, ciMetadata: null);
+        json = Regex.Replace(json, "\"kronikolVersion\":\\s*\"[^\"]*\"", $"\"kronikolVersion\": \"{writtenBy}\"");
+        if (writtenBy != "4.14.0")
+            json = Regex.Replace(json, "\"assertion\":\\s*true,\\s*", "");
+        Assert.Equal(writtenBy == "4.14.0", json.Contains("\"assertion\"", StringComparison.Ordinal));
+
+        var subSteps = MergeableReportReader.Parse(json).Features.Single().Scenarios.Single().Steps!.Single().SubSteps!;
+
+        Assert.True(subSteps[0].IsAssertion);
+        Assert.Equal(keywordLessStepIsOne, subSteps[1].IsAssertion);
     }
 
     [Fact]

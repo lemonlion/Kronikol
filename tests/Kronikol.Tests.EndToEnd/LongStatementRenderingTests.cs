@@ -149,7 +149,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         // diagram out (V8's --jitless turns WebAssembly off too: the next fact).
         using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true, Args = ["--js-flags=--no-opt --no-maglev"] });
-        var page = await browser.NewPageAsync(new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
+        var page = await OpenPageAsync(browser, new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
 
         var (sequence, component) = await RenderLongLinkedLabelReport(page,
             ReportTestHelper.GenerateReportWithLongLinkedLabels(TempDir, OutputDir, "LongLinkedLabelsNoOpt.html"));
@@ -167,7 +167,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         // Smetana port. Before that, the component diagram drew the engine's "dot/GraphViz has crashed" picture.
         using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true, Args = ["--js-flags=--jitless"] });
-        var page = await browser.NewPageAsync(new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
+        var page = await OpenPageAsync(browser, new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
 
         var (sequence, component) = await RenderLongLinkedLabelReport(page,
             ReportTestHelper.GenerateReportWithLongLinkedLabels(TempDir, OutputDir, "LongLinkedLabelsJitless.html"));

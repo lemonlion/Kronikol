@@ -196,6 +196,8 @@ public class CountFlagTests : IDisposable
                                 [
                                     new ScenarioStep
                                     {
+                                        // Track's sub-step: marked since 4.14.0, and a report of this build is read by the mark.
+                                        IsAssertion = true,
                                         Text = "total == 4173", Status = ExecutionResult.Failed,
                                         FailureMessage = "Expected 4173 but found 3902", SourceFile = "CheckoutTests.cs", SourceLine = 42
                                     }

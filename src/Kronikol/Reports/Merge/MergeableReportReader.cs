@@ -74,7 +74,10 @@ public static class MergeableReportReader
         var warmUpScenarios = new Dictionary<string, double>(StringComparer.Ordinal);
         var annotations = new Dictionary<string, List<ReportGenerator.ScenarioAnnotation>>(StringComparer.Ordinal);
         var defaultedResults = new List<string>();
-        var notes = new ParseNotes();
+        // A shard written before the data file marked its assertions (#145) is read as a reader of its version reads
+        // it: a step without a keyword is one. The merge then writes the mark, so a merged report that carries a later
+        // shard's version still lists them.
+        var notes = new ParseNotes { InfersAssertions = !AssertionMark.MarksAssertions(GetString(root, "kronikolVersion")) };
 
         foreach (var fe in EnumerateArray(root, "features"))
         {
@@ -154,6 +157,9 @@ public static class MergeableReportReader
     {
         /// <summary>Whether the shard held a compressed payload, so that its merge is written compressed too.</summary>
         public bool CompressedPayloads { get; set; }
+
+        /// <summary>Whether the shard predates the assertion mark, so a step without a keyword is read as one.</summary>
+        public bool InfersAssertions { get; init; }
 
         public List<string> StepStatuses { get; } = [];
         public List<string> AnnotationKinds { get; } = [];
@@ -265,7 +271,9 @@ public static class MergeableReportReader
         var steps = arr.EnumerateArray().Select(s => new ScenarioStep
         {
             Keyword = GetString(s, "keyword"),
-            IsAssertion = s.TryGetProperty("assertion", out var assertion) && assertion.ValueKind == JsonValueKind.True,
+            IsAssertion = s.TryGetProperty("assertion", out var assertion)
+                ? assertion.ValueKind == JsonValueKind.True
+                : notes.InfersAssertions && GetString(s, "keyword") is null,
             Text = GetString(s, "text") ?? "",
             // Null, not Passed, when the status cannot be read: a step has an honest "not recorded"
             // value where a scenario does not, and a status this build does not know is not a pass.

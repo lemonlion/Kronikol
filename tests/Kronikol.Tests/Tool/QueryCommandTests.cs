@@ -2530,6 +2530,8 @@ public class QueryCommandTests : IDisposable
                             [
                                 new ScenarioStep
                                 {
+                                    // Track's sub-step: marked since 4.14.0, and a report of this build is read by the mark.
+                                    IsAssertion = true,
                                     Text = "total == 4173",
                                     Status = allPassing ? ExecutionResult.Passed : ExecutionResult.Failed,
                                     FailureMessage = allPassing ? null : "Expected 4173 but found 3902",

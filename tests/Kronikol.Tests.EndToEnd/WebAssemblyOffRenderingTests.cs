@@ -73,7 +73,7 @@ public class WebAssemblyOffRenderingTests : PlaywrightTestBase
     {
         using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
         await using var browser = await LaunchJitless(playwright);
-        var page = await browser.NewPageAsync(new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
+        var page = await OpenPageAsync(browser, new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
 
         var outcome = await RenderComponentReport(page,
             ReportTestHelper.GenerateReportWithEmbeddedComponentDiagram(TempDir, OutputDir, "WasmOffJitlessWorker.html"));
@@ -89,7 +89,7 @@ public class WebAssemblyOffRenderingTests : PlaywrightTestBase
     {
         using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
         await using var browser = await LaunchJitless(playwright);
-        var page = await browser.NewPageAsync(new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
+        var page = await OpenPageAsync(browser, new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
 
         var outcome = await RenderComponentReport(page,
             ReportTestHelper.GenerateReportWithEmbeddedComponentDiagram(TempDir, OutputDir, "WasmOffJitlessMainThread.html", browserRenderWorkers: 0));

@@ -196,7 +196,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
         """, null, new() { Timeout = 15000, PollingInterval = 200 });
 
         // Wait for the addZoomButton callback to fire
-        await Page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))");
+        await TwoAnimationFramesAsync(Page);
 
         // Capture after-toggle layout
         var afterInfo = await Page.EvaluateAsync<string>("""

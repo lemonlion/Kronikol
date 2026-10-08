@@ -36,7 +36,7 @@ public class NonSecureOriginTests : PlaywrightTestBase
         public async Task<IPage> ClipboardReader()
         {
             await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"], new() { Origin = Server.UrlOf("").TrimEnd('/') });
-            var reader = await Context.NewPageAsync();
+            var reader = await PlaywrightTestBase.OpenPageAsync(Context);
             await reader.GotoAsync(Server.UrlOf("blank.html"));
             return reader;
         }
@@ -57,8 +57,8 @@ public class NonSecureOriginTests : PlaywrightTestBase
         var server = LoopbackFileServer.Start(root);
         var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
         var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true, Args = [$"--host-resolver-rules=MAP {LanHost} 127.0.0.1"] });
-        var context = await browser.NewContextAsync(new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
-        var page = await context.NewPageAsync();
+        var context = await PlaywrightTestBase.OpenContextAsync(browser, new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
+        var page = await PlaywrightTestBase.OpenPageAsync(context);
         var lan = new LanReport { Server = server, Playwright = playwright, Browser = browser, Context = context, Page = page };
         page.Console += (_, m) => { if (m.Type == "error") lock (lan.ConsoleErrors) lan.ConsoleErrors.Add(m.Text); };
         page.PageError += (_, error) => { lock (lan.PageErrors) lan.PageErrors.Add(error); };
@@ -214,7 +214,7 @@ public class NonSecureOriginTests : PlaywrightTestBase
         Assert.DoesNotContain("Copy as PNG (no transparency)", items);
 
         // The control: the same report from the loopback address, a secure context, offers them.
-        var loopback = await lan.Context.NewPageAsync();
+        var loopback = await OpenPageAsync(lan.Context);
         await loopback.GotoAsync(lan.Server.UrlOf("LanHostImageCopies.html"));
         var loopbackItems = await MenuItems(loopback, await FirstDrawnDiagram(loopback));
         Assert.Contains("Copy as PNG", loopbackItems);
