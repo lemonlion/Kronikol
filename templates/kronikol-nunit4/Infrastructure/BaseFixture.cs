@@ -15,7 +15,7 @@ public abstract class BaseFixture : DiagrammedComponentTest, IDisposable
 
     static BaseFixture()
     {
-        SFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        SFactory = new PlaceholderApiFactory().WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
             {
@@ -38,4 +38,22 @@ public abstract class BaseFixture : DiagrammedComponentTest, IDisposable
     }
 
     public void Dispose() => Client.Dispose();
+
+    /// <summary>
+    /// Hosts the placeholder API with no entry point and no solution: the test project's entry point is its test
+    /// framework's, and WebApplicationFactory looks for an app's content root beside a solution file, which a project
+    /// created outside a solution does not have, so the factory names the test's output directory instead.
+    /// TODO: Once you reference your real API project, delete this class and Program.cs, and use
+    /// <c>new WebApplicationFactory&lt;YourApi.Program&gt;()</c> directly.
+    /// </summary>
+    private sealed class PlaceholderApiFactory : WebApplicationFactory<Program>
+    {
+        public PlaceholderApiFactory() => Environment.SetEnvironmentVariable(
+            $"ASPNETCORE_TEST_CONTENTROOT_{typeof(Program).Assembly.GetName().Name!.ToUpperInvariant().Replace('.', '_')}",
+            AppContext.BaseDirectory);
+
+        protected override IHostBuilder CreateHostBuilder() =>
+            new HostBuilder().ConfigureWebHost(web => web.Configure(app =>
+                app.Run(async context => await context.Response.WriteAsync("Hello from SERVICE_NAME"))));
+    }
 }

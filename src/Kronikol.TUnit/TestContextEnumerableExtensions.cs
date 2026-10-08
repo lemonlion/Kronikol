@@ -48,7 +48,7 @@ internal static class TestContextEnumerableExtensions
                                 IsHappyPath = x.Metadata.TestDetails.Categories.Contains(HappyPathAttribute.HappyPathCategoryKey),
                                 ErrorMessage = ScenarioOutcome.Message(result, x.Execution.Result?.Exception),
                                 ErrorStackTrace = ScenarioOutcome.StackTrace(result, x.Execution.Result?.Exception),
-                                Duration = ScenarioOutcome.Duration(x.Execution.Result?.Duration),
+                                Duration = ScenarioOutcome.Duration(x.Execution.Result?.Duration, x.Execution.Result?.Start),
                                 EndedAt = x.Execution.Result?.End,
                                 OutlineId = parsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(displayName)) : null,
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null,

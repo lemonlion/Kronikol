@@ -1,0 +1,4 @@
+# tunit with --treenode-filter selecting one test (after R2): the runner executes 1, the report draws 1
+Passed         00:00:00.0503476  Passing_test
+SUMMARY outcome=Completed total=1 executed=1 passed=1
+  - name='Passing test'	      result=Passed

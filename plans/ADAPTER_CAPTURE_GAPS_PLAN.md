@@ -1,7 +1,7 @@
 # Adapter capture gaps: the tests xUnit v3, MSTest, NUnit 4 and TUnit leave out of their reports
 
 **Written:** 2026-10-08, at 4.12.0, by kronikol-1c, from a probe of the four adapters run that day at 4.11.0 (`a81d5e03`).
-**Status: R1 released as 4.13.3, with a follow-up in 4.14.2; R2 next**, both at the owner's "fix any other problems you found" (the instruction that executed
+**Status: R1 released as 4.13.3 (with a follow-up in 4.14.2), and R2 and R3 together as 4.14.4**, both at the owner's "fix any other problems you found" (the instruction that executed
 `XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md`, whose section 8 inferred the first of these gaps). **Q1 to Q5 await the owner**:
 each needs new public surface or a design choice. Evidence labels: **RUN** (measured by the probe), **READ** (in the source,
 `file:line` at `a81d5e03`), **INFERRED**. The probe, its outputs and its feasibility dumps are in the session scratchpad
@@ -111,3 +111,25 @@ run from compiling source that changed while the suite ran.
   failed every overload in clean-up (`GetMethod(name)`); a row MSTest names after its method keeps 4.13.3's id. At
   4.14.2 the MSTest project passes 66 of 66, the core suite 7,098 with 2 skipped, the full Playwright suite 1,003 with
   28 skipped when run alone, and release.slnf builds in Release for every target.
+- **2026-10-08.** 4.14.2 published: Release run 37831687433 and CI 37831683901 passed, nuget.org listed all 62 ids at
+  20:56, the wiki has the MSTest page's edit (`518d77d`) and Kronikol4J's ledger its line (`619fc10`).
+- **2026-10-08.** R2 and R3 released together as 4.14.4 (kronikol-1c), to spare a release cycle while three sessions
+  released in turn. R2: NUnit 4 adds the tests its tear-down never sees from the run's result tree in the set-up
+  fixture's `[OneTimeTearDown]`, and TUnit from `AssemblyHookContext.AllTests` in the `[After(Assembly)]` hook
+  (reached through `AssemblyHookContext.Current`, so no template or signature changes); a test of a class that does
+  not derive from `DiagrammedComponentTest` stays out, as does a TUnit test with no result, which a filtered run
+  showed covers the tests a filter leaves out (`r2/tunit-filtered.txt`). That closes Q3's silent green for these two
+  adapters; xUnit v3 and MSTest wait on Q1 and Q2. A fact pins the NUnit version the tree reading was measured on
+  (4.6.0), as section 2 said. R3: measured first with every template as published, 21 of 24 runs failed
+  (`r3/before/`), for three causes: the entry point section 4 names, no content root outside a solution, and two xUnit
+  v3 templates (BDDfy, ReqNRoll) with no `Microsoft.NET.Test.Sdk`, whose test host never started. Section 4's
+  `CreateHostBuilder` override was not enough on its own: `WebApplicationFactory` looks for the content root after the
+  builder is made, whatever root it sets, and in .NET 10 reads `MvcTestingAppManifest.json` (always written to the
+  output) rather than the content-root attribute, so the placeholder factory names its root through the
+  `TEST_CONTENTROOT_<assembly>` setting, read from the environment on the generic host. `WebHostBuilder`, which the
+  TUnit templates used, is obsolete in .NET 10 (ASPDEPR004) and no template uses it now. CI runs each scaffold's
+  sample test, and `TemplateTestHostTests` holds the test host and the builder. Checks, on the branch rebased onto
+  4.14.3: the NUnit 4 and TUnit adapter projects pass 25 and 35, the full Playwright suite 1,003 with 28 skipped when
+  run alone, release.slnf builds in Release for every target, and the core suite passes 7,110 with 2 skipped before
+  the version bump and after it. On 4.14.2, the LightBDD TUnit project passed 25, the example NUnit 4 and TUnit
+  component suites 2 and 12, and the integration facts that run them 30 and 38.

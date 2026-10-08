@@ -1,0 +1,22 @@
+<tmp>\before\nosln\kronikol-tunit\Infrastructure\BaseFixture.cs(50,17): warning ASPDEPR004: 'WebHostBuilder' is obsolete: 'WebHostBuilder is deprecated in favor of HostBuilder and WebApplicationBuilder. For more information, visit https://aka.ms/aspnet/deprecate/004.' (https://aka.ms/aspnet/deprecate/004) [<tmp>\before\nosln\kronikol-tunit\ScaffoldSmoke.csproj]
+failed Get_root_endpoint_returns_success (0ms)
+  TUnit.Engine.Exceptions.TestFailedException: [Test Failure] InvalidOperationException: Solution root could not be located using application root <tmp>\before\nosln\kronikol-tunit\bin\Debug\net10.0\.
+    at Microsoft.AspNetCore.TestHost.WebHostBuilderExtensions.UseSolutionRelativeContentRoot(IWebHostBuilder builder, String solutionRelativePath, String applicationBasePath, ReadOnlySpan`1 solutionNames)
+    at Microsoft.AspNetCore.TestHost.WebHostBuilderExtensions.UseSolutionRelativeContentRoot(IWebHostBuilder builder, String solutionRelativePath)
+    at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.SetContentRoot(IWebHostBuilder builder)
+    at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.StartServer()
+    at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+    at Kronikol.TUnit.WebApplicationFactoryExtensions.CreateTestTrackingClient[T](WebApplicationFactory`1 factory, TUnitTestTrackingMessageHandlerOptions options)
+    at ScaffoldSmoke.Infrastructure.BaseFixture..ctor() in <tmp>\before\nosln\kronikol-tunit\Infrastructure\BaseFixture.cs:34
+    at ScaffoldSmoke.Scenarios.SampleFeature..ctor()
+       --- TUnit internals omitted (run with --detailed-stacktrace for full trace) ---
+
+  In process file artifacts produced:
+    - <tmp>\before\nosln\kronikol-tunit\bin\Debug\net10.0\TestResults\ScaffoldSmoke-windows-net10.0-report.html
+
+Test run summary: Failed! - <tmp>\before\nosln\kronikol-tunit\bin\Debug\net10.0\ScaffoldSmoke.dll (net10.0|x64)
+  total: 1
+  failed: 1
+  succeeded: 0
+  skipped: 0
+  duration: 582ms

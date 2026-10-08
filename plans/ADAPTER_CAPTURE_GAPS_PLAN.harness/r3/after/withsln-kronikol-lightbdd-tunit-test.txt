@@ -1,0 +1,10 @@
+
+  In process file artifacts produced:
+    - <tmp>\after\withsln\kronikol-lightbdd-tunit\ScaffoldSmoke\bin\Debug\net10.0\TestResults\ScaffoldSmoke-windows-net10.0-report.html
+
+Test run summary: Passed! - <tmp>\after\withsln\kronikol-lightbdd-tunit\ScaffoldSmoke\bin\Debug\net10.0\ScaffoldSmoke.dll (net10.0|x64)
+  total: 1
+  failed: 0
+  succeeded: 1
+  skipped: 0
+  duration: 2s 569ms

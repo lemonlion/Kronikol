@@ -1,0 +1,9 @@
+## NUnit 4: UncapturedTestsTests with UncapturedTests.In answering nothing (the adapter before R2)
+  Failed A_found_test_becomes_a_scenario_with_its_verdict_and_only_a_failure_carries_a_message [24 ms]
+  Failed A_statically_ignored_test_and_one_whose_fixture_failed_to_start_are_found [17 ms]
+Failed!  - Failed:     2, Passed:     3, Skipped:     0, Total:     5, Duration: 43 ms - Kronikol.Tests.NUnit4.dll (net10.0)
+
+## TUnit: UncapturedTestsTests with Select answering nothing, and ScenarioOutcomeTests with the start ignored
+  Failed Kronikol.Tests.TUnit.ScenarioOutcomeTests.A_test_that_never_started_has_no_duration [2 ms]
+  Failed Kronikol.Tests.TUnit.UncapturedTestsTests.A_test_of_a_tracked_class_that_was_not_captured_is_found [9 ms]
+Failed!  - Failed:     2, Passed:    12, Skipped:     0, Total:    14, Duration: 42 ms - Kronikol.Tests.TUnit.dll (net10.0)

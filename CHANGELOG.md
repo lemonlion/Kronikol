@@ -4,6 +4,73 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.14.4] - 2026-10-08
+
+**Patch - NUnit 4 and TUnit report the tests their tear-down never sees, and every template's sample test passes as
+shipped (`plans/ADAPTER_CAPTURE_GAPS_PLAN.md` R2 and R3).** Found by the plan's probe of each adapter's own template
+and fixed at the owner's "fix any other problems you found"; the two releases ship as one. Bug fixes, and nothing new
+for a consumer to call, so the patch part moves (4.14.3 to 4.14.4). The history action's `VERSION` installs
+`Kronikol.Tool` 4.14.4, and the templates pin 4.14.3.
+
+### Fixed
+
+- **NUnit 4: a test ignored by attribute, and the tests of a fixture whose constructor or `[OneTimeSetUp]` threw, were
+  missing from the report,** so a run whose only failures were of that kind reported none (`# No failures`, `failed: 0`)
+  while the runner failed. `DiagrammedComponentTest` captures a test in its `[TearDown]`, which those never reach.
+  `NUnitReportGenerator` now reads the run's result tree, which NUnit holds in the set-up fixture's `[OneTimeTearDown]`
+  where the report is written, and adds each test of a tracked fixture that the tear-down did not capture, with its
+  outcome and, for a failure, its message. A test of a fixture that does not derive from `DiagrammedComponentTest` stays
+  out. The tree is `NUnit.Framework.Internal`'s, which NUnit does not promise to keep; with none (a report written
+  anywhere else), the report has the captured tests alone, as before. Behaviour change: such a run's report, its
+  `Failures.md` and its counts now hold these tests, so they can rise.
+- **TUnit: a test skipped by attribute, and a test whose class's constructor threw, were missing from the report,**
+  likewise. `TUnitReportGenerator` reads `AssemblyHookContext.AllTests` in the `[After(Assembly)]` hook and adds each test
+  of a tracked class with a result that `[After(Test)]` did not capture; a test a filter left out has no result and stays
+  out. A test that never started has no duration, where TUnit measured one from the start of time (739,896 days).
+  Behaviour change: as for NUnit 4, the report's counts can rise.
+- **The sample test of every Kronikol template failed as shipped.** Measured on 2026-10-08 with the published templates,
+  each created with `dotnet new` and its sample test run as a user would, outside a solution and inside one: 21 of the
+  24 runs failed. The nine templates whose placeholder `Program` had a `Main` failed both ways: two never started their
+  tests (the next entry), and in the other seven, since a test project's entry point is its test framework's (the build
+  warned CS8892), `WebApplicationFactory<Program>` never reached the placeholder's host ("the entry point exited without
+  ever building an IHost"), and outside a solution it found no content root ("Solution root could not be located"). The
+  three TUnit templates, whose placeholder already needed no entry point, failed outside a solution only. Every template
+  now hosts its placeholder through a `PlaceholderApiFactory` that builds the stand-in app on a generic host, so no
+  entry point is run, and names the test's output directory as its content root through the
+  `TEST_CONTENTROOT_<assembly>` setting, which `WebApplicationFactory` reads before it looks for a solution; `Program`
+  is a marker class with no `Main`, and the TODO says to delete both once the project references the real API. The TUnit
+  templates' factory used `WebHostBuilder`, which .NET 10 marks obsolete, so every TUnit scaffold built with an
+  ASPDEPR004 warning; no template uses it now.
+- **The BDDfy and ReqNRoll xUnit v3 templates' tests never started.** Neither referenced `Microsoft.NET.Test.Sdk`,
+  which brings the test host `dotnet test` starts, so each run stopped at "testhost.dll was not found", in a solution or
+  out of one; they reference it now, as the other xUnit templates do.
+
+### CI
+
+- **The template job built each scaffold and ran none of them,** which proved only that they compiled. It now runs each
+  scaffold's sample test, outside a solution as a new project starts (`dotnet test`, or `dotnet run` for the TUnit
+  templates).
+
+### Tests
+
+- NUnit 4: `UncapturedTestsTests` builds a run's result tree as NUnit does. A test ignored by attribute and one whose
+  fixture failed to start are found, and become a skipped scenario and a failed one with its message; a test the
+  tear-down captured is not found again; a test of an untracked fixture is left out; and with no tree nothing is found.
+  The tree is read on the NUnit version it was measured on (4.6.0), and a fact pins it, so a newer NUnit is measured
+  again before the pin moves.
+- TUnit: `UncapturedTestsTests` (a test found, one captured, an untracked class, a test with no result, no list), and
+  `ScenarioOutcomeTests` gains a test that never started.
+- Red first: with the adapters' behaviour before this release in place, the two NUnit facts that find tests failed, as
+  did TUnit's found test and its never-started duration (`plans/ADAPTER_CAPTURE_GAPS_PLAN.harness/r2/red-proofs.txt`).
+- The probes, each adapter's own template (`r2/`): NUnit 4 reports the runner's 13 tests (it reported 10) and its digest
+  reads 5 of 13 failed; TUnit reports the runner's 9 (it reported 7), 4 of 9 failed; and with a filter selecting one
+  test, TUnit's report draws that one.
+- `TemplateTestHostTests`: every template that `dotnet test` runs references the Test SDK, and none builds its
+  placeholder with `WebHostBuilder`; both failed on 4.14.2's templates.
+- Before and after, in `plans/ADAPTER_CAPTURE_GAPS_PLAN.harness/r3/`: each template created and its sample test run
+  outside and inside a solution, on the templates as published (21 of 24 failed) and as this release ships them (24
+  of 24 passed, with no warning).
+
 ## [4.14.3] - 2026-10-08
 
 **Patch - every HTTP hop carries the test identity and the trace (#134 follow-up).**

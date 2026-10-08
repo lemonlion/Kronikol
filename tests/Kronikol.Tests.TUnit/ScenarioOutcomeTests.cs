@@ -58,17 +58,27 @@ public class ScenarioOutcomeTests
         Assert.Null(ScenarioOutcome.StackTrace(ExecutionResult.Failed, null));
     }
 
+    private static readonly DateTimeOffset Started = new(2026, 10, 8, 12, 0, 0, TimeSpan.Zero);
+
     [Fact]
     public void A_duration_below_zero_is_no_duration()
     {
-        Assert.Null(ScenarioOutcome.Duration(TimeSpan.FromTicks(-8)));
+        Assert.Null(ScenarioOutcome.Duration(TimeSpan.FromTicks(-8), Started));
     }
 
     [Fact]
     public void A_duration_of_zero_or_more_is_kept_and_none_stays_none()
     {
-        Assert.Equal(TimeSpan.Zero, ScenarioOutcome.Duration(TimeSpan.Zero));
-        Assert.Equal(TimeSpan.FromMilliseconds(250), ScenarioOutcome.Duration(TimeSpan.FromMilliseconds(250)));
-        Assert.Null(ScenarioOutcome.Duration(null));
+        Assert.Equal(TimeSpan.Zero, ScenarioOutcome.Duration(TimeSpan.Zero, Started));
+        Assert.Equal(TimeSpan.FromMilliseconds(250), ScenarioOutcome.Duration(TimeSpan.FromMilliseconds(250), Started));
+        Assert.Null(ScenarioOutcome.Duration(null, Started));
+    }
+
+    [Fact]
+    public void A_test_that_never_started_has_no_duration()
+    {
+        // R2: a test whose class's constructor threw has no start, and TUnit measured its duration from the start of time
+        // (739,896 days on the probe).
+        Assert.Null(ScenarioOutcome.Duration(TimeSpan.FromDays(739896), start: null));
     }
 }

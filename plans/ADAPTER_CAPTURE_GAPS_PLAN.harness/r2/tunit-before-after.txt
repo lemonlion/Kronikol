@@ -1,0 +1,32 @@
+# tunit: the tests the report leaves out, before (4.11.0, probe run1) and after R2 (c1deb2a9, on 4.13.3)
+## runner (run1 TRX)
+NotExecuted    00:00:00.0943896  Dynamically_skipped_test
+Failed         00:00:00.1345977  Failing_test
+Passed         00:00:00.0937147  Passing_test
+NotExecuted    00:00:00.0159940  Statically_skipped_test
+Failed         00:00:00.0000008  Test_in_class_whose_Before_Test_hook_throws
+Failed         00:00:00.0000000  Test_in_class_whose_constructor_throws
+Passed         00:00:00.1014195  Theory_rows(1)
+Failed         00:00:00.1345747  Theory_rows(2)
+Passed         00:00:00.1014458  Theory_rows(3)
+SUMMARY outcome=Failed total=9 executed=7 passed=3 failed=4 notExecuted=2
+## before: report
+  - name='Test in class whose before test hook throws'	      result=Failed
+  - name='Passing test'	      result=Passed
+  - name='Dynamically skipped test'	      result=Skipped
+  - name='Failing test'	      result=Failed
+  - name='Theory rows [1]'	      result=Passed
+  - name='Theory rows [2]'	      result=Failed
+  - name='Theory rows [3]'	      result=Passed
+## after: report
+  - name='Test in class whose before test hook throws'	      result=Failed
+  - name='Test in class whose constructor throws'	      result=Failed
+  - name='Passing test'	      result=Passed
+  - name='Dynamically skipped test'	      result=Skipped
+  - name='Failing test'	      result=Failed
+  - name='Statically skipped test'	      result=Skipped
+  - name='Theory rows [1]'	      result=Passed
+  - name='Theory rows [2]'	      result=Failed
+  - name='Theory rows [3]'	      result=Passed
+## after: Failures.md
+# Failures — 4 of 9 scenarios

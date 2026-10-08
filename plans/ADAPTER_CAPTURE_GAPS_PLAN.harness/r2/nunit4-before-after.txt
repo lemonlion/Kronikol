@@ -1,0 +1,43 @@
+# nunit4: the tests the report leaves out, before (4.11.0, probe run1) and after R2 (c1deb2a9, on 4.13.3)
+## runner (run1 TRX)
+Passed         00:00:00.2490970  Assert_pass_with_message_test
+NotExecuted    00:00:00.0075380  Assert_warn_test
+NotExecuted    00:00:00.0021220  Dynamically_ignored_test
+NotExecuted    00:00:00.0022190  Dynamically_inconclusive_test
+Failed         00:00:00.0587620  Failing_test
+Passed         00:00:00.0011620  Passing_test
+NotExecuted    00:00:00.0004510  Statically_ignored_test
+Failed         00:00:00.0007640  Test_in_class_whose_OneTimeSetUp_throws
+Failed         00:00:00.0003120  Test_in_class_whose_SetUp_throws
+Failed         00:00:00.1757650  Test_in_class_whose_constructor_throws
+Passed         00:00:00.0026630  Theory_rows(1)
+Failed         00:00:00.0058589  Theory_rows(2)
+Passed         00:00:00.0007140  Theory_rows(3)
+SUMMARY outcome=Failed total=13 executed=9 passed=4 failed=5
+## before: report
+  - name='Passing test'	      result=Passed
+  - name='Assert pass with message test'	      result=Passed
+  - name='Assert warn test'	      result=Passed
+  - name='Dynamically ignored test'	      result=Skipped
+  - name='Dynamically inconclusive test'	      result=Skipped
+  - name='Failing test'	      result=Failed
+  - name='Theory rows [1]'	      result=Passed
+  - name='Theory rows [2]'	      result=Failed
+  - name='Theory rows [3]'	      result=Passed
+  - name='Test in class whose set up throws'	      result=Failed
+## after: report
+  - name='Test in class whose constructor throws'	      result=Failed
+  - name='Test in class whose one time set up throws'	      result=Failed
+  - name='Passing test'	      result=Passed
+  - name='Assert pass with message test'	      result=Passed
+  - name='Assert warn test'	      result=Passed
+  - name='Dynamically ignored test'	      result=Skipped
+  - name='Dynamically inconclusive test'	      result=Skipped
+  - name='Failing test'	      result=Failed
+  - name='Statically ignored test'	      result=Skipped
+  - name='Theory rows [1]'	      result=Passed
+  - name='Theory rows [2]'	      result=Failed
+  - name='Theory rows [3]'	      result=Passed
+  - name='Test in class whose set up throws'	      result=Failed
+## after: Failures.md
+# Failures — 5 of 13 scenarios

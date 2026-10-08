@@ -1,0 +1,53 @@
+<tmp>\before\nosln\kronikol-reqnroll-tunit\Hooks\TestSetupHooks.cs(70,17): warning ASPDEPR004: 'WebHostBuilder' is obsolete: 'WebHostBuilder is deprecated in favor of HostBuilder and WebApplicationBuilder. For more information, visit https://aka.ms/aspnet/deprecate/004.' (https://aka.ms/aspnet/deprecate/004) [<tmp>\before\nosln\kronikol-reqnroll-tunit\ScaffoldSmoke.csproj]
+failed Get root endpoint returns success (189ms)
+  TUnit.Engine.Exceptions.TestFailedException: [Test Failure] TestExecutionException: Test failed: Solution root could not be located using application root <tmp>\before\nosln\kronikol-reqnroll-tunit\bin\Debug\net10.0\. | After(Test) hook failed: Cannot create an instance of System.Net.Http.HttpMessageHandler because it is an abstract class.
+    at TUnit.Engine.TestExecutor.ExecuteAsync(AbstractExecutableTest executableTest, TestInitializer testInitializer, CancellationToken cancellationToken, Nullable`1 testTimeout)
+    at TUnit.Engine.Services.TestExecution.TestCoordinator.ExecuteTestAsync(AbstractExecutableTest test, CancellationToken cancellationToken)
+    at TUnit.Engine.Services.TestExecution.TestCoordinator.ExecuteTestAsync(AbstractExecutableTest test, CancellationToken cancellationToken)
+  --->  One or more errors occurred. (Solution root could not be located using application root <tmp>\before\nosln\kronikol-reqnroll-tunit\bin\Debug\net10.0\.) (After(Test) hook failed: Cannot create an instance of System.Net.Http.HttpMessageHandler because it is an abstract class.)
+  --->  System.InvalidOperationException: Solution root could not be located using application root <tmp>\before\nosln\kronikol-reqnroll-tunit\bin\Debug\net10.0\.
+    at Microsoft.AspNetCore.TestHost.WebHostBuilderExtensions.UseSolutionRelativeContentRoot(IWebHostBuilder builder, String solutionRelativePath, String applicationBasePath, ReadOnlySpan`1 solutionNames)
+    at Microsoft.AspNetCore.TestHost.WebHostBuilderExtensions.UseSolutionRelativeContentRoot(IWebHostBuilder builder, String solutionRelativePath)
+    at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.SetContentRoot(IWebHostBuilder builder)
+    at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.StartServer()
+    at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+    at Kronikol.ReqNRoll.WebApplicationFactoryExtensions.CreateTestTrackingClient[T](WebApplicationFactory`1 factory, ReqNRollTestTrackingMessageHandlerOptions options)
+    at ScaffoldSmoke.Hooks.TestSetupHooks.BeforeScenario(IObjectContainer objectContainer) in <tmp>\before\nosln\kronikol-reqnroll-tunit\Hooks\TestSetupHooks.cs:38
+    at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+    at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+    --- End of stack trace from previous location ---
+    at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+    at Reqnroll.Infrastructure.TestExecutionEngine.InvokeHookAsync(IAsyncBindingInvoker invoker, IHookBinding hookBinding, HookType hookType)
+    at Reqnroll.Infrastructure.TestExecutionEngine.InvokeHookAsync(IAsyncBindingInvoker invoker, IHookBinding hookBinding, HookType hookType)
+    at Reqnroll.Infrastructure.TestExecutionEngine.FireEventsAsync(HookType hookType)
+    at Reqnroll.Infrastructure.TestExecutionEngine.FireEventsAsync(HookType hookType)
+    at Reqnroll.Infrastructure.TestExecutionEngine.FireScenarioEventsAsync(HookType bindingEvent)
+    at Reqnroll.Infrastructure.TestExecutionEngine.OnScenarioStartAsync()
+    at Reqnroll.Infrastructure.TestExecutionEngine.OnAfterLastStepAsync()
+    at Reqnroll.TestRunner.CollectScenarioErrorsAsync()
+    at ScaffoldSmoke.Features.SampleFeature.ScenarioCleanupAsync()
+    at ScaffoldSmoke.Features.SampleFeature.GetRootEndpointReturnsSuccess() in <tmp>\before\nosln\kronikol-reqnroll-tunit\Features\Sample.feature:11
+    at TUnit.Core.ExecutableTest`1.InvokeTestAsync(Object instance, CancellationToken cancellationToken)
+    at TUnit.Engine.TestExecutor.ExecuteTestAsync(AbstractExecutableTest executableTest, CancellationToken cancellationToken)
+    at TUnit.Engine.TestExecutor.ExecuteAsync(AbstractExecutableTest executableTest, TestInitializer testInitializer, CancellationToken cancellationToken, Nullable`1 testTimeout)
+  Standard output
+    -> Loading plugin <tmp>\before\nosln\kronikol-reqnroll-tunit\bin\Debug\net10.0\Reqnroll.TUnit.ReqnrollPlugin.dll
+    -> Loading plugin <tmp>\before\nosln\kronikol-reqnroll-tunit\bin\Debug\net10.0\ScaffoldSmoke.dll
+    -> Using reqnroll.json
+    Given the service is running
+    -> skipped because of previous errors
+    When a GET request is sent to the root endpoint
+    -> skipped because of previous errors
+    Then the response should be successful
+    -> skipped because of previous errors
+    
+
+  In process file artifacts produced:
+    - <tmp>\before\nosln\kronikol-reqnroll-tunit\bin\Debug\net10.0\TestResults\ScaffoldSmoke-windows-net10.0-report.html
+
+Test run summary: Failed! - <tmp>\before\nosln\kronikol-reqnroll-tunit\bin\Debug\net10.0\ScaffoldSmoke.dll (net10.0|x64)
+  total: 1
+  failed: 1
+  succeeded: 0
+  skipped: 0
+  duration: 3s 519ms

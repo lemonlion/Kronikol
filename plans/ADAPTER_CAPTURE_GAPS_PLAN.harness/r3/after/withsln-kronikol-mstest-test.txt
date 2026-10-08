@@ -1,0 +1,7 @@
+  Determining projects to restore...
+  Restored <tmp>\after\withsln\kronikol-mstest\ScaffoldSmoke\ScaffoldSmoke.csproj (in 335 ms).
+  ScaffoldSmoke -> <tmp>\after\withsln\kronikol-mstest\ScaffoldSmoke\bin\Debug\net10.0\ScaffoldSmoke.dll
+Test run for <tmp>\after\withsln\kronikol-mstest\ScaffoldSmoke\bin\Debug\net10.0\ScaffoldSmoke.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 1 s - ScaffoldSmoke.dll (net10.0)

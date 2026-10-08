@@ -364,7 +364,7 @@ jobs:
           dotnet new install "$PKG"
           for dir in templates/kronikol-*/; do
             short=$(basename "$dir")
-            echo "::group::Instantiating & building $short"
+            echo "::group::Instantiating, building & testing $short"
             dotnet new "$short" -n ScaffoldSmoke -o "$RUNNER_TEMP/tpl-smoke/$short"
             for f in $AGENT_FILES; do
               if [ ! -f "$RUNNER_TEMP/tpl-smoke/$short/$f" ]; then
@@ -380,5 +380,14 @@ jobs:
               exit 1
             fi
             dotnet build "$RUNNER_TEMP/tpl-smoke/$short" --configuration Release
+            # Run the sample test as a user would on the scaffold, outside any solution. Building proved
+            # only that it compiles: every template's sample test failed as shipped until R3 of
+            # plans/ADAPTER_CAPTURE_GAPS_PLAN.md (the test framework's entry point beat the placeholder's
+            # Main, outside a solution WebApplicationFactory found no content root, and two xUnit v3
+            # templates had no Microsoft.NET.Test.Sdk, so dotnet test never started their test host).
+            case "$short" in
+              *tunit*) dotnet run --project "$RUNNER_TEMP/tpl-smoke/$short" --configuration Release --no-build ;;
+              *) dotnet test "$RUNNER_TEMP/tpl-smoke/$short" --configuration Release --no-build -- RunConfiguration.TreatNoTestsAsError=true ;;
+            esac
             echo "::endgroup::"
           done

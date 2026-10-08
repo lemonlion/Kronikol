@@ -1,0 +1,34 @@
+<tmp>\before\nosln\kronikol-lightbdd-tunit\Infrastructure\BaseFixture.cs(53,17): warning ASPDEPR004: 'WebHostBuilder' is obsolete: 'WebHostBuilder is deprecated in favor of HostBuilder and WebApplicationBuilder. For more information, visit https://aka.ms/aspnet/deprecate/004.' (https://aka.ms/aspnet/deprecate/004) [<tmp>\before\nosln\kronikol-lightbdd-tunit\ScaffoldSmoke.csproj]
+Error executing After hooks for ScaffoldSmoke.Scenarios.SampleFeature.1.1.Get_root_endpoint_returns_success.1.1.0: TUnit.Core.Exceptions.AfterClassException: AfterClass hook failed: LightBddScopeAttribute is not defined in the project. Please ensure that following attribute, or attribute extending it is defined at assembly level: [assembly:LightBddScopeAttribute]
+ ---> System.InvalidOperationException: LightBddScopeAttribute is not defined in the project. Please ensure that following attribute, or attribute extending it is defined at assembly level: [assembly:LightBddScopeAttribute]
+   at LightBDD.TUnit.Implementation.TUnitFeatureCoordinator.GetInstance()
+   at LightBDD.TUnit.FeatureRunnerProvider.GetRunnerFor(Type featureType)
+   at LightBDD.TUnit.FeatureFixture.FeatureFixtureTearDown(ClassHookContext classHookContext)
+   at TUnit.Generated.Hooks.LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown__ClassHookContext_After_Class.LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown__ClassHookContext_After_ClassInitializer.<>c__DisplayClass0_0.<global_LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown_1Params_Body>b__0()
+   at TUnit.Generated.Hooks.LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown__ClassHookContext_After_Class.LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown__ClassHookContext_After_ClassInitializer.global_LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown_1Params_Body(ClassHookContext context, CancellationToken cancellationToken)
+   at TUnit.Engine.Helpers.HookTimeoutHelper.<CreateTimeoutHookAction>g__CreateTimeoutHookActionAsync|1_0[T](StaticHookMethod`1 hook, T context, Int32 timeoutMs, CancellationToken cancellationToken)
+   at TUnit.Engine.Services.HookExecutor.ExecuteHookWithActivityAsync[TContext](NamedHookDelegate`1 hook, TContext context, CancellationToken cancellationToken)
+   at TUnit.Engine.Services.HookExecutor.ExecuteAfterClassHooksAsync(Type testClass, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+Error in last test in session event receiver: LightBddScopeAttribute is not defined in the project. Please ensure that following attribute, or attribute extending it is defined at assembly level: [assembly:LightBddScopeAttribute]
+failed Get_root_endpoint_returns_success (0ms)
+  TUnit.Engine.Exceptions.TestFailedException: [Test Failure] AfterClassException: AfterClass hook failed: LightBddScopeAttribute is not defined in the project. Please ensure that following attribute, or attribute extending it is defined at assembly level: [assembly:LightBddScopeAttribute]
+  --->  System.InvalidOperationException: LightBddScopeAttribute is not defined in the project. Please ensure that following attribute, or attribute extending it is defined at assembly level: [assembly:LightBddScopeAttribute]
+    at LightBDD.TUnit.Implementation.TUnitFeatureCoordinator.GetInstance()
+    at LightBDD.TUnit.FeatureRunnerProvider.GetRunnerFor(Type featureType)
+    at LightBDD.TUnit.FeatureFixture.FeatureFixtureTearDown(ClassHookContext classHookContext)
+    at TUnit.Generated.Hooks.LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown__ClassHookContext_After_Class.LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown__ClassHookContext_After_ClassInitializer.<>c__DisplayClass0_0.<global_LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown_1Params_Body>b__0()
+    at TUnit.Generated.Hooks.LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown__ClassHookContext_After_Class.LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown__ClassHookContext_After_ClassInitializer.global_LightBDD_TUnit_FeatureFixture_FeatureFixtureTearDown_1Params_Body(ClassHookContext context, CancellationToken cancellationToken)
+    at TUnit.Engine.Helpers.HookTimeoutHelper.<CreateTimeoutHookAction>g__CreateTimeoutHookActionAsync|1_0[T](StaticHookMethod`1 hook, T context, Int32 timeoutMs, CancellationToken cancellationToken)
+    at TUnit.Engine.Services.HookExecutor.ExecuteHookWithActivityAsync[TContext](NamedHookDelegate`1 hook, TContext context, CancellationToken cancellationToken)
+    at TUnit.Engine.Services.HookExecutor.ExecuteAfterClassHooksAsync(Type testClass, CancellationToken cancellationToken)
+
+  In process file artifacts produced:
+    - <tmp>\before\nosln\kronikol-lightbdd-tunit\bin\Debug\net10.0\TestResults\ScaffoldSmoke-windows-net10.0-report.html
+
+Test run summary: Failed! - <tmp>\before\nosln\kronikol-lightbdd-tunit\bin\Debug\net10.0\ScaffoldSmoke.dll (net10.0|x64)
+  total: 1
+  failed: 1
+  succeeded: 0
+  skipped: 0
+  duration: 1s 137ms

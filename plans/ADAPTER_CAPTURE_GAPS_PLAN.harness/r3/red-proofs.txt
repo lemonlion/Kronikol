@@ -1,0 +1,19 @@
+build exit 0
+    0 Error(s)
+== branch (e4811bd4)
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 521 ms - Kronikol.Tests.dll (net10.0)
+== 4.14.2's templates (47646b61)
+  Failed Kronikol.Tests.Packaging.TemplateTestHostTests.Every_template_that_dotnet_test_runs_references_the_test_SDK [22 ms]
+   Assert.All() Failure: 2 out of 9 items in the collection did not pass.
+     Error: kronikol-bddfy-xunit3 references no Microsoft.NET.Test.Sdk, so dotnet test cannot start its test host
+     Error: kronikol-reqnroll-xunit3 references no Microsoft.NET.Test.Sdk, so dotnet test cannot start its test host
+  Failed Kronikol.Tests.Packaging.TemplateTestHostTests.No_template_builds_its_placeholder_with_the_obsolete_WebHostBuilder [620 ms]
+   Assert.All() Failure: 3 out of 51 items in the collection did not pass.
+      Error: Assert.DoesNotContain() Failure: Sub-string found
+             Found:  "new WebHostBuilder("
+      Error: Assert.DoesNotContain() Failure: Sub-string found
+             Found:  "new WebHostBuilder("
+      Error: Assert.DoesNotContain() Failure: Sub-string found
+             Found:  "new WebHostBuilder("
+Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 669 ms - Kronikol.Tests.dll (net10.0)
+== done
