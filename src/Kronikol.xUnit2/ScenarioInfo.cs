@@ -30,4 +30,13 @@ public class ScenarioInfo
 
     /// <summary>Made by Kronikol's results sink when xUnit sent the test's <c>ITestStarting</c>, not by <see cref="TestTrackingAttribute"/>.</summary>
     internal bool MadeAtTestStarting { get; init; }
+
+    /// <summary>The order the process made its scenarios in, the sink's and the attribute's alike.</summary>
+    internal long Sequence { get; init; } = XUnit2TestTrackingContext.NextSequence();
+
+    /// <summary>A sink's scenario that <see cref="TestTrackingAttribute"/>'s <c>Before</c> took from the hand-over.</summary>
+    internal bool TakenByBefore { get; set; }
+
+    /// <summary>An attribute's own scenario that a run's sink has reported, so no later run reports it again.</summary>
+    internal bool Claimed { get; set; }
 }

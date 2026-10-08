@@ -30,10 +30,14 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
     private readonly ConcurrentDictionary<ITest, ScenarioInfo> _byTest = new(ReferenceEqualityComparer.Instance);
     private readonly ConcurrentQueue<ScenarioInfo> _inOrder = new();
     private DateTime? _start;
+    private long _runFrom = XUnit2TestTrackingContext.CurrentSequence;
     private int _finished;
 
-    /// <summary>Writes the reports for the run's scenarios, between the run's start and end, both UTC.</summary>
-    internal delegate void ReportWriter(IReadOnlyList<ScenarioInfo> scenarios, DateTime start, DateTime end);
+    /// <summary>
+    /// Writes the reports for the run's scenarios, between the run's start and end, both UTC, with the diagnostics
+    /// the run recorded.
+    /// </summary>
+    internal delegate void ReportWriter(IReadOnlyList<ScenarioInfo> scenarios, DateTime start, DateTime end, IReadOnlyList<DiagnosticEntry> diagnostics);
 
     public KronikolResultsSink(IMessageSink runnerSink, ReportWriter writeReports)
     {
@@ -85,6 +89,7 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
         {
             case ITestAssemblyStarting:
                 _start ??= DateTime.UtcNow;
+                _runFrom = XUnit2TestTrackingContext.CurrentSequence;
                 break;
 
             case ITestStarting starting:
@@ -157,19 +162,83 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
         || testMethod.TestClass.TestCollection.CollectionDefinition?.ToRuntimeType() is { } definition
            && definition.IsDefined(typeof(TestTrackingAttribute), inherit: true);
 
-    /// <summary>The end of the run: a tracked test with no result is reported as a default, then the reports are written.</summary>
+    /// <summary>
+    /// The end of the run: scenarios the attribute made on its own are paired with their results, a tracked test
+    /// with no result is reported as a default, and the reports are written.
+    /// </summary>
     private void Finish()
     {
         if (Interlocked.Exchange(ref _finished, 1) != 0)
             return;
 
-        var scenarios = _inOrder.ToArray();
+        var diagnostics = new List<DiagnosticEntry>();
+        var scenarios = PairTheAttributesOwn(_inOrder.ToArray(), diagnostics);
         foreach (var scenario in scenarios.Where(s => !s.HasResult))
         {
             scenario.Result = ExecutionResult.Passed;
             scenario.ResultDefaulted = true;
         }
 
-        _writeReports(scenarios, _start ?? DateTime.UtcNow, DateTime.UtcNow);
+        _writeReports(scenarios, _start ?? DateTime.UtcNow, DateTime.UtcNow, diagnostics);
+    }
+
+    /// <summary>
+    /// Pairs the scenarios <see cref="TestTrackingAttribute"/> made on its own during this run with the sink's, by test
+    /// method and in the order the tests started (plans/XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md 4.4).
+    /// </summary>
+    /// <remarks>
+    /// The attribute makes its own when nothing was handed over on the test's flow: a framework whose message bus
+    /// delivers from a thread of its own, after the test may already have run. Its scenario holds the test's calls,
+    /// and the sink's holds its result, so the attribute's takes the result and is reported in the sink's place.
+    /// The rows of a theory pair in the order they started, which is their order unless they ran in parallel.
+    /// </remarks>
+    private List<ScenarioInfo> PairTheAttributesOwn(ScenarioInfo[] scenarios, List<DiagnosticEntry> diagnostics)
+    {
+        var own = XUnit2TestTrackingContext.CollectedScenarios.Values
+            .Where(s => !s.MadeAtTestStarting && !s.Claimed && s.Sequence > _runFrom)
+            .OrderBy(s => s.Sequence)
+            .ToList();
+
+        var reported = new List<ScenarioInfo>(scenarios.Length + own.Count);
+        var paired = 0;
+        foreach (var scenario in scenarios)
+        {
+            var partner = scenario.TakenByBefore ? null : own.FirstOrDefault(o => o.MethodMatchKey == scenario.MethodMatchKey);
+            if (partner is null)
+            {
+                reported.Add(scenario);
+                continue;
+            }
+
+            own.Remove(partner);
+            partner.Claimed = true;
+            partner.ScenarioName = scenario.ScenarioName;
+            partner.Result = scenario.Result;
+            partner.ErrorMessage = scenario.ErrorMessage;
+            partner.ErrorStackTrace = scenario.ErrorStackTrace;
+            partner.Duration = scenario.Duration;
+            partner.EndedAt = scenario.EndedAt;
+            partner.HasResult = scenario.HasResult;
+            reported.Add(partner);
+            paired++;
+        }
+
+        // Any left were made for tests the sink never saw start, which no framework Kronikol knows of does: they are
+        // reported with no verdict, so their calls are not dropped.
+        foreach (var leftOver in own)
+        {
+            leftOver.Claimed = true;
+            reported.Add(leftOver);
+        }
+
+        if (paired + own.Count > 0)
+            diagnostics.Add(new DiagnosticEntry(DiagnosticKind.Other,
+                $"{paired + own.Count} scenario(s) were paired with their results by test method, in the order the tests "
+                + "started, because the test framework's message bus did not deliver xUnit's messages on each test's own "
+                + "flow, which is how Kronikol hands a test its scenario. A theory's rows that ran in parallel could show "
+                + "each other's results. Turn on xunit.execution.SynchronousMessageReporting, or see the wiki's "
+                + "Integration-xUnit2 page, \"Already using another test framework\"."));
+
+        return reported;
     }
 }

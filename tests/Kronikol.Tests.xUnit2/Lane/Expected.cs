@@ -21,7 +21,8 @@ public static class Expected
     /// <summary>Every test in the fixtures, Untracked's three included.</summary>
     public const int TestCount = 24;
 
-    public static bool IsTracked(TrxTest test) => TrackedClasses.Contains(test.ClassSimpleName);
+    public static bool IsTracked(TrxTest test, IReadOnlyCollection<string>? alsoTracked = null) =>
+        TrackedClasses.Contains(test.ClassSimpleName) || alsoTracked?.Contains(test.ClassSimpleName) == true;
 
     public static string Feature(TrxTest test) => ScenarioTitleResolver.FormatFeatureName(test.ClassSimpleName);
 
@@ -50,15 +51,18 @@ public static class Expected
     /// <summary>
     /// Every tracked test is one scenario, under its own name, with its own verdict, duration, error and calls,
     /// and nothing else is a scenario. A call a tracked test made is in no other scenario and not in the
-    /// background section.
+    /// background section. <paramref name="alsoTracked"/> names a fixture's own tracked classes, which add their
+    /// tests to <see cref="TestCount"/>.
     /// </summary>
-    public static void EveryTrackedTestIsItsOwnScenario(FixtureRun run)
+    public static void EveryTrackedTestIsItsOwnScenario(FixtureRun run, params string[] alsoTracked)
     {
         var trx = run.Trx ?? throw new Xunit.Sdk.XunitException($"No TRX.{Environment.NewLine}{run.Describe()}");
-        Assert.True(trx.Tests.Count == TestCount, $"The run recorded {trx.Tests.Count} tests, not {TestCount}.{Environment.NewLine}{run.Describe()}");
+        var expectedCount = TestCount + trx.Tests.Count(t => alsoTracked.Contains(t.ClassSimpleName));
+        Assert.True(trx.Tests.Count == expectedCount && expectedCount >= TestCount + alsoTracked.Length,
+            $"The run recorded {trx.Tests.Count} tests, not {expectedCount}.{Environment.NewLine}{run.Describe()}");
 
         var report = run.Report;
-        var tracked = trx.Tests.Where(IsTracked).ToArray();
+        var tracked = trx.Tests.Where(t => IsTracked(t, alsoTracked)).ToArray();
         var problems = new List<string>();
 
         foreach (var test in tracked)

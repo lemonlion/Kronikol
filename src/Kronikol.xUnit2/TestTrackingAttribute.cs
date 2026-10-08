@@ -40,6 +40,7 @@ public sealed class TestTrackingAttribute : BeforeAfterTestAttribute
         // class, method), and each Before finds the same scenario.
         if (XUnit2TestTrackingContext.HandedOverScenarioFor(methodUnderTest) is { } handedOver)
         {
+            handedOver.TakenByBefore = true;
             XUnit2TestTrackingContext.SetCurrentTest($"{className}.{methodName}", handedOver.Id);
             return;
         }

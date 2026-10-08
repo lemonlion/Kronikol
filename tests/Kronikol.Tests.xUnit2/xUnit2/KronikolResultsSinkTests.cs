@@ -44,14 +44,14 @@ public class DerivedSinkTests : TrackedSinkBase
 [Collection("CollectedScenarios")]
 public class KronikolResultsSinkTests : IDisposable
 {
-    private readonly List<(IReadOnlyList<ScenarioInfo> Scenarios, DateTime Start, DateTime End)> _written = [];
+    private readonly List<(IReadOnlyList<ScenarioInfo> Scenarios, DateTime Start, DateTime End, IReadOnlyList<DiagnosticEntry> Diagnostics)> _written = [];
 
     public KronikolResultsSinkTests() => XUnit2TestTrackingContext.CollectedScenarios.Clear();
 
     public void Dispose() => XUnit2TestTrackingContext.CollectedScenarios.Clear();
 
     private KronikolResultsSink Sink(IMessageSink? runner = null) =>
-        new(runner ?? new RecordingSink(), (scenarios, start, end) => _written.Add((scenarios, start, end)));
+        new(runner ?? new RecordingSink(), (scenarios, start, end, diagnostics) => _written.Add((scenarios, start, end, diagnostics)));
 
     private static void Run(KronikolResultsSink sink, params IMessageSinkMessage[] messages)
     {
@@ -286,7 +286,7 @@ public class KronikolResultsSinkTests : IDisposable
     public void A_report_that_fails_to_write_still_lets_the_runner_hear_that_the_assembly_finished()
     {
         var runner = new RecordingSink();
-        using var sink = new KronikolResultsSink(runner, (_, _, _) => throw new IOException("the disk is full"));
+        using var sink = new KronikolResultsSink(runner, (_, _, _, _) => throw new IOException("the disk is full"));
 
         var answer = sink.OnMessage(AssemblyStarting()) && sink.OnMessage(AssemblyFinished());
 
@@ -305,7 +305,7 @@ public class KronikolResultsSinkTests : IDisposable
 
         sink.OnMessage(AssemblyFinished());
 
-        var (_, start, end) = Assert.Single(_written);
+        var (_, start, end, _) = Assert.Single(_written);
         Assert.InRange(start, before, after);
         Assert.True(end >= start.AddMilliseconds(45), $"The run started {start:O} and ended {end:O}, 50 ms later");
     }

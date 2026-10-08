@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Xunit.Extensions.AssemblyFixture's framework, subclassed to wrap its executor with WithKronikolReporting(),
+       as #132's suite does. Under xunit.runner.visualstudio 2.8.2. -->
+  <ItemGroup>
+    <PackageReference Include="Xunit.Extensions.AssemblyFixture" Version="2.6.0" />
+  </ItemGroup>
+</Project>

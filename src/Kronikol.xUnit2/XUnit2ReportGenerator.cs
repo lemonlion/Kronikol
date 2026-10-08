@@ -15,7 +15,8 @@ public static class XUnit2ReportGenerator
     /// xUnit v2 shows a test's result only to the test framework, so on this path no scenario has one: each is
     /// reported as <see cref="ExecutionResult.Passed"/> and marked as a default, not a verdict, with a
     /// <see cref="DiagnosticKind.ResultDefaulted"/> diagnostic, and the specifications are written blank.
-    /// <see cref="ReportingTestFramework"/> writes the reports with each test's own result.
+    /// <see cref="ReportingTestFramework"/>, or <see cref="TestFrameworkExecutorExtensions.WithKronikolReporting"/> on
+    /// another framework's executor, writes the reports with each test's own result.
     /// </remarks>
     public static void CreateStandardReportsWithDiagrams(DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options)
     {
@@ -25,7 +26,7 @@ public static class XUnit2ReportGenerator
 
         Write(scenarios, startRunTime, endRunTime, options,
             "xUnit v2 shows a test's result only to the test framework, and these reports were written without "
-            + "Kronikol's (ReportingTestFramework)");
+            + "Kronikol's (ReportingTestFramework, or WithKronikolReporting() on another framework's executor)");
     }
 
     public static void CreateStandardReportsWithDiagrams(IEnumerable<ScenarioInfo> scenarios, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options)
@@ -38,11 +39,13 @@ public static class XUnit2ReportGenerator
     /// is a default, saying <paramref name="whyDefaulted"/>.
     /// </summary>
     internal static void Write(IReadOnlyList<ScenarioInfo> scenarios, DateTime startRunTime, DateTime endRunTime,
-        ReportConfigurationOptions options, string whyDefaulted)
+        ReportConfigurationOptions options, string whyDefaulted, IReadOnlyList<DiagnosticEntry>? diagnostics = null)
     {
         // The generator records into the collector in scope, or scopes one of its own when there is none.
         var collector = ReportDiagnosticsScope.Current is null ? new ReportDiagnosticsCollector() : null;
         using var scope = collector is null ? null : ReportDiagnosticsScope.Begin(collector);
+        foreach (var entry in diagnostics ?? [])
+            ReportDiagnosticsScope.Current!.Add(entry);
 
         var defaulted = scenarios.Where(s => s.ResultDefaulted).ToArray();
         if (defaulted.Length > 0)

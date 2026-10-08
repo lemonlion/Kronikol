@@ -23,6 +23,13 @@ public static class XUnit2TestTrackingContext
 
     internal static readonly ConcurrentDictionary<string, ScenarioInfo> CollectedScenarios = new();
 
+    private static long _sequence;
+
+    internal static long NextSequence() => Interlocked.Increment(ref _sequence);
+
+    /// <summary>The last sequence number given out, so a run can tell the scenarios made since it started.</summary>
+    internal static long CurrentSequence => Interlocked.Read(ref _sequence);
+
     public static (string Name, string Id) GetCurrentTestInfo() =>
         CurrentTest.Value ?? ("Unknown Test", Guid.NewGuid().ToString());
 

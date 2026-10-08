@@ -4,6 +4,50 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.12.0] - 2026-10-08
+
+**Minor - Kronikol.xUnit2's reports under another test framework (#132).** `plans/XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md`
+R2 (S5 and S6), decision D38, roadmap row 1.24. `WithKronikolReporting()` and the class that holds it are new public
+surface, so the minor part moves (4.11.1 to 4.12.0). Nothing changes for a suite that does not call it. The history
+action's `VERSION` installs `Kronikol.Tool` 4.12.0, and the templates pin 4.11.1.
+
+### Added
+
+- **`TestFrameworkExecutorExtensions.WithKronikolReporting(this ITestFrameworkExecutor)`**, in `Kronikol.xUnit2`. A suite
+  whose `[assembly: TestFramework]` is already taken by another framework (Xunit.Extensions.AssemblyFixture,
+  Xunit.DependencyInjection, Meziantou.Xunit.ParallelTestFramework and others) gets Kronikol's reports by wrapping that
+  framework's executor, in a framework class of its own:
+  `protected override ITestFrameworkExecutor CreateExecutor(AssemblyName a) => base.CreateExecutor(a).WithKronikolReporting();`.
+  A sealed framework, such as Xunit.DependencyInjection's, is wrapped by composition: an `ITestFramework` of the suite's
+  own holds it and wraps what its `GetExecutor` returns. The run then writes the reports `ReportingTestFramework` writes,
+  each test with its own result, with `ReportLifecycle.Options`. The wrapper turns on xUnit's synchronous message
+  reporting on a copy of the runner's options, passes messages to the runner's sink from one thread, in order, as xUnit's
+  own message bus does, and writes the reports when the test assembly finishes, before the runner hears that it has:
+  most frameworks' executors return from `RunTests` before their tests have run. Wrapping an executor that already
+  writes Kronikol's reports, Kronikol's own or one already wrapped, returns it unchanged.
+- **A framework that keeps xUnit's asynchronous message bus still gets its results.** Its tests never see the scenario
+  Kronikol made for them, so `TestTrackingAttribute` makes its own, and at the end of the run each takes the result of the
+  same test method's scenario, in the order the tests started. The report records an `Other` diagnostic saying so: a
+  theory's rows that ran in parallel could show each other's results.
+
+### Documentation
+
+- The wiki's Integration-xUnit2 page has a section, "Already using another test framework": the subclass, the
+  composition for a sealed framework, the project properties that switch off a generated attribute
+  (`EnableXunitDependencyInjectionDefaultTestFrameworkAttribute`, `IncludeMeziantouXunitParallelTestFramework`), what the
+  wrapper turns on and why, and the ReqNRoll and LightBDD packages for those suites. The collection-fixture alternative
+  points there, and Framework-Integration-Guides lists the wrapper.
+
+### Tests
+
+- The fixture lane runs Xunit.Extensions.AssemblyFixture 2.6.0's framework with the wrapper under
+  xunit.runner.visualstudio 2.8.2 and 3.1.5, Xunit.DependencyInjection 9.9.2's by composition, and a framework that keeps
+  the asynchronous bus. Every tracked test is its own scenario under each; the assembly fixture is made once and
+  injected, the injected service reaches its test, and a report that is slow to write is whole when `dotnet test`
+  returns. Passing the runner the assembly's last message before writing left no report at all in that run, which the
+  lane's slow-report facts catch. Unit facts cover wrapping twice, Kronikol's own executor, the options copy, one
+  disposal and the pairing.
+
 ## [4.11.1] - 2026-10-08
 
 **Patch - xUnit v2 results reach the right scenario, and the tests the report dropped appear (#123).**

@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A framework whose assembly runner keeps xUnit's asynchronous message bus whatever the options say, so the
+       sink never sees a test start on the test's own flow: the fallback of the plan's section 4.4 (T18). -->
+</Project>

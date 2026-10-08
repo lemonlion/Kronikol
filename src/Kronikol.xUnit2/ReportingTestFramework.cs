@@ -82,22 +82,22 @@ public static class ReportLifecycle
     /// that calls it writes any failure to <c>kronikol-error.log</c> beside the test assembly, so none reaches the
     /// test run.
     /// </summary>
-    internal static void GenerateReports(IReadOnlyList<ScenarioInfo> scenarios, DateTime start, DateTime end)
+    internal static void GenerateReports(IReadOnlyList<ScenarioInfo> scenarios, DateTime start, DateTime end, IReadOnlyList<DiagnosticEntry> diagnostics)
     {
         if (Interlocked.Exchange(ref _reported, 1) != 0)
             return;
 
-        WriteReports(scenarios, start, end);
+        WriteReports(scenarios, start, end, diagnostics);
     }
 
     /// <summary>Writes the reports for <paramref name="scenarios"/> with <see cref="Options"/>, or nothing for a run with none.</summary>
-    internal static void WriteReports(IReadOnlyList<ScenarioInfo> scenarios, DateTime start, DateTime end)
+    internal static void WriteReports(IReadOnlyList<ScenarioInfo> scenarios, DateTime start, DateTime end, IReadOnlyList<DiagnosticEntry> diagnostics)
     {
         if (scenarios.Count == 0)
             return;
 
         XUnit2ReportGenerator.Write(scenarios, start, end, Options ?? new ReportConfigurationOptions(),
-            "xUnit sent no result for them (a cancelled run sends none)");
+            "xUnit sent no result for them (a cancelled run sends none)", diagnostics);
     }
 
     /// <summary>Appends <paramref name="exception"/> to <c>kronikol-error.log</c> beside the test assembly. Never throws.</summary>

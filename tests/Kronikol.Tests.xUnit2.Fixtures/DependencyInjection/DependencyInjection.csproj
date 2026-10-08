@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Xunit.DependencyInjection 9.9.2 (its last version on xunit 2.x). Its framework class is sealed and the package
+    generates its [assembly: TestFramework], so the generated one is switched off and a framework of the suite's
+    own holds the package's and wraps the executor it hands out: the wiki's composition recipe.
+  -->
+  <PropertyGroup>
+    <EnableXunitDependencyInjectionDefaultTestFrameworkAttribute>false</EnableXunitDependencyInjectionDefaultTestFrameworkAttribute>
+    <XunitStartupFullName>Kronikol.Tests.xUnit2.Fixtures.Startup</XunitStartupFullName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Xunit.DependencyInjection" Version="9.9.2" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The AssemblyFixture fixture under xunit.runner.visualstudio 3.1.5 (T19). -->
+  <PropertyGroup>
+    <FixtureRunnerVersion>3.1.5</FixtureRunnerVersion>
+    <!-- The framework attribute names the assembly that holds the framework class. -->
+    <AssemblyName>AssemblyFixture</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Xunit.Extensions.AssemblyFixture" Version="2.6.0" />
+    <Compile Include="..\AssemblyFixture\*.cs" LinkBase="AssemblyFixture" />
+  </ItemGroup>
+</Project>

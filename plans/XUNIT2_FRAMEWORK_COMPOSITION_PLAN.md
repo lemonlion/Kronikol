@@ -1,9 +1,9 @@
 # xUnit v2 reports under another test framework: #132, with #123
 
 **Written:** 2026-10-07, at 4.9.0 (`417c8e58`), the day #132 was filed. 4.9.1 was published while it was written and touches
-none of the files below. **Status: green-lit 2026-10-08, executing** (the owner: "implement the plan in full", and "fix
-any other problems you found"; roadmap row 1.24, decision D38, Q1 to Q11 as recommended). R1, a patch, is 4.11.1; R2, a
-minor, follows. The log (section 11) records what was run. Evidence labels: **RUN** (measured here, `dotnet test` on net8.0 with
+none of the files below. **Status: green-lit 2026-10-08 and executed** (the owner: "implement the plan in full", and
+"fix any other problems you found"; roadmap row 1.24, decision D38, Q1 to Q11 as recommended). R1, a patch, is 4.11.1;
+R2, a minor, is 4.12.0. The log (section 11) records what was run. Evidence labels: **RUN** (measured here, `dotnet test` on net8.0 with
 xunit 2.9.3, Kronikol.xUnit2 built from `417c8e58`), **READ** (in the source, `file:line`: Kronikol at `417c8e58`; xunit at
 its `v2-2.9.3` tag; xunit.runner.visualstudio at `2.8.2` and `3.1.5`; Xunit.Extensions.AssemblyFixture at `2.6.0`),
 **INFERRED** (reasoned from facts, stated by none), **DOC**, **ISSUE** (taken from #132 or #123, not re-measured). The probes
@@ -530,3 +530,20 @@ follows R1 directly, since it reuses R1's sink.
     994 of 995, the one failure a 60-second wait for a merged report's diagrams while another build loaded the machine,
     which passed alone (its class 4 of 4) and in the full run of R1's code before the rebase (995 of 995); `release.slnf`
     built in Release for every target. Every other `tests/*` project passed on R1's code before the rebase.
+- **2026-10-08. R2, 4.12.0.** `TestFrameworkExecutorExtensions.WithKronikolReporting()` and the internal
+  `KronikolReportingExecutor`, with section 4.4's fallback in the sink. Four more fixture projects join the lane:
+  AssemblyFixture under each adapter, DependencyInjection and AsyncBus (`OtherFrameworksLaneTests`).
+  - **Where it departs from the plan.** Section 4.4's fallback pairs by the test's class and method (`MethodMatchKey`), in
+    the order the tests started, not by today's name rule. The name rule is what #123 found wrong, and a mutation back to
+    it (M7) failed the async-bus fact. A theory's rows pair in start order, which is right when they run one after
+    another, as xUnit runs a test case's rows; the diagnostic says that rows run in parallel could show each other's
+    results.
+  - **Red first.** R2's fixtures and facts do not compile on R1 (`WithKronikolReporting` does not exist there).
+  - **Mutations** (`r2/mutate_r2.py`, `r2/mutations-r2.txt`): 8 of 8 caught. Passing the runner `ITestAssemblyFinished`
+    before writing (M5), under AssemblyFixture, left no report at all: the test host exited once the runner had the
+    message.
+  - **Suites.** Kronikol.Tests.xUnit2 74 of 74, the lane among them, on Windows and on Linux (a .NET 10 SDK container
+    with the .NET 8 runtimes, as CI runs it); the example's xUnit v2 project 2 of 2 and its 30 integration facts;
+    `release.slnf` built in Release for every target. R2 changes nothing outside `src/Kronikol.xUnit2` and its tests, so
+    the core and Playwright suites were not run again after R1's. The first run of R2's checks met the drive full
+    (0 bytes free, from other files on the machine); its Release build and Linux run were run again once there was room.

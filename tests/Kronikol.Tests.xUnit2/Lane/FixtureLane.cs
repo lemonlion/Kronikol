@@ -8,6 +8,8 @@ namespace Kronikol.Tests.xUnit2.Lane;
 /// <param name="Label">What the variant is, for the results folder and failure messages.</param>
 /// <param name="Attempt">A variant run more than once gets a run of its own per attempt (T2 runs three).</param>
 /// <param name="Environment">Variables for the child; <c>{results}</c> in a value is the run's results folder.</param>
+/// <param name="RunSettings">A run setting for the adapter, after <c>--</c> (<c>xUnit.MethodDisplay=method</c>).</param>
+/// <param name="ListTests">Lists the tests instead of running them.</param>
 /// <param name="FilesToCreate">Empty files made before the run; <c>{results}</c> as in <paramref name="Environment"/>.</param>
 public sealed record FixtureVariant(
     string Fixture,

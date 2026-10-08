@@ -1,0 +1,12 @@
+# R2 mutations (scratch worktree at the R2 code; each applied alone, its facts run, then restored)
+
+M1 wrap regardless: CAUGHT (38 s) Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 280 ms - Kronikol.Tests.xUnit2.dll (net10.0)
+M2 dispose the framework each time: CAUGHT (9 s) Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 21 ms - Kronikol.Tests.xUnit2.dll (net10.0)
+M3 set the option on the runner's object (decorator): CAUGHT (9 s) Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 20 ms - Kronikol.Tests.xUnit2.dll (net10.0)
+M4 run without Kronikol's sink: CAUGHT (46 s) Failed!  - Failed:     3, Passed:     0, Skipped:     0, Total:     3, Duration: 32 s - Kronikol.Tests.xUnit2.dll (net10.0)
+M5 pass ITestAssemblyFinished on before writing (under AssemblyFixture): CAUGHT (24 s) Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 17 s - Kronikol.Tests.xUnit2.dll (net10.0)
+M6 drop the fallback pairing: CAUGHT (16 s) Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 11 s - Kronikol.Tests.xUnit2.dll (net10.0)
+M7 pair the fallback by name: CAUGHT (15 s) Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 10 s - Kronikol.Tests.xUnit2.dll (net10.0)
+M8 record no diagnostic for the pairing: CAUGHT (13 s) Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 8 s - Kronikol.Tests.xUnit2.dll (net10.0)
+
+M5 rerun with its output kept: the AssemblyFixture slow-report run ended with no Reports directory ("reports none"), the host having exited once the runner had ITestAssemblyFinished.
