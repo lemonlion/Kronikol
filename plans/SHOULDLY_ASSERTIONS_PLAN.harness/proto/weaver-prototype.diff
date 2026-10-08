@@ -1,0 +1,65 @@
+diff --git a/src/Kronikol.AssertionTracking/AssertionWeaver.cs b/src/Kronikol.AssertionTracking/AssertionWeaver.cs
+index d6071df1..76079557 100644
+--- a/src/Kronikol.AssertionTracking/AssertionWeaver.cs
++++ b/src/Kronikol.AssertionTracking/AssertionWeaver.cs
+@@ -218,7 +218,8 @@ private static bool ReferencesAssertionLibrary(AssemblyDefinition assembly)
+         // Check assembly references (normal case: assertions from NuGet packages)
+         if (assembly.MainModule.AssemblyReferences
+             .Any(r => r.Name == "FluentAssertions" || r.Name == "AwesomeAssertions" ||
+-                      r.Name == "TUnit.Assertions" || r.Name == "TUnit.Assertions.Should"))
++                      r.Name == "TUnit.Assertions" || r.Name == "TUnit.Assertions.Should" ||
++                      r.Name == "Shouldly"))
+             return true;
+ 
+         // Also check if assertion-library types are defined within the assembly itself
+@@ -639,9 +640,15 @@ private static bool IsAssertionLibraryType(TypeReference type)
+         var ns = type.Namespace;
+         return ns.StartsWith("FluentAssertions", StringComparison.Ordinal) ||
+                ns.StartsWith("AwesomeAssertions", StringComparison.Ordinal) ||
+-               ns.StartsWith("TUnit.Assertions", StringComparison.Ordinal);
++               ns.StartsWith("TUnit.Assertions", StringComparison.Ordinal) ||
++               ns == "Shouldly";
+     }
+ 
++    // PROTOTYPE (#141): a Shouldly assertion is a Should* method, or a member of the static Should class.
++    internal static bool IsShouldlyEntryPoint(MethodReference method) =>
++        method.DeclaringType.Namespace == "Shouldly" &&
++        (method.Name.StartsWith("Should", StringComparison.Ordinal) || method.DeclaringType.Name == "Should");
++
+     /// <summary>
+     /// Checks if a method call is an assertion entry point:
+     /// - .Should() on FluentAssertions/AwesomeAssertions/TUnit types
+@@ -651,6 +658,8 @@ private static bool IsAssertionEntryPoint(MethodReference method)
+     {
+         if (method.Name == "Should" && IsAssertionLibraryType(method.DeclaringType))
+             return true;
++        if (IsShouldlyEntryPoint(method))
++            return true;
+         if (method.Name == "That" && method.DeclaringType.Name == "Assert" &&
+             method.DeclaringType.Namespace.StartsWith("TUnit.Assertions", StringComparison.Ordinal))
+             return true;
+@@ -815,8 +824,12 @@ instr.Operand is MethodReference mr &&
+         // Build local variable name map from debug info
+         var localNames = GetLocalVariableNames(method);
+ 
+-        // Scan instructions after Should
+-        for (var i = shouldIdx + 1; i < statementInstructions.Count; i++)
++        // Scan instructions after Should (PROTOTYPE: before the call for Shouldly, whose arguments precede it)
++        var shouldly = Environment.GetEnvironmentVariable("PROTO_CAPTURE_BEFORE") == "1" &&
++                       statementInstructions[shouldIdx].Operand is MethodReference entryRef && IsShouldlyEntryPoint(entryRef);
++        var scanFrom = shouldly ? 0 : shouldIdx + 1;
++        var scanTo = shouldly ? shouldIdx : statementInstructions.Count;
++        for (var i = scanFrom; i < scanTo; i++)
+         {
+             var instr = statementInstructions[i];
+ 
+@@ -1676,7 +1689,8 @@ private void WrapAssertions(
+         // (Pop0 behaviour), then there cannot be values left over from preceding code.
+         // The computation may be incorrect due to linear walk over non-executed branch paths.
+         if (firstInstr.OpCode.StackBehaviourPop == StackBehaviour.Pop0 &&
+-            firstInstr.OpCode != OpCodes.Dup)
++            firstInstr.OpCode != OpCodes.Dup &&
++            Environment.GetEnvironmentVariable("PROTO_SPILL_POP0") != "1")
+         {
+             return null;
+         }

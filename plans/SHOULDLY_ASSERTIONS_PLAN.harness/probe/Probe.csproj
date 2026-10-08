@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    S0 probe for SHOULDLY_ASSERTIONS_PLAN.md (#141). A console app with no test framework: Track.TestIdResolver
+    names a test per case, and the assertion notes are read back from RequestResponseLogger.
+    -p:KronikolVersion=<v>  the published Kronikol packages to weave with (default 4.9.0, the repo at planning time)
+    -p:Control=true         also references AwesomeAssertions 9.6.0 and compiles the CONTROL cases
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">4.9.0</KronikolVersion>
+    <DefineConstants Condition="'$(Control)' == 'true'">$(DefineConstants);CONTROL</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Kronikol" Version="$(KronikolVersion)" />
+    <PackageReference Include="Kronikol.AssertionTracking" Version="$(KronikolVersion)" PrivateAssets="all" />
+    <PackageReference Include="Shouldly" Version="4.3.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Control)' == 'true'">
+    <PackageReference Include="AwesomeAssertions" Version="9.6.0" />
+  </ItemGroup>
+</Project>

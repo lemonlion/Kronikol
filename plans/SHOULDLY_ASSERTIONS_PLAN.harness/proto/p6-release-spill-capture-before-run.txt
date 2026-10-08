@@ -1,0 +1,32 @@
+Kronikol 4.9.0.0 · woven: True
+== ShouldBe_passes: threw InvalidProgramException: Common Language Runtime detected an invalid program.
+   notes: 0
+== ShouldBe_fails: threw InvalidProgramException: Common Language Runtime detected an invalid program.
+   notes: 0
+== ShouldNotBeNull_fails: threw ShouldAssertException: string? name = null;⏎        name⏎    should not be null but was
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ name.ShouldNotBeNull()⏎string? name = null;⏎        name⏎    should not be null but was⏎end note⏎'__^*__:Program.cs:L64
+== ShouldBeTrue_fails: threw ShouldAssertException: false;⏎        flag⏎    should be⏎True⏎    but was⏎False
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ flag.ShouldBeTrue()⏎false;⏎        flag⏎    should be⏎True⏎    but was⏎False⏎end note⏎'__^*__:Program.cs:L69
+== ShouldNotBeEmpty_fails: threw ShouldAssertException: new List<int>();⏎        items⏎    should not be empty but was
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ items.ShouldNotBeEmpty()⏎new List<int>();⏎        items⏎    should not be empty but was⏎end note⏎'__^*__:Program.cs:L74
+== ShouldBe_with_custom_message_fails: threw ShouldAssertException: 3;⏎        result⏎    should be⏎5⏎    but was⏎3⏎⏎Additional Info:⏎    custom message
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ result.ShouldBe(5, "custom message")⏎3;⏎        result⏎    should be⏎5⏎    but was⏎3⏎⏎Additional Info:⏎    custom message⏎end note⏎'__^*__:Program.cs:L79
+== ShouldBe_array_initializer_passes: passed
+   notes: 1
+   | hnote across <<assertionNote>> #d4edda⏎✓ items.ShouldBe(new[] { 1, 2 })⏎end note⏎'__^*__:Program.cs:L84
+== ShouldBe_null_conditional_passes: threw InvalidProgramException: Common Language Runtime detected an invalid program.
+   notes: 0
+== ShouldSatisfyAllConditions_two_fail: threw ShouldAssertException: order⏎    should satisfy all the conditions specified, but does not.⏎The following errors were found ...⏎--------------- Error 1 ---------------⏎    order.Id⏎        should be⏎    2⏎        but was⏎    1⏎⏎--------------- Error 2 ---------------⏎    order.Name⏎        should be⏎    "b"⏎        but was⏎    "a"⏎        difference⏎    Difference     |  |   ⏎                   | \|/  ⏎    Index          | 0    ⏎    Expected Value | b    ⏎    Actual Value   | a    ⏎    Expected Code  | 98   ⏎    Actual Code    | 97   ⏎⏎-----------------------------------------
+   notes: 3
+   | hnote across <<assertionNote>> #f8d7da⏎✗ order.Id.ShouldBe(2),⏎order.Id⏎    should be⏎2⏎    but was⏎1⏎end note⏎'__^*__:Program.cs:L96
+   | hnote across <<assertionNote>> #f8d7da⏎✗ order.Name.ShouldBe("b"))⏎order.Name⏎    should be⏎"b"⏎    but was⏎"a"⏎    difference⏎Difference     |  |   ⏎               | \|/  ⏎Index          | 0    ⏎Expected Value | b    ⏎Actual Value   | a    ⏎Expected Code  | 98   ⏎Actual Code    | 97   ⏎end note⏎'__^*__:Program.cs:L97
+   | hnote across <<assertionNote>> #f8d7da⏎✗ order.ShouldSatisfyAllConditions( () => order.Id.ShouldBe(2), () => order.Name.ShouldBe("b"))⏎order⏎    should satisfy all the conditions specified, but does not.⏎The following errors were found ...⏎--------------- Error 1 ---------------⏎    order.Id⏎        should be⏎    2⏎        but was⏎    1⏎⏎--------------- Error 2 ---------------⏎    order.Name⏎        should be⏎    "b"⏎        but was⏎    "a"⏎        difference⏎    Difference     |  |   ⏎                   | \|/  ⏎    Index          | 0    ⏎    Expected Value | b    ⏎    Actual Value   | a    ⏎    Expected Code  | 98   ⏎    Actual Code    | 97   ⏎⏎-----------------------------------------⏎end note⏎'__^*__:Program.cs:L95
+== Should_Throw_passes: threw InvalidProgramException: Common Language Runtime detected an invalid program.
+   notes: 0
+== Should_ThrowAsync_fails: threw ShouldAssertException: Task `async () => await Task.Yield()`⏎    should throw⏎System.InvalidOperationException⏎    but did not
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Should.ThrowAsync<InvalidOperationException>(async () => await Task.Yield())⏎Task `async () => await Task.Yield()`⏎    should throw⏎System.InvalidOperationException⏎    but did not⏎end note⏎'__^*__:Program.cs:L108

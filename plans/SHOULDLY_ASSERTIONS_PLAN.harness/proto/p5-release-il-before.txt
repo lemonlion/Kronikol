@@ -1,0 +1,7 @@
+    L51  IL_0000: ldc.i4.5
+    L52  IL_0001: ldc.i4.5
+         IL_0002: stloc.0
+    L53  IL_0003: ldloc.0
+         IL_0004: ldnull
+         IL_0005: call System.Void Shouldly.ShouldBeTestExtensions::ShouldBe<System.Int32>(!!0,!!0,System.String)
+    L54  IL_000a: ret

@@ -1,0 +1,23 @@
+    L51  IL_0000: ldc.i4.5
+    L52  IL_0001: ldc.i4.5
+         IL_0002: stloc.0
+         IL_0003: nop
+    L53  IL_0004: ldloc.0
+         IL_0005: ldnull
+         IL_0006: call System.Void Shouldly.ShouldBeTestExtensions::ShouldBe<System.Int32>(!!0,!!0,System.String)
+         IL_000b: ldstr "result.ShouldBe(expected)"
+         IL_0010: ldstr "C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\19eb1bc1-2d7b-43ae-8364-4eb3eecabfcc\scratchpad\s0\plain\Program.cs"
+         IL_0015: ldc.i4.s 53
+         IL_0017: call System.Void Kronikol.Tracking.Track::AssertionPassed(System.String,System.String,System.Int32)
+         IL_001c: leave.s IL_0038
+         IL_001e: stloc.1
+         IL_001f: ldstr "result.ShouldBe(expected)"
+         IL_0024: ldloc.1
+         IL_0025: callvirt System.String System.Exception::get_Message()
+         IL_002a: ldstr "C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\19eb1bc1-2d7b-43ae-8364-4eb3eecabfcc\scratchpad\s0\plain\Program.cs"
+         IL_002f: ldc.i4.s 53
+         IL_0031: call System.Void Kronikol.Tracking.Track::AssertionFailed(System.String,System.String,System.String,System.Int32)
+         IL_0036: rethrow
+         IL_0038: nop
+    L54  IL_0039: ret
+handler Catch try 3-1e

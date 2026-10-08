@@ -1,0 +1,50 @@
+== dotnet build 
+1 Warning(s)
+Build succeeded.
+C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\19eb1bc1-2d7b-43ae-8364-4eb3eecabfcc\scratchpad\s0b-nowarn\Probe.csproj(16,5): warning KRONIKO
+== dotnet build -p:NoWarn=KRONIKOL001
+0 Warning(s)
+Build succeeded.
+== dotnet build -p:MSBuildWarningsAsMessages=KRONIKOL001
+0 Warning(s)
+Build succeeded.
+== dotnet build -p:TreatWarningsAsErrors=true
+1 Warning(s)
+Build succeeded.
+C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\19eb1bc1-2d7b-43ae-8364-4eb3eecabfcc\scratchpad\s0b-nowarn\Probe.csproj(16,5): warning KRONIKO
+== dotnet build -p:TreatWarningsAsErrors=true -p:NoWarn=KRONIKOL001
+0 Warning(s)
+Build succeeded.
+== SDK 10.0.300: dotnet build -warnaserror
+0 Warning(s)
+1 Error(s)
+Build FAILED.
+error KRONIKOL001: probe warning from a task
+== SDK 10.0.300: dotnet build -p:MSBuildTreatWarningsAsErrors=true
+0 Warning(s)
+1 Error(s)
+Build FAILED.
+error KRONIKOL001: probe warning from a task
+== SDK 10.0.300: dotnet build -warnaserror -p:NoWarn=KRONIKOL001
+0 Error(s)
+0 Warning(s)
+Build succeeded.
+== SDK 8.0.421: dotnet build 
+0 Error(s)
+1 Warning(s)
+Build succeeded.
+warning KRONIKOL001: probe warning from a task
+== SDK 8.0.421: dotnet build -p:TreatWarningsAsErrors=true
+0 Error(s)
+1 Warning(s)
+Build succeeded.
+warning KRONIKOL001: probe warning from a task
+== SDK 8.0.421: dotnet build -warnaserror
+0 Warning(s)
+1 Error(s)
+Build FAILED.
+error KRONIKOL001: probe warning from a task
+== SDK 8.0.421: dotnet build -p:NoWarn=KRONIKOL001
+0 Error(s)
+0 Warning(s)
+Build succeeded.

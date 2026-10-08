@@ -1,0 +1,12 @@
+{"event": "start", "testId": "t1", "testName": "ShouldBe_int", "feature": "Clusters", "timestamp": "2026-10-07T10:00:00.000Z"}
+{"event": "end", "testId": "t1", "status": "failed", "error": "result\n    should be\n5\n    but was\n3", "durationMs": 5, "timestamp": "2026-10-07T10:00:00.000Z"}
+{"event": "start", "testId": "t2", "testName": "ShouldBe_string", "feature": "Clusters", "timestamp": "2026-10-07T10:00:01.000Z"}
+{"event": "end", "testId": "t2", "status": "failed", "error": "result\n    should be\n\"a\"\n    but was\n\"b\"", "durationMs": 5, "timestamp": "2026-10-07T10:00:01.000Z"}
+{"event": "start", "testId": "t3", "testName": "ShouldBeGreaterThan", "feature": "Clusters", "timestamp": "2026-10-07T10:00:02.000Z"}
+{"event": "end", "testId": "t3", "status": "failed", "error": "result\n    should be greater than\n10\n    but was\n3", "durationMs": 5, "timestamp": "2026-10-07T10:00:02.000Z"}
+{"event": "start", "testId": "t4", "testName": "ShouldNotBeNull_other_subject", "feature": "Clusters", "timestamp": "2026-10-07T10:00:03.000Z"}
+{"event": "end", "testId": "t4", "status": "failed", "error": "name\n    should not be null but was", "durationMs": 5, "timestamp": "2026-10-07T10:00:03.000Z"}
+{"event": "start", "testId": "t5", "testName": "FA_be_5", "feature": "Clusters", "timestamp": "2026-10-07T10:00:04.000Z"}
+{"event": "end", "testId": "t5", "status": "failed", "error": "Expected result to be 5, but found 3.", "durationMs": 5, "timestamp": "2026-10-07T10:00:04.000Z"}
+{"event": "start", "testId": "t6", "testName": "FA_be_6", "feature": "Clusters", "timestamp": "2026-10-07T10:00:05.000Z"}
+{"event": "end", "testId": "t6", "status": "failed", "error": "Expected result to be 6, but found 3.", "durationMs": 5, "timestamp": "2026-10-07T10:00:05.000Z"}
