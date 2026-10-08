@@ -1,3 +1,4 @@
+using Shouldly;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tracking;
@@ -30,6 +31,20 @@ public class TrackThatTests : IDisposable
         Assert.NotEmpty(logs);
         Assert.Contains("#d4edda", logs[0].PlantUml!);
         Assert.Contains("\u2713", logs[0].PlantUml!); // ✓
+    }
+
+    [Fact]
+    public void Track_That_with_Shouldly_resolves_values()
+    {
+        // The values were read only after FluentAssertions' .Should(). (SHOULDLY_ASSERTIONS_PLAN F10).
+        using var scope = TestIdentityScope.Begin(_testId, _testId);
+        var expected = 42;
+        var result = 42;
+
+        Track.That(() => result.ShouldBe(expected));
+
+        var log = Assert.Single(GetAssertionLogs());
+        Assert.Contains("Result should be '42'", log.PlantUml!);
     }
 
     [Fact]

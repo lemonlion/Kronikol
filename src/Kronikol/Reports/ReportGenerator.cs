@@ -5113,20 +5113,37 @@ public static class ReportGenerator
             new XElement("RelativePath", attachment.RelativePath),
             attachment.MediaType != null ? new XElement("MediaType", attachment.MediaType) : null);
 
-    private static object MapStepJson(ScenarioStep step) => new
-    {
-        step.Keyword,
-        step.Text,
-        Status = step.Status?.ToString(),
-        DurationSeconds = step.Duration?.TotalSeconds,
-        // Failure detail rides on the lean mapper too: the small file is for saving payload bytes, not for
-        // withholding why the test failed.
-        step.FailureMessage,
-        step.SourceFile,
-        step.SourceLine,
-        SubSteps = (step.SubSteps ?? []).Select(MapStepJson).ToArray(),
-        Attachments = (step.Attachments ?? []).Select(MapAttachmentJson).ToArray()
-    };
+    private static object MapStepJson(ScenarioStep step) => step.IsAssertion
+        // "assertion": true on a tracked assertion only (#145), so a report without one is written as before.
+        ? new
+        {
+            step.Keyword,
+            Assertion = true,
+            step.Text,
+            Status = step.Status?.ToString(),
+            DurationSeconds = step.Duration?.TotalSeconds,
+            // Failure detail rides on the lean mapper too: the small file is for saving payload bytes, not for
+            // withholding why the test failed.
+            step.FailureMessage,
+            step.SourceFile,
+            step.SourceLine,
+            SubSteps = (step.SubSteps ?? []).Select(MapStepJson).ToArray(),
+            Attachments = (step.Attachments ?? []).Select(MapAttachmentJson).ToArray()
+        }
+        : new
+        {
+            step.Keyword,
+            step.Text,
+            Status = step.Status?.ToString(),
+            DurationSeconds = step.Duration?.TotalSeconds,
+            // Failure detail rides on the lean mapper too: the small file is for saving payload bytes, not for
+            // withholding why the test failed.
+            step.FailureMessage,
+            step.SourceFile,
+            step.SourceLine,
+            SubSteps = (step.SubSteps ?? []).Select(MapStepJson).ToArray(),
+            Attachments = (step.Attachments ?? []).Select(MapAttachmentJson).ToArray()
+        };
 
     /// <summary>
     /// Step mapping for the mergeable report — a superset of <see cref="MapStepJson"/> that also carries
@@ -5134,24 +5151,45 @@ public static class ReportGenerator
     /// (<see cref="ScenarioStep.TextSegments"/>), tabular/tree/inline parameters, doc-strings, comments
     /// and bypass reason.
     /// </summary>
-    private static object MapStepJsonFull(ScenarioStep step) => new
-    {
-        step.Keyword,
-        step.Text,
-        Status = step.Status?.ToString(),
-        DurationSeconds = step.Duration?.TotalSeconds,
-        step.BypassReason,
-        step.DocString,
-        step.DocStringMediaType,
-        step.FailureMessage,
-        step.SourceFile,
-        step.SourceLine,
-        Comments = step.Comments ?? [],
-        SubSteps = (step.SubSteps ?? []).Select(MapStepJsonFull).ToArray(),
-        Attachments = (step.Attachments ?? []).Select(MapAttachmentJson).ToArray(),
-        Parameters = (step.Parameters ?? []).Select(MapStepParameterJson).ToArray(),
-        TextSegments = step.TextSegments?.Select(MapTextSegmentJson).ToArray()
-    };
+    private static object MapStepJsonFull(ScenarioStep step) => step.IsAssertion
+        // "assertion": true on a tracked assertion only (#145), so a report without one is written as before.
+        ? new
+        {
+            step.Keyword,
+            Assertion = true,
+            step.Text,
+            Status = step.Status?.ToString(),
+            DurationSeconds = step.Duration?.TotalSeconds,
+            step.BypassReason,
+            step.DocString,
+            step.DocStringMediaType,
+            step.FailureMessage,
+            step.SourceFile,
+            step.SourceLine,
+            Comments = step.Comments ?? [],
+            SubSteps = (step.SubSteps ?? []).Select(MapStepJsonFull).ToArray(),
+            Attachments = (step.Attachments ?? []).Select(MapAttachmentJson).ToArray(),
+            Parameters = (step.Parameters ?? []).Select(MapStepParameterJson).ToArray(),
+            TextSegments = step.TextSegments?.Select(MapTextSegmentJson).ToArray()
+        }
+        : new
+        {
+            step.Keyword,
+            step.Text,
+            Status = step.Status?.ToString(),
+            DurationSeconds = step.Duration?.TotalSeconds,
+            step.BypassReason,
+            step.DocString,
+            step.DocStringMediaType,
+            step.FailureMessage,
+            step.SourceFile,
+            step.SourceLine,
+            Comments = step.Comments ?? [],
+            SubSteps = (step.SubSteps ?? []).Select(MapStepJsonFull).ToArray(),
+            Attachments = (step.Attachments ?? []).Select(MapAttachmentJson).ToArray(),
+            Parameters = (step.Parameters ?? []).Select(MapStepParameterJson).ToArray(),
+            TextSegments = step.TextSegments?.Select(MapTextSegmentJson).ToArray()
+        };
 
     private static object MapStepParameterJson(StepParameter p) => new
     {
@@ -5393,6 +5431,7 @@ public static class ReportGenerator
     private static XElement MapStepXml(ScenarioStep step) =>
         new("Step",
             step.Keyword != null ? new XElement("Keyword", step.Keyword) : null,
+            step.IsAssertion ? new XElement("Assertion", "true") : null,
             new XElement("Text", step.Text),
             step.Status != null ? new XElement("Status", step.Status.ToString()) : null,
             step.Duration != null ? new XElement("DurationSeconds", step.Duration.Value.TotalSeconds.ToString("F3", CultureInfo.InvariantCulture)) : null,
@@ -5681,6 +5720,9 @@ public static class ReportGenerator
     private static void AppendTestRunYamlStep(StringBuilder yml, ScenarioStep step, string indent)
     {
         AppendYaml(yml, indent + "- Keyword: ", (step.Keyword ?? ""));
+        // Written on a tracked assertion only (#145), so a report without one is written as before.
+        if (step.IsAssertion)
+            yml.Append(indent + "  Assertion: true\n");
         AppendYaml(yml, indent + "  Text: ", step.Text);
         AppendYamlNullable(yml, indent + "  Status: ", step.Status?.ToString());
         if (step.Duration != null)
@@ -6699,6 +6741,7 @@ public static class ReportGenerator
                     ["properties"] = new Dictionary<string, object?>
                     {
                         ["keyword"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Gherkin keyword (Given, When, Then, And, But); null for a tracked assertion or a sub-step" },
+                        ["assertion"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "true on a tracked assertion (Track.That, the assertion weave, or an ingested assertion record), and absent on every other step; a step without a keyword is not an assertion for that alone" },
                         ["text"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The step text, capitalised per CapitaliseStepText, placeholders expanded for an outline row" },
                         ["status"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["enum"] = statusEnumValues, ["description"] = "The step's own verdict; null when the producer recorded none" },
                         ["durationSeconds"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Seconds the step took; null when unknown" },
@@ -6902,6 +6945,7 @@ public static class ReportGenerator
             new XAttribute("name", "StepType"),
             new XElement(xs + "sequence",
                 new XElement(xs + "element", new XAttribute("name", "Keyword"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "Assertion"), new XAttribute("type", "xs:boolean"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "Text"), new XAttribute("type", "xs:string")),
                 new XElement(xs + "element", new XAttribute("name", "Status"), new XAttribute("type", "ExecutionResult"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "DurationSeconds"), new XAttribute("type", "xs:decimal"), new XAttribute("minOccurs", "0")),

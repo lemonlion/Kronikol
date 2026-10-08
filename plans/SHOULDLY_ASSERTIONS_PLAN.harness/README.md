@@ -18,6 +18,13 @@ Windows 11.
 | `shouldly/inventory-4.3.0-net8.0.md`, `shouldly/inventory-5.0.0-preview.2-net8.0.md` | Shouldly's public API by reflection over each package's `lib/net8.0/Shouldly.dll`: types, `[ShouldlyMethods]`, methods and overloads, return and parameter shapes (§2.6). The messages are in `s0/plain-run.txt` |
 | `s0b/nowarn-results.txt`, `s0b/NoWarnProbe.csproj` | How a task's coded warning behaves under `<NoWarn>`, `<MSBuildWarningsAsMessages>`, `TreatWarningsAsErrors`, `-warnaserror` and `MSBuildTreatWarningsAsErrors`, on SDKs 8.0.421 and 10.0.300 (§3.9) |
 | `s0b/cluster/tests.ndjson`, `s0b/cluster/Failures.md` | Six failing tests (four Shouldly messages, two FluentAssertions ones) fed to the published 4.9.0 `kronikol ingest` with `KRONIKOL_HISTORY=off`, and the digest it wrote (F14, F15) |
+| `r1/red-4.10.0-*.txt`, `r1/red-4.11.0-*.txt` | R1's facts without R1's fixes: the new and changed facts copied into a worktree at each release, built and run there (`base` names the commit) |
+| `r1/mutations.txt` | R1's mutations: each undoes one fix in a snapshot worktree, with the facts that went red |
+| `r1/acceptance/` | R1's acceptance: the probe with its controls on local packages in Debug, in Release and with an embedded PDB, the published 4.11.0 in Release (F21), and the scripts that ran them |
+| `r1/scope/` | The scope fix (F12) on FluentAssertions 6.12.2, 7.2.0 and 8.9.0 and AwesomeAssertions 8.2.0 and 9.6.0, on local packages (`run.sh`, `Program.cs`) |
+| `r2/red-4.12.3-*.txt`, `r2/red-stubs.py`, `r2/red.sh` | R2's facts on R1's release, with the compile stubs `red-stubs.py` adds (members declared and never read): the weaver's facts with the IL net on and off, the core facts and the Playwright fact |
+| `r2/mutations.txt`, `r2/mutate.py` | R2's mutations: plan §4.3's M1 to M9 and M15 to M18, then M19 on for what execution added |
+| `r2/acceptance/` | R2's acceptance: the probe on local packages, Shouldly only and with its controls, in Debug and Release, with an embedded PDB, and with `<DebugType>none</DebugType>` for `KRONIKOL001` |
 
 ## Re-running
 

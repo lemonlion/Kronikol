@@ -129,6 +129,7 @@ internal static class ReportScanner
         ThrowIfChanged(stream, index);
 
         walker.Finish();
+        index.SettleAssertionMarks();
         return index;
     }
 
@@ -292,7 +293,7 @@ internal static class ReportScanner
                 "method", "uri", "serviceName", "callerName", "statusCode", "statusText", "error", "timestamp", "requestResponseId",
                 "traceId", "stepPath", "phase", "metaType", "dependencyCategory", "activityTraceId",
                 "activitySpanId", "capturedBy", "isUserAction", "durationMs", "content", "keyword", "status",
-                "durationSeconds", "failureMessage", "sourceFile", "sourceLine", "bypassReason", "docString",
+                "durationSeconds", "failureMessage", "sourceFile", "sourceLine", "bypassReason", "docString", "assertion",
                 "id", "stableId", "result", "isHappyPath", "errorMessage", "errorStackTrace", "rule",
                 "features", "scenarios", "httpInteractions", "annotations", "attachments", "diagnostics",
                 "steps", "backgroundSteps", "subSteps", "headers", "labels", "categories", "exampleValues",
@@ -849,6 +850,7 @@ internal static class ReportScanner
                     break;
                 case "sourceFile": step.SourceFile = reader.GetString(); break;
                 case "sourceLine": step.SourceLine = reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out var line) ? line : null; break;
+                case "assertion": step.Assertion = reader.TokenType == JsonTokenType.True; break;
                 case "bypassReason": step.BypassReason = reader.GetString(); break;
                 case "docString": step.DocString = reader.GetString(); break;
             }

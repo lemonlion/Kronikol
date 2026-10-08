@@ -21,6 +21,7 @@
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="8.9.0" />
     <PackageReference Include="AwesomeAssertions" Version="9.4.0" />
+    <PackageReference Include="Shouldly" Version="4.3.0" />
   </ItemGroup>
 
   <!-- The source file to compile is passed via /p:FixtureSource=... -->

@@ -1,0 +1,20 @@
+== plain-Debug: build exit 0
+Kronikol.AssertionTracking: Instrumented 14 assertion(s) in 13 method(s) (777ms)
+== plain-Debug: run exit 0
+== plain-Release: build exit 0
+Kronikol.AssertionTracking: Instrumented 14 assertion(s) in 13 method(s) (323ms)
+== plain-Release: run exit 0
+== control-Debug: build exit 0
+Kronikol.AssertionTracking: Instrumented 21 assertion(s) in 19 method(s) (907ms)
+== control-Debug: run exit 0
+== control-Release: build exit 0
+Kronikol.AssertionTracking: Instrumented 21 assertion(s) in 19 method(s) (609ms)
+== control-Release: run exit 0
+== embedded: build exit 0
+Kronikol.AssertionTracking: Instrumented 21 assertion(s) in 19 method(s) (302ms)
+== embedded: run exit 0
+== nosymbols: build exit 0
+1>C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\19eb1bc1-2d7b-43ae-8364-4eb3eecabfcc\scratchpad\nuget-r2\kronikol.assertiontracking\4.14.0-local.141\buildTransitive\Kronikol.AssertionTracking.targets(52,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: the build writes no symbols (<DebugType>none</DebugType>), and the weave finds each statement through them. [C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\19eb1bc1-2d7b-43ae-8364-4eb3eecabfcc\scratchpad\probe-r2\Probe.csproj]
+C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\19eb1bc1-2d7b-43ae-8364-4eb3eecabfcc\scratchpad\nuget-r2\kronikol.assertiontracking\4.14.0-local.141\buildTransitive\Kronikol.AssertionTracking.targets(52,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: the build writes no symbols (<DebugType>none</DebugType>), and the weave finds each statement through them. [C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\19eb1bc1-2d7b-43ae-8364-4eb3eecabfcc\scratchpad\probe-r2\Probe.csproj]
+== nosymbols -warnaserror: build exit 1
+DONE

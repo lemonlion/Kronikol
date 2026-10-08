@@ -1,0 +1,1 @@
+3ac6ac5c Release 4.12.3: assertion tracking draws what the run did (plans/SHOULDLY_ASSERTIONS_PLAN.md R1, roadmap row 1.

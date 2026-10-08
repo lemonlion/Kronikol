@@ -1,0 +1,358 @@
+Failed!  - Failed:   117, Passed:   167, Skipped:    28, Total:   312, Duration: 4 m 10 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+
+FAIL Kronikol.Tests.AssertionTracking.StackAnalysisTests.A_statement_the_analysis_cannot_type_is_left_unwoven_and_counted(optimization: Debug)
+     Assert.Equal() Failure: Values differ
+     Expected: 0
+     Actual:   1
+FAIL Kronikol.Tests.AssertionTracking.StackAcrossStatementsTests.A_subject_kept_on_the_stack_across_a_statement_is_woven(library: "FluentAssertions", optimization: Release)
+     Assert.IsNotType() Failure: Value is the exact type
+     Expected: typeof(System.InvalidProgramException)
+     Actual:   typeof(System.InvalidProgramException)
+FAIL Kronikol.Tests.AssertionTracking.WovenIlVerifiesTests.An_error_the_compiler_wrote_is_not_counted(optimization: Debug)
+     Assert.Empty() Failure: Collection was not empty
+     Collection: ["Kronikol.AssertionTracking.Internal.__AssertionTra"···]
+FAIL Kronikol.Tests.AssertionTracking.StackAnalysisTests.A_statement_the_analysis_cannot_type_is_left_unwoven_and_counted(optimization: Release)
+     Assert.Equal() Failure: Values differ
+     Expected: 0
+     Actual:   1
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.No_warning_when_something_is_woven
+     The weave wrote IL that does not verify (TaskWovenNoWarning.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.WovenIlVerifiesTests.An_error_the_compiler_wrote_is_not_counted(optimization: Release)
+     Assert.Empty() Failure: Collection was not empty
+     Collection: ["Kronikol.AssertionTracking.Internal.__AssertionTra"···]
+FAIL Kronikol.Tests.AssertionTracking.StackAnalysisTests.A_statement_a_branch_enters_part_way_is_left_unwoven(optimization: Debug)
+     Assert.Equal() Failure: Values differ
+     Expected: 0
+     Actual:   1
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_logs_a_method_it_leaves_unwoven
+     The weave wrote IL that does not verify (TaskStrippedMethod.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.WovenIlVerifiesTests.The_net_catches_a_weave_that_leaves_a_value_on_the_stack(optimization: Release)
+     Assert.All() Failure: 1 out of 4 items in the collection did not pass.
+     [3]: Item:  "Kronikol.AssertionTracking.Internal.__AssertionTra"···
+     Error: Assert.StartsWith() Failure: String start does not match
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_woven_Shouldly_message_equals_the_unwoven_one(method: "ShouldBe_with_custom_message_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "result\r\n    should be\r\n5\r\n    but was\r\n3\r\n\r\nAdditi"···
+FAIL Kronikol.Tests.AssertionTracking.StackAnalysisTests.A_statement_a_branch_enters_part_way_is_left_unwoven(optimization: Release)
+     Assert.Equal() Failure: Values differ
+     Expected: 0
+     Actual:   1
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_woven_Shouldly_message_equals_the_unwoven_one(method: "ShouldBeTrue_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 1)
+     Expected: "flag\r\n    should be\r\nTrue\r\n    but was\r\nFalse"
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_woven_Shouldly_message_equals_the_unwoven_one(method: "ShouldBe_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "result\r\n    should be\r\n5\r\n    but was\r\n3"
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_woven_Shouldly_message_equals_the_unwoven_one(method: "ShouldNotBeNull_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "name\r\n    should not be null but was"
+FAIL Kronikol.Tests.AssertionTracking.Shouldly5PreviewTests.Shouldly_5_preview_is_woven(configuration: "Debug")
+     Assert.Equal() Failure: Values differ
+     Expected: 3
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_weaves_a_portable_pdb_as_before
+     The weave wrote IL that does not verify (TaskPortablePdb.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.WovenIlVerifiesTests.The_net_catches_a_weave_that_leaves_a_value_on_the_stack(optimization: Debug)
+     Assert.All() Failure: 1 out of 2 items in the collection did not pass.
+     [1]: Item:  "Kronikol.AssertionTracking.Internal.__AssertionTra"···
+     Error: Assert.StartsWith() Failure: String start does not match
+FAIL Kronikol.Tests.AssertionTracking.StackAcrossStatementsTests.A_subject_kept_on_the_stack_across_a_statement_is_woven(library: "AwesomeAssertions", optimization: Release)
+     Assert.IsNotType() Failure: Value is the exact type
+     Expected: typeof(System.InvalidProgramException)
+     Actual:   typeof(System.InvalidProgramException)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_condition_lambdas_closure_value_is_captured(optimization: Debug)
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Order id should be '2'", "Order should satisfy all conditions"]
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_warns_when_the_build_has_no_symbols
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.Shouldly5PreviewTests.Shouldly_5_preview_is_woven(configuration: "Release")
+     Assert.Equal() Failure: Values differ
+     Expected: 3
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_condition_lambdas_closure_value_is_captured(optimization: Release)
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Order id should be '2'", "Order should satisfy all conditions"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldNotBeEmpty_fails", labels: ["Items should not be empty"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Items should not be empty"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBe_array_initializer_passes", labels: ["Items should be new[] { 1, 2 }"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Items should be new[] { 1, 2 }"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "Should_ThrowAsync_fails", labels: ["Should throw InvalidOperationException"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Should throw InvalidOperationException"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBe_passes", labels: ["Result should be 3"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Result should be 3"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBe_with_custom_message_fails", labels: ["Result should be 5"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Result should be 5"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "Should_Throw_passes", labels: ["Should throw InvalidOperationException"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Should throw InvalidOperationException"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBe_fails", labels: ["Result should be '5'"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Result should be '5'"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBe_null_conditional_passes", labels: ["Order name should be \"a\""])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Order name should be \"a\""]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldSatisfyAllConditions_two_fail", labels: ["Order id should be 2", "Order name should be \"b\"", "Order should satisfy all conditions"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Order id should be 2", "Order name should be \"b\"", "Order should satisfy all conditions"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldNotBeNull_fails", labels: ["Name should not be null"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Name should not be null"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBeTrue_fails", labels: ["Flag should be true"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Flag should be true"]
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_warns_when_no_statement_calls_an_assertion
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "DynamicShould_HaveProperty", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "Async_after_an_await", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "In_a_switch_arm", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "ShouldBeOfType_result_used", notes: 2)
+     Assert.Equal() Failure: Values differ
+     Expected: 2
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "ShouldThrowAsync_on_a_task", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "ShouldHaveFlag_in_another_namespace", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "Inside_try_finally", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "Inside_lock", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_weaves_an_assembly_whose_pdb_is_embedded
+     The weave wrote IL that does not verify (TaskEmbeddedPdb.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_warns_when_the_attribute_finds_no_supported_library
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "ShouldContain_predicate", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "A_parameter", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "A_struct", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "A_record_with", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "ShouldAllBe_predicate", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "A_ternary_argument", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "Async_without_an_await", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "A_generic_T", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_Shouldly_only_assembly_is_woven(optimization: Release)
+     Assert.Equal() Failure: Values differ
+     Expected: 13
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_Shouldly_only_assembly_is_woven(optimization: Debug)
+     Assert.Equal() Failure: Values differ
+     Expected: 13
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_Shouldly_failure_note_carries_Shouldlys_message(optimization: Debug)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_Shouldly_failure_note_carries_Shouldlys_message(optimization: Release)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBeTrue_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "Should_ThrowAsync_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBe_passes", throws: False, outcomes: [True])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [True]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldNotBeNull_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "Should_Throw_passes", throws: False, outcomes: [True])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [True]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBe_array_initializer_passes", throws: False, outcomes: [True])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [True]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldSatisfyAllConditions_two_fail", throws: True, outcomes: [False, False, False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False, False, False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBe_with_custom_message_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBe_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldNotBeEmpty_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBe_null_conditional_passes", throws: False, outcomes: [True])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [True]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_ShouldlyMethods_helper_is_one_row(optimization: Release)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_ShouldlyMethods_helper_is_one_row(optimization: Debug)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Its_body_is_not_woven(optimization: Release)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Its_body_is_not_woven(optimization: Debug)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Shouldly_values_are_the_arguments_after_the_subject(optimization: Release)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Shouldly_values_are_the_arguments_after_the_subject(optimization: Debug)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_custom_message_is_not_captured(optimization: Release)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_custom_message_is_not_captured(optimization: Debug)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.

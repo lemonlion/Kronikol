@@ -24,6 +24,25 @@ internal sealed class ReportIndex
     /// </summary>
     public DateTime LastWriteUtc { get; init; }
     public string? KronikolVersion { get; set; }
+
+    /// <summary>The first version whose data file marks every tracked assertion with <c>"assertion": true</c> (#145).</summary>
+    internal static readonly Version AssertionMarkSince = new(4, 14, 0);
+
+    /// <summary>Whether a report from <paramref name="version"/> marks its assertions, so an unmarked step is a step.</summary>
+    internal static bool MarksAssertions(string? version) =>
+        version is not null &&
+        Version.TryParse(version.Split('-', '+')[0], out var parsed) &&
+        parsed >= AssertionMarkSince;
+
+    /// <summary>On a report that marks its assertions, a step without the mark is not one.</summary>
+    internal void SettleAssertionMarks()
+    {
+        if (!MarksAssertions(KronikolVersion))
+            return;
+        foreach (var scenario in Scenarios)
+            foreach (var (_, _, step) in scenario.AllSteps())
+                step.Assertion ??= false;
+    }
     public string? StartTime { get; set; }
     public string? EndTime { get; set; }
     /// <summary>
@@ -209,8 +228,16 @@ internal sealed class StepEntry
 
     public bool Failed => Status is not null && Status.Equals("Failed", StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>An assertion sub-step is one with no keyword — <c>Track.That</c> records them that way.</summary>
-    public bool IsAssertion => Keyword is null;
+    /// <summary>The data file's own mark (#145): true on a tracked assertion, false on any other step of a report
+    /// that writes the mark, and null for a report written before it.</summary>
+    public bool? Assertion { get; set; }
+
+    /// <summary>
+    /// A tracked assertion. A report written before the mark (<see cref="ReportIndex.AssertionMarkSince"/>) is read
+    /// as before: a step with no keyword, the way <c>Track.That</c> records them, which also took in every
+    /// keyword-less step a framework records (#145).
+    /// </summary>
+    public bool IsAssertion => Assertion ?? Keyword is null;
 
     public string Display => Keyword is null ? Text : $"{Keyword} {Text}";
 }

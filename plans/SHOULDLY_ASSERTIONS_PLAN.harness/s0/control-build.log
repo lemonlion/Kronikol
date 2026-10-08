@@ -1,0 +1,4 @@
+1>_CleanAssertionTracking:
+_WeaveAssertionTracking:
+AssertionTracking: 13 types, 64 methods, 7 assertions weaved in 364ms
+Kronikol.AssertionTracking: Instrumented 7 assertion(s) in 6 method(s) (478ms)

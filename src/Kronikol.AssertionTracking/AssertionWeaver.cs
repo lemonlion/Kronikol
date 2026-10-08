@@ -12,8 +12,9 @@ namespace Kronikol.AssertionTracking;
 
 /// <summary>
 /// Core IL weaving logic. Opens a compiled assembly with Cecil, finds the assertion statements of
-/// FluentAssertions and AwesomeAssertions (<c>.Should()</c>) and TUnit (<c>Assert.That()</c>), and wraps each
-/// in a try/catch that reports pass/fail to Track.AssertionPassed/Track.AssertionFailed.
+/// FluentAssertions and AwesomeAssertions (<c>.Should()</c>), Shouldly (<c>ShouldBe()</c> and the rest of its
+/// <c>[ShouldlyMethods]</c>) and TUnit (<c>Assert.That()</c>), and wraps each in a try/catch that reports pass/fail
+/// to Track.AssertionPassed/Track.AssertionFailed.
 /// </summary>
 public class AssertionWeaver
 {
@@ -117,6 +118,8 @@ public class AssertionWeaver
                 continue;
             if (IsStateMachineWithSuppressedParent(type))
                 continue;
+            if (IsInOwnShouldlyMethodsType(type))
+                continue;
 
             foreach (var method in type.Methods)
             {
@@ -130,8 +133,10 @@ public class AssertionWeaver
                 if (assertions.Count == 0)
                     continue;
 
-                WrapAssertions(method, assertions, passedRef, failedRef, passedWithValuesRef, failedWithValuesRef, getMessageMethod, exceptionType);
-                result.WeavedCount += assertions.Count;
+                var woven = WrapAssertions(method, assertions, result, passedRef, failedRef, passedWithValuesRef, failedWithValuesRef, getMessageMethod, exceptionType);
+                if (woven == 0)
+                    continue;
+                result.WeavedCount += woven;
                 result.MethodCount++;
             }
         }
@@ -202,20 +207,25 @@ public class AssertionWeaver
     private static void AddWeavedSentinel(AssemblyDefinition assembly)
     {
         var module = assembly.MainModule;
-        // Create a minimal attribute type in the module itself
+        // Create a minimal attribute type in the module itself, an Attribute as a custom attribute's type must be,
+        // taken from the module's own core library rather than the one this task runs on.
+        var attributeType = new TypeReference("System", "Attribute", module, module.TypeSystem.CoreLibrary);
         var attrType = new TypeDefinition(
             "Kronikol.AssertionTracking.Internal",
             "__AssertionTrackingWeaved__",
             Mono.Cecil.TypeAttributes.NotPublic | Mono.Cecil.TypeAttributes.Sealed,
-            module.TypeSystem.Object);
+            attributeType);
         module.Types.Add(attrType);
 
-        // Add a parameterless constructor
+        // Add a parameterless constructor that runs the base one, as a verifiable constructor must
         var ctor = new MethodDefinition(
             ".ctor",
             Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.HideBySig |
             Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName,
             module.TypeSystem.Void);
+        ctor.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
+        ctor.Body.Instructions.Add(Instruction.Create(OpCodes.Call,
+            new MethodReference(".ctor", module.TypeSystem.Void, attributeType) { HasThis = true }));
         ctor.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
         attrType.Methods.Add(ctor);
 
@@ -228,6 +238,17 @@ public class AssertionWeaver
     {
         var resolver = new DefaultAssemblyResolver();
 
+        // Cecil searches "." and "bin" first, relative to the process's current directory. Given the build's
+        // references, they come first instead, so an assembly that happens to sit in the current directory cannot
+        // stand in for the one the project references: an older Shouldly there resolved Shouldly 5's ShouldBe to
+        // no method, and its custom message stayed in the label.
+        var references = _searchDirectories.Length > 0;
+        if (references)
+        {
+            resolver.RemoveSearchDirectory(".");
+            resolver.RemoveSearchDirectory("bin");
+        }
+
         // Add the directory containing the assembly itself
         var assemblyDir = Path.GetDirectoryName(assemblyPath);
         if (!string.IsNullOrEmpty(assemblyDir))
@@ -237,6 +258,12 @@ public class AssertionWeaver
         foreach (var dir in _searchDirectories)
         {
             resolver.AddSearchDirectory(dir);
+        }
+
+        if (references)
+        {
+            resolver.AddSearchDirectory(".");
+            resolver.AddSearchDirectory("bin");
         }
 
         return resolver;
@@ -256,7 +283,7 @@ public class AssertionWeaver
         // Check assembly references (normal case: assertions from NuGet packages)
         if (assembly.MainModule.AssemblyReferences
             .Any(r => r.Name == "FluentAssertions" || r.Name == "AwesomeAssertions" ||
-                      r.Name == "TUnit.Assertions" || r.Name == "TUnit.Assertions.Should"))
+                      r.Name == "TUnit.Assertions" || r.Name == "TUnit.Assertions.Should" || r.Name == "Shouldly"))
             return true;
 
         // Also check if assertion-library types are defined within the assembly itself
@@ -426,6 +453,7 @@ public class AssertionWeaver
 
         var sequencePoints = method.DebugInformation.SequencePoints.ToList();
         var instructions = method.Body.Instructions;
+        StackAnalysis? analysis = null;
 
         // Build instruction list indexed by offset for O(1) range lookups.
         // Walk the linked list once and bucket instructions by sequence point ranges.
@@ -503,6 +531,12 @@ public class AssertionWeaver
 
             // Read the source text for this statement
             var sourceText = ReadSourceText(sp);
+            var shouldlyCall = statementInstructions
+                .Where(i => i.OpCode == OpCodes.Call || i.OpCode == OpCodes.Callvirt)
+                .Select(i => i.Operand as MethodReference)
+                .FirstOrDefault(mr => mr != null && IsShouldlyMethod(mr));
+            if (shouldlyCall != null)
+                sourceText = WithoutCustomMessage(sourceText, shouldlyCall);
 
             // Exclude trailing leave/leave.s and ret from the statement. In async state machines,
             // the compiler places a leave at the end of user code to exit the outer try.
@@ -556,7 +590,8 @@ public class AssertionWeaver
                 SequencePoint = sp,
                 SourceText = sourceText,
                 OutboundBranches = outboundBranches,
-                CapturedVariables = DetectCapturedVariables(method, statementInstructions, sourceText),
+                CapturedVariables = DetectCapturedVariables(method, statementInstructions, sourceText,
+                    () => analysis ??= StackAnalysis.Analyze(method.Body)),
                 IsAwaited = isAwaited,
                 GetResultInstruction = getResultInstr
             });
@@ -680,13 +715,15 @@ public class AssertionWeaver
         var ns = type.Namespace;
         return ns.StartsWith("FluentAssertions", StringComparison.Ordinal) ||
                ns.StartsWith("AwesomeAssertions", StringComparison.Ordinal) ||
-               ns.StartsWith("TUnit.Assertions", StringComparison.Ordinal);
+               ns.StartsWith("TUnit.Assertions", StringComparison.Ordinal) ||
+               ns.StartsWith("Shouldly", StringComparison.Ordinal);
     }
 
     /// <summary>
     /// Checks if a method call is an assertion entry point:
     /// - .Should() on FluentAssertions/AwesomeAssertions/TUnit types
     /// - Assert.That() on TUnit.Assertions.Assert
+    /// - a method on a type Shouldly marks [ShouldlyMethods], or a suite's own type so marked
     /// </summary>
     private static bool IsAssertionEntryPoint(MethodReference method)
     {
@@ -695,6 +732,43 @@ public class AssertionWeaver
         if (method.Name == "That" && method.DeclaringType.Name == "Assert" &&
             method.DeclaringType.Namespace.StartsWith("TUnit.Assertions", StringComparison.Ordinal))
             return true;
+        return IsShouldlyMethod(method);
+    }
+
+    /// <summary>
+    /// A Shouldly assertion: a method on a type Shouldly marks <c>[ShouldlyMethods]</c>, which is how Shouldly
+    /// itself tells its assertions from the rest of its API and how it documents a custom assertion. Not a name
+    /// rule: <c>ShouldHaveFlag</c> lives in another namespace, and a suite's own <c>ShouldBeTheSame</c> is not one.
+    /// A suite's own marked type counts too (Q5), so <c>order.ShouldBeValid()</c> is one row.
+    /// </summary>
+    private static bool IsShouldlyMethod(MethodReference method)
+    {
+        var type = method.DeclaringType;
+        if (type is TypeDefinition own)
+            return HasShouldlyMethodsAttribute(own);
+        if (!type.Namespace.StartsWith("Shouldly", StringComparison.Ordinal))
+            return false;
+
+        // Read the mark from Shouldly's own type; when the reference cannot be resolved, a type in Shouldly's
+        // assembly under its namespace is taken as one.
+        TypeDefinition? resolved = null;
+        try { resolved = type.Resolve(); }
+        catch (AssemblyResolutionException) { }
+        return resolved != null ? HasShouldlyMethodsAttribute(resolved) : type.Scope?.Name == "Shouldly";
+    }
+
+    private static bool HasShouldlyMethodsAttribute(TypeDefinition type) =>
+        type.HasCustomAttributes &&
+        type.CustomAttributes.Any(a => a.AttributeType.Name == "ShouldlyMethodsAttribute" &&
+                                       a.AttributeType.Namespace == "Shouldly");
+
+    /// <summary>A type a suite marked <c>[ShouldlyMethods]</c>, or one nested in it (its lambdas and state
+    /// machines): its calls are one row each, so its own body is not woven (Q5).</summary>
+    private static bool IsInOwnShouldlyMethodsType(TypeDefinition type)
+    {
+        for (var t = type; t != null; t = t.DeclaringType)
+            if (HasShouldlyMethodsAttribute(t))
+                return true;
         return false;
     }
 
@@ -939,13 +1013,15 @@ public class AssertionWeaver
     private static List<CapturedVariable> DetectCapturedVariables(
         MethodDefinition method,
         List<Instruction> statementInstructions,
-        string sourceText)
+        string sourceText,
+        Func<StackAnalysis> analysis)
     {
         var captured = new List<CapturedVariable>();
         var seenNames = new HashSet<string>(StringComparer.Ordinal);
 
         // Find the assertion entry point call index (Should or Assert.That)
         var shouldIdx = -1;
+        HashSet<Instruction>? skip = null;
         for (var i = 0; i < statementInstructions.Count; i++)
         {
             var instr = statementInstructions[i];
@@ -953,12 +1029,22 @@ public class AssertionWeaver
                 instr.Operand is MethodReference mr &&
                 IsAssertionEntryPoint(mr))
             {
+                if (IsShouldlyMethod(mr))
+                {
+                    // Shouldly's call is the whole assertion: its arguments come before it, so the scan starts
+                    // after the subject's own instructions rather than after the call.
+                    if (ShouldlyArguments(mr, instr, statementInstructions, analysis()) is not { } arguments)
+                        return captured;
+                    shouldIdx = arguments.Start - 1;
+                    skip = arguments.Skip;
+                    break;
+                }
                 shouldIdx = i;
                 break;
             }
         }
 
-        if (shouldIdx < 0)
+        if (shouldIdx < 0 && skip == null)
             return captured;
 
         // Build local variable name map from debug info
@@ -968,6 +1054,8 @@ public class AssertionWeaver
         for (var i = shouldIdx + 1; i < statementInstructions.Count; i++)
         {
             var instr = statementInstructions[i];
+            if (skip != null && skip.Contains(instr))
+                continue;
 
             // ldloc / ldloc.s / ldloc.0-3 — regular local variable or display class
             if (IsLdloc(instr, out var localIndex))
@@ -1376,6 +1464,133 @@ public class AssertionWeaver
         return captured;
     }
 
+    /// <summary>
+    /// Where a Shouldly call's values start in its statement, and the instructions that are not values: the
+    /// arguments after the subject are the values (FluentAssertions' are its assertion method's, never the subject),
+    /// and a <c>customMessage</c> or a parameter the compiler fills with code text (<c>[CallerArgumentExpression]</c>,
+    /// Shouldly 5) is skipped. A subject the compiler pushed in an earlier statement leaves the whole statement to
+    /// its arguments. Null when the stack before the call cannot be read.
+    /// </summary>
+    private static (int Start, HashSet<Instruction> Skip)? ShouldlyArguments(
+        MethodReference call, Instruction callInstruction, List<Instruction> statement, StackAnalysis analysis)
+    {
+        var stack = analysis.StackBefore(callInstruction);
+        var count = call.Parameters.Count;
+        if (stack == null || stack.Length < count)
+            return null;
+
+        MethodDefinition? resolved = null;
+        try { resolved = call.Resolve(); }
+        catch (AssemblyResolutionException) { }
+
+        // An extension method's first argument is its subject; Should.Throw(...) and DynamicShould's have none.
+        var hasSubject = resolved != null
+            ? resolved.HasCustomAttributes && resolved.CustomAttributes.Any(a => a.AttributeType.Name == "ExtensionAttribute")
+            : call.DeclaringType.Name is not ("Should" or "DynamicShould");
+        var first = stack.Length - count;
+        int IndexOf(int argument) =>
+            stack[first + argument].Producer is { } producer ? statement.IndexOf(producer) : -1;
+
+        var start = hasSubject && count > 0 ? IndexOf(0) + 1 : 0;
+        var skip = new HashSet<Instruction>();
+        for (var k = hasSubject ? 1 : 0; k < count && resolved != null; k++)
+        {
+            var parameter = resolved.Parameters[k];
+            var notAValue = parameter.Name == "customMessage" && parameter.ParameterType.MetadataType == MetadataType.String ||
+                            parameter.HasCustomAttributes &&
+                            parameter.CustomAttributes.Any(a => a.AttributeType.Name == "CallerArgumentExpressionAttribute");
+            if (!notAValue)
+                continue;
+            // The argument's own instructions run from just after the one before it through its producer; when
+            // that one is not in the statement (a subject pushed earlier), from the start of the values.
+            var end = IndexOf(k);
+            if (end < 0)
+                continue;
+            var begin = k > 0 ? Math.Max(IndexOf(k - 1) + 1, start) : start;
+            for (var i = begin; i <= end; i++)
+                skip.Add(statement[i]);
+        }
+        return (start, skip);
+    }
+
+    /// <summary>
+    /// The statement's text without the custom message a Shouldly call is given by position (172 of 4.3.0's 187
+    /// methods take one), so <c>result.ShouldBe(5, "the total")</c> is labelled "Result should be 5": the message
+    /// is Shouldly's to show, in its failure. A message passed by name is left for the label to drop, and a call
+    /// whose arguments are named is left as written.
+    /// </summary>
+    private static string WithoutCustomMessage(string text, MethodReference call)
+    {
+        MethodDefinition? resolved = null;
+        try { resolved = call.Resolve(); }
+        catch (AssemblyResolutionException) { }
+        if (resolved == null)
+            return text;
+
+        var index = -1;
+        for (var p = 0; p < resolved.Parameters.Count; p++)
+        {
+            if (resolved.Parameters[p].Name == "customMessage" &&
+                resolved.Parameters[p].ParameterType.MetadataType == MetadataType.String)
+                index = p;
+        }
+        var isExtension = resolved.HasCustomAttributes &&
+                          resolved.CustomAttributes.Any(a => a.AttributeType.Name == "ExtensionAttribute");
+        var argument = isExtension ? index - 1 : index;
+        if (index < 0 || argument < 0)
+            return text;
+
+        // The call's argument list: the first '(' after its name, to the bracket that closes it.
+        var at = text.IndexOf("." + call.Name, StringComparison.Ordinal);
+        if (at < 0)
+            return text;
+        var open = text.IndexOf('(', at);
+        if (open < 0)
+            return text;
+        var commas = new List<int>();
+        var close = -1;
+        var depth = 0;
+        for (var i = open; i < text.Length && close < 0; i++)
+        {
+            var c = text[i];
+            if (c == '"' || c == '\'')
+            {
+                i = EndOfLiteral(text, i);
+                continue;
+            }
+            switch (c)
+            {
+                case '(' or '[' or '{':
+                    depth++;
+                    break;
+                case ')' or ']' or '}':
+                    depth--;
+                    if (depth == 0)
+                        close = i;
+                    break;
+                case ',' when depth == 1:
+                    commas.Add(i);
+                    break;
+            }
+        }
+        if (close < 0 || argument > commas.Count || text.Substring(open, close - open).Contains(": "))
+            return text;
+
+        // Remove the argument with the comma before it (or, for the first, the comma after it).
+        int from, to;
+        if (argument > 0)
+        {
+            from = commas[argument - 1];
+            to = argument < commas.Count ? commas[argument] : close;
+        }
+        else
+        {
+            from = open + 1;
+            to = commas.Count > 0 ? commas[0] + 1 : close;
+        }
+        return (text.Substring(0, from) + text.Substring(to)).Replace("( ", "(");
+    }
+
     private static bool IsLdloc(Instruction instr, out int index)
     {
         if (instr.OpCode == OpCodes.Ldloc_0) { index = 0; return true; }
@@ -1771,9 +1986,14 @@ public class AssertionWeaver
     /// <summary>
     /// Wraps each assertion statement in: try { [original] ; AssertionPassed(...) } catch(Exception ex) { AssertionFailed(..., ex.Message); throw; }
     /// </summary>
-    private void WrapAssertions(
+    /// <summary>
+    /// Wraps each statement whose stack the analysis accounts for, and returns how many it wrapped; each one it
+    /// leaves is added to <see cref="WeaveResult.Unwoven"/> with the reason.
+    /// </summary>
+    private int WrapAssertions(
         MethodDefinition method,
         List<AssertionStatement> assertions,
+        WeaveResult result,
         MethodReference passedRef,
         MethodReference failedRef,
         MethodReference passedWithValuesRef,
@@ -1784,352 +2004,237 @@ public class AssertionWeaver
         var il = method.Body.GetILProcessor();
         method.Body.SimplifyMacros();
 
+        // What the stack holds before each instruction, read once on the method as the compiler wrote it: every
+        // wrap below inserts its code between statements and leaves each original instruction's stack as it was.
+        var analysis = StackAnalysis.Analyze(method.Body);
+
+        // Every statement is planned before any is wrapped: a statement's exit is read at the instruction after
+        // it, which the wrap of the statement after it puts its own code in front of.
+        var plans = assertions
+            .Select(assertion => (Reason: PlanStack(method, assertion, analysis, out var entry, out var exit), Entry: entry, Exit: exit))
+            .ToList();
+        var woven = 0;
+
         // Process in reverse order to avoid offset shifts affecting earlier statements
         for (var i = assertions.Count - 1; i >= 0; i--)
         {
             var assertion = assertions[i];
-            WrapSingleAssertion(method, il, assertion, passedRef, failedRef,
+            var (reason, entry, exit) = plans[i];
+            if (reason != null)
+            {
+                result.Unwoven.Add($"{method.DeclaringType.FullName}.{method.Name}, line {assertion.SequencePoint.StartLine}: {reason}");
+                continue;
+            }
+
+            WrapSingleAssertion(method, il, assertion, entry, exit, passedRef, failedRef,
                 passedWithValuesRef, failedWithValuesRef, getMessageRef, exceptionTypeRef);
+            woven++;
         }
+
+        // The weave adds locals (spills, value arrays, the caught exception) to a method that may have had none, and a
+        // method with locals is verifiable only when they start zeroed: a lambda the compiler wrote without locals
+        // had no localsinit flag to keep.
+        if (method.Body.Variables.Count > 0)
+            method.Body.InitLocals = true;
 
         method.Body.OptimizeMacros();
+        return woven;
     }
 
     /// <summary>
-    /// In Release builds, the compiler can leave values on the evaluation stack across statement
-    /// boundaries (e.g. GetResult() return value is consumed directly by Should() without an
-    /// intermediate stloc/ldloc). The CLR requires the stack to be empty at try block entry.
-    /// This method detects a non-empty stack at firstInstr and inserts stloc instructions to
-    /// spill the stack values. The caller must emit corresponding ldloc instructions after the
-    /// tryStart nop to reload them inside the try block.
+    /// The values on the stack where the statement's <c>try</c> opens (<paramref name="entry"/>, stored before it
+    /// and loaded back inside it) and where the statement ends (<paramref name="exit"/>, stored before its
+    /// <c>leave</c> and loaded back after the <c>catch</c>), bottom first. Returns null when both can be accounted
+    /// for, and otherwise why the statement is left unwoven.
     /// </summary>
-    private static List<VariableDefinition>? SpillStackIfNeeded(
-        MethodBody body, ILProcessor il, Instruction firstInstr)
+    private static string? PlanStack(MethodDefinition method, AssertionStatement assertion, StackAnalysis analysis,
+        out StackAnalysis.Slot[] entry, out StackAnalysis.Slot[] exit)
     {
-        // Compute stack depth at firstInstr by walking forward from the nearest
-        // known-zero point (branch target, handler start, or method start).
-        var depth = ComputeStackDepthAt(body, firstInstr);
-        if (depth <= 0)
+        entry = Array.Empty<StackAnalysis.Slot>();
+        exit = Array.Empty<StackAnalysis.Slot>();
+        if (!analysis.Consistent)
+            return "the method's evaluation stack could not be followed";
+
+        var awaited = assertion.IsAwaited && assertion.GetResultInstruction != null;
+        var (start, end) = awaited
+            ? AwaitedRange(assertion.GetResultInstruction!)
+            : (assertion.FirstInstruction, assertion.LastInstruction);
+
+        // A return part-way through the statement (the null path of `order?.Name.ShouldBe("a")` ending a void
+        // method) cannot stay inside a try; it can leave to the method's own return when the statement is followed
+        // by one and there is no value to return.
+        if (!awaited && Range(start, end).Any(i => i.OpCode == OpCodes.Ret) &&
+            (method.ReturnType.MetadataType != MetadataType.Void || end.Next?.OpCode != OpCodes.Ret))
+            return "the statement returns from the method part-way";
+
+        // A try is entered only through its first instruction: a branch from outside the statement to any later one
+        // would jump into it.
+        if (!awaited && EntersPartWay(method, start, end))
+            return "a branch from outside the statement lands inside it";
+
+        var before = analysis.StackBefore(start);
+        if (before == null)
+            return "no path reaches the statement";
+        var after = end.Next != null ? analysis.StackBefore(end.Next) ?? Array.Empty<StackAnalysis.Slot>() : Array.Empty<StackAnalysis.Slot>();
+
+        if (!StackAnalysis.IsFullyTyped(before) || !StackAnalysis.IsFullyTyped(after) ||
+            !before.Concat(after).All(slot => IsUsableIn(slot.Type!, method)))
+            return "a value on the evaluation stack around the statement has a type the weave cannot name";
+        if (awaited && before.Length > 0)
+            return "the stack is not empty where the awaited result is read";
+
+        // A branch out of the statement (a null-conditional's short cut) is sent to the statement's exit, which
+        // stores the exit values: it must arrive with as many as the statement's end leaves.
+        if (!awaited)
         {
-            // Safety check: dup always requires at least 1 value on the stack.
-            // The linear walk in ComputeStackDepthAt can produce incorrect (negative or zero)
-            // results when the assertion follows complex control flow (e.g., Release-mode
-            // multi-assertion patterns where both paths merge with a value on the stack).
-            if (firstInstr.OpCode == OpCodes.Dup)
-                depth = 1;
-            else
-                return null;
+            foreach (var branch in assertion.OutboundBranches)
+            {
+                var at = branch.Operand is Instruction target ? analysis.StackBefore(target) : null;
+                if (at == null || at.Length != after.Length)
+                    return "a branch out of the statement leaves the stack at another depth than its end";
+            }
         }
 
-        // Safety check: if the first instruction doesn't consume anything from the stack
-        // (Pop0 behaviour), then there cannot be values left over from preceding code.
-        // The computation may be incorrect due to linear walk over non-executed branch paths.
-        if (firstInstr.OpCode.StackBehaviourPop == StackBehaviour.Pop0 &&
-            firstInstr.OpCode != OpCodes.Dup)
+        entry = before;
+        exit = after;
+        return null;
+    }
+
+    /// <summary>Whether an instruction outside the statement, or an exception handler, reaches one of its instructions
+    /// after the first: a try around the statement would then be entered other than through its start.</summary>
+    private static bool EntersPartWay(MethodDefinition method, Instruction start, Instruction end)
+    {
+        var inside = new HashSet<Instruction>(Range(start, end));
+        inside.Remove(start);
+        foreach (var instruction in method.Body.Instructions)
         {
+            if (instruction == start || inside.Contains(instruction))
+                continue;
+            if (instruction.Operand is Instruction target && inside.Contains(target) ||
+                instruction.Operand is Instruction[] targets && targets.Any(inside.Contains))
+                return true;
+        }
+        return method.Body.ExceptionHandlers.Any(h =>
+            inside.Contains(h.TryStart) || inside.Contains(h.HandlerStart) || h.FilterStart != null && inside.Contains(h.FilterStart));
+    }
+
+    private static IEnumerable<Instruction> Range(Instruction start, Instruction end)
+    {
+        for (var i = start; i != null; i = i.Next)
+        {
+            yield return i;
+            if (i == end)
+                yield break;
+        }
+    }
+
+    /// <summary>Whether a local of <paramref name="type"/> can be declared in <paramref name="method"/>: every generic
+    /// parameter it names belongs to the method or its type.</summary>
+    private static bool IsUsableIn(TypeReference type, MethodDefinition method)
+    {
+        switch (type)
+        {
+            case GenericParameter parameter:
+                return ReferenceEquals(parameter.Owner, method) ||
+                       (parameter.Owner is TypeReference owner && owner.FullName == method.DeclaringType.FullName);
+            case TypeSpecification specification when type is not GenericInstanceType:
+                return IsUsableIn(specification.ElementType, method);
+            case GenericInstanceType instance:
+                return instance.GenericArguments.All(argument => IsUsableIn(argument, method));
+            default:
+                return true;
+        }
+    }
+
+    /// <summary>The awaited result's read at the await's merge point: the load of the awaiter, <c>GetResult()</c>,
+    /// and the <c>pop</c> or Debug <c>nop</c> after a void one.</summary>
+    private static (Instruction Start, Instruction End) AwaitedRange(Instruction getResult)
+    {
+        var start = getResult;
+        var previous = getResult.Previous;
+        if (previous != null && (previous.OpCode == OpCodes.Ldloca || previous.OpCode == OpCodes.Ldloca_S ||
+                                 previous.OpCode == OpCodes.Ldloc || previous.OpCode == OpCodes.Ldloc_S ||
+                                 previous.OpCode == OpCodes.Ldloc_0 || previous.OpCode == OpCodes.Ldloc_1 ||
+                                 previous.OpCode == OpCodes.Ldloc_2 || previous.OpCode == OpCodes.Ldloc_3))
+            start = previous;
+
+        var end = getResult;
+        var next = getResult.Next;
+        if (next != null && (next.OpCode == OpCodes.Pop || next.OpCode == OpCodes.Nop))
+            end = next;
+        return (start, end);
+    }
+
+    /// <summary>
+    /// A local for one stack slot, of the slot's own type, or none for a <c>ldnull</c>: an object local would
+    /// reload it as an object where the call after it takes a string (ILVerify's StackUnexpected), so a null is
+    /// popped and pushed again (<see cref="StoreSlot"/>, <see cref="LoadSlot"/>).
+    /// </summary>
+    private static VariableDefinition? SlotLocal(MethodDefinition method, StackAnalysis.Slot slot) =>
+        StackAnalysis.IsNull(slot) ? null : NewSlotLocal(method, slot);
+
+    private static Instruction StoreSlot(ILProcessor il, VariableDefinition? local) =>
+        local == null ? il.Create(OpCodes.Pop) : il.Create(OpCodes.Stloc, local);
+
+    private static Instruction LoadSlot(ILProcessor il, VariableDefinition? local) =>
+        local == null ? il.Create(OpCodes.Ldnull) : il.Create(OpCodes.Ldloc, local);
+
+    /// <summary>A local for one stack slot, of the slot's own type.</summary>
+    private static VariableDefinition NewSlotLocal(MethodDefinition method, StackAnalysis.Slot slot)
+    {
+        var local = new VariableDefinition(method.Module.ImportReference(StackAnalysis.LocalType(slot.Type!, method.Module)));
+        method.Body.Variables.Add(local);
+        return local;
+    }
+
+    /// <summary>
+    /// Stores the values <paramref name="entry"/> describes, top first, in front of <paramref name="firstInstr"/>,
+    /// and returns their locals bottom first, for the caller to load back inside the <c>try</c>.
+    /// </summary>
+    private static List<VariableDefinition?>? SpillStack(
+        MethodDefinition method, ILProcessor il, Instruction firstInstr, StackAnalysis.Slot[] entry)
+    {
+        if (entry.Length == 0)
             return null;
-        }
 
-        // Determine the types on the stack by walking backwards from firstInstr.
-        // Each value we encounter (in reverse) corresponds to a stack slot.
-        var spillTypes = new TypeReference[depth];
-        var current = firstInstr.Previous;
-        var remaining = depth;
-        while (current != null && remaining > 0)
+        var locals = new List<VariableDefinition?>(entry.Length);
+        for (var i = entry.Length - 1; i >= 0; i--)
         {
-            var pushCount = GetInstructionPushCount(current);
-            var popCount = GetInstructionPopCount(current, body);
-
-            // This instruction pushes values — those are our spill candidates
-            for (var p = 0; p < pushCount && remaining > 0; p++)
-            {
-                remaining--;
-                spillTypes[remaining] = GetPushedType(current, body, p);
-            }
-
-            if (remaining <= 0) break;
-
-            // If this instruction also pops, we'd need to go further back
-            // which is complex. For the common case (single push), we stop here.
-            if (popCount > 0) break;
-
-            current = current.Previous;
+            var local = SlotLocal(method, entry[i]);
+            locals.Insert(0, local);
+            il.InsertBefore(firstInstr, StoreSlot(il, local));
         }
-
-        // Fill any remaining unknown types with object
-        for (var i = 0; i < depth; i++)
-            spillTypes[i] ??= body.Method.Module.TypeSystem.Object;
-
-        // Emit stloc instructions BEFORE firstInstr (in reverse order — top of stack first)
-        var spillLocals = new List<VariableDefinition>(depth);
-        for (var i = depth - 1; i >= 0; i--)
-        {
-            var local = new VariableDefinition(spillTypes[i]);
-            body.Variables.Add(local);
-            spillLocals.Insert(0, local);
-            il.InsertBefore(firstInstr, il.Create(OpCodes.Stloc, local));
-        }
-
-        return spillLocals;
+        return locals;
     }
 
     /// <summary>
-    /// Computes the net stack depth at the exit of an assertion (after lastInstr).
-    /// This is the entry stack depth + the net delta of all instructions from firstInstr to lastInstr.
-    /// If positive, the assertion leaves values on the stack for subsequent code.
+    /// Moves the statement's sequence point to the first instruction the weave put in front of it, so the stored
+    /// values, the <c>try</c>'s start and the value arrays map to the statement's own line, not the line above.
+    /// Shouldly reads its message's first line from the source line of the test's frame, and in a Release build
+    /// that frame resolved to the line above when the prologue sat under the previous statement's sequence point
+    /// (SHOULDLY_ASSERTIONS_PLAN F7).
     /// </summary>
-    private static int ComputeExitStackDepth(MethodBody body, Instruction firstInstr, Instruction lastInstr)
+    private static void MoveSequencePoint(MethodDefinition method, SequencePoint point, Instruction to)
     {
-        var startOffset = firstInstr.Offset;
-        var endOffset = lastInstr.Offset;
-
-        // Walk the instructions and track the "pre-branch minimum exit depth".
-        // The dup pattern (which creates exit values) occurs at the start of the assertion
-        // BEFORE any branches. Internal branches (ternary, ?.) occur later for argument
-        // computation and result in net-0 after merging. A naive linear walk double-counts
-        // both branch paths. Instead, compute net delta up to the first internal branch;
-        // that represents the true exit depth from the dup pattern.
-        var entryDepth = ComputeStackDepthAt(body, firstInstr);
-        var netDelta = 0;
-        var dupCount = 0;
-        var seenAssertionEntry = false;
-        var current = firstInstr;
-        while (current != null)
+        var points = method.DebugInformation.SequencePoints;
+        var index = points.IndexOf(point);
+        if (index < 0)
+            return;
+        points[index] = new SequencePoint(to, point.Document)
         {
-            // If we hit an internal branch, stop counting here. Everything after
-            // is argument computation that nets to zero on actual execution.
-            if (current.Operand is Instruction brTarget &&
-                brTarget.Offset >= startOffset && brTarget.Offset <= endOffset &&
-                current.OpCode.FlowControl != FlowControl.Call)
-            {
-                break;
-            }
-
-            // Only count dup instructions that appear BEFORE the assertion entry call
-            // (Should/Assert.That). These are the Release-mode subject-sharing dups.
-            // Dups that appear AFTER the entry call are for argument construction
-            // (e.g., newarr; dup; stelem.ref for params arrays) and do NOT leave
-            // values on the exit stack. Issue #53.
-            if (current.OpCode == OpCodes.Dup && !seenAssertionEntry)
-                dupCount++;
-
-            if ((current.OpCode == OpCodes.Call || current.OpCode == OpCodes.Callvirt) &&
-                current.Operand is MethodReference mr && IsAssertionEntryPoint(mr))
-                seenAssertionEntry = true;
-
-            netDelta += GetInstructionPushCount(current) - GetInstructionPopCount(current, body);
-            if (current == lastInstr) break;
-            current = current.Next;
-        }
-
-        // If we broke out at a branch, the assertion body contains internal control flow
-        // (null-conditional ?.). One dup is consumed by the assertion's null-check + method
-        // chain. Extra dup instructions indicate Release-mode value sharing across multiple
-        // assertions on the same subject — those values pass through as exit stack depth.
-        if (current != null && current != lastInstr && current.Operand is Instruction)
-        {
-            return dupCount > 1 ? dupCount - 1 : 0;
-        }
-
-        var exitDepth = entryDepth + netDelta;
-        return exitDepth > 0 ? exitDepth : 0;
-    }
-
-    /// <summary>
-    /// Computes the evaluation stack depth at a target instruction by finding the nearest
-    /// known-zero point and walking forward. Known-zero points: branch targets from leave/br,
-    /// exception handler boundaries, method entry after state dispatch.
-    /// </summary>
-    private static int ComputeStackDepthAt(MethodBody body, Instruction target)
-    {
-        // Collect all branch targets and handler starts — these have stack depth 0
-        var zeroPoints = new HashSet<Instruction>();
-        foreach (var handler in body.ExceptionHandlers)
-        {
-            if (handler.TryStart != null) zeroPoints.Add(handler.TryStart);
-            if (handler.HandlerStart != null) zeroPoints.Add(handler.HandlerStart);
-            if (handler.FilterStart != null) zeroPoints.Add(handler.FilterStart);
-        }
-        foreach (var instr in body.Instructions)
-        {
-            if (instr.Operand is Instruction brTarget)
-                zeroPoints.Add(brTarget);
-            if (instr.Operand is Instruction[] targets)
-                foreach (var t in targets) zeroPoints.Add(t);
-        }
-
-        // Find the nearest zero-point at or before target and walk forward
-        var depth = 0;
-
-        foreach (var instr in body.Instructions)
-        {
-            if (instr == target)
-                return depth;
-
-            if (zeroPoints.Contains(instr))
-                depth = 0;
-
-            depth += GetInstructionPushCount(instr) - GetInstructionPopCount(instr, body);
-
-            // After unconditional transfer, reset — the next instruction is reachable only
-            // from a branch (stack = 0 or = 1 for catch handler push)
-            if (instr.OpCode == OpCodes.Ret || instr.OpCode == OpCodes.Throw ||
-                instr.OpCode == OpCodes.Rethrow ||
-                instr.OpCode == OpCodes.Leave || instr.OpCode == OpCodes.Leave_S)
-            {
-                depth = 0;
-            }
-        }
-
-        return 0;
-    }
-
-    private static int GetInstructionPushCount(Instruction instr)
-    {
-        var code = instr.OpCode;
-        if (code.StackBehaviourPush == StackBehaviour.Push0)
-            return 0;
-        if (code.StackBehaviourPush == StackBehaviour.Push1 ||
-            code.StackBehaviourPush == StackBehaviour.Pushi ||
-            code.StackBehaviourPush == StackBehaviour.Pushi8 ||
-            code.StackBehaviourPush == StackBehaviour.Pushr4 ||
-            code.StackBehaviourPush == StackBehaviour.Pushr8 ||
-            code.StackBehaviourPush == StackBehaviour.Pushref)
-            return 1;
-        if (code.StackBehaviourPush == StackBehaviour.Push1_push1)
-            return 2;
-        if (code.StackBehaviourPush == StackBehaviour.Varpush)
-        {
-            // call/callvirt/newobj: push 1 if non-void return, 0 otherwise
-            if (instr.Operand is MethodReference mr)
-                return IsVoidReturnType(mr.ReturnType) ? 0 : 1;
-            return 0;
-        }
-        return 0;
-    }
-
-    /// <summary>
-    /// Checks whether a return type represents void, stripping modreq/modopt wrappers.
-    /// C# record init-only setters return <c>System.Void modreq(IsExternalInit)</c> which
-    /// has a FullName of "System.Void modreq(...)" — a naive string comparison misses this.
-    /// </summary>
-    private static bool IsVoidReturnType(TypeReference returnType)
-    {
-        // Strip modreq/modopt wrappers (e.g., init-only setters)
-        while (returnType is RequiredModifierType reqMod)
-            returnType = reqMod.ElementType;
-        while (returnType is OptionalModifierType optMod)
-            returnType = optMod.ElementType;
-        return returnType.FullName == "System.Void";
-    }
-
-    private static int GetInstructionPopCount(Instruction instr, MethodBody body)
-    {
-        var code = instr.OpCode;
-        if (code.StackBehaviourPop == StackBehaviour.Pop0)
-            return 0;
-        if (code.StackBehaviourPop == StackBehaviour.Pop1 ||
-            code.StackBehaviourPop == StackBehaviour.Popi ||
-            code.StackBehaviourPop == StackBehaviour.Popref)
-            return 1;
-        if (code.StackBehaviourPop == StackBehaviour.Pop1_pop1 ||
-            code.StackBehaviourPop == StackBehaviour.Popi_pop1 ||
-            code.StackBehaviourPop == StackBehaviour.Popi_popi ||
-            code.StackBehaviourPop == StackBehaviour.Popi_popi8 ||
-            code.StackBehaviourPop == StackBehaviour.Popi_popr4 ||
-            code.StackBehaviourPop == StackBehaviour.Popi_popr8 ||
-            code.StackBehaviourPop == StackBehaviour.Popref_pop1 ||
-            code.StackBehaviourPop == StackBehaviour.Popref_popi)
-            return 2;
-        if (code.StackBehaviourPop == StackBehaviour.Popi_popi_popi ||
-            code.StackBehaviourPop == StackBehaviour.Popref_popi_popi ||
-            code.StackBehaviourPop == StackBehaviour.Popref_popi_popi8 ||
-            code.StackBehaviourPop == StackBehaviour.Popref_popi_popr4 ||
-            code.StackBehaviourPop == StackBehaviour.Popref_popi_popr8 ||
-            code.StackBehaviourPop == StackBehaviour.Popref_popi_popref)
-            return 3;
-        if (code.StackBehaviourPop == StackBehaviour.Varpop)
-        {
-            // call/callvirt/newobj: pop param count + (instance ? 1 : 0)
-            if (instr.Operand is MethodReference mr)
-            {
-                var count = mr.Parameters.Count;
-                if (mr.HasThis && code != OpCodes.Newobj)
-                    count++;
-                return count;
-            }
-            // ret: pops 1 if method has non-void return
-            if (code == OpCodes.Ret)
-                return IsVoidReturnType(body.Method.ReturnType) ? 0 : 1;
-            return 0;
-        }
-        return 0;
-    }
-
-    /// <summary>
-    /// Determines the type pushed by an instruction (for creating the spill local).
-    /// </summary>
-    private static TypeReference GetPushedType(Instruction instr, MethodBody body, int index)
-    {
-        var module = body.Method.Module;
-
-        if (instr.Operand is MethodReference mr && mr.ReturnType.FullName != "System.Void")
-        {
-            var returnType = mr.ReturnType;
-            // Resolve generic parameters (e.g. TaskAwaiter<int>.GetResult() returns !0 → int)
-            if (returnType is GenericParameter gp)
-            {
-                if (mr.DeclaringType is GenericInstanceType git && gp.Position < git.GenericArguments.Count)
-                    return git.GenericArguments[gp.Position];
-                if (mr is GenericInstanceMethod gim && gp.Type == GenericParameterType.Method &&
-                    gp.Position < gim.GenericArguments.Count)
-                    return gim.GenericArguments[gp.Position];
-            }
-            return returnType;
-        }
-        if (instr.Operand is FieldReference fr)
-            return fr.FieldType;
-        if (instr.OpCode == OpCodes.Ldloc || instr.OpCode == OpCodes.Ldloc_S)
-            return ((VariableDefinition)instr.Operand).VariableType;
-        if (instr.OpCode == OpCodes.Ldloc_0) return body.Variables[0].VariableType;
-        if (instr.OpCode == OpCodes.Ldloc_1) return body.Variables[1].VariableType;
-        if (instr.OpCode == OpCodes.Ldloc_2) return body.Variables[2].VariableType;
-        if (instr.OpCode == OpCodes.Ldloc_3) return body.Variables[3].VariableType;
-        if (instr.OpCode == OpCodes.Dup) return module.TypeSystem.Object; // approximate
-        if (instr.OpCode == OpCodes.Ldarg_0) return body.Method.DeclaringType;
-
-        // For integer/string/etc constants
-        if (instr.OpCode == OpCodes.Ldc_I4 || instr.OpCode == OpCodes.Ldc_I4_S ||
-            instr.OpCode == OpCodes.Ldc_I4_M1 ||
-            instr.OpCode == OpCodes.Ldc_I4_0 || instr.OpCode == OpCodes.Ldc_I4_1 ||
-            instr.OpCode == OpCodes.Ldc_I4_2 || instr.OpCode == OpCodes.Ldc_I4_3 ||
-            instr.OpCode == OpCodes.Ldc_I4_4 || instr.OpCode == OpCodes.Ldc_I4_5 ||
-            instr.OpCode == OpCodes.Ldc_I4_6 || instr.OpCode == OpCodes.Ldc_I4_7 ||
-            instr.OpCode == OpCodes.Ldc_I4_8)
-            return module.TypeSystem.Int32;
-        if (instr.OpCode == OpCodes.Ldc_I8) return module.TypeSystem.Int64;
-        if (instr.OpCode == OpCodes.Ldc_R4) return module.TypeSystem.Single;
-        if (instr.OpCode == OpCodes.Ldc_R8) return module.TypeSystem.Double;
-        if (instr.OpCode == OpCodes.Ldstr) return module.TypeSystem.String;
-        if (instr.OpCode == OpCodes.Ldnull) return module.TypeSystem.Object;
-
-        // Comparison and integer-producing operators (ceq, cgt, cgt.un, clt, clt.un, conv.i4, etc.)
-        if (instr.OpCode.StackBehaviourPush == StackBehaviour.Pushi)
-            return module.TypeSystem.Int32;
-        if (instr.OpCode.StackBehaviourPush == StackBehaviour.Pushi8)
-            return module.TypeSystem.Int64;
-        if (instr.OpCode.StackBehaviourPush == StackBehaviour.Pushr4)
-            return module.TypeSystem.Single;
-        if (instr.OpCode.StackBehaviourPush == StackBehaviour.Pushr8)
-            return module.TypeSystem.Double;
-
-        return module.TypeSystem.Object;
+            StartLine = point.StartLine,
+            StartColumn = point.StartColumn,
+            EndLine = point.EndLine,
+            EndColumn = point.EndColumn,
+        };
     }
 
     private void WrapSingleAssertion(
         MethodDefinition method,
         ILProcessor il,
         AssertionStatement assertion,
+        StackAnalysis.Slot[] entry,
+        StackAnalysis.Slot[] exit,
         MethodReference passedRef,
         MethodReference failedRef,
         MethodReference passedWithValuesRef,
@@ -2157,7 +2262,7 @@ public class AssertionWeaver
         // instead of wrapping the visible SP range (which spans await suspend/resume machinery).
         if (assertion.IsAwaited && assertion.GetResultInstruction != null)
         {
-            WrapAwaitedAssertion(method, il, assertion, passedRef, failedRef,
+            WrapAwaitedAssertion(method, il, assertion, exit, passedRef, failedRef,
                 passedWithValuesRef, failedWithValuesRef, getMessageRef, exceptionTypeRef);
             return;
         }
@@ -2165,27 +2270,38 @@ public class AssertionWeaver
         // Find the instruction AFTER the last assertion instruction
         var afterLastInstr = lastInstr.Next;
 
-        // Compute exit stack depth BEFORE any modifications. Release-mode multi-dup patterns
-        // (multiple null-conditional assertions sharing a subject via dup;dup;brtrue) leave
-        // values on the stack for subsequent assertions. Since 'leave' clears the stack,
-        // we spill exit values into locals before the leave and reload them after the catch.
-        var exitStackDepth = ComputeExitStackDepth(body, firstInstr, lastInstr);
+        // A return part-way through the statement leaves to the method's own return after it instead (PlanStack
+        // left the statement unwoven unless that return is there and the method returns no value).
+        foreach (var ret in Range(firstInstr, lastInstr).Where(i => i.OpCode == OpCodes.Ret).ToList())
+        {
+            ret.OpCode = OpCodes.Leave;
+            ret.Operand = afterLastInstr;
+        }
 
-        // In Release builds, the compiler may leave values on the evaluation stack across
-        // sequence point boundaries (e.g. GetResult() return value feeds directly into Should()).
-        // The CLR requires the stack to be empty at try block entry points. Detect this case
-        // and spill any stack values into temp locals, reloading them inside the try block.
-        var spillLocals = SpillStackIfNeeded(body, il, firstInstr);
+        // Values the statement leaves on the stack for the code after it (Release builds share one subject
+        // between assertions with dup): 'leave' clears the stack, so they are stored before it and loaded back
+        // after the catch.
+        var exitStackDepth = exit.Length;
+
+        // In Release builds, the compiler may leave values on the evaluation stack across sequence point
+        // boundaries (a Shouldly subject pushed before the statement, a GetResult() value fed straight into
+        // Should()). The CLR requires the stack to be empty where a try starts, so they are stored in locals of
+        // their own types and loaded back inside the try.
+        var spillLocals = SpillStack(method, il, firstInstr, entry);
 
         // Create try-start nop (we'll insert before the first instruction)
         var tryStart = il.Create(OpCodes.Nop);
         il.InsertBefore(firstInstr, tryStart);
+        var prologueStart = tryStart;
+        for (var s = 0; s < (spillLocals?.Count ?? 0); s++)
+            prologueStart = prologueStart.Previous!;
+        MoveSequencePoint(method, assertion.SequencePoint, prologueStart);
 
         // Reload spilled values after tryStart (inside the try block, before firstInstr)
         if (spillLocals != null)
         {
             foreach (var spillLocal in spillLocals)
-                il.InsertBefore(firstInstr, il.Create(OpCodes.Ldloc, spillLocal));
+                il.InsertBefore(firstInstr, LoadSlot(il, spillLocal));
         }
 
         // Fix handler nesting: if any existing exception handler's TryStart references
@@ -2348,25 +2464,21 @@ public class AssertionWeaver
 
         // Exit-spill: when the assertion leaves values on the stack for subsequent assertions,
         // save them before 'leave' (which clears the stack) and reload after the catch.
-        List<VariableDefinition>? exitSpillLocals = null;
+        List<VariableDefinition?>? exitSpillLocals = null;
         Instruction? truePathExitStart = null;
         Instruction? nullPathExitStart = null;
 
         if (exitStackDepth > 0 && afterLastInstr != null)
         {
-            exitSpillLocals = new List<VariableDefinition>(exitStackDepth);
+            exitSpillLocals = new List<VariableDefinition?>(exitStackDepth);
             for (var i = 0; i < exitStackDepth; i++)
-            {
-                var local = new VariableDefinition(module.TypeSystem.Object);
-                body.Variables.Add(local);
-                exitSpillLocals.Add(local);
-            }
+                exitSpillLocals.Add(SlotLocal(method, exit[i]));
 
             // True-path: save exit values (top of stack first) after AssertionPassed
-            truePathExitStart = il.Create(OpCodes.Stloc, exitSpillLocals[exitStackDepth - 1]);
+            truePathExitStart = StoreSlot(il, exitSpillLocals[exitStackDepth - 1]);
             il.InsertBefore(afterLastInstr, truePathExitStart);
             for (var i = exitStackDepth - 2; i >= 0; i--)
-                il.InsertBefore(afterLastInstr, il.Create(OpCodes.Stloc, exitSpillLocals[i]));
+                il.InsertBefore(afterLastInstr, StoreSlot(il, exitSpillLocals[i]));
         }
 
         // leave to after the catch
@@ -2382,10 +2494,10 @@ public class AssertionWeaver
         // are still on the stack. Save them before leaving the try block.
         if (exitSpillLocals != null)
         {
-            nullPathExitStart = il.Create(OpCodes.Stloc, exitSpillLocals[exitStackDepth - 1]);
+            nullPathExitStart = StoreSlot(il, exitSpillLocals[exitStackDepth - 1]);
             il.InsertBefore(afterLastInstr!, nullPathExitStart);
             for (var i = exitStackDepth - 2; i >= 0; i--)
-                il.InsertBefore(afterLastInstr!, il.Create(OpCodes.Stloc, exitSpillLocals[i]));
+                il.InsertBefore(afterLastInstr!, StoreSlot(il, exitSpillLocals[i]));
             il.InsertBefore(afterLastInstr!, il.Create(OpCodes.Leave, afterCatch));
         }
 
@@ -2457,7 +2569,7 @@ public class AssertionWeaver
         if (exitSpillLocals != null)
         {
             for (var i = 0; i < exitStackDepth; i++)
-                il.InsertBefore(afterLastInstr!, il.Create(OpCodes.Ldloc, exitSpillLocals[i]));
+                il.InsertBefore(afterLastInstr!, LoadSlot(il, exitSpillLocals[i]));
         }
 
         // Retarget any outbound branches (from null-propagation ?.) to the null-path exit
@@ -2497,6 +2609,7 @@ public class AssertionWeaver
         MethodDefinition method,
         ILProcessor il,
         AssertionStatement assertion,
+        StackAnalysis.Slot[] exit,
         MethodReference passedRef,
         MethodReference failedRef,
         MethodReference passedWithValuesRef,
@@ -2514,33 +2627,8 @@ public class AssertionWeaver
 
         var getResultInstr = assertion.GetResultInstruction!;
 
-        // Find the first instruction at the merge point that we need to wrap.
-        // This is typically: ldloca.s awaiter (or ldloc.s/ldloc) before GetResult().
-        // Walk backwards from GetResult to find the load of the awaiter address.
-        var mergeStart = getResultInstr;
-        var prev = getResultInstr.Previous;
-        if (prev != null && (prev.OpCode == OpCodes.Ldloca || prev.OpCode == OpCodes.Ldloca_S ||
-                             prev.OpCode == OpCodes.Ldloc || prev.OpCode == OpCodes.Ldloc_S ||
-                             prev.OpCode == OpCodes.Ldloc_0 || prev.OpCode == OpCodes.Ldloc_1 ||
-                             prev.OpCode == OpCodes.Ldloc_2 || prev.OpCode == OpCodes.Ldloc_3))
-        {
-            mergeStart = prev;
-        }
-
-        // Determine what comes after GetResult() — could be a pop (void), stloc (result stored),
-        // or nothing (result consumed directly). We need to include the pop if present.
-        var mergeEnd = getResultInstr;
-        var afterGetResult = getResultInstr.Next;
-        if (afterGetResult != null && afterGetResult.OpCode == OpCodes.Pop)
-        {
-            mergeEnd = afterGetResult;
-        }
-        else if (afterGetResult != null && afterGetResult.OpCode == OpCodes.Nop)
-        {
-            // Debug builds may have a nop after void GetResult
-            mergeEnd = afterGetResult;
-        }
-
+        // The merge point's read of the result: the awaiter's load, GetResult() and a pop or nop after a void one.
+        var (mergeStart, mergeEnd) = AwaitedRange(getResultInstr);
         var afterMergeEnd = mergeEnd.Next;
 
         // Insert tryStart nop before array construction AND the merge point.
@@ -2688,6 +2776,16 @@ public class AssertionWeaver
             }
         }
 
+        // A result the code after the await reads (var ex = await Should.ThrowAsync<T>(...)) is still on the stack
+        // where the try ends, and 'leave' clears the stack: store it first and load it back after the catch.
+        List<VariableDefinition?>? exitLocals = null;
+        if (exit.Length > 0 && afterMergeEnd != null)
+        {
+            exitLocals = exit.Select(slot => SlotLocal(method, slot)).ToList();
+            for (var i = exit.Length - 1; i >= 0; i--)
+                il.InsertBefore(afterMergeEnd, StoreSlot(il, exitLocals[i]));
+        }
+
         // Leave to after catch
         var afterCatch = il.Create(OpCodes.Nop);
         var leaveInstr = il.Create(OpCodes.Leave, afterCatch);
@@ -2759,6 +2857,10 @@ public class AssertionWeaver
             CatchType = exceptionTypeRef
         };
         body.ExceptionHandlers.Insert(0, handler);
+
+        if (exitLocals != null)
+            foreach (var local in exitLocals)
+                il.InsertBefore(afterMergeEnd!, LoadSlot(il, local));
     }
 }
 
@@ -2817,4 +2919,7 @@ public class WeaveResult
     public int MethodCount { get; set; }
     public string? SkipReason { get; set; }
     public List<string> DiagMessages { get; set; } = new List<string>();
+
+    /// <summary>The assertion statements found but left unwoven, each with where it is and why.</summary>
+    public List<string> Unwoven { get; set; } = new List<string>();
 }

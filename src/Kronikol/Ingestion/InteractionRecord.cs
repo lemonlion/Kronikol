@@ -133,6 +133,17 @@ public sealed record InteractionRecord
     /// <summary>Assertion markers: the failure message shown under a failed assertion.</summary>
     [JsonPropertyName("message")] public string? Message { get; init; }
 
+    /// <summary>
+    /// Assertion markers: the file the assertion is written in, as the tests feed's <c>assertion</c> record carries
+    /// it. With <see cref="SourceLine"/> it gives the note the source comment an in-process assertion's note has
+    /// (the file name only), which the report's source links read. It had none (SHOULDLY_ASSERTIONS_PLAN section 8,
+    /// item 4).
+    /// </summary>
+    [JsonPropertyName("sourceFile")] public string? SourceFile { get; init; }
+
+    /// <summary>Assertion markers: the line in <see cref="SourceFile"/>.</summary>
+    [JsonPropertyName("sourceLine")] public int? SourceLine { get; init; }
+
     /// <summary>Record kinds (<see cref="Kind"/>).</summary>
     public static class Kinds
     {
@@ -378,7 +389,7 @@ public sealed record InteractionRecord
         var isStep = string.Equals(Kind, Kinds.Step, StringComparison.OrdinalIgnoreCase);
         var plantUml = isStep
             ? StepDelimiterPlantUml(Keyword, Text, Table, DocString)
-            : AssertionNotePlantUml(Text, Passed ?? true, Message);
+            : AssertionNotePlantUml(Text, Passed ?? true, Message) + SourceComment();
         // Classified at the source, as the in-process emitters classify theirs: step attribution advances
         // its cursor on Step, the annotation export lists Row and Custom, and the Setup partition treats a
         // narration marker differently from a boundary. Unclassified, every one of them read as Custom.
@@ -440,6 +451,12 @@ public sealed record InteractionRecord
             table is { Length: > 0 } ? [new Kronikol.PlantUml.StepBarTable(null, table)] : null,
             docString);
     }
+
+    /// <summary>The source comment Track puts after an assertion's note, from the record's file and line, or nothing.</summary>
+    private string SourceComment() =>
+        SourcePaths.FileName(SourceFile) is { Length: > 0 } file && SourceLine is > 0 and var line
+            ? $"\n'__^*__:{file}:L{line}"
+            : "";
 
     /// <summary>The assertion note Kronikol's assertion tracking draws: green ✓ / red ✗ <c>hnote across &lt;&lt;assertionNote&gt;&gt;</c>.</summary>
     public static string AssertionNotePlantUml(string? text, bool passed, string? message)

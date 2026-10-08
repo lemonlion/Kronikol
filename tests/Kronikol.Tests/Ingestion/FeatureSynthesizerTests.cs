@@ -215,6 +215,25 @@ public class FeatureSynthesizerTests
         Assert.Null(third.Labels);
     }
 
+    [Fact]
+    public void An_ingested_assertion_is_marked_and_a_step_without_a_keyword_is_not()
+    {
+        // #145: both are keyword-less, and only the assertion is one (SHOULDLY_ASSERTIONS_PLAN section 3.10).
+        var records = new List<TestRunRecord>
+        {
+            new() { Event = "start", TestId = "mark", TestName = "charges a card", Timestamp = T0 },
+            new() { Event = "step", TestId = "mark", Text = "a saved card", Status = "passed", Timestamp = T0.AddSeconds(1) },
+            new() { Event = "assertion", TestId = "mark", Text = "the charge settled", Status = "passed", Timestamp = T0.AddSeconds(2) },
+            new() { Event = "end", TestId = "mark", Status = "passed", Timestamp = T0.AddSeconds(3) },
+        };
+
+        var scenario = FeatureSynthesizer.Build(records, logs: null).Features.Single().Scenarios.Single();
+        var steps = scenario.Steps!.SelectMany(s => new[] { s }.Concat(s.SubSteps ?? [])).ToArray();
+
+        Assert.False(steps.Single(s => s.Text == "a saved card").IsAssertion);
+        Assert.True(steps.Single(s => s.Text.EndsWith("the charge settled", StringComparison.Ordinal)).IsAssertion);
+    }
+
     /// <summary>
     /// <c>plans/INGEST_FIDELITY_PLAN.md</c> T9 and T10: where a test is written and why a step failed. The model had every
     /// field (the digest's "written at" and failing step, CTRF's <c>filePath</c>, <c>kronikol query failures</c>); the

@@ -794,6 +794,7 @@ this table missed, and the skill references under `.claude/skills/` and `templat
 | Q8 | ILVerify as a test dependency | **Yes**, in the weaver's test project only; nothing ships with it |
 | Q9 | R1 and R2 as two releases | **Yes, in that order.** R1 fixes live defects for every FluentAssertions user (rule 1) and is small; R2 rewrites shared weaver code and should not hold them |
 | Q10 | The source rewriter | **Out of scope**; §8 item 1 recommends removing it |
+| Q11 | *(added in R2, open)* R1's scope limit: a failure that uninstrumented code adds to an `AssertionScope` is drawn on the next instrumented assertion in it | **Leave it for now.** Removing it needs the weave to call a new public `Track` member before each assertion, so the weave could use it only against a Kronikol that has the member, and the weaver would need a second path for an older one. The limit is pinned by a fact and stated in the wiki; take it if a suite meets it |
 
 ## Appendix A. Edit sites
 
@@ -876,3 +877,68 @@ this table missed, and the skill references under `.claude/skills/` and `templat
   Summary Preview 37773056576 on `3ac6ac5c`; nuget.org lists all 62 ids at 4.12.3. The wiki has R1's edits
   (`44170c9`, with a sentence the draft missed: TUnit's `Assert.Multiple()` is read as a scope too) and Kronikol4J's
   ledger its line (`864e5f4`).
+- 2026-10-08, R2 (4.14.0): Shouldly, the stack analysis, `KRONIKOL001` and the assertion field, with §11 taken as
+  recommended (Q1 the field, Q2 the code `KRONIKOL001`, Q3 no subject value, Q4 a row per condition and one for the
+  call, Q5 a suite's `[ShouldlyMethods]` helper one row and not woven inside, Q6 Shouldly 4.x with facts on
+  5.0.0-preview.2, Q8 ILVerify in the weaver's tests only, Q9 two releases), and what execution found.
+  - **The ILVerify net (Q8) found two defects in every weave the weaver has shipped.** Its first run over the weaver
+    suite's fixtures failed 151 facts on two errors the weave adds: the marker attribute's constructor never ran
+    its base constructor (`ThisUninitReturn`), and a method that gained locals from the weave, a lambda the compiler
+    wrote without any, kept no `localsinit` flag (`InitLocals`). The runtime accepts both and ILVerify does not. Both
+    are fixed, every weave in the weaver's tests goes through the net (`WovenIl`), and a fact holds that none goes
+    around it. On 4.12.3 the net turns 263 of the suite's 284 run facts red (`harness/r2/red-4.12.3-weaver-net-on.txt`).
+  - **F21 is fixed by the stack analysis (§3.2).** One worklist pass per method names each value on the stack and
+    the instruction that pushed it, and the weave stores and reloads exactly those, in locals of their own types.
+    Building it found two more shapes in Shouldly's Release IL: a `null` the compiler leaves on the stack
+    (`name.ShouldBe(null)`), which a local typed `object` handed back where the call wants its own type, and a `ret`
+    inside the statement (`order?.Name.ShouldBe("a")` ending a void method), which cannot stay inside a `try`. A
+    `null` is pushed again rather than reloaded, and the `ret` leaves to the method's own return.
+  - **A statement a branch enters part-way is left unwoven (found in execution).** A crafted fact that branches into
+    the middle of an assertion statement found the weave wrapping it in a `try` the branch then entered (ILVerify's
+    `BranchIntoTry`). No compiler is known to write that shape; the weave now leaves such a statement as written and
+    lists it, as it does one whose stack the analysis cannot follow.
+  - **Shouldly's message in Release (§3.3, measured):** §3.3 said the weave leaves the message as it is. In Debug it
+    does. In Release an unwoven build's message quotes the line above the assertion (Shouldly reads the failing
+    frame's source line, and when the compiler keeps the subject on the stack the frame resolves to the previous
+    statement's line), while the woven build names the subject, because the weave moves the statement's sequence
+    point onto its prologue. The Release facts compare the woven message with the unwoven Debug one; on 4.12.3 the
+    unwoven Release message starts `3;` or `string? name = null;` (`harness/r2/red-4.12.3-weaver-net-off.txt`).
+  - **The weave searched the build's current directory before the project's references (found in execution).**
+    Cecil's default resolver looks in `.` and `bin` first. In the Shouldly 5 facts the test process's own Shouldly
+    4.3.0 resolved there, Shouldly 5's methods were missing from it, and a custom message stayed in the label. The
+    weave searches the references first when the build hands it them.
+  - **Section 8 items 2 and 4.** TUnit's `Assert.That(x).IsEqualTo(y)` reads `X is equal to y` with its values. The
+    interactions feed's assertion record takes `sourceFile` and `sourceLine` for its note's source comment; item 4's
+    step part is not done, by design: the interactions feed draws the diagram and makes no step of any record, its
+    step markers included, and the tests feed's `assertion` event, which makes the step, now carries the mark.
+  - **#145's mark is read from 4.14.0** (`ReportIndex.AssertionMarkSince`): a report from an earlier version keeps the
+    keyword-less inference, so `query assertions` on an old report answers as it did.
+  - **Not done, and why:** R1's scope limit stays (a failure that uninstrumented code adds to a scope is drawn on the
+    next instrumented assertion in it). Removing it needs the weave to call a new public `Track` member before each
+    assertion, and a build that references an older Kronikol cannot call one; it was never in R2's list. It is §11's
+    Q11.
+  - **Found on the way:** `Track.That` read no values when a string literal in the assertion's arguments held a
+    bracket; two summaries in the weaver sat on the wrong method after R2's own edit (caught before release); the
+    LightBDD step decorator's doc comment linked the `StepCollector` overloads without a test id, where it calls the
+    ones with one; four S0 build logs the harness README cites were never committed (`*.log` is ignored) and are
+    force-added now.
+  - **Proofs:** on 4.12.3, with compile stubs for the members R2 adds (declared and never read), the new
+    facts fail for their own reasons (`harness/r2/red-4.12.3-*.txt`). With the IL net on, 263 of the weaver suite's 284
+    run facts fail on 4.12.3's constructor defect; with it off, every new weaver fact fails on what 4.12.3 does (no
+    Shouldly weave, F21's `InvalidProgramException`, the unwoven Release message quoting the line above, no warning,
+    nothing listed), except three guards that hold there by design (a suite's own `ShouldBe` is not an assertion, no
+    warning without the attribute, the scan that every weave goes through the net); 37 core rows and the Playwright
+    fact fail. 29 mutations, each undoing one behaviour (§4.3's M1 to M9 and M15 to M18, then M18b to M28 for what
+    execution added), are each caught (`harness/r2/mutations.txt`). M7 and M28 survived the first run, so two facts
+    were strengthened: the custom-message fact reads the woven IL, with a message passed by name too, and a task fact
+    reads the listing a default-verbosity build prints (4.12.3 has no such listing). The half of M7 that captures a
+    `[CallerArgumentExpression]` argument is equivalent: the compiler passes a literal, which the weave never reads
+    as a value. The weaver suite passes in Release on net8.0, net9.0 and net10.0 (230, 258 and 286, the rest SDKs
+    not installed), the core suite 7,095 with 2 skipped, the full Playwright suite 998 with 28 skipped, and
+    release.slnf builds in Release and packs every target (62 packages).
+  - **Acceptance on local packages** (an isolated NuGet cache, a version label nuget.org never has): the plan's probe
+    weaves 14 statements in 13 methods of a Shouldly-only build in Debug and in Release (4.9.0 to 4.13.x weave none),
+    and with its controls 21 in 19 methods in Debug, in Release and with an embedded PDB. Every Shouldly case draws
+    its sentence and Shouldly's message, naming the subject in Release, and F21's control fails with its own message
+    where 4.11.0 and 4.12.3 threw `InvalidProgramException`. With `<DebugType>none</DebugType>` the build warns
+    `KRONIKOL001`, and `-warnaserror` fails it (`harness/r2/acceptance/`).

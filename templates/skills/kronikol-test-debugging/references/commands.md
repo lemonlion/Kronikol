@@ -157,7 +157,9 @@ scenario's `stableId` and example values.
 
 ### `assertions <report> [s3] [--failed]`
 Every tracked assertion, flat: expression with resolved values, pass/fail, failure message, source
-location. Omit the address for the whole run.
+location. Omit the address for the whole run. From 4.14.0 the data file marks each tracked assertion
+(`"assertion": true`) and the verb lists the marked steps; a report from an earlier version is read as
+before, taking every step without a keyword.
 
 Assertions reach the data file only when `IncludeTrackedAssertionsInStepList` is on. When it is off they
 exist only in the diagram — `note` finds them there.

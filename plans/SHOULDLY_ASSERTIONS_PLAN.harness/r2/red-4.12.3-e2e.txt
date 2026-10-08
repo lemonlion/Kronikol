@@ -1,0 +1,6 @@
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 4 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+
+FAIL Kronikol.Tests.EndToEnd.ShouldlyAssertionNoteTests.A_Shouldly_assertion_note_paints_its_sentence
+     Assert.Contains() Failure: Sub-string not found
+     String:    "Caller OrderService Caller OrderService GET /api/o"···
+     Not found: "Result should be '5'"

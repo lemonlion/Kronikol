@@ -87,23 +87,30 @@ public static class ClosureValueResolver
             ? expression["() => ".Length..]
             : expression;
 
-        // Find .Should(). and then the method args
+        // Find .Should(). and then the method args; a Shouldly assertion is the call itself
+        // (`result.ShouldBe(42)`, `Should.Throw<T>(…)`), so its own arguments are the ones read.
         var shouldIdx = expr.IndexOf(".Should().", StringComparison.Ordinal);
-        if (shouldIdx < 0)
+        string afterShould;
+        if (shouldIdx >= 0)
+            afterShould = expr[(shouldIdx + ".Should().".Length)..];
+        else if (ShouldlyCall(expr) is var shouldly and >= 0)
+            afterShould = expr[shouldly..];
+        else
             return null;
-
-        var afterShould = expr[(shouldIdx + ".Should().".Length)..];
 
         // Find the opening paren of the assertion method
         var parenIdx = afterShould.IndexOf('(');
         if (parenIdx < 0)
             return null;
 
-        // Extract content between outermost parens
+        // Extract content between outermost parens, skipping brackets inside string and character literals
+        var literal = AssertionExpressionFormatter.LiteralMask(afterShould);
         var depth = 0;
         var start = parenIdx + 1;
         for (var i = parenIdx; i < afterShould.Length; i++)
         {
+            if (literal[i])
+                continue;
             switch (afterShould[i])
             {
                 case '(':
@@ -118,6 +125,22 @@ public static class ClosureValueResolver
         }
 
         return null;
+    }
+
+    /// <summary>Where a Shouldly call's method name starts (<c>ShouldBe</c> in <c>result.ShouldBe(42)</c>,
+    /// <c>Throw</c> in <c>Should.Throw&lt;T&gt;(…)</c>), or -1.</summary>
+    private static int ShouldlyCall(string expr)
+    {
+        if (expr.StartsWith("Should.", StringComparison.Ordinal))
+            return "Should.".Length;
+        for (var at = expr.IndexOf(".Should", StringComparison.Ordinal); at >= 0;
+             at = expr.IndexOf(".Should", at + 1, StringComparison.Ordinal))
+        {
+            var next = at + ".Should".Length;
+            if (next < expr.Length && char.IsUpper(expr[next]))
+                return at + 1;
+        }
+        return -1;
     }
 
     private static List<(string Name, object? Value)> GetClosureFields(object target)

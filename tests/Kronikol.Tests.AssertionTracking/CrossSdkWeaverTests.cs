@@ -717,6 +717,51 @@ public class CrossSdkWeaverTests
 
     // ========== Helpers ==========
 
+    // ========== Shouldly (SHOULDLY_ASSERTIONS_PLAN fact 18) ==========
+
+    /// <summary>A source with its FluentAssertions calls in Shouldly's shape: <c>x.Should().Be(y)</c> is <c>x.ShouldBe(y)</c>.</summary>
+    private static string InShouldly(string source) =>
+        source.Replace("using FluentAssertions;", "using Shouldly;").Replace(".Should().", ".Should");
+
+    private static readonly (string Name, string Source, string[] Methods)[] Sources =
+    [
+        ("AsyncNoAwait", AsyncNoAwaitSource, ["The_value_should_not_be_null", "The_value_should_be_hello"]),
+        ("AsyncWithAwait", AsyncWithAwaitSource, ["Delayed_assertion", "Multiple_assertions_with_await"]),
+        ("NullConditional", NullConditionalSource, ["Null_conditional_assertion", "Null_conditional_with_null_value"]),
+        ("TernaryAsync", TernaryAsyncSource, ["Ternary_assertion"]),
+        ("TryCatchFinally", TryCatchFinallySource, ["Try_catch_finally_assertion"]),
+        ("SwitchExpression", SwitchExpressionSource, ["Switch_expression_assertion"]),
+        ("AwaitUsing", AwaitUsingSource, ["Await_using_assertion"]),
+    ];
+
+    public static TheoryData<string, string, string> ShouldlyCases()
+    {
+        var data = new TheoryData<string, string, string>();
+        foreach (var sdk in new[] { "8.0", "9.0", "10.0", "11.0" })
+            foreach (var configuration in new[] { "Debug", "Release" })
+                foreach (var source in Sources)
+                    data.Add(sdk, configuration, source.Name);
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(ShouldlyCases))]
+    public void Shouldly_source_weaves_and_executes(string sdk, string configuration, string sourceName)
+    {
+        var (_, source, methods) = Sources.Single(s => s.Name == sourceName);
+        var name = $"Shouldly{sdk.Replace(".0", "")}{sourceName}{configuration}";
+        if (sdk == "11.0")
+        {
+            SkipIfNet11Missing();
+            AssertWeaveAndExecute(name, InShouldly(source), "11.0.100-preview.3", "net10.0", configuration, methods,
+                dotnetPath: DotNet11Path);
+            return;
+        }
+
+        SkipIfSdkMissing(sdk);
+        AssertWeaveAndExecute(name, InShouldly(source), sdk + ".0", "net" + sdk, configuration, methods);
+    }
+
     private static void SkipIfSdkMissing(string sdkMajorMinor)
     {
         if (!TestAssemblyBuilder.IsSdkAvailable(sdkMajorMinor))
@@ -748,7 +793,7 @@ public class CrossSdkWeaverTests
             name, source, sdkVersion, tfm, configuration, dotnetPath);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().BeGreaterThan(0,
             $"weaver should instrument assertions in assembly compiled by SDK {sdkVersion} ({configuration})");

@@ -14,7 +14,7 @@ public class AssertionTrackingPackageTests
         AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Kronikol.AssertionTracking"));
 
     /// <summary>Every library the weaver instruments today.</summary>
-    private static readonly string[] Libraries = ["FluentAssertions", "AwesomeAssertions", "TUnit"];
+    private static readonly string[] Libraries = ["FluentAssertions", "AwesomeAssertions", "Shouldly", "TUnit"];
 
     [Fact]
     public void The_package_description_names_the_attribute_and_the_libraries()

@@ -75,6 +75,10 @@ public class CucumberFeatureMergerTests
         Assert.Equal($"{Track.FailSymbol} the order is confirmed", failed.Text);
         Assert.Equal(ExecutionResult.Failed, failed.Status);
         Assert.Contains("nope", failed.Comments!);
+
+        // Each carries the data file's assertion mark (#145); the Gherkin steps do not.
+        Assert.All(scenario.Steps!.SelectMany(s => s.SubSteps!), step => Assert.True(step.IsAssertion));
+        Assert.All(scenario.Steps!, step => Assert.False(step.IsAssertion));
     }
 
     [Fact]

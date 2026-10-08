@@ -49,7 +49,7 @@ public static partial class AssertionExpressionFormatter
         // Split on .Should().
         var match = ShouldSplitRegex.Match(expr);
         if (!match.Success)
-            return expr;
+            return FormatShouldly(expr, resolvedValues) ?? FormatTUnit(expr, resolvedValues) ?? expr;
 
         var subject = expr[..match.Index];
         var assertionPart = expr[(match.Index + match.Length)..];
@@ -74,6 +74,133 @@ public static partial class AssertionExpressionFormatter
         result = result.Replace(" to string ", " ");
 
         return result;
+    }
+
+    /// <summary>
+    /// Shouldly's two shapes, read by rule rather than by table, since its method list is long and grows:
+    /// <c>subject.ShouldMethod(args)</c> reads "{Subject} should {method words} {args}", the words being the method
+    /// name after <c>Should</c> split on case, and <c>Should.Throw&lt;T&gt;(…)</c> reads "Should throw T". An
+    /// <c>Async</c> suffix is not read, a type argument is named without its brackets, and an action written
+    /// <c>() =&gt; …</c> is not shown: Shouldly runs it (each condition of <c>ShouldSatisfyAllConditions</c> is a
+    /// row of its own). A custom message passed by name is not shown either; the weave leaves a positional one out
+    /// of the statement's text. Null when the expression is neither shape.
+    /// </summary>
+    private static string? FormatShouldly(string expr, Dictionary<string, string>? resolvedValues)
+    {
+        string subject, call;
+        if (expr.StartsWith("Should.", StringComparison.Ordinal))
+        {
+            subject = "";
+            call = expr["Should.".Length..];
+        }
+        else
+        {
+            var at = TopLevelShouldCall(expr);
+            if (at < 0)
+                return null;
+            subject = expr[..at];
+            call = expr[(at + 1 + "Should".Length)..];
+        }
+
+        var (method, args) = ParseMethodAndArgs(call);
+        string? typeArgument = null;
+        if (args is not null && args.StartsWith('<') && args.IndexOf('>') is > 0 and var close)
+        {
+            typeArgument = args[1..close];
+            args = args[(close + 1)..].TrimStart(',', ' ');
+        }
+
+        var words = SplitPascalCase(method).ToLowerInvariant();
+        if (words == "async" || words.EndsWith(" async", StringComparison.Ordinal))
+            words = words[..^"async".Length].TrimEnd();
+
+        var shown = SplitTopLevelCommas(args ?? "")
+            .Select(a => a.Trim())
+            .Where(a => a.Length > 0 &&
+                        !a.StartsWith("() =>", StringComparison.Ordinal) &&
+                        !a.StartsWith("async () =>", StringComparison.Ordinal) &&
+                        !a.StartsWith("customMessage:", StringComparison.Ordinal))
+            .ToArray();
+        var formattedArgs = FormatArgs(shown.Length == 0 ? null : string.Join(", ", shown), resolvedValues);
+
+        var sentence = new StringBuilder(subject.Length == 0 ? "Should" : FormatSubject(subject) + " should");
+        foreach (var part in new[] { words, typeArgument, formattedArgs })
+        {
+            if (!string.IsNullOrEmpty(part))
+                sentence.Append(' ').Append(part);
+        }
+        return sentence.ToString();
+    }
+
+    /// <summary>
+    /// TUnit's <c>Assert.That(subject).IsEqualTo(5)</c> reads "Subject is equal to 5": the subject between the
+    /// brackets of <c>Assert.That</c>, then the first assertion's words and its arguments, with resolved values put
+    /// in as for FluentAssertions. It was drawn as the raw code, and the values the weave read were dropped
+    /// (SHOULDLY_ASSERTIONS_PLAN section 8, item 2). Null when the expression is not that shape.
+    /// </summary>
+    private static string? FormatTUnit(string expr, Dictionary<string, string>? resolvedValues)
+    {
+        const string prefix = "Assert.That(";
+        if (!expr.StartsWith(prefix, StringComparison.Ordinal))
+            return null;
+
+        var literal = LiteralMask(expr);
+        var depth = 0;
+        var close = -1;
+        for (var i = prefix.Length - 1; i < expr.Length && close < 0; i++)
+        {
+            if (literal[i])
+                continue;
+            if (expr[i] == '(')
+                depth++;
+            else if (expr[i] == ')' && --depth == 0)
+                close = i;
+        }
+        if (close < 0 || close + 2 >= expr.Length || expr[close + 1] != '.')
+            return null;
+
+        var subject = expr[prefix.Length..close];
+        var assertionPart = expr[(close + 2)..];
+        foreach (var chain in new[] { ".And.", ".Or." })
+        {
+            var at = assertionPart.IndexOf(chain, StringComparison.Ordinal);
+            if (at >= 0)
+                assertionPart = assertionPart[..at];
+        }
+
+        var (method, args) = ParseMethodAndArgs(assertionPart);
+        var words = SplitPascalCase(method).ToLowerInvariant();
+        var formattedArgs = FormatArgs(args, resolvedValues);
+        return string.IsNullOrEmpty(formattedArgs)
+            ? $"{FormatSubject(subject)} {words}"
+            : $"{FormatSubject(subject)} {words} {formattedArgs}";
+    }
+
+    /// <summary>The index of the dot before the first <c>.ShouldX(</c> call outside brackets and literals, or -1:
+    /// the subject is what comes before it.</summary>
+    private static int TopLevelShouldCall(string expr)
+    {
+        var literal = LiteralMask(expr);
+        var depth = 0;
+        for (var i = 0; i < expr.Length; i++)
+        {
+            if (literal[i])
+                continue;
+            switch (expr[i])
+            {
+                case '(' or '[' or '{':
+                    depth++;
+                    break;
+                case ')' or ']' or '}':
+                    depth--;
+                    break;
+                case '.' when depth == 0 && i > 0 &&
+                              string.CompareOrdinal(expr, i + 1, "Should", 0, "Should".Length) == 0 &&
+                              i + 1 + "Should".Length < expr.Length && char.IsUpper(expr[i + 1 + "Should".Length]):
+                    return i;
+            }
+        }
+        return -1;
     }
 
     private static string FormatSubject(string subject)

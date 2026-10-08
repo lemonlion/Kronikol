@@ -9,9 +9,10 @@ namespace Kronikol.AssertionTracking;
 
 /// <summary>
 /// MSBuild task that runs after compilation and uses Mono.Cecil to instrument the assertion statements of
-/// FluentAssertions and AwesomeAssertions (<c>.Should()</c>) and TUnit (<c>Assert.That()</c>) with assertion
-/// tracking: a try/catch around each statement that calls Track.AssertionPassed/Track.AssertionFailed.
-/// Only activates if <c>[assembly: TrackAssertions]</c> is found in the compiled assembly. It reads the
+/// FluentAssertions and AwesomeAssertions (<c>.Should()</c>), Shouldly (<c>ShouldBe()</c> and the rest) and TUnit
+/// (<c>Assert.That()</c>) with assertion tracking: a try/catch around each statement that calls
+/// Track.AssertionPassed/Track.AssertionFailed. Only activates if <c>[assembly: TrackAssertions]</c> is found in the
+/// compiled assembly, and warns (KRONIKOL001) when that attribute finds nothing to instrument. It reads the
 /// statements from the build's symbols, a portable PDB beside the assembly or one embedded in it.
 /// </summary>
 public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
@@ -70,6 +71,28 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
         foreach (var message in result.DiagMessages)
             Log.LogMessage(MessageImportance.Low, "AssertionTracking: {0}", message);
 
+        // A statement the weave cannot account for is left as the compiler wrote it, never miscompiled; it still
+        // runs, untracked, and the build says where and why.
+        if (result.Unwoven.Count > 0)
+        {
+            Log.LogMessage(MessageImportance.Normal,
+                "Kronikol.AssertionTracking: Left {0} assertion statement(s) unwoven; they run as written, without a note:",
+                result.Unwoven.Count);
+            foreach (var unwoven in result.Unwoven)
+                Log.LogMessage(MessageImportance.Normal, "  {0}", unwoven);
+        }
+
+        // [assembly: TrackAssertions] asks for notes; a weave that can give none says why, as a warning with a code
+        // a project can silence with <NoWarn> (#144). It said so only at detailed verbosity, so a suite whose only
+        // library was not read looked tracked and drew nothing.
+        if (result.WeavedCount == 0 && NothingInstrumented(result) is { } reason)
+        {
+            Log.LogWarning(subcategory: null, warningCode: "KRONIKOL001", helpKeyword: null, file: null,
+                lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0,
+                message: "Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: {0}.",
+                reason);
+        }
+
         if (result.WeavedCount > 0)
         {
             Log.LogMessage(MessageImportance.Normal,
@@ -86,4 +109,19 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
 
         return true;
     }
+
+    private const string Libraries = "FluentAssertions, AwesomeAssertions, Shouldly or TUnit.Assertions";
+
+    /// <summary>Why a weave with the attribute declared instrumented nothing, or null when it is not a case to
+    /// warn about: no attribute, an assembly already woven, or statements the weave left unwoven and listed.</summary>
+    private static string? NothingInstrumented(WeaveResult result) => result.SkipReason switch
+    {
+        "No assertion library referenced" =>
+            $"the assembly references none of the libraries the weaver reads ({Libraries}); an assertion of another library can be drawn with Track.That(() => ...)",
+        { } skip when skip.StartsWith("No symbols", StringComparison.Ordinal) =>
+            "the build writes no symbols (<DebugType>none</DebugType>), and the weave finds each statement through them",
+        null when result.Unwoven.Count == 0 =>
+            $"no statement in the assembly calls an assertion of {Libraries}; an assertion of another library can be drawn with Track.That(() => ...)",
+        _ => null,
+    };
 }

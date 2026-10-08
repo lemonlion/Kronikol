@@ -22,7 +22,7 @@ internal static class WovenRun
         string name, string source, OptimizationLevel optimization, IReadOnlyList<string> extraReferences, int? woven = null)
     {
         var assemblyPath = TestAssemblyBuilder.Build(name, source, optimization, Microsoft.CodeAnalysis.Emit.DebugInformationFormat.PortablePdb, extraReferences);
-        var result = new AssertionWeaver().Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(new AssertionWeaver(), assemblyPath);
         if (woven is { } expected)
             Assert.Equal(expected, result.WeavedCount);
         return assemblyPath;

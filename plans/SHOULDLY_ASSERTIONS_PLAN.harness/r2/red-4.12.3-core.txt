@@ -1,0 +1,140 @@
+Failed!  - Failed:    37, Passed:   237, Skipped:     0, Total:   274, Duration: 220 ms - Kronikol.Tests.dll (net10.0)
+
+FAIL Kronikol.Tests.Packaging.AssertionTrackingPackageTests.The_package_description_names_the_attribute_and_the_libraries
+     Assert.Contains() Failure: Sub-string not found
+     String:    "IL weaver that draws each assertion in a test as a"···
+     Not found: "Shouldly"
+FAIL Kronikol.Tests.Tracking.ClosureValueResolverTests.A_Shouldly_call_has_its_arguments_read(expression: "() => Should.Throw<InvalidOperationException>(() ="···)
+     System.Collections.Generic.KeyNotFoundException : The given key 'expected' was not present in the dictionary.
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "greeting.ShouldBe(\"Hi!\")", expected: "Greeting should be \"Hi!\"")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Greeting should be "Hi!""
+FAIL Kronikol.Tests.Tracking.ClosureValueResolverTests.A_Shouldly_call_has_its_arguments_read(expression: "() => order.Name.ShouldContain(expected, \"why\")")
+     System.Collections.Generic.KeyNotFoundException : The given key 'expected' was not present in the dictionary.
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "Should.Throw<InvalidOperationException>(() => Run("···, expected: "Should throw InvalidOperationException")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 6)
+     Expected: "Should throw InvalidOperationException"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "action.ShouldThrow<ArgumentException>()", expected: "Action should throw ArgumentException")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Action should throw ArgumentException"
+FAIL Kronikol.Tests.Tracking.ClosureValueResolverTests.A_Shouldly_call_has_its_arguments_read(expression: "() => x.ShouldBe(expected)")
+     System.Collections.Generic.KeyNotFoundException : The given key 'expected' was not present in the dictionary.
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "result.ShouldBe(expected, customMessage: \"why\")", expected: "Result should be expected")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Result should be expected"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "name.ShouldNotBeNull()", expected: "Name should not be null")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Name should not be null"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "order?.Name.ShouldBe(\"a\")", expected: "Order name should be \"a\"")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Order name should be "a""
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "await Should.ThrowAsync<InvalidOperationException>"···, expected: "Should throw InvalidOperationException")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 6)
+     Expected: "Should throw InvalidOperationException"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "total.ShouldBeGreaterThan(3)", expected: "Total should be greater than 3")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Total should be greater than 3"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "order.ShouldSatisfyAllConditions(() => order.Id.Sh"···, expected: "Order should satisfy all conditions")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Order should satisfy all conditions"
+FAIL Kronikol.Tests.Packaging.AssertionTrackingPackageTests.A_shipped_comment_names_the_attribute_and_the_libraries(file: "AssertionWeaver.cs")
+     Assert.Contains() Failure: Sub-string not found
+     String:    "using System;\nusing System.Collections.Generic;\nus"···
+     Not found: "Shouldly"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "flags.ShouldHaveFlag(Flags.A)", expected: "Flags should have flag A")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Flags should have flag A"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "items.ShouldAllBe(x => x > 0)", expected: "Items should all be [ x => x > 0 ]")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Items should all be [ x => x > 0 ]"
+FAIL Kronikol.Tests.Packaging.AssertionTrackingPackageTests.A_shipped_comment_names_the_attribute_and_the_libraries(file: "Attributes/TrackAssertionsAttribute.cs")
+     Assert.Contains() Failure: Sub-string not found
+     String:    "// <auto-generated />\n// This file is included in "···
+     Not found: "Shouldly"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "result.ShouldBe(5)", expected: "Result should be 5")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Result should be 5"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "Should.NotThrow(() => Run())", expected: "Should not throw")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 6)
+     Expected: "Should not throw"
+FAIL Kronikol.Tests.Packaging.AssertionTrackingPackageTests.A_shipped_comment_names_the_attribute_and_the_libraries(file: "WeaveAssertionsTask.cs")
+     Assert.Contains() Failure: Sub-string not found
+     String:    "using System;\nusing System.Collections.Generic;\nus"···
+     Not found: "Shouldly"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.Shouldly_labels_read_as_sentences(expression: "order.ShouldBeOfType<Order>()", expected: "Order should be of type Order")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Order should be of type Order"
+FAIL Kronikol.Tests.Tracking.ClosureValueResolverTests.A_bracket_in_a_literal_does_not_cut_the_arguments_short
+     System.Collections.Generic.KeyNotFoundException : The given key 'expected' was not present in the dictionary.
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.TUnit_labels_read_as_sentences(expression: "Assert.That(result).IsEqualTo(5)", expected: "Result is equal to 5")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Result is equal to 5"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.TUnit_labels_read_as_sentences(expression: "await Assert.That(items).IsNotEmpty()", expected: "Items is not empty")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Items is not empty"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.TUnit_labels_read_as_sentences(expression: "await Assert.That(text).Contains(\"(\")", expected: "Text contains \"(\"")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Text contains "(""
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.TUnit_labels_read_as_sentences(expression: "Assert.That(order.Total).IsGreaterThan(3).And.IsLe"···, expected: "Order total is greater than 3")
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Order total is greater than 3"
+FAIL Kronikol.Tests.Ingestion.Cucumber.CucumberFeatureMergerTests.Assertions_nest_under_the_step_that_was_running
+     Assert.All() Failure: 3 out of 3 items in the collection did not pass.
+     [0]: Item:  ScenarioStep { Keyword = , IsAssertion = False, Text = ✓ the customer exists, Status = Passed, BypassReason = , Duration = , SubSteps = , Parameters = , Comments = , Attachments = , DocStr
+     Error: Assert.True() Failure
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_Shouldly_label_takes_resolved_values
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Result should be '5'"
+FAIL Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_TUnit_label_takes_resolved_values
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "Result is equal to '5'"
+FAIL Kronikol.Tests.Tracking.TrackThatTests.Track_That_with_Shouldly_resolves_values
+     Assert.Contains() Failure: Sub-string not found
+     String:    "\nhnote across <<assertionNote>> #d4edda\n✓ result.S"···
+     Not found: "Result should be '42'"
+FAIL Kronikol.Tests.Ingestion.FeatureSynthesizerTests.An_ingested_assertion_is_marked_and_a_step_without_a_keyword_is_not
+     Assert.True() Failure
+     Expected: True
+     Actual:   False
+FAIL Kronikol.Tests.Reports.AssertionMarkTests.A_step_without_a_keyword_is_not_an_assertion(writtenBy: "4.14.0", assertions: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   2
+FAIL Kronikol.Tests.Reports.AssertionMarkTests.A_step_without_a_keyword_is_not_an_assertion(writtenBy: "4.14.0-local.141", assertions: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   2
+FAIL Kronikol.Tests.Reports.AssertionMarkTests.A_tracked_assertion_is_marked_in_process
+     Assert.True() Failure
+     Expected: True
+     Actual:   False
+FAIL Kronikol.Tests.Reports.AssertionMarkTests.An_assertion_sub_step_is_marked_in_the_data_file
+     System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+FAIL Kronikol.Tests.Ingestion.InteractionRecordTests.An_assertion_marker_with_a_source_draws_the_note_its_source_comment
+     Assert.EndsWith() Failure: String end does not match
+     String:       ···"ionNote>> #d4edda\n✓ The banner is visible\nend note"
+     Expected end: "end note\n'__^*__:banner.spec.ts:L42"
+FAIL Kronikol.Tests.Reports.AssertionMarkTests.A_merged_report_keeps_the_mark
+     Assert.True() Failure
+     Expected: True
+     Actual:   False

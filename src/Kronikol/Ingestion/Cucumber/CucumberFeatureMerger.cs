@@ -211,6 +211,7 @@ public static class CucumberFeatureMerger
                      && !string.Equals(record.Status, "fail", StringComparison.OrdinalIgnoreCase);
         return new ScenarioStep
         {
+            IsAssertion = true,
             Text = $"{(passed ? Track.PassSymbol : Track.FailSymbol)} {record.Text ?? "assertion"}",
             Status = passed ? ExecutionResult.Passed : ExecutionResult.Failed,
             Comments = passed || string.IsNullOrWhiteSpace(record.Error) ? null : [record.Error!],

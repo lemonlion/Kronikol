@@ -372,4 +372,54 @@ public class AssertionExpressionFormatterTests
     {
         Assert.Equal(expected, AssertionExpressionFormatter.Format(expression));
     }
+
+    [Theory]
+    [InlineData("result.ShouldBe(5)", "Result should be 5")]
+    [InlineData("name.ShouldNotBeNull()", "Name should not be null")]
+    [InlineData("total.ShouldBeGreaterThan(3)", "Total should be greater than 3")]
+    [InlineData("order.ShouldBeOfType<Order>()", "Order should be of type Order")]
+    [InlineData("order.ShouldSatisfyAllConditions(() => order.Id.ShouldBe(2), () => order.Name.ShouldBe(\"b\"))", "Order should satisfy all conditions")]
+    [InlineData("Should.Throw<InvalidOperationException>(() => Run())", "Should throw InvalidOperationException")]
+    [InlineData("await Should.ThrowAsync<InvalidOperationException>(async () => await Run())", "Should throw InvalidOperationException")]
+    [InlineData("Should.NotThrow(() => Run())", "Should not throw")]
+    [InlineData("action.ShouldThrow<ArgumentException>()", "Action should throw ArgumentException")]
+    [InlineData("result.ShouldBe(expected, customMessage: \"why\")", "Result should be expected")]
+    [InlineData("items.ShouldAllBe(x => x > 0)", "Items should all be [ x => x > 0 ]")]
+    [InlineData("flags.ShouldHaveFlag(Flags.A)", "Flags should have flag A")]
+    [InlineData("order?.Name.ShouldBe(\"a\")", "Order name should be \"a\"")]
+    [InlineData("greeting.ShouldBe(\"Hi!\")", "Greeting should be \"Hi!\"")]
+    public void Shouldly_labels_read_as_sentences(string expression, string expected)
+    {
+        // By rule rather than by table (SHOULDLY_ASSERTIONS_PLAN section 3.5): the words after "Should", split on
+        // case; no Async; a type argument without its brackets; an action Shouldly runs, and a custom message
+        // passed by name, not shown.
+        Assert.Equal(expected, AssertionExpressionFormatter.Format(expression));
+    }
+
+    [Fact]
+    public void A_Shouldly_label_takes_resolved_values()
+    {
+        var label = AssertionExpressionFormatter.Format("result.ShouldBe(expected)", new Dictionary<string, string> { ["expected"] = "5" });
+
+        Assert.Equal("Result should be '5'", label);
+    }
+
+    [Theory]
+    [InlineData("Assert.That(result).IsEqualTo(5)", "Result is equal to 5")]
+    [InlineData("await Assert.That(items).IsNotEmpty()", "Items is not empty")]
+    [InlineData("Assert.That(order.Total).IsGreaterThan(3).And.IsLessThan(9)", "Order total is greater than 3")]
+    [InlineData("await Assert.That(text).Contains(\"(\")", "Text contains \"(\"")]
+    public void TUnit_labels_read_as_sentences(string expression, string expected)
+    {
+        // It was drawn as the raw code (SHOULDLY_ASSERTIONS_PLAN section 8, item 2).
+        Assert.Equal(expected, AssertionExpressionFormatter.Format(expression));
+    }
+
+    [Fact]
+    public void A_TUnit_label_takes_resolved_values()
+    {
+        var label = AssertionExpressionFormatter.Format("await Assert.That(result).IsEqualTo(expected)", new Dictionary<string, string> { ["expected"] = "5" });
+
+        Assert.Equal("Result is equal to '5'", label);
+    }
 }

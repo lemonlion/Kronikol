@@ -1,0 +1,826 @@
+Failed!  - Failed:   263, Passed:    21, Skipped:    28, Total:   312, Duration: 4 m 44 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+
+FAIL Kronikol.Tests.AssertionTracking.WovenIlVerifiesTests.An_error_the_compiler_wrote_is_not_counted(optimization: Debug)
+     The weave wrote IL that does not verify (NetCompilerErrorDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.StackAcrossStatementsTests.A_subject_kept_on_the_stack_across_a_statement_is_woven(library: "FluentAssertions", optimization: Release)
+     The weave wrote IL that does not verify (StackAcross_FluentAssertions_Release.dll):
+     Tests.Fails: StackUnexpected: Unexpected type on the stack. (Offset 3, Found Int32, Expected ref 'object')
+     Tests.Passes: StackUnexpected: Unexpected type on the stack. (Offset 3, Found Int32, Expected ref 'object')
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_LambdaClosure_ResolvesValue
+     The weave wrote IL that does not verify (AsyncLambdaClosure.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.StatementTextTests.A_lambda_condition_on_its_own_line_is_labelled_by_its_body(optimization: Release)
+     The weave wrote IL that does not verify (LambdaConditionText_Release.dll):
+     Tests.Method: StackUnexpected: Unexpected type on the stack. (Offset 17, Found ref 'object', Expected ref '[S.P.CoreLib]System.Collections.Generic.IEnumerable`1<int32>')
+     Tests/<>c.<Method>b__0_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_uninstrumented_code_adds_to_a_scope_is_drawn_on_the_next_assertion(library: "AwesomeAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (ScopeHelper_AwesomeAssertions_Debug.dll):
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Tests/<>c.<Inspectors>b__2_1: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.StackAnalysisTests.A_statement_the_analysis_cannot_type_is_left_unwoven_and_counted(optimization: Debug)
+     The weave wrote IL that does not verify (StackUnfollowable_Debug.dll):
+     Tests.Method: BranchIntoTry: Branch into try block. (Offset 3)
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.No_warning_when_something_is_woven
+     The weave wrote IL that does not verify (TaskWovenNoWarning.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.StackAcrossStatementsTests.A_subject_kept_on_the_stack_across_a_statement_is_woven(library: "FluentAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (StackAcross_FluentAssertions_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.WovenIlVerifiesTests.An_error_the_compiler_wrote_is_not_counted(optimization: Release)
+     The weave wrote IL that does not verify (NetCompilerErrorRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.StackAnalysisTests.A_statement_the_analysis_cannot_type_is_left_unwoven_and_counted(optimization: Release)
+     The weave wrote IL that does not verify (StackUnfollowable_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.StatementTextTests.A_lambda_condition_on_its_own_line_is_labelled_by_its_body(optimization: Debug)
+     The weave wrote IL that does not verify (LambdaConditionText_Debug.dll):
+     Tests/<>c.<Method>b__0_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Tests/<>c.<Method>b__0_1: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AwaitedFluentAssertionThrowAsync_Instruments(optimization: Release)
+     The weave wrote IL that does not verify (AwaitedThrowAsync_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_uninstrumented_code_adds_to_a_scope_is_drawn_on_the_next_assertion(library: "FluentAssertions", optimization: Release)
+     The weave wrote IL that does not verify (ScopeHelper_FluentAssertions_Release.dll):
+     Tests.Inspectors: StackUnexpected: Unexpected type on the stack. (Offset 17, Found ref 'object', Expected ref '[S.P.CoreLib]System.Collections.Generic.IEnumerable`1<int32>')
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_logs_a_method_it_leaves_unwoven
+     The weave wrote IL that does not verify (TaskStrippedMethod.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_woven_Shouldly_message_equals_the_unwoven_one(method: "ShouldBe_with_custom_message_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "result\r\n    should be\r\n5\r\n    but was\r\n3\r\n\r\nAdditi"···
+FAIL Kronikol.Tests.AssertionTracking.StackAcrossStatementsTests.A_subject_kept_on_the_stack_across_a_statement_is_woven(library: "AwesomeAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (StackAcross_AwesomeAssertions_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.Shouldly5PreviewTests.Shouldly_5_preview_is_woven(configuration: "Debug")
+     Assert.Equal() Failure: Values differ
+     Expected: 3
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.StackAnalysisTests.A_statement_a_branch_enters_part_way_is_left_unwoven(optimization: Debug)
+     The weave wrote IL that does not verify (StackEnteredPartWay_Debug.dll):
+     Tests.Method: BranchIntoTry: Branch into try block. (Offset 2)
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_woven_Shouldly_message_equals_the_unwoven_one(method: "ShouldBeTrue_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 1)
+     Expected: "flag\r\n    should be\r\nTrue\r\n    but was\r\nFalse"
+FAIL Kronikol.Tests.AssertionTracking.WovenIlVerifiesTests.The_net_catches_a_weave_that_leaves_a_value_on_the_stack(optimization: Release)
+     The weave wrote IL that does not verify (NetCatchesRelease.dll):
+     Tests.Method: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 3)
+     Tests.Method: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 51)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_woven_Shouldly_message_equals_the_unwoven_one(method: "ShouldBe_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "result\r\n    should be\r\n5\r\n    but was\r\n3"
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_woven_Shouldly_message_equals_the_unwoven_one(method: "ShouldNotBeNull_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Strings differ
+     ↓ (pos 0)
+     Expected: "name\r\n    should not be null but was"
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Debug_SwitchExpression_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10SwitchExprDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.StatementTextTests.A_statement_sharing_its_line_is_labelled_by_its_own_columns
+     The weave wrote IL that does not verify (SharedLineText.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AwaitedFluentAssertionThrowAsync_Instruments(optimization: Debug)
+     The weave wrote IL that does not verify (AwaitedThrowAsync_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_uninstrumented_code_adds_to_a_scope_is_drawn_on_the_next_assertion(library: "AwesomeAssertions", optimization: Release)
+     The weave wrote IL that does not verify (ScopeHelper_AwesomeAssertions_Release.dll):
+     Tests.Inspectors: StackUnexpected: Unexpected type on the stack. (Offset 17, Found ref 'object', Expected ref '[S.P.CoreLib]System.Collections.Generic.IEnumerable`1<int32>')
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_weaves_a_portable_pdb_as_before
+     The weave wrote IL that does not verify (TaskPortablePdb.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.StackAcrossStatementsTests.A_subject_kept_on_the_stack_across_a_statement_is_woven(library: "AwesomeAssertions", optimization: Release)
+     The weave wrote IL that does not verify (StackAcross_AwesomeAssertions_Release.dll):
+     Tests.Fails: StackUnexpected: Unexpected type on the stack. (Offset 3, Found Int32, Expected ref 'object')
+     Tests.Passes: StackUnexpected: Unexpected type on the stack. (Offset 3, Found Int32, Expected ref 'object')
+FAIL Kronikol.Tests.AssertionTracking.StackAnalysisTests.A_statement_a_branch_enters_part_way_is_left_unwoven(optimization: Release)
+     The weave wrote IL that does not verify (StackEnteredPartWay_Release.dll):
+     Tests.Method: BranchIntoTry: Branch into try block. (Offset 2)
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.WovenIlVerifiesTests.The_net_catches_a_weave_that_leaves_a_value_on_the_stack(optimization: Debug)
+     The weave wrote IL that does not verify (NetCatchesDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_condition_lambdas_closure_value_is_captured(optimization: Debug)
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Order id should be '2'", "Order should satisfy all conditions"]
+FAIL Kronikol.Tests.AssertionTracking.StatementTextTests.A_statement_alone_on_its_line_reads_as_before
+     The weave wrote IL that does not verify (AloneOnLineText.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_uninstrumented_code_adds_to_a_scope_is_drawn_on_the_next_assertion(library: "FluentAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (ScopeHelper_FluentAssertions_Debug.dll):
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Tests/<>c.<Inspectors>b__2_1: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_LoopWithTryCatch_DoesNotThrow(optimization: Debug)
+     The weave wrote IL that does not verify (AsyncLoopTryCatchDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_warns_when_the_build_has_no_symbols
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.Shouldly5PreviewTests.Shouldly_5_preview_is_woven(configuration: "Release")
+     Assert.Equal() Failure: Values differ
+     Expected: 3
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_condition_lambdas_closure_value_is_captured(optimization: Release)
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Order id should be '2'", "Order should satisfy all conditions"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldNotBeEmpty_fails", labels: ["Items should not be empty"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Items should not be empty"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBe_array_initializer_passes", labels: ["Items should be new[] { 1, 2 }"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Items should be new[] { 1, 2 }"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "Should_ThrowAsync_fails", labels: ["Should throw InvalidOperationException"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Should throw InvalidOperationException"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBe_passes", labels: ["Result should be 3"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Result should be 3"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBe_with_custom_message_fails", labels: ["Result should be 5"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Result should be 5"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "Should_Throw_passes", labels: ["Should throw InvalidOperationException"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Should throw InvalidOperationException"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBe_fails", labels: ["Result should be '5'"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Result should be '5'"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBe_null_conditional_passes", labels: ["Order name should be \"a\""])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Order name should be \"a\""]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldSatisfyAllConditions_two_fail", labels: ["Order id should be 2", "Order name should be \"b\"", "Order should satisfy all conditions"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Order id should be 2", "Order name should be \"b\"", "Order should satisfy all conditions"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldNotBeNull_fails", labels: ["Name should not be null"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Name should not be null"]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBeTrue_fails", labels: ["Flag should be true"])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: ["Flag should be true"]
+FAIL Kronikol.Tests.AssertionTracking.StatementTextTests.A_bracket_inside_a_literal_does_not_pull_in_the_next_lines
+     The weave wrote IL that does not verify (BracketLiteralText.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_warns_when_no_statement_calls_an_assertion
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_assertion_in_an_AssertionScope_is_drawn_failed(library: "FluentAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (Scope_FluentAssertions_Debug.dll):
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Tests/<>c.<Inspectors>b__2_1: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_LoopWithTryCatch_DoesNotThrow(optimization: Release)
+     The weave wrote IL that does not verify (AsyncLoopTryCatchRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_assertion_in_an_AssertionScope_is_drawn_failed(library: "FluentAssertions", optimization: Release)
+     The weave wrote IL that does not verify (Scope_FluentAssertions_Release.dll):
+     Tests.Inspectors: StackUnexpected: Unexpected type on the stack. (Offset 17, Found ref 'object', Expected ref '[S.P.CoreLib]System.Collections.Generic.IEnumerable`1<int32>')
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_LambdaClosure_MultipleVariables_ResolvesAll
+     The weave wrote IL that does not verify (LambdaClosureMulti.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "DynamicShould_HaveProperty", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "Async_after_an_await", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "In_a_switch_arm", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "ShouldBeOfType_result_used", notes: 2)
+     Assert.Equal() Failure: Values differ
+     Expected: 2
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "ShouldThrowAsync_on_a_task", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "ShouldHaveFlag_in_another_namespace", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "Inside_try_finally", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "Inside_lock", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_weaves_an_assembly_whose_pdb_is_embedded
+     The weave wrote IL that does not verify (TaskEmbeddedPdb.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_assertion_in_an_AssertionScope_is_drawn_failed(library: "AwesomeAssertions", optimization: Release)
+     The weave wrote IL that does not verify (Scope_AwesomeAssertions_Release.dll):
+     Tests.Inspectors: StackUnexpected: Unexpected type on the stack. (Offset 17, Found ref 'object', Expected ref '[S.P.CoreLib]System.Collections.Generic.IEnumerable`1<int32>')
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_LockThenAssertionWithLambda_DoesNotThrow(optimization: Release)
+     The weave wrote IL that does not verify (LockThenAssertRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "ShouldContain_predicate", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "A_parameter", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "A_struct", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "A_record_with", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "ShouldAllBe_predicate", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "A_ternary_argument", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "Async_without_an_await", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_shape_runs_woven(method: "A_generic_T", notes: 1)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_warns_when_the_attribute_finds_no_supported_library
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_assertion_in_an_AssertionScope_is_drawn_failed(library: "AwesomeAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (Scope_AwesomeAssertions_Debug.dll):
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Tests/<>c.<Inspectors>b__2_1: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_LockThenAssertionWithLambda_DoesNotThrow(optimization: Debug)
+     The weave wrote IL that does not verify (LockThenAssertDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_Shouldly_only_assembly_is_woven(optimization: Release)
+     Assert.Equal() Failure: Values differ
+     Expected: 13
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_inspector_is_drawn_failed(library: "FluentAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (ScopeInspectors_FluentAssertions_Debug.dll):
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Tests/<>c.<Inspectors>b__2_1: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_Shouldly_only_assembly_is_woven(optimization: Debug)
+     Assert.Equal() Failure: Values differ
+     Expected: 13
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_WithExpressionOnInstanceField_DoesNotThrowInvalidProgram(optimization: Debug)
+     The weave wrote IL that does not verify (AsyncWithExpr_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_inspector_is_drawn_failed(library: "AwesomeAssertions", optimization: Release)
+     The weave wrote IL that does not verify (ScopeInspectors_AwesomeAssertions_Release.dll):
+     Tests.Inspectors: StackUnexpected: Unexpected type on the stack. (Offset 17, Found ref 'object', Expected ref '[S.P.CoreLib]System.Collections.Generic.IEnumerable`1<int32>')
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_Shouldly_failure_note_carries_Shouldlys_message(optimization: Debug)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_Shouldly_failure_note_carries_Shouldlys_message(optimization: Release)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_WithExpressionOnInstanceField_DoesNotThrowInvalidProgram(optimization: Release)
+     The weave wrote IL that does not verify (AsyncWithExpr_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_inspector_is_drawn_failed(library: "AwesomeAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (ScopeInspectors_AwesomeAssertions_Debug.dll):
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Tests/<>c.<Inspectors>b__2_1: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBeTrue_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "Should_ThrowAsync_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBe_passes", throws: False, outcomes: [True])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [True]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldNotBeNull_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "Should_Throw_passes", throws: False, outcomes: [True])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [True]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBe_array_initializer_passes", throws: False, outcomes: [True])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [True]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldSatisfyAllConditions_two_fail", throws: True, outcomes: [False, False, False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False, False, False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBe_with_custom_message_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBe_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldNotBeEmpty_fails", throws: True, outcomes: [False])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [False]
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_records_its_outcome(method: "ShouldBe_null_conditional_passes", throws: False, outcomes: [True])
+     Assert.Equal() Failure: Collections differ
+     ↓ (pos 0)
+     Expected: [True]
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_ShouldlyMethods_helper_is_one_row(optimization: Release)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_inspector_is_drawn_failed(library: "FluentAssertions", optimization: Release)
+     The weave wrote IL that does not verify (ScopeInspectors_FluentAssertions_Release.dll):
+     Tests.Inspectors: StackUnexpected: Unexpected type on the stack. (Offset 17, Found ref 'object', Expected ref '[S.P.CoreLib]System.Collections.Generic.IEnumerable`1<int32>')
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NestedWithExpression_DoesNotThrowInvalidProgram(optimization: Debug)
+     The weave wrote IL that does not verify (AsyncNestedWith_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_ShouldlyMethods_helper_is_one_row(optimization: Debug)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.Outside_a_scope_a_pass_is_drawn_after_a_caught_failure(library: "AwesomeAssertions", optimization: Release)
+     The weave wrote IL that does not verify (ScopeAfterCatch_AwesomeAssertions_Release.dll):
+     Tests.Inspectors: StackUnexpected: Unexpected type on the stack. (Offset 17, Found ref 'object', Expected ref '[S.P.CoreLib]System.Collections.Generic.IEnumerable`1<int32>')
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Its_body_is_not_woven(optimization: Release)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NestedWithExpression_DoesNotThrowInvalidProgram(optimization: Release)
+     The weave wrote IL that does not verify (AsyncNestedWith_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Its_body_is_not_woven(optimization: Debug)
+     Assert.Equal() Failure: Values differ
+     Expected: 1
+     Actual:   0
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.Outside_a_scope_a_pass_is_drawn_after_a_caught_failure(library: "FluentAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (ScopeAfterCatch_FluentAssertions_Debug.dll):
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Tests/<>c.<Inspectors>b__2_1: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_MixedAwaitAndNormalAssertions_OnlySkipsAwaitedArgAssertions(optimization: Release)
+     The weave wrote IL that does not verify (AsyncMixed_Release.dll):
+     Tests/<AssertValidationError>d__0.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 344, Found ref 'object', Expected ref 'string')
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Shouldly_values_are_the_arguments_after_the_subject(optimization: Release)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.Outside_a_scope_a_pass_is_drawn_after_a_caught_failure(library: "AwesomeAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (ScopeAfterCatch_AwesomeAssertions_Debug.dll):
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Tests/<>c.<Inspectors>b__2_1: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_MixedAwaitAndNormalAssertions_OnlySkipsAwaitedArgAssertions(optimization: Debug)
+     The weave wrote IL that does not verify (AsyncMixed_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Shouldly_values_are_the_arguments_after_the_subject(optimization: Debug)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.Outside_a_scope_a_pass_is_drawn_after_a_caught_failure(library: "FluentAssertions", optimization: Release)
+     The weave wrote IL that does not verify (ScopeAfterCatch_FluentAssertions_Release.dll):
+     Tests.Inspectors: StackUnexpected: Unexpected type on the stack. (Offset 17, Found ref 'object', Expected ref '[S.P.CoreLib]System.Collections.Generic.IEnumerable`1<int32>')
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_custom_message_is_not_captured(optimization: Release)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_a_nested_scope_hands_on_is_not_blamed_on_the_next_assertion(library: "AwesomeAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (ScopeNested_AwesomeAssertions_Debug.dll):
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Tests/<>c.<Inspectors>b__2_1: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.A_custom_message_is_not_captured(optimization: Debug)
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NullConditionalMultipleAssertions_NullValue_DoesNotThrow(optimization: Debug)
+     The weave wrote IL that does not verify (AsyncNullCondMultiNull_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_a_nested_scope_hands_on_is_not_blamed_on_the_next_assertion(library: "AwesomeAssertions", optimization: Release)
+     The weave wrote IL that does not verify (ScopeNested_AwesomeAssertions_Release.dll):
+     Tests.Inspectors: StackUnexpected: Unexpected type on the stack. (Offset 17, Found ref 'object', Expected ref '[S.P.CoreLib]System.Collections.Generic.IEnumerable`1<int32>')
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NullConditionalMultipleAssertions_NullValue_DoesNotThrow(optimization: Release)
+     The weave wrote IL that does not verify (AsyncNullCondMultiNull_Release.dll):
+     Tests/<Method>d__0.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 209, Found ref 'object', Expected ref '[AsyncNullCondMultiNull_Release]Result')
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_a_nested_scope_hands_on_is_not_blamed_on_the_next_assertion(library: "FluentAssertions", optimization: Debug)
+     The weave wrote IL that does not verify (ScopeNested_FluentAssertions_Debug.dll):
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Tests/<>c.<Inspectors>b__2_1: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_OutParamWithStructAndTernaryInBecause_DoesNotThrow(optimization: Release)
+     The weave wrote IL that does not verify (OutParamStructTernaryRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failure_a_nested_scope_hands_on_is_not_blamed_on_the_next_assertion(library: "FluentAssertions", optimization: Release)
+     The weave wrote IL that does not verify (ScopeNested_FluentAssertions_Release.dll):
+     Tests.Inspectors: StackUnexpected: Unexpected type on the stack. (Offset 17, Found ref 'object', Expected ref '[S.P.CoreLib]System.Collections.Generic.IEnumerable`1<int32>')
+     Tests/<>c.<Inspectors>b__2_0: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_OutParamWithStructAndTernaryInBecause_DoesNotThrow(optimization: Debug)
+     The weave wrote IL that does not verify (OutParamStructTernaryDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_TUnit_assertion_in_Assert_Multiple_is_drawn_failed(optimization: Release)
+     The weave wrote IL that does not verify (ScopeTUnit_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionScopeTests.A_failed_TUnit_assertion_in_Assert_Multiple_is_drawn_failed(optimization: Debug)
+     The weave wrote IL that does not verify (ScopeTUnit_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_LinqOrderByDescending_BeEquivalentTo_DoesNotThrowBadImageFormat(optimization: Debug)
+     The weave wrote IL that does not verify (LinqOrderByDescending_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_LinqOrderByDescending_BeEquivalentTo_DoesNotThrowBadImageFormat(optimization: Release)
+     The weave wrote IL that does not verify (LinqOrderByDescending_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NullConditionalShould_NullValue_DoesNotThrow(optimization: Release)
+     The weave wrote IL that does not verify (AsyncNullCondNull_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NullConditionalShould_NullValue_DoesNotThrow(optimization: Debug)
+     The weave wrote IL that does not verify (AsyncNullCondNull_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NullConditionalShould_DoesNotThrow(optimization: Release)
+     The weave wrote IL that does not verify (AsyncNullCondShould_Release.dll):
+     Tests/<Method>d__0.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 235, Found ref 'object', Expected ref '[AsyncNullCondShould_Release]Result')
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NullConditionalShould_DoesNotThrow(optimization: Debug)
+     The weave wrote IL that does not verify (AsyncNullCondShould_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AwaitedAssertion_WithCapturedVariables_FailingAssertion_DoesNotThrowNRE(optimization: Debug)
+     The weave wrote IL that does not verify (AwaitedWithVarsFail_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AwaitedAssertion_WithCapturedVariables_FailingAssertion_DoesNotThrowNRE(optimization: Release)
+     The weave wrote IL that does not verify (AwaitedWithVarsFail_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_GenericMethod_WithValueTypeArguments_DoesNotThrow(optimization: Debug)
+     The weave wrote IL that does not verify (GenericValueTypeDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_GenericMethod_WithValueTypeArguments_DoesNotThrow(optimization: Release)
+     The weave wrote IL that does not verify (GenericValueTypeRelease.dll):
+     Then.ShouldBeTheSame: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 70)
+     Then.ShouldBeTheSame: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 71)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_TernaryAssertion_DoesNotThrow(optimization: Debug)
+     The weave wrote IL that does not verify (AsyncTernaryDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_TernaryAssertion_DoesNotThrow(optimization: Release)
+     The weave wrote IL that does not verify (AsyncTernaryRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_TUnitShouldSyntax_InstrumentsAssertion
+     The weave wrote IL that does not verify (TUnitShould.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_InstanceFieldAsDirectArgument_ResolvesValue(optimization: Release)
+     The weave wrote IL that does not verify (AsyncInstanceFieldArg_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_InstanceFieldAsDirectArgument_ResolvesValue(optimization: Debug)
+     The weave wrote IL that does not verify (AsyncInstanceFieldArg_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AssertionAsLastStatement_DoesNotProduceInvalidIL
+     The weave wrote IL that does not verify (LastStatement.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AwaitedAssertion_InstrumentsAtGetResult(optimization: Release)
+     The weave wrote IL that does not verify (AwaitedAssertion_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AwaitedAssertion_InstrumentsAtGetResult(optimization: Debug)
+     The weave wrote IL that does not verify (AwaitedAssertion_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_BlockPragmaDisableEnable_SkipsRange
+     The weave wrote IL that does not verify (BlockPragma.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_WithConstantArg_DoesNotEmitArrays
+     The weave wrote IL that does not verify (ConstArg.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_MultipleAssertions_InstrumentsAll
+     The weave wrote IL that does not verify (AsyncMultiple.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_TUnitAssertThat_InstrumentsAssertion
+     The weave wrote IL that does not verify (TUnitAssertThat.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_NullPropagation_PreservesSemantics
+     The weave wrote IL that does not verify (NullProp.dll):
+     Tests.Method: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 66)
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_MethodWithOutParam_DoesNotThrow(optimization: Debug)
+     The weave wrote IL that does not verify (OutParamDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_MethodWithOutParam_DoesNotThrow(optimization: Release)
+     The weave wrote IL that does not verify (OutParamRelease.dll):
+     Then.ShouldMatch: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 61)
+     Then.ShouldMatch: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 62)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_LambdaClosure_OrCondition_ResolvesValue
+     The weave wrote IL that does not verify (LambdaClosureOr.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_LambdaClosure_SingleVariable_ResolvesValue
+     The weave wrote IL that does not verify (LambdaClosure.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_SuppressOnAsyncMethod_SkipsStateMachine(optimization: Debug)
+     The weave wrote IL that does not verify (SuppressAsync_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_SuppressOnAsyncMethod_SkipsStateMachine(optimization: Release)
+     The weave wrote IL that does not verify (SuppressAsync_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_ExpressionBodiedAsyncMethod_ContainWithAnd_CapturesFullExpression
+     The weave wrote IL that does not verify (ExprBodiedAsyncContain.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_WithVariable_CapturesStateField
+     The weave wrote IL that does not verify (AsyncVar.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_TUnitShouldAndFluentAssertions_InstrumentsBoth
+     The weave wrote IL that does not verify (TUnitMixed.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_WithAttribute_InstrumentsShould
+     The weave wrote IL that does not verify (WithAttribute.dll):
+     Tests.Method: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_WithNullVariable_ShowsNull
+     The weave wrote IL that does not verify (NullVar.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_Sdk8_AwesomeAssertions_LinqOrderByDescending_DoesNotThrowBadImageFormat(configuration: "Release")
+     The weave wrote IL that does not verify (Sdk8AALinqOrderBy_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_AwesomeAssertions_LinqOrderByDescending_DoesNotThrowBadImageFormat(optimization: Debug)
+     The weave wrote IL that does not verify (AALinqOrderBy_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_AwesomeAssertions_LinqOrderByDescending_DoesNotThrowBadImageFormat(optimization: Release)
+     The weave wrote IL that does not verify (AALinqOrderBy_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_WithBecauseParam_DoesNotThrow(optimization: Debug)
+     The weave wrote IL that does not verify (AsyncBecause_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_WithBecauseParam_DoesNotThrow(optimization: Release)
+     The weave wrote IL that does not verify (AsyncBecause_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_InlinePragmaDisable_SkipsSingleAssertion
+     The weave wrote IL that does not verify (InlinePragma.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_WithOldBetaAttribute_StillWorks
+     The weave wrote IL that does not verify (OldBetaAttribute.dll):
+     Tests.Method: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_WithMethodParameter_CapturesParameterForValueResolution
+     The weave wrote IL that does not verify (MethodParam.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NoAwait_ExpressionBody_InstrumentsWithoutInvalidProgram
+     The weave wrote IL that does not verify (AsyncNoAwait.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_InstrumentedAssembly_ContainsExceptionHandlers
+     The weave wrote IL that does not verify (HasHandlers.dll):
+     Tests.Method: InitLocals: initlocals must be set for verifiable methods with one or more local variables. (Offset 49)
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NullConditionalInArgs_DoesNotThrow(optimization: Debug)
+     The weave wrote IL that does not verify (AsyncNullCondDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NullConditionalInArgs_DoesNotThrow(optimization: Release)
+     The weave wrote IL that does not verify (AsyncNullCondRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_MultipleAssertions_Release_InstrumentsAll
+     The weave wrote IL that does not verify (AsyncMultipleRelease.dll):
+     Tests/<Method>d__0.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 373, Found ref 'object', Expected ref 'string')
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_InstrumentsAssertions
+     The weave wrote IL that does not verify (AsyncMethod.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_WithLocalVariable_CapturesVariableForValueResolution
+     The weave wrote IL that does not verify (LocalVar.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_ContainLambdaWithAndOperator_CapturesFullExpression
+     The weave wrote IL that does not verify (ContainAndLambda.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_LinqChainOnProperty_BeEquivalentTo_DoesNotThrowBadImageFormat(optimization: Debug)
+     The weave wrote IL that does not verify (LinqChainProperty_Debug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_LinqChainOnProperty_BeEquivalentTo_DoesNotThrowBadImageFormat(optimization: Release)
+     The weave wrote IL that does not verify (LinqChainProperty_Release.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_LambdaArg_CapturesVariablesFromLambdaBody
+     The weave wrote IL that does not verify (LambdaArgCapture.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_BlockPragmaDisableWithoutEnable_SkipsRemaining
+     The weave wrote IL that does not verify (BlockPragmaNoEnable.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_AsyncMethod_NoAwait_ExpressionBody_Release_InstrumentsWithoutInvalidProgram
+     The weave wrote IL that does not verify (AsyncNoAwaitRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_MultipleAssertions_InstrumentsEach
+     The weave wrote IL that does not verify (MultipleAssertions.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_WithMultipleVariables_CapturesAll
+     The weave wrote IL that does not verify (MultiVar.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "NullConditional")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "TernaryAsync")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Debug", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "AsyncNoAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "SwitchExpression")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Release", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "8.0", configuration: "Debug", sourceName: "TryCatchFinally")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 8.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Debug", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Debug), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "9.0", configuration: "Release", sourceName: "AsyncWithAwait")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 9.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Shouldly_source_weaves_and_executes(sdk: "10.0", configuration: "Release", sourceName: "AwaitUsing")
+     TUnit.Assertions.Exceptions.AssertionException : Expected result.WeavedCount to be greater than 0 because weaver should instrument assertions in assembly compiled by SDK 10.0.0 (Release), but found 0.
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Debug_TernaryAsync_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8TernaryDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Debug_SwitchExpression_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8SwitchExprDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Release_AsyncWithAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8AsyncWithAwaitRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Release_AsyncWithAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10AsyncWithAwaitRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Release_AsyncWithAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9AsyncWithAwaitRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Debug_NullConditional_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9NullCondDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Release_NullConditional_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10NullCondRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Release_TryCatchFinally_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10TryCatchRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Debug_SwitchExpression_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9SwitchExprDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Release_SwitchExpression_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8SwitchExprRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Release_AsyncNoAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8AsyncNoAwaitRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Release_AwaitUsing_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9AwaitUsingRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Debug_NullConditional_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8NullCondDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Debug_TryCatchFinally_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8TryCatchDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Debug_AsyncWithAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8AsyncWithAwaitDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Release_SwitchExpression_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10SwitchExprRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Release_TernaryAsync_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9TernaryRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Debug_AsyncNoAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10AsyncNoAwaitDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Debug_TryCatchFinally_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9TryCatchDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Release_TernaryAsync_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8TernaryRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Debug_AsyncNoAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9AsyncNoAwaitDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Debug_TernaryAsync_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10TernaryDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Release_TryCatchFinally_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8TryCatchRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Debug_TernaryAsync_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9TernaryDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Release_AsyncNoAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10AsyncNoAwaitRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Debug_AsyncNoAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8AsyncNoAwaitDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Release_NullConditional_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8NullCondRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Debug_AsyncWithAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10AsyncWithAwaitDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Debug_AsyncWithAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9AsyncWithAwaitDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Release_TryCatchFinally_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9TryCatchRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Release_NullConditional_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9NullCondRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Debug_AwaitUsing_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8AwaitUsingDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Release_TernaryAsync_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10TernaryRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Debug_AwaitUsing_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9AwaitUsingDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Debug_NullConditional_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10NullCondDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Release_SwitchExpression_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9SwitchExprRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net8_Release_AwaitUsing_WeaveAndExecute
+     The weave wrote IL that does not verify (Net8AwaitUsingRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net9_Release_AsyncNoAwait_WeaveAndExecute
+     The weave wrote IL that does not verify (Net9AsyncNoAwaitRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Release_AwaitUsing_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10AwaitUsingRelease.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Debug_TryCatchFinally_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10TryCatchDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)
+FAIL Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.Net10_Debug_AwaitUsing_WeaveAndExecute
+     The weave wrote IL that does not verify (Net10AwaitUsingDebug.dll):
+     Kronikol.AssertionTracking.Internal.__AssertionTrackingWeaved__..ctor: ThisUninitReturn: Return from .ctor when this is uninitialized. (Offset 0)

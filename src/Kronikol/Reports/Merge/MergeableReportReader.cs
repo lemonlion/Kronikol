@@ -265,6 +265,7 @@ public static class MergeableReportReader
         var steps = arr.EnumerateArray().Select(s => new ScenarioStep
         {
             Keyword = GetString(s, "keyword"),
+            IsAssertion = s.TryGetProperty("assertion", out var assertion) && assertion.ValueKind == JsonValueKind.True,
             Text = GetString(s, "text") ?? "",
             // Null, not Passed, when the status cannot be read: a step has an honest "not recorded"
             // value where a scenario does not, and a status this build does not know is not a pass.

@@ -190,7 +190,8 @@ public static class TestAssemblyBuilder
     /// <returns>Path to the compiled assembly DLL</returns>
     public static string BuildWithSdk(
         string name, string source, string sdkVersion, string tfm,
-        string configuration = "Debug", string? dotnetPath = null)
+        string configuration = "Debug", string? dotnetPath = null,
+        IReadOnlyDictionary<string, string>? packageVersions = null)
     {
         var fixturesDir = Path.GetFullPath(FixturesDir);
         if (!File.Exists(Path.Combine(fixturesDir, "WeaverFixture.csproj")))
@@ -226,6 +227,16 @@ public static class TestAssemblyBuilder
         // (dotnet resolves global.json from the project directory, not working directory)
         var csprojPath = Path.Combine(buildDir, "WeaverFixture.csproj");
         File.Copy(Path.Combine(fixturesDir, "WeaverFixture.csproj"), csprojPath, overwrite: true);
+        // Another version of a package the fixture project references (Shouldly 5's preview, say).
+        if (packageVersions is { Count: > 0 })
+        {
+            var project = File.ReadAllText(csprojPath);
+            foreach (var (package, version) in packageVersions)
+                project = System.Text.RegularExpressions.Regex.Replace(project,
+                    $"(<PackageReference Include=\"{System.Text.RegularExpressions.Regex.Escape(package)}\" Version=\")[^\"]+(\")",
+                    "${1}" + version + "${2}");
+            File.WriteAllText(csprojPath, project);
+        }
         File.Copy(Path.Combine(fixturesDir, "Attributes.cs"),
             Path.Combine(buildDir, "Attributes.cs"), overwrite: true);
 

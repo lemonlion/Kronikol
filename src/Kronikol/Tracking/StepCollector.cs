@@ -222,6 +222,7 @@ public static class StepCollector
             {
                 OriginalKeyword = null,
                 EffectiveKeyword = null,
+                IsAssertion = true,
                 Text = expression,
                 StartTime = Stopwatch.GetTimestamp(),
                 EndTime = Stopwatch.GetTimestamp(),
@@ -443,6 +444,7 @@ public static class StepCollector
         return new ScenarioStep
         {
             Keyword = step.EffectiveKeyword,
+            IsAssertion = step.IsAssertion,
             Text = step.Text,
             Status = status,
             BypassReason = step.BypassReason,
@@ -507,6 +509,7 @@ public static class StepCollector
 
     private class CollectedStep
     {
+        public bool IsAssertion { get; set; }
         public string? OriginalKeyword { get; set; }
         public string? EffectiveKeyword { get; set; }
         public string Text { get; set; } = "";

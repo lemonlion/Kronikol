@@ -17,6 +17,33 @@ public class ClosureValueResolverTests
     }
 
     [Fact]
+    public void A_bracket_in_a_literal_does_not_cut_the_arguments_short()
+    {
+        // The argument scan counted the "(" in the literal as an open call and never found the list's end.
+        var expected = "hello";
+        Action action = () => Dummy(expected);
+
+        var result = ClosureValueResolver.ResolveValues(action, "() => x.Should().Be(expected, \"the reason (and more\")");
+
+        Assert.Equal("hello", result.ResolvedValues["expected"]);
+    }
+
+    [Theory]
+    [InlineData("() => x.ShouldBe(expected)")]
+    [InlineData("() => order.Name.ShouldContain(expected, \"why\")")]
+    [InlineData("() => Should.Throw<InvalidOperationException>(() => Run(expected))")]
+    public void A_Shouldly_call_has_its_arguments_read(string expression)
+    {
+        // The arguments were read only after FluentAssertions' .Should(). (SHOULDLY_ASSERTIONS_PLAN F10).
+        var expected = "hello";
+        Action action = () => Dummy(expected);
+
+        var result = ClosureValueResolver.ResolveValues(action, expression);
+
+        Assert.Equal("hello", result.ResolvedValues["expected"]);
+    }
+
+    [Fact]
     public void Resolves_numeric_variable()
     {
         var count = 42;

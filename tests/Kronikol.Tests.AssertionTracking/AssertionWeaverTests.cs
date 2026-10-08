@@ -30,7 +30,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(0);
     }
@@ -72,7 +72,7 @@ public class AssertionWeaverTests
         }
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(0);
         result.SkipReason.Should().Contain("version too old");
@@ -96,7 +96,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1, $"SkipReason: {result.SkipReason}");
         result.MethodCount.Should().Be(1);
@@ -120,7 +120,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1, "old TrackAssertionsBeta attribute should still be recognized");
     }
@@ -144,7 +144,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(0);
     }
@@ -169,7 +169,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(0);
     }
@@ -197,7 +197,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(3);
         result.MethodCount.Should().Be(1);
@@ -221,7 +221,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        WovenIl.Weave(weaver, assemblyPath);
 
         // Read the assembly back and verify exception handlers exist
         using var assembly = AssemblyDefinition.ReadAssembly(assemblyPath,
@@ -261,7 +261,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         // The assertion IS instrumented (not skipped)
         result.WeavedCount.Should().Be(1);
@@ -305,7 +305,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         // The assertion inside the async method IS instrumented
         result.WeavedCount.Should().Be(1);
@@ -354,7 +354,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(2);
 
@@ -410,7 +410,7 @@ public class AssertionWeaverTests
             Microsoft.CodeAnalysis.OptimizationLevel.Release);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(2);
 
@@ -460,7 +460,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(3);
 
@@ -505,7 +505,7 @@ public class AssertionWeaverTests
             OptimizationLevel.Release);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(3);
 
@@ -572,7 +572,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().BeGreaterThan(0);
 
@@ -621,7 +621,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().BeGreaterThan(0);
 
@@ -677,7 +677,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(3);
 
@@ -714,7 +714,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         // Execute and verify it calls AssertionPassedWithValues (doesn't throw)
@@ -762,7 +762,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -807,7 +807,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         // Verify assembly runs without error (using simple AssertionPassed path)
@@ -844,7 +844,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -889,7 +889,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -940,7 +940,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -993,7 +993,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -1046,7 +1046,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -1098,7 +1098,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -1144,7 +1144,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         // Load and execute — InvalidProgramException would be thrown here if ret is inside try
@@ -1199,7 +1199,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -1267,7 +1267,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1);
 
@@ -1322,7 +1322,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1);
 
@@ -1381,7 +1381,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(2);
 
@@ -1448,7 +1448,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1);
 
@@ -1490,7 +1490,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1);
 
@@ -1526,7 +1526,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(2, "inline pragma should skip only the annotated assertion");
     }
@@ -1557,7 +1557,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(2, "block pragma should skip assertions between disable and enable");
     }
@@ -1586,7 +1586,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1, "block pragma without enable should skip all remaining assertions");
     }
@@ -1634,7 +1634,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -1708,7 +1708,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -1778,7 +1778,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         // Only NormalMethod's assertion should be weaved; SuppressedMethod's state machine is skipped
         result.WeavedCount.Should().Be(1,
@@ -1820,7 +1820,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().BeGreaterThan(0);
 
@@ -1866,7 +1866,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().BeGreaterThan(0);
 
@@ -1917,7 +1917,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().BeGreaterThan(0);
 
@@ -1960,7 +1960,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1);
 
@@ -2003,7 +2003,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         // Assertions with await in arguments are skipped (can't safely wrap across await boundary)
         result.WeavedCount.Should().Be(0);
@@ -2050,7 +2050,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         // First assertion (with await arg) is skipped; the other two are weaved
         result.WeavedCount.Should().Be(2,
@@ -2093,7 +2093,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         // The assembly must execute without InvalidProgramException regardless of tracking
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -2164,7 +2164,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1);
 
@@ -2239,7 +2239,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().BeGreaterThanOrEqualTo(1);
 
@@ -2310,7 +2310,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().BeGreaterThanOrEqualTo(1);
 
@@ -2351,7 +2351,7 @@ public class AssertionWeaverTests
             """);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -2405,7 +2405,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().Be(1);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -2456,7 +2456,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().BeGreaterThan(0);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -2516,7 +2516,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().BeGreaterThan(0);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -2595,7 +2595,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().BeGreaterThan(0);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -2682,7 +2682,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
         result.WeavedCount.Should().BeGreaterThan(0);
 
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -2757,7 +2757,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1);
 
@@ -2835,7 +2835,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1);
 
@@ -2916,7 +2916,7 @@ public class AssertionWeaverTests
             optimization);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1);
 
@@ -3002,7 +3002,7 @@ public class AssertionWeaverTests
             configuration: configuration);
 
         var weaver = new AssertionWeaver();
-        var result = weaver.Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+        var result = WovenIl.Weave(weaver, assemblyPath);
 
         result.WeavedCount.Should().Be(1);
 

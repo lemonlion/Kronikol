@@ -234,6 +234,34 @@ public class InteractionRecordTests
     }
 
     [Fact]
+    public void An_assertion_marker_with_a_source_draws_the_note_its_source_comment()
+    {
+        // The tests feed's assertion record drew its file and line, the interactions feed's never did
+        // (SHOULDLY_ASSERTIONS_PLAN section 8, item 4). The report's source links read the comment.
+        var t0 = new DateTimeOffset(2026, 8, 21, 10, 0, 0, TimeSpan.Zero);
+        var written = InteractionRecord.AssertionMarker("t1", "the banner is visible", passed: true, t0)
+            with { SourceFile = "src/specs/banner.spec.ts", SourceLine = 42 };
+
+        var record = InteractionRecord.FromJson(written.ToJson());
+        var note = record.ToLogs().First(l => l.PlantUml is not null).PlantUml!;
+
+        Assert.EndsWith("end note\n'__^*__:banner.spec.ts:L42", note.ReplaceLineEndings("\n").TrimEnd());
+        Assert.Contains("\"sourceLine\":42", written.ToJson());
+    }
+
+    [Fact]
+    public void An_assertion_marker_without_a_source_draws_the_note_as_before()
+    {
+        var t0 = new DateTimeOffset(2026, 8, 21, 10, 0, 0, TimeSpan.Zero);
+        var record = InteractionRecord.AssertionMarker("t1", "the banner is visible", passed: true, t0);
+
+        var note = record.ToLogs().First(l => l.PlantUml is not null).PlantUml!;
+
+        Assert.EndsWith("end note", note.TrimEnd());
+        Assert.DoesNotContain("source", record.ToJson());
+    }
+
+    [Fact]
     public void User_actions_and_markers_round_trip_and_map_to_the_right_log_entries()
     {
         var t0 = new DateTimeOffset(2026, 8, 21, 10, 0, 0, TimeSpan.Zero);

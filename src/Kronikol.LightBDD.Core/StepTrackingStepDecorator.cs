@@ -7,8 +7,9 @@ using Kronikol.Tracking;
 namespace Kronikol.LightBDD;
 
 /// <summary>
-/// LightBDD step decorator that brackets each step with <see cref="StepCollector.StartStep"/>
-/// and <see cref="StepCollector.CompleteStep"/>, enabling step delimiters in sequence diagrams
+/// LightBDD step decorator that brackets each step with
+/// <see cref="StepCollector.StartStep(string, string, string, string[], object[])"/> and
+/// <see cref="StepCollector.CompleteStep(string, bool, string)"/>, enabling step delimiters in sequence diagrams
 /// and assertion sub-step attachment during step execution.
 /// Registered automatically by <c>CreateStandardReportsWithDiagrams()</c>.
 /// </summary>

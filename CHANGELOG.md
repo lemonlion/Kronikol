@@ -4,6 +4,75 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.14.0] - 2026-10-08
+
+**Minor - assertion tracking reads Shouldly.**
+`plans/SHOULDLY_ASSERTIONS_PLAN.md` R2: Shouldly support (#141), a warning when the weave instruments nothing
+(#144) and the assertion mark in the data file (#145). Shouldly recognition, the `KRONIKOL001` warning, the
+`assertion` field in the data file and its schemas, `ScenarioStep.IsAssertion` and the interactions feed's
+`sourceFile` and `sourceLine` on an assertion record are new, so the minor part moves (4.13.3 to 4.14.0). Two
+behaviour changes are named below: the warning, and what `query assertions` lists. The history action's `VERSION`
+installs `Kronikol.Tool` 4.14.0, and the templates pin 4.13.3.
+
+### Added
+
+- **Shouldly assertions are tracked.** `[assembly: TrackAssertions]` instruments Shouldly 4.x assertions as it does
+  FluentAssertions, AwesomeAssertions and TUnit: a method on a type Shouldly marks `[ShouldlyMethods]` (how Shouldly
+  tells its assertions from the rest of its API), so `ShouldBe`, `ShouldNotBeNull`, `ShouldHaveFlag`,
+  `Should.Throw` and `await Should.ThrowAsync` are recognised and a suite's own `ShouldBe...` method is not. A
+  Shouldly-only suite was skipped before any method was read. Labels read as sentences by rule, the words after
+  `Should` split on case (`result.ShouldBe(5)` reads `Result should be 5`, `name.ShouldNotBeNull()` reads
+  `Name should not be null`, `Should.Throw<T>(...)` reads `Should throw T`), without a custom message or an action
+  Shouldly runs. Values are the arguments after the subject, drawn as FluentAssertions' are.
+  `ShouldSatisfyAllConditions` draws a row per condition and one for the call, and a suite's own
+  `[ShouldlyMethods]` helper is one row whose body is not woven. A failure's note carries Shouldly's own message;
+  in a Release build it names the subject, where an unwoven Release build quotes the line above. Facts also run on
+  Shouldly 5.0's preview. `Track.That(() => x.ShouldBe(y))` reads its values too.
+- **A weave that instruments nothing says so (#144).** A build that declares `[assembly: TrackAssertions]` and
+  instruments nothing warns `KRONIKOL001`, naming why: no library the weaver reads is referenced (the message names
+  them and `Track.That`), the build writes no symbols, or no statement calls an assertion. It said so only at
+  detailed verbosity. Behaviour change: a build with `-warnaserror` or `MSBuildTreatWarningsAsErrors` fails on it;
+  `<NoWarn>KRONIKOL001</NoWarn>` silences it. A statement the weave leaves as written is listed with its reason at
+  normal verbosity.
+- **The data file marks a tracked assertion (#145).** `TestRunReport.json` writes `"assertion": true` on a tracked
+  assertion's step (`<Assertion>true</Assertion>` in the XML, `Assertion: true` in the YAML; the JSON schema and the
+  XSD have the field), only on one, so a report without assertions is written as before. `ScenarioStep.IsAssertion`
+  is the model's side, set in process, by `kronikol ingest`'s tests feed and its Cucumber merge, and kept by a
+  merge; the debugging skill's command reference says so. Behaviour change: on a report from 4.14.0,
+  `kronikol query assertions` (and the steps and narrative views) count the marked steps, where they took every
+  keyword-less step, a framework's own `[Step]` and an ingested step included; a report from an earlier version is
+  read as before.
+- **An interactions-feed assertion record can say where it is written.** Its `sourceFile` and `sourceLine`, as the
+  tests feed's `assertion` event carries them, give its note the source comment an in-process assertion's has (plan
+  section 8, item 4). The feed still makes no step of it: the interactions feed draws the diagram, and its step
+  markers make no steps either.
+
+### Fixed
+
+- **A Release build could throw `InvalidProgramException` in a woven test (F21).** The compiler keeps a value on the
+  evaluation stack across statements when nothing else needs it in between (`int result = 3; int expected = 5;
+  result.Should().Be(expected);`), and the weave read the stack's depth line by line and wrapped the statement
+  without it; measured on the published 4.11.0 and on 4.12.3. One stack analysis per method now names each value
+  on the stack and what pushed it, and the weave stores and reloads exactly those. A `null` left on the stack is
+  pushed again rather than reloaded as an `object`; a return part-way through a statement
+  (`order?.Name.Should().Be("a")` ending a void method) leaves to the method's own return instead of sitting inside
+  the `try`; a statement a branch enters part-way, or whose stack the analysis cannot follow, is left as written and
+  listed.
+- **The weave wrote IL that does not verify.** The marker attribute it adds to a woven assembly had a constructor
+  that never ran its base one, and a method that gained locals from the weave (a lambda that had none) kept no
+  `localsinit` flag. The runtime accepted both, ILVerify did not; the weaver's tests now run ILVerify over every
+  assembly they weave.
+- **TUnit's `Assert.That(x).IsEqualTo(y)` was labelled with its raw code and dropped its values** (plan section 8,
+  item 2). It reads `X is equal to y`, with the values the weave read.
+- **`Track.That` read no values for a bracket inside a string literal** in the assertion's arguments: the argument
+  scan counted it as an open call.
+- **The weave searched the build's current directory before the project's references** when resolving an
+  assertion library, so an assembly that happened to sit there could stand in for the one referenced; an older
+  Shouldly there hid Shouldly 5's methods.
+
+Each change has a fact that failed on 4.12.3 for its own reason (`plans/SHOULDLY_ASSERTIONS_PLAN.harness/r2/`), and
+undoing it alone turns its fact red.
+
 ## [4.13.3] - 2026-10-08
 
 **Patch - the xUnit v3, MSTest, NUnit 4 and TUnit adapters report the tests they saw as their runner did

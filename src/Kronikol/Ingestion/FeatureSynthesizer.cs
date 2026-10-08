@@ -417,6 +417,7 @@ public static class FeatureSynthesizer
                      && !string.Equals(record.Status, "fail", StringComparison.OrdinalIgnoreCase);
         return new ScenarioStep
         {
+            IsAssertion = true,
             Text = $"{(passed ? Track.PassSymbol : Track.FailSymbol)} {record.Text ?? "assertion"}",
             Status = passed ? ExecutionResult.Passed : ExecutionResult.Failed,
             Comments = BuildComments(passed ? null : record.Error, record.StackTrace),

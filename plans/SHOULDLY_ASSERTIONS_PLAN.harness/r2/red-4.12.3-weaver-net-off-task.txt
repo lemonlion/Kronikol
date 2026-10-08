@@ -1,0 +1,8 @@
+Failed!  - Failed:     3, Passed:     6, Skipped:     0, Total:     9, Duration: 4 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_warns_when_the_build_has_no_symbols
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_warns_when_no_statement_calls_an_assertion
+     Assert.Single() Failure: The collection was empty
+FAIL Kronikol.Tests.AssertionTracking.WeaveAssertionsTaskTests.The_task_warns_when_the_attribute_finds_no_supported_library
+     Assert.Single() Failure: The collection was empty

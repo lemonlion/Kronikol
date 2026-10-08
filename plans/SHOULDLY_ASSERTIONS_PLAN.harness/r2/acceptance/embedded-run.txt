@@ -1,0 +1,52 @@
+Kronikol 4.14.0.0 · woven: True
+== ShouldBe_passes: passed
+   notes: 1
+   | hnote across <<assertionNote>> #d4edda⏎✓ Result should be '5'⏎end note⏎'__^*__:Program.cs:L53
+== ShouldBe_fails: threw ShouldAssertException: result⏎    should be⏎5⏎    but was⏎3
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Result should be '5'⏎result⏎    should be⏎5⏎    but was⏎3⏎end note⏎'__^*__:Program.cs:L59
+== ShouldNotBeNull_fails: threw ShouldAssertException: name⏎    should not be null but was
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Name should not be null⏎name⏎    should not be null but was⏎end note⏎'__^*__:Program.cs:L64
+== ShouldBeTrue_fails: threw ShouldAssertException: flag⏎    should be⏎True⏎    but was⏎False
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Flag should be true⏎flag⏎    should be⏎True⏎    but was⏎False⏎end note⏎'__^*__:Program.cs:L69
+== ShouldNotBeEmpty_fails: threw ShouldAssertException: items⏎    should not be empty but was
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Items should not be empty⏎items⏎    should not be empty but was⏎end note⏎'__^*__:Program.cs:L74
+== ShouldBe_with_custom_message_fails: threw ShouldAssertException: result⏎    should be⏎5⏎    but was⏎3⏎⏎Additional Info:⏎    custom message
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Result should be 5⏎result⏎    should be⏎5⏎    but was⏎3⏎⏎Additional Info:⏎    custom message⏎end note⏎'__^*__:Program.cs:L79
+== ShouldBe_array_initializer_passes: passed
+   notes: 1
+   | hnote across <<assertionNote>> #d4edda⏎✓ Items should be new[] { 1, 2 }⏎end note⏎'__^*__:Program.cs:L84
+== ShouldBe_null_conditional_passes: passed
+   notes: 1
+   | hnote across <<assertionNote>> #d4edda⏎✓ Order name should be "a"⏎end note⏎'__^*__:Program.cs:L89
+== ShouldSatisfyAllConditions_two_fail: threw ShouldAssertException: order⏎    should satisfy all the conditions specified, but does not.⏎The following errors were found ...⏎--------------- Error 1 ---------------⏎    order.Id⏎        should be⏎    2⏎        but was⏎    1⏎⏎--------------- Error 2 ---------------⏎    order.Name⏎        should be⏎    "b"⏎        but was⏎    "a"⏎        difference⏎    Difference     |  |   ⏎                   | \|/  ⏎    Index          | 0    ⏎    Expected Value | b    ⏎    Actual Value   | a    ⏎    Expected Code  | 98   ⏎    Actual Code    | 97   ⏎⏎-----------------------------------------
+   notes: 3
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Order id should be 2⏎order.Id⏎    should be⏎2⏎    but was⏎1⏎end note⏎'__^*__:Program.cs:L96
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Order name should be "b"⏎order.Name⏎    should be⏎"b"⏎    but was⏎"a"⏎    difference⏎Difference     |  |   ⏎               | \|/  ⏎Index          | 0    ⏎Expected Value | b    ⏎Actual Value   | a    ⏎Expected Code  | 98   ⏎Actual Code    | 97   ⏎end note⏎'__^*__:Program.cs:L97
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Order should satisfy all conditions⏎order⏎    should satisfy all the conditions specified, but does not.⏎The following errors were found ...⏎--------------- Error 1 ---------------⏎    order.Id⏎        should be⏎    2⏎        but was⏎    1⏎⏎--------------- Error 2 ---------------⏎    order.Name⏎        should be⏎    "b"⏎        but was⏎    "a"⏎        difference⏎    Difference     |  |   ⏎                   | \|/  ⏎    Index          | 0    ⏎    Expected Value | b    ⏎    Actual Value   | a    ⏎    Expected Code  | 98   ⏎    Actual Code    | 97   ⏎⏎-----------------------------------------⏎end note⏎'__^*__:Program.cs:L95
+== Should_Throw_passes: passed
+   notes: 2
+   | hnote across <<assertionNote>> #d4edda⏎✓ Should throw InvalidOperationException⏎end note⏎'__^*__:Program.cs:L102
+   | hnote across <<assertionNote>> #d4edda⏎✓ Ex message should be "boom"⏎end note⏎'__^*__:Program.cs:L103
+== Should_ThrowAsync_fails: threw ShouldAssertException: Task `async () => await Task.Yield()`⏎    should throw⏎System.InvalidOperationException⏎    but did not
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Should throw InvalidOperationException⏎Task `async () => await Task.Yield()`⏎    should throw⏎System.InvalidOperationException⏎    but did not⏎end note⏎'__^*__:Program.cs:L108
+== Control_Should_Be_fails: threw AssertionFailedException: Expected result to be 5, but found 3.
+   notes: 1
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Result should be '5'⏎Expected result to be 5, but found 3.⏎end note⏎'__^*__:Program.cs:L116
+== Control_label_keeps_a_bang_in_a_literal: passed
+   notes: 1
+   | hnote across <<assertionNote>> #d4edda⏎✓ Greeting should be "Hi!"⏎end note⏎'__^*__:Program.cs:L123
+== Control_lambda_conditions: passed
+   notes: 3
+   | hnote across <<assertionNote>> #d4edda⏎✓ First should be 1⏎end note⏎'__^*__:Program.cs:L131
+   | hnote across <<assertionNote>> #d4edda⏎✓ Second should be 2⏎end note⏎'__^*__:Program.cs:L132
+   | hnote across <<assertionNote>> #d4edda⏎✓ Items should satisfy respectively [  first => first.Should().Be(1), second => second.Should().Be(2) ]⏎end note⏎'__^*__:Program.cs:L130
+== Control_AssertionScope_fails: threw AssertionFailedException: Expected result to be 5, but found 3.⏎
+   notes: 2
+   | hnote across <<assertionNote>> #f8d7da⏎✗ Result should be 5⏎Expected result to be 5, but found 3.⏎end note⏎'__^*__:Program.cs:L141
+   | hnote across <<assertionNote>> #d4edda⏎✓ Result should be 3⏎end note⏎'__^*__:Program.cs:L142

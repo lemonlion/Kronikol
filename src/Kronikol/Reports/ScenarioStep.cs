@@ -6,6 +6,14 @@ namespace Kronikol.Reports;
 public record ScenarioStep
 {
     public string? Keyword { get; set; }
+
+    /// <summary>
+    /// True for a tracked assertion: one <c>Track.That</c> or the assertion weave recorded, or a tests NDJSON
+    /// <c>assertion</c> record. The data file writes it only when true (<c>"assertion": true</c>), so a report
+    /// without assertions is written as before; a step without a keyword is not an assertion for that alone.
+    /// </summary>
+    public bool IsAssertion { get; set; }
+
     public required string Text { get; set; }
     public ExecutionResult? Status { get; set; }
     public string? BypassReason { get; set; }

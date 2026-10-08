@@ -5,7 +5,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <Title>Test Tracking Diagrams Assertion Tracking</Title>
-    <Description>IL weaver that draws each assertion in a test as a note in its Kronikol diagram and a sub-step in its step list, passed or failed, with the values it compared. It instruments the assertion statements of FluentAssertions and AwesomeAssertions (.Should()) and TUnit (Assert.That()) in the compiled IL, so C# semantics such as null propagation, ref parameters and evaluation order are unchanged. Turn it on with [assembly: TrackAssertions].</Description>
+    <Description>IL weaver that draws each assertion in a test as a note in its Kronikol diagram and a sub-step in its step list, passed or failed, with the values it compared. It instruments the assertion statements of FluentAssertions and AwesomeAssertions (.Should()), Shouldly (ShouldBe() and the rest) and TUnit (Assert.That()) in the compiled IL, so C# semantics such as null propagation, ref parameters and evaluation order are unchanged. Turn it on with [assembly: TrackAssertions].</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 
     <!-- MSBuild task packaging: output DLLs to tasks/ folder in nupkg -->
@@ -37,5 +37,10 @@
       <_PackageFiles Include="@(_TaskDependency)" PackagePath="tasks\netstandard2.0\" />
     </ItemGroup>
   </Target>
+
+  <ItemGroup>
+    <!-- The stack analysis's facts read it directly (StackAnalysisTests). -->
+    <InternalsVisibleTo Include="Kronikol.Tests.AssertionTracking" />
+  </ItemGroup>
 
 </Project>
