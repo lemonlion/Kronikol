@@ -21,33 +21,42 @@
   Run only these lanes (names as in results/). Default: all.
 .PARAMETER CompareOnly
   Run nothing: compare every saved run again from its run.trx and report-extract.json, then summarize.
+.PARAMETER Package
+  A released Kronikol.xUnit2 version (section 6.6's acceptance): A, C2 (AssemblyFixture with WithKronikolReporting())
+  and E are built against that package from nuget.org and run $Runs times each, into results/package-<version>/.
+  SUMMARY.md is not rewritten; each run's compare.txt is the evidence.
 #>
 param(
     [int]$Runs = 3,
     [string[]]$Lanes,
-    [switch]$CompareOnly
+    [switch]$CompareOnly,
+    [string]$Package
 )
 
 $ErrorActionPreference = 'Stop'
 # pwsh -File hands "-Lanes a,b" over as the one string "a,b".
 if ($Lanes) { $Lanes = @($Lanes | ForEach-Object { $_ -split ',' } | Where-Object { $_ }) }
 $H = $PSScriptRoot
-$Results = Join-Path $H 'results'
+$Results = if ($Package) { Join-Path $H "results/package-$Package" } else { Join-Path $H 'results' }
+$MainArtifacts = if ($Package) { "pkg-$Package" } else { 'main' }
+# @() keeps one argument an array: an if expression unrolls it to a string, which a splat hands over char by char.
+# RestoreNoHttpCache: a release minutes old is missing from the cached version list until it expires.
+$PackageArgs = @(if ($Package) { "-p:KronikolXUnit2Version=$Package"; "-p:RestoreNoHttpCache=true" })
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new()
 $env:PYTHONUTF8 = '1'
 $env:KRONIKOL_HISTORY = 'off'
 $ProbeVars = 'PROBE_SYNC', 'PROBE_FORMAT_GUARD', 'PROBE_LOG', 'PROBE_TIMING', 'PROBE_REPORTS'
 
-function Build([string]$Project, [string]$Artifacts = 'main', [string[]]$Extra = @()) {
-    Write-Host "build $Project ($Artifacts) $Extra"
-    $log = & dotnet build "$H/probe/$Project/$Project.csproj" --artifacts-path "$H/.build/$Artifacts" -c Debug @Extra 2>&1
+function Build([string]$Project, [string]$Artifacts = $MainArtifacts, [string[]]$Extra = @()) {
+    Write-Host "build $Project ($Artifacts) $Extra $PackageArgs"
+    $log = & dotnet build "$H/probe/$Project/$Project.csproj" --artifacts-path "$H/.build/$Artifacts" -c Debug @Extra @PackageArgs 2>&1
     if ($LASTEXITCODE -ne 0) { $log | Select-Object -Last 30 | Write-Host; throw "build failed: $Project" }
 }
 
 function Want([string]$Lane) { -not $Lanes -or $Lanes -contains $Lane }
 
 function Invoke-Lane {
-    param([string]$Lane, [string]$Project, [int]$N, [hashtable]$Vars = @{}, [string]$Artifacts = 'main')
+    param([string]$Lane, [string]$Project, [int]$N, [hashtable]$Vars = @{}, [string]$Artifacts = $MainArtifacts)
     if (-not (Want $Lane)) { return }
     $out = Join-Path $Results "$Lane/$N"
     Remove-Item $out -Recurse -Force -ErrorAction SilentlyContinue
@@ -117,6 +126,17 @@ if ($CompareOnly) {
         }
     }
     & python "$H/tools/summarize.py" $Results
+    return
+}
+
+# --- a released package (6.6): A, C2 and E against it, interleaved ------------------------------------
+if ($Package) {
+    foreach ($p in 'A.OwnFramework', 'C2.AssemblyFixtureWrapper', 'E.CollectionFixtureOnly') { Build $p }
+    for ($n = 1; $n -le $Runs; $n++) {
+        Invoke-Lane 'A.OwnFramework' 'A.OwnFramework' $n
+        Invoke-Lane 'C2.AssemblyFixtureWrapper' 'C2.AssemblyFixtureWrapper' $n
+        Invoke-Lane 'E.CollectionFixtureOnly' 'E.CollectionFixtureOnly' $n
+    }
     return
 }
 

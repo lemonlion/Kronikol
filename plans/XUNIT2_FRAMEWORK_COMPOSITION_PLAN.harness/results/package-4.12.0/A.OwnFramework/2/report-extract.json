@@ -1,0 +1,247 @@
+{
+ "extractOf": "TestRunReport.json",
+ "startText": "2026-10-08T10:41:08Z",
+ "endText": "2026-10-08T10:41:10Z",
+ "scenarios": [
+  {
+   "id": "3d91f4fd-f05f-4960-9c31-6943d4a87c94",
+   "feature": "Ctor Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-08T10:41:08.600Z",
+   "error": "the test class constructor throws on purpose",
+   "calls": []
+  },
+  {
+   "id": "4ef84159-b54f-4635-b645-12677d775fb0",
+   "feature": "Display Name Dots",
+   "name": "Does the thing.",
+   "result": "Passed",
+   "seconds": 0.0004656,
+   "endedAt": "2026-10-08T10:41:08.625Z",
+   "error": "",
+   "calls": [
+    "/dots/trailing-dot"
+   ]
+  },
+  {
+   "id": "3e2009c6-aa45-4c14-8af3-02e760c2cccc",
+   "feature": "Display Name Dots",
+   "name": "Order api returns 404 for v1.2",
+   "result": "Passed",
+   "seconds": 0.0239364,
+   "endedAt": "2026-10-08T10:41:08.624Z",
+   "error": "",
+   "calls": [
+    "/dots/version-1-2"
+   ]
+  },
+  {
+   "id": "31fe681b-c3da-4b7e-9019-f4d499b242d4",
+   "feature": "Facts",
+   "name": "A failing fact with a display name",
+   "result": "Failed",
+   "seconds": 0.0275479,
+   "endedAt": "2026-10-08T10:41:08.628Z",
+   "error": "Assert.Equal() Failure: Values differ",
+   "calls": [
+    "/facts/displayname-fails"
+   ]
+  },
+  {
+   "id": "6b5a95da-b306-4fc9-bffd-89cd3f2ac8c9",
+   "feature": "Facts",
+   "name": "A passing fact with a display name",
+   "result": "Passed",
+   "seconds": 9.52e-05,
+   "endedAt": "2026-10-08T10:41:08.629Z",
+   "error": "",
+   "calls": [
+    "/facts/displayname-passes"
+   ]
+  },
+  {
+   "id": "c151e4c6-9b67-478c-9e25-3d278ca583cf",
+   "feature": "Facts",
+   "name": "Fails",
+   "result": "Failed",
+   "seconds": 0.0005473,
+   "endedAt": "2026-10-08T10:41:08.629Z",
+   "error": "Assert.Equal() Failure: Values differ",
+   "calls": [
+    "/facts/fails"
+   ]
+  },
+  {
+   "id": "d09dc063-612e-47f0-bedf-bab175058589",
+   "feature": "Facts",
+   "name": "Passes",
+   "result": "Passed",
+   "seconds": 0.0001074,
+   "endedAt": "2026-10-08T10:41:08.629Z",
+   "error": "",
+   "calls": [
+    "/facts/passes"
+   ]
+  },
+  {
+   "id": "c207654c-c320-428b-b6bd-5783de1dd11d",
+   "feature": "Facts",
+   "name": "Skipped",
+   "result": "Skipped",
+   "seconds": 0,
+   "endedAt": "2026-10-08T10:41:08.629Z",
+   "error": "",
+   "calls": []
+  },
+  {
+   "id": "166c206e-d972-40ed-a0ca-2bb341cb579d",
+   "feature": "Fixture Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-08T10:41:08.598Z",
+   "error": "Class fixture type 'Probe.ThrowingFixture' threw in its constructor",
+   "calls": []
+  },
+  {
+   "id": "da5442b7-0909-4e1f-b10d-7cca50c6ff58",
+   "feature": "Init Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-08T10:41:08.605Z",
+   "error": "InitializeAsync throws on purpose",
+   "calls": []
+  },
+  {
+   "id": "39d8b206-0ab0-4b58-b5a2-775750980425",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 1 }]",
+   "result": "Passed",
+   "seconds": 0.023877,
+   "endedAt": "2026-10-08T10:41:08.624Z",
+   "error": "",
+   "calls": [
+    "/nonser/1"
+   ]
+  },
+  {
+   "id": "aaaf8038-6158-40d8-90ee-f1d5d0bfe3eb",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 2 }]",
+   "result": "Passed",
+   "seconds": 0.0004332,
+   "endedAt": "2026-10-08T10:41:08.625Z",
+   "error": "",
+   "calls": [
+    "/nonser/2"
+   ]
+  },
+  {
+   "id": "05f98a1f-74e3-436e-91fc-8d7aba0c4c64",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 3 }]",
+   "result": "Passed",
+   "seconds": 6.19e-05,
+   "endedAt": "2026-10-08T10:41:08.625Z",
+   "error": "",
+   "calls": [
+    "/nonser/3"
+   ]
+  },
+  {
+   "id": "26c25762-e4e3-49e8-a048-50d13fdcde23",
+   "feature": "Theories",
+   "name": "Rows [row: 1, ms: 50]",
+   "result": "Passed",
+   "seconds": 0.0618327,
+   "endedAt": "2026-10-08T10:41:10.216Z",
+   "error": "",
+   "calls": [
+    "/row/1/slept/50"
+   ]
+  },
+  {
+   "id": "de52118d-0a26-4954-b311-13872b2afbcc",
+   "feature": "Theories",
+   "name": "Rows [row: 2, ms: 400]",
+   "result": "Passed",
+   "seconds": 0.4378477,
+   "endedAt": "2026-10-08T10:41:09.039Z",
+   "error": "",
+   "calls": [
+    "/row/2/slept/400"
+   ]
+  },
+  {
+   "id": "e150d190-a7f5-4dff-a08b-f778b709869c",
+   "feature": "Theories",
+   "name": "Rows [row: 3, ms: 100]",
+   "result": "Passed",
+   "seconds": 0.1028615,
+   "endedAt": "2026-10-08T10:41:09.142Z",
+   "error": "",
+   "calls": [
+    "/row/3/slept/100"
+   ]
+  },
+  {
+   "id": "3707cce1-6384-444f-a606-4da532356be0",
+   "feature": "Theories",
+   "name": "Rows [row: 4, ms: 800]",
+   "result": "Failed",
+   "seconds": 0.8045935,
+   "endedAt": "2026-10-08T10:41:10.154Z",
+   "error": "Assert.NotEqual() Failure: Values are equal",
+   "calls": [
+    "/row/4/slept/800"
+   ]
+  },
+  {
+   "id": "e3f5f487-ea24-43a3-92ac-54c8ba1206a5",
+   "feature": "Theories",
+   "name": "Rows [row: 5, ms: 200]",
+   "result": "Passed",
+   "seconds": 0.2053141,
+   "endedAt": "2026-10-08T10:41:09.348Z",
+   "error": "",
+   "calls": [
+    "/row/5/slept/200"
+   ]
+  },
+  {
+   "id": "ea9906ef-c55d-4425-858f-fc7acb3eb04f",
+   "feature": "Theories",
+   "name": "Rows [row: 6, ms: 20]",
+   "result": "Passed",
+   "seconds": 0.0307446,
+   "endedAt": "2026-10-08T10:41:10.247Z",
+   "error": "",
+   "calls": [
+    "/row/6/slept/20"
+   ]
+  }
+ ],
+ "background": [],
+ "backgroundCount": 0,
+ "diagnostics": {},
+ "pathOccurrences": {
+  "/dots/trailing-dot": 5,
+  "/dots/version-1-2": 5,
+  "/facts/displayname-fails": 5,
+  "/facts/displayname-passes": 5,
+  "/facts/fails": 5,
+  "/facts/passes": 5,
+  "/nonser/1": 5,
+  "/nonser/2": 5,
+  "/nonser/3": 5,
+  "/row/1/slept/50": 5,
+  "/row/2/slept/400": 5,
+  "/row/3/slept/100": 5,
+  "/row/4/slept/800": 5,
+  "/row/5/slept/200": 5,
+  "/row/6/slept/20": 5
+ }
+}

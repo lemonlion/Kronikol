@@ -1,0 +1,21 @@
+{
+  "runManifestVersion": 1,
+  "run": "local:20261008T104101Z:77aa6610",
+  "at": "2026-10-08T10:41:01Z",
+  "suite": "C2.AssemblyFixtureWrapper",
+  "scenarios": 21,
+  "failed": 6,
+  "partial": null,
+  "kronikolVersion": "4.12.0\u002B615549a3b59ea305c155f2dc4d80deb5cb6dc5e6",
+  "files": [
+    "ComponentDiagram.html",
+    "Failures.jsonl",
+    "Failures.md",
+    "Specifications.html",
+    "Specifications.yml",
+    "TestRunReport.html",
+    "TestRunReport.json",
+    "TestRunReport.schema.json"
+  ],
+  "attachments": []
+}

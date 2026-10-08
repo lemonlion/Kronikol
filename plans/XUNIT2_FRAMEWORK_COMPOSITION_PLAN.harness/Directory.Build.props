@@ -31,7 +31,12 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
+  <!-- run.ps1 -Package <version> sets KronikolXUnit2Version: the probes then run against that release from
+       nuget.org (section 6.6's acceptance), not against src/. -->
+  <ItemGroup Condition="'$(KronikolXUnit2Version)' == ''">
     <ProjectReference Include="$(KronikolXUnit2Project)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(KronikolXUnit2Version)' != ''">
+    <PackageReference Include="Kronikol.xUnit2" Version="$(KronikolXUnit2Version)" />
   </ItemGroup>
 </Project>

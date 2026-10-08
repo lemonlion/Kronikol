@@ -1,0 +1,10 @@
+{
+  "lane": "A.OwnFramework",
+  "project": "A.OwnFramework",
+  "run": 1,
+  "vars": {},
+  "artifacts": "pkg-4.12.0",
+  "startedUtc": "2026-10-08T10:40:51.9475746Z",
+  "wallSeconds": 5.167,
+  "exitCode": 1
+}

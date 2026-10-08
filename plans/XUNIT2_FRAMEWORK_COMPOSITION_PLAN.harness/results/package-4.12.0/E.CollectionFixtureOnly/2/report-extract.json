@@ -1,0 +1,209 @@
+{
+ "extractOf": "TestRunReport.json",
+ "startText": "2026-10-08T10:41:15Z",
+ "endText": "2026-10-08T10:41:16Z",
+ "scenarios": [
+  {
+   "id": "8ceafa3e-fefa-4911-93d4-b2a48b857a0e",
+   "feature": "Display Name Dots",
+   "name": "Dotted version",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/dots/version-1-2"
+   ]
+  },
+  {
+   "id": "39d19961-398a-4b10-ab44-621495993cc7",
+   "feature": "Display Name Dots",
+   "name": "Trailing dot",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/dots/trailing-dot"
+   ]
+  },
+  {
+   "id": "3bf4754f-fbb3-418f-a8f9-ee789145d6da",
+   "feature": "Facts",
+   "name": "Fails",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/facts/fails"
+   ]
+  },
+  {
+   "id": "7b77d90f-7896-4e93-995c-4f089b0d5eb0",
+   "feature": "Facts",
+   "name": "Fails with display name",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/facts/displayname-fails"
+   ]
+  },
+  {
+   "id": "9589bbd5-2f01-4ebc-8598-c6fc600441ea",
+   "feature": "Facts",
+   "name": "Passes",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/facts/passes"
+   ]
+  },
+  {
+   "id": "ae4d21ba-1e93-4a2a-82e2-eaa5447e1fdd",
+   "feature": "Facts",
+   "name": "Passes with display name",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/facts/displayname-passes"
+   ]
+  },
+  {
+   "id": "bc7bedc2-90e7-4e06-ac24-262a8e42d061",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/nonser/1"
+   ]
+  },
+  {
+   "id": "fe823eb4-063d-4622-ade9-6d51899dd389",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/nonser/2"
+   ]
+  },
+  {
+   "id": "c0e0ff92-9e71-4745-9398-c6f3d7fa33d1",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/nonser/3"
+   ]
+  },
+  {
+   "id": "e40c2e4b-2049-4dc0-a186-0076ba910fda",
+   "feature": "Theories",
+   "name": "Rows",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/row/4/slept/800"
+   ]
+  },
+  {
+   "id": "99bf4741-0907-4671-b8f8-8fd8e654e382",
+   "feature": "Theories",
+   "name": "Rows",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/row/5/slept/200"
+   ]
+  },
+  {
+   "id": "85e75767-24b9-417f-8a68-70e0f7db9a78",
+   "feature": "Theories",
+   "name": "Rows",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/row/1/slept/50"
+   ]
+  },
+  {
+   "id": "5d5dab34-94dc-4bb8-8c5a-a06b9426dfec",
+   "feature": "Theories",
+   "name": "Rows",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/row/6/slept/20"
+   ]
+  },
+  {
+   "id": "8f1c463e-5ece-4ffb-a2f8-0402d35b99a4",
+   "feature": "Theories",
+   "name": "Rows",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/row/3/slept/100"
+   ]
+  },
+  {
+   "id": "a4fd5cd5-f113-4889-b238-dc9a0b38883a",
+   "feature": "Theories",
+   "name": "Rows",
+   "result": "Passed",
+   "seconds": 0,
+   "endedAt": null,
+   "error": "",
+   "calls": [
+    "/row/2/slept/400"
+   ]
+  }
+ ],
+ "background": [],
+ "backgroundCount": 0,
+ "diagnostics": {
+  "ResultDefaulted": 1
+ },
+ "pathOccurrences": {
+  "/dots/trailing-dot": 5,
+  "/dots/version-1-2": 5,
+  "/facts/displayname-fails": 5,
+  "/facts/displayname-passes": 5,
+  "/facts/fails": 5,
+  "/facts/passes": 5,
+  "/nonser/1": 5,
+  "/nonser/2": 5,
+  "/nonser/3": 5,
+  "/row/1/slept/50": 5,
+  "/row/2/slept/400": 5,
+  "/row/3/slept/100": 5,
+  "/row/4/slept/800": 5,
+  "/row/5/slept/200": 5,
+  "/row/6/slept/20": 5
+ }
+}

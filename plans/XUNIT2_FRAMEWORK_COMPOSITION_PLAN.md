@@ -547,3 +547,16 @@ follows R1 directly, since it reuses R1's sink.
     `release.slnf` built in Release for every target. R2 changes nothing outside `src/Kronikol.xUnit2` and its tests, so
     the core and Playwright suites were not run again after R1's. The first run of R2's checks met the drive full
     (0 bytes free, from other files on the machine); its Release build and Linux run were run again once there was room.
+- **2026-10-08. Published.** 4.11.1 (`8f653f63`): Release 37760306231, CI 37760303892, CodeQL 37760304212 and CI Summary
+  Preview 37760303938 passed. CI's Adapter Tests job ran the 30 lane facts on ubuntu, and the fixtures folder is on the
+  auto-discovery skip list. The wiki's edits are `c7595a3` and Kronikol4J's ledger line is `b03f05a`. 4.12.0 (`615549a3`):
+  Release 37762758415, CI 37762755578, CodeQL 37762755591 and CI Summary Preview 37762755748 passed, and the wiki's section
+  is `7293b1f`. nuget.org lists both. #123 and #132 were closed with comments.
+  - **Section 6.6, on the published packages** (`run.ps1 -Package 4.12.0`, `results/package-4.12.0/`). A (Kronikol's
+    framework) and C2 (Xunit.Extensions.AssemblyFixture 2.6.0 with `WithKronikolReporting()`, as the wiki writes it), built
+    against nuget.org's 4.12.0, ran three times each: every test was its own scenario with its own verdict, duration and
+    calls, and `compare.py` flagged no row (19 of 19 and 21 of 21 per run). E, the collection-fixture path, carries the
+    `ResultDefaulted` diagnostic in its `Failures.md`. The harness's `Directory.Build.props` gained the package switch and
+    `run.ps1` the `-Package` lanes; restoring a release minutes old needed `RestoreNoHttpCache`, since NuGet's cached
+    version list did not have it yet.
+  - **Still open:** R2's last done criterion is the reporter's: #132's own suite on the wrapper.

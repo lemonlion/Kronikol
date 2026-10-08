@@ -1,0 +1,247 @@
+{
+ "extractOf": "TestRunReport.json",
+ "startText": "2026-10-08T10:41:18Z",
+ "endText": "2026-10-08T10:41:19Z",
+ "scenarios": [
+  {
+   "id": "ebcdaecd-1a21-41d4-8238-838ba9198231",
+   "feature": "Ctor Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-08T10:41:18.164Z",
+   "error": "the test class constructor throws on purpose",
+   "calls": []
+  },
+  {
+   "id": "3a801cae-204f-45bf-83ae-db4cae527d49",
+   "feature": "Display Name Dots",
+   "name": "Does the thing.",
+   "result": "Passed",
+   "seconds": 0.0002703,
+   "endedAt": "2026-10-08T10:41:18.190Z",
+   "error": "",
+   "calls": [
+    "/dots/trailing-dot"
+   ]
+  },
+  {
+   "id": "f8fccb5a-c612-4c34-bd0f-fc1a34df5203",
+   "feature": "Display Name Dots",
+   "name": "Order api returns 404 for v1.2",
+   "result": "Passed",
+   "seconds": 0.0222453,
+   "endedAt": "2026-10-08T10:41:18.189Z",
+   "error": "",
+   "calls": [
+    "/dots/version-1-2"
+   ]
+  },
+  {
+   "id": "70462a3f-38c4-40fc-8497-e5b479cca794",
+   "feature": "Facts",
+   "name": "A failing fact with a display name",
+   "result": "Failed",
+   "seconds": 0.0263391,
+   "endedAt": "2026-10-08T10:41:18.193Z",
+   "error": "Assert.Equal() Failure: Values differ",
+   "calls": [
+    "/facts/displayname-fails"
+   ]
+  },
+  {
+   "id": "c9bf1c26-d733-4bf9-9bd0-abbe44fa615c",
+   "feature": "Facts",
+   "name": "A passing fact with a display name",
+   "result": "Passed",
+   "seconds": 0.0001035,
+   "endedAt": "2026-10-08T10:41:18.194Z",
+   "error": "",
+   "calls": [
+    "/facts/displayname-passes"
+   ]
+  },
+  {
+   "id": "8d80cb82-9001-4df2-aa62-931a4401cabe",
+   "feature": "Facts",
+   "name": "Fails",
+   "result": "Failed",
+   "seconds": 0.0005724,
+   "endedAt": "2026-10-08T10:41:18.194Z",
+   "error": "Assert.Equal() Failure: Values differ",
+   "calls": [
+    "/facts/fails"
+   ]
+  },
+  {
+   "id": "0d0159ca-3650-468f-82f6-f4da6b79ac06",
+   "feature": "Facts",
+   "name": "Passes",
+   "result": "Passed",
+   "seconds": 0.0001163,
+   "endedAt": "2026-10-08T10:41:18.194Z",
+   "error": "",
+   "calls": [
+    "/facts/passes"
+   ]
+  },
+  {
+   "id": "e8ced0f9-a55a-4540-b563-38bdf81f1830",
+   "feature": "Facts",
+   "name": "Skipped",
+   "result": "Skipped",
+   "seconds": 0,
+   "endedAt": "2026-10-08T10:41:18.194Z",
+   "error": "",
+   "calls": []
+  },
+  {
+   "id": "d9fae9a0-2784-4282-abed-8c0399be8693",
+   "feature": "Fixture Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-08T10:41:18.163Z",
+   "error": "Class fixture type 'Probe.ThrowingFixture' threw in its constructor",
+   "calls": []
+  },
+  {
+   "id": "cdae5564-c298-4104-9612-c6517ef2fe8a",
+   "feature": "Init Throws",
+   "name": "Never runs",
+   "result": "Failed",
+   "seconds": 0,
+   "endedAt": "2026-10-08T10:41:18.170Z",
+   "error": "InitializeAsync throws on purpose",
+   "calls": []
+  },
+  {
+   "id": "028444c9-d049-42a4-ac4e-68235e1062cf",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 1 }]",
+   "result": "Passed",
+   "seconds": 0.0222789,
+   "endedAt": "2026-10-08T10:41:18.189Z",
+   "error": "",
+   "calls": [
+    "/nonser/1"
+   ]
+  },
+  {
+   "id": "2f8e2f8f-cc72-452a-8dd3-d9250676176d",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 2 }]",
+   "result": "Passed",
+   "seconds": 0.0004215,
+   "endedAt": "2026-10-08T10:41:18.189Z",
+   "error": "",
+   "calls": [
+    "/nonser/2"
+   ]
+  },
+  {
+   "id": "a10ec7c4-7a81-40e1-83b2-75acac60d8b7",
+   "feature": "Member Data Not Serializable",
+   "name": "Non serializable rows [item: NonSer { I = 3 }]",
+   "result": "Passed",
+   "seconds": 8.37e-05,
+   "endedAt": "2026-10-08T10:41:18.190Z",
+   "error": "",
+   "calls": [
+    "/nonser/3"
+   ]
+  },
+  {
+   "id": "e2fdf126-2c01-4771-a931-d4346d574a75",
+   "feature": "Theories",
+   "name": "Rows [row: 1, ms: 50]",
+   "result": "Passed",
+   "seconds": 0.051617,
+   "endedAt": "2026-10-08T10:41:19.791Z",
+   "error": "",
+   "calls": [
+    "/row/1/slept/50"
+   ]
+  },
+  {
+   "id": "534e801c-d1ab-4c33-81b3-1d81fd354de7",
+   "feature": "Theories",
+   "name": "Rows [row: 2, ms: 400]",
+   "result": "Passed",
+   "seconds": 0.4353809,
+   "endedAt": "2026-10-08T10:41:18.602Z",
+   "error": "",
+   "calls": [
+    "/row/2/slept/400"
+   ]
+  },
+  {
+   "id": "b5193bbb-d336-4c54-9881-cf8f0ffd6269",
+   "feature": "Theories",
+   "name": "Rows [row: 3, ms: 100]",
+   "result": "Passed",
+   "seconds": 0.1121035,
+   "endedAt": "2026-10-08T10:41:18.715Z",
+   "error": "",
+   "calls": [
+    "/row/3/slept/100"
+   ]
+  },
+  {
+   "id": "53232403-489c-4b1d-b3fd-19c72ca7fb11",
+   "feature": "Theories",
+   "name": "Rows [row: 4, ms: 800]",
+   "result": "Failed",
+   "seconds": 0.8119518,
+   "endedAt": "2026-10-08T10:41:19.739Z",
+   "error": "Assert.NotEqual() Failure: Values are equal",
+   "calls": [
+    "/row/4/slept/800"
+   ]
+  },
+  {
+   "id": "aa80774b-1605-4ee8-9f14-9ce52f2a0faa",
+   "feature": "Theories",
+   "name": "Rows [row: 5, ms: 200]",
+   "result": "Passed",
+   "seconds": 0.2101057,
+   "endedAt": "2026-10-08T10:41:18.926Z",
+   "error": "",
+   "calls": [
+    "/row/5/slept/200"
+   ]
+  },
+  {
+   "id": "67e7184c-9acd-4043-a3aa-a6e473f56681",
+   "feature": "Theories",
+   "name": "Rows [row: 6, ms: 20]",
+   "result": "Passed",
+   "seconds": 0.0303451,
+   "endedAt": "2026-10-08T10:41:19.822Z",
+   "error": "",
+   "calls": [
+    "/row/6/slept/20"
+   ]
+  }
+ ],
+ "background": [],
+ "backgroundCount": 0,
+ "diagnostics": {},
+ "pathOccurrences": {
+  "/dots/trailing-dot": 5,
+  "/dots/version-1-2": 5,
+  "/facts/displayname-fails": 5,
+  "/facts/displayname-passes": 5,
+  "/facts/fails": 5,
+  "/facts/passes": 5,
+  "/nonser/1": 5,
+  "/nonser/2": 5,
+  "/nonser/3": 5,
+  "/row/1/slept/50": 5,
+  "/row/2/slept/400": 5,
+  "/row/3/slept/100": 5,
+  "/row/4/slept/800": 5,
+  "/row/5/slept/200": 5,
+  "/row/6/slept/20": 5
+ }
+}

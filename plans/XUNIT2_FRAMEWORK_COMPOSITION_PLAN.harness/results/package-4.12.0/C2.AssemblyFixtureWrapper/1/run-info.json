@@ -1,0 +1,10 @@
+{
+  "lane": "C2.AssemblyFixtureWrapper",
+  "project": "C2.AssemblyFixtureWrapper",
+  "run": 1,
+  "vars": {},
+  "artifacts": "pkg-4.12.0",
+  "startedUtc": "2026-10-08T10:40:57.3393366Z",
+  "wallSeconds": 4.954,
+  "exitCode": 1
+}

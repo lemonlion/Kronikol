@@ -1,0 +1,22 @@
+{
+  "runManifestVersion": 1,
+  "run": "local:20261008T104116Z:a57c969d",
+  "at": "2026-10-08T10:41:16Z",
+  "suite": "E.CollectionFixtureOnly",
+  "scenarios": 15,
+  "failed": 0,
+  "partial": null,
+  "kronikolVersion": "4.12.0\u002B615549a3b59ea305c155f2dc4d80deb5cb6dc5e6",
+  "files": [
+    "ComponentDiagram.html",
+    "Failures.jsonl",
+    "Failures.md",
+    "Specifications.html",
+    "Specifications.yml",
+    "TestRunReport.html",
+    "TestRunReport.json",
+    "TestRunReport.labs.html",
+    "TestRunReport.schema.json"
+  ],
+  "attachments": []
+}

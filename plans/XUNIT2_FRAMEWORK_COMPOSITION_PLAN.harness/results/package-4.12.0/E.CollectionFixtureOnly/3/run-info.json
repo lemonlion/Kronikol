@@ -1,0 +1,10 @@
+{
+  "lane": "E.CollectionFixtureOnly",
+  "project": "E.CollectionFixtureOnly",
+  "run": 3,
+  "vars": {},
+  "artifacts": "pkg-4.12.0",
+  "startedUtc": "2026-10-08T10:41:23.4971095Z",
+  "wallSeconds": 3.064,
+  "exitCode": 1
+}
