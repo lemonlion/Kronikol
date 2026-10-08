@@ -901,6 +901,36 @@ against the recommendation.
     - `r1/suite.txt`: the full suite on R1's commit, before its rebase onto 4.12.2 and 4.12.3. `r1/rebased-check.txt`:
       on the rebased commit, the Release build and the core, gRPC, S3, ServiceBus, Sqlite and diagnostic-page
       projects, since 4.12.2 changed how `RequestResponseLogger`'s store is reached.
+  - **R1 published the same day.** Release run 37774651570 and CI 37774646774 passed on `134fb79e`, nuget.org lists
+    all 62 ids at 4.13.0, the wiki has R1's edits (`6b78db6`, with a gRPC-only "Hosts That Call Each Other" section on
+    `Multi-Host-Test-Architectures.md` that R3 widens), Kronikol4J's ledger its line (`c6e3e18`), #134 is closed with
+    a comment, and #137 has one saying its section 2 is done.
+  - **R2 = 4.13.2.** Its proofs:
+    - `r2/red-v4.13.0.txt`: with the facts copied onto v4.13.0, 8 of the 10 `StreamingOutcomeTests` facts failed: a
+      stream was logged `OK`, with no content, as it started. The two that pass there are guards (a call disposed once
+      its status is known is logged with that status; a stream read to its end and then disposed is logged once), and
+      so are the 39 `GrpcTrackingInterceptorTests`, among them the three that now read their stream to its end.
+    - `r2/mutations.txt`: 4 of 4 killed.
+    - `results/accept/accept-4.13.2-local.r2-*`: against R1's results only P9 flips. The stream that fails after one
+      reply is logged `NotFound` with its message, where it read `OK`.
+    - `results/accept/breakfastprovider-r2.txt`: s54's and s55's CosmosDB reads now nest under their streams, s55's
+      stream reads `NotFound`, and the two reflection streams, which their client disposes after one reply, read
+      `Cancelled` (408). Those are the three new errors in each lane; ReqNRoll's one CosmosDB query fewer is s128's
+      polling again.
+    - `r2/suite.txt`: the full suite on R2's commit before its rebase onto 4.13.1, all 50 projects. The core passes
+      7,059 with 2 skipped and the gRPC project 189. The Playwright project failed 79 facts in that run while the disk
+      was full, and passed 997 with 28 skipped when run again alone on the same commit. `r2/rebased-check.txt`:
+      on the rebased commit, since 4.13.1 changed how an adapter answers outside a test, the Release build and the
+      gRPC project (189) pass, and every core fact passed in one of two runs. Each run failed one other fact, which
+      passes alone: `CultureInvariantPipelineTests` under ar-SA in the first, and in the second
+      `HistoryLedgerTests`' read budget (2,372 ms against 1,500, with other sessions' suites running), which 4.13.1's
+      core run also failed. Neither reads gRPC code. R3 takes both up.
+    - Found while releasing: kronikol-28's 4.13.1 CI failed `AsyncUnaryCall_activity_spans_from_request_to_response`
+      once ("Sequence contains no matching element"; it passed on the second attempt). Nothing in the gRPC test project
+      clears the span store. The cause is `InternalFlowActivityListener.EnsureStarted`: since #70 (`4e8bebd3`) a
+      caller that loses the race to start the listener returns at once, before the winner has registered it, so the
+      span the loser starts next is not sampled, and its gRPC call logs a trace id no span carries. R2's and R1's test
+      classes add parallel first callers. The fix is R3's.
 
 ## Appendix A. Edit sites at `417c8e58`
 

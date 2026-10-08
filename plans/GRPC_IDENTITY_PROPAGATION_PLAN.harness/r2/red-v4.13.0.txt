@@ -1,0 +1,28 @@
+=== tests/Kronikol.Tests.Grpc :: FullyQualifiedName~StreamingOutcomeTests|FullyQualifiedName~GrpcTrackingInterceptorTests
+Build succeeded.
+  Failed Kronikol.Tests.Grpc.StreamingOutcomeTests.A_server_stream_that_fails_after_one_reply_is_logged_once_as_the_failure [331 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+  Failed Kronikol.Tests.Grpc.StreamingOutcomeTests.A_real_duplex_stream_that_fails_is_logged_as_the_failure [410 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.Grpc.StreamingOutcomeTests.A_duplex_stream_is_logged_when_it_ends_and_as_its_failure_when_it_fails [2 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+  Failed Kronikol.Tests.Grpc.StreamingOutcomeTests.A_client_stream_whose_response_fails_is_logged_as_the_failure [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.Grpc.StreamingOutcomeTests.A_client_stream_is_logged_when_its_response_arrives_with_the_response [2 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+  Failed Kronikol.Tests.Grpc.StreamingOutcomeTests.A_real_server_stream_that_fails_NotFound_is_logged_as_NotFound [123 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.Grpc.StreamingOutcomeTests.A_completed_server_stream_is_logged_OK_after_its_last_message_and_its_span_ends_then [2 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+  Failed Kronikol.Tests.Grpc.StreamingOutcomeTests.A_call_disposed_mid_stream_is_logged_Cancelled_once [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Failed!  - Failed:     8, Passed:    41, Skipped:     0, Total:    49, Duration: 929 ms - Kronikol.Tests.Grpc.dll (net10.0)
+=== done

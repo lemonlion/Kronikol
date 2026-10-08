@@ -1,0 +1,5 @@
+kronikol 4.13.2-local.r2+e5701bd7c8ac2c7e5487890f6ebb408cff8c3034 probe=attribution variant=workaround
+B saw (test id|test name|traceparents): id-1|Scenario one|00-5105a6e8996b0d991b63abf6ba752fc3-eda5b702282f475c-00
+  Test       -> Service A  test=id-1     source=TestContext
+  Service A  -> Service B  test=id-1     source=RequestHeader
+  Service B  -> Stub C     test=id-1     source=RequestHeader

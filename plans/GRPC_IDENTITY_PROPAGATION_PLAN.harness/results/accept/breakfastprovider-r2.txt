@@ -1,0 +1,87 @@
+# BreakfastProvider (scratch clone of origin at 0ee43e8, its 27 Kronikol pins moved to each version), xUnit and ReqNRoll
+# lanes in memory, read with the query.cs beside each report. 4.13.2-local.r2 is packed from R2's commit (on 4.13.0); the
+# control is 4.13.0-local.r1 (breakfastprovider-r1.txt). R2's packages also carry 4.12.2 and 4.12.3, which R1's local pack
+# did not: the '! 3 calls carried a test id that no scenario of this run has' line is 4.12.2's, not R2's.
+
+## Lanes
+xunit 4.13.2-local.r2: exit 0 in 646s; Test run summary: Passed! 
+reqnroll 4.13.2-local.r2: exit 0 in 505s; Test run summary: Passed! 
+
+## Calls and errors per service (query services), R1 then R2
+-- xunit
+0a1
+> ! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 3 test ids, the most calls (1) under '4c2d7755-…
+2c3
+< Breakfast Provider|568|92
+---
+> Breakfast Provider|568|95
+-- reqnroll
+0a1
+> ! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 3 test ids, the most calls (1) under '02d4c4f7-…
+2,3c3,4
+< Breakfast Provider|554|94
+< CosmosDB|197|7
+---
+> Breakfast Provider|554|97
+> CosmosDB|196|7
+
+## The three new errors: s55's stream reads NotFound, and the two reflection streams, which their client disposes
+## after one reply, read Cancelled (MapGrpcStatusToHttp maps it to 408 RequestTimeout, as for a unary call)
+
+$ query flow <xunit 4.13.2-local.r2> s54
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 3 test ids, the most calls (1) under '4c2d7755-…
+s54  Streaming order updates should return the current status  [Passed]
+
+  s54/i0    Caller → Breakfast Provider  GET /milk  OK  98 ms
+    s54/i1    Breakfast Provider → Cow Service  GET /milk  OK  92 ms
+  s54/i4    Caller → Breakfast Provider  GET /eggs  OK  1 ms
+  s54/i6    Caller → Breakfast Provider  GET /flour  OK  0 ms
+  s54/i8    Caller → Breakfast Provider  POST /pancakes  Created  99 ms  b:2195078e 80 B
+    s54/i9    Breakfast Provider → CosmosDB  Create /orders  Created  1 ms
+    s54/i11   Kafka Broker → Breakfast Provider  Consume (Kafka) /breakfast_recipe_logs  Ack  0 ms  b:fa515b46 188 B
+    s54/i13   Breakfast Provider → Reporting Database (SQL Server)  Insert /RecipeReports  OK  19 ms
+    s54/i15   Breakfast Provider → Kafka Broker  Produce  0 ms
+    s54/i17   Google Cloud Pub/Sub → Breakfast Provider  Consume (Pub/Sub) /breakfast_batch_completions  Ack  0 ms  b:c2d30b0c 168 B
+    s54/i19   Breakfast Provider → Reporting Database (SQL Server)  Insert /BatchCompletionRecords  OK  0 ms
+    s54/i21   Breakfast Provider → Google Cloud Pub/Sub  Publish (Pub/Sub) /PancakeBatchCompletedEvent  Responded  0 ms
+    s54/i23   Azure Event Hub → Breakfast Provider  Consume (Event Hub) /breakfast-equipment-alerts  Ack  0 ms  b:865b2edc 202 B
+    s54/i25   Breakfast Provider → Reporting Database (SQL Server)  Insert /EquipmentAlerts  OK  1 ms
+  s54/i28   Caller → Breakfast Provider  POST /orders  Created  249 ms  b:a8c69724 163 B
+    s54/i29   Breakfast Provider → CosmosDB  Create /orders  OK  26 ms
+    s54/i31   Breakfast Provider → Event Grid  Publish (Event Grid) /OrderCreatedEvent  Responded  0 ms
+    s54/i33   Breakfast Provider → CosmosDB  Create /orders  Created  0 ms
+    s54/i35   Breakfast Provider → Kitchen Service  POST /prepare  OK  93 ms  b:063928f6 97 B
+    s54/i37   Breakfast Provider → Notification Service (gRPC)  SendOrderConfirmation /notifications.NotificationGrpc/SendOr…  OK  69 ms  b:21d43f4f 141 B
+    s54/i39   Breakfast Provider → Reporting Database (SQL Server)  Select /OrderSummaries  OK  0 ms
+    s54/i41   Breakfast Provider → Reporting Database (SQL Server)  Insert /OrderSummaries  OK  0 ms
+  s54/i44   Caller → Breakfast Provider  StreamOrderUpdates (server-stream) /breakfast.BreakfastGrpc/…  OK  121 ms  b:18b9eb1c 53 B
+    s54/i45   Breakfast Provider → CosmosDB  Read /orders  OK  0 ms
+24 calls shown · http s54/iN --keys for a payload · indented calls ran inside the call above them
+
+$ query flow <xunit 4.13.2-local.r2> s55
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 3 test ids, the most calls (1) under '4c2d7755-…
+s55  Streaming updates for non existent order should return not found  [Passed]
+
+  s55/i0    Caller → Breakfast Provider  StreamOrderUpdates (server-stream) /breakfast.BreakfastGrpc/…  NotFound  637 ms  b:48572a5d 53 B
+    s55/i1    Breakfast Provider → CosmosDB  Read /orders  NotFound  29 ms
+2 calls shown · http s55/iN --keys for a payload · indented calls ran inside the call above them
+
+$ query flow <xunit 4.13.2-local.r2> s172
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 3 test ids, the most calls (1) under '4c2d7755-…
+s172  Grpc server reflection should describe the breakfast service  [Passed]
+
+  s172/i0   Caller → Breakfast Provider  ServerReflectionInfo (duplex-stream) /grpc.reflection.v1.Ser…  RequestTimeout  57 ms
+1 calls shown · http s172/iN --keys for a payload
+
+$ query flow <xunit 4.13.2-local.r2> s173
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 3 test ids, the most calls (1) under '4c2d7755-…
+s173  Grpc server reflection should list the breakfast service  [Passed]
+
+  s173/i0   Caller → Breakfast Provider  ServerReflectionInfo (duplex-stream) /grpc.reflection.v1.Ser…  RequestTimeout  393 ms
+1 calls shown · http s173/iN --keys for a payload
+
+## ReqNRoll's one CosmosDB call fewer is s128's polling count again (see breakfastprovider-r0.txt)
+47c47
+<       3 s128 Query /orders
+---
+>       2 s128 Query /orders

@@ -1,0 +1,6 @@
+kronikol 4.13.2-local.r2+e5701bd7c8ac2c7e5487890f6ebb408cff8c3034 probe=nonascii variant=propagated
+R1 name "Place an order": call ok; B's call to C: id-p1, RequestHeader, name exact
+R1 name "Caf‚ order": call ok; B's call to C: id-p2, RequestHeader, name exact
+R1 name "Order a coffee ?": call ok; B's call to C: id-p3, RequestHeader, name exact
+R1 name "Theory(text: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"úúú)": call ok; B's call to C: id-p4, RequestHeader, name exact
+R1 name "Theory(a<LF>b)": call ok; B's call to C: id-p5, RequestHeader, name exact

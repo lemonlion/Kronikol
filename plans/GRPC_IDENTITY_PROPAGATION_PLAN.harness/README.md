@@ -96,6 +96,10 @@ Each release's proofs, added as it was made:
 - `r1/red.sh <worktree at the previous release> <worktree at R1> <out>` and `r1/mutate.py`, the same for R1. The red
   proof stubs `GrpcTrackingOptions.PropagateTestIdentity` and the interceptor's `HasHttpContextAccessor` so the facts
   compile; neither stub does anything. Output: `r1/red-v4.12.1.txt` and `r1/mutations.txt`.
-- `results/accept/breakfastprovider-r0.txt` and `breakfastprovider-r1.txt`: BreakfastProvider's xUnit and ReqNRoll
+- `r2/red.sh` and `r2/mutate.py`, the same for R2, with nothing stubbed: R2's facts use only public members. Output:
+  `r2/red-v4.13.0.txt` and `r2/mutations.txt`.
+- `r1/suite.txt` and `r2/suite.txt`: `suite.sh` on each release's commit before its rebase, and `r1/rebased-check.txt` and
+  `r2/rebased-check.txt` the Release build and the projects the rebase could touch, on the commit that was pushed.
+- `results/accept/breakfastprovider-r0.txt`, `-r1.txt` and `-r2.txt`: BreakfastProvider's xUnit and ReqNRoll
   lanes on each release's local packages, compared with the release before, and `breakfastprovider-grpc-flows-4.11.0.txt`
   the four gRPC scenarios before R1.

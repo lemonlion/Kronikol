@@ -1,0 +1,16 @@
+R2 rebased onto 16b02497 (4.13.1 and its plan log), 2026-10-08
+release.slnf, Release:
+    0 Error(s)
+Build succeeded.
+Kronikol.Tests.Grpc:
+Passed!  - Failed:     0, Passed:   189, Skipped:     0, Total:   189, Duration: 1 s - Kronikol.Tests.Grpc.dll (net10.0)
+Kronikol.Tests, first run:
+  Failed Kronikol.Tests.Reports.CultureInvariantPipelineTests.Every_file_a_run_writes_is_the_same_under_the_culture_as_under_en_us(culture: "ar-SA") [8 s]
+Failed!  - Failed:     1, Passed:  7057, Skipped:     3, Total:  7061, Duration: 4 m 46 s - Kronikol.Tests.dll (net10.0)
+  alone: CultureInvariantPipelineTests passes 4 of 4
+Kronikol.Tests, second run:
+Test run for C:\Code\Kronikol-grpc134-mut\tests\Kronikol.Tests\bin\Release\net10.0\Kronikol.Tests.dll (.NETCoreApp,Version=v10.0)
+  Failed Kronikol.Tests.History.HistoryLedgerTests.Ledger_for_5000_scenarios_over_50_runs_stays_under_the_budget [11 s]
+   the fastest of three reads took 2372 ms (budget is generous here; the measured figure is ~100 ms)
+Failed!  - Failed:     1, Passed:  7058, Skipped:     2, Total:  7061, Duration: 4 m 35 s - Kronikol.Tests.dll (net10.0)
+  alone: the ledger budget fact passes (1 s)

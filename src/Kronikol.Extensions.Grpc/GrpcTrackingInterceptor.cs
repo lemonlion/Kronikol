@@ -182,18 +182,38 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         var requestResponseId = Guid.NewGuid();
 
         EnsureListenerStarted();
-        using var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
-        var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
+        // The span lasts until the stream ends (StreamOutcome completes it); the caller gets its own Activity.Current
+        // back when the call starts, as an async unary call's caller does.
+        var callerActivity = Activity.Current;
+        var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
+        try
+        {
+            var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
 
-        context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
+            context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-        LogRequest(testInfo, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+            LogRequest(testInfo, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
-        var call = continuation(request, context);
+            var call = continuation(request, context);
 
-        LogResponse(testInfo, label, null, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
-
-        return call;
+            var outcome = new StreamOutcome(this, testInfo, label, uri, serviceName, traceId, requestResponseId,
+                activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current);
+            return new AsyncServerStreamingCall<TResponse>(
+                new OutcomeReader<TResponse>(call.ResponseStream, outcome),
+                call.ResponseHeadersAsync,
+                call.GetStatus,
+                call.GetTrailers,
+                () => outcome.Dispose(call.GetStatus, call.Dispose));
+        }
+        catch
+        {
+            InternalFlowSpanStore.Complete(activity);
+            throw;
+        }
+        finally
+        {
+            Activity.Current = callerActivity;
+        }
     }
 
     public override AsyncClientStreamingCall<TRequest, TResponse> AsyncClientStreamingCall<TRequest, TResponse>(
@@ -220,18 +240,39 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         var requestResponseId = Guid.NewGuid();
 
         EnsureListenerStarted();
-        using var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
-        var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
+        // The span lasts until the stream ends (StreamOutcome completes it); the caller gets its own Activity.Current
+        // back when the call starts, as an async unary call's caller does.
+        var callerActivity = Activity.Current;
+        var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
+        try
+        {
+            var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
 
-        context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
+            context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-        LogRequest(testInfo, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+            LogRequest(testInfo, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
-        var call = continuation(context);
+            var call = continuation(context);
 
-        LogResponse(testInfo, label, null, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
-
-        return call;
+            var outcome = new StreamOutcome(this, testInfo, label, uri, serviceName, traceId, requestResponseId,
+                activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current);
+            return new AsyncClientStreamingCall<TRequest, TResponse>(
+                call.RequestStream,
+                WrapStreamResponse(call.ResponseAsync, outcome, effectiveVerbosity),
+                call.ResponseHeadersAsync,
+                call.GetStatus,
+                call.GetTrailers,
+                () => outcome.Dispose(call.GetStatus, call.Dispose));
+        }
+        catch
+        {
+            InternalFlowSpanStore.Complete(activity);
+            throw;
+        }
+        finally
+        {
+            Activity.Current = callerActivity;
+        }
     }
 
     public override AsyncDuplexStreamingCall<TRequest, TResponse> AsyncDuplexStreamingCall<TRequest, TResponse>(
@@ -258,18 +299,39 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         var requestResponseId = Guid.NewGuid();
 
         EnsureListenerStarted();
-        using var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
-        var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
+        // The span lasts until the stream ends (StreamOutcome completes it); the caller gets its own Activity.Current
+        // back when the call starts, as an async unary call's caller does.
+        var callerActivity = Activity.Current;
+        var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
+        try
+        {
+            var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
 
-        context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
+            context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-        LogRequest(testInfo, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+            LogRequest(testInfo, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
-        var call = continuation(context);
+            var call = continuation(context);
 
-        LogResponse(testInfo, label, null, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
-
-        return call;
+            var outcome = new StreamOutcome(this, testInfo, label, uri, serviceName, traceId, requestResponseId,
+                activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current);
+            return new AsyncDuplexStreamingCall<TRequest, TResponse>(
+                call.RequestStream,
+                new OutcomeReader<TResponse>(call.ResponseStream, outcome),
+                call.ResponseHeadersAsync,
+                call.GetStatus,
+                call.GetTrailers,
+                () => outcome.Dispose(call.GetStatus, call.Dispose));
+        }
+        catch
+        {
+            InternalFlowSpanStore.Complete(activity);
+            throw;
+        }
+        finally
+        {
+            Activity.Current = callerActivity;
+        }
     }
 
     private async Task<TResponse> WrapUnaryResponse<TResponse>(
@@ -296,6 +358,109 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         finally
         {
             InternalFlowSpanStore.Complete(activity);
+        }
+    }
+
+    /// <summary>A client stream's response, recorded as an async unary call's is, through its outcome.</summary>
+    private async Task<TResponse> WrapStreamResponse<TResponse>(
+        Task<TResponse> responseTask, StreamOutcome outcome, GrpcTrackingVerbosity effectiveVerbosity)
+    {
+        TResponse response;
+        try
+        {
+            response = await responseTask.ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            outcome.Failed(ex);
+            throw;
+        }
+
+        outcome.Completed(SerializeMessage(response, effectiveVerbosity));
+        return response;
+    }
+
+    /// <summary>
+    /// The outcome of a streaming call, recorded once, when the call ends, with the span ending with it. The response
+    /// stream read to its end, or a client stream's response, is <c>OK</c>; a failure is its mapped status with
+    /// <c>"{code}: {message}"</c>, as for a unary call. A call disposed first is <c>Cancelled</c>, unless its status
+    /// was already known; a call neither read to its end nor disposed has no response recorded.
+    /// </summary>
+    private sealed class StreamOutcome(
+        GrpcTrackingInterceptor owner, TestIdentity testInfo, string label, Uri uri, string serviceName,
+        Guid traceId, Guid requestResponseId, string? activityTraceId, string? activitySpanId,
+        GrpcOperationInfo opInfo, Activity? activity, TestPhase phase)
+    {
+        private int _recorded;
+
+        public void Completed(string? content = null) => Record(content, HttpStatusCode.OK);
+
+        public void Failed(Exception exception)
+        {
+            var (code, text) = exception switch
+            {
+                RpcException rpc => (rpc.StatusCode, $"{rpc.StatusCode}: {rpc.Message}"),
+                OperationCanceledException => (StatusCode.Cancelled, $"{StatusCode.Cancelled}: {exception.Message}"),
+                _ => (StatusCode.Unknown, $"{StatusCode.Unknown}: {exception.Message}"),
+            };
+            Record(text, MapGrpcStatusToHttp(code));
+        }
+
+        /// <summary>The call is being disposed: its status when it already has one, else <c>Cancelled</c>.</summary>
+        public void Dispose(Func<Status> getStatus, Action dispose)
+        {
+            Status? status = null;
+            try
+            {
+                status = getStatus();
+            }
+            catch (InvalidOperationException)
+            {
+                // The call has not finished: disposing it cancels it.
+            }
+
+            dispose();
+
+            if (status is not { } known)
+                Record($"{StatusCode.Cancelled}: the call was disposed before its stream ended", MapGrpcStatusToHttp(StatusCode.Cancelled));
+            else if (known.StatusCode == StatusCode.OK)
+                Completed();
+            else
+                Failed(new RpcException(known));
+        }
+
+        private void Record(string? content, HttpStatusCode statusCode)
+        {
+            if (Interlocked.Exchange(ref _recorded, 1) != 0)
+                return;
+
+            owner.LogResponse(testInfo, label, content, uri, serviceName, traceId, requestResponseId, statusCode,
+                activityTraceId, activitySpanId, opInfo, phase);
+            InternalFlowSpanStore.Complete(activity);
+        }
+    }
+
+    /// <summary>A response stream that records its call's outcome when it ends or fails.</summary>
+    private sealed class OutcomeReader<T>(IAsyncStreamReader<T> inner, StreamOutcome outcome) : IAsyncStreamReader<T>
+    {
+        public T Current => inner.Current;
+
+        public async Task<bool> MoveNext(CancellationToken cancellationToken)
+        {
+            bool more;
+            try
+            {
+                more = await inner.MoveNext(cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                outcome.Failed(ex);
+                throw;
+            }
+
+            if (!more)
+                outcome.Completed();
+            return more;
         }
     }
 
@@ -331,7 +496,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         Uri uri, string serviceName,
         Guid traceId, Guid requestResponseId, HttpStatusCode statusCode,
         string? activityTraceId, string? activitySpanId,
-        GrpcOperationInfo? opInfo = null)
+        GrpcOperationInfo? opInfo = null, TestPhase? phase = null)
     {
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Name, testInfo.Id,
@@ -341,7 +506,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             statusCode,
             DependencyCategory: DependencyCategories.Grpc)
         {
-            Phase = TestPhaseContext.Current,
+            Phase = phase ?? TestPhaseContext.Current,
             AttributionSource = testInfo.Source,
             Timestamp = DateTimeOffset.UtcNow,
             ActivityTraceId = activityTraceId,

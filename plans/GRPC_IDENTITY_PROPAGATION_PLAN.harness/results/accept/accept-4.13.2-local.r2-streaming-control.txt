@@ -1,0 +1,4 @@
+kronikol 4.13.2-local.r2+e5701bd7c8ac2c7e5487890f6ebb408cff8c3034 probe=streaming variant=control
+P9 server stream: client received 1 message(s), then RpcException NotFound
+  Request  status=- content={ }
+  Response status=NotFound content=NotFound: Status(StatusCode="NotFound", Detail="gone after the first reply")

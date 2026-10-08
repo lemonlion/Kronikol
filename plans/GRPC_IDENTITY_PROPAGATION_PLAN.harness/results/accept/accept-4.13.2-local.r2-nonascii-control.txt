@@ -1,0 +1,37 @@
+kronikol 4.13.2-local.r2+e5701bd7c8ac2c7e5487890f6ebb408cff8c3034 probe=nonascii variant=control
+P10 name "Place an order"
+  encoded (section 4.1), HTTP over a socket: ok, the exact name after decoding
+  encoded (section 4.1), gRPC over h2c: ok, the exact name after decoding
+  HTTP handler over a socket: ok, server saw name=Place an order
+  gRPC identity metadata over h2c: ok, server saw name=Place an order
+  HTTP handler in memory (TestServer): ok, B saw id-2|Place an order|00-c47d07eac0dd0a61c5604d9a68f0b76f-e079f59ea8960a31-00
+  gRPC identity metadata in memory (TestServer): ok, B saw name=Place an order
+P10 name "Caf‚ order"
+  encoded (section 4.1), HTTP over a socket: ok, the exact name after decoding
+  encoded (section 4.1), gRPC over h2c: ok, the exact name after decoding
+  HTTP handler over a socket: ok, server saw name=UTF-8''Caf%C3%A9%20order
+  gRPC identity metadata over h2c: RpcException: Status(StatusCode="Internal", Detail="Error starting gRPC call. HttpRequestException: Request headers must contain only ASCII characters.", DebugException="System.Net.Http.HttpRequestException: Request headers must contain only ASCII characters.")
+  HTTP handler in memory (TestServer): ok, B saw id-2|UTF-8''Caf%C3%A9%20order|00-580317c4accd65f4de5451c5af766dbd-be9ff60404383bbb-00
+  gRPC identity metadata in memory (TestServer): ok, B saw name=Caf‚ order
+P10 name "Order a coffee ?"
+  encoded (section 4.1), HTTP over a socket: ok, the exact name after decoding
+  encoded (section 4.1), gRPC over h2c: ok, the exact name after decoding
+  HTTP handler over a socket: ok, server saw name=UTF-8''Order%20a%20coffee%20%E2%98%95
+  gRPC identity metadata over h2c: RpcException: Status(StatusCode="Internal", Detail="Error starting gRPC call. HttpRequestException: Request headers must contain only ASCII characters.", DebugException="System.Net.Http.HttpRequestException: Request headers must contain only ASCII characters.")
+  HTTP handler in memory (TestServer): ok, B saw id-2|UTF-8''Order%20a%20coffee%20%E2%98%95|00-e9abbb2cf3582593489cf1f6f9cfcd90-b03b208173f45e88-00
+  gRPC identity metadata in memory (TestServer): ok, B saw name=Order a coffee ?
+P10 name "Theory(text: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"úúú)"
+  encoded (section 4.1), HTTP over a socket: ok, the exact name after decoding
+  encoded (section 4.1), gRPC over h2c: ok, the exact name after decoding
+  HTTP handler over a socket: ok, server saw name=UTF-8''Theory%28text%3A%20%22aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa%22%C2%B7%C2%B7%C2%B7%29
+  gRPC identity metadata over h2c: RpcException: Status(StatusCode="Internal", Detail="Error starting gRPC call. HttpRequestException: Request headers must contain only ASCII characters.", DebugException="System.Net.Http.HttpRequestException: Request headers must contain only ASCII characters.")
+  HTTP handler in memory (TestServer): ok, B saw id-2|UTF-8''Theory%28text%3A%20%22aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa%22%C2%B7%C2%B7%C2%B7%29|00-2e909b48bfcb83967507db2b80a69592-d74c7344451504d3-00
+  gRPC identity metadata in memory (TestServer): ok, B saw name=Theory(text: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"úúú)
+P10 name "Theory(a<LF>b)"
+  encoded (section 4.1), HTTP over a socket: ok, the exact name after decoding
+  encoded (section 4.1), gRPC over h2c: ok, the exact name after decoding
+  HTTP handler over a socket: ok, server saw name=UTF-8''Theory%28a%0Ab%29
+  gRPC identity metadata over h2c: RpcException: Status(StatusCode="Unavailable", Detail="Error starting gRPC call. HttpRequestException: The response ended prematurely while waiting for the next frame from the server. (ResponseEnded) HttpIOException: The response ended prematurely while waiting for the next frame from the server. (ResponseEnded)", DebugException="System.Net.Http.HttpRequestException: The response ended prematurely while waiting for the next frame from the server. (ResponseEnded)")
+  HTTP handler in memory (TestServer): ok, B saw id-2|UTF-8''Theory%28a%0Ab%29|00-fad7f33263f1bb6a60d5421fb05ba899-88ea792f1e7c9975-00
+  gRPC identity metadata in memory (TestServer): ok, B saw name=Theory(a
+b)

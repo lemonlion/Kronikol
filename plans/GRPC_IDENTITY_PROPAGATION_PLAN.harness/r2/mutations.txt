@@ -1,0 +1,22 @@
+KILLED: log a stream at start (T40)
+  ['Failed!  - Failed:     4, Passed:     6, Skipped:     0, Total:    10, Duration: 3 s - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_call_disposed_mid_stream_is_logged_Cancelled_once
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_completed_server_stream_is_logged_OK_after_its_last_message_and_its_span_ends_then
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_real_server_stream_that_fails_NotFound_is_logged_as_NotFound
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_server_stream_that_fails_after_one_reply_is_logged_once_as_the_failure
+KILLED: record an outcome twice (T43)
+  ['Failed!  - Failed:     3, Passed:     7, Skipped:     0, Total:    10, Duration: 1 s - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_call_disposed_mid_stream_is_logged_Cancelled_once
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_duplex_stream_is_logged_when_it_ends_and_as_its_failure_when_it_fails
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_stream_read_to_its_end_and_then_disposed_is_logged_once
+KILLED: an early dispose reads OK (T43)
+  ['Failed!  - Failed:     1, Passed:     9, Skipped:     0, Total:    10, Duration: 543 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_call_disposed_mid_stream_is_logged_Cancelled_once
+KILLED: a failed stream reads OK (T41, T42)
+  ['Failed!  - Failed:     5, Passed:     5, Skipped:     0, Total:    10, Duration: 653 ms - Kronikol.Tests.Grpc.dll (net10.0)']
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_client_stream_whose_response_fails_is_logged_as_the_failure
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_duplex_stream_is_logged_when_it_ends_and_as_its_failure_when_it_fails
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_real_duplex_stream_that_fails_is_logged_as_the_failure
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_real_server_stream_that_fails_NotFound_is_logged_as_NotFound
+    red: Kronikol.Tests.Grpc.StreamingOutcomeTests.A_server_stream_that_fails_after_one_reply_is_logged_once_as_the_failure
+done

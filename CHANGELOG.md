@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.13.2] - 2026-10-08
+
+**Patch - a streaming gRPC call's outcome is recorded when its stream ends (#134).**
+`plans/GRPC_IDENTITY_PROPAGATION_PLAN.md` R2. A bug fix, nothing new to call, so the patch part moves (4.13.1 to 4.13.2).
+The history action's `VERSION` installs `Kronikol.Tool` 4.13.2, and the templates pin 4.13.1.
+
+### Fixed
+
+- **Server-streaming, client-streaming and duplex calls were recorded as `OK`, with no content, as soon as they
+  started,** and their span covered only the start, so a stream that failed read as a success in the report and in
+  `kronikol query failures`. BreakfastProvider's "Streaming updates for non existent order should return not found"
+  expects `NotFound`, passes, and its report said `OK` (the plan's P11). The response is now recorded when the call
+  ends: `OK` when the response stream is read to its end, or, for a client stream, when its response arrives (with
+  that response); the gRPC status, mapped as for a unary call, with `"{code}: {message}"`, when it fails; and
+  `Cancelled` when the call is disposed before its stream ends and before its status is known. The span lasts until
+  then, and the caller's `Activity.Current` is given back when the call starts, as for an async unary call.
+  Behaviour changes: a stream neither read to its end nor disposed has no response recorded, where it had an `OK`; and
+  a stream its caller disposes before reading it to its end, as a reflection client does after one reply, reads
+  `Cancelled`, which `MapGrpcStatusToHttp` maps to 408 as for a unary call, where it read `OK`. gRPC's own status for
+  such a call is `CANCELLED`. In BreakfastProvider's xUnit run the two reflection scenarios show it, and s55's stream
+  reads `NotFound`.
+
+### Tests
+
+- `StreamingOutcomeTests` covers each kind's success, failure and early dispose, on fakes and, for a server stream and
+  a duplex stream that fail, on a real gRPC server. The three facts that read a stream's response at its start now
+  read the stream to its end.
 ## [4.13.1] - 2026-10-08
 
 **Patch - outside a test, xUnit v2 and NUnit say there is no test, so a call there goes to a scope, the global fallback

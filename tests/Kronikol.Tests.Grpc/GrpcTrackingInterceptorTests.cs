@@ -339,16 +339,20 @@ public class GrpcTrackingInterceptorTests
 
     // ─── Streaming calls ──────────────────────────────────
 
+    // Since R2 of plans/GRPC_IDENTITY_PROPAGATION_PLAN.md a stream's response is logged when the stream ends, not
+    // when the call starts (StreamingOutcomeTests has the outcomes).
+
     [Fact]
-    public void ServerStreamingCall_Logs_request_and_response()
+    public async Task ServerStreamingCall_Logs_request_and_response()
     {
         var interceptor = new GrpcTrackingInterceptor(MakeOptions());
         var method = CreateMethod(type: MethodType.ServerStreaming);
         var context = CreateContext(method);
 
-        interceptor.AsyncServerStreamingCall(
+        using var call = interceptor.AsyncServerStreamingCall(
             "Hello", context,
             (req, ctx) => TestHelpers.CreateServerStreamingCall<string>());
+        while (await call.ResponseStream.MoveNext(CancellationToken.None)) { }
 
         var logs = GetLogsFromThisTest();
         Assert.Equal(2, logs.Length);
@@ -370,15 +374,16 @@ public class GrpcTrackingInterceptorTests
     }
 
     [Fact]
-    public void DuplexStreamingCall_Logs_request_and_response()
+    public async Task DuplexStreamingCall_Logs_request_and_response()
     {
         var interceptor = new GrpcTrackingInterceptor(MakeOptions());
         var method = CreateMethod(type: MethodType.DuplexStreaming);
         var context = CreateContext(method);
 
-        interceptor.AsyncDuplexStreamingCall(
+        using var call = interceptor.AsyncDuplexStreamingCall(
             context,
             ctx => TestHelpers.CreateDuplexStreamingCall<string, string>());
+        while (await call.ResponseStream.MoveNext(CancellationToken.None)) { }
 
         var logs = GetLogsFromThisTest();
         Assert.Equal(2, logs.Length);
@@ -879,7 +884,7 @@ public class GrpcTrackingInterceptorTests
     }
 
     [Fact]
-    public void ServerStreamingCall_resolves_test_info_from_HttpContextAccessor_on_options()
+    public async Task ServerStreamingCall_resolves_test_info_from_HttpContextAccessor_on_options()
     {
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers["test-tracking-current-test-name"] = "Streaming HTTP Context";
@@ -897,9 +902,10 @@ public class GrpcTrackingInterceptorTests
         var method = CreateMethod(type: MethodType.ServerStreaming);
         var context = CreateContext(method);
 
-        interceptor.AsyncServerStreamingCall(
+        using var call = interceptor.AsyncServerStreamingCall(
             "Hello", context,
             (req, ctx) => TestHelpers.CreateServerStreamingCall<string>());
+        while (await call.ResponseStream.MoveNext(CancellationToken.None)) { }
 
         var logs = GetLogsFromThisTest();
         Assert.Equal(2, logs.Length);
