@@ -1,0 +1,43 @@
+== seqparticipant stmt=800 verdict=draw regex calls nesting >= 150: 2
+  max= 2385 input=  800 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(participant|actor|create|boundary|control|entity|queue|database|collections)|create[\s ](participant|actor|boundary|control|entity|queue|database|collectio…/
+  max= 2385 input=  800 x1  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(?:(participant|actor|create|boundary|control|entity|queue|database|collections)|create[\s ](participant|actor|boundary|control|entity|queue|database|collectio…/
+== seqdatabase stmt=800 verdict=draw regex calls nesting >= 150: 2
+  max= 2394 input=  800 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(participant|actor|create|boundary|control|entity|queue|database|collections)|create[\s ](participant|actor|boundary|control|entity|queue|database|collectio…/
+  max= 2394 input=  800 x1  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(?:(participant|actor|create|boundary|control|entity|queue|database|collections)|create[\s ](participant|actor|boundary|control|entity|queue|database|collectio…/
+== comprect stmt=800 verdict=draw regex calls nesting >= 150: 9
+  max= 3635 input=  729 x1  nspr_Matcher2_find < nspkcl_CreoleStripeSimpleParser__init_ < nspkcl_CreoleStripeSimpleParser__init_0 < nspkcl_CreoleParser_createStripes
+      /^(\*+)([^*]+(?:[^*]|\*\*[^*]+\*\*)*)$/
+  max= 1623 input=  800 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+  max= 1623 input=  800 x2  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+== comprectwrapped stmt=800 verdict=draw regex calls nesting >= 150: 18
+  max= 1623 input=  800 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+  max= 1623 input=  800 x2  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+  max=  388 input=  124 x2  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+== compdb stmt=800 verdict=draw regex calls nesting >= 150: 8
+  max= 1624 input=  800 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+  max= 1624 input=  800 x2  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+  max=  388 input=  124 x2  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+== activity stmt=800 verdict=draw regex calls nesting >= 150: 2
+  max= 1613 input=  800 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^((?:#(?:\w+[-\\|/]?\w+;)?(?:(?:text|back|header|line|line\.dashed|line\.dotted|line\.bold|shadowing)(?::\w+[-\\|/]?\w+)?(?:;|(?![\w;:.])))+)|(?:#\w+[-\\|/]?\w+…/
+  max= 1613 input=  800 x1  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^((?:#(?:\w+[-\\|/]?\w+;)?(?:(?:text|back|header|line|line\.dashed|line\.dotted|line\.bold|shadowing)(?::\w+[-\\|/]?\w+)?(?:;|(?![\w;:.])))+)|(?:#\w+[-\\|/]?\w+…/
+== comptitle stmt=800 verdict=draw regex calls nesting >= 150: 6
+  max=  388 input=  124 x2  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  158 input=   69 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+  max=  158 input=   69 x1  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/

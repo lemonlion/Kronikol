@@ -1,0 +1,28 @@
+@startuml
+!pragma teoz true
+
+
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Api" as api
+entity "CustomerService" as customerService
+entity "OrderService" as orderService
+
+partition #F6F6F6 Setup
+api -[#438DD5]> customerService: GET: /customers/ada
+customerService -[#438DD5]-> api: OK
+note right
+{
+  "ok": true
+}
+end note
+end
+api -[#438DD5]> orderService: POST: /orders
+orderService -[#438DD5]-> api: OK
+note right
+{
+  "ok": true
+}
+end note
+@enduml

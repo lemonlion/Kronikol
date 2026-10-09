@@ -1,0 +1,13 @@
+== c4 stmt=800 verdict=draw regex calls nesting >= 60: 3950
+  max= 2340 input=  778 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^([^"“”]+)["“”]([^"“”]+)["“”]$/
+  max=  388 input=  124 x5  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  200 input=   73 x291  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(skinparam|skinparamlocked)[\s ]+([\w.]*(?:\<\<[^<>]*\>\>)?[\w.]*)[\s ]+([^{}]*)$/
+  max=  200 input=   73 x51  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(skinparam|skinparamlocked)[\s ]+([\w.]*(?:\<\<[^<>]*\>\>)?[\w.]*)[\s ]+([^{}]*)$/
+  max=  127 input=   45 x209  nspr_Matcher2_find < nspr_RegexConcat_match < nspt_TLineType_getFromLineInternal < nspt_StringLocated_getType
+      /^[\s ]*![\s ]*(local|global)?[\s ]*\$?[\p{L}\uD800-\uDBFF\uDC00-\uDFFF_][\p{L}\uD800-\uDBFF\uDC00-\uDFFF_0-9]*[\s ]*\??=/
+  max=  126 input=   53 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/

@@ -1,0 +1,11 @@
+== colourbar stmt=800 verdict=draw regex calls nesting >= 60: 19
+  max= 1529 input=  762 x1  nspr_Matcher2_find < nspkcc_CommandCreoleColorChange_matchingSize < nspkcc_CommandCreoleColorChange.$matchingSize < nspkcl_StripeSimple_modifyStripe
+      /^(\<color[\s:]+(#[0-9a-fA-F]{1,6}|#?\w+)[\s ]*\>(.*?)\</color\>)/
+  max=  118 input=   33 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(&[\s ]*)?(\{([\p{L}[0-9]_]+)\}[\s ]+)?(([\p{L}[0-9]_.@]+)|["“”]([^"“”]+)["“”]|["“”]([^"“”]+)["“”][\s ]*as[\s ]+([\p{L}[0-9]_.@]+)|([\p{L}[0-9]_.@]+)[\s …/
+  max=  118 input=   33 x1  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(&[\s ]*)?(\{([\p{L}[0-9]_]+)\}[\s ]+)?(([\p{L}[0-9]_.@]+)|["“”]([^"“”]+)["“”]|["“”]([^"“”]+)["“”][\s ]*as[\s ]+([\p{L}[0-9]_.@]+)|([\p{L}[0-9]_.@]+)[\s …/
+  max=   96 input=   37 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(participant|actor|create|boundary|control|entity|queue|database|collections)|create[\s ](participant|actor|boundary|control|entity|queue|database|collectio…/
+  max=   96 input=   37 x2  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(?:(participant|actor|create|boundary|control|entity|queue|database|collections)|create[\s ](participant|actor|boundary|control|entity|queue|database|collectio…/

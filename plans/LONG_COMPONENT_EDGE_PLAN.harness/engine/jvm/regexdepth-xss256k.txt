@@ -1,0 +1,8 @@
+java 25, Xss from command line
+len=     500  BOTH(quoted)=nomatch FIRST(quoted)=nomatch SECOND(unquoted)=nomatch | control (?:[^g])+ =match   (?:a|[^g])+ =SOE    
+len=    1000  BOTH(quoted)=nomatch FIRST(quoted)=nomatch SECOND(unquoted)=nomatch | control (?:[^g])+ =match   (?:a|[^g])+ =SOE    
+len=    2000  BOTH(quoted)=nomatch FIRST(quoted)=nomatch SECOND(unquoted)=nomatch | control (?:[^g])+ =match   (?:a|[^g])+ =SOE    
+len=    5000  BOTH(quoted)=nomatch FIRST(quoted)=nomatch SECOND(unquoted)=nomatch | control (?:[^g])+ =match   (?:a|[^g])+ =SOE    
+len=   10000  BOTH(quoted)=nomatch FIRST(quoted)=nomatch SECOND(unquoted)=nomatch | control (?:[^g])+ =match   (?:a|[^g])+ =SOE    
+len=  100000  BOTH(quoted)=nomatch FIRST(quoted)=nomatch SECOND(unquoted)=nomatch | control (?:[^g])+ =match   (?:a|[^g])+ =SOE    
+len= 1000000  BOTH(quoted)=nomatch FIRST(quoted)=nomatch SECOND(unquoted)=nomatch | control (?:[^g])+ =match   (?:a|[^g])+ =SOE    

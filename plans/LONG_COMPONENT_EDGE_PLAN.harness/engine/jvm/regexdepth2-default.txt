@@ -1,0 +1,7 @@
+java 25
+n=    300  creole list '**name**' = nomatch | <color> no close = nomatch | loop label = match   | "name" as x (.+?) = match  
+n=   1000  creole list '**name**' = nomatch | <color> no close = nomatch | loop label = match   | "name" as x (.+?) = match  
+n=   3000  creole list '**name**' = nomatch | <color> no close = nomatch | loop label = match   | "name" as x (.+?) = match  
+n=  10000  creole list '**name**' = nomatch | <color> no close = nomatch | loop label = match   | "name" as x (.+?) = match  
+n=  30000  creole list '**name**' = nomatch | <color> no close = nomatch | loop label = match   | "name" as x (.+?) = match  
+n= 100000  creole list '**name**' = nomatch | <color> no close = nomatch | loop label = match   | "name" as x (.+?) = match  

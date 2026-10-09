@@ -1,0 +1,21 @@
+@startuml
+!pragma teoz true
+
+
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Api" as api
+entity "OrderService" as orderService
+
+
+hnote across <<stepDelimiter>> #black:<color:white>Given a customer named "Ada" with a gold account
+
+api -[#438DD5]> orderService: POST: /orders
+orderService -[#438DD5]-> api: OK
+note right
+{
+  "ok": true
+}
+end note
+@enduml

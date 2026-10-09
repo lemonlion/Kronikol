@@ -1,0 +1,40 @@
+== seq stmt=800 verdict=draw regex calls nesting >= 60: 9
+  max=   80 input=   12 x7  nspr_RegexConcat_match < nspt_TLineType_getFromLineInternal < nspt_StringLocated_getType < nspti_CodeIteratorLongComment_peek
+      /^\(?((?:[-0A-Za-z_!:@;/=,"' ][?+*]?|\\[b$(){}<>|*.+^\[\]][?+*]?|\.\*|\.\+)+)(?:\)\+|\))?$/
+  max=   79 input=  800 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(&[\s ]*)?(\{([\p{L}[0-9]_]+)\}[\s ]+)?(([\p{L}[0-9]_.@]+)|["“”]([^"“”]+)["“”]|["“”]([^"“”]+)["“”][\s ]*as[\s ]+([\p{L}[0-9]_.@]+)|([\p{L}[0-9]_.@]+)[\s …/
+  max=   79 input=  800 x1  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(&[\s ]*)?(\{([\p{L}[0-9]_]+)\}[\s ]+)?(([\p{L}[0-9]_.@]+)|["“”]([^"“”]+)["“”]|["“”]([^"“”]+)["“”][\s ]*as[\s ]+([\p{L}[0-9]_.@]+)|([\p{L}[0-9]_.@]+)[\s …/
+== seqlink stmt=800 verdict=draw regex calls nesting >= 60: 12
+  max= 2377 input=  791 x1  nspr_Matcher2_find < nspkcc_CommandCreoleUrl_matchingSize < jl_Object.$matchingSize < nspkcl_StripeSimple_modifyStripe
+      /^(\[\[[\s ]*["“”]([^"“”]+)["“”](?:[\s ]*\{([^{}]*)\})?(?:[\s ]([^\s \{\}\[\]][^\[\]]*))?[\s ]*\]\]|\[\[[\s ]*\{(.*)\}[\s ]*\]\]|\[\[[\s ]*\{([^{}]*)\}[\s ]*(…/
+  max= 2377 input=  791 x1  nspr_Matcher2_find < nspkcc_CommandCreoleUrl_executeAndAdvance < jl_Object.$executeAndAdvance < nspkcl_StripeSimple_modifyStripe
+      /^(\[\[[\s ]*["“”]([^"“”]+)["“”](?:[\s ]*\{([^{}]*)\})?(?:[\s ]([^\s \{\}\[\]][^\[\]]*))?[\s ]*\]\]|\[\[[\s ]*\{(.*)\}[\s ]*\]\]|\[\[[\s ]*\{([^{}]*)\}[\s ]*(…/
+  max= 2375 input=  791 x1  nspr_Matcher2_matches < nspu_UrlBuilder_matchesOrFind < nspu_UrlBuilder_getUrl < nspkcc_CommandCreoleUrl_executeAndAdvance
+      /\[\[[\s ]*([^\s "“”\[\]]+?)(?:[\s ]*\{([^{}]*)\})?(?:[\s ]([^\s \{\}\[\]][^\[\]]*))?[\s ]*\]\]/
+  max=   80 input=   12 x7  nspr_RegexConcat_match < nspt_TLineType_getFromLineInternal < nspt_StringLocated_getType < nspti_CodeIteratorLongComment_peek
+      /^\(?((?:[-0A-Za-z_!:@;/=,"' ][?+*]?|\\[b$(){}<>|*.+^\[\]][?+*]?|\.\*|\.\+)+)(?:\)\+|\))?$/
+  max=   79 input=  800 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(&[\s ]*)?(\{([\p{L}[0-9]_]+)\}[\s ]+)?(([\p{L}[0-9]_.@]+)|["“”]([^"“”]+)["“”]|["“”]([^"“”]+)["“”][\s ]*as[\s ]+([\p{L}[0-9]_.@]+)|([\p{L}[0-9]_.@]+)[\s …/
+== class stmt=800 verdict=draw regex calls nesting >= 60: 8
+  max= 2375 input=  790 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspcc_CommandLinkClass_executeArg0
+      /^["“”]([^"“”]+)["“”]([^"“”]+)["“”]([^"“”]+)["“”]$/
+  max= 2375 input=  790 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspcc_CommandLinkClass_executeArg0
+      /^["“”]([^"“”]+)["“”]([^"“”]+)$/
+  max=  491 input=  158 x1  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  431 input=  139 x1  nspr_RegexConcat_match < nspc_CommandMultilines2_isValid < nspc_CommandMultilines2_isValid < nspc_CommandMultilines2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=   82 input=  800 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:@([\d.]+)[\s ]+)?(?:((?:[^\p{L}[0-9]\s _$#\:{}<>"“”]|[\\]{2}|::)?[\p{L}[0-9]_$]+(?:(?:[^\p{L}[0-9]\s _$#\:{}<>"“”]|[\\]{2}|::)[\p{L}[0-9]_$]+)*|["“”][^"“…/
+== classunq stmt=800 verdict=draw regex calls nesting >= 60: 7
+  max= 2376 input=  790 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspcc_CommandLinkClass_executeArg0
+      /^([^"“”]+)["“”]([^"“”]+)["“”]$/
+  max=  491 input=  158 x1  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  431 input=  139 x1  nspr_RegexConcat_match < nspc_CommandMultilines2_isValid < nspc_CommandMultilines2_isValid < nspc_CommandMultilines2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=   82 input=  800 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:@([\d.]+)[\s ]+)?(?:((?:[^\p{L}[0-9]\s _$#\:{}<>"“”]|[\\]{2}|::)?[\p{L}[0-9]_$]+(?:(?:[^\p{L}[0-9]\s _$#\:{}<>"“”]|[\\]{2}|::)[\p{L}[0-9]_$]+)*|["“”][^"“…/
+  max=   82 input=  800 x1  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(?:@([\d.]+)[\s ]+)?(?:((?:[^\p{L}[0-9]\s _$#\:{}<>"“”]|[\\]{2}|::)?[\p{L}[0-9]_$]+(?:(?:[^\p{L}[0-9]\s _$#\:{}<>"“”]|[\\]{2}|::)[\p{L}[0-9]_$]+)*|["“”][^"“…/

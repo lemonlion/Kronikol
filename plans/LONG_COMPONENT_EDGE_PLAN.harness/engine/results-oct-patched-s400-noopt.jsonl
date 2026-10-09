@@ -1,0 +1,5 @@
+{"tag":"oct-patched-s400-noopt","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"plain","edge":">=30000","note":"draws at hi"}
+{"tag":"oct-patched-s400-noopt","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"unquoted","edge":">=30000","note":"draws at hi"}
+{"tag":"oct-patched-s400-noopt","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"longalias","edge":">=30000","note":"draws at hi"}
+{"tag":"oct-patched-s400-noopt","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"c4","edge":">=30000","note":"draws at hi"}
+{"tag":"oct-patched-s400-noopt","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"class","edge":16389,"failAt":16390,"failVerdict":"E","failMsg":"java.lang.RuntimeException: Diagram too large for browser rendering: 98305x190 (max 98304; override via the maxSvgSize option, or set it to 0 to disable this ch","around":"16369:. 16387:. 16388:. 16390:E 16391:E 16409:E"}

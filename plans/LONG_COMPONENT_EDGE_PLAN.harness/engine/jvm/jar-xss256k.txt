@@ -1,0 +1,8 @@
+plain-1950 rc=0 svg=27312 labeltext_lines=1 err=[]
+plain-5000 rc=0 svg=66913 labeltext_lines=1 err=[]
+plain-20000 rc=0 svg=260585 labeltext_lines=1 err=[]
+unquoted-1950 rc=0 svg=27309 labeltext_lines=1 err=[]
+unquoted-20000 rc=0 svg=260731 labeltext_lines=1 err=[]
+class-1950 rc=0 svg=6170 labeltext_lines=1 err=[]
+class-20000 rc=0 svg=24292 labeltext_lines=1 err=[]
+seqlink-1950 rc=0 svg=4302 labeltext_lines=1 err=[]

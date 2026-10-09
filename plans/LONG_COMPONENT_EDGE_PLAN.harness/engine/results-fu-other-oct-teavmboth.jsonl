@@ -1,0 +1,7 @@
+{"tag":"fu-other-oct-teavmboth","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"seqparticipant","edge":">=4000","note":"draws at hi"}
+{"tag":"fu-other-oct-teavmboth","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"seqdatabase","edge":">=4000","note":"draws at hi"}
+{"tag":"fu-other-oct-teavmboth","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"compdb","edge":">=4000","note":"draws at hi"}
+{"tag":"fu-other-oct-teavmboth","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"activity","edge":">=4000","note":"draws at hi"}
+{"tag":"fu-other-oct-teavmboth","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"comptitle","edge":">=4000","note":"draws at hi"}
+{"tag":"fu-other-oct-teavmboth","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"comprectwrapped","edge":">=4000","note":"draws at hi"}
+{"tag":"fu-other-oct-teavmboth","engine":"core-oct-master-noobf.js","flags":"--stack-size=400 --no-opt --no-maglev","reps":1,"shape":"comprect","edge":324,"failAt":325,"failVerdict":"S","failMsg":"java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded","around":"304:. 322:. 323:. 325:S 326:S 344:S"}

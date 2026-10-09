@@ -1,0 +1,6 @@
+{"shape":"plain","len":1000,"stmt":1000,"verdict":"draw","frames":0,"chromium":"147.0.7727.15","jsflags":"--no-opt --no-maglev"}
+{"shape":"plain","len":1030,"stmt":1030,"verdict":"draw","frames":0,"chromium":"147.0.7727.15","jsflags":"--no-opt --no-maglev"}
+{"shape":"plain","len":1040,"stmt":1040,"verdict":"draw","frames":0,"chromium":"147.0.7727.15","jsflags":"--no-opt --no-maglev"}
+{"shape":"plain","len":1050,"stmt":1050,"verdict":"draw","frames":0,"chromium":"147.0.7727.15","jsflags":"--no-opt --no-maglev"}
+{"shape":"plain","len":1060,"stmt":1060,"verdict":"draw","frames":0,"chromium":"147.0.7727.15","jsflags":"--no-opt --no-maglev"}
+{"shape":"plain","len":1100,"stmt":1100,"verdict":"S","frames":10,"chromium":"147.0.7727.15","jsflags":"--no-opt --no-maglev"}

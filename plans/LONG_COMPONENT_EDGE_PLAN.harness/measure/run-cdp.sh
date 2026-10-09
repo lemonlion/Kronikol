@@ -1,0 +1,7 @@
+#!/bin/sh
+# The issue's method (one Chrome, a fresh tab per page over CDP) at the issue's edges and at this harness's edges.
+cd "$(dirname "$0")"
+node cdp-check.js '{"label":"G-cdp-chrome-w4-jit","page":"w4","reps":3,"cases":[{"shape":"unbroken","L":1600},{"shape":"unbroken","L":1610},{"shape":"unbroken","L":1700},{"shape":"unbroken","L":1770},{"shape":"unbroken","L":1780},{"shape":"real","L":1600},{"shape":"real","L":1610},{"shape":"real","L":1770},{"shape":"real","L":1780},{"n":44},{"n":48},{"n":56},{"n":66}]}'
+node cdp-check.js '{"label":"G-cdp-chrome-w4-off","page":"w4","jsflags":"--no-opt --no-maglev","reps":2,"cases":[{"shape":"unbroken","L":540},{"shape":"unbroken","L":550},{"shape":"unbroken","L":570},{"shape":"unbroken","L":580},{"shape":"real","L":500},{"shape":"real","L":570},{"shape":"real","L":580},{"shape":"real","L":600},{"shape":"short-lines","L":832}]}'
+node cdp-check.js '{"label":"G-cdp-chrome-w0-off","page":"w0","jsflags":"--no-opt --no-maglev","reps":2,"cases":[{"shape":"unbroken","L":1040},{"shape":"unbroken","L":1050},{"shape":"unbroken","L":1100},{"shape":"unbroken","L":1110},{"shape":"real","L":1000},{"shape":"real","L":1100},{"shape":"real","L":1110},{"shape":"real","L":1600}]}'
+node cdp-check.js '{"label":"G-cdp-chrome-w0-jit","page":"w0","reps":3,"cases":[{"shape":"unbroken","L":1979},{"shape":"unbroken","L":1984},{"shape":"unbroken","L":2000},{"n":66}]}'

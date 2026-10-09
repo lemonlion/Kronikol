@@ -1,0 +1,28 @@
+@startuml
+!pragma teoz true
+
+
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Api" as api
+entity "StockService" as stockService
+entity "OrderService" as orderService
+
+loop ×6 · 37 ms
+api -[#438DD5]> stockService: GET: /stock/SKU-1
+stockService -[#438DD5]-> api: OK
+note right
+{
+  "ok": true
+}
+end note
+end
+api -[#438DD5]> orderService: POST: /orders
+orderService -[#438DD5]-> api: OK
+note right
+{
+  "ok": true
+}
+end note
+@enduml

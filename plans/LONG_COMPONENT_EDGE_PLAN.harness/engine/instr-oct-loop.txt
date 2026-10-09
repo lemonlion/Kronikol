@@ -1,0 +1,13 @@
+== loop stmt=800 verdict=draw regex calls nesting >= 60: 21
+  max= 1608 input=  800 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(&[\s ]*)?(opt|alt|loop|par|par2|break|critical|else|end|also|group|partition)((?<!else)(?<!also)(?<!end)#\w+)?(?:[\s ]+(#\w+))?(?:[\s ]+(.*?))?$/
+  max= 1608 input=  800 x1  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(&[\s ]*)?(opt|alt|loop|par|par2|break|critical|else|end|also|group|partition)((?<!else)(?<!also)(?<!end)#\w+)?(?:[\s ]+(#\w+))?(?:[\s ]+(.*?))?$/
+  max=  118 input=   33 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(&[\s ]*)?(\{([\p{L}[0-9]_]+)\}[\s ]+)?(([\p{L}[0-9]_.@]+)|["“”]([^"“”]+)["“”]|["“”]([^"“”]+)["“”][\s ]*as[\s ]+([\p{L}[0-9]_.@]+)|([\p{L}[0-9]_.@]+)[\s …/
+  max=  118 input=   33 x2  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(&[\s ]*)?(\{([\p{L}[0-9]_]+)\}[\s ]+)?(([\p{L}[0-9]_.@]+)|["“”]([^"“”]+)["“”]|["“”]([^"“”]+)["“”][\s ]*as[\s ]+([\p{L}[0-9]_.@]+)|([\p{L}[0-9]_.@]+)[\s …/
+  max=   96 input=   37 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(participant|actor|create|boundary|control|entity|queue|database|collections)|create[\s ](participant|actor|boundary|control|entity|queue|database|collectio…/
+  max=   96 input=   37 x2  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(?:(participant|actor|create|boundary|control|entity|queue|database|collections)|create[\s ](participant|actor|boundary|control|entity|queue|database|collectio…/

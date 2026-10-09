@@ -1,0 +1,81 @@
+== unquoted stmt=800 verdict=draw regex calls nesting >= 60: 143
+  max= 2337 input=  777 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^([^"“”]+)["“”]([^"“”]+)["“”]$/
+  max=  388 input=  124 x5  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  158 input=   69 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+  max=  158 input=   69 x2  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+== coloured stmt=800 verdict=draw regex calls nesting >= 60: 144
+  max= 2309 input=  768 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)["“”]([^"“”]+)["“”]$/
+  max= 2309 input=  768 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)$/
+  max=  388 input=  124 x5  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  158 input=   69 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+== wrapped stmt=800 verdict=draw regex calls nesting >= 60: 144
+  max= 2336 input=  777 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)["“”]([^"“”]+)["“”]$/
+  max= 2336 input=  777 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)$/
+  max=  388 input=  124 x5  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  158 input=   69 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+== real stmt=800 verdict=draw regex calls nesting >= 60: 144
+  max= 2336 input=  777 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)["“”]([^"“”]+)["“”]$/
+  max= 2336 input=  777 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)$/
+  max=  388 input=  124 x5  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  158 input=   69 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+== quotes stmt=800 verdict=draw regex calls nesting >= 60: 144
+  max=  388 input=  124 x5  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  158 input=   69 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+  max=  158 input=   69 x2  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+  max=  153 input=   69 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(state|person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase…/
+== escapes stmt=800 verdict=draw regex calls nesting >= 60: 144
+  max= 2336 input=  777 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)["“”]([^"“”]+)["“”]$/
+  max= 2336 input=  777 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)$/
+  max=  388 input=  124 x5  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  158 input=   69 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+== commas stmt=800 verdict=draw regex calls nesting >= 60: 144
+  max= 2336 input=  777 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)["“”]([^"“”]+)["“”]$/
+  max= 2336 input=  777 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)$/
+  max=  388 input=  124 x5  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  158 input=   69 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/
+== longalias stmt=800 verdict=draw regex calls nesting >= 60: 144
+  max= 1260 input=  800 x1  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^([\p{L}[0-9]_.]+|["“”][^"“”]+["“”]|\(\)[\s ]*[\p{L}[0-9]_.]+|\(\)[\s ]*["“”][^"“”]+["“”]|:[^:]+:/?|(?!\[\*\])\[[^\[\]]+\]|\((?!\*\))[^)]+\)/?)[\s ]*(?:["…/
+  max= 1260 input=  800 x1  nspr_Matcher2_find < nspr_RegexComposed_matcher < nspr_RegexConcat.$matcher1 < nspc_SingleLineCommand2_execute
+      /^([\p{L}[0-9]_.]+|["“”][^"“”]+["“”]|\(\)[\s ]*[\p{L}[0-9]_.]+|\(\)[\s ]*["“”][^"“”]+["“”]|:[^:]+:/?|(?!\[\*\])\[[^\[\]]+\]|\((?!\*\))[^)]+\)/?)[\s ]*(?:["…/
+  max= 1181 input=  392 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)["“”]([^"“”]+)["“”]$/
+  max= 1181 input=  392 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)$/
+== noskin stmt=800 verdict=draw regex calls nesting >= 60: 19
+  max= 2336 input=  777 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)["“”]([^"“”]+)["“”]$/
+  max= 2336 input=  777 x1  nspr_Matcher2_matches < nspdc_Labels__init_0 < nspdc_Labels__init_ < nspdc_CommandLinkElement_executeArg
+      /^["“”]([^"“”]+)["“”]([^"“”]+)$/
+  max=  388 input=  124 x4  nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid < nspc_SingleLineCommand2.$isValid
+      /^\([-?a-z ]+(\|[-?a-z ]+)+\)$/
+  max=  158 input=   69 x2  nspr_Matcher2_find < nspr_RegexConcat_match < nspr_RegexConcat.$match < nspc_SingleLineCommand2_isValid
+      /^(?:(person|artifact|actor/|actor|folder|card|file|package|rectangle|hexagon|label|node|frame|cloud|action|process|database|queue|stack|storage|agent|usecase/|u…/

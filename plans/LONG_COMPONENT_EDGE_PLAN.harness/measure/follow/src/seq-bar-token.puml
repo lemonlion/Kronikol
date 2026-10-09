@@ -1,0 +1,21 @@
+@startuml
+!pragma teoz true
+
+
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Api" as api
+entity "OrderService" as orderService
+
+
+hnote across <<stepDelimiter>> #black:<color:white>[{"sku":"SKU-0001","qty":2},{"sku":"SKU-0002","qty":3},{"sku":"SKU-0003","qty":4},{"sku":"SKU-0004","qty":5},{"sku":"SKU-0005","qty":6},{"sku":"SKU-0006","qty":7},{"sku":"SKU-0007","qty":1},{"sku":"SKU-0008","qty":2},{"sku":"SKU-0009","qty":3},{"sku":"SKU-0010","qty":4},{"sku":"SKU-0011","qty":5},{"sku":"SKU-0012","qty":6},{"sku":"SKU-0013","qty":7},{"sku":"SKU-0014","qty":1},{"sku":"SKU-0015","qty":2},{"sku":"SKU-0016","qty":3},{"sku":"SKU-0017","qty":4},{"sku":"SKU-0018","qty":5},{"sku":"SKU-0019","qty":6},{"sku":"SKU-0020","qty":7},{"sku":"SKU-0021","qty":1},{"sku":"SKU-0022","qty":2},{"sku":"SKU-0023","qty":3},{"sku":"SKU-0024","qty":4},{"sku":"SKU-0025","qty":5},{"sku":"SKU-0026","qty":6},{"sku":"SKU-0027","qty":7},{"sku":"SKU-0028","qty":1},{"sku":"SKU-0029","qty":2},{"sku":"SKU-0030","qty":3},{"sku":"SKU-0031","qty":4},{"sku":"SKU-0032","qty":5},{"sku":"SKU-0033","qty":6},{"sku":"SKU-0034","qty":7},{"sku":"SKU-0035","qty":1},{"sku":"SKU-0036","qty":2},{"sku":"SKU-0037","qty":3},{"sku":"SKU-0038","qty":4},{"sku":"SKU-0039","qty":5},{"sku":"SKU-0040","qty":6},{"sku":"SKU-0041","qty":7},{"sku":"SKU-0042","qty":1},{"sku":"SKU-0043","qty":2},{"sku":"SKU-0044","qty":3},{"sku":"SKU-0045","qty":4},{"sku":"SKU-0046","qty":5},{"sku":"SKU-0047","qty":6},{"sku":"SKU-0048","qty":7},{"sku":"SKU-0049","qty":1},{"sku":"SKU-0050","qty":…
+
+api -[#438DD5]> orderService: POST: /orders
+orderService -[#438DD5]-> api: OK
+note right
+{
+  "ok": true
+}
+end note
+@enduml
