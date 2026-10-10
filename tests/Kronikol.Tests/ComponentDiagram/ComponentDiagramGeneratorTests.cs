@@ -467,12 +467,15 @@ public class ComponentDiagramGeneratorTests
         Assert.Contains("Custom: HTTP (5 calls)", result);
     }
 
-    [Fact]
-    public void GeneratePlantUml_EdgeLabel_IsCappedAtTheStatementLimit()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void A_formatters_label_is_cut_to_the_label_cap(bool useC4)
     {
-        // Component diagrams use a different parser from sequence diagrams and its limits are unmeasured,
-        // so the cap here is defensive: real labels are two orders of magnitude below it, and an over-long
-        // statement costs the whole diagram rather than the one edge.
+        // A RelationshipLabelFormatter's label is the consumer's own format, so it is cut at its end, as the
+        // 2,000-character statement cap cut it until 4.14.5, but to the edge label's measured cap: the engine
+        // walks the whole label once per character, and a render worker with V8's optimizing compilers off ran
+        // out of stack from 550 characters, drawing a stack-overflow picture in place of the diagram (#162).
         var relationships = new[]
         {
             new ComponentRelationship("Caller", "OrderService", "HTTP", ["GET"], 5, 3)
@@ -483,11 +486,11 @@ public class ComponentDiagramGeneratorTests
             RelationshipLabelFormatter = _ => new string('x', 6000)
         };
 
-        var result = ComponentDiagramGenerator.GeneratePlantUml(relationships, options);
+        var label = LabelOf(ComponentDiagramGenerator.GeneratePlantUml(relationships, options, useC4: useC4));
 
-        var edge = result.Split('\n').Single(l => l.Contains("xxxx", StringComparison.Ordinal));
-        Assert.True(edge.Trim().Length <= PlantUmlStatementLimits.MaxMessageStatementChars, $"{edge.Trim().Length} chars");
-        Assert.Contains(PlantUmlStatementLimits.TruncationMarker, edge);
+        Assert.True(label.Length <= PlantUmlStatementLimits.MaxComponentEdgeLabelChars, $"{label.Length} characters");
+        Assert.True(label.Length >= PlantUmlStatementLimits.MaxComponentEdgeLabelChars - 2, $"cut short of the cap, at {label.Length}");
+        Assert.EndsWith(PlantUmlStatementLimits.TruncationMarker, label, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1181,6 +1184,20 @@ public class ComponentDiagramGeneratorTests
     /// <summary>The display lines a label draws as — it is one physical statement broken by <c>\n</c> escapes.</summary>
     private static string[] DisplayLines(string label) => label.Split("\\n");
 
+    /// <summary>
+    /// The label of the one edge in <paramref name="plantUml"/>, as written and without its quotes, in either form:
+    /// <c>caller -[#colour]-&gt; service : "…"</c> or C4's <c>Rel(caller, service, "…", $tags="…")</c>.
+    /// </summary>
+    private static string LabelOf(string plantUml)
+    {
+        var rel = plantUml.Split('\n').Select(l => l.TrimEnd('\r')).SingleOrDefault(l => l.StartsWith("Rel(", StringComparison.Ordinal));
+        if (rel is null)
+            return EdgeLabel(plantUml);
+        var open = rel.IndexOf(", \"", StringComparison.Ordinal) + 3;
+        var tags = rel.LastIndexOf("\", $tags=", StringComparison.Ordinal);
+        return rel[open..(tags >= 0 ? tags : rel.LastIndexOf("\")", StringComparison.Ordinal))];
+    }
+
     [Fact]
     public void GeneratePlantUml_LongEdgeLabel_IsBrokenIntoDisplayLines()
     {
@@ -1215,29 +1232,32 @@ public class ComponentDiagramGeneratorTests
     [Fact]
     public void GeneratePlantUml_Wrapping_BreaksAtWhitespaceAndKeepsEveryOperationWhole()
     {
-        var result = ComponentDiagramGenerator.GeneratePlantUml(ManyOperations(), useC4: false);
+        // Eight operations: as many as fit under the label cap, so every one is listed.
+        var result = ComponentDiagramGenerator.GeneratePlantUml(ManyOperations(8), useC4: false);
 
         var label = EdgeLabel(result);
+        Assert.Contains("\\n", label, StringComparison.Ordinal);
 
         // Every operation must survive intact — a break inside a table name would be a silent
         // corruption of the architecture overview rather than a layout choice.
-        for (var i = 0; i < 30; i++)
+        for (var i = 0; i < 8; i++)
             Assert.Contains($"SELECT FROM location_performance_{i:D2}", label, StringComparison.Ordinal);
         // And the breaks replaced spaces, so no display line starts or ends with one.
         Assert.All(DisplayLines(label), line => Assert.Equal(line.Trim(), line));
     }
 
     [Fact]
-    public void GeneratePlantUml_Wrapping_StillHonoursTheStatementLimit()
+    public void GeneratePlantUml_Wrapping_StillHonoursTheLabelCap()
     {
-        // The `\n` escapes are two characters each and count toward the statement the parser measures,
-        // so the cap has to be applied to the wrapped label, not to the label it was built from.
+        // The `\n` escapes count toward the label the engine walks, so the cap has to be applied to the
+        // wrapped label, not to the label it was built from.
         var options = new ComponentDiagramOptions { RelationshipLabelFormatter = _ => string.Join(" ", Enumerable.Repeat("operation", 900)) };
 
         var result = ComponentDiagramGenerator.GeneratePlantUml(ManyOperations(), options, useC4: false);
 
-        var edge = result.Split('\n').Single(l => l.Contains("operation", StringComparison.Ordinal));
-        Assert.True(edge.Trim().Length <= PlantUmlStatementLimits.MaxMessageStatementChars, $"{edge.Trim().Length} chars");
+        var label = EdgeLabel(result);
+        Assert.Contains("\\n", label, StringComparison.Ordinal);
+        Assert.True(label.Length <= PlantUmlStatementLimits.MaxComponentEdgeLabelChars, $"{label.Length} chars");
     }
 
     [Fact]
@@ -1295,9 +1315,14 @@ public class ComponentDiagramGeneratorTests
         var text = link.Groups["text"].Value;
         Assert.True(text.Length <= PlantUmlStatementLimits.MaxLinkedLabelChars, $"{text.Length} characters inside the link");
         Assert.StartsWith("HTTP: GET /api/orders/very/long/route/segment/00", text, StringComparison.Ordinal);
-        Assert.EndsWith(PlantUmlStatementLimits.TruncationMarker, text, StringComparison.Ordinal);
-        Assert.Contains("P50: 45ms", edge, StringComparison.Ordinal);
-        Assert.Contains("10 calls across 5 tests", edge, StringComparison.Ordinal);
+        // The list loses whole entries from its end inside the link, which says how many (#162).
+        Assert.Matches(", \u2026, \\+\\d+ more$", text.Replace("\\n", " ", StringComparison.Ordinal));
+        // The engine walks the whole label, not only the link's text: the whole label is within the edge's cap,
+        // and both stats lines are kept.
+        var label = LabelOf(source);
+        Assert.True(label.Length <= PlantUmlStatementLimits.MaxComponentEdgeLabelChars, $"{label.Length} characters in the label");
+        Assert.Contains("]]\\nP50: 45ms | P95: 120ms | P99: 250ms", label, StringComparison.Ordinal);
+        Assert.EndsWith("\\n10 calls across 5 tests", label, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1326,5 +1351,113 @@ public class ComponentDiagramGeneratorTests
         Assert.All(lines, line => Assert.True(
             line.Length <= ComponentDiagramGenerator.MaxLabelLineChars,
             $"display line of {line.Length} chars: {line}"));
+    }
+
+    // ─── The edge label's measured cap (#162, plans/LONG_COMPONENT_EDGE_PLAN.md R1) ───
+
+    /// <summary>The edge #162 reported: a service writing to <paramref name="statements"/> ClickHouse tables.</summary>
+    private static ComponentRelationship[] Warehouse(int statements, string caller = "Caller") =>
+    [
+        new(caller, "Warehouse", "ClickHouse",
+            [.. Enumerable.Range(1, statements).Select(i => $"INSERT INTO orders_archive_{i:000}")], statements, 1, "ClickHouse")
+    ];
+
+    /// <summary>The entries a default label lists after its protocol, its display breaks read as the spaces they replaced.</summary>
+    private static string[] Entries(string label, string protocol)
+    {
+        var text = label.Replace("\\n", " ", StringComparison.Ordinal);
+        Assert.StartsWith(protocol + ": ", text, StringComparison.Ordinal);
+        return text[(protocol.Length + 2)..text.LastIndexOf(" - ", StringComparison.Ordinal)].Split(", ");
+    }
+
+    [Fact]
+    public void A_long_method_list_is_cut_to_the_label_cap_and_keeps_its_counts()
+    {
+        // #162: an edge listing 66 INSERT statements wrote a label of 1,944 characters, and the render worker drew
+        // the engine's stack-overflow picture in place of the whole component diagram.
+        var label = EdgeLabel(ComponentDiagramGenerator.GeneratePlantUml(Warehouse(66), useC4: false));
+
+        Assert.True(label.Length <= PlantUmlStatementLimits.MaxComponentEdgeLabelChars, $"{label.Length} characters");
+        Assert.EndsWith(" - 66 calls across 1 tests", label.Replace("\\n", " ", StringComparison.Ordinal), StringComparison.Ordinal);
+        var entries = Entries(label, "ClickHouse");
+        var kept = entries[..^2];
+        Assert.Equal(PlantUmlStatementLimits.TruncationMarker, entries[^2]);
+        Assert.Equal($"+{66 - kept.Length} more", entries[^1]);
+        // Whole entries, the first ones in the order the label lists them, and as many as fit: one more would not.
+        Assert.Equal(Enumerable.Range(1, kept.Length).Select(i => $"INSERT INTO orders_archive_{i:000}"), kept);
+        Assert.True(kept.Length >= 8, $"only {kept.Length} entries kept");
+        Assert.True(label.Length + "INSERT INTO orders_archive_001, ".Length > PlantUmlStatementLimits.MaxComponentEdgeLabelChars,
+            $"room for another entry: {label.Length} characters with {kept.Length} entries");
+    }
+
+    [Fact]
+    public void A_label_within_the_cap_keeps_its_bytes()
+    {
+        // Ten statements, as 4.14.4 wrote them: the cap moves nothing that fits under it.
+        var label = EdgeLabel(ComponentDiagramGenerator.GeneratePlantUml(Warehouse(10), useC4: false));
+
+        Assert.Equal("ClickHouse: INSERT INTO orders_archive_001, INSERT INTO orders_archive_002,\\nINSERT INTO orders_archive_003, "
+            + "INSERT INTO orders_archive_004, INSERT INTO orders_archive_005,\\nINSERT INTO orders_archive_006, INSERT INTO orders_archive_007, "
+            + "INSERT INTO orders_archive_008,\\nINSERT INTO orders_archive_009, INSERT INTO orders_archive_010 - 10 calls across 1 tests", label);
+    }
+
+    [Fact]
+    public void An_HTTP_edge_is_cut_by_whole_routes_too()
+    {
+        var relationships = new[]
+        {
+            new ComponentRelationship("Caller", "OrderService", "HTTP",
+                [.. Enumerable.Range(0, 40).Select(i => $"GET /api/orders/{i:D2}/lines")], 400, 12)
+        };
+
+        var label = EdgeLabel(ComponentDiagramGenerator.GeneratePlantUml(relationships, useC4: false));
+
+        Assert.True(label.Length <= PlantUmlStatementLimits.MaxComponentEdgeLabelChars, $"{label.Length} characters");
+        var entries = Entries(label, "HTTP");
+        Assert.Equal(Enumerable.Range(0, entries.Length - 2).Select(i => $"GET /api/orders/{i:D2}/lines"), entries[..^2]);
+        Assert.Equal($"+{40 - (entries.Length - 2)} more", entries[^1]);
+        Assert.EndsWith(" - 400 calls across 12 tests", label.Replace("\\n", " ", StringComparison.Ordinal), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void One_entry_longer_than_the_cap_is_cut_and_the_counts_kept()
+    {
+        // No whole entry fits: the first is cut with TruncateLabel, so the edge still says what it calls.
+        var relationships = new[]
+        {
+            new ComponentRelationship("Caller", "Warehouse", "ClickHouse",
+                ["INSERT INTO " + string.Join("_", Enumerable.Repeat("partitioned_archive", 40)), "SELECT 1"], 2, 1, "ClickHouse")
+        };
+
+        var label = EdgeLabel(ComponentDiagramGenerator.GeneratePlantUml(relationships, useC4: false));
+        var text = label.Replace("\\n", " ", StringComparison.Ordinal);
+
+        Assert.True(label.Length <= PlantUmlStatementLimits.MaxComponentEdgeLabelChars, $"{label.Length} characters");
+        Assert.StartsWith("ClickHouse: INSERT INTO partitioned_archive_", text, StringComparison.Ordinal);
+        Assert.EndsWith(" - 2 calls across 1 tests", text, StringComparison.Ordinal);
+        Assert.Contains("\u2026, +1 more - ", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("SELECT 1", text, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void The_cut_label_is_the_same_in_both_forms(bool useC4)
+    {
+        // C4's Rel(…) is drawn by Server and Local rendering, whose Java engine does not recurse, but a source can be
+        // rendered either way, so the label is capped where it is written.
+        var label = LabelOf(ComponentDiagramGenerator.GeneratePlantUml(Warehouse(66), useC4: useC4));
+
+        Assert.Equal(EdgeLabel(ComponentDiagramGenerator.GeneratePlantUml(Warehouse(66), useC4: false)), label);
+    }
+
+    [Fact]
+    public void Long_participant_names_do_not_shorten_the_label()
+    {
+        // The aliases are matched by a pattern of their own whose depth does not add to the label's, so the cap is
+        // on the label as written, whatever the names around it.
+        var label = EdgeLabel(ComponentDiagramGenerator.GeneratePlantUml(Warehouse(66, caller: "Caller" + new string('c', 150)), useC4: false));
+
+        Assert.Equal(EdgeLabel(ComponentDiagramGenerator.GeneratePlantUml(Warehouse(66), useC4: false)), label);
     }
 }

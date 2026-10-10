@@ -77,7 +77,11 @@ public static class DefaultDiagramsFetcher
     internal static string RenderErrorPlantUml(Exception exception) =>
         "@startuml\nhide footbox\nskinparam ParticipantBorderColor transparent\nskinparam ParticipantBackgroundColor transparent\n"
         + "skinparam LifeLineBorderColor transparent\nparticipant \" \" as renderError\nhnote across <<renderError>> #ffdddd\n"
-        + EscapeNoteText($"\u26a0 diagram could not be generated: {exception.GetType().Name}: {exception.Message}")
+        // One line of note body: it draws at 15,900 characters in the render worker with V8's optimizing compilers
+        // off, so it is held to the note ceiling, which an exception message can pass.
+        + PlantUml.PlantUmlStatementLimits.TruncateLabel(
+            EscapeNoteText($"\u26a0 diagram could not be generated: {exception.GetType().Name}: {exception.Message}"),
+            PlantUml.PlantUmlStatementLimits.MaxNoteLineChars)
         + "\nend note\n@enduml";
 
     /// <summary>

@@ -1,0 +1,59 @@
+statement-limits-worker-probe.js, 2026-10-10: every statement Kronikol writes whose length a run controls, in the
+BrowserJs render worker, for plans/LONG_COMPONENT_EDGE_PLAN.md R1 and R3 (#162). Kronikol 4.14.4's emitters, engine
+@plantuml/core@1.2026.8 (jsDelivr, SRI checked by the page), the shipped render script with one worker
+(emitter-corpus -- --shim <page> 1; 0 workers for the main thread).
+
+Sources (from the repository root, at 4.14.4; since 4.14.5 the emitters cut these values themselves, so a re-measure past
+the caps needs a build with the constants raised):
+  dotnet run --project tools/render-bench/emitter-corpus -- --component-edges <dir>/edges
+  dotnet run --project tools/render-bench/emitter-corpus -- --statement-kinds <dir>/kinds
+  dotnet run --project tools/render-bench/emitter-corpus -- --shim <dir>/shim-w1.html 1   (and shim-w0.html 0)
+Runs (BISECT=1 STEP=10 REPS=2; a fresh page per case unless warm):
+  JSFLAGS="--no-opt --no-maglev" COLD=1 FROM=300 TO=1950 node statement-limits-worker-probe.js --scan-edges <dir>/edges <dir>/shim-w1.html npm=https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8
+  JSFLAGS="--no-opt --no-maglev" COLD=1 FROM=100 TO=1500 node statement-limits-worker-probe.js --kinds <dir>/kinds <dir>/shim-w1.html npm=...
+  the same with BROWSER=chrome, without JSFLAGS (the JIT on), with WARM=50 and no COLD (one page after 50 renders), on
+  shim-w0.html (the main thread), and with BROWSER=firefox and BROWSER=webkit. Linux: the same scripts in
+  mcr.microsoft.com/playwright:v1.59.1-noble under podman in WSL (playwright-core 1.59.1 from npm, BENCH_PW pointed at it).
+
+Verdict: drawn = an SVG that is not the stack-overflow picture (RangeError, "Maximum call stack", "too much recursion"),
+not an error picture ("Syntax Error?", "An error has occurred", or a first drawn line starting "PlantUML "), and that
+draws every expected name (a sequence diagram's participants twice).
+
+Configurations
+  A  Chromium 147.0.7727.15, worker, --js-flags=--no-opt --no-maglev, Windows 11
+  B  Chrome 154.0.8037.99, worker, --js-flags=--no-opt --no-maglev, Windows 11
+  C  Chromium 147.0.7727.15, worker, --js-flags=--no-opt --no-maglev, Linux (WSL 6.18 kernel, the Playwright image)
+  D  Chromium 147, worker, JIT on, cold, Windows      E  Chrome 154, worker, JIT on, cold, Windows
+  F  Chromium 147, worker, JIT on, cold, Linux        G  Chromium 147 and Chrome 154, worker, warm (50 renders first), Windows
+  H  Chromium 147, main thread, --no-opt --no-maglev  I  Firefox 148.0.2, worker   J  WebKit 26.4 (main thread: no OffscreenCanvas)
+
+Last length that drew / first that failed (`chars`: the component edge's label as written; the opener's and the bar's
+whole line; a name's or span name's own characters):
+
+shape              A          B          C          D           E           F           G           H           I          J
+component edge     540/550    540/550    540/550    1900/1910   1740/1750   1900/1910   1610/1620   1070/1080   all        all
+ (sql, grpc, kafka, non-ASCII and a formatter's label: the same in every column; the label's content does not count)
+stats edge (456)   draws      draws      draws      draws       draws       draws       draws       draws       draws      draws
+loop opener        830/840    830/840    830/840    1000/1010   1040/1050   1000/1010   1490/1500   all         1060/1070  all
+partition opener   830/840    830/840    830/840    1000/1010   1070/1080   1000/1010   all         all         1110/1120  all
+coloured step bar  870/880    870/880    870/880    1030/1040   1030/1040   1030/1040   1390/1400   all         1240/1250  all
+sequence entity    270/280    270/280    270/280    530/540     570/580     530/540     810/820     540/550     800/810    all
+sequence database  270/280    270/280    270/280    530/540     540/550     530/540     810/820     540/550     790/800    all
+component database 330/340    330/340    330/340    720/730     720/730     720/730     760/770     660/670     540/550    all
+component system   300/310    300/310    300/310    680/690     680/690     680/690     710/720     620/630     500/510    all
+activity action    810/820    810/820    810/820    980/990     980/990     980/990     1470/1480   all         1130/1140  all
+activity swimlane  530/540    530/540    530/540    990/1000    1060/1070   990/1000    all         1050/1060   all        all
+placeholder note   draws to 1500 everywhere; draws to 15,900 in A (bisected separately)
+
+How each fails: the edge and the swimlane as the RangeError picture; the coloured bar as plain RangeError text (Firefox:
+"InternalError: too much recursion"), no SVG; openers, names and actions as a "Syntax Error?" picture, since the
+overflow is swallowed while a command is chosen. "all": every length to the end of the range drew.
+
+With the optimizing compilers off, Windows and Linux and both Chromium builds agree to the character; that is the
+binding configuration (plan Q2). The issue's own figure for the edge was 30 characters lower (a 516-character label),
+probably on another platform. Caps set from it, each at most three quarters of the lowest edge:
+  MaxComponentEdgeLabelChars 375 (new), MaxBlockLabelChars 600 (was 1471), MaxColouredNoteBarChars 600 (was 1400),
+  MaxParticipantNameChars 200 (new; names, aliases, swimlanes), MaxActivityActionChars 600 (new).
+The placeholder note keeps the 16,000 note ceiling, which it had not been held to.
+
+Logs: plans/LONG_COMPONENT_EDGE_PLAN.harness/r1r3/logs/.

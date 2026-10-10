@@ -107,13 +107,17 @@ public static class InternalFlowRenderer
         var source = string.IsNullOrEmpty(node.Span.Source) ? "Unknown" : node.Span.Source;
         if (source != currentSwimlane)
         {
-            sb.AppendLine($"|{WrapForWidth(EscapePlantUml(source))}|");
+            // A swimlane's name is a participant's: the engine walks it once per character on its stack.
+            sb.AppendLine($"|{WrapForWidth(EscapePlantUml(PlantUml.PlantUmlStatementLimits.CapName(source)))}|");
             currentSwimlane = source;
         }
 
         // wrapWidth breaks at whitespace only, and the labels that get long here are SQL text and
         // fully-qualified type names — the character budget is what bounds the ones that have none.
-        var label = WrapForWidth(EscapePlantUml(node.Span.Name));
+        // The engine walks the action once per character on its stack, so the label as written is capped too:
+        // a span named after a whole SQL statement cost the diagram in the render worker (#162's R3).
+        var label = PlantUml.PlantUmlStatementLimits.TruncateLabel(
+            WrapForWidth(EscapePlantUml(node.Span.Name)), PlantUml.PlantUmlStatementLimits.MaxActivityActionChars);
         var duration = node.Span.Duration.TotalMilliseconds;
         sb.AppendLine(duration >= 1
             ? $":{label} ({duration:F0}ms);"

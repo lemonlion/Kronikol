@@ -1154,6 +1154,12 @@ inside the link the way `TruncateLabel` does. The label shape made no difference
 P3's figure (drawn at 1,000, failed from 1,100, 1,600 drawn) was the same effect: its probe ran the lengths in
 one page, so each was rendered in a warmer worker than the last.
 
+**Corrected 2026-10-10 (`plans/LONG_COMPONENT_EDGE_PLAN.md` §2.4, F2, F7a; #162).** The last row was measured by the
+probe's legacy mode, which counted any SVG as drawn, error pictures included. With a strict verdict, `--jitless` and
+optimizers-off loop labels draw `Syntax Error?` from 840 characters, coloured bars as the emitter writes them (one
+token, no breaks) fail from 880, and a component edge's label fails from 550 unlinked: the engine walks the whole
+label, link or not, so the link was never the cause on that edge. 4.14.5 caps each in the worker.
+
 **The cap: `MaxLinkedLabelChars` = 350,** 75% of the lowest edge found (475), where §3.0 expected about 750 from
 the cold JIT figure alone. The lowest edges are in the configuration an enterprise policy or a browser security
 mode sets when it turns V8's optimizing compilers off, and a report opened there lost every diagram with a request

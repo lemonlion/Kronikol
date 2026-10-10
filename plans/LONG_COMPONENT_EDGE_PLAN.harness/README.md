@@ -40,6 +40,19 @@ time. The generated pages and most generated sources are left out; `follow/gen/g
 | `follow/src/` | The representative sources: the step bars (one token, rich, short), `loop`, `partition`, the stats edge |
 | `follow/logs/` | `K-*` the edges per statement kind, `L-*` 3.30.4's legacy cases re-run with the strict verdict, `M-*` the coloured bar with and without the filler's line breaks |
 
+## `r1r3/`: the execution of R1 and R3 (plan §11, 2026-10-10)
+
+Measured on 2026-10-10 at 4.14.4's emitters with the tools in `tools/render-bench/` (their README has the commands); the
+table is `tools/render-bench/results/statement-limits-worker-2026-10-10.txt`.
+
+| Path | What it is |
+|---|---|
+| `run-win-1.sh`, `run-win-2.sh` | The Windows runs: Chromium 147 and Chrome 154 cold, warm and with the optimizing compilers off, the main thread, Firefox 148 and WebKit 26.4, edges and kinds |
+| `linux-run.sh`, `linux-pull.sh` | The Linux runs: Playwright's `v1.59.1-noble` image under podman in WSL, Chromium 147 with the JIT on and off, and how the logs were copied out |
+| `logs/` | One log per platform, browser, mode and shape set (`*-edges.txt` the component edge in each form, `*-kinds.txt` every other kind), each case with its verdict |
+| `red/` | The new facts copied onto 4.14.4 with the three new constants stubbed: `core-on-4.14.4.txt` (22 fail) and `e2e-on-4.14.4.txt` (12 fail), each on its own assertion |
+| `mutate_r1r3.py`, `mutations.jsonl` | Each mutation puts one behaviour back as it was, in a snapshot worktree, and runs the facts that should catch it; the results, one line each |
+
 ## `research/`: the inventories the plan was written from
 
 | File | What it is |

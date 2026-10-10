@@ -12,13 +12,13 @@ internal enum PlantUmlStatementKind
     /// <summary>A message/arrow statement — <c>a -&gt; b: label</c>. Capped at <see cref="PlantUmlStatementLimits.MaxMessageStatementChars"/>.</summary>
     Message,
 
-    /// <summary>A fragment opener carrying a label — <c>loop</c>, <c>alt</c>, <c>partition</c>. Capped, lower, at <see cref="PlantUmlStatementLimits.MaxBlockLabelChars"/>.</summary>
+    /// <summary>A fragment opener carrying a label — <c>loop</c>, <c>alt</c>, <c>partition</c>. Capped, lower, at <see cref="PlantUmlStatementLimits.MaxBlockLabelChars"/>, the render worker's stack edge.</summary>
     BlockOpener,
 
     /// <summary>
     /// A one-line note carrying a colour or font tag — the step-delimiter bar
     /// <c>hnote across &lt;&lt;stepDelimiter&gt;&gt; #black:&lt;color:white&gt;…</c>. Capped at
-    /// <see cref="PlantUmlStatementLimits.MaxColouredNoteBarChars"/>, and the cheapest of all the limits.
+    /// <see cref="PlantUmlStatementLimits.MaxColouredNoteBarChars"/>, the render worker's stack edge.
     /// </summary>
     ColouredNoteBar,
 
@@ -34,7 +34,11 @@ internal enum PlantUmlStatementKind
     /// <summary>A preprocessor or diagram directive — <c>!theme</c>, <c>@startuml</c>. No cap.</summary>
     Directive,
 
-    /// <summary>Anything else — participants, <c>skinparam</c>, <c>autonumber</c>, blank lines. Left alone.</summary>
+    /// <summary>
+    /// Anything else — participants, <c>skinparam</c>, <c>autonumber</c>, blank lines. Left alone: a participant's name
+    /// and alias are capped where they are written (<see cref="PlantUmlStatementLimits.MaxParticipantNameChars"/>),
+    /// since cutting a declaration's line would cut its alias.
+    /// </summary>
     Other
 }
 
@@ -50,31 +54,50 @@ internal enum PlantUmlStatementKind
 /// <item><description>an over-long <b>message</b> matches no rule, so the parser abandons the diagram
 /// and the engine draws <c>Syntax Error?</c> over the whole fragment (or silently draws the wrong
 /// diagram when the class-parse fallback succeeds);</description></item>
-/// <item><description>an over-long <b>coloured note bar</b> or — since the 1.2026.8beta1 build — an
-/// over-long <b>block opener</b> takes the engine's own renderer down with
-/// <c>RangeError: Maximum call stack size exceeded</c> and produces no SVG at all;</description></item>
-/// <item><description>an over-long <b>link</b>, the text inside <c>[[…]]</c>, does the same in the Chromium
-/// worker <c>BrowserJs</c> renders in, from under a quarter of the message limit, where node and the page's
-/// main thread draw it (<see cref="MaxLinkedLabelChars"/>).</description></item>
+/// <item><description>everything else is the engine's stack. Its regex library (TeaVM's port of
+/// <c>java.util.regex</c>) walks a bracket class under <c>+</c> or <c>*</c>, and a lazy <c>.*?</c>, once per
+/// character on the JavaScript stack, and PlantUML runs such patterns over a <b>coloured note bar</b>, a
+/// <b>block opener</b>, a <b>link</b>'s text, a <b>component edge</b>'s label, a <b>participant's name</b> and
+/// alias, and an <b>activity action</b> and swimlane. Past its length the engine draws its RangeError picture or
+/// text, or <c>Syntax Error?</c> where the overflow is swallowed while a command is chosen, in place of the whole
+/// diagram. The JVM does not recurse there, so Java PlantUML draws all of them at 100,000 characters
+/// (plans/LONG_COMPONENT_EDGE_PLAN.md §2.3).</description></item>
 /// </list>
-/// <para>Measured caps on the trimmed statement (the value below each is the constant, kept under the
-/// lowest measurement so a small engine drift, or a runtime with a smaller stack, does not reopen the bug;
-/// a stack edge moves with the runtime, so the constants keep their margin under the lowest figure, not
-/// under any one of them):</para>
+/// <para>
+/// A stack edge is a budget, so it binds where the stack is smallest: the Web Worker <c>BrowserJs</c> renders in,
+/// whose stack is half the page's, with V8's optimizing compilers off (as an enterprise policy or a browser's
+/// security mode can set), where every frame is the interpreter's size. Until 4.14.5 the block-opener and
+/// coloured-bar caps came from node, whose stack is the page's, and both failed in a cold worker with the JIT on,
+/// the default. Each constant keeps a quarter under the lowest figure found, so that a runtime with a smaller stack
+/// does not reopen the bug.
+/// </para>
 /// <list type="table">
 /// <item><term><c>a -&gt; b: …</c>, <c>a --&gt; b: …</c>, <c>a -[#F39C12]&gt; b: …</c></term><description>2000 — exactly, on every build measured, and on the
-/// whole statement: a 27-character prefix leaves a 1973-character label, not a longer statement.</description></item>
-/// <item><term><c>loop</c> 1476, <c>alt</c> 1477, <c>group</c> 1482, <c>opt</c> 1484 (1.2026.6 parse limits;
-/// from 1.2026.8beta1 the parse accepts more and the edge is the engine's stack, not the parser: about 2,000
-/// on node 25.9 with its default stack, 1980 to 2041 on the 1.2026.8 builds, 3660 to 5641 on the runtime of
-/// 2026-09-04, and past 5000 with a larger stack)</term><description>constant 1471</description></item>
-/// <item><term><c>hnote across … #black:&lt;color:white&gt;…</c> 1458–1534 on 1.2026.6; from 1.2026.8beta1 a
-/// stack edge too, 2005 to 2008 on node 25.9 (≈4124 on the runtime of 2026-09-04)</term><description>constant 1400</description></item>
+/// whole statement: a 27-character prefix leaves a 1973-character label, not a longer statement. A parse limit,
+/// so the same in every runtime.</description></item>
+/// <item><term><c>loop</c>, <c>partition</c> openers, the whole statement, in the worker: 840 with the optimizing
+/// compilers off, 1,010 cold with the JIT on (node 25.9: about 2,000; 1.2026.6's parse limits were 1476 to
+/// 1484)</term><description>constant 600 (1471 until 4.14.5)</description></item>
+/// <item><term><c>hnote across … #black:&lt;color:white&gt;…</c>, in the worker: 880 with the optimizing compilers
+/// off, 1,040 cold with the JIT on (node 25.9: 2005 to 2008)</term><description>constant 600 (1400 until 4.14.5)</description></item>
 /// <item><term>note bodies 16371, <c>note over a : …</c> 16392, plain <c>hnote across</c> 16398
-/// (16370/16377/16376 on 1.2026.8beta1 — unchanged)</term><description>constant 16000</description></item>
-/// <item><term>the text inside a <c>[[#iflow-…]]</c> link, in the Chromium worker: 980 cold, 475 to 495 with the
-/// optimizing compilers off (measured in the worker, not in node)</term><description>constant 350</description></item>
+/// (16370/16377/16376 on 1.2026.8beta1 — unchanged; a placeholder note's line draws at 15,900 in the worker with
+/// the optimizing compilers off)</term><description>constant 16000</description></item>
+/// <item><term>the text inside a <c>[[#iflow-…]]</c> link, in the worker: 980 cold, 475 to 495 with the
+/// optimizing compilers off</term><description>constant 350</description></item>
+/// <item><term>a component diagram edge's label, as written, in the worker: 550 with the optimizing compilers
+/// off, 1,910 cold with the JIT on (Chromium 147), 1,620 warm (the issue's platform: 516)</term><description>constant 375</description></item>
+/// <item><term>a participant's name, in the worker with the optimizing compilers off: 280 in a sequence diagram,
+/// 310 and 340 in a component diagram, 540 as an activity swimlane</term><description>constant 200</description></item>
+/// <item><term>an activity diagram's action, in the worker: 820 with the optimizing compilers off, 990 cold with
+/// the JIT on</term><description>constant 600</description></item>
 /// </list>
+/// <para>
+/// The worker figures are the first length that failed, measured on 2026-10-10 with Kronikol's own emitters in
+/// Chromium 147 and Chrome 154 on Windows and in Chromium 147 on Linux, which agree with the optimizing compilers
+/// off (tools/render-bench/results/statement-limits-worker-2026-10-10.txt). Firefox's worker fails later, and
+/// WebKit, which renders on the page's main thread where it has no OffscreenCanvas, later still.
+/// </para>
 /// <para>
 /// Leading and trailing whitespace is not counted — a valid short arrow padded to 2500 characters with
 /// trailing spaces parses — so every cap applies to the trimmed statement.
@@ -82,17 +105,18 @@ internal enum PlantUmlStatementKind
 /// <para>
 /// <b>Which limits are PlantUML's and which are the JS build's.</b> Measured against real Java PlantUML
 /// through IKVM (see <c>IkvmStatementLimitTests</c>): the <b>2,000-character message limit is PlantUML's
-/// own</b> — Java refuses 2,001 exactly as the JS build does — while the block-opener limit and the
-/// coloured-note-bar crash are artifacts of the TeaVM build, which Java draws far past. Every cap is
-/// applied where the source is written rather than where a renderer is chosen, because the same source
-/// may be rendered either way.
+/// own</b> — Java refuses 2,001 exactly as the JS build does — while every stack edge above is an artifact of
+/// the TeaVM build, which Java draws far past. Every cap is applied where the source is written rather than where
+/// a renderer is chosen, because the same source may be rendered either way.
 /// </para>
 /// <para>
 /// Measuring this is easy to get wrong: when a message statement is too long the parser falls back to
 /// reading the source as a <em>class</em> diagram, and that fallback often succeeds — echoing the label
 /// text and emitting no <c>Syntax Error</c> banner. "Is the label in the SVG?" therefore passes for both
 /// outcomes. The signal that separates them is that a sequence diagram draws each participant twice, as
-/// a head box and a foot box.
+/// a head box and a foot box. And the engine's error pictures are SVGs that list the source, so "an SVG holding
+/// the names" passes too: a probe has to reject a picture whose first drawn line starts <c>PlantUML </c>, as the
+/// worker probe did not until 4.14.5.
 /// </para>
 /// </summary>
 internal static class PlantUmlStatementLimits
@@ -101,19 +125,45 @@ internal static class PlantUmlStatementLimits
     public const int MaxMessageStatementChars = 2000;
 
     /// <summary>
-    /// Longest <c>loop</c>/<c>alt</c>-style block opener. Measured between 1476 (<c>loop</c>) and 1484
-    /// (<c>opt</c>) — an oddly specific range, which is why the boundary is pinned by an integration test
-    /// rather than trusted as a documented constant.
+    /// Longest <c>loop</c>/<c>alt</c>-style block opener, the whole statement. The engine's regex library walks the
+    /// label once per character on its stack, and in the render worker, whose stack is half the page's, a
+    /// <c>loop</c> or <c>partition</c> opener drew <c>Syntax Error?</c> from 840 characters with V8's optimizing
+    /// compilers off and from 1,010 in a cold worker with the JIT on, the default (plans/LONG_COMPONENT_EDGE_PLAN.md R3:
+    /// Chromium 147 and Chrome 154, Windows and Linux; Firefox's worker from 1,070). Until 4.14.5 the constant was
+    /// 1471, from the parse limits of 1.2026.6 and node, whose stack is the page's.
     /// </summary>
-    public const int MaxBlockLabelChars = 1471;
+    public const int MaxBlockLabelChars = 600;
 
     /// <summary>
-    /// Longest one-line note carrying a colour tag. Measured at 1458 for the real step-delimiter bar
-    /// (<c>hnote across &lt;&lt;stepDelimiter&gt;&gt; #black:&lt;color:white&gt;…</c>) — past it the engine
-    /// overflows its own JS stack and the diagram is lost entirely, so this one is worth truncating a long
-    /// Gherkin step for. The same bar <em>without</em> a colour tag runs to 16398.
+    /// Longest one-line note carrying a colour tag: the step bar a step written as one unbroken token takes
+    /// (<c>hnote across &lt;&lt;stepDelimiter&gt;&gt; #black:&lt;color:white&gt;…</c>; a step with spaces takes the
+    /// styled form, which draws to 13,600). Past it the engine overflows its stack in the colour tag's pattern and
+    /// draws its RangeError text in place of the diagram: in the render worker from 880 characters with V8's
+    /// optimizing compilers off and from 1,040 in a cold worker with the JIT on, the default
+    /// (plans/LONG_COMPONENT_EDGE_PLAN.md R3; Firefox's worker from 1,250). Until 4.14.5 the constant was 1400, from
+    /// node, whose stack is the page's. The same bar <em>without</em> a colour tag runs to 16398.
     /// </summary>
-    public const int MaxColouredNoteBarChars = 1400;
+    public const int MaxColouredNoteBarChars = 600;
+
+    /// <summary>
+    /// Longest participant name a diagram shows: a sequence diagram's participant, a component diagram's node, an
+    /// activity diagram's swimlane. The engine walks a declared name, and the alias derived from it, once per
+    /// character on its stack, and in the render worker with V8's optimizing compilers off a sequence diagram drew
+    /// <c>Syntax Error?</c> from 280 characters of name, a component diagram from 310 (a <c>&lt;&lt;system&gt;&gt;</c>
+    /// rectangle) and 340 (a database), and an activity diagram from 540 (a swimlane); cold with the JIT on, from 540,
+    /// 690, 730 and 1,000 (plans/LONG_COMPONENT_EDGE_PLAN.md R3). A longer name is cut with <see cref="TruncateLabel"/>,
+    /// and its alias takes a hash of the whole name (<see cref="AliasSource"/>), so two names that share their start
+    /// stay two participants.
+    /// </summary>
+    public const int MaxParticipantNameChars = 200;
+
+    /// <summary>
+    /// Longest action in the internal-flow activity diagram, <c>:span name (12ms);</c>, measured as the name is
+    /// written (escaped and wrapped). Instrumentations name a span after a whole SQL statement, and in the render
+    /// worker with V8's optimizing compilers off the engine drew <c>Syntax Error?</c> from 820 characters of name, and
+    /// from 990 cold with the JIT on (plans/LONG_COMPONENT_EDGE_PLAN.md R3).
+    /// </summary>
+    public const int MaxActivityActionChars = 600;
 
     /// <summary>
     /// Ceiling for note content of any kind. Measured at 16371–16398; a pure backstop, since Kronikol
@@ -129,14 +179,53 @@ internal static class PlantUmlStatementLimits
     /// <c>RangeError: Maximum call stack size exceeded</c> takes the place of the whole diagram. Measured in
     /// Chromium 147 on both engine builds (plans/ENGINE_PIN_PLAN.md §10): from 980 characters in a worker whose
     /// JIT has not warmed up, 1,575 in one that has, and 475 (a component edge) to 495 (a request) with V8's
-    /// optimizing compilers off, as a browser runs them when a policy or a security mode turns them off. The same text unlinked
-    /// draws at every length to the message limit, and the page's main thread, node, Firefox and WebKit draw
-    /// every length measured. The constant keeps a quarter under the lowest edge.
+    /// optimizing compilers off, as a browser runs them when a policy or a security mode turns them off. In a sequence
+    /// diagram the same text unlinked draws at every length to the message limit, and the page's main thread, node,
+    /// Firefox and WebKit draw every length measured. A component diagram's edge is another matter: the engine walks
+    /// its whole label, link or not, so <see cref="MaxComponentEdgeLabelChars"/> binds there and this cap never does
+    /// (until 4.14.5 this said the unlinked edge drew to the message limit; it failed from 550). The constant keeps a
+    /// quarter under the lowest edge.
     /// </summary>
     public const int MaxLinkedLabelChars = 350;
 
+    /// <summary>
+    /// Longest label of a component diagram edge, <c>caller -[#colour]-&gt; service : "label"</c> (and C4's
+    /// <c>Rel(…)</c>), measured as written: display breaks and escapes count, the quotes and the aliases do not.
+    /// The engine reads every edge label through a pattern its regex library walks once per character on the
+    /// stack, link or no link, so a long method list runs a render worker out of stack and the engine draws a
+    /// stack-overflow picture in place of the whole diagram (#162). Measured in the worker with V8's optimizing
+    /// compilers off, cold and warm, on Windows and Linux, in Chromium 147 and Chrome 154: 540 characters draw and
+    /// 550 fail (plans/LONG_COMPONENT_EDGE_PLAN.md R1; the issue's own figures were 506 and 516). With the JIT on a
+    /// cold worker draws to 1,900. The constant keeps a quarter under the issue's figure.
+    /// </summary>
+    public const int MaxComponentEdgeLabelChars = 375;
+
     /// <summary>Appended where a statement is cut, so a reader can tell truncation from a short value.</summary>
     public const string TruncationMarker = "…";
+
+    /// <summary>A participant's name as a diagram shows it: cut to <see cref="MaxParticipantNameChars"/>, marker included.</summary>
+    public static string CapName(string name) => TruncateLabel(name, MaxParticipantNameChars);
+
+    /// <summary>
+    /// What a participant's alias is derived from: the name itself when it fits under
+    /// <see cref="MaxParticipantNameChars"/>, else its start followed by a hash of the whole name, so that two names
+    /// sharing their first <see cref="MaxParticipantNameChars"/> characters, which <see cref="CapName"/> shows alike,
+    /// stay two participants.
+    /// </summary>
+    public static string AliasSource(string name) =>
+        name.Length <= MaxParticipantNameChars ? name : string.Concat(name.AsSpan(0, MaxParticipantNameChars - 9), "_", StableHash(name));
+
+    /// <summary>
+    /// Eight hex digits of FNV-1a over the name's UTF-16 code units: the same on every runtime and in every process,
+    /// as an alias that lands in a golden file or a merged report has to be.
+    /// </summary>
+    private static string StableHash(string text)
+    {
+        var hash = 0x811C9DC5u;
+        foreach (var c in text)
+            hash = (hash ^ c) * 0x01000193u;
+        return hash.ToString("x8", System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     /// <summary>The cap for a statement of this kind, or <c>null</c> when the engine imposes none.</summary>
     public static int? CapFor(PlantUmlStatementKind kind) => kind switch

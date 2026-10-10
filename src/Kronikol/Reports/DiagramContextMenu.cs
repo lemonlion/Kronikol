@@ -73,8 +73,24 @@ public static class DiagramContextMenu
             .Replace("__PLANTUML_ENGINE_INTEGRITY__", TrackingDefaults.PlantUmlJsIntegrity)
             .Replace("__PLANTUML_VIZ_INTEGRITY__", TrackingDefaults.VizGlobalJsIntegrity)
             .Replace("__PLANTUML_WORKER_HOST_SOURCE__", hostLiteral)
-            .Replace("__PLANTUML_ON_DEMAND__", onDemand ? "true" : "false");
+            .Replace("__PLANTUML_ON_DEMAND__", onDemand ? "true" : "false")
+            .Replace("__PLANTUML_STATEMENT_LIMITS__", StatementLimitsLiteral);
     }
+
+    /// <summary>
+    /// The caps the page's own check names an over-long line by when a diagram fails (findOverLongStatement), taken from
+    /// <see cref="PlantUml.PlantUmlStatementLimits"/> so the two cannot drift: until 4.14.5 the script carried its own
+    /// copies of two of them.
+    /// </summary>
+    private static string StatementLimitsLiteral => System.Text.Json.JsonSerializer.Serialize(new
+    {
+        message = PlantUml.PlantUmlStatementLimits.MaxMessageStatementChars,
+        blockLabel = PlantUml.PlantUmlStatementLimits.MaxBlockLabelChars,
+        colouredNoteBar = PlantUml.PlantUmlStatementLimits.MaxColouredNoteBarChars,
+        componentEdgeLabel = PlantUml.PlantUmlStatementLimits.MaxComponentEdgeLabelChars,
+        participantName = PlantUml.PlantUmlStatementLimits.MaxParticipantNameChars,
+        activityAction = PlantUml.PlantUmlStatementLimits.MaxActivityActionChars,
+    });
 
     public static string GetContextMenuScript() => WithDecompressHelper(WithCopyTextHelper(LoadResource("context-menu-script.js")));
 

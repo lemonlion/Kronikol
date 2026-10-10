@@ -83,6 +83,174 @@ if (args.Length >= 2 && args[0] == "--linked-labels")
     return;
 }
 
+if (args.Length >= 2 && args[0] == "--component-edges")
+{
+    // One component diagram per edge-label shape, written by ComponentDiagramGenerator with the options a run report
+    // uses (the coloured `caller -[#colour]-> service : "…"` form, no C4), for statement-limits-worker-probe.js
+    // --scan-edges (plans/LONG_COMPONENT_EDGE_PLAN.md R1): the probe cuts each label to every length, so each edge
+    // carries 90 distinct operations, more than any cap leaves. Since 4.14.5 the emitter cuts the label itself at
+    // MaxComponentEdgeLabelChars, so a re-measure past that needs a build with the constant raised.
+    var dir = args[1];
+    Directory.CreateDirectory(dir);
+    var t0Edges = new DateTimeOffset(2026, 10, 10, 10, 0, 0, TimeSpan.Zero);
+    List<RequestResponseLog> Edge(string service, string category, string scheme, Func<int, string> method) =>
+        Enumerable.Range(1, 90).Select(i => new RequestResponseLog("edges", "t1", method(i), null, new Uri($"{scheme}://{service.ToLowerInvariant()}/default"), [],
+            service, "Caller", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false, DependencyCategory: category)
+        { Timestamp = t0Edges.AddSeconds(i) }).ToList();
+    (string Shape, List<RequestResponseLog> Logs)[] edges =
+    [
+        // The SQL family at the default verbosity: one entry per table (ClickHouse, as in #162).
+        ("sql", Edge("Warehouse", "ClickHouse", "clickhouse", i => $"INSERT INTO orders_archive_{i:000}")),
+        // gRPC: one entry per RPC.
+        ("grpc", Edge("PricingService", "gRPC", "grpc", i => $"pricing.v1.PricingService/GetQuoteForRegion{i:00}")),
+        // Kafka at the default verbosity: one entry per topic, `Produce → <topic>`.
+        ("kafka", Edge("Broker", Kronikol.Constants.DependencyCategories.MessageQueue, "kafka", i => $"Produce → orders.events.region-{i:00}")),
+        // Table names outside ASCII, which the emitter writes as they are.
+        ("nonascii", Edge("Archive", "SQL", "sql", i => $"INSERT INTO 注文アーカイブ_café_{i:000}")),
+    ];
+    foreach (var (shape, logs) in edges)
+    {
+        var relationships = Kronikol.ComponentDiagram.ComponentDiagramGenerator.ExtractRelationships(logs);
+        File.WriteAllText(Path.Combine(dir, $"edge-{shape}.puml"), Kronikol.ComponentDiagram.ComponentDiagramGenerator.GeneratePlantUml(relationships, useC4: false));
+    }
+    // A RelationshipLabelFormatter's label is the consumer's own format: here a sentence that never ends.
+    {
+        var relationships = Kronikol.ComponentDiagram.ComponentDiagramGenerator.ExtractRelationships(edges[0].Logs);
+        var options = new Kronikol.ComponentDiagram.ComponentDiagramOptions
+        {
+            RelationshipLabelFormatter = r => string.Join(" ", Enumerable.Range(1, 400).Select(i => $"{r.Service} took call {i} of {r.CallCount}"))
+        };
+        File.WriteAllText(Path.Combine(dir, "edge-formatter.puml"), Kronikol.ComponentDiagram.ComponentDiagramGenerator.GeneratePlantUml(relationships, useC4: false, options: options));
+    }
+    // The stats form no report writes today (no caller passes stats): the method list inside its internal-flow link,
+    // then two stats lines.
+    {
+        var relationships = Kronikol.ComponentDiagram.ComponentDiagramGenerator.ExtractRelationships(edges[0].Logs);
+        var key = $"iflow-rel-{Kronikol.ComponentDiagram.ComponentFlowSegmentBuilder.SanitizeKey("Caller")}-{Kronikol.ComponentDiagram.ComponentFlowSegmentBuilder.SanitizeKey("Warehouse")}";
+        var stats = new Dictionary<string, Kronikol.ComponentDiagram.RelationshipStats>
+        {
+            [key] = new(90, 5, 60, 45, 120, 999, 3, 1200, 0.12, [], [], null, null, false, 0.5, [], null, 10),
+        };
+        File.WriteAllText(Path.Combine(dir, "edge-stats.puml"), Kronikol.ComponentDiagram.ComponentDiagramGenerator.GeneratePlantUml(relationships, stats: stats, useC4: false));
+    }
+    Console.WriteLine($"wrote {edges.Length + 2} component-edge sources to {Path.GetFullPath(dir)}");
+    return;
+}
+
+if (args.Length >= 2 && args[0] == "--statement-kinds")
+{
+    // The other statements Kronikol writes whose length a run controls, each from the emitter that writes it, for
+    // statement-limits-worker-probe.js --kinds (plans/LONG_COMPONENT_EDGE_PLAN.md R3). Fixed shapes at the top of
+    // <dir>, which the probe lengthens itself: the collapsed-run loop, the setup partition, and a step that is one
+    // unbreakable token (the coloured bar's only long form). Length-driven shapes, one source per length from 10 to
+    // 1,500 by 5, in <dir>/<kind>/<length>.puml: a participant's name in a sequence diagram (an HTTP service and a
+    // database) and in a component diagram (a database and a <<system>> rectangle), a span name in the internal-flow
+    // activity diagram, its swimlane, and the message of the placeholder a scenario gets when its diagram fails.
+    var dir = Path.GetFullPath(args[1]);
+    Directory.CreateDirectory(dir);
+    var tk = 0;
+    var t0Kinds = new DateTimeOffset(2026, 10, 10, 10, 0, 0, TimeSpan.Zero);
+    DateTimeOffset At() => t0Kinds.AddMilliseconds(37 * ++tk);
+    List<RequestResponseLog> Pair(string test, string caller, string service, OneOf<HttpMethod, string> method, string url,
+        string? cat = null, TestPhase phase = TestPhase.Unknown)
+    {
+        var trace = Guid.NewGuid(); var id = Guid.NewGuid();
+        return
+        [
+            new(test, test, method, null, new Uri(url), [], service, caller, RequestResponseType.Request, trace, id, false,
+                null, RequestResponseMetaType.Default, cat) { Timestamp = At(), Phase = phase },
+            new(test, test, method, "{ \"ok\": true }", new Uri(url), [], service, caller, RequestResponseType.Response, trace, id, false,
+                HttpStatusCode.OK, RequestResponseMetaType.Default, cat) { Timestamp = At(), Phase = phase },
+        ];
+    }
+    List<RequestResponseLog> StepMarker(string test, string plantUml, DiagramMarkerKind kind, bool actionStart = false) =>
+    [
+        new(test, test, "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+        { IsOverrideStart = true, MarkerKind = kind, PlantUml = "\n" + plantUml + "\n\n", Timestamp = At(), IsActionStart = actionStart },
+        new(test, test, "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+        { IsOverrideEnd = true, MarkerKind = kind, Timestamp = At() },
+    ];
+    // As a BrowserJs report asks for it: the page splits, so the source is one piece.
+    string Sequence(List<RequestResponseLog> logs, bool collapse = false, bool separateSetup = false) =>
+        string.Join("\n@@FRAGMENT@@\n", PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs, separateSetup: separateSetup,
+            collapseConsecutiveIdenticalCalls: collapse, clientSideSplitting: true).Single().PlantUmls.Select(p => p.PlainText));
+    {
+        var logs = new List<RequestResponseLog>();
+        for (var i = 0; i < 6; i++) logs.AddRange(Pair("loop", "Api", "StockService", HttpMethod.Get, "http://stock.internal/stock/SKU-1"));
+        logs.AddRange(Pair("loop", "Api", "OrderService", HttpMethod.Post, "http://orders.internal/orders"));
+        File.WriteAllText(Path.Combine(dir, "loop.puml"), Sequence(logs, collapse: true));
+    }
+    {
+        var logs = new List<RequestResponseLog>();
+        logs.AddRange(Pair("setup", "Api", "CustomerService", HttpMethod.Get, "http://customers.internal/customers/ada", phase: TestPhase.Setup));
+        logs.AddRange(StepMarker("setup", "", DiagramMarkerKind.Phase, actionStart: true));
+        logs.AddRange(Pair("setup", "Api", "OrderService", HttpMethod.Post, "http://orders.internal/orders", phase: TestPhase.Action));
+        File.WriteAllText(Path.Combine(dir, "partition.puml"), Sequence(logs, separateSetup: true));
+    }
+    {
+        // A JSON array written as one token: no break, so the coloured form, as long as the emitter lets it be.
+        var token = "[" + string.Join(",", Enumerable.Range(1, 300).Select(i => $"{{\"sku\":\"SKU-{i:D4}\",\"qty\":{i % 7 + 1}}}")) + "]";
+        var logs = new List<RequestResponseLog>();
+        logs.AddRange(StepMarker("steps", StepBarPlantUml.Build(token), DiagramMarkerKind.Step));
+        logs.AddRange(Pair("steps", "Api", "OrderService", HttpMethod.Post, "http://orders.internal/orders"));
+        File.WriteAllText(Path.Combine(dir, "bar-token.puml"), Sequence(logs));
+    }
+    // Long values without whitespace, as the long ones are: hosts and type names, SQL text, an exception message.
+    string Name(int k)
+    {
+        const string unit = "orders-archive-replica.eu-west-1.internal.Kronikol.Example.Warehouse.";
+        var s = string.Concat(Enumerable.Repeat(unit, k / unit.Length + 1));
+        return "Svc" + s[..(k - 3)];
+    }
+    string Sql(int k)
+    {
+        const string sql = "SELECT o.Id, o.CustomerId, o.Total, o.Status, l.Sku, l.Quantity, l.Price FROM Orders AS o INNER JOIN OrderLines AS l ON l.OrderId = o.Id WHERE o.CustomerId = @p0 AND o.Status <> @p1 ";
+        var s = string.Concat(Enumerable.Repeat(sql, k / sql.Length + 1))[..k].TrimEnd();
+        return s + new string('x', k - s.Length);
+    }
+    string[] kinds = ["seq-entity", "seq-database", "comp-database", "comp-system", "activity", "activity-lane", "placeholder"];
+    foreach (var kind in kinds) Directory.CreateDirectory(Path.Combine(dir, kind));
+    var start = new DateTime(2026, 10, 10, 10, 0, 0, DateTimeKind.Utc);
+    string Activity(string name, string source)
+    {
+        Kronikol.InternalFlow.FlowSpan[] spans =
+        [
+            new("trace1", "s1", null, "POST /orders", "OrderService", start, TimeSpan.FromMilliseconds(40)),
+            new("trace1", "s2", "s1", name, source, start.AddMilliseconds(5), TimeSpan.FromMilliseconds(12)),
+        ];
+        var segment = new Kronikol.InternalFlow.InternalFlowSegment(Guid.NewGuid(), RequestResponseType.Request, "t1", null, null, []) { FlowSpans = spans };
+        return string.Join("\n@@FRAGMENT@@\n", Kronikol.InternalFlow.InternalFlowRenderer.RenderActivityDiagramBatched(segment));
+    }
+    for (var k = 10; k <= 1500; k += 5)
+    {
+        var name = Name(k);
+        File.WriteAllText(Path.Combine(dir, "seq-entity", $"{k}.puml"), Sequence(Pair("p", "Api", name, HttpMethod.Get, "http://orders.internal/orders/123")));
+        File.WriteAllText(Path.Combine(dir, "seq-database", $"{k}.puml"), Sequence(Pair("p", "Api", name, "Query", "sql://orders-db/Orders", cat: "SQL")));
+        {
+            var logs = Enumerable.Range(1, 3).Select(i => new RequestResponseLog("c", "t1", $"INSERT INTO orders_archive_{i:000}", null,
+                new Uri("clickhouse://warehouse/default"), [], name, "Caller", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false,
+                DependencyCategory: "ClickHouse")).ToList();
+            File.WriteAllText(Path.Combine(dir, "comp-database", $"{k}.puml"),
+                Kronikol.ComponentDiagram.ComponentDiagramGenerator.GeneratePlantUml(Kronikol.ComponentDiagram.ComponentDiagramGenerator.ExtractRelationships(logs), useC4: false));
+        }
+        {
+            var logs = new List<RequestResponseLog>
+            {
+                new("c", "t1", HttpMethod.Get, null, new Uri("http://orders.internal/orders/1"), [], name, "Caller", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false),
+                new("c", "t1", HttpMethod.Get, null, new Uri("http://stock.internal/stock/1"), [], "StockService", name, RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false),
+            };
+            File.WriteAllText(Path.Combine(dir, "comp-system", $"{k}.puml"),
+                Kronikol.ComponentDiagram.ComponentDiagramGenerator.GeneratePlantUml(Kronikol.ComponentDiagram.ComponentDiagramGenerator.ExtractRelationships(logs), useC4: false));
+        }
+        File.WriteAllText(Path.Combine(dir, "activity", $"{k}.puml"), Activity(Sql(k), "Microsoft.EntityFrameworkCore"));
+        File.WriteAllText(Path.Combine(dir, "activity-lane", $"{k}.puml"), Activity("SELECT 1", name));
+        File.WriteAllText(Path.Combine(dir, "placeholder", $"{k}.puml"),
+            DefaultDiagramsFetcher.RenderErrorPlantUml(new InvalidOperationException(Sql(k))));
+    }
+    Console.WriteLine($"wrote the statement kinds to {dir}");
+    return;
+}
+
 var outDir = args.Length > 0 ? args[0] : "kcorpus";
 Directory.CreateDirectory(outDir);
 var written = new List<string>();

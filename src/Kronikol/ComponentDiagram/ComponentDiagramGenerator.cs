@@ -214,45 +214,38 @@ public static partial class ComponentDiagramGenerator
             var serviceAlias = SanitizeAlias(rel.Service);
             var relKey = $"iflow-rel-{ComponentFlowSegmentBuilder.SanitizeKey(rel.Caller)}-{ComponentFlowSegmentBuilder.SanitizeKey(rel.Service)}";
 
+            // An edge label grows with the method list and with whatever a RelationshipLabelFormatter returns, and
+            // the engine walks the whole label once per character on its stack: a render worker with V8's optimizing
+            // compilers off ran out of stack from 550 characters and drew a stack-overflow picture in place of the
+            // whole diagram (#162). So the label, as written, is held to MaxComponentEdgeLabelChars: the method list
+            // loses whole entries from its end, keeping the counts and the stats, and a formatter's label, which is
+            // the consumer's own format, is cut at its end. Wrapped before it is measured: the `\n` escapes count
+            // toward what the engine walks. The same label goes into both emitted forms, `caller -[#colour]->
+            // service : "…"` and C4's `Rel(caller, service, "…", $tags="#colour")`.
+            var linkOpen = $"[[#{relKey} ";
             string label;
             if (options.RelationshipLabelFormatter is not null)
             {
-                label = options.RelationshipLabelFormatter(rel);
+                label = CapLinkText(WrapLabel(options.RelationshipLabelFormatter(rel)), linkOpen);
+                label = PlantUml.PlantUmlStatementLimits.TruncateLabel(label, PlantUml.PlantUmlStatementLimits.MaxComponentEdgeLabelChars);
             }
             else if (stats != null && stats.TryGetValue(relKey, out var relStats))
             {
-                var methodsPart = rel.Protocol == DependencyCategories.HTTP
-                    ? $"HTTP: {string.Join(", ", rel.Methods.OrderBy(m => m))}"
-                    : $"{rel.Protocol}: {string.Join(", ", rel.Methods.OrderBy(m => m))}";
-
                 var statsPart = $"P50: {relStats.MedianMs:F0}ms | P95: {relStats.P95Ms:F0}ms | P99: {relStats.P99Ms:F0}ms";
 
                 var errorPart = relStats.ErrorRate > 0
                     ? $" | {relStats.ErrorRate * 100:F0}% errors"
                     : "";
 
-                label = $"[[#iflow-rel-{ComponentFlowSegmentBuilder.SanitizeKey(rel.Caller)}-{ComponentFlowSegmentBuilder.SanitizeKey(rel.Service)} {methodsPart}]]\\n{statsPart}{errorPart}\\n{rel.CallCount} calls across {rel.TestCount} tests";
+                label = FitMethodList(rel, methodsPart =>
+                    $"{linkOpen}{methodsPart}]]\\n{statsPart}{errorPart}\\n{rel.CallCount} calls across {rel.TestCount} tests", linkOpen);
             }
             else
             {
-                var methodsPart = rel.Protocol == DependencyCategories.HTTP
-                    ? $"HTTP: {string.Join(", ", rel.Methods.OrderBy(m => m))}"
-                    : $"{rel.Protocol}: {string.Join(", ", rel.Methods.OrderBy(m => m))}";
-                label = $"{methodsPart} - {rel.CallCount} calls across {rel.TestCount} tests";
+                label = FitMethodList(rel, methodsPart => $"{methodsPart} - {rel.CallCount} calls across {rel.TestCount} tests");
             }
 
-            // An edge label grows with the method list and with whatever a RelationshipLabelFormatter
-            // returns. Component diagrams use a different parser from sequence diagrams and its limits are
-            // unmeasured, so this is a defensive ceiling at the sequence-diagram message limit rather than
-            // a measured one: real labels are two orders of magnitude below it, and an over-long statement
-            // costs the whole diagram, not the one edge. The allowance covers both emitted forms —
-            // `caller -[#colour]-> service : "…"` and C4's `Rel(caller, service, "…", $tags="#colour")`.
-            // Wrapped before it is capped, not after: the `\n` escapes are two characters each and count
-            // toward the statement the parser measures, so capping the wrapped label is what actually
-            // keeps the emitted line inside the limit.
-            label = WrapLabel(label);
-            label = CapLinkText(label, $"[[#{relKey} ");
-
+            // The sequence-diagram message limit stays behind it as a backstop for the whole statement.
             var edgeOverhead = callerAlias.Length + serviceAlias.Length + 40;
             label = PlantUml.PlantUmlStatementLimits.TruncateLabel(
                 label, PlantUml.PlantUmlStatementLimits.MaxMessageStatementChars - edgeOverhead);
@@ -317,11 +310,68 @@ public static partial class ComponentDiagramGenerator
     private static string WrapLabel(string label) => Wrap(label, MaxLabelLineChars);
 
     /// <summary>
+    /// The edge's label, as <paramref name="build"/> writes it around the method list, with as many of the
+    /// relationship's operations as fit under <see cref="PlantUml.PlantUmlStatementLimits.MaxComponentEdgeLabelChars"/>
+    /// once wrapped (every display break counted). A list that does not fit loses whole entries from its end and says
+    /// how many, <c>…, +38 more</c>, so what <paramref name="build"/> puts after the list is kept: the call and test
+    /// counts, and the stats form's closed link and stats lines. When not even the first entry fits whole, it is cut
+    /// with <see cref="PlantUml.PlantUmlStatementLimits.TruncateLabel"/>, its own marker standing for the rest. A label
+    /// that fits comes back exactly as it was.
+    /// </summary>
+    private static string FitMethodList(ComponentRelationship rel, Func<string, string> build, string? linkOpen = null)
+    {
+        var cap = PlantUml.PlantUmlStatementLimits.MaxComponentEdgeLabelChars;
+        var marker = PlantUml.PlantUmlStatementLimits.TruncationMarker;
+        var methods = rel.Methods.OrderBy(m => m).ToArray();
+        var head = $"{rel.Protocol}: ";
+        string Written(string listing)
+        {
+            var label = WrapLabel(build(listing));
+            return linkOpen is null ? label : CapLinkText(label, linkOpen);
+        }
+
+        var whole = Written(head + string.Join(", ", methods));
+        if (whole.Length <= cap || methods.Length == 0)
+            return whole.Length <= cap ? whole : PlantUml.PlantUmlStatementLimits.TruncateLabel(whole, cap);
+
+        // A wrap only lengthens a label (a break takes a space's place, or splits a word with two characters), so a
+        // count whose unwrapped label is over the cap is passed over without building it.
+        var frame = build(string.Empty).Length;
+        var joined = new int[methods.Length + 1];
+        for (var i = 0; i < methods.Length; i++)
+            joined[i + 1] = joined[i] + (i > 0 ? 2 : 0) + methods[i].Length;
+        for (var kept = methods.Length - 1; kept >= 1; kept--)
+        {
+            var more = $", +{methods.Length - kept} more";
+            if (frame + head.Length + joined[kept] + 2 + marker.Length + more.Length > cap)
+                continue;
+            var candidate = Written($"{head}{string.Join(", ", methods.Take(kept))}, {marker}{more}");
+            if (candidate.Length <= cap)
+                return candidate;
+        }
+
+        string FirstCut(int length) => head + PlantUml.PlantUmlStatementLimits.TruncateLabel(methods[0], length)
+            + (methods.Length > 1 ? $", +{methods.Length - 1} more" : string.Empty);
+        string? fitted = null;
+        for (int low = 1, high = methods[0].Length - 1; low <= high;)
+        {
+            var length = (low + high) / 2;
+            var candidate = Written(FirstCut(length));
+            if (candidate.Length <= cap) { fitted = candidate; low = length + 1; }
+            else high = length - 1;
+        }
+        // Only a protocol name or stats text as long as the cap leaves no room for any of the list.
+        return fitted ?? PlantUml.PlantUmlStatementLimits.TruncateLabel(whole, cap);
+    }
+
+    /// <summary>
     /// Cuts the text of the edge's internal-flow link, the method list, to
     /// <see cref="PlantUml.PlantUmlStatementLimits.MaxLinkedLabelChars"/> as written, display breaks included,
     /// and keeps the link closed and the stats lines after it. A Chromium worker, where BrowserJs renders,
-    /// overflows its stack parsing a longer link and draws nothing of the diagram, and the statement cap
-    /// below would otherwise cut a long method list inside the link. A label without the link comes back unchanged.
+    /// overflows its stack parsing a longer link and draws nothing of the diagram. Since 4.14.5 the whole label is held
+    /// to the shorter <see cref="PlantUml.PlantUmlStatementLimits.MaxComponentEdgeLabelChars"/>
+    /// (<see cref="FitMethodList"/>), which the engine walks link or no link, so for the method list this cap no longer
+    /// binds; it stays for a formatter's label that writes the link itself. A label without the link comes back unchanged.
     /// </summary>
     private static string CapLinkText(string label, string linkOpen)
     {
@@ -336,11 +386,12 @@ public static partial class ComponentDiagramGenerator
     }
 
     /// <summary>
-    /// A participant's name, broken onto display lines of at most <see cref="MaxNameLineChars"/>
-    /// characters. Unchanged — byte for byte — for every name short enough to fit, which is all of them
-    /// in practice.
+    /// A participant's name, cut to <see cref="PlantUml.PlantUmlStatementLimits.MaxParticipantNameChars"/> (its alias
+    /// keeps it distinct, <see cref="PlantUml.PlantUmlStatementLimits.AliasSource"/>) and broken onto display lines of at
+    /// most <see cref="MaxNameLineChars"/> characters. Unchanged — byte for byte — for every name short enough to fit,
+    /// which is all of them in practice.
     /// </summary>
-    private static string WrapName(string name) => Wrap(name, MaxNameLineChars);
+    private static string WrapName(string name) => Wrap(PlantUml.PlantUmlStatementLimits.CapName(name), MaxNameLineChars);
 
     /// <summary>
     /// Wraps each of <paramref name="text"/>'s existing display lines to <paramref name="budget"/>
@@ -390,5 +441,5 @@ public static partial class ComponentDiagramGenerator
         log.Method.Value?.ToString() ?? "Unknown";
 
     private static string SanitizeAlias(string name) =>
-        SanitizeAliasRegex().Replace(name.Camelize(), "_");
+        SanitizeAliasRegex().Replace(PlantUml.PlantUmlStatementLimits.AliasSource(name).Camelize(), "_");
 }

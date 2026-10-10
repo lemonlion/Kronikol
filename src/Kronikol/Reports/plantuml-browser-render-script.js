@@ -1013,11 +1013,25 @@
         // recurrence into a one-glance diagnosis.
         var _statementArrowRx = /<{1,2}[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}|[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}>{1,2}/;
         var _statementBlockRx = /^(loop|alt|else|opt|group|par|critical|break|partition|also)\b/i;
+        // The other statements the engine walks once per character on its stack, which a render worker runs out of
+        // well under the parse limits (plans/LONG_COMPONENT_EDGE_PLAN.md): a participant declared with a quoted name
+        // and an alias, a component diagram's edge with its quoted label, an activity diagram's swimlane and action.
+        var _statementDeclarationRx = /^(?:participant|actor|entity|database|collections|queue|boundary|control|rectangle|hexagon)\s+"(.*)"\s+as\s+([^\s<]+)/;
+        var _statementEdgeRx = /^\S+\s+(?:-\[[^\]]*\]->|-->|\.\.>)\s+\S+\s+:\s+"(.*)"$/;
+        var _statementSwimlaneRx = /^\|(.*)\|$/;
+        var _statementActionRx = /^:(.*?)(?: \(\d+ms\))?;$/;
+        // PlantUmlStatementLimits' constants, written in by DiagramContextMenu.
+        var _statementLimits = __PLANTUML_STATEMENT_LIMITS__;
+        // A declared name as it is measured: wrap breaks, bold markers and a component node's stereotype line taken out.
+        function shownName(written) {
+            return written.replace(/\\n<size:10>\[[^\]]*\]<\/size>$/, '').replace(/\*\*/g, '').replace(/\\n/g, '');
+        }
         // A note is read by the splitter's rule (isNoteStatement, opensNoteBlock): this check's own pattern took a line
         // starting with the keyword for a note, so an over-long message from a service called "Note" was never named.
         function findOverLongStatement(source) {
             var lines = String(source).split('\n');
             var inNote = false;
+            var L = _statementLimits;
             for (var i = 0; i < lines.length; i++) {
                 var t = lines[i].replace(/\r$/, '').trim();
                 if (inNote) {
@@ -1027,15 +1041,41 @@
                 if (!t || t[0] === "'" || t[0] === '!' || t[0] === '@') continue;
                 if (isNoteStatement(t)) {
                     inNote = opensNoteBlock(t);
+                    // A one-line note carrying a colour tag: the step bar of a step written as one token.
+                    if (!inNote && /<color:|<font/i.test(t) && t.length > L.colouredNoteBar)
+                        return { line: i + 1, kind: 'coloured note bar', length: t.length, limit: L.colouredNoteBar };
                     continue;
                 }
                 if (_statementBlockRx.test(t)) {
-                    if (t.length > 1471) return { line: i + 1, kind: 'block label', length: t.length, limit: 1471 };
+                    if (t.length > L.blockLabel) return { line: i + 1, kind: 'block label', length: t.length, limit: L.blockLabel };
+                    continue;
+                }
+                var d = _statementDeclarationRx.exec(t);
+                if (d) {
+                    var name = shownName(d[1]);
+                    if (name.length > L.participantName) return { line: i + 1, kind: 'participant name', length: name.length, limit: L.participantName };
+                    if (d[2].length > L.participantName) return { line: i + 1, kind: 'participant alias', length: d[2].length, limit: L.participantName };
+                    continue;
+                }
+                var e = _statementEdgeRx.exec(t);
+                if (e) {
+                    if (e[1].length > L.componentEdgeLabel) return { line: i + 1, kind: 'component edge label', length: e[1].length, limit: L.componentEdgeLabel };
+                    continue;
+                }
+                var s = _statementSwimlaneRx.exec(t);
+                if (s) {
+                    var lane = s[1].replace(/\\n/g, '');
+                    if (lane.length > L.participantName) return { line: i + 1, kind: 'swimlane name', length: lane.length, limit: L.participantName };
+                    continue;
+                }
+                var a = _statementActionRx.exec(t);
+                if (a) {
+                    if (a[1].length > L.activityAction) return { line: i + 1, kind: 'activity action', length: a[1].length, limit: L.activityAction };
                     continue;
                 }
                 var m = _statementArrowRx.exec(t);
-                if (m && t.indexOf(':', m.index + m[0].length) >= 0 && t.length > 2000)
-                    return { line: i + 1, kind: 'message statement', length: t.length, limit: 2000 };
+                if (m && t.indexOf(':', m.index + m[0].length) >= 0 && t.length > L.message)
+                    return { line: i + 1, kind: 'message statement', length: t.length, limit: L.message };
             }
             return null;
         }

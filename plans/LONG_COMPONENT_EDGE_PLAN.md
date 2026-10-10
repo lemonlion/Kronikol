@@ -1,8 +1,10 @@
 # Long component edges in the render worker (#162)
 
 **Date:** 2026-10-09 · **Repo version:** 4.14.4 (`main` at `9f2cd394`; line numbers are for that commit) · **Status:**
-**draft, NOT green-lit.** Drafted from #162 (filed 2026-10-08), at the owner's ask of 2026-10-09 to analyse the issue
-critically and plan a fix for the underlying problem.
+**green-lit in full 2026-10-10, EXECUTING.** Drafted from #162 (filed 2026-10-08), at the owner's ask of 2026-10-09 to
+analyse the issue critically and plan a fix for the underlying problem. The owner's ask of 2026-10-10: implement the plan
+in full, including raising the issue with TeaVM and opening any PRs for the fix, so every §9 question is taken as
+recommended (Q4 yes). R1 and R3 shipped as 4.14.5; R2 is 4.14.6 (§11).
 
 Evidence labels: **RUN** (measured on 2026-10-09 on Windows 11 with the published 4.14.4 packages and the pinned engine,
 `@plantuml/core@1.2026.8`; Chrome 154.0.8037.99, Playwright 1.59.1's Chromium 147.0.7727.15, Firefox 148.0.2, WebKit 26.4,
@@ -85,6 +87,11 @@ figures probably come from Linux or macOS, where thread stacks are sized differe
 gives a cold edge 160 characters below Chromium 147's on this machine, while the optimizers-off edge is the same in both
 (RUN). A cap therefore needs a margin under figures from platforms this machine does not run, and R1 measures Linux
 too (§4.1).
+
+*Measured 2026-10-10:* Linux is not the reason. Playwright's Chromium 147 on Linux (its own image, under WSL) gives the
+same edges as on Windows to the character, with the optimizing compilers off and with the JIT on, so the issue's
+platform stays unknown (macOS and Edge were not measured). The figure the caps keep their margin under is this
+machine's: a label of 550 as written, the line's 580 in the table above (§11, 2026-10-10).
 
 ## 2. Where it stands today
 
@@ -570,8 +577,8 @@ in it beyond Q1 and Q2; R2 and R3 are hardening; U is the owner's.
 | The pin stays `@plantuml/core@1.2026.8` through R3 | READ (`TrackingDefaults.PlantUmlJsCdnBase`) |
 | The label's length is the exact measure for the component edge | RUN in node; the worker's shapes agree (§2.2) |
 | A Chromium worker has about half the main thread's stack | RUN on Windows only (1.96) |
-| The issue's lower figures come from Linux or macOS | INFERRED from its `check.js`; R1 measures Linux |
-| Firefox and WebKit draw every length to 2,000 | RUN on Windows; WebKit on its main thread only |
+| The issue's lower figures come from Linux or macOS | INFERRED from its `check.js`. **Not Linux:** Chromium 147 on Linux agrees with Windows to the character (RUN, 2026-10-10); macOS unmeasured |
+| Firefox and WebKit draw every length to 2,000 | RUN on Windows; WebKit on its main thread only. **True of the edge only:** Firefox 148's worker fails names, openers, the coloured bar and actions from 500 to 1,250 characters, every one above R3's caps (RUN, 2026-10-10) |
 | Edge behaves as Chrome | ESTIMATED (same engine; not measured) |
 | No generated report passes stats | READ |
 | Java PlantUML is not affected | RUN (OpenJDK 25, `-Xss256k`, 1.2026.8beta1 jar) |
@@ -587,6 +594,25 @@ in it beyond Q1 and Q2; R2 and R3 are hardening; U is the owner's.
   activity actions fail with the optimizers off (from 275 and 820), and the stats edge at 3.30.4's cap draws (line 491;
   its edge is line 581, the unlinked edge's). 3.30.4's legacy verdicts were not sound (F7a). R3 widened from "re-check"
   to "lower two caps and add two", and Q8 now recommends R1 with R3.
+- **2026-10-10. Green-lit in full; R1 and R3 executed as 4.14.5.** The measurement of §4.1 was made with Kronikol's own
+  emitters (`emitter-corpus -- --component-edges` and `--statement-kinds`) and the strict verdict in every mode of
+  `statement-limits-worker-probe.js`, in Chromium 147 and Chrome 154 on Windows, Chromium 147 on Linux, Firefox 148 and
+  WebKit 26.4, cold, warm and with the optimizing compilers off
+  (`tools/render-bench/results/statement-limits-worker-2026-10-10.txt`, not `component-edge-worker-<date>.txt` as §4.1
+  named it, since it holds every kind). With the optimizing compilers off the three Chromium runs agree to the
+  character: the edge's label as written fails from 550, a block opener from 840, the coloured bar from 880, a sequence
+  participant's name from 280, a component node's from 310 to 340, an activity action from 820, and an activity
+  swimlane from 540, a kind §2.4 did not list (`[^|]+`, drawn as the RangeError picture). A placeholder note draws to
+  15,900. Caps: the edge 375, openers and the bar 600, names, aliases and swimlanes 200, actions 600, and the
+  placeholder note held to the 16,000 note ceiling, which it had not been. The cut keeps whole entries and ends
+  `…, +N more` (Q1): #162's 66 statements keep 10. A cut name's alias takes an FNV-1a hash of the whole name, so two
+  names that share their first 200 characters stay two participants. The page's check of the failing line now takes
+  every cap from C# (`__PLANTUML_STATEMENT_LIMITS__`) and names each capped kind. Found while executing, fixed in the
+  same release: `ComponentDiagramDiffer` (§8) wrote its names with no cap; the coloured-bar fact in
+  `NodeJsPlantUmlRendererTests` checked the styled bar, not the one-token one, so it could not fail; the
+  name-wrapping fact used a 321-character name, now cut. Red first: copied onto 4.14.4, 22 core facts and 12
+  Playwright facts fail (`LONG_COMPONENT_EDGE_PLAN.harness/r1r3/red/`); mutations in `r1r3/mutate_r1r3.py`, results
+  beside it.
 
 ## Appendix A. Edit sites at `9f2cd394`
 

@@ -40,8 +40,9 @@ public class ComponentDiagramNameWrappingTests
     public void A_long_name_reopens_bold_on_every_line()
     {
         // `**a\nb**` is not bold across the break — creole bold is line-scoped, and the closing marker
-        // draws as literal text. Each line has to carry its own pair.
-        var name = "DataInsights." + new string('x', 300) + ".Gateway";
+        // draws as literal text. Each line has to carry its own pair. 191 characters: three lines, and under the
+        // participant cap, so the name is drawn whole (a longer one is cut, PlantUmlStatementLengthTests).
+        var name = "DataInsights." + new string('x', 170) + ".Gateway";
 
         var result = ComponentDiagramGenerator.GeneratePlantUml(NamedDependency(name), useC4: false);
 
@@ -49,7 +50,7 @@ public class ComponentDiagramNameWrappingTests
         var field = declaration["rectangle \"".Length..declaration.IndexOf("\\n<size:10>", StringComparison.Ordinal)];
         var lines = field.Split("\\n");
 
-        Assert.True(lines.Length > 1, "a 300-character name should not be drawn on one line");
+        Assert.True(lines.Length > 2, "a 191-character name should be drawn on three lines");
         Assert.All(lines, line =>
         {
             Assert.StartsWith("**", line, StringComparison.Ordinal);

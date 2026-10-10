@@ -1222,7 +1222,7 @@ public static partial class PlantUmlCreator
     /// assertion note's shape, and the styled step-bar body (<c>&lt;&lt;stepBody&gt;&gt;</c>) whose
     /// black-bar/white-text colours live here rather than in inline tags — <c>&lt;color:white&gt;</c>
     /// styles only the first display line of a note, and inline colour tags put the statement under
-    /// the coloured-bar crash cap (<see cref="PlantUmlStatementLimits.MaxColouredNoteBarChars"/>).
+    /// the coloured-bar cap (<see cref="PlantUmlStatementLimits.MaxColouredNoteBarChars"/>, the render worker's stack edge).
     /// </summary>
     private static string AddMarkerNoteStyling(List<RequestResponseLog> tracesForTest)
     {
@@ -1428,14 +1428,16 @@ public static partial class PlantUmlCreator
     /// fit, which is all of them in practice.
     /// </summary>
     private static string WrapParticipantName(string name) =>
-        DiagramWidth.Wrap(name, DiagramWidth.MaxNameLineChars);
+        DiagramWidth.Wrap(PlantUmlStatementLimits.CapName(name), DiagramWidth.MaxNameLineChars);
 
     [GeneratedRegex(@"[^a-zA-Z0-9_]")]
     private static partial Regex SanitizeAliasRegex();
 
     private static string SanitizePlantUmlAlias(string name)
     {
-        return AliasCache.GetOrAdd(name, n => SanitizeAliasRegex().Replace(n.Camelize(), "_"));
+        // A name past the participant cap is shown cut, and its alias comes from the cut name and a hash of the whole
+        // one (PlantUmlStatementLimits.AliasSource): the engine walks an alias once per character on its stack too.
+        return AliasCache.GetOrAdd(name, n => SanitizeAliasRegex().Replace(PlantUmlStatementLimits.AliasSource(n).Camelize(), "_"));
     }
 
     internal static bool IsBinaryContent(string? content)

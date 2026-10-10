@@ -635,4 +635,35 @@ public class ComponentDiagramReportTests : IDisposable
         var fnBody = content[fnStart..fnEnd];
         Assert.Contains("component-diagram", fnBody);
     }
+
+    [Fact]
+    public void ComponentDiagram_html_holds_a_long_edge_to_the_label_cap()
+    {
+        // #162: a service writing to 66 ClickHouse tables. The page's component source, as a BrowserJs run writes it
+        // with the default options, keeps the edge's label within the measured cap, cut by whole entries.
+        var logs = Enumerable.Range(1, 66).Select(i => new RequestResponseLog(
+            TestName: "Test", TestId: "test-1", Method: $"INSERT INTO orders_archive_{i:000}", Content: null,
+            Uri: new Uri("clickhouse://warehouse/default"), Headers: [], ServiceName: "Warehouse", CallerName: "Caller",
+            Type: RequestResponseType.Request, TraceId: Guid.NewGuid(), RequestResponseId: Guid.NewGuid(), TrackingIgnore: false,
+            DependencyCategory: "ClickHouse")).ToArray();
+
+        var result = ComponentDiagramReportGenerator.GenerateComponentDiagramReport(
+            logs, new ReportConfigurationOptions { PlantUmlRendering = PlantUmlRendering.BrowserJs });
+
+        var html = File.ReadAllText(result.HtmlFilePath);
+        var embedded = string.Join("\n", System.Text.RegularExpressions.Regex
+            .Matches(html, "data-plantuml-z=\"([^\"]*)\"")
+            .Select(m =>
+            {
+                using var gzip = new System.IO.Compression.GZipStream(
+                    new MemoryStream(Convert.FromBase64String(m.Groups[1].Value)), System.IO.Compression.CompressionMode.Decompress);
+                using var reader = new StreamReader(gzip);
+                return reader.ReadToEnd();
+            }));
+        var edge = embedded.Split('\n').Select(l => l.TrimEnd('\r')).Single(l => l.StartsWith("caller -[#", StringComparison.Ordinal));
+        var label = edge[(edge.IndexOf(" : \"", StringComparison.Ordinal) + 4)..^1];
+        Assert.True(label.Length <= Kronikol.PlantUml.PlantUmlStatementLimits.MaxComponentEdgeLabelChars, $"{label.Length} characters");
+        Assert.StartsWith("ClickHouse: INSERT INTO orders_archive_001, ", label, StringComparison.Ordinal);
+        Assert.EndsWith(" more - 66 calls across 1 tests", label.Replace("\\n", " ", StringComparison.Ordinal), StringComparison.Ordinal);
+    }
 }

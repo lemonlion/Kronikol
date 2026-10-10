@@ -4174,6 +4174,61 @@ public static class ReportTestHelper
     internal static readonly object WholePipeline = new();
 
     /// <summary>
+    /// #162 through the whole pipeline (<see cref="ReportGenerator.CreateStandardReportsWithDiagrams"/>) with the default
+    /// options: one scenario whose service writes to 66 ClickHouse tables, so the run report's component panel and
+    /// ComponentDiagram.html each hold one edge listing 66 operations, a label 4.14.4 wrote at 1,944 characters. The
+    /// component diagram is held to the scenario's two participants by a ParticipantFilter, since the process's call
+    /// log holds every fixture's calls: the two are named after <paramref name="fileName"/>, so no other call joins the
+    /// edge. Returns the run report's address, ComponentDiagram.html's, and the two names.
+    /// </summary>
+    public static (string Report, string ComponentDiagram, string Caller, string Service) GenerateRunReportWithLongComponentEdge(
+        string tempDir, string outputDir, string fileName)
+    {
+        var reportsDir = Path.Combine(tempDir, "long-edge-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(reportsDir);
+        var testId = "long-edge-" + Guid.NewGuid().ToString("N");
+        // One word each: the component diagram's wrapWidth breaks a name at its spaces.
+        var caller = "Archiver" + fileName;
+        var service = "Warehouse" + fileName;
+        var at = DateTimeOffset.UtcNow.AddSeconds(-30);
+
+        lock (WholePipeline)
+        {
+            DefaultDiagramsFetcher.Reset();
+            for (var i = 1; i <= 66; i++)
+            {
+                var id = Guid.NewGuid();
+                var statement = $"INSERT INTO orders_archive_{i:000}";
+                var uri = new Uri("clickhouse://warehouse/default");
+                RequestResponseLogger.Log(new RequestResponseLog("Archive orders", testId, statement, statement + " VALUES (1)", uri, [],
+                    service, caller, RequestResponseType.Request, Guid.NewGuid(), id, false, null, RequestResponseMetaType.Default, "ClickHouse")
+                    { Timestamp = at.AddMilliseconds(i * 10) });
+                RequestResponseLogger.Log(new RequestResponseLog("Archive orders", testId, statement, "1 row", uri, [],
+                    service, caller, RequestResponseType.Response, Guid.NewGuid(), id, false, "OK", RequestResponseMetaType.Default, "ClickHouse")
+                    { Timestamp = at.AddMilliseconds(i * 10 + 5) });
+            }
+
+            ReportGenerator.CreateStandardReportsWithDiagrams(
+                [new Feature { DisplayName = "Archive", Scenarios = [new Scenario { Id = testId, DisplayName = "Archive orders", Result = ExecutionResult.Passed }] }],
+                at.UtcDateTime.AddSeconds(-1), DateTime.UtcNow,
+                new ReportConfigurationOptions
+                {
+                    ReportsFolderPath = reportsDir,
+                    ComponentDiagramOptions = new Kronikol.ComponentDiagram.ComponentDiagramOptions { ParticipantFilter = name => name == caller || name == service },
+                    GenerateSpecificationsReport = false,
+                    GenerateSpecificationsData = false,
+                });
+            DefaultDiagramsFetcher.Reset();
+        }
+
+        var report = Path.Combine(reportsDir, "TestRunReport.html");
+        var component = Path.Combine(reportsDir, "ComponentDiagram.html");
+        File.Copy(report, Path.Combine(outputDir, fileName + ".html"), true);
+        File.Copy(component, Path.Combine(outputDir, fileName + ".ComponentDiagram.html"), true);
+        return (new Uri(report).AbsoluteUri, new Uri(component).AbsoluteUri, caller, service);
+    }
+
+    /// <summary>
     /// A run report written by the whole pipeline (<see cref="ReportGenerator.CreateStandardReportsWithDiagrams"/>) with
     /// internal-flow tracking on and its defaults (HideLink, ShowLinkOnHover): one scenario whose calls to
     /// <c>/with-flow-N</c> have spans of their own trace, so they get a segment, and whose calls to <c>/without-flow-N</c>

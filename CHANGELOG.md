@@ -4,7 +4,64 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [4.14.5] - 2026-10-10
+
+**Patch - a component diagram edge listing many operations draws in the render worker (#162), and the other statements
+the worker ran out of stack on have caps measured there (`plans/LONG_COMPONENT_EDGE_PLAN.md` R1 and R3).** Bug fixes,
+and nothing new for a consumer to call: the caps are internal constants. So the patch part moves (4.14.4 to 4.14.5). The
+fixes shorten what some long values show in a diagram, which is called out below. This release also carries the template
+README change that was listed under Unreleased. The history action's `VERSION` installs `Kronikol.Tool` 4.14.5, and the
+templates pin 4.14.4.
+
+The cause is in the engine: the regex library of PlantUML's JavaScript build (TeaVM's port of `java.util.regex`) walks
+some patterns once per character on the JavaScript stack, and PlantUML runs such patterns over an edge's label, a
+participant's name, a block opener, a coloured note bar and an activity action. The `BrowserJs` renderer draws in a Web
+Worker, whose stack is half the page's, and with V8's optimizing compilers off (as an enterprise policy or a browser's
+security mode can set) every frame is the interpreter's size. Java PlantUML does not recurse there, so `Server` and
+`Local` rendering were never affected. Each cap below was measured in that worker with Kronikol's own emitters, in
+Chromium 147 and Chrome 154 on Windows and Chromium 147 on Linux, which agree to the character
+(`tools/render-bench/results/statement-limits-worker-2026-10-10.txt`).
+
+### Fixed
+
+- **A component diagram edge listing many operations replaced the whole diagram with the engine's stack-overflow
+  picture** in Chrome, in `ComponentDiagram.html` and the report's component panel. An edge lists each distinct
+  operation, so a suite writing to about 50 tables reached it with the JIT on, and about 15 with the optimizing
+  compilers off (the label failed from 550 characters there; the issue's line failed from 550, a label of 516). The edge's label now has a
+  measured cap of its own, 375 characters as written. A longer list keeps its first entries in order, ends with
+  `…, +N more`, and keeps its call and test counts; every call is still in its scenario's sequence diagram. A
+  `RelationshipLabelFormatter`'s label is cut at its end to the same cap. The cap the edge borrowed from the sequence
+  diagram's message limit was never measured for this statement and was more than three times too high. Until a
+  release carries this, an adapter's `Verbosity = Summarised`, a `RelationshipLabelFormatter` or
+  `BrowserRenderWorkers = 0` avoid it.
+- **A step written as one token, or a long `loop` label in a diagram override, could cost its sequence diagram in a
+  worker that had just started,** the default configuration. A step bar holding one unbroken token (a JSON array, say)
+  past 1,040 characters drew the engine's RangeError text in place of the diagram, and a `loop` or `partition` label
+  past 1,010 a `Syntax Error?` picture, under caps of 1,400 and 1,471 that were measured in node, whose stack is the
+  page's. Both caps are now 600 (the worker with the optimizing compilers off failed from 880 and 840).
+- **Long participant names, span names and swimlane names did the same with the optimizing compilers off:** a
+  sequence diagram's participant from 280 characters of name, a component diagram's node from 310, an action in the
+  internal-flow activity diagram from 820 (instrumentations name a span after its SQL), and a swimlane from 540. None
+  had a cap. Names and swimlanes are now cut at 200 and actions at 600. A cut name keeps a participant of its own: its
+  alias takes a hash of the whole name, so two services whose names share their first 200 characters keep a lifeline
+  each.
+- **`ComponentDiagramDiffer.GenerateDiffPlantUml` wrote its participants' names with no cap,** so a service named past
+  310 characters lost the diff diagram the same way. Its names and aliases are now cut as the component diagram's are.
+- The note a scenario gets when its diagram cannot be produced was not held to the note ceiling, so an exception
+  message past 16,000 characters could cost the note too; it is cut there now.
+- When a diagram fails, the page names the line the engine choked on. It knew two statement kinds, at their old
+  limits; it now knows every capped kind, and takes the caps from Kronikol's own constants rather than copies of them.
+- `MaxLinkedLabelChars`' documentation said the same text unlinked draws at every length to the message limit. That
+  holds for a sequence diagram's message only: the engine walks a component edge's whole label, link or not.
+
+### Tools
+
+- `tools/render-bench/statement-limits-worker-probe.js` counted any SVG as drawn, the engine's error pictures included,
+  so 3.30.4's worker figures for block openers and coloured bars were false passes, and its coloured-bar text held
+  display breaks the emitter never writes in that form. Every mode now rejects the stack and error pictures and checks
+  that the diagram's names are drawn; `--kinds` and `--scan-edges` read sources from the emitter
+  (`emitter-corpus -- --statement-kinds`, `--component-edges`), and `BISECT=1` and `WARM=<n>` bisect each shape and
+  measure a warmed worker.
 
 ### Documentation
 
@@ -12,6 +69,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
   `PlaceholderApiFactory` without its `Program`; it now says to delete both and create the factory from the API's own
   entry point. It also names the file to configure for the ReqNRoll and BDDfy templates, and says the TUnit templates
   run with `dotnet run`.
+
+### Tests
+
+- `ComponentDiagramGeneratorTests`: #162's 66 statements cut to the cap by whole entries with `…, +56 more` and the
+  counts; a label within the cap keeps 4.14.4's bytes; an HTTP edge cut by whole routes; one entry longer than the cap
+  cut and the counts kept; a formatter's label cut at the cap in both forms; the same cut label in the C4 form; long
+  participant names leave the label alone; the stats form keeps its link closed and both stats lines within the cap.
+  `ComponentDiagramReportTests` and `MergeableReportTests` hold `ComponentDiagram.html`'s edge and a merged report's.
+- `PlantUmlStatementLengthTests`: each new cap through its emitter (a 420-character service name and its alias, two
+  names sharing their start, component nodes, a span named after a SQL statement, a swimlane, a one-token step, a
+  spliced `loop` label, the placeholder note, the diff diagram's names in both forms), and the corpus invariant now
+  covers participant declarations and the component and activity emitters, with a sibling that fails on a statement
+  kind the caps do not know.
+- Playwright (`LongStatementRenderingTests`): #162's edge through the whole pipeline draws in the run report's panel and
+  in `ComponentDiagram.html`, in the shared Chromium and in one with the optimizing compilers off; each capped kind
+  draws past its old limit; the page names each kind past its cap.
+- Red first: copied onto 4.14.4 with the three new constants stubbed, 22 of these facts and the 12 new Playwright facts
+  fail, each on its own assertion (`plans/LONG_COMPONENT_EDGE_PLAN.harness/r1r3/red/`); the diff diagram's fact, added
+  later, failed before its fix on names of 327 and 328 characters.
+- Mutations (`r1r3/mutate_r1r3.py`, results in `r1r3/mutations.jsonl`): each puts one behaviour back as it was (a cap
+  raised, the cut taken from the label's end, the stats lines dropped, a name or its alias uncapped, the page's check
+  on its old limits) and all 18 are caught.
 
 ## [4.14.4] - 2026-10-08
 

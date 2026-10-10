@@ -15,8 +15,9 @@ internal readonly record struct StepBarTable(string? Name, string[][] Rows);
 /// <item>no body content — the legacy one-line coloured bar,
 /// <c>hnote across &lt;&lt;stepDelimiter&gt;&gt; #black:&lt;color:white&gt;label</c>, byte-identical to
 /// what shipped before tables joined the bar, capped at
-/// <see cref="PlantUmlStatementLimits.MaxColouredNoteBarChars"/> (the coloured form crashes the JS
-/// engine outright past ~1400 characters);</item>
+/// <see cref="PlantUmlStatementLimits.MaxColouredNoteBarChars"/> (the colour tag's pattern overflows the
+/// engine's stack in the render worker past 880 characters with V8's optimizing compilers off, 1,040 with the JIT on,
+/// and the engine draws its RangeError text in place of the diagram);</item>
 /// <item>a Gherkin data table, a doc string, or multi-line marker text — the styled form,
 /// <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;&lt;&lt;stepBody&gt;&gt;: label\n\n|= … |\n</c>, still one
 /// physical line (the report's hide-steps strip regex and every line-oriented consumer keep working)

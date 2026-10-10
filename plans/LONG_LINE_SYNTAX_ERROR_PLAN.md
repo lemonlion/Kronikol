@@ -232,9 +232,15 @@ controls, no `Force = true`, no network mocking.
 2. **Component diagram edge labels.** [ComponentDiagramGenerator.cs:190](src/Kronikol/ComponentDiagram/ComponentDiagramGenerator.cs#L190)
    builds `[[#iflow-rel-… {methodsPart}]]\n…` edge labels that grow with the method count. Component
    diagrams use a different parser with its own limits — **unmeasured**. Worth a short probe.
+   **Answered 2026-10-10 (`plans/LONG_COMPONENT_EDGE_PLAN.md`, #162):** the edge's label is walked once per character
+   on the engine's stack (TeaVM's regex port, `Labels`), linked or not; the render worker failed from 550 characters
+   with V8's optimizing compilers off and from 1,910 cold with the JIT on. 4.14.5 caps it at 375
+   (`MaxComponentEdgeLabelChars`), cut by whole entries.
 3. **What is the 1471 for `loop`/`alt`?** An oddly specific number, and lower than the message cap.
    Not blocking (Kronikol's block labels are short), but it suggests the limit is not a single
-   documented constant, so the pins in §5.2 matter.
+   documented constant, so the pins in §5.2 matter. **2026-10-10:** a parse limit of 1.2026.6; from 1.2026.8beta1 the
+   opener's edge is the engine's stack, and in the render worker it failed from 840 (optimizers off) and 1,010 (cold);
+   4.14.5 sets 600 (`plans/LONG_COMPONENT_EDGE_PLAN.md` R3).
 
 ## 7. Follow-ups
 

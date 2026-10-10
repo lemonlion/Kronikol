@@ -58,12 +58,22 @@ Scripts
   `dotnet run --project emitter-corpus -- <dir>` writes 14 sources from Kronikol's own emitter (header blocks, both step-bar forms,
   assertion notes, internal-flow links, focus colours, a 400-line note, 200 calls, creole-looking payloads);
   `-- --shim <page> <workers>` writes a bare page carrying the shipped render script; `-- --linked-labels <dir>` writes the linked
-  statements `statement-limits-worker-probe.js --scan` cuts. `emitter-corpus-compare.js <dir> <label>=<engine
+  statements `statement-limits-worker-probe.js --scan` cuts; `-- --component-edges <dir>` writes component diagram edges of 90
+  operations in four method shapes, a formatter's label and the stats form, for `--scan-edges`; `-- --statement-kinds <dir>` writes
+  the other statements a run's values lengthen (the collapsed-run `loop`, the setup `partition`, a one-token step bar, and one source
+  per length for participant names in both diagrams, span names, swimlanes and the placeholder note), for `--kinds`. `emitter-corpus-compare.js <dir> <label>=<engine
   dir> <label>=<engine dir>` renders the sources through the shipped Node script on two builds and compares the SVG bytes
   (`results/emitter-corpus-2026-09-25.txt`; re-run on the 3.31.1 serializer, all 14 sources, `results/emitter-corpus-2026-09-26.txt`).
   Before 3.29.6 the creole-payload source stalled every later source of the batch; the mock DOM now answers the engine's script loads at once.
-- `statement-limits-worker-probe.js <shim page> <label>=<cdn base> [...]`: the statement limits in the shipped BrowserJs worker, per
-  engine route (the page from `emitter-corpus -- --shim <page> 1`); `results/statement-limits-worker-2026-09-25.txt`.
+- `statement-limits-worker-probe.js --kinds|--scan|--scan-edges <dir> <shim page> <label>=<cdn base> [...]`: the statement limits in
+  the shipped BrowserJs worker, per engine route (the page from `emitter-corpus -- --shim <page> 1`). Every mode's verdict is strict:
+  the engine's stack and error pictures are not drawn (any picture whose first drawn line starts `PlantUML `), and every expected name
+  must be drawn. The modeless form of 3.30.4 (`results/statement-limits-worker-2026-09-25.txt`) counted any SVG as drawn, error
+  pictures included, so its block-opener and coloured-bar rows are void; `--kinds` replaces it, with the emitter's own sources.
+  `--scan-edges` cuts a component edge's label to each length; `BISECT=1` bisects each shape to `STEP` instead of scanning,
+  `WARM=<n>` renders n diagrams first in one page, `KINDS=<list>` picks shapes. `results/statement-limits-worker-2026-10-10.txt`
+  is the measurement behind `MaxComponentEdgeLabelChars`, `MaxParticipantNameChars`, `MaxActivityActionChars` and the
+  block-opener and coloured-bar caps of 4.14.5 (plans/LONG_COMPONENT_EDGE_PLAN.md R1 and R3), on Windows and Linux.
   `--scan <dir> <shim page> <label>=<cdn base> [...]` cuts the text inside each `[[#iflow-…]]` link the emitter wrote (the sources
   from `emitter-corpus -- --linked-labels <dir>`: five request-label shapes, a request inside a collapsed-run `loop`, and a component
   edge) to every length from `FROM` to `TO` by `STEP`, the way `TruncateLabel` cuts it. The edge moves with V8's tier-up, so

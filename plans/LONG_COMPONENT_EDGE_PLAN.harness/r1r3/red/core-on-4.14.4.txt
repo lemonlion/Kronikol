@@ -1,0 +1,99 @@
+  Failed Kronikol.Tests.PlantUml.PlantUmlStatementLengthTests.A_span_named_after_a_whole_sql_statement_is_cut_to_the_action_cap [6 ms]
+  Error Message:
+   1279 characters
+--
+  Failed Kronikol.Tests.ComponentDiagram.ComponentDiagramGeneratorTests.A_formatters_label_is_cut_to_the_label_cap(useC4: False) [297 ms]
+  Error Message:
+   1942 characters
+--
+  Failed Kronikol.Tests.PlantUml.NodeJsPlantUmlRendererTests.A_coloured_note_bar_crashes_the_engine_rather_than_reporting_a_syntax_error [297 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1400
+--
+  Failed Kronikol.Tests.PlantUml.PlantUmlStatementLengthTests.The_measured_limits_are_recorded_as_constants [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 600
+--
+  Failed Kronikol.Tests.ComponentDiagram.ComponentDiagramGeneratorTests.A_formatters_label_is_cut_to_the_label_cap(useC4: True) [< 1 ms]
+  Error Message:
+   1942 characters
+--
+  Failed Kronikol.Tests.ComponentDiagram.ComponentDiagramGeneratorTests.Long_participant_names_do_not_shorten_the_label [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                       ↓ (pos 1794)
+--
+  Failed Kronikol.Tests.ComponentDiagram.ComponentDiagramGeneratorTests.A_long_method_list_is_cut_to_the_label_cap_and_keeps_its_counts [< 1 ms]
+  Error Message:
+   1945 characters
+--
+  Failed Kronikol.Tests.PlantUml.PlantUmlStatementLengthTests.A_spliced_loop_label_is_cut_to_the_block_cap [2 ms]
+  Error Message:
+   Assert.EndsWith() Failure: String end does not match
+String:       ···"rder sync retry the order sync retry the order syn"
+--
+  Failed Kronikol.Tests.ComponentDiagram.ComponentDiagramGeneratorTests.An_HTTP_edge_is_cut_by_whole_routes_too [< 1 ms]
+  Error Message:
+   1085 characters
+--
+  Failed Kronikol.Tests.PlantUml.PlantUmlStatementLengthTests.A_long_swimlane_name_is_cut_to_the_participant_cap [< 1 ms]
+  Error Message:
+   714 characters
+--
+  Failed Kronikol.Tests.ComponentDiagram.ComponentDiagramGeneratorTests.One_entry_longer_than_the_cap_is_cut_and_the_counts_kept [< 1 ms]
+  Error Message:
+   874 characters
+--
+  Failed Kronikol.Tests.PlantUml.PlantUmlStatementLengthTests.No_diagram_the_test_corpus_generates_exceeds_a_statement_limit [17 ms]
+  Error Message:
+   Assert.All() Failure: 1 out of 5 items in the collection did not pass.
+[4]: Item:  Tuple ("orders-archive-replica.eu-west-1.internal.orders-a"···, "ordersArchiveReplica_euWest1_internal_ordersArchiv"···)
+--
+  Failed Kronikol.Tests.PlantUml.PlantUmlStatementLengthTests.The_placeholder_note_is_held_to_the_note_ceiling [1 ms]
+  Error Message:
+   20061 characters
+--
+  Failed Kronikol.Tests.ComponentDiagram.ComponentDiagramGeneratorTests.GeneratePlantUml_ManyMethods_KeepTheInternalFlowLinkClosedAndShortEnoughForTheWorker(useC4: True) [89 ms]
+  Error Message:
+   Assert.Matches() Failure: Pattern not found in value
+Regex: ", …, \\+\\d+ more$"
+--
+  Failed Kronikol.Tests.ComponentDiagram.ComponentDiagramGeneratorTests.GeneratePlantUml_ManyMethods_KeepTheInternalFlowLinkClosedAndShortEnoughForTheWorker(useC4: False) [< 1 ms]
+  Error Message:
+   Assert.Matches() Failure: Pattern not found in value
+Regex: ", …, \\+\\d+ more$"
+--
+  Failed Kronikol.Tests.ComponentDiagram.ComponentDiagramGeneratorTests.GeneratePlantUml_Wrapping_StillHonoursTheLabelCap [< 1 ms]
+  Error Message:
+   1935 chars
+--
+  Failed Kronikol.Tests.PlantUml.PlantUmlStatementLengthTests.A_long_service_name_is_cut_and_its_alias_with_it [2 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  Tuple ("orders-archive-replica.eu-west-1.internal.orders-a"···, "ordersArchiveReplica_euWest1_internal_ordersArchiv"···)
+--
+  Failed Kronikol.Tests.PlantUml.PlantUmlStatementLengthTests.A_long_component_name_is_cut_and_two_such_names_stay_two_nodes [1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  Tuple ("**orders-archive-replica.eu-west-1.internal.orders"···, "ordersArchiveReplica_euWest1_internal_ordersArchiv"···)
+--
+  Failed Kronikol.Tests.PlantUml.PlantUmlStatementLengthTests.No_component_or_activity_diagram_the_corpus_generates_exceeds_a_worker_cap [2 ms]
+  Error Message:
+   name of 900 characters, past 200: rectangle "**checkout-frontend.eu-west-1.internal.checkout-frontend.eu-west-1.internal.checko**\n**u
+--
+  Failed Kronikol.Tests.PlantUml.PlantUmlStatementLengthTests.Two_long_names_that_share_their_start_stay_two_participants [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                                          ↓ (pos 329)
+--
+  Failed Kronikol.Tests.ComponentDiagram.ComponentDiagramReportTests.ComponentDiagram_html_holds_a_long_edge_to_the_label_cap [764 ms]
+  Error Message:
+   1945 characters
+--
+  Failed Kronikol.Tests.Reports.Merge.MergeableReportTests.A_merged_reports_component_edge_is_held_to_the_label_cap [1 s]
+  Error Message:
+   1945 characters
+--
+Failed!  - Failed:    22, Passed:   122, Skipped:     0, Total:   144, Duration: 1 s - Kronikol.Tests.dll (net10.0)

@@ -148,17 +148,18 @@ public static partial class ComponentDiagramDiffer
         foreach (var participant in allParticipants)
         {
             var alias = SanitizeAlias(participant);
+            var shown = PlantUml.PlantUmlStatementLimits.CapName(participant);
 
             if (useC4)
             {
                 var kind = pureCallers.Contains(participant) ? "Person" : "System";
 
                 if (newServiceSet.Contains(participant))
-                    sb.AppendLine($"{kind}({alias}, \"{participant}\", $tags=\"#LimeGreen\")");
+                    sb.AppendLine($"{kind}({alias}, \"{shown}\", $tags=\"#LimeGreen\")");
                 else if (removedServiceSet.Contains(participant))
-                    sb.AppendLine($"{kind}({alias}, \"{participant}\", $tags=\"#Red\")");
+                    sb.AppendLine($"{kind}({alias}, \"{shown}\", $tags=\"#Red\")");
                 else
-                    sb.AppendLine($"{kind}({alias}, \"{participant}\")");
+                    sb.AppendLine($"{kind}({alias}, \"{shown}\")");
             }
             else
             {
@@ -170,7 +171,7 @@ public static partial class ComponentDiagramDiffer
                     stereotype = "removedService";
                 else
                     stereotype = pureCallers.Contains(participant) ? "person" : "system";
-                sb.AppendLine($"rectangle \"**{participant}**\\n<size:10>[{typeLabel}]</size>\" as {alias} <<{stereotype}>>");
+                sb.AppendLine($"rectangle \"**{shown}**\\n<size:10>[{typeLabel}]</size>\" as {alias} <<{stereotype}>>");
             }
         }
 
@@ -214,6 +215,8 @@ public static partial class ComponentDiagramDiffer
 
     private static string RelKey(ComponentRelationship r) => $"{r.Caller}->{r.Service}";
 
+    // A name past the worker's cap is cut, and its alias keeps a hash of the whole name, as in
+    // ComponentDiagramGenerator: see PlantUmlStatementLimits.MaxParticipantNameChars.
     private static string SanitizeAlias(string name) =>
-        SanitizeAliasRegex().Replace(name.Camelize(), "_");
+        SanitizeAliasRegex().Replace(PlantUml.PlantUmlStatementLimits.AliasSource(name).Camelize(), "_");
 }

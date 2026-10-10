@@ -482,11 +482,15 @@ public class NodeJsPlantUmlRendererTests
         // The step-delimiter bar's own form. Past the cap the engine throws `RangeError: Maximum call
         // stack size exceeded` and returns no SVG at all, so the scenario loses every diagram it had
         // rather than one statement. Measured 1458 on the 1.2026.6 build, around 4124 on 1.2026.8beta1
-        // on 2026-09-04 and 2005 to 2008 on node 25.9 with both 1.2026.8 builds: a stack-overflow edge,
-        // so it moves with the runtime and wobbles between processes; the crash probe sits
-        // far past it and the constant far under it.
-        var safe = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml("Given", new string('s', 1200));
-        Assert.True(safe.Length <= PlantUmlStatementLimits.MaxColouredNoteBarChars);
+        // on 2026-09-04 and 2005 to 2008 on node 25.9 with both 1.2026.8 builds, and in the render worker,
+        // whose stack is half node's, from 880 with V8's optimizing compilers off (plans/LONG_COMPONENT_EDGE_PLAN.md
+        // R3): a stack-overflow edge, so it moves with the runtime; the crash probe sits far past it and the
+        // constant far under it. The bar is a step written as one token, a JSON array, which keeps the
+        // coloured form at any length: a step with a space wraps, and a wrapped step takes the styled form.
+        var token = "[" + string.Join(",", Enumerable.Range(1, 60).Select(i => $"{{\"sku\":\"SKU-{i:D4}\"}}")) + "]";
+        var safe = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml(null, token);
+        Assert.StartsWith(Kronikol.PlantUml.StepBarPlantUml.LegacyPrefix, safe);
+        Assert.Equal(PlantUmlStatementLimits.MaxColouredNoteBarChars, safe.Length);
 
         Assert.True(Renders($"a -> b: x\n{safe}"), "the capped bar renders");
         Assert.Equal("", RenderBody("a -> b: x\nhnote across <<stepDelimiter>> #black:<color:white>" + new string('s', 6000)));

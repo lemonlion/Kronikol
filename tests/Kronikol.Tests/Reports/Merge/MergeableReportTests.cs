@@ -364,4 +364,49 @@ public class MergeableReportTests
 
         File.Delete(written);
     }
+
+    [Fact]
+    public void A_merged_reports_component_edge_is_held_to_the_label_cap()
+    {
+        // kronikol merge draws the component panel from the union of each shard's relationships, so two shards of 33
+        // tables each make one edge of 66: its label, as the page renders it, is cut by whole entries to the edge's
+        // measured cap and keeps its counts (#162, plans/LONG_COMPONENT_EDGE_PLAN.md R1).
+        static string Shard(int first) => ReportGenerator.GenerateMergeableReportJson(
+            [new Feature { DisplayName = "Archive", Scenarios = [new Scenario { Id = $"s{first}", DisplayName = $"Archive orders from {first}", Result = ExecutionResult.Passed }] }],
+            new DateTime(2026, 10, 10, 10, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 10, 10, 10, 1, 0, DateTimeKind.Utc),
+            new[] { new DiagramAsCode($"s{first}", "", "@startuml\nA->B\n@enduml") }.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind),
+            componentRelationships:
+            [
+                new ComponentRelationship("Caller", "Warehouse", "ClickHouse",
+                    [.. Enumerable.Range(first, 33).Select(i => $"INSERT INTO orders_archive_{i:000}")], 33, 1, "ClickHouse")
+            ],
+            internalFlowSegmentData: null,
+            wholeTestFlow: null,
+            WholeTestFlowVisualization.None,
+            ciMetadata: null);
+        var merged = MergeableReportMerger.Merge([MergeableReportReader.Parse(Shard(1)), MergeableReportReader.Parse(Shard(34))]);
+
+        var outputPath = Path.Combine(Path.GetTempPath(), "kronikol-merge-edge-test", "Combined.html");
+        var written = MergeableReportRenderer.Render(merged, outputPath, title: "Combined Report");
+        var html = File.ReadAllText(written);
+        File.Delete(written);
+
+        // The page's diagram sources, gzipped in its puml-data map, the component panel's among them.
+        var data = System.Text.RegularExpressions.Regex.Match(html, "<script id=\"puml-data\" type=\"application/json\">(.*?)</script>");
+        Assert.True(data.Success, "the merged report carries no diagram data");
+        var sources = JsonDocument.Parse(data.Groups[1].Value).RootElement.EnumerateObject().Select(p =>
+        {
+            using var gzip = new System.IO.Compression.GZipStream(
+                new MemoryStream(Convert.FromBase64String(p.Value.GetString()!)), System.IO.Compression.CompressionMode.Decompress);
+            using var reader = new StreamReader(gzip);
+            return reader.ReadToEnd();
+        });
+        var edge = sources.SelectMany(src => src.Split('\n')).Select(l => l.TrimEnd('\r'))
+            .Single(l => l.StartsWith("caller -[", StringComparison.Ordinal));
+        var label = edge[(edge.IndexOf(" : \"", StringComparison.Ordinal) + 4)..^1];
+        Assert.True(label.Length <= Kronikol.PlantUml.PlantUmlStatementLimits.MaxComponentEdgeLabelChars, $"{label.Length} characters");
+        Assert.Contains("INSERT INTO orders_archive_001", label, StringComparison.Ordinal);
+        Assert.EndsWith(" more - 66 calls across 2 tests", label.Replace("\\n", " ", StringComparison.Ordinal), StringComparison.Ordinal);
+    }
 }

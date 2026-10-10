@@ -1,0 +1,58 @@
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.The_classifier_names_each_statement_past_its_worker_cap [465 ms]
+  Error Message:
+   block label was not named
+--
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_statement_past_its_old_limit_draws_in_the_worker(kind: "span name", optimizingCompilersOff: True) [2 s]
+  Error Message:
+   Assert.DoesNotMatch() Failure: Match found
+                                     ↓ (pos 425)
+--
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_statement_past_its_old_limit_draws_in_the_worker(kind: "service name", optimizingCompilersOff: True) [2 s]
+  Error Message:
+   Assert.DoesNotMatch() Failure: Match found
+                                     ↓ (pos 300)
+--
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_statement_past_its_old_limit_draws_in_the_worker(kind: "spliced loop label", optimizingCompilersOff: False) [799 ms]
+  Error Message:
+   Assert.DoesNotMatch() Failure: Match found
+                                     ↓ (pos 340)
+--
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_statement_past_its_old_limit_draws_in_the_worker(kind: "database name", optimizingCompilersOff: True) [1 s]
+  Error Message:
+   Assert.DoesNotMatch() Failure: Match found
+                                     ↓ (pos 300)
+--
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_statement_past_its_old_limit_draws_in_the_worker(kind: "spliced loop label", optimizingCompilersOff: True) [2 s]
+  Error Message:
+   Assert.DoesNotMatch() Failure: Match found
+                                     ↓ (pos 340)
+--
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_statement_past_its_old_limit_draws_in_the_worker(kind: "coloured step bar", optimizingCompilersOff: True) [2 s]
+  Error Message:
+   no diagram was drawn: java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded
+--
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_statement_past_its_old_limit_draws_in_the_worker(kind: "coloured step bar", optimizingCompilersOff: False) [779 ms]
+  Error Message:
+   no diagram was drawn: java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded
+--
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_statement_past_its_old_limit_draws_in_the_worker(kind: "swimlane name", optimizingCompilersOff: True) [2 s]
+  Error Message:
+   Assert.DoesNotMatch() Failure: Match found
+                                      ↓ (pos 394)
+--
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_statement_past_its_old_limit_draws_in_the_worker(kind: "component name", optimizingCompilersOff: True) [1 s]
+  Error Message:
+   Assert.DoesNotMatch() Failure: Match found
+                                     ↓ (pos 698)
+--
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_component_edge_with_many_statements_draws_in_the_worker [2 s]
+  Error Message:
+   Assert.DoesNotMatch() Failure: Match found
+                                     ↓ (pos 890)
+--
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_component_edge_with_many_statements_draws_with_the_optimizing_compilers_off [3 s]
+  Error Message:
+   Assert.DoesNotMatch() Failure: Match found
+                                     ↓ (pos 910)
+--
+Failed!  - Failed:    12, Passed:     6, Skipped:     0, Total:    18, Duration: 30 s - Kronikol.Tests.EndToEnd.dll (net10.0)
