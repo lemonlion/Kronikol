@@ -4,7 +4,7 @@
 **green-lit in full 2026-10-10, EXECUTED (R1, R3 as 4.14.5; R2 as 4.14.6).** Drafted from #162 (filed 2026-10-08), at the owner's ask of 2026-10-09 to
 analyse the issue critically and plan a fix for the underlying problem. The owner's ask of 2026-10-10: implement the plan
 in full, including raising the issue with TeaVM and opening any PRs for the fix, so every §9 question is taken as
-recommended (Q4 yes). R1 and R3 shipped as 4.14.5 and R2 as 4.14.6 (§11); the TeaVM report is the upstream half.
+recommended (Q4 yes). R1 and R3 shipped as 4.14.5 and R2 as 4.14.6, both published (§11); the upstream half is konsoletyper/teavm#1295 and #1296.
 
 Evidence labels: **RUN** (measured on 2026-10-09 on Windows 11 with the published 4.14.4 packages and the pinned engine,
 `@plantuml/core@1.2026.8`; Chrome 154.0.8037.99, Playwright 1.59.1's Chromium 147.0.7727.15, Firefox 148.0.2, WebKit 26.4,
@@ -631,6 +631,18 @@ in it beyond Q1 and Q2; R2 and R3 are hardening; U is the owner's.
   report. The plan's §5 test of a 10,000-character edge would have met this form; the tests use the emitter's wrapped
   form instead, which fails as the picture. Red first on 4.14.5 (`r2/red/`: 7 core facts and 5 Playwright facts fail);
   mutations in `r2/mutate_r2.py`, results beside it.
+- **2026-10-10, published, and the upstream half posted.** 4.14.5 (`0321192f`; Release run 38012982612, CI 38012981081,
+  CodeQL 38012981101) and 4.14.6 (`98c4806d`; Release run 38015347936, CI 38015345821) passed, and nuget.org listed all
+  62 ids at each. The wiki has R1 and R3's edits (`8c86217`) and R2's (`8a57576`), Kronikol4J's ledger a line for each
+  release (`1a69119`, `7e9c7d5`), and #162 is closed with a comment naming both releases. U, the engine: the TeaVM
+  change was built by a subagent and reviewed here. `TCodePointSet` is implemented by the range, dot and surrogate nodes,
+  and `TCodePointQuantifierSet` and `TReluctantCodePointQuantifierSet` walk the same search tree as the recursive
+  quantifiers in a loop. 193 of 193 regex and `String` tests pass on the JVM, JS and Wasm GC, and the 4 new long-input
+  tests fail on master. A differential fuzz against master's classes found no difference in 13,265,280 cases. In node it
+  runs at 0.33 to 1.21 times master's time. PlantUML built with it draws every statement kind past 30,000 characters,
+  with 538 renders byte-identical. It is posted as konsoletyper/teavm#1295 (the issue) and #1296 (the pull request,
+  commit `10acb854` on `lemonlion/teavm`, branch `regex-iterative-quantifiers`). The caps are raised in a later plan,
+  once a published PlantUML build carries the fix and the engine is re-pinned (Appendix C).
 
 ## Appendix A. Edit sites at `9f2cd394`
 
