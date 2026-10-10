@@ -1,0 +1,72 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-red162r2\src\Kronikol.Extensions.Grpc\Kronikol.Extensions.Grpc.csproj (in 301 ms).
+  Restored C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj (in 301 ms).
+  2 of 4 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-red162r2\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.Otlp -> C:\Code\Kronikol-red162r2\src\Kronikol.Extensions.Otlp\bin\Debug\net10.0\Kronikol.Extensions.Otlp.dll
+  Kronikol.Extensions.Grpc -> C:\Code\Kronikol-red162r2\src\Kronikol.Extensions.Grpc\bin\Debug\net10.0\Kronikol.Extensions.Grpc.dll
+C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\HistoryReportHelper.cs(95,42): warning CS1573: Parameter 'tempDir' has no matching param tag in the XML comment for 'HistoryReportHelper.Generate(string, string, string, Func<int, HistoryRun, HistoryRun>?, bool)' (but other parameters do) [C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\HistoryReportHelper.cs(95,58): warning CS1573: Parameter 'outputDir' has no matching param tag in the XML comment for 'HistoryReportHelper.Generate(string, string, string, Func<int, HistoryRun, HistoryRun>?, bool)' (but other parameters do) [C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\HistoryReportHelper.cs(95,76): warning CS1573: Parameter 'fileName' has no matching param tag in the XML comment for 'HistoryReportHelper.Generate(string, string, string, Func<int, HistoryRun, HistoryRun>?, bool)' (but other parameters do) [C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\ReportTestHelper.cs(2800,64): warning CS1573: Parameter 'tempDir' has no matching param tag in the XML comment for 'ReportTestHelper.GenerateReportWithEverySection(string, string, string, string?)' (but other parameters do) [C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\ReportTestHelper.cs(2800,80): warning CS1573: Parameter 'outputDir' has no matching param tag in the XML comment for 'ReportTestHelper.GenerateReportWithEverySection(string, string, string, string?)' (but other parameters do) [C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\ReportTestHelper.cs(2800,98): warning CS1573: Parameter 'fileName' has no matching param tag in the XML comment for 'ReportTestHelper.GenerateReportWithEverySection(string, string, string, string?)' (but other parameters do) [C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+  Kronikol.Tests.EndToEnd -> C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\bin\Debug\net10.0\Kronikol.Tests.EndToEnd.dll
+Test run for C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\bin\Debug\net10.0\Kronikol.Tests.EndToEnd.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:19.05]     Kronikol.Tests.EndToEnd.LongStatementRenderingTests.The_stack_detector_tells_the_engines_stack_failure_from_a_drawn_diagram [FAIL]
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.The_stack_detector_tells_the_engines_stack_failure_from_a_drawn_diagram [655 ms]
+  Error Message:
+   Microsoft.Playwright.PlaywrightException : TypeError: window._isStackOverflow is not a function
+    at eval (eval at evaluate (:302:30), <anonymous>:1:15)
+    at UtilityScript.evaluate (<anonymous>:309:18)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+  Stack Trace:
+     at Microsoft.Playwright.Transport.Connection.InnerSendMessageToServerAsync[T](ChannelOwner object, String method, Dictionary`2 dictionary, Boolean keepNulls) in /_/src/Playwright/Transport/Connection.cs:line 201
+   at Microsoft.Playwright.Transport.Connection.WrapApiCallAsync[T](Func`1 action, Boolean isInternal, String title) in /_/src/Playwright/Transport/Connection.cs:line 505
+   at Microsoft.Playwright.Core.Frame.EvaluateAsync[T](String script, Object arg) in /_/src/Playwright/Core/Frame.cs:line 722
+   at Kronikol.Tests.EndToEnd.LongStatementRenderingTests.The_stack_detector_tells_the_engines_stack_failure_from_a_drawn_diagram() in C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\LongStatementRenderingTests.cs:line 568
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:22.27]     Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_diagram_the_engine_runs_out_of_stack_on_is_reported_as_a_failure(workers: 0) [FAIL]
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_diagram_the_engine_runs_out_of_stack_on_is_reported_as_a_failure(workers: 0) [3 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_diagram_the_engine_runs_out_of_stack_on_is_reported_as_a_failure(Int32 workers) in C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\LongStatementRenderingTests.cs:line 456
+   at Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_diagram_the_engine_runs_out_of_stack_on_is_reported_as_a_failure(Int32 workers) in C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\LongStatementRenderingTests.cs:line 481
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:24.22]     Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_diagram_the_engine_runs_out_of_stack_on_is_reported_as_a_failure(workers: 1) [FAIL]
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_diagram_the_engine_runs_out_of_stack_on_is_reported_as_a_failure(workers: 1) [1 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_diagram_the_engine_runs_out_of_stack_on_is_reported_as_a_failure(Int32 workers) in C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\LongStatementRenderingTests.cs:line 456
+   at Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_diagram_the_engine_runs_out_of_stack_on_is_reported_as_a_failure(Int32 workers) in C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\LongStatementRenderingTests.cs:line 481
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:37.48]     Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_popup_diagram_the_engine_runs_out_of_stack_on_is_described_when_it_is_drawn [FAIL]
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_popup_diagram_the_engine_runs_out_of_stack_on_is_described_when_it_is_drawn [13 s]
+  Error Message:
+   System.TimeoutException : Timeout 10000ms exceeded.
+Call log:
+  - waiting for Locator("#iflow-stack [data-engine-failure='stack']") to be visible
+  Stack Trace:
+     at Microsoft.Playwright.Transport.Connection.InnerSendMessageToServerAsync[T](ChannelOwner object, String method, Dictionary`2 dictionary, Boolean keepNulls) in /_/src/Playwright/Transport/Connection.cs:line 201
+   at Microsoft.Playwright.Transport.Connection.WrapApiCallAsync[T](Func`1 action, Boolean isInternal, String title) in /_/src/Playwright/Transport/Connection.cs:line 505
+   at Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_popup_diagram_the_engine_runs_out_of_stack_on_is_described_when_it_is_drawn() in C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\LongStatementRenderingTests.cs:line 513
+   at Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_popup_diagram_the_engine_runs_out_of_stack_on_is_described_when_it_is_drawn() in C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\LongStatementRenderingTests.cs:line 514
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:38.41]     Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_stack_failure_the_engine_writes_as_text_is_reported_as_a_failure [FAIL]
+  Failed Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_stack_failure_the_engine_writes_as_text_is_reported_as_a_failure [930 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.EndToEnd.LongStatementRenderingTests.A_stack_failure_the_engine_writes_as_text_is_reported_as_a_failure() in C:\Code\Kronikol-red162r2\tests\Kronikol.Tests.EndToEnd\LongStatementRenderingTests.cs:line 531
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     5, Passed:     0, Skipped:     0, Total:     5, Duration: 20 s - Kronikol.Tests.EndToEnd.dll (net10.0)

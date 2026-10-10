@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Net;
+using Kronikol.ComponentDiagram;
 using Kronikol.PlantUml;
+using Kronikol.Reports;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.PlantUml;
@@ -77,6 +79,111 @@ public class NodeJsPlantUmlRendererTests
     // ═══════════════════════════════════════════════════════════
     // Batch mode (one node process per report) + V8 code cache
     // ═══════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// A component diagram in the generator's form whose one edge carries a label of <paramref name="labelChars"/>
+    /// characters, wrapped about every hundred at a comma as the generator wraps one. The generator's own cap no longer
+    /// writes one past about 375; from about 2,500 the label is past node's stack. Its edge is line 6.
+    /// </summary>
+    internal static string OverflowingComponentDiagram(int labelChars)
+    {
+        var flat = ("ClickHouse: " + string.Join(", ", Enumerable.Range(0, 2000).Select(i => $"INSERT INTO orders_archive_{i:D4}")))[..labelChars];
+        var lines = new List<string>();
+        var line = "";
+        foreach (var entry in flat.Split(", "))
+        {
+            if (line.Length > 0 && line.Length + 2 + entry.Length > 100) { lines.Add(line + ","); line = entry; }
+            else line = line.Length == 0 ? entry : line + ", " + entry;
+        }
+        if (line.Length > 0) lines.Add(line);
+        return "@startuml\nleft to right direction\nskinparam wrapWidth 200\n"
+               + "rectangle \"**Caller**\\n<size:10>[Person]</size>\" as caller <<person>>\n"
+               + "database \"Warehouse\" as warehouse\n"
+               + "caller -[#E74C3C]-> warehouse : \"" + string.Join("\\n", lines) + "\"\n@enduml";
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void Batch_counts_the_engines_stack_picture_as_a_failure_of_its_own_diagram()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // Past its stack the engine draws a picture of its own error (RangeError: Maximum call stack size exceeded), an
+        // SVG the batch returned as the drawn diagram.
+        var results = NodeJsPlantUmlRenderer.RenderMany([Seq("First", "One"), OverflowingComponentDiagram(4000), Seq("Third", "Three")]);
+
+        Assert.Equal(3, results.Count);
+        Assert.True(results[0].Succeeded, results[0].Error);
+        Assert.False(results[1].Succeeded, "the engine's stack picture was returned as the drawn diagram");
+        Assert.Contains("ran out of stack", results[1].Error);
+        Assert.Contains("line 6", results[1].Error);
+        Assert.Contains("Maximum call stack size exceeded", results[1].Error);
+        Assert.True(results[2].Succeeded, results[2].Error);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void Batch_names_a_stack_failure_the_engine_writes_as_text()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        // A coloured note bar past the stack fails as text, which the batch already returned as the diagram's error,
+        // with nothing to say that the engine ran out of stack.
+        var bar = "hnote across #black:<color:white>" + string.Concat(Enumerable.Repeat("{\"sku\":\"SKU-0001\",\"n\":1},", 200)) + "</color>";
+        var results = NodeJsPlantUmlRenderer.RenderMany(["@startuml\nparticipant Api\nparticipant Orders\nApi -> Orders: GET /orders\n" + bar + "\n@enduml"]);
+
+        Assert.False(results[0].Succeeded);
+        Assert.Contains("ran out of stack", results[0].Error);
+        Assert.Contains("Maximum call stack size exceeded", results[0].Error);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void A_component_diagram_the_engine_runs_out_of_stack_on_is_a_failed_panel_and_a_diagnostic()
+    {
+        Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
+
+        var collector = new ReportDiagnosticsCollector();
+        ComponentDiagramReportGenerator.DrawnDiagram? drawn;
+        using (ReportDiagnosticsScope.Begin(collector))
+            drawn = ComponentDiagramReportGenerator.DrawEmbedded(OverflowingComponentDiagram(4000),
+                new ReportConfigurationOptions { PlantUmlRendering = PlantUmlRendering.NodeJs, InlineSvgRendering = true });
+
+        Assert.NotNull(drawn);
+        Assert.Null(drawn.InlineSvg);
+        Assert.Null(drawn.ImageSource);
+        Assert.Contains("ran out of stack", drawn.Failure);
+        var entry = Assert.Single(collector.Entries, e => e.Kind == DiagnosticKind.RenderFailure);
+        Assert.Contains("Drawing the embedded component diagram failed", entry.Message);
+    }
+
+    private static string Picture(params string[] lines) =>
+        "<svg xmlns=\"http://www.w3.org/2000/svg\"><g>" + string.Concat(lines.Select((l, i) => $"<text x=\"5\" y=\"{14 * (i + 1)}\">{l}</text>")) + "</g></svg>";
+
+    private const string VersionLine = "PlantUML version $version$ / $git.commit.id$ [Unknown compile time]";
+
+    public static TheoryData<string?, bool, string> StackResults => new()
+    {
+        { "java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded", true, "V8's text, no picture" },
+        { "java.lang.RuntimeException: (JavaScript) InternalError: too much recursion", true, "SpiderMonkey's text" },
+        { Picture(VersionLine, "[From textarea (line 6) ]", "@startuml", "caller -[#E74C3C]-&gt; warehouse : \"ClickHouse: INSERT INTO ...",
+            " You should send a mail to plantuml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded (Assumed diagram type: component)"),
+            true, "the engine's stack picture" },
+        { Picture(VersionLine, "@startuml", " java.lang.RuntimeException: (JavaScript) InternalError: too much recursion"), true, "the stack picture in Firefox" },
+        { Picture(VersionLine, "[From textarea (line 4) ]", "@startuml", "loop yyyy ...", " Syntax Error? (Assumed diagram type: sequence)"), false, "a syntax error" },
+        { Picture(VersionLine, "[From textarea (line 3) ]", "note over a: RangeError: Maximum call stack size exceeded", " Syntax Error? (Assumed diagram type: sequence)"), false, "a syntax error in a source quoting the error" },
+        { Picture("Api", "Orders", "GET /orders", "Api", "Orders", "RangeError: Maximum call stack size exceeded"), false, "a drawn diagram whose last note quotes the error" },
+        { "java.lang.RuntimeException: Diagram too large for browser rendering: 9000x40000 (max 98304)", false, "too large" },
+        { "", false, "nothing" },
+        { null, false, "null" },
+    };
+
+    [Theory]
+    [MemberData(nameof(StackResults))]
+    public void The_stack_detector_tells_the_engines_stack_failure_from_a_drawn_diagram(string? result, bool expected, string why)
+    {
+        Assert.True(expected == NodeJsPlantUmlRenderer.IsStackOverflow(result), why);
+    }
 
     internal static string Seq(string a, string b) => $"@startuml\nparticipant {a}\nparticipant {b}\n{a} -> {b} : hello from {a}\n@enduml";
 

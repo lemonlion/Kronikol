@@ -53,6 +53,15 @@ table is `tools/render-bench/results/statement-limits-worker-2026-10-10.txt`.
 | `red/` | The new facts copied onto 4.14.4 with the three new constants stubbed: `core-on-4.14.4.txt` (22 fail) and `e2e-on-4.14.4.txt` (12 fail), each on its own assertion |
 | `mutate_r1r3.py`, `mutations.jsonl` | Each mutation puts one behaviour back as it was, in a snapshot worktree, and runs the facts that should catch it; the results, one line each |
 
+## `r2/`: the execution of R2 (plan §11, 2026-10-10)
+
+| Path | What it is |
+|---|---|
+| `failure-forms-browser.js` | Renders an over-long component edge (unwrapped, and in the emitter's wrapped form) and a coloured bar through the shipped render script's shim page in Chromium, with `JSFLAGS` for the optimizing compilers, and prints what the engine wrote: the RangeError text, the error picture's lines, or an edge drawn with the label `0` |
+| `failure-forms-node.js` | The same edge in the emitter's form through the `engine/` harness in node, at lengths from 1,500 to 14,000: the stack picture from about 2,500 |
+| `red/` | The R2 facts copied onto 4.14.5 with the Node detector stubbed: `core-on-4.14.5.txt` (7 fail) and `e2e-on-4.14.5.txt` (5 fail) |
+| `mutate_r2.py`, `mutations.jsonl` | Each mutation puts one behaviour back as it was (the picture cached or not counted, the detector reading the whole picture or without its first line, no description or one below the picture, the popup's check, the Node renderer returning the picture), and the results |
+
 ## `research/`: the inventories the plan was written from
 
 | File | What it is |

@@ -24,7 +24,9 @@
     //   window.plantumlLoad()  — a no-op kept for compatibility; the shim owns the engine lifecycle.
     //   window.__kronikolRender  — telemetry: { mode: 'worker' | 'main-thread', workers, renders,
     //       cacheHits, workerMs, injectMs, errors, inFlight, maxInFlight, engineFetchMs, fallbackReason,
-    //       engineIntegrity, vizIntegrity, webAssembly }.
+    //       engineIntegrity, vizIntegrity, webAssembly }. `errors` counts the engine's stack failures too (since
+    //       4.14.6): its RangeError text or picture, which is described in the page and never cached.
+    //   window._isStackOverflow(result)  — whether an engine answer (an SVG or text) is its stack failure.
     //
     // Both files are checked against their known hashes (TrackingDefaults) by the browser itself: the
     // worker path's fetch and the fallback's tags carry `integrity`, and a file whose bytes differ is never
@@ -138,6 +140,24 @@
             cacheEvict();
         }
 
+        // --- the engine's stack failure ---------------------------------------------------------
+        // The engine's regex library (TeaVM's port of java.util.regex) walks some patterns once per character on the
+        // JavaScript stack, and past the stack it reports the overflow in one of two ways (plans/LONG_COMPONENT_EDGE_PLAN.md
+        // R2): as text with no picture (a coloured note bar), or as its error picture, whose first line starts "PlantUML "
+        // and whose last line names the error. V8 and JavaScriptCore say "Maximum call stack size exceeded", SpiderMonkey
+        // "too much recursion". Either is a failed render: counted as an error and never cached. A drawn diagram quoting
+        // the phrase (a captured exception in a note) is not one, and neither is a syntax error's picture of a source
+        // that quotes it, since only the picture's last line is read.
+        var _stackOverflowRx = /Maximum call stack size exceeded|too much recursion/;
+        function isStackOverflow(result) {
+            if (typeof result !== 'string' || !result) return false;
+            if (result.indexOf('<svg') < 0) return _stackOverflowRx.test(result);
+            var texts = result.match(/<text\b[^>]*>[^<]*<\/text>/g);
+            if (!texts || texts[0].replace(/<[^>]*>/g, '').indexOf('PlantUML ') !== 0) return false;
+            return _stackOverflowRx.test(texts[texts.length - 1]);
+        }
+        window._isStackOverflow = isStackOverflow;
+
         // --- writing results and failures into the page ---------------------------------------
         function resolveTarget(t) { return t.el || (t.id ? document.getElementById(t.id) : null); }
         function inject(targets, svg) {
@@ -218,7 +238,10 @@
             telemetry.inFlight = busyCount();
             if (m.type === 'done') {
                 telemetry.renders++; telemetry.workerMs += m.ms || 0;
-                cachePut(job.key, m.svg);
+                // A stack failure keeps the engine's own picture or text for the page to describe, but is not cached:
+                // asked for again, the source is drawn again.
+                if (isStackOverflow(m.svg)) telemetry.errors++;
+                else cachePut(job.key, m.svg);
                 inject(job.targets, m.svg);
                 if (!firstDone) firstDone = true;
             } else if (m.type === 'error') {
@@ -409,6 +432,7 @@
                 if (done) return;
                 done = true; mainBusy = false;
                 clearTimeout(timer); mo.disconnect();
+                if (isStackOverflow(el.innerHTML)) telemetry.errors++;
                 setTimeout(pumpMain, 0);
             }
             mo.observe(el, { childList: true, subtree: true });
@@ -1080,6 +1104,28 @@
             return null;
         }
         window._findOverLongStatement = findOverLongStatement;
+        // The longest statement in a source, for a stack failure no cap explains (a kind no cap knows yet, or a runtime
+        // with a smaller stack). A note's body is left out, since the engine does not walk it on the stack; a one-line
+        // note carrying a colour tag is kept, since it does.
+        function findLongestStatement(source) {
+            var lines = String(source).split('\n');
+            var inNote = false, best = null;
+            for (var i = 0; i < lines.length; i++) {
+                var t = lines[i].replace(/\r$/, '').trim();
+                if (inNote) {
+                    if (closesNoteBlock(t)) inNote = false;
+                    continue;
+                }
+                if (!t || t[0] === "'" || t[0] === '!' || t[0] === '@') continue;
+                if (isNoteStatement(t)) {
+                    inNote = opensNoteBlock(t);
+                    if (inNote || !/<color:|<font/i.test(t)) continue;
+                }
+                if (!best || t.length > best.length) best = { line: i + 1, length: t.length };
+            }
+            return best;
+        }
+        window._findLongestStatement = findLongestStatement;
         // Source text shown inside markup: `&` first, or a `&lt;`, `&copy` or `&amp;` in the source would
         // be read by the page and shown as something else.
         function escapeMarkupText(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
@@ -1104,6 +1150,30 @@
                     + 'OpenIconic icons (<code>&lt;&amp;name&gt;</code>) and emoji (<code>&lt;:name:&gt;</code>) need a bundle ('
                     + bundle[1] + '.js) that the engine in the page cannot fetch. <code>PlantUmlRendering.Server</code> and <code>PlantUmlRendering.Local</code> draw them.'
                     + rawDetails + '</div>';
+                return true;
+            }
+            if (window._isStackOverflow && window._isStackOverflow(el.innerHTML) && !el.querySelector('[data-engine-failure]')) {
+                var stackSource = source || el.getAttribute('data-plantuml') || '';
+                var past = findOverLongStatement(stackSource);
+                var longest = past ? null : findLongestStatement(stackSource);
+                var cause = '<strong>The diagram engine ran out of stack.</strong> '
+                    + 'Its JavaScript build reads some statements one character at a time on its stack, so one long statement '
+                    + 'can exhaust it, soonest in the Web Worker a report draws in. '
+                    + (past ? 'Line ' + past.line + ' is a ' + past.kind + ' of ' + past.length + ' characters (limit ' + past.limit + '). '
+                       : longest ? 'Its longest statement is line ' + longest.line + ', of ' + longest.length + ' characters. ' : '')
+                    + '<code>PlantUmlRendering.Server</code> and <code>PlantUmlRendering.Local</code> draw it.';
+                if (svg) {
+                    // Kronikol's line above, the engine's own picture below it.
+                    var stack = document.createElement('div');
+                    stack.className = 'engine-failure';
+                    stack.setAttribute('data-engine-failure', 'stack');
+                    stack.style.cssText = 'color:#c00;margin-bottom:0.5em';
+                    stack.innerHTML = cause + rawDetails;
+                    el.insertBefore(stack, el.firstChild);
+                } else {
+                    el.innerHTML = '<div class="engine-failure" data-engine-failure="stack" style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
+                        + cause + ' <code>' + escapeMarkupText(text.slice(0, 200)) + '</code>' + rawDetails + '</div>';
+                }
                 return true;
             }
             if (svg && _engineSyntaxErrorRx.test(text) && !el.querySelector('[data-engine-failure]')) {

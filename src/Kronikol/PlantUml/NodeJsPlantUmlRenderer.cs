@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using System.Net;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Kronikol.Constants;
 
 namespace Kronikol.PlantUml;
@@ -10,7 +12,7 @@ namespace Kronikol.PlantUml;
 /// Renders PlantUML diagrams locally using a bundled Node.js PlantUML renderer.
 /// Downloads the required JavaScript files on first use and caches them locally, checked against their known hashes.
 /// </summary>
-public static class NodeJsPlantUmlRenderer
+public static partial class NodeJsPlantUmlRenderer
 {
     private const string CdnBase = TrackingDefaults.PlantUmlJsCdnBase;
     private const string VizFileName = "viz-global.js";
@@ -131,9 +133,13 @@ public static class NodeJsPlantUmlRenderer
             try { parsed = JsonSerializer.Deserialize<BatchResultLine>(trimmed); }
             catch (JsonException) { continue; }
             if (parsed?.Id is null || !int.TryParse(parsed.Id, out var index) || index < 0 || index >= results.Length) continue;
-            results[index] = parsed.Svg is not null && parsed.Svg.Contains("<svg", StringComparison.OrdinalIgnoreCase)
-                ? new NodeRenderResult(parsed.Svg, null)
-                : new NodeRenderResult(null, parsed.Error ?? "Node.js PlantUML render produced no SVG output.");
+            // The engine's stack picture is an SVG, but no drawing of the diagram: a failure of this diagram alone.
+            var answer = parsed.Svg is not null && parsed.Svg.Contains("<svg", StringComparison.OrdinalIgnoreCase) ? parsed.Svg : parsed.Error;
+            results[index] = IsStackOverflow(answer)
+                ? new NodeRenderResult(null, StackOverflowError(plantUmls[index], answer!))
+                : parsed.Svg is not null && parsed.Svg.Contains("<svg", StringComparison.OrdinalIgnoreCase)
+                    ? new NodeRenderResult(parsed.Svg, null)
+                    : new NodeRenderResult(null, parsed.Error ?? "Node.js PlantUML render produced no SVG output.");
         }
 
         if (process.ExitCode != 0 && results.All(r => r is null))
@@ -145,6 +151,56 @@ public static class NodeJsPlantUmlRenderer
                 $"Node.js PlantUML batch render returned no result for this diagram (exit code {process.ExitCode}). {stderr}".Trim());
 
         return results!;
+    }
+
+    // The engine's regex library (TeaVM's port of java.util.regex) walks some patterns once per character on the
+    // JavaScript stack, and past the stack it reports the overflow as text with no picture (a coloured note bar) or as its
+    // error picture, whose first line starts "PlantUML " and whose last line names the error: "Maximum call stack size
+    // exceeded" (V8, JavaScriptCore) or "too much recursion" (SpiderMonkey). The page reads it the same way
+    // (isStackOverflow in plantuml-browser-render-script.js; plans/LONG_COMPONENT_EDGE_PLAN.md R2).
+    [GeneratedRegex(@"(?:\w+Error: )?(?:Maximum call stack size exceeded|too much recursion)")]
+    private static partial Regex StackOverflowRegex();
+
+    [GeneratedRegex(@"<text\b[^>]*>[^<]*</text>")]
+    private static partial Regex SvgTextRegex();
+
+    [GeneratedRegex("<[^>]*>")]
+    private static partial Regex TagRegex();
+
+    // The engine's error picture names the source line it stopped at: "[From textarea (line 6) ]".
+    [GeneratedRegex(@"\[From [^\]]*\(line (\d+)\)")]
+    private static partial Regex ErrorLineRegex();
+
+    /// <summary>
+    /// Whether the engine's answer is its stack failure: the text it writes with no picture, or its error picture
+    /// naming the overflow on its last line. A drawn diagram that quotes the phrase (a captured exception in a note) is
+    /// not one, and neither is a syntax error's picture of a source that quotes it, since only the last line is read.
+    /// </summary>
+    internal static bool IsStackOverflow(string? result)
+    {
+        if (string.IsNullOrEmpty(result)) return false;
+        if (!result.Contains("<svg", StringComparison.OrdinalIgnoreCase)) return StackOverflowRegex().IsMatch(result);
+        var texts = SvgTextRegex().Matches(result);
+        if (texts.Count == 0 || !TagRegex().Replace(texts[0].Value, "").StartsWith("PlantUML ", StringComparison.Ordinal))
+            return false;
+        return StackOverflowRegex().IsMatch(texts[^1].Value);
+    }
+
+    /// <summary>
+    /// The error a stack failure becomes: the cause, the line the engine named with its length, and the engine's own
+    /// words, so that the placeholder note or the component panel says why the diagram is missing.
+    /// </summary>
+    internal static string StackOverflowError(string plantUml, string result)
+    {
+        var lines = plantUml.Replace("\r\n", "\n").Trim().Split('\n');
+        var named = ErrorLineRegex().Match(result);
+        var where = named.Success && int.TryParse(named.Groups[1].Value, out var line) && line >= 1 && line <= lines.Length
+            ? $" on line {line}, a statement of {lines[line - 1].Trim().Length} characters"
+            : "";
+        var words = StackOverflowRegex().Match(WebUtility.HtmlDecode(result)).Value;
+        return $"The PlantUML engine ran out of stack{where} ({words}): its JavaScript build reads some statements one "
+               + "character at a time on its stack, so one long statement can exhaust it. PlantUmlRendering.Server and "
+               + "PlantUmlRendering.Local draw it.";
     }
 
     private sealed record BatchLine(string id, string source);
@@ -180,12 +236,17 @@ public static class NodeJsPlantUmlRenderer
         RecordCodeCacheStatus(error);
 
         if (process.ExitCode != 0)
-            throw new InvalidOperationException(
-                $"Node.js PlantUML render failed (exit code {process.ExitCode}): {error}");
+            throw new InvalidOperationException(IsStackOverflow(error)
+                ? StackOverflowError(plantUml, error)
+                : $"Node.js PlantUML render failed (exit code {process.ExitCode}): {error}");
 
         if (string.IsNullOrWhiteSpace(svg) || !svg.Contains("<svg", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException(
                 $"Node.js PlantUML render produced no SVG output. stderr: {error}");
+
+        // The engine's stack picture is an SVG, but no drawing of the diagram.
+        if (IsStackOverflow(svg))
+            throw new InvalidOperationException(StackOverflowError(plantUml, svg));
 
         return svg;
     }

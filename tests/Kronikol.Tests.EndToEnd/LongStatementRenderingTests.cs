@@ -331,10 +331,10 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         };
     }
 
-    private string DiagramPage(string source, string name) => ServePage($$"""
+    private string DiagramPage(string source, string name, int workers = Constants.TrackingDefaults.BrowserRenderWorkers) => ServePage($$"""
         <!DOCTYPE html><html><head><title>{{name}}</title>
         <style>{{DiagramContextMenu.GetInlineSvgStyles()}}</style>
-        {{DiagramContextMenu.GetPlantUmlBrowserRenderScript()}}
+        {{DiagramContextMenu.GetPlantUmlBrowserRenderScript(workers, Constants.TrackingDefaults.BrowserRenderCacheMegabytes, Constants.TrackingDefaults.BrowserFragmentMaxHeight)}}
         </head><body><div class="scenario">
         <div class="plantuml-browser" id="puml-1" data-plantuml="{{System.Net.WebUtility.HtmlEncode(source)}}" data-diagram-type="plantuml"></div>
         </div></body></html>
@@ -406,5 +406,165 @@ public class LongStatementRenderingTests : PlaywrightTestBase
             + "\" as a\ncaller -[#E74C3C]-> warehouse : \"" + x[..PlantUmlStatementLimits.MaxComponentEdgeLabelChars] + "\"\n@enduml";
         var none = await Page.EvaluateAsync<JsonElement?>("(src) => window._findOverLongStatement(src)", atCaps);
         Assert.True(none is null || none.Value.ValueKind == JsonValueKind.Null, $"named a statement at its cap: {none}");
+    }
+
+    /// <summary>
+    /// A component diagram in the generator's form whose one edge carries a label of <paramref name="labelChars"/>
+    /// characters, wrapped about every hundred at a comma as the generator wraps one. The generator's own cap no longer
+    /// writes such a label, so this is a source written by hand (<c>componentDiagramPlantUml</c>) or merged from a report
+    /// written before 4.14.5. Its edge is line 6.
+    /// </summary>
+    private static (string Source, int LabelLength) OverflowingComponentDiagram(int labelChars = 1500)
+    {
+        var flat = ("ClickHouse: " + string.Join(", ", Enumerable.Range(0, 400).Select(i => $"INSERT INTO orders_archive_{i:D3}")))[..labelChars];
+        var lines = new List<string>();
+        var line = "";
+        foreach (var entry in flat.Split(", "))
+        {
+            if (line.Length > 0 && line.Length + 2 + entry.Length > 100) { lines.Add(line + ","); line = entry; }
+            else line = line.Length == 0 ? entry : line + ", " + entry;
+        }
+        if (line.Length > 0) lines.Add(line);
+        var label = string.Join("\\n", lines);
+        return ("@startuml\nleft to right direction\nskinparam wrapWidth 200\n"
+                + "rectangle \"**Caller**\\n<size:10>[Person]</size>\" as caller <<person>>\n"
+                + "database \"Warehouse\" as warehouse\n"
+                + "caller -[#E74C3C]-> warehouse : \"" + label + "\"\n@enduml", label.Length);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(0)]
+    public async Task A_diagram_the_engine_runs_out_of_stack_on_is_reported_as_a_failure(int workers)
+    {
+        // Past its stack the engine draws a picture of its own error (RangeError: Maximum call stack size exceeded), which
+        // the page took for a drawn diagram: it counted no error, cached the picture and said nothing about the cause.
+        // Drawn with the optimizing compilers off, where the worker fails from 550 characters of edge label and the main
+        // thread from 1,080.
+        var (source, labelLength) = OverflowingComponentDiagram();
+        using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+        await using var browser = await LaunchWithTheOptimizingCompilersOff(playwright);
+        var page = await OpenPageAsync(browser, new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
+
+        await page.GotoAsync(DiagramPage(source, $"stack overflow w{workers}", workers));
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#puml-1')?.getAttribute('data-rendered') === '1'",
+            null, new() { Timeout = 120_000, PollingInterval = 200 });
+
+        Assert.Equal(workers == 0 ? "main-thread" : "worker", await page.EvaluateAsync<string>("() => window.__kronikolRender.mode"));
+        var note = page.Locator("#puml-1 [data-engine-failure='stack']");
+        Assert.Equal(1, await note.CountAsync());
+        var text = await note.InnerTextAsync();
+        Assert.Contains("ran out of stack", text);
+        Assert.Contains($"Line 6 is a component edge label of {labelLength} characters (limit {PlantUmlStatementLimits.MaxComponentEdgeLabelChars})", text);
+        Assert.Equal(1, await page.EvaluateAsync<int>("() => window.__kronikolRender.errors"));
+        // The engine's own picture stays, below Kronikol's line.
+        Assert.Equal(1, await page.Locator("#puml-1 svg").CountAsync());
+        Assert.True(await page.EvaluateAsync<bool>(
+            "() => { const el = document.querySelector('#puml-1'); return el.firstElementChild === el.querySelector(\"[data-engine-failure='stack']\"); }"),
+            "Kronikol's line is not above the engine's picture");
+
+        if (workers > 0)
+        {
+            // Not cached: the same source asked for again is drawn again, not answered from the cache.
+            var hits = await page.EvaluateAsync<int>("""
+                (src) => new Promise(resolve => {
+                    const before = window.__kronikolRender.cacheHits;
+                    const el = document.createElement('div'); el.id = 'again'; document.body.appendChild(el);
+                    const mo = new MutationObserver(() => { mo.disconnect(); resolve(window.__kronikolRender.cacheHits - before); });
+                    mo.observe(el, { childList: true, subtree: true, characterData: true });
+                    window.plantuml.render(src.split('\n'), 'again');
+                })
+                """, source);
+            Assert.Equal(0, hits);
+            Assert.Equal(2, await page.EvaluateAsync<int>("() => window.__kronikolRender.errors"));
+        }
+    }
+
+    [Fact]
+    public async Task A_popup_diagram_the_engine_runs_out_of_stack_on_is_described_when_it_is_drawn()
+    {
+        // The internal-flow popup looked for the engine's error text 100 ms after asking for the render, before a worker
+        // answers, so it found nothing and left the engine's failure as the diagram. It now reads the answer when the
+        // engine writes it, and describes a stack failure as the report does.
+        var (source, labelLength) = OverflowingComponentDiagram();
+        var content = $"<div class=\"plantuml-browser\" id=\"iflow-stack\" data-plantuml=\"{System.Net.WebUtility.HtmlEncode(source)}\"></div>";
+        var pageUri = ServePage($$"""
+            <!DOCTYPE html><html><head><title>popup stack</title>
+            <style>{{DiagramContextMenu.GetInternalFlowPopupStyles()}}</style>
+            {{DiagramContextMenu.GetPlantUmlBrowserRenderScript()}}
+            </head><body>
+            <script>window.__iflowSegments = { 'iflow-seg-stack': { title: 'Internal Flow', content: {{JsonSerializer.Serialize(content)}} } };</script>
+            {{DiagramContextMenu.GetInternalFlowConfigScript(InternalFlowHasDataBehavior.ShowLinkOnHover)}}
+            {{DiagramContextMenu.GetInternalFlowPopupScript()}}
+            </body></html>
+            """, "PopupStack");
+        using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+        await using var browser = await LaunchWithTheOptimizingCompilersOff(playwright);
+        var page = await OpenPageAsync(browser, new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
+
+        await page.GotoAsync(pageUri);
+        await page.EvaluateAsync("() => window._iflowShowPopup('iflow-seg-stack')");
+        await page.WaitForFunctionAsync(
+            "() => document.querySelector('#iflow-stack')?.dataset.rendered === '1'",
+            null, new() { Timeout = 120_000, PollingInterval = 200 });
+
+        var note = page.Locator("#iflow-stack [data-engine-failure='stack']");
+        await note.WaitForAsync(new() { Timeout = 10_000 });
+        Assert.Contains($"Line 6 is a component edge label of {labelLength} characters", await note.InnerTextAsync());
+    }
+
+    [Fact]
+    public async Task A_stack_failure_the_engine_writes_as_text_is_reported_as_a_failure()
+    {
+        // A coloured note bar past its edge fails as text, with no picture: the page showed the engine's RangeError line
+        // as the diagram. A bar of 5,000 characters, which the emitter's cap no longer writes.
+        var bar = "hnote across #black:<color:white>" + string.Concat(Enumerable.Repeat("{\"sku\":\"SKU-0001\",\"n\":1},", 200)) + "</color>";
+        var source = "@startuml\nparticipant \"Api\" as api\nparticipant \"Orders\" as orders\napi -> orders: GET /orders\n" + bar + "\n@enduml";
+
+        await Page.GotoAsync(DiagramPage(source, "stack overflow text"));
+        await Page.WaitForFunctionAsync(
+            "() => document.querySelector('#puml-1')?.getAttribute('data-rendered') === '1'",
+            null, new() { Timeout = 120_000, PollingInterval = 200 });
+
+        var note = Page.Locator("#puml-1 [data-engine-failure='stack']");
+        Assert.Equal(1, await note.CountAsync());
+        var text = await note.InnerTextAsync();
+        Assert.Contains("ran out of stack", text);
+        Assert.Contains($"Line 5 is a coloured note bar of {bar.Length} characters (limit {PlantUmlStatementLimits.MaxColouredNoteBarChars})", text);
+        Assert.Contains("Maximum call stack size exceeded", text);
+        Assert.Equal(1, await Page.EvaluateAsync<int>("() => window.__kronikolRender.errors"));
+    }
+
+    [Fact]
+    public async Task The_stack_detector_tells_the_engines_stack_failure_from_a_drawn_diagram()
+    {
+        await Page.GotoAsync(ServePage("""
+            <!DOCTYPE html><html><head><title>stack detector</title>
+            """ + DiagramContextMenu.GetPlantUmlBrowserRenderScript() + """
+            </head><body></body></html>
+            """));
+        static string Picture(params string[] lines) =>
+            "<svg xmlns=\"http://www.w3.org/2000/svg\"><g>" + string.Concat(lines.Select((l, i) => $"<text x=\"5\" y=\"{14 * (i + 1)}\">{l}</text>")) + "</g></svg>";
+        const string version = "PlantUML version $version$ / $git.commit.id$ [Unknown compile time]";
+        (string? Result, bool Expected, string Why)[] cases =
+        [
+            ("java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded", true, "V8's text, no picture"),
+            ("java.lang.RuntimeException: (JavaScript) InternalError: too much recursion", true, "SpiderMonkey's text"),
+            (Picture(version, "[From textarea (line 6) ]", "@startuml", "caller -[#E74C3C]-&gt; warehouse : \"ClickHouse: INSERT INTO ...",
+                " You should send a mail to plantuml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded (Assumed diagram type: component)"),
+                true, "the engine's stack picture"),
+            (Picture(version, "@startuml", " java.lang.RuntimeException: (JavaScript) InternalError: too much recursion"), true, "the stack picture in Firefox"),
+            (Picture(version, "[From textarea (line 4) ]", "@startuml", "loop yyyy ...", " Syntax Error? (Assumed diagram type: sequence)"), false, "a syntax error"),
+            (Picture(version, "[From textarea (line 3) ]", "note over a: RangeError: Maximum call stack size exceeded", " Syntax Error? (Assumed diagram type: sequence)"),
+                false, "a syntax error in a source quoting the error"),
+            (Picture("Api", "Orders", "GET /orders", "Api", "Orders", "RangeError: Maximum call stack size exceeded"), false, "a drawn diagram whose last note quotes the error"),
+            ("java.lang.RuntimeException: Diagram too large for browser rendering: 9000x40000 (max 98304)", false, "too large"),
+            ("", false, "nothing"),
+            (null, false, "null"),
+        ];
+
+        foreach (var (result, expected, why) in cases)
+            Assert.True(expected == await Page.EvaluateAsync<bool>("(r) => window._isStackOverflow(r)", result), why);
     }
 }

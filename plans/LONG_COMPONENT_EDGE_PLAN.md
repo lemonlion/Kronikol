@@ -1,10 +1,10 @@
 # Long component edges in the render worker (#162)
 
 **Date:** 2026-10-09 · **Repo version:** 4.14.4 (`main` at `9f2cd394`; line numbers are for that commit) · **Status:**
-**green-lit in full 2026-10-10, EXECUTING.** Drafted from #162 (filed 2026-10-08), at the owner's ask of 2026-10-09 to
+**green-lit in full 2026-10-10, EXECUTED (R1, R3 as 4.14.5; R2 as 4.14.6).** Drafted from #162 (filed 2026-10-08), at the owner's ask of 2026-10-09 to
 analyse the issue critically and plan a fix for the underlying problem. The owner's ask of 2026-10-10: implement the plan
 in full, including raising the issue with TeaVM and opening any PRs for the fix, so every §9 question is taken as
-recommended (Q4 yes). R1 and R3 shipped as 4.14.5; R2 is 4.14.6 (§11).
+recommended (Q4 yes). R1 and R3 shipped as 4.14.5 and R2 as 4.14.6 (§11); the TeaVM report is the upstream half.
 
 Evidence labels: **RUN** (measured on 2026-10-09 on Windows 11 with the published 4.14.4 packages and the pinned engine,
 `@plantuml/core@1.2026.8`; Chrome 154.0.8037.99, Playwright 1.59.1's Chromium 147.0.7727.15, Firefox 148.0.2, WebKit 26.4,
@@ -613,6 +613,24 @@ in it beyond Q1 and Q2; R2 and R3 are hardening; U is the owner's.
   name-wrapping fact used a 321-character name, now cut. Red first: copied onto 4.14.4, 22 core facts and 12
   Playwright facts fail (`LONG_COMPONENT_EDGE_PLAN.harness/r1r3/red/`); mutations in `r1r3/mutate_r1r3.py`, results
   beside it.
+- **2026-10-10, later. R2 executed as 4.14.6.** The page's detector (`isStackOverflow`, exposed as
+  `window._isStackOverflow`) reads an engine answer as a stack failure when it is text naming the overflow, or the error
+  picture (first line `PlantUML `) whose last line names it; only the last line is read, so a syntax error's picture of
+  a source that quotes the phrase is not one. On a worker's answer and after a main-thread render, the failure counts in
+  `__kronikolRender.errors` and is not cached, and `describeEngineFailure` puts a line above the engine's picture (or in
+  place of its text) naming the statement past its cap, or else the longest. Found while executing and fixed: the
+  internal-flow popup's own check ran on a 100 ms timer, before a worker answers, so it never saw a failure; it now reads
+  the answer when the engine writes it and calls the same description. `NodeJsPlantUmlRenderer` fails a diagram whose
+  answer is the stack picture or text, naming the line the engine reported (`[From textarea (line N)]`) and its length,
+  so a sequence diagram takes the placeholder path and a component diagram the failed panel and a `RenderFailure`
+  diagnostic. Found on the way and not fixable here: a component edge whose label has no line breaks, once past the
+  stack, is drawn with the label `0` and no error, in the worker and on the main thread (from no more than 2,600
+  characters with the JIT on and 830 with the optimizing compilers off; `r2/failure-forms-browser.js`). The engine
+  swallows the overflow and reads the line by another rule, so no detector can tell the result from a drawing. Kronikol's
+  emitter wraps every long label and caps it at 375, so its own diagrams are not affected; the form is in the TeaVM
+  report. The plan's §5 test of a 10,000-character edge would have met this form; the tests use the emitter's wrapped
+  form instead, which fails as the picture. Red first on 4.14.5 (`r2/red/`: 7 core facts and 5 Playwright facts fail);
+  mutations in `r2/mutate_r2.py`, results beside it.
 
 ## Appendix A. Edit sites at `9f2cd394`
 

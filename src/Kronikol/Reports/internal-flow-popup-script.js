@@ -140,22 +140,23 @@
                                     'Use <code>CallTree</code> style for large relationship flows.</div>';
                                 return;
                             }
+                            // The engine's answer is read when it is written: a render in a worker takes longer than
+                            // any fixed wait, so a check on a timer found nothing and left the engine's error text as the
+                            // diagram. A stack failure is described as the report describes one (the line it choked on);
+                            // any other failure the engine writes as text is a diagram too large to draw.
                             var mo = new MutationObserver(function() {
                                 mo.disconnect();
                                 el.dataset.rendered = '1';
-                            });
-                            mo.observe(el, { childList: true, subtree: true });
-                            window.plantuml.render(lines, el.id);
-                            setTimeout(function() {
-                                var text = el.textContent || '';
-                                if (text.indexOf('RuntimeException') >= 0 || text.indexOf('RangeError') >= 0) {
-                                    mo.disconnect();
-                                    el.dataset.rendered = '1';
+                                if (window._isStackOverflow && window._isStackOverflow(el.innerHTML)) {
+                                    if (window._describeEngineFailure) window._describeEngineFailure(el, source);
+                                } else if (!el.querySelector('svg') && (el.textContent || '').indexOf('RuntimeException') >= 0) {
                                     el.innerHTML = '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px">' +
                                         '<strong>Activity diagram too large for browser rendering.</strong><br>' +
                                         'Use <code>CallTree</code> style for large relationship flows.</div>';
                                 }
-                            }, 100);
+                            });
+                            mo.observe(el, { childList: true, subtree: true });
+                            window.plantuml.render(lines, el.id);
                         } catch(e) {
                             el.dataset.rendered = '1';
                             el.textContent = 'Activity diagram too large for browser rendering. Use CallTree style instead.';

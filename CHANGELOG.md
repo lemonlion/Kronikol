@@ -4,6 +4,50 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.14.6] - 2026-10-10
+
+**Patch - the page and the Node renderer report the engine's stack failure as a failed diagram
+(`plans/LONG_COMPONENT_EDGE_PLAN.md` R2, #162).** Bug fixes, and nothing new for a consumer to call, so the patch part
+moves (4.14.5 to 4.14.6). The history action's `VERSION` installs `Kronikol.Tool` 4.14.6, and the templates pin 4.14.5.
+
+Since 4.14.5 every statement Kronikol writes stays under the engine's stack edges as measured, so this matters for a
+source written by hand (`componentDiagramPlantUml`, `InsertPlantUml`), one merged from a report written before 4.14.5,
+or a runtime with a smaller stack than any measured.
+
+### Fixed
+
+- **The engine's stack-overflow picture was taken for a drawn diagram.** Past its stack, PlantUML's JavaScript build
+  draws a picture of its own error (`RangeError: Maximum call stack size exceeded`; `too much recursion` in Firefox) in
+  place of the diagram, or writes the error as text. The page counted the picture as a successful render, cached it
+  and said nothing about why. It now counts it in `__kronikolRender.errors`, does not cache it (the same source asked
+  for again is drawn again), and puts a line above the engine's picture that names the cause and the statement the
+  engine choked on: a statement past its cap with its kind, length and cap, or else the longest statement. The text
+  form gets the same line in place of the bare error.
+- **`NodeJsPlantUmlRenderer` returned the stack picture as the diagram.** A sequence diagram now gets the placeholder
+  note any refused diagram gets, and a component diagram the failed panel and a `RenderFailure` diagnostic. Either
+  message names the cause, and the line the engine stopped at with its length. The text form, which was already a
+  failure, now says the same.
+- **The internal-flow popup looked for the engine's error 100 ms after asking for the render,** before a render worker
+  answers, so a failure stayed on screen as the diagram. It now reads the answer when the engine writes it, and
+  describes a stack failure as the report does.
+
+### Tests
+
+- Playwright (`LongStatementRenderingTests`): a component diagram past the stack, drawn with the optimizing compilers
+  off, in the worker and on the main thread. The line names the edge's statement and its cap, the error is counted, the
+  engine's picture stays below the line, and in the worker the same source asked for again is drawn again. Also the
+  text form (a coloured bar of 5,041 characters), the popup, and the detector against the stack text and picture in
+  V8's and SpiderMonkey's words, a syntax error's picture (one of them of a source quoting the error), a drawn diagram
+  whose last note quotes it, a too-large failure, and nothing.
+- `NodeJsPlantUmlRendererTests`: the batch's stack picture and its text form each fail alone, with the cause and the
+  line; the component panel fails with a `RenderFailure` diagnostic; and the detector is checked against the same
+  cases.
+- Red first: copied onto 4.14.5 with the Node detector stubbed, 7 core facts and the 5 Playwright facts fail, each on its
+  own assertion (`plans/LONG_COMPONENT_EDGE_PLAN.harness/r2/red/`).
+- Mutations (`r2/mutate_r2.py`, results in `r2/mutations.jsonl`): each puts one behaviour back as it was (the picture
+  cached or not counted, the detector reading the whole picture or skipping its first line, no description or one below
+  the picture, the popup's check, the Node renderer returning the picture or naming no line) and all 14 are caught.
+
 ## [4.14.5] - 2026-10-10
 
 **Patch - a component diagram edge listing many operations draws in the render worker (#162), and the other statements
