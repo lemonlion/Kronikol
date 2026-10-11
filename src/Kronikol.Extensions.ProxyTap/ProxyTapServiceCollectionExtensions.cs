@@ -26,7 +26,10 @@ public static class ProxyTapServiceCollectionExtensions
         return services;
     }
 
-    /// <summary>Registers several taps from a list of options (one hosted service each).</summary>
+    /// <summary>
+    /// Registers several taps from a list of options (one hosted service each). Each tap gets a copy of its options, every
+    /// member included, so changing an options object after this call does not change its tap.
+    /// </summary>
     public static IServiceCollection AddProxyTapTestTracking(this IServiceCollection services, IEnumerable<ProxyTapOptions> taps)
     {
         ArgumentNullException.ThrowIfNull(taps);
@@ -61,9 +64,11 @@ public static class ProxyTapServiceCollectionExtensions
         to.TestNameHeaderFallbacks.AddRange(from.TestNameHeaderFallbacks);
         to.TestIdHeaderFallbacks.AddRange(from.TestIdHeaderFallbacks);
         to.IdentityResolver = from.IdentityResolver;
+        to.ResolvedIdentityTraceparent = from.ResolvedIdentityTraceparent;
         to.FallbackTestName = from.FallbackTestName;
         to.CaptureUnattributedRequests = from.CaptureUnattributedRequests;
         to.FallbackTestId = from.FallbackTestId;
+        to.InFlightRegistry = from.InFlightRegistry;
         to.Sink = from.Sink;
         to.Phase = from.Phase;
         to.ForwardTimeout = from.ForwardTimeout;

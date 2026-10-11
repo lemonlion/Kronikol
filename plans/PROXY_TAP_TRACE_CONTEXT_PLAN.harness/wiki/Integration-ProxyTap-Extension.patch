@@ -1,0 +1,79 @@
+diff --git a/Integration-ProxyTap-Extension.md b/Integration-ProxyTap-Extension.md
+index 51c0529..947f6ae 100644
+--- a/Integration-ProxyTap-Extension.md
++++ b/Integration-ProxyTap-Extension.md
+@@ -31,9 +31,9 @@ browser/test ──► tap :8082 ──► graphql :8081 ──► tap :9192 ─
+ 
+ For every exchange the tap:
+ 
+-1. **Resolves the test identity** from the inbound request — `test-tracking-current-test-name` / `test-tracking-current-test-id` (the same headers `TestTrackingContextMiddleware` reads), then any configured fallback headers, then (by default) the **W3C `traceparent` trace id**. The traceparent fallback is what makes browser-driven suites work: the test mints the trace, every browser request carries it, and downstream hops that drop the custom headers still carry `traceparent`.
++1. **Resolves the test identity** from the inbound request — `test-tracking-current-test-name` / `test-tracking-current-test-id` (the same headers `TestTrackingContextMiddleware` reads), then any configured fallback headers, then (by default) the **W3C `traceparent` trace id**. The traceparent fallback is what makes browser-driven suites work: the test mints the trace, every browser request carries it, and downstream hops that drop the custom headers still carry `traceparent`. A host's `IdentityResolver`, when set, is asked before all of these; for a client that sends neither headers nor a trace, see [A client that cannot send the test's trace](#a-client-that-cannot-send-the-tests-trace).
+ 2. **Re-injects the four correlation headers** (`test-tracking-current-test-name`, `-current-test-id`, `-caller-name`, `-trace-id`) on the forwarded request when missing, so attribution survives a hop that would otherwise drop them. A name or id that is not plain ASCII is read and written in the `UTF-8''` form ([[HTTP Tracking Setup › Header values|HTTP-Tracking-Setup#header-values]]); until 4.12.1 the tap read it raw and re-injected `?` for each such character.
+-3. **Forwards** the original bytes (hop-by-hop headers handled; `Host` rewritten to the target). When an `ActivityListener` is attached to the `Kronikol.ProxyTap` source it emits a server span (parented on the inbound `traceparent`) and a client span, and re-parents the forwarded `traceparent` on the client span — the downstream service then nests under the tap in your distributed trace. Without a listener it is fully transparent.
++3. **Forwards** the original bytes (hop-by-hop headers handled; `Host` rewritten to the target). When an `ActivityListener` is attached to the `Kronikol.ProxyTap` source it emits a server span (parented on the inbound `traceparent`, or on the trace context `ResolvedIdentityTraceparent` names for a request the `IdentityResolver` attributed) and a client span, and re-parents the forwarded `traceparent` on the client span — the downstream service then nests under the tap in your distributed trace. Without a listener it is fully transparent.
+ 4. **Responds first, records second** — capture decodes (gzip/deflate/br) and caps a *copy* of both bodies after the response has been written back, so it never sits on the request path.
+ 5. **Redacts secrets at capture** — `authorization`, `proxy-authorization`, `cookie`, `set-cookie`, `x-api-key`, … are replaced with `[REDACTED]` (or dropped) *before* the entry reaches any sink. This is the security boundary: the secret never enters the in-memory store, `TestRunReport.json`, or an NDJSON file. (`ExcludedHeaders` only hides headers in the diagram — see [[Capture-Time-Redaction]].)
+ 6. **Logs** a `Request` and a `Response` entry (shared `TraceId`/`RequestResponseId`, `ServiceName`/`CallerName` from the options, status, timestamps, `ActivityTraceId`/`ActivitySpanId`) to the configured sink.
+@@ -101,19 +101,50 @@ One `IHostedService` per tap starts it with the host and stops it on shutdown. C
+ | `ReinjectCorrelation` | `true` | Re-stamp missing `test-tracking-*` headers on the forwarded request. |
+ | `IdentityFromTraceparent` | `true` | Use the inbound `traceparent` trace id as the test id when no id header is present. |
+ | `TestNameHeaderFallbacks` / `TestIdHeaderFallbacks` | empty | Extra headers to read name/id from (legacy header names). |
+-| `IdentityResolver` | `null` | Custom `(headers, traceparent) → (name, id)?` override. |
++| `IdentityResolver` | `null` | Custom `(headers, traceparent) → (name, id)?` override, asked before the built-in rules. One that throws is logged and counted (`IdentityResolverFailures`), and the built-in rules attribute the request; until 4.15.0 the request was answered `502`. |
++| `ResolvedIdentityTraceparent` | `null` | `(name, id) → TraceParent?`: the trace a request the `IdentityResolver` attributed joins when it carries no `traceparent` (4.15.0+). Needs `IdentityResolver`. See [A client that cannot send the test's trace](#a-client-that-cannot-send-the-tests-trace). |
+ | `FallbackTestName` | `Unknown` | Name when only an id is known (the tests file / `kronikol ingest` normalises it). |
+ | `CaptureUnattributedRequests` | `false` | Capture requests with no identity (under `FallbackTestName`). |
+ | `FallbackTestId` | `null` | With `CaptureUnattributedRequests`, use this fixed id for all unattributed traffic (one "outside any test" scenario) instead of a fresh id per request. |
+ | `Sink` | `RequestResponseLoggerSink.Instance` | Where entries go; combine with `NdjsonInteractionWriter` (or an `OtlpExportSink`, 3.0.60+) via `CompositeRequestResponseSink`. |
+ | `Phase` | `Unknown` | `TestPhase` stamped on entries. |
+-| `EmitActivities` / `SynthesizeTraceparent` | `true` / `true` | Spans on `ProxyTap.ActivitySource`; mint a `traceparent` when the caller sent none. |
++| `EmitActivities` / `SynthesizeTraceparent` | `true` / `true` | Spans on `ProxyTap.ActivitySource`; mint a `traceparent` when the caller sent none and `ResolvedIdentityTraceparent` named none. |
+ | `ForwardTimeout` / `ConnectTimeout` | 200 s / 5 s | Upstream deadlines. |
+-| `InFlightRegistry` | `null` | Publish the identity of every request in flight to `ServiceName`, so a capturer that cannot read headers can attribute what it sees — see [In-flight identity](#in-flight-identity-lending-a-database-tap-an-identity). |
++| `InFlightRegistry` | `null` | Publish the identity of every request in flight to `ServiceName`, so a capturer that cannot read headers can attribute what it sees — see [In-flight identity](#in-flight-identity-lending-a-database-tap-an-identity). Until 4.15.0, taps registered from a list (`AddProxyTapTestTracking(IEnumerable<ProxyTapOptions>)`) dropped it. |
+ | `Log` / `Name` | `null` | Diagnostics callback and display name. |
+ 
+ ---
+ 
++## A client that cannot send the test's trace
++
++**Added in v4.15.0**
++
++Some clients cannot stamp the `test-tracking-*` headers: a native app on a device or an emulator, a third-party SDK, anything whose requests the test does not build. The host can still say which test such a request belongs to through `IdentityResolver` (all traffic from one device belongs to whichever test holds that device, say), and the tap re-injects the four headers on the forwarded request. But the client sends no `traceparent` either, and the services behind the tap usually pass on only `traceparent`. So the tap forwarded the request in a trace of its own (a `traceparent` it minted, or with a listener a root span), and every hop below it landed in a trace no test owns. In a consumer that keys tests by trace id, those calls showed up as traffic outside any test.
++
++`ResolvedIdentityTraceparent` closes the gap. It receives the identity the resolver returned and answers with that test's trace context, typically the test's root span:
++
++```csharp
++o.IdentityResolver = (headers, _) => devices.TestHolding(headers);     // (name, id)? of the test that holds the device
++o.ResolvedIdentityTraceparent = test =>                                 // that test's trace, as W3C trace context
++    TraceParent.TryParse($"00-{devices.TraceIdOf(test.Id)}-{devices.RootSpanIdOf(test.Id)}-01");
++```
++
++The tap continues the context as though the client had sent it as its `traceparent`:
++
++- **With a listener** on `Kronikol.ProxyTap`, the tap's server span is a child of it, its client span a child of the server span, and the forwarded `traceparent` names the client span, in the test's trace.
++- **With none**, the forwarded `traceparent` is the context itself, flags included. `SynthesizeTraceparent` does not apply: the request has a trace.
++
++Either way the services below the tap nest under the span the host named, and the captured entries carry its trace id.
++
++- **An inbound `traceparent` always wins**, and the callback is never asked about an identity the tap read from the headers or the `traceparent`. A `traceparent` the tap cannot parse counts as none.
++- **Return `null`** to leave a request as it would be without the option.
++- **The context must be valid W3C trace context**: a trace id of 32 and a parent span id of 16 lowercase hex digits, neither all zeros (the tap writes version `00`). One that is not, or a callback that throws, never fails the request. It goes on in a trace of its own, as before, and the tap writes a `Log` line, counts it in `ResolvedIdentityTraceparentFailures` and reports it as a `CaptureDegraded` entry in `Diagnostics()`.
++- **It needs `IdentityResolver`.** Setting it alone fails the options' validation, at `StartAsync` or at registration.
++
++The tap's capture counters are `RequestsHandled`, `RequestsCaptured`, `ForwardFailures`, `IdentityResolverFailures` and `ResolvedIdentityTraceparentFailures`; `Diagnostics()` turns each non-zero problem counter into one `CaptureDegraded` entry (see [[Diagnostics and Debugging|Diagnostics-and-Debugging]]).
++
++---
++
+ ## In-flight identity: lending a database tap an identity
+ 
+ **Added in v3.0.45**
+@@ -125,7 +156,7 @@ A tap on an HTTP hop reads the test identity straight off the request headers. A
+ ```csharp
+ var inFlight = new InFlightIdentityRegistry();          // or InFlightIdentityRegistry.Shared
+ 
+-services.AddProxyTap(o =>
++services.AddProxyTapTestTracking(o =>
+ {
+     o.CallerName = "graphql";
+     o.ServiceName = "myDotnetService";

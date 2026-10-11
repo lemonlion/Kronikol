@@ -4,6 +4,79 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.15.0] - 2026-10-11
+
+**Minor - a request the proxy tap's resolver attributes joins the test's trace (`plans/PROXY_TAP_TRACE_CONTEXT_PLAN.md`
+R1).** `ProxyTapOptions.ResolvedIdentityTraceparent`, `ProxyTap.ResolvedIdentityTraceparentFailures` and
+`ProxyTap.IdentityResolverFailures` are new public surface, so the minor part moves (4.14.6 to 4.15.0). Code that does
+not set the option behaves as before, except for the two fixes below, which change what a host sees. The report output
+does not change, so Kronikol4J's ledger gets no line. The history action's `VERSION` installs `Kronikol.Tool` 4.15.0,
+and the templates pin 4.14.6.
+
+### Added
+
+- **`ProxyTapOptions.ResolvedIdentityTraceparent`**, in `Kronikol.Extensions.ProxyTap`. A client that cannot stamp the
+  correlation headers, such as a native app on a device or an emulator, cannot send the test's `traceparent` either. A
+  host could attribute its requests through `IdentityResolver` (all traffic from one device belongs to whichever test
+  holds it), and the tap re-injected the `test-tracking-*` headers, but it forwarded each request in a trace of its own:
+  a root span with a random trace id when a listener was attached, a random `traceparent` from `SynthesizeTraceparent`
+  when none was. Services below the tap usually pass on only `traceparent`, so every hop below it landed in a trace no
+  test owns, and a consumer that keys tests by trace id showed those hops as traffic outside any test. The option
+  receives the identity the resolver returned and answers with that test's trace context, typically its root span
+  (`00-{trace id}-{root span id}-01`), and the tap continues it as though the client had sent it. With a listener the
+  tap's server span is a child of that context, and the forwarded `traceparent` names the tap's client span in the same
+  trace; with none, the forwarded `traceparent` is the context itself, flags included, whatever `SynthesizeTraceparent`
+  says. An inbound `traceparent` always wins, and an identity read from the headers or the `traceparent` never asks. The
+  context must be valid W3C trace context (a trace id of 32 and a parent span id of 16 lowercase hex digits, neither all
+  zeros). One that is not, or a callback that throws, never fails the request: it goes on as it would without the
+  option. `Validate()` refuses the option without `IdentityResolver`, where it could never apply.
+- **`ProxyTap.ResolvedIdentityTraceparentFailures`** counts those failures, `Diagnostics()` reports them as a
+  `CaptureDegraded` entry, and each is a `Log` line naming the value, the reason and the test id. A null answer is not a
+  failure.
+- **`ProxyTap.IdentityResolverFailures`**, with a `Diagnostics()` entry of its own, for the first fix below.
+
+### Fixed
+
+- **A `ProxyTapOptions.IdentityResolver` that threw failed the request.** The exception reached the tap's catch-all,
+  which counted a forward failure, answered the caller `502 Bad Gateway` and reported the upstream as unreachable. The
+  tap now logs it, counts it in `IdentityResolverFailures`, and attributes the request by the built-in rules (the
+  `test-tracking-*` headers, then the `traceparent`), as `TcpTap` does with its resolver. Behaviour change: such a
+  request is forwarded instead of answered `502`.
+- **`AddProxyTapTestTracking(IEnumerable<ProxyTapOptions>)` dropped `InFlightRegistry`**, from 3.0.45, when the
+  registry arrived. It copies each options object member by member and left that one out, so a tap registered from a
+  list published nothing to its registry, and a capturer asking the registry got no identity. Behaviour change: such a
+  tap now publishes each request it forwards.
+
+### Documentation
+
+- `ResolvedIdentityTraceparent` and the two counters are documented; `IdentityResolver`, `EmitActivities` and
+  `SynthesizeTraceparent` say how they meet the new option, and the list overload of `AddProxyTapTestTracking` says that
+  each tap gets a copy of its options, every member included.
+- The wiki edits follow publication (`plans/PROXY_TAP_TRACE_CONTEXT_PLAN.harness/wiki/`). Integration-ProxyTap-Extension
+  gains a section on a client that cannot send the test's trace and the option's row, and its rows for
+  `IdentityResolver`, `SynthesizeTraceparent` and `InFlightRegistry` say what changed. Its in-flight sample called
+  `services.AddProxyTap(...)`, which does not exist; it calls `AddProxyTapTestTracking`.
+
+### Tests
+
+- `ResolvedIdentityTraceparentTests`, in a collection that runs alone, since its facts attach a process-wide
+  `ActivityListener` or assert that none is attached. With a listener, the tap's server span has the trace and parent the
+  host named and the forwarded `traceparent` is its client span's; without one, the forwarded `traceparent` is exactly
+  the named one, for both flags and with `SynthesizeTraceparent` on and off. An inbound `traceparent` wins, one the tap
+  cannot read counts as none, and an identity from the headers never asks. Eight invalid values, a throwing callback and
+  a null answer each leave the request as it was; the first two are counted, logged and reported. The option needs a
+  resolver, and a throwing resolver no longer fails the request.
+- `ProxyTapRegistrationTests`: a reflection guard that every option survives the list registration (a property of a
+  type it has no value for fails it, so a new option cannot slip past), and a tap publishes each request it forwards to
+  its in-flight registry, built directly and from a list. No fact had covered the registry's wiring.
+- Red first: copied onto 4.14.6 with three compile stubs, 21 of the 26 new rows fail, each on its own assertion, and the
+  5 guard rows pass (`plans/PROXY_TAP_TRACE_CONTEXT_PLAN.harness/red-v4.14.6.txt`).
+- Mutations (`mutate.py`, results in `mutations.jsonl`): each puts one behaviour back as it was or breaks it (the host
+  never asked; the server span or the forward ignoring the named context; the named context winning over an inbound one;
+  a header identity asking; no validation, or a weaker one; a rejection not counted, reported or logged; a throwing
+  callback not caught; a null answer counted; the flags dropped; the option accepted without a resolver; either fix
+  undone; either copy line dropped), and all 26 are caught.
+
 ## [4.14.6] - 2026-10-10
 
 **Patch - the page and the Node renderer report the engine's stack failure as a failed diagram

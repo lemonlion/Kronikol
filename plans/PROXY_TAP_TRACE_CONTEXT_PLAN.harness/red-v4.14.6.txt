@@ -1,0 +1,111 @@
+=== v4.14.6 with the stubs
+Build succeeded.
+  Passed Kronikol.Tests.ProxyTap.ProxyTapRegistrationTests.A_tap_publishes_each_request_it_forwards_to_its_in_flight_registry(registeredFromAList: False) [46 ms]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapRegistrationTests.A_tap_publishes_each_request_it_forwards_to_its_in_flight_registry(registeredFromAList: True) [6 ms]
+    Assert.NotNull() Failure: Value is null
+    at Kronikol.Tests.ProxyTap.ProxyTapRegistrationTests.A_tap_publishes_each_request_it_forwards_to_its_in_flight_registry(Boolean registeredFromAList) in tests/Kronikol.Tests.ProxyTap/ProxyTapRegistrationTests.cs:line 106
+  Failed Kronikol.Tests.ProxyTap.ProxyTapRegistrationTests.Registering_taps_from_a_list_keeps_every_option [2 ms]
+    AddProxyTapTestTracking(IEnumerable<ProxyTapOptions>) drops: ResolvedIdentityTraceparent (set a delegate, copied null); InFlightRegistry (set Kronikol.Extensions.ProxyTap.InFlightIdentityRegistry, copied null)
+    at Kronikol.Tests.ProxyTap.ProxyTapRegistrationTests.Registering_taps_from_a_list_keeps_every_option() in tests/Kronikol.Tests.ProxyTap/ProxyTapRegistrationTests.cs:line 62
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(traceId: "4bf92f3577b34da6a3ce929d0e0e4736", spanId: "0000000000000000", problem: "the parent span id must not be all zeros") [33 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: 1
+    Actual:   0
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(String traceId, String spanId, String problem) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 223
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(traceId: "4bf92f3577b34da6a3ce929d0e0e4736", spanId: "00f067aa0ba902b70", problem: "the parent span id must be 16 lowercase hex digits") [2 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: 1
+    Actual:   0
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(String traceId, String spanId, String problem) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 223
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(traceId: "4bf92f3577b34da6a3ce929d0e0e473", spanId: "00f067aa0ba902b7", problem: "the trace id must be 32 lowercase hex digits") [2 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: 1
+    Actual:   0
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(String traceId, String spanId, String problem) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 223
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(traceId: "4bf92f3577b34da6a3ce929d0e0e4736", spanId: "zzf067aa0ba902b7", problem: "the parent span id must be 16 lowercase hex digits") [1 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: 1
+    Actual:   0
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(String traceId, String spanId, String problem) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 223
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(traceId: "00000000000000000000000000000000", spanId: "00f067aa0ba902b7", problem: "the trace id must not be all zeros") [1 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: 1
+    Actual:   0
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(String traceId, String spanId, String problem) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 223
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(traceId: "4BF92F3577B34DA6A3CE929D0E0E4736", spanId: "00f067aa0ba902b7", problem: "the trace id must be 32 lowercase hex digits") [1 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: 1
+    Actual:   0
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(String traceId, String spanId, String problem) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 223
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(traceId: null, spanId: "00f067aa0ba902b7", problem: "the trace id must be 32 lowercase hex digits") [1 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: 1
+    Actual:   0
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(String traceId, String spanId, String problem) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 223
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(traceId: "4bf92f3577b34da6a3ce929d0e0e4736", spanId: "00F067AA0BA902B7", problem: "the parent span id must be 16 lowercase hex digits") [1 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: 1
+    Actual:   0
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_value_that_is_not_W3C_trace_context_leaves_the_request_in_a_trace_of_its_own_and_is_reported(String traceId, String spanId, String problem) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 223
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.With_a_listener_a_value_that_is_not_W3C_trace_context_leaves_the_tap_span_out_of_the_tests_trace [3 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: 1
+    Actual:   0
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.With_a_listener_a_value_that_is_not_W3C_trace_context_leaves_the_tap_span_out_of_the_tests_trace() in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 247
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.Without_a_listener_the_request_is_forwarded_with_the_traceparent_the_host_names(flags: 0, synthesizeTraceparent: True) [3 ms]
+    Assert.Equal() Failure: Strings differ
+    ↓ (pos 3)
+    Expected: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902"···
+    Actual:   "00-13678852c118d880499d39ca7ff43918-bf0deeb677496a"···
+    ↑ (pos 3)
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.Without_a_listener_the_request_is_forwarded_with_the_traceparent_the_host_names(Byte flags, Boolean synthesizeTraceparent) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 102
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.Without_a_listener_the_request_is_forwarded_with_the_traceparent_the_host_names(flags: 0, synthesizeTraceparent: False) [1 ms]
+    The forwarded request carries a traceparent
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.ForwardedTraceparent(StubUpstream upstream) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 390
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.Without_a_listener_the_request_is_forwarded_with_the_traceparent_the_host_names(flags: 1, synthesizeTraceparent: True) [1 ms]
+    Assert.Equal() Failure: Strings differ
+    ↓ (pos 3)
+    Expected: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902"···
+    Actual:   "00-a95ae6e0462ba9c17662aaf25e0fac79-d23c47b94fb900"···
+    ↑ (pos 3)
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.Without_a_listener_the_request_is_forwarded_with_the_traceparent_the_host_names(Byte flags, Boolean synthesizeTraceparent) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 102
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.Without_a_listener_the_request_is_forwarded_with_the_traceparent_the_host_names(flags: 1, synthesizeTraceparent: False) [1 ms]
+    The forwarded request carries a traceparent
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.ForwardedTraceparent(StubUpstream upstream) in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 390
+  Passed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.An_identity_read_from_the_headers_never_asks_the_host(withListener: True) [3 ms]
+  Passed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.An_identity_read_from_the_headers_never_asks_the_host(withListener: False) [1 ms]
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_null_answer_leaves_the_request_as_it_was_and_reports_nothing [2 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: 1
+    Actual:   0
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_null_answer_leaves_the_request_as_it_was_and_reports_nothing() in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 292
+  Passed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.An_inbound_traceparent_wins_over_the_one_the_host_names(withListener: True) [2 ms]
+  Passed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.An_inbound_traceparent_wins_over_the_one_the_host_names(withListener: False) [1 ms]
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.With_a_listener_a_request_the_resolver_attributed_nests_under_the_span_the_host_names [3 ms]
+    Assert.Single() Failure: The collection was empty
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.With_a_listener_a_request_the_resolver_attributed_nests_under_the_span_the_host_names() in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 66
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_host_callback_that_throws_leaves_the_request_in_a_trace_of_its_own_and_is_reported [2 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: 1
+    Actual:   0
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_host_callback_that_throws_leaves_the_request_in_a_trace_of_its_own_and_is_reported() in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 268
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.The_option_needs_an_IdentityResolver [< 1 ms]
+    Assert.Throws() Failure: No exception was thrown
+    Expected: typeof(System.ArgumentException)
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.The_option_needs_an_IdentityResolver() in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 310
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.An_IdentityResolver_that_throws_no_longer_fails_the_request [2 ms]
+    Assert.Equal() Failure: Values differ
+    Expected: OK
+    Actual:   BadGateway
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.An_IdentityResolver_that_throws_no_longer_fails_the_request() in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 333
+  Failed Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_traceparent_the_tap_cannot_read_counts_as_none [2 ms]
+    Assert.Equal() Failure: Strings differ
+    ↓ (pos 3)
+    Expected: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902"···
+    Actual:   "00-8ed87da85700659a7a40a444fa0ee39f-3b401b2a405084"···
+    ↑ (pos 3)
+    at Kronikol.Tests.ProxyTap.ResolvedIdentityTraceparentTests.A_traceparent_the_tap_cannot_read_counts_as_none() in tests/Kronikol.Tests.ProxyTap/ResolvedIdentityTraceparentTests.cs:line 160
+Total tests: 26
+     Passed: 5
+     Failed: 21
+=== done

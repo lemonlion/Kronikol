@@ -95,8 +95,36 @@ public sealed class ProxyTapOptions
     /// <summary>
     /// Custom identity resolver. Receives the inbound request headers (multi-valued) and the parsed
     /// traceparent (or null); return the (name, id) to attribute to, or null to use the built-in rules.
+    /// A resolver that throws is logged and counted (<see cref="ProxyTap.IdentityResolverFailures"/>), and the
+    /// built-in rules attribute the request; the request itself is forwarded as usual. To carry the test's trace
+    /// past the tap for a request this attributes, see <see cref="ResolvedIdentityTraceparent"/>.
     /// </summary>
     public Func<IReadOnlyDictionary<string, string[]>, TraceParent?, (string Name, string Id)?>? IdentityResolver { get; set; }
+
+    /// <summary>
+    /// The trace a request joins when <see cref="IdentityResolver"/> attributed it and it carries no <c>traceparent</c>
+    /// (none, or none <see cref="TraceParent.TryParse"/> accepts). A client that cannot stamp the correlation headers, such
+    /// as a native app on a device or an emulator, cannot send the test's trace either, so without this the tap forwards
+    /// such a request in a trace of its own, and the services below it, which pass on only <c>traceparent</c>, record
+    /// their spans in a trace no test owns. Receives the identity the resolver returned; return the test's trace context,
+    /// typically its root span (<c>TraceParent.TryParse($"00-{testTraceId}-{rootSpanId}-01")</c>), or null to leave the
+    /// request as it is without this option.
+    /// </summary>
+    /// <remarks>
+    /// <para>The tap continues the context as though the caller had sent it as its <c>traceparent</c>. With a listener on
+    /// <see cref="ProxyTap.ActivitySource"/> the tap's server span is a child of it, and the forwarded <c>traceparent</c>
+    /// names the tap's client span, in the same trace. With none, the forwarded <c>traceparent</c> is the context itself,
+    /// flags included, whatever <see cref="SynthesizeTraceparent"/> says. Either way the services below the tap nest
+    /// under the span it names, and the captured entries carry its trace id.</para>
+    /// <para>An inbound <c>traceparent</c> always wins, and the tap does not call this for an identity it read from the
+    /// headers or the <c>traceparent</c>. The context must be valid W3C trace context: a trace id of 32 and a parent span
+    /// id of 16 lowercase hex digits, neither all zeros (the tap writes version <c>00</c>). One that is not, or a callback
+    /// that throws, never fails the request: it goes on in a trace of its own, as without this option, and the tap logs
+    /// it, counts it (<see cref="ProxyTap.ResolvedIdentityTraceparentFailures"/>) and reports it in
+    /// <see cref="ProxyTap.Diagnostics"/>.</para>
+    /// <para>Requires <see cref="IdentityResolver"/>. Default null.</para>
+    /// </remarks>
+    public Func<(string Name, string Id), TraceParent?>? ResolvedIdentityTraceparent { get; set; }
 
     /// <summary>Name used when only an id could be resolved. Default <c>Unknown</c> (the tests file / ingest normalises it later).</summary>
     public string FallbackTestName { get; set; } = TestIdentityScope.UnknownTestName;
@@ -137,14 +165,18 @@ public sealed class ProxyTapOptions
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>
-    /// Emit a server span (parented on the inbound <c>traceparent</c>) and a client span for the forwarded
+    /// Emit a server span (parented on the inbound <c>traceparent</c>, or on the context
+    /// <see cref="ResolvedIdentityTraceparent"/> names when there is none) and a client span for the forwarded
     /// call on <see cref="ProxyTap.ActivitySource"/>, re-parenting the forwarded <c>traceparent</c> on the
     /// client span so the downstream service nests under the tap in a distributed trace. Free when no
     /// listener is attached. Default true.
     /// </summary>
     public bool EmitActivities { get; set; } = true;
 
-    /// <summary>When the inbound request has no <c>traceparent</c>, synthesise one for the forwarded request (so every hop is traceable). Default true.</summary>
+    /// <summary>
+    /// When the inbound request has no <c>traceparent</c>, and <see cref="ResolvedIdentityTraceparent"/> names none for it,
+    /// synthesise one for the forwarded request (so every hop is traceable). Default true.
+    /// </summary>
     public bool SynthesizeTraceparent { get; set; } = true;
 
     /// <summary>Optional diagnostic log callback (listener start/stop, forwarding errors).</summary>
@@ -167,6 +199,10 @@ public sealed class ProxyTapOptions
             throw new ArgumentException("ServiceName is required.", nameof(ServiceName));
         if (string.IsNullOrWhiteSpace(ListenHost))
             throw new ArgumentException("ListenHost is required.", nameof(ListenHost));
+        if (ResolvedIdentityTraceparent is not null && IdentityResolver is null)
+            throw new ArgumentException(
+                "ResolvedIdentityTraceparent names the trace of a request IdentityResolver attributed, so it does nothing without IdentityResolver. Set IdentityResolver too, or leave ResolvedIdentityTraceparent null.",
+                nameof(ResolvedIdentityTraceparent));
     }
 }
 
