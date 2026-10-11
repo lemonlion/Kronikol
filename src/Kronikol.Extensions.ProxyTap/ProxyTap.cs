@@ -50,6 +50,8 @@ public sealed class ProxyTap : IAsyncDisposable
     private long _handled;
     private long _captured;
     private long _forwardFailures;
+    private long _identityResolverFailures;
+    private long _resolvedIdentityTraceparentFailures;
 
     /// <summary>Creates a tap for the given options (validated on <see cref="StartAsync"/>).</summary>
     public ProxyTap(ProxyTapOptions options)
@@ -71,6 +73,19 @@ public sealed class ProxyTap : IAsyncDisposable
 
     /// <summary>Requests the tap could not forward (the upstream was unreachable, timed out or the exchange threw) and answered <c>502 Bad Gateway</c> instead.</summary>
     public long ForwardFailures => Interlocked.Read(ref _forwardFailures);
+
+    /// <summary>
+    /// Requests whose <see cref="ProxyTapOptions.IdentityResolver"/> threw. Each was attributed by the built-in rules instead
+    /// (the <c>test-tracking-*</c> headers, then the <c>traceparent</c>) and forwarded as usual.
+    /// </summary>
+    public long IdentityResolverFailures => Interlocked.Read(ref _identityResolverFailures);
+
+    /// <summary>
+    /// Requests <see cref="ProxyTapOptions.ResolvedIdentityTraceparent"/> gave no usable trace context: it returned one
+    /// that is not valid W3C trace context, or it threw. Each was forwarded in a trace of its own, as it would have been
+    /// without the option. A null answer is not counted.
+    /// </summary>
+    public long ResolvedIdentityTraceparentFailures => Interlocked.Read(ref _resolvedIdentityTraceparentFailures);
 
     /// <summary>Whether the listener is accepting connections.</summary>
     public bool IsListening => _listener.IsListening;
@@ -97,6 +112,16 @@ public sealed class ProxyTap : IAsyncDisposable
         if (uncaptured > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
                 string.Create(CultureInfo.InvariantCulture, $"{name}: {uncaptured:N0} of {handled:N0} forwarded request(s) carried no test identity and were not captured (no test-tracking headers or traceparent reached this hop; CaptureUnattributedRequests is off)")));
+
+        var resolverFailures = IdentityResolverFailures;
+        if (resolverFailures > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                string.Create(CultureInfo.InvariantCulture, $"{name}: IdentityResolver threw on {resolverFailures:N0} request(s), so the built-in rules attributed them instead (the test-tracking headers, then the traceparent); they may be under another test or none. Each exception goes to the tap's Log")));
+
+        var traceparentFailures = ResolvedIdentityTraceparentFailures;
+        if (traceparentFailures > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                string.Create(CultureInfo.InvariantCulture, $"{name}: ResolvedIdentityTraceparent gave {traceparentFailures:N0} request(s) no usable trace context (a value that is not valid W3C trace context, or the callback threw), so each was forwarded in a trace of its own and the services below this tap recorded it outside its test's trace. Each value goes to the tap's Log")));
 
         return entries;
     }
@@ -187,7 +212,14 @@ public sealed class ProxyTap : IAsyncDisposable
         }
 
         // ---- identity --------------------------------------------------------------------------
-        var identity = ResolveIdentity(requestHeaders, inboundTraceparent);
+        var identity = ResolveIdentity(requestHeaders, inboundTraceparent, out var resolverAttributed);
+
+        // The trace this request continues: the one it carries, or, when the host's resolver attributed it and it carries
+        // none, the one the host names for that identity. A client that cannot stamp the correlation headers cannot send
+        // the test's trace either, and the services below the tap pass on only traceparent.
+        var parent = inboundTraceparent
+                     ?? (resolverAttributed && identity is { } attributed ? HostTraceparentFor(attributed) : null);
+
         var ignore = requestHeaders.ContainsKey(TestTrackingHttpHeaders.Ignore);
         var capture = identity is not null || _options.CaptureUnattributedRequests;
         identity ??= capture ? (_options.FallbackTestName, _options.FallbackTestId ?? Guid.NewGuid().ToString("N")) : null;
@@ -209,8 +241,8 @@ public sealed class ProxyTap : IAsyncDisposable
         Activity? client = null;
         if (_options.EmitActivities)
         {
-            server = inboundTraceparent is not null && ActivityContext.TryParse(inboundTraceparent.ToString(), null, isRemote: true, out var parent)
-                ? ActivitySource.StartActivity($"tap {_options.DisplayName}", ActivityKind.Server, parent)
+            server = parent is not null && ActivityContext.TryParse(parent.ToString(), null, isRemote: true, out var parentContext)
+                ? ActivitySource.StartActivity($"tap {_options.DisplayName}", ActivityKind.Server, parentContext)
                 : ActivitySource.StartActivity($"tap {_options.DisplayName}", ActivityKind.Server);
             server?.SetTag("kronikol.caller", _options.CallerName);
             server?.SetTag("kronikol.service", _options.ServiceName);
@@ -239,6 +271,14 @@ public sealed class ProxyTap : IAsyncDisposable
             forwardedTraceparent = null; // copied verbatim below — transparent when nobody listens
             activityTraceId = inboundTraceparent.TraceId;
             activitySpanId = inboundTraceparent.ParentSpanId;
+        }
+        else if (parent is not null)
+        {
+            // The context the host named, forwarded as though the caller had sent it: nobody listens, so the services
+            // below nest under the span it names. SynthesizeTraceparent is for a request with no trace, and this has one.
+            forwardedTraceparent = parent.ToString();
+            activityTraceId = parent.TraceId;
+            activitySpanId = parent.ParentSpanId;
         }
         else if (_options.SynthesizeTraceparent)
         {
@@ -319,13 +359,34 @@ public sealed class ProxyTap : IAsyncDisposable
 
     // ------------------------------------------------------------------ identity
 
-    internal (string Name, string Id)? ResolveIdentity(IReadOnlyDictionary<string, string[]> headers, TraceParent? traceparent)
+    /// <summary>
+    /// The identity a request is attributed to: the host's <see cref="ProxyTapOptions.IdentityResolver"/> first (then
+    /// <paramref name="fromResolver"/> is true), then the <c>test-tracking-*</c> headers and their fallbacks, then the
+    /// <c>traceparent</c>'s trace id. Null when none applies.
+    /// </summary>
+    internal (string Name, string Id)? ResolveIdentity(IReadOnlyDictionary<string, string[]> headers, TraceParent? traceparent, out bool fromResolver)
     {
-        if (_options.IdentityResolver is not null)
+        fromResolver = false;
+        if (_options.IdentityResolver is { } resolver)
         {
-            var custom = _options.IdentityResolver(headers, traceparent);
+            (string Name, string Id)? custom = null;
+            try
+            {
+                custom = resolver(headers, traceparent);
+            }
+            catch (Exception ex)
+            {
+                // The host's callback failing is no reason to fail the request it was asked about, which a 502 would do
+                // (and count as a forward failure). The built-in rules attribute it instead, as TcpTap's resolver does.
+                Interlocked.Increment(ref _identityResolverFailures);
+                _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap IdentityResolver threw ({ex.GetType().Name}: {ex.Message}); the built-in rules attribute the request instead.");
+            }
+
             if (custom is not null)
+            {
+                fromResolver = true;
                 return custom;
+            }
         }
 
         // Kronikol's own headers carry a value that is not plain ASCII in the UTF-8'' form (TrackingHeaderValue).
@@ -351,6 +412,68 @@ public sealed class ProxyTap : IAsyncDisposable
 
         return (name ?? _options.FallbackTestName, id);
     }
+
+    /// <summary>
+    /// The trace context <see cref="ProxyTapOptions.ResolvedIdentityTraceparent"/> names for a request the resolver
+    /// attributed to <paramref name="identity"/>, or null: when the option is not set, when it answers null, and when its
+    /// answer cannot be used (it is not valid W3C trace context, or the callback threw). The last is logged and counted,
+    /// and leaves the request as it would be without the option.
+    /// </summary>
+    private TraceParent? HostTraceparentFor((string Name, string Id) identity)
+    {
+        if (_options.ResolvedIdentityTraceparent is not { } traceparentFor)
+            return null;
+
+        TraceParent? named;
+        try
+        {
+            named = traceparentFor(identity);
+        }
+        catch (Exception ex)
+        {
+            RejectHostTraceparent(identity, $"threw ({ex.GetType().Name}: {ex.Message})");
+            return null;
+        }
+
+        if (named is null)
+            return null;
+
+        if (TraceContextProblem(named) is { } problem)
+        {
+            RejectHostTraceparent(identity, $"returned {named}, which is not valid W3C trace context ({problem})");
+            return null;
+        }
+
+        return named;
+    }
+
+    private void RejectHostTraceparent((string Name, string Id) identity, string what)
+    {
+        Interlocked.Increment(ref _resolvedIdentityTraceparentFailures);
+        _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap ResolvedIdentityTraceparent {what} for test id {identity.Id}; the request is forwarded in a trace of its own.");
+    }
+
+    /// <summary>
+    /// Why <paramref name="value"/> is not W3C trace context a tap can continue, or null when it is: the trace id must be 32
+    /// and the parent span id 16 lowercase hex digits, and neither may be all zeros. <see cref="TraceParent.TryParse"/> is
+    /// more lenient about what it reads; this is about what the tap writes. The version is always <c>00</c>, since the
+    /// tap formats the value itself.
+    /// </summary>
+    private static string? TraceContextProblem(TraceParent value)
+    {
+        if (!IsLowercaseHex(value.TraceId, 32))
+            return "the trace id must be 32 lowercase hex digits";
+        if (value.TraceId.All(c => c == '0'))
+            return "the trace id must not be all zeros";
+        if (!IsLowercaseHex(value.ParentSpanId, 16))
+            return "the parent span id must be 16 lowercase hex digits";
+        if (value.ParentSpanId.All(c => c == '0'))
+            return "the parent span id must not be all zeros";
+        return null;
+    }
+
+    private static bool IsLowercaseHex(string? value, int length) =>
+        value is not null && value.Length == length && value.All(c => c is (>= '0' and <= '9') or (>= 'a' and <= 'f'));
 
     private void Reinject(HttpRequestMessage message, IReadOnlyDictionary<string, string[]> inbound, (string Name, string Id) identity, Guid traceId)
     {
