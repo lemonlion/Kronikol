@@ -618,6 +618,7 @@ public class AssertionWeaver
 
             // Read the source text for this statement
             var sourceText = ReadSourceText(sp);
+            var writtenText = sourceText;
             var shouldlyCall = statementInstructions
                 .Where(i => i.OpCode == OpCodes.Call || i.OpCode == OpCodes.Callvirt)
                 .Select(i => i.Operand as MethodReference)
@@ -670,6 +671,8 @@ public class AssertionWeaver
                 }
             }
 
+            var capturedVariables = DetectCapturedVariables(method, statementInstructions, sourceText,
+                () => analysis ??= StackAnalysis.Analyze(method.Body));
             results.Add(new AssertionStatement
             {
                 FirstInstruction = statementInstructions.First(),
@@ -677,8 +680,11 @@ public class AssertionWeaver
                 SequencePoint = sp,
                 SourceText = sourceText,
                 OutboundBranches = outboundBranches,
-                CapturedVariables = DetectCapturedVariables(method, statementInstructions, sourceText,
-                    () => analysis ??= StackAnalysis.Analyze(method.Body)),
+                CapturedVariables = capturedVariables,
+                ArgumentCapture = isAwaited
+                    ? null
+                    : DetectCapturedArguments(method, statementInstructions, writtenText, capturedVariables,
+                        analysis ??= StackAnalysis.Analyze(method.Body)),
                 IsAwaited = isAwaited,
                 GetResultInstruction = getResultInstr
             });
@@ -1091,6 +1097,295 @@ public class AssertionWeaver
         }
 
         return disabled;
+    }
+
+    /// <summary>
+    /// The arguments of the statement's assertion call whose values the weave passes to Track under each argument's own
+    /// text, so a note shows the value the assertion received rather than one read off a variable after the statement
+    /// (ASSERTION_VALUE_SUBSTITUTION_PLAN Q3): <c>expected.Colour.ToString()</c> reads <c>'Blue'</c>, a join reads the
+    /// branch taken. The call is Shouldly's own, or the first one that takes what FluentAssertions' <c>Should()</c>
+    /// returned. An argument is left out when the library shows it itself (a custom message, a <c>because</c>, a
+    /// caller-expression parameter), when it is code with nothing to evaluate (a constant, <c>new[] { 1, 2 }</c>, a
+    /// lambda), when it is a variable already captured, and when its value cannot be held in an object (a by-ref or
+    /// a ref struct). Null when nothing is captured or the call's arguments cannot be matched to the text. The text is
+    /// the statement as written, with Shouldly's custom message still in it, so the arguments match the parameters by
+    /// position wherever the message sits.
+    /// </summary>
+    private static ArgumentCapture? DetectCapturedArguments(MethodDefinition method, List<Instruction> statement,
+        string sourceText, List<CapturedVariable> variables, StackAnalysis analysis)
+    {
+        if (!analysis.Consistent)
+            return null;
+
+        var entryIndex = statement.FindIndex(i =>
+            (i.OpCode == OpCodes.Call || i.OpCode == OpCodes.Callvirt) && i.Operand is MethodReference m && IsAssertionEntryPoint(m));
+        if (entryIndex < 0)
+            return null;
+        var entry = statement[entryIndex];
+        var entryMethod = (MethodReference)entry.Operand;
+
+        Instruction call;
+        int textFrom;
+        if (IsShouldlyMethod(entryMethod))
+        {
+            call = entry;
+            textFrom = 0;
+        }
+        else
+        {
+            var receiving = statement.Skip(entryIndex + 1).FirstOrDefault(i =>
+                (i.OpCode == OpCodes.Call || i.OpCode == OpCodes.Callvirt) && i.Operand is MethodReference m && m.HasThis &&
+                analysis.StackBefore(i) is { } before && before.Length > m.Parameters.Count &&
+                ReferenceEquals(before[before.Length - m.Parameters.Count - 1].Producer, entry));
+            textFrom = sourceText.IndexOf(".Should()", StringComparison.Ordinal);
+            if (receiving == null || textFrom < 0)
+                return null;
+            call = receiving;
+        }
+
+        var callee = (MethodReference)call.Operand;
+        var resolved = TryResolve(callee);
+        var stack = analysis.StackBefore(call);
+        var count = callee.Parameters.Count;
+        if (resolved == null || stack == null || stack.Length < count || resolved.Parameters.Count != count)
+            return null;
+        var texts = ArgumentTexts(sourceText, callee.Name, textFrom);
+        if (texts == null)
+            return null;
+
+        var first = stack.Length - count;
+        var isExtension = !callee.HasThis && resolved.HasCustomAttributes &&
+                          resolved.CustomAttributes.Any(a => a.AttributeType.Name == "ExtensionAttribute");
+        var captured = new List<(int Slot, string Text, TypeReference? BoxAs)>();
+        for (var p = isExtension ? 1 : 0; p < count; p++)
+        {
+            var parameter = resolved.Parameters[p];
+            var index = isExtension ? p - 1 : p;
+            if (index >= texts.Count || HasAttribute(parameter, "ParamArrayAttribute"))
+                break;
+            if (parameter.Name is "customMessage" or "because" or "becauseArgs" ||
+                HasAttribute(parameter, "CallerArgumentExpressionAttribute"))
+                continue;
+
+            var text = texts[index];
+            var slot = stack[first + p];
+            if (!EvaluatesSomething(text) || variables.Any(v => v.Name == text) || slot.Type == null ||
+                StackAnalysis.IsNull(slot) || IsConstant(slot.Producer, analysis) || !CanHoldAsObject(slot.Type, method))
+                continue;
+            captured.Add((first + p, text, BoxType(callee, callee.Parameters[p].ParameterType, slot.Type)));
+        }
+        if (captured.Count == 0)
+            return null;
+
+        var lowest = captured.Min(c => c.Slot);
+        var spill = stack.Skip(lowest).ToArray();
+        if (!StackAnalysis.IsFullyTyped(spill) || !spill.All(slot => StackAnalysis.IsNull(slot) || CanHoldAsLocal(slot.Type!, method)))
+            return null;
+
+        return new ArgumentCapture
+        {
+            Call = call,
+            Spill = spill,
+            Arguments = captured.Select(c => new CapturedArgument { SpillIndex = c.Slot - lowest, Text = c.Text, BoxAs = c.BoxAs }).ToList(),
+        };
+    }
+
+    private static bool HasAttribute(ParameterDefinition parameter, string name) =>
+        parameter.HasCustomAttributes && parameter.CustomAttributes.Any(a => a.AttributeType.Name == name);
+
+    /// <summary>
+    /// The texts of the arguments of the call to <paramref name="methodName"/> at or after <paramref name="from"/> in the
+    /// statement, split at its top-level commas outside literals and trimmed; null when the call is not found or an
+    /// argument is passed by name (then the text's order is not the parameters').
+    /// </summary>
+    private static List<string>? ArgumentTexts(string text, string methodName, int from)
+    {
+        var at = from;
+        int open;
+        while (true)
+        {
+            at = text.IndexOf("." + methodName, at, StringComparison.Ordinal);
+            if (at < 0)
+                return null;
+            var after = at + 1 + methodName.Length;
+            while (after < text.Length && char.IsWhiteSpace(text[after]))
+                after++;
+            if (after < text.Length && text[after] == '<')
+            {
+                var depth = 0;
+                for (; after < text.Length; after++)
+                {
+                    if (text[after] == '<')
+                        depth++;
+                    else if (text[after] == '>' && --depth == 0)
+                        break;
+                }
+                after++;
+                while (after < text.Length && char.IsWhiteSpace(text[after]))
+                    after++;
+            }
+            if (after < text.Length && text[after] == '(')
+            {
+                open = after;
+                break;
+            }
+            at++;
+        }
+
+        var commas = new List<int>();
+        var close = -1;
+        var level = 0;
+        for (var i = open; i < text.Length && close < 0; i++)
+        {
+            var c = text[i];
+            if (c == '"' || c == '\'')
+            {
+                i = EndOfLiteral(text, i);
+                continue;
+            }
+            switch (c)
+            {
+                case '(' or '[' or '{':
+                    level++;
+                    break;
+                case ')' or ']' or '}':
+                    level--;
+                    if (level == 0)
+                        close = i;
+                    break;
+                case ',' when level == 1:
+                    commas.Add(i);
+                    break;
+            }
+        }
+        if (close < 0 || HasNamedArgument(text, open, commas))
+            return null;
+
+        var bounds = new List<int> { open };
+        bounds.AddRange(commas);
+        bounds.Add(close);
+        var texts = new List<string>();
+        for (var b = 0; b + 1 < bounds.Count; b++)
+        {
+            var argument = text.Substring(bounds[b] + 1, bounds[b + 1] - bounds[b] - 1).Trim();
+            if (argument.Length == 0)
+                return texts.Count == 0 && bounds.Count == 2 ? texts : null;
+            texts.Add(argument);
+        }
+        return texts;
+    }
+
+    private static readonly HashSet<string> NotEvaluated = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "new", "typeof", "sizeof", "default", "nameof", "true", "false", "null", "checked", "unchecked", "stackalloc",
+    };
+
+    /// <summary>
+    /// Whether an argument's text evaluates something its text does not already say: a name outside literals that is
+    /// not a keyword, a type created with <c>new</c> or a lambda's parameters, or an interpolated string with a hole.
+    /// <c>expected.Id</c>, <c>flag ? a : "none"</c> and <c>$"{expected.Id}-1"</c> do; <c>5</c>, <c>"A1"</c>,
+    /// <c>new[] { 1, 2 }</c>, <c>new Order("A1")</c> and a lambda do not.
+    /// </summary>
+    private static bool EvaluatesSomething(string text)
+    {
+        if (System.Text.RegularExpressions.Regex.IsMatch(text, @"^\s*(async\s+)?(\([^()]*\)|[A-Za-z_]\w*)\s*=>"))
+            return false;
+        var afterNew = false;
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c == '"' || c == '\'')
+            {
+                var close = EndOfLiteral(text, i);
+                var interpolated = c == '"' && i > 0 &&
+                                   (text[i - 1] == '$' || (i > 1 && text[i - 1] == '@' && text[i - 2] == '$'));
+                if (interpolated && text.IndexOf('{', i, close - i + 1) >= 0)
+                    return true;
+                i = close;
+                afterNew = false;
+                continue;
+            }
+            if (!(char.IsLetter(c) || c == '_') || (i > 0 && (char.IsLetterOrDigit(text[i - 1]) || text[i - 1] == '_' || text[i - 1] == '@')))
+            {
+                if (c is '(' or '[' or '{')
+                    afterNew = false;
+                continue;
+            }
+            var end = i;
+            while (end < text.Length && (char.IsLetterOrDigit(text[end]) || text[end] == '_'))
+                end++;
+            var word = text.Substring(i, end - i);
+            i = end - 1;
+            if (word == "new")
+            {
+                afterNew = true;
+                continue;
+            }
+            if (afterNew || NotEvaluated.Contains(word))
+                continue;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>Whether a value comes straight from a constant (<c>ldc</c>, <c>ldstr</c>, <c>ldnull</c>), perhaps
+    /// converted or boxed: its text already says what it is.</summary>
+    private static bool IsConstant(Instruction? producer, StackAnalysis analysis)
+    {
+        for (var depth = 0; producer != null && depth < 8; depth++)
+        {
+            var name = producer.OpCode.Name;
+            if (name.StartsWith("ldc.", StringComparison.Ordinal) || producer.OpCode.Code is Code.Ldstr or Code.Ldnull)
+                return true;
+            if (!(name.StartsWith("conv.", StringComparison.Ordinal) || producer.OpCode.Code == Code.Box))
+                return false;
+            var input = analysis.StackBefore(producer);
+            producer = input is { Length: > 0 } ? input[input.Length - 1].Producer : null;
+        }
+        return false;
+    }
+
+    /// <summary>Whether a value of this type can be boxed into the values array: not a by-ref, a pointer, a ref
+    /// struct (Span&lt;T&gt;), a delegate or an expression tree (a lambda's value is its code).</summary>
+    private static bool CanHoldAsObject(TypeReference type, MethodDefinition method)
+    {
+        if (!CanHoldAsLocal(type, method))
+            return false;
+        var definition = TryResolve(type);
+        if (definition == null)
+            return type is GenericParameter;
+        for (var t = definition; t != null; t = t.BaseType != null ? TryResolve(t.BaseType) : null)
+        {
+            if (t.FullName is "System.MulticastDelegate" or "System.Linq.Expressions.Expression")
+                return false;
+        }
+        return !(definition.HasCustomAttributes && definition.CustomAttributes.Any(a => a.AttributeType.Name == "IsByRefLikeAttribute"));
+    }
+
+    /// <summary>Whether a stack value of this type can be stored in a local of the method and loaded back.</summary>
+    private static bool CanHoldAsLocal(TypeReference type, MethodDefinition method) =>
+        type is not ByReferenceType && type is not PointerType && type is not FunctionPointerType && IsUsableIn(type, method);
+
+    /// <summary>
+    /// The type to box an argument's value as: the parameter's own type, with the call's type arguments put in, when
+    /// that is a value type (a comparison's <c>bool</c> is an <c>int32</c> on the stack and would box as a number);
+    /// else the stack's type when that is a value type or a type parameter; else none.
+    /// </summary>
+    private static TypeReference? BoxType(MethodReference callee, TypeReference parameterType, TypeReference slotType)
+    {
+        var concrete = parameterType;
+        if (parameterType is GenericParameter generic)
+        {
+            if (generic.Type == GenericParameterType.Method && callee is GenericInstanceMethod method &&
+                generic.Position < method.GenericArguments.Count)
+                concrete = method.GenericArguments[generic.Position];
+            else if (generic.Type == GenericParameterType.Type && callee.DeclaringType is GenericInstanceType owner &&
+                     generic.Position < owner.GenericArguments.Count)
+                concrete = owner.GenericArguments[generic.Position];
+        }
+        if (concrete is not GenericParameter && !concrete.ContainsGenericParameter && concrete.IsValueType)
+            return concrete;
+        return slotType.IsValueType || slotType is GenericParameter ? slotType : null;
     }
 
     /// <summary>
@@ -2350,6 +2645,53 @@ public class AssertionWeaver
         };
     }
 
+    /// <summary>
+    /// In front of the assertion call: stores the values it takes from the lowest captured argument up in locals,
+    /// copies each captured argument's into its place in the values array (after the variables'), and loads them all
+    /// back, so the call runs as compiled. A branch to the call (a join in the last argument, such as a custom message
+    /// written <c>flag ? "a" : "b"</c>) is sent to the stores, or the values would be copied on one path only.
+    /// </summary>
+    private static void CaptureArguments(MethodDefinition method, ILProcessor il, ArgumentCapture capture,
+        VariableDefinition valuesLocal, int firstIndex)
+    {
+        var locals = capture.Spill.Select(slot => SlotLocal(method, slot)).ToList();
+        var inserted = new List<Instruction>();
+        for (var s = capture.Spill.Length - 1; s >= 0; s--)
+            inserted.Add(StoreSlot(il, locals[s]));
+        for (var a = 0; a < capture.Arguments.Count; a++)
+        {
+            var argument = capture.Arguments[a];
+            inserted.Add(il.Create(OpCodes.Ldloc, valuesLocal));
+            inserted.Add(il.Create(OpCodes.Ldc_I4, firstIndex + a));
+            inserted.Add(LoadSlot(il, locals[argument.SpillIndex]));
+            if (argument.BoxAs != null)
+                inserted.Add(il.Create(OpCodes.Box, method.Module.ImportReference(argument.BoxAs)));
+            inserted.Add(il.Create(OpCodes.Stelem_Ref));
+        }
+        for (var s = 0; s < capture.Spill.Length; s++)
+            inserted.Add(LoadSlot(il, locals[s]));
+
+        foreach (var instruction in inserted)
+            il.InsertBefore(capture.Call, instruction);
+
+        var ours = new HashSet<Instruction>(inserted);
+        foreach (var instruction in method.Body.Instructions)
+        {
+            if (ours.Contains(instruction))
+                continue;
+            if (ReferenceEquals(instruction.Operand, capture.Call))
+                instruction.Operand = inserted[0];
+            else if (instruction.Operand is Instruction[] targets)
+            {
+                for (var t = 0; t < targets.Length; t++)
+                {
+                    if (ReferenceEquals(targets[t], capture.Call))
+                        targets[t] = inserted[0];
+                }
+            }
+        }
+    }
+
     private void WrapSingleAssertion(
         MethodDefinition method,
         ILProcessor il,
@@ -2365,7 +2707,8 @@ public class AssertionWeaver
     {
         var body = method.Body;
         var module = method.Module;
-        var hasValues = assertion.CapturedVariables.Count > 0;
+        var capture = assertion.ArgumentCapture;
+        var hasValues = assertion.CapturedVariables.Count > 0 || capture != null;
 
         // Expression string and file/line for tracking
         var expressionText = assertion.SourceText;
@@ -2484,22 +2827,34 @@ public class AssertionWeaver
             body.Variables.Add(namesLocal);
             body.Variables.Add(valuesLocal);
 
-            // Build names array: new string[N] { "var1", "var2", ... }
+            // Build names array: new string[N] { "var1", "var2", ..., "argument text", ... }
             var count = assertion.CapturedVariables.Count;
-            il.InsertBefore(firstInstr, il.Create(OpCodes.Ldc_I4, count));
+            var arguments = capture?.Arguments ?? new List<CapturedArgument>();
+            il.InsertBefore(firstInstr, il.Create(OpCodes.Ldc_I4, count + arguments.Count));
             il.InsertBefore(firstInstr, il.Create(OpCodes.Newarr, module.TypeSystem.String));
-            for (var vi = 0; vi < count; vi++)
+            for (var vi = 0; vi < count + arguments.Count; vi++)
             {
                 il.InsertBefore(firstInstr, il.Create(OpCodes.Dup));
                 il.InsertBefore(firstInstr, il.Create(OpCodes.Ldc_I4, vi));
-                il.InsertBefore(firstInstr, il.Create(OpCodes.Ldstr, assertion.CapturedVariables[vi].Name));
+                il.InsertBefore(firstInstr, il.Create(OpCodes.Ldstr,
+                    vi < count ? assertion.CapturedVariables[vi].Name : arguments[vi - count].Text));
                 il.InsertBefore(firstInstr, il.Create(OpCodes.Stelem_Ref));
             }
             il.InsertBefore(firstInstr, il.Create(OpCodes.Stloc, namesLocal));
 
-            // Build values array: new object[N] { var1, var2, ... } (with boxing if needed)
-            il.InsertBefore(firstInstr, il.Create(OpCodes.Ldc_I4, count));
+            // Build values array: new object[N] { var1, var2, ... } (with boxing if needed). An argument's slot starts
+            // as a plain object, which prints as its type name, so an argument the statement throws before evaluating
+            // shows no value; the call fills it in (below).
+            il.InsertBefore(firstInstr, il.Create(OpCodes.Ldc_I4, count + arguments.Count));
             il.InsertBefore(firstInstr, il.Create(OpCodes.Newarr, module.TypeSystem.Object));
+            for (var ai = 0; ai < arguments.Count; ai++)
+            {
+                il.InsertBefore(firstInstr, il.Create(OpCodes.Dup));
+                il.InsertBefore(firstInstr, il.Create(OpCodes.Ldc_I4, count + ai));
+                il.InsertBefore(firstInstr, il.Create(OpCodes.Newobj,
+                    module.ImportReference(typeof(object).GetConstructor(Type.EmptyTypes))));
+                il.InsertBefore(firstInstr, il.Create(OpCodes.Stelem_Ref));
+            }
             for (var vi = 0; vi < count; vi++)
             {
                 var cv = assertion.CapturedVariables[vi];
@@ -2541,6 +2896,9 @@ public class AssertionWeaver
                 il.InsertBefore(firstInstr, il.Create(OpCodes.Stelem_Ref));
             }
             il.InsertBefore(firstInstr, il.Create(OpCodes.Stloc, valuesLocal));
+
+            if (capture != null)
+                CaptureArguments(method, il, capture, valuesLocal, count);
         }
 
         // Create the "after assertion success" block
@@ -3003,6 +3361,11 @@ public class AssertionStatement
     /// </summary>
     public List<CapturedVariable> CapturedVariables { get; set; } = new List<CapturedVariable>();
     /// <summary>
+    /// The assertion call's arguments whose evaluated values are passed under their own text (Q3), or null. Never set
+    /// for an awaited assertion: the values array is built after its await, past the call.
+    /// </summary>
+    internal ArgumentCapture? ArgumentCapture { get; set; }
+    /// <summary>
     /// True if this assertion is awaited (contains GetAwaiter/IsCompleted pattern).
     /// Awaited assertions require wrapping GetResult() at the merge point instead of
     /// wrapping the entire visible SP range in try/catch.
@@ -3013,6 +3376,29 @@ public class AssertionStatement
     /// This is where assertion failures actually throw.
     /// </summary>
     public Instruction? GetResultInstruction { get; set; }
+}
+
+/// <summary>The values an assertion call takes from the stack from its lowest captured argument up, which the weave
+/// stores in locals before the call, copies the captured ones of into the values array, and loads back.</summary>
+internal class ArgumentCapture
+{
+    /// <summary>The assertion call.</summary>
+    public Instruction Call { get; set; } = null!;
+    /// <summary>The stack's slots from the lowest captured argument to the top, bottom first.</summary>
+    public StackAnalysis.Slot[] Spill { get; set; } = Array.Empty<StackAnalysis.Slot>();
+    /// <summary>The captured arguments, in the order their names and values follow the variables in the arrays.</summary>
+    public List<CapturedArgument> Arguments { get; set; } = new List<CapturedArgument>();
+}
+
+/// <summary>One argument whose evaluated value is passed to Track under the argument's own text.</summary>
+internal class CapturedArgument
+{
+    /// <summary>Its slot in <see cref="ArgumentCapture.Spill"/>.</summary>
+    public int SpillIndex { get; set; }
+    /// <summary>The argument as written in the statement.</summary>
+    public string Text { get; set; } = "";
+    /// <summary>The type to box its value as, or null for a reference type.</summary>
+    public TypeReference? BoxAs { get; set; }
 }
 
 public class CapturedVariable

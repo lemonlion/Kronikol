@@ -470,7 +470,8 @@ public static partial class AssertionExpressionFormatter
     /// kept under its whole text, or, for a value Kronikol read before a method call or an index
     /// (<see cref="ChainValues.Prefixes"/>), its read part is: <c>'Blue'.ToString()</c>. A shorter key never matches
     /// inside a longer chain, so <c>expected</c>'s value does not stand in for <c>expected.Plain</c>, nor a list for
-    /// its element. Code with no value, a literal among it, stays as written.
+    /// its element. An argument whose own value the weave passed (under the argument's text, from 4.16.0) is replaced
+    /// whole by it, before any chain inside it is looked at. Code with no value, a literal among it, stays as written.
     /// </summary>
     private static string SubstituteResolvedValues(string args, Dictionary<string, string> resolvedValues)
     {
@@ -485,27 +486,78 @@ public static partial class AssertionExpressionFormatter
                 values.TryAdd(AccessChain.CanonicalKey(key), value);
         }
 
-        var sb = new StringBuilder(args.Length);
-        var pos = 0;
+        // An argument's own value (the weave passes each argument's value under the argument's text) replaces the
+        // whole argument; the chains of the arguments left are substituted as their values were read.
+        var replacements = new List<(int Start, int End, string Value)>();
+        foreach (var (start, end) in TopLevelArguments(args))
+        {
+            if (values.TryGetValue(AccessChain.CanonicalKey(args[start..end]), out var value))
+                replacements.Add((start, end, value));
+        }
+
         foreach (var chain in AccessChain.Find(args))
         {
-            if (chain.Start < pos)
+            if (replacements.Any(r => chain.Start < r.End && chain.End > r.Start))
                 continue;
 
             if (values.TryGetValue(chain.Key, out var value))
-            {
-                sb.Append(args, pos, chain.Start - pos).Append('\'').Append(value).Append('\'');
-                pos = chain.End;
-            }
+                replacements.Add((chain.Start, chain.End, value));
             else if (chain.HasUnreadRest && prefixes is not null && prefixes.Contains(chain.ReadKey) &&
                      values.TryGetValue(chain.ReadKey, out var part))
-            {
-                sb.Append(args, pos, chain.Start - pos).Append('\'').Append(part).Append('\'');
-                pos = chain.ReadEnd;
-            }
+                replacements.Add((chain.Start, chain.ReadEnd, part));
+        }
+
+        var sb = new StringBuilder(args.Length);
+        var pos = 0;
+        foreach (var (start, end, value) in replacements.OrderBy(r => r.Start))
+        {
+            if (start < pos)
+                continue;
+            sb.Append(args, pos, start - pos).Append('\'').Append(value).Append('\'');
+            pos = end;
         }
         sb.Append(args, pos, args.Length - pos);
         return sb.ToString();
+    }
+
+    /// <summary>Each top-level argument of a list, as its span without the whitespace around it: split at the commas
+    /// outside brackets and literals.</summary>
+    private static IEnumerable<(int Start, int End)> TopLevelArguments(string args)
+    {
+        var literal = LiteralMask(args);
+        var depth = 0;
+        var start = 0;
+        for (var i = 0; i <= args.Length; i++)
+        {
+            if (i < args.Length && literal[i])
+                continue;
+            if (i < args.Length)
+            {
+                switch (args[i])
+                {
+                    case '(' or '[' or '{':
+                        depth++;
+                        continue;
+                    case ')' or ']' or '}':
+                        depth--;
+                        continue;
+                    case not ',':
+                        continue;
+                }
+                if (depth != 0)
+                    continue;
+            }
+
+            var s = start;
+            var e = i;
+            while (s < e && char.IsWhiteSpace(args[s]))
+                s++;
+            while (e > s && char.IsWhiteSpace(args[e - 1]))
+                e--;
+            if (e > s)
+                yield return (s, e);
+            start = i + 1;
+        }
     }
 
     private static bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';

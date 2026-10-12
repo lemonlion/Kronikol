@@ -1,0 +1,127 @@
+R2 mutations (plan section 4.3's practice, one per behaviour R2 adds), run 2026-10-12 with mutate.py in a git stash
+create snapshot worktree, net10.0. First run: 13 of 15 killed; N8 and N14 survived, showing two facts too weak (the
+comparison fixture's slot is already a bool on the stack, and the two-argument row's second argument was itself a
+chain the chain pass replaces). Char_join and a join in that row were added, and the rerun below kills both: 15 of 15.
+
+== N1: no argument captured
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:    25, Passed:    20, Skipped:     0, Total:    45, Duration: 4 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_failing_statement_labels_the_expected_value_its_message_names
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_message_argument_is_not_captured_as_a_value(method: "Fluent_because", argument: "\"ids mat
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_message_argument_is_not_captured_as_a_value(method: "Shouldly_message_in_a_variable", argu
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_statement_inside_satisfy_all_conditions_labels_its_values
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Argument_after_a
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Comparison_argum
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Fluent_because",
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Fluent_because_h
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Fluent_join", la
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Interpolated_arg
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Shouldly_message
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Static_field_cha
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Value_type_argum
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Call_after_a_member"
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Call_named_like_a_pr
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "First_of_a_list", la
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Fluent_call_after_a_
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Member_after_a_call"
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Two_calls", label: "
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Coalesce", label: "A
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Conditional", label:
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Join_before_a_custom
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Join_in_a_custom_mes
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Message_holding_a_va
+== N2: a not-evaluated argument's value starts as null, not a plain object
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     1, Passed:    44, Skipped:     0, Total:    45, Duration: 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.An_argument_the_statement_threw_before_evaluating_is_shown_as_written
+== N3: the whole-argument pass skipped
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     2, Passed:    65, Skipped:     0, Total:    67, Duration: 175 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_is_matched_to_its_argument_as_written(expression: "actual.ShouldBe(flag ? expected
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_of_null_reads_null
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     8, Passed:    37, Skipped:     0, Total:    45, Duration: 4 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Comparison_argum
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Fluent_join", la
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Interpolated_arg
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Value_type_argum
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Coalesce", label: "A
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Conditional", label:
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Join_before_a_custom
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Message_holding_a_va
+== N4: an argument's text read as a variable's name
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     8, Passed:    59, Skipped:     0, Total:    67, Duration: 123 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_is_matched_to_its_argument_as_written(expression: "actual.Should().BeOneOf(expecte
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_is_matched_to_its_argument_as_written(expression: "actual.ShouldBe(expected.Inner?
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_is_matched_to_its_argument_as_written(expression: "actual.ShouldBe(expected.Lines.
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_is_matched_to_its_argument_as_written(expression: "actual.ShouldBe(expected\n    .
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_is_matched_to_its_argument_as_written(expression: "actual.ShouldBe(flag ? expected
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_of_null_reads_null
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_replaces_the_whole_argument
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_wins_over_a_value_read_afterwards
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:    23, Passed:    22, Skipped:     0, Total:    45, Duration: 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_failing_statement_labels_the_expected_value_its_message_names
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_statement_inside_satisfy_all_conditions_labels_its_values
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Argument_after_a
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Comparison_argum
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Fluent_because",
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Fluent_because_h
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Fluent_join", la
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Interpolated_arg
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Shouldly_message
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Static_field_cha
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Value_type_argum
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Call_after_a_member"
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Call_named_like_a_pr
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "First_of_a_list", la
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Fluent_call_after_a_
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Member_after_a_call"
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Two_calls", label: "
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Coalesce", label: "A
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Conditional", label:
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Join_before_a_custom
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Join_in_a_custom_mes
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Message_holding_a_va
+== N5: a value read off a variable afterwards wins over the argument's
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     3, Passed:    64, Skipped:     0, Total:    67, Duration: 136 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_is_matched_to_its_argument_as_written(expression: "actual.ShouldBe(expected.Inner?
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_is_matched_to_its_argument_as_written(expression: "actual.ShouldBe(expected\n    .
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_wins_over_a_value_read_afterwards
+== N6: constants captured
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     1, Passed:    44, Skipped:     0, Total:    45, Duration: 4 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Enum_constant", 
+== N7: a custom message or a because captured
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     2, Passed:    43, Skipped:     0, Total:    45, Duration: 4 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_message_argument_is_not_captured_as_a_value(method: "Shouldly_message_in_a_variable", argu
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Fluent_because_h
+== N8: a value boxed as the stack's type, not the parameter's
+   Kronikol.Tests.AssertionTracking.csproj: ['Passed!  - Failed:     0, Passed:    45, Skipped:     0, Total:    45, Duration: 4 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+== N9: a branch to the call not sent to the stores
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     1, Passed:    44, Skipped:     0, Total:    45, Duration: 4 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Join_in_a_custom_mes
+== N10: the arguments matched against the text without Shouldly's message
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     1, Passed:    44, Skipped:     0, Total:    45, Duration: 4 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Argument_after_a
+== N11: code with nothing to evaluate captured
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     1, Passed:   110, Skipped:     0, Total:   111, Duration: 10 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.ShouldlyWeaveTests.Each_Shouldly_case_is_labelled_as_a_sentence(method: "ShouldBe_array_initializer_passes", labels: 
+== N12: a variable already captured passed again as an argument
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     1, Passed:    44, Skipped:     0, Total:    45, Duration: 13 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_variable_passed_alone_is_named_once
+== N13: an argument whose value does not print kept as null
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     1, Passed:    66, Skipped:     0, Total:    67, Duration: 201 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_that_was_not_evaluated_falls_back_to_the_values_read
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     1, Passed:    44, Skipped:     0, Total:    45, Duration: 5 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.An_argument_the_statement_threw_before_evaluating_is_shown_as_written
+== N14: the argument list not split at its commas
+   Kronikol.Tests.csproj: ['Passed!  - Failed:     0, Passed:    67, Skipped:     0, Total:    67, Duration: 161 ms - Kronikol.Tests.dll (net10.0)']
+== N15: an interpolated string argument read as constant text
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     1, Passed:    44, Skipped:     0, Total:    45, Duration: 4 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Interpolated_arg
+done
+mutations finished
+
+Rerun of N8 and N14 with the added facts:
+== N8: a value boxed as the stack's type, not the parameter's
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     1, Passed:    45, Skipped:     0, Total:    46, Duration: 4 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Arguments", method: "Char_join", labe
+== N14: the argument list not split at its commas
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     1, Passed:    66, Skipped:     0, Total:    67, Duration: 146 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_argument_value_is_matched_to_its_argument_as_written(expression: "actual.Should().BeOneOf(expecte
+done

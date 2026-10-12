@@ -4,6 +4,71 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.16.0] - 2026-10-12
+
+**Minor - an assertion note shows the value each argument had when the assertion received it (#163,
+`plans/ASSERTION_VALUE_SUBSTITUTION_PLAN.md` R2, the plan's Q3).** New behaviour: the weave now passes the value of
+each argument of a Shouldly or FluentAssertions call, so a note shows values it could not show before. No public member
+is added or changed, but a note says something new, so the minor part moves (4.14.11 to 4.16.0; 4.15.0 is the
+number open pull request #164 is written for). Labels change for the shapes below; a report written before this release
+keeps its labels. The history action's `VERSION` installs `Kronikol.Tool` 4.16.0, and the templates pin 4.14.10.
+
+### Added
+
+- **A woven assertion's argument shows the value the assertion received for it.** Until now a note's values were
+  rebuilt after the statement: the weave saved each variable, and Kronikol read members off it once the assertion had
+  run, which reaches only a chain of members. The weave now also stores each argument of the assertion call as the call
+  takes it, and passes it under the argument's own text, so the whole argument is replaced by its value:
+
+  | Statement | 4.14.8 to 4.14.11 | 4.16.0 |
+  |---|---|---|
+  | `actual.Colour.ToString().ShouldBe(expected.Colour.ToString())` | `… should be 'Blue'.ToString()` | `… should be 'Blue'` |
+  | `actual.Lines.First().ShouldBe(expected.Lines.First())` | `… should be expected.Lines.First()` | `… should be 'x'` |
+  | `….ShouldBe(expected.Lines.Count(l => l == "x"))` | `… should be [ expected.Lines.Count(l => l == "x") ]` | `… should be '1'` |
+  | `response.SplitId.ShouldBe(splits.First().SplitId)` | `… should be splits.First().SplitId` | `… should be 'S1'` |
+  | `actual.Id.ShouldBe(flag ? expected.Id : "none")` | `… should be 'True' ? 'A1' : "none"` | `… should be 'A1'` |
+  | `actual.Id.ShouldBe(expected.Missing ?? expected.Id)` | `… should be 'null' ?? 'A1'` | `… should be 'A1'` |
+  | `actual.Lines.Count.ShouldBe(expected.Lines.Count + 0)` | `… should be '2' + 0` | `… should be '2'` |
+  | `actual.Id.ShouldBe($"{expected.Id}-1")` | `… should be $"{expected.Id}-1"` | `… should be 'A1-1'` |
+  | `….ShouldBe(StaticExpected.Colour.ToString())` (a static field) | `… should be StaticExpected.Colour.ToString()` | `… should be 'Blue'` |
+
+  A value is taken when the call is made, so nothing read after the statement (a getter with a side effect, an object
+  changed later) reaches the note's arguments. An argument after Shouldly's custom message is read too (one of
+  `ShouldBe`'s string overloads takes its options there). The rest is as in 4.14.8. A constant (`"A1"`, `2`,
+  `Colour.Blue`), code with nothing to evaluate (`new[] { 1, 2 }`, a lambda), Shouldly's custom message and
+  FluentAssertions' `because` keep their text, and a variable passed alone shows its value. An argument passed by
+  name, an awaited assertion (TUnit's, and FluentAssertions' `…Async` ones), `Track.That` and the assertion's subject
+  are read as in 4.14.8, and so is an argument the statement threw before evaluating, or one whose value does not
+  print. The values travel in the arrays `Track.AssertionPassedWithValues` and `Track.AssertionFailedWithValues`
+  already take, under each argument's text as its name, and the methods' XML docs say so. An older `Kronikol` beside
+  a 4.16.0 weave still draws its labels: 4.14.8 leaves the argument values out, and earlier versions match them by text.
+
+### Tests
+
+- Kronikol.Tests.AssertionTracking `AssertionValueWeaveTests`, woven in Debug and in Release: the issue's statements
+  now label the value each argument had (`'Blue'`, `'x'`, `'blue'`, `'S1'`, `'1'`), as do joins (`?:`, `??`, a `?:` in
+  a custom message on either branch), a static field's chain, arithmetic, an interpolated string, a comparison
+  (`'True'`), a `?:` of two characters (`'A'`: boxed as the parameter's `char`, not the `int32` the stack holds), an
+  argument after Shouldly's custom message, FluentAssertions' joins and calls with a `because`,
+  and conditions inside `ShouldSatisfyAllConditions`; constants, a variable alone and a `because` holding a variable keep
+  their text; an argument the statement threw before evaluating is shown as written; a custom message or a `because` is
+  never captured, and a variable passed alone is named once.
+- `TrackValueResolutionTests`: an argument's value, passed under its text, replaces the whole argument, wins over a value
+  read afterwards, reads `'null'` when null, falls back to the chain's reading when it was not evaluated, and is matched
+  to its argument as written (a join, `?.`, line breaks with `!`, a call with a lambda, one argument of two).
+- Playwright `ShouldlyAssertionNoteTests.An_argument_value_note_paints_the_value_the_assertion_received`: the report
+  paints `Actual colour should be 'Blue'` above Shouldly's message, and not `'Blue'.ToString()`.
+- Proofs (the plan's harness, `r2/`): copied onto v4.14.8, 26 of the 46 weaver facts, 8 of the 9 new Track facts and the
+  Playwright fact fail, each on 4.14.8's own label (the weaver facts that pass there are R1's suppression facts and
+  guards; the Track fact that passes is the not-evaluated fallback); 15 of 15 mutations are killed; the plan's probe on local
+  packages draws the same labels in Debug and in Release, with 25 of its 65 cases changed from 4.14.8's, each to the
+  value the call received; the issue's own stack (4.14.8's scratch project on local packages) prints `'A1'`,
+  `'Blue'`, `'x'`, `'blue'`, `'Blue'` and `'S1'` through `query.cs assertions`; and the woven probe grows by 2,560 bytes
+  (about 6.7%) for its 42 statements, with the weave's time within noise.
+- Checks: the core suite passes 7,340 with 2 skipped after the version bump, the weaver suite passes in Release on
+  net8.0, net9.0 and net10.0, the full Playwright suite passes 1,026 with 28 skipped, and `release.slnf` builds in
+  Release for every target.
+
 ## [4.14.11] - 2026-10-12
 
 **Patch - an audit of the xUnit v2 composition plan (#132, #123) and the adapter capture gaps plan, released from 4.11.1

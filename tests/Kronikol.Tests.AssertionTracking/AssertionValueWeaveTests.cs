@@ -3,9 +3,10 @@ using Microsoft.CodeAnalysis;
 namespace Kronikol.Tests.AssertionTracking;
 
 /// <summary>
-/// #163 through the weave (ASSERTION_VALUE_SUBSTITUTION_PLAN facts 11 to 13), in Debug and in Release: the issue's
-/// statements label the values they compared, a Shouldly argument holding a join captures its values (F7), and
-/// <c>[SuppressAssertionTracking]</c> covers the code the compiler moves out of a method or class (F8).
+/// #163 through the weave (ASSERTION_VALUE_SUBSTITUTION_PLAN facts 11 to 13, and R2), in Debug and in Release: the
+/// issue's statements label the values they compared, read from each argument as the assertion received it (Q3); a
+/// Shouldly argument holding a join is labelled by its value (F7); constants and code with no variable in it stay as
+/// written; and <c>[SuppressAssertionTracking]</c> covers the code the compiler moves out of a method or class (F8).
 /// </summary>
 public class AssertionValueWeaveTests
 {
@@ -91,6 +92,131 @@ public class AssertionValueWeaveTests
                 var expected = new Order();
                 actual.Colour.ToString().ShouldBe(expected.Colour.ToString());
             }
+
+            public static void Inside_satisfy_all_conditions()
+            {
+                var actual = new Order();
+                var expected = new Order();
+                actual.ShouldSatisfyAllConditions(
+                    () => actual.Colour.ToString().ShouldBe(expected.Colour.ToString()),
+                    () => actual.Lines.First().ShouldBe(expected.Lines.First()));
+            }
+        }
+
+        public static class Defaults
+        {
+            public static StringCompareShould Compare => StringCompareShould.IgnoreCase;
+        }
+
+        public static class Arguments
+        {
+            public static readonly Order StaticExpected = new Order();
+
+            public static void Static_field_chain()
+            {
+                var actual = new Order();
+                actual.Colour.ToString().ShouldBe(StaticExpected.Colour.ToString());
+            }
+
+            public static void String_constant()
+            {
+                var actual = new Order();
+                actual.Id.ShouldBe("A1");
+            }
+
+            public static void Number_constant()
+            {
+                var count = 2;
+                count.ShouldBe(2);
+            }
+
+            public static void Enum_constant()
+            {
+                var actual = new Order();
+                actual.Colour.ShouldBe(Colour.Blue);
+            }
+
+            public static void Variable_alone()
+            {
+                var actual = new Order();
+                var expected = "A1";
+                actual.Id.ShouldBe(expected);
+            }
+
+            public static void Value_type_argument()
+            {
+                var actual = new Order();
+                var expected = new Order();
+                actual.Lines.Count.ShouldBe(expected.Lines.Count + 0);
+            }
+
+            public static void Comparison_argument()
+            {
+                var actual = new Order();
+                var expected = new Order();
+                actual.Id.Equals("A1").ShouldBe(expected.Id == "A1");
+            }
+
+            public static void Char_join()
+            {
+                // Each branch pushes an int32 constant: only the parameter's type says the value is a char.
+                var actual = new Order();
+                var flag = true;
+                actual.Id[0].ShouldBe(flag ? 'A' : 'B');
+            }
+
+            public static void Interpolated_argument()
+            {
+                var actual = new Order { Id = "A1-1" };
+                var expected = new Order();
+                actual.Id.ShouldBe($"{expected.Id}-1");
+            }
+
+            public static void Argument_that_throws()
+            {
+                var actual = new Order();
+                var empty = new Order { Inner = null };
+                actual.Id.ShouldBe(empty.Inner!.Value);
+            }
+
+            public static void Fluent_join()
+            {
+                var actual = new Order();
+                var expected = new Order();
+                var flag = false;
+                actual.Id.Should().Be(flag ? "none" : expected.Id);
+            }
+
+            public static void Fluent_because()
+            {
+                var actual = new Order();
+                var expected = new Order();
+                actual.Id.Should().Be(expected.Id.Trim(), "ids match");
+            }
+
+            public static void Fluent_because_holding_a_variable()
+            {
+                var actual = new Order();
+                var expected = new Order();
+                var who = "the buyer";
+                actual.Id.Should().Be(expected.Id.Trim(), $"ids match for {who}");
+            }
+
+            public static void Shouldly_message_in_a_variable()
+            {
+                var actual = new Order();
+                var expected = new Order();
+                var why = "ids match";
+                actual.Id.ShouldBe(expected.Id.Trim(), why);
+            }
+
+            public static void Argument_after_a_custom_message()
+            {
+                // Shouldly 4.3.0 takes the custom message before the comparison's options here.
+                var actual = new Order();
+                var expected = new Order();
+                actual.Id.ShouldBe(expected.Id.ToLowerInvariant(), "ids", Defaults.Compare);
+            }
         }
 
         public static class Joins
@@ -133,22 +259,58 @@ public class AssertionValueWeaveTests
                 var why = "the id";
                 actual.Id.ShouldBe(flag ? expected.Id : "none", $"{why} matters");
             }
+
+            public static void Join_in_a_custom_message_taken()
+            {
+                var actual = new Order();
+                var expected = new Order();
+                var flag = true;
+                actual.Id.ShouldBe(expected.Id.Trim(), flag ? "first" : "second");
+            }
+
+            public static void Join_in_a_custom_message_not_taken()
+            {
+                var actual = new Order();
+                var expected = new Order();
+                var flag = false;
+                actual.Id.ShouldBe(expected.Id.Trim(), flag ? "first" : "second");
+            }
         }
         """;
 
+    // Each argument reads the value the assertion received for it (R2, Q3): 4.14.8 read 'Blue'.ToString(), the
+    // value before the call, and showed a list's First(), a Count(...) and a join's branches as code.
     public static TheoryData<string, string, string> IssueLabels => new()
     {
-        { "Issue", "Call_after_a_member", "Actual colour should be 'Blue'.ToString()" },
-        { "Issue", "First_of_a_list", "First value of actual lines should be expected.Lines.First()" },
-        { "Issue", "Two_calls", "Actual colour to lower invariant() should be 'Blue'.ToString().ToLowerInvariant()" },
-        { "Issue", "Fluent_call_after_a_member", "Actual colour should be 'Blue'.ToString()" },
-        { "Issue", "Member_after_a_call", "Response split id should be splits.First().SplitId" },
-        { "Issue", "Call_named_like_a_property", "Actual lines count(l => l == \"x\") should be [ expected.Lines.Count(l => l == \"x\") ]" },
-        { "Joins", "Conditional", "Actual id should be 'True' ? 'A1' : \"none\"" },
-        { "Joins", "Coalesce", "Actual id should be 'null' ?? 'A1'" },
+        { "Issue", "Call_after_a_member", "Actual colour should be 'Blue'" },
+        { "Issue", "First_of_a_list", "First value of actual lines should be 'x'" },
+        { "Issue", "Two_calls", "Actual colour to lower invariant() should be 'blue'" },
+        { "Issue", "Fluent_call_after_a_member", "Actual colour should be 'Blue'" },
+        { "Issue", "Member_after_a_call", "Response split id should be 'S1'" },
+        { "Issue", "Call_named_like_a_property", "Actual lines count(l => l == \"x\") should be '1'" },
+        { "Joins", "Conditional", "Actual id should be 'A1'" },
+        { "Joins", "Coalesce", "Actual id should be 'A1'" },
         { "Joins", "Null_conditional", "Value should be 'v'" },
-        { "Joins", "Join_before_a_custom_message", "Actual id should be 'True' ? 'A1' : \"none\"" },
-        { "Joins", "Message_holding_a_variable_after_a_join", "Actual id should be 'True' ? 'A1' : \"none\"" },
+        { "Joins", "Join_before_a_custom_message", "Actual id should be 'A1'" },
+        { "Joins", "Message_holding_a_variable_after_a_join", "Actual id should be 'A1'" },
+        // A join in the last argument ends at the call itself: one of its branches jumps straight there.
+        { "Joins", "Join_in_a_custom_message_taken", "Actual id should be 'A1'" },
+        { "Joins", "Join_in_a_custom_message_not_taken", "Actual id should be 'A1'" },
+        { "Arguments", "Static_field_chain", "Actual colour should be 'Blue'" },
+        { "Arguments", "String_constant", "Actual id should be \"A1\"" },
+        { "Arguments", "Number_constant", "Count should be 2" },
+        { "Arguments", "Enum_constant", "Actual colour should be Blue" },
+        { "Arguments", "Variable_alone", "Actual id should be 'A1'" },
+        { "Arguments", "Value_type_argument", "Actual lines count should be '2'" },
+        { "Arguments", "Char_join", "Actual id[0] should be 'A'" },
+        { "Arguments", "Interpolated_argument", "Actual id should be 'A1-1'" },
+        { "Arguments", "Comparison_argument", "Actual id equals(\"A1\") should be 'True'" },
+        { "Arguments", "Fluent_join", "Actual id should be 'A1'" },
+        { "Arguments", "Fluent_because", "Actual id should be 'A1', \"ids match\"" },
+        // The plan's section 8 item 4: a variable in a because is the reason's text, never a value put inside it.
+        { "Arguments", "Fluent_because_holding_a_variable", "Actual id should be 'A1', $\"ids match for {who}\"" },
+        { "Arguments", "Shouldly_message_in_a_variable", "Actual id should be 'A1'" },
+        { "Arguments", "Argument_after_a_custom_message", "Actual id should be 'a1', 'IgnoreCase'" },
     };
 
     [Theory]
@@ -165,6 +327,21 @@ public class AssertionValueWeaveTests
     }
 
     [Fact]
+    public void A_statement_inside_satisfy_all_conditions_labels_its_values()
+    {
+        // The issue's suite drew these inside ShouldSatisfyAllConditions as well as outside it: each condition is a
+        // lambda, woven as a statement of its own.
+        foreach (var optimization in new[] { OptimizationLevel.Debug, OptimizationLevel.Release })
+        {
+            var (thrown, notes) = WovenRun.Run(Woven(optimization), "Issue", "Inside_satisfy_all_conditions");
+
+            Assert.True(thrown is null, $"{optimization}: {thrown}");
+            Assert.Contains(notes, n => n.Label == "Actual colour should be 'Blue'");
+            Assert.Contains(notes, n => n.Label == "First value of actual lines should be 'x'");
+        }
+    }
+
+    [Fact]
     public void A_failing_statement_labels_the_expected_value_its_message_names()
     {
         foreach (var optimization in new[] { OptimizationLevel.Debug, OptimizationLevel.Release })
@@ -174,8 +351,55 @@ public class AssertionValueWeaveTests
             Assert.NotNull(thrown);
             var note = Assert.Single(notes);
             Assert.False(note.Passed);
-            Assert.Equal("Actual colour should be 'Blue'.ToString()", note.Label);
+            Assert.Equal("Actual colour should be 'Blue'", note.Label);
             Assert.Contains("\"Blue\"", note.Message);
+        }
+    }
+
+    [Fact]
+    public void An_argument_the_statement_threw_before_evaluating_is_shown_as_written()
+    {
+        // The value's slot still holds the plain object the weave started it with, so the label reads the variable's
+        // chain, which here cannot be read: as written, never a value the assertion did not receive.
+        foreach (var optimization in new[] { OptimizationLevel.Debug, OptimizationLevel.Release })
+        {
+            var (thrown, notes) = WovenRun.Run(Woven(optimization), "Arguments", "Argument_that_throws");
+
+            Assert.IsType<NullReferenceException>(thrown);
+            var note = Assert.Single(notes);
+            Assert.False(note.Passed);
+            Assert.Equal("Actual id should be empty.Inner.Value", note.Label);
+        }
+    }
+
+    [Theory]
+    [InlineData("Fluent_because", "\"ids match\"")]
+    [InlineData("Shouldly_message_in_a_variable", "why")]
+    public void A_message_argument_is_not_captured_as_a_value(string method, string argument)
+    {
+        // FluentAssertions' because and Shouldly's customMessage are the library's to show: the weave never names
+        // them among the values it passes (an argument's value is passed under its text).
+        foreach (var optimization in new[] { OptimizationLevel.Debug, OptimizationLevel.Release })
+        {
+            using var module = Mono.Cecil.ModuleDefinition.ReadModule(Woven(optimization), new Mono.Cecil.ReaderParameters { InMemory = true });
+            var woven = module.GetType("Arguments").Methods.Single(m => m.Name == method);
+
+            Assert.Contains(woven.Body.Instructions, i => i.OpCode == Mono.Cecil.Cil.OpCodes.Ldstr && (string)i.Operand == "expected.Id.Trim()");
+            Assert.DoesNotContain(woven.Body.Instructions, i => i.OpCode == Mono.Cecil.Cil.OpCodes.Ldstr && (string)i.Operand == argument);
+        }
+    }
+
+    [Fact]
+    public void A_variable_passed_alone_is_named_once()
+    {
+        // A bare variable is captured as a variable already (its members are read off it); the weave does not pass
+        // it a second time as an argument.
+        foreach (var optimization in new[] { OptimizationLevel.Debug, OptimizationLevel.Release })
+        {
+            using var module = Mono.Cecil.ModuleDefinition.ReadModule(Woven(optimization), new Mono.Cecil.ReaderParameters { InMemory = true });
+            var woven = module.GetType("Arguments").Methods.Single(m => m.Name == "Variable_alone");
+
+            Assert.Single(woven.Body.Instructions, i => i.OpCode == Mono.Cecil.Cil.OpCodes.Ldstr && (string)i.Operand == "expected");
         }
     }
 

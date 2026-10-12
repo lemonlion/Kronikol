@@ -1,0 +1,133 @@
+Kronikol 4.16.0.0 · woven: True
+== WovenShouldly.S01_property: passed
+   ✓ Actual id should be 'A1'
+== WovenShouldly.S02_enum_property: passed
+   ✓ Actual colour should be 'Blue'
+== WovenShouldly.S03_ToString: passed
+   ✓ Actual colour should be 'Blue'
+== WovenShouldly.S04_First: passed
+   ✓ First value of actual lines should be 'x'
+== WovenShouldly.S05_two_calls: passed
+   ✓ Actual colour to lower invariant() should be 'blue'
+== WovenShouldly.S06_Count_property: passed
+   ✓ Actual lines count should be '2'
+== WovenShouldly.S07_Count_method: passed
+   ✓ Actual lines count() should be '2'
+== WovenShouldly.S08_Count_with_predicate: passed
+   ✓ Actual lines count(l => l == "x") should be '1'
+== WovenShouldly.S09_indexer: passed
+   ✓ Actual lines[0] should be 'x'
+== WovenShouldly.S10_call_then_property: passed
+   ✓ First value of actual lines length should be '1'
+== WovenShouldly.S11_call_on_a_one_segment_path: passed
+   ✓ Actual id should be 'A1'
+== WovenShouldly.S12_call_with_arguments: passed
+   ✓ Actual colour to string("G") should be 'Blue'
+== WovenShouldly.S13_generic_method: passed
+   ✓ Actual get<int>() should be '0'
+== WovenShouldly.S14_null_conditional: passed
+   ✓ Value should be 'v'
+== WovenShouldly.S15_null_conditional_on_a_null: passed
+   ✓ Value should be 'null'
+== WovenShouldly.S16_unprintable_property: passed
+   ✓ Plain should be same as expected.Plain
+== WovenShouldly.S17_four_segments: passed
+   ✓ Actual box inner value length should be '1'
+== WovenShouldly.S18_null_forgiving: passed
+   ✓ Actual inner value should be 'v'
+== WovenShouldly.S19_nameof: passed
+   ✓ "Colour" should be nameof(expected.Colour)
+== WovenShouldly.S20_interpolated: passed
+   ✓ Actual id should be 'A1'
+== WovenShouldly.S21_field: passed
+   ✓ Actual field should be 'f'
+== WovenShouldly.S22_arithmetic: passed
+   ✓ Actual code should be '7'
+== WovenShouldly.S23_null_property: passed
+   ✓ Actual missing should be 'null'
+== WovenShouldly.S24_issue_SplitId: passed
+   ✓ Actual id should be 'A1'
+== WovenShouldly.S25_failing_ToString: threw ShouldAssertException
+   ✗ Actual colour should be 'Blue'⏎actual.Colour.ToString()⏎    should be⏎"Blue"⏎    but was⏎"Red"⏎    difference⏎Difference     |  |    |    |    |   ⏎               | \|/  \|/  \|/  \|/  ⏎Index          | 0    1    2    3    ⏎Expected Value | B    l    u    e    ⏎Actual Value   | R    e    d         ⏎Expected Code  | 66   108  117  101  ⏎Actual Code    | 82   101  100       
+== WovenShouldly.S26_ShouldSatisfyAllConditions: passed
+   ✓ Actual colour should be 'Blue'
+   ✓ Actual id should be 'A1'
+   ✓ Actual should satisfy all conditions
+== WovenShouldly.S27_value_inside_a_call: passed
+   ✓ Actual id should be 'A1'
+== WovenShouldly.S28_static_field: passed
+   ✓ Actual colour should be 'Blue'
+== WovenShouldly.S29_local_holding_the_value: passed
+   ✓ Actual colour should be 'Blue'
+== WovenShouldly.S30_ternary_argument: passed
+   ✓ Actual id should be 'A1'
+== WovenShouldly.S31_coalesce_argument: passed
+   ✓ Actual id should be 'A1'
+== WovenFluent.F01_property: passed
+   ✓ Actual id should be 'A1'
+== WovenFluent.F02_ToString: passed
+   ✓ Actual colour should be 'Blue'
+== WovenFluent.F03_First: passed
+   ✓ First value of actual lines should be 'x'
+== WovenFluent.F04_unprintable_property: passed
+   ✓ Plain should be same as expected.Plain
+== WovenFluent.F05_Count_with_predicate: passed
+   ✓ Actual lines count(l => l == "x") should be '1'
+== WovenFluent.F06_failing_ToString: threw AssertionFailedException
+   ✗ Actual colour should be 'Blue'⏎Expected actual.Colour.ToString() to be "Blue" with a length of 4, but "Red" has a length of 3,<U+200B><U+200B>⏎differs near "Red" (index 0).
+== WovenFluent.F07_indexer: passed
+   ✓ Actual lines[0] should be 'x'
+== WovenFluent.F08_null_conditional_on_a_null: passed
+   ✓ Value should be 'null'
+== WovenFluent.F09_coalesce_argument: passed
+   ✓ Actual id should be 'A1'
+== ThatCases.T01_property: passed
+   ✓ Actual id should be 'A1'
+== ThatCases.T03_ToString: passed
+   ✓ Actual colour should be 'Blue'.ToString()
+== ThatCases.T04_First: passed
+   ✓ First value of actual lines should be expected.Lines.First()
+== ThatCases.T08_Count_with_predicate: passed
+   ✓ Actual lines count(l => l == "x") should be [ expected.Lines.Count(l => l == "x") ]
+== ThatCases.T09_indexer: passed
+   ✓ Actual lines[0] should be expected.Lines[0]
+== ThatCases.T15_null_conditional_on_a_null: passed
+   ✓ Value should be 'null'
+== ThatCases.T16_unprintable_property: passed
+   ✓ Plain should be same as expected.Plain
+== ThatCases.T17_four_segments: passed
+   ✓ Actual box inner value length should be '1'
+== ThatCases.T19_nameof: passed
+   ✓ "Colour" should be nameof(expected.Colour)
+== ThatCases.T22_arithmetic: passed
+   ✓ Actual code should be expected.Code + 0
+== DirectCases.D01_getter_that_throws: passed
+   ✓ Actual fine should be faulty.Throws
+== DirectCases.D02_null_root: passed
+   ✗ Actual id should be expected.Id⏎Object reference not set to an instance of an object.
+== DirectCases.D03_null_in_the_middle: passed
+   ✗ Actual id should be expected.Inner.Value⏎Object reference not set to an instance of an object.
+== DirectCases.D04_TUnit_property: passed
+   ✓ Actual id is equal to 'A1'
+== DirectCases.D05_TUnit_ToString: passed
+   ✓ Actual colour is equal to 'Blue'.ToString()
+== DirectCases.D06_root_then_indexer: passed
+   ✓ Actual id should be ids[0]
+== DirectCases.D07_root_then_call: passed
+   ✓ Actual id should be 'A1'.Trim()
+== DirectCases.D08_FluentAssertions_ToString: passed
+   ✓ Actual colour should be 'Blue'.ToString()
+== DirectCases.D09_unprintable_root_then_call: passed
+   ✓ Actual name should be 'plain'.ToUpper()
+== DirectCases.D10_value_holding_to_string: passed
+   ✓ Actual note should be 'call to string() now'
+== SuppressedMethods.U01_lambda_in_a_suppressed_method: passed
+   (no note)
+== SuppressedMethods.U02_Track_That_in_a_suppressed_method: passed
+   ✓ Actual id should be 'A1'
+== SuppressedMethods.U03_statement_in_a_suppressed_method: passed
+   (no note)
+== SuppressedType.U04_async_method_in_a_suppressed_type: passed
+   (no note)
+== SuppressedType.U05_statement_in_a_suppressed_type: passed
+   (no note)

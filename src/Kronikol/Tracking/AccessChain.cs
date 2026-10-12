@@ -367,6 +367,11 @@ internal sealed class AccessChain
         return i;
     }
 
+    /// <summary>Whether <paramref name="text"/> is one name: a variable's, as the weave passes it, rather than an
+    /// argument's text.</summary>
+    public static bool IsIdentifier(string text) =>
+        text.Length > 0 && IsIdentifierStart(text[0]) && text.All(IsIdentifierChar);
+
     private static bool IsIdentifierStart(char c) => char.IsLetter(c) || c == '_';
 
     private static bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';

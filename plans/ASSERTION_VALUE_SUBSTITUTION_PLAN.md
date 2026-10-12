@@ -3,7 +3,8 @@
 **Date:** 2026-10-11 · **Repo version:** 4.14.6 (`main` at d59843fa; line numbers are for that commit, and
 `src/Kronikol/Tracking/` is the same as at 98c4806d, the commit the issue cites) · **Status:** **green-lit in full
 by the owner on 2026-10-12** ("implement the plan in full"), every question in §11 as recommended: Q1 the scalar
-prefix, Q2 as written, Q3 taken as R2 (a minor), Q4 F7 to F10 in R1, Q5 the cuts left. Roadmap row 1.27. Executing.
+prefix, Q2 as written, Q3 taken as R2 (a minor), Q4 F7 to F10 in R1, Q5 the cuts left. Roadmap row 1.27. Executed:
+R1 as 4.14.8, R2 as 4.16.0 (the Log).
 
 Evidence labels: **RUN** (measured on 2026-10-11 with the published 4.14.6 packages, Shouldly 4.3.0 and
 FluentAssertions 6.12.1 on net8.0, built by SDK 10.0.300, in Debug and Release; the probe and its saved output are in
@@ -703,3 +704,40 @@ any page this table missed, and the skill references (`.claude/skills/`, `templa
   stack, a scratch copy of the xUnit v2 template on net8.0 with Shouldly 4.3.0 and FluentAssertions 6.12.1, read
   through `kronikol query assertions` (`issue-stack-query.txt`). The plan's roadmap row is 1.27: a cloud session's
   PR #164 (4.15.0, in review) had taken 1.26 on 2026-10-11, so R2 takes 4.16.0.
+- 2026-10-12, R2 built as 4.16.0 (4.15.0 is the number open PR #164 is written for). What changed from §3.10 while
+  building it:
+  - **The arrays are built where they were, and the call fills its slots.** The weave still builds the names and
+    values arrays before the statement; each captured argument's slot starts as a plain `object`, and the weave
+    stores the argument's value into it just in front of the call (it stores what the call takes from the stack from
+    the lowest captured argument up, copies the captured ones, and loads them all back). A branch to the call, which a
+    join in the last argument makes (a custom message written `flag ? "a" : "b"`), is sent to those stores, or one
+    path would skip them (`Join_in_a_custom_message_taken` and `_not_taken`).
+  - **What is captured.** Each argument of Shouldly's call, or of the first call that takes what FluentAssertions'
+    `Should()` returned, unless the library shows it (`customMessage`, `because`, `becauseArgs`, a
+    `[CallerArgumentExpression]` parameter), its text evaluates nothing (a constant, `new[] { 1, 2 }`, a lambda; an
+    interpolated string with a hole does evaluate something, `Interpolated_argument`), it comes straight from a constant
+    (`ldc`, `ldstr`, `ldnull`, perhaps converted or boxed), it is a variable already captured
+    (`A_variable_passed_alone_is_named_once`), or its value cannot be held in an object (a by-ref, a pointer, a ref
+    struct, a delegate, an expression tree). A value type is boxed as the parameter's type with the call's type
+    arguments put in, so a `?:` of two character constants, which the stack holds as `int32`, reads `'A'` and not `'65'`
+    (`Char_join`). Awaited assertions keep R1's reading: their arrays are built at the merge point, after the call.
+  - **The argument texts are matched against the statement as written**, before `WithoutCustomMessage` cuts
+    Shouldly's message: Shouldly 4.3.0 has 13 methods whose `customMessage` comes before another parameter
+    (`ShouldBe(string, string, string customMessage, StringCompareShould options)` among them), and the cut text put
+    the next argument out of place (`Argument_after_a_custom_message`).
+  - **The runtime** tells an argument's text from a variable's name by `AccessChain.IsIdentifier`, adds an
+    argument's value before any chain is read so that it wins, and the formatter replaces each top-level argument
+    whose canonical text is a key before it looks at the chains of the others.
+  - **§8 item 4 checked:** a variable in FluentAssertions' `because` (`$"ids match for {who}"`) is never put into
+    the reason's text (`Fluent_because_holding_a_variable`).
+  - **S0 of R2 (§9, Q3's cost)** was measured on the plan's probe rather than the weaver's largest fixture: the woven
+    `Probe.dll` grows by 2,560 bytes (6.6% in Debug, 6.8% in Release) against the published 4.14.8, for the same 42
+    statements, and the weave's time stays within noise (`r2/cost.txt`). The owner's suite remains the owner's to run.
+  Proofs, in `harness/r2/`: red on v4.14.8 for 26 of the 46 weaver facts, each on 4.14.8's own form (the 20 that pass
+  there are R1's suppression facts and guards: constants, a variable alone, `?.`, an argument that threw), 8 of the 9
+  new Track facts (the ninth is the not-evaluated guard) and the new Playwright fact; 15 of 15 mutations killed
+  (`mutations.txt`; N8 and N14 survived the first run, which showed two facts too weak, so `Char_join` and a join in
+  the two-argument row were added); the probe on local packages `4.16.0-local.163`, Debug equal to Release, with 25 of
+  its 65 cases changed from `r1/`, each to the value the call received (`compare-with-r1.txt`); and the issue's stack,
+  R1's scratch project on `4.16.0-local.163`, prints `'A1'`, `'Blue'`, `'x'`, `'blue'`, `'Blue'` and `'S1'`
+  (`issue-stack-query.txt`).

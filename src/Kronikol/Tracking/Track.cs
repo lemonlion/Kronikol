@@ -146,7 +146,9 @@ public static class Track
     /// Called by the IL weaver (AssertionWeaver) to log a passing assertion with runtime variable values.
     /// The weaver emits arrays of variable names and their boxed values; this method reads each access chain that
     /// starts at one of them (members up to the first method call or index) and puts a value in the label only in
-    /// place of exactly the code it was read for. A chain it cannot read is shown as written.
+    /// place of exactly the code it was read for. A chain it cannot read is shown as written. A name that is not an
+    /// identifier is an argument of the assertion call as written, and its value is the one the call received
+    /// (from 4.16.0's weaver): it replaces that whole argument.
     /// </summary>
     public static void AssertionPassedWithValues(string expression, string[] varNames, object?[] varValues, string? callerFilePath = null, int callerLineNumber = 0)
     {
@@ -169,7 +171,9 @@ public static class Track
     /// Called by the IL weaver (AssertionWeaver) to log a failing assertion with runtime variable values.
     /// The weaver emits arrays of variable names and their boxed values; this method reads each access chain that
     /// starts at one of them (members up to the first method call or index) and puts a value in the label only in
-    /// place of exactly the code it was read for. A chain it cannot read is shown as written.
+    /// place of exactly the code it was read for. A chain it cannot read is shown as written. A name that is not an
+    /// identifier is an argument of the assertion call as written, and its value is the one the call received
+    /// (from 4.16.0's weaver): it replaces that whole argument.
     /// </summary>
     public static void AssertionFailedWithValues(string expression, string failureMessage, string[] varNames, object?[] varValues, string? callerFilePath = null, int callerLineNumber = 0)
     {
@@ -252,10 +256,13 @@ public static class Track
     }
 
     /// <summary>
-    /// The values the weave passed (each captured name and its value), read for every access chain in the statement
-    /// that starts at one of them, the subject's included: a chain's value under its own text, or the part read before
-    /// a method call or an index when that is a single value (<see cref="AccessChain"/>). A chain that cannot be read
-    /// gets no value and stays as written in the label (#163).
+    /// The values the weave passed, under the canonical text of the code each is the value of. A name that is an
+    /// identifier is a variable, read for every access chain in the statement that starts at it, the subject's
+    /// included: a chain's value under its own text, or the part read before a method call or an index when that is a
+    /// single value (<see cref="AccessChain"/>); a chain that cannot be read gets no value and stays as written (#163).
+    /// Any other name is an argument's text, passed with the value the assertion received for it (from 4.16.0's weave):
+    /// that value is the argument's, and wins over a value read off a variable afterwards. An argument the statement
+    /// threw before evaluating is passed as a plain <c>object</c>, which prints as its type name and so as nothing.
     /// </summary>
     private static Dictionary<string, string>? ResolveVariableValues(string expression, string[] varNames, object?[] varValues)
     {
@@ -265,10 +272,16 @@ public static class Track
         try
         {
             var roots = new Dictionary<string, object?>(StringComparer.Ordinal);
-            for (var i = 0; i < varNames.Length; i++)
-                roots.TryAdd(varNames[i], i < varValues.Length ? varValues[i] : null);
-
             var values = new ChainValues();
+            for (var i = 0; i < varNames.Length; i++)
+            {
+                var value = i < varValues.Length ? varValues[i] : null;
+                if (AccessChain.IsIdentifier(varNames[i]))
+                    roots.TryAdd(varNames[i], value);
+                else if (FormatValue(value) is { } formatted)
+                    values.TryAdd(AccessChain.CanonicalKey(varNames[i]), formatted);
+            }
+
             var read = new HashSet<string>(StringComparer.Ordinal);
             foreach (var chain in AccessChain.Find(expression))
             {

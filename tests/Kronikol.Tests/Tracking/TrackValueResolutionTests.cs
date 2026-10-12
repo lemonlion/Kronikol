@@ -458,6 +458,60 @@ public class TrackValueResolutionTests : IDisposable
         Assert.EndsWith(" should be map['k1'].Id", label);
     }
 
+    // --- An argument's own value, passed by the weave under the argument's text (ASSERTION_VALUE_SUBSTITUTION_PLAN Q3) ---
+
+    [Fact]
+    public void An_argument_value_replaces_the_whole_argument()
+    {
+        var label = Label("actual.Colour.ToString().ShouldBe(expected.Colour.ToString())",
+            ["expected", "expected.Colour.ToString()"], [Expected, "Blue"]);
+
+        Assert.EndsWith(" should be 'Blue'", label);
+    }
+
+    [Fact]
+    public void An_argument_that_was_not_evaluated_falls_back_to_the_values_read()
+    {
+        // The weave starts an argument's value as a plain object, which prints as its type name: the statement threw
+        // before the argument was evaluated, and the label reads the variable's chain as it would without the value.
+        var label = Label("actual.Colour.ToString().ShouldBe(expected.Colour.ToString())",
+            ["expected", "expected.Colour.ToString()"], [Expected, new object()]);
+
+        Assert.EndsWith(" should be 'Blue'.ToString()", label);
+    }
+
+    [Fact]
+    public void An_argument_value_wins_over_a_value_read_afterwards()
+    {
+        // The argument's value is what the assertion compared; the variable's member is read after the statement ran.
+        var label = Label("actual.ShouldBe(expected.Code)", ["expected", "expected.Code"], [Expected, 6]);
+
+        Assert.EndsWith(" should be '6'", label);
+    }
+
+    [Fact]
+    public void An_argument_value_of_null_reads_null()
+    {
+        var label = Label("actual.ShouldBe(expected.Missing ?? other)",
+            ["expected", "expected.Missing ?? other"], [Expected, null]);
+
+        Assert.EndsWith(" should be 'null'", label);
+    }
+
+    [Theory]
+    [InlineData("actual.ShouldBe(flag ? expected.Id : \"none\")", "flag ? expected.Id : \"none\"", "A1", " should be 'A1'")]
+    [InlineData("actual.ShouldBe(expected.Inner?.Value)", "expected.Inner?.Value", "w", " should be 'w'")]
+    [InlineData("actual.ShouldBe(expected\n    .Inner!\n    .Value)", "expected\n    .Inner!\n    .Value", "w", " should be 'w'")]
+    [InlineData("actual.ShouldBe(expected.Lines.Count(l => l == \"x\"))", "expected.Lines.Count(l => l == \"x\")", 1, " should be '1'")]
+    [InlineData("actual.Should().BeOneOf(expected.Id, flag ? other : \"none\")", "flag ? other : \"none\"", "B2", " should be one of 'A1', 'B2'")]
+    public void An_argument_value_is_matched_to_its_argument_as_written(string expression, string argument, object value, string argumentPart)
+    {
+        // Each value differs from what reading the variable gives ('v', 2), so only the argument's own value passes.
+        var label = Label(expression, ["expected", argument], [Expected, value]);
+
+        Assert.EndsWith(argumentPart, label);
+    }
+
     // --- Test helpers ---
 
     private enum Colour { Red, Blue }

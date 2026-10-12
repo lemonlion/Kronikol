@@ -1,0 +1,80 @@
+WovenShouldly.S03_ToString:
+   old  ✓ Actual colour should be 'Blue'.ToString()
+   new  ✓ Actual colour should be 'Blue'
+WovenShouldly.S04_First:
+   old  ✓ First value of actual lines should be expected.Lines.First()
+   new  ✓ First value of actual lines should be 'x'
+WovenShouldly.S05_two_calls:
+   old  ✓ Actual colour to lower invariant() should be 'Blue'.ToString().ToLowerInvariant()
+   new  ✓ Actual colour to lower invariant() should be 'blue'
+WovenShouldly.S07_Count_method:
+   old  ✓ Actual lines count() should be expected.Lines.Count()
+   new  ✓ Actual lines count() should be '2'
+WovenShouldly.S08_Count_with_predicate:
+   old  ✓ Actual lines count(l => l == "x") should be [ expected.Lines.Count(l => l == "x") ]
+   new  ✓ Actual lines count(l => l == "x") should be '1'
+WovenShouldly.S09_indexer:
+   old  ✓ Actual lines[0] should be expected.Lines[0]
+   new  ✓ Actual lines[0] should be 'x'
+WovenShouldly.S10_call_then_property:
+   old  ✓ First value of actual lines length should be expected.Lines.First().Length
+   new  ✓ First value of actual lines length should be '1'
+WovenShouldly.S11_call_on_a_one_segment_path:
+   old  ✓ Actual id should be 'A1'.ToString()
+   new  ✓ Actual id should be 'A1'
+WovenShouldly.S12_call_with_arguments:
+   old  ✓ Actual colour to string("G") should be 'Blue'.ToString("G")
+   new  ✓ Actual colour to string("G") should be 'Blue'
+WovenShouldly.S13_generic_method:
+   old  ✓ Actual get<int>() should be expected.Get<int>()
+   new  ✓ Actual get<int>() should be '0'
+WovenShouldly.S20_interpolated:
+   old  ✓ Actual id should be $"{expected.Id}"
+   new  ✓ Actual id should be 'A1'
+WovenShouldly.S22_arithmetic:
+   old  ✓ Actual code should be '7' + 0
+   new  ✓ Actual code should be '7'
+WovenShouldly.S24_issue_SplitId:
+   old  ✓ Actual id should be splits.First().Id
+   new  ✓ Actual id should be 'A1'
+WovenShouldly.S25_failing_ToString:
+   old  ✗ Actual colour should be 'Blue'.ToString()⏎actual.Colour.ToString()⏎    should be⏎"Blue"⏎    but was⏎"Red"⏎    difference⏎Difference     |  |    |    |    |   ⏎               | \|/  \|/  \|/  \|/  ⏎Index          | 0    1    2    3    ⏎Expected Value | B    l    u    e    ⏎Actual Value   | R    e    d         ⏎Expected Code  | 66   108  117  101  ⏎Actual Code    | 82   101  100
+   new  ✗ Actual colour should be 'Blue'⏎actual.Colour.ToString()⏎    should be⏎"Blue"⏎    but was⏎"Red"⏎    difference⏎Difference     |  |    |    |    |   ⏎               | \|/  \|/  \|/  \|/  ⏎Index          | 0    1    2    3    ⏎Expected Value | B    l    u    e    ⏎Actual Value   | R    e    d         ⏎Expected Code  | 66   108  117  101  ⏎Actual Code    | 82   101  100
+WovenShouldly.S26_ShouldSatisfyAllConditions:
+   old  ✓ Actual colour should be 'Blue'.ToString()
+   old  ✓ Actual id should be 'A1'
+   old  ✓ Actual should satisfy all conditions
+   new  ✓ Actual colour should be 'Blue'
+   new  ✓ Actual id should be 'A1'
+   new  ✓ Actual should satisfy all conditions
+WovenShouldly.S27_value_inside_a_call:
+   old  ✓ Actual id should be string.Concat('A1')
+   new  ✓ Actual id should be 'A1'
+WovenShouldly.S28_static_field:
+   old  ✓ Actual colour should be StaticExpected.Colour.ToString()
+   new  ✓ Actual colour should be 'Blue'
+WovenShouldly.S30_ternary_argument:
+   old  ✓ Actual id should be 'True' ? 'A1' : "none"
+   new  ✓ Actual id should be 'A1'
+WovenShouldly.S31_coalesce_argument:
+   old  ✓ Actual id should be 'null' ?? 'A1'
+   new  ✓ Actual id should be 'A1'
+WovenFluent.F02_ToString:
+   old  ✓ Actual colour should be 'Blue'.ToString()
+   new  ✓ Actual colour should be 'Blue'
+WovenFluent.F03_First:
+   old  ✓ First value of actual lines should be expected.Lines.First()
+   new  ✓ First value of actual lines should be 'x'
+WovenFluent.F05_Count_with_predicate:
+   old  ✓ Actual lines count(l => l == "x") should be [ expected.Lines.Count(l => l == "x") ]
+   new  ✓ Actual lines count(l => l == "x") should be '1'
+WovenFluent.F06_failing_ToString:
+   old  ✗ Actual colour should be 'Blue'.ToString()⏎Expected actual.Colour.ToString() to be "Blue" with a length of 4, but "Red" has a length of 3,<U+200B><U+200B>⏎differs near "Red" (index 0).
+   new  ✗ Actual colour should be 'Blue'⏎Expected actual.Colour.ToString() to be "Blue" with a length of 4, but "Red" has a length of 3,<U+200B><U+200B>⏎differs near "Red" (index 0).
+WovenFluent.F07_indexer:
+   old  ✓ Actual lines[0] should be expected.Lines[0]
+   new  ✓ Actual lines[0] should be 'x'
+WovenFluent.F09_coalesce_argument:
+   old  ✓ Actual id should be 'null' ?? 'A1'
+   new  ✓ Actual id should be 'A1'
+unchanged cases: 40 of 65

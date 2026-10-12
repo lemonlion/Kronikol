@@ -1,0 +1,15 @@
+R2's cost (plan section 9), measured 2026-10-12 on the plan's probe (42 woven statements), net8.0, SDK 10.0.300,
+Windows 11: the woven Probe.dll and the weave's own timing line, published 4.14.8 against local 4.16.0-local.163.
+Each build is one run, made beside another build on the same machine, so the milliseconds are within noise.
+
+                    4.14.8 (nuget.org)   4.16.0-local.163    change
+Debug  Probe.dll    38,912 bytes         41,472 bytes        +2,560 (+6.6%)
+Release Probe.dll   37,888 bytes         40,448 bytes        +2,560 (+6.8%)
+Debug  weave        443 ms               434 ms
+Release weave       353 ms               449 ms
+
+Both weave 42 statements in 42 methods. The 2,560 bytes are the stores, copies and reloads in front of each
+assertion call whose arguments are captured, and one more slot in each values array.
+
+A rerun after the interpolated-string fix (the final R2 code) gave the same sizes, and 313 ms (Debug) and 314 ms
+(Release) for the weave.

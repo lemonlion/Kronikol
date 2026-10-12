@@ -19,12 +19,15 @@ public class ShouldlyAssertionNoteTests : DiagramNotePlaywrightBase
     private string GenerateReport() =>
         GenerateReport("result.ShouldBe(expected)", "result\n    should be\n5\n    but was\n3", 5, "ShouldlyNote.html");
 
-    private string GenerateReport(string expression, string message, object expected, string fileName)
+    private string GenerateReport(string expression, string message, object expected, string fileName) =>
+        GenerateReport(expression, message, ["expected"], [expected], fileName);
+
+    private string GenerateReport(string expression, string message, string[] names, object?[] values, string fileName)
     {
         // Track's own call, the one the weave makes after a failing statement, under a test of its own.
         var testId = "shouldly-note-" + Guid.NewGuid().ToString("N");
         using (TestIdentityScope.Begin(testId, testId))
-            Track.AssertionFailedWithValues(expression, message, ["expected"], [expected], "OrderTests.cs", 42);
+            Track.AssertionFailedWithValues(expression, message, names, values, "OrderTests.cs", 42);
         var note = RequestResponseLogger.RequestAndResponseLogs
             .Single(l => l.TestId == testId && l.PlantUml is not null && l.PlantUml.Contains("<<assertionNote>>"))
             .PlantUml!;
@@ -102,6 +105,23 @@ public class ShouldlyAssertionNoteTests : DiagramNotePlaywrightBase
 
         Assert.Contains("Actual colour should be 'Blue'.ToString()", words);
         Assert.DoesNotContain("'null'", words);
+        Assert.Contains("should be \"Blue\" but was \"Red\"", words);
+    }
+
+    [Fact]
+    public async Task An_argument_value_note_paints_the_value_the_assertion_received()
+    {
+        // From 4.16.0 the weave passes each argument's value under the argument's text, and the note paints that
+        // value in place of the whole argument, where 4.14.8 painted the value read before the call.
+        await Page.GotoAsync(GenerateReport(
+            "actual.Colour.ToString().ShouldBe(expected.Colour.ToString())",
+            "actual.Colour.ToString()\n    should be\n\"Blue\"\n    but was\n\"Red\"",
+            ["expected", "expected.Colour.ToString()"], [new Expected(Colour.Blue), "Blue"], "ArgumentValueNote.html"));
+
+        var words = await PaintedWords();
+
+        Assert.Contains("Actual colour should be 'Blue'", words);
+        Assert.DoesNotContain("'Blue'.ToString()", words);
         Assert.Contains("should be \"Blue\" but was \"Red\"", words);
     }
 
