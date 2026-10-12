@@ -162,3 +162,7 @@ run from compiling source that changed while the suite ran.
   integration facts then hung after the TUnit component: section 5's build, run once per component, left MSBuild nodes
   for reuse that held the runner's redirected output open, and the runner waited for its end without a limit. Its
   children reuse no node now, and that wait is bounded.
+- **2026-10-12.** 4.14.11 published: Release run 38242711568, CI 38242706669 and CI Summary Preview 38242706677 passed,
+  and CodeQL 38242706971 passed. CI's template job created and ran the xUnit v3 template on net8.0 and the TUnit one on
+  net9.0, both passing. nuget.org listed all 62 ids at 12:47, the wiki has the audit's edits on 19 pages (`f369431`), and
+  Kronikol4J's ledger has its line (`9bd5008`). Questions Q1 to Q8 await the owner.
