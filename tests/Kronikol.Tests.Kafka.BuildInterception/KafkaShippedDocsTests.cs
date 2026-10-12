@@ -15,6 +15,23 @@ public class KafkaShippedDocsTests
 
     private const string Interceptor = "Kronikol.Extensions.Kafka.BuildInterception.KafkaBuildInterceptor";
 
+    private static string Remarks(string assembly, string member) =>
+        XDocument.Load(Path.Combine(AppContext.BaseDirectory, assembly + ".xml"))
+            .Descendants("member").Single(m => (string)m.Attribute("name")! == member)
+            .Element("remarks")!.Value;
+
+    // CI's Release run found it (plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md F25): with quick JIT off, the remedy the
+    // remarks give for tier-up, a method is compiled optimized at its first call, and the JIT can inline Build() into a
+    // method compiled before the patch, so the remarks must say when to enable.
+    [Fact]
+    public void The_interceptor_says_to_enable_before_the_code_that_builds_the_clients_first_runs()
+    {
+        var remarks = Remarks("Kronikol.Extensions.Kafka.BuildInterception", $"T:{Interceptor}");
+
+        Assert.Contains("before the code that builds the clients first runs", remarks, StringComparison.Ordinal);
+        Assert.Contains("inline", remarks, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Reset_says_the_patches_stay()
     {

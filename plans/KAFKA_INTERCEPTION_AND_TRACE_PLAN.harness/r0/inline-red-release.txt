@@ -1,0 +1,12 @@
+# F25, red: the released tree (8638a3d6, 4.16.2) unchanged, as CI runs it: dotnet test tests/Kronikol.Tests.Kafka.BuildInterception --configuration Release
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Subscribe_Is_Tracked_Through_Patched_Build [2 s]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.With_the_test_projects_quick_JIT_off_four_hundred_builds_are_all_tracked [2 s]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.An_enabled_pair_whose_shape_no_other_patch_covers_is_tracked [125 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_key_build_their_own_clients [347 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.An_enabled_pair_whose_shape_no_other_patch_covers_is_tracked [123 ms]
+Failed!  - Failed:     3, Passed:    66, Skipped:     0, Total:    69, Duration: 6 s - Kronikol.Tests.Kafka.BuildInterception.dll (net8.0)
+Failed!  - Failed:     2, Passed:    67, Skipped:     0, Total:    69, Duration: 6 s - Kronikol.Tests.Kafka.BuildInterception.dll (net10.0)
+# CI (run 38251641755, job 114819190168, ubuntu-latest, Release) failed a third set on each runtime:
+#   A_builder_subclass_returns_one_wrapper_of_its_own_pair_when_that_pair_is_enabled (TrackingKafkaProducer<Null, string> expected,
+#   Confluent.Kafka.Producer<Null, string> built), A_value_type_pair_enabled_alone_is_tracked_and_leaves_reference_type_pairs_alone,
+#   An_enabled_pair_whose_shape_no_other_patch_covers_is_tracked, Disabling_one_pair_leaves_its_builder_correctly_typed_and_another_enabled_pair_tracked

@@ -1,0 +1,8 @@
+# F25, red: the released tree (8638a3d6, 4.16.2) with the build-interception project's facts compiled optimized in Debug
+# (<Optimize>true</Optimize> added, nothing else changed): dotnet test tests/Kronikol.Tests.Kafka.BuildInterception
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.EnableTracking_Action_Overload_Works [3 s]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_value_type_pair_enabled_alone_is_tracked_and_leaves_reference_type_pairs_alone [235 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.An_enabled_pair_whose_shape_no_other_patch_covers_is_tracked [203 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.An_enabled_pair_whose_shape_no_other_patch_covers_is_tracked [125 ms]
+Failed!  - Failed:     2, Passed:    67, Skipped:     0, Total:    69, Duration: 9 s - Kronikol.Tests.Kafka.BuildInterception.dll (net8.0)
+Failed!  - Failed:     2, Passed:    67, Skipped:     0, Total:    69, Duration: 9 s - Kronikol.Tests.Kafka.BuildInterception.dll (net10.0)

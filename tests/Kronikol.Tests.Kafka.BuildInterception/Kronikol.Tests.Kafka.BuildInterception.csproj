@@ -8,6 +8,10 @@
     <!-- These facts build hundreds of clients: with quick JIT on, the runtime recompiles the patched Build() after a few
          dozen and drops the patch (F2). This is the remedy the interceptor names. -->
     <TieredCompilationQuickJit>false</TieredCompilationQuickJit>
+    <!-- With quick JIT off a method is compiled optimized at its first call, and the JIT can then inline Build() into a
+         method compiled before the patch, whose builds stay untracked. A Debug build compiles nothing optimized and so
+         hides that: every configuration compiles these facts as CI's Release run does. -->
+    <Optimize>true</Optimize>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="10.0.0">

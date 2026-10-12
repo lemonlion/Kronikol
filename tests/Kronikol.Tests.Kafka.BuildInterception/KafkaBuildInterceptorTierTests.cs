@@ -28,7 +28,7 @@ public class KafkaBuildInterceptorTierTests : IDisposable
         var untracked = 0;
         for (var i = 0; i < 400; i++)
         {
-            using var producer = new ProducerBuilder<string, string>(ProducerConfig()).Build();
+            using var producer = Built(() => new ProducerBuilder<string, string>(ProducerConfig()).Build());
             if (producer is not TrackingKafkaProducer<string, string>) untracked++;
         }
 

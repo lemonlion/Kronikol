@@ -125,6 +125,7 @@ writing into the caller's `Message` (F9, now fixed by a copy).
 | F22 | **Two failures are still drawn nowhere.** A synchronous `Produce` that throws (`Local_QueueFull`, an unknown topic, a serializer's error, Confluent `Producer.cs:886-944`) leaves before anything is logged, and a `Consume` that throws `ConsumeException` (a deserializer's error, a broker error) is never drawn, though the exception carries the record, its topic, partition, offset and headers (`ConsumeException.cs:42-68`; `Consumer.cs:883`, `:916`, `:950`) | READ | `TrackingKafkaProducer.cs:54-90`; `TrackingKafkaConsumer.cs:24-43` |
 | F23 | **Hosts that enable at once lose their first build.** `PatchProducerBuild` marks the type patched (`TryAdd`) before it patches, so a host that loses the race returns at once and builds against the unpatched method: with ten hosts enabling together, 9 of 10 first builds were untracked on 4.14.6, every run, both runtimes; a host that builds its producer once at startup stays untracked for the run. `Harmony.Patch` is not idempotent either (each call appends a prefix) | RUN | audit `B/B-results.md` E3; `KafkaBuildInterceptor.cs:123-143` |
 | F24 | **A dependent producer on an owner with delivery reports off logs nothing.** The dependent producer's own `enableDeliveryReports` defaults to true, so `Produce(…, handler)` is accepted, but the owner registered no delivery callback, so the wrapped handler never runs: a tracked dependent producer (by `.Tracked()` or DI decoration today, by interception in R1) records no produce at all. Confluent also leaks the handle it allocated for each such handler (READ) | RUN | audit `B/B-results.md` E6 (iii); Confluent `Producer.cs` |
+| F25 | **A method compiled before the patch builds untracked.** With quick JIT off, F2's remedy, a method is compiled with optimizations at its first call, and the JIT can inline `Build()` into it; a method compiled before the shape's patch keeps the inlined original, so its builds are untracked. A test method that enables and then builds in its own body is such a method. Found after R0's release: CI's remainder lane builds the tests in Release and failed 3 of the 69 build-interception facts per runtime, a different set as the order changed, while every local run, a Debug build that compiles nothing with optimizations, passed. The product cannot reach an inlined copy, so the remarks and the wiki say to enable before the code that builds the clients first runs | RUN | CI run 38251641755, job 114819190168; harness `r0/inline-red-release.txt`, `r0/inline-red-debug.txt` |
 
 ## 4. The design
 
@@ -969,6 +970,28 @@ Each is another subsystem's, so it is recorded here rather than folded into thes
     `QueryCommand.Trace.cs` names the trackers that record W3C ids (F16). The wiki edits are `wiki/r0_wiki.py`, applied
     after publication; the Raw label table needed none, since F11's fix makes the code match it.
   - **Checks.** On the tree rebased onto 4.16.1, the core suite passes 7,355 with 2 skipped after the version bump, Kronikol.Tests.Kafka passes 234, Kronikol.Tests.Kafka.BuildInterception 69 on net8.0 and 69 on net10.0, the full Playwright suite passes 1,026 with 28 skipped, and release.slnf builds in Release for every target.
+
+- **2026-10-12, 4.16.2 published.** Release run 38251644951 passed and nuget.org listed the packages; the wiki has
+  R0's edits (`d291a79`, rebased onto 4.16.1's wiki commit, whose wording of the `CurrentStepTypeFetcher` row was
+  kept) and Kronikol4J's ledger R0's line (`15469b5`). CI's remainder lane failed (F25, the next entry).
+- **2026-10-12, F25 found by CI after 4.16.2, fixed as 4.16.4.** CI's remainder lane on 8638a3d6 failed in
+  `Kronikol.Tests.Kafka.BuildInterception` (run 38251641755): 3 facts per runtime expected a tracked client and got
+  Confluent's own. Every local run had been a Debug build, which compiles nothing with optimizations; CI builds in
+  Release, where quick JIT off (the project's setting, F2's remedy) compiles each method optimized at its first call,
+  and a fact that enables and then builds was compiled before its own `Enable…` ran, so the JIT could inline `Build()`
+  past the patch. Which facts failed depended on the order: a fact passed when an earlier one had already patched its
+  shape, since a method compiled after a patch did not inline the patched `Build()`. The released tree fails 3 and 2 in
+  Release here too (`r0/inline-red-release.txt`). Fixed in the facts and documented:
+  - The project compiles optimized in every configuration (`<Optimize>true</Optimize>`), so a local run sees what CI
+    sees: on the released tree that alone fails 2 facts per runtime (`r0/inline-red-debug.txt`).
+  - Each of the 55 builds runs through `Built(() => …)`, a lambda the JIT compiles when it first runs, after the fact's
+    `Enable…`, which is the supported order. Then 70 of 70 pass per runtime in three optimized Debug runs and two
+    Release runs.
+  - The interceptor's remarks say to enable before the code that builds the clients first runs, and why
+    (`The_interceptor_says_to_enable_before_the_code_that_builds_the_clients_first_runs`, red first); the wiki's
+    tiering section says it too, and that a Debug build hides it (`wiki/f25_wiki.py`).
+  - The lane stops at its first failure, so no project after this one ran on CI for 4.16.2. `Kronikol.Tests.Kafka`
+    passes 234 in Release here. R1's `KafkaDependentProducerTests` takes the same form before R1 ships.
 
 ## Appendix A. Edit sites at `d59843fa` (4.14.6)
 

@@ -25,6 +25,11 @@ namespace Kronikol.Extensions.Kafka.BuildInterception;
 /// is then lost for the rest of the process. Setting
 /// <c>&lt;TieredCompilationQuickJit&gt;false&lt;/TieredCompilationQuickJit&gt;</c> in the test project keeps it;
 /// without it, enabling says so on standard error and in the report's diagnostics.</para>
+/// <para>Enable interception before the code that builds the clients first runs, in a fixture's constructor or before the
+/// host starts. A method is compiled at its first call, and with quick JIT off it is compiled with optimizations, which
+/// can inline <c>Build()</c> into it; one compiled before the patch keeps the inlined original, so its builds are
+/// untracked. A test method that enables interception and then builds a client was compiled before its own
+/// <c>Enable…</c> ran.</para>
 /// </remarks>
 public static class KafkaBuildInterceptor
 {

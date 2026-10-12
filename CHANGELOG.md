@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.16.4] - 2026-10-12
+
+**Patch - Kafka build interception says to enable it before the code that builds the clients first runs, and its
+facts hold in a Release build (#135; `plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md` F25).** Corrected docs and test
+fixes, and nothing new for a consumer to call, so the patch part moves (4.16.3 to 4.16.4).
+
+CI's Release run of 4.16.2 found what every local Debug run had hidden. With quick JIT off, the remedy 4.16.2 gives for
+tier-up, a method is compiled with optimizations at its first call, and the JIT can inline `Build()` into it. A method
+compiled before the patch keeps the inlined original, and its builds are untracked; a test method that enables
+interception and then builds a client in its own body is such a method. Nothing in the package can reach an inlined
+copy.
+
+- **Docs:** `KafkaBuildInterceptor`'s remarks say to enable interception before the code that builds the clients first
+  runs (in a fixture's constructor, or before the host starts), and why. The Kafka wiki page's tiering section says the
+  same, and that a Debug build can pass where the same tests built in Release fail.
+- **Tests:** `Kronikol.Tests.Kafka.BuildInterception` compiles optimized in every configuration, so a local run sees
+  what CI sees: on 4.16.2's tree that alone fails 2 facts per runtime. Each of its 55 builds now runs in a lambda the JIT
+  compiles after the fact's `Enable…`, and `KafkaShippedDocsTests` pins the new paragraph. CI's remainder lane stops at
+  its first failure, so no test project after this one ran on CI for 4.16.2; it runs them again.
+- **Checks:** The core suite passes 7,436 with 2 skipped after the version bump, Kronikol.Tests.Kafka passes 234, Kronikol.Tests.Kafka.BuildInterception 70 on net8.0 and 70 on net10.0 both in Debug, now compiled with optimizations, and in Release, the full Playwright suite passes 1,028 with 28 skipped, and release.slnf builds in Release for every target.
+
 ## [4.16.3] - 2026-10-12
 
 **Patch - fixes from an audit of `plans/WARM_UP_PLAN.md` (#113; 4.7.3, 4.8.0, 4.9.0 and 4.9.1).** At the owner's

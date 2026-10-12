@@ -2,6 +2,7 @@ using Confluent.Kafka;
 using Kronikol.Extensions.Kafka;
 using Kronikol.Extensions.Kafka.BuildInterception;
 using Kronikol.Tracking;
+using static Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport;
 
 namespace Kronikol.Tests.Kafka.BuildInterception;
 
@@ -43,7 +44,7 @@ public class KafkaBuildInterceptorTests : IDisposable
     {
         KafkaBuildInterceptor.EnableConsumerTracking<string, string>(MakeOptions());
 
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
 
         Assert.IsType<TrackingKafkaConsumer<string, string>>(consumer);
     }
@@ -51,7 +52,7 @@ public class KafkaBuildInterceptorTests : IDisposable
     [Fact]
     public void ConsumerBuilder_Build_Returns_Original_When_Not_Enabled()
     {
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
 
         Assert.IsNotType<TrackingKafkaConsumer<string, string>>(consumer);
     }
@@ -63,7 +64,7 @@ public class KafkaBuildInterceptorTests : IDisposable
     {
         KafkaBuildInterceptor.EnableProducerTracking<string, string>(MakeOptions());
 
-        using var producer = new ProducerBuilder<string, string>(MakeProducerConfig()).Build();
+        using var producer = Built(() => new ProducerBuilder<string, string>(MakeProducerConfig()).Build());
 
         Assert.IsType<TrackingKafkaProducer<string, string>>(producer);
     }
@@ -71,7 +72,7 @@ public class KafkaBuildInterceptorTests : IDisposable
     [Fact]
     public void ProducerBuilder_Build_Returns_Original_When_Not_Enabled()
     {
-        using var producer = new ProducerBuilder<string, string>(MakeProducerConfig()).Build();
+        using var producer = Built(() => new ProducerBuilder<string, string>(MakeProducerConfig()).Build());
 
         Assert.IsNotType<TrackingKafkaProducer<string, string>>(producer);
     }
@@ -83,8 +84,8 @@ public class KafkaBuildInterceptorTests : IDisposable
     {
         KafkaBuildInterceptor.EnableTracking<string, string>(MakeOptions());
 
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
-        using var producer = new ProducerBuilder<string, string>(MakeProducerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
+        using var producer = Built(() => new ProducerBuilder<string, string>(MakeProducerConfig()).Build());
 
         Assert.IsType<TrackingKafkaConsumer<string, string>>(consumer);
         Assert.IsType<TrackingKafkaProducer<string, string>>(producer);
@@ -102,7 +103,7 @@ public class KafkaBuildInterceptorTests : IDisposable
             opts.CurrentTestInfoFetcher = () => ("BuildInterception Test", _testId);
         });
 
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
 
         Assert.IsType<TrackingKafkaConsumer<string, string>>(consumer);
     }
@@ -115,7 +116,7 @@ public class KafkaBuildInterceptorTests : IDisposable
         KafkaBuildInterceptor.EnableConsumerTracking<string, string>(MakeOptions());
         KafkaBuildInterceptor.DisableConsumerTracking<string, string>();
 
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
 
         Assert.IsNotType<TrackingKafkaConsumer<string, string>>(consumer);
     }
@@ -126,7 +127,7 @@ public class KafkaBuildInterceptorTests : IDisposable
         KafkaBuildInterceptor.EnableProducerTracking<string, string>(MakeOptions());
         KafkaBuildInterceptor.DisableProducerTracking<string, string>();
 
-        using var producer = new ProducerBuilder<string, string>(MakeProducerConfig()).Build();
+        using var producer = Built(() => new ProducerBuilder<string, string>(MakeProducerConfig()).Build());
 
         Assert.IsNotType<TrackingKafkaProducer<string, string>>(producer);
     }
@@ -137,8 +138,8 @@ public class KafkaBuildInterceptorTests : IDisposable
         KafkaBuildInterceptor.EnableTracking<string, string>(MakeOptions());
         KafkaBuildInterceptor.Reset();
 
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
-        using var producer = new ProducerBuilder<string, string>(MakeProducerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
+        using var producer = Built(() => new ProducerBuilder<string, string>(MakeProducerConfig()).Build());
 
         Assert.IsNotType<TrackingKafkaConsumer<string, string>>(consumer);
         Assert.IsNotType<TrackingKafkaProducer<string, string>>(producer);
@@ -152,7 +153,7 @@ public class KafkaBuildInterceptorTests : IDisposable
         KafkaBuildInterceptor.EnableConsumerTracking<string, string>(MakeOptions());
         KafkaBuildInterceptor.EnableConsumerTracking<string, string>(MakeOptions());
 
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
 
         Assert.IsType<TrackingKafkaConsumer<string, string>>(consumer);
     }
@@ -164,10 +165,10 @@ public class KafkaBuildInterceptorTests : IDisposable
     {
         KafkaBuildInterceptor.EnableConsumerTracking<string, string>(MakeOptions());
 
-        using var stringConsumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
-        using var intConsumer = new ConsumerBuilder<int, string>(MakeConsumerConfig())
+        using var stringConsumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
+        using var intConsumer = Built(() => new ConsumerBuilder<int, string>(MakeConsumerConfig())
             .SetKeyDeserializer(Deserializers.Int32)
-            .Build();
+            .Build());
 
         Assert.IsType<TrackingKafkaConsumer<string, string>>(stringConsumer);
         Assert.IsNotType<TrackingKafkaConsumer<int, string>>(intConsumer);
@@ -194,7 +195,7 @@ public class KafkaBuildInterceptorTests : IDisposable
         options.TrackSubscribe = true;
         KafkaBuildInterceptor.EnableConsumerTracking<string, string>(options);
 
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
         consumer.Subscribe("test-topic");
 
         var logs = GetLogsFromThisTest();
@@ -210,7 +211,7 @@ public class KafkaBuildInterceptorTests : IDisposable
         KafkaBuildInterceptor.DisableConsumerTracking<string, string>();
         KafkaBuildInterceptor.EnableConsumerTracking<string, string>(MakeOptions());
 
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
 
         Assert.IsType<TrackingKafkaConsumer<string, string>>(consumer);
     }
@@ -224,7 +225,7 @@ public class KafkaBuildInterceptorTests : IDisposable
         KafkaBuildInterceptor.Reset();
         KafkaBuildInterceptor.EnableConsumerTracking<string, string>(MakeOptions());
 
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
 
         Assert.IsType<TrackingKafkaConsumer<string, string>>(consumer);
     }
@@ -237,8 +238,8 @@ public class KafkaBuildInterceptorTests : IDisposable
         KafkaBuildInterceptor.EnableTracking<string, string>(MakeOptions());
         KafkaBuildInterceptor.DisableConsumerTracking<string, string>();
 
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
-        using var producer = new ProducerBuilder<string, string>(MakeProducerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
+        using var producer = Built(() => new ProducerBuilder<string, string>(MakeProducerConfig()).Build());
 
         Assert.IsNotType<TrackingKafkaConsumer<string, string>>(consumer);
         Assert.IsType<TrackingKafkaProducer<string, string>>(producer);
@@ -250,8 +251,8 @@ public class KafkaBuildInterceptorTests : IDisposable
         KafkaBuildInterceptor.EnableTracking<string, string>(MakeOptions());
         KafkaBuildInterceptor.DisableProducerTracking<string, string>();
 
-        using var consumer = new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build();
-        using var producer = new ProducerBuilder<string, string>(MakeProducerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<string, string>(MakeConsumerConfig()).Build());
+        using var producer = Built(() => new ProducerBuilder<string, string>(MakeProducerConfig()).Build());
 
         Assert.IsType<TrackingKafkaConsumer<string, string>>(consumer);
         Assert.IsNotType<TrackingKafkaProducer<string, string>>(producer);

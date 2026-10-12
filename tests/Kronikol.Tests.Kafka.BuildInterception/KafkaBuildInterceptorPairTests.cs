@@ -30,7 +30,7 @@ public class KafkaBuildInterceptorPairTests : IDisposable
     {
         KafkaBuildInterceptor.EnableProducerTracking<string, string>(MakeOptions());
 
-        using var producer = new ProducerBuilder<Null, string>(ProducerConfig()).Build();
+        using var producer = Built(() => new ProducerBuilder<Null, string>(ProducerConfig()).Build());
 
         AssertConfluentClient(producer, "Producer`2", typeof(Null), typeof(string));
         producer.Produce("t135", new Message<Null, string> { Value = "v" });
@@ -41,8 +41,8 @@ public class KafkaBuildInterceptorPairTests : IDisposable
     {
         KafkaBuildInterceptor.EnableTracking<string, string>(MakeOptions());
 
-        using var producer = new ProducerBuilder<string, byte[]>(ProducerConfig()).Build();
-        using var consumer = new ConsumerBuilder<Null, string>(ConsumerConfig()).Build();
+        using var producer = Built(() => new ProducerBuilder<string, byte[]>(ProducerConfig()).Build());
+        using var consumer = Built(() => new ConsumerBuilder<Null, string>(ConsumerConfig()).Build());
 
         AssertConfluentClient(producer, "Producer`2", typeof(string), typeof(byte[]));
         AssertConfluentClient(consumer, "Consumer`2", typeof(Null), typeof(string));
@@ -56,10 +56,10 @@ public class KafkaBuildInterceptorPairTests : IDisposable
         KafkaBuildInterceptor.EnableTracking<string, string>(MakeOptions());
         KafkaBuildInterceptor.EnableTracking<string, byte[]>(MakeOptions());
 
-        using var strings = new ProducerBuilder<string, string>(ProducerConfig()).Build();
-        using var bytes = new ProducerBuilder<string, byte[]>(ProducerConfig()).Build();
-        using var stringConsumer = new ConsumerBuilder<string, string>(ConsumerConfig()).Build();
-        using var bytesConsumer = new ConsumerBuilder<string, byte[]>(ConsumerConfig()).Build();
+        using var strings = Built(() => new ProducerBuilder<string, string>(ProducerConfig()).Build());
+        using var bytes = Built(() => new ProducerBuilder<string, byte[]>(ProducerConfig()).Build());
+        using var stringConsumer = Built(() => new ConsumerBuilder<string, string>(ConsumerConfig()).Build());
+        using var bytesConsumer = Built(() => new ConsumerBuilder<string, byte[]>(ConsumerConfig()).Build());
 
         Assert.IsType<TrackingKafkaProducer<string, string>>(strings);
         Assert.IsType<TrackingKafkaProducer<string, byte[]>>(bytes);
@@ -75,16 +75,16 @@ public class KafkaBuildInterceptorPairTests : IDisposable
 
         // The patch stays for the process: removing it cannot restore the code the other pairs share.
         Assert.Equal(1, InterceptorPrefixes(typeof(ProducerBuilder<object, object>)));
-        using (var strings = new ProducerBuilder<string, string>(ProducerConfig()).Build())
+        using (var strings = Built(() => new ProducerBuilder<string, string>(ProducerConfig()).Build()))
             AssertConfluentClient(strings, "Producer`2", typeof(string), typeof(string));
-        using (var nullKeyed = new ProducerBuilder<Null, string>(ProducerConfig()).Build())
+        using (var nullKeyed = Built(() => new ProducerBuilder<Null, string>(ProducerConfig()).Build()))
         {
             AssertConfluentClient(nullKeyed, "Producer`2", typeof(Null), typeof(string));
             nullKeyed.Produce("t135", new Message<Null, string> { Value = "v" });
         }
 
         KafkaBuildInterceptor.EnableProducerTracking<string, string>(MakeOptions());
-        using var again = new ProducerBuilder<string, string>(ProducerConfig()).Build();
+        using var again = Built(() => new ProducerBuilder<string, string>(ProducerConfig()).Build());
 
         Assert.IsType<TrackingKafkaProducer<string, string>>(again);
     }
@@ -96,8 +96,8 @@ public class KafkaBuildInterceptorPairTests : IDisposable
         KafkaBuildInterceptor.EnableProducerTracking<Null, string>(MakeOptions());
         KafkaBuildInterceptor.DisableProducerTracking<string, string>();
 
-        using var strings = new ProducerBuilder<string, string>(ProducerConfig()).Build();
-        using var nullKeyed = new ProducerBuilder<Null, string>(ProducerConfig()).Build();
+        using var strings = Built(() => new ProducerBuilder<string, string>(ProducerConfig()).Build());
+        using var nullKeyed = Built(() => new ProducerBuilder<Null, string>(ProducerConfig()).Build());
 
         AssertConfluentClient(strings, "Producer`2", typeof(string), typeof(string));
         strings.Produce("t135", new Message<string, string> { Key = "k", Value = "v" });
@@ -109,8 +109,8 @@ public class KafkaBuildInterceptorPairTests : IDisposable
     {
         KafkaBuildInterceptor.EnableProducerTracking<int, string>(MakeOptions());
 
-        using var ints = new ProducerBuilder<int, string>(ProducerConfig()).Build();
-        using var strings = new ProducerBuilder<string, string>(ProducerConfig()).Build();
+        using var ints = Built(() => new ProducerBuilder<int, string>(ProducerConfig()).Build());
+        using var strings = Built(() => new ProducerBuilder<string, string>(ProducerConfig()).Build());
 
         Assert.IsType<TrackingKafkaProducer<int, string>>(ints);
         AssertConfluentClient(strings, "Producer`2", typeof(string), typeof(string));
@@ -131,8 +131,8 @@ public class KafkaBuildInterceptorPairTests : IDisposable
     {
         KafkaBuildInterceptor.EnableProducerTracking<Null, string>(MakeOptions());
 
-        using var orders = new OrdersBuilder(ProducerConfig()).Build();
-        using var delegating = new DelegatingBuilder<Null, string>(ProducerConfig()).Build();
+        using var orders = Built(() => new OrdersBuilder(ProducerConfig()).Build());
+        using var delegating = Built(() => new DelegatingBuilder<Null, string>(ProducerConfig()).Build());
 
         Assert.IsType<TrackingKafkaProducer<Null, string>>(orders);
         Assert.IsType<TrackingKafkaProducer<Null, string>>(delegating);
@@ -143,8 +143,8 @@ public class KafkaBuildInterceptorPairTests : IDisposable
     {
         KafkaBuildInterceptor.EnableProducerTracking<string, string>(MakeOptions());
 
-        using var orders = new OrdersBuilder(ProducerConfig()).Build();
-        using var delegating = new DelegatingBuilder<Null, string>(ProducerConfig()).Build();
+        using var orders = Built(() => new OrdersBuilder(ProducerConfig()).Build());
+        using var delegating = Built(() => new DelegatingBuilder<Null, string>(ProducerConfig()).Build());
 
         AssertConfluentClient(orders, "Producer`2", typeof(Null), typeof(string));
         AssertConfluentClient(delegating, "Producer`2", typeof(Null), typeof(string));
@@ -158,10 +158,10 @@ public class KafkaBuildInterceptorPairTests : IDisposable
     {
         KafkaBuildInterceptor.EnableTracking<int, string>(MakeOptions());
 
-        using var bytes = new ProducerBuilder<int, byte[]>(ProducerConfig()).Build();
-        using var nulls = new ProducerBuilder<int, Null>(ProducerConfig()).Build();
-        using var consumer = new ConsumerBuilder<int, byte[]>(ConsumerConfig()).Build();
-        using var tracked = new ProducerBuilder<int, string>(ProducerConfig()).Build();
+        using var bytes = Built(() => new ProducerBuilder<int, byte[]>(ProducerConfig()).Build());
+        using var nulls = Built(() => new ProducerBuilder<int, Null>(ProducerConfig()).Build());
+        using var consumer = Built(() => new ConsumerBuilder<int, byte[]>(ConsumerConfig()).Build());
+        using var tracked = Built(() => new ProducerBuilder<int, string>(ProducerConfig()).Build());
 
         AssertConfluentClient(bytes, "Producer`2", typeof(int), typeof(byte[]));
         AssertConfluentClient(nulls, "Producer`2", typeof(int), typeof(Null));
@@ -177,8 +177,8 @@ public class KafkaBuildInterceptorPairTests : IDisposable
     {
         KafkaBuildInterceptor.EnableProducerTracking<string, int>(MakeOptions());
 
-        using var nullKeyed = new ProducerBuilder<Null, int>(ProducerConfig()).Build();
-        using var bytesKeyed = new ProducerBuilder<byte[], int>(ProducerConfig()).Build();
+        using var nullKeyed = Built(() => new ProducerBuilder<Null, int>(ProducerConfig()).Build());
+        using var bytesKeyed = Built(() => new ProducerBuilder<byte[], int>(ProducerConfig()).Build());
 
         AssertConfluentClient(nullKeyed, "Producer`2", typeof(Null), typeof(int));
         AssertConfluentClient(bytesKeyed, "Producer`2", typeof(byte[]), typeof(int));
@@ -191,12 +191,12 @@ public class KafkaBuildInterceptorPairTests : IDisposable
     {
         KafkaBuildInterceptor.EnableProducerTracking<KeyValuePair<string, string>, string>(MakeOptions());
 
-        using var uris = new ProducerBuilder<KeyValuePair<Uri, Uri>, string>(ProducerConfig())
+        using var uris = Built(() => new ProducerBuilder<KeyValuePair<Uri, Uri>, string>(ProducerConfig())
             .SetKeySerializer(new ToStringSerializer<KeyValuePair<Uri, Uri>>())
-            .Build();
-        using var tracked = new ProducerBuilder<KeyValuePair<string, string>, string>(ProducerConfig())
+            .Build());
+        using var tracked = Built(() => new ProducerBuilder<KeyValuePair<string, string>, string>(ProducerConfig())
             .SetKeySerializer(new ToStringSerializer<KeyValuePair<string, string>>())
-            .Build();
+            .Build());
 
         AssertConfluentClient(uris, "Producer`2", typeof(KeyValuePair<Uri, Uri>), typeof(string));
         Assert.IsType<TrackingKafkaProducer<KeyValuePair<string, string>, string>>(tracked);
@@ -213,12 +213,12 @@ public class KafkaBuildInterceptorPairTests : IDisposable
         KafkaBuildInterceptor.EnableProducerTracking<KeyValuePair<string, string>, string>(MakeOptions());
         KafkaBuildInterceptor.EnableProducerTracking<KeyValuePair<Uri, Uri>, string>(MakeOptions());
 
-        using var strings = new ProducerBuilder<KeyValuePair<string, string>, string>(ProducerConfig())
+        using var strings = Built(() => new ProducerBuilder<KeyValuePair<string, string>, string>(ProducerConfig())
             .SetKeySerializer(new ToStringSerializer<KeyValuePair<string, string>>())
-            .Build();
-        using var uris = new ProducerBuilder<KeyValuePair<Uri, Uri>, string>(ProducerConfig())
+            .Build());
+        using var uris = Built(() => new ProducerBuilder<KeyValuePair<Uri, Uri>, string>(ProducerConfig())
             .SetKeySerializer(new ToStringSerializer<KeyValuePair<Uri, Uri>>())
-            .Build();
+            .Build());
 
         Assert.IsType<TrackingKafkaProducer<KeyValuePair<string, string>, string>>(strings);
         Assert.IsType<TrackingKafkaProducer<KeyValuePair<Uri, Uri>, string>>(uris);
@@ -231,7 +231,7 @@ public class KafkaBuildInterceptorPairTests : IDisposable
         KafkaBuildInterceptor.EnableProducerTracking<int, string>(MakeOptions());
         KafkaBuildInterceptor.EnableProducerTracking<long, string>(MakeOptions());
 
-        using var longs = new ProducerBuilder<long, string>(ProducerConfig()).Build();
+        using var longs = Built(() => new ProducerBuilder<long, string>(ProducerConfig()).Build());
 
         Assert.IsType<TrackingKafkaProducer<long, string>>(longs);
     }
@@ -331,10 +331,10 @@ public class KafkaBuildInterceptorPairTests : IDisposable
     private bool EnableAndBuildTracked<TKey, TValue>()
     {
         KafkaBuildInterceptor.EnableProducerTracking<TKey, TValue>(MakeOptions());
-        using var producer = new ProducerBuilder<TKey, TValue>(ProducerConfig())
+        using var producer = Built(() => new ProducerBuilder<TKey, TValue>(ProducerConfig())
             .SetKeySerializer(new ToStringSerializer<TKey>())
             .SetValueSerializer(new ToStringSerializer<TValue>())
-            .Build();
+            .Build());
         return producer is TrackingKafkaProducer<TKey, TValue>;
     }
 
@@ -381,7 +381,7 @@ public class KafkaBuildInterceptorPairTests : IDisposable
         KafkaBuildInterceptor.EnableProducerTracking<string, string>(options);
         KafkaBuildInterceptor.EnableProducerTracking<string, string>(FlushTrackingOptions());
 
-        using (var producer = new ProducerBuilder<string, string>(ProducerConfig()).Build())
+        using (var producer = Built(() => new ProducerBuilder<string, string>(ProducerConfig()).Build()))
             producer.Flush(TimeSpan.FromMilliseconds(1));
 
         var kafkaTrackers = TrackingComponentRegistry.GetRegisteredComponents().OfType<KafkaTracker>().ToArray();
@@ -396,7 +396,7 @@ public class KafkaBuildInterceptorPairTests : IDisposable
         TrackingComponentRegistry.Clear();
         KafkaBuildInterceptor.EnableTracking<string, string>(FlushTrackingOptions());
 
-        using (var producer = new ProducerBuilder<string, string>(ProducerConfig()).Build())
+        using (var producer = Built(() => new ProducerBuilder<string, string>(ProducerConfig()).Build()))
             producer.Flush(TimeSpan.FromMilliseconds(1));
 
         Assert.Empty(TrackingComponentRegistry.GetUnusedComponents().OfType<KafkaTracker>());
@@ -410,7 +410,7 @@ public class KafkaBuildInterceptorPairTests : IDisposable
         TrackingComponentRegistry.Clear();
         KafkaBuildInterceptor.EnableConsumerTracking<Null, byte[]>(MakeOptions());
 
-        using var consumer = new ConsumerBuilder<Null, byte[]>(ConsumerConfig()).Build();
+        using var consumer = Built(() => new ConsumerBuilder<Null, byte[]>(ConsumerConfig()).Build());
 
         Assert.Equal(new[] { "KafkaTracker (Kafka, consumer <Null,Byte[]>)" },
             TrackingComponentRegistry.GetRegisteredComponents().OfType<KafkaTracker>().Select(t => t.ComponentName));

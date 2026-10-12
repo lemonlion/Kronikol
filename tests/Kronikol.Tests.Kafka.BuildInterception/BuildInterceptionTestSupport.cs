@@ -14,6 +14,14 @@ internal static class BuildInterceptionTestSupport
 
     public static ConsumerConfig ConsumerConfig() => new() { GroupId = "build-interception", BootstrapServers = "localhost:9092" };
 
+    /// <summary>
+    /// Builds through <paramref name="build"/>, a method of its own that the JIT compiles when it first runs, after the
+    /// fact's <c>Enable…</c>. A fact that enables and then builds in its own body was compiled before its <c>Enable…</c>
+    /// ran, and with quick JIT off the JIT can inline <c>Build()</c> there, past the patch, as it can into a method of the
+    /// app's compiled before interception was enabled (the interceptor's remarks say so).
+    /// </summary>
+    public static T Built<T>(Func<T> build) => build();
+
     /// <summary>Asserts <paramref name="client"/> is Confluent's own client (<c>Producer`2</c> or <c>Consumer`2</c>) of exactly this pair.</summary>
     public static void AssertConfluentClient(object client, string definition, Type key, Type value)
     {
