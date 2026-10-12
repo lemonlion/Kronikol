@@ -126,7 +126,10 @@ public static partial class QueryCommand
         // Ranked by each scenario's own time when the run paid a first-call warm-up (plans/WARM_UP_PLAN.md): whichever
         // scenario went first carries the app's one-time cost, and ranking it first sends a reader to the wrong test.
         var warmed = scenarios.Where(s => s.WarmUpSeconds is > 0).ToArray();
-        var slowest = scenarios.OrderByDescending(s => s.TimeLeftSeconds).Take(3).ToArray();
+        // Ties on the time left go to the longer scenario by wall time: a scenario that was all warm-up and a skipped one of
+        // 0 s both leave none, and the skipped one, first in the file, stood at the top and dropped the whole block (until
+        // 4.16.3), which shows only when a scenario took any time.
+        var slowest = scenarios.OrderByDescending(s => s.TimeLeftSeconds).ThenByDescending(s => s.DurationSeconds).Take(3).ToArray();
         if (slowest.Length > 0 && slowest[0].DurationSeconds > 0)
         {
             writer.Line();
@@ -154,13 +157,16 @@ public static partial class QueryCommand
         {
             var largest = warmed.OrderByDescending(s => s.WarmUpSeconds).First();
             var total = warmed.Sum(s => s.WarmUpSeconds!.Value);
-            writer.Line($"First-call warm-up: {total:0.##}s in {warmed.Length} scenario{(warmed.Length == 1 ? "" : "s")}; the most in {largest.Address}, "
-                        + $"{largest.WarmUpSeconds:0.##}s of its {largest.DurationSeconds:0.##}s (flow {largest.Address})");
+            // Under ten milliseconds in milliseconds: a warm-up capped at a 3 ms BDDfy duration (#122) read "0s of its 0s".
+            static string Time(double seconds) => seconds < 0.01 ? $"{seconds * 1000:0.#}ms" : $"{seconds:0.##}s";
+            writer.Line($"First-call warm-up: {Time(total)} in {warmed.Length} scenario{(warmed.Length == 1 ? "" : "s")}; the most in {largest.Address}, "
+                        + $"{Time(largest.WarmUpSeconds!.Value)} of its {Time(largest.DurationSeconds)} (flow {largest.Address})");
             writer.Data("warmUp", new
             {
                 seconds = total,
                 scenarios = warmed.Length,
-                calls = scenarios.Sum(s => s.Interactions.Count(i => i.WarmUp is not null)),
+                // The calls of the scenarios counted: one with no duration holds marks and no seconds.
+                calls = warmed.Sum(s => s.Interactions.Count(i => i.WarmUp is not null)),
                 largest = new { address = largest.Address, warmUpSeconds = largest.WarmUpSeconds, durationSeconds = largest.DurationSeconds }
             });
         }
@@ -207,9 +213,23 @@ public static partial class QueryCommand
             return 0;
         }
 
+        // --slower-than reads each scenario's own time and the rows read wall time, so a scenario that took longer than
+        // the ones listed can be missing from them: the answer says so (until 4.16.3 it did not).
+        var warmedOut = options.SlowerThan is { } slowerThan
+            ? scope.Count(s => s.DurationSeconds >= slowerThan && s.TimeLeftSeconds < slowerThan && MatchesBesidesTime(s, options))
+            : 0;
+        void NoteWarmedOut()
+        {
+            if (warmedOut > 0)
+                writer.Note($"{warmedOut} scenario{(warmedOut == 1 ? " that took" : "s that took")} {options.SlowerThan:0.##}s or more "
+                            + (warmedOut == 1 ? "is left out: the first-call warm-up it paid is not its own time"
+                                : "are left out: the first-call warm-up they paid is not their own time"));
+        }
+
         if (matches.Count == 0)
         {
             writer.Note("no scenarios matched");
+            NoteWarmedOut();
             writer.Footer($"{index.Scenarios.Count} scenarios in the report");
             return 0;
         }
@@ -232,11 +252,13 @@ public static partial class QueryCommand
             // A call is its request, as `interactions` and `services` count it: the records count each half (the JSON's
             // `interactions`), and printed as calls they doubled every answered call.
             var calls = scenario.Interactions.Count(i => i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase));
+            // The row's time is wall time; what of it was the run's first-call warm-up follows, as --slower-than leaves it out.
+            var warmUp = scenario.WarmUpSeconds is > 0 and var seconds ? $"  {seconds:0.##}s warm-up" : "";
             writer.Line($"{scenario.Address,-5} {flags,-4} {scenario.DurationSeconds,6:0.##}s  {calls,4} calls  "
-                        + QueryWriter.OneLine(scenario.Name, 80) + repeats + attempt);
+                        + QueryWriter.OneLine(scenario.Name, 80) + repeats + attempt + warmUp);
             if (scenario.Failed && scenario.ErrorMessage is { } message)
                 writer.Line($"        {QueryWriter.OneLine(message, 100)}");
-        }, options.RerunArgs(), scenario => new
+        }, options.RerunArgs(), scenario => WithWarmUp(scenario, new
         {
             address = scenario.Address,
             stableId = scenario.StableId,
@@ -254,12 +276,23 @@ public static partial class QueryCommand
             labels = scenario.Labels,
             categories = scenario.Categories,
             exampleValues = scenario.ExampleValues
-        });
+        }));
+        NoteWarmedOut();
 
         return 0;
     }
 
-    private static bool Matches(ScenarioEntry scenario, QueryOptions options)
+    /// <summary>A scenario's item with <c>warmUpSeconds</c> when it paid the run's first-call warm-up, as the report
+    /// writes it, and as it was otherwise.</summary>
+    private static object WithWarmUp(ScenarioEntry scenario, object item) =>
+        scenario.WarmUpSeconds is { } seconds ? QueryWriter.WithMember(item, "warmUpSeconds", seconds) : item;
+
+    private static bool Matches(ScenarioEntry scenario, QueryOptions options) =>
+        MatchesBesidesTime(scenario, options)
+        // The scenario's own time: a scenario slow only because it paid the run's first-call warm-up is not slow.
+        && !(options.SlowerThan is { } slower && scenario.TimeLeftSeconds < slower);
+
+    private static bool MatchesBesidesTime(ScenarioEntry scenario, QueryOptions options)
     {
         if (options.Result is { } result && !scenario.Result.Equals(result, StringComparison.OrdinalIgnoreCase))
             return false;
@@ -272,9 +305,6 @@ public static partial class QueryCommand
                 .Any(l => l.Contains(label, StringComparison.OrdinalIgnoreCase)))
             return false;
         if (options.Grep is { } grep && !scenario.Name.Contains(grep, StringComparison.OrdinalIgnoreCase))
-            return false;
-        // The scenario's own time: a scenario slow only because it paid the run's first-call warm-up is not slow.
-        if (options.SlowerThan is { } slower && scenario.TimeLeftSeconds < slower)
             return false;
         return true;
     }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Kronikol.Constants;
 using System.Collections.Concurrent;
 using System.Data.Common;
@@ -121,7 +122,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         var requestUri = BuildUri(command, sqlOp, effectiveVerbosity);
         var content = effectiveVerbosity == SqlTrackingVerbosity.Summarised && !_options.LogResponseContent
             ? null
-            : rowsAffected.HasValue ? $"{rowsAffected.Value} rows affected" : null;
+            : rowsAffected.HasValue ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected" : null;
 
         var log = new RequestResponseLog(
             testInfo.Value.Name,
@@ -353,7 +354,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         var uri = BuildUri(command, sqlOp, verbosity);
         var content = verbosity == SqlTrackingVerbosity.Summarised && !_options.LogResponseContent
             ? null
-            : rowsAffected.HasValue ? $"{rowsAffected.Value} rows affected" : null;
+            : rowsAffected.HasValue ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected" : null;
 
         return new PhaseVariant(method, uri, content, [], skip);
     }
@@ -458,7 +459,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
     {
         if (!_options.LogResponseContent) return null;
         if (result is null or DBNull) return "null";
-        var str = result.ToString() ?? "";
+        var str = SqlRowFormatter.ValueText(result);
         return str.Length > _options.MaxValueDisplayLength
             ? $"{str[.._options.MaxValueDisplayLength]}... ({str.Length} chars)"
             : str;

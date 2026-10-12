@@ -58,7 +58,7 @@ internal static class VerbTable
         new("--out", "FILE", "Write the answer to a file instead of stdout. On http, body, note and diagram the payload itself is what is saved."),
         new("--offset", "N", "Resume a truncated listing at row N - the value the previous page's next: line printed."),
         new("--limit", "N", "Cap the rows shown; each verb has a ceiling and says so when N is above it."),
-        new("--slower-than", "SECONDS", "Only scenarios that took longer than this."),
+        new("--slower-than", "SECONDS", "Only scenarios that took this long or longer of their own: wall time less the first-call warm-up."),
         new("--lines", "RANGE", "A line range of a payload, like 20-60."),
         new("--result", "RESULT", "Only scenarios with this result: Passed, Failed, Skipped."),
         new("--feature", "TEXT", "Only scenarios whose feature name contains TEXT."),

@@ -55,6 +55,12 @@ public class WarmUpPagesTests : IDisposable
             Assert.Equal("600", scenario.GetAttribute("data-warmup-ms"));
             Assert.Equal(" · 600ms warm-up", scenario.QuerySelector(":scope > summary .duration-badge > .warm-up-note")!.TextContent);
             Assert.Equal("width:30.0%", document.QuerySelector("#scenario-timeline .timeline-warm-up")!.GetAttribute("style"));
+            // Each page as a reader sees it, not only its attributes: the tooltip naming the call, the colour of the 1.4 s
+            // the scenario took of its own, and the rule that mutes the note.
+            var badge = scenario.QuerySelector(":scope > summary .duration-badge")!;
+            Assert.Equal("2 s, 600 ms of it first-call warm-up: POST /orders 600 ms (later calls 5 ms)", badge.GetAttribute("title"));
+            Assert.Contains("duration-fast", badge.ClassList);
+            Assert.Contains(".duration-badge .warm-up-note", string.Concat(document.QuerySelectorAll("style").Select(s => s.TextContent)));
         }
     }
 

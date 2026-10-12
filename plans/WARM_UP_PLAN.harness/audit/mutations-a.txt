@@ -1,0 +1,30 @@
+CAUGHT  M1 a merge renames the totals and not each mark  [A_scenario_the_merge_renames_keeps_its_own_calls_in_its_tooltips]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 871 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M2 ties go to capture order again  [Calls_that_tie_are_ordered_as_the_data_file_lists_them]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 61 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M3 the file order takes features as handed over, not by name  [Calls_that_tie_are_ordered_as_the_data_file_lists_them]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 55 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M4 the tooltip rounds from a minute again  [The_tooltip_reads_each_time_as_the_badge_writes_it]  Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 2 s - Kronikol.Tests.dll (net10.0)
+CAUGHT  M5 the badge writes 60.0s again  [The_tooltip_reads_each_time_as_the_badge_writes_it]  Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 2 s - Kronikol.Tests.dll (net10.0)
+CAUGHT  M6 percentiles over unrounded own times  [A_percentile_is_an_own_time_as_the_filter_reads_it]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 739 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M7 diff reads the time left only when both runs carry a mark  [WarmUpQueryTests.Diff]  Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 305 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M8 every report reads as marking the warm-up, whatever wrote it  [Diff_reads_a_run_written_before_the_marks_by_wall_time_on_both_sides]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 188 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M9 interactions --json names the first call by its id  [Interactions_mark_a_warm_up_call_after_its_duration]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 180 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M10 a first call carries "first": null again  [Interactions_mark_a_warm_up_call_after_its_duration]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 180 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M11 a scenarios row says nothing of its warm-up  [Scenarios_say_how_much_of_each_was_the_warm_up]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 172 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M12 a scenarios item has no warmUpSeconds  [Scenarios_say_how_much_of_each_was_the_warm_up]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 222 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M13 --slower-than says nothing of what it left out  [Slower_than_reads_the_time_left]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 173 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M14 an example column replaces a scenario field again  [ExampleColumnsTests]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 128 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M15 Slowest ties in file order again  [Slowest_is_listed_when_every_scenario_left_no_time_of_its_own]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 189 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M16 the warm-up member counts every scenario's calls  [The_warm_up_line_counts_the_calls_of_the_scenarios_it_counts]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 176 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M17 the warm-up line writes 3 ms as 0s  [A_warm_up_under_ten_milliseconds_reads_in_milliseconds]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 180 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M18 a mark of an unknown kind is kept  [A_mark_this_build_cannot_read_is_no_mark]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 200 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M19 a numeric kind is read as a string  [A_mark_this_build_cannot_read_is_no_mark]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 202 ms - Kronikol.Tests.dll (net10.0)
+BUILD FAILED M20 the XSD takes any kind
+BUILD FAILED M21 the XSD takes no baseline calls
+CAUGHT  M22 the XSD takes a negative time  [The_xsd_refuses_a_mark_the_json_schema_refuses]  Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 288 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M23 the timeline never names its stripes  [The_timeline_says_what_its_stripes_are_when_it_draws_them]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 614 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  M24 the timeline names stripes it does not draw  [The_timeline_says_what_its_stripes_are_when_it_draws_them]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 1 s - Kronikol.Tests.dll (net10.0)
+CAUGHT  M25 no page carries the warm-up rules  [WarmUpPagesTests]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 1 s - Kronikol.Tests.dll (net10.0)
+done; the tree is restored and rebuilt
+exit 0
+CAUGHT  M20 the XSD takes any kind  [The_xsd_refuses_a_mark_the_json_schema_refuses]  Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 1 s - Kronikol.Tests.dll (net10.0)
+CAUGHT  M21 the XSD takes no baseline calls  [The_xsd_refuses_a_mark_the_json_schema_refuses]  Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 292 ms - Kronikol.Tests.dll (net10.0)
+done; the tree is restored and rebuilt

@@ -593,4 +593,20 @@ public class StepWeaverTests
     {
         Assert.Equal("Get http response", StepWeaver.HumanizeMethodName("GetHTTPResponse"));
     }
+    [Fact]
+    public void HumanizeMethodName_reads_the_same_on_a_machine_whose_culture_cases_i_otherwise()
+    {
+        // The weaver runs in the consumer's build: cased with the build machine's culture, a step method ItemsAreShipped
+        // was woven as "İtems are shipped" on a Turkish or Azeri machine (until 4.16.3).
+        var previous = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("tr-TR");
+        try
+        {
+            Assert.Equal("Items are shipped", StepWeaver.HumanizeMethodName("itemsAreShipped"));
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = previous;
+        }
+    }
 }

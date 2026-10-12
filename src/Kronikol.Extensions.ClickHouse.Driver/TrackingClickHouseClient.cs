@@ -325,14 +325,14 @@ public sealed class TrackingClickHouseClient : IClickHouseClient, ITrackingCompo
     {
         if (!_options.LogParameters || parameters is null || parameters.Count == 0)
             return null;
-        return string.Join(", ", parameters.Cast<DbParameter>().Select(p => $"{p.ParameterName}={p.Value}"));
+        return string.Join(", ", parameters.Cast<DbParameter>().Select(p => $"{p.ParameterName}={(p.Value is null or DBNull ? "" : SqlRowFormatter.ValueText(p.Value))}"));
     }
 
     private string? FormatScalar(object? result)
     {
         if (!_options.LogResponseContent) return null;
         if (result is null or DBNull) return "null";
-        var text = result.ToString() ?? "";
+        var text = SqlRowFormatter.ValueText(result);
         var maxLength = _options.MaxValueDisplayLength;
         return text.Length > maxLength ? $"{text[..maxLength]}... ({text.Length} chars)" : text;
     }

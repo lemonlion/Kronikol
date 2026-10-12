@@ -34,7 +34,9 @@ public static partial class StringCasing
         var humanized = Humanize(input);
         return humanized.Length == 0
             ? input
-            : CultureInfo.CurrentCulture.TextInfo.ToTitleCase(humanized);
+            // Invariant, as every casing here: Turkish and Azeri case 'i' otherwise, so a feature's name and stableId
+            // differed by machine (until 4.16.3).
+            : CultureInfo.InvariantCulture.TextInfo.ToTitleCase(humanized);
     }
 
     /// <summary>
@@ -44,12 +46,12 @@ public static partial class StringCasing
     {
         var word = Pascalize(input);
         return word.Length > 0
-            ? $"{char.ToLower(word[0])}{word[1..]}"
+            ? $"{char.ToLowerInvariant(word[0])}{word[1..]}"
             : word;
     }
 
     private static string Pascalize(string input) =>
-        PascalizeRegex().Replace(input, match => match.Groups[1].Value.ToUpper());
+        PascalizeRegex().Replace(input, match => match.Groups[1].Value.ToUpperInvariant());
 
     private static string Humanize(string input)
     {
@@ -81,14 +83,14 @@ public static partial class StringCasing
                 return value.All(char.IsUpper) &&
                        (value.Length > 1 || (match.Index > 0 && input[match.Index - 1] == ' ') || value == "I")
                     ? value
-                    : value.ToLower();
+                    : value.ToLowerInvariant();
             }));
 
         if (result.All(c => c == ' ' || char.IsUpper(c)) && result.Contains(' '))
-            result = result.ToLower();
+            result = result.ToLowerInvariant();
 
         return result.Length > 0
-            ? $"{char.ToUpper(result[0])}{result[1..]}"
+            ? $"{char.ToUpperInvariant(result[0])}{result[1..]}"
             : result;
     }
 }

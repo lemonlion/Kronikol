@@ -42,7 +42,9 @@ public class WarmUpCorpusTests
         var wantScenarios = want.GetProperty("scenarios").EnumerateObject().ToDictionary(p => p.Name, p => p.Value.GetDouble());
         Assert.Equal(wantScenarios.Keys.Order(StringComparer.Ordinal), found.ScenarioMs.Keys.Order(StringComparer.Ordinal));
         foreach (var (id, ms) in found.ScenarioMs)
-            Assert.InRange(ms, wantScenarios[id] - 1, wantScenarios[id] + 1);
+            // To the tick, as warmup.py counts since 4.16.3: until then it rounded each end to the microsecond, so this
+            // took anything within a millisecond and could not see the two disagree by less.
+            Assert.Equal(wantScenarios[id], ms, 6);
     }
 
     [Fact]

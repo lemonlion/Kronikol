@@ -1762,10 +1762,13 @@ public static class ReportGenerator
         if (hasDurations)
         {
             // Each scenario's own time: a scenario slow only because it paid the run's first-call warm-up is not slow
-            // (plans/WARM_UP_PLAN.md R2), and report-duration-filter-function.js compares the same number.
+            // (plans/WARM_UP_PLAN.md R2), and report-duration-filter-function.js compares the same number. Read as the
+            // filter reads it, data-duration-ms less data-warmup-ms with each written whole, so a percentile is a time
+            // some scenario takes and the button that names it shows that scenario (until 4.16.3 the difference was
+            // rounded once, and could sit a millisecond above it).
             var durationsMs = features.SelectMany(f => f.Scenarios)
                 .Where(s => s.Duration.HasValue)
-                .Select(s => s.Duration!.Value.TotalMilliseconds - WarmUpMsOf(warmUp, s.Id))
+                .Select(s => WholeMs(s.Duration!.Value.TotalMilliseconds) - WholeMs(WarmUpMsOf(warmUp, s.Id)))
                 .OrderBy(d => d)
                 .ToArray();
             var p50Ms = Percentile(durationsMs, 0.50);
@@ -1968,7 +1971,10 @@ public static class ReportGenerator
             {
                 var maxDuration = timelineScenarios.Max(x => x.Scenario.Duration!.Value.TotalMilliseconds);
                 body.Append($"<div id=\"scenario-timeline\" class=\"scenario-timeline\"{(showTimelinePanel ? "" : " style=\"display:none\"")}>");
-                body.Append("<div class=\"timeline-header\">Scenario Timeline <span class=\"timeline-info\" title=\"The Scenario Timeline shows every test scenario ordered by duration (longest first). Each bar is proportional to the scenario's elapsed time, colour-coded by result: green = passed, red = failed, grey = skipped, orange = bypassed. Use it to quickly spot slow tests, compare relative durations, and identify performance outliers across the entire test run.\">&#x1F6C8;</span></div>");
+                body.Append("<div class=\"timeline-header\">Scenario Timeline <span class=\"timeline-info\" title=\"The Scenario Timeline shows every test scenario ordered by duration (longest first). Each bar is proportional to the scenario's elapsed time, colour-coded by result: green = passed, red = failed, grey = skipped, orange = bypassed. Use it to quickly spot slow tests, compare relative durations, and identify performance outliers across the entire test run."
+                    // A page that draws a warm-up stripe says what it is (until 4.16.3 the legend named every colour but it).
+                    + (warmUp.ScenarioMs.Count > 0 ? " A striped start is the first-call warm-up the scenario paid; hover over the bar for its calls." : "")
+                    + "\">&#x1F6C8;</span></div>");
                 foreach (var (featureName, scenario) in timelineScenarios)
                 {
                     var durationMs = scenario.Duration!.Value.TotalMilliseconds;
@@ -2585,7 +2591,7 @@ public static class ReportGenerator
             foreach (var scenario in orderedScenarios)
             {
                 AppendYaml(yml, "      - Scenario: ", scenario.DisplayName);
-                yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLower() + "\n");
+                yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLowerInvariant() + "\n");
 
                 if (scenario.Labels is { Length: > 0 })
                 {
@@ -4237,6 +4243,11 @@ public static class ReportGenerator
     private static double WarmUpMsOf(WarmUpResult? warmUp, string scenarioId) =>
         warmUp is not null && warmUp.ScenarioMs.TryGetValue(scenarioId, out var ms) ? ms : 0;
 
+    /// <summary>Milliseconds as a <c>data-duration-ms</c> or <c>data-warmup-ms</c> attribute writes them (<c>F0</c>), which
+    /// is what the page's scripts read back.</summary>
+    private static double WholeMs(double ms) =>
+        double.Parse(ms.ToString("F0", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
+
     /// <summary>The value at <paramref name="p"/> of sorted values, by nearest rank: the P50 of two is the smaller, where
     /// <c>sorted[(int)(n * p)]</c> picked the larger until 4.9.0.</summary>
     private static double Percentile(double[] sorted, double p) =>
@@ -4262,11 +4273,16 @@ public static class ReportGenerator
     /// </summary>
     internal static string WarmUpTooltip(TimeSpan duration, double warmUpMs, IEnumerable<WarmUpMark> calls)
     {
-        // Under a second, cut to whole milliseconds as the badge and the timeline write it (FormatDurationBadge), so the
-        // tooltip never reads 697 ms beside a badge reading 696ms.
-        static string Time(double ms) => ms >= 1000
-            ? string.Create(CultureInfo.InvariantCulture, $"{ms / 1000:0.##} s")
-            : string.Create(CultureInfo.InvariantCulture, $"{Math.Floor(ms):0} ms");
+        // As the badge and the timeline write it (FormatDurationBadge): under a second cut to whole milliseconds, so the
+        // tooltip never reads 697 ms beside a badge reading 696ms, and from a minute whole minutes and seconds, cut, where
+        // it read 62 s beside 1m 1s (until 4.16.3). Between them, to the hundredth the badge rounds to a tenth.
+        static string Time(double ms)
+        {
+            if (ms < 1000)
+                return string.Create(CultureInfo.InvariantCulture, $"{Math.Floor(ms):0} ms");
+            var badge = FormatDurationBadge(TimeSpan.FromMilliseconds(ms));
+            return badge.Contains('m') ? badge : string.Create(CultureInfo.InvariantCulture, $"{ms / 1000:0.##} s");
+        }
         static string Baseline(double ms) => string.Create(CultureInfo.InvariantCulture, $"{ms:0.#} ms");
 
         var text = new StringBuilder($"{Time(duration.TotalMilliseconds)}, {Time(warmUpMs)} of it first-call warm-up: ");
@@ -4289,7 +4305,11 @@ public static class ReportGenerator
         if (total.TotalSeconds < 1)
             return $"{(int)total.TotalMilliseconds}ms";
         if (total.TotalMinutes < 1)
-            return string.Create(CultureInfo.InvariantCulture, $"{total.TotalSeconds:F1}s");
+        {
+            var seconds = string.Create(CultureInfo.InvariantCulture, $"{total.TotalSeconds:F1}");
+            // Just under a minute the tenth rounds up to one: written as the minute it reads as, not as 60.0s (until 4.16.3).
+            return seconds == "60.0" ? "1m 0s" : seconds + "s";
+        }
         return $"{(int)total.TotalMinutes}m {total.Seconds}s";
     }
 
@@ -4644,17 +4664,30 @@ public static class ReportGenerator
 
             var request = pair.FirstOrDefault(l => l.Type == RequestResponseType.Request);
             var response = pair.FirstOrDefault(l => l.Type == RequestResponseType.Response);
-            if (request?.Timestamp is not { } start || response?.Timestamp is not { } end)
-                continue;
-
-            // Two records stamped with one instant measured nothing (a pair logged after the call, a deferred flush, a
-            // response the producer did not stamp): no duration, where until 4.7.3 every reader showed 0 ms.
-            var elapsed = (end - start).TotalMilliseconds;
-            if (elapsed > 0)
+            if (InteractionDuration(request, response) is { } elapsed)
                 durations[pair.Key] = elapsed;
         }
 
         return durations;
+    }
+
+    /// <summary>
+    /// A call's duration as the data files write it: what its capturer measured, else the time between its two records
+    /// when that is more than none; null when neither says. <see cref="ComputeInteractionDurations"/> applies it to a run,
+    /// and Failures.md, the sequence diagram's loop label and the component diagram's statistics to one call (until
+    /// 4.16.3 the last two read the timestamps alone).
+    /// </summary>
+    internal static double? InteractionDuration(RequestResponseLog? request, RequestResponseLog? response)
+    {
+        if ((request?.DurationMs ?? response?.DurationMs) is { } measured)
+            return measured;
+        if (request?.Timestamp is not { } start || response?.Timestamp is not { } end)
+            return null;
+
+        // Two records stamped with one instant measured nothing (a pair logged after the call, a deferred flush, a
+        // response the producer did not stamp): no duration, where until 4.7.3 every reader showed 0 ms.
+        var elapsed = (end - start).TotalMilliseconds;
+        return elapsed > 0 ? elapsed : null;
     }
 
     /// <summary>
@@ -5287,7 +5320,7 @@ public static class ReportGenerator
                                         warmUp is not null && warmUp.ScenarioMs.TryGetValue(s.Id, out var xmlWarmUpMs)
                                             ? new XElement("WarmUpSeconds", (xmlWarmUpMs / 1000).ToString("F3", CultureInfo.InvariantCulture))
                                             : null,
-                                        new XElement("IsHappyPath", s.IsHappyPath.ToString().ToLower()),
+                                        new XElement("IsHappyPath", s.IsHappyPath.ToString().ToLowerInvariant()),
                                         s.ErrorMessage != null ? new XElement("ErrorMessage", s.ErrorMessage) : null,
                                         s.ErrorStackTrace != null ? new XElement("ErrorStackTrace", s.ErrorStackTrace) : null,
                                         s.FailureCause != null ? new XElement("FailureCause", s.FailureCause) : null,
@@ -5587,7 +5620,7 @@ public static class ReportGenerator
                     yml.Append("        WarmUpSeconds: " + (ymlWarmUpMs / 1000).ToString("F3", CultureInfo.InvariantCulture) + "\n");
                 if (scenario.EndedAt is { } ymlEndedAt)
                     AppendYaml(yml, "        EndedAt: ", FormatInstant(ymlEndedAt));
-                yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLower() + "\n");
+                yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLowerInvariant() + "\n");
 
                 if (scenario.ErrorMessage is not null)
                     AppendYaml(yml, "        ErrorMessage: ", scenario.ErrorMessage);
@@ -5880,7 +5913,7 @@ public static class ReportGenerator
             foreach (var scenario in orderedScenarios)
             {
                 AppendYaml(yml, "      - Scenario: ", scenario.DisplayName);
-                yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLower() + "\n");
+                yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLowerInvariant() + "\n");
 
                 if (scenario.Labels is { Length: > 0 })
                 {
@@ -5969,7 +6002,7 @@ public static class ReportGenerator
                                 f.Scenarios.OrderByDescending(s => s.IsHappyPath).ThenBy(s => s.DisplayName).Select(s =>
                                     new XElement("Scenario",
                                         new XElement("Name", s.DisplayName),
-                                        new XElement("IsHappyPath", s.IsHappyPath.ToString().ToLower()),
+                                        new XElement("IsHappyPath", s.IsHappyPath.ToString().ToLowerInvariant()),
                                         (s.Labels is { Length: > 0 }) ? new XElement("Labels", s.Labels.Select(l => new XElement("Label", l))) : null,
                                         (s.Categories is { Length: > 0 }) ? new XElement("Categories", s.Categories.Select(c => new XElement("Category", c))) : null,
                                         (s.BackgroundSteps is { Length: > 0 }) ? new XElement("BackgroundSteps", s.BackgroundSteps.Select(MapSpecStepXml)) : null,
@@ -6931,6 +6964,8 @@ public static class ReportGenerator
     private static string GenerateTestRunReportXmlSchema()
     {
         var xs = XNamespace.Get("http://www.w3.org/2001/XMLSchema");
+        XElement NonNegativeDecimal() => new(xs + "simpleType", new XElement(xs + "restriction", new XAttribute("base", "xs:decimal"),
+            new XElement(xs + "minInclusive", new XAttribute("value", "0"))));
 
         var resultEnumValues = Enum.GetNames(typeof(ExecutionResult));
 
@@ -7019,10 +7054,14 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "WarmUp"), new XAttribute("minOccurs", "0"),
                     new XElement(xs + "complexType",
                         new XElement(xs + "sequence",
-                            new XElement(xs + "element", new XAttribute("name", "Kind"), new XAttribute("type", "xs:string")),
+                            // Held as the JSON schema holds them (until 4.16.3 any kind and any number validated).
+                            new XElement(xs + "element", new XAttribute("name", "Kind"),
+                                new XElement(xs + "simpleType", new XElement(xs + "restriction", new XAttribute("base", "xs:string"),
+                                    new XElement(xs + "enumeration", new XAttribute("value", WarmUpMark.FirstKind)),
+                                    new XElement(xs + "enumeration", new XAttribute("value", WarmUpMark.WaitedKind))))),
                             new XElement(xs + "element", new XAttribute("name", "Shape"), new XAttribute("type", "xs:string")),
-                            new XElement(xs + "element", new XAttribute("name", "BaselineMs"), new XAttribute("type", "xs:decimal")),
-                            new XElement(xs + "element", new XAttribute("name", "BaselineCalls"), new XAttribute("type", "xs:int")),
+                            new XElement(xs + "element", new XAttribute("name", "BaselineMs"), NonNegativeDecimal()),
+                            new XElement(xs + "element", new XAttribute("name", "BaselineCalls"), new XAttribute("type", "xs:positiveInteger")),
                             new XElement(xs + "element", new XAttribute("name", "First"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))))),
                 new XElement(xs + "element", new XAttribute("name", "StepPath"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
             ));
@@ -7036,7 +7075,7 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "Description"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "Result"), new XAttribute("type", "ExecutionResult")),
                 new XElement(xs + "element", new XAttribute("name", "DurationSeconds"), new XAttribute("type", "xs:decimal")),
-                new XElement(xs + "element", new XAttribute("name", "WarmUpSeconds"), new XAttribute("type", "xs:decimal"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "WarmUpSeconds"), NonNegativeDecimal(), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "IsHappyPath"), new XAttribute("type", "xs:boolean")),
                 new XElement(xs + "element", new XAttribute("name", "ErrorMessage"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "ErrorStackTrace"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),

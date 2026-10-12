@@ -9,7 +9,8 @@ function filter_duration() {
         update_url_hash();
         return;
     }
-    var thresholdMs = threshold * 1000;
+    // Whole milliseconds, as the attributes below are written, so a threshold of 0.03 s is 30, not 30.000000000000004.
+    var thresholdMs = Math.round(threshold * 1000);
     for (var i = 0; i < c.items.length; i++) {
         if (!c.items[i].el.hasAttribute('data-duration-ms')) { c.items[i].dur = true; continue; }
         var ms = parseFloat(c.items[i].el.getAttribute('data-duration-ms'));
@@ -39,6 +40,8 @@ function set_percentile(btn) {
         if (customWrap) customWrap.style.display = 'none';
         btn.classList.add('percentile-active');
         var ms = parseFloat(btn.getAttribute('data-threshold-ms'));
-        if (input) { input.value = (ms / 1000).toFixed(1); filter_duration(); }
+        // The percentile itself, not rounded to a tenth of a second: a P50 of 30 ms read 0.0, which filters nothing, and a
+        // P90 of 1,259 ms read 1.3, which hid the scenario it names.
+        if (input) { input.value = String(ms / 1000); filter_duration(); }
     }
 }

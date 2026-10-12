@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
@@ -222,7 +223,7 @@ public class TrackingSpannerCommand : DbCommand
 
         var responseContent = effectiveVerbosity == SpannerTrackingVerbosity.Summarised && !_options.LogResponseContent
             ? null
-            : rowsAffected.HasValue ? $"{rowsAffected.Value} rows affected" : null;
+            : rowsAffected.HasValue ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected" : null;
 
         _connection.Tracker.LogResponse(op, requestResponseId, traceId, responseContent);
     }
@@ -245,7 +246,7 @@ public class TrackingSpannerCommand : DbCommand
     {
         if (!_options.LogResponseContent) return null;
         if (result is null or DBNull) return "null";
-        var str = result.ToString() ?? "";
+        var str = SqlRowFormatter.ValueText(result);
         return str.Length > 500 ? $"{str[..500]}... ({str.Length} chars)" : str;
     }
 
@@ -256,7 +257,7 @@ public class TrackingSpannerCommand : DbCommand
 
         var paramStr = string.Join(", ", _inner.Parameters
             .Cast<DbParameter>()
-            .Select(p => $"{p.ParameterName}={p.Value}"));
+            .Select(p => $"{p.ParameterName}={(p.Value is null or DBNull ? "" : SqlRowFormatter.ValueText(p.Value))}"));
 
         return $"{CommandText}\n-- Parameters: {paramStr}";
     }

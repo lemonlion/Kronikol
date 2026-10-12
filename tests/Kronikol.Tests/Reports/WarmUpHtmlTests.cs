@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using AngleSharp;
 using AngleSharp.Dom;
@@ -54,6 +55,11 @@ public class WarmUpHtmlTests : IDisposable
     [InlineData(696.6, 612.7, "696ms", " · 612ms warm-up", "696 ms, 612 ms of it first-call warm-up: POST /orders 612 ms (later calls 5 ms)")]
     // Just under a second the tooltip wrote 1000 ms beside a badge reading 999ms.
     [InlineData(1999.7, 999.7, "2.0s", " · 999ms warm-up", "2 s, 999 ms of it first-call warm-up: POST /orders 999 ms (later calls 5 ms)")]
+    // From a minute the badge cuts to whole minutes and seconds; the tooltip rounded, so 61.996 s read 1m 1s on the badge
+    // and 62 s in the tooltip (until 4.16.3).
+    [InlineData(61996, 61996, "1m 1s", " · 1m 1s warm-up", "1m 1s, 1m 1s of it first-call warm-up: POST /orders 1m 1s (later calls 5 ms)")]
+    // Just under a minute the badge's tenth of a second rounds up to a minute, which it wrote as 60.0s.
+    [InlineData(59960, 1500, "1m 0s", " · 1.5s warm-up", "1m 0s, 1.5 s of it first-call warm-up: POST /orders 1.5 s (later calls 5 ms)")]
     public void The_tooltip_reads_each_time_as_the_badge_writes_it(double durationMs, double firstMs, string text, string note, string tooltip)
     {
         var (features, logs) = Marked(firstMs);
@@ -68,6 +74,41 @@ public class WarmUpHtmlTests : IDisposable
         var row = page.QuerySelectorAll("#scenario-timeline .timeline-row").Single(r => r.QuerySelector(".timeline-label")!.TextContent == "Place");
         Assert.Equal(text, row.QuerySelector(".timeline-duration")!.TextContent);
         Assert.Equal(tooltip, row.QuerySelector(".timeline-bar")!.GetAttribute("title"));
+    }
+
+    [Fact]
+    public void A_percentile_is_an_own_time_as_the_filter_reads_it()
+    {
+        // The filter reads a scenario's own time as data-duration-ms less data-warmup-ms, each written whole. A percentile
+        // taken before either was rounded sat a millisecond above the scenario it names, and its button hid that scenario
+        // (until 4.16.3): 1,910.4 ms with 650.6 ms of warm-up is 1,259.8 ms of its own, read as 1,910 less 651.
+        var logs = new List<RequestResponseLog>();
+        Call(logs, "s1", 0, 650.6);
+        Call(logs, "s3", 1000, 5);
+        Call(logs, "s3", 1100, 5);
+        Feature[] features =
+        [
+            new()
+            {
+                DisplayName = "Orders",
+                Scenarios =
+                [
+                    new Scenario { Id = "s1", DisplayName = "Place", Result = ExecutionResult.Passed, Duration = TimeSpan.FromTicks(19_104_000) },
+                    new Scenario { Id = "s2", DisplayName = "Place again", Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(400) },
+                    new Scenario { Id = "s3", DisplayName = "Place twice", Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(300) }
+                ]
+            }
+        ];
+
+        var page = Page((features, logs));
+
+        var place = Scenario(page, "s1");
+        Assert.Equal(1259, int.Parse(place.GetAttribute("data-duration-ms")!, CultureInfo.InvariantCulture)
+            - int.Parse(place.GetAttribute("data-warmup-ms")!, CultureInfo.InvariantCulture));
+        // Nearest rank over 300, 400 and Place's own time: P90 is Place's.
+        var p90 = page.QuerySelectorAll(".percentile-btn").Single(b => b.TextContent.StartsWith("P90", StringComparison.Ordinal));
+        Assert.Equal("1259", p90.GetAttribute("data-threshold-ms"));
+        Assert.Equal("1259", page.QuerySelector(".duration-filters")!.GetAttribute("data-p90"));
     }
 
     [Fact]
@@ -185,6 +226,17 @@ public class WarmUpHtmlTests : IDisposable
     }
 
     [Fact]
+    public void The_timeline_says_what_its_stripes_are_when_it_draws_them()
+    {
+        // The striped start of a bar is the warm-up's share; the legend named every colour but that (until 4.16.3). A
+        // page that draws no stripe says nothing of them, and so reads as it did.
+        const string Stripes = "A striped start is the first-call warm-up the scenario paid; hover over the bar for its calls.";
+
+        Assert.Contains(Stripes, Page(Marked()).QuerySelector("#scenario-timeline .timeline-info")!.GetAttribute("title"));
+        Assert.DoesNotContain(Stripes, Page(Marked(firstMs: 5)).QuerySelector("#scenario-timeline .timeline-info")!.GetAttribute("title"));
+    }
+
+    [Fact]
     public void A_parameterized_group_sums_its_rows_warm_up_as_it_sums_their_durations()
     {
         var (features, logs) = Marked();
@@ -213,8 +265,10 @@ public class WarmUpHtmlTests : IDisposable
         var logs = new List<RequestResponseLog>();
         Call(logs, "s1", 0, firstMs);
         Call(logs, "s2", 10, firstMs > 20 ? firstMs - 10 : firstMs);
-        Call(logs, "s3", 1000, 5);
-        Call(logs, "s3", 1100, 5);
+        // The later calls start after the first ends, however long it took, so it has a baseline.
+        var later = firstMs < 1000 ? 1000 : firstMs + 1000;
+        Call(logs, "s3", later, 5);
+        Call(logs, "s3", later + 100, 5);
         Feature[] features =
         [
             new()

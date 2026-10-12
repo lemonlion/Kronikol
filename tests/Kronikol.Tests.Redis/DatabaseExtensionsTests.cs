@@ -250,6 +250,29 @@ public class RedisTrackingDatabaseProxyTests : IDisposable
         Assert.Equal("Increment", logs[0].Method.Value?.ToString());
     }
 
+    [Theory]
+    [InlineData("de-DE")]
+    [InlineData("sv-SE")]
+    public void A_number_the_server_answers_reads_the_same_on_every_machine(string culture)
+    {
+        // Until 4.16.3 a double read -1,5 on a German machine and a negative count took a Swedish minus sign.
+        var stub = StubDatabase.CreateProxy(s => { s.NextDoubleResult = -1.5; s.NextIncrementResult = -3; });
+        var db = stub.WithRedisTestTracking(MakeOptions());
+        var previous = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo(culture);
+        try
+        {
+            db.StringIncrement("price", 0.5);
+            db.StringDecrement("stock");
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = previous;
+        }
+
+        Assert.Equal(["-1.5", "-3"], GetLogsFromThisTest().Where(l => l.Type == RequestResponseType.Response).Select(l => l.Content));
+    }
+
     [Fact]
     public void Untracked_Method_Does_Not_Log()
     {

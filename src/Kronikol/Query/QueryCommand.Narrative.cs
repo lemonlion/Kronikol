@@ -613,16 +613,20 @@ public static partial class QueryCommand
         var later = $"later calls {baseline} median ({warmUp.BaselineCalls})";
         if (!warmUp.Waited)
             return $"first {warmUp.Shape} of the run: {later}";
-        var first = warmUp.First is { } id
+        return FirstCallAddress(index, warmUp) is { } first
+            ? $"waited for {first}, the run's first {warmUp.Shape}: {later}"
+            : $"waited for the run's first {warmUp.Shape}: {later}";
+    }
+
+    /// <summary>For a call that waited, the address of the run's first call of its shape, the call it waited for; null for
+    /// the first call itself, or when the report does not hold it.</summary>
+    internal static string? FirstCallAddress(ReportIndex index, WarmUpEntry warmUp) =>
+        warmUp.Waited && warmUp.First is { } id
             ? index.Scenarios.SelectMany(s => s.Interactions
                     .Where(i => i.RequestResponseId == id && i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase))
                     .Select(i => i.Address(s)))
                 .FirstOrDefault()
             : null;
-        return first is null
-            ? $"waited for the run's first {warmUp.Shape}: {later}"
-            : $"waited for {first}, the run's first {warmUp.Shape}: {later}";
-    }
 
     private static bool TryScenario(ReportIndex index, QueryOptions options, TextWriter error, out ScenarioEntry scenario) =>
         TryScenario(index, options, error, out scenario, out _);

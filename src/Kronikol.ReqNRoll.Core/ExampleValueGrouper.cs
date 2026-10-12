@@ -9,10 +9,11 @@ namespace Kronikol.ReqNRoll;
 /// </summary>
 internal static class ExampleValueGrouper
 {
-    // Extracts a group name from step text patterns like "the following X:" or "with X:"
+    // Extracts a group name from step text patterns like "the following X:" or "with X:". Every pattern here ignores case
+    // the same way on every machine: under Turkish casing WITH did not match "with" (until 4.16.3).
     private static readonly Regex TableNamePattern = new(
         @"(?:the\s+following\s+)?(?:\w+\s+)?(\w+)\s*:?\s*$",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     /// <summary>
     /// Builds structured ExampleValues and ExampleRawValues from flat Example columns and step table data.
@@ -124,14 +125,14 @@ internal static class ExampleValueGrouper
         // Pattern: "a/the X ... with the following Y:" → X is the parent
         var match = Regex.Match(firstTableStep.Text,
             @"(?:a|the)\s+(?:\w+\s+)?(\w+)\s+""[^""]*""\s+with\s+the\s+following",
-            RegexOptions.IgnoreCase);
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         if (match.Success && !IsGenericWord(match.Groups[1].Value))
             return TitleCase(match.Groups[1].Value);
 
         // Pattern: "a/the NOUN with ..." → NOUN is the parent
         match = Regex.Match(firstTableStep.Text,
             @"(?:a|the)\s+(\w+)\s+(?:with|that|having)",
-            RegexOptions.IgnoreCase);
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         if (match.Success && !IsGenericWord(match.Groups[1].Value))
             return TitleCase(match.Groups[1].Value);
 
@@ -376,7 +377,7 @@ internal static class ExampleValueGrouper
 
         foreach (var pattern in patterns)
         {
-            var match = Regex.Match(stepText, pattern, RegexOptions.IgnoreCase);
+            var match = Regex.Match(stepText, pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             if (match.Success)
             {
                 var name = match.Groups[1].Value;

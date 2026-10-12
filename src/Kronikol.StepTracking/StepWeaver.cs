@@ -625,7 +625,7 @@ public class StepWeaver
         {
             text = text.Substring(keyword.Length + 1);
             if (text.Length > 0)
-                text = char.ToUpper(text[0]) + text.Substring(1);
+                text = char.ToUpperInvariant(text[0]) + text.Substring(1);
         }
 
         return text;
@@ -644,9 +644,10 @@ public class StepWeaver
         // Collapse multiple spaces and trim
         text = Regex.Replace(text, @"\s+", " ").Trim();
 
-        // Sentence case: uppercase first letter, lowercase the rest
+        // Sentence case: uppercase first letter, lowercase the rest. Invariant: the weaver runs in the consumer's build, and
+        // a Turkish or Azeri machine wove "İtems are shipped" (until 4.16.3).
         if (text.Length > 0)
-            text = char.ToUpper(text[0]) + text.Substring(1).ToLowerInvariant();
+            text = char.ToUpperInvariant(text[0]) + text.Substring(1).ToLowerInvariant();
 
         return text;
     }

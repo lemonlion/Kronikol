@@ -44,7 +44,9 @@ internal sealed record WarmUpResult(IReadOnlyDictionary<Guid, WarmUpMark> Calls,
 /// first pays it. For each shape of call a test makes (service, method and templated path), the run's first call is a
 /// warm-up when it took at least <see cref="Ratio"/> times and <see cref="FloorMs"/> more than the median of the shape's
 /// calls that started after it ended, and so is a call that waited for it. The rule's executable spec is
-/// <c>plans/WARM_UP_PLAN.harness/warmup.py</c> (<c>marks</c>), which this must equal call for call.
+/// <c>plans/WARM_UP_PLAN.harness/warmup.py</c> (<c>marks</c>), which this must equal call for call, save a statement's
+/// templated head: the spec does not model it, since no test-made call in its corpus is statement-shaped, and
+/// <c>Statements_with_different_heads_on_one_connection_are_two_shapes</c> holds it instead.
 /// </summary>
 internal static partial class WarmUpCalls
 {
@@ -72,9 +74,15 @@ internal static partial class WarmUpCalls
         var scenarios = new Dictionary<string, Scenario>(StringComparer.Ordinal);
         foreach (var scenario in features.SelectMany(f => f.Scenarios))
             scenarios.TryAdd(scenario.Id, scenario);
+        // Where each scenario's calls stand in the data file: features by display name with the writer's own bare
+        // OrderBy (BuildFeaturesJsonModel; FailuresDigestGenerator.Enumerate says why the comparer must match), then
+        // each feature's scenarios. Calls that tie on everything else are ordered as a reader of the file orders them.
+        var listed = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var scenario in features.OrderBy(f => f.DisplayName).SelectMany(f => f.Scenarios ?? []))
+            listed.TryAdd(scenario.Id, listed.Count);
 
         var durations = ReportGenerator.ComputeInteractionDurations(logs.OfType<RequestResponseLog>().ToArray());
-        var calls = TestCalls(logs, scenarios, durations, rules);
+        var calls = TestCalls(logs, scenarios, listed, durations, rules);
 
         var marks = new Dictionary<Guid, WarmUpMark>();
         foreach (var shape in calls.GroupBy(c => (c.Service, c.Method, c.Target)))
@@ -103,7 +111,11 @@ internal static partial class WarmUpCalls
     private static DateTimeOffset? AsWritten(DateTimeOffset? start) =>
         start is { } at ? new DateTimeOffset(at.UtcTicks - at.UtcTicks % TimeSpan.TicksPerMillisecond, TimeSpan.Zero) : null;
 
-    private sealed record Call(Guid Id, int Order, string ScenarioId, string Service, string Method, string Target, string Shape,
+    /// <summary>
+    /// A call as the pass reads it: <c>Listed</c> is where its scenario stands in the data file, and <c>Order</c> where the
+    /// call stands among the run's records (within one scenario, its place in the file).
+    /// </summary>
+    private sealed record Call(Guid Id, int Listed, int Order, string ScenarioId, string Service, string Method, string Target, string Shape,
         DateTimeOffset? StartAt, double? DurationMs, int? Status)
     {
         public DateTimeOffset Start => StartAt!.Value;
@@ -118,7 +130,7 @@ internal static partial class WarmUpCalls
     /// diagram uses, <c>PlantUmlCreator</c>), and an event a broker delivered is not a request the test made.
     /// </summary>
     private static List<Call> TestCalls(IReadOnlyList<RequestResponseLog?> logs, Dictionary<string, Scenario> scenarios,
-        IReadOnlyDictionary<Guid, double> durations, HistoryShapeRules? rules)
+        Dictionary<string, int> listed, IReadOnlyDictionary<Guid, double> durations, HistoryShapeRules? rules)
     {
         var requests = new List<RequestResponseLog>();
         var responses = new Dictionary<Guid, RequestResponseLog>();
@@ -147,7 +159,7 @@ internal static partial class WarmUpCalls
             // Grouped by the upper-cased method (warmup.py's shape_of) and named with the method as the data file writes
             // it, so a gRPC GetOrderStatus is not written GETORDERSTATUS.
             var target = TargetOf(request, rules);
-            calls.Add(new Call(request.RequestResponseId, calls.Count, request.TestId, request.ServiceName,
+            calls.Add(new Call(request.RequestResponseId, listed[request.TestId], calls.Count, request.TestId, request.ServiceName,
                 MethodOf(request).ToUpperInvariant(), target, $"{ReportGenerator.MethodText(request.Method)} {target}", AsWritten(request.Timestamp),
                 durations.TryGetValue(request.RequestResponseId, out var ms) ? ms : null,
                 InteractionStatus.Split(response?.StatusCode).Code));
@@ -163,9 +175,11 @@ internal static partial class WarmUpCalls
             return;
 
         // In time, not in the data file's order (an ingest replays a test's records as a call tree); ties go to the
-        // shorter call, then to capture order, as warmup.py's stable sort on (start, duration) does.
+        // shorter call, then to the call the data file lists first, as warmup.py's stable sort on (start, duration) over
+        // the file does.
         calls.Sort((a, b) => a.Start != b.Start ? a.Start.CompareTo(b.Start)
             : a.Duration != b.Duration ? a.Duration.CompareTo(b.Duration)
+            : a.Listed != b.Listed ? a.Listed.CompareTo(b.Listed)
             : a.Order.CompareTo(b.Order));
         var first = calls[0];
         var firstEnd = first.End!.Value;

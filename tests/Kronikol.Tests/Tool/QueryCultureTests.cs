@@ -123,6 +123,34 @@ public class QueryCultureTests : IDisposable
         Assert.Equal(VerbTable.Names.Order(StringComparer.Ordinal), Calls.Select(c => c.Verb).Order(StringComparer.Ordinal));
     }
 
+    [Theory]
+    [MemberData(nameof(CultureRun.Data), MemberType = typeof(CultureRun))]
+    public void A_report_scanned_outside_the_query_reads_a_numeric_parameter_as_written(string culture)
+    {
+        // kronikol ctrf and history quarantine scan a report outside the query's invariant scope, where a number among a
+        // step's parameters was written back with the machine's culture (1,1 on a German machine) and as a double (1.10
+        // read 1.1), until 4.16.3. Kronikol writes parameter values as text; a report from another writer need not.
+        ScenarioStep[] steps =
+        [
+            new()
+            {
+                Keyword = "GIVEN", Text = "The cake costs 1.10", Status = ExecutionResult.Passed,
+                Parameters = [new StepParameter { Name = "price", Kind = StepParameterKind.Inline, InlineValue = new InlineParameterValue("1.10", null, VerificationStatus.NotApplicable) }],
+            },
+        ];
+        Feature[] features = [new Feature { DisplayName = "Cakes", Scenarios = [new Scenario { Id = "t0", DisplayName = "Price a cake", Result = ExecutionResult.Passed, Steps = steps }] }];
+        var path = Path.Combine(_directory, "Numeric.json");
+        File.Move(ReportGenerator.GenerateTestRunReportData(features, new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc), "Numeric_" + Guid.NewGuid().ToString("N")[..8] + ".json", DataFormat.Json), path, overwrite: true);
+        var json = File.ReadAllText(path);
+        Assert.Contains("\"value\": \"1.10\"", json, StringComparison.Ordinal);
+        File.WriteAllText(path, json.Replace("\"value\": \"1.10\"", "\"value\": 1.10", StringComparison.Ordinal));
+
+        var index = CultureRun.Under(culture, () => ReportScanner.Scan(path));
+
+        Assert.Equal(["price", "1.10"], index.Scenarios.Single().Steps.Single().Parameters);
+    }
+
     // ─── Harness ───────────────────────────────────────────────
 
     private static (string Output, string Error, int Exit) Run(string command, string report, params string[] args)

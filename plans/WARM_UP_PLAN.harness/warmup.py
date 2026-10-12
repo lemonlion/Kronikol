@@ -67,6 +67,16 @@ def ts(s):
     return dt.datetime.fromisoformat(s.replace('Z', '+00:00')) if s else None
 
 
+EPOCH = dt.datetime(1970, 1, 1, tzinfo=dt.timezone.utc)
+TICKS_PER_MS = 10_000
+
+
+def ticks(d):
+    """An instant in 100 ns ticks, as .NET counts them: a call's end is its start plus its duration to the tick, as
+    WarmUpCalls computes it, where a timedelta would round it to the microsecond."""
+    return (d - EPOCH) // dt.timedelta(microseconds=1) * 10
+
+
 def reduce_report(path):
     """The fields the rule reads, one entry per call (a request and its response)."""
     d = json.load(open(path, encoding='utf-8'))
@@ -83,7 +93,9 @@ def reduce_report(path):
                 if req is None:
                     continue
                 dur = req.get('durationMs')
-                if dur is None and res is not None and req.get('timestamp') and res.get('timestamp'):
+                # Derived only for a report written before the key existed: a null the writer wrote means the call
+                # has no duration (two records with one instant, 4.7.3), and the pass leaves its shape unjudged.
+                if 'durationMs' not in req and res is not None and req.get('timestamp') and res.get('timestamp'):
                     dur = (ts(res['timestamp']) - ts(req['timestamp'])).total_seconds() * 1000.0
                 calls.append({
                     'rid': rid, 'caller': req.get('callerName') or '', 'service': req.get('serviceName') or '',
@@ -122,11 +134,13 @@ def load(loader):
               'wall': (s.get('durationSeconds') or 0.0) * 1000.0, 'calls': []}
         services = {c['service'] for c in s['calls']}
         for c in s['calls']:
-            start = ts(c['start'])
+            # In ticks (see ticks): with a microsecond end, a 600.0004 ms first call ended before a call that started
+            # 600 ms after it, where the report's pass reads the two as overlapping.
+            start = ticks(ts(c['start'])) if c['start'] else None
             dur = c['durationMs']
             call = dict(c)
             call.update(scenario=sc, start=start, dur=dur,
-                        end=(start + dt.timedelta(milliseconds=dur)) if (start is not None and dur is not None) else None,
+                        end=(start + round(dur * TICKS_PER_MS)) if (start is not None and dur is not None) else None,
                         # Plan 4.1 step 1: the test's own call. Its caller never appears as a service in the
                         # scenario (the rule PlantUmlCreator uses to pick the diagram's actor), and it is a
                         # request, not an event a broker delivered.
@@ -192,7 +206,7 @@ def detect(calls, variant='P'):
             if not (first['start'] <= c['start'] < first['end']):
                 continue
             by_ratio = 'ratio' in waiters and c['dur'] >= ratio * med and c['dur'] - med >= floor
-            released = ('release' in waiters and abs((c['end'] - first['end']).total_seconds() * 1000.0) <= RELEASE_MS
+            released = ('release' in waiters and abs(c['end'] - first['end']) <= RELEASE_MS * TICKS_PER_MS
                         and c['dur'] - med >= floor)
             if by_ratio or released:
                 c['warm'] = ('waited', med, len(later), first['rid'])
@@ -236,12 +250,12 @@ def union_ms(intervals):
     for s, e in sorted(intervals):
         if cur_e is None or s > cur_e:
             if cur_e is not None:
-                total += (cur_e - cur_s).total_seconds() * 1000.0
+                total += (cur_e - cur_s) / TICKS_PER_MS
             cur_s, cur_e = s, e
         elif e > cur_e:
             cur_e = e
     if cur_e is not None:
-        total += (cur_e - cur_s).total_seconds() * 1000.0
+        total += (cur_e - cur_s) / TICKS_PER_MS
     return total
 
 

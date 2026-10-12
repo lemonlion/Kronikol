@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using StackExchange.Redis;
 
@@ -224,8 +225,9 @@ public class RedisTrackingDatabase : DispatchProxy
             RedisValue rv when !rv.IsNull => rv.ToString(),
             RedisValueWithExpiry rve when !rve.Value.IsNull => rve.Value.ToString(),
             Lease<byte> lease when lease is not null && lease.Length > 0 => $"{lease.Length} bytes",
-            long l => l.ToString(),
-            double d => d.ToString(),
+            // Invariant: a double read 1,5 on a German machine and a negative long took the culture's minus sign (until 4.16.3).
+            long l => l.ToString(CultureInfo.InvariantCulture),
+            double d => d.ToString(CultureInfo.InvariantCulture),
             bool b => b.ToString(),
             _ => null,
         };

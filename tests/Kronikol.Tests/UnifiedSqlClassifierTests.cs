@@ -5,6 +5,39 @@ namespace Kronikol.Tests;
 
 public class UnifiedSqlClassifierTests
 {
+    // ─── The machine's culture ─────────────────────────────────
+
+    [Theory]
+    [InlineData("insert into users (name) values (@name)")]
+    [InlineData("insert or ignore into users (name) values (@name)")]
+    [InlineData("insert into users (id) values (1) on conflict (id) do update set id = 2")]
+    [InlineData("insert into users (id) values (1) on duplicate key update id = 2")]
+    [InlineData("with recent as (select id from users) insert into archive select id from recent")]
+    [InlineData("exec dbo.refresh_totals")]
+    [InlineData("execute dbo.refresh_totals")]
+    [InlineData("commit")]
+    [InlineData("drop table if exists users")]
+    [InlineData("create index if not exists ix_users on users (name)")]
+    [InlineData("optimize table events")]
+    [InlineData("detach dictionary ids")]
+    [InlineData("attach permanently table events")]
+    [InlineData("rename dictionary ids to old_ids")]
+    [InlineData("alter table events on cluster main delete where id = 1")]
+    [InlineData("select * from users where id in (1, 2) limit 1")]
+    [InlineData("set nocount on; insert into users (id) values (1)")]
+    public void A_statement_in_small_letters_classifies_the_same_on_a_machine_whose_culture_cases_i_otherwise(string sql)
+    {
+        // Turkish pairs I with ı and i with İ, and a case-insensitive pattern built at run time follows the machine's
+        // culture unless told not to (ExampleValueGrouper's did until 4.16.3, so WITH missed "with"). These patterns
+        // are source-generated, which fixes their casing when the code is built; a guard, so INSERT keeps matching
+        // "insert" on a Turkish machine if one is ever built at run time.
+        var english = CultureRun.Under("en-US", () => UnifiedSqlClassifier.Classify(sql));
+        var turkish = CultureRun.Under("tr-TR", () => UnifiedSqlClassifier.Classify(sql));
+
+        Assert.NotEqual(UnifiedSqlOperation.Other, english.Operation);
+        Assert.Equal(english, turkish);
+    }
+
     // ─── Basic keyword classification ───────────────────────────
 
     [Fact]

@@ -230,7 +230,10 @@ public static class MergeableReportMerger
             kept.Add(report with
             {
                 Features = features.ToArray(),
-                Interactions = report.Interactions.Where(i => !duplicateIds.Contains(i.TestId)).ToArray(),
+                // An expired call sits under no scenario and names the one it came from (until 4.16.3 a copy's were kept).
+                Interactions = report.Interactions
+                    .Where(i => !duplicateIds.Contains(i.TestId) && !(i.ExpiredFromTestId is { } from && duplicateIds.Contains(from)))
+                    .ToArray(),
                 Diagrams = report.Diagrams.Where(d => !duplicateIds.Contains(d.TestRuntimeId)).ToArray(),
                 StepPaths = report.StepPaths.Where(e => !duplicateIds.Contains(e.Key)).ToDictionary(e => e.Key, e => e.Value, StringComparer.Ordinal),
                 WarmUp = WithoutScenarios(report.WarmUp, report.Interactions, duplicateIds),
@@ -331,9 +334,13 @@ public static class MergeableReportMerger
                 .ToArray(),
             Diagrams = report.Diagrams.Select(d => d with { TestRuntimeId = Id(d.TestRuntimeId) }).ToArray(),
             StepPaths = report.StepPaths.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal),
-            WarmUp = report.WarmUp.ScenarioMs.Count == 0
+            // A mark names its scenario too: the page lists a scenario's calls in its tooltips by it, so a mark left on the
+            // old id was listed under the other shard's scenario, and the renamed one listed none (until 4.16.3).
+            WarmUp = report.WarmUp.Calls.Count == 0 && report.WarmUp.ScenarioMs.Count == 0
                 ? report.WarmUp
-                : report.WarmUp with { ScenarioMs = report.WarmUp.ScenarioMs.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal) },
+                : new WarmUpResult(
+                    report.WarmUp.Calls.ToDictionary(e => e.Key, e => e.Value with { ScenarioId = Id(e.Value.ScenarioId) }),
+                    report.WarmUp.ScenarioMs.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal)),
             Annotations = report.Annotations.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal),
             InternalFlowSegments = report.InternalFlowSegments.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal),
             WholeTestFlow = report.WholeTestFlow.ToDictionary(e => Id(e.Key), e => e.Value, StringComparer.Ordinal)

@@ -393,6 +393,29 @@ public class WarmUpCallsTests
     }
 
     [Fact]
+    public void Calls_that_tie_are_ordered_as_the_data_file_lists_them()
+    {
+        // Calls that start in one millisecond and take as long tie on everything the file records but its order: features
+        // by name, then each feature's scenarios, then their calls (warmup.py's stable sort). An ingest stamps whole
+        // milliseconds, so parallel calls tie like this; the capture order, which the file does not keep, decided until
+        // 4.16.3, and the report's first call was another than the one its own file gives.
+        var run = new Run().Scenario("b1", feature: "B").Scenario("a1", feature: "A").Scenario("a2", feature: "A");
+        var capturedFirst = run.Call("b1", 0, 600);
+        var capturedSecond = run.Call("a2", 0, 600);
+        var listedFirst = run.Call("a1", 0, 600);
+        run.Call("a2", 1000, 5);
+        run.Call("a2", 1100, 5);
+
+        var found = run.Find(asCaptured: true);
+
+        Assert.Equal(WarmUpMark.FirstKind, found.Calls[listedFirst].Kind);
+        Assert.Equal(WarmUpMark.WaitedKind, found.Calls[capturedFirst].Kind);
+        Assert.Equal(WarmUpMark.WaitedKind, found.Calls[capturedSecond].Kind);
+        Assert.Equal(listedFirst, found.Calls[capturedFirst].First);
+        Assert.Equal(listedFirst, found.Calls[capturedSecond].First);
+    }
+
+    [Fact]
     public void A_failing_first_call_is_not_compared_with_calls_that_succeeded()
     {
         var run = new Run().Scenario("s1");
@@ -438,11 +461,15 @@ public class WarmUpCallsTests
         private static readonly DateTimeOffset T0 = new(2026, 10, 5, 10, 0, 0, TimeSpan.Zero);
         private readonly List<RequestResponseLog> _logs = [];
         private readonly Dictionary<string, List<Scenario>> _features = new(StringComparer.Ordinal);
+        private readonly List<string> _captured = [];
 
         public Run Scenario(string id, double? durationMs = 10_000, string feature = "Orders")
         {
             if (!_features.TryGetValue(feature, out var scenarios))
+            {
                 _features[feature] = scenarios = [];
+                _captured.Add(feature);
+            }
             scenarios.Add(new Scenario
             {
                 Id = id,
@@ -469,9 +496,12 @@ public class WarmUpCallsTests
             return id;
         }
 
-        public WarmUpResult Find(HistoryShapeRules? rules = null) =>
-            WarmUpCalls.Find(_features.OrderBy(f => f.Key, StringComparer.Ordinal)
-                .Select(f => new Feature { DisplayName = f.Key, Scenarios = f.Value.ToArray() }).ToArray(), _logs, rules);
+        /// <param name="rules">The consumer's shape templates.</param>
+        /// <param name="asCaptured">Hands the features over in the order they were first seen, as an adapter does, not by
+        /// name as the data file lists them.</param>
+        public WarmUpResult Find(HistoryShapeRules? rules = null, bool asCaptured = false) =>
+            WarmUpCalls.Find((asCaptured ? _captured.AsEnumerable() : _features.Keys.Order(StringComparer.Ordinal))
+                .Select(f => new Feature { DisplayName = f, Scenarios = _features[f].ToArray() }).ToArray(), _logs, rules);
 
         private static DateTimeOffset At(double ms) => T0.AddTicks((long)Math.Round(ms * TimeSpan.TicksPerMillisecond));
     }

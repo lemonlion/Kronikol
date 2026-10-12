@@ -152,6 +152,34 @@ public class TrackingSqliteResponseCaptureTests : IDisposable
         Assert.Equal("2", GetLogsForTest().Last(l => l.Type == RequestResponseType.Response).Content);
     }
 
+    [Theory]
+    [InlineData("de-DE")]
+    [InlineData("sv-SE")]
+    public void A_scalar_and_a_parameter_read_as_a_row_does_on_every_machine(string culture)
+    {
+        // Until 4.16.3 both took the machine's culture: SELECT 2.5 answered 2,5 on a German machine, beside rows
+        // written 2.5 (as JSON) in the same report, and a negative number took a Swedish minus sign.
+        _options.Verbosity = SqlTrackingVerbosityLevel.Raw;
+        _options.LogParameters = true;
+        var previous = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo(culture);
+        try
+        {
+            using var cmd = _tracking.CreateCommand();
+            cmd.CommandText = "SELECT @price * 2";
+            cmd.Parameters.Add(new SqliteParameter("@price", -1.25));
+            cmd.ExecuteScalar();
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = previous;
+        }
+
+        var logs = GetLogsForTest();
+        Assert.EndsWith("-- Parameters: @price=-1.25", logs.First(l => l.Type == RequestResponseType.Request).Content);
+        Assert.Equal("-2.5", logs.Last(l => l.Type == RequestResponseType.Response).Content);
+    }
+
     [Fact]
     public void LogResponseContent_false_keeps_responses_empty()
     {

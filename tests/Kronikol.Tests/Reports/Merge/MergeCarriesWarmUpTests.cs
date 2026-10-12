@@ -49,6 +49,33 @@ public class MergeCarriesWarmUpTests : IDisposable
     }
 
     [Fact]
+    public void A_scenario_the_merge_renames_keeps_its_own_calls_in_its_tooltips()
+    {
+        // NUnit numbers its tests per assembly, so two shards can each hold a scenario 0-1001: the merge renames the second
+        // shard's, and each scenario's tooltips must still name its own calls, not the other shard's or none.
+        var a = Shard("a", startMs: 0, firstMs: 600, warmUp: null, ids: "0-100");
+        var b = Shard("b", startMs: 5000, firstMs: 700, warmUp: null, ids: "0-100");
+
+        using var merged = Merge(a, b);
+
+        var renamed = Scenarios(merged).Select(s => s.GetProperty("id").GetString()).Where(id => id!.Contains('#')).ToArray();
+        Assert.Equal(2, renamed.Length);
+        var html = File.ReadAllText(System.IO.Path.Combine(_directory, "Combined.html"));
+        var document = BrowsingContext.New(AngleSharp.Configuration.Default).OpenAsync(req => req.Content(html)).GetAwaiter().GetResult();
+        var badges = document.QuerySelectorAll("details.scenario[data-warmup-ms]")
+            .ToDictionary(e => e.GetAttribute("data-warmup-ms")!, e => e.QuerySelector("summary .duration-badge")!.GetAttribute("title")!);
+        var bars = document.QuerySelectorAll(".timeline-bar[title*='warm-up']").Select(e => e.GetAttribute("title")!).ToArray();
+        Assert.Equal(["600", "700"], badges.Keys.Order());
+        Assert.Equal(2, bars.Length);
+        foreach (var (own, other) in new[] { ("600", "700"), ("700", "600") })
+        {
+            Assert.EndsWith($"POST /orders {own} ms (later calls 5 ms)", badges[own]);
+            Assert.DoesNotContain($"{other} ms (", badges[own]);
+            Assert.Single(bars, t => t == badges[own]);
+        }
+    }
+
+    [Fact]
     public void Shards_that_carry_no_marks_get_none_though_their_merged_calls_would()
     {
         // Written as a shard from before the marks: the merged calls hold a 600 ms first call and later 5 ms ones.
@@ -99,12 +126,13 @@ public class MergeCarriesWarmUpTests : IDisposable
         Assert.Equal(["600"], MarkedInReport(Path.Combine(output, "TestRunReport.html")));
     }
 
-    private (string Path, Guid First) Shard(string name, double startMs, double firstMs, WarmUpResult? warmUp)
+    private (string Path, Guid First) Shard(string name, double startMs, double firstMs, WarmUpResult? warmUp, string? ids = null)
     {
+        ids ??= name;
         var logs = new List<RequestResponseLog>();
-        var firstCall = Call(logs, name + "1", startMs, firstMs);
-        Call(logs, name + "2", startMs + 1000, 5);
-        Call(logs, name + "2", startMs + 1100, 5);
+        var firstCall = Call(logs, ids + "1", startMs, firstMs);
+        Call(logs, ids + "2", startMs + 1000, 5);
+        Call(logs, ids + "2", startMs + 1100, 5);
         Feature[] features =
         [
             new()
@@ -112,8 +140,8 @@ public class MergeCarriesWarmUpTests : IDisposable
                 DisplayName = "Orders " + name,
                 Scenarios =
                 [
-                    new Scenario { Id = name + "1", DisplayName = "First " + name, Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2) },
-                    new Scenario { Id = name + "2", DisplayName = "Later " + name, Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2) }
+                    new Scenario { Id = ids + "1", DisplayName = "First " + name, Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2) },
+                    new Scenario { Id = ids + "2", DisplayName = "Later " + name, Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2) }
                 ]
             }
         ];

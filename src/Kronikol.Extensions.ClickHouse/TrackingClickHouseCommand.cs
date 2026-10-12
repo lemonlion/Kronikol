@@ -241,7 +241,7 @@ public class TrackingClickHouseCommand : DbCommand
     {
         if (!_connection.Options.LogResponseContent) return null;
         if (result is null or DBNull) return "null";
-        var str = result.ToString() ?? "";
+        var str = SqlRowFormatter.ValueText(result);
         var maxLen = _connection.Options.MaxValueDisplayLength;
         return str.Length > maxLen ? $"{str[..maxLen]}... ({str.Length} chars)" : str;
     }
@@ -253,7 +253,7 @@ public class TrackingClickHouseCommand : DbCommand
 
         var paramStr = string.Join(", ", _inner.Parameters
             .Cast<DbParameter>()
-            .Select(p => $"{p.ParameterName}={p.Value}"));
+            .Select(p => $"{p.ParameterName}={(p.Value is null or DBNull ? "" : SqlRowFormatter.ValueText(p.Value))}"));
 
         return paramStr;
     }

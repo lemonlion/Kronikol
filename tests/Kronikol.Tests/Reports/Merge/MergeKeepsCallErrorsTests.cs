@@ -98,40 +98,78 @@ public class MergeKeepsCallErrorsTests : IDisposable
     }
 
     /// <summary>
-    /// One scenario with a call made under the test framework's context that threw, and a call that inherited the
-    /// scenario's context after it ended, which the report moves to the background block.
+    /// A shard given to the merge a second time beside a scenario of its own, as yesterday's merged file is beside a
+    /// shard re-run since: the merge dropped the copy's calls, and kept its expired calls, which sit under no scenario,
+    /// so the background block listed each of them twice. Until 4.16.3.
     /// </summary>
-    private void WriteShard(string name, string scenarioId, string service, TimeSpan? duration = null)
+    [Fact]
+    public void A_copied_scenarios_expired_calls_are_kept_once()
+    {
+        WriteShard("runner1.json", null, ("a1", "Orders"));
+        WriteShard("runner2-with-runner1-again.json", null, ("a1", "Orders"), ("b1", "Payments"));
+
+        using var merged = Merge();
+        var root = merged.RootElement;
+
+        Assert.Contains(root.GetProperty("diagnostics").EnumerateArray(),
+            d => d.GetProperty("message").GetString()!.Contains("supplied twice", StringComparison.Ordinal));
+        var background = root.GetProperty("background");
+        var expiredFrom = background.GetProperty("interactions").EnumerateArray()
+            .Where(i => i.GetProperty("type").GetString() == "Request")
+            .Select(i => i.GetProperty("expiredFrom").GetString()).Order(StringComparer.Ordinal).ToArray();
+        Assert.Equal(["a1", "b1"], expiredFrom);
+        var groups = background.GetProperty("afterScenarioEnd").EnumerateArray()
+            .Select(g => (g.GetProperty("scenarioId").GetString(), g.GetProperty("calls").GetInt32()))
+            .OrderBy(g => g.Item1, StringComparer.Ordinal).ToArray();
+        Assert.Equal([("a1", 1), ("b1", 1)], groups);
+    }
+
+    private void WriteShard(string name, string scenarioId, string service, TimeSpan? duration = null) =>
+        WriteShard(name, duration, (scenarioId, service));
+
+    /// <summary>
+    /// A scenario a service, each with a call made under the test framework's context that threw, and a call that
+    /// inherited the scenario's context after it ended, which the report moves to the background block.
+    /// </summary>
+    private void WriteShard(string name, TimeSpan? duration, params (string Id, string Service)[] scenarios)
     {
         var at = new DateTimeOffset(Start).AddSeconds(1);
-        var uri = new Uri($"http://{service.ToLowerInvariant()}/x");
-        var failure = new HttpRequestException($"{service} said no", new IOException("connection reset"));
-        var (trace, pair, lateTrace, latePair) = (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
-        RequestResponseLog[] logs =
-        [
-            new(scenarioId, scenarioId, HttpMethod.Post, "{}", uri, [], service, "Test", RequestResponseType.Request, trace, pair, false)
-                { Timestamp = at, AttributionSource = AttributionSource.TestContext },
-            new(scenarioId, scenarioId, HttpMethod.Post, null, uri, [], service, "Test", RequestResponseType.Response, trace, pair, false, FailedSend.Status(failure))
-                { Timestamp = at.AddMilliseconds(20), AttributionSource = AttributionSource.TestContext, Error = FailedSend.Describe(failure) },
-            new(TestIdentityScope.UnknownTestName, TestIdentityScope.UnknownTestId, HttpMethod.Get, null, uri, [], service, "Worker", RequestResponseType.Request, lateTrace, latePair, false)
-                { Timestamp = at.AddSeconds(30), AttributionSource = AttributionSource.Expired, ExpiredFromTestId = scenarioId },
-            new(TestIdentityScope.UnknownTestName, TestIdentityScope.UnknownTestId, HttpMethod.Get, "{}", uri, [], service, "Worker", RequestResponseType.Response, lateTrace, latePair, false, HttpStatusCode.OK)
-                { Timestamp = at.AddSeconds(30.02), AttributionSource = AttributionSource.Expired, ExpiredFromTestId = scenarioId },
-        ];
+        var logs = new List<RequestResponseLog>();
+        foreach (var (scenarioId, service) in scenarios)
+        {
+            var uri = new Uri($"http://{service.ToLowerInvariant()}/x");
+            var failure = new HttpRequestException($"{service} said no", new IOException("connection reset"));
+            var (trace, pair, lateTrace, latePair) = (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+            logs.AddRange(
+            [
+                new(scenarioId, scenarioId, HttpMethod.Post, "{}", uri, [], service, "Test", RequestResponseType.Request, trace, pair, false)
+                    { Timestamp = at, AttributionSource = AttributionSource.TestContext },
+                new(scenarioId, scenarioId, HttpMethod.Post, null, uri, [], service, "Test", RequestResponseType.Response, trace, pair, false, FailedSend.Status(failure))
+                    { Timestamp = at.AddMilliseconds(20), AttributionSource = AttributionSource.TestContext, Error = FailedSend.Describe(failure) },
+                new(TestIdentityScope.UnknownTestName, TestIdentityScope.UnknownTestId, HttpMethod.Get, null, uri, [], service, "Worker", RequestResponseType.Request, lateTrace, latePair, false)
+                    { Timestamp = at.AddSeconds(30), AttributionSource = AttributionSource.Expired, ExpiredFromTestId = scenarioId },
+                new(TestIdentityScope.UnknownTestName, TestIdentityScope.UnknownTestId, HttpMethod.Get, "{}", uri, [], service, "Worker", RequestResponseType.Response, lateTrace, latePair, false, HttpStatusCode.OK)
+                    { Timestamp = at.AddSeconds(30.02), AttributionSource = AttributionSource.Expired, ExpiredFromTestId = scenarioId },
+            ]);
+        }
 
         var json = ReportGenerator.GenerateMergeableReportJson(
-            [new Feature { DisplayName = service, Scenarios = [new Scenario { Id = scenarioId, DisplayName = "Call " + service, Result = ExecutionResult.Failed, EndedAt = at.AddSeconds(1), Duration = duration }] }],
+            scenarios.Select(s => new Feature
+            {
+                DisplayName = s.Service,
+                Scenarios = [new Scenario { Id = s.Id, DisplayName = "Call " + s.Service, Result = ExecutionResult.Failed, EndedAt = at.AddSeconds(1), Duration = duration }]
+            }).ToArray(),
             Start, Start.AddMinutes(1),
-            new[] { new DiagramAsCode(scenarioId, "", $"@startuml\nTest -> {service} : POST /x\n@enduml") }.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind),
-            [new ComponentRelationship("Test", service, "HTTP", new HashSet<string> { "POST /x" }, 1, 1, "http")],
+            scenarios.Select(s => new DiagramAsCode(s.Id, "", $"@startuml\nTest -> {s.Service} : POST /x\n@enduml")).ToLookup(d => d.TestRuntimeId, d => d.CodeBehind),
+            scenarios.Select(s => new ComponentRelationship("Test", s.Service, "HTTP", new HashSet<string> { "POST /x" }, 1, 1, "http")).ToArray(),
             internalFlowSegmentData: null, wholeTestFlow: null, WholeTestFlowVisualization.None, ciMetadata: null,
-            diagnostics: null, trackedLogs: logs);
+            diagnostics: null, trackedLogs: logs.ToArray());
         File.WriteAllText(Path.Combine(_directory, name), json);
 
         // The shard itself holds what the merge has to keep.
         using var shard = JsonDocument.Parse(json);
-        Assert.Single(shard.RootElement.GetProperty("background").GetProperty("interactions").EnumerateArray(),
-            i => i.GetProperty("type").GetString() == "Request");
+        Assert.Equal(scenarios.Length, shard.RootElement.GetProperty("background").GetProperty("interactions").EnumerateArray()
+            .Count(i => i.GetProperty("type").GetString() == "Request"));
     }
 
     private JsonDocument Merge()

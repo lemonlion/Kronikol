@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Net;
@@ -121,7 +122,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             : exception is not null
                 ? exception.Message
                 : rowsAffected.HasValue
-                    ? $"{rowsAffected.Value} rows affected"
+                    ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected"
                     : null;
 
         OneOf<HttpStatusCode, string> status = exception is not null ? "Error" : "OK";
@@ -154,7 +155,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
                     : exception is not null
                         ? exception.Message
                         : rowsAffected.HasValue
-                            ? $"{rowsAffected.Value} rows affected"
+                            ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected"
                             : null;
                 return new PhaseVariant("", new Uri($"{_options.UriScheme}:///"), vContent, [], false);
             });
@@ -265,7 +266,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             : exception is not null
                 ? exception.Message
                 : rowsAffected.HasValue
-                    ? $"{rowsAffected.Value} rows affected"
+                    ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected"
                     : null;
 
         OneOf<HttpStatusCode, string> status = exception is not null ? "Error" : "OK";
@@ -298,7 +299,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
                     : exception is not null
                         ? exception.Message
                         : rowsAffected.HasValue
-                            ? $"{rowsAffected.Value} rows affected"
+                            ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected"
                             : null;
                 return new PhaseVariant("", new Uri($"{_options.UriScheme}:///"), vContent, [], false);
             });

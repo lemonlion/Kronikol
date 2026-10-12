@@ -91,7 +91,8 @@ belongs to both and means different things — a scenario name on `scenarios`, a
   unquote it, because a filter value can hold a space (`--service "Dessert Provider"`). It is never the
   offset you already asked for: past the end and too-big-to-fit both give `null`, the second with a note.
 - `--count` replaces `items`/`total` with `count`. `summary` and `diff` add verb-specific members
-  (`run`, `failed`, `slowest`, `diagnostics`; `left`, `right`, `tracking`).
+  (`run`, `failed`, `failedTotal`, `slowest`, `diagnostics`, and `warmUp` when the run paid a first-call warm-up;
+  `left`, `right`, `tracking`).
 - Row caps still apply (25 for `failures`, 120 for `interactions` rows, 200 elsewhere), so `total` can
   exceed what one page returns whatever `--limit` says.
 - Errors: plain text on stderr, exit 2 for usage and 1 for a read failure. Under `--json` stdout also
@@ -118,7 +119,10 @@ warm-up went: `First-call warm-up: 2.65s in 7 scenarios; the most in s49, 1.19s 
 | `--feature X` | substring match on feature name |
 | `--label L` | matches scenario labels, categories and feature labels |
 | `--grep T` | substring match on scenario name |
-| `--slower-than 5` | seconds of the scenario's own time: a first-call warm-up it paid is left out |
+| `--slower-than 5` | seconds of the scenario's own time: a first-call warm-up it paid is left out, and a note counts the scenarios that took as long only with it |
+
+A row's time is wall time; a scenario that paid the run's first-call warm-up ends `  0.6s warm-up`, and its `--json`
+item carries `warmUpSeconds`.
 
 ### `services <report> [s3] [--sort duration\|bytes\|errors]`
 Per service: call count, errors, bytes, median and max duration, status mix. Scoped to one scenario when

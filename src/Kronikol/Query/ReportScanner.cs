@@ -55,6 +55,19 @@ internal static class ReportScanner
     internal static bool CarriesInteractions(ReportIndex index) =>
         index.MergeableFormatVersion is null || AtLeast(index.KronikolVersion, MergeableTrafficSince);
 
+    /// <summary>
+    /// The first Kronikol that marked the run's first-call warm-up (plans/WARM_UP_PLAN.md R1). A report it wrote carries
+    /// <c>warmUpSeconds</c> on every scenario that paid one, so a scenario without it paid none; before it, nothing says.
+    /// </summary>
+    private static readonly Version WarmUpSince = new(4, 8, 0);
+
+    /// <summary>
+    /// Whether the report says how much of each scenario's time was the run's first-call warm-up: written by a Kronikol that
+    /// marks it, or carrying a mark. A version that is absent or does not parse is evidence only through its marks.
+    /// </summary>
+    internal static bool MarksWarmUp(ReportIndex index) =>
+        AtLeast(index.KronikolVersion, WarmUpSince) || index.Scenarios.Any(s => s.WarmUpSeconds is not null);
+
     private static bool AtLeast(string? kronikolVersion, Version floor)
     {
         if (string.IsNullOrWhiteSpace(kronikolVersion))
@@ -446,6 +459,10 @@ internal static class ReportScanner
             {
                 if (_interaction is not null && _scenario is not null)
                 {
+                    // A mark of a kind this build does not know is no mark, as the merge reader reads it: an unknown kind read
+                    // as a first call (until 4.16.3).
+                    if (_interaction.WarmUp is { Kind: not ("first" or "waited") })
+                        _interaction.WarmUp = null;
                     _scenario.Interactions.Add(_interaction);
                     RecordBody(_interaction, _scenario);
                 }
@@ -704,11 +721,12 @@ internal static class ReportScanner
                 var mark = interaction.WarmUp ??= new WarmUpEntry();
                 switch (key)
                 {
-                    case "kind": mark.Kind = reader.GetString() ?? ""; break;
-                    case "shape": mark.Shape = reader.GetString() ?? ""; break;
+                    // Strings only where a string is written: a number here threw out of the whole query (until 4.16.3).
+                    case "kind": mark.Kind = reader.TokenType == JsonTokenType.String ? reader.GetString() ?? "" : ""; break;
+                    case "shape": mark.Shape = reader.TokenType == JsonTokenType.String ? reader.GetString() ?? "" : ""; break;
                     case "baselineMs": mark.BaselineMs = reader.TokenType == JsonTokenType.Number && reader.TryGetDouble(out var baseline) ? baseline : 0; break;
                     case "baselineCalls": mark.BaselineCalls = reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out var calls) ? calls : 0; break;
-                    case "first": mark.First = reader.GetString(); break;
+                    case "first": mark.First = reader.TokenType == JsonTokenType.String ? reader.GetString() : null; break;
                 }
                 return;
             }
@@ -823,7 +841,10 @@ internal static class ReportScanner
             {
                 if (reader.TokenType is JsonTokenType.String or JsonTokenType.Number && key is "name" or "value")
                 {
-                    var text = reader.TokenType == JsonTokenType.String ? reader.GetString() : reader.GetDouble().ToString();
+                    // A number as written: ctrf and history quarantine scan outside the query's invariant scope, where
+                    // GetDouble().ToString() wrote 1.10 as 1,1 on a German machine (until 4.16.3).
+                    var text = reader.TokenType == JsonTokenType.String ? reader.GetString()
+                        : reader.HasValueSequence ? Encoding.UTF8.GetString(reader.ValueSequence) : Encoding.UTF8.GetString(reader.ValueSpan);
                     if (!string.IsNullOrEmpty(text))
                         step.Parameters.Add(text);
                 }
@@ -872,6 +893,11 @@ internal static class ReportScanner
                     scenario.Diagrams.Add(TokenSlice(ref reader, windowStart));
                 return;
             }
+            // Only the scenario's own members from here: an object it holds, such as an outline's exampleFlatValues, has
+            // the consumer's keys, and a column called result, name or durationSeconds replaced the scenario's own field
+            // (until 4.16.3).
+            if (!At("scenarios", "#"))
+                return;
 
             switch (key)
             {

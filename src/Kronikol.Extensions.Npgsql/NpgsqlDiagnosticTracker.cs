@@ -158,7 +158,7 @@ public sealed class NpgsqlDiagnosticTracker : SqlDiagnosticTracker, IObserver<Di
                     var name = pType.GetProperty("ParameterName")?.GetValue(p)?.ToString();
                     var val = pType.GetProperty("Value")?.GetValue(p);
                     if (name is not null)
-                        paramStrs.Add($"{name}={val}");
+                        paramStrs.Add($"{name}={(val is null or DBNull ? "" : Kronikol.Sql.SqlRowFormatter.ValueText(val))}");
                 }
                 if (paramStrs.Count > 0)
                     parameters = string.Join(", ", paramStrs);

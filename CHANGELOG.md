@@ -4,6 +4,162 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.16.3] - 2026-10-12
+
+**Patch - fixes from an audit of `plans/WARM_UP_PLAN.md` (#113; 4.7.3, 4.8.0, 4.9.0 and 4.9.1).** At the owner's
+request to make sure nothing was missed from the plan and that the implementation has no bugs (the plan log's audit
+entry). Bug fixes, and nothing new for a consumer to call, so the patch part moves (4.16.2 to 4.16.3). Some output
+changes where it was wrong, each called out below: a `kronikol query interactions --json` waiter's `first`, a
+`scenarios` row of a scenario that paid a warm-up, a duration badge just under a minute, the XSD, a SQL or Redis value
+and a name on a machine whose culture writes them otherwise, a loop label over calls with no time, and the response of a
+call that returns a `ValueTask`. The history action's `VERSION` installs `Kronikol.Tool` 4.16.3, and the templates pin
+4.16.1 (nuget.org had not listed 4.16.2 when this was cut).
+
+### Fixed
+
+- **A merged report's warm-up tooltips could name another scenario's calls.** When `kronikol merge` renames a
+  scenario whose id another shard also used (NUnit numbers its tests per assembly, so two shards each hold a
+  `0-1001`), it renamed the scenario's warm-up time but not its marked calls. The scenario that kept the id listed both
+  shards' calls in its badge and timeline tooltips, and the renamed one listed none. The merged data file was right.
+- **Calls that tie were ordered by capture, which the data file does not keep.** Two calls of one kind that start in
+  the same millisecond and take as long tie on everything a report records, and `kronikol ingest` stamps whole
+  milliseconds, so parallel calls tie like this. The pass took the one captured first as the run's first call, where a
+  reader of the report (and the plan's `warmup.py`) takes the one the file lists first. The same calls were marked, but
+  the kinds, a waiter's `first`, the tooltips and `flow`'s lines were swapped. Ties now go to the file's order.
+- **The P50 to P99 buttons did not filter at the percentile they name.** A button set the threshold in seconds
+  rounded to a tenth. A P50 under 50 ms became 0.0, which filters nothing, and a P90 of 1,259 ms became 1.3 s, which hid
+  the scenario the button names. In a run of fewer than a hundred scenarios, P99 could hide every scenario. This is
+  older than the warm-up. A button now filters at its own value to the millisecond. The percentiles are also taken over
+  each scenario's own time as the filter reads it (`data-duration-ms` less `data-warmup-ms`, each a whole number of
+  milliseconds), so a percentile can be one millisecond lower than before.
+- **From a minute, the warm-up tooltip rounded where the badge cuts.** A scenario of 61.996 s read `1m 1s` on its
+  badge and `62 s` in its tooltip. From a minute, the tooltip now writes each time as the badge does. Separately, a
+  duration from 59.95 s to just under a minute rounded to a tenth and read `60.0s`; it now reads `1m 0s`, as a minute
+  does.
+- **`kronikol query diff` read a run that paid no warm-up as one written before the marks.** A run with no warm-up
+  writes no `warmUpSeconds`, so beside a marked run the diff fell back to wall time on both sides. A warm-up that moved
+  into a scenario then read as a slowdown, and a scenario slower by its own time could read as no change. A run written
+  by 4.8.0 or later now counts as paying none. A run written before 4.8.0 is still read by wall time on both sides.
+- **`kronikol query interactions --json` named the call a waiter waited for by an id no verb takes.** A waiter's
+  `warmUp.first` was the call's `requestResponseId`. It is now the call's address (`s0/i0`), as `flow` prints it, and a
+  first call no longer carries `"first": null`.
+- **`kronikol query scenarios --slower-than` left out scenarios without saying why.** The filter reads each
+  scenario's own time, without its first-call warm-up, and the rows show wall time. A scenario that took longer than the
+  ones listed could be missing with nothing said. A note now counts the scenarios the warm-up left out. A marked
+  scenario's row ends `  0.6s warm-up`, and its `--json` item carries `warmUpSeconds`. `--help` now describes the flag as
+  it works.
+- **An outline's example column could replace a scenario's own field in `kronikol query`.** A column named `result`,
+  `name` or `durationSeconds` sits in a scenario's `exampleFlatValues`. The query engine read it as the scenario's
+  field, so a passing row with a `result` of 42 counted as neither passed nor failed. This is older than the warm-up. It
+  now reads only the scenario's own members.
+- **`kronikol query summary`.** A skipped scenario of 0 s tied on time left with one that was all warm-up and, coming
+  first in the file, dropped the whole Slowest list; ties now go to the longer by wall time. The `--json` `warmUp`
+  member counted the marked calls of scenarios with no duration beside the seconds of the others; it now counts the
+  calls of the scenarios it counts. A warm-up under 10 ms (one capped at a short BDDfy duration, #122) read
+  `0s of its 0s`; it is now written in milliseconds.
+- **A `warmUp` member the query engine could not read stopped the query.** A `kind`, `shape` or `first` that was not a
+  string threw out of every verb. A kind other than `first` or `waited` was read as a first call. Both now read as no
+  mark, as the merge reader already reads them.
+- **The XSD took any warm-up kind and any number.** `WarmUp/Kind` is now `first` or `waited`, `BaselineCalls` at least
+  1, and `BaselineMs` and `WarmUpSeconds` at least 0, as the JSON schema has always said. Every document Kronikol wrote
+  still validates.
+- **The Scenario Timeline's legend named every colour but the warm-up's stripes.** A page that draws a warm-up stripe
+  now says what it is. A page that draws none reads as it did.
+- **A tracked method that returns a `ValueTask` was recorded before it ended.** 4.7.3 timed calls through
+  `TrackingProxy` (`ReplaceWithTracked`, `ReplaceWithTrackingProxy`, the MediatR mediator) from their start to their
+  end, for a method that returns a `Task`. One that returns a `ValueTask` was recorded as answered when it returned, so
+  a call that failed after 200 ms read as a success of 7 ms, and a `ValueTask<T>` was written by reading its `Result`,
+  which held the caller's thread until the call ended and could read a pooled one twice. Both are now awaited as a
+  `Task` is, and recorded when they end, with their result or their failure. A `ValueTask` the serializer is given is
+  written `"<ValueTask>"`, never read.
+- **A collapsed loop's label read a call with no time as 0 ms, and it and the component diagram's statistics did not
+  read a measured time.** Since 4.7.3 a data file writes no duration for two records of one instant, and takes a
+  duration its capturer measured (`durationMs`, which an ingested call can carry) over the timestamps. The loop label
+  (`loop ×3 · 0 ms`) and the component diagram's call statistics still read the timestamps alone. Both now time a call
+  as the data files do; a loop of calls with no time has no time in its label.
+- **On a Turkish or Azeri machine, names were cased otherwise, so a scenario's `stableId` was not the one every other
+  machine gives it.** Those cultures give `i` a dotted capital and `I` a dotless small letter. A scenario named from
+  `it_rejects_an_empty_order` read `İt rejects an empty order`, a feature named from `order_items_tests` changed with
+  it, and a step woven from `itemsAreShipped` read `İtems are shipped`. History, baselines and merges pair runs by
+  `stableId`, so they paired these runs with no other machine's. Every name is now cased the same on every machine. A
+  ReqNRoll step written in capitals also grouped its example values otherwise there (`WITH` did not match `with`, so a
+  recipe's tables lost their parent); its patterns now ignore case the same way everywhere.
+- **A SQL scalar or parameter took the machine's culture.** Every SQL wrapper (SqlClient, Npgsql, MySqlConnector,
+  Oracle, SQLite, Dapper, EF Core, ClickHouse ADO, ClickHouse.Driver and Spanner) wrote a scalar result and each
+  parameter with `ToString()`. `SELECT 2.5` answered `2,5` on a German machine, a date came out in the local calendar
+  and order, and a negative number took the culture's minus sign, beside rows of the same report written `2.5` and in
+  ISO 8601 (rows are JSON). They are now written as a row writes them. A row count (`-1 rows affected`) takes no
+  culture either, and neither does a number a Redis server answers (`INCRBYFLOAT` read `-1,5`).
+- **A merge kept a copied scenario's expired calls.** When a shard reaches `kronikol merge` a second time beside
+  scenarios of its own (yesterday's merged file left beside a shard re-run since), the merge drops the copied scenarios
+  and their calls, and kept their expired calls, which sit under no scenario, so the background block listed each of
+  them twice. They now go with their scenario.
+- **A number among a step's parameters was read back as a double.** Kronikol writes parameter values as text, but a
+  report from another writer can hold a number. The query engine's reader turned `1.10` into `1.1`, and into `1,1` on a
+  German machine under `kronikol ctrf` and `kronikol history quarantine`, which read with it outside the query's
+  invariant culture. A number is now read as written.
+
+### Documentation
+
+- Both `references/commands.md` copies list `summary --json`'s `failedTotal` and `warmUp` members and the `scenarios`
+  warm-up suffix and note. Both `SKILL.md` copies say a call marked `waited for …` is warm-up too.
+- `WarmUpCalls`' summary no longer claims the plan's `warmup.py` equals it call for call on a statement's head, which
+  the spec does not model.
+- Plan harness: `warmup.py` derives a duration only for a report written before `durationMs` existed. It no longer
+  reads the writer's `null` (two records with one instant) as 0 ms. It counts time in .NET ticks, as the pass does,
+  where a microsecond end could read two calls as apart that the pass reads as overlapping. `expected-marks.json` moved
+  by under a microsecond per scenario, and the corpus fact now compares to six decimals instead of within a
+  millisecond.
+
+### Tests
+
+- `MergeCarriesWarmUpTests`: a scenario the merge renames keeps its own calls in its tooltips.
+- `WarmUpCallsTests`: calls that tie are ordered as the data file lists them, features by name.
+- `WarmUpHtmlTests`: the tooltip reads each time as the badge writes it (61.996 s, 59.96 s); a percentile is an own time
+  as the filter reads it (1,259 ms, not 1,260); the timeline names its stripes when it draws them, and only then.
+- `WarmUpQueryTests`: `diff` reads a run that paid no warm-up as paying none (a slowdown found, a moved warm-up not a
+  slowdown), and a run written before the marks by wall time on both sides; `interactions --json` names a waiter's
+  first call by its address; `scenarios` rows and items say what each held of the warm-up; `--slower-than` counts what
+  it left out; Slowest ties; the `warmUp` member's calls; a 3 ms warm-up; a mark this build cannot read.
+- `WarmUpDataTests`: the XSD refuses each mark the JSON schema refuses. `WarmUpPagesTests`: the Specifications pages
+  carry the warm-up's tooltip, colour and rules. `ExampleColumnsTests` (new): an example column named `result` does
+  not replace the scenario's.
+- `TrackingProxyTests`: a `ValueTask<T>` call is recorded when it ends, with its result and its time; one that fails is
+  recorded as failed; a `ValueTask` call is timed to its end. `TrackingSafeSerializerTests`: a pending `ValueTask` is
+  written without being read.
+- `SequenceCollapserTests` and `RelationshipStatsTests`: calls of one instant have no time in the loop label, and a
+  measured duration is read over the timestamps in the label and the statistics.
+- `ScenarioTitleResolverTests`, `StepWeaverTests` and `ExampleValueGrouperTests`: a title, a feature name, a camel-cased
+  name, a woven step's name and a grouping of example values read the same under tr-TR as under en-US.
+  `UnifiedSqlClassifierTests` holds 17 statements in small letters to the same classification under both.
+- `SqlValueTextTests` (new) under de-DE, ar-SA, th-TH and sv-SE; the SQLite wrapper's scalar and parameter and a Redis
+  double and long under de-DE and sv-SE, through the wrappers.
+- `MergeKeepsCallErrorsTests`: a copied scenario's expired calls are kept once. `QueryCultureTests`: a report scanned
+  outside the query reads a numeric parameter as written, under each culture.
+- `CultureInvariantSourceTests`: the rule read neither a verbatim interpolation (`$@"…"`), a lowercase specifier
+  (`{x:f1}`) nor a `string.Format` or `AppendFormat` item, and its control applied another rule than the scan; both now
+  run one rule that reads all three, and the widened rule finds nothing in `src`. A second rule holds every SQL and
+  Redis wrapper to writing a value without the machine's culture (on the tree before the audit it finds 33 lines), and
+  a third holds every casing in `src` to the invariant culture (it finds 14 lines there).
+- Playwright `WarmUpMarkTests`: a percentile button filters at the time it names, and a saved diagram is named for its
+  scenario.
+- Proofs: each fix put back as it was, or each new fact's target broken, in 25 mutations of the warm-up fixes and 26 of
+  the rest, every one caught (plan harness `audit/`); each new fact fails without its fix.
+- The consumer check (the plan's S7) on local 4.16.3 packages: BreakfastProvider's reports carry `warmup.py`'s marks
+  call for call in two xUnit and three ReqNRoll runs, and its pages draw exactly what its data files record.
+- Checks: the core suite passes 7,436 with 2 skipped after the version bump, the SQL, Redis, ClickHouse, Spanner and
+  step-weaver projects pass, the full Playwright suite passes 1,028 with 28 skipped, and `release.slnf` builds in
+  Release for every target and packs all 62 packages.
+
+### Records
+
+- The audit's scripts and results are in `plans/WARM_UP_PLAN.harness/audit/`, and the plan's log, its row in
+  `PLANS_STATUS.md` and roadmap 1.19 and Appendix C record what it found and what it left for the owner: reports sort
+  feature and scenario names in the machine culture's order (the #162 audit left the same question, a comparer for the
+  whole product); the component diagram's statistics count a call with no time as 0 ms; a merged copy's calls of no
+  scenario at all (`CaptureBackground`) are still kept twice, since nothing tells them from a call; group rows show no
+  warm-up mark; and the JSON schema allows `first` on either kind.
+
 ## [4.16.2] - 2026-10-12
 
 **Patch - Kafka build interception returns the right client for every type pair, and every Kafka call is drawn as it

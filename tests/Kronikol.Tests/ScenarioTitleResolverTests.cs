@@ -395,4 +395,19 @@ public class ScenarioTitleResolverTests
         var result = ScenarioTitleResolver.FormatFeatureName(input);
         Assert.Equal(expected, result);
     }
+    [Fact]
+    public void A_title_reads_the_same_on_a_machine_whose_culture_cases_i_otherwise()
+    {
+        // Turkish and Azeri give 'i' a dotted capital and 'I' a dotless small letter. Cased with the machine's culture,
+        // "it_rejects_an_empty_order" read "İt rejects…" there, and its stableId differed from every other machine's, so
+        // history, baselines and merges did not pair the runs (until 4.16.3).
+        var (title, feature, camel) = CultureRun.Under("tr-TR", () => (
+            ScenarioTitleResolver.ResolveScenarioTitle("OrderTests", "OrderTests", "it_rejects_an_empty_order"),
+            ScenarioTitleResolver.FormatFeatureName("order_items_tests"),
+            "Inventory".Camelize()));
+
+        Assert.Equal("It rejects an empty order", title);
+        Assert.Equal("Order Items Tests", feature);
+        Assert.Equal("inventory", camel);
+    }
 }

@@ -122,6 +122,17 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
                 return handled;
             }
 
+            // A ValueTask is a struct, boxed here: logged as it was, the call ended when the method returned, its response
+            // was the struct (whose Result blocks until the call ends) and a failure after that was a success (until
+            // 4.16.3). It is awaited as the Task it wraps, and handed back as a ValueTask of that Task.
+            if (result is ValueTask valueTask)
+                return new ValueTask(HandleAsyncResultVoid(valueTask.AsTask(), methodName, uri, requestContent, activity, startedAt));
+            if (targetMethod.ReturnType is { IsGenericType: true } valueTaskType && valueTaskType.GetGenericTypeDefinition() == typeof(ValueTask<>))
+                return typeof(TrackingProxy<T>)
+                    .GetMethod(nameof(HandleValueTaskTyped), BindingFlags.NonPublic | BindingFlags.Instance)!
+                    .MakeGenericMethod(valueTaskType.GetGenericArguments()[0])
+                    .Invoke(this, [result, methodName, uri, requestContent, activity, startedAt]);
+
             var responseContent = TrackingSafeSerializer.Serialize(result, _options.SerializerOptions);
             LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.OK, activity, startedAt);
             InternalFlowSpanStore.Complete(activity);
@@ -165,6 +176,10 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
             throw;
         }
     }
+
+    private ValueTask<TResult> HandleValueTaskTyped<TResult>(
+        ValueTask<TResult> valueTask, string methodName, Uri uri, string? requestContent, Activity? activity, DateTimeOffset startedAt) =>
+        new(HandleAsyncResultTyped(valueTask.AsTask(), methodName, uri, requestContent, activity, startedAt));
 
     private async Task HandleAsyncResultVoid(
         Task task, string methodName, Uri uri, string? requestContent, Activity? activity, DateTimeOffset startedAt)

@@ -23,7 +23,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
     /// shape; "Browse" and "Search" run 300 and 400 ms with no call. By wall time "Place" is the slowest; by its own time
     /// (500 ms) it is below "Place again".
     /// </summary>
-    private string Generate(string fileName, bool includeTestRunData = true)
+    private string Generate(string fileName, bool includeTestRunData = true, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null)
     {
         var logs = new List<RequestResponseLog>();
         Call(logs, "place", 0, 1500);
@@ -43,7 +43,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
                 ]
             }
         ];
-        var path = ReportGenerator.GenerateHtmlReport([], features, T0.UtcDateTime, T0.UtcDateTime.AddMinutes(1), null,
+        var path = ReportGenerator.GenerateHtmlReport(diagrams ?? [], features, T0.UtcDateTime, T0.UtcDateTime.AddMinutes(1), null,
             Path.Combine(TempDir, fileName), "Warm-up", includeTestRunData,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs, trackedLogs: logs.ToArray());
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
@@ -58,9 +58,41 @@ public class WarmUpMarkTests : PlaywrightTestBase
         var (trace, id) = (Guid.NewGuid(), Guid.NewGuid());
         var uri = new Uri("http://orders/orders");
         logs.Add(new RequestResponseLog(scenario, scenario, HttpMethod.Post, "{}", uri, [], "orders", "Test", RequestResponseType.Request, trace, id, false)
-            { Timestamp = T0.AddMilliseconds(startMs) });
+            { Timestamp = At(startMs) });
         logs.Add(new RequestResponseLog(scenario, scenario, HttpMethod.Post, "{}", uri, [], "orders", "Test", RequestResponseType.Response, trace, id, false, HttpStatusCode.OK)
-            { Timestamp = T0.AddMilliseconds(startMs + durationMs) });
+            { Timestamp = At(startMs + durationMs) });
+    }
+
+    private static DateTimeOffset At(double ms) => T0.AddTicks((long)Math.Round(ms * TimeSpan.TicksPerMillisecond));
+
+    /// <summary>
+    /// One feature of the scenarios named, each with its wall time: one with a first call pays it from the run's start, and
+    /// "Again" makes two later 5 ms calls of the same shape, so that call is the run's first-call warm-up.
+    /// </summary>
+    private string GenerateOwnTimes(string fileName, params (string Name, double WallMs, double FirstCallMs)[] scenarios)
+    {
+        var logs = new List<RequestResponseLog>();
+        foreach (var scenario in scenarios.Where(s => s.FirstCallMs > 0))
+            Call(logs, scenario.Name, 0, scenario.FirstCallMs);
+        Call(logs, "Again", 3000, 5);
+        Call(logs, "Again", 3100, 5);
+        Feature[] features =
+        [
+            new()
+            {
+                DisplayName = "Orders",
+                Scenarios = scenarios.Select(s => new Scenario
+                {
+                    Id = s.Name, DisplayName = s.Name, Result = ExecutionResult.Passed,
+                    Duration = TimeSpan.FromTicks((long)Math.Round(s.WallMs * TimeSpan.TicksPerMillisecond))
+                }).ToArray()
+            }
+        ];
+        var path = ReportGenerator.GenerateHtmlReport([], features, T0.UtcDateTime, T0.UtcDateTime.AddMinutes(1), null,
+            Path.Combine(TempDir, fileName), "Warm-up", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs, trackedLogs: logs.ToArray());
+        File.Copy(path, Path.Combine(OutputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
     }
 
     private ILocator ScenarioNamed(string name) =>
@@ -126,6 +158,54 @@ public class WarmUpMarkTests : PlaywrightTestBase
         await p90.ClickAsync();
 
         Assert.Equal(["Place again"], await VisibleScenarios());
+    }
+
+    [Fact]
+    public async Task A_percentile_button_filters_at_the_time_it_names()
+    {
+        // Rounded to a tenth of a second, a P50 of 30 ms read 0.0 s, which filters nothing, and a P90 of 1,259 ms read 1.3 s,
+        // which hid the scenario it names (until 4.16.3). Place's own time is 30 ms here: 1,600 less 1,570 of warm-up.
+        await Page.GotoAsync(GenerateOwnTimes("WarmUpPercentileUnder.html",
+            ("Place", 1600, 1570), ("Again", 40, 0), ("Browse", 10, 0), ("Search", 20, 0), ("Pay", 2000, 0)));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        var p50 = Page.Locator(".percentile-btn", new() { HasTextString = "P50" });
+        await Expect(p50).ToHaveTextAsync("P50 (30ms)");
+        await p50.ClickAsync();
+
+        // The page lists scenarios in its own order; what the button shows is the question, not where.
+        Assert.Equal(["Again", "Pay", "Place"], (await VisibleScenarios()).Order(StringComparer.Ordinal));
+
+        // 1,910.4 ms with 650.6 ms of warm-up: the filter reads 1,910 less 651, 1,259 ms of its own, and that is the P90.
+        await Page.GotoAsync(GenerateOwnTimes("WarmUpPercentileOver.html",
+            ("Place", 1910.4, 650.6), ("Again", 100, 0), ("Browse", 200, 0), ("Search", 300, 0), ("Pay", 400, 0)));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        var p90 = Page.Locator(".percentile-btn", new() { HasTextString = "P90" });
+        await Expect(p90).ToHaveTextAsync("P90 (1.3s)");
+        await p90.ClickAsync();
+
+        Assert.Equal(["Place"], await VisibleScenarios());
+    }
+
+    [Fact]
+    public async Task A_saved_diagram_is_named_for_its_scenario_without_the_warm_up()
+    {
+        // The menu names a saved diagram after its scenario's title with the duration badge taken out; the warm-up note sits
+        // inside the badge and goes with it (plans/WARM_UP_PLAN.md 4.5, which 4.9.0 read and did not run).
+        await Page.GotoAsync(Generate("WarmUpDiagramName.html",
+            diagrams: [new("place", "", "@startuml\nCaller -> Orders : POST /orders\nOrders --> Caller : 201 Created\n@enduml")]));
+        await Expect(ScenarioNamed("Place").Locator(":scope > summary .duration-badge > .warm-up-note")).ToHaveTextAsync(" · 1.5s warm-up");
+        await Page.Locator("details.feature > summary").First.ClickAsync();
+        await ScenarioNamed("Place").Locator(":scope > summary").ClickAsync();
+        var svg = ScenarioNamed("Place").Locator("svg").First;
+        await svg.WaitForAsync(new() { Timeout = 60_000 });
+
+        await DispatchContextMenu(svg);
+        var saveImage = Page.Locator(".diagram-ctx-menu .submenu-parent", new() { HasTextString = "Save image" });
+        await saveImage.HoverAsync();
+        var item = saveImage.Locator(".submenu").GetByText("Save as SVG", new() { Exact = true });
+        var download = await Page.RunAndWaitForDownloadAsync(() => item.ClickAsync(), new() { Timeout = 10_000 });
+
+        Assert.Equal("place.svg", download.SuggestedFilename);
     }
 
     [Fact]

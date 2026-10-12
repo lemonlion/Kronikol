@@ -172,7 +172,9 @@ public static class ComponentFlowSegmentBuilder
             {
                 if (responseLookup.TryGetValue(req.RequestResponseId, out var res))
                 {
-                    var duration = (res.Timestamp!.Value - req.Timestamp!.Value).TotalMilliseconds;
+                    // What the capturer measured when it did, as the data files take it (an ingested call can carry its
+                    // own durationMs on records of one instant, read as 0 ms until 4.16.3), else the gap as before.
+                    var duration = Reports.ReportGenerator.InteractionDuration(req, res) ?? (res.Timestamp!.Value - req.Timestamp!.Value).TotalMilliseconds;
                     if (duration >= 0)
                         callDurations.Add((duration, req, res));
                 }

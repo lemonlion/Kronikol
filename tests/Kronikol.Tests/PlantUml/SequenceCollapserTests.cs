@@ -43,6 +43,34 @@ public class SequenceCollapserTests
     }
 
     [Fact]
+    public void Calls_stamped_with_one_instant_have_no_time_to_summarise()
+    {
+        // Two records of one instant measured nothing (a pair logged after the call): the data files write no duration
+        // for them since 4.7.3, and the loop label read "0 ms" beside them until 4.16.3.
+        var logs = Pairs(("/q/1", 200, 0), ("/q/1", 200, 0), ("/q/1", 200, 0));
+
+        var result = SequenceCollapser.Apply(logs, collapse: true, threshold: 2, maxPairs: null);
+
+        Assert.Equal(3, result.Traces[0].CollapsedCount);
+        Assert.Null(result.Traces[0].CollapsedSummary);
+    }
+
+    [Fact]
+    public void A_duration_the_capturer_measured_is_believed_over_the_timestamps()
+    {
+        // As the data files write it (ReportGenerator.ComputeInteractionDurations): an ingested call can carry its own
+        // durationMs and records of one instant.
+        var logs = Pairs(("/q/1", 200, 0), ("/q/1", 200, 0), ("/q/1", 200, 0));
+        var measured = new[] { 120.0, 150.0, 130.0 };
+        for (var i = 0; i < measured.Length; i++)
+            logs[i * 2 + 1] = logs[i * 2 + 1] with { DurationMs = measured[i] };
+
+        var result = SequenceCollapser.Apply(logs, collapse: true, threshold: 2, maxPairs: null);
+
+        Assert.Equal("120–150 ms", result.Traces[0].CollapsedSummary);
+    }
+
+    [Fact]
     public void Runs_shorter_than_the_threshold_are_left_alone()
     {
         var logs = Pairs(("/q/1", 200, 10), ("/q/1", 200, 10), ("/q/2", 200, 5));

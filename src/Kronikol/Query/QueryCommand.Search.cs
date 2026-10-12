@@ -728,10 +728,12 @@ public static partial class QueryCommand
         var fresh = new List<RunChange>();
         var slower = new List<RunChange>();
         var matched = new List<(ScenarioEntry Then, ScenarioEntry Now)>();
-        // Each scenario's own time where both runs carry first-call warm-up marks (plans/WARM_UP_PLAN.md Q7): the scenario
-        // that went first pays the app's warm-up, and which one that is can change between runs. A run written before the
-        // marks, or that paid none, is read by wall time on both sides, as it was.
-        var leftOut = left.Scenarios.Any(s => s.WarmUpSeconds is not null) && right.Scenarios.Any(s => s.WarmUpSeconds is not null);
+        // Each scenario's own time where both runs say what the warm-up took (plans/WARM_UP_PLAN.md Q7): the scenario that
+        // went first pays the app's warm-up, and which one that is can change between runs. A run written since the marks
+        // that paid none writes none and is read as paying none, where until 4.16.3 it was read by wall time beside a
+        // marked run, so a warm-up that moved into a scenario read as a slowdown. A run written before the marks may hold a
+        // warm-up nothing names, so both runs are read by wall time, as they were.
+        var leftOut = ReportScanner.MarksWarmUp(left) && ReportScanner.MarksWarmUp(right);
         double Seconds(ScenarioEntry scenario) => leftOut ? scenario.TimeLeftSeconds : scenario.DurationSeconds;
         var freshScenarios = new List<ScenarioEntry>();
 

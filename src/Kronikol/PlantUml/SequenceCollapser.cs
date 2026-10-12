@@ -140,12 +140,13 @@ public static class SequenceCollapser
     private static string? Summarise(List<Unit> run)
     {
         var durations = new List<double>();
+        // As the data files time a call (ReportGenerator.InteractionDuration): what its capturer measured, else the gap
+        // between its records when there is one. Until 4.16.3 records of one instant read 0 ms here, and a measured
+        // duration was not read at all.
         foreach (var unit in run)
         {
-            var req = unit.Entries[0].Timestamp;
-            var resp = unit.Entries[1].Timestamp;
-            if (req.HasValue && resp.HasValue && resp.Value >= req.Value)
-                durations.Add((resp.Value - req.Value).TotalMilliseconds);
+            if (Reports.ReportGenerator.InteractionDuration(unit.Entries[0], unit.Entries[1]) is { } ms)
+                durations.Add(ms);
         }
 
         if (durations.Count == 0)

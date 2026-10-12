@@ -168,9 +168,10 @@ public static partial class ScenarioTitleResolver
         var humanized = SplitPascalCase(name);
         humanized = humanized.Replace("_", " ");
         humanized = MultipleSpacesRegex().Replace(humanized, " ").Trim();
+        // Invariant, so a name and its stableId are one on every machine: Turkish and Azeri case 'i' otherwise (until 4.16.3).
         return humanized.Length == 0
             ? humanized
-            : char.ToUpper(humanized[0]) + humanized[1..].ToLowerInvariant();
+            : char.ToUpperInvariant(humanized[0]) + humanized[1..].ToLowerInvariant();
     }
 
     private static string SplitPascalCase(string input)

@@ -1,0 +1,12 @@
+[14:29:17] build
+[14:29:56] xUnit run 1
+[14:33:17] xUnit run 1 rc=0 199s report=tests/BreakfastProvider.Tests.Component.xUnit/bin/Debug/net10.0/Reports/TestRunReport.json
+[14:33:17] xUnit run 2
+[14:36:04] xUnit run 2 rc=0 164s report=tests/BreakfastProvider.Tests.Component.xUnit/bin/Debug/net10.0/Reports/TestRunReport.json
+[14:36:04] ReqNRoll run 1
+[14:36:40] ReqNRoll run 1 rc=0 33s report=tests/BreakfastProvider.Tests.Component.ReqNRoll/bin/Debug/net10.0/Reports/TestRunReport.json
+[14:36:40] ReqNRoll run 2
+[14:36:51] ReqNRoll run 2 rc=0 8s report=tests/BreakfastProvider.Tests.Component.ReqNRoll/bin/Debug/net10.0/Reports/TestRunReport.json
+[14:36:51] ReqNRoll run 3
+[14:37:11] ReqNRoll run 3 rc=0 18s report=tests/BreakfastProvider.Tests.Component.ReqNRoll/bin/Debug/net10.0/Reports/TestRunReport.json
+[14:37:11] done

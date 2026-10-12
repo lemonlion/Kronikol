@@ -699,6 +699,43 @@ for #122 or says it did not.
     `GetOrderStatus /breakfast.BreakfastGrpc/GetOrderStatus`, and paints each badge's times as its tooltip reads them.
     #113 has a follow-up comment naming 4.9.1 (6043672681). The plan is complete.
 
+  - **Audit, 2026-10-12, released as 4.16.3 (patch)**, at the owner's request to make sure nothing was missed from the
+    plan and that the implementation has no bugs. Every item of sections 4 to 6 and every patch row of section 8 was
+    delivered. The audit read the code, ran the plan's facts and its spec again, and found these, each with a fact that
+    fails without its fix: a merge renamed a scenario's warm-up time and not its marked calls, so a scenario that kept a
+    colliding id listed both shards' calls; calls that tie on start and duration were ordered by capture, which the data
+    file does not keep, so the marks a report carried could not be found again from it; the P50 to P99 buttons set their
+    threshold in seconds rounded to a tenth (older than the plan; P99 could hide every scenario); from a minute the
+    tooltip rounded where the badge cuts, and a badge from 59.95 s read `60.0s`; `diff` read a run that paid no warm-up
+    as one written before the marks; `interactions --json` named a waiter's first call by an id no verb takes;
+    `scenarios --slower-than` left scenarios out unsaid; an example column named `result` replaced the scenario's
+    (older); `summary`'s Slowest lost its list on a tie with a skipped scenario, its `warmUp` member counted calls of
+    scenarios it did not count, and a 3 ms warm-up read `0s of its 0s`; a mark the query could not read stopped every
+    verb; the XSD took any kind and number; and the timeline's legend left the stripes out. Outside the warm-up's own
+    surfaces, of R0's and section 8's kind: a method returning a `ValueTask` through `TrackingProxy` was recorded before
+    it ended (4.7.3 timed a `Task` alone); the loop label and the component statistics read the timestamps alone, and
+    the label a call with no time as 0 ms; names were cased with the machine's culture, so a scenario's `stableId`
+    differed on a Turkish or Azeri machine; SQL scalars, parameters and row counts and Redis numbers took the machine's
+    culture; a merge kept a copied scenario's expired calls; a number among a step's parameters was read back as a
+    double; and the culture lint read neither `$@"…"`, a lowercase specifier nor a composite format, while its control
+    ran another rule than its scan. Two guards are new: no SQL or Redis capture writes a value with the machine's
+    culture, and no casing in `src` takes it. `warmup.py` read the writer's `null` duration as 0 ms and timed to the
+    microsecond; it now times in ticks as the pass does, and `expected-marks.json` moved by under a microsecond.
+  - Proofs (harness `audit/`): 25 mutations of the warm-up fixes and 26 of the rest, each caught (`mutations-a.txt`,
+    `mutations-b.txt`). S7 on local 4.16.3 packages (`audit/s7/`): BreakfastProvider (`0ee43e8`, a scratch clone)
+    passes xUnit twice (212 of 212) and ReqNRoll three times (214 of 214); each report carries `warmup.py`'s marks
+    call for call (8 in 7 scenarios and 7 in 6; 46 in 36, 35 in 25 and 44 in 32), and both pages draw exactly what
+    each data file records. The comparison's control is the one 4.9.1's S7 ran (`p1/`). Checks: the core suite
+    passes 7,436 with 2 skipped after the version bump, the SQL, Redis, ClickHouse, Spanner and step-weaver projects
+    pass, the full Playwright suite passes 1,028 with 28 skipped, and `release.slnf` builds in Release for every
+    target and packs all 62 packages.
+  - Left for the owner (`ROADMAP.md` Appendix C): reports sort feature and scenario names in the machine culture's
+    order, which the #162 audit left as the same question (one comparer for the whole product, where Kronikol4J sorts
+    in ordinal order); the component diagram's statistics count a call with no time as 0 ms; a merged copy's calls of
+    no scenario at all (`CaptureBackground`) are still kept twice, since nothing tells a copy from a call; a
+    parameterized group's rows show no warm-up mark of their own (its badge sums them); and the JSON schema allows
+    `first` on either kind.
+
 ## Appendix A. Edit sites at `37e93813`
 
 A list of what this plan's author found, not of what the change touches. Before declaring a slice done, grep for every

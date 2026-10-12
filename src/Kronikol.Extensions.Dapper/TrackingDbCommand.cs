@@ -1,3 +1,4 @@
+using System.Globalization;
 using Kronikol.Constants;
 using System.Data;
 using System.Data.Common;
@@ -272,7 +273,7 @@ public class TrackingDbCommand : DbCommand
         var uri = BuildUri(op, effectiveVerbosity);
         var responseContent = effectiveVerbosity == DapperTrackingVerbosity.Summarised && !_options.LogResponseContent
             ? null
-            : exception is not null ? exception.Message : rowsAffected.HasValue ? $"{rowsAffected.Value} rows affected" : null;
+            : exception is not null ? exception.Message : rowsAffected.HasValue ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected" : null;
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name,
@@ -300,7 +301,7 @@ public class TrackingDbCommand : DbCommand
                     : DapperOperationClassifier.GetDiagramLabel(op, v);
                 var vContent = v == DapperTrackingVerbosity.Summarised && !_options.LogResponseContent
                     ? null
-                    : exception is not null ? exception.Message : rowsAffected.HasValue ? $"{rowsAffected.Value} rows affected" : null;
+                    : exception is not null ? exception.Message : rowsAffected.HasValue ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected" : null;
                 return new PhaseVariant(
                     vMethod, BuildUri(op, v), vContent, [], false);
             }));
@@ -368,7 +369,7 @@ public class TrackingDbCommand : DbCommand
     {
         if (!_options.LogResponseContent) return null;
         if (result is null or DBNull) return "null";
-        var str = result.ToString() ?? "";
+        var str = SqlRowFormatter.ValueText(result);
         return str.Length > _options.MaxValueDisplayLength
             ? $"{str[.._options.MaxValueDisplayLength]}... ({str.Length} chars)"
             : str;
@@ -401,7 +402,7 @@ public class TrackingDbCommand : DbCommand
 
         var paramStr = string.Join(", ", _inner.Parameters
             .Cast<DbParameter>()
-            .Select(p => $"{p.ParameterName}={p.Value}"));
+            .Select(p => $"{p.ParameterName}={(p.Value is null or DBNull ? "" : SqlRowFormatter.ValueText(p.Value))}"));
 
         return $"{CommandText}\n-- Parameters: {paramStr}";
     }

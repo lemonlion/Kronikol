@@ -1,0 +1,42 @@
+cached 4.16.3 folders left: 0
+package references moved: 27
+nuget.config: local feed C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4da7d127-ac79-4498-84d8-6f4c5a25b755\scratchpad\feed-4.16.3
+[14:29:17] build
+[14:29:56] xUnit run 1
+[14:33:17] xUnit run 1 rc=0 199s report=tests/BreakfastProvider.Tests.Component.xUnit/bin/Debug/net10.0/Reports/TestRunReport.json
+[14:33:17] xUnit run 2
+[14:36:04] xUnit run 2 rc=0 164s report=tests/BreakfastProvider.Tests.Component.xUnit/bin/Debug/net10.0/Reports/TestRunReport.json
+[14:36:04] ReqNRoll run 1
+[14:36:40] ReqNRoll run 1 rc=0 33s report=tests/BreakfastProvider.Tests.Component.ReqNRoll/bin/Debug/net10.0/Reports/TestRunReport.json
+[14:36:40] ReqNRoll run 2
+[14:36:51] ReqNRoll run 2 rc=0 8s report=tests/BreakfastProvider.Tests.Component.ReqNRoll/bin/Debug/net10.0/Reports/TestRunReport.json
+[14:36:51] ReqNRoll run 3
+[14:37:11] ReqNRoll run 3 rc=0 18s report=tests/BreakfastProvider.Tests.Component.ReqNRoll/bin/Debug/net10.0/Reports/TestRunReport.json
+[14:37:11] done
+restored from: C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4da7d127-ac79-4498-84d8-6f4c5a25b755\scratchpad\feed-4.16.3
+ReqNRoll-1.test.txt:  total: 214  failed: 0  succeeded: 214  skipped: 0 
+ReqNRoll-2.test.txt:  total: 214  failed: 0  succeeded: 214  skipped: 0 
+ReqNRoll-3.test.txt:  total: 214  failed: 0  succeeded: 214  skipped: 0 
+xUnit-1.test.txt:  total: 212  failed: 0  succeeded: 212  skipped: 0 
+xUnit-2.test.txt:  total: 212  failed: 0  succeeded: 212  skipped: 0 
+ReqNRoll-1: script 46 marks in 36 scenarios, report 46 in 36: equal
+ReqNRoll-2: script 35 marks in 25 scenarios, report 35 in 25: equal
+ReqNRoll-3: script 44 marks in 32 scenarios, report 44 in 32: equal
+xUnit-1: script 8 marks in 7 scenarios, report 8 in 7: equal
+xUnit-2: script 7 marks in 6 scenarios, report 7 in 6: equal
+== html xUnit-1
+TestRunReport.html: 7 marked in the data (7 drawn alone, 0 in 0 groups), 7 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+Specifications.html: 7 marked in the data (7 drawn alone, 0 in 0 groups), 7 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+== html xUnit-2
+TestRunReport.html: 6 marked in the data (6 drawn alone, 0 in 0 groups), 6 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+Specifications.html: 6 marked in the data (6 drawn alone, 0 in 0 groups), 6 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+== html ReqNRoll-1
+TestRunReport.html: 36 marked in the data (33 drawn alone, 3 in 3 groups), 36 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+Specifications.html: 36 marked in the data (33 drawn alone, 3 in 3 groups), 36 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+== html ReqNRoll-2
+TestRunReport.html: 25 marked in the data (23 drawn alone, 2 in 2 groups), 25 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+Specifications.html: 25 marked in the data (23 drawn alone, 2 in 2 groups), 25 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+== html ReqNRoll-3
+TestRunReport.html: 32 marked in the data (28 drawn alone, 4 in 4 groups), 32 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+Specifications.html: 32 marked in the data (28 drawn alone, 4 in 4 groups), 32 notes, warm-up rules 1x, wrong 0, unmarked drawn 0: equal
+exit 1

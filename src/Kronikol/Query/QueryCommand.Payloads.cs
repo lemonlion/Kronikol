@@ -142,16 +142,25 @@ public static partial class QueryCommand
                     ? null
                     : new { bodyHash = response.BodyHash, bodyLength = response.BodyLength }
             };
-            // Only on a marked call, so every other item reads as it did.
+            // Only on a marked call, so every other item reads as it did. A call that waited names the call it waited for
+            // by its address, as flow does, which every verb takes; the first call has no "first", as in the report.
             return interaction.WarmUp is { } warmUp
-                ? QueryWriter.WithMember(item, "warmUp", new
-                {
-                    kind = warmUp.Kind,
-                    shape = warmUp.Shape,
-                    baselineMs = warmUp.BaselineMs,
-                    baselineCalls = warmUp.BaselineCalls,
-                    first = warmUp.First
-                })
+                ? QueryWriter.WithMember(item, "warmUp", warmUp.Waited
+                    ? new
+                    {
+                        kind = warmUp.Kind,
+                        shape = warmUp.Shape,
+                        baselineMs = warmUp.BaselineMs,
+                        baselineCalls = warmUp.BaselineCalls,
+                        first = FirstCallAddress(index, warmUp)
+                    }
+                    : (object)new
+                    {
+                        kind = warmUp.Kind,
+                        shape = warmUp.Shape,
+                        baselineMs = warmUp.BaselineMs,
+                        baselineCalls = warmUp.BaselineCalls
+                    })
                 : item;
         });
 

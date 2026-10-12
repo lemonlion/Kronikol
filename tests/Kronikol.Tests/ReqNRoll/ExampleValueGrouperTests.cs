@@ -147,6 +147,32 @@ public class ExampleValueGrouperTests
     }
 
     [Fact]
+    public void A_step_in_capitals_groups_the_same_on_a_machine_whose_culture_cases_i_otherwise()
+    {
+        // Turkish pairs i with İ and ı with I, and a case-insensitive pattern follows the machine's culture unless told
+        // not to: WITH did not match "with" there, so a recipe's tables lost their parent (until 4.16.3).
+        var flatValues = new Dictionary<string, string>
+        {
+            ["Flour"] = "Plain Flour",
+            ["Apples"] = "Granny Smith",
+            ["Topping1"] = "Streusel",
+            ["Topping2"] = "Icing Glaze"
+        };
+        var steps = new List<ReqNRollStepInfo>
+        {
+            new("Given", "A RECIPE WITH THE FOLLOWING INGREDIENTS:", TableText: "| Flour       | Apples       |\n| Plain Flour | Granny Smith |"),
+            new("And", "THE FOLLOWING MUFFIN TOPPINGS:", TableText: "| Name        |\n| Streusel    |\n| Icing Glaze |")
+        };
+        string[] Keys() => ExampleValueGrouper.BuildStructured(flatValues, steps).Item1.Keys.Order(StringComparer.Ordinal).ToArray();
+
+        var english = CultureRun.Under("en-US", Keys);
+        var turkish = CultureRun.Under("tr-TR", Keys);
+
+        Assert.Equal(["RECIPE"], english);
+        Assert.Equal(english, turkish);
+    }
+
+    [Fact]
     public void BuildStructured_TableWithNoMatchingValues_NotGrouped()
     {
         var flatValues = new Dictionary<string, string>

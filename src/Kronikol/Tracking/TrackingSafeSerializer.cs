@@ -25,6 +25,11 @@ public static class TrackingSafeSerializer
         if (options.UnwrapTasks && value is Task task)
             return SerializeTask(task, options);
 
+        // A ValueTask is never read: its Result blocks until the call ends, and one backed by a pooled source may be read
+        // once only, by whoever awaits it. Its members were written like any other object's until 4.16.3.
+        if (value is ValueTask || value.GetType() is { IsGenericType: true } type && type.GetGenericTypeDefinition() == typeof(ValueTask<>))
+            return "\"<ValueTask>\"";
+
         // Filter elements from arrays
         if (value is object[] array)
             return SerializeFilteredArray(array, options);

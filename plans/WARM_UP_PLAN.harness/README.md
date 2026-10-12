@@ -15,6 +15,7 @@ Kronikol 4.6.0 (`37e93813`). Python 3.10 or later, standard library only; the cu
 | `breakfastprovider/runlanes.sh` | Builds a BreakfastProvider clone once and runs lanes several times, copying each `TestRunReport.json` out. `KRONIKOL_HISTORY=off`, so nothing is recorded |
 | `breakfastprovider/warmup-query.patch` | The section 4.8 change to BreakfastProvider's `StartupExtensions.cs`. The `InitializeOnStartup()` run is the same line without the `warmup:` argument |
 | `culture/culture.cs` | F12: what four duration formats write on a comma-decimal machine. `dotnet run --file culture.cs` |
+| `audit/` | The audit of 2026-10-12, released as 4.16.3: `mutate-a.py` and `mutations-a.txt` (the warm-up fixes; M20's first form did not compile and was rewritten, and M21's first build failed and passed on a rerun), `mutate-b.py` and `mutations-b.txt` (the rest; MB7 and MB10 first named the wrong lines and were rerun), `wiki.py` (the wiki edits, run against a wiki worktree), and `s7/` (the consumer check on local 4.16.3 packages) |
 
 ## Re-running
 

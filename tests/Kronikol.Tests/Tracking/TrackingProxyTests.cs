@@ -364,6 +364,89 @@ public class TrackingProxyTests
         Assert.True(elapsed >= TimeSpan.FromMilliseconds(25), $"took {elapsed.TotalMilliseconds} ms");
     }
 
+    /// <summary>
+    /// A method that returns a <see cref="ValueTask"/> is asynchronous too. Until 4.16.3 the proxy took only a
+    /// <see cref="Task"/> as one: it logged a ValueTask call when the method returned, before it ran, serialized the
+    /// boxed struct (reading its <c>Result</c>, which blocks until the call ends) as the response, and logged a call that
+    /// failed after returning as a success.
+    /// </summary>
+    [Fact]
+    public async Task A_value_task_call_is_logged_when_it_ends_with_its_result()
+    {
+        var proxy = TrackingProxy<IValueCalculator>.Create(new SlowValueCalculator(), new TrackingProxyOptions
+        {
+            ServiceName = "Calculator",
+            CurrentTestInfoFetcher = () => (TestName, _testId)
+        });
+
+        Assert.Equal(49, await proxy.SquareAsync(7));
+
+        var logs = GetLogsForTest();
+        var response = logs.Single(l => l.Type == RequestResponseType.Response);
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode!.Value);
+        Assert.Equal("49", response.Content);
+        var elapsed = response.Timestamp!.Value - logs.Single(l => l.Type == RequestResponseType.Request).Timestamp!.Value;
+        Assert.True(elapsed >= TimeSpan.FromMilliseconds(50), $"took {elapsed.TotalMilliseconds} ms");
+    }
+
+    [Fact]
+    public async Task A_value_task_call_that_fails_is_logged_as_failed()
+    {
+        var proxy = TrackingProxy<IValueCalculator>.Create(new SlowValueCalculator(), new TrackingProxyOptions
+        {
+            ServiceName = "Calculator",
+            CurrentTestInfoFetcher = () => (TestName, _testId)
+        });
+
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await proxy.FailAsync());
+
+        var response = GetLogsForTest().Single(l => l.Type == RequestResponseType.Response);
+        Assert.Equal(System.Net.HttpStatusCode.InternalServerError, response.StatusCode!.Value);
+        Assert.Equal("InvalidOperationException: no square today", response.Content);
+    }
+
+    [Fact]
+    public async Task A_value_task_call_with_no_result_is_timed_to_its_end()
+    {
+        var proxy = TrackingProxy<IValueCalculator>.Create(new SlowValueCalculator(), new TrackingProxyOptions
+        {
+            ServiceName = "Calculator",
+            CurrentTestInfoFetcher = () => (TestName, _testId)
+        });
+
+        await proxy.WaitAsync();
+
+        var logs = GetLogsForTest();
+        var response = logs.Single(l => l.Type == RequestResponseType.Response);
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode!.Value);
+        var elapsed = response.Timestamp!.Value - logs.Single(l => l.Type == RequestResponseType.Request).Timestamp!.Value;
+        Assert.True(elapsed >= TimeSpan.FromMilliseconds(50), $"took {elapsed.TotalMilliseconds} ms");
+    }
+
+    public interface IValueCalculator
+    {
+        ValueTask<int> SquareAsync(int a);
+        ValueTask<int> FailAsync();
+        ValueTask WaitAsync();
+    }
+
+    private class SlowValueCalculator : IValueCalculator
+    {
+        public async ValueTask<int> SquareAsync(int a)
+        {
+            await Task.Delay(60);
+            return a * a;
+        }
+
+        public async ValueTask<int> FailAsync()
+        {
+            await Task.Delay(60);
+            throw new InvalidOperationException("no square today");
+        }
+
+        public async ValueTask WaitAsync() => await Task.Delay(60);
+    }
+
     private class SlowCalculator : ICalculator
     {
         public int Add(int a, int b)

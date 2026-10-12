@@ -58,6 +58,26 @@ public class TrackingSafeSerializerTests
     }
 
     [Fact]
+    public void A_value_task_is_written_without_being_read()
+    {
+        // Its members were written like any other object's until 4.16.3, and its Result blocks until the call ends: a
+        // pending one held the caller's thread, and one backed by a pooled source may be read once, by whoever awaits it.
+        var source = new TaskCompletionSource<string>();
+        try
+        {
+            var serializing = Task.Run(() => TrackingSafeSerializer.Serialize(new ValueTask<string>(source.Task)));
+
+            Assert.True(serializing.Wait(TimeSpan.FromSeconds(5)), "serializing a pending ValueTask blocked");
+            Assert.Equal("\"<ValueTask>\"", serializing.Result);
+            Assert.Equal("\"<ValueTask>\"", TrackingSafeSerializer.Serialize(new ValueTask(Task.CompletedTask)));
+        }
+        finally
+        {
+            source.TrySetResult("released");
+        }
+    }
+
+    [Fact]
     public void Filters_cancellation_tokens()
     {
         var args = new object[] { "hello", new CancellationToken(), 42 };

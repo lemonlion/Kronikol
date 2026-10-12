@@ -31,6 +31,20 @@ internal static class SqlRowFormatter
         return value;
     }
 
+    /// <summary>
+    /// A single value as a note shows it, a scalar result or a parameter, written as the same value is in a row (as JSON):
+    /// numbers, dates and times the same on every machine, text as it is, bytes by their length. Until 4.16.3 each
+    /// wrapper wrote it with the machine's culture, so <c>SELECT 2.5</c> answered <c>2,5</c> on a German machine.
+    /// </summary>
+    internal static string ValueText(object value) => value switch
+    {
+        string text => text,
+        byte[] bytes => $"[bytes: {bytes.Length}]",
+        DateTime or DateTimeOffset or DateOnly or TimeOnly or TimeSpan => JsonSerializer.Serialize(value, value.GetType(), JsonOptions).Trim('"'),
+        IFormattable formattable => formattable.ToString(null, System.Globalization.CultureInfo.InvariantCulture),
+        _ => value.ToString() ?? ""
+    };
+
     /// <summary>The column list a count-and-columns note shows, cut after <see cref="MaxDisplayedColumns"/> names.</summary>
     internal static string? FormatColumnNames(IReadOnlyList<string> names)
     {

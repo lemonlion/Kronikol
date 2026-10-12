@@ -99,6 +99,21 @@ public class RelationshipStatsTests
     // ═══════════════════════════════════════════════════════════
 
     [Fact]
+    public void ComputeRelationshipStats_believes_a_duration_the_capturer_measured()
+    {
+        // As the data files write it (ReportGenerator.ComputeInteractionDurations): an ingested call can carry its own
+        // durationMs on records of one instant, and the edge read the instants alone, 0 ms, until 4.16.3.
+        var (req, res) = MakeRequestResponsePair(requestTime: BaseTime, responseTime: BaseTime);
+        var logs = new[] { req, res with { DurationMs = 150 } };
+        var rels = ComponentDiagramGenerator.ExtractRelationships(logs);
+
+        var stats = ComponentFlowSegmentBuilder.ComputeRelationshipStats(rels, logs).Values.Single();
+
+        Assert.Equal(150, stats.MedianMs);
+        Assert.Equal(150, stats.P95Ms);
+    }
+
+    [Fact]
     public void ComputeRelationshipStats_empty_logs_returns_empty()
     {
         var result = ComponentFlowSegmentBuilder.ComputeRelationshipStats([], []);

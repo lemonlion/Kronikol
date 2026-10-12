@@ -1,0 +1,31 @@
+CAUGHT  MB1 a ValueTask call is logged as it starts again  [TrackingProxyTests.A_value_task]  Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 440 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB2 a ValueTask<T> call is logged as it starts again  [TrackingProxyTests.A_value_task]  Failed!  - Failed:     2, Passed:     1, Skipped:     0, Total:     3, Duration: 289 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB3a the serializer writes a ValueTask's members again  [A_value_task_is_written_without_being_read]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 44 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB3b the serializer reads a pending ValueTask<T> again  [A_value_task_is_written_without_being_read]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 5 s - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB4 a measured duration loses to the timestamps  [SequenceCollapserTests|FullyQualifiedName~RelationshipStatsTests]  Failed!  - Failed:     2, Passed:    48, Skipped:     0, Total:    50, Duration: 592 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB5 the loop label counts an untimed call as 0 ms  [SequenceCollapserTests]  Failed!  - Failed:     1, Passed:    11, Skipped:     0, Total:    12, Duration: 116 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB6 component stats read the timestamps over a measured duration  [RelationshipStatsTests]  Failed!  - Failed:     1, Passed:    37, Skipped:     0, Total:    38, Duration: 728 ms - Kronikol.Tests.dll (net10.0)
+SKIPPED MB7 a title takes the machine's casing: the code to mutate occurs 0 times, not 1
+CAUGHT  MB8 a feature name is title-cased with the machine's culture  [ScenarioTitleResolverTests.A_title_reads_the_same]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 49 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB9 camel case lowers with the machine's culture  [ScenarioTitleResolverTests.A_title_reads_the_same]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 54 ms - Kronikol.Tests.dll (net10.0)
+SKIPPED MB10 the weaver humanizes with the build machine's culture: the code to mutate occurs 0 times, not 1
+CAUGHT  MB11 a SQL value takes the machine's culture  [SqlValueTextTests]  Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 78 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB12 a SQL date is written in the invariant calendar form, not as a row writes it  [SqlValueTextTests]  Failed!  - Failed:     4, Passed:     0, Skipped:     0, Total:     4, Duration: 37 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB13 the SQLite scalar takes the machine's culture  [A_scalar_and_a_parameter_read_as_a_row_does_on_every_machine]  Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 793 ms - Kronikol.Tests.Sqlite.dll (net10.0)
+CAUGHT  MB14 a SQLite parameter takes the machine's culture  [A_scalar_and_a_parameter_read_as_a_row_does_on_every_machine]  Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 262 ms - Kronikol.Tests.Sqlite.dll (net10.0)
+CAUGHT  MB15 a Redis double takes the machine's culture  [A_number_the_server_answers_reads_the_same_on_every_machine]  Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 677 ms - Kronikol.Tests.Redis.dll (net10.0)
+CAUGHT  MB16 a Redis long takes the machine's minus sign  [A_number_the_server_answers_reads_the_same_on_every_machine]  Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 116 ms - Kronikol.Tests.Redis.dll (net10.0)
+CAUGHT  MB17 a Spanner row count takes the machine's minus sign  [A_value_a_database_capture_writes_as_text_does_not_take_the_machines_culture]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 2 s - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB18 a copy's expired calls are kept  [A_copied_scenarios_expired_calls_are_kept_once]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 319 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB19 the parent patterns follow the machine's casing  [A_step_in_capitals_groups_the_same]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 330 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB20 the lint skips a verbatim interpolation  [CultureInvariantSourceTests.The_rule_finds_what_it_is_for]  Failed!  - Failed:     1, Passed:    20, Skipped:     0, Total:    21, Duration: 71 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB21 the lint skips a composite format  [CultureInvariantSourceTests.The_rule_finds_what_it_is_for]  Failed!  - Failed:     2, Passed:    19, Skipped:     0, Total:    21, Duration: 55 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB22 the lint reads F and not f in a hole  [CultureInvariantSourceTests.The_rule_finds_what_it_is_for]  Failed!  - Failed:     1, Passed:    20, Skipped:     0, Total:    21, Duration: 131 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB23 the lint reads N and not n in a ToString  [CultureInvariantSourceTests.The_rule_finds_what_it_is_for]  Failed!  - Failed:     1, Passed:    20, Skipped:     0, Total:    21, Duration: 76 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB24 the capture lint misses a diagnostic tracker's parameter  [CultureInvariantSourceTests.The_capture_rule_finds_what_it_is_for]  Failed!  - Failed:     1, Passed:     7, Skipped:     0, Total:     8, Duration: 44 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB25 a numeric parameter is written back as a double  [A_report_scanned_outside_the_query_reads_a_numeric_parameter_as_written]  Failed!  - Failed:     4, Passed:     0, Skipped:     0, Total:     4, Duration: 157 ms - Kronikol.Tests.dll (net10.0)
+done; the tree is restored and rebuilt
+exit 0
+CAUGHT  MB7 a title takes the machine's casing  [ScenarioTitleResolverTests.A_title_reads_the_same]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 54 ms - Kronikol.Tests.dll (net10.0)
+CAUGHT  MB10 the weaver humanizes with the build machine's culture  [HumanizeMethodName_reads_the_same]  Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 616 ms - Kronikol.Tests.StepTracking.dll (net10.0)
+done; the tree is restored and rebuilt

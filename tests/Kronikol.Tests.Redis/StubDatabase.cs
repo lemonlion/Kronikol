@@ -10,6 +10,7 @@ public class StubDatabase : DispatchProxy
     public RedisValue NextHashGetResult { get; set; } = RedisValue.Null;
     public bool NextKeyExistsResult { get; set; } = false;
     public long NextIncrementResult { get; set; } = 1;
+    public double? NextDoubleResult { get; set; }
     public bool NextBoolResult { get; set; } = true;
 
     public static IDatabase CreateProxy(Action<StubDatabase>? configure = null)
@@ -50,7 +51,7 @@ public class StubDatabase : DispatchProxy
         if (returnType == typeof(Task<long>))
             return Task.FromResult(NextIncrementResult);
         if (returnType == typeof(Task<double>))
-            return Task.FromResult((double)NextIncrementResult);
+            return Task.FromResult(NextDoubleResult ?? NextIncrementResult);
         if (returnType == typeof(Task<HashEntry[]>))
             return Task.FromResult(Array.Empty<HashEntry>());
         if (returnType == typeof(Task<RedisValueWithExpiry>))
@@ -74,7 +75,7 @@ public class StubDatabase : DispatchProxy
         if (returnType == typeof(long))
             return NextIncrementResult;
         if (returnType == typeof(double))
-            return (double)NextIncrementResult;
+            return NextDoubleResult ?? NextIncrementResult;
         if (returnType == typeof(HashEntry[]))
             return Array.Empty<HashEntry>();
         if (returnType == typeof(RedisValueWithExpiry))

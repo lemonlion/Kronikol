@@ -161,6 +161,29 @@ public class WarmUpDataTests : IDisposable
     }
 
     [Theory]
+    // The XSD holds a mark to what the JSON schema holds it to, which until 4.16.3 it did not: any kind, any number.
+    [InlineData("Kind", "later")]
+    [InlineData("BaselineCalls", "0")]
+    [InlineData("BaselineMs", "-1")]
+    [InlineData("WarmUpSeconds", "-0.5")]
+    public void The_xsd_refuses_a_mark_the_json_schema_refuses(string element, string value)
+    {
+        var schemaPath = Path.Combine(_directory, "TestRunReport.xsd");
+        File.Move(ReportGenerator.GenerateTestRunReportSchema($"WarmUpXsd_{Guid.NewGuid():N}.xsd", DataFormat.Xml), schemaPath, overwrite: true);
+        var schemas = new System.Xml.Schema.XmlSchemaSet();
+        schemas.Add(null, schemaPath);
+        var (features, logs, _) = Marked(600);
+        var document = XDocument.Parse(File.ReadAllText(Write(features, logs, DataFormat.Xml)));
+        var target = document.Descendants().First(e => e.Name.LocalName == element);
+
+        target.Value = value;
+        var errors = new List<string>();
+        document.Validate(schemas, (_, e) => errors.Add(e.Message));
+
+        Assert.NotEmpty(errors);
+    }
+
+    [Theory]
     [InlineData(DataFormat.Xml)]
     [InlineData(DataFormat.Yaml)]
     public void The_new_numbers_are_written_with_a_point_under_a_decimal_comma_culture(DataFormat format)
