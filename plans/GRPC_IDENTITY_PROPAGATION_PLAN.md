@@ -3,7 +3,7 @@
 **Written:** 2026-10-07, at 4.9.0 (`417c8e58`). #134 was filed the same day against 4.6.0 (`a074cf14`) and links one
 line, `GrpcTrackingInterceptor.cs` L353 (its `traceparent`), which is unchanged at `417c8e58`. 4.9.1 (`f6bf1d03`) was
 tagged later the same day and touches none of the files this plan edits; at its tip only `CHANGELOG.md`'s line numbers
-move (by 27). **Status: green-lit on 2026-10-08 with Q1 and Q4 as recommended, executed and published the same day as 4.12.1 (R0), 4.13.0 (R1), 4.13.2 (R2) and 4.14.3 (R3), and audited on 2026-10-12; the audit's fixes shipped as 4.16.1 (§11).**
+move (by 27). **Status: green-lit on 2026-10-08 with Q1 and Q4 as recommended, executed and published the same day as 4.12.1 (R0), 4.13.0 (R1), 4.13.2 (R2) and 4.14.3 (R3), and audited on 2026-10-12; the audit's fixes shipped as 4.16.1, published the same day (§11).**
 Evidence labels: **RUN** (measured here),
 **READ** (in the source, `file:line` at `417c8e58`), **INFERRED** (reasoned from facts, stated by none), **ISSUE** (taken
 from #134, not re-measured). The probe behind every RUN line, and its output, are in
@@ -1042,6 +1042,11 @@ without a stage row. Its leftovers are in `ROADMAP.md` Appendix C.
     `mutations.txt` and `mutations-spanner.txt` (40 of 40 caught); `suite.txt`, the suite at the version bump, where
     every test project passes in Release; and `breakfastprovider.txt`, BreakfastProvider's xUnit and ReqNRoll lanes on
     the local pack, where all 212 and 214 scenarios pass.
+  - **4.16.1 published the same day.** Release run 38250044209, CI 38250041042, CI Summary Preview 38250041083 and
+    CodeQL 38250041067 passed on `ff91c7d6`, and nuget.org listed all 62 ids at 12:57 UTC. The wiki has the audit's
+    edits (`5add5e9`), Kronikol4J's ledger its entry and the three corrected lines (`a3a2121`), and #134 a comment
+    naming 4.13.2, 4.14.3 and 4.16.1. The number followed the order the sessions sharing the machine agreed:
+    kronikol-1c's 4.14.11 and kronikol-6b's 4.16.0 went first, and kronikol-cc's 4.16.2 followed.
 
 ## Appendix A. Edit sites at `417c8e58`
 
