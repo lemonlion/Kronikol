@@ -570,3 +570,26 @@ follows R1 directly, since it reuses R1's sink.
   the core suite passes 7,016 with 2 skipped; the Playwright suite passed 995 of 995 on 4.12.0, before the rebase.
   - **The other adapters (section 8's third row), measured.** A probe of the xUnit v3, MSTest, NUnit 4 and TUnit adapters
     confirmed the inference for all four and found more: `plans/ADAPTER_CAPTURE_GAPS_PLAN.md`.
+- **2026-10-12. Audited** (kronikol-1c, at the owner's "make sure nothing was missed from the plan, that there isn't any
+  bugs or issues in the implementation", worktree `Kronikol-audit132` at 4.14.7), with `ADAPTER_CAPTURE_GAPS_PLAN.md`,
+  whose log has the method. Section 5 was ticked fact by fact against the tests: T4 asserts no reason (the log's
+  departure), T12 and T21 are guards, T17 checks identity and no run, T19 runs NoFramework, DependencyInjection and
+  AsyncBus under 2.8.2 only, and `Deserialize`'s pass-through has no fact. Fixed in 4.14.11, each with a fact red on
+  4.14.7 (`ADAPTER_CAPTURE_GAPS_PLAN.harness/audit/red-proofs.txt`):
+  - **A regression of section 4.5's rule.** Kept whole whenever it held whitespace, an xUnit default name formatted by
+    `methodDisplayOptions` (`Ns.OrderTests.Returns 404 ...`) kept its namespace and class, in v2 and v3. xUnit v2 formats
+    `Class.Method` whole (`TestMethodTestCase.BaseDisplayName`, 2.9.3, decompiled), and `replacePeriodWithComma` turns
+    the class's dots into commas too, so the adapters now read the method after the namespace, and take a DisplayName the
+    test set as written, its arguments being what xUnit appended after it (`ScenarioTitleResolver.FormatXunitDisplayName`,
+    internal, visible to the two adapters). A DisplayName's own parentheses were read as a row's arguments; that stays so
+    on MSTest, NUnit and TUnit, older than this plan (Appendix C of `ROADMAP.md`).
+  - **`ResultDefaulted` (Q7) went stale**: a suite on the framework or the wrapper that also wrote reports from a
+    collection fixture's `Dispose`, as `DiagrammedTestRun` advised, left a running test marked a default after its result
+    came. The sink now sets the mark from whether a result came, and `DiagrammedTestRun` says not to write from `Dispose`.
+  - **The core rule made `kronikol ingest` blank specifications twice over**: `--fold-unknown`'s fold scenario kept the
+    mark, so a green run's specifications were blank, and the line explaining blank specifications counted failures only.
+  - **F7's diagnostic (4.12.2)** counted calls the tracking ignores and ingest's unattributed records, which the ingest
+    reports itself; #130's audit found the second too.
+  - Left open (Appendix C): on the fallback (section 4.4), two `TestTracking` attributes on one test make two scenarios,
+    and a skipped theory row takes the next row's calls; cleanup failures and `IErrorMessage` never reach the report; a
+    reused host writes no second report (A4); the reporter's own suite on the wrapper.

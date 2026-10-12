@@ -31,10 +31,10 @@ dotnet new install Kronikol.Templates
 
 ```bash
 dotnet new kronikol-xunit3 --name MyService.Tests.Component \
-  --service-name "Order Service" \
-  --downstream-service "Payment Gateway" \
-  --downstream-port 15060 \
-  --framework net10.0
+  --serviceName "Order Service" \
+  --downstreamService "Payment Gateway" \
+  --downstreamPort 15060 \
+  --Framework net10.0
 ```
 
 ## Parameters
@@ -42,10 +42,10 @@ dotnet new kronikol-xunit3 --name MyService.Tests.Component \
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `--name` | Current directory | Project name and root namespace |
-| `--service-name` | MyApi | Name of your service (appears in diagrams) |
-| `--downstream-service` | DownstreamService | Name of a downstream dependency |
-| `--downstream-port` | 15050 | Port for downstream service HTTP fake |
-| `--framework` | net10.0 | Target framework (net8.0/net9.0/net10.0) |
+| `--serviceName` | MyApi | Name of your service (appears in diagrams) |
+| `--downstreamService` | DownstreamService | Name of a downstream dependency |
+| `--downstreamPort` | 15050 | Port for downstream service HTTP fake |
+| `--Framework` | net10.0 | Target framework (net8.0/net9.0/net10.0) |
 
 ## What's Included
 
@@ -82,8 +82,10 @@ Copy the folder into `.github/actions/`, keeping its `.gitattributes`. Its READM
 
 1. Add a `<ProjectReference>` to your API project in the generated `.csproj`
 2. Remove the placeholder: delete `Program.cs` and the `PlaceholderApiFactory` class, and create the factory from your
-   API's own entry point, `new WebApplicationFactory<YourApi.Program>()`. Until then the sample test runs against the
-   placeholder, in a solution or not.
+   API's own entry point, `new WebApplicationFactory<Program>()` with your API's `Program` (an API written with top-level
+   statements declares it in the global namespace, and before .NET 10 needs `public partial class Program;`). Until
+   then the sample test runs against the placeholder, in a solution or not; once `Program` is your API's, the
+   placeholder factory refuses to start, so a test cannot pass against the placeholder by mistake.
 3. Update `BaseFixture.cs` (`Hooks/TestSetupHooks.cs` for ReqNRoll, `Infrastructure/BDDfyTestSetup.cs` for BDDfy) to
    configure services specific to your API
 4. Run tests: `dotnet test`, or `dotnet run` for the TUnit templates, which run on Microsoft.Testing.Platform

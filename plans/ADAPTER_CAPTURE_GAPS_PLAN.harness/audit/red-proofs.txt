@@ -1,0 +1,70 @@
+Red proofs of the audit of 2026-10-12 (kronikol-1c), for both XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md and
+ADAPTER_CAPTURE_GAPS_PLAN.md. The audit's new and changed test files were copied into a worktree at v4.14.7 (the release
+before the audit's), with three stubs standing in for what 4.14.7 did where a fact calls a helper it lacks:
+  - ScenarioTitleResolver.FormatXunitDisplayName(display, explicit) => FormatScenarioDisplayName(display), the public
+    formatter both xUnit adapters called;
+  - NUnit 4's and TUnit's UncapturedTests.IsTheWholeRun(...) => true, since 4.14.4 to 4.14.7 always added the tests no
+    hook captured.
+Each project's new facts were run with `dotnet test --filter`. Every new behaviour fails on its own assertion; what passes
+there is a guard (inputs 4.14.7 already handled, the never-throws inputs, the stubs' true for a whole run, the converse
+template fact and two template facts that existed, the MSTest overloads 4.14.7 resolved by luck). Raw output follows.
+
+=== Kronikol.Tests
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatXunitDisplayName_TakesTheMethodFromADefaultName(displayName: "Ns.OrderTests.Returns 404 for missing order", expected: "Returns 404 for missing order") [537 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Reports.OrphanedCallsTests.A_record_with_no_test_id_is_left_to_the_ingest_that_could_not_attribute_it [541 ms]
+   Assert.Equal() Failure: Collections differ
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatXunitDisplayName_TakesTheMethodFromADefaultName(displayName: "Ns.OrderTests.Places a order(qty: 1)", expected: "Places a order [qty: 1]") [< 1 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatXunitDisplayName_TakesTheMethodFromADefaultName(displayName: "Ns, OrderTests, Returns 404 for missing order", expected: "Returns 404 for missing order") [< 1 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatXunitDisplayName_TakesTheMethodFromADefaultName(displayName: "My Ns.Order Tests.Returns 404 for missing order", expected: "Returns 404 for missing order") [< 1 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatXunitDisplayName_TakesTheMethodFromADefaultName(displayName: "Ns.OrderTests.Places<Int32, String>(a: 1, b: 2)", expected: "Places<int32, string> [a: 1, b: 2]") [< 1 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Reports.OrphanedCallsTests.A_call_the_tracking_ignores_is_not_counted_since_nothing_draws_it_under_any_id [4 ms]
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatXunitDisplayName_KeepsADisplayNameTheTestSetWhole(displayName: "Returns 404 (not found)(id: 1)", explicitDisplayName: "Returns 404 (not found)", expected: "Returns 404 (not found) [id: 1]") [< 1 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.FormatXunitDisplayName_KeepsADisplayNameTheTestSetWhole(displayName: "Returns 404 (not found)", explicitDisplayName: "Returns 404 (not found)", expected: "Returns 404 (not found)") [< 1 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ScenarioTitleResolverTests.AppendTestParameters_ReadsNoArgumentsFromAParenthesisInMidSentence [< 1 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.Ingestion.IngestPipelineTests.The_fold_scenario_is_not_a_defaulted_result_so_a_green_run_keeps_its_specifications [457 ms]
+   Assert.False() Failure
+  Failed Kronikol.Tests.Tool.IngestCommandTests.An_ingest_whose_specifications_are_blank_for_a_result_with_no_verdict_says_why [307 ms]
+   Assert.Contains() Failure: Sub-string not found
+  Failed Kronikol.Tests.Packaging.TemplateTestHostTests.Every_placeholder_factory_refuses_a_Program_that_is_not_the_placeholders [3 s]
+   Assert.All() Failure: 12 out of 12 items in the collection did not pass.
+  Failed Kronikol.Tests.Packaging.TemplateTestHostTests.Every_template_takes_the_Mvc_Testing_version_for_the_framework_it_was_created_for [1 ms]
+   Assert.All() Failure: 12 out of 12 items in the collection did not pass.
+Failed!  - Failed:    14, Passed:    17, Skipped:     0, Total:    31, Duration: 3 s - Kronikol.Tests.dll (net10.0)
+=== Kronikol.Tests.xUnit2
+  Failed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.A_default_name_formatted_with_spaces_is_named_after_its_method [292 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.xUnit2.KronikolResultsSinkTests.A_scenario_an_earlier_write_marked_as_a_default_is_a_verdict_once_its_result_arrives [132 ms]
+   Assert.False() Failure
+Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 435 ms - Kronikol.Tests.xUnit2.dll (net10.0)
+=== Kronikol.Tests.NUnit4
+  Failed An_explicit_test_a_run_did_not_select_is_not_found [28 ms]
+     Assert.That(UncapturedTests.In(Run(fixtureResult), capturedIds: []), Is.Empty)
+  Expected: <empty>
+  Failed Only_a_report_of_the_whole_run_takes_the_tests_no_tear_down_captured(["a", "b"],["a"],False) [< 1 ms]
+     Assert.That(UncapturedTests.IsTheWholeRun(run, passed), Is.EqualTo(whole))
+  Expected: False
+Failed!  - Failed:     2, Passed:     3, Skipped:     0, Total:     5, Duration: 35 ms - Kronikol.Tests.NUnit4.dll (net10.0)
+=== Kronikol.Tests.TUnit
+  Failed Kronikol.Tests.TUnit.UncapturedTestsTests.Only_a_report_of_the_whole_run_takes_the_tests_no_hook_captured(run: ["a", "b"], passed: ["a"], whole: False) [257 ms]
+   Assert.Equal() Failure: Values differ
+Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 279 ms - Kronikol.Tests.TUnit.dll (net10.0)
+=== Kronikol.Tests.MSTest
+  Failed Sums (1,2,3) [19 ms]
+   Assert.AreNotEqual failed. Expected any value except:<Kronikol.Tests.MSTest.OverloadedTestMethodTests.Sums>. Actual:<Kronikol.Tests.MSTest.OverloadedTestMethodTests.Sums>. 'notExpected' expression: 'Id(nameof(Sums))', 'actual' expression: 'CurrentTestInfo.Fetcher().Id'.
+  Failed Places ("one") [< 1 ms]
+   Assert.AreEqual failed. Expected:<System.String>. Actual:<System.Int32>. 'expected' expression: 'typeof(string)', 'actual' expression: 'TestMethodOf(GetType(), TestContext)!.GetParameters().Single().ParameterType'.
+Failed!  - Failed:     2, Passed:     4, Skipped:     0, Total:     6, Duration: 48 ms - Kronikol.Tests.MSTest.dll (net10.0)
+=== Kronikol.Tests.xUnit3
+  Failed Kronikol.Tests.xUnit3.AsyncLifetimeCaptureTests.After_stamps_no_end_for_a_test_whose_DisposeAsync_runs_after_it [241 ms]
+   Assert.False() Failure
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 259 ms - Kronikol.Tests.xUnit3.dll (net10.0)
+DONE

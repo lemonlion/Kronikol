@@ -55,4 +55,13 @@ public class UncapturedTestsTests
     {
         Assert.Empty(UncapturedTests.In(null, []));
     }
+
+    [Theory]
+    [InlineData(new[] { "a", "b" }, new[] { "b", "a" }, true)]
+    [InlineData(new[] { "a", "b" }, new[] { "a", "b", "c" }, true)]
+    [InlineData(new string[0], new string[0], true)]
+    [InlineData(new[] { "a", "b" }, new[] { "a" }, false)]
+    public void Only_a_report_of_the_whole_run_takes_the_tests_no_hook_captured(string[] run, string[] passed, bool whole) =>
+        // A caller that passes part of the run gets that part: before, every other tracked test came back as uncaptured.
+        Assert.Equal(whole, UncapturedTests.IsTheWholeRun(run, passed));
 }

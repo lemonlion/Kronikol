@@ -42,13 +42,22 @@ public abstract class BaseFixture : DiagrammedComponentTest
     /// framework's, and WebApplicationFactory looks for an app's content root beside a solution file, which a project
     /// created outside a solution does not have, so the factory names the test's output directory instead.
     /// TODO: Once you reference your real API project, delete this class and Program.cs, and use
-    /// <c>new WebApplicationFactory&lt;YourApi.Program&gt;()</c> directly.
+    /// <c>new WebApplicationFactory&lt;Program&gt;()</c> with your API's <c>Program</c> (an API written with top-level
+    /// statements declares it in the global namespace, and before .NET 10 needs <c>public partial class Program;</c>).
     /// </summary>
     private sealed class PlaceholderApiFactory : WebApplicationFactory<Program>
     {
-        public PlaceholderApiFactory() => Environment.SetEnvironmentVariable(
-            $"ASPNETCORE_TEST_CONTENTROOT_{typeof(Program).Assembly.GetName().Name!.ToUpperInvariant().Replace('.', '_')}",
-            AppContext.BaseDirectory);
+        public PlaceholderApiFactory()
+        {
+            // Program is the placeholder's only while Program.cs is: given your API's Program, this would host the
+            // placeholder in your API's place, and the tests would pass without ever reaching your API.
+            if (typeof(Program).Assembly != typeof(PlaceholderApiFactory).Assembly)
+                throw new InvalidOperationException(
+                    "Program is your API's now: delete PlaceholderApiFactory and use new WebApplicationFactory<Program>() (see its TODO).");
+            Environment.SetEnvironmentVariable(
+                $"ASPNETCORE_TEST_CONTENTROOT_{typeof(Program).Assembly.GetName().Name!.ToUpperInvariant().Replace('.', '_')}",
+                AppContext.BaseDirectory);
+        }
 
         protected override IHostBuilder CreateHostBuilder() =>
             new HostBuilder().ConfigureWebHost(web => web.Configure(app =>

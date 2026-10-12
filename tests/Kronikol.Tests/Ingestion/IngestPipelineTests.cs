@@ -261,6 +261,33 @@ public class IngestPipelineTests : IDisposable
     }
 
     [Fact]
+    public void The_fold_scenario_is_not_a_defaulted_result_so_a_green_run_keeps_its_specifications()
+    {
+        // The fold scenario never ends, since it is not a test. Since 4.11.1 a defaulted result blanks the
+        // specifications, so a fold left marked as one blanked them for a run whose every test passed.
+        const string known = "known-test";
+        var (r1, s1) = InteractionRecord.Pair(known, null, "GET", "http://a/k", "A", "Test", statusCode: "200", requestTimestamp: T0, responseTimestamp: T0.AddSeconds(1));
+        var (r2, s2) = InteractionRecord.Pair("warmup-1", null, "GET", "http://a/w1", "A", "Test", statusCode: "200", requestTimestamp: T0.AddSeconds(2), responseTimestamp: T0.AddSeconds(3));
+        var file = WriteCapture("fold-green.ndjson", r1, s1, r2, s2);
+        var tests = WriteTests(
+            new TestRunRecord { Event = "start", TestId = known, TestName = "known › test", Timestamp = T0 },
+            new TestRunRecord { Event = "end", TestId = known, Status = "passed", Timestamp = T0.AddSeconds(1) });
+        var options = IngestPipeline.DefaultOptions();
+        options.ReportsFolderPath = Path.Combine(_dir, "R-fold-green");
+
+        var result = IngestPipeline.Run(new IngestRequest
+        {
+            InteractionFiles = [file], TestsFile = tests, Options = options,
+            FoldUnknownTestsInto = new UnknownTestFold("Traffic outside any test", "outside"),
+        });
+
+        var outside = result.Features.SelectMany(f => f.Scenarios).Single(s => s.Id == "outside");
+        Assert.False(outside.ResultDefaulted);
+        Assert.DoesNotContain(result.Diagnostics, d => d.Kind == DiagnosticKind.ResultDefaulted);
+        Assert.True(new FileInfo(Path.Combine(options.ReportsFolderPath, $"{options.HtmlSpecificationsFileName}.html")).Length > 0);
+    }
+
+    [Fact]
     public void A_scenario_with_only_markers_keeps_the_no_interactions_affordance_and_never_sends_an_empty_body_to_the_browser_engine()
     {
         // An API-only test: it asserted things but touched no tracked dependency. Its diagram is

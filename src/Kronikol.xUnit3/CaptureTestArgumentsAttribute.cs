@@ -33,7 +33,8 @@ internal sealed class CaptureTestArgumentsAttribute : BeforeAfterTestAttribute
     /// </summary>
     public override void After(MethodInfo methodUnderTest, IXunitTest test)
     {
+        // xUnit runs DisposeAsync after this, so the test has not ended: no end is stamped (DiagrammedTestRun.TestEnds).
         if (Xunit.TestContext.Current.TestClassInstance is DiagrammedComponentTest and IAsyncDisposable)
-            DiagrammedComponentTest.Capture(Xunit.TestContext.Current);
+            DiagrammedComponentTest.Capture(Xunit.TestContext.Current, stampEnd: false);
     }
 }

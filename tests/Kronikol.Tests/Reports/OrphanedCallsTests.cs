@@ -72,6 +72,27 @@ public class OrphanedCallsTests : IDisposable
     }
 
     [Fact]
+    public void A_call_the_tracking_ignores_is_not_counted_since_nothing_draws_it_under_any_id()
+    {
+        // The Ignore header, or a set-up call under TrackDuringSetup = false: every drawing path leaves it out.
+        var ignored = Pair("orphan-a").Select(l => l with { TrackingIgnore = true }).ToArray();
+
+        var found = OrphanedCalls.Find(Features("scenario-1"), ignored);
+
+        Assert.Equal(0, found.Calls);
+    }
+
+    [Fact]
+    public void A_record_with_no_test_id_is_left_to_the_ingest_that_could_not_attribute_it()
+    {
+        // kronikol ingest records its unattributed records as a diagnostic of its own; counting them again under ''
+        // gave every kronikol query answer the same warning twice.
+        var found = OrphanedCalls.Find(Features("scenario-1"), [.. Pair(""), .. Pair("orphan-a")]);
+
+        Assert.Equal([("orphan-a", 1)], found.TestIds);
+    }
+
+    [Fact]
     public void A_diagram_marker_under_an_unknown_id_is_not_a_call()
     {
         var marker = new RequestResponseLog("Pay by card", "orphan-a", HttpMethod.Get, null, new Uri("http://orders/step"), [], "orders", "Test",

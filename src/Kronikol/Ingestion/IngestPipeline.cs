@@ -464,6 +464,7 @@ public static class IngestPipeline
             synthesised = CucumberFeatureMerger.Merge(cucumber, synthesised, current);
         }
 
+        var defaultedResultCount = synthesised.DefaultedResultCount;
         if (request.FoldUnknownTestsInto is { } foldedInto)
         {
             // The fold scenario is not a test: nothing ran and nothing ended, so ResultWhenUnknown (meant
@@ -473,6 +474,13 @@ public static class IngestPipeline
                 if (scenario.Id == foldedInto.ScenarioId)
                 {
                     scenario.Result = ExecutionResult.Passed;
+                    // Nor is its result a default standing in for a verdict, which would blank the specifications
+                    // of a run whose every test passed and count it in the diagnostic below.
+                    if (scenario.ResultDefaulted)
+                    {
+                        scenario.ResultDefaulted = false;
+                        defaultedResultCount--;
+                    }
                     // And history must not read it as one: it comes and goes with whether unattributed
                     // traffic survived, which made it "absent" in one run and "new" in the next.
                     scenario.NotATest = true;
@@ -483,9 +491,9 @@ public static class IngestPipeline
         // A scenario that started and never ended took ResultWhenUnknown rather than a verdict. With the
         // compatibility default of Passed that is invisible in the report — a crashed worker looks green —
         // so it is recorded as a diagnostic, which every reader of the file (and `kronikol query`) surfaces.
-        if (synthesised.DefaultedResultCount > 0)
+        if (defaultedResultCount > 0)
             diagnostics.Add(DiagnosticKind.ResultDefaulted,
-                $"{synthesised.DefaultedResultCount} scenario(s) recorded no result and were reported as "
+                $"{defaultedResultCount} scenario(s) recorded no result and were reported as "
                 + $"{request.ResultWhenUnknown}. Set IngestRequest.ResultWhenUnknown = ExecutionResult.Failed if your "
                 + "producer always writes an end record.");
 

@@ -95,16 +95,29 @@ public abstract class DiagrammedComponentTest
     }
 
     /// <summary>
-    /// The running test's method. By name and by the number of arguments its row passes (<c>TestData</c>, null without
-    /// data), where <c>GetMethod(name)</c> threw <c>AmbiguousMatchException</c> for a class that overloads a test method,
-    /// failing each overload in <c>[TestCleanup]</c> (measured on 4.13.3).
+    /// The running test's method. By name and by the arguments its row passes (<c>TestData</c>, null without data), where
+    /// <c>GetMethod(name)</c> threw <c>AmbiguousMatchException</c> for a class that overloads a test method, failing each
+    /// overload in <c>[TestCleanup]</c> (measured on 4.13.3). Of overloads taking as many arguments, the one whose
+    /// parameters accept the row's values; a row that matches no count passes its values to a <c>params</c> array.
     /// </summary>
     internal static MethodInfo? TestMethodOf(Type testClass, TestContext context)
     {
         var candidates = testClass.GetMethods().Where(m => m.Name == context.TestName).ToArray();
         if (candidates.Length <= 1)
             return candidates.FirstOrDefault();
-        var arguments = context.TestData?.Length ?? 0;
-        return candidates.FirstOrDefault(m => m.GetParameters().Length == arguments) ?? candidates[0];
+        var data = context.TestData ?? [];
+        var sameCount = candidates.Where(m => m.GetParameters().Length == data.Length).ToArray();
+        return sameCount.FirstOrDefault(m => Accepts(m, data))
+            ?? sameCount.FirstOrDefault()
+            ?? (data.Length > 0 ? candidates.FirstOrDefault(TakesParams) : null)
+            ?? candidates[0];
     }
+
+    private static bool Accepts(MethodInfo method, object?[] data) =>
+        method.GetParameters().Zip(data).All(p => p.Second is null
+            ? !p.First.ParameterType.IsValueType || Nullable.GetUnderlyingType(p.First.ParameterType) is not null
+            : p.First.ParameterType.IsInstanceOfType(p.Second));
+
+    private static bool TakesParams(MethodInfo method) =>
+        method.GetParameters() is [.., var last] && last.IsDefined(typeof(ParamArrayAttribute), inherit: false);
 }

@@ -21,6 +21,9 @@
 		<InternalsVisibleTo Include="Kronikol.Extensions.ProxyTap" />
 		<InternalsVisibleTo Include="Kronikol.Playwright" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.ClickHouse.Driver" />
+		<!-- ScenarioTitleResolver.FormatXunitDisplayName: an xUnit display name read with the test's own DisplayName -->
+		<InternalsVisibleTo Include="Kronikol.xUnit2" />
+		<InternalsVisibleTo Include="Kronikol.xUnit3" />
 		<!-- search-index bench harness (tools/search-bench/formatter-probe), query-bench precedent -->
 		<InternalsVisibleTo Include="formatter-probe" />
 	</ItemGroup>

@@ -22,6 +22,8 @@ public class UncapturedTestsTests
         public void Throws() { }
 
         public void Captured() { }
+
+        public void Explicit() { }
     }
 
     private sealed class UntrackedFixture
@@ -128,4 +130,23 @@ public class UncapturedTestsTests
         Assert.That(failed.Result, Is.EqualTo(ExecutionResult.Failed));
         Assert.That(failed.ErrorMessage, Is.EqualTo("OneTimeSetUp: probe: the constructor threw"));
     }
+
+    [Test]
+    public void An_explicit_test_a_run_did_not_select_is_not_found()
+    {
+        // NUnit schedules an [Explicit] test on a run that does not select it and skips it as Explicit, on every such run.
+        var (fixture, fixtureResult) = Fixture<TrackedFixture>();
+        var @explicit = Method<TrackedFixture>(fixture, nameof(TrackedFixture.Explicit));
+        fixtureResult.AddResult(Result(@explicit, ResultState.Explicit));
+
+        Assert.That(UncapturedTests.In(Run(fixtureResult), capturedIds: []), Is.Empty);
+    }
+
+    [TestCase(new[] { "a", "b" }, new[] { "b", "a" }, true)]
+    [TestCase(new[] { "a", "b" }, new[] { "a", "b", "c" }, true)]
+    [TestCase(new string[0], new string[0], true)]
+    [TestCase(new[] { "a", "b" }, new[] { "a" }, false)]
+    public void Only_a_report_of_the_whole_run_takes_the_tests_no_tear_down_captured(string[] run, string[] passed, bool whole) =>
+        // A caller that passes part of the run gets that part: before, every other tracked test came back as uncaptured.
+        Assert.That(UncapturedTests.IsTheWholeRun(run, passed), Is.EqualTo(whole));
 }

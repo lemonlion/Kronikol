@@ -497,8 +497,9 @@ internal static class IngestCommand
     }
 
     /// <summary>
-    /// The specification outputs are written blank when any scenario failed, so a broken build cannot
-    /// publish half-truths as documentation (the rule Generated-Reports documents for in-process runs). On
+    /// The specification outputs are written blank when any scenario failed, or has a default in place of a
+    /// verdict (a test that started and never ended), so a run cannot publish half-truths as documentation (the
+    /// rule Generated-Reports documents for in-process runs). On
     /// this path nothing said so, and a user whose first ingest was of a red run found two empty files.
     /// One line, not a diagnostic: the diagnostics list means "silence is a clean run", and this is the
     /// run behaving as designed.
@@ -523,13 +524,20 @@ internal static class IngestCommand
             return;
 
         var scenarios = features.SelectMany(f => f.Scenarios ?? []).ToArray();
-        // The generator's predicate: Failed, and only Failed, blanks the files.
+        // The generator's predicate: a failure, or a result that is a default rather than a verdict, blanks the files.
         var failed = scenarios.Count(s => s.Result == ExecutionResult.Failed);
-        if (failed == 0)
+        var defaulted = scenarios.Count(s => s.Result != ExecutionResult.Failed && s.ResultDefaulted);
+        if (failed == 0 && defaulted == 0)
             return;
 
+        var why = (failed, defaulted) switch
+        {
+            (_, 0) => $"{failed} of {scenarios.Length} scenario(s) failed",
+            (0, _) => $"{defaulted} of {scenarios.Length} scenario(s) have no verdict, only a default",
+            _ => $"{failed} of {scenarios.Length} scenario(s) failed, and {defaulted} of {scenarios.Length} have no verdict, only a default",
+        };
         var names = blank.Count == 1 ? blank[0] + " is" : string.Join(" and ", blank) + " are";
-        @out.WriteLine($"{names} blank: {failed} of {scenarios.Length} scenario(s) failed, and the specification is only published from a green run.");
+        @out.WriteLine($"{names} blank: {why}, and the specification is only published from a green run.");
     }
 
     /// <summary>

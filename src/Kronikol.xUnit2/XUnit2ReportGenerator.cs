@@ -29,6 +29,11 @@ public static class XUnit2ReportGenerator
             + "Kronikol's (ReportingTestFramework, or WithKronikolReporting() on another framework's executor)");
     }
 
+    /// <summary>
+    /// Writes the reports for the scenarios given, each with the result it carries. A scenario marked
+    /// <see cref="ScenarioInfo.ResultDefaulted"/> is reported with a <see cref="DiagnosticKind.ResultDefaulted"/> diagnostic,
+    /// and the specifications are then written blank.
+    /// </summary>
     public static void CreateStandardReportsWithDiagrams(IEnumerable<ScenarioInfo> scenarios, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options)
     {
         Write(scenarios.ToArray(), startRunTime, endRunTime, options, "no result was recorded for them");

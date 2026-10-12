@@ -11,8 +11,10 @@ public class DiagrammedTestRun
     public static ConcurrentQueue<ITestContext> TestContexts { get; } = new();
 
     /// <summary>
-    /// When each test finished, by unique id, stamped as its test class is disposed. xunit.v3 keeps the
-    /// finish time on its result messages, not on the context the report is built from.
+    /// When each test finished, by unique id, stamped as its test class is disposed through <c>Dispose</c>. xunit.v3
+    /// keeps the finish time on its result messages, not on the context the report is built from. A test whose class
+    /// xunit.v3 disposes through <c>DisposeAsync</c> has none: that runs after the last hook Kronikol has, and a call made
+    /// in it is still the test's.
     /// </summary>
     public static ConcurrentDictionary<string, DateTimeOffset> TestEnds { get; } = new();
     protected static DateTime StartRunTime { get; private set; }

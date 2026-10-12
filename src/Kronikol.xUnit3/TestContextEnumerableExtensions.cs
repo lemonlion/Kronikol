@@ -1,3 +1,4 @@
+using System.Reflection;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 using Xunit;
@@ -26,7 +27,7 @@ internal static class TestContextEnumerableExtensions
                         .ThenBy(x => x.Test?.TestDisplayName)
                         .Select(x =>
                         {
-                            var displayName = ScenarioTitleResolver.FormatScenarioDisplayName(x.Test!.TestDisplayName);
+                            var displayName = ScenarioTitleResolver.FormatXunitDisplayName(x.Test!.TestDisplayName, ExplicitDisplayName(x));
 
                             // Try structured extraction from TestMethodArguments first
                             var structuredResult = TryExtractStructuredParametersWithRaw(x);
@@ -99,6 +100,12 @@ internal static class TestContextEnumerableExtensions
             return null;
         }
     }
+
+    /// <summary>The DisplayName the test set on its fact or theory, which xUnit uses as written.</summary>
+    private static string? ExplicitDisplayName(ITestContext context) =>
+        context.TestCase is IXunitTestCase testCase
+            ? testCase.TestMethod.Method.GetCustomAttribute<FactAttribute>()?.DisplayName
+            : null;
 
     private static string? GetStructuredOutlineId(ITestContext context)
     {

@@ -18,6 +18,16 @@ internal static class UncapturedTests
             ? []
             : Select(allTests, t => new Candidate(t.Id, t.Metadata.TestDetails.ClassType, t.Execution.Result is not null), capturedIds);
 
+    /// <summary>
+    /// Whether the tests a caller passed hold every test the run captured: the run's own collection, or a copy of it. A
+    /// caller that passes part of the run gets that part, as it did before these tests joined the report.
+    /// </summary>
+    public static bool IsTheWholeRun(IEnumerable<string> runIds, IEnumerable<string> passedIds)
+    {
+        var passed = passedIds.ToHashSet(StringComparer.Ordinal);
+        return runIds.All(passed.Contains);
+    }
+
     internal static IReadOnlyList<T> Select<T>(IEnumerable<T> all, Func<T, Candidate> describe, IEnumerable<string> capturedIds)
     {
         var captured = capturedIds.ToHashSet(StringComparer.Ordinal);

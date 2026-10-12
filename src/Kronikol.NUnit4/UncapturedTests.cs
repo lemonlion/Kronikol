@@ -29,6 +29,16 @@ internal static class UncapturedTests
         return found;
     }
 
+    /// <summary>
+    /// Whether the tests a caller passed hold every test the run captured: the run's own collection, or a copy of it. A
+    /// caller that passes part of the run gets that part, as it did before these tests joined the report.
+    /// </summary>
+    public static bool IsTheWholeRun(IEnumerable<string> runIds, IEnumerable<string> passedIds)
+    {
+        var passed = passedIds.ToHashSet(StringComparer.Ordinal);
+        return runIds.All(passed.Contains);
+    }
+
     /// <summary>The result of the suite whose one-time tear-down is running, or null anywhere else.</summary>
     public static ITestResult? RunningSuiteResult()
     {
@@ -51,7 +61,9 @@ internal static class UncapturedTests
             return;
         }
 
+        // An [Explicit] test is skipped on every run that does not select it, by design, as TUnit leaves its own out.
         if (captured.Contains(result.Test.Id)
+            || result.ResultState is { Status: TestStatus.Skipped, Label: "Explicit" }
             || result.Test.TypeInfo?.Type is not { } fixtureType
             || !typeof(DiagrammedComponentTest).IsAssignableFrom(fixtureType)
             || result.Test is not Test test

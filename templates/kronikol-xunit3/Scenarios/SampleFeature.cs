@@ -13,7 +13,7 @@ public class SampleFeature : BaseFixture
     public async Task Get_root_endpoint_returns_success()
     {
         // Arrange & Act
-        var response = await Client.GetAsync("/");
+        var response = await Client.GetAsync("/", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);

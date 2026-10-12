@@ -25,4 +25,35 @@ public class OverloadedTestMethodTests : DiagrammedComponentTest
     {
         Assert.AreEqual(Id($"{nameof(Overloaded)} ({row})"), CurrentTestInfo.Fetcher().Id);
     }
+
+    [TestMethod]
+    public void Sums()
+    {
+        Assert.AreEqual(Id(nameof(Sums)), CurrentTestInfo.Fetcher().Id);
+    }
+
+    [TestMethod]
+    [DataRow(1, 2, 3)]
+    public void Sums(params int[] values)
+    {
+        // The row passes three values to one params parameter, so no overload takes as many: it was read as the test
+        // without data, and given that test's id.
+        Assert.AreNotEqual(Id(nameof(Sums)), CurrentTestInfo.Fetcher().Id);
+        Assert.AreEqual(typeof(int[]), TestMethodOf(GetType(), TestContext)!.GetParameters().Single().ParameterType);
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    public void Places(int quantity)
+    {
+        Assert.AreEqual(typeof(int), TestMethodOf(GetType(), TestContext)!.GetParameters().Single().ParameterType);
+    }
+
+    [TestMethod]
+    [DataRow("one")]
+    public void Places(string quantity)
+    {
+        // Two overloads take one argument: the one whose parameter takes the row's value, where the first was taken.
+        Assert.AreEqual(typeof(string), TestMethodOf(GetType(), TestContext)!.GetParameters().Single().ParameterType);
+    }
 }

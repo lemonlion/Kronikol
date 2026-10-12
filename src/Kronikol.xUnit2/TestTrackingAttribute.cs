@@ -16,8 +16,9 @@ namespace Kronikol.xUnit2;
 /// is already applied automatically.
 /// </para>
 /// <para>
-/// Under <see cref="ReportingTestFramework"/> the scenario is made when xUnit starts the test, and this
-/// attribute ties the calls the test makes to it, from <c>Before</c> to <c>After</c>.
+/// Under <see cref="ReportingTestFramework"/>, or another framework whose executor is wrapped with
+/// <see cref="TestFrameworkExecutorExtensions.WithKronikolReporting"/>, the scenario is made when xUnit starts the test,
+/// and this attribute ties the calls the test makes to it, from <c>Before</c> to <c>After</c>.
 /// </para>
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Assembly, AllowMultiple = false)]
@@ -42,9 +43,9 @@ public sealed class TestTrackingAttribute : BeforeAfterTestAttribute
             return;
         }
 
-        // No sink handed one over: the reports are written some other way (a collection fixture), or the bus
-        // did not deliver on the test's flow. The scenario is this attribute's own, and its result, if any, is
-        // found by name (plans/XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md 4.4).
+        // No sink handed one over: the reports are written some other way (a collection fixture), where the scenario
+        // gets no result and is reported as a default, or the bus did not deliver on the test's flow, where the sink
+        // pairs it with its result by test method in the order the tests started (plans/XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md 4.4).
         var testId = Guid.NewGuid().ToString();
         var featureName = ScenarioTitleResolver.FormatFeatureName(className);
         var scenarioName = ScenarioTitleResolver.FormatScenarioDisplayName(methodName);

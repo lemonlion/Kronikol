@@ -4,6 +4,117 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.14.11] - 2026-10-12
+
+**Patch - an audit of the xUnit v2 composition plan (#132, #123) and the adapter capture gaps plan, released from 4.11.1
+to 4.14.4, fixes what they broke and what they missed.** At the owner's request to make sure nothing was missed from the
+plans and that the implementation has no bugs (`plans/XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md` and
+`plans/ADAPTER_CAPTURE_GAPS_PLAN.md`, each log's audit entry). Bug fixes, and nothing new for a consumer to call, so the
+patch part moves (4.14.10 to 4.14.11). The history action's `VERSION` installs `Kronikol.Tool` 4.14.11, and the templates
+pin 4.14.10.
+
+### Fixed
+
+- **xUnit v2 and v3: a suite that sets xUnit's `methodDisplayOptions` named every scenario after its namespace and
+  class** (`replaceUnderscoreWithSpace` made `Ns.OrderTests.Returns_404` "Ns.order tests.returns 404"), since 4.11.1
+  kept any name with a space whole, to protect a DisplayName written as a sentence. xUnit formats its default name, class
+  and method together, so the method is now read after the namespace whatever its spaces, or its commas under
+  `replacePeriodWithComma`; and a DisplayName the test set is used as written, so its own parentheses are no longer read
+  as a theory row's arguments (`[Fact(DisplayName = "Returns 404 (not found)")]` was named "Returns 404 [not found]" and
+  grouped with any other such fact as one parameterized outline). A row's arguments are what xUnit appended after it.
+  Behaviour change: such scenarios take their method's name again, as before 4.11.1, and their history continues under it.
+- **`kronikol ingest --fold-unknown` wrote blank specifications for a run whose every test passed.** The fold scenario,
+  which is not a test and never ends, kept the mark of a result that is a default, which since 4.11.1 blanks the
+  specifications as a failure does, and the `ResultDefaulted` diagnostic counted it. It is no longer marked.
+- **`kronikol ingest` wrote blank specifications without saying why when a result was a default** (a test that started
+  and never ended). The line that explains blank specifications counted failures only; it now names both ("are blank: 1
+  of 3 scenario(s) have no verdict, only a default, and the specification is only published from a green run").
+- **The `UnattributedInteractions` diagnostic (4.12.2) counted calls that nothing draws under any id:** a call the
+  tracking ignores (the Ignore header, or a set-up call with `TrackDuringSetup` off), and the records `kronikol ingest`
+  could not attribute, which the ingest reports itself, so `kronikol query` headed every answer with the same warning
+  twice. Found by this audit and by #130's.
+- **xUnit v2: a test's verdict could read as a default in the final report** when a suite on `ReportingTestFramework`
+  or `WithKronikolReporting()` also wrote reports from a collection fixture's `Dispose`, as `DiagrammedTestRun`'s
+  documentation suggested. That write marks every scenario with no result yet as a default, and a test still running in
+  another collection kept the mark after its result came, so the final report carried the `ResultDefaulted` diagnostic
+  and blank specifications. The final report now marks a default only where no result came, and `DiagrammedTestRun`'s
+  documentation says not to write reports from `Dispose` under either.
+- **NUnit 4 and TUnit: a report written for part of a run took back every other tracked test** (since 4.14.4), as tests
+  the tear-down had not captured. They join a report of the whole run only: the run's own `TestContexts`, or a copy of
+  it. A caller that passes part of the run gets that part, as before 4.14.4.
+- **NUnit 4: every `[Explicit]` test was reported Skipped on every run that did not select it** (since 4.14.4). NUnit
+  skips such a test as Explicit by design; it stays out of the report, as TUnit leaves its own out.
+- **xUnit v3: a call made in an `IAsyncLifetime` test's `DisposeAsync` went to the background section**, with a
+  diagnostic that it arrived after the test ended (since 4.13.3, which captures such a test before xUnit disposes it).
+  The test's end is no longer stamped there, so its calls stay with it.
+- **MSTest: a data row of an overloaded test method could take the wrong overload.** A row that passes its values to a
+  `params` array matched no overload by count and was read as the test without data, with that test's id, so one of the
+  two left the report; and of two overloads taking as many arguments, the first was taken, with its `[HappyPath]` and its
+  parameter names. A row now takes the overload whose parameters accept its values, or else the `params` one.
+- **BDDfy on xUnit v3: a DisplayName with a parenthesis in mid-sentence** ("Returns 404 (not found) for a missing
+  order") gave the scenario's title a "[not found) for a missing order]" suffix. Only a name that ends in `)` carries
+  arguments, as the scenario formatter has read them since 4.11.1.
+- **The templates:**
+  - Created with `--Framework net8.0` or `net9.0`, every template failed restore: `Microsoft.AspNetCore.Mvc.Testing` ships
+    a major version per .NET version, for its own framework only, and the templates pinned 10.0.7. They now take 8.0.31,
+    9.0.20 or 10.0.7 by the framework chosen, and CI creates and runs xUnit v3 on net8.0 and TUnit on net9.0 beside the
+    defaults.
+  - Once `Program.cs` was deleted and the project referenced an API whose `Program` is public, the placeholder factory
+    still compiled and hosted the placeholder in the API's place, so a test that checks only a status code passed
+    without reaching the API. It now refuses to start when `Program` is not the placeholder's, and says what to delete.
+  - The TODO said to use `new WebApplicationFactory<YourApi.Program>()`, which does not compile for an API written with
+    top-level statements, whose `Program` is in the global namespace; it and the package README now say so.
+  - The xUnit v3 template's sample test built with an xUnit1051 warning; it passes the test's cancellation token.
+  - The three TUnit templates' `Program.cs` still said their placeholder, unlike the others, declared no `Main`, and did
+    not say to delete `PlaceholderApiFactory` with it.
+  - The package README gave options `dotnet new` rejects (`--service-name`, `--downstream-service`, `--downstream-port`,
+    `--framework`); they are `--serviceName`, `--downstreamService`, `--downstreamPort` and `--Framework`.
+- Doc comments: `TestTrackingAttribute` named only `ReportingTestFramework` and said its own scenario's result is found by
+  name; xUnit v3's `DiagrammedTestRun.TestEnds` said every test's end is stamped as its class is disposed; and
+  `XUnit2ReportGenerator`'s overload taking scenarios, `NUnitReportGenerator` and `TUnitReportGenerator` had none.
+
+### Corrected records
+
+- 4.13.3's entry said the MSTest data-row id change re-keys each row's history. History is keyed by the scenario's
+  stable id (feature, name, outline and example values), never by its `Id`, so no history key moved: the first row kept
+  its history, and the rows the report had dropped began theirs.
+- 4.13.3 said xUnit v3 reads an `IAsyncLifetime` test's result when it is already final. It is final unless the class's
+  `DisposeAsync`, or another attribute's `After`, then throws: xUnit folds that failure into the test afterwards, and the
+  report keeps the earlier verdict. Recorded as an open question in the plan.
+- 4.14.4's plan log said its NUnit 4 and TUnit fix closed the silent green run for those adapters. A failure outside any
+  test (a fixture's `[OneTimeTearDown]`, or TUnit's `[After(Class)]` on the run's last test) still leaves the report green
+  while the runner fails. Recorded as an open question.
+
+### Tests
+
+- `ScenarioTitleResolverTests`: an xUnit default name formatted with spaces, with spaces and commas in its namespace,
+  for a generic method and with a row's arguments; a DisplayName kept whole with its own parentheses, and a row's
+  arguments after it; inputs that must not throw; `AppendTestParameters` with a parenthesis in mid-sentence.
+- `KronikolResultsSinkTests`: a default name formatted with spaces is named after its method, and a scenario an earlier
+  write marked as a default is a verdict once its result comes.
+- `IngestPipelineTests` and `IngestCommandTests`: the fold scenario leaves a green run its specifications, and the line
+  explaining blank specifications for a default, and for a failure and a default together.
+- `OrphanedCallsTests`: a call the tracking ignores and a record with no test id are not counted.
+- NUnit 4 and TUnit `UncapturedTestsTests`: an `[Explicit]` test a run did not select, and the whole-run rule.
+- MSTest `OverloadedTestMethodTests`, run by MSTest: a `params` row beside a test without data, and two overloads of one
+  arity.
+- xUnit v3 `AsyncLifetimeCaptureTests`: no end is stamped before `DisposeAsync`.
+- `TemplateTestHostTests`: every template takes Mvc.Testing by framework, every placeholder factory refuses a `Program`
+  that is not its own, and no TUnit template references the test SDK.
+- Red first: copied onto 4.14.7, with three stubs for helpers it lacks standing in for what it did, 22 facts and theory
+  cases failed, each on its own assertion (`plans/ADAPTER_CAPTURE_GAPS_PLAN.harness/audit/red-proofs.txt`).
+- The templates, as this release ships them: xUnit v3 and ReqNRoll on xUnit v3 created for net8.0, TUnit for net9.0
+  and MSTest for net10.0, each built with no warning and passed its sample test.
+- The example integration runner could hang for good on Windows: the build it runs once per component left MSBuild
+  nodes running for reuse, a node started from it inherited the runner's redirected output, and the runner waited
+  without limit for that output to end (found when this release's own run stopped after the TUnit component). Its
+  children reuse no node now, and the wait for their output is bounded.
+- Checks: after the version bump, the core suite passes 7,331 with 2 skipped; the xUnit v2, MSTest, TUnit, NUnit 4 and
+  xUnit v3 adapter projects pass 97, 71, 40, 31 and 18; the full Playwright suite passes 1,025 with 28 skipped when
+  run alone; the example integration facts pass 246 of 254, the other 8 failing on a port and a report file that the
+  hung run's leftover processes still held, and all 136 facts of their class pass on the fixed runner; and
+  release.slnf builds in Release for every target.
+
 ## [4.14.10] - 2026-10-12
 
 **Patch - fixes from an audit of `plans/LONG_COMPONENT_EDGE_PLAN.md` (#162; 4.14.5 and 4.14.6).** Bug fixes, and nothing

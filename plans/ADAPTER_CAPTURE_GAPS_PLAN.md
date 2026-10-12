@@ -52,7 +52,8 @@ because it builds the templates and never runs them.
 | **R3** | The templates' sample test passes as shipped, and CI runs it (section 4) | patch |
 
 Every fix starts with a fact that fails on 4.12.x for its own reason. R1's MSTest change moves the scenario id of a data
-row, which keys its history: the changelog says so. R2 reads `NUnit.Framework.Internal`'s result tree, which NUnit does not
+row. (This said the id keys the row's history, and 4.13.3's changelog repeated it. History is keyed by the scenario's
+stable id, its feature, name, outline and example values, so no history key moved: the audit of 2026-10-12.) R2 reads `NUnit.Framework.Internal`'s result tree, which NUnit does not
 promise to keep; the fact pins the NUnit version it was measured on, and a missing tree degrades to today's behaviour.
 
 ## 3. Questions for the owner
@@ -64,6 +65,9 @@ promise to keep; the fact pins the NUnit version it was measured on, and a missi
 | Q3 | Silent green: when every failure is one the adapter missed, the report says there were none. Even after R1, R2, Q1 and Q2, a report cannot vouch for a run it did not see whole | A line in `Failures.md` and a diagnostic when the adapter knows it saw fewer tests than ran, where it can know |
 | Q4 | A run that captures no scenario writes nothing, so the previous run's report is read as this one's | Write the pointer and `Failures.md` saying no scenario was captured, and rotate the previous run out |
 | Q5 | NUnit's `Warning` (`Assert.Warn`) is reported Passed (`TestStatusExtensions`, public), where the VSTest adapter's TRX says NotExecuted, and its text rides in `errorMessage`, the only place the report has for it. R1 keeps both as they were | A warning shown as such (a label, or a note beside the verdict) is new surface; until then, keep the text |
+| Q6 | xUnit v3 reads an `IAsyncLifetime` test's result in `After`, before `DisposeAsync`; xUnit folds a failure that `DisposeAsync`, or another attribute's `After`, throws into the test afterwards, so the report keeps a Passed the runner overturns (audit, 2026-10-12, from xunit.v3 3.2.2's `TestRunner`) | Measure it with a test; the fix needs a later hook than any a test class has, which is Q1's question |
+| Q7 | A failure outside any test leaves the report green while the runner fails: NUnit 4 reads no suite's own result (a fixture's `[OneTimeTearDown]` that throws), and TUnit marks a test failed for an `[After(Class)]` hook after `[After(Assembly)]` has written the report. R2 closed the silent green for tests, not for these | A diagnostic naming the suite, with Q3's |
+| Q8 | MSTest rows whose display strings coincide (a `[DynamicData]` object without `ToString`, "Places (Ns.Order)" for each) share one id, so the report keeps the first row and its failure can vanish. Telling them apart by run order would split a `[Retry]`'s attempts into scenarios | Measure `[Retry]` first; then an ordinal per id, only for rows |
 
 ## 4. The templates (R3)
 
@@ -138,3 +142,23 @@ run from compiling source that changed while the suite ran.
   has the NUnit, TUnit and project-template pages' edits (`83e5802`) and Kronikol4J's ledger its two lines (`0e1a3d6`).
   The template package's README still said to delete only `Program.cs`, which now leaves `PlaceholderApiFactory`
   without its `Program`; it is fixed under the changelog's `[Unreleased]`, for the next release to carry.
+- **2026-10-12. Audited** (kronikol-1c, at the owner's "make sure nothing was missed from the plan, that there isn't any
+  bugs or issues in the implementation", worktree `Kronikol-audit132` at 4.14.7). Six read-only reviews, one per area,
+  each finding checked against the code before it was acted on; fixed in 4.14.11 with a fact each, red on 4.14.7
+  (`ADAPTER_CAPTURE_GAPS_PLAN.harness/audit/red-proofs.txt`). From R2: a report written for part of a run took back every
+  other tracked test (NUnit 4 and TUnit now add the uncaptured tests to a report of the whole run only), and NUnit 4
+  reported every `[Explicit]` test Skipped on every run. From R1: an `IAsyncLifetime` test's `DisposeAsync` calls went to
+  the background section (xUnit v3 no longer stamps that test's end in `After`), and an MSTest row of an overloaded
+  method could take the wrong overload (a `params` array, or two overloads of one arity). From R3: every template failed
+  restore with `--Framework net8.0` or `net9.0` (Mvc.Testing 10 is for net10.0 only; the version now follows the
+  framework, and CI runs one scaffold on each), the placeholder factory hosted the placeholder in place of a referenced
+  API (it now refuses), the TUnit templates' `Program.cs` comments were stale, the xUnit v3 sample built with xUnit1051
+  (`r3/after/summary.txt` said "warnings: none": its grep missed analyzer warnings), and the package README's option
+  names were wrong. Corrected here: section 2's history sentence, and the 4.14.4 entry above, whose "closes Q3's silent
+  green" holds for tests only (Q7). New questions Q6 to Q8. Not taken, with the reason in section 3 or Appendix C:
+  TUnit's data-generation failures under a property filter (a test the run never executed can read Failed; not
+  measured), NUnit's per-instance stopwatch under `ParallelScope.Children` and an endpoint lost when a fixture's first
+  test is a data row (both older than this plan), and the timings of the tests R2 adds. The audit's own run of the example
+  integration facts then hung after the TUnit component: section 5's build, run once per component, left MSBuild nodes
+  for reuse that held the runner's redirected output open, and the runner waited for its end without a limit. Its
+  children reuse no node now, and that wait is bounded.

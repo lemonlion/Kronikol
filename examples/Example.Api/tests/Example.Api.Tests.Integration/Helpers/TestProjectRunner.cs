@@ -17,6 +17,7 @@ public static class TestProjectRunner
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(120);
 
     private static readonly TimeSpan BuildTimeout = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan OutputDrainTimeout = TimeSpan.FromSeconds(30);
 
     private static readonly string ArchivedReportsRoot =
         Path.Combine(TestProjects.SolutionRoot, "TestResults", "ArchivedReports");
@@ -103,6 +104,10 @@ public static class TestProjectRunner
 
         foreach (var (key, value) in environment)
             psi.Environment[key] = value;
+        // A build leaves MSBuild nodes running for the next build to reuse, and a node started here inherits the
+        // redirected output, so the read below never saw its end: on Windows a run hung for good after a component's
+        // build (2026-10-12). The children reuse no node.
+        psi.Environment["MSBUILDDISABLENODEREUSE"] = "1";
 
         using var process = new Process { StartInfo = psi };
         var stdout = new StringBuilder();
@@ -123,8 +128,11 @@ public static class TestProjectRunner
             return (false, -1, stdout.ToString(), stderr.ToString());
         }
 
-        // The timed WaitForExit can return before the redirected output is read to its end; this one cannot.
-        process.WaitForExit();
+        // The timed WaitForExit can return before the redirected output is read to its end; this waits for the end, for
+        // a while, since a process the child left behind could hold the output open for ever.
+        using var drain = new CancellationTokenSource(OutputDrainTimeout);
+        try { await process.WaitForExitAsync(drain.Token); }
+        catch (OperationCanceledException) { /* the output read so far is the run's */ }
 
         return (true, process.ExitCode, stdout.ToString(), stderr.ToString());
     }

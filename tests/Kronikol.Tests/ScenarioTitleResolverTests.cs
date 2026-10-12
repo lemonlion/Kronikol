@@ -334,6 +334,47 @@ public class ScenarioTitleResolverTests
         Assert.Equal("SomeTests", result);
     }
 
+    // xUnit's default display name, which methodDisplayOptions format whole: the namespace is removed whatever its
+    // spaces (4.11.1 kept it, since a name with whitespace read as a sentence) and whatever its dots became.
+    [Theory]
+    [InlineData("Ns.OrderTests.Returns_404_for_missing_order", "Returns 404 for missing order")]
+    [InlineData("Ns.OrderTests.Returns 404 for missing order", "Returns 404 for missing order")]
+    [InlineData("My Ns.Order Tests.Returns 404 for missing order", "Returns 404 for missing order")]
+    [InlineData("Ns, OrderTests, Returns 404 for missing order", "Returns 404 for missing order")]
+    [InlineData("Ns.OrderTests.Places(qty: 1, sku: \"a.b\")", "Places [qty: 1, sku: \"a.b\"]")]
+    [InlineData("Ns.OrderTests.Places a order(qty: 1)", "Places a order [qty: 1]")]
+    [InlineData("Ns.OrderTests.Places<Int32, String>(a: 1, b: 2)", "Places<int32, string> [a: 1, b: 2]")]
+    [InlineData("Returns_404", "Returns 404")]
+    [InlineData("Returns 404(id: Foo())", "Returns 404 [id: Foo()]")]
+    public void FormatXunitDisplayName_TakesTheMethodFromADefaultName(string displayName, string expected) =>
+        Assert.Equal(expected, ScenarioTitleResolver.FormatXunitDisplayName(displayName, explicitDisplayName: null));
+
+    // A DisplayName the test set is used as written, with its own dots and parentheses; a theory row's arguments are
+    // what xUnit appended after it.
+    [Theory]
+    [InlineData("Returns 404 (not found)", "Returns 404 (not found)", "Returns 404 (not found)")]
+    [InlineData("Returns 404 (not found)(id: 1)", "Returns 404 (not found)", "Returns 404 (not found) [id: 1]")]
+    [InlineData("System.Text.Json parses numbers", "System.Text.Json parses numbers", "System.text.json parses numbers")]
+    [InlineData("Order API returns 404 for v1.2", "Order API returns 404 for v1.2", "Order api returns 404 for v1.2")]
+    [InlineData("Does the thing.", "Does the thing.", "Does the thing.")]
+    public void FormatXunitDisplayName_KeepsADisplayNameTheTestSetWhole(string displayName, string explicitDisplayName, string expected) =>
+        Assert.Equal(expected, ScenarioTitleResolver.FormatXunitDisplayName(displayName, explicitDisplayName));
+
+    [Theory]
+    [InlineData("", null)]
+    [InlineData("(", null)]
+    [InlineData(".", null)]
+    [InlineData(", ", null)]
+    [InlineData("<", null)]
+    [InlineData("x", "")]
+    [InlineData("x", "y")]
+    public void FormatXunitDisplayName_NeverThrows(string displayName, string? explicitDisplayName) =>
+        Assert.NotNull(ScenarioTitleResolver.FormatXunitDisplayName(displayName, explicitDisplayName));
+
+    [Fact]
+    public void AppendTestParameters_ReadsNoArgumentsFromAParenthesisInMidSentence() =>
+        Assert.Equal("Returns a 404", ScenarioTitleResolver.AppendTestParameters("Returns a 404", "Returns 404 (not found) for a missing order"));
+
     [Fact]
     public void AppendTestParameters_KeepsTheClosingParenthesisOfAnArgument()
     {

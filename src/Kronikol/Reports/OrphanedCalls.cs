@@ -15,13 +15,18 @@ internal sealed record OrphanedCallSummary(int Calls, IReadOnlyList<(string Test
 /// report. The run records them as a <see cref="DiagnosticKind.UnattributedInteractions"/> entry; a console line, which
 /// <c>dotnet test</c> does not show at its default verbosity, was once the only trace.
 /// </summary>
+/// <remarks>
+/// A call the tracking ignores is drawn under no id, so it is not one of these. Nor is a record with no test id at
+/// all: that is <c>kronikol ingest</c>'s record it could not attribute, which the ingest reports itself.
+/// </remarks>
 internal static class OrphanedCalls
 {
     public static OrphanedCallSummary Find(IReadOnlyList<Feature> features, IEnumerable<RequestResponseLog?> logs)
     {
         var scenarioIds = features.SelectMany(f => f.Scenarios ?? []).Select(s => s.Id).ToHashSet(StringComparer.Ordinal);
         var byId = logs
-            .Where(l => l is not null && !l.IsDiagramMarker && l.TestId != TestIdentityScope.UnknownTestId && !scenarioIds.Contains(l.TestId))
+            .Where(l => l is not null && !l.IsDiagramMarker && !l.TrackingIgnore && !string.IsNullOrEmpty(l.TestId)
+                && l.TestId != TestIdentityScope.UnknownTestId && !scenarioIds.Contains(l.TestId))
             .GroupBy(l => l!.TestId, StringComparer.Ordinal)
             .Select(g => (TestId: g.Key, Calls: g.Select(l => l!.RequestResponseId).Distinct().Count()))
             .OrderByDescending(x => x.Calls)

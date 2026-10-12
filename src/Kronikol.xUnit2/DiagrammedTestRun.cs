@@ -8,10 +8,11 @@ namespace Kronikol.xUnit2;
 /// Generate reports in your subclass's <c>Dispose()</c> method using
 /// <see cref="XUnit2ReportGenerator.CreateStandardReportsWithDiagrams(DateTime, DateTime, ReportConfigurationOptions)"/>.
 /// <para>
-/// <b>Note:</b> When using the <see cref="ReportingTestFramework"/> (recommended),
-/// reports are generated automatically after all tests complete, and this class
-/// is not strictly required. It remains useful for starting/stopping HTTP fakes
-/// and other shared test resources.
+/// <b>Note:</b> When using the <see cref="ReportingTestFramework"/> (recommended), or another framework's executor
+/// wrapped with <see cref="TestFrameworkExecutorExtensions.WithKronikolReporting"/>, reports are generated automatically
+/// after all tests complete, with each test's result: do not also write them from <c>Dispose</c>, which would write a
+/// second run with no results. This class remains useful for starting/stopping HTTP fakes and other shared test
+/// resources.
 /// </para>
 /// <para>
 /// Reports written from <c>Dispose</c> carry no test's result: xUnit v2 shows results only to the test

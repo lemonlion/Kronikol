@@ -35,8 +35,10 @@ public static partial class ScenarioTitleResolver
         if (testDisplayName is null)
             return resolvedTitle;
 
+        // As FormatScenarioDisplayName reads them: a framework appends arguments at the end, so a name with a '(' in
+        // mid-sentence ("Returns 404 (not found) for a missing order") has none.
         var parenIndex = testDisplayName.IndexOf('(');
-        if (parenIndex < 0)
+        if (parenIndex < 0 || !testDisplayName.EndsWith(')'))
             return resolvedTitle;
 
         var paramContent = WithoutClosingParenthesis(testDisplayName[(parenIndex + 1)..]);
@@ -92,6 +94,52 @@ public static partial class ScenarioTitleResolver
             return testDisplayName.Trim();
 
         return parameters is not null ? $"{humanized} [{parameters}]" : humanized;
+    }
+
+    /// <summary>
+    /// Names a scenario from an xUnit display name, given the DisplayName the test set, if any. xUnit builds a default
+    /// name from the class and method and formats it whole by <c>methodDisplayOptions</c> (so a namespace can carry
+    /// spaces, or commas for its dots), uses a DisplayName as written, and appends a theory row's arguments to either.
+    /// So the method is the part after the namespace whatever its spaces, and a DisplayName keeps its own parentheses.
+    /// </summary>
+    internal static string FormatXunitDisplayName(string displayName, string? explicitDisplayName)
+    {
+        if (explicitDisplayName is { Length: > 0 } && displayName.StartsWith(explicitDisplayName, StringComparison.Ordinal))
+            return WithArguments(explicitDisplayName, displayName[explicitDisplayName.Length..]);
+
+        // Neither a class nor a method name can hold '(', so the first one opens a row's arguments.
+        var argumentsAt = displayName.IndexOf('(');
+        var head = argumentsAt < 0 ? displayName : displayName[..argumentsAt];
+        return WithArguments(XunitMethodPart(head), argumentsAt < 0 ? "" : displayName[argumentsAt..]);
+    }
+
+    /// <summary>
+    /// The method of a formatted <c>Class.Method</c>: after the last <c>.</c>, or after the last <c>, </c> when
+    /// <c>replacePeriodWithComma</c> made the dots commas, leaving a generic method's <c>&lt;…&gt;</c> with it.
+    /// </summary>
+    private static string XunitMethodPart(string head)
+    {
+        var genericAt = head.IndexOf('<');
+        var name = genericAt < 0 ? head : head[..genericAt];
+        var generic = genericAt < 0 ? "" : head[genericAt..];
+        var dot = name.LastIndexOf('.');
+        var comma = name.LastIndexOf(", ", StringComparison.Ordinal);
+        var method = dot >= 0 ? name[(dot + 1)..] : comma >= 0 ? name[(comma + 2)..] : name;
+        return method + generic;
+    }
+
+    private static string WithArguments(string title, string arguments)
+    {
+        var humanized = Humanize(title);
+        if (humanized.Length == 0)
+            humanized = title.Trim();
+
+        var content = arguments.StartsWith('(') ? WithoutClosingParenthesis(arguments[1..]) : arguments;
+        if (content.Length == 0)
+            return humanized;
+        if (content.Length > MaxParameterLength)
+            content = content[..MaxParameterLength] + "…";
+        return $"{humanized} [{content}]";
     }
 
     /// <summary>

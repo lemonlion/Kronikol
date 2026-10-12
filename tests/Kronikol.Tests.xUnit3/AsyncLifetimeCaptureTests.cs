@@ -26,6 +26,18 @@ public class AsyncLifetimeCaptureTests : DiagrammedComponentTest, IAsyncLifetime
 
         Assert.Equal(before + 1, Captured(context));
     }
+
+    [Fact]
+    public void After_stamps_no_end_for_a_test_whose_DisposeAsync_runs_after_it()
+    {
+        // xUnit runs After before DisposeAsync, so a cleanup call made there came after the end After stamped and went to
+        // the background section with a "calls arrived after ... ended" diagnostic. With no end, none is read as late.
+        var id = TestContext.Current.Test!.UniqueID;
+
+        new CaptureTestArgumentsAttribute().After(typeof(AsyncLifetimeCaptureTests).GetMethod(nameof(After_stamps_no_end_for_a_test_whose_DisposeAsync_runs_after_it))!, null!);
+
+        Assert.False(DiagrammedTestRun.TestEnds.ContainsKey(id));
+    }
 }
 
 /// <summary>A class xUnit disposes through <c>Dispose</c> is still captured there, and only there.</summary>

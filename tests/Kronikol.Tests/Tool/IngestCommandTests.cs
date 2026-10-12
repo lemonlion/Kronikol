@@ -791,6 +791,44 @@ public class IngestCommandTests : IDisposable
     }
 
     [Fact]
+    public void An_ingest_whose_specifications_are_blank_for_a_result_with_no_verdict_says_why()
+    {
+        // A test that started and never ended is reported Passed as a default, and since 4.11.1 a default blanks the
+        // specifications as a failure does. The line explaining blank files counted failures only, so here it was silent.
+        const string testId = "dfa171651916cd43dd8448eb211c80319c";
+        var captures = Path.Combine(_dir, "captures-defaulted");
+        Directory.CreateDirectory(captures);
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/health", "web", "web",
+            requestContent: "", responseContent: "{\"ok\":true}", statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+        var tests = Path.Combine(captures, "tests.ndjson");
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › never ends", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+        ]);
+        var output = Path.Combine(_dir, "out-defaulted");
+        var @out = new StringWriter();
+
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", output], @out, new StringWriter()));
+
+        Assert.Equal(0, new FileInfo(Path.Combine(output, "Specifications.html")).Length);
+        Assert.Contains("Specifications.html and Specifications.yml are blank: 1 of 1 scenario(s) have no verdict, only a default, and the specification is only published from a green run.", @out.ToString());
+
+        // A failure and a default together: the line names both.
+        const string failingId = "fa11ed651916cd43dd8448eb211c80319c";
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › never ends", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "start", TestId = failingId, TestName = "cli › fails", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = failingId, Status = "failed", Error = "expected 1 got 2", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+        @out = new StringWriter();
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", Path.Combine(_dir, "out-defaulted-and-failed")], @out, new StringWriter()));
+        Assert.Contains("are blank: 1 of 2 scenario(s) failed, and 1 of 2 have no verdict, only a default, and the specification", @out.ToString());
+    }
+
+    [Fact]
     public void An_ingest_does_not_warn_that_activity_diagrams_will_be_empty()
     {
         // The ingest path turns internal-flow tracking off (there are no in-process spans to show), so the

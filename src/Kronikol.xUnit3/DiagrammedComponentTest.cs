@@ -31,9 +31,12 @@ public abstract class DiagrammedComponentTest : IDisposable
 
     /// <summary>Hands the test's context to the run's report; called once per test, from here or from
     /// <see cref="CaptureTestArgumentsAttribute.After"/> for a class xUnit disposes asynchronously.</summary>
-    internal static void Capture(ITestContext context)
+    /// <param name="context">The test's context.</param>
+    /// <param name="stampEnd">Whether the test ends now. Not before a <c>DisposeAsync</c> still to run: a call made there
+    /// is the test's, and one after the stamped end would be read as having arrived after it.</param>
+    internal static void Capture(ITestContext context, bool stampEnd = true)
     {
-        if (context.Test?.UniqueID is { } id)
+        if (stampEnd && context.Test?.UniqueID is { } id)
             DiagrammedTestRun.TestEnds[id] = DateTimeOffset.UtcNow;
         DiagrammedTestRun.TestContexts.Enqueue(context);
     }

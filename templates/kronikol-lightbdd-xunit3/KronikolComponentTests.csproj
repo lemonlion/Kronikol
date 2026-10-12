@@ -10,6 +10,14 @@
     <RootNamespace>KronikolComponentTests</RootNamespace>
   </PropertyGroup>
 
+  <!-- Microsoft.AspNetCore.Mvc.Testing ships a major version per .NET version, each for its own target framework only:
+       the one matching the framework the project was created for (the template's Framework option). -->
+  <PropertyGroup>
+    <MvcTestingVersion>10.0.7</MvcTestingVersion>
+    <MvcTestingVersion Condition="$(TargetFramework.StartsWith('net9'))">9.0.20</MvcTestingVersion>
+    <MvcTestingVersion Condition="$(TargetFramework.StartsWith('net8'))">8.0.31</MvcTestingVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <Content Update="appsettings.componenttests.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -19,9 +27,9 @@
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="8.9.0" />
     <PackageReference Include="LightBDD.XUnit3" Version="3.12.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="$(MvcTestingVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
-    <PackageReference Include="Kronikol.LightBDD.xUnit3" Version="4.14.9" />
+    <PackageReference Include="Kronikol.LightBDD.xUnit3" Version="4.14.10" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

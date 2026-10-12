@@ -121,7 +121,8 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
             // As TestTrackingAttribute.Before names a scenario it makes: the class running the test, which for an
             // inherited test method is the derived class.
             FeatureName = ScenarioTitleResolver.FormatFeatureName(type.Name),
-            ScenarioName = ScenarioTitleResolver.FormatScenarioDisplayName(test.DisplayName),
+            ScenarioName = ScenarioTitleResolver.FormatXunitDisplayName(test.DisplayName,
+                method.GetCustomAttribute<FactAttribute>(inherit: true)?.DisplayName),
             MethodMatchKey = $"{type.FullName}.{method.Name}",
             Endpoint = type.GetCustomAttributes(inherit: true).OfType<EndpointAttribute>().FirstOrDefault()?.Endpoint,
             IsHappyPath = method.GetCustomAttributes(inherit: true).OfType<HappyPathAttribute>().Any(),
@@ -173,10 +174,13 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
 
         var diagnostics = new List<DiagnosticEntry>();
         var scenarios = PairTheAttributesOwn(_inOrder.ToArray(), diagnostics);
-        foreach (var scenario in scenarios.Where(s => !s.HasResult))
+        foreach (var scenario in scenarios)
         {
-            scenario.Result = ExecutionResult.Passed;
-            scenario.ResultDefaulted = true;
+            // Set both ways: a write from a collection fixture's Dispose (XUnit2ReportGenerator's overload with no
+            // scenarios) marks every scenario still without a result as a default, and one that has it by now is not.
+            scenario.ResultDefaulted = !scenario.HasResult;
+            if (!scenario.HasResult)
+                scenario.Result = ExecutionResult.Passed;
         }
 
         _writeReports(scenarios, _start ?? DateTime.UtcNow, DateTime.UtcNow, diagnostics);

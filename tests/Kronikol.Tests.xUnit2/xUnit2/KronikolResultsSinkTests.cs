@@ -14,6 +14,7 @@ public class TrackedSinkTests
     public void Fails() { }
     public void Skipped() { }
     public void Cancelled() { }
+    public void Passes_for_every_order() { }
 }
 
 public class UntrackedSinkTests
@@ -106,6 +107,20 @@ public class KronikolResultsSinkTests : IDisposable
     }
 
     [Fact]
+    public void A_default_name_formatted_with_spaces_is_named_after_its_method()
+    {
+        // methodDisplayOptions: replaceUnderscoreWithSpace formats xUnit's whole Class.Method name. 4.11.1 read a name with
+        // spaces as a sentence and kept its namespace and class in the scenario's name.
+        var test = Test<TrackedSinkTests>(nameof(TrackedSinkTests.Passes_for_every_order),
+            "Kronikol.Tests.xUnit2.TrackedSinkTests.Passes for every order");
+        using var sink = Sink();
+
+        Run(sink, AssemblyStarting(), Starting(test), Passed(test), Finished(test), AssemblyFinished());
+
+        Assert.Equal("Passes for every order", Assert.Single(Assert.Single(_written).Scenarios).ScenarioName);
+    }
+
+    [Fact]
     public void A_skipped_test_is_reported_skipped_with_no_error()
     {
         var test = Test<TrackedSinkTests>(nameof(TrackedSinkTests.Skipped));
@@ -134,6 +149,33 @@ public class KronikolResultsSinkTests : IDisposable
         Assert.Equal(ExecutionResult.Passed, scenarios[0].Result);
         Assert.NotNull(scenarios[0].EndedAt);
         Assert.False(scenarios[1].ResultDefaulted);
+    }
+
+    [Fact]
+    public void A_scenario_an_earlier_write_marked_as_a_default_is_a_verdict_once_its_result_arrives()
+    {
+        // A suite on Kronikol's framework that also writes reports from a collection fixture's Dispose, as DiagrammedTestRun
+        // advised: that write marks every scenario with no result yet as a default, and a test still running in another
+        // collection kept the mark after its result came, so the final report called a measured failure a default.
+        var running = Test<TrackedSinkTests>(nameof(TrackedSinkTests.Fails));
+        var reports = Path.Combine(Path.GetTempPath(), "kronikol-sink-" + Guid.NewGuid().ToString("N"));
+        using var sink = Sink();
+        try
+        {
+            Run(sink, AssemblyStarting(), Starting(running));
+            XUnit2ReportGenerator.CreateStandardReportsWithDiagrams(DateTime.UtcNow.AddSeconds(-1), DateTime.UtcNow,
+                new ReportConfigurationOptions { ReportsFolderPath = reports });
+            Run(sink, Failed(running, "expected 1 got 2"), Finished(running), AssemblyFinished());
+        }
+        finally
+        {
+            if (Directory.Exists(reports))
+                Directory.Delete(reports, recursive: true);
+        }
+
+        var scenario = Assert.Single(Assert.Single(_written).Scenarios);
+        Assert.Equal(ExecutionResult.Failed, scenario.Result);
+        Assert.False(scenario.ResultDefaulted);
     }
 
     [Fact]
