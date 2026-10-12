@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using Confluent.Kafka;
 using Kronikol.Constants;
@@ -18,15 +19,20 @@ public sealed class KafkaProduceTracking<TKey, TValue>
     private readonly KafkaPayload _payload;
     private readonly string _topic;
     private readonly KafkaOperation _operation;
+    private readonly Activity? _publish;
+    private readonly Activity? _previous;
     private int _reported;
 
     internal KafkaProduceTracking(KafkaTracker tracker, KafkaCall call, string topic, KafkaOperation operation,
-        Message<TKey, TValue> message, KafkaTrackingOptions options, bool addTraceParent)
+        Message<TKey, TValue> message, KafkaTrackingOptions options, bool addTraceParent, Activity? publish = null,
+        Activity? previous = null)
     {
         _tracker = tracker;
         _call = call;
         _topic = topic;
         _operation = operation;
+        _publish = publish;
+        _previous = previous;
         _payload = KafkaContent.Of(message, options, leaveOutKronikols: false);
         Message = ToSend(message, call, options, addTraceParent);
     }
@@ -71,6 +77,22 @@ public sealed class KafkaProduceTracking<TKey, TValue>
         Delivered(report);
         then?.Invoke(report);
     };
+
+    /// <summary>
+    /// Ends the publish span a wrapper's produce runs under (<see cref="KafkaTrackingOptions.TraceMessageProcessing"/>),
+    /// when the produce call returns on the caller's flow, so a delivery report on Confluent's poll thread never ends it
+    /// there: what was current when it ended stays current, unless it was the publish span, whose place what was
+    /// current before it takes back.
+    /// </summary>
+    internal void EndPublish()
+    {
+        if (_publish is null || _publish.IsStopped)
+            return;
+        var current = Activity.Current;
+        _publish.Stop();
+        var restored = current != _publish ? current : _previous;
+        Activity.Current = restored is { IsStopped: false } ? restored : null;
+    }
 
     private void Report(KafkaOperationInfo op, DateTimeOffset outcomeAt, string? failureStatus, string? error)
     {

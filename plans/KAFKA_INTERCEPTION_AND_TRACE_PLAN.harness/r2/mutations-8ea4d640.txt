@@ -1,0 +1,21 @@
+M1 (no publish span (T64)): killed by 1: A_produce_runs_under_a_publish_span_that_its_traceparent_names
+M2 (the produce captured before its publish span starts, so the traceparent names the caller's span (T64)): killed by 1: A_produce_runs_under_a_publish_span_that_its_traceparent_names
+M3 (a hand-written decorator's TrackProduce starts a publish span it never ends): SURVIVED
+M4 (a publish span with TraceMessageProcessing off): killed by 4: A_produce_runs_under_a_publish_span_that_its_traceparent_names, Untraced_the_wrappers_start_no_span_and_answer_a_consume_at_once, A_traceparent_is_read_as_the_runtime_reads_it(traceParent:, Under_an_ambient_span_a_sync_produce_records_the_ids_taken_at_the_call
+M5 (the publish span never ended): killed by 1: A_produce_runs_under_a_publish_span_that_its_traceparent_names
+M6 (the span current before the produce made current again even when the caller's own span is current): SURVIVED
+M7 (an ended span left current after a produce): SURVIVED
+M8 (ProduceAsync never ends its publish span): killed by 1: A_produce_runs_under_a_publish_span_that_its_traceparent_names
+M9 (Produce never ends its publish span): SURVIVED
+M10 (Consume answers at once under TraceMessageProcessing, no scope (T62)): killed by 4: A_loop_that_wraps_each_Consume_in_its_own_span_never_parents_one_on_a_stopped_span, Consume_returns_with_the_messages_span_current_and_the_consume_not_yet_answered, The_consumers_next_call_answers_the_consume_and_ends_its_span(call:, The_next_Consume_answers_the_consume_before_it_polls
+M11 (the next Consume does not close the last scope): killed by 4: A_Consume_inside_Task_Run_leaves_the_awaiting_code_its_own_span_and_never_a_stopped_one, A_loop_that_wraps_each_Consume_in_its_own_span_never_parents_one_on_a_stopped_span, The_deferred_response_keeps_the_test_phase_and_ids_of_its_request, The_next_Consume_answers_the_consume_before_it_polls
+M12 (Commit() does not close the scope): killed by 1: The_consumers_next_call_answers_the_consume_and_ends_its_span(call:
+M13 (Commit(offsets) does not close the scope): killed by 1: The_consumers_next_call_answers_the_consume_and_ends_its_span(call:
+M14 (Commit(result) does not close the scope): killed by 1: The_consumers_next_call_answers_the_consume_and_ends_its_span(call:
+M15 (StoreOffset(result) does not close the scope): killed by 1: The_consumers_next_call_answers_the_consume_and_ends_its_span(call:
+M16 (StoreOffset(offset) does not close the scope): killed by 1: The_consumers_next_call_answers_the_consume_and_ends_its_span(call:
+M17 (Close does not close the scope): killed by 3: A_loop_that_wraps_each_Consume_in_its_own_span_never_parents_one_on_a_stopped_span, Consume_returns_with_the_messages_span_current_and_the_consume_not_yet_answered, The_consumers_next_call_answers_the_consume_and_ends_its_span(call:
+M18 (Dispose does not close the scope): killed by 1: The_consumers_next_call_answers_the_consume_and_ends_its_span(call:
+M19 (the scope closed at the next call as a using block closes it: the span before the scope made current, not the call's own (T62)): killed by 1: A_loop_that_wraps_each_Consume_in_its_own_span_never_parents_one_on_a_stopped_span
+M20 (at the next call the scope's own ended span left in place of the span before it): SURVIVED
+M21 (an ended span left current when a scope closes (T43)): SURVIVED

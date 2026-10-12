@@ -76,7 +76,7 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
         Message<TKey, TValue> message,
         CancellationToken cancellationToken)
     {
-        var tracking = _tracker.TrackProduce(topic, message, KafkaOperation.ProduceAsync, _options, AddsTraceParent);
+        var tracking = _tracker.TrackProduce(topic, message, KafkaOperation.ProduceAsync, _options, AddsTraceParent, publishSpan: true);
 
         DeliveryResult<TKey, TValue> result;
         try
@@ -87,6 +87,10 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
         {
             tracking.Failed(exception);
             throw;
+        }
+        finally
+        {
+            tracking.EndPublish();
         }
 
         tracking.Delivered(result);
@@ -99,33 +103,39 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
         Message<TKey, TValue> message,
         Action<DeliveryReport<TKey, TValue>>? deliveryHandler)
     {
-        var tracking = _tracker.TrackProduce(topic, message, KafkaOperation.Produce, _options, AddsTraceParent);
-
-        // Confluent calls no delivery handler for this producer and refuses one (F7, F24): produce as the caller asked
-        // and log at the call, without the partition and offset only a delivery report holds.
-        if (DeliveryReports == Off)
-        {
-            Send(deliveryHandler);
-            tracking.Sent();
-            return;
-        }
-
+        var tracking = _tracker.TrackProduce(topic, message, KafkaOperation.Produce, _options, AddsTraceParent, publishSpan: true);
         try
         {
-            produce(tracking.Message, tracking.Handler(deliveryHandler));
+            // Confluent calls no delivery handler for this producer and refuses one (F7, F24): produce as the caller
+            // asked and log at the call, without the partition and offset only a delivery report holds.
+            if (DeliveryReports == Off)
+            {
+                Send(deliveryHandler);
+                tracking.Sent();
+                return;
+            }
+
+            try
+            {
+                produce(tracking.Message, tracking.Handler(deliveryHandler));
+            }
+            catch (InvalidOperationException refusal) when (IsDeliveryReportsRefusal(refusal, deliveryHandler))
+            {
+                // The setting could not be read (a decorator, a Confluent whose internals moved): Confluent's refusal
+                // comes before anything is queued, so produce again without a handler, and remember.
+                Volatile.Write(ref _deliveryReports, Off);
+                Send(null);
+                tracking.Sent();
+            }
+            catch (Exception exception)
+            {
+                tracking.Failed(exception);
+                throw;
+            }
         }
-        catch (InvalidOperationException refusal) when (IsDeliveryReportsRefusal(refusal, deliveryHandler))
+        finally
         {
-            // The setting could not be read (a decorator, a Confluent whose internals moved): Confluent's refusal comes
-            // before anything is queued, so produce again without a handler, and remember.
-            Volatile.Write(ref _deliveryReports, Off);
-            Send(null);
-            tracking.Sent();
-        }
-        catch (Exception exception)
-        {
-            tracking.Failed(exception);
-            throw;
+            tracking.EndPublish();
         }
 
         void Send(Action<DeliveryReport<TKey, TValue>>? handler)

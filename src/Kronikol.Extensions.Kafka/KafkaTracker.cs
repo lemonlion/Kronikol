@@ -101,10 +101,17 @@ public class KafkaTracker : ITrackingComponent
         TrackProduce(topicPartition.Topic, message, operation, _options, _options.PropagateTraceContext);
 
     // The wrappers' path: their own options decide the content and what travels, and a traceparent is added only where
-    // the wrapper is the last before Confluent.
+    // the wrapper is the last before Confluent. Under TraceMessageProcessing a wrapper's produce runs under a publish
+    // span, started before the call is captured so the traceparent names it, and ended by the wrapper (EndPublish).
     internal KafkaProduceTracking<TKey, TValue> TrackProduce<TKey, TValue>(string topic, Message<TKey, TValue> message,
-        KafkaOperation operation, KafkaTrackingOptions options, bool addTraceParent) =>
-        new(this, Capture(), topic, operation, message, options, addTraceParent);
+        KafkaOperation operation, KafkaTrackingOptions options, bool addTraceParent, bool publishSpan = false)
+    {
+        var previous = Activity.Current;
+        var publish = publishSpan && options.TraceMessageProcessing
+            ? Source.StartActivity($"{topic} publish", ActivityKind.Producer)
+            : null;
+        return new(this, Capture(), topic, operation, message, options, addTraceParent, publish, previous);
+    }
 
     /// <summary>
     /// Tracks a message consumed through a Kafka client this package does not wrap, as a decorator of a library's own
@@ -125,8 +132,9 @@ public class KafkaTracker : ITrackingComponent
         return BeginConsume(result, _options);
     }
 
-    // TrackConsume's scope: the identity, correlation and request at once, the response and the span's end at dispose.
-    private ConsumeScope BeginConsume<TKey, TValue>(ConsumeResult<TKey, TValue> result, KafkaTrackingOptions options)
+    // TrackConsume's scope, and the wrapper's under TraceMessageProcessing: the identity, correlation and request at
+    // once, the response and the span's end when the scope closes.
+    internal ConsumeScope BeginConsume<TKey, TValue>(ConsumeResult<TKey, TValue> result, KafkaTrackingOptions options)
     {
         var identified = EstablishTestIdentity(result.Message?.Headers, options);
         AutoCorrelate(result, options);
@@ -195,23 +203,33 @@ public class KafkaTracker : ITrackingComponent
         TestCorrelationStore.Correlate(correlationKey, identity.Name, identity.Id);
     }
 
-    // A message being handled: at dispose, once, the consume's response, the span's end with the span current before it
-    // made current again (unless it has ended), and the end of the message's identity.
-    private sealed class ConsumeScope(bool identified, OpenEntry? entry, Activity? span, Activity? previous) : IDisposable
+    // A message being handled: when it closes, once, the consume's response, the span's end, and the end of the
+    // message's identity.
+    internal sealed class ConsumeScope(bool identified, OpenEntry? entry, Activity? span, Activity? previous) : IDisposable
     {
         internal static readonly ConsumeScope None = new(identified: false, entry: null, span: null, previous: null);
 
         private int _disposed;
 
-        public void Dispose()
+        // The scope a using block closes: what was current before it is current again (unless it has ended).
+        public void Dispose() => Close(atNextCall: false);
+
+        // The wrapper's scope under TraceMessageProcessing, closed by the consumer's next call: what was current when
+        // that call began stays current, unless it was this scope's own span, whose place what was current before the
+        // scope takes back. Never a span that has ended (plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md 4.5, T62).
+        internal void CloseAtNextCall() => Close(atNextCall: true);
+
+        private void Close(bool atNextCall)
         {
             if (Interlocked.Exchange(ref _disposed, 1) != 0)
                 return;
             entry?.Answer(DateTimeOffset.UtcNow, failureStatus: null, error: null);
             if (span is not null)
             {
+                var current = Activity.Current;
                 span.Stop();
-                Activity.Current = previous is { IsStopped: false } ? previous : null;
+                var restored = atNextCall && current != span ? current : previous;
+                Activity.Current = restored is { IsStopped: false } ? restored : null;
             }
             if (identified)
                 TestIdentityScope.ClearMessageIdentity();
@@ -395,7 +413,7 @@ public class KafkaTracker : ITrackingComponent
 
     // An entry whose request is stored. Its response takes the test, phase, labels and ids the call captured, whenever
     // and wherever it is answered; each caller answers once (KafkaProduceTracking and ConsumeScope see to it).
-    private sealed class OpenEntry(KafkaTracker tracker, KafkaCall call, TestIdentity test, KafkaOperationInfo op, string label,
+    internal sealed class OpenEntry(KafkaTracker tracker, KafkaCall call, TestIdentity test, KafkaOperationInfo op, string label,
         Uri uri, string service, string caller, Guid requestResponseId, W3CIds? ids)
     {
         internal string Label => label;

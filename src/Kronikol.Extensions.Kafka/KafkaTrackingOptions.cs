@@ -65,6 +65,20 @@ public record KafkaTrackingOptions
     public bool PropagateTraceContext { get; set; } = true;
 
     /// <summary>
+    /// When <c>true</c> (default <c>false</c>), the wrappers trace message processing with no change to the consuming
+    /// code. <see cref="TrackingKafkaConsumer{TKey,TValue}.Consume(CancellationToken)"/> handles each message as
+    /// <see cref="KafkaTracker.TrackConsume{TKey,TValue}"/>'s scope does and returns with the scope open: the message's
+    /// <c>Kronikol.Kafka</c> span current, the consume not yet answered. The scope ends at the consumer's next
+    /// <c>Consume</c> (at its start, before it waits), <c>Commit</c>, <c>StoreOffset</c>, <c>Close</c> or
+    /// <c>Dispose</c>, leaving current what was current when that call began, or, when that was the scope's own span,
+    /// what was current before the scope. A produce through the wrapper runs under a <c>{topic} publish</c> span, which
+    /// the <c>traceparent</c> Kronikol adds names. Best effort: a <c>Consume</c> called inside <c>Task.Run</c> leaves
+    /// nothing current for the code that awaits it, and a commit from another thread ends the window there. Where the
+    /// consuming code can be changed, the scope (<c>using (tracker.TrackConsume(result))</c>) has neither limit.
+    /// </summary>
+    public bool TraceMessageProcessing { get; set; }
+
+    /// <summary>
     /// When <c>true</c>, the consumer stores a correlation entry in <see cref="Kronikol.Tracking.TestCorrelationStore"/>
     /// after extracting test identity from message headers. This enables parallel-safe attribution
     /// for decoupled processing patterns where the processing thread loses access to the message headers.

@@ -1,0 +1,6 @@
+M3 (a hand-written decorator's TrackProduce starts a publish span it never ends): killed by 1: A_hand_written_TrackProduce_starts_no_publish_span
+M6 (the span current before the produce made current again even when the caller's own span is current): killed by 1: A_span_the_inner_producer_leaves_current_stays_current_after_the_publish_span_ends
+M7 (an ended span left current after a produce): killed by 1: A_produce_leaves_no_ended_span_current_when_the_callers_span_ended_during_it
+M9 (Produce never ends its publish span): killed by 2: A_produce_leaves_no_ended_span_current_when_the_callers_span_ended_during_it, A_sync_produce_ends_its_publish_span_when_the_call_returns
+M20 (at the next call the scope's own ended span left in place of the span before it): killed by 1: At_the_next_call_the_span_current_before_the_scope_is_current_again
+M21 (an ended span left current when a scope closes (T43)): SURVIVED

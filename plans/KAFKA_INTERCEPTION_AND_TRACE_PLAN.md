@@ -1053,6 +1053,45 @@ Each is another subsystem's, so it is recorded here rather than folded into thes
     broker facts skipped, in Debug and in Release; the build-interception suite 75 of 75 on .NET 8 and .NET 10, in Debug
     and in Release; the full Playwright suite 1,036 with 28 skipped; and release.slnf builds in Release for every
     target. BreakfastProvider's xUnit lane passes 212 of 212 on the local packages.
+- **2026-10-12, 4.17.0 published.** Release run 38270677189, CI 38270674843 (its remainder lane included) and CodeQL
+  38270674905 passed, and nuget.org listed all 62 ids; the wiki has R1's edits (`8c0a935`) and Kronikol4J's ledger R1's
+  line (`15b8ab5`).
+- **2026-10-12, R2 built (S9), released as 4.18.0.** As designed in 4.5, with Q6 and Q7 as recommended: an opt-in mode
+  with no change to the consuming code, `KafkaTrackingOptions.TraceMessageProcessing` (default `false`). On the way:
+  - **What R2 is now.** R1 shipped `TrackConsume`'s scope with its span and deferred response, so R2 is the wrappers
+    doing the same with no code change: `Consume` returns with the message's scope open (`BeginConsume`, now internal)
+    and the consumer's next `Consume` (at its start, before it waits), `Commit`, `StoreOffset`, `Close` or `Dispose`
+    closes it (T41's zero-change half); a produce runs under a `{topic} publish` producer span, started before the
+    produce is captured so the `traceparent` names it, and ended when the call returns (T64).
+  - **The restore rule at the next call (T62).** What was current when that call began stays current, unless it is the
+    scope's own span, whose place the span current before the scope takes back; never a span that has ended. The publish
+    span's end keeps the same rule. `Activity.Stop` makes the stopped span's parent current on the thread that stops it,
+    so the facts end a span on another thread when it must end without that.
+  - **Only the sync produce shows the publish span's restore.** `ProduceAsync` is an async method, and the runtime gives
+    its caller back its own context however the method ends, so what is current after the publish span ends matters to
+    the sync `Produce`'s caller alone; the facts for it use `Produce`.
+  - **T43** holds at the entry level: with the option off the wrappers start no span and answer a consume at once, as
+    R1's do. Whole reports were not compared byte for byte, since two runs differ in their ids and times whatever the
+    version.
+  - **Red first.** The option and its facts were written before the code; re-run on 4.17.0 with the option unread
+    (`r2/red-4.17.0-summary.md`), 11 of the 15 facts fail on their own assertion and the 4 that pass are guards (T43,
+    T62 twice, T63). No consumer acceptance: BreakfastProvider consumes through its own in-memory services, not
+    Kronikol's wrapper.
+  - **Mutations** (`r2/mutate.py`): 21 over the publish span and its end, the consumer's next calls and the restore
+    rule. The first run killed 15 (`r2/mutations-8ea4d640.txt`). Five of the six that survived wanted a fact, now added:
+    a hand-written decorator's `TrackProduce` starting a publish span it would never end (M3), the sync `Produce` never
+    ending its span (M9), the span current before a produce forced back over one the producer inside left current (M6),
+    an ended span left current after a produce (M7), and the scope's own ended span left in place of the loop's at the
+    next call (M20). The sixth, M21 (no guard against an ended span when a scope closes), is equivalent:
+    `Activity.Current`'s setter refuses a span that has ended, and the scope's span starts with nothing current, so
+    after it ends nothing is current with the guard or without it (`r2/mutations-rerun-m3-m6-m7-m9-m20-m21.txt`; the
+    runtime's three behaviours checked in `r2/activity-current-check.cs`). M7 is not equivalent, since the publish
+    span's parent is the caller's span, which its end makes current whether or not it has ended. 20 of 21 are killed;
+    the 21st cannot be.
+  - **Checks.** After the version bump, the core suite passes 7,443 with 2 skipped; the Kafka suite 314 with its 3
+    broker facts skipped, in Debug and in Release; the build-interception suite 75 of 75 on .NET 8 and .NET 10, in Debug
+    and in Release; the full Playwright suite 1,036 with 28 skipped; and release.slnf builds in Release for every
+    target.
 
 ## Appendix A. Edit sites at `d59843fa` (4.14.6)
 

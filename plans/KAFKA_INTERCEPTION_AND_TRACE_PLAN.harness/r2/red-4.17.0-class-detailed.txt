@@ -1,0 +1,174 @@
+Test run for C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\bin\Debug\net10.0\Kronikol.Tests.Kafka.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\bin\Debug\net10.0\Kronikol.Tests.Kafka.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.15]   Discovering: Kronikol.Tests.Kafka
+[xUnit.net 00:00:00.40]   Discovered:  Kronikol.Tests.Kafka
+[xUnit.net 00:00:00.56]   Starting:    Kronikol.Tests.Kafka
+[xUnit.net 00:00:00.65]     Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "Close") [FAIL]
+[xUnit.net 00:00:00.65]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:00.65]       Stack Trace:
+[xUnit.net 00:00:00.65]         C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs(154,0): at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call)
+[xUnit.net 00:00:00.65]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.65]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.66]     Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "Dispose") [FAIL]
+[xUnit.net 00:00:00.66]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:00.66]       Stack Trace:
+[xUnit.net 00:00:00.66]         C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs(154,0): at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call)
+[xUnit.net 00:00:00.66]            at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+[xUnit.net 00:00:00.66]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:00.66]     Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "Commit(offsets)") [FAIL]
+[xUnit.net 00:00:00.66]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:00.66]       Stack Trace:
+[xUnit.net 00:00:00.66]         C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs(154,0): at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call)
+[xUnit.net 00:00:00.66]            at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+[xUnit.net 00:00:00.66]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:00.66]     Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "StoreOffset(result)") [FAIL]
+[xUnit.net 00:00:00.66]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:00.66]       Stack Trace:
+[xUnit.net 00:00:00.66]         C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs(154,0): at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call)
+[xUnit.net 00:00:00.66]            at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+[xUnit.net 00:00:00.66]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:00.66]     Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "StoreOffset(offset)") [FAIL]
+[xUnit.net 00:00:00.66]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:00.66]       Stack Trace:
+[xUnit.net 00:00:00.66]         C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs(154,0): at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call)
+[xUnit.net 00:00:00.66]            at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+[xUnit.net 00:00:00.66]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:00.66]     Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "Commit(result)") [FAIL]
+[xUnit.net 00:00:00.66]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:00.66]       Stack Trace:
+[xUnit.net 00:00:00.66]         C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs(154,0): at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call)
+[xUnit.net 00:00:00.66]            at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+[xUnit.net 00:00:00.66]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:00.66]     Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "Commit") [FAIL]
+[xUnit.net 00:00:00.66]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:00.66]       Stack Trace:
+[xUnit.net 00:00:00.66]         C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs(154,0): at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call)
+[xUnit.net 00:00:00.66]            at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+[xUnit.net 00:00:00.66]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:00.71]     Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_next_Consume_answers_the_consume_before_it_polls [FAIL]
+[xUnit.net 00:00:00.71]       00:00:00
+[xUnit.net 00:00:00.71]       Stack Trace:
+[xUnit.net 00:00:00.71]         C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs(120,0): at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_next_Consume_answers_the_consume_before_it_polls()
+[xUnit.net 00:00:00.71]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.71]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "Close") [29 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call) in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs:line 154
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "Dispose") [< 1 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call) in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs:line 154
+   at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "Commit(offsets)") [< 1 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call) in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs:line 154
+   at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "StoreOffset(result)") [< 1 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call) in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs:line 154
+   at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "StoreOffset(offset)") [< 1 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call) in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs:line 154
+   at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "Commit(result)") [< 1 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call) in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs:line 154
+   at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(call: "Commit") [< 1 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(String call) in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs:line 154
+   at InvokeStub_KafkaMessageProcessingTests.The_consumers_next_call_answers_the_consume_and_ends_its_span(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_deferred_response_keeps_the_test_phase_and_ids_of_its_request [4 ms]
+  Failed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_next_Consume_answers_the_consume_before_it_polls [46 ms]
+  Error Message:
+   00:00:00
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.The_next_Consume_answers_the_consume_before_it_polls() in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs:line 120
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+%3|1791819221.878|FAIL|rdkafka#producer-1| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2030ms in state CONNECT)
+%3|1791819221.878|ERROR|rdkafka#producer-1| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down
+%3|1791819221.878|ERROR|rdkafka#producer-1| [thrd:app]: rdkafka#producer-1: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2030ms in state CONNECT)
+[xUnit.net 00:00:02.78]     Kronikol.Tests.Kafka.KafkaMessageProcessingTests.A_produce_runs_under_a_publish_span_that_its_traceparent_names [FAIL]
+[xUnit.net 00:00:02.78]       Assert.Single() Failure: The collection did not contain any matching items
+[xUnit.net 00:00:02.78]       Expected:   (predicate expression)
+[xUnit.net 00:00:02.78]       Collection: []
+[xUnit.net 00:00:02.78]       Stack Trace:
+[xUnit.net 00:00:02.78]         C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs(267,0): at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.A_produce_runs_under_a_publish_span_that_its_traceparent_names()
+[xUnit.net 00:00:02.78]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.A_produce_runs_under_a_publish_span_that_its_traceparent_names [2 s]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+Expected:   (predicate expression)
+Collection: []
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.A_produce_runs_under_a_publish_span_that_its_traceparent_names() in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs:line 267
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:02.79]     Kronikol.Tests.Kafka.KafkaMessageProcessingTests.A_loop_that_wraps_each_Consume_in_its_own_span_never_parents_one_on_a_stopped_span [FAIL]
+[xUnit.net 00:00:02.79]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:02.79]                  ↓ (pos 0)
+[xUnit.net 00:00:02.79]       Expected: "orders process"
+[xUnit.net 00:00:02.79]       Actual:   "iteration"
+[xUnit.net 00:00:02.79]                  ↑ (pos 0)
+[xUnit.net 00:00:02.79]       Stack Trace:
+[xUnit.net 00:00:02.79]         C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs(216,0): at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.A_loop_that_wraps_each_Consume_in_its_own_span_never_parents_one_on_a_stopped_span()
+[xUnit.net 00:00:02.79]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:02.79]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:02.80]     Kronikol.Tests.Kafka.KafkaMessageProcessingTests.Consume_returns_with_the_messages_span_current_and_the_consume_not_yet_answered [FAIL]
+[xUnit.net 00:00:02.80]       Assert.NotNull() Failure: Value is null
+[xUnit.net 00:00:02.80]       Stack Trace:
+[xUnit.net 00:00:02.80]         C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs(91,0): at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.Consume_returns_with_the_messages_span_current_and_the_consume_not_yet_answered()
+[xUnit.net 00:00:02.80]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:02.80]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:02.81]   Finished:    Kronikol.Tests.Kafka (ID = '5e106db954d7c329c2823f36301cc251ae1fd3286cc8fd7c92a2907449f8c969')
+  Passed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.A_Consume_inside_Task_Run_leaves_the_awaiting_code_its_own_span_and_never_a_stopped_one [2 ms]
+  Failed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.A_loop_that_wraps_each_Consume_in_its_own_span_never_parents_one_on_a_stopped_span [4 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "orders process"
+Actual:   "iteration"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.A_loop_that_wraps_each_Consume_in_its_own_span_never_parents_one_on_a_stopped_span() in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs:line 216
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.Two_consumers_in_one_loop_never_leave_a_stopped_span_current [1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.Untraced_the_wrappers_start_no_span_and_answer_a_consume_at_once [5 ms]
+  Failed Kronikol.Tests.Kafka.KafkaMessageProcessingTests.Consume_returns_with_the_messages_span_current_and_the_consume_not_yet_answered [< 1 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageProcessingTests.Consume_returns_with_the_messages_span_current_and_the_consume_not_yet_answered() in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Kafka\KafkaMessageProcessingTests.cs:line 91
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Test Run Failed.
+Total tests: 15
+     Passed: 4
+     Failed: 11
+ Total time: 3.1780 Seconds

@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.18.0] - 2026-10-12
+
+**Minor - Kafka message processing traced with no change to the consuming code (#135;
+`plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md` R2).** A new option, `KafkaTrackingOptions.TraceMessageProcessing`, so the
+minor part moves (4.17.0 to 4.18.0). It is off by default, and with it off nothing changes.
+
+- **The consumer wrapper.** With the option on, `Consume` handles each message as `KafkaTracker.TrackConsume`'s scope
+  does and returns with the scope open: the message's `Kronikol.Kafka` span (`{topic} process`) is current, so the
+  spans the handler starts are its children and show in the consume arrow's popup, and the consume is not answered
+  yet, so the handler's calls lie inside it and its duration is the processing time. The scope ends at the consumer's
+  next `Consume` (at its start, before it waits), `Commit`, `StoreOffset`, `Close` or `Dispose`. The span current when
+  that call began stays current, unless it was the scope's own span, whose place the span current before the scope
+  takes back; a span that has ended is never left current.
+- **The producer wrapper.** A produce runs under a `{topic} publish` producer span. Where Kronikol adds the
+  `traceparent` (its wrapper the last before Confluent's producer), the header names that span, so a consumer parents on
+  a span that exists. The span ends when the produce call returns, on the caller's flow, never on Confluent's poll
+  thread.
+- **Limits, documented.** A `Consume` inside `Task.Run` leaves nothing current for the code that awaits it; a commit
+  from another thread ends the window there; a message handed to a worker leaves the window at the next poll. The
+  scope (`using (tracker.TrackConsume(result))`) has none of them.
+- **Docs.** README's Kafka row; the wiki's Kafka page (tracing message processing without code changes, the options
+  table), API reference
+  and internal flow pages.
+- **Tests:** `KafkaMessageProcessingTests` (21): `Consume` returning with the message's span current and its consume
+  open; each next call answering it and ending its span, and what is current after it; a produce under its publish span,
+  async and sync, with what is current after it; a hand-written `TrackProduce` starting none; `Task.Run`, a loop's own
+  spans, two consumers and a span that ended meanwhile; the deferred response; and nothing changed with the option off.
+  Proofs (plan harness `r2/`): on 4.17.0 with the option unread, 11 of the first 15 fail on their own assertion and the
+  4 that pass are guards; 20 of 21 mutations are killed and the 21st is equivalent (the runtime will not make an ended
+  span current).
+- **Checks:** After the version bump, the core suite passes 7,443 with 2 skipped; the Kafka suite 314 with its 3 broker
+  facts skipped, in Debug and in Release; the build-interception suite 75 of 75 on .NET 8 and .NET 10, in Debug and in
+  Release; the full Playwright suite 1,036 with 28 skipped; and release.slnf builds in Release for every target.
+
 ## [4.17.0] - 2026-10-12
 
 **Minor - Kafka entries carry W3C trace ids, `DependentProducerBuilder` is intercepted, a message's value is the body

@@ -14,6 +14,9 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
     private readonly KafkaTracker _tracker;
     private readonly KafkaTrackingOptions _options;
 
+    // Under TraceMessageProcessing, the last message's scope, open until this consumer's next call.
+    private KafkaTracker.ConsumeScope? _processing;
+
     public TrackingKafkaConsumer(IConsumer<TKey, TValue> inner, KafkaTracker tracker, KafkaTrackingOptions options)
     {
         _inner = inner;
@@ -29,6 +32,9 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
 
     private ConsumeResult<TKey, TValue> ConsumeCore(Func<ConsumeResult<TKey, TValue>> consume)
     {
+        // The last message was handled once the loop polls again: its consume is answered before this poll waits.
+        EndProcessing();
+
         // The previous message's identity ends at the next poll, whatever that poll returns (F10): an empty poll or a
         // partition's end left it on everything the loop did next.
         if (_options.PropagateTestIdentity)
@@ -80,9 +86,16 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
     {
         if (result is null || result.IsPartitionEOF) return;
 
-        // The message's identity stays current until the next poll (F10), so no scope here.
-        _tracker.Consumed(result, _options);
+        // The message's identity stays current until the next poll (F10); under TraceMessageProcessing so do its span and
+        // its open consume.
+        if (_options.TraceMessageProcessing)
+            _processing = _tracker.BeginConsume(result, _options);
+        else
+            _tracker.Consumed(result, _options);
     }
+
+    // Closes the last message's scope, when TraceMessageProcessing opened one, at the consumer's next call.
+    private void EndProcessing() => Interlocked.Exchange(ref _processing, null)?.CloseAtNextCall();
 
     // A consume that throws (a deserializer's error, a broker's) is drawn from the record the exception carries, as the
     // consume of its message's test (F22). Its key and value are still bytes, so it shows no content.
@@ -129,10 +142,21 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
     public void IncrementalAssign(IEnumerable<TopicPartition> partitions) => _inner.IncrementalAssign(partitions);
     public void IncrementalUnassign(IEnumerable<TopicPartition> partitions) => _inner.IncrementalUnassign(partitions);
     public void Unassign() => _inner.Unassign();
-    public void StoreOffset(ConsumeResult<TKey, TValue> result) => _inner.StoreOffset(result);
-    public void StoreOffset(TopicPartitionOffset offset) => _inner.StoreOffset(offset);
+    public void StoreOffset(ConsumeResult<TKey, TValue> result)
+    {
+        EndProcessing();
+        _inner.StoreOffset(result);
+    }
+
+    public void StoreOffset(TopicPartitionOffset offset)
+    {
+        EndProcessing();
+        _inner.StoreOffset(offset);
+    }
+
     public List<TopicPartitionOffset> Commit()
     {
+        EndProcessing();
         var result = _inner.Commit();
         LogCommit();
         return result;
@@ -140,12 +164,14 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
 
     public void Commit(IEnumerable<TopicPartitionOffset> offsets)
     {
+        EndProcessing();
         _inner.Commit(offsets);
         LogCommit();
     }
 
     public void Commit(ConsumeResult<TKey, TValue> result)
     {
+        EndProcessing();
         _inner.Commit(result);
         LogCommit();
     }
@@ -167,6 +193,15 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
     public List<TopicPartitionOffset> OffsetsForTimes(IEnumerable<TopicPartitionTimestamp> timestampsToSearch, TimeSpan timeout) => _inner.OffsetsForTimes(timestampsToSearch, timeout);
     public WatermarkOffsets GetWatermarkOffsets(TopicPartition topicPartition) => _inner.GetWatermarkOffsets(topicPartition);
     public WatermarkOffsets QueryWatermarkOffsets(TopicPartition topicPartition, TimeSpan timeout) => _inner.QueryWatermarkOffsets(topicPartition, timeout);
-    public void Close() => _inner.Close();
-    public void Dispose() => _inner.Dispose();
+    public void Close()
+    {
+        EndProcessing();
+        _inner.Close();
+    }
+
+    public void Dispose()
+    {
+        EndProcessing();
+        _inner.Dispose();
+    }
 }

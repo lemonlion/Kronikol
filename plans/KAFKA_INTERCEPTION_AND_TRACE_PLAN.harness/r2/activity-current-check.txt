@@ -1,0 +1,4 @@
+# dotnet run activity-current-check.cs (.NET 10.0.300 SDK, 2026-10-12)
+after a.Stop() while not current: Current = null
+after setting Current to the ended a: Current = b
+after b.Stop(): Current = a, stopped = True

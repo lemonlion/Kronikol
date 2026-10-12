@@ -133,6 +133,13 @@ internal sealed class ScriptedConsumer<TKey, TValue> : IConsumer<TKey, TValue>
         return this;
     }
 
+    /// <summary>A poll that runs <paramref name="poll"/> when the inner consumer is called, and returns what it returns.</summary>
+    public ScriptedConsumer<TKey, TValue> ReturnsFrom(Func<ConsumeResult<TKey, TValue>?> poll)
+    {
+        _polls.Enqueue(poll);
+        return this;
+    }
+
     /// <summary>Topics handed to <see cref="Subscribe(IEnumerable{string})"/>, as the inner consumer enumerated them.</summary>
     public List<string> Subscribed { get; } = [];
 
