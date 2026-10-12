@@ -16,13 +16,15 @@ public class ShouldlyAssertionNoteTests : DiagramNotePlaywrightBase
 {
     public ShouldlyAssertionNoteTests(PlaywrightFixture fixture) : base(fixture) { }
 
-    private string GenerateReport()
+    private string GenerateReport() =>
+        GenerateReport("result.ShouldBe(expected)", "result\n    should be\n5\n    but was\n3", 5, "ShouldlyNote.html");
+
+    private string GenerateReport(string expression, string message, object expected, string fileName)
     {
         // Track's own call, the one the weave makes after a failing statement, under a test of its own.
         var testId = "shouldly-note-" + Guid.NewGuid().ToString("N");
         using (TestIdentityScope.Begin(testId, testId))
-            Track.AssertionFailedWithValues("result.ShouldBe(expected)", "result\n    should be\n5\n    but was\n3",
-                ["expected"], [5], "OrderTests.cs", 42);
+            Track.AssertionFailedWithValues(expression, message, ["expected"], [expected], "OrderTests.cs", 42);
         var note = RequestResponseLogger.RequestAndResponseLogs
             .Single(l => l.TestId == testId && l.PlantUml is not null && l.PlantUml.Contains("<<assertionNote>>"))
             .PlantUml!;
@@ -56,18 +58,17 @@ public class ShouldlyAssertionNoteTests : DiagramNotePlaywrightBase
         var path = ReportGenerator.GenerateHtmlReport(
             [new DiagramAsCode("s1", "", diagram)], features,
             DateTime.UtcNow, DateTime.UtcNow,
-            null, Path.Combine(TempDir, "ShouldlyNote.html"), "Test Report", true,
+            null, Path.Combine(TempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             toggleDefaults: ReportTestHelper.ClassicStart);
-        File.Copy(path, Path.Combine(OutputDir, "ShouldlyNote.html"), true);
+        File.Copy(path, Path.Combine(OutputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
     }
 
-    [Fact]
-    public async Task A_Shouldly_assertion_note_paints_its_sentence()
+    /// <summary>The words the first scenario's diagram paints with the Assertions toggle on, one text run per word.</summary>
+    private async Task<string> PaintedWords()
     {
-        await Page.GotoAsync(GenerateReport());
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await RenderAllDiagramsAndWait(minCount: 1);
@@ -83,10 +84,37 @@ public class ShouldlyAssertionNoteTests : DiagramNotePlaywrightBase
                 renders, new() { Timeout = 90000, PollingInterval = 200 });
         }
 
-        // What the SVG paints, one text run per word: the sentence, then Shouldly's message line by line.
         var painted = await scenario.Locator("[data-diagram-type='plantuml'] svg").First.EvaluateAsync<string>(
             "svg => Array.from(svg.querySelectorAll('text')).map(t => t.textContent).join(' ')");
-        var words = string.Join(' ', painted.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        return string.Join(' ', painted.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    [Fact]
+    public async Task A_method_call_argument_note_paints_its_value()
+    {
+        // #163: the expected value read before the call, where 4.14.6 painted 'null'() whatever the value.
+        await Page.GotoAsync(GenerateReport(
+            "actual.Colour.ToString().ShouldBe(expected.Colour.ToString())",
+            "actual.Colour.ToString()\n    should be\n\"Blue\"\n    but was\n\"Red\"",
+            new Expected(Colour.Blue), "MethodCallNote.html"));
+
+        var words = await PaintedWords();
+
+        Assert.Contains("Actual colour should be 'Blue'.ToString()", words);
+        Assert.DoesNotContain("'null'", words);
+        Assert.Contains("should be \"Blue\" but was \"Red\"", words);
+    }
+
+    private enum Colour { Red, Blue }
+
+    private sealed record Expected(Colour Colour);
+
+    [Fact]
+    public async Task A_Shouldly_assertion_note_paints_its_sentence()
+    {
+        await Page.GotoAsync(GenerateReport());
+        // What the SVG paints, one text run per word: the sentence, then Shouldly's message line by line.
+        var words = await PaintedWords();
 
         Assert.Contains("Result should be '5'", words);
         Assert.Contains("result should be 5 but was 3", words);

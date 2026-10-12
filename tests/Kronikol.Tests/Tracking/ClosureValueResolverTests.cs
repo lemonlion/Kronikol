@@ -316,15 +316,59 @@ public class ClosureValueResolverTests
     }
 
     [Fact]
-    public void Falls_back_when_property_chain_returns_null()
+    public void Falls_back_when_a_null_comes_before_a_plain_dot()
     {
+        // The code itself would have thrown there, so the chain has no value: it is not the value null.
         var config = new OuterConfig { Inner = null! };
         Action action = () => Dummy(config);
 
         var result = ClosureValueResolver.ResolveValues(
             action, "() => x.Should().Be(config.Inner.Value)");
 
+        Assert.DoesNotContain("config.Inner.Value", result.ResolvedValues.Keys);
+        Assert.Single(result.Fallbacks);
+    }
+
+    [Fact]
+    public void Reads_null_when_a_null_comes_before_a_null_conditional()
+    {
+        var config = new OuterConfig { Inner = null! };
+        Action action = () => Dummy(config);
+
+        var result = ClosureValueResolver.ResolveValues(
+            action, "() => x.Should().Be(config.Inner?.Value)");
+
         Assert.Equal("null", result.ResolvedValues["config.Inner.Value"]);
+    }
+
+    [Theory]
+    [InlineData("() => x.Should().Be(expected.Lines.Count())")]
+    [InlineData("() => x.Should().Be(expected.Lines.Count(l => l == \"x\"))")]
+    [InlineData("() => x.ShouldBe(expected.Lines.Count(l => l == \"x\"))")]
+    public void A_call_named_like_a_property_is_not_read_as_the_property(string expression)
+    {
+        // List<T>.Count is the property; the code called Enumerable.Count, which returned 1.
+        var expected = new Listing { Lines = ["x", "y"] };
+        Action action = () => Dummy(expected);
+
+        var result = ClosureValueResolver.ResolveValues(action, expression);
+
+        Assert.DoesNotContain("2", result.ResolvedValues.Values);
+    }
+
+    [Fact]
+    public void A_getter_that_throws_costs_only_its_own_chain()
+    {
+        var faulty = new Faulty();
+        var expected = new MuffinBatchExpectation { ExpectedName = "chocolate" };
+        Action action = () => { Dummy(faulty); Dummy(expected); };
+
+        var result = ClosureValueResolver.ResolveValues(
+            action, "() => x.Should().BeOneOf(faulty.Throws, expected.ExpectedName)");
+
+        Assert.Equal("chocolate", result.ResolvedValues["expected.ExpectedName"]);
+        Assert.DoesNotContain("faulty.Throws", result.ResolvedValues.Keys);
+        Assert.Contains(result.Fallbacks, f => f.FieldName == "faulty.Throws");
     }
 
     [Fact]
@@ -373,6 +417,16 @@ public class ClosureValueResolverTests
     private class InnerConfig
     {
         public int Value { get; set; }
+    }
+
+    private class Listing
+    {
+        public List<string> Lines { get; set; } = [];
+    }
+
+    private class Faulty
+    {
+        public string Throws => throw new InvalidOperationException("boom");
     }
 
     public class FieldHolder

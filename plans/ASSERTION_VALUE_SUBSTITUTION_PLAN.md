@@ -680,3 +680,26 @@ any page this table missed, and the skill references (`.claude/skills/`, `templa
 - 2026-10-12: green-lit in full by the owner ("implement the plan in full"), every §11 question as recommended;
   placed as roadmap row 1.27 (stage 1, rule 1, no decision number; 1.26 is the row PR #164, a cloud session's 4.15.0 in review, took on 2026-10-11). Executed by kronikol-6b in the worktree
   `Kronikol-163`.
+- 2026-10-12, R1 built as 4.14.8 (4.14.7 went to kronikol-28's #133 audit patch the same morning). What changed from
+  the plan while building it:
+  - **Facts placed in their own files.** The weaver facts 11 to 13 are `AssertionValueWeaveTests.cs` (one fixture
+    holds the issue's statements, the joins and the suppression table) rather than `ShouldlyWeaveTests.cs` and
+    `AssertionWeaverTests.cs`; fact 14 is a second fact in `ShouldlyAssertionNoteTests.cs`.
+  - **A third join defect (F11), found by fact 11.** With the capture fixed, `actual.Id.ShouldBe(flag ? expected.Id :
+    "none", "the id")` still drew `, "the id"` in its label: `WithoutCustomMessage` (`AssertionWeaver.cs`) left a
+    call "whose arguments are named" as written and tested that by `": "` anywhere in the arguments, which a `?:`
+    holds. It now looks for a name and a colon where an argument starts (`HasNamedArgument`), and M15 reverts it.
+  - **F8 was wider than its table:** a type nested in a suppressed class was woven too (fact 12 fails on 4.14.6 for
+    `SuppressedType+Nested`).
+  - **A dictionary passed to the public `Format` replaces whole chains only.** Only Kronikol's own readers know that
+    a value read before a call is a single value (`ChainValues.Prefixes`), so `'Blue'.ToString()` comes from them;
+    a caller's dictionary never puts its key before a call or an index
+    (`A_plain_dictionary_key_does_not_stand_before_a_call`).
+  - **M10** was run as the whole of `ClosureValueResolver.cs` at v4.14.6 put back (15 facts fail).
+  Proofs, in `harness/r1/`: red on v4.14.6 for 72 core facts, 20 of the 25 weaver facts (the 5 that pass there are
+  guards) and the Playwright fact; mutations M1 to M15 and M10 all killed (`mutations.txt`); the probe on local
+  packages `4.14.8-local.163`, Debug equal to Release, 52 of 65 cases changed, each to its §3.9 form
+  (`compare-with-s0.txt`; 42 statements woven where 4.14.6 wove 55, the 13 the attribute now covers); and the issue's
+  stack, a scratch copy of the xUnit v2 template on net8.0 with Shouldly 4.3.0 and FluentAssertions 6.12.1, read
+  through `kronikol query assertions` (`issue-stack-query.txt`). The plan's roadmap row is 1.27: a cloud session's
+  PR #164 (4.15.0, in review) had taken 1.26 on 2026-10-11, so R2 takes 4.16.0.

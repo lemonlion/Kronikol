@@ -14,6 +14,7 @@ Windows 11, in Debug and in Release.
 | `probe/SuppressCases.cs` | 5 cases for `[SuppressAssertionTracking]` on a method and on a class (F8, plan §2.6) |
 | `s0/build-4.14.6-debug.txt`, `s0/build-4.14.6-release.txt` | The weave's summary line: 55 statements instrumented |
 | `s0/run-4.14.6-debug.txt`, `s0/run-4.14.6-release.txt` | Every case, its outcome and its notes. The two files are identical |
+| `r1/` | R1's proofs (4.14.8): `run-local-debug.txt` and `run-local-release.txt`, the probe on local packages `4.14.8-local.163` (identical); `compare-with-s0.txt`, every case whose labels changed from `s0/`, written by `compare_probe.py`; `build-local.txt`, the weave's line (42 statements); `mutations.txt` with `mutate.py`, the mutation runs; `probe_local.sh`, the local-package recipe; and the issue's stack (`IssueStack.csproj`, `IssueFeature.cs`, `issue-stack-query.txt`) |
 | `classify.py` | Counts `kronikol query assertions` lines (or the probe's output) by what their quoted values are (plan §4.4). A member's name in quotes (F5) and a whole record in quotes (F4) cannot be told from a real value by the text alone; the script lists quoted single words for a look and does not count them |
 
 ## Re-running

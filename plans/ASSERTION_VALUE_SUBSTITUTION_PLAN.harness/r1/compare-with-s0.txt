@@ -1,0 +1,170 @@
+WovenShouldly.S03_ToString:
+   old  ✓ Actual colour to string() should be 'null'()
+   new  ✓ Actual colour should be 'Blue'.ToString()
+WovenShouldly.S04_First:
+   old  ✓ First value of actual lines should be 'null'()
+   new  ✓ First value of actual lines should be expected.Lines.First()
+WovenShouldly.S05_two_calls:
+   old  ✓ Actual colour to string() to lower invariant() should be 'null'().ToLowerInvariant()
+   new  ✓ Actual colour to lower invariant() should be 'Blue'.ToString().ToLowerInvariant()
+WovenShouldly.S07_Count_method:
+   old  ✓ Actual lines count() should be '2'()
+   new  ✓ Actual lines count() should be expected.Lines.Count()
+WovenShouldly.S08_Count_with_predicate:
+   old  ✓ Actual lines count(l => l == "x") should be [ '2'(l => l == "x") ]
+   new  ✓ Actual lines count(l => l == "x") should be [ expected.Lines.Count(l => l == "x") ]
+WovenShouldly.S09_indexer:
+   old  ✓ Actual lines[0] should be '[ "x", "y" ]'[0]
+   new  ✓ Actual lines[0] should be expected.Lines[0]
+WovenShouldly.S10_call_then_property:
+   old  ✓ First value of actual lines length should be 'null'().Length
+   new  ✓ First value of actual lines length should be expected.Lines.First().Length
+WovenShouldly.S11_call_on_a_one_segment_path:
+   old  ✓ Actual id should be 'null'()
+   new  ✓ Actual id should be 'A1'.ToString()
+WovenShouldly.S12_call_with_arguments:
+   old  ✓ Actual colour to string(" g") should be 'null'("G")
+   new  ✓ Actual colour to string("G") should be 'Blue'.ToString("G")
+WovenShouldly.S13_generic_method:
+   old  ✓ Actual get<int>() should be 'null'<int>()
+   new  ✓ Actual get<int>() should be expected.Get<int>()
+WovenShouldly.S14_null_conditional:
+   old  ✓ Value should be 'Value'
+   new  ✓ Value should be 'v'
+WovenShouldly.S15_null_conditional_on_a_null:
+   old  ✓ Value should be 'Value'
+   new  ✓ Value should be 'null'
+WovenShouldly.S16_unprintable_property:
+   old  ✓ Plain should be same as 'Order { Id = A1, Colour = Blue,<U+200B><U+200B>
+   new  ✓ Plain should be same as expected.Plain
+WovenShouldly.S17_four_segments:
+   old  ✓ Actual box inner value length should be 'v'.Length
+   new  ✓ Actual box inner value length should be '1'
+WovenShouldly.S18_null_forgiving:
+   old  ✓ Actual inner value should be 'Inner(v)'.Value
+   new  ✓ Actual inner value should be 'v'
+WovenShouldly.S19_nameof:
+   old  ✓ " colour" should be nameof(expected.Colour)
+   new  ✓ "Colour" should be nameof(expected.Colour)
+WovenShouldly.S24_issue_SplitId:
+   old  ✓ Actual id should be 'null'().Id
+   new  ✓ Actual id should be splits.First().Id
+WovenShouldly.S25_failing_ToString:
+   old  ✗ Actual colour to string() should be 'null'()⏎actual.Colour.ToString()⏎    should be⏎"Blue"⏎    but was⏎"Red"⏎    difference⏎Difference     |  |    |    |    |   ⏎               | \|/  \|/  \|/  \|/  ⏎Index          | 0    1    2    3    ⏎Expected Value | B    l    u    e    ⏎Actual Value   | R    e    d         ⏎Expected Code  | 66   108  117  101  ⏎Actual Code    | 82   101  100
+   new  ✗ Actual colour should be 'Blue'.ToString()⏎actual.Colour.ToString()⏎    should be⏎"Blue"⏎    but was⏎"Red"⏎    difference⏎Difference     |  |    |    |    |   ⏎               | \|/  \|/  \|/  \|/  ⏎Index          | 0    1    2    3    ⏎Expected Value | B    l    u    e    ⏎Actual Value   | R    e    d         ⏎Expected Code  | 66   108  117  101  ⏎Actual Code    | 82   101  100
+WovenShouldly.S26_ShouldSatisfyAllConditions:
+   old  ✓ Actual colour to string() should be 'null'()
+   old  ✓ Actual id should be 'A1'
+   old  ✓ Actual should satisfy all conditions
+   new  ✓ Actual colour should be 'Blue'.ToString()
+   new  ✓ Actual id should be 'A1'
+   new  ✓ Actual should satisfy all conditions
+WovenShouldly.S28_static_field:
+   old  ✓ Actual colour to string() should be StaticExpected.Colour.ToString()
+   new  ✓ Actual colour should be StaticExpected.Colour.ToString()
+WovenShouldly.S29_local_holding_the_value:
+   old  ✓ Actual colour to string() should be 'Blue'
+   new  ✓ Actual colour should be 'Blue'
+WovenShouldly.S30_ternary_argument:
+   old  ✓ Actual id should be flag ? expected.Id : "none"
+   new  ✓ Actual id should be 'True' ? 'A1' : "none"
+WovenShouldly.S31_coalesce_argument:
+   old  ✓ Actual id should be expected.Missing ?? expected.Id
+   new  ✓ Actual id should be 'null' ?? 'A1'
+WovenFluent.F02_ToString:
+   old  ✓ Actual colour should be 'null'()
+   new  ✓ Actual colour should be 'Blue'.ToString()
+WovenFluent.F03_First:
+   old  ✓ First value of actual lines should be 'null'()
+   new  ✓ First value of actual lines should be expected.Lines.First()
+WovenFluent.F04_unprintable_property:
+   old  ✓ Plain should be same as 'Order { Id = A1, Colour = Blue,<U+200B><U+200B>
+   new  ✓ Plain should be same as expected.Plain
+WovenFluent.F05_Count_with_predicate:
+   old  ✓ Actual lines count(l => l == "x") should be [ '2'(l => l == "x") ]
+   new  ✓ Actual lines count(l => l == "x") should be [ expected.Lines.Count(l => l == "x") ]
+WovenFluent.F06_failing_ToString:
+   old  ✗ Actual colour should be 'null'()⏎Expected actual.Colour.ToString() to be "Blue" with a length of 4, but "Red" has a length of 3,<U+200B><U+200B>⏎differs near "Red" (index 0).
+   new  ✗ Actual colour should be 'Blue'.ToString()⏎Expected actual.Colour.ToString() to be "Blue" with a length of 4, but "Red" has a length of 3,<U+200B><U+200B>⏎differs near "Red" (index 0).
+WovenFluent.F07_indexer:
+   old  ✓ Actual lines[0] should be '[ "x", "y" ]'[0]
+   new  ✓ Actual lines[0] should be expected.Lines[0]
+WovenFluent.F08_null_conditional_on_a_null:
+   old  ✓ Value should be 'null'.Value
+   new  ✓ Value should be 'null'
+ThatCases.T01_property:
+   old  ✓ Actual id should be 'A1'
+   old  ✓ Actual id should be 'A1'
+   new  ✓ Actual id should be 'A1'
+ThatCases.T03_ToString:
+   old  ✓ Actual colour to string() should be 'null'()
+   old  ✓ Actual colour to string() should be expected.Colour.ToString()
+   new  ✓ Actual colour should be 'Blue'.ToString()
+ThatCases.T04_First:
+   old  ✓ First value of actual lines should be 'null'()
+   old  ✓ First value of actual lines should be expected.Lines.First()
+   new  ✓ First value of actual lines should be expected.Lines.First()
+ThatCases.T08_Count_with_predicate:
+   old  ✓ Actual lines count(l => l == "x") should be [ '2'(l => l == "x") ]
+   old  ✓ Actual lines count(l => l == "x") should be [ '2'(l => l == "x") ]
+   new  ✓ Actual lines count(l => l == "x") should be [ expected.Lines.Count(l => l == "x") ]
+ThatCases.T09_indexer:
+   old  ✓ Actual lines[0] should be '[ "x", "y" ]'[0]
+   old  ✓ Actual lines[0] should be '[ "x", "y" ]'[0]
+   new  ✓ Actual lines[0] should be expected.Lines[0]
+ThatCases.T15_null_conditional_on_a_null:
+   old  ✓ Value should be 'Value'
+   old  ✓ Value should be 'null'.Value
+   new  ✓ Value should be 'null'
+ThatCases.T16_unprintable_property:
+   old  ✓ Plain should be same as 'Order { Id = A1, Colour = Blue,<U+200B><U+200B>
+   old  ✓ Plain should be same as 'Plain'
+   new  ✓ Plain should be same as expected.Plain
+ThatCases.T17_four_segments:
+   old  ✓ Actual box inner value length should be 'v'.Length
+   old  ✓ Actual box inner value length should be '1'
+   new  ✓ Actual box inner value length should be '1'
+ThatCases.T19_nameof:
+   old  ✓ " colour" should be nameof(expected.Colour)
+   old  ✓ " colour" should be nameof(expected.Colour)
+   new  ✓ "Colour" should be nameof(expected.Colour)
+ThatCases.T22_arithmetic:
+   old  ✓ Actual code should be '7' + 0
+   old  ✓ Actual code should be expected.Code + 0
+   new  ✓ Actual code should be expected.Code + 0
+DirectCases.D01_getter_that_throws:
+   old  ✓ Actual fine should be 'null'
+   new  ✓ Actual fine should be faulty.Throws
+DirectCases.D02_null_root:
+   old  ✗ Actual id should be 'null'.Id⏎Object reference not set to an instance of an object.
+   new  ✗ Actual id should be expected.Id⏎Object reference not set to an instance of an object.
+DirectCases.D03_null_in_the_middle:
+   old  ✗ Actual id should be 'null'⏎Object reference not set to an instance of an object.
+   new  ✗ Actual id should be expected.Inner.Value⏎Object reference not set to an instance of an object.
+DirectCases.D05_TUnit_ToString:
+   old  ✓ Actual colour to string() is equal to 'null'()
+   new  ✓ Actual colour is equal to 'Blue'.ToString()
+DirectCases.D06_root_then_indexer:
+   old  ✓ Actual id should be '[ "A1" ]'[0]
+   new  ✓ Actual id should be ids[0]
+DirectCases.D07_root_then_call:
+   old  ✓ Actual id should be 'null'()
+   new  ✓ Actual id should be 'A1'.Trim()
+DirectCases.D08_FluentAssertions_ToString:
+   old  ✓ Actual colour should be 'null'()
+   new  ✓ Actual colour should be 'Blue'.ToString()
+DirectCases.D09_unprintable_root_then_call:
+   old  ✓ Actual name should be 'null'()
+   new  ✓ Actual name should be 'plain'.ToUpper()
+DirectCases.D10_value_holding_to_string:
+   old  ✓ Actual note should be 'call now'
+   new  ✓ Actual note should be 'call to string() now'
+SuppressedMethods.U01_lambda_in_a_suppressed_method:
+   old  ✓ Actual id should be 'A1'
+SuppressedMethods.U02_Track_That_in_a_suppressed_method:
+   old  ✓ Actual id should be 'A1'
+   old  ✓ Actual id should be 'A1'
+   new  ✓ Actual id should be 'A1'
+SuppressedType.U04_async_method_in_a_suppressed_type:
+   old  ✓ Actual id should be 'A1'
+unchanged cases: 13 of 65

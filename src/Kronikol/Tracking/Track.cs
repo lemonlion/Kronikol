@@ -144,8 +144,9 @@ public static class Track
 
     /// <summary>
     /// Called by the IL weaver (AssertionWeaver) to log a passing assertion with runtime variable values.
-    /// The weaver emits arrays of variable names and their boxed values; this method resolves
-    /// dotted property paths and substitutes formatted values into the expression text.
+    /// The weaver emits arrays of variable names and their boxed values; this method reads each access chain that
+    /// starts at one of them (members up to the first method call or index) and puts a value in the label only in
+    /// place of exactly the code it was read for. A chain it cannot read is shown as written.
     /// </summary>
     public static void AssertionPassedWithValues(string expression, string[] varNames, object?[] varValues, string? callerFilePath = null, int callerLineNumber = 0)
     {
@@ -166,8 +167,9 @@ public static class Track
 
     /// <summary>
     /// Called by the IL weaver (AssertionWeaver) to log a failing assertion with runtime variable values.
-    /// The weaver emits arrays of variable names and their boxed values; this method resolves
-    /// dotted property paths and substitutes formatted values into the expression text.
+    /// The weaver emits arrays of variable names and their boxed values; this method reads each access chain that
+    /// starts at one of them (members up to the first method call or index) and puts a value in the label only in
+    /// place of exactly the code it was read for. A chain it cannot read is shown as written.
     /// </summary>
     public static void AssertionFailedWithValues(string expression, string failureMessage, string[] varNames, object?[] varValues, string? callerFilePath = null, int callerLineNumber = 0)
     {
@@ -200,7 +202,7 @@ public static class Track
                     allScalar = false;
                     break;
                 }
-                if (item != null && !IsScalarType(item.GetType()))
+                if (item != null && !AccessChain.IsScalarType(item.GetType()))
                     allScalar = false;
             }
 
@@ -249,15 +251,12 @@ public static class Track
         }
     }
 
-    private static bool IsScalarType(Type type)
-    {
-        return type.IsPrimitive || type.IsEnum || type == typeof(string)
-            || type == typeof(decimal) || type == typeof(Guid)
-            || type == typeof(DateTime) || type == typeof(DateTimeOffset)
-            || type == typeof(TimeSpan) || type == typeof(DateOnly)
-            || type == typeof(TimeOnly);
-    }
-
+    /// <summary>
+    /// The values the weave passed (each captured name and its value), read for every access chain in the statement
+    /// that starts at one of them, the subject's included: a chain's value under its own text, or the part read before
+    /// a method call or an index when that is a single value (<see cref="AccessChain"/>). A chain that cannot be read
+    /// gets no value and stays as written in the label (#163).
+    /// </summary>
     private static Dictionary<string, string>? ResolveVariableValues(string expression, string[] varNames, object?[] varValues)
     {
         if (varNames == null || varValues == null || varNames.Length == 0)
@@ -265,131 +264,25 @@ public static class Track
 
         try
         {
-            var resolved = new Dictionary<string, string>();
-
+            var roots = new Dictionary<string, object?>(StringComparer.Ordinal);
             for (var i = 0; i < varNames.Length; i++)
+                roots.TryAdd(varNames[i], i < varValues.Length ? varValues[i] : null);
+
+            var values = new ChainValues();
+            var read = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var chain in AccessChain.Find(expression))
             {
-                var name = varNames[i];
-                var value = i < varValues.Length ? varValues[i] : null;
-
-                // Resolve dotted paths in the expression (up to 3 levels deep)
-                ResolveDottedPaths(expression, name, value, resolved);
-
-                // Also add the root variable's formatted value
-                var formatted = FormatValue(value);
-                if (formatted is not null)
-                    resolved.TryAdd(name, formatted);
+                if (roots.TryGetValue(chain.Root, out var rootValue) && read.Add(chain.Key))
+                    values.Keep(chain, chain.Read(rootValue), (value, _) => FormatValue(value));
             }
 
-            return resolved.Count > 0 ? resolved : null;
+            return values.Count > 0 ? values : null;
         }
         catch
         {
             return null;
         }
     }
-
-    private static void ResolveDottedPaths(string expression, string rootName, object? rootValue, Dictionary<string, string> resolved)
-    {
-        if (rootValue is null)
-            return;
-
-        // Scan expression for patterns like rootName.Prop or rootName.Prop.Sub (up to 3 levels)
-        var searchStart = 0;
-        while (true)
-        {
-            var idx = expression.IndexOf(rootName, searchStart, StringComparison.Ordinal);
-            if (idx < 0) break;
-
-            // Ensure it's a word boundary before
-            if (idx > 0 && IsIdentifierChar(expression[idx - 1]))
-            {
-                searchStart = idx + rootName.Length;
-                continue;
-            }
-
-            var afterRoot = idx + rootName.Length;
-            if (afterRoot >= expression.Length || expression[afterRoot] != '.')
-            {
-                searchStart = afterRoot;
-                continue;
-            }
-
-            // We have rootName. — extract the dotted path (up to 3 segments)
-            var path = ExtractDottedPath(expression, afterRoot, maxSegments: 3);
-            if (path is not null)
-            {
-                var fullPath = rootName + path;
-                if (!resolved.ContainsKey(fullPath))
-                {
-                    var walked = WalkPropertyChain(rootValue, path[1..]); // skip leading '.'
-                    var formatted = FormatValue(walked);
-                    if (formatted is not null)
-                        resolved[fullPath] = formatted;
-                }
-            }
-
-            searchStart = afterRoot;
-        }
-    }
-
-    private static string? ExtractDottedPath(string expression, int dotIndex, int maxSegments)
-    {
-        var pos = dotIndex;
-        var segments = 0;
-        var result = "";
-
-        while (segments < maxSegments && pos < expression.Length && expression[pos] == '.')
-        {
-            pos++; // skip '.'
-            var segStart = pos;
-            while (pos < expression.Length && IsIdentifierChar(expression[pos]))
-                pos++;
-
-            if (pos == segStart) break; // empty segment
-
-            result += "." + expression[segStart..pos];
-            segments++;
-        }
-
-        return segments > 0 ? result : null;
-    }
-
-    private static object? WalkPropertyChain(object? root, string path)
-    {
-        if (root is null) return null;
-
-        var current = root;
-        var segments = path.Split('.');
-
-        foreach (var segment in segments)
-        {
-            if (current is null) return null;
-
-            var type = current.GetType();
-            var prop = type.GetProperty(segment, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (prop is not null)
-            {
-                try { current = prop.GetValue(current); }
-                catch { return null; }
-                continue;
-            }
-
-            var field = type.GetField(segment, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (field is not null)
-            {
-                try { current = field.GetValue(current); }
-                catch { return null; }
-                continue;
-            }
-
-            return null; // segment not found
-        }
-
-        return current;
-    }
-
-    private static bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';
 
     private static Dictionary<string, string>? ResolveClosureValues(Delegate assertion, string? expression)
     {

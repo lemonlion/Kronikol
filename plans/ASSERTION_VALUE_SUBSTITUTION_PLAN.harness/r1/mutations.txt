@@ -1,0 +1,165 @@
+== M1: a member that a call follows read as a member again
+   Kronikol.Tests.csproj: ['Failed!  - Failed:    22, Passed:   257, Skipped:     0, Total:   279, Duration: 451 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected.Colour.ToS
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected.Get<Dictio
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected.Get<int>()
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected.Lines.Coun
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected.Lines.Firs
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_that_goes_on_past_a_call_gives_its_read_parts_value
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_method_is_never_read_as_a_member_even_when_a_property_shares_its_name
+     red: Kronikol.Tests.Tracking.AccessChainTests.Only_a_single_value_read_before_a_call_is_kept_as_a_prefix
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.A_call_named_like_a_property_is_not_read_as_the_property(expression: "() => x.Should().Be(expected.L
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.A_call_named_like_a_property_is_not_read_as_the_property(expression: "() => x.ShouldBe(expected.Line
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Colour.ToString().Should().Be(expect
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Colour.ToString().ShouldBe(expected.
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Colour.ToString().ToLowerInvariant()
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Colour.ToString(\"G\").ShouldBe(expe
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Id.ShouldBe(expected.Id.ToString())"
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Id.ShouldBe(id.Trim())", name: "id",
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "await Assert.That(actual.Colour.ToString())
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_named_like_a_property_is_not_read_as_the_property(expression: "actual.Lines.Count().ShouldBe(
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_named_like_a_property_is_not_read_as_the_property(expression: "actual.Lines.Count(l => l == \
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "actual.ShouldBe(expected.Box.Inner.Value
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     5, Passed:    20, Skipped:     0, Total:    25, Duration: 7 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_failing_statement_labels_the_expected_value_its_message_names
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Call_after_a_member"
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Call_named_like_a_pr
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Fluent_call_after_a_
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Issue", method: "Two_calls", label: "
+== M2: unreadable answered as null again
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     6, Passed:   273, Skipped:     0, Total:   279, Duration: 108 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_getter_that_throws_is_unreadable
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_member_that_is_not_there_is_unreadable
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.A_getter_that_throws_costs_only_its_own_chain
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.Falls_back_when_property_does_not_exist_on_chain
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_unreadable_chain_shows_no_value(expression: "actual.ShouldBe(expected.NoSuchMember)", name: "expe
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_unreadable_chain_shows_no_value(expression: "actual.ShouldBe(faulty.Throws)", name: "faulty", val
+== M3: a null before a plain dot read as null
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     4, Passed:   275, Skipped:     0, Total:   279, Duration: 121 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_null_before_a_plain_dot_is_unreadable
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.Falls_back_when_a_null_comes_before_a_plain_dot
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_unreadable_chain_shows_no_value(expression: "actual.ShouldBe(expected.Inner.Value)", name: "expec
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.AssertionPassedWithValues_null_intermediate_before_a_plain_dot_shows_the_chain_as_written
+== M4: a null before ?. read as unreadable
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     9, Passed:   270, Skipped:     0, Total:   279, Duration: 115 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_null_before_a_null_conditional_gives_the_whole_chain_null(text: "x.ShouldBe(d.Next?.Secret)")
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_null_before_a_null_conditional_gives_the_whole_chain_null(text: "x.ShouldBe(d.Next?.Secret.Length)")
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.Reads_null_when_a_null_comes_before_a_null_conditional
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_null_before_a_null_conditional_reads_null(expression: "actual.ShouldBe(expected.Box!.Inner?.Value)
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_null_before_a_null_conditional_reads_null(expression: "actual.ShouldBe(expected.Inner?.Value!)", a
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_null_before_a_null_conditional_reads_null(expression: "actual.ShouldBe(expected.Inner?.Value)", ar
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_null_before_a_null_conditional_reads_null(expression: "actual.ShouldBe(expected.Inner?.Value.Lengt
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_null_before_a_null_conditional_reads_null(expression: "actual.ShouldBe(expected.Inner?.Value.ToStr
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.AssertionPassedWithValues_null_intermediate_before_a_null_conditional_shows_null
+== M5: the substitution back to a search with the identifier-character boundary
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     6, Passed:   273, Skipped:     0, Total:   279, Duration: 317 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "x.Should().Be(expected.Lines[0])
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "x.ShouldBe(expected.Inner!.Value
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "x.ShouldBe(expected.Inner.Value)
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "x.ShouldBe(ids[0])", key: "ids",
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "x.ShouldBeSameAs(expected.Plain)
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_plain_dictionary_key_does_not_stand_before_a_call
+== M6: the three-segment limit restored
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     2, Passed:   277, Skipped:     0, Total:   279, Duration: 127 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected.Lines.Firs
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "actual.ShouldBe(expected.Box.Inner.Value
+== M7: the resolver keying the raw text instead of the canonical one
+   Kronikol.Tests.csproj: ['Failed!  - Failed:    16, Passed:   263, Skipped:     0, Total:   279, Duration: 257 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected.Get<Dictio
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected.Inner!.Val
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected.Inner?.Val
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected.Lines.Coun
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected.Lines?[0])
+     red: Kronikol.Tests.Tracking.AccessChainTests.A_chain_runs_to_its_last_segment_and_is_read_to_its_first_call_or_index(text: "x.ShouldBe(expected\n    .Inne
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.Reads_null_when_a_null_comes_before_a_null_conditional
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "actual.ShouldBe(expected.Inner!.Value)",
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "actual.ShouldBe(expected\n    .Box\n    
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_null_before_a_null_conditional_reads_null(expression: "actual.ShouldBe(expected.Box!.Inner?.Value)
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_null_before_a_null_conditional_reads_null(expression: "actual.ShouldBe(expected.Inner?.Value!)", a
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_null_before_a_null_conditional_reads_null(expression: "actual.ShouldBe(expected.Inner?.Value)", ar
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_null_before_a_null_conditional_reads_null(expression: "actual.ShouldBe(expected.Inner?.Value.Lengt
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_null_before_a_null_conditional_reads_null(expression: "actual.ShouldBe(expected.Inner?.Value.ToStr
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_null_conditional_over_a_value_reads_the_value
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.AssertionPassedWithValues_null_intermediate_before_a_null_conditional_shows_null
+== M8a: Q1 scalar test removed (always the read part)
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     9, Passed:   270, Skipped:     0, Total:   279, Duration: 164 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AccessChainTests.Only_a_single_value_read_before_a_call_is_kept_as_a_prefix
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Code.ShouldBe(expected.Get<int>())",
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Id.ShouldBe(splits.First().Id)", nam
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Lines.First().ShouldBe(expected.Line
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_named_like_a_property_is_not_read_as_the_property(expression: "actual.Lines.Count().ShouldBe(
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_named_like_a_property_is_not_read_as_the_property(expression: "actual.Lines.Count(l => l == \
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "actual.ShouldBe(expected.Lines[0])", arg
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_value_inside_an_index_is_substituted_while_the_indexed_chain_stays_as_written
+== M8b: Q1 scalar test inverted (never the read part)
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     9, Passed:   270, Skipped:     0, Total:   279, Duration: 109 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AccessChainTests.Only_a_single_value_read_before_a_call_is_kept_as_a_prefix
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Colour.ToString().Should().Be(expect
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Colour.ToString().ShouldBe(expected.
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Colour.ToString().ToLowerInvariant()
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Colour.ToString(\"G\").ShouldBe(expe
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Id.ShouldBe(expected.Id.ToString())"
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "actual.Id.ShouldBe(id.Trim())", name: "id",
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member(expression: "await Assert.That(actual.Colour.ToString())
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "actual.ShouldBe(expected.Box.Inner.Value
+== M9: the quoted last segment restored
+   Kronikol.Tests.csproj: ['Failed!  - Failed:    11, Passed:   268, Skipped:     0, Total:   279, Duration: 96 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "x.ShouldBe(expected.Inner!.Value
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_key_is_not_substituted_inside_a_longer_chain(expression: "x.ShouldBe(expected.Inner.Value)
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_member_name_is_never_quoted_as_a_value(expression: "await Assert.That(value).IsEqualTo(exp
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_member_name_is_never_quoted_as_a_value(expression: "value.Should().Be(expected.Inner.Value
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_member_name_is_never_quoted_as_a_value(expression: "value.ShouldBe(expected.Inner.Value)",
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_member_name_is_never_quoted_as_a_value(expression: "value.ShouldBe(expected.Inner?.Value)"
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_member_path_ending_in_an_underscore_is_shown_as_written
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_member_path_with_no_value_is_shown_as_written
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.An_underscore_prefixed_two_segment_path_with_no_value_is_shown_as_written
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.An_unreadable_chain_shows_no_value(expression: "actual.ShouldBe(expected.Inner.Value)", name: "expec
+     red: Kronikol.Tests.Tracking.TrackValueResolutionTests.AssertionPassedWithValues_null_intermediate_before_a_plain_dot_shows_the_chain_as_written
+== M11: ShouldlyArguments' start from the previous producer again
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     5, Passed:    20, Skipped:     0, Total:    25, Duration: 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Coalesce", label: "A
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Conditional", label:
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Join_before_a_custom
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Message_holding_a_va
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Null_conditional", l
+== M12a: suppression by the type's own attribute alone
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     7, Passed:    18, Skipped:     0, Total:    25, Duration: 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.Suppression_reaches_lambdas_local_functions_state_machines_and_nested_types(type: "Methods",
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.Suppression_reaches_lambdas_local_functions_state_machines_and_nested_types(type: "Suppresse
+== M12b: every lambda suppressed
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     2, Passed:    23, Skipped:     0, Total:    25, Duration: 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.Suppression_reaches_lambdas_local_functions_state_machines_and_nested_types(type: "Methods",
+== M13: FormatSubject splitting literals again
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     5, Passed:   274, Skipped:     0, Total:   279, Duration: 102 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_subject_literal_is_kept_as_written(expression: "\"Colour\".Should().Be(\"Colour\")", expec
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_subject_literal_is_kept_as_written(expression: "\"Colour\".ShouldBe(nameof(expected.Colour
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_subject_literal_is_kept_as_written(expression: "\"a.b\".Length.ShouldBe(3)", expected: "\"
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_subject_literal_is_kept_as_written(expression: "await Assert.That(\"Colour\").IsEqualTo(\"
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_subject_literal_is_kept_as_written(expression: "x.ToString(\"G\").ShouldBe(\"Blue\")", exp
+== M14: the to-string rule over the whole sentence, FluentAssertions only
+   Kronikol.Tests.csproj: ['Failed!  - Failed:     3, Passed:   276, Skipped:     0, Total:   279, Duration: 119 ms - Kronikol.Tests.dll (net10.0)']
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_value_holding_to_string_is_not_rewritten(expression: "x.Should().Be(note)")
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.To_string_is_read_alike_in_every_library(expression: "actual.Colour.ToString().ShouldBe(\"Bl
+     red: Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.To_string_is_read_alike_in_every_library(expression: "await Assert.That(actual.Colour.ToStri
+== M15: a colon anywhere in the arguments read as a named argument again
+   Kronikol.Tests.AssertionTracking.csproj: ['Failed!  - Failed:     2, Passed:    23, Skipped:     0, Total:    25, Duration: 5 s - Kronikol.Tests.AssertionTracking.dll (net10.0)']
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Join_before_a_custom
+     red: Kronikol.Tests.AssertionTracking.AssertionValueWeaveTests.A_woven_statement_labels_the_values_it_compared(type: "Joins", method: "Message_holding_a_va
+done
+== M10: ClosureValueResolver back on its own walker (the whole file at v4.14.6)
+   Kronikol.Tests.csproj: Failed!  - Failed:    15, Passed:   264, Skipped:     0, Total:   279, Duration: 200 ms - Kronikol.Tests.dll (net10.0)
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.Falls_back_when_a_null_comes_before_a_plain_dot
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.Reads_null_when_a_null_comes_before_a_null_conditional
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.A_call_named_like_a_property_is_not_read_as_the_property(expression: "() => x.Should().Be(expected.Lines.Count
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.A_call_named_like_a_property_is_not_read_as_the_property(expression: "() => x.ShouldBe(expected.Lines.Count(l 
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.A_call_named_like_a_property_is_not_read_as_the_property(expression: "() => x.Should().Be(expected.Lines.Count
+     red: Kronikol.Tests.Tracking.ClosureValueResolverTests.A_getter_that_throws_costs_only_its_own_chain
+     red: Kronikol.Tests.Tracking.ValuePathParityTests.Both_paths_label_one_assertion_alike(expression: "() => actual.Should().Be(expected.Inner?.Value)")
+     red: Kronikol.Tests.Tracking.ValuePathParityTests.Both_paths_label_one_assertion_alike(expression: "() => actual.Should().Be(empty.Inner.Value)")
+     red: Kronikol.Tests.Tracking.ValuePathParityTests.Both_paths_label_one_assertion_alike(expression: "() => actual.Should().BeOneOf(faulty.Throws, expec"···)
+     red: Kronikol.Tests.Tracking.ValuePathParityTests.Both_paths_label_one_assertion_alike(expression: "() => actual.Should().Be(expected.Colour.ToString("···)
+     red: Kronikol.Tests.Tracking.ValuePathParityTests.Both_paths_label_one_assertion_alike(expression: "() => actual.Should().Be(empty.Inner?.Value)")
+     red: Kronikol.Tests.Tracking.ValuePathParityTests.Both_paths_label_one_assertion_alike(expression: "() => actual.Should().Be(id.Trim())")
+     red: Kronikol.Tests.Tracking.ValuePathParityTests.Both_paths_label_one_assertion_alike(expression: "() => actual.Should().Be(expected.Inner!.Value)")
+     red: Kronikol.Tests.Tracking.ValuePathParityTests.Both_paths_label_one_assertion_alike(expression: "() => actual.ShouldBe(expected.Colour.ToString())")
+     red: Kronikol.Tests.Tracking.ValuePathParityTests.Both_paths_label_one_assertion_alike(expression: "() => actual.Should().Be(expected.Colour.ToString("···)

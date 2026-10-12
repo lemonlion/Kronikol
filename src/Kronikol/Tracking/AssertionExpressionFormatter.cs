@@ -5,8 +5,10 @@ namespace Kronikol.Tracking;
 
 /// <summary>
 /// Parses assertion expressions (typically captured via <c>[CallerArgumentExpression]</c>)
-/// into readable English sentences. Optimised for FluentAssertions <c>.Should().Method(args)</c>
-/// patterns but falls back gracefully for other assertion styles.
+/// into readable English sentences: FluentAssertions' <c>.Should().Method(args)</c>, Shouldly's
+/// <c>subject.ShouldMethod(args)</c> and TUnit's <c>Assert.That(subject).Method(args)</c>, falling back to the code
+/// for other assertion styles. The arguments keep their code, with a value in quotes only in place of exactly the code
+/// it was read for; code with no value is shown as written.
 /// </summary>
 public static partial class AssertionExpressionFormatter
 {
@@ -66,14 +68,9 @@ public static partial class AssertionExpressionFormatter
         var formattedMethod = SplitPascalCase(method).ToLowerInvariant();
         var formattedArgs = FormatArgs(args, resolvedValues);
 
-        var result = string.IsNullOrEmpty(formattedArgs)
+        return string.IsNullOrEmpty(formattedArgs)
             ? $"{formattedSubject} should {formattedMethod}"
             : $"{formattedSubject} should {formattedMethod} {formattedArgs}";
-
-        result = result.Replace(" to string() ", " ");
-        result = result.Replace(" to string ", " ");
-
-        return result;
     }
 
     /// <summary>
@@ -203,14 +200,22 @@ public static partial class AssertionExpressionFormatter
         return -1;
     }
 
+    /// <summary>
+    /// The subject in words: split on each <c>.</c> and each part on case, lower-cased, with <c>First()</c> and
+    /// <c>Last()</c> read as "First value of …". A string or character literal is code too, and is kept exactly as
+    /// written (<c>"Colour"</c> read <c>" colour"</c>). A <c>.ToString()</c> is how the code reaches the value it
+    /// compares, not part of what is compared, and is left out for every library alike.
+    /// </summary>
     private static string FormatSubject(string subject)
     {
-        var segments = subject.Split('.');
+        var segments = SplitOutsideLiterals(subject, '.');
+        if (segments.Count > 1)
+            segments.RemoveAll(segment => segment is "ToString()" or "ToString");
 
         // Detect First()/Last() and reorder: "collection.First().Prop" → "First value of collection prop"
         var firstLastIdx = -1;
         string? firstLastWord = null;
-        for (var j = 0; j < segments.Length; j++)
+        for (var j = 0; j < segments.Count; j++)
         {
             if (segments[j] == "First()") { firstLastIdx = j; firstLastWord = "First"; break; }
             if (segments[j] == "Last()") { firstLastIdx = j; firstLastWord = "Last"; break; }
@@ -221,22 +226,21 @@ public static partial class AssertionExpressionFormatter
             var sb = new StringBuilder();
             sb.Append(firstLastWord);
             sb.Append(" value of");
-            for (var i = 0; i < segments.Length; i++)
+            for (var i = 0; i < segments.Count; i++)
             {
                 if (i == firstLastIdx) continue;
                 sb.Append(' ');
-                sb.Append(SplitPascalCase(segments[i].Trim('_')).ToLowerInvariant());
+                sb.Append(Words(segments[i]));
             }
             return sb.ToString();
         }
 
         {
             var sb = new StringBuilder();
-            for (var i = 0; i < segments.Length; i++)
+            for (var i = 0; i < segments.Count; i++)
             {
                 if (i > 0) sb.Append(' ');
-                var segment = segments[i].Trim('_');
-                sb.Append(SplitPascalCase(segment).ToLowerInvariant());
+                sb.Append(Words(segments[i]));
             }
 
             // Capitalize first letter
@@ -245,6 +249,43 @@ public static partial class AssertionExpressionFormatter
 
             return sb.ToString();
         }
+    }
+
+    /// <summary>One subject segment in words: its code split on case and lower-cased, its literals as written.</summary>
+    private static string Words(string segment)
+    {
+        segment = segment.Trim('_');
+        var literal = LiteralMask(segment);
+        var sb = new StringBuilder();
+        for (var i = 0; i < segment.Length;)
+        {
+            var end = i;
+            while (end < segment.Length && literal[end] == literal[i])
+                end++;
+            var part = segment[i..end];
+            sb.Append(literal[i] ? part : SplitPascalCase(part).ToLowerInvariant());
+            i = end;
+        }
+        return sb.ToString();
+    }
+
+    /// <summary><paramref name="text"/> split at each <paramref name="separator"/> outside string and character
+    /// literals.</summary>
+    private static List<string> SplitOutsideLiterals(string text, char separator)
+    {
+        var literal = LiteralMask(text);
+        var parts = new List<string>();
+        var start = 0;
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] == separator && !literal[i])
+            {
+                parts.Add(text[start..i]);
+                start = i + 1;
+            }
+        }
+        parts.Add(text[start..]);
+        return parts;
     }
 
     /// <summary>
@@ -407,16 +448,12 @@ public static partial class AssertionExpressionFormatter
         if (string.IsNullOrWhiteSpace(args))
             return "";
 
-        // Substitute resolved values for standalone variable tokens in the args
         if (resolvedValues is { Count: > 0 })
             args = SubstituteResolvedValues(args, resolvedValues);
 
         // Wrap lambda expressions in square brackets for readability
         if (args.Contains("=>"))
             return $"[ {args} ]";
-
-        // Simplify dotted member access chains: _eggsSteps.EggsResponse.Eggs → 'Eggs'
-        args = SimplifyMemberAccessPaths(args);
 
         // Strip enum prefixes: TaskStatus.RanToCompletion → RanToCompletion, HttpStatusCode.OK → OK
         // But preserve complex expressions like DateTime.UtcNow, TimeSpan.FromSeconds(5)
@@ -427,97 +464,51 @@ public static partial class AssertionExpressionFormatter
         return args;
     }
 
+    /// <summary>
+    /// Puts each value in quotes in place of exactly the code it was read for (#163). The arguments' access chains
+    /// are found with the readers' own parser (<see cref="AccessChain"/>), and a chain is replaced only by the value
+    /// kept under its whole text, or, for a value Kronikol read before a method call or an index
+    /// (<see cref="ChainValues.Prefixes"/>), its read part is: <c>'Blue'.ToString()</c>. A shorter key never matches
+    /// inside a longer chain, so <c>expected</c>'s value does not stand in for <c>expected.Plain</c>, nor a list for
+    /// its element. Code with no value, a literal among it, stays as written.
+    /// </summary>
     private static string SubstituteResolvedValues(string args, Dictionary<string, string> resolvedValues)
     {
-        // Process longer keys first to prevent partial matches
-        // (e.g. "expected.ExpectedIngredientCount" before "expected")
-        var orderedKeys = resolvedValues.Keys.OrderByDescending(k => k.Length);
-
-        foreach (var name in orderedKeys)
+        var prefixes = (resolvedValues as ChainValues)?.Prefixes;
+        Dictionary<string, string> values;
+        if (resolvedValues is ChainValues)
+            values = resolvedValues;
+        else
         {
-            var value = resolvedValues[name];
-            var idx = 0;
-            while (idx <= args.Length - name.Length)
+            values = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var (key, value) in resolvedValues)
+                values.TryAdd(AccessChain.CanonicalKey(key), value);
+        }
+
+        var sb = new StringBuilder(args.Length);
+        var pos = 0;
+        foreach (var chain in AccessChain.Find(args))
+        {
+            if (chain.Start < pos)
+                continue;
+
+            if (values.TryGetValue(chain.Key, out var value))
             {
-                idx = args.IndexOf(name, idx, StringComparison.Ordinal);
-                if (idx < 0) break;
-
-                var before = idx > 0 ? args[idx - 1] : ' ';
-                var after = idx + name.Length < args.Length ? args[idx + name.Length] : ' ';
-
-                // Must be a standalone token (not part of a larger identifier)
-                if (IsIdentifierChar(before) || IsIdentifierChar(after))
-                {
-                    idx += name.Length;
-                    continue;
-                }
-
-                // Don't substitute inside quoted strings
-                if (IsInsideQuotes(args, idx))
-                {
-                    idx += name.Length;
-                    continue;
-                }
-
-                var replacement = $"'{value}'";
-                args = args[..idx] + replacement + args[(idx + name.Length)..];
-                idx += replacement.Length;
+                sb.Append(args, pos, chain.Start - pos).Append('\'').Append(value).Append('\'');
+                pos = chain.End;
+            }
+            else if (chain.HasUnreadRest && prefixes is not null && prefixes.Contains(chain.ReadKey) &&
+                     values.TryGetValue(chain.ReadKey, out var part))
+            {
+                sb.Append(args, pos, chain.Start - pos).Append('\'').Append(part).Append('\'');
+                pos = chain.ReadEnd;
             }
         }
-
-        return args;
+        sb.Append(args, pos, args.Length - pos);
+        return sb.ToString();
     }
-
-    private static bool IsInsideQuotes(string text, int position) => LiteralMask(text)[position];
 
     private static bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';
-
-    private static string SimplifyMemberAccessPaths(string args)
-    {
-        // If already contains quotes (resolved values), don't re-process
-        if (args.Contains('\''))
-            return args;
-
-        // Handle comma-separated args by processing each individually
-        if (args.Contains(','))
-        {
-            var parts = SplitTopLevelCommas(args);
-            var simplified = new string[parts.Length];
-            for (var i = 0; i < parts.Length; i++)
-                simplified[i] = SimplifySingleMemberAccess(parts[i].Trim());
-            return string.Join(", ", simplified);
-        }
-
-        return SimplifySingleMemberAccess(args);
-    }
-
-    private static string SimplifySingleMemberAccess(string arg)
-    {
-        // Skip if it contains parens, quotes, operators, or spaces — not a simple member access
-        if (arg.Contains('(') || arg.Contains('"') || arg.Contains('\'') ||
-            arg.Contains(' ') || arg.Contains('+') || arg.Contains('-'))
-            return arg;
-
-        // Must contain a dot to be a member access path
-        if (!arg.Contains('.'))
-            return arg;
-
-        var segments = arg.Split('.');
-
-        // Two-segment paths where both start with uppercase and no underscore prefix
-        // are likely enums (HttpStatusCode.OK) — leave for StripSimpleEnumPrefixes
-        if (segments.Length == 2 && !arg.StartsWith("_") &&
-            segments[0].Length > 0 && char.IsUpper(segments[0][0]) &&
-            segments[1].Length > 0 && char.IsUpper(segments[1][0]))
-            return arg;
-
-        // For multi-segment paths or underscore-prefixed paths, extract last segment
-        var lastSegment = segments[^1].Trim('_');
-        if (string.IsNullOrEmpty(lastSegment))
-            return arg;
-
-        return $"'{lastSegment}'";
-    }
 
     private static string[] SplitTopLevelCommas(string text)
     {

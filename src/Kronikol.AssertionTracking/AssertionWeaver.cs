@@ -111,10 +111,11 @@ public class AssertionWeaver
         var typeCount = 0;
         var methodCount = 0;
 
+        var suppressed = SuppressedCode(assembly.MainModule);
         foreach (var type in assembly.MainModule.GetTypes())
         {
             typeCount++;
-            if (HasSuppressAttribute(type))
+            if (suppressed.Types.Contains(type))
                 continue;
             if (IsStateMachineWithSuppressedParent(type))
                 continue;
@@ -126,7 +127,7 @@ public class AssertionWeaver
                 methodCount++;
                 if (!method.HasBody)
                     continue;
-                if (HasSuppressAttribute(method))
+                if (suppressed.Methods.Contains(method))
                     continue;
 
                 var assertions = FindAssertionStatements(method, result);
@@ -327,6 +328,92 @@ public class AssertionWeaver
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// What <c>[SuppressAssertionTracking]</c> covers: a type that carries it or is nested in one that does (its
+    /// display classes, <c>&lt;&gt;c</c> and state machines among them), a method that carries it, every method of
+    /// such a type, and the code the compiler generated from those methods, found by what they reference and followed
+    /// transitively: the lambdas and local functions they load or call, and the state machine their
+    /// <c>[AsyncStateMachine]</c> or <c>[IteratorStateMachine]</c> names. The compiler moves that code out of the
+    /// method, where checking the method's own attribute did not reach it, though the attribute is documented to skip
+    /// all assertions within (ASSERTION_VALUE_SUBSTITUTION_PLAN F8). A method the code merely calls is not covered.
+    /// </summary>
+    private static (HashSet<TypeDefinition> Types, HashSet<MethodDefinition> Methods) SuppressedCode(ModuleDefinition module)
+    {
+        var types = new HashSet<TypeDefinition>();
+        foreach (var type in module.GetTypes())
+        {
+            for (var enclosing = type; enclosing != null; enclosing = enclosing.DeclaringType)
+            {
+                if (HasSuppressAttribute(enclosing))
+                {
+                    types.Add(type);
+                    break;
+                }
+            }
+        }
+
+        var methods = new HashSet<MethodDefinition>();
+        var pending = new Stack<MethodDefinition>();
+        void Cover(MethodDefinition method)
+        {
+            if (methods.Add(method))
+                pending.Push(method);
+        }
+
+        foreach (var type in module.GetTypes())
+        {
+            foreach (var method in type.Methods)
+            {
+                if (types.Contains(type) || HasSuppressAttribute(method))
+                    Cover(method);
+            }
+        }
+
+        while (pending.Count > 0)
+        {
+            var method = pending.Pop();
+            foreach (var attribute in method.CustomAttributes)
+            {
+                if (attribute.AttributeType.Name is "AsyncStateMachineAttribute" or "IteratorStateMachineAttribute" or "AsyncIteratorStateMachineAttribute" &&
+                    attribute.ConstructorArguments.Count == 1 &&
+                    attribute.ConstructorArguments[0].Value is TypeReference stateMachineReference &&
+                    TryResolve(stateMachineReference) is { } stateMachine && stateMachine.Module == module)
+                {
+                    types.Add(stateMachine);
+                    foreach (var stateMachineMethod in stateMachine.Methods)
+                        Cover(stateMachineMethod);
+                }
+            }
+
+            if (!method.HasBody)
+                continue;
+            foreach (var instruction in method.Body.Instructions)
+            {
+                if (instruction.Operand is not MethodReference reference ||
+                    instruction.OpCode.Code is not (Code.Ldftn or Code.Ldvirtftn or Code.Call or Code.Callvirt or Code.Newobj) ||
+                    !(reference.Name.StartsWith("<", StringComparison.Ordinal) ||
+                      reference.DeclaringType.Name.StartsWith("<", StringComparison.Ordinal)))
+                    continue;
+                if (TryResolve(reference) is { } target && target.Module == module)
+                    Cover(target);
+            }
+        }
+
+        return (types, methods);
+    }
+
+    private static MethodDefinition? TryResolve(MethodReference reference)
+    {
+        try { return reference.Resolve(); }
+        catch (AssemblyResolutionException) { return null; }
+    }
+
+    private static TypeDefinition? TryResolve(TypeReference reference)
+    {
+        try { return reference.Resolve(); }
+        catch (AssemblyResolutionException) { return null; }
     }
 
     private (MethodReference Passed, MethodReference Failed, MethodReference PassedWithValues, MethodReference FailedWithValues)? GetTrackMethodReferences(AssemblyDefinition assembly)
@@ -1501,12 +1588,20 @@ public class AssertionWeaver
                             parameter.CustomAttributes.Any(a => a.AttributeType.Name == "CallerArgumentExpressionAttribute");
             if (!notAValue)
                 continue;
-            // The argument's own instructions run from just after the one before it through its producer; when
-            // that one is not in the statement (a subject pushed earlier), from the start of the values.
+            // The argument's own instructions end at its producer and start where the argument before it is on the
+            // stack as the call sees it: walking back from the producer while the slot under this argument holds that
+            // same value. That value's producer is unknown after a ?:, a ?? or a ?. (two paths reach the call), so the
+            // walk compares slots rather than looking the producer up: from the producer of the argument before, a
+            // join skipped every value from the start (ASSERTION_VALUE_SUBSTITUTION_PLAN F7).
             var end = IndexOf(k);
             if (end < 0)
                 continue;
-            var begin = k > 0 ? Math.Max(IndexOf(k - 1) + 1, start) : start;
+            var slot = first + k - 1;
+            var below = slot >= 0 ? stack[slot].Producer : null;
+            var begin = end;
+            while (slot >= 0 && begin - 1 >= start && analysis.StackBefore(statement[begin - 1]) is { } before &&
+                   before.Length > slot && ReferenceEquals(before[slot].Producer, below))
+                begin--;
             for (var i = begin; i <= end; i++)
                 skip.Add(statement[i]);
         }
@@ -1573,7 +1668,7 @@ public class AssertionWeaver
                     break;
             }
         }
-        if (close < 0 || argument > commas.Count || text.Substring(open, close - open).Contains(": "))
+        if (close < 0 || argument > commas.Count || HasNamedArgument(text, open, commas))
             return text;
 
         // Remove the argument with the comma before it (or, for the first, the comma after it).
@@ -1589,6 +1684,32 @@ public class AssertionWeaver
             to = commas.Count > 0 ? commas[0] + 1 : close;
         }
         return (text.Substring(0, from) + text.Substring(to)).Replace("( ", "(");
+    }
+
+    /// <summary>
+    /// Whether an argument of the list opened at <paramref name="open"/> is passed by name (<c>customMessage: "…"</c>):
+    /// a name and a colon where an argument starts. A colon elsewhere is not one: the text test for <c>": "</c> read
+    /// a <c>?:</c> argument as named, and its positional message stayed in the label (ASSERTION_VALUE_SUBSTITUTION_PLAN
+    /// section 4.1, found by fact 11).
+    /// </summary>
+    private static bool HasNamedArgument(string text, int open, List<int> commas)
+    {
+        foreach (var start in commas.Prepend(open))
+        {
+            var i = start + 1;
+            while (i < text.Length && char.IsWhiteSpace(text[i]))
+                i++;
+            var name = i;
+            while (i < text.Length && (char.IsLetterOrDigit(text[i]) || text[i] == '_'))
+                i++;
+            if (i == name || char.IsDigit(text[name]))
+                continue;
+            while (i < text.Length && char.IsWhiteSpace(text[i]))
+                i++;
+            if (i < text.Length && text[i] == ':' && !(i + 1 < text.Length && text[i + 1] == ':'))
+                return true;
+        }
+        return false;
     }
 
     private static bool IsLdloc(Instruction instr, out int index)

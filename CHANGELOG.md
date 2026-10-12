@@ -4,6 +4,101 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.14.8] - 2026-10-12
+
+**Patch - an assertion note puts a value in quotes only for code whose value Kronikol read, and only in place of
+exactly that code (#163, `plans/ASSERTION_VALUE_SUBSTITUTION_PLAN.md` R1).** Bug fixes, with nothing new for a consumer
+to call, so the patch part moves (4.14.7 to 4.14.8). Labels change for the shapes below; a report written before this
+release keeps its labels, so `kronikol merge` of an older shard with a newer one shows both forms. The history action's
+`VERSION` installs `Kronikol.Tool` 4.14.8, and the templates pin 4.14.7.
+
+### Fixed
+
+- **An argument that called a method on a variable's member read `'null'()`, whatever the value.**
+  `expected.Colour.ToString()`, `expected.Lines.First()` and `splits.First().SplitId` read `'null'()`, `'null'()` and
+  `'null'().SplitId`: the method's name was read as a member, and a member that was not there read as null. When the
+  assertion failed, the label named null as the expected value beside the library's message naming the real one.
+  Members are now read up to the first method call or index, and a value read before a call is shown before it when it
+  is a single value (a number, an enum, a string, a bool, a `Guid`, a date or a time): `'Blue'.ToString()`. A list or
+  an object in that place is not the value compared, so `expected.Lines.First()` is shown as written.
+- **A method that shares a property's name read as the property.** `expected.Lines.Count(l => l == "x")` showed the
+  list's `Count` (2) where the call returned 1, in woven notes and in `Track.That`'s. A member that a call follows is
+  now never read.
+- **A value stood in for a longer expression whose value it was not.** `expected.Lines[0]` showed the whole list,
+  `expected.Plain` (an object whose `ToString()` is its type name) the whole `expected` record, `expected.Inner!.Value`
+  the `Inner` object, and a chain of four members the value of its first three. A value now replaces exactly the code
+  it was read for, a chain is read however long it is, and the readers and the label agree on where a chain ends, with
+  `?.`, `!` and line breaks in it. `AssertionExpressionFormatter.Format`, given a dictionary of values, likewise puts a
+  value only in place of the whole chain its key names.
+- **A chain that could not be read showed `'null'`:** a getter that threw, a member that was not there, and a null
+  before a plain `.`, where the code itself would have thrown. It is now shown as written. A null before `?.` reads
+  `'null'`, for the whole rest of the chain, as C# gives it. In `Track.That`, a getter that threw lost every value of
+  the assertion; it now costs only its own chain.
+- **A member path with no value showed its last member's name in quotes:** `_eggsSteps.EggsResponse.Eggs` read
+  `'Eggs'`, and `map[key]!.Id` read `'Id'`, which looked like values. Such a path is now shown as written.
+- **`Track.That` and woven assertions read values by different rules,** so one assertion drew different labels on the
+  two paths. Both now read through one reader. The differences left are that `Track.That` leaves an operand of an
+  arithmetic operator as code, and cuts a value at 50 characters where a woven note cuts at 100.
+- **A Shouldly assertion whose argument held `?:`, `??` or `?.` captured no values** (from 4.14.0), and a positional
+  custom message after such an argument stayed in the label, since a `?:` read as a named argument.
+  `actual.Id.ShouldBe(flag ? expected.Id : "none", "the id")` now reads `Actual id should be 'True' ? 'A1' : "none"`.
+- **`[SuppressAssertionTracking]` did not reach the code the compiler moves out of a method or class.** A lambda or a
+  local function in a suppressed method and an async method in a suppressed class were still instrumented, and
+  `Track.That` in a suppressed method drew two notes, though the attribute is documented to skip all assertions within.
+  It now covers lambdas at any depth, local functions, async and iterator methods and nested types, found by what the
+  suppressed code references rather than by name. A method that the suppressed code calls is not covered.
+- **A string literal in an assertion's subject was rewritten into words:** `"Colour".ShouldBe(…)` read
+  `" colour" should be`, and `x.ToString("G")` read `x to string(" g")`. Literals are now kept as written.
+- **`.ToString()` was dropped from FluentAssertions labels alone, and from the whole sentence.** Shouldly and TUnit
+  labels kept `to string()` in the subject, and FluentAssertions' rule also took the words out of a value
+  (`'call to string() now'` read `'call now'`). Every library now drops a `.ToString()` from the subject, and a value is
+  never rewritten.
+- The XML docs of `Track.AssertionPassedWithValues`, `Track.AssertionFailedWithValues`, `ClosureValueResolver` and
+  `AssertionExpressionFormatter` described the old reading ("resolves dotted property paths"); they now give the rule.
+
+### Tests
+
+- `AccessChainTests` (new): what a chain is (members, calls with type arguments, indexes, `?.`, `!`, line breaks,
+  `this.field`), the part that is read, the key the readers and the label share, and reading's three answers: a value,
+  null through `?.`, and nothing for a member that is not there, a getter that throws or a null before a plain `.`; a
+  base type's private member is read, and a method is never read for a property of its name.
+- `TrackValueResolutionTests`, through `Track.AssertionPassedWithValues`: the issue's five statements and their
+  neighbours (`'Blue'.ToString()`, `'A1'.Trim()`, TUnit's text, and no `'null'(` anywhere), a call named like a
+  property, chains that cannot be read, `?.` over a null, a value never inside a longer chain (an index, a property that
+  does not print, `!`, four members, line breaks), a variable quoted only where it stands alone, `this.field`,
+  `nameof`, and a value inside an index. The fact that pinned a null link as `'null'` is now a pair: the plain `.` form
+  is shown as written, and the `?.` form reads `'null'` for the whole chain.
+- `ClosureValueResolverTests`: the same pair (`Falls_back_when_property_chain_returns_null` read the null link as
+  `"null"`), a call named like a property, and a getter that throws costing only its own chain.
+- `ValuePathParityTests` (new): 26 shapes labelled alike through `Track.That` and through the weave's path.
+- `AssertionExpressionFormatterTests`: four facts that pinned a member's name in quotes (`'Eggs'` twice,
+  `'ExpectedValue'`, `'Id'`) pin the code as written; new facts cover a member's name never quoted, a value never inside
+  a longer chain, a dictionary's key never standing before a call, subject literals, `.ToString()` in every library and
+  a value holding the words `to string()`.
+- Kronikol.Tests.AssertionTracking `AssertionValueWeaveTests` (new), woven in Debug and in Release: the issue's
+  statements, and a failing one, label the values they compared (Shouldly's and FluentAssertions' calls); a Shouldly
+  argument with `?:`, `??` or `?.` captures its values and leaves out a positional message; and `[SuppressAssertionTracking]`
+  covers a lambda, a lambda in a lambda, a static lambda, a local function, async methods, `Track.That` and a nested
+  type, while a lambda in a method without the attribute is still woven.
+- Playwright `ShouldlyAssertionNoteTests.A_method_call_argument_note_paints_its_value`: the report paints
+  `Actual colour should be 'Blue'.ToString()` above Shouldly's message, and no `'null'`.
+- Proofs (the plan's harness, `r1/`): copied onto v4.14.6, 72 core facts, 20 of the 25 weaver facts and the Playwright
+  fact fail, each on its own assertion (the five weaver facts that pass there are guards, for code 4.14.6 already left
+  alone); 17 of 17 mutations are killed; the plan's probe, on local packages, draws the same labels in Debug and in
+  Release, with 52 of its 65 cases changed, each to the plan's form; and the issue's own stack (net8.0, xUnit 2.9.3,
+  Kronikol.xUnit2, Shouldly 4.3.0, FluentAssertions 6.12.1) prints the new labels through `kronikol query assertions`.
+- Checks: the core suite passes 7,266 with 2 skipped after the version bump (one Node renderer fact timed out
+  beside a concurrent weaver run, and passes run alone); the weaver suite passes in Release on net8.0 (255, 84
+  skipped), net9.0 (283, 56 skipped) and net10.0 (311, 28 skipped); the full Playwright suite passes 1,021 with 28
+  skipped; and `release.slnf` builds in Release for every target.
+
+### Documentation
+
+- Wiki `Assertion-Tracking.md`: the value rules (access chains, the single-value prefix, `?.`, what is shown as
+  written), the suppression section, the formatter's rules and two new table rows; its lambda row is corrected (a lambda
+  argument is drawn in brackets, `[ x => x.IsAdmin ]`); the `Track.That` section says values are read by the same
+  rules. `Diagnostics-and-Debugging.md` lists what a `Track.That` resolution fallback can be.
+
 ## [4.14.7] - 2026-10-12
 
 **Patch - outside a test, `TrackingDiagramOverride.StartSetup()` and `StartAction()` set the phase again on xUnit v2 and

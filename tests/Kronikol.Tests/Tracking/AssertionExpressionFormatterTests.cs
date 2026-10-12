@@ -233,19 +233,20 @@ public class AssertionExpressionFormatterTests
     }
 
     [Fact]
-    public void Format_simplifies_dotted_member_access_in_args()
+    public void A_member_path_with_no_value_is_shown_as_written()
     {
+        // A quoted word means a value: the last member's name in quotes ('Eggs') read as one (#163, Q2).
         var result = AssertionExpressionFormatter.Format(
             "() => _muffinStepsResponse.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)");
-        Assert.Equal("Muffin steps response ingredients should contain 'Eggs'", result);
+        Assert.Equal("Muffin steps response ingredients should contain _eggsSteps.EggsResponse.Eggs", result);
     }
 
     [Fact]
-    public void Format_simplifies_underscore_prefixed_two_segment_path_in_args()
+    public void An_underscore_prefixed_two_segment_path_with_no_value_is_shown_as_written()
     {
         var result = AssertionExpressionFormatter.Format(
             "() => result.Should().Be(_steps.ExpectedValue)");
-        Assert.Equal("Result should be 'ExpectedValue'", result);
+        Assert.Equal("Result should be _steps.ExpectedValue", result);
     }
 
     [Fact]
@@ -258,11 +259,77 @@ public class AssertionExpressionFormatterTests
     }
 
     [Fact]
-    public void Format_strips_trailing_underscore_from_last_segment_in_args()
+    public void A_member_path_ending_in_an_underscore_is_shown_as_written()
     {
         var result = AssertionExpressionFormatter.Format(
             "() => items.Should().Contain(_steps.Response.Eggs_)");
-        Assert.Equal("Items should contain 'Eggs'", result);
+        Assert.Equal("Items should contain _steps.Response.Eggs_", result);
+    }
+
+    [Theory]
+    [InlineData("value.ShouldBe(expected.Inner.Value)", "Value should be expected.Inner.Value")]
+    [InlineData("value.Should().Be(expected.Inner.Value)", "Value should be expected.Inner.Value")]
+    [InlineData("await Assert.That(value).IsEqualTo(expected.Inner.Value)", "Value is equal to expected.Inner.Value")]
+    [InlineData("value.ShouldBe(expected.Inner?.Value)", "Value should be expected.Inner.Value")]
+    public void A_member_name_is_never_quoted_as_a_value(string expression, string expected)
+    {
+        Assert.Equal(expected, AssertionExpressionFormatter.Format(expression));
+    }
+
+    [Theory]
+    [InlineData("x.Should().Be(expected.Lines[0])", "expected.Lines", "[ \"x\", \"y\" ]", "X should be expected.Lines[0]")]
+    [InlineData("x.ShouldBeSameAs(expected.Plain)", "expected", "Order { Id = A1 }", "X should be same as expected.Plain")]
+    [InlineData("x.ShouldBe(expected.Inner.Value)", "expected.Inner", "Inner(v)", "X should be expected.Inner.Value")]
+    [InlineData("x.ShouldBe(expected.Inner!.Value)", "expected.Inner", "Inner(v)", "X should be expected.Inner.Value")]
+    [InlineData("x.ShouldBe(ids[0])", "ids", "[ \"A1\" ]", "X should be ids[0]")]
+    public void A_key_is_not_substituted_inside_a_longer_chain(string expression, string key, string value, string expected)
+    {
+        var label = AssertionExpressionFormatter.Format(expression, new Dictionary<string, string> { [key] = value });
+
+        Assert.Equal(expected, label);
+    }
+
+    [Fact]
+    public void A_plain_dictionary_key_does_not_stand_before_a_call()
+    {
+        // Only Kronikol's own readers know a value is a single value (a number, an enum, a string, ...), so only
+        // they put a value before a call; a dictionary passed in replaces whole chains (#163, Q1).
+        var label = AssertionExpressionFormatter.Format(
+            "x.ShouldBe(expected.Colour.ToString())",
+            new Dictionary<string, string> { ["expected.Colour"] = "Blue" });
+
+        Assert.Equal("X should be expected.Colour.ToString()", label);
+    }
+
+    [Theory]
+    [InlineData("\"Colour\".ShouldBe(nameof(expected.Colour))", "\"Colour\" should be nameof(expected.Colour)")]
+    [InlineData("\"Colour\".Should().Be(\"Colour\")", "\"Colour\" should be \"Colour\"")]
+    [InlineData("x.ToString(\"G\").ShouldBe(\"Blue\")", "X to string(\"G\") should be \"Blue\"")]
+    [InlineData("\"a.b\".Length.ShouldBe(3)", "\"a.b\" length should be 3")]
+    [InlineData("await Assert.That(\"Colour\").IsEqualTo(\"Colour\")", "\"Colour\" is equal to \"Colour\"")]
+    public void A_subject_literal_is_kept_as_written(string expression, string expected)
+    {
+        Assert.Equal(expected, AssertionExpressionFormatter.Format(expression));
+    }
+
+    [Theory]
+    [InlineData("actual.Colour.ToString().ShouldBe(\"Blue\")", "Actual colour should be \"Blue\"")]
+    [InlineData("actual.Colour.ToString().Should().Be(\"Blue\")", "Actual colour should be \"Blue\"")]
+    [InlineData("await Assert.That(actual.Colour.ToString()).IsEqualTo(\"Blue\")", "Actual colour is equal to \"Blue\"")]
+    public void To_string_is_read_alike_in_every_library(string expression, string expected)
+    {
+        Assert.Equal(expected, AssertionExpressionFormatter.Format(expression));
+    }
+
+    [Theory]
+    [InlineData("x.Should().Be(note)")]
+    [InlineData("x.ShouldBe(note)")]
+    public void A_value_holding_to_string_is_not_rewritten(string expression)
+    {
+        var label = AssertionExpressionFormatter.Format(
+            expression, new Dictionary<string, string> { ["note"] = "call to string() now" });
+
+        Assert.Equal("X should be 'call to string() now'", label);
     }
 
     [Fact]
@@ -367,7 +434,7 @@ public class AssertionExpressionFormatterTests
     [InlineData("result!.Should().BeTrue()", "Result should be true")]
     [InlineData("items.First()!.Name.Should().Be(\"a\")", "First value of items name should be \"a\"")]
     [InlineData("value.Should().Be(expected!)", "Value should be expected")]
-    [InlineData("value.Should().Be(map[key]!.Id)", "Value should be 'Id'")]
+    [InlineData("value.Should().Be(map[key]!.Id)", "Value should be map[key].Id")]
     public void A_null_forgiving_bang_is_still_dropped(string expression, string expected)
     {
         Assert.Equal(expected, AssertionExpressionFormatter.Format(expression));

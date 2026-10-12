@@ -1,0 +1,13 @@
+✓ s0/0.0   Actual id should be 'A1'
+     at IssueFeature.cs:31
+✓ s0/0.1   Actual colour should be 'Blue'.ToString()
+     at IssueFeature.cs:32
+✓ s0/0.2   First value of actual lines should be expected.Lines.First()
+     at IssueFeature.cs:33
+✓ s0/0.3   Actual colour to lower invariant() should be 'Blue'.ToString().ToLowerInvariant()
+     at IssueFeature.cs:34
+✓ s0/0.4   Actual colour should be 'Blue'.ToString()
+     at IssueFeature.cs:35
+✓ s0/0.5   Result split id should be splits.First().SplitId
+     at IssueFeature.cs:36
+6 assertions

@@ -18,6 +18,12 @@ public static class ClosureValueResolver
     /// Attempts to resolve captured variable values from the delegate's closure.
     /// Returns resolved values and any fallback reasons (for diagnostic logging).
     /// </summary>
+    /// <remarks>
+    /// The assertion's arguments are read as the weave's values are (<see cref="AccessChain"/>): each access chain that
+    /// starts at a captured variable, members up to the first method call or index, under its own text. A chain that
+    /// cannot be read (a member that is not there, a getter that throws, a null before a plain <c>.</c>) costs only
+    /// itself, and is recorded as a fallback. An operand of an arithmetic operator is left as code.
+    /// </remarks>
     public static ResolveResult ResolveValues(Delegate assertion, string? expression)
     {
         var result = new ResolveResult();
@@ -33,48 +39,38 @@ public static class ClosureValueResolver
         if (argsText is null)
             return result;
 
-        var closureFields = GetClosureFields(target);
+        var roots = new Dictionary<string, object?>(StringComparer.Ordinal);
+        foreach (var (name, value) in GetClosureFields(target))
+            roots.TryAdd(name, value);
 
-        foreach (var (name, value) in closureFields)
+        var chains = AccessChain.Find(argsText).Where(chain => roots.ContainsKey(chain.Root)).ToList();
+        var computed = chains
+            .Where(chain => HasAdjacentOperator(argsText, chain.Start, chain.End - chain.Start))
+            .Select(chain => chain.Key)
+            .ToHashSet(StringComparer.Ordinal);
+        var values = (ChainValues)result.ResolvedValues;
+        var read = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var chain in chains)
         {
-            if (!IsStandaloneToken(argsText, name))
+            if (!read.Add(chain.Key))
                 continue;
 
-            // Check if the token is followed by a dotted property chain (e.g. "expected.Prop.Sub")
-            var dottedChain = ExtractDottedChain(argsText, name);
-            if (dottedChain is not null)
+            if (computed.Contains(chain.Key))
             {
-                var fullKey = name + dottedChain;
-
-                if (IsInComputedExpression(argsText, fullKey))
-                {
-                    result.AddFallback(fullKey, "computed expression");
-                    continue;
-                }
-
-                var leafValue = WalkPropertyChain(value, dottedChain);
-                if (leafValue.Success)
-                {
-                    var displayValue = FormatValue(leafValue.Value, fullKey, result);
-                    if (displayValue is not null)
-                        result.ResolvedValues[fullKey] = displayValue;
-                }
-                else
-                {
-                    result.AddFallback(fullKey, leafValue.FailureReason ?? "property chain navigation failed");
-                }
+                result.AddFallback(chain.Key, "computed expression");
                 continue;
             }
 
-            if (IsInComputedExpression(argsText, name))
+            var chainRead = chain.Read(roots[chain.Root]);
+            if (!chainRead.Readable)
             {
-                result.AddFallback(name, "computed expression");
+                result.AddFallback(chain.Key, chainRead.Reason ?? "property chain navigation failed");
                 continue;
             }
 
-            var displayVal = FormatValue(value, name, result);
-            if (displayVal is not null)
-                result.ResolvedValues[name] = displayVal;
+            if (!values.Keep(chain, chainRead, (value, key) => FormatValue(value, key, result)) && !chainRead.Whole)
+                result.AddFallback(chain.Key, "read up to a method call or an index, and not a single value");
         }
 
         return result;
@@ -258,76 +254,6 @@ public static class ClosureValueResolver
         return false;
     }
 
-    /// <summary>
-    /// If the token in argsText is followed by ".Property.Sub..." chains, extracts that suffix
-    /// (e.g. ".ExpectedIngredientCount"). Returns null if no dotted chain follows.
-    /// </summary>
-    private static string? ExtractDottedChain(string argsText, string token)
-    {
-        var idx = 0;
-        while (idx <= argsText.Length - token.Length)
-        {
-            idx = argsText.IndexOf(token, idx, StringComparison.Ordinal);
-            if (idx < 0)
-                return null;
-
-            var before = idx > 0 ? argsText[idx - 1] : ' ';
-            var afterPos = idx + token.Length;
-
-            if (!IsIdentifierChar(before) && afterPos < argsText.Length && argsText[afterPos] == '.')
-            {
-                // Extract the full dotted chain: .Prop1.Prop2...
-                var chainStart = afterPos;
-                var pos = chainStart + 1; // skip the first dot
-                while (pos < argsText.Length && (IsIdentifierChar(argsText[pos]) || argsText[pos] == '.'))
-                {
-                    // Don't end on a trailing dot
-                    if (argsText[pos] == '.' && (pos + 1 >= argsText.Length || !IsIdentifierChar(argsText[pos + 1])))
-                        break;
-                    pos++;
-                }
-
-                var chain = argsText[chainStart..pos];
-                if (chain.Length > 1) // must be ".X" at minimum
-                    return chain;
-            }
-
-            idx += token.Length;
-        }
-
-        return null;
-    }
-
-    private static (bool Success, object? Value, string? FailureReason) WalkPropertyChain(object? root, string chain)
-    {
-        // chain is e.g. ".ExpectedIngredientCount" or ".Inner.Value"
-        var segments = chain.Split('.', StringSplitOptions.RemoveEmptyEntries);
-        var current = root;
-
-        foreach (var segment in segments)
-        {
-            if (current is null)
-                return (true, null, null); // null in the middle → resolve as "null"
-
-            var prop = current.GetType().GetProperty(segment,
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (prop is null)
-            {
-                var field = current.GetType().GetField(segment,
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (field is null)
-                    return (false, null, $"property '{segment}' not found on {current.GetType().Name}");
-                current = field.GetValue(current);
-            }
-            else
-            {
-                current = prop.GetValue(current);
-            }
-        }
-
-        return (true, current, null);
-    }
-
     private static string? FormatValue(object? value, string fieldName, ResolveResult result)
     {
         if (value is null)
@@ -351,7 +277,7 @@ public static class ClosureValueResolver
                     allScalar = false;
                     break;
                 }
-                if (item != null && !IsScalarType(item.GetType()))
+                if (item != null && !AccessChain.IsScalarType(item.GetType()))
                     allScalar = false;
             }
 
@@ -393,15 +319,6 @@ public static class ClosureValueResolver
     }
 
     private static bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';
-
-    private static bool IsScalarType(Type type)
-    {
-        return type.IsPrimitive || type.IsEnum || type == typeof(string)
-            || type == typeof(decimal) || type == typeof(Guid)
-            || type == typeof(DateTime) || type == typeof(DateTimeOffset)
-            || type == typeof(TimeSpan) || type == typeof(DateOnly)
-            || type == typeof(TimeOnly);
-    }
 }
 
 /// <summary>
@@ -409,7 +326,7 @@ public static class ClosureValueResolver
 /// </summary>
 public class ResolveResult
 {
-    public Dictionary<string, string> ResolvedValues { get; } = new();
+    public Dictionary<string, string> ResolvedValues { get; } = new ChainValues();
     public List<(string FieldName, string Reason)> Fallbacks { get; } = [];
 
     public void AddFallback(string fieldName, string reason)
