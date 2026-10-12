@@ -700,6 +700,11 @@ in it beyond Q1 and Q2; R2 and R3 are hardening; U is the owner's.
   joins the drawn lines with nothing between them, so the two halves of a split emoji met again; it reads each line
   now. Scripts and results: `LONG_COMPONENT_EDGE_PLAN.harness/audit/`.
 
+- **2026-10-12, the audit's release published.** 4.14.10 (`a9a3c1aa`; Release run 38231605958, CI 38231603470,
+  CodeQL 38231603504) passed, and nuget.org listed all 62 ids. The wiki has the audit's edits (`a5814bc`) and
+  Kronikol4J's ledger a line for the release (`8789bb0`), which records the ordinal method order as parity gained and
+  the rest as not mirrored.
+
 ## Appendix A. Edit sites at `9f2cd394`
 
 | File | Lines | R | What |
