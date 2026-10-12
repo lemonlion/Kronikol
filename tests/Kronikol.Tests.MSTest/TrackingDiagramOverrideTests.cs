@@ -69,6 +69,24 @@ public class TrackingDiagramOverrideTests
     }
 
     [TestMethod]
+    public void On_a_thread_the_test_did_not_reach_StartAction_and_StartSetup_set_the_phase_there()
+    {
+        // The phase belongs to the flow, not to a test: only StartAction's marker needs a test to be filed under.
+        TestPhase afterStartAction = default, afterStartSetup = default;
+
+        OutsideATest.OnThreadWithNoFlow(() =>
+        {
+            TrackingDiagramOverride.StartAction();
+            afterStartAction = TestPhaseContext.Current;
+            TrackingDiagramOverride.StartSetup();
+            afterStartSetup = TestPhaseContext.Current;
+        });
+
+        Assert.AreEqual(TestPhase.Action, afterStartAction);
+        Assert.AreEqual(TestPhase.Setup, afterStartSetup);
+    }
+
+    [TestMethod]
     public void On_a_thread_the_test_did_not_reach_with_nothing_else_a_marker_is_dropped()
     {
         var marker = "marker-" + Guid.NewGuid().ToString("N");

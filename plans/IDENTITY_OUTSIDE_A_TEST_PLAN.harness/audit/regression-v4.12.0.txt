@@ -1,0 +1,3 @@
+worktree v4.12.0 (615549a3)
+[xUnit.net 00:00:00.52]     Kronikol.Tests.xUnit2.PhaseSetInTheConstructorTests.StartAction_in_the_constructor_logs_no_marker [FAIL]
+Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 85 ms - Kronikol.Tests.xUnit2.dll (net10.0)

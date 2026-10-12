@@ -1,17 +1,20 @@
 # Identity outside a test (#133)
 
-**Status: EXECUTED and PUBLISHED as 4.13.1 (2026-10-08).** The owner asked for #133 to be assessed critically, "what I don't want is
-for this to be 'fixed' and then another consumer breaks", then to "implement the plan in full, in a separate worktree"
-and "fix any other problems you found". The assessment was given in a session on 2026-10-07 (kronikol-28) and is
-recorded here with what the execution measured. Harness: `IDENTITY_OUTSIDE_A_TEST_PLAN.harness/`.
+**Status: EXECUTED and PUBLISHED as 4.13.1 (2026-10-08); AUDITED 2026-10-12, its one regression fixed in 4.14.7
+(section 7).** The owner asked for #133 to be assessed critically, "what I don't want is for this to be 'fixed' and then
+another consumer breaks", then to "implement the plan in full, in a separate worktree" and "fix any other problems you
+found", and later to "make sure nothing was missed from the plan, that there isn't any bugs or issues in the
+implementation". The assessment was given in a session on 2026-10-07 (kronikol-28) and is recorded here with what the
+execution and the audit measured. Harness: `IDENTITY_OUTSIDE_A_TEST_PLAN.harness/`.
 
 ## TL;DR
 
-- Outside a test, Kronikol.xUnit2's fetcher answered `("Unknown Test", <new GUID>)` where every other adapter throws. The
-  resolver took the random id for the test, so a call made in a test class's constructor, `InitializeAsync`,
-  `DisposeAsync`, `Dispose`, a fixture or a thread the test did not start never reached a `TestIdentityScope`, the global
-  fallback or the background, and vanished from the report. Not deliberate: the GUID predates the resolver chain, every
-  later change assumed `unknown`, and 2.28.22's "all fetchers throw" never reached xUnit v2 (its `unknown` check is dead).
+- Outside a test, Kronikol.xUnit2's fetcher answered `("Unknown Test", <new GUID>)` where every other adapter throws.
+  The resolver took the random id for the test, so a call made in a test class's constructor, `InitializeAsync`,
+  `DisposeAsync`, `Dispose`, a fixture or a thread the test did not start never reached a `TestIdentityScope`, the
+  global fallback or the background, and vanished from the report. Not deliberate: the GUID predates the resolver chain,
+  every later change assumed `unknown`, and 2.28.22's "all fetchers throw" never reached xUnit v2 (its `unknown` check
+  is dead).
 - Kronikol.NUnit4 had the same defect (found while executing, measured): NUnit's context names the fixture in a
   set-up fixture, a fixture's constructor and one-time set-up and tear-down, and an ad hoc test with a new id on a
   thread that did not flow a test's context.
@@ -38,9 +41,9 @@ recorded here with what the execution measured. Harness: `IDENTITY_OUTSIDE_A_TES
 ## 2. Option B, and why not A
 
 A: make `GetCurrentTestInfo()` return `TestIdentityScope.UnknownIdentity` outside a test. It fixes custom code that
-calls it too, but it is public and documented as returning `("Unknown Test", <new GUID>)` (Tracking-Custom-Dependencies),
-so code that used its id as a key or as a test id for its own markers would change bucket (to the shared `unknown`) and
-name (`Unknown` for `Unknown Test`) without being touched.
+calls it too, but it is public and documented as returning `("Unknown Test", <new GUID>)`
+(Tracking-Custom-Dependencies), so code that used its id as a key or as a test id for its own markers would change
+bucket (to the shared `unknown`) and name (`Unknown` for `Unknown Test`) without being touched.
 
 B (taken): keep `GetCurrentTestInfo()`, give the adapter an internal `Current` accessor, and have Kronikol's three
 readers use it. Custom fetchers built on `GetCurrentTestInfo()` keep exactly what they had; the wiki's recipe now
@@ -54,11 +57,14 @@ a suite, and the fetcher, both `TestIdResolver`s and the override read it.
 - **xUnit v2 and NUnit, calls outside a test:** they went under an id no scenario owns, so no report showed them. They
   now go to a `TestIdentityScope` or the global fallback when one names a test (a fallback an earlier test left set
   included), and otherwise nowhere, or to Background calls under `CaptureBackground`. An HTTP call's test headers
-  follow: the scope's or fallback's test, the background identity (`unknown`) under `CaptureBackground`, or none. No report loses a call it drew: the calls that move were drawn nowhere.
-- **`DeferredLogFlushHandler` on xUnit v2:** held calls flushed outside a test went under the random id; they now appear in
-  the first test that makes a call through the handler, the handler's design and the other frameworks' behaviour.
+  follow: the scope's or fallback's test, the background identity (`unknown`) under `CaptureBackground`, or none. No
+  report loses a call it drew: the calls that move were drawn nowhere.
+- **`DeferredLogFlushHandler` on xUnit v2:** held calls flushed outside a test went under the random id; they now appear
+  in the first test that makes a call through the handler, the handler's design and the other frameworks' behaviour.
 - **`TrackingDiagramOverride.StartAction()` outside a test on xUnit v2:** it set the phase (inherited by the test that
-  followed, since the constructor's flow is the test's) and logged an orphan marker; it now does nothing.
+  followed, since the constructor's flow is the test's) and logged an orphan marker; 4.13.1 made it do nothing. That
+  dropped the phase along with the marker, a regression the audit found (section 7, A5): since 4.14.7 it sets the
+  phase again, as `StartSetup()` does, and only the marker is dropped.
 - **MSTest, TUnit overrides outside a test:** no exception.
 - **Inside a test nothing changes:** the probes' in-test lines and the xUnit v3 probe are identical before and after.
 - Consumers checked: section 4.
@@ -67,9 +73,9 @@ a suite, and the fetcher, both `TestIdResolver`s and the override read it.
 
 - Red: the new tests copied onto v4.12.0: every behaviour fact failed for its own reason (xUnit v2 14, NUnit 10,
   MSTest 4, TUnit 3); the passes are the controls inside a test and the guard on `GetCurrentTestInfo()` (`red/`).
-- Mutations: 18, each undoing one part of the fix; 17 turned a named fact red. M18 (TUnit's override ignoring the running
-  test) survives: Kronikol.Tests.TUnit runs under xUnit v3, where TUnit has no current test, and Example.Api's TUnit
-  suite, which CI runs under TUnit and which calls the override inside its tests, checks no marker.
+- Mutations: 18, each undoing one part of the fix; 17 turned a named fact red. M18 (TUnit's override ignoring the
+  running test) survives: Kronikol.Tests.TUnit runs under xUnit v3, where TUnit has no current test, and Example.Api's
+  TUnit suite, which CI runs under TUnit and which calls the override inside its tests, checks no marker.
   `probe/after/tunit.txt` shows the path on a real TUnit run (`mutations/`).
 - Suites on this tree: Kronikol.Tests.xUnit2 91, Kronikol.Tests.NUnit4 11 (new), Kronikol.Tests.MSTest 56 and
   Kronikol.Tests.TUnit 21 (also in Release, as CI runs them, on 4.12.0); the core suite 7,058 with 2 skipped and one
@@ -77,7 +83,13 @@ a suite, and the fetcher, both `TestIdResolver`s and the override read it.
   and the whole suite passed with this change on 4.12.3); release.slnf builds and packs in Release for every target.
 - Probes: one per framework, on the published 4.9.1 packages and on this checkout (`probe/`, `run_probes.sh`). xUnit v3
   is the control: identical before and after.
-- Consumers: Example.Api's xUnit2, NUnit4, ReqNRoll.xUnit2 and LightBDD.xUnit2 suites, each run on 8f653f63 (4.11.1) and on this branch with a fresh history ledger, record the same scenarios, results and calls (`consumers/examples.txt`). BreakfastProvider's NUnit lane (0ee43e8, in memory) passes 212 of 212 twice on 4.11.1 and twice with Kronikol and Kronikol.NUnit4 packed from this branch; every scenario's calls match, except one outbox poll in the retry exhaustion scenario, which differs as much between two runs of the same build (`consumers/breakfastprovider-nunit.txt`). No run prints the orphan warning. BreakfastProvider has no xUnit v2 or MSTest lane, and its TUnit lane cannot reach the override change, which is on a path that threw before.
+- Consumers: Example.Api's xUnit2, NUnit4, ReqNRoll.xUnit2 and LightBDD.xUnit2 suites, each run on 8f653f63 (4.11.1) and
+  on this branch with a fresh history ledger, record the same scenarios, results and calls (`consumers/examples.txt`).
+  BreakfastProvider's NUnit lane (0ee43e8, in memory) passes 212 of 212 twice on 4.11.1 and twice with Kronikol and
+  Kronikol.NUnit4 packed from this branch; every scenario's calls match, except one outbox poll in the retry exhaustion
+  scenario, which differs as much between two runs of the same build (`consumers/breakfastprovider-nunit.txt`). No run
+  prints the orphan warning. BreakfastProvider has no xUnit v2 or MSTest lane, and its TUnit lane cannot reach the
+  override change, which is on a path that threw before.
 
 ## 5. Open questions (not in this release)
 
@@ -88,6 +100,7 @@ a suite, and the fetcher, both `TestIdResolver`s and the override read it.
 | Q3 | NUnit's fetcher names a call by `TestAdapter.DisplayName`, the fixture class's display name, not the test's | RUN | Cosmetic in reports (they key by id); it reaches the header and `kronikol ingest`'s names. A separate issue |
 | Q4 | `StepCollector.ResolveTestId` skips the global fallback where `Track` does not; the overrides consult the global fallback inside a detached flow where the resolver does not | READ | Small; left as they are |
 | Q5 | ReqNRoll's and LightBDD's overrides throw `InvalidOperationException` outside a scenario, where the others now do nothing | READ | Deliberate and clear; left |
+| Q6 | xUnit v3's `TrackingDiagramOverride` sets no phase outside a test (since 2.31.6), where the xUnit v2, NUnit, MSTest and TUnit overrides set it since 4.14.7 | READ (audit) | Small in practice: xUnit v3 runs a test class's constructor and `InitializeAsync` inside the test, so only its fixtures and threads the test did not reach are affected. Changing it changes what xUnit v3 users get today; owner's call |
 
 ## 6. Log
 
@@ -96,9 +109,9 @@ a suite, and the fetcher, both `TestIdResolver`s and the override read it.
 - **2026-10-08.** Executed in the worktree `Kronikol-xunit2-133`, on 4.10.0, then 4.11.1 and 4.12.0: #123's xUnit v2
   results sink and #132's executor wrapper merged with this without a conflict in behaviour, and Kronikol.Tests.xUnit2
   passes 91 on the result. Four releases landed while it waited its turn (4.12.1, 4.12.2, 4.12.3 and 4.13.0); it was
-  rebased onto each, and the suites in section 4 ran on the last. The cross-framework probe found F6 and F7 and Q2 to Q3. Peers: kronikol-1c took F9;
-  kronikol-50 (#141) and kronikol-f1 (#136) shared no lines; kronikol-94 (#134) rebases its MSTest data-row work on
-  this release's override.
+  rebased onto each, and the suites in section 4 ran on the last. The cross-framework probe found F6 and F7 and Q2 to
+  Q3. Peers: kronikol-1c took F9; kronikol-50 (#141) and kronikol-f1 (#136) shared no lines; kronikol-94 (#134) rebases
+  its MSTest data-row work on this release's override.
 - **2026-10-08, published.** 4.13.1's Release run 37779632646 passed on 78f62e12, with CodeQL 37779628620 and CI Summary
   Preview 37779628625. CI 37779628618 failed its first attempt on one gRPC test outside this change
   (GrpcTrackingInterceptorTests.AsyncUnaryCall_activity_spans_from_request_to_response: no span carried the call's trace
@@ -108,3 +121,34 @@ a suite, and the fetcher, both `TestIdResolver`s and the override read it.
   4.13.1. The wiki has the 23 edits (ec03999; the link check reads the same before and after), and #133 is closed with a
   comment naming the release. kronikol-1c's next patch adds its NUnit facts and the adapter's InternalsVisibleTo to the
   new project.
+- **2026-10-12, audited** at the owner's ask (kronikol-28, worktree `Kronikol-audit133`): section 7. One regression
+  (A5), fixed in 4.14.7; the rest were records and wiki text.
+
+## 7. Audit (2026-10-12)
+
+The owner asked to "make sure nothing was missed from the plan, that there isn't any bugs or issues in the
+implementation". The sweep followed the plan-execution audit checklist: every reader of the identity, every fetcher, the
+XML docs, the wiki, the skill and template files, each changelog sentence against a fact, and the plan's own claims
+against the code.
+
+| # | Finding | Where it went |
+|---|---|---|
+| A1 | ROADMAP Appendix C had no row for this plan's leftovers (Q1 to Q6) | Added |
+| A2 | Ten lines of this file ran past 120 columns, the longest to 754 | Rewrapped |
+| A3 | Event-Annotations' "Null-safety" note told readers to write a null-safe delegate, though one that throws is caught and the tracker goes on to a scope and the global fallback | Wiki (`audit/a1_wiki.py`) |
+| A4 | Five gRPC recipes on Diagnostics-and-Debugging and Integration-Grpc-Extension called a `GetCurrentTestInfo()` the pages never define; on xUnit v2 a reader would write it over the public `XUnit2TestTrackingContext.GetCurrentTestInfo()`, whose id outside a test no scenario owns | Wiki: `CurrentTestInfo.Fetcher` |
+| A5 | **A regression in 4.13.1.** `StartSetup()` only sets the phase and `StartAction()` sets it and logs a marker, but 4.13.1's overrides returned early outside a test, which dropped the phase with the marker. The phase is an `AsyncLocal` every tracker stamps on the calls it logs, and xUnit v2 runs a test on the flow its constructor and `InitializeAsync` ran on, so a base class that set it there lost it for every call of its tests. Section 3 had said the phase was inherited, and dropped it anyway | Fixed in 4.14.7: the phase is set either way and only the marker needs a test (xUnit v2, NUnit, MSTest, TUnit); xUnit v3 is Q6 |
+| A6 | API-Reference's `TrackingDiagramOverride` row said the override does nothing outside a test | Wiki, with A5 |
+
+Checked and found right: no code, example or template reads `XUnit2TestTrackingContext.GetCurrentTestInfo()`; every
+fetcher in the repo throws outside a test (LightBDD's through `ScenarioExecutionContext`, which existing facts show
+throwing); MSTest's `CurrentTestId` (4.13.3) is an `AsyncLocal` set beside the context, and the probe shows the class
+and assembly cleanups see no test; no XML doc, skill file or template text describes the old fetcher behaviour;
+Example.Api calls `StartAction()` only inside tests and BreakfastProvider calls neither method, so no known consumer's
+report changes with A5's fix.
+
+Proofs (`audit/`): of the seven new facts, the six phase facts fail on v4.14.6 and the marker fact passes
+(`red-v4.14.6.txt`); on v4.12.0, before #133, the three xUnit v2 phase facts pass and the marker fact fails on the #133
+defect itself (`regression-v4.12.0.txt`). Suites: Kronikol.Tests.xUnit2 95, Kronikol.Tests.NUnit4 26,
+Kronikol.Tests.MSTest 67 and Kronikol.Tests.TUnit 36; the core suite 7,146 with 2 skipped; release.slnf builds and packs in Release
+for every target.

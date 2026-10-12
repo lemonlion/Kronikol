@@ -95,6 +95,77 @@ public class ConstructorAndInitializeAsyncTests : IAsyncLifetime
     }
 }
 
+// The phase belongs to the flow, not to a test: TrackingDiagramOverride.StartSetup and StartAction set it wherever they are
+// called, and xUnit v2 runs the test on the flow its constructor and InitializeAsync ran on, so a phase set there is the
+// phase the test's calls carry. Only StartAction's diagram marker needs a test to be filed under. 4.13.1 to 4.14.6 set no
+// phase outside a test, so a base class that set it in its constructor left every call of its tests without one.
+
+[TestTracking]
+[Collection(IdentityOutsideATestCollection.Name)]
+public class PhaseSetInTheConstructorTests
+{
+    private readonly string _path = "/in-the-action-" + Guid.NewGuid().ToString("N");
+    private readonly RequestResponseLog[] _strayMarkers;
+
+    public PhaseSetInTheConstructorTests()
+    {
+        var before = OverrideMarkers().ToHashSet();
+        TrackingDiagramOverride.StartAction();
+        // A marker StartAction logged here would name no scenario; one another class logs inside its own test at the same
+        // moment names that test's.
+        _strayMarkers = OverrideMarkers()
+            .Where(l => !before.Contains(l)
+                        && (l.TestId is null || !XUnit2TestTrackingContext.CollectedScenarios.ContainsKey(l.TestId)))
+            .ToArray();
+    }
+
+    private static IEnumerable<RequestResponseLog> OverrideMarkers() =>
+        RequestResponseLogger.RequestAndResponseLogs.Where(l => l.Uri.Host == "override.com");
+
+    [Fact]
+    public void The_test_runs_in_the_phase_its_constructor_set()
+    {
+        Assert.Equal(TestPhase.Action, TestPhaseContext.Current);
+    }
+
+    [Fact]
+    public void A_call_the_test_makes_carries_the_phase_its_constructor_set()
+    {
+        OutsideATest.SendThroughTracking(_path);
+
+        var logs = OutsideATest.LogsFor(_path);
+        Assert.NotEmpty(logs);
+        Assert.All(logs, l => Assert.Equal(TestPhase.Action, l.Phase));
+    }
+
+    [Fact]
+    public void StartAction_in_the_constructor_logs_no_marker()
+    {
+        Assert.Empty(_strayMarkers);
+    }
+}
+
+[TestTracking]
+[Collection(IdentityOutsideATestCollection.Name)]
+public class PhaseSetInInitializeAsyncTests : IAsyncLifetime
+{
+    public PhaseSetInInitializeAsyncTests() => TrackingDiagramOverride.StartAction();
+
+    public Task InitializeAsync()
+    {
+        TrackingDiagramOverride.StartSetup();
+        return Task.CompletedTask;
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    [Fact]
+    public void The_test_runs_in_the_phase_InitializeAsync_set_last()
+    {
+        Assert.Equal(TestPhase.Setup, TestPhaseContext.Current);
+    }
+}
+
 [TestTracking]
 [Collection(IdentityOutsideATestCollection.Name)]
 public class AFlowTheTestDidNotReachTests

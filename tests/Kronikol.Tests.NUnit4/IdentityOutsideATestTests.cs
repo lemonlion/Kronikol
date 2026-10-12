@@ -107,6 +107,21 @@ public class IdentityOutsideATestTests : DiagrammedComponentTest
     }
 
     [Test]
+    public void On_a_thread_the_test_did_not_reach_StartAction_and_StartSetup_set_the_phase_there()
+    {
+        // The phase belongs to the flow, not to a test: only StartAction's marker needs a test to be filed under.
+        var phases = OutsideATest.OnThreadWithNoFlow(() =>
+        {
+            TrackingDiagramOverride.StartAction();
+            var afterStartAction = TestPhaseContext.Current;
+            TrackingDiagramOverride.StartSetup();
+            return (afterStartAction, TestPhaseContext.Current);
+        });
+
+        Assert.That(phases, Is.EqualTo((TestPhase.Action, TestPhase.Setup)));
+    }
+
+    [Test]
     public void On_a_thread_the_test_did_not_reach_with_nothing_else_the_resolver_answers_no_test_or_the_background()
     {
         Assert.That(OutsideATest.OnThreadWithNoFlow(IdentityObservation.Take).Resolved, Is.Null);

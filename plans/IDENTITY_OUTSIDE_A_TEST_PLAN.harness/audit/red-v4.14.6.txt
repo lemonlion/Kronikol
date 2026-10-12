@@ -1,0 +1,30 @@
+worktree v4.14.6 (98c4806d)
+== Kronikol.Tests.xUnit2 (FullyQualifiedName~PhaseSetIn)
+[xUnit.net 00:00:01.06]     Kronikol.Tests.xUnit2.PhaseSetInInitializeAsyncTests.The_test_runs_in_the_phase_InitializeAsync_set_last [FAIL]
+[xUnit.net 00:00:01.07]     Kronikol.Tests.xUnit2.PhaseSetInTheConstructorTests.The_test_runs_in_the_phase_its_constructor_set [FAIL]
+[xUnit.net 00:00:01.08]     Kronikol.Tests.xUnit2.PhaseSetInTheConstructorTests.A_call_the_test_makes_carries_the_phase_its_constructor_set [FAIL]
+  Assert.Equal() Failure: Values differ
+  Assert.Equal() Failure: Values differ
+  Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+  Error: Assert.Equal() Failure: Values differ
+  Expected: Action
+  Actual:   Unknown
+  Error: Assert.Equal() Failure: Values differ
+  Expected: Action
+  Actual:   Unknown
+Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 259 ms - Kronikol.Tests.xUnit2.dll (net10.0)
+== Kronikol.Tests.NUnit4 (Name~StartAction_and_StartSetup)
+  Assert.That(phases, Is.EqualTo((TestPhase.Action, TestPhase.Setup)))
+  Expected: (Action, Setup)
+  But was:  (Unknown, Unknown)
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 37 ms - Kronikol.Tests.NUnit4.dll (net10.0)
+== Kronikol.Tests.MSTest (Name~StartAction_and_StartSetup)
+  Assert.AreEqual failed. Expected:<Action>. Actual:<Unknown>. 'expected' expression: 'TestPhase.Action', 'actual' expression: 'afterStartAction'.
+  at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowAssertAreEqualFailed(Object expected, Object actual, String userMessage) in /_/src/TestFramework/TestFramework/Assertions/Assert.AreEqual.
+  at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual[T](T expected, T actual, IEqualityComparer`1 comparer, String message, String expectedExpression, String actualExpression) in /_/src/T
+  at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual[T](T expected, T actual, String message, String expectedExpression, String actualExpression) in /_/src/TestFramework/TestFramework/Ass
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 41 ms - Kronikol.Tests.MSTest.dll (net10.0)
+== Kronikol.Tests.TUnit (FullyQualifiedName~StartAction_and_StartSetup)
+[xUnit.net 00:00:02.41]     Kronikol.Tests.TUnit.TrackingDiagramOverrideTests.With_no_TUnit_test_StartAction_and_StartSetup_set_the_phase [FAIL]
+  Assert.Equal() Failure: Values differ
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 258 ms - Kronikol.Tests.TUnit.dll (net10.0)

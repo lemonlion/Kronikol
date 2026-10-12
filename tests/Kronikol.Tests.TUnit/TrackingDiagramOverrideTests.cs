@@ -39,6 +39,17 @@ public class TrackingDiagramOverrideTests
     }
 
     [Fact]
+    public void With_no_TUnit_test_StartAction_and_StartSetup_set_the_phase()
+    {
+        // The phase belongs to the flow, not to a test: only StartAction's marker needs a test to be filed under.
+        TrackingDiagramOverride.StartAction();
+        Assert.Equal(Kronikol.Tracking.TestPhase.Action, TestPhaseContext.Current);
+
+        TrackingDiagramOverride.StartSetup();
+        Assert.Equal(Kronikol.Tracking.TestPhase.Setup, TestPhaseContext.Current);
+    }
+
+    [Fact]
     public void With_no_TUnit_test_and_nothing_else_a_marker_is_dropped()
     {
         var marker = "marker-" + Guid.NewGuid().ToString("N");
