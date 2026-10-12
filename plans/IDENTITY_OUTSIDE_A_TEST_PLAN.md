@@ -1,7 +1,7 @@
 # Identity outside a test (#133)
 
-**Status: EXECUTED and PUBLISHED as 4.13.1 (2026-10-08); AUDITED 2026-10-12, its one regression fixed in 4.14.7
-(section 7).** The owner asked for #133 to be assessed critically, "what I don't want is for this to be 'fixed' and then
+**Status: EXECUTED and PUBLISHED as 4.13.1 (2026-10-08); AUDITED 2026-10-12, its one regression fixed and
+published in 4.14.7 (section 7).** The owner asked for #133 to be assessed critically, "what I don't want is for this to be 'fixed' and then
 another consumer breaks", then to "implement the plan in full, in a separate worktree" and "fix any other problems you
 found", and later to "make sure nothing was missed from the plan, that there isn't any bugs or issues in the
 implementation". The assessment was given in a session on 2026-10-07 (kronikol-28) and is recorded here with what the
@@ -123,6 +123,10 @@ a suite, and the fetcher, both `TestIdResolver`s and the override read it.
   new project.
 - **2026-10-12, audited** at the owner's ask (kronikol-28, worktree `Kronikol-audit133`): section 7. One regression
   (A5), fixed in 4.14.7; the rest were records and wiki text.
+- **2026-10-12, published.** 4.14.7's Release run 38221054585 passed on 5bab4ee6, with CI 38221052375 (first attempt;
+  its jobs ran the four xUnit v2 facts, TUnit's and the NUnit and MSTest thread facts), CodeQL 38221052417 and CI
+  Summary Preview 38221052395. nuget.org lists all 62 ids at 4.14.7. The wiki has the audit's edits (99a98bc; the link
+  check reads 204 anchors and 653 pages, all found), and #133 has a follow-up comment naming the release.
 
 ## 7. Audit (2026-10-12)
 
