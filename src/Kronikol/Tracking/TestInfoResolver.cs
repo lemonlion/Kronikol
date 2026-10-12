@@ -36,7 +36,8 @@ public static class TestInfoResolver
 {
     /// <summary>
     /// Attempts to resolve the current test name and ID.
-    /// First checks HTTP request headers propagated by <see cref="TestTrackingMessageHandler"/>,
+    /// First checks HTTP request headers propagated by <see cref="TestTrackingMessageHandler"/> (or by the gRPC
+    /// package's <c>GrpcTrackingInterceptor</c>),
     /// then falls back to the delegate (e.g. from a test framework's execution context),
     /// then falls back to <see cref="TestIdentityScope.Current"/>,
     /// then falls back to <see cref="TestIdentityScope.GlobalFallback"/>.

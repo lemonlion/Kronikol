@@ -188,6 +188,10 @@ public class IdentityPropagationTests
         Assert.Empty(Logs());
         Assert.Equal("UTF-8''Caf%C3%A9%20order", Single(sent, NameKey));
         Assert.Equal("UTF-8''" + Uri.EscapeDataString(_testId), Single(sent, IdKey));
+        Assert.True(Guid.TryParse(Single(sent, TraceIdKey), out _));
+        Assert.Equal("Service A", Single(sent, CallerKey));
+        // No span is started for a call that is not tracked, so there is none for a traceparent to name.
+        Assert.DoesNotContain(sent, e => e.Key == "traceparent");
     }
 
     // ─── T29: HasHttpContextAccessor ────────────────────────────
@@ -201,6 +205,61 @@ public class IdentityPropagationTests
     }
 
     // ─── helpers ────────────────────────────────────────────────
+
+    // ─── What one call kind or one value pinned, for every kind ──
+
+    [Theory]
+    [MemberData(nameof(CallKinds.All), MemberType = typeof(CallKinds))]
+    public async Task A_trace_id_the_caller_put_in_the_metadata_is_the_one_the_call_is_logged_with(CallKind kind)
+    {
+        // The called host reads the caller's, so the call's records must carry it too, or kronikol query flow cannot
+        // nest the called host's calls under this one.
+        var callerTraceId = Guid.NewGuid();
+
+        var sent = (await CallKinds.InvokeAsync(new GrpcTrackingInterceptor(Options()), kind,
+            new Metadata { { TraceIdKey, callerTraceId.ToString() } })).Options.Headers!;
+
+        Assert.Equal(callerTraceId.ToString(), Single(sent, TraceIdKey));
+        Assert.Equal(2, Logs().Length);
+        Assert.All(Logs(), log => Assert.Equal(callerTraceId, log.TraceId));
+    }
+
+    [Theory]
+    [MemberData(nameof(CallKinds.All), MemberType = typeof(CallKinds))]
+    public async Task An_inbound_trace_id_that_is_not_a_GUID_gives_the_call_a_new_one(CallKind kind)
+    {
+        var accessor = new StubAccessor(Inbound("Place an order", _testId, "abc"));
+
+        var sent = (await CallKinds.InvokeAsync(new GrpcTrackingInterceptor(Options(), accessor), kind)).Options.Headers!;
+
+        var sentTraceId = Guid.Parse(Single(sent, TraceIdKey));
+        Assert.NotEqual(Guid.Empty, sentTraceId);
+        Assert.Equal(2, Logs().Length);
+        Assert.All(Logs(), log => Assert.Equal(sentTraceId, log.TraceId));
+    }
+
+    [Theory]
+    [MemberData(nameof(CallKinds.All), MemberType = typeof(CallKinds))]
+    public async Task A_binary_entry_of_the_callers_goes_with_the_call_and_stays_out_of_the_log(CallKind kind)
+    {
+        var payload = new byte[] { 0, 1, 2, 250 };
+
+        var sent = (await CallKinds.InvokeAsync(new GrpcTrackingInterceptor(Options()), kind,
+            new Metadata { { "payload-bin", payload } })).Options.Headers!;
+
+        Assert.Equal(payload, Assert.Single(sent, e => e.Key == "payload-bin").ValueBytes);
+        Assert.Empty(Assert.Single(Logs(), l => l.Type == RequestResponseType.Request).Headers);
+    }
+
+    [Theory]
+    [MemberData(nameof(CallKinds.All), MemberType = typeof(CallKinds))]
+    public async Task A_caller_name_that_is_not_plain_ASCII_is_sent_encoded(CallKind kind)
+    {
+        var sent = (await CallKinds.InvokeAsync(new GrpcTrackingInterceptor(Options(o => o.CallerName = "Café front end")), kind))
+            .Options.Headers!;
+
+        Assert.Equal("UTF-8''Caf%C3%A9%20front%20end", Single(sent, CallerKey));
+    }
 
     private static DefaultHttpContext Inbound(string name, string id, string traceId)
     {

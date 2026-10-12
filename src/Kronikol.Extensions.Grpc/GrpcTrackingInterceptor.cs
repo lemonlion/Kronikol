@@ -74,7 +74,8 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
         AsyncUnaryCall<TResponse> call;
         Task<TResponse> wrappedResponseAsync;
-        string? activityTraceId, activitySpanId;
+        string? activityTraceId = null, activitySpanId = null;
+        var requestLogged = false;
         try
         {
             (activityTraceId, activitySpanId, var recorded) = CaptureActivityContext();
@@ -82,6 +83,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
             LogRequest(testInfo, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+            requestLogged = true;
 
             // Started under the span, so the transport's own spans are its children.
             call = continuation(request, context);
@@ -90,8 +92,15 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
                 call.ResponseAsync, testInfo, label, uri, serviceName, traceId, requestResponseId, effectiveVerbosity,
                 activityTraceId, activitySpanId, activity, opInfo);
         }
-        catch
+        catch (Exception ex)
         {
+            // A continuation that throws as the call starts (a disposed channel does) is the call's answer.
+            if (requestLogged)
+            {
+                var (status, content) = Failure(ex);
+                LogResponse(testInfo, label, content, uri, serviceName, traceId, requestResponseId, status,
+                    activityTraceId, activitySpanId, opInfo);
+            }
             InternalFlowSpanStore.Complete(activity);
             throw;
         }
@@ -148,10 +157,11 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             LogResponse(testInfo, label, responseContent, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
             return response;
         }
-        catch (RpcException ex)
+        catch (Exception ex)
         {
-            LogResponse(testInfo, label, $"{ex.StatusCode}: {ex.Message}", uri, serviceName,
-                traceId, requestResponseId, MapGrpcStatusToHttp(ex.StatusCode), activityTraceId, activitySpanId, opInfo);
+            var (status, content) = Failure(ex);
+            LogResponse(testInfo, label, content, uri, serviceName,
+                traceId, requestResponseId, status, activityTraceId, activitySpanId, opInfo);
             throw;
         }
     }
@@ -186,6 +196,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         // back when the call starts, as an async unary call's caller does.
         var callerActivity = Activity.Current;
         var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
+        StreamOutcome? started = null;
         try
         {
             var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
@@ -194,10 +205,12 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
             LogRequest(testInfo, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
-            var call = continuation(request, context);
-
             var outcome = new StreamOutcome(this, testInfo, label, uri, serviceName, traceId, requestResponseId,
                 activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current);
+            started = outcome;
+
+            var call = continuation(request, context);
+
             return new AsyncServerStreamingCall<TResponse>(
                 new OutcomeReader<TResponse>(call.ResponseStream, outcome),
                 call.ResponseHeadersAsync,
@@ -205,9 +218,13 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
                 call.GetTrailers,
                 () => outcome.Dispose(call.GetStatus, call.Dispose));
         }
-        catch
+        catch (Exception ex)
         {
-            InternalFlowSpanStore.Complete(activity);
+            // A continuation that throws as the call starts (a disposed channel does) is the call's answer.
+            if (started is not null)
+                started.Failed(ex);
+            else
+                InternalFlowSpanStore.Complete(activity);
             throw;
         }
         finally
@@ -244,6 +261,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         // back when the call starts, as an async unary call's caller does.
         var callerActivity = Activity.Current;
         var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
+        StreamOutcome? started = null;
         try
         {
             var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
@@ -252,10 +270,12 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
             LogRequest(testInfo, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
-            var call = continuation(context);
-
             var outcome = new StreamOutcome(this, testInfo, label, uri, serviceName, traceId, requestResponseId,
                 activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current);
+            started = outcome;
+
+            var call = continuation(context);
+
             return new AsyncClientStreamingCall<TRequest, TResponse>(
                 call.RequestStream,
                 WrapStreamResponse(call.ResponseAsync, outcome, effectiveVerbosity),
@@ -264,9 +284,13 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
                 call.GetTrailers,
                 () => outcome.Dispose(call.GetStatus, call.Dispose));
         }
-        catch
+        catch (Exception ex)
         {
-            InternalFlowSpanStore.Complete(activity);
+            // A continuation that throws as the call starts (a disposed channel does) is the call's answer.
+            if (started is not null)
+                started.Failed(ex);
+            else
+                InternalFlowSpanStore.Complete(activity);
             throw;
         }
         finally
@@ -303,6 +327,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         // back when the call starts, as an async unary call's caller does.
         var callerActivity = Activity.Current;
         var activity = GrpcActivitySource.StartActivity(opInfo.FullMethodName ?? "gRPC");
+        StreamOutcome? started = null;
         try
         {
             var (activityTraceId, activitySpanId, recorded) = CaptureActivityContext();
@@ -311,10 +336,12 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
             LogRequest(testInfo, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
-            var call = continuation(context);
-
             var outcome = new StreamOutcome(this, testInfo, label, uri, serviceName, traceId, requestResponseId,
                 activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current);
+            started = outcome;
+
+            var call = continuation(context);
+
             return new AsyncDuplexStreamingCall<TRequest, TResponse>(
                 call.RequestStream,
                 new OutcomeReader<TResponse>(call.ResponseStream, outcome),
@@ -323,9 +350,13 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
                 call.GetTrailers,
                 () => outcome.Dispose(call.GetStatus, call.Dispose));
         }
-        catch
+        catch (Exception ex)
         {
-            InternalFlowSpanStore.Complete(activity);
+            // A continuation that throws as the call starts (a disposed channel does) is the call's answer.
+            if (started is not null)
+                started.Failed(ex);
+            else
+                InternalFlowSpanStore.Complete(activity);
             throw;
         }
         finally
@@ -349,16 +380,35 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             LogResponse(testInfo, label, responseContent, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
             return response;
         }
-        catch (RpcException ex)
+        catch (Exception ex)
         {
-            LogResponse(testInfo, label, $"{ex.StatusCode}: {ex.Message}", uri, serviceName,
-                traceId, requestResponseId, MapGrpcStatusToHttp(ex.StatusCode), activityTraceId, activitySpanId, opInfo);
+            var (status, content) = Failure(ex);
+            LogResponse(testInfo, label, content, uri, serviceName,
+                traceId, requestResponseId, status, activityTraceId, activitySpanId, opInfo);
             throw;
         }
         finally
         {
             InternalFlowSpanStore.Complete(activity);
         }
+    }
+
+    /// <summary>
+    /// How a call that failed is recorded: an <see cref="RpcException"/> as its status, an
+    /// <see cref="OperationCanceledException"/> as <c>Cancelled</c> (a channel with
+    /// <c>ThrowOperationCanceledOnCancellation</c> throws one where it would throw <c>RpcException(Cancelled)</c>), and
+    /// anything else as <c>Unknown</c>, each with <c>"{code}: {message}"</c>. Every failure is recorded, so no request
+    /// is left without its response.
+    /// </summary>
+    private static (HttpStatusCode Status, string Content) Failure(Exception exception)
+    {
+        var (code, message) = exception switch
+        {
+            RpcException rpc => (rpc.StatusCode, rpc.Message),
+            OperationCanceledException => (StatusCode.Cancelled, exception.Message),
+            _ => (StatusCode.Unknown, exception.Message),
+        };
+        return (MapGrpcStatusToHttp(code), $"{code}: {message}");
     }
 
     /// <summary>A client stream's response, recorded as an async unary call's is, through its outcome.</summary>
@@ -397,16 +447,14 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
         public void Failed(Exception exception)
         {
-            var (code, text) = exception switch
-            {
-                RpcException rpc => (rpc.StatusCode, $"{rpc.StatusCode}: {rpc.Message}"),
-                OperationCanceledException => (StatusCode.Cancelled, $"{StatusCode.Cancelled}: {exception.Message}"),
-                _ => (StatusCode.Unknown, $"{StatusCode.Unknown}: {exception.Message}"),
-            };
-            Record(text, MapGrpcStatusToHttp(code));
+            var (status, content) = Failure(exception);
+            Record(content, status);
         }
 
-        /// <summary>The call is being disposed: its status when it already has one, else <c>Cancelled</c>.</summary>
+        /// <summary>
+        /// The call is being disposed: its status when it already has one, else <c>Cancelled</c>. The call is disposed,
+        /// and the outcome recorded, whatever reading its status or its own dispose throws.
+        /// </summary>
         public void Dispose(Func<Status> getStatus, Action dispose)
         {
             Status? status = null;
@@ -414,19 +462,24 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             {
                 status = getStatus();
             }
-            catch (InvalidOperationException)
+            catch
             {
-                // The call has not finished: disposing it cancels it.
+                // The call has not finished (InvalidOperationException), or it cannot say: disposing it cancels it.
             }
 
-            dispose();
-
-            if (status is not { } known)
-                Record($"{StatusCode.Cancelled}: the call was disposed before its stream ended", MapGrpcStatusToHttp(StatusCode.Cancelled));
-            else if (known.StatusCode == StatusCode.OK)
-                Completed();
-            else
-                Failed(new RpcException(known));
+            try
+            {
+                dispose();
+            }
+            finally
+            {
+                if (status is not { } known)
+                    Record($"{StatusCode.Cancelled}: the call was disposed before its stream ended", MapGrpcStatusToHttp(StatusCode.Cancelled));
+                else if (known.StatusCode == StatusCode.OK)
+                    Completed();
+                else
+                    Failed(new RpcException(known));
+            }
         }
 
         private void Record(string? content, HttpStatusCode statusCode)
@@ -537,8 +590,11 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     /// <summary>What one call carries and logs.</summary>
     /// <param name="Identity">The identity the call resolved.</param>
     /// <param name="TraceId">
-    /// The call's Kronikol trace id: the one the request being served carries, so the called host's calls share it and
-    /// <c>kronikol query flow</c> nests them under this call, else a new one.
+    /// The call's Kronikol trace id: the one the caller put in the call's metadata, which is the one sent; else the one
+    /// the request being served carries, else a new one. The called host's HTTP handler and gRPC interceptor, given its
+    /// accessor, reuse it for their own calls, so <c>kronikol query flow</c> nests those under this call even when the
+    /// two sides name the service differently; a tracker that makes a trace id of its own (a database's) nests only by
+    /// name.
     /// </param>
     /// <param name="LoggedHeaders">The caller's metadata, read before the interceptor adds any, so diagrams show no new lines.</param>
     /// <param name="Tracked">Whether the call is logged in the current phase.</param>
@@ -562,10 +618,30 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
         return new CallPlan(
             identity.Value,
-            InboundTraceId() ?? Guid.NewGuid(),
+            CallerTraceId(context) ?? InboundTraceId() ?? Guid.NewGuid(),
             GetCallHeaders(context),
             PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction),
             _options.PropagateTestIdentity && identity.Value.IsAttributed);
+    }
+
+    /// <summary>
+    /// The Kronikol trace id the caller put in the call's metadata itself, when it is a GUID: the interceptor leaves that
+    /// header as it is, so the called host reads that id, and the call is logged with it too.
+    /// </summary>
+    private static Guid? CallerTraceId<TRequest, TResponse>(ClientInterceptorContext<TRequest, TResponse> context)
+        where TRequest : class
+        where TResponse : class
+    {
+        if (context.Options.Headers is not { } headers)
+            return null;
+
+        foreach (var entry in headers)
+        {
+            if (!entry.IsBinary && string.Equals(entry.Key, TestTrackingHttpHeaders.TraceIdHeader, StringComparison.OrdinalIgnoreCase))
+                return Guid.TryParse(entry.Value, out var traceId) ? traceId : null;
+        }
+
+        return null;
     }
 
     /// <summary>The Kronikol trace id of the request the host is serving, when it carries one that is a GUID.</summary>
@@ -678,14 +754,27 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         };
     }
 
+    /// <summary>
+    /// The message as the call's record shows it, which never fails the call: JSON through
+    /// <see cref="JsonFormatter.ToDiagnosticString"/>, the same text <c>JsonFormatter.Default</c> writes except for a
+    /// <c>google.protobuf.Any</c> whose type no registry holds, written as its type URL and bytes where
+    /// <c>JsonFormatter.Default</c> throws; and a short note in place of a message that cannot be written at all.
+    /// </summary>
     private string? SerializeMessage<T>(T message, GrpcTrackingVerbosity verbosity)
     {
         if (verbosity == GrpcTrackingVerbosity.Summarised) return null;
 
-        if (message is IMessage protoMsg)
-            return JsonFormatter.Default.Format(protoMsg);
+        try
+        {
+            if (message is IMessage protoMsg)
+                return JsonFormatter.ToDiagnosticString(protoMsg);
 
-        return message?.ToString();
+            return message?.ToString();
+        }
+        catch (Exception ex)
+        {
+            return $"({message?.GetType().Name} could not be written: {ex.Message})";
+        }
     }
 
     public static HttpStatusCode MapGrpcStatusToHttp(StatusCode grpcStatus)

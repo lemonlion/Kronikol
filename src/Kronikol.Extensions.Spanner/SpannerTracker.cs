@@ -172,8 +172,8 @@ public class SpannerTracker : ITrackingComponent
         void OnRequest(string methodName, IMessage request, DateTimeOffset timestamp)
         {
             var opInfo = ClassifyServerRequest(methodName, request);
-            var content = ExtractServerContent(methodName, request, tracker._options);
-            var (reqId, traceId) = tracker.LogRequest(opInfo, content);
+            var (content, rawContent) = RequestContent(request, tracker._options);
+            var (reqId, traceId) = tracker.LogRequest(opInfo, content, rawContent);
             if (reqId != Guid.Empty)
             {
                 // Store for pairing with response using a correlation key
@@ -200,16 +200,17 @@ public class SpannerTracker : ITrackingComponent
                 }
             }
 
-            if (matched is not null)
-            {
-                tracker.LogResponse(matched.Value.Op, matched.Value.ReqId, matched.Value.TraceId, null);
-            }
-            else
-            {
+            var (op, reqId, traceId) = matched is { } pending
+                ? (pending.Op, pending.ReqId, pending.TraceId)
                 // Fallback: log as standalone if we can't match
-                var opInfo = ClassifyServerRequest(methodName, request);
-                tracker.LogResponse(opInfo, Guid.Empty, Guid.Empty, null);
-            }
+                : (ClassifyServerRequest(methodName, request), Guid.Empty, Guid.Empty);
+
+            // A call that failed is drawn with its error, as through the ADO.NET command and the interceptor: the
+            // status is all the observer has of it, so the status names it.
+            if (statusCode is { } code && code != StatusCode.OK)
+                tracker.LogResponseCore(op, reqId, traceId, code.ToString(), rawContent: null, status: "Error");
+            else
+                tracker.LogResponse(op, reqId, traceId, null);
         }
 
         return (OnRequest, OnResponse);
@@ -267,22 +268,30 @@ public class SpannerTracker : ITrackingComponent
         return op;
     }
 
-    private static string? ExtractServerContent(string methodName, IMessage request, SpannerTrackingOptions options)
+    /// <summary>
+    /// A request's content at Detailed verbosity and at Raw, as the ADO.NET command gives its own: a statement's SQL text
+    /// is the Detailed content only when <see cref="SpannerTrackingOptions.LogSqlText"/> is on, and always the Raw
+    /// content. Both are given whatever the current phase's verbosity, since <see cref="LogRequest"/> leaves content out
+    /// at Summarised and takes each phase's own for its variants.
+    /// </summary>
+    internal static (string? Content, string? RawContent) RequestContent(object? request, SpannerTrackingOptions options)
     {
-        var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
-            options.Verbosity, options.SetupVerbosity, options.ActionVerbosity);
-
-        if (effectiveVerbosity == SpannerTrackingVerbosity.Summarised)
-            return null;
-
-        return request switch
+        var sql = request switch
         {
-            ExecuteSqlRequest sql => sql.Sql,
-            ReadRequest read => $"Read table: {read.Table}",
-            CommitRequest commit => FormatCommitContent(commit),
+            ExecuteSqlRequest statement => statement.Sql,
             ExecuteBatchDmlRequest batch => string.Join("\n", batch.Statements.Select(s => s.Sql)),
             _ => null
         };
+        if (sql is not null)
+            return (options.LogSqlText ? sql : null, sql);
+
+        var content = request switch
+        {
+            ReadRequest read => $"Read table: {read.Table}",
+            CommitRequest commit => FormatCommitContent(commit),
+            _ => null
+        };
+        return (content, content);
     }
 
     private static string FormatCommitContent(CommitRequest commit)

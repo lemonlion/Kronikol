@@ -146,12 +146,14 @@ public static class SpannerResponseFormatter
     }
 
     /// <summary>
-    /// Gets the full JSON representation for Raw verbosity.
+    /// Gets the full JSON representation for Raw verbosity. A <c>google.protobuf.Any</c> (a failed batch statement's
+    /// <c>google.rpc.Status</c> details) is written as its type URL and bytes: <c>JsonFormatter.Default</c> throws on
+    /// one whose type its registry does not hold, which failed the application's call.
     /// </summary>
     public static string? FormatRaw<TResponse>(TResponse response)
     {
         if (response is IMessage protoMsg)
-            return JsonFormatter.Default.Format(protoMsg);
+            return JsonFormatter.ToDiagnosticString(protoMsg);
         return null;
     }
 

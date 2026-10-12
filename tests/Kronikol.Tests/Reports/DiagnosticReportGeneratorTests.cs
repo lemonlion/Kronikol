@@ -298,6 +298,19 @@ public class DiagnosticReportGeneratorTests : IDisposable
     }
 
     [Fact]
+    public void A_group_with_no_accessor_warns_once_any_one_of_its_instances_was_invoked()
+    {
+        // Plan section 4.4: "0 of M" is a warning when none has one and one was invoked, not only when all were.
+        TrackingComponentRegistry.Register(new StubComponentWithAccessor("Client (Orders)", false, false));
+        TrackingComponentRegistry.Register(new StubComponentWithAccessor("Client (Orders)", true, false));
+        TrackingComponentRegistry.Register(new StubComponentWithAccessor("Client (Orders)", false, false));
+
+        var html = DiagnosticReportGenerator.BuildHtml([MakeLog("t1", RequestResponseType.Request, Guid.NewGuid())], [], new ReportConfigurationOptions());
+
+        Assert.Equal("<span class=\"warn\">⚠ 0 of 3</span>", AccessorCellOf(html, "Client (Orders)"));
+    }
+
+    [Fact]
     public void Each_instance_of_a_group_shows_whether_it_holds_an_accessor()
     {
         TrackingComponentRegistry.Register(new StubComponentWithAccessor("Client (Orders)", true, true));

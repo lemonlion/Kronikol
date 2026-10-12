@@ -4,6 +4,116 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.16.1] - 2026-10-12
+
+**Patch - an audit of the gRPC identity propagation releases, 4.12.1 to 4.14.3 (#134,
+`plans/GRPC_IDENTITY_PROPAGATION_PLAN.md`): a gRPC call is recorded however it fails and never fails for being tracked,
+a disposed stream or an awaited proxied call leaves the caller's current span alone, and a call is logged with the trace
+id it carries.** Bug fixes, and nothing new for a consumer to call, so the patch part moves (4.16.0 to 4.16.1). The
+history action's `VERSION` installs `Kronikol.Tool` 4.16.1, and the templates pin 4.14.11.
+
+### Fixed
+
+- **A gRPC message holding a `google.protobuf.Any` failed the call.** The interceptor wrote each message into the call's
+  record with `JsonFormatter.Default`, which throws on an `Any` whose type its registry, empty by default, does not hold
+  (any type, `google.protobuf.Struct` included). A request carrying one failed before it was sent, and a response
+  carrying one, such as a `google.rpc.Status` with details, reached the caller as an `InvalidOperationException` in
+  place of the response. Messages are now written with `JsonFormatter.ToDiagnosticString`, which writes the same text
+  for every other message and an `Any` as its `@type` and `@value`; a message that cannot be written at all (its
+  `ToString()` throws) gets a short note in its place, and the call goes on. `Kronikol.Extensions.Spanner`'s Raw
+  verbosity had the same fault, for a failed batch statement's status details, and is fixed the same way.
+- **A gRPC call that failed with something other than an `RpcException` left its request without a response.** A unary
+  call cancelled on a channel with `ThrowOperationCanceledOnCancellation` throws `OperationCanceledException`, and its
+  record stayed open; so did a call of any kind whose continuation threw as it started (a disposed channel does). Each
+  is now recorded as a stream's failure already was: `Cancelled` (408) for a cancellation, `Unknown` (500) for anything
+  else, with `"{code}: {message}"`.
+- **Disposing a streaming call moved the caller's current span.** Since 4.13.2 a stream's span ends with the stream, and
+  `Activity.Stop()` sets `Activity.Current` to the span's predecessor whatever is current. A stream disposed while
+  another span was current, or from another thread such as a fixture's tear-down, left that flow pointing at the span
+  that was current when the call started, which may have stopped long before. `InternalFlowSpanStore.Complete` now keeps
+  the stopping flow's current span, unless the span it stops is that span.
+- **A stream whose status could not be read was neither disposed nor recorded.** Disposing a stream reads its status
+  first, and caught only the `InvalidOperationException` Grpc.Net.Client throws for an unfinished call; anything else
+  escaped before the call was disposed. The call is now disposed, and its outcome recorded, whatever reading its status
+  or its own dispose throws.
+- **`TrackingProxy` left its span current after an awaited async method** (with `ActivitySourceName` set), so the
+  caller's next call started as its child, in its trace. 4.12.1 fixed the same fault in the gRPC interceptor's async
+  unary call.
+- **A call was logged with one trace id and sent with another.** Since 4.13.0 for gRPC and 4.14.3 for HTTP, a
+  `test-tracking-trace-id` header the caller set is left as it is and the called host reads it, but the call was
+  recorded under a new trace id, so `kronikol query flow` could not nest the called host's calls under it. A retry that
+  sends the same HTTP request again did the same: the first attempt's trace id stays on the request, and each later
+  attempt was logged under a new one, unless the host was serving a request with a trace id of its own. A call is now
+  logged with the trace id it carries.
+- **`HeadersToForward` added a header again when the request already carried it,** as a retry's later attempts do, or as
+  a value the caller set does, and the called host read the values joined into one. A header is now copied only when
+  the request lacks it, as the identity headers have been since 4.14.3. Behaviour change: a value the caller set is sent
+  alone, where the forwarded value was sent beside it.
+- **`SpannerTrackingOptions.LogSqlText` did nothing for the gRPC interceptor or the server observer.** Only the ADO.NET
+  command honoured it: with it off, a statement's SQL text was still the request's content at Detailed verbosity on the
+  other two paths. All three now take the content from one place, so the SQL text is the Detailed content only when the
+  option is on, and the Raw content always, as the command's was. The same change gives a phase its own content when
+  `SetupVerbosity` or `ActionVerbosity` shows content and the base verbosity is Summarised: the interceptor and the
+  observer computed the content once, at the base verbosity, so that phase's variant had none. The ADO.NET command had
+  the mirror of it: with a Raw base and a Detailed phase, the Detailed phase showed the SQL text and its parameters
+  whatever `LogSqlText` said. The option now has a doc comment saying what it covers.
+- **A call that failed through the Spanner server observer read as answered.** `CreateServerObservers`' response
+  observer is given the call's gRPC status and logged every response alike. A status other than `OK` is now an `Error`
+  response whose content names the status, as a failed call through the ADO.NET command or the interceptor is drawn
+  with its error.
+- **The `test-tracking-ignore` header was honoured only in lower case.** A header added as `Test-Tracking-Ignore` keeps
+  that casing, and the handler compared names case-sensitively; header names are not case-sensitive, and ProxyTap
+  already read it so.
+
+### Documentation
+
+- The plan's record: its status line, summary, section 7 and section 8 still said it was executing, that it shipped as
+  three releases, and that the TestServer `traceparent`, #133 and MSTest findings wanted issues; each now says what
+  happened. `PLANS_STATUS.md` lists all four releases, `ROADMAP.md` Appendix C the plan's remaining leftovers, and
+  `V5_PLAN.md` cites the right section for `CurrentStepTypeFetcher`.
+- Doc comments: `TestTrackingMessageHandler` and its `HeadersToForward` option said every request carries the identity
+  (the requests it tracks do, and a hop passes the trace id on only with an accessor);
+  `TestTrackingMessageHandlerOptions.HttpContextAccessor` said `AddTrackedGrpcClient` sets it (that sets the gRPC
+  options' accessor); `TestIdentityScope`, `TestInfoResolver` and `TestTrackingServerBridge` named only the HTTP handler
+  as writing the identity headers, which the gRPC interceptor has also done since 4.13.0; and the gRPC interceptor's
+  trace-id note said the called host's calls nest under the call, which holds only for trackers that reuse the inbound
+  trace id.
+- Four headings in this file had no blank line before them.
+
+### Tests
+
+- gRPC. `CallEndingTests`: a stream disposed while another span is current, or from a flow with none, for each
+  streaming kind; a stream whose status read or own dispose throws; a unary call, async or blocking, that fails with
+  `OperationCanceledException` or another exception; a continuation that throws as each kind of call starts; a stream
+  whose read fails without an `RpcException`; a stream disposed after it failed; and a stream's response logged in the
+  phase it started in. `MessageContentTests`: unary and client-stream calls carrying an `Any`, and a message that cannot
+  be written. `IdentityPropagationTests`, each for all five kinds: a trace id in the caller's metadata, an inbound trace
+  id that is not a GUID, a `-bin` entry, and a caller name that is not plain ASCII; T28 now also pins the untracked
+  call's trace id and caller name, and that it sends no `traceparent`. `CallMetadataTests`: the caller's span is back as
+  each kind of call starts, and the sampled flags for each kind (T6 covered the async unary call only).
+  `MultiHostPropagationTests`: T32 as the plan lists it (four hosts, the first gRPC hop made by a host serving an HTTP
+  request), and T35's call made while the call into the host is open; `MultiHostBackgroundTests` observes T34's call
+  recorded as background work, where T34 inferred it.
+- Core. `TestTrackingMessageHandlerTests`: the ignore header in three casings, a caller's trace id, a retry's trace id,
+  `HeadersToForward` on a retry and beside a caller's value, the transport rule for `HttpClientHandler`, a caller's
+  `traceparent` with a span current, and an excluded host's request. `TrackingProxyTests`: an awaited async method.
+  `DiagnosticReportGeneratorTests`: a group warns once any one of its instances was invoked. Spanner: `FormatRaw` with
+  an `Any`; `LogSqlText` off at Detailed and at Raw through the server observer and through the interceptor, for a
+  unary and a streaming call; the action phase's content when the base verbosity is Summarised, and a command's
+  Detailed phase under a Raw base (`TrackingSpannerCommandContentTests`); and the observer's failed status, with and
+  without a request to pair.
+- Red first: copied onto 4.14.6's source, 38 of the new facts fail, each on its own assertion (30 gRPC, 7 core, 1
+  Spanner; `plans/GRPC_IDENTITY_PROPAGATION_PLAN.harness/audit/red-v4.14.6.txt`). The Spanner facts written later fail
+  on the source before their fix: the three `LogSqlText` and phase-content facts, the streaming call's Detailed row and
+  the command's phase fact (`audit/red-spanner-logsqltext.txt`), and the observer's two failed-status facts
+  (`audit/red-spanner-observer-status.txt`). The others pin behaviour that was already right, and pass there.
+- Mutations (`audit/mutate.py` and `audit/mutate_spanner.py`, results in `audit/mutations.txt` and
+  `audit/mutations-spanner.txt`): each puts one behaviour back as it was, one site at a time, and 40 of 40 are caught.
+- Checks (`audit/suite.txt`, `audit/breakfastprovider.txt`): at the version bump every test project passes in Release,
+  the core suite 7,352 with 2 skipped and the end-to-end suite with Playwright 1,026 with 28 skipped; `release.slnf`
+  builds in Release for every target; and BreakfastProvider's xUnit and ReqNRoll lanes pass on the local pack, all 212
+  and 214 scenarios.
+
 ## [4.16.0] - 2026-10-12
 
 **Minor - an assertion note shows the value each argument had when the assertion received it (#163,
@@ -654,6 +764,7 @@ installs `Kronikol.Tool` 4.14.3, and the templates pin 4.14.2.
   trace id no span carried, and the internal-flow view had nothing under it. A gRPC fact failed this way on 4.13.1's
   and 4.14.1's CI. A caller now waits until the listener is registered, for at most a second, still without taking a lock
   (#70).
+
 ### Documentation
 
 - `TestTrackingMessageHandler`'s summary says what it sends, and `HeadersToForward` says the identity headers need not
@@ -679,6 +790,7 @@ installs `Kronikol.Tool` 4.14.3, and the templates pin 4.14.2.
   for a read that takes about 100 ms alone, and `RelationshipStatsTests`' 2,000 ms budget at 3,601 ms. A probe of the
   machine's load now stretches both, at most five times, as the Playwright project's render budgets are
   (`ContentionScale`), and the stats fact takes the fastest of three runs, as the ledger's does.
+
 ## [4.14.2] - 2026-10-08
 
 **Patch - MSTest keeps a data row's method in its scenario id when the row has a display name of its own, and a class that
@@ -900,6 +1012,7 @@ The history action's `VERSION` installs `Kronikol.Tool` 4.13.2, and the template
 - `StreamingOutcomeTests` covers each kind's success, failure and early dispose, on fakes and, for a server stream and
   a duplex stream that fail, on a real gRPC server. The three facts that read a stream's response at its start now
   read the stream to its end.
+
 ## [4.13.1] - 2026-10-08
 
 **Patch - outside a test, xUnit v2 and NUnit say there is no test, so a call there goes to a scope, the global fallback
@@ -1006,6 +1119,7 @@ this was pushed.
   the background identity and a detached flow. `MultiHostPropagationTests` runs real hosts: a service the test calls
   over gRPC, a gRPC hop behind an HTTP hop, two gRPC hops, a non-ASCII name over Kestrel h2c, the option off, and one
   trace id across the hop. A Playwright fact reads the gRPC row of a real `DiagnosticReport.html`.
+
 ## [4.12.3] - 2026-10-08
 
 **Patch - assertion tracking draws what the run did.**

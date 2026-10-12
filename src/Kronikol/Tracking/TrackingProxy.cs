@@ -98,6 +98,9 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
             ? TrackingSafeSerializer.Serialize(args, _options.SerializerOptions)
             : null;
 
+        // The target runs under the span, but an async target returns before the span ends: the caller's own current
+        // span is given back then, or the proxy's would stay current in the caller's flow and parent its next call.
+        var callerActivity = Activity.Current;
         Activity? activity = null;
         if (_activitySource is not null)
         {
@@ -112,7 +115,12 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
             var result = targetMethod.Invoke(_target, args);
 
             if (result is Task task)
-                return HandleAsyncResult(task, targetMethod, methodName, uri, requestContent, activity, startedAt);
+            {
+                var handled = HandleAsyncResult(task, targetMethod, methodName, uri, requestContent, activity, startedAt);
+                if (activity is not null)
+                    Activity.Current = callerActivity;
+                return handled;
+            }
 
             var responseContent = TrackingSafeSerializer.Serialize(result, _options.SerializerOptions);
             LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.OK, activity, startedAt);

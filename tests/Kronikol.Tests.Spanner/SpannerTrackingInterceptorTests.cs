@@ -58,6 +58,75 @@ public class SpannerTrackingInterceptorTests
 
     // ─── AsyncUnaryCall Tests ────────────────────────────────
 
+    // ─── LogSqlText, and content per phase, as the ADO.NET command has them ───
+
+    private RequestResponseLog ExecuteSql(SpannerTrackingOptions options, string sql)
+    {
+        var interceptor = CreateInterceptor(options);
+        var request = new ExecuteSqlRequest { Sql = sql, Session = "projects/p/instances/i/databases/d/sessions/s" };
+        var method = MakeMethod<ExecuteSqlRequest, ResultSet>("google.spanner.v1.Spanner", "ExecuteSql");
+        interceptor.AsyncUnaryCall(request, new ClientInterceptorContext<ExecuteSqlRequest, ResultSet>(method, null, new CallOptions()),
+            (_, _) => FakeUnaryCall(new ResultSet()));
+        return Assert.Single(GetLogs(), l => l.Type == RequestResponseType.Request);
+    }
+
+    [Fact]
+    public void With_LogSqlText_off_a_statement_is_logged_without_its_SQL_at_Detailed_as_a_command_is()
+    {
+        // TrackingSpannerCommand leaves the SQL text out at Detailed when LogSqlText is off; the interceptor ignored it.
+        var options = MakeOptions();
+        options.LogSqlText = false;
+
+        Assert.Null(ExecuteSql(options, "SELECT * FROM Users").Content);
+    }
+
+    [Fact]
+    public void With_LogSqlText_off_a_statement_still_carries_its_SQL_at_Raw_as_a_command_does()
+    {
+        var options = MakeOptions(SpannerTrackingVerbosity.Raw);
+        options.LogSqlText = false;
+
+        Assert.Equal("SELECT * FROM Users", ExecuteSql(options, "SELECT * FROM Users").Content);
+    }
+
+    [Theory]
+    [InlineData(SpannerTrackingVerbosity.Detailed, null)]
+    [InlineData(SpannerTrackingVerbosity.Raw, "SELECT * FROM Users")]
+    public void With_LogSqlText_off_a_streamed_statement_is_logged_as_a_unary_one_is(SpannerTrackingVerbosity verbosity, string? expected)
+    {
+        // The streaming call logs its request at a call site of its own.
+        var options = MakeOptions(verbosity);
+        options.LogSqlText = false;
+        var interceptor = CreateInterceptor(options);
+        var request = new ExecuteSqlRequest { Sql = "SELECT * FROM Users", Session = "projects/p/instances/i/databases/d/sessions/s" };
+        var method = MakeMethod<ExecuteSqlRequest, PartialResultSet>("google.spanner.v1.Spanner", "ExecuteStreamingSql", MethodType.ServerStreaming);
+        var originalCall = new AsyncServerStreamingCall<PartialResultSet>(
+            new FakeAsyncStreamReader<PartialResultSet>([]), Task.FromResult(new Metadata()),
+            () => Status.DefaultSuccess, () => new Metadata(), () => { });
+
+        interceptor.AsyncServerStreamingCall(request,
+            new ClientInterceptorContext<ExecuteSqlRequest, PartialResultSet>(method, null, new CallOptions()),
+            (_, _) => originalCall);
+
+        Assert.Equal(expected, Assert.Single(GetLogs(), l => l.Type == RequestResponseType.Request).Content);
+    }
+
+    [Fact]
+    public void A_phase_whose_verbosity_shows_content_gets_it_when_the_base_verbosity_is_Summarised()
+    {
+        // Variants are attached while the phase is not yet known; the interceptor computed the content once, at the
+        // base verbosity, and so gave the action phase none.
+        TestPhaseContext.Reset();
+        var options = MakeOptions(SpannerTrackingVerbosity.Summarised);
+        options.ActionVerbosity = SpannerTrackingVerbosity.Detailed;
+
+        var log = ExecuteSql(options, "SELECT * FROM Orders");
+
+        Assert.Null(log.Content);
+        Assert.Equal("SELECT * FROM Orders", log.ActionVariant?.Content);
+    }
+
+
     [Fact]
     public void AsyncUnaryCall_ExecuteSql_Logs_request_and_response()
     {

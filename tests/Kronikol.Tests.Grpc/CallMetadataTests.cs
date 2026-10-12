@@ -138,12 +138,47 @@ public class CallMetadataTests
         Assert.NotEqual(TraceIdOf(first!), TraceIdOf(second!));
     }
 
+    [Theory]
+    [MemberData(nameof(CallKinds.All), MemberType = typeof(CallKinds))]
+    public void The_caller_has_its_own_current_span_back_as_soon_as_any_kind_of_call_starts(CallKind kind)
+    {
+        // A streaming call's span lasts until its stream ends, as an async unary call's lasts until its response, so
+        // each of them gives the caller's span back when the call starts (T4 for every kind).
+        using var source = new ActivitySource("Kronikol.Tests.CallStart." + Guid.NewGuid().ToString("N"));
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = s => s == source || s.Name == "Kronikol.Grpc",
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+        };
+        ActivitySource.AddActivityListener(listener);
+        var interceptor = new GrpcTrackingInterceptor(Options());
+        var context = CallKinds.Context(kind);
+
+        using var outer = source.StartActivity("outer");
+        Assert.NotNull(outer);
+        IDisposable? call = kind switch
+        {
+            CallKind.AsyncUnary => interceptor.AsyncUnaryCall("request", context, (_, _) => CallKinds.Unary()),
+            CallKind.BlockingUnary => null,
+            CallKind.ServerStreaming => interceptor.AsyncServerStreamingCall("request", context, (_, _) => CallKinds.ServerStream("one")),
+            CallKind.ClientStreaming => interceptor.AsyncClientStreamingCall(context, _ => CallKinds.ClientStream()),
+            _ => interceptor.AsyncDuplexStreamingCall(context, _ => CallKinds.DuplexStream("one")),
+        };
+        if (kind == CallKind.BlockingUnary)
+            interceptor.BlockingUnaryCall("request", context, (_, _) => "response");
+
+        Assert.Same(outer, Activity.Current);
+        call?.Dispose();
+        Assert.Same(outer, Activity.Current);
+    }
+
     // ─── T6: the flags follow the span ──────────────────────────
 
-    [Fact]
-    public async Task The_flags_say_sampled_when_another_listener_records_the_span()
+    [Theory]
+    [MemberData(nameof(CallKinds.All), MemberType = typeof(CallKinds))]
+    public async Task The_flags_say_sampled_when_another_listener_records_the_span(CallKind kind)
     {
-        var method = CallKinds.Method(CallKind.AsyncUnary, "flags.Probe", "Recorded" + Guid.NewGuid().ToString("N"));
+        var method = CallKinds.Method(kind, "flags.Probe", "Recorded" + Guid.NewGuid().ToString("N"));
         using var recorder = new ActivityListener
         {
             ShouldListenTo = source => source.Name == "Kronikol.Grpc",
@@ -153,7 +188,7 @@ public class CallMetadataTests
         };
         ActivitySource.AddActivityListener(recorder);
 
-        var sent = await CallKinds.InvokeAsync(new GrpcTrackingInterceptor(Options()), CallKind.AsyncUnary, method: method);
+        var sent = await CallKinds.InvokeAsync(new GrpcTrackingInterceptor(Options()), kind, method: method);
 
         Assert.EndsWith("-01", Assert.Single(sent.Options.Headers!, e => e.Key == "traceparent").Value);
     }

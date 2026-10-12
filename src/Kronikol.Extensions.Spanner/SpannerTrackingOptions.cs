@@ -23,6 +23,10 @@ public record SpannerTrackingOptions
     /// v5 (plans/V5_PLAN.md).
     /// </summary>
     public Func<string?>? CurrentStepTypeFetcher { get; set; }
+    /// <summary>
+    /// Whether a statement's SQL text is a request's content at Detailed verbosity, through the ADO.NET command, the gRPC
+    /// interceptor and the server observer alike. Raw verbosity always shows it, and Summarised never does. Default true.
+    /// </summary>
     public bool LogSqlText { get; set; } = true;
     [Obsolete("Raw verbosity now always includes parameters. This property is no longer used.")]
     public bool LogParameters { get; set; }

@@ -28,11 +28,23 @@ public static class InternalFlowSpanStore
     /// <summary>
     /// Stops the activity (if still running) and adds it to the store.
     /// Useful as a one-liner at the end of an in-process tracking scope.
+    /// <para>
+    /// <see cref="Activity.Stop"/> sets <see cref="Activity.Current"/> to the stopped span's predecessor whatever is
+    /// current, so a span ended from a flow where it is not current (a streaming gRPC call that its caller disposes,
+    /// perhaps under a span of its own or from another thread) would move that flow's current span. The flow keeps it:
+    /// only a span that is itself current gives way to its predecessor.
+    /// </para>
     /// </summary>
     public static void Complete(Activity? activity)
     {
         if (activity is null) return;
-        if (!activity.IsStopped) activity.Stop();
+        if (!activity.IsStopped)
+        {
+            var current = Activity.Current;
+            activity.Stop();
+            if (!ReferenceEquals(current, activity))
+                Activity.Current = current;
+        }
         Add(activity);
     }
 

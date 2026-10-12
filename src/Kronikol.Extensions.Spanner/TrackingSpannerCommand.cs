@@ -201,11 +201,9 @@ public class TrackingSpannerCommand : DbCommand
         var rawContent = BuildParameterizedContent();
         var detailedContent = _options.LogSqlText ? CommandText : null;
 
-        var content = _options.Verbosity == SpannerTrackingVerbosity.Raw
-            ? rawContent
-            : detailedContent;
-
-        var (reqId, traceId) = _connection.Tracker.LogRequest(op, content, rawContent);
+        // Both forms go to the tracker, which takes each phase's own: choosing one here, from the base verbosity, gave a
+        // Detailed phase the Raw content when the base was Raw, SQL text and parameters whatever LogSqlText said.
+        var (reqId, traceId) = _connection.Tracker.LogRequest(op, detailedContent, rawContent);
         return reqId == Guid.Empty ? null : (traceId, reqId);
     }
 

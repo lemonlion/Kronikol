@@ -3,7 +3,7 @@
 **Written:** 2026-10-07, at 4.9.0 (`417c8e58`). #134 was filed the same day against 4.6.0 (`a074cf14`) and links one
 line, `GrpcTrackingInterceptor.cs` L353 (its `traceparent`), which is unchanged at `417c8e58`. 4.9.1 (`f6bf1d03`) was
 tagged later the same day and touches none of the files this plan edits; at its tip only `CHANGELOG.md`'s line numbers
-move (by 27). **Status: green-lit on 2026-10-08 with Q1 and Q4 as recommended, and executing: R0 is 4.12.1 and R1 4.13.0 (§11).**
+move (by 27). **Status: green-lit on 2026-10-08 with Q1 and Q4 as recommended, executed and published the same day as 4.12.1 (R0), 4.13.0 (R1), 4.13.2 (R2) and 4.14.3 (R3), and audited on 2026-10-12; the audit's fixes shipped as 4.16.1 (§11).**
 Evidence labels: **RUN** (measured here),
 **READ** (in the source, `file:line` at `417c8e58`), **INFERRED** (reasoned from facts, stated by none), **ISSUE** (taken
 from #134, not re-measured). The probe behind every RUN line, and its output, are in
@@ -52,18 +52,19 @@ This plan:
 - **designs the fix** (§4): one lossless encoding for identity values in every writer and reader (R0), the four
   identity headers in every gRPC call's metadata behind `PropagateTestIdentity` (R1), and streaming outcomes (R2).
 
-It ships as three releases (§6.2): **R0, a patch**, for the defects on the code the fix touches; **R1, a minor**, for
-the propagation and its option; **R2, a patch**, for streaming outcomes.
+It shipped as four releases (§6.2): **R0, a patch**, for the defects on the code the fix touches; **R1, a minor**, for
+the propagation and its option; **R2, a patch**, for streaming outcomes; and **R3, a patch** added when the owner settled
+Q1, for the HTTP handler's hops. An audit of all four shipped as 4.16.1 (§11).
 
 ## 0. Summary
 
 | | |
 |---|---|
-| What ships | **R0, a patch:** identity header values are encoded losslessly (printable ASCII unchanged, anything else as an RFC 8187 `UTF-8''` value) by every writer and decoded by every reader, so no test name fails a call; the interceptor stops writing into the caller's `Metadata`, keeps a caller's `traceparent`, takes the trace flags from its span and gives `Activity.Current` back; a foreign trace id no longer throws; the diagnostic report's accessor column counts instances. **R1, a minor:** `GrpcTrackingOptions.PropagateTestIdentity` (default `true`) puts the four identity headers into every gRPC call's metadata, on every hop; `HasHttpContextAccessor` on the interceptor and on the three other components the report lists without it. **R2, a patch:** a streaming call's outcome is recorded when the stream ends |
+| What ships | **R0, a patch:** identity header values are encoded losslessly (printable ASCII unchanged, anything else as an RFC 8187 `UTF-8''` value) by every writer and decoded by every reader, so no test name fails a call; the interceptor stops writing into the caller's `Metadata`, keeps a caller's `traceparent`, takes the trace flags from its span and gives `Activity.Current` back; a foreign trace id no longer throws; the diagnostic report's accessor column counts instances. **R1, a minor:** `GrpcTrackingOptions.PropagateTestIdentity` (default `true`) puts the four identity headers into every gRPC call's metadata, on every hop; `HasHttpContextAccessor` on the interceptor and on the three other components the report lists without it. **R2, a patch:** a streaming call's outcome is recorded when the stream ends. **R3, a patch:** the HTTP handler puts the identity on every hop, each header only when the request lacks it, and sends the current span's `traceparent` when its transport injects none |
 | The rule (R1) | When an identity resolves and names a scenario (`TestIdentity.IsAttributed`), the call's metadata gains `test-tracking-current-test-name`, `-id`, `-trace-id` and `-caller-name`, each only when the caller's metadata lacks it. The identity is whatever the interceptor resolves, including one that arrived on the request the host is serving. It is sent whether or not the call itself is tracked in the current phase |
 | What it measured | On 4.6.0 and 4.9.0, B's call to C is `unknown` behind a gRPC hop, from host A or straight from the test (P1, P1b); the issue's workaround makes it `id-1`. In BreakfastProvider's CI report, four gRPC scenarios miss the CosmosDB read behind their gRPC call (P11). A reused `Metadata` sends B one `traceparent` joining every earlier call's, and from the second call B's span leaves the trace (P2); `Metadata.Empty` throws (P3); non-ASCII and line-feed names fail calls, and with §4.1's encoding all five tried arrive exact over both sockets (P10) |
-| Bumps | R0 patch (nothing new to call; one internal helper). R1 minor (a new option and four new public members; its default is on, as 2.34.0's messaging propagation was). R2 patch |
-| Open | Ten questions (§9). Q1, whether HTTP should also re-stamp on every hop, is the one with the largest effect; the plan recommends it as its own release and does not do it |
+| Bumps | R0 patch (nothing new to call; one internal helper). R1 minor (a new option and four new public members; its default is on, as 2.34.0's messaging propagation was). R2 patch. R3 patch |
+| Open | Ten questions (§9). Q1, whether HTTP should also re-stamp on every hop, was the one with the largest effect; the plan recommended it as its own release, and the owner's answer made it R3 |
 
 ## 1. How far each claim was checked
 
@@ -516,7 +517,7 @@ Content stays `null`. Recording the messages of a stream is a separate question 
 ### 4.7 What stays as it is
 
 - The header names (`ROADMAP.md` 12b.3: "no new names") and the `traceparent` trace and span ids.
-- The HTTP handler's hop rule, unless Q1 says otherwise.
+- The HTTP handler's hop rule, unless Q1 says otherwise (it did: R3).
 - The HTTP handler's and the messaging producers' stamping of the background identity (Q3).
 - The receiving middleware.
 - The logged headers.
@@ -766,7 +767,8 @@ Not placed. At `417c8e58`, `ROADMAP.md` lists neither #134 nor its siblings (#10
 planning issues from the same batch are placing them as they go: #135's plan took row 1.21 and D37 on 2026-10-07,
 uncommitted. So a row is claimed with "taking 1.N now" when the owner places this plan. The natural place is stage 1,
 beside the other defects users hit in a first integration. No decision number is needed unless Q1 or Q4 is decided
-against the recommendation.
+against the recommendation. It was never placed: the owner green-lit it the day after it was written, and it finished
+without a stage row. Its leftovers are in `ROADMAP.md` Appendix C.
 
 ## 8. Found on the way, not in this plan
 
@@ -774,7 +776,8 @@ against the recommendation.
   to a framework `DiagnosticsHandler` whenever an `Activity` is current (L147-153), and `TestServer`'s client has none.
   So an HTTP hop between in-process hosts starts a new trace, and `kronikol query trace` and the internal-flow view
   break at it. The comment's concern, Application Insights correlation on real sockets, needs its own measurement. This
-  wants its own issue.
+  wanted its own issue; R3 (4.14.3) fixed it instead, for any transport but SocketsHttpHandler and HttpClientHandler,
+  which inject their own.
 - **The background identity is sent as if it were a scenario's** (READ). The HTTP handler (L205-220) and the messaging
   producers (`TrackingKafkaProducer.cs:108-113` and siblings) stamp `Unknown`/`unknown` when `CaptureBackground` is on.
   The receiving host then records background work with source `RequestHeader`. The id is right and the source is
@@ -785,17 +788,17 @@ against the recommendation.
   implementation is dead weight, but nothing reads it.
 - **#133:** xUnit v2's fetcher answers a fresh GUID outside a test. Every identity the gRPC interceptor sends from such
   a flow would be that orphan, as the HTTP handler's already is. Only #133's fix removes it; this plan neither depends
-  on it nor works around it.
-- **Siblings planned elsewhere:**
-  - #137 section 1, markers listed as unpaired requests;
+  on it nor works around it. #133's fix shipped as 4.13.1.
+- **Siblings:**
+  - #137 section 1, markers listed as unpaired requests (open, and in no plan; `ROADMAP.md` Appendix C);
   - #138, `InternalFlowActivitySources` and the listener's unused `additionalActivitySources`
-    (`InternalFlowActivityListener.cs:44`);
+    (`InternalFlowActivityListener.cs:44`; open, and in no plan; `ROADMAP.md` Appendix C);
   - #136, MongoDB's options take no accessor; its own session plans it and leaves the column to this plan;
   - #135, Kafka trace ids; its session formats `traceparent` the way §4.2 does.
 - **#97.** The package floats `Grpc.Net.Client 2.*`, so 4.6.0 and 4.9.0 both require 2.84.0 or later, and the
   issue's 2.76.0 cannot restore beside them (RUN, `nu1605-*.txt`). T30 to T35's `Grpc.AspNetCore` pin depends on it.
 - **MSTest gives every `[DataRow]` of a method the same id** (READ, `Kronikol.MSTest/CurrentTestInfo.cs:17`), so
-  their calls share one scenario. That is outside this plan; it wants an issue.
+  their calls share one scenario. That is outside this plan; kronikol-1c's 4.13.3 and 4.14.2 fixed it (§11).
 
 ## 9. Questions, with recommendations
 
@@ -984,6 +987,61 @@ against the recommendation.
     that failed on the listener race on 4.13.1's and 4.14.1's CI passed on its first attempt) and CodeQL 37837639639
     passed on `f9c67188`, nuget.org lists all 62 ids at 4.14.3, the wiki has R3's edits (`0b8eb20`), and Kronikol4J's
     ledger its line (`aab0cb9`). What the plan left is in `ROADMAP.md` Appendix C.
+- **2026-10-12, an audit of the four releases.** The owner asked "Can you make sure nothing was missed from the plan,
+  that there isn't any bugs or issues in the implementation", in a worktree of its own. kronikol-94 read the shipped
+  code against §4, and three reviewers read the rest against the plan from `C:/Code/Kronikol-audit134`: the docs and
+  records against §6.3 to §6.7, the tests against §5 fact by fact, and every writer and reader of the identity headers
+  against §4.1. The fixes were made in `C:/Code/Kronikol-fix134` and shipped as 4.16.1, a patch.
+  - **The test list.** Every fact from T1 to T43 exists. Three were weaker than §5 lists them, and are now as listed:
+    - T32 put no host A in front, so its first gRPC hop came from the test. It is now four hosts, with the first gRPC
+      hop made by a host serving the test's HTTP request.
+    - T34 inferred `unknown` with background capture off. A fact now observes the call recorded as background work.
+    - T35 showed the shared trace id but not that the call into the host is still open. It now shows both. `CallNesting`
+      is internal to the Query layer, which the gRPC test project cannot see; `CallNestingTests.cs:49` holds the rule.
+    - §5's mutations "drop the `Activity.Current` restore" and "hard-code `00`" were each caught at one call kind only.
+      Facts now cover each kind.
+  - **Defects found, all fixed in 4.16.1, each red first** (`audit/red-v4.14.6.txt`: 38 facts fail on 4.14.6's source):
+    - A gRPC message holding a `google.protobuf.Any` failed the call. `JsonFormatter.Default` throws on an `Any` its
+      empty registry does not hold (`audit/anyprobe.cs`). This dates from the interceptor's first version.
+      `Kronikol.Extensions.Spanner`'s Raw verbosity had the same fault.
+    - A unary call that failed with something other than an `RpcException`, and a call of any kind whose continuation
+      threw as it started, left its request without a response. Streams already recorded such failures.
+    - R2 made a stream's span end with the stream, and `Activity.Stop()` sets `Activity.Current` to the span's
+      predecessor whatever is current (`audit/stopprobe.cs`). A stream disposed under another span, or from another
+      flow, moved that flow's current span. R2's `Dispose` also caught only `InvalidOperationException` from
+      `GetStatus`.
+    - `TrackingProxy` left its span current after an async target, which is F4 outside gRPC.
+    - Since R1 (gRPC) and R3 (HTTP), a `test-tracking-trace-id` the caller set was sent but not logged. The call was
+      logged with a new trace id, and so was every retry of an HTTP request after its first attempt.
+    - `HeadersToForward` added a header the request already carried. R3's changelog said each header is added only when
+      the request lacks it, which held for the identity headers alone.
+    - The `test-tracking-ignore` header was honoured only in lower case.
+    - Found while correcting the Spanner wiki page: only the ADO.NET command honoured
+      `SpannerTrackingOptions.LogSqlText`. The gRPC interceptor and the server observer each kept their own copy of the
+      content code, which ignored it. They also computed the content once, at the base verbosity, so a phase variant
+      had none when the base was Summarised (`audit/red-spanner-logsqltext.txt`). The command had the mirror of it: a
+      Detailed phase under a Raw base showed the SQL text and its parameters. The observer also logged a failed call as
+      answered, ignoring the status it is given (`audit/red-spanner-observer-status.txt`).
+  - **Records** that had gone stale, and were brought up to date:
+    - this plan's status line, summary, §7 and §8;
+    - `PLANS_STATUS.md`, `ROADMAP.md` Appendix C, `V5_PLAN.md`'s citation and four `CHANGELOG.md` headings;
+    - doc comments in `TestTrackingMessageHandler` and its options, `TestIdentityScope`, `TestInfoResolver` and
+      `TestTrackingServerBridge`;
+    - the wiki: 35 pages, among them the gRPC, Spanner, HTTP tracking setup, multi-host and diagnostics pages, and the
+      `CurrentStepTypeFetcher` row of every extension page whose package does not read it;
+    - three of Kronikol4J's ledger lines. 4.12.1's said every ASCII name is sent unchanged. 4.13.0's blamed the port's
+      client for a gap that its missing gRPC server reader causes. 4.14.3's named two of four differences.
+  - **Left open, in `ROADMAP.md` Appendix C:**
+    - A `traceparent` the caller set is sent while the call is logged with its own span's ids.
+    - A retried request's logged headers include the identity headers its first attempt added.
+    - `ProxyTapOptions.IdentityResolver` receives Kronikol's headers undecoded, and its doc does not say so. PR #164
+      rewrites that doc.
+    - If `InternalFlowActivityListener`'s constructor ever threw, later callers would each wait their full second. The
+      constructor cannot throw on the inputs it is given, so nothing guards it.
+  - **Proofs** in `audit/`: `red-v4.14.6.txt`, `red-spanner-logsqltext.txt` and `red-spanner-observer-status.txt`;
+    `mutations.txt` and `mutations-spanner.txt` (40 of 40 caught); `suite.txt`, the suite at the version bump, where
+    every test project passes in Release; and `breakfastprovider.txt`, BreakfastProvider's xUnit and ReqNRoll lanes on
+    the local pack, where all 212 and 214 scenarios pass.
 
 ## Appendix A. Edit sites at `417c8e58`
 

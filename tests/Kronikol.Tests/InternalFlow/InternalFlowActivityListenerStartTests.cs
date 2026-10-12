@@ -44,7 +44,7 @@ public class InternalFlowActivityListenerStartTests
     {
         // Issue #70: On constrained thread pools (Linux CI), multiple handlers
         // calling EnsureStarted() concurrently must not block on a lock.
-        // All threads should return immediately (only one performs initialization).
+        // One thread registers the listener; the others wait, without a lock, until it is registered.
         InternalFlowActivityListener.ResetForTesting();
 
         const int threadCount = 8;

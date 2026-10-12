@@ -30,8 +30,9 @@ public record TestTrackingMessageHandlerOptions
     public string CallingServiceName { get => CallerName; set => CallerName = value; }
 
     /// <summary>
-    /// Headers to copy from the request the host is serving onto each outgoing request. The four test identity
-    /// headers need not be listed: the handler puts them on every request it sends.
+    /// Headers to copy from the request the host is serving onto each outgoing request, unless the request already
+    /// carries the header. The four test identity headers need not be listed: the handler puts them on every request it
+    /// tracks.
     /// </summary>
     public IEnumerable<string> HeadersToForward { get; set; } = [];
 
@@ -60,7 +61,8 @@ public record TestTrackingMessageHandlerOptions
     /// <summary>
     /// Resolves test identity from HTTP context headers when the handler runs inside
     /// the SUT's request pipeline. Auto-resolved from DI by <c>CreateTestTrackingClient</c>
-    /// and <c>AddTrackedGrpcClient</c> when not explicitly set.
+    /// when not explicitly set; a handler that <c>TrackDependenciesForDiagrams</c>' message handler filter builds is
+    /// given the host's accessor through its constructor, which wins over this.
     /// </summary>
     public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; set; }
 }

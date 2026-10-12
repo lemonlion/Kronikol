@@ -1,0 +1,5 @@
+Kronikol.Tests.Spanner.SpannerTrackerServerObserverTests.OnResponse_with_a_failed_status_logs_an_Error_response_naming_it(matched: True) [FAIL]
+Kronikol.Tests.Spanner.SpannerTrackerServerObserverTests.OnResponse_with_a_failed_status_logs_an_Error_response_naming_it(matched: False) [FAIL]
+   Assert.Equal() Failure: Strings differ
+   Assert.Equal() Failure: Strings differ
+Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 391 ms - Kronikol.Tests.Spanner.dll (net10.0)

@@ -111,3 +111,12 @@ Each release's proofs, added as it was made:
 - `results/accept/breakfastprovider-r0.txt`, `-r1.txt`, `-r2.txt` and `-r3.txt`: BreakfastProvider's xUnit and ReqNRoll
   lanes on each release's local packages, compared with the release before, and `breakfastprovider-grpc-flows-4.11.0.txt`
   the four gRPC scenarios before R1.
+- `audit/`, the audit of 2026-10-12 (the plan's §11): `red-v4.14.6.txt` is every new fact run on 4.14.6's source with the
+  audit's tests copied in, nothing stubbed; `mutate.py <snapshot worktree> <out>` puts each fixed behaviour back, and each
+  newly pinned one, one site at a time, and runs the facts that should catch it (output `mutations.txt`); `stopprobe.cs`
+  shows `Activity.Stop()` setting `Activity.Current` whatever is current; `anyprobe.cs` shows `JsonFormatter.Default`
+  throwing on an `Any` its registry lacks where `JsonFormatter.ToDiagnosticString` writes the same text as it for any
+  other message. The Spanner faults were found later, while correcting the wiki: `red-spanner-logsqltext.txt` and
+  `red-spanner-observer-status.txt` are their facts on the source before each fix, and `mutate_spanner.py` (output
+  `mutations-spanner.txt`) does for those fixes what `mutate.py` does for the rest. `suite.txt` and
+  `breakfastprovider.txt` are the release candidate's suite and consumer runs.

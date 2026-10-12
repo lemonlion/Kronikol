@@ -10,10 +10,13 @@ namespace Kronikol.Tracking;
 /// logging them as <see cref="RequestResponseLog"/> entries for inclusion in test sequence diagrams.
 /// This is the primary mechanism for tracking HTTP dependencies in tests.
 /// <para>
-/// Each request it sends carries the test identity in the four <see cref="TestTrackingHttpHeaders"/> (name, id, trace
+/// Each request it tracks carries the test identity in the four <see cref="TestTrackingHttpHeaders"/> (name, id, trace
 /// id and caller name), so a host that calls <c>AddTestTrackingContextPropagation()</c> attributes its own calls to
-/// the scenario. That holds on every hop: a handler in a host serving a request passes that request's identity and
-/// Kronikol trace id on. A header the request already carries is left as it is.
+/// the scenario. That holds on every hop: a handler in a host serving a request passes on the identity that request
+/// carries (read through the handler's <see cref="IHttpContextAccessor"/>, or else from the scope the host's middleware
+/// opened for it), and with an accessor its Kronikol trace id too. A header the request already carries is left as it
+/// is, and the call is logged with the trace id the request carries. A request the handler does not track carries
+/// nothing of this: one sent synchronously, one to an excluded host, and one for which no identity resolves.
 /// </para>
 /// </summary>
 public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
@@ -217,8 +220,12 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             currentTestInfo = resolved.Value;
         }
 
-        // A trace id another tool wrote in some other form must not fail the application's call.
-        var traceId = hasTraceIdHeader && Guid.TryParse(traceIdHeaders.First(), out var inboundTraceId) ? inboundTraceId : Guid.NewGuid();
+        // The call's trace id: the one the request already carries (the caller's own, or the first attempt's when a retry
+        // sends the message again), since the header is left as it is and the called host reads that one; else the
+        // request being served's; else a new one. A trace id another tool wrote in some other form must not fail the
+        // application's call.
+        var traceId = TraceIdOf(request.Headers)
+                      ?? (hasTraceIdHeader && Guid.TryParse(traceIdHeaders.First(), out var inboundTraceId) ? inboundTraceId : Guid.NewGuid());
 
         // The identity goes on every outgoing request, whether this handler resolved it or took it from the request the
         // host is serving, so a host passes its scenario on to the next host as the gRPC interceptor does. Each header
@@ -237,7 +244,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         var requestFocusFields = !hasCurrentTestNameHeader ? DiagramFocus.ConsumePendingRequestFocus() : null;
         var responseFocusFields = !hasCurrentTestNameHeader ? DiagramFocus.ConsumePendingResponseFocus() : null;
 
-        var trackingIgnore = requestHeaders.Any(x => x.Key == TestTrackingHttpHeaders.Ignore)
+        var trackingIgnore = requestHeaders.Any(x => string.Equals(x.Key, TestTrackingHttpHeaders.Ignore, StringComparison.OrdinalIgnoreCase))
                              || !PhaseConfiguration.ShouldTrack(_trackDuringSetup, _trackDuringAction);
         var currentPhase = TestPhaseContext.Current;
 
@@ -329,6 +336,11 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         return response;
     }
 
+    /// <summary>
+    /// Copies each header <see cref="TestTrackingMessageHandlerOptions.HeadersToForward"/> names from the request being
+    /// served, unless the request already carries it: one the caller set, or one a first attempt copied when a retry
+    /// sends the message again. A second value would reach the called host joined to the first.
+    /// </summary>
     private void ForwardHeaders(HttpRequestMessage request)
     {
         if(!_headersToForward.Any())
@@ -340,10 +352,16 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
 
         foreach (var header in _headersToForward)
         {
-            if (contextHeaders.TryGetValue(header, out var value))
+            if (!request.Headers.Contains(header) && contextHeaders.TryGetValue(header, out var value))
                 request.Headers.Add(header, (IEnumerable<string?>)value);
         }
     }
+
+    /// <summary>The Kronikol trace id the request already carries, when it is a GUID.</summary>
+    private static Guid? TraceIdOf(System.Net.Http.Headers.HttpRequestHeaders headers) =>
+        headers.TryGetValues(TestTrackingHttpHeaders.TraceIdHeader, out var values) && Guid.TryParse(values.FirstOrDefault(), out var traceId)
+            ? traceId
+            : null;
 
     /// <summary>
     /// Whether the transport at the end of this handler's chain injects the trace context itself: SocketsHttpHandler,

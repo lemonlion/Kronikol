@@ -80,6 +80,32 @@ public class MultiHostPropagationTests
     }
 
     [Fact]
+    public async Task Two_gRPC_hops_from_a_host_the_test_called_over_HTTP_carry_the_identity_to_the_fourth_host()
+    {
+        // T32 as the plan lists it: test --HTTP--> A --gRPC--> B --gRPC--> C --HTTP--> stub D, so the first gRPC hop is
+        // made by a host serving the test's request, and the second by one serving a gRPC call.
+        await using var d = await StubHost.StartAsync("Stub D " + _suffix);
+        await using var c = await HopHost.StartAsync("Service C " + _suffix, o => o.NextHttp = d);
+        await using var b = await HopHost.StartAsync("Service B " + _suffix, o => o.NextGrpc = c);
+        await using var a = await HopHost.StartAsync("Service A " + _suffix, o => o.NextGrpc = b);
+
+        await StartThroughHttp(a);
+
+        var call = CallTo(d.Name);
+        Assert.NotNull(call);
+        Assert.Equal(_testId, call.TestId);
+        Assert.Equal(AttributionSource.RequestHeader, call.AttributionSource);
+        var requests = RequestResponseLogger.RequestAndResponseLogs
+            .Where(l => l.Type == RequestResponseType.Request && l.ServiceName.EndsWith(_suffix, StringComparison.Ordinal))
+            .ToArray();
+        var aToB = Assert.Single(requests, l => l.ServiceName == b.Name);
+        var bToC = Assert.Single(requests, l => l.ServiceName == c.Name);
+        Assert.All([aToB, bToC], hop => Assert.Equal(_testId, hop.TestId));
+        Assert.Equal(aToB.TraceId, bToC.TraceId);
+        Assert.Equal(aToB.TraceId, call.TraceId);
+    }
+
+    [Fact]
     public async Task A_name_that_is_not_plain_ascii_reaches_a_host_over_h2c_exactly()
     {
         await using var c = await StubHost.StartAsync("Stub C " + _suffix);
@@ -139,6 +165,10 @@ public class MultiHostPropagationTests
         Assert.NotEqual(aToB.ServiceName, bToC.CallerName);
         Assert.Equal(aToB.TraceId, bToC.TraceId);
         Assert.Equal(testToA.TraceId, aToB.TraceId);
+        // The rule nests a call under an open call, so B's call is made while A's call into B is open.
+        var aToBEnds = Assert.Single(RequestResponseLogger.RequestAndResponseLogs,
+            l => l.RequestResponseId == aToB.RequestResponseId && l.Type == RequestResponseType.Response);
+        Assert.InRange(bToC.Timestamp!.Value, aToB.Timestamp!.Value, aToBEnds.Timestamp!.Value);
     }
 
     private async Task StartThroughHttp(HopHost a)
@@ -153,5 +183,47 @@ public class MultiHostPropagationTests
         { BaseAddress = a.BaseAddress };
 
         (await client.GetAsync("/start", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+    }
+}
+
+/// <summary>
+/// T34 observed rather than inferred: with <see cref="GrpcTrackingOptions.PropagateTestIdentity"/> off, the called host's
+/// call is recorded as background work. This turns <see cref="RequestResponseLogger.CaptureBackground"/> on, which is
+/// process-wide, so it runs alone.
+/// </summary>
+[Collection(nameof(BackgroundCaptureCollection))]
+public class MultiHostBackgroundTests
+{
+    private readonly string _testId = Guid.NewGuid().ToString();
+    private readonly string _suffix = Guid.NewGuid().ToString("N")[..8];
+
+    [Fact]
+    public async Task With_PropagateTestIdentity_off_the_called_hosts_call_is_recorded_as_background_work()
+    {
+        var before = RequestResponseLogger.CaptureBackground;
+        RequestResponseLogger.CaptureBackground = true;
+        try
+        {
+            await using var c = await StubHost.StartAsync("Stub C " + _suffix);
+            await using var b = await HopHost.StartAsync("Service B " + _suffix, o => o.NextHttp = c);
+            var client = b.CreateTestClient(new GrpcTrackingOptions
+            {
+                ServiceName = b.Name,
+                CallerName = "Test",
+                CurrentTestInfoFetcher = () => ("Place an order", _testId),
+                PropagateTestIdentity = false,
+            });
+
+            await client.CallAsync(new HopRequest { Text = "hello" }, cancellationToken: TestContext.Current.CancellationToken);
+
+            var call = Assert.Single(RequestResponseLogger.RequestAndResponseLogs,
+                l => l.ServiceName == c.Name && l.Type == RequestResponseType.Request);
+            Assert.Equal(TestIdentityScope.UnknownTestId, call.TestId);
+            Assert.Equal(AttributionSource.None, call.AttributionSource);
+        }
+        finally
+        {
+            RequestResponseLogger.CaptureBackground = before;
+        }
     }
 }

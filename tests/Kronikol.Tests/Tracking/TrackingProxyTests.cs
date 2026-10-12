@@ -189,6 +189,36 @@ public class TrackingProxyTests
     }
 
     [Fact]
+    public async Task An_awaited_async_method_leaves_the_callers_current_span_as_it_was()
+    {
+        // The span starts in the proxy's synchronous Invoke, so the target runs under it; but Invoke returns before
+        // the span ends, and a span still current there stays current in the caller's flow, parenting the next call.
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = s => s.Name == _sourceName,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
+        };
+        ActivitySource.AddActivityListener(listener);
+        var proxy = TrackingProxy<ICalculator>.Create(new FakeCalculator(), new TrackingProxyOptions
+        {
+            ServiceName = "Calculator",
+            ActivitySourceName = _sourceName,
+            CurrentTestInfoFetcher = () => (TestName, _testId)
+        });
+
+        Activity.Current = null;
+        Assert.Equal(6, await proxy.MultiplyAsync(2, 3));
+        Assert.Null(Activity.Current);
+        Assert.Equal(12, await proxy.MultiplyAsync(3, 4));
+
+        var spans = InternalFlowSpanStore.GetSpans()
+            .Where(s => s.Source.Name == _sourceName && s.DisplayName == "MultiplyAsync")
+            .ToArray();
+        Assert.Equal(2, spans.Length);
+        Assert.NotEqual(spans[0].TraceId, spans[1].TraceId);
+    }
+
+    [Fact]
     public void Void_method_is_tracked()
     {
         var mock = new FakeCalculator();

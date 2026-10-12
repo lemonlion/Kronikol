@@ -65,6 +65,25 @@ public class SpannerTrackerServerObserverTests
         Assert.Equal(RequestResponseType.Response, logs[1].Type);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void OnResponse_with_a_failed_status_logs_an_Error_response_naming_it(bool matched)
+    {
+        // The observer is given the call's gRPC status, and logged every response alike, so a failed call read as answered.
+        var tracker = new SpannerTracker(MakeOptions());
+        var (onRequest, onResponse) = SpannerTracker.CreateServerObservers(tracker);
+        var request = new ExecuteSqlRequest { Sql = "SELECT * FROM Missing" };
+        if (matched)
+            onRequest("ExecuteSql", request, DateTimeOffset.UtcNow);
+
+        onResponse("ExecuteSql", request, null, TimeSpan.FromMilliseconds(5), StatusCode.NotFound, DateTimeOffset.UtcNow);
+
+        var response = Assert.Single(GetLogs(), l => l.Type == RequestResponseType.Response);
+        Assert.Equal("Error", response.StatusCode?.Value?.ToString());
+        Assert.Equal("NotFound", response.Content);
+    }
+
     [Fact]
     public void OnRequest_Extracts_sql_from_ExecuteSqlRequest()
     {
@@ -76,6 +95,21 @@ public class SpannerTrackerServerObserverTests
 
         var log = GetLogs().First();
         Assert.Contains("SELECT Name FROM Users", log.Content);
+    }
+
+    [Theory]
+    [InlineData(SpannerTrackingVerbosity.Detailed, null)]
+    [InlineData(SpannerTrackingVerbosity.Raw, "SELECT Name FROM Users")]
+    public void OnRequest_with_LogSqlText_off_leaves_the_SQL_out_at_Detailed_only(SpannerTrackingVerbosity verbosity, string? expected)
+    {
+        var options = MakeOptions();
+        options.Verbosity = verbosity;
+        options.LogSqlText = false;
+        var (onRequest, _) = SpannerTracker.CreateServerObservers(new SpannerTracker(options));
+
+        onRequest("ExecuteSql", new ExecuteSqlRequest { Sql = "SELECT Name FROM Users" }, DateTimeOffset.UtcNow);
+
+        Assert.Equal(expected, Assert.Single(GetLogs()).Content);
     }
 
     [Fact]

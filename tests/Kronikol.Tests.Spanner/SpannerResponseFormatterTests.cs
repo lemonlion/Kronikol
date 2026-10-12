@@ -357,6 +357,28 @@ public class SpannerResponseFormatterTests
         Assert.Null(result);
     }
 
+    [Fact]
+    public void FormatRaw_writes_an_Any_its_registry_does_not_hold_instead_of_throwing()
+    {
+        // A batch DML response that failed part way carries a google.rpc.Status, whose details are google.protobuf.Any.
+        // JsonFormatter.Default throws on an Any whose type its empty registry does not hold, and at Raw verbosity
+        // that failed the application's call.
+        var batch = new ExecuteBatchDmlResponse
+        {
+            Status = new Google.Rpc.Status
+            {
+                Code = 3,
+                Message = "statement 2 failed",
+                Details = { Google.Protobuf.WellKnownTypes.Any.Pack(new Google.Protobuf.WellKnownTypes.Struct()) },
+            },
+        };
+
+        var result = SpannerResponseFormatter.FormatRaw(batch);
+
+        Assert.Contains("type.googleapis.com/google.protobuf.Struct", result);
+        Assert.Contains("statement 2 failed", result);
+    }
+
     // ─── MaxResponseRows negative ───────────────────────────
 
     [Fact]

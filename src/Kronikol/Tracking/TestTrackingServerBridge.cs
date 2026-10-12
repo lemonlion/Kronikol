@@ -6,7 +6,7 @@ namespace Kronikol.Tracking;
 /// <summary>
 /// Reads test tracking context from HTTP request headers, enabling code running on the
 /// WebApplicationFactory server thread to obtain the test name and ID that was propagated
-/// by <see cref="TestTrackingMessageHandler"/>.
+/// by <see cref="TestTrackingMessageHandler"/>, or by the gRPC package's <c>GrpcTrackingInterceptor</c>.
 /// </summary>
 public static class TestTrackingServerBridge
 {

@@ -1,0 +1,16 @@
+Kronikol.Tests.Spanner.SpannerTrackingInterceptorTests.A_phase_whose_verbosity_shows_content_gets_it_when_the_base_verbosity_is_Summarised [FAIL]
+Kronikol.Tests.Spanner.SpannerTrackerServerObserverTests.OnRequest_with_LogSqlText_off_leaves_the_SQL_out_at_Detailed_only(verbosity: Detailed, expected: null) [FAIL]
+Kronikol.Tests.Spanner.SpannerTrackingInterceptorTests.With_LogSqlText_off_a_statement_is_logged_without_its_SQL_at_Detailed_as_a_command_is [FAIL]
+   Assert.Equal() Failure: Strings differ
+   Assert.Equal() Failure: Strings differ
+   Assert.Null() Failure: Value is not null
+Failed!  - Failed:     3, Passed:     2, Skipped:     0, Total:     5, Duration: 131 ms - Kronikol.Tests.Spanner.dll (net10.0)
+
+Kronikol.Tests.Spanner.TrackingSpannerCommandContentTests.A_Detailed_phase_of_a_command_logged_at_Raw_leaves_the_SQL_out_when_LogSqlText_is_off [FAIL]
+   Assert.Null() Failure: Value is not null
+(on the command's source before its fix; 1 of 1 red)
+
+Kronikol.Tests.Spanner.SpannerTrackingInterceptorTests.With_LogSqlText_off_a_streamed_statement_is_logged_as_a_unary_one_is(verbosity: Detailed, expected: null) [FAIL]
+Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2 - Kronikol.Tests.Spanner.dll (net10.0)
+(the streaming call site, given a fact of its own when the mutation list showed no fact covered it; on the source before
+the fix, 1 of 2 red: the Raw row passes there, since the SQL text was always the Raw content)

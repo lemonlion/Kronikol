@@ -1,0 +1,83 @@
+Red proof of the #134 audit facts: the tests of the audit commit, on the source of d59843fa (v4.14.6 and docs).
+Every new fact that fails there, with the first line of its failure; every other fact in these projects passes.
+
+Failed!  - Failed:    30, Passed:   221, Skipped:     0, Total:   251, Duration: 1 s - Kronikol.Tests.Grpc.dll (net10.0)
+Failed!  - Failed:     1, Passed:    24, Skipped:     0, Total:    25, Duration: 1 s - Kronikol.Tests.Spanner.dll (net10.0)
+Failed!  - Failed:     7, Passed:   169, Skipped:     0, Total:   176, Duration: 1 s - Kronikol.Tests.dll (net10.0)
+
+CallEndingTests.A_call_whose_continuation_throws_as_it_starts_is_logged_as_its_failure(kind: AsyncUnary)
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.A_call_whose_continuation_throws_as_it_starts_is_logged_as_its_failure(kind: BlockingUnary)
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.A_call_whose_continuation_throws_as_it_starts_is_logged_as_its_failure(kind: ClientStreaming)
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.A_call_whose_continuation_throws_as_it_starts_is_logged_as_its_failure(kind: Duplex)
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.A_call_whose_continuation_throws_as_it_starts_is_logged_as_its_failure(kind: ServerStreaming)
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.A_stream_whose_dispose_throws_is_still_logged_and_its_span_ended(kind: ClientStreaming)
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.A_stream_whose_dispose_throws_is_still_logged_and_its_span_ended(kind: Duplex)
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.A_stream_whose_dispose_throws_is_still_logged_and_its_span_ended(kind: ServerStreaming)
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.A_stream_whose_status_cannot_be_read_is_still_disposed_and_logged_Cancelled(kind: ClientStreaming)
+    System.NotSupportedException : this call has no status
+CallEndingTests.A_stream_whose_status_cannot_be_read_is_still_disposed_and_logged_Cancelled(kind: Duplex)
+    System.NotSupportedException : this call has no status
+CallEndingTests.A_stream_whose_status_cannot_be_read_is_still_disposed_and_logged_Cancelled(kind: ServerStreaming)
+    System.NotSupportedException : this call has no status
+CallEndingTests.A_unary_call_that_fails_without_an_RpcException_is_logged_as_its_failure(kind: AsyncUnary, failure: "cancelled")
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.A_unary_call_that_fails_without_an_RpcException_is_logged_as_its_failure(kind: AsyncUnary, failure: "other")
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.A_unary_call_that_fails_without_an_RpcException_is_logged_as_its_failure(kind: BlockingUnary, failure: "cancelled")
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.A_unary_call_that_fails_without_an_RpcException_is_logged_as_its_failure(kind: BlockingUnary, failure: "other")
+    Assert.Single() Failure: The collection was empty
+CallEndingTests.Disposing_a_stream_from_a_flow_with_no_span_leaves_that_flow_without_one(kind: ClientStreaming)
+    Assert.Null() Failure: Value is not null | Expected: null
+CallEndingTests.Disposing_a_stream_from_a_flow_with_no_span_leaves_that_flow_without_one(kind: Duplex)
+    Assert.Null() Failure: Value is not null | Expected: null
+CallEndingTests.Disposing_a_stream_from_a_flow_with_no_span_leaves_that_flow_without_one(kind: ServerStreaming)
+    Assert.Null() Failure: Value is not null | Expected: null
+CallEndingTests.Disposing_a_stream_while_another_span_is_current_leaves_that_span_current(kind: ClientStreaming)
+    Assert.Same() Failure: Values are not the same instance | Expected: Activity { ActivityTraceFlags = None, Baggage = [], Context = System.Diagnostics.A
+CallEndingTests.Disposing_a_stream_while_another_span_is_current_leaves_that_span_current(kind: Duplex)
+    Assert.Same() Failure: Values are not the same instance | Expected: Activity { ActivityTraceFlags = None, Baggage = [], Context = System.Diagnostics.A
+CallEndingTests.Disposing_a_stream_while_another_span_is_current_leaves_that_span_current(kind: ServerStreaming)
+    Assert.Same() Failure: Values are not the same instance | Expected: Activity { ActivityTraceFlags = None, Baggage = [], Context = System.Diagnostics.A
+IdentityPropagationTests.A_trace_id_the_caller_put_in_the_metadata_is_the_one_the_call_is_logged_with(kind: AsyncUnary)
+    Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+IdentityPropagationTests.A_trace_id_the_caller_put_in_the_metadata_is_the_one_the_call_is_logged_with(kind: BlockingUnary)
+    Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+IdentityPropagationTests.A_trace_id_the_caller_put_in_the_metadata_is_the_one_the_call_is_logged_with(kind: ClientStreaming)
+    Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+IdentityPropagationTests.A_trace_id_the_caller_put_in_the_metadata_is_the_one_the_call_is_logged_with(kind: Duplex)
+    Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+IdentityPropagationTests.A_trace_id_the_caller_put_in_the_metadata_is_the_one_the_call_is_logged_with(kind: ServerStreaming)
+    Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+MessageContentTests.A_blocking_unary_call_carrying_an_Any_succeeds_and_records_its_messages
+    System.InvalidOperationException : Type registry has no descriptor for type name 'google.protobuf.Struct'
+MessageContentTests.A_client_stream_whose_response_is_an_Any_succeeds_and_records_it
+    System.InvalidOperationException : Type registry has no descriptor for type name 'google.protobuf.Struct'
+MessageContentTests.A_message_that_cannot_be_written_at_all_does_not_fail_the_call
+    System.InvalidOperationException : no text for this one
+MessageContentTests.An_async_unary_call_carrying_an_Any_succeeds_and_records_its_messages
+    System.InvalidOperationException : Type registry has no descriptor for type name 'google.protobuf.Struct'
+SpannerResponseFormatterTests.FormatRaw_writes_an_Any_its_registry_does_not_hold_instead_of_throwing
+    System.InvalidOperationException : Type registry has no descriptor for type name 'google.protobuf.Struct'
+TestTrackingMessageHandlerTests.A_forwarded_header_is_not_added_again_when_the_request_is_sent_again
+    Assert.Equal() Failure: Collections differ | Expected: <generated> ["corr-123"]
+TestTrackingMessageHandlerTests.A_header_the_caller_set_is_left_as_it_is_by_HeadersToForward
+    Assert.Equal() Failure: Collections differ | Expected: <generated> ["set-by-the-caller"]
+TestTrackingMessageHandlerTests.A_request_sent_again_is_logged_each_time_with_the_one_trace_id_it_carries
+    Assert.All() Failure: 2 out of 4 items in the collection did not pass.
+TestTrackingMessageHandlerTests.A_trace_id_the_caller_set_on_the_request_is_the_one_the_call_is_logged_with
+    Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+TestTrackingMessageHandlerTests.The_ignore_header_is_honoured_in_any_casing(name: "TEST-TRACKING-IGNORE")
+    Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+TestTrackingMessageHandlerTests.The_ignore_header_is_honoured_in_any_casing(name: "Test-Tracking-Ignore")
+    Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+TrackingProxyTests.An_awaited_async_method_leaves_the_callers_current_span_as_it_was
+    Assert.Null() Failure: Value is not null | Expected: null

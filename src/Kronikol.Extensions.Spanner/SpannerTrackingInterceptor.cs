@@ -41,8 +41,8 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
         if (!ShouldTrack(opInfo))
             return continuation(request, context);
 
-        var content = ExtractContent(methodName, request);
-        var (reqId, traceId) = _tracker.LogRequest(opInfo, content);
+        var (content, rawContent) = SpannerTracker.RequestContent(request, _options);
+        var (reqId, traceId) = _tracker.LogRequest(opInfo, content, rawContent);
         if (reqId == Guid.Empty)
             return continuation(request, context);
 
@@ -71,8 +71,8 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
         if (!ShouldTrack(opInfo))
             return continuation(request, context);
 
-        var content = ExtractContent(methodName, request);
-        var (reqId, traceId) = _tracker.LogRequest(opInfo, content);
+        var (content, rawContent) = SpannerTracker.RequestContent(request, _options);
+        var (reqId, traceId) = _tracker.LogRequest(opInfo, content, rawContent);
         if (reqId == Guid.Empty)
             return continuation(request, context);
 
@@ -203,46 +203,6 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
         };
 
         return baseOp with { Operation = operation, TableName = table };
-    }
-
-    private string? ExtractContent<TRequest>(string methodName, TRequest request)
-    {
-        var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
-            _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
-
-        if (effectiveVerbosity == SpannerTrackingVerbosity.Summarised)
-            return null;
-
-        return request switch
-        {
-            ExecuteSqlRequest sql => sql.Sql,
-            ReadRequest read => $"Read table: {read.Table}",
-            CommitRequest commit => FormatCommitContent(commit),
-            ExecuteBatchDmlRequest batch => FormatBatchDmlContent(batch),
-            _ => null
-        };
-    }
-
-    private static string FormatCommitContent(CommitRequest commit)
-    {
-        if (commit.Mutations.Count == 0) return "Commit (no mutations)";
-
-        var parts = commit.Mutations.Select(m => m.OperationCase switch
-        {
-            Mutation.OperationOneofCase.Insert => $"INSERT {m.Insert.Table}",
-            Mutation.OperationOneofCase.Update => $"UPDATE {m.Update.Table}",
-            Mutation.OperationOneofCase.InsertOrUpdate => $"UPSERT {m.InsertOrUpdate.Table}",
-            Mutation.OperationOneofCase.Replace => $"REPLACE {m.Replace.Table}",
-            Mutation.OperationOneofCase.Delete => $"DELETE {m.Delete.Table}",
-            _ => "Unknown mutation"
-        });
-
-        return string.Join("; ", parts);
-    }
-
-    private static string FormatBatchDmlContent(ExecuteBatchDmlRequest batch)
-    {
-        return string.Join("\n", batch.Statements.Select(s => s.Sql));
     }
 
     private async Task<TResponse> WrapUnaryResponse<TResponse>(

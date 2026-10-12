@@ -2080,4 +2080,140 @@ public class TestTrackingMessageHandlerTests : IDisposable
         Assert.Equal("Fetcher Test", logs[0].TestName);
         Assert.Equal(_testId, logs[0].TestId);
     }
+
+    // ─── Audit of plans/GRPC_IDENTITY_PROPAGATION_PLAN.md (R3's handler) ───
+
+    [Theory]
+    [InlineData("test-tracking-ignore")]
+    [InlineData("Test-Tracking-Ignore")]
+    [InlineData("TEST-TRACKING-IGNORE")]
+    public async Task The_ignore_header_is_honoured_in_any_casing(string name)
+    {
+        // Header names are case-insensitive (RFC 9110), and a custom header keeps the casing it was added with.
+        using var invoker = CreateInvoker(DefaultOptions());
+        var request = MakeGetRequest();
+        request.Headers.Add(name, "true");
+
+        await invoker.SendAsync(request, CancellationToken.None);
+
+        var logs = GetLogsFromThisTest();
+        Assert.Equal(2, logs.Length);
+        Assert.All(logs, l => Assert.True(l.TrackingIgnore));
+    }
+
+    [Fact]
+    public async Task A_trace_id_the_caller_set_on_the_request_is_the_one_the_call_is_logged_with()
+    {
+        // The handler leaves the caller's header as it is, so the called host reads that id: the call's records must
+        // carry it too, or kronikol query flow cannot nest the called host's calls under this one.
+        using var invoker = CreateInvoker(DefaultOptions());
+        var callerTraceId = Guid.NewGuid();
+        var request = MakeGetRequest();
+        request.Headers.Add(TestTrackingHttpHeaders.TraceIdHeader, callerTraceId.ToString());
+
+        await invoker.SendAsync(request, CancellationToken.None);
+
+        Assert.Equal([callerTraceId.ToString()], _innerHandler.CapturedRequest!.Headers.GetValues(TestTrackingHttpHeaders.TraceIdHeader));
+        var logs = GetLogsFromThisTest();
+        Assert.Equal(2, logs.Length);
+        Assert.All(logs, l => Assert.Equal(callerTraceId, l.TraceId));
+    }
+
+    [Fact]
+    public async Task A_request_sent_again_is_logged_each_time_with_the_one_trace_id_it_carries()
+    {
+        // A retry handler outside this one sends the same message again; it still carries the trace id the first
+        // attempt stamped, which is the one the called host reads.
+        using var invoker = CreateInvoker(DefaultOptions());
+        var request = MakeGetRequest();
+
+        await invoker.SendAsync(request, CancellationToken.None);
+        await invoker.SendAsync(request, CancellationToken.None);
+
+        var sent = Guid.Parse(Assert.Single(_innerHandler.CapturedRequest!.Headers.GetValues(TestTrackingHttpHeaders.TraceIdHeader)));
+        var logs = GetLogsFromThisTest();
+        Assert.Equal(4, logs.Length);
+        Assert.All(logs, l => Assert.Equal(sent, l.TraceId));
+    }
+
+    [Fact]
+    public async Task Traceparent_is_left_to_the_framework_when_the_transport_is_HttpClientHandler()
+    {
+        // HttpClientHandler runs SocketsHttpHandler, and so the framework's DiagnosticsHandler, as the handler's own
+        // default transport does.
+        var capture = new CapturingDelegatingHandler { InnerHandler = new HttpClientHandler() };
+        using var invoker = new HttpMessageInvoker(new TestTrackingMessageHandler(DefaultOptions()) { InnerHandler = capture });
+        using var existingActivity = new Activity("ExistingTest");
+        existingActivity.SetIdFormat(ActivityIdFormat.W3C);
+        existingActivity.Start();
+
+        await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
+
+        Assert.False(capture.CapturedRequest!.Headers.Contains("traceparent"));
+        existingActivity.Stop();
+    }
+
+    [Fact]
+    public async Task A_traceparent_the_caller_set_is_kept_alone_when_the_transport_injects_none()
+    {
+        using var invoker = CreateInvoker(DefaultOptions());
+        using var existingActivity = new Activity("ExistingTest");
+        existingActivity.SetIdFormat(ActivityIdFormat.W3C);
+        existingActivity.Start();
+        const string callers = "00-aaaabbbbccccddddaaaabbbbccccdddd-1122334455667788-01";
+        var request = MakeGetRequest();
+        request.Headers.TryAddWithoutValidation("traceparent", callers);
+
+        await invoker.SendAsync(request, CancellationToken.None);
+
+        Assert.Equal([callers], _innerHandler.CapturedRequest!.Headers.GetValues("traceparent"));
+        existingActivity.Stop();
+    }
+
+    [Fact]
+    public async Task A_forwarded_header_is_not_added_again_when_the_request_is_sent_again()
+    {
+        var accessor = CreateHttpContextAccessor(("X-Correlation-Id", "corr-123"));
+        var options = DefaultOptions();
+        options.HeadersToForward = ["X-Correlation-Id"];
+        using var invoker = CreateInvoker(options, accessor);
+        var request = MakeGetRequest();
+
+        await invoker.SendAsync(request, CancellationToken.None);
+        await invoker.SendAsync(request, CancellationToken.None); // a retry handler outside sends the same message again
+
+        Assert.Equal(["corr-123"], _innerHandler.CapturedRequest!.Headers.GetValues("X-Correlation-Id"));
+    }
+
+    [Fact]
+    public async Task A_header_the_caller_set_is_left_as_it_is_by_HeadersToForward()
+    {
+        // Two values would reach the called host as one joined value, as identity headers listed here did before 4.14.3.
+        var accessor = CreateHttpContextAccessor(
+            (TestTrackingHttpHeaders.CurrentTestNameHeader, "Test"),
+            (TestTrackingHttpHeaders.CurrentTestIdHeader, _testId),
+            ("X-Correlation-Id", "corr-123"));
+        var options = DefaultOptions();
+        options.HeadersToForward = ["X-Correlation-Id", TestTrackingHttpHeaders.CurrentTestIdHeader];
+        using var invoker = CreateInvoker(options, accessor);
+        var request = MakeGetRequest();
+        request.Headers.Add("X-Correlation-Id", "set-by-the-caller");
+
+        await invoker.SendAsync(request, CancellationToken.None);
+
+        Assert.Equal(["set-by-the-caller"], _innerHandler.CapturedRequest!.Headers.GetValues("X-Correlation-Id"));
+        Assert.Equal([_testId], _innerHandler.CapturedRequest!.Headers.GetValues(TestTrackingHttpHeaders.CurrentTestIdHeader));
+    }
+
+    [Fact]
+    public async Task A_request_to_an_excluded_host_carries_no_identity_and_no_traceparent()
+    {
+        using var invoker = CreateInvoker(DefaultOptions());
+
+        await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://override.com/api/test"), CancellationToken.None);
+
+        var sent = _innerHandler.CapturedRequest!.Headers;
+        Assert.DoesNotContain(sent, h => h.Key.StartsWith("test-tracking-", StringComparison.OrdinalIgnoreCase));
+        Assert.False(sent.Contains("traceparent"));
+    }
 }

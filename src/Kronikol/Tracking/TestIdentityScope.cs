@@ -7,7 +7,8 @@ namespace Kronikol.Tracking;
 /// <para>
 /// Resolution order in <see cref="TestInfoResolver"/>:
 /// <list type="number">
-///   <item>HTTP request headers (propagated by <see cref="TestTrackingMessageHandler"/>)</item>
+///   <item>HTTP request headers (propagated by <see cref="TestTrackingMessageHandler"/>, or by the gRPC package's
+///   <c>GrpcTrackingInterceptor</c> in a call's metadata)</item>
 ///   <item><c>CurrentTestInfoFetcher</c> delegate (test framework AsyncLocal)</item>
 ///   <item><see cref="TestIdentityScope.Current"/> (this class, AsyncLocal)</item>
 ///   <item><see cref="TestIdentityScope.GlobalFallback"/> (static, for pre-existing threads)</item>
