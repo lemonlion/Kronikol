@@ -106,7 +106,7 @@ public class TrackingKafkaProducerFailureTests
         var response = Response();
         Assert.Equal("!Local_MsgTimedOut", Status(response));
         Assert.Equal(FailedSend.Describe(thrown), response.Error);
-        Assert.Equal("Key: k, Value: v", Assert.Single(Logs(), l => l.Type == RequestResponseType.Request).Content);
+        Assert.Equal("v", Assert.Single(Logs(), l => l.Type == RequestResponseType.Request).Content);
     }
 
     [Fact]

@@ -1,0 +1,21 @@
+$ kronikol query http <report> s0/i15
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 3 test ids, the most calls (1) under '5784f5e8-…
+s0/i15  Request  Breakfast Provider → Kafka Broker
+Produce kafka:///
+took 0 ms
+response s0/i16
+trace f57deced4511a03773890ad1921fe9ad span 2e3e3f97a75bbd3d   (W3C — matches your OTel traces and app logs)
+kind Event
+category MessageQueue
+body: none
+
+
+$ kronikol query trace <report> f57deced...
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 3 test ids, the most calls (1) under '5784f5e8-…
+trace f57deced… — 5 calls across 1 scenario
+  +0 ms     s0/i8     Breakfast Provider POST /muffins                                      Created   span 1793817b
+  +1 ms     s0/i11    Breakfast Provider Consume (Kafka) /breakfast_recipe_logs             Ack      span 2e3e3f97
+  +1 ms     s0/i15    Kafka Broker Produce                                                     span 2e3e3f97
+  +1 ms     s0/i17    Google Cloud Pub/Sub Publish (Pub/Sub) /MuffinBatchCompletedEvent       Responded   span 28a28e61
+  +1 ms     s0/i19    Breakfast Provider Consume (Event Hub) /breakfast-equipment-alerts    Ack      span 182848c8
+parent span ids are not captured — this is the chronology of the trace, not its tree

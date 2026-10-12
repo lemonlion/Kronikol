@@ -25,7 +25,17 @@ public record KafkaTrackingOptions
     public Func<string?>? CurrentStepTypeFetcher { get; set; }
     public bool TrackProduce { get; set; } = true;
     public bool TrackConsume { get; set; } = true;
+    /// <summary>
+    /// Whether a message's value is recorded, as the entry's body: a JSON value is indented, offered the YAML view and
+    /// queryable as an HTTP body is. Nothing is recorded under <see cref="KafkaTrackingVerbosity.Summarised"/>.
+    /// </summary>
     public bool LogMessageValue { get; set; } = true;
+
+    /// <summary>
+    /// Whether a message's key is recorded, as the entry's <c>kafka-key</c> header, which a note draws on a line of its
+    /// own above the body and keeps in view when the report hides headers. Nothing is recorded under
+    /// <see cref="KafkaTrackingVerbosity.Summarised"/>.
+    /// </summary>
     public bool LogMessageKey { get; set; } = true;
     public bool TrackSubscribe { get; set; } = false;
     public bool TrackUnsubscribe { get; set; } = false;
@@ -44,6 +54,15 @@ public record KafkaTrackingOptions
     /// Defaults to <c>true</c>.
     /// </summary>
     public bool PropagateTestIdentity { get; set; } = true;
+
+    /// <summary>
+    /// When <c>true</c> (the default), a produced message that carries no <c>traceparent</c> is given one naming
+    /// <see cref="System.Diagnostics.Activity.Current"/> (or new ids, not sampled, when no span is current), so a consumer
+    /// that parents on the message joins the producer's trace. Only where this wrapper is the last before Confluent's
+    /// own producer: when another wrapper sits inside it, that wrapper's <c>traceparent</c> is the one sent and recorded.
+    /// A <c>traceparent</c> the caller set is never replaced, and the caller's message is never written to.
+    /// </summary>
+    public bool PropagateTraceContext { get; set; } = true;
 
     /// <summary>
     /// When <c>true</c>, the consumer stores a correlation entry in <see cref="Kronikol.Tracking.TestCorrelationStore"/>

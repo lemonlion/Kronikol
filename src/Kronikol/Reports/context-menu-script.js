@@ -6,6 +6,10 @@
     // header lines. collapsible-notes-script.js carries the same literal (DiagramContextMenuTests checks).
     var NOTE_HEADER_TAG = /^<color:(?:gray|#[0-9A-Fa-f]{6})>/;
     var NOTE_HEADER_TAG_INDENTED = new RegExp('^\\s*' + NOTE_HEADER_TAG.source.slice(1));
+    // A message's key line (collapsible-notes-script.js carries the same literal): metadata, copied as text with the
+    // headers, never as payload.
+    var NOTE_KEY_LINE = /^<b>Key<\/b> /;
+    var NOTE_KEY_LINE_INDENTED = /^(\s*)<b>Key<\/b> /;
 
     function findDiagramContainer(el) {
         while (el) {
@@ -258,7 +262,7 @@
     }
 
     function noteLinesToText(lines, unescapeLine) {
-        var stripped = lines.map(function(l) { return l.replace(NOTE_HEADER_TAG_INDENTED, ''); });
+        var stripped = lines.map(function(l) { return l.replace(NOTE_HEADER_TAG_INDENTED, '').replace(NOTE_KEY_LINE_INDENTED, '$1Key '); });
         return rejoinNoteSource(stripped.join('\n')).split('\n').map(unescapeLine).join('\n');
     }
 
@@ -269,7 +273,7 @@
         var afterGray = false;
         for (var i = 0; i < lines.length; i++) {
             var t = lines[i].trim();
-            if (NOTE_HEADER_TAG.test(t)) { afterGray = true; header.push(lines[i]); continue; }
+            if (NOTE_HEADER_TAG.test(t) || NOTE_KEY_LINE.test(t)) { afterGray = true; header.push(lines[i]); continue; }
             if (afterGray && t === '') { header.push(lines[i]); continue; }
             break;
         }

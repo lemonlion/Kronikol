@@ -159,4 +159,31 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
             Assert.All(texts, b => Assert.Equal("none|#000000", b));
         }
     }
+
+    // plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md T42: a message consumed under TrackConsume's scope opens a popup that
+    // lists the scope's span and the handler's spans, at the default granularity (Kronikol.Kafka is a well-known
+    // source), and not the producer's span, which ended before the consume began.
+    [Fact]
+    public async Task A_consume_handled_under_its_scope_opens_a_popup_of_the_handlers_spans()
+    {
+        var (uri, _) = ReportTestHelper.GenerateRunReportWithKafkaConsumeScope(TempDir, OutputDir, "ArrowLink_KafkaScope.html");
+        await OpenAndDraw(uri);
+
+        // SVG rule: a dispatched click, on the arrow's own text.
+        await Page.EvaluateAsync("""
+            () => Array.from(document.querySelectorAll('.plantuml-browser:not(.iflow-diagram) svg text'))
+                .find(t => t.textContent.includes('Consume'))
+                .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+            """);
+
+        var popup = Page.Locator(".iflow-popup");
+        await Expect(popup).ToBeVisibleAsync();
+        await Expect(popup.Locator("h3")).ToHaveTextAsync("Internal Flow (3 spans)");
+        await popup.Locator(".iflow-diagram svg").First.WaitForAsync(new() { Timeout = PopupFirstDrawTimeout });
+        var drawn = await popup.Locator(".iflow-diagram svg").First.TextContentAsync();
+        Assert.Contains("orders process", drawn);
+        Assert.Contains("handle order", drawn);
+        Assert.Contains("SELECT orders", drawn);
+        Assert.DoesNotContain("orders publish", drawn);
+    }
 }

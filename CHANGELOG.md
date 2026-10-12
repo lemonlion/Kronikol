@@ -4,6 +4,80 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.17.0] - 2026-10-12
+
+**Minor - Kafka entries carry W3C trace ids, `DependentProducerBuilder` is intercepted, a message's value is the body
+of its note, and a decorator of any Kafka client can track it (#135, #160, #167;
+`plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md` R1).** New public surface (`KafkaTrackingOptions.PropagateTraceContext`,
+`KafkaTracker.TrackProduce` and `TrackConsume` with `KafkaProduceTracking<TKey,TValue>`, the
+`TestTrackingMessageHeaders.TraceId` constant) and a builder the package did not cover, so the minor part moves
+(4.16.4 to 4.17.0). Kafka notes and the ids on Kafka entries are report output that changes; both are called out
+below.
+
+- **Dependent producers.** `KafkaBuildInterceptor.EnableProducerTracking<TKey,TValue>` (and `EnableTracking`) also
+  tracks
+  producers built with `new DependentProducerBuilder<TKey,TValue>(handle).Build()`, the way wrapper libraries share one
+  client between producers. A dependent producer of a pair that is not enabled stays untracked.
+- **W3C ids.** A produce entry records the ids of the last `traceparent` on the message sent, else those of
+  `Activity.Current` at the call. A consume entry records those of the consumed message's last `traceparent`, and only
+  when the consume is recorded under the test the message's identity headers name, so a trace is never claimed by two
+  tests; never the polling loop's span. `LogProduce` and `LogConsume` called by hand record `Activity.Current`'s. A
+  `traceparent` is read as the runtime reads one when it parents a span (`ActivityContext.TryParse`).
+- **`traceparent` on a produced message.** With `PropagateTraceContext` (default `true`), a message produced without a
+  `traceparent` is handed to Confluent with one naming `Activity.Current` (flags `01` when the span is recorded, new
+  ids with `00` when no span is current), only where Kronikol's wrapper is the last before Confluent's own producer:
+  an instrumentation wrapper inside it writes its own, and Kronikol records that. A caller's `traceparent` is kept, and
+  the caller's message is still never written to.
+- **The Kronikol trace id on a message.** A message produced inside a scenario carries its produce's Kronikol trace id
+  in a `kronikol-trace-id` header (`TestTrackingMessageHeaders.TraceId`), the trace id of the request being served when
+  a host produces it. A consume under the message's test takes it, so `kronikol query flow` nests the delivery under
+  the call that published it while that call is open.
+- **Spans.** A Kafka tracker starts Kronikol's activity listener on its first call, as the HTTP handler does, so a
+  suite that tracks only Kafka captures spans.
+- **Message content (#167).** A note's body is the message's value: a JSON value is indented, offered the YAML view
+  and queryable (`kronikol query values <report> --service Kafka --request --path '$.Status'`). The key is the entry's
+  `kafka-key` header, which the note draws as a `Key` line above the body and keeps in view when the header toggle
+  hides the headers; the message's own headers are the entry's other headers, and a consume leaves out Kronikol's.
+  Keys and values are written by type: a string as it is, `byte[]` as an HTTP body is read, numbers, dates and ids in
+  their invariant form, a protobuf message as its JSON, anything else as JSON. **Changed:** the content was one line,
+  `Key: order-123, Value: {"amount":99}`.
+- **Decorators (#160).** `KafkaTracker.TrackProduce(topic, message, operation)` returns a
+  `KafkaProduceTracking<TKey,TValue>`: hand Kafka its `Message` (the caller's copied, with the headers above), then
+  report the outcome once with `Delivered`, `Failed`, `Sent` or a `Handler`. `TrackConsume(result)` returns the scope a
+  message is handled in: the message's scenario is current inside it, the consume's request is logged at its start and
+  its response when it is disposed (so the handler's calls lie inside the consume, `kronikol query flow` nests them
+  under it, and its duration is the processing time), and the handler runs under a `Kronikol.Kafka` consumer span,
+  `{topic} process`, a child of the message's `traceparent` when the consume is the message's test's, whose ids the
+  consume records; `Kronikol.Kafka` joins the well-known sources, so the consume arrow's popup shows the handler's
+  spans. The plan had the span in a later release; it ships with the method so the method's behaviour never changes
+  under a caller. The produce wrapper is built on `TrackProduce`.
+- **Report output that changes.** Kafka notes change shape (above). Kafka entries gain `activityTraceId` and
+  `activitySpanId`, so `kronikol query trace` includes them, the whole-test flow gains a consumer's handler spans when
+  the consumer parents on the message, and an OTLP export puts Kafka spans in the app's trace instead of the per-test
+  one. A wrapper's consume records the producer's span, the one the message's `traceparent` names, and only under
+  the message's own test; a consume under `TrackConsume`'s scope records its `{topic} process` span.
+- **Docs.** README's Build Interception row; the `values` recipe for a message in the agent instructions written beside
+  every report and in the skill; the wiki's Kafka page (dependent producers, trace ids and `traceparent`, message
+  content, decorating your own client), API reference, internal flow, generated reports, ingest, querying, export and
+  filtering pages.
+- **Tests:** `KafkaTraceContextTests` (the ids at the call, a `traceparent` only where the wrapper is last,
+  `PropagateTraceContext`, the sampled flag, the runtime's parsing, the Kronikol trace id, the own-test rule, `flow` and
+  the whole-test flow), `KafkaMessageContentTests` (the value as the body, the key header, each type, the invariant
+  culture, binary and protobuf values), `KafkaHandWrittenDecoratorTests` and `KafkaConsumeScopeTests` (the decorator
+  API, and the scope's span, deferred response, restored span and phase), `KafkaDependentProducerTests`,
+  `KafkaListenerStartTests`, `KafkaReportQueryTests` (`flow` nests a handler's calls under its consume), the wrapper
+  facts for the ids, `MessageKeyLineTests` and `DiagramContextMenuTests` in the core suite, and Playwright
+  `KafkaNoteTests` (the key line with the headers hidden and shown, the toggle, the YAML view, copy, a collapsed note's
+  preview) and `ArrowLinkOpensPopupTests` (a consume's popup shows its handler's spans). Three facts need a broker
+  (`KafkaBrokerTests`: the broker `KRONIKOL_TEST_KAFKA` names, else one Testcontainers starts where Docker answers) and
+  pass against cp-kafka 7.6.1. Proofs (plan harness `r1/`): on 4.16.2 with compile stubs, 48 Kafka facts, 4
+  dependent-producer facts, 6 core facts and 7 Playwright facts fail, each on its own assertion; 42 of 42 mutations are
+  killed.
+- **Checks:** After the version bump, the core suite passes 7,443 with 2 skipped; the Kafka suite 293 with its 3 broker
+  facts skipped, in Debug and in Release; the build-interception suite 75 of 75 on .NET 8 and .NET 10, in Debug and in
+  Release; the full Playwright suite 1,036 with 28 skipped; and release.slnf builds in Release for every target.
+  BreakfastProvider's xUnit lane passes 212 of 212 on the local packages.
+
 ## [4.16.4] - 2026-10-12
 
 **Patch - Kafka build interception says to enable it before the code that builds the clients first runs, and its

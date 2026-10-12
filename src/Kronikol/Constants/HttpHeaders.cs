@@ -20,4 +20,11 @@ public static class TestTrackingMessageHeaders
 {
     public const string TestName = "kronikol-test-name";
     public const string TestId = "kronikol-test-id";
+
+    /// <summary>
+    /// The Kronikol trace id of the request a message was produced while serving, so the consume shares it and
+    /// <c>kronikol query flow</c> nests the delivery under that call (the HTTP header's counterpart,
+    /// <see cref="TestTrackingHttpHeaders.TraceIdHeader"/>).
+    /// </summary>
+    public const string TraceId = "kronikol-trace-id";
 }

@@ -13,6 +13,10 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
+    <!-- A protobuf message as a Kafka value (plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md 4.4); the extension finds it by reflection -->
+    <PackageReference Include="Google.Protobuf" Version="3.*" />
+    <!-- A real broker for the facts only a broker can answer (plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md 5.4), the version the other Testcontainers references pin -->
+    <PackageReference Include="Testcontainers.Kafka" Version="4.8.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Kafka\Kronikol.Extensions.Kafka.csproj" />

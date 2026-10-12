@@ -1,0 +1,103 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\Kronikol.Tests.Kafka.BuildInterception.csproj (in 375 ms).
+  Restored C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Kafka.BuildInterception\Kronikol.Extensions.Kafka.BuildInterception.csproj (in 375 ms).
+  2 of 4 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-kafka135-red1\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.Kafka -> C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Kafka\bin\Debug\net10.0\Kronikol.Extensions.Kafka.dll
+  Kronikol.Extensions.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Extensions.Kafka.BuildInterception.dll
+C:\Code\Kronikol-kafka135-red1\src\Kronikol\PlantUml\NodeJsPlantUmlRenderer.cs(56,118): warning CS8604: Possible null reference argument for parameter 'expectedIntegrity' in 'EngineCache.EngineCache(string directory, Func<string, byte[]> download, string cdnBase, IReadOnlyDictionary<string, string> expectedIntegrity)'. [C:\Code\Kronikol-kafka135-red1\src\Kronikol\Kronikol.csproj::TargetFramework=net8.0]
+C:\Code\Kronikol-kafka135-red1\src\Kronikol\Reports\Merge\MergeableReportReader.cs(99,38): warning CS8604: Possible null reference argument for parameter 'testName' in 'void MergeableReportReader.ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into, Dictionary<string, List<string?>>? stepPaths, ParseNotes notes, Dictionary<Guid, WarmUpMark>? warmUpCalls = null)'. [C:\Code\Kronikol-kafka135-red1\src\Kronikol\Kronikol.csproj::TargetFramework=net8.0]
+C:\Code\Kronikol-kafka135-red1\src\Kronikol\PlantUml\PlantUmlCreator.cs(1506,48): warning CS8604: Possible null reference argument for parameter 'content' in 'string PlantUmlCreator.FormFieldLines(string content)'. [C:\Code\Kronikol-kafka135-red1\src\Kronikol\Kronikol.csproj::TargetFramework=net8.0]
+  Kronikol -> C:\Code\Kronikol-kafka135-red1\src\Kronikol\bin\Debug\net8.0\Kronikol.dll
+C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaDependentProducerTests.cs(86,21): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\Kronikol.Tests.Kafka.BuildInterception.csproj::TargetFramework=net10.0]
+  Kronikol.Tests.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Tests.Kafka.BuildInterception.dll
+  Kronikol.Extensions.Kafka -> C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Kafka\bin\Debug\net8.0\Kronikol.Extensions.Kafka.dll
+  Kronikol.Extensions.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Kafka.BuildInterception\bin\Debug\net8.0\Kronikol.Extensions.Kafka.BuildInterception.dll
+C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaDependentProducerTests.cs(86,21): warning xUnit1051: Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken to allow test cancellation to be more responsive. (https://xunit.net/xunit.analyzers/rules/xUnit1051) [C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\Kronikol.Tests.Kafka.BuildInterception.csproj::TargetFramework=net8.0]
+  Kronikol.Tests.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net8.0\Kronikol.Tests.Kafka.BuildInterception.dll
+Test run for C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net8.0\Kronikol.Tests.Kafka.BuildInterception.dll (.NETCoreApp,Version=v8.0)
+Test run for C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Tests.Kafka.BuildInterception.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:05.62]     Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producers_produce_is_its_callers_though_the_owner_delivers_under_the_owners_test [FAIL]
+[xUnit.net 00:00:05.63]     Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.Enabling_a_producer_pair_patches_the_dependent_builder_once_per_shape [FAIL]
+[xUnit.net 00:00:05.73]     Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_value_type_pair_is_tracked_and_its_other_pairs_are_not [FAIL]
+[xUnit.net 00:00:05.83]     Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_pair_is_tracked [FAIL]
+[xUnit.net 00:00:05.99]     Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producers_produce_is_its_callers_though_the_owner_delivers_under_the_owners_test [FAIL]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producers_produce_is_its_callers_though_the_owner_delivers_under_the_owners_test [1 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 2
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producers_produce_is_its_callers_though_the_owner_delivers_under_the_owners_test() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaDependentProducerTests.cs:line 88
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.Enabling_a_producer_pair_patches_the_dependent_builder_once_per_shape [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_value_type_pair_is_tracked_and_its_other_pairs_are_not [109 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<int, string>)
+Actual:   typeof(Confluent.Kafka.Producer<int, string>)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_value_type_pair_is_tracked_and_its_other_pairs_are_not() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaDependentProducerTests.cs:line 58
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_pair_is_tracked [107 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<string, string>)
+Actual:   typeof(Confluent.Kafka.Producer<string, string>)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_pair_is_tracked() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaDependentProducerTests.cs:line 35
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:     4, Passed:     1, Skipped:     0, Total:     5, Duration: 3 s - Kronikol.Tests.Kafka.BuildInterception.dll (net10.0)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producers_produce_is_its_callers_though_the_owner_delivers_under_the_owners_test [3 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 2
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producers_produce_is_its_callers_though_the_owner_delivers_under_the_owners_test() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaDependentProducerTests.cs:line 88
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:06.09]     Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_pair_is_tracked [FAIL]
+[xUnit.net 00:00:06.10]     Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.Enabling_a_producer_pair_patches_the_dependent_builder_once_per_shape [FAIL]
+[xUnit.net 00:00:06.20]     Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_value_type_pair_is_tracked_and_its_other_pairs_are_not [FAIL]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_pair_is_tracked [106 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<string, string>)
+Actual:   typeof(Confluent.Kafka.Producer<string, string>)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_pair_is_tracked() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaDependentProducerTests.cs:line 35
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.Enabling_a_producer_pair_patches_the_dependent_builder_once_per_shape [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_value_type_pair_is_tracked_and_its_other_pairs_are_not [106 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<int, string>)
+Actual:   typeof(Confluent.Kafka.Producer<int, string>)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaDependentProducerTests.A_dependent_producer_of_an_enabled_value_type_pair_is_tracked_and_its_other_pairs_are_not() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaDependentProducerTests.cs:line 58
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     4, Passed:     1, Skipped:     0, Total:     5, Duration: 3 s - Kronikol.Tests.Kafka.BuildInterception.dll (net8.0)

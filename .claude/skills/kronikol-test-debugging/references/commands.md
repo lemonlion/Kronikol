@@ -214,6 +214,8 @@ $.status across 44 response bodies (7 distinct bodies)
 | `--request` / `--both` | target request bodies, or both (rows tagged `req`/`resp`); default is the response body |
 
 - Scope is the whole run, or one scenario with `s3`.
+- A message's payload is the body of its **request** half (a Kafka produce or consume records the value there and
+  nothing on the response), so query it with `--request`: `values . --service Kafka --request --path '$.Status'`.
 - **Counting is per occurrence, not per distinct body** — the same body arriving 41 times counts 41
   times (each distinct body is still parsed only once).
 - A body the path misses is counted as `(absent)` — silence would hide exactly the bug this finds.

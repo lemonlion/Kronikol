@@ -79,7 +79,7 @@ public class TrackingKafkaProducerContextTests
         var request = Assert.Single(LogsOf(test), l => l.Type == RequestResponseType.Request);
         Assert.Equal(TestPhase.Setup, request.Phase);
         Assert.Equal("Produce orders[2]@9", request.Method.Value!.ToString());
-        Assert.Equal("Key: k, Value: v", request.Content);
+        Assert.Equal("v", request.Content);
     }
 
     [Fact]
@@ -168,7 +168,7 @@ public class TrackingKafkaProducerContextTests
         Assert.All(sent, m => Assert.NotSame(reused, m));
         Assert.Equal(first, Header(sent[0], "kronikol-test-id"));
         Assert.Equal(second, Header(sent[1], "kronikol-test-id"));
-        Assert.All(sent, m => Assert.Equal(["kronikol-test-name", "kronikol-test-id"], m.Headers.Select(h => h.Key)));
+        Assert.All(sent, m => Assert.Equal(["kronikol-test-name", "kronikol-test-id", "kronikol-trace-id"], m.Headers.Select(h => h.Key)));
         Assert.All(sent, m => Assert.Equal(("k", "v"), (m.Key, m.Value)));
     }
 
@@ -193,7 +193,7 @@ public class TrackingKafkaProducerContextTests
 
         Assert.Equal(["traceparent", "kronikol-test-id"], message.Headers.Select(h => h.Key));
         var sent = Assert.Single(inner.ProducedMessages).Message;
-        Assert.Equal(["traceparent", "kronikol-test-id", "kronikol-test-name"], sent.Headers.Select(h => h.Key));
+        Assert.Equal(["traceparent", "kronikol-test-id", "kronikol-test-name", "kronikol-trace-id"], sent.Headers.Select(h => h.Key));
         Assert.Equal("set-by-caller", Header(sent, "kronikol-test-id"));
         Assert.Equal($"Test {test}", Header(sent, "kronikol-test-name"));
         Assert.Equal(timestamp, sent.Timestamp);

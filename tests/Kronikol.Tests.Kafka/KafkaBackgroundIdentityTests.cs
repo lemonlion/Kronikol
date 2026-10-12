@@ -55,6 +55,53 @@ public class KafkaBackgroundIdentityTests
             TestCorrelationStore.Remove(CorrelationKeys.Kafka("Kafka", key));
         }
     }
+
+    // A message a scenario produced, consumed where its identity does not decide (the consumer does not read it): the
+    // consume is the background's, and recording the message's trace there would make two owners claim the producer's
+    // trace, so the scenario's whole-test flow would keep it for neither (plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md 4.3).
+    [Fact]
+    public void A_consume_recorded_under_the_background_records_no_trace_ids()
+    {
+        var topic = $"background-{Guid.NewGuid():N}";
+        var options = OutsideATest();
+        options.PropagateTestIdentity = false;
+        options.AutoCorrelateOnConsume = false;
+        var message = new Message<string, string>
+        {
+            Key = "k", Value = "v",
+            Headers = new Headers
+            {
+                { "kronikol-test-name", System.Text.Encoding.UTF8.GetBytes("Place an order") },
+                { "kronikol-test-id", System.Text.Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()) },
+                { "traceparent", System.Text.Encoding.UTF8.GetBytes("00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01") },
+            },
+        };
+        var capture = RequestResponseLogger.CaptureBackground;
+        RequestResponseLogger.CaptureBackground = true;
+        try
+        {
+            new TrackingKafkaConsumer<string, string>(
+                new ScriptedConsumer<string, string>().Returns(new ConsumeResult<string, string>
+                {
+                    TopicPartitionOffset = new TopicPartitionOffset(topic, new Partition(0), new Offset(0)),
+                    Message = message,
+                }),
+                new KafkaTracker(options), options).Consume(TimeSpan.Zero);
+
+            var consume = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.Method.Value!.ToString() == $"Consume ← {topic}").ToArray();
+            Assert.Equal(2, consume.Length);
+            Assert.All(consume, e =>
+            {
+                Assert.Equal(AttributionSource.None, e.AttributionSource);
+                Assert.Null(e.ActivityTraceId);
+                Assert.Null(e.ActivitySpanId);
+            });
+        }
+        finally
+        {
+            RequestResponseLogger.CaptureBackground = capture;
+        }
+    }
 }
 
 /// <summary>

@@ -230,6 +230,19 @@ public class DiagramContextMenuTests
         Assert.Contains($"var NOTE_HEADER_TAG = {HeaderTagRegex};", _script);
     }
 
+    // A message's key line (plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md 4.4): the label the generator writes is the one
+    // both scripts take for metadata, so neither copies it as payload nor the YAML view swaps it, and hiding headers
+    // keeps it.
+    [Fact]
+    public void Both_scripts_recognise_a_key_line_by_the_label_the_generator_writes()
+    {
+        var literal = "/^" + Kronikol.PlantUml.PlantUmlCreator.NoteKeyLabel.Replace("/", "\\/") + "/";
+
+        Assert.Equal("/^<b>Key<\\/b> /", literal);
+        Assert.Contains($"var NOTE_KEY_LINE = {literal};", _notesScript);
+        Assert.Contains($"var NOTE_KEY_LINE = {literal};", _script);
+    }
+
     [Fact]
     public void The_header_tag_the_emitter_writes_is_one_the_scripts_recognise()
     {

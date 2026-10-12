@@ -155,7 +155,7 @@ public class TrackingKafkaConsumerIdentityTests
         consumer.Consume(TimeSpan.Zero);
 
         var requests = LogsOf(_testId).Where(l => l.Type == RequestResponseType.Request).ToArray();
-        Assert.Equal(["Key: k, Value: v", "Key: p, Value: paid"], requests.Select(r => r.Content));
+        Assert.Equal(["v", "paid"], requests.Select(r => r.Content));
     }
 
     // ─── F17 ─────────
@@ -177,7 +177,7 @@ public class TrackingKafkaConsumerIdentityTests
         consumer.Consume(TestContext.Current.CancellationToken);
 
         var requests = LogsOf(_testId).Where(l => l.Type == RequestResponseType.Request).ToArray();
-        Assert.Equal(["Key: a, Value: 1", "Key: b, Value: 2"], requests.Select(r => r.Content));
+        Assert.Equal(["1", "2"], requests.Select(r => r.Content));
     }
 
     [Fact]
@@ -234,7 +234,7 @@ public class TrackingKafkaConsumerIdentityTests
         await producer.ProduceAsync("orders", new Message<string, string> { Key = "action", Value = "2" }, TestContext.Current.CancellationToken);
 
         var request = Assert.Single(LogsOf(_testId), l => l.Type == RequestResponseType.Request);
-        Assert.Equal("Key: action, Value: 2", request.Content);
+        Assert.Equal("2", request.Content);
     }
 
     [Fact]

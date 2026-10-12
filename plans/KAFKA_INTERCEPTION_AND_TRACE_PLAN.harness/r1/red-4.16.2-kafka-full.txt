@@ -1,0 +1,550 @@
+Test run for C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\bin\Debug\net10.0\Kronikol.Tests.Kafka.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_hand_written_log_records_the_span_current_at_the_call [13 ms]
+  Error Message:
+   Assert.All() Failure: 4 out of 4 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test cc1a08ed-6c49-4cda-9d43-98c3bac4cb83, TestId = cc1a08ed-6c49-4cda-9d43-98c3bac4cb83, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = 18c02c29-16ff-4cc7-bead-728524de1865, RequestResponseId = 910fbdd0-422a-4a1e-8887-4971da59adf2, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Values differ
+            Expected: Tuple ("d29b0dcf868c42a606a39cb7dadb9b57", "4fa70ddd9b93925c")
+            Actual:   Tuple (null, null)
+[1]: Item:  RequestResponseLog { TestName = Test cc1a08ed-6c49-4cda-9d43-98c3bac4cb83, TestId = cc1a08ed-6c49-4cda-9d43-98c3bac4cb83, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = 18c02c29-16ff-4cc7-bead-728524de1865, RequestResponseId = 910fbdd0-422a-4a1e-8887-4971da59adf2, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Values differ
+            Expected: Tuple ("d29b0dcf868c42a606a39cb7dadb9b57", "4fa70ddd9b93925c")
+            Actual:   Tuple (null, null)
+[2]: Item:  RequestResponseLog { TestName = Test cc1a08ed-6c49-4cda-9d43-98c3bac4cb83, TestId = cc1a08ed-6c49-4cda-9d43-98c3bac4cb83, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Orders, CallerName = Kafka, Type = Request, TraceId = e8754b79-5dc5-4a96-8755-93d75f470d73, RequestResponseId = c96eeffe-620c-46e8-9665-b45bfd3264f4, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Values differ
+            Expected: Tuple ("d29b0dcf868c42a606a39cb7dadb9b57", "4fa70ddd9b93925c")
+            Actual:   Tuple (null, null)
+[3]: Item:  RequestResponseLog { TestName = Test cc1a08ed-6c49-4cda-9d43-98c3bac4cb83, TestId = cc1a08ed-6c49-4cda-9d43-98c3bac4cb83, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Orders, CallerName = Kafka, Type = Response, TraceId = e8754b79-5dc5-4a96-8755-93d75f470d73, RequestResponseId = c96eeffe-620c-46e8-9665-b45bfd3264f4, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Values differ
+            Expected: Tuple ("d29b0dcf868c42a606a39cb7dadb9b57", "4fa70ddd9b93925c")
+            Actual:   Tuple (null, null)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_hand_written_log_records_the_span_current_at_the_call() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 195
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Consume_Includes_the_key_as_the_kafka_key_header_and_the_value_as_the_body [5 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in collection
+Collection: []
+Not found:  Tuple ("kafka-key", "order-123")
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Consume_Includes_the_key_as_the_kafka_key_header_and_the_value_as_the_body() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerTests.cs:line 179
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.An_identity_header_the_caller_set_is_kept_and_only_the_missing_one_is_added [634 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+                                                                                                               ↓ (pos 3)
+Expected: <generated>                                ["traceparent", "kronikol-test-id", "kronikol-test-name", "kronikol-trace-id"]
+Actual:   IEnumerableSelectIterator<IHeader, string> ["traceparent", "kronikol-test-id", "kronikol-test-name"]
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.An_identity_header_the_caller_set_is_kept_and_only_the_missing_one_is_added() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs:line 196
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.KafkaMessageContentTests.Numbers_dates_and_ids_are_written_in_their_invariant_form_whatever_the_culture [621 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "2026-10-12T09:30:00.0000000+00:00"
+Actual:   "Key: 3,5, Value: 12.10.2026 09:30:00 +00:00"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageContentTests.Numbers_dates_and_ids_are_written_in_their_invariant_form_whatever_the_culture() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaMessageContentTests.cs:line 111
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(traceParent: "00-0af7651916cd43dd8448eb211c80319c-00000000000000"···, parents: False) [1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test 5aff333b-6968-4c35-806c-2b4cb657abc4, TestId = 5aff333b-6968-4c35-806c-2b4cb657abc4, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = 3abb1201-abcf-41a7-be2c-70275dc22f5c, RequestResponseId = 0fe99d0f-dc7e-4a4d-889e-78c643128a01, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "e7a8fa50c29d56f000b231bbc289b711"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test 5aff333b-6968-4c35-806c-2b4cb657abc4, TestId = 5aff333b-6968-4c35-806c-2b4cb657abc4, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = 3abb1201-abcf-41a7-be2c-70275dc22f5c, RequestResponseId = 0fe99d0f-dc7e-4a4d-889e-78c643128a01, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "e7a8fa50c29d56f000b231bbc289b711"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(String traceParent, Boolean parents) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 221
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaMessageContentTests.A_header_whose_bytes_are_not_UTF8_text_is_binary_content [2 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in collection
+Collection: []
+Not found:  Tuple ("signature", "[binary content]")
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageContentTests.A_header_whose_bytes_are_not_UTF8_text_is_binary_content() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaMessageContentTests.cs:line 164
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(traceParent: "01-0af7651916cd43dd8448eb211c80319c-b7ad6b71692033"···, parents: True) [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test 41b8a756-c809-42bc-a6e0-066d9360f5a6, TestId = 41b8a756-c809-42bc-a6e0-066d9360f5a6, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = faede59d-0c86-4b00-9bd1-578f8238c6e8, RequestResponseId = 8c150911-2ef2-406d-88f5-7e0d2cab44b9, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "0af7651916cd43dd8448eb211c80319c"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test 41b8a756-c809-42bc-a6e0-066d9360f5a6, TestId = 41b8a756-c809-42bc-a6e0-066d9360f5a6, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = faede59d-0c86-4b00-9bd1-578f8238c6e8, RequestResponseId = 8c150911-2ef2-406d-88f5-7e0d2cab44b9, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "0af7651916cd43dd8448eb211c80319c"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(String traceParent, Boolean parents) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 221
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaMessageContentTests.A_byte_array_value_is_read_as_the_HTTP_handler_reads_a_body(value: [0, 1, 123, 34, 97, ···], body: "{\"a\":1}") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "{"a":1}"
+Actual:   "Key: k, Value: System.Byte[]"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageContentTests.A_byte_array_value_is_read_as_the_HTTP_handler_reads_a_body(Byte[] value, String body) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaMessageContentTests.cs:line 94
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(traceParent: "ff-0af7651916cd43dd8448eb211c80319c-b7ad6b71692033"···, parents: False) [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test 3b946e8c-1275-4b37-a128-50e045a59e38, TestId = 3b946e8c-1275-4b37-a128-50e045a59e38, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = 4a979e39-b4e8-4134-8930-832b88ecd584, RequestResponseId = 82ecde6a-49dc-4ccc-9082-a34de02f024d, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "bfbe68a5375debfffb116c915434a6c3"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test 3b946e8c-1275-4b37-a128-50e045a59e38, TestId = 3b946e8c-1275-4b37-a128-50e045a59e38, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = 4a979e39-b4e8-4134-8930-832b88ecd584, RequestResponseId = 82ecde6a-49dc-4ccc-9082-a34de02f024d, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "bfbe68a5375debfffb116c915434a6c3"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(String traceParent, Boolean parents) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 221
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaMessageContentTests.A_byte_array_value_is_read_as_the_HTTP_handler_reads_a_body(value: [0, 1, 2, 3, 4, ···], body: "[binary content]") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "[binary content]"
+Actual:   "Key: k, Value: System.Byte[]"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageContentTests.A_byte_array_value_is_read_as_the_HTTP_handler_reads_a_body(Byte[] value, String body) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaMessageContentTests.cs:line 94
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(traceParent: "00-00000000000000000000000000000000-b7ad6b71692033"···, parents: False) [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test f5044427-4255-436e-b00f-b7a2ab0ed95c, TestId = f5044427-4255-436e-b00f-b7a2ab0ed95c, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = 958f0977-9358-438f-8d09-911141c9c4c8, RequestResponseId = f9b67b19-10c8-4dca-aa0b-ddd01ffe2ac0, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "b185f97956d77726010034371e52593b"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test f5044427-4255-436e-b00f-b7a2ab0ed95c, TestId = f5044427-4255-436e-b00f-b7a2ab0ed95c, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = 958f0977-9358-438f-8d09-911141c9c4c8, RequestResponseId = f9b67b19-10c8-4dca-aa0b-ddd01ffe2ac0, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "b185f97956d77726010034371e52593b"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(String traceParent, Boolean parents) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 221
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaMessageContentTests.A_byte_array_value_is_read_as_the_HTTP_handler_reads_a_body(value: [123, 34, 97, 34, 58, ···], body: "{\"a\":1}") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "{"a":1}"
+Actual:   "Key: k, Value: System.Byte[]"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageContentTests.A_byte_array_value_is_read_as_the_HTTP_handler_reads_a_body(Byte[] value, String body) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaMessageContentTests.cs:line 94
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(traceParent: "00-0af7651916cd43dd8448eb211c80319c-b7ad6b71692033"···, parents: False) [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test 04b2ec17-3bed-4f24-bc94-0654f264ca93, TestId = 04b2ec17-3bed-4f24-bc94-0654f264ca93, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = 45fb3fd2-0ae9-453d-b784-623f53d77210, RequestResponseId = fa6e25e9-1861-470c-861c-5a6904c0d9d9, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "e65ce1ec6773952571c51b9d8eb9082e"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test 04b2ec17-3bed-4f24-bc94-0654f264ca93, TestId = 04b2ec17-3bed-4f24-bc94-0654f264ca93, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = 45fb3fd2-0ae9-453d-b784-623f53d77210, RequestResponseId = fa6e25e9-1861-470c-861c-5a6904c0d9d9, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "e65ce1ec6773952571c51b9d8eb9082e"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(String traceParent, Boolean parents) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 221
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(traceParent: "00-0af7651916cd43dd8448eb211c80319c-b7ad6b71692033"···, parents: True) [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test 545abe53-8075-4bc6-b77b-894b63b88bac, TestId = 545abe53-8075-4bc6-b77b-894b63b88bac, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = cf306c3e-5069-4e41-ab93-c0ddcedc321d, RequestResponseId = cab014b2-bae7-4098-8b8b-a587c6b7b50e, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "0af7651916cd43dd8448eb211c80319c"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test 545abe53-8075-4bc6-b77b-894b63b88bac, TestId = 545abe53-8075-4bc6-b77b-894b63b88bac, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = cf306c3e-5069-4e41-ab93-c0ddcedc321d, RequestResponseId = cab014b2-bae7-4098-8b8b-a587c6b7b50e, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "0af7651916cd43dd8448eb211c80319c"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(String traceParent, Boolean parents) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 221
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(traceParent: "00-0AF7651916CD43DD8448EB211C80319C-B7AD6B71692033"···, parents: False) [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test 1290ed18-a5b5-4b58-8c54-0bb035487b13, TestId = 1290ed18-a5b5-4b58-8c54-0bb035487b13, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = 1ce247c3-0754-43f7-a409-ebc06e1c674e, RequestResponseId = 85c136e0-0d00-4cdd-b25a-7af8447b9675, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "f6e480b77c17e6aec76d335bd02d9217"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test 1290ed18-a5b5-4b58-8c54-0bb035487b13, TestId = 1290ed18-a5b5-4b58-8c54-0bb035487b13, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = 1ce247c3-0754-43f7-a409-ebc06e1c674e, RequestResponseId = 85c136e0-0d00-4cdd-b25a-7af8447b9675, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "f6e480b77c17e6aec76d335bd02d9217"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(String traceParent, Boolean parents) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 221
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.An_action_phase_override_shows_content_though_the_base_verbosity_is_summarised [3 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+           ↓ (pos 0)
+Expected: "v"
+Actual:   "Key: k, Value: v"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.An_action_phase_override_shows_content_though_the_base_verbosity_is_summarised() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs:line 158
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(traceParent: "01-0af7651916cd43dd8448eb211c80319c-b7ad6b71692033"···, parents: False) [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test d5856047-9a59-4e4c-87f9-892814b5fa97, TestId = d5856047-9a59-4e4c-87f9-892814b5fa97, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = a9fc7d0b-121e-4e88-8b59-98a423995c26, RequestResponseId = 43d6aa7a-0fc9-4dd6-b3f7-75d8226951be, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "1de2318428287f2719cd69e53068a7c1"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test d5856047-9a59-4e4c-87f9-892814b5fa97, TestId = d5856047-9a59-4e4c-87f9-892814b5fa97, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = a9fc7d0b-121e-4e88-8b59-98a423995c26, RequestResponseId = 43d6aa7a-0fc9-4dd6-b3f7-75d8226951be, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "1de2318428287f2719cd69e53068a7c1"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_is_read_as_the_runtime_reads_it(String traceParent, Boolean parents) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 221
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_Kafka_tracker_starts_the_internal_flow_listener_when_it_first_logs [4 ms]
+  Error Message:
+   Assert.True() Failure
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_Kafka_tracker_starts_the_internal_flow_listener_when_it_first_logs() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 444
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_message_produced_outside_a_request_carries_the_produces_own_trace_id [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "84e868e3-2f74-4a7d-ba9b-b4b5b9932ca0"
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_message_produced_outside_a_request_carries_the_produces_own_trace_id() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 341
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_wrapper_inside_that_appends_a_traceparent_is_the_one_sent_and_recorded(callerSetOne: True) [1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test 27f45436-2f50-47c1-9f3c-db256c3fb7ba, TestId = 27f45436-2f50-47c1-9f3c-db256c3fb7ba, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = 1d146aea-5e42-402b-a61d-9e95e44cc21e, RequestResponseId = 72707cdf-d7b7-4711-948e-51ba67030569, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "11111111111111111111111111111111"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test 27f45436-2f50-47c1-9f3c-db256c3fb7ba, TestId = 27f45436-2f50-47c1-9f3c-db256c3fb7ba, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = 1d146aea-5e42-402b-a61d-9e95e44cc21e, RequestResponseId = 72707cdf-d7b7-4711-948e-51ba67030569, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "11111111111111111111111111111111"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_wrapper_inside_that_appends_a_traceparent_is_the_one_sent_and_recorded(Boolean callerSetOne) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 179
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_wrapper_inside_that_appends_a_traceparent_is_the_one_sent_and_recorded(callerSetOne: False) [< 1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test 3ed06318-bb50-4ecf-b4cf-12c56bd2ce9d, TestId = 3ed06318-bb50-4ecf-b4cf-12c56bd2ce9d, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = ecff541b-16e6-48b7-826c-2763d0d965f1, RequestResponseId = b034f1c4-6f52-47db-b2be-c435e12f3703, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "11111111111111111111111111111111"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test 3ed06318-bb50-4ecf-b4cf-12c56bd2ce9d, TestId = 3ed06318-bb50-4ecf-b4cf-12c56bd2ce9d, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = ecff541b-16e6-48b7-826c-2763d0d965f1, RequestResponseId = b034f1c4-6f52-47db-b2be-c435e12f3703, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:40 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "11111111111111111111111111111111"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_wrapper_inside_that_appends_a_traceparent_is_the_one_sent_and_recorded(Boolean callerSetOne) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 179
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.Consume_by_milliseconds_and_by_token_are_logged_and_empty_and_EOF_polls_are_not [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+           ↓ (pos 0)
+Expected: "1"
+Actual:   "Key: a, Value: 1"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.Consume_by_milliseconds_and_by_token_are_logged_and_empty_and_EOF_polls_are_not() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs:line 180
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.TrackDuringSetup_false_leaves_a_setup_produce_out_and_an_action_produce_in [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "2"
+Actual:   "Key: action, Value: 2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.TrackDuringSetup_false_leaves_a_setup_produce_out_and_an_action_produce_in() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs:line 237
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.A_ProduceAsync_that_throws_is_drawn_and_rethrown [855 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(Confluent.Kafka.KafkaException)
+Actual:   typeof(System.NotImplementedException)
+---- System.NotImplementedException : R1 stub
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.A_ProduceAsync_that_throws_is_drawn_and_rethrown() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaHandWrittenDecoratorTests.cs:line 104
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Kronikol.Extensions.Kafka.KafkaTracker.TrackProduce[TKey,TValue](String topic, Message`2 message, KafkaOperation operation) in C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Kafka\KafkaTracker.cs:line 69
+   at Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.OrdersPublisher.PublishAsync(String topic, Message`2 message) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaHandWrittenDecoratorTests.cs:line 36
+  Failed Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.A_failed_delivery_is_drawn_with_its_error_code [1 ms]
+  Error Message:
+   System.NotImplementedException : R1 stub
+  Stack Trace:
+     at Kronikol.Extensions.Kafka.KafkaTracker.TrackProduce[TKey,TValue](String topic, Message`2 message, KafkaOperation operation) in C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Kafka\KafkaTracker.cs:line 69
+   at Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.OrdersPublisher.Publish(String topic, Message`2 message, Action`1 handler) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaHandWrittenDecoratorTests.cs:line 50
+   at Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.A_failed_delivery_is_drawn_with_its_error_code() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaHandWrittenDecoratorTests.cs:line 89
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.Under_an_ambient_span_the_produce_records_its_ids [1 ms]
+  Error Message:
+   System.NotImplementedException : R1 stub
+  Stack Trace:
+     at Kronikol.Extensions.Kafka.KafkaTracker.TrackProduce[TKey,TValue](String topic, Message`2 message, KafkaOperation operation) in C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Kafka\KafkaTracker.cs:line 69
+   at Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.OrdersPublisher.PublishAsync(String topic, Message`2 message) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaHandWrittenDecoratorTests.cs:line 36
+   at Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.Under_an_ambient_span_the_produce_records_its_ids() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaHandWrittenDecoratorTests.cs:line 135
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.A_consumed_messages_identity_is_current_inside_the_scope_and_cleared_after [< 1 ms]
+  Error Message:
+   System.NotImplementedException : R1 stub
+  Stack Trace:
+     at Kronikol.Extensions.Kafka.KafkaTracker.TrackConsume[TKey,TValue](ConsumeResult`2 result) in C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Kafka\KafkaTracker.cs:line 74
+   at Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.A_consumed_messages_identity_is_current_inside_the_scope_and_cleared_after() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaHandWrittenDecoratorTests.cs:line 161
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.The_callers_message_is_not_written_to_and_the_message_sent_carries_the_identity [< 1 ms]
+  Error Message:
+   System.NotImplementedException : R1 stub
+  Stack Trace:
+     at Kronikol.Extensions.Kafka.KafkaTracker.TrackProduce[TKey,TValue](String topic, Message`2 message, KafkaOperation operation) in C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Kafka\KafkaTracker.cs:line 69
+   at Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.OrdersPublisher.PublishAsync(String topic, Message`2 message) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaHandWrittenDecoratorTests.cs:line 36
+   at Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.The_callers_message_is_not_written_to_and_the_message_sent_carries_the_identity() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaHandWrittenDecoratorTests.cs:line 119
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.A_produce_is_its_callers_though_its_delivery_handler_runs_under_the_builders_context [< 1 ms]
+  Error Message:
+   System.NotImplementedException : R1 stub
+  Stack Trace:
+     at Kronikol.Extensions.Kafka.KafkaTracker.TrackProduce[TKey,TValue](String topic, Message`2 message, KafkaOperation operation) in C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Kafka\KafkaTracker.cs:line 69
+   at Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.OrdersPublisher.Publish(String topic, Message`2 message, Action`1 handler) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaHandWrittenDecoratorTests.cs:line 50
+   at Kronikol.Tests.Kafka.KafkaHandWrittenDecoratorTests.A_produce_is_its_callers_though_its_delivery_handler_runs_under_the_builders_context() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaHandWrittenDecoratorTests.cs:line 74
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_consumers_handler_spans_are_in_the_scenarios_flow_exactly_when_it_parents_on_the_message(parentsOnTheMessage: True) [3 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in collection
+Collection: ["POST /orders"]
+Not found:  "handle order"
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_consumers_handler_spans_are_in_the_scenarios_flow_exactly_when_it_parents_on_the_message(Boolean parentsOnTheMessage) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 392
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_consume_under_another_test_leaves_the_producing_tests_flow_its_spans [4 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in collection
+Collection: []
+Not found:  "POST /orders"
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_consume_under_another_test_leaves_the_producing_tests_flow_its_spans() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 431
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaMessageContentTests.A_protobuf_value_is_its_JSON [293 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "{ "status": "Placed" }"
+Actual:   "Key: k, Value: { "status": "Placed" }"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageContentTests.A_protobuf_value_is_its_JSON() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaMessageContentTests.cs:line 122
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaMessageContentTests.A_consumes_headers_leave_out_Kronikols_own [4 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [Tuple ("kafka-key", "order-1"), Tuple ("source", "checkout"), Tuple ("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b71692033"···)]
+Actual:   []
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageContentTests.A_consumes_headers_leave_out_Kronikols_own() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaMessageContentTests.cs:line 80
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.KafkaMessageContentTests.A_Null_key_has_no_key_header [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "v"
+Actual:   "Value: v"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageContentTests.A_Null_key_has_no_key_header() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaMessageContentTests.cs:line 131
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaMessageContentTests.LogMessageKey_false_drops_the_key_and_LogMessageValue_false_the_body [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [Tuple ("source", "checkout")]
+Actual:   []
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageContentTests.LogMessageKey_false_drops_the_key_and_LogMessageValue_false_the_body() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaMessageContentTests.cs:line 144
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaMessageContentTests.A_JSON_value_is_the_body_and_the_key_and_the_messages_own_headers_are_the_entrys_headers [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "{"Status":"Placed","Total":12.5}"
+Actual:   "Key: order-1, Value: {"Status":"Placed","Total":12"···
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaMessageContentTests.A_JSON_value_is_the_body_and_the_key_and_the_messages_own_headers_are_the_entrys_headers() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaMessageContentTests.cs:line 51
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:04.25]     Kronikol.Tests.Kafka.KafkaBrokerTests.A_message_the_broker_refuses_is_drawn_with_the_brokers_error_code [SKIP]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_produce_called_in_setup_and_delivered_once_the_action_began_is_a_setup_entry_at_setup_verbosity [5 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "v"
+Actual:   "Key: k, Value: v"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_produce_called_in_setup_and_delivered_once_the_action_began_is_a_setup_entry_at_setup_verbosity() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs:line 82
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.The_callers_message_is_never_written_and_each_produce_hands_Confluent_its_own_tests_identity [8 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  Message`2 { Headers = [···], Key = "k", Timestamp = Confluent.Kafka.Timestamp, Value = "v" }
+     Error: Assert.Equal() Failure: Collections differ
+                                                                                                            ↓ (pos 2)
+            Expected: <generated>                                ["kronikol-test-name", "kronikol-test-id", "kronikol-trace-id"]
+            Actual:   IEnumerableSelectIterator<IHeader, string> ["kronikol-test-name", "kronikol-test-id"]
+[1]: Item:  Message`2 { Headers = [···], Key = "k", Timestamp = Confluent.Kafka.Timestamp, Value = "v" }
+     Error: Assert.Equal() Failure: Collections differ
+                                                                                                            ↓ (pos 2)
+            Expected: <generated>                                ["kronikol-test-name", "kronikol-test-id", "kronikol-trace-id"]
+            Actual:   IEnumerableSelectIterator<IHeader, string> ["kronikol-test-name", "kronikol-test-id"]
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.The_callers_message_is_never_written_and_each_produce_hands_Confluent_its_own_tests_identity() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs:line 171
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaReportQueryTests.Query_values_reads_a_field_of_a_messages_JSON_value [1 s]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "$.Status across 0 request bodies (0 distinct bodie"···
+Not found: "Placed"
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaReportQueryTests.Query_values_reads_a_field_of_a_messages_JSON_value() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaReportQueryTests.cs:line 90
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.KafkaReportQueryTests.Query_trace_on_a_produces_trace_id_lists_the_produce_then_its_consume [37 ms]
+  Error Message:
+   kronikol query trace C:\Users\cex\AppData\Local\Temp\kronikol-kafka-queryxzrqdxff.2ps 0af7651916cd43dd8448eb211c80319c exited 2: No trace 0af7651916cd43dd8448eb211c80319c — the report holds 0 distinct trace ids. Re-run the suite on a current Kronikol to get trace ids.
+
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaReportQueryTests.Query(String[] args) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaReportQueryTests.cs:line 78
+   at Kronikol.Tests.Kafka.KafkaReportQueryTests.Query_trace_on_a_produces_trace_id_lists_the_produce_then_its_consume() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaReportQueryTests.cs:line 104
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Skipped Kronikol.Tests.Kafka.KafkaBrokerTests.A_message_the_broker_refuses_is_drawn_with_the_brokers_error_code [1 ms]
+[xUnit.net 00:00:04.26]     Kronikol.Tests.Kafka.KafkaBrokerTests.A_produce_and_its_consume_share_one_trace_and_the_value_is_the_body [SKIP]
+[xUnit.net 00:00:04.26]     Kronikol.Tests.Kafka.KafkaBrokerTests.A_dependent_producers_produce_is_recorded_with_the_offset_the_broker_wrote [SKIP]
+  Skipped Kronikol.Tests.Kafka.KafkaBrokerTests.A_produce_and_its_consume_share_one_trace_and_the_value_is_the_body [1 ms]
+  Skipped Kronikol.Tests.Kafka.KafkaBrokerTests.A_dependent_producers_produce_is_recorded_with_the_offset_the_broker_wrote [1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(byTopic: False) [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "v"
+Actual:   "Key: k, Value: v"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(Boolean byTopic) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 109
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(byTopic: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "v"
+Actual:   "Key: k, Value: v"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(Boolean byTopic) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 109
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.Under_an_ambient_span_a_sync_produce_records_the_ids_taken_at_the_call [1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test d4d04bb6-773a-4e8b-9b9a-e6599fabc35c, TestId = d4d04bb6-773a-4e8b-9b9a-e6599fabc35c, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = f8915123-b381-42c6-afc1-6a7553244139, RequestResponseId = 2e8da125-cc51-496e-9000-9758b75ffd9c, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:42 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "c5e964370a53c4b93bfd3c9e745cb252"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test d4d04bb6-773a-4e8b-9b9a-e6599fabc35c, TestId = d4d04bb6-773a-4e8b-9b9a-e6599fabc35c, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = f8915123-b381-42c6-afc1-6a7553244139, RequestResponseId = 2e8da125-cc51-496e-9000-9758b75ffd9c, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:42 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "c5e964370a53c4b93bfd3c9e745cb252"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.Under_an_ambient_span_a_sync_produce_records_the_ids_taken_at_the_call() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 90
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_says_sampled_when_the_apps_tracing_records_the_span_and_not_when_only_Kronikol_listens [2 s]
+  Error Message:
+   Assert.EndsWith() Failure: String end does not match
+String:       null
+Expected end: "-01"
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_traceparent_says_sampled_when_the_apps_tracing_records_the_span_and_not_when_only_Kronikol_listens() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 141
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_message_that_carries_a_traceparent_is_sent_with_it_alone_and_the_entry_records_it [1 s]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test 4719be63-6a51-422b-808d-ae78c35e170e, TestId = 4719be63-6a51-422b-808d-ae78c35e170e, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = bab91cbd-2bd2-4bbd-8e48-b79ff8bfefce, RequestResponseId = de83129c-84df-42fa-803c-6596a84dffb1, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:45 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "0af7651916cd43dd8448eb211c80319c"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test 4719be63-6a51-422b-808d-ae78c35e170e, TestId = 4719be63-6a51-422b-808d-ae78c35e170e, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = bab91cbd-2bd2-4bbd-8e48-b79ff8bfefce, RequestResponseId = de83129c-84df-42fa-803c-6596a84dffb1, TrackingIgnore = False, StatusCode = Kronikol.Tracking.OneOf`2[System.Net.HttpStatusCode,System.String], MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:46 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = Local: Message timed out, ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "0af7651916cd43dd8448eb211c80319c"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_message_that_carries_a_traceparent_is_sent_with_it_alone_and_the_entry_records_it() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 155
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.Confluents_own_producer_is_handed_a_traceparent_the_entry_records_and_the_callers_message_keeps_none [1 s]
+  Error Message:
+   Assert.Single() Failure: The collection was empty
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.Confluents_own_producer_is_handed_a_traceparent_the_entry_records_and_the_callers_message_keeps_none() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 103
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_message_produced_while_serving_a_request_carries_its_trace_id_and_the_consume_takes_it [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "efc78fab-431b-4b85-91af-dc55498da11b"
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_message_produced_while_serving_a_request_carries_its_trace_id_and_the_consume_takes_it() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 327
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.KafkaTraceContextTests.A_consume_under_the_test_its_message_names_records_the_messages_trace_and_parent_span [1 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test 9c4df97e-336d-4268-9f0d-01c6ce56517a, TestId = 9c4df97e-336d-4268-9f0d-01c6ce56517a, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Orders, CallerName = Kafka, Type = Request, TraceId = 0698e72d-e8c3-4979-a4d1-7281313e24bb, RequestResponseId = 5c97ceaa-08f5-419d-94c4-3dd481b712fe, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:47 +00:00, AttributionSource = Scope, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "0af7651916cd43dd8448eb211c80319c"
+            Actual:   null
+[1]: Item:  RequestResponseLog { TestName = Test 9c4df97e-336d-4268-9f0d-01c6ce56517a, TestId = 9c4df97e-336d-4268-9f0d-01c6ce56517a, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Orders, CallerName = Kafka, Type = Response, TraceId = 0698e72d-e8c3-4979-a4d1-7281313e24bb, RequestResponseId = 5c97ceaa-08f5-419d-94c4-3dd481b712fe, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 13:18:47 +00:00, AttributionSource = Scope, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+            Expected: "0af7651916cd43dd8448eb211c80319c"
+            Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaTraceContextTests.AssertIds(RequestResponseLog[] entries, String traceId, String spanId) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 61
+   at Kronikol.Tests.Kafka.KafkaTraceContextTests.A_consume_under_the_test_its_message_names_records_the_messages_trace_and_parent_span() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.Kafka\KafkaTraceContextTests.cs:line 278
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:    48, Passed:   231, Skipped:     3, Total:   282, Duration: 7 s - Kronikol.Tests.Kafka.dll (net10.0)

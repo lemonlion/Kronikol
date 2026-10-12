@@ -1,0 +1,6 @@
+q1-off-1 [15:32:12] xUnit run 1 rc=0 183s report=tests/BreakfastProvider.Tests.Component.xUnit/bin/Debug/net10.0/Reports/TestRunReport.json 
+q1-off-2 [15:38:09] xUnit run 1 rc=0 158s report=tests/BreakfastProvider.Tests.Component.xUnit/bin/Debug/net10.0/Reports/TestRunReport.json 
+q1-off-3 [15:44:40] xUnit run 1 rc=0 182s report=tests/BreakfastProvider.Tests.Component.xUnit/bin/Debug/net10.0/Reports/TestRunReport.json 
+q1-on-1 [15:28:50] xUnit run 1 rc=0 169s report=tests/BreakfastProvider.Tests.Component.xUnit/bin/Debug/net10.0/Reports/TestRunReport.json 
+q1-on-2 [15:35:11] xUnit run 1 rc=0 160s report=tests/BreakfastProvider.Tests.Component.xUnit/bin/Debug/net10.0/Reports/TestRunReport.json 
+q1-on-3 [15:41:22] xUnit run 1 rc=0 177s report=tests/BreakfastProvider.Tests.Component.xUnit/bin/Debug/net10.0/Reports/TestRunReport.json 

@@ -992,6 +992,67 @@ Each is another subsystem's, so it is recorded here rather than folded into thes
     tiering section says it too, and that a Debug build hides it (`wiki/f25_wiki.py`).
   - The lane stops at its first failure, so no project after this one ran on CI for 4.16.2. `Kronikol.Tests.Kafka`
     passes 234 in Release here. R1's `KafkaDependentProducerTests` takes the same form before R1 ships.
+- **2026-10-12, 4.16.4 published.** Release run 38259436637, CI 38259433180 (its remainder lane included, so every
+  project after `Kronikol.Tests.Kafka.BuildInterception` ran too) and CodeQL 38259433167 passed, and nuget.org listed
+  the packages; the wiki has F25's edits (`382bd2d`). F25 changed no output, so Kronikol4J's ledger has no line for it.
+- **2026-10-12, R1 built (S4 to S7), released as 4.17.0.** As designed in 4.1, 4.3 and 4.4, with Q5, Q16 (B), Q17 and
+  Q19 as recommended. On the way:
+  - **`TrackConsume`'s scope moved from R2 into R1.** 4.5 had R2 change what `TrackConsume` does (a span, and the
+    response logged at dispose), but the method is new in R1: changing a public method's behaviour in the minor after
+    the one that adds it would make code written against R1 behave differently untouched, which CLAUDE.md counts as
+    major. So it ships with its final behaviour. The scope logs the consume's request at its start and its response at
+    dispose, so the handler's calls lie inside it and `flow` nests them under it (T41's scope half, RUN P8 case S4); it
+    runs the handler under a `Kronikol.Kafka` consumer span, `{topic} process` (T40), a child of the message's
+    `traceparent` when the consume is recorded under the message's test and the root of a trace of its own otherwise,
+    never a child of the span the loop polls under (T55 and T56 for the scope); it makes the span current before it
+    current again (T62's explicit-scope half); its response keeps the request's test, phase and ids (T63); and
+    `Kronikol.Kafka` joins the well-known sources (T42, as a segment fact and in Playwright). R2 keeps the opt-in
+    zero-change mode, the publish span (T64), T43 and T62's zero-change cases.
+  - **T42 holds to what the builder guarantees.** In one test a consume's segment takes its trace's spans in its window
+    (`InternalFlowSegmentBuilder.cs:152-162`; the subtree rule applies only to a trace two tests claim). The window
+    holds the handler's spans; a producer's span that ended before the consume began is not in it; one that starts
+    inside the window would be. Q6's builder rule (a call whose own span is stored takes its subtree) stays unshipped.
+  - **T58 corrected.** 4.3 said the runtime accepts version `01` "with a longer value"; `ActivityContext.TryParse`
+    accepts version `01` at 55 characters and refuses a longer one. The theory pins what the runtime does.
+  - **S5 and S6 were written before their facts**, against the red-first rule. The proof is the red run on 4.16.2 with
+    compile stubs (`r1/stubs.py`, `r1/red-4.16.2-summary.md`): 48 Kafka facts, 4 dependent-producer facts, 6 core
+    facts and 7 Playwright facts fail on their own assertion (the decorator facts by the stubs throwing, the plan's
+    red for T61), and the 7 that pass (5 Kafka facts, a dependent-producer fact and a core fact) are guards the plan
+    names; T55's flow fact fails there because the producing test's flow needs the produce's ids.
+  - **F25 in R1's own facts.** `KafkaDependentProducerTests` builds through `Built(() => …)`, as the other
+    build-interception facts do since 4.16.4.
+  - **Mutations** (`r1/mutate.py`): 42 mutations over the tracker, the produce, the message content, the build
+    interception, the PlantUML creator and the page's note and menu scripts. The first run killed 39
+    (`r1/mutations-1061892f.txt`); three survived, each for want of a fact. N12 (a Kafka tracker that does not start the
+    listener) passed because the F14 fact read a listener another class had started: its two facts (a tracker's log, a
+    wrapper's produce) now reset the listener first, in a serial collection of their own (`KafkaListenerStartTests`, as
+    `ProcessGlobalStoreTests` requires of any reset). N20 (a produce reported twice) had no fact that reported one
+    twice: a library's catch can report a produce its try already reported, and it is drawn once, as first reported. N34
+    (a collapsed note's preview showing the key line) had no Playwright fact that collapsed a Kafka note. With the three
+    facts all 42 are killed (`r1/mutations-rerun-n12-n20-n34.txt`).
+  - **Broker facts**: the three facts that need a broker pass against cp-kafka 7.6.1 (Q15), a single-node KRaft broker
+    in podman on port 19092 named by `KRONIKOL_TEST_KAFKA` (`r1/broker-local-cp-kafka-7.6.1.txt`), since no Docker
+    endpoint answers here; not 9092, which the facts use as the address with no broker. Where Docker answers, as on
+    CI's ubuntu-latest runners, Testcontainers starts the same image.
+  - **S8**: BreakfastProvider's xUnit lane in a scratch clone at `0ee43e8` on R1's local packages passes 212 of 212, and
+    all 40 of its Kafka produce entries carry the ids of the `KafkaPublish` span the app started for them (a probe in
+    the clone wrote each span's ids; `kronikol query http` read each entry's). The control on 4.16.4 from nuget.org
+    passes 212 of 212 and its 40 produce entries carry no ids, though the app started the same 40 spans (`r1/s8/`). The
+    lane is the in-memory one, not the docker one 6.1 names: the docker lane needs Kafka certificates installed in the
+    machine's store and the hosts file edited. It runs R1's wrapper over BreakfastProvider's in-memory producer, so it
+    cannot show the `traceparent`, which needs Confluent's producer inside; the broker facts show that.
+  - **Q1**: measured on BreakfastProvider's xUnit in-memory lane (212 scenarios) on 4.17.0's local packages, three runs
+    each way, alternated: with quick JIT on 169, 160 and 177 s, with it off (`DOTNET_TC_QuickJit=0`) 183, 158 and 182 s,
+    a mean of +3% (169 to 174 s) inside the runs' own spread (`r1/s8/q1-summary.txt`). The cost is small, but the props
+    does not ship in 4.x. It would turn quick JIT off in every consumer's test process, so their untouched code would
+    run differently, and CLAUDE.md counts a changed default as major. And under F25, with quick JIT off, a method that
+    enables interception and then builds a client can have `Build()` inlined in Release, where today's tiering
+    intercepts its first builds. The tiering diagnostic and the documented setting stay the remedy; the props is
+    proposed for v5 in ROADMAP Appendix C.
+  - **Checks.** After the version bump, the core suite passes 7,443 with 2 skipped; the Kafka suite 293 with its 3
+    broker facts skipped, in Debug and in Release; the build-interception suite 75 of 75 on .NET 8 and .NET 10, in Debug
+    and in Release; the full Playwright suite 1,036 with 28 skipped; and release.slnf builds in Release for every
+    target. BreakfastProvider's xUnit lane passes 212 of 212 on the local packages.
 
 ## Appendix A. Edit sites at `d59843fa` (4.14.6)
 

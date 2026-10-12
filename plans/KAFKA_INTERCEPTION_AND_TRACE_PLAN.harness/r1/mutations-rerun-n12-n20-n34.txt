@@ -1,0 +1,3 @@
+N12 (the listener not started by a Kafka tracker (T31, F14)): killed by 2: A_Kafka_tracker_starts_the_internal_flow_listener_when_it_first_logs, A_wrapper_starts_the_internal_flow_listener_when_it_first_produces
+N20 (a produce reported twice (T61)): killed by 1: A_produce_reported_again_is_drawn_once_as_first_reported
+N34 (the collapsed note's preview shows the key line): killed by 1: A_collapsed_note_previews_its_body_without_the_key_line

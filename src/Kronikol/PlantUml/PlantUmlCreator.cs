@@ -62,6 +62,16 @@ public static partial class PlantUmlCreator
 
     public static string[] DefaultExcludedHeaders => ["Cache-Control", "Pragma"];
 
+    /// <summary>
+    /// The entry header a message's key travels in (plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md 4.4, #167). A note draws
+    /// it above the body as a line of its own, <see cref="NoteKeyLabel"/> and the key, which the page's header toggle
+    /// leaves in place: the key was part of a Kafka note's content before the value became its body.
+    /// </summary>
+    internal const string MessageKeyHeader = "kafka-key";
+
+    /// <summary>The start of a note's key line: markup a payload cannot carry, since its <c>&lt;</c> is escaped.</summary>
+    internal const string NoteKeyLabel = "<b>Key</b> ";
+
     private static readonly ConcurrentDictionary<string, string> AliasCache = new();
 
     public static IEnumerable<PlantUmlForTest> GetPlantUmlImageTagsPerTestId(
@@ -335,7 +345,7 @@ public static partial class PlantUmlCreator
                     if (requestPreFormattingProcessor is not null)
                         content = requestPreFormattingProcessor(content);
 
-                    var noteContent = FormatNoteContent(excludeAllHeaders ? [] : effectiveHeaders, content, excludedHeaders, RequestResponseType.Request, requestMidFormattingProcessor, trace.FocusFields, focusEmphasis, focusDeEmphasis, graphQlBodyFormat);
+                    var noteContent = FormatNoteContent(excludeAllHeaders ? KeyHeaderOnly(effectiveHeaders) : effectiveHeaders, content, excludedHeaders, RequestResponseType.Request, requestMidFormattingProcessor, trace.FocusFields, focusEmphasis, focusDeEmphasis, graphQlBodyFormat);
 
                     if (requestPostFormattingProcessor is not null)
                         noteContent = requestPostFormattingProcessor(noteContent);
@@ -411,7 +421,7 @@ public static partial class PlantUmlCreator
                     if (responsePreFormattingProcessor is not null)
                         content = responsePreFormattingProcessor(content);
 
-                    var noteContent = FormatNoteContent(excludeAllHeaders ? [] : effectiveHeaders, content, excludedHeaders, RequestResponseType.Response, responseMidFormattingProcessor, trace.FocusFields, focusEmphasis, focusDeEmphasis);
+                    var noteContent = FormatNoteContent(excludeAllHeaders ? KeyHeaderOnly(effectiveHeaders) : effectiveHeaders, content, excludedHeaders, RequestResponseType.Response, responseMidFormattingProcessor, trace.FocusFields, focusEmphasis, focusDeEmphasis);
 
                     if (responsePostFormattingProcessor is not null)
                         noteContent = responsePostFormattingProcessor(noteContent);
@@ -1531,12 +1541,34 @@ public static partial class PlantUmlCreator
         }
 
         var headersOnTop = suppressHeaders ? "" : string.Join(Environment.NewLine, headers
-            .Where(y => !excludedHeaders.Contains(y.Key))
+            .Where(y => y.Key != MessageKeyHeader && !excludedHeaders.Contains(y.Key))
             .OrderBy(y => y.Key)
             .SelectMany(y => BatchGray($"[{y.Key}={y.Value}]")));
+        var keyLine = KeyLine(headers);
+        if (keyLine is not null)
+            headersOnTop = headersOnTop.Length == 0 ? keyLine : keyLine + Environment.NewLine + headersOnTop;
 
         return ((headersOnTop + Environment.NewLine + Environment.NewLine).TrimStart() + formattedContent.Trim()).TrimEnd();
     }
+
+    // The longest key a key line shows: the whole key stays in the entry's headers (kronikol query http --headers).
+    private const int MaxNoteKeyChars = 120;
+
+    // A message's key, on a line of its own above the headers: the label is Kronikol's markup, the key is escaped like a
+    // payload, kept to one line and cut where a long one would make the note too wide to draw.
+    private static string? KeyLine(IEnumerable<(string Key, string? Value)> headers)
+    {
+        foreach (var (key, value) in headers)
+        {
+            if (key == MessageKeyHeader && value is not null)
+                return NoteKeyLabel + EscapeCreoleMarkup(PlantUmlStatementLimits.TruncateLabel(value.ReplaceLineEndings(" "), MaxNoteKeyChars));
+        }
+        return null;
+    }
+
+    // With every header left out, a message's key is still drawn: it is the message's content, not transport metadata.
+    private static (string Key, string? Value)[] KeyHeaderOnly(IEnumerable<(string Key, string? Value)> headers) =>
+        headers.Where(h => h.Key == MessageKeyHeader).ToArray();
 
     private static readonly JsonWriterOptions IndentedWriterOptions = new() { Indented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 

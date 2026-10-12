@@ -1,0 +1,1 @@
+entries 40: a KafkaPublish span 40, another span 0, no ids 0; probe spans 40

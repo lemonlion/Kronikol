@@ -106,6 +106,7 @@ matters.
 | "which assertions failed?" | `assertions --failed` (add `s3` to scope): flat list with resolved values, messages and `file:line` |
 | "what did X return?" | `interactions s3 --service X` → `http s3/iN --keys` → `--path` |
 | "what values did X ever return?" | `values --path '$.field' --service X` — distinct values, counted, with addresses |
+| "what did the messages on a topic carry?" | `values --path '$.field' --service Kafka --request`: a message's value is its request half's body |
 | "which calls returned a bad value?" | `interactions --where '$.success = false'` — run-wide; `req:$.x` targets the request |
 | "which example row broke?" | `steps s3` (its parameters) + `annotations s3` |
 | "it failed, I re-ran it, and now the report is green" | The reports directory holds the NEWEST run; the ones before it are kept under `runs/`. `history <reports-dir> --failing` names what failed earlier and in which run → `failures <reports-dir> --run last-failed` opens that run, and every verb takes `--run` from there (`interactions`, `http`, …). Not kept any more: `history --run last-failed` still answers from the ledger, first line of each error included |

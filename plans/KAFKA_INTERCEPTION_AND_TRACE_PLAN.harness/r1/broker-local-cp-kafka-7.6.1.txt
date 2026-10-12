@@ -1,0 +1,7 @@
+# Broker facts (5.4) against confluentinc/cp-kafka:7.6.1 in KRaft mode, run in podman (podman-machine-default) on port 19092,
+# KRONIKOL_TEST_KAFKA=localhost:19092, on the R1 tree rebased onto 4.16.4 (2026-10-12). librdkafka's ::1 connect lines are its IPv6 attempt before IPv4.
+  Passed Kronikol.Tests.Kafka.KafkaBrokerTests.A_message_the_broker_refuses_is_drawn_with_the_brokers_error_code [7 s]
+  Passed Kronikol.Tests.Kafka.KafkaBrokerTests.A_dependent_producers_produce_is_recorded_with_the_offset_the_broker_wrote [28 s]
+  Passed Kronikol.Tests.Kafka.KafkaBrokerTests.A_produce_and_its_consume_share_one_trace_and_the_value_is_the_body [21 s]
+Test Run Successful.
+Total tests: 3

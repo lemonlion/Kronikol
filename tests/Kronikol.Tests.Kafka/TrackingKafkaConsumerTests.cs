@@ -157,7 +157,7 @@ public class TrackingKafkaConsumerTests
     // ─── Consume content: Key logging ───────────────────────
 
     [Fact]
-    public void Consume_Includes_Key_in_content()
+    public void Consume_Includes_the_key_as_the_kafka_key_header_and_the_value_as_the_body()
     {
         var options = MakeOptions();
         options.LogMessageKey = true;
@@ -176,8 +176,8 @@ public class TrackingKafkaConsumerTests
         consumer.Consume(TimeSpan.FromSeconds(1));
 
         var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Request);
-        Assert.Contains("order-123", log.Content);
-        Assert.Contains("{\"amount\":99}", log.Content);
+        Assert.Contains(("kafka-key", "order-123"), log.Headers);
+        Assert.Equal("{\"amount\":99}", log.Content);
     }
 
     [Fact]

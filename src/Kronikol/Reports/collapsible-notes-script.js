@@ -7,6 +7,13 @@
     // carries the same literal (DiagramContextMenuTests checks the two match).
     var NOTE_HEADER_TAG = /^<color:(?:gray|#[0-9A-Fa-f]{6})>/;
     var NOTE_HEADER_TAG_INDENTED = new RegExp('^\\s*' + NOTE_HEADER_TAG.source.slice(1));
+    // A message's key, drawn above a note's headers (PlantUmlCreator.NoteKeyLabel, #167): Kronikol's own markup, never
+    // a payload's, whose '<' is escaped. It is not payload, so the JSON and YAML views and the copies leave it out with
+    // the headers, and it is not a header, so hiding headers leaves it in view. context-menu-script.js carries the same
+    // literal.
+    var NOTE_KEY_LINE = /^<b>Key<\/b> /;
+    var NOTE_KEY_LINE_INDENTED = /^(\s*)<b>Key<\/b> /;
+    function isNoteMetaLine(trimmed) { return NOTE_HEADER_TAG.test(trimmed) || NOTE_KEY_LINE.test(trimmed); }
 
     // ── Copy fidelity: undoing the breaks Kronikol wrote ────────────────────
     // A break in a note body is a DISPLAY decision — the width budget's, not the payload's — so every
@@ -89,7 +96,7 @@
 
     function getNotePreview(contentLines) {
         var nonGray = contentLines.map(function(l) { return l.trim(); })
-            .filter(function(l) { return !NOTE_HEADER_TAG.test(l); });
+            .filter(function(l) { return !isNoteMetaLine(l); });
         var raw = nonGray.join(' ').trim();
         if (!raw) return '';
         if (raw.length <= 60) return raw;
@@ -628,7 +635,7 @@
         // Tooltip for collapsed notes
         if (state === 'collapsed' && contentLines && grp && grp.paths.length > 0) {
             var tipLines = contentLines.map(function(l) {
-                return l.replace(NOTE_HEADER_TAG_INDENTED, '');
+                return l.replace(NOTE_HEADER_TAG_INDENTED, '').replace(NOTE_KEY_LINE_INDENTED, '$1Key ');
             });
             // Read like Copy box text: the width bound's breaks joined first, then the escapes decoded (§12.5).
             var tipText = decodeNoteEscapes(rejoinWrappedNoteLines(tipLines.join('\n'))).trim();
@@ -1024,7 +1031,7 @@
         var afterGray = false;
         for (var i = 0; i < contentLines.length; i++) {
             var trimmed = contentLines[i].trim();
-            if (NOTE_HEADER_TAG.test(trimmed)) { afterGray = true; continue; }
+            if (isNoteMetaLine(trimmed)) { afterGray = true; continue; }
             if (afterGray && trimmed === '') continue;
             afterGray = false;
             payload.push(contentLines[i]);
@@ -1520,7 +1527,7 @@
                 continue;
             }
             if (inNote && swapping) {
-                if (!headerDone && NOTE_HEADER_TAG.test(trimmed)) { afterGray = true; out.push(lines[i]); continue; }
+                if (!headerDone && isNoteMetaLine(trimmed)) { afterGray = true; out.push(lines[i]); continue; }
                 if (!headerDone && afterGray && trimmed === '') { out.push(lines[i]); continue; }
                 headerDone = true;
                 continue; // payload line dropped — YAML lines are emitted before 'end note'
@@ -1541,7 +1548,7 @@
         var afterGray = false;
         for (var i = 0; i < rawContentLines.length; i++) {
             var trimmed = rawContentLines[i].trim();
-            if (NOTE_HEADER_TAG.test(trimmed)) { afterGray = true; header.push(rawContentLines[i]); continue; }
+            if (isNoteMetaLine(trimmed)) { afterGray = true; header.push(rawContentLines[i]); continue; }
             if (afterGray && trimmed === '') { header.push(rawContentLines[i]); continue; }
             break;
         }
@@ -1811,6 +1818,7 @@
         var noteMode = 'normal'; // 'normal', 'collapsed', 'truncated'
         var truncateLineCount = 0;
         var justSkippedGray = false;
+        var keyLineAbove = false;
         var noteContentEmitted = false;
 
         for (var i = 0; i < lines.length; i++) {
@@ -1818,6 +1826,7 @@
             if (!inNote && /^note(?:<<[^>]*>>)*\s+(left|right)/.test(trimmed)) {
                 inNote = true;
                 justSkippedGray = false;
+                keyLineAbove = false;
                 noteContentEmitted = false;
                 newLines.push(lines[i]);
                 var step = noteSteps[nIdx] || 0;
@@ -1854,8 +1863,9 @@
             if (noteMode === 'collapsed') continue;
             if (noteMode === 'truncated') {
                 if (hideHeaders && NOTE_HEADER_TAG.test(trimmed)) { justSkippedGray = true; continue; }
-                if (justSkippedGray && trimmed === '') continue;
+                if (justSkippedGray && trimmed === '' && !keyLineAbove) continue;
                 justSkippedGray = false;
+                keyLineAbove = NOTE_KEY_LINE.test(trimmed);
                 truncateLineCount++;
                 if (truncateLineCount <= limit) {
                     newLines.push(lines[i]);
@@ -1864,8 +1874,9 @@
                 continue;
             }
             if (inNote && hideHeaders && NOTE_HEADER_TAG.test(trimmed)) { justSkippedGray = true; continue; }
-            if (justSkippedGray && trimmed === '') continue;
+            if (justSkippedGray && trimmed === '' && !keyLineAbove) continue;
             justSkippedGray = false;
+            keyLineAbove = inNote && NOTE_KEY_LINE.test(trimmed);
             newLines.push(lines[i]);
             if (inNote) noteContentEmitted = true;
         }

@@ -3785,6 +3785,130 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// A run report through the whole pipeline, at the default span granularity, whose one scenario consumes a Kafka
+    /// message under <c>KafkaTracker.TrackConsume</c>'s scope, in the entries and spans the scope records
+    /// (plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md 4.5, T42): the consume's request at the scope's start and its response
+    /// 150 ms later, both carrying the ids of an <c>orders process</c> span from a source named <c>Kronikol.Kafka</c>,
+    /// a child of the producer's <c>orders publish</c> span, which ended 300 ms before the consume; the handler's
+    /// <c>handle order</c> and <c>SELECT orders</c> descend from the scope's span. The test project does not reference
+    /// the Kafka package, so the entries are written in its shape.
+    /// </summary>
+    public static (string Uri, string ReportsDir) GenerateRunReportWithKafkaConsumeScope(string tempDir, string outputDir, string fileName)
+    {
+        var reportsDir = Path.Combine(tempDir, "kafka-scope-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(reportsDir);
+        const string name = "Consume an order";
+        var testId = "kafka-scope-" + Guid.NewGuid().ToString("N");
+        var handlerName = "Kronikol.Tests.KafkaScope.E2E." + Guid.NewGuid().ToString("N");
+        using var kafka = new System.Diagnostics.ActivitySource("Kronikol.Kafka");
+        using var handler = new System.Diagnostics.ActivitySource(handlerName);
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = s => s == kafka || s == handler,
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+        var spans = new List<System.Diagnostics.Activity>();
+        var trace = System.Diagnostics.ActivityTraceId.CreateRandom();
+        var at = DateTimeOffset.UtcNow.AddSeconds(-30);
+
+        System.Diagnostics.Activity Span(System.Diagnostics.ActivitySource source, string spanName, System.Diagnostics.ActivitySpanId parent,
+            DateTimeOffset start, int ms, System.Diagnostics.ActivityKind kind = System.Diagnostics.ActivityKind.Internal)
+        {
+            System.Diagnostics.Activity.Current = null;
+            var span = source.StartActivity(spanName, kind,
+                new System.Diagnostics.ActivityContext(trace, parent, System.Diagnostics.ActivityTraceFlags.Recorded))!;
+            span.SetStartTime(start.UtcDateTime);
+            span.SetEndTime(start.UtcDateTime.AddMilliseconds(ms));
+            spans.Add(span);
+            return span;
+        }
+
+        lock (WholePipeline)
+        {
+            DefaultDiagramsFetcher.Reset();
+            var publish = Span(handler, "orders publish", System.Diagnostics.ActivitySpanId.CreateRandom(), at.AddMilliseconds(-300), 20,
+                System.Diagnostics.ActivityKind.Producer);
+            var process = Span(kafka, "orders process", publish.SpanId, at, 150, System.Diagnostics.ActivityKind.Consumer);
+            var handle = Span(handler, "handle order", process.SpanId, at.AddMilliseconds(5), 120);
+            Span(handler, "SELECT orders", handle.SpanId, at.AddMilliseconds(20), 30);
+
+            var id = Guid.NewGuid();
+            var kronikolTrace = Guid.NewGuid();
+            RequestResponseLogger.Log(new RequestResponseLog(name, testId, "Consume ← orders", """{"Status":"Placed"}""",
+                new Uri("kafka:///orders"), [("kafka-key", "order-1")], "Orders", "Kafka", RequestResponseType.Request, kronikolTrace, id,
+                TrackingIgnore: false, MetaType: RequestResponseMetaType.Event, DependencyCategory: Kronikol.Constants.DependencyCategories.MessageQueue)
+                { Timestamp = at, ActivityTraceId = trace.ToString(), ActivitySpanId = process.SpanId.ToString() });
+            RequestResponseLogger.Log(new RequestResponseLog(name, testId, "Consume ← orders", null,
+                new Uri("kafka:///orders"), [], "Orders", "Kafka", RequestResponseType.Response, kronikolTrace, id,
+                TrackingIgnore: false, MetaType: RequestResponseMetaType.Event, DependencyCategory: Kronikol.Constants.DependencyCategories.MessageQueue)
+                { Timestamp = at.AddMilliseconds(150), ActivityTraceId = trace.ToString(), ActivitySpanId = process.SpanId.ToString() });
+            foreach (var span in spans)
+                Kronikol.InternalFlow.InternalFlowSpanStore.Add(span);
+
+            ReportGenerator.CreateStandardReportsWithDiagrams(
+                [new Feature { DisplayName = name, Scenarios = [new Scenario { Id = testId, DisplayName = name, Result = ExecutionResult.Passed }] }],
+                at.UtcDateTime.AddSeconds(-1), DateTime.UtcNow,
+                new ReportConfigurationOptions
+                {
+                    ReportsFolderPath = reportsDir,
+                    PlantUmlRendering = PlantUmlRendering.BrowserJs,
+                    InternalFlowTracking = true,
+                    GenerateComponentDiagram = false,
+                    GenerateSpecificationsReport = false,
+                    GenerateSpecificationsData = false,
+                });
+            DefaultDiagramsFetcher.Reset();
+        }
+        foreach (var span in spans) span.Dispose();
+
+        var html = Path.Combine(reportsDir, "TestRunReport.html");
+        File.Copy(html, Path.Combine(outputDir, fileName), true);
+        return (new Uri(html).AbsoluteUri, reportsDir);
+    }
+
+    /// <summary>
+    /// One diagram whose request note is a Kafka produce, built through the real formatter: the message's value, a JSON
+    /// object, is the body, its key the entry's <c>kafka-key</c> header, and its own <c>source</c> header follows
+    /// (plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md 4.4, #167).
+    /// </summary>
+    public static string GenerateReportWithKafkaNote(string tempDir, string outputDir, string fileName,
+        bool headersShown, NotePayloadFormat notePayloadFormat)
+    {
+        var (features, _) = CreateTestData();
+        var traceId = Guid.NewGuid();
+        var pairId = Guid.NewGuid();
+        RequestResponseLog[] logs =
+        [
+            new("Kafka produce", "kafka", "Produce → orders", """{"Status":"Placed","Lines":[{"Sku":"A1","Qty":2}]}""",
+                new Uri("kafka:///orders"), [("kafka-key", "order-1"), ("source", "checkout")],
+                "Kafka", "Caller", RequestResponseType.Request, traceId, pairId,
+                TrackingIgnore: false, MetaType: RequestResponseMetaType.Event,
+                DependencyCategory: Kronikol.Constants.DependencyCategories.MessageQueue),
+            new("Kafka produce", "kafka", "Produce → orders", null,
+                new Uri("kafka:///orders"), [],
+                "Kafka", "Caller", RequestResponseType.Response, traceId, pairId,
+                TrackingIgnore: false, MetaType: RequestResponseMetaType.Event,
+                DependencyCategory: Kronikol.Constants.DependencyCategories.MessageQueue),
+        ];
+
+        var source = Kronikol.PlantUml.PlantUmlCreator
+            .GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.First().PlainText;
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DiagramAsCode("t1", "", source)], features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ResolvedToggleDefaults.BuiltIn with { HeadersShown = headersShown, NotePayloadFormat = notePayloadFormat });
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// One diagram whose response note is JSON holding two runs of 150 emoji with no space in them, one starting on an
     /// even and one on an odd code unit, built through the real formatter. Its writer escapes each emoji as
     /// <c>\uXXXX\uXXXX</c>; the YAML view decodes them, so it is the view that draws, and breaks, a run of them.

@@ -13,7 +13,8 @@ namespace Kronikol.Extensions.Kafka;
 /// A produce is captured at the call (its scenario, phase, verbosity and time) and stored once its outcome is known, the
 /// response stamped then, so a produce is its caller's even though Confluent runs delivery handlers on another thread.
 /// A produce that fails, by a failed delivery report or by throwing, is drawn with its error. The caller's message is
-/// never written to: when identity headers are added, Confluent is handed a copy.
+/// never written to: when headers are added, Confluent is handed a copy. The entry records the W3C ids of the last
+/// <c>traceparent</c> the message sent carries, else those of <see cref="System.Diagnostics.Activity.Current"/> at the call.
 /// </remarks>
 public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
 {
@@ -28,6 +29,10 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
     private readonly KafkaTracker _tracker;
     private readonly KafkaTrackingOptions _options;
 
+    // Whether this wrapper is the last before Confluent's own producer, the only place it adds a traceparent: a wrapper
+    // inside it (an instrumentation package's) writes its own, which a consumer should parent on (4.3).
+    private readonly bool _lastBeforeConfluent;
+
     // Whether Confluent calls a delivery handler for this producer's messages (On, Off, Unknown), read once.
     private int _deliveryReports;
 
@@ -36,6 +41,9 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
         _inner = inner;
         _tracker = tracker;
         _options = options;
+        _lastBeforeConfluent = inner.GetType() is { IsGenericType: true } type
+            && type.Assembly == typeof(IProducer<,>).Assembly
+            && type.GetGenericTypeDefinition().FullName == "Confluent.Kafka.Producer`2";
     }
 
     public Task<DeliveryResult<TKey, TValue>> ProduceAsync(
@@ -68,22 +76,20 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
         Message<TKey, TValue> message,
         CancellationToken cancellationToken)
     {
-        var call = _tracker.Capture();
-        var content = BuildContent(message);
+        var tracking = _tracker.TrackProduce(topic, message, KafkaOperation.ProduceAsync, _options, AddsTraceParent);
 
         DeliveryResult<TKey, TValue> result;
         try
         {
-            result = await produce(ToSend(message, call), cancellationToken);
+            result = await produce(tracking.Message, cancellationToken);
         }
         catch (Exception exception)
         {
-            _tracker.LogProduce(call, Failed(KafkaOperation.ProduceAsync, topic, exception), content, DateTimeOffset.UtcNow, Status(exception), Describe(exception));
+            tracking.Failed(exception);
             throw;
         }
 
-        _tracker.LogProduce(call, new KafkaOperationInfo(KafkaOperation.ProduceAsync, topic, result.Partition.Value, result.Offset.Value),
-            content, DateTimeOffset.UtcNow);
+        tracking.Delivered(result);
         return result;
     }
 
@@ -93,28 +99,20 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
         Message<TKey, TValue> message,
         Action<DeliveryReport<TKey, TValue>>? deliveryHandler)
     {
-        var call = _tracker.Capture();
-        var content = BuildContent(message);
-        var sent = ToSend(message, call);
+        var tracking = _tracker.TrackProduce(topic, message, KafkaOperation.Produce, _options, AddsTraceParent);
 
         // Confluent calls no delivery handler for this producer and refuses one (F7, F24): produce as the caller asked
         // and log at the call, without the partition and offset only a delivery report holds.
         if (DeliveryReports == Off)
         {
             Send(deliveryHandler);
-            _tracker.LogProduce(call, new KafkaOperationInfo(KafkaOperation.Produce, topic), content, call.At);
+            tracking.Sent();
             return;
         }
 
         try
         {
-            produce(sent, report =>
-            {
-                var failed = report.Error is { IsError: true };
-                _tracker.LogProduce(call, new KafkaOperationInfo(KafkaOperation.Produce, topic, Known(report.Partition), Known(report.Offset)),
-                    content, DateTimeOffset.UtcNow, failed ? "!" + report.Error!.Code : null, failed ? report.Error!.Reason : null);
-                deliveryHandler?.Invoke(report);
-            });
+            produce(tracking.Message, tracking.Handler(deliveryHandler));
         }
         catch (InvalidOperationException refusal) when (IsDeliveryReportsRefusal(refusal, deliveryHandler))
         {
@@ -122,11 +120,11 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
             // before anything is queued, so produce again without a handler, and remember.
             Volatile.Write(ref _deliveryReports, Off);
             Send(null);
-            _tracker.LogProduce(call, new KafkaOperationInfo(KafkaOperation.Produce, topic), content, call.At);
+            tracking.Sent();
         }
         catch (Exception exception)
         {
-            LogFailed(exception);
+            tracking.Failed(exception);
             throw;
         }
 
@@ -134,18 +132,18 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
         {
             try
             {
-                produce(sent, handler);
+                produce(tracking.Message, handler);
             }
             catch (Exception exception)
             {
-                LogFailed(exception);
+                tracking.Failed(exception);
                 throw;
             }
         }
-
-        void LogFailed(Exception exception) =>
-            _tracker.LogProduce(call, Failed(KafkaOperation.Produce, topic, exception), content, DateTimeOffset.UtcNow, Status(exception), Describe(exception));
     }
+
+    // A traceparent is added only where this wrapper is the last before Confluent (4.3).
+    private bool AddsTraceParent => _options.PropagateTraceContext && _lastBeforeConfluent;
 
     // Exactly Confluent's refusal of a handler on a producer without delivery reports, for a call that passed none of its
     // own and a producer whose setting could not be read. Not ObjectDisposedException, which derives from
@@ -181,66 +179,6 @@ public class TrackingKafkaProducer<TKey, TValue> : IProducer<TKey, TValue>
             // A fake or a decorator whose Handle throws.
             return null;
         }
-    }
-
-    // The message Confluent is handed: the caller's, or, when identity headers are added, a copy holding the caller's key,
-    // value, timestamp and headers in order, then each identity header the caller's lack (F9), as gRPC copies a call's
-    // metadata. Only an identity that names a scenario travels: the background identity on a message made its consumer
-    // adopt it as a scenario's (F20).
-    private Message<TKey, TValue> ToSend(Message<TKey, TValue> message, KafkaCall call)
-    {
-        if (!_options.PropagateTestIdentity || call.Test is not { IsAttributed: true } identity)
-            return message;
-
-        var missing = new List<(string Key, string Value)>(2);
-        if (!Has(message.Headers, TestTrackingMessageHeaders.TestName))
-            missing.Add((TestTrackingMessageHeaders.TestName, identity.Name));
-        if (!Has(message.Headers, TestTrackingMessageHeaders.TestId))
-            missing.Add((TestTrackingMessageHeaders.TestId, identity.Id));
-        if (missing.Count == 0)
-            return message;
-
-        var headers = new Headers();
-        if (message.Headers is not null)
-            foreach (var header in message.Headers)
-                headers.Add(header.Key, header.GetValueBytes());
-        foreach (var (key, value) in missing)
-            headers.Add(key, Encoding.UTF8.GetBytes(value));
-        return new Message<TKey, TValue> { Key = message.Key, Value = message.Value, Timestamp = message.Timestamp, Headers = headers };
-    }
-
-    private static bool Has(Headers? headers, string key) => headers is not null && headers.Any(h => h.Key == key);
-
-    // A failed produce, with the partition and offset its delivery result holds when Confluent knew them.
-    private static KafkaOperationInfo Failed(KafkaOperation operation, string topic, Exception exception) =>
-        exception is ProduceException<TKey, TValue> { DeliveryResult: { } result }
-            ? new KafkaOperationInfo(operation, topic, Known(result.Partition), Known(result.Offset))
-            : new KafkaOperationInfo(operation, topic);
-
-    private static int? Known(Partition partition) => partition.Value >= 0 ? partition.Value : null;
-
-    private static long? Known(Offset offset) => offset.Value >= 0 ? offset.Value : null;
-
-    // Confluent's error code says what happened (!Local_MsgTimedOut); any other exception is named by its type, as
-    // FailedSend names a thrown call's.
-    private static string Status(Exception exception) =>
-        exception is KafkaException kafka ? "!" + kafka.Error.Code : FailedSend.Status(exception);
-
-    // Confluent queues a message before its wait can be cancelled, so a cancelled wait is not an undelivered message.
-    private static string Describe(Exception exception) => exception is OperationCanceledException
-        ? FailedSend.Describe(exception) + " The message was queued before the wait was cancelled, so it may still be delivered."
-        : FailedSend.Describe(exception);
-
-    private string? BuildContent(Message<TKey, TValue> message)
-    {
-        if (!KafkaTracker.ShowsContent(_options)) return null;
-
-        var parts = new List<string>();
-        if (_options.LogMessageKey && message.Key is not null)
-            parts.Add($"Key: {message.Key}");
-        if (_options.LogMessageValue && message.Value is not null)
-            parts.Add($"Value: {message.Value}");
-        return parts.Count > 0 ? string.Join(", ", parts) : null;
     }
 
     // ─── IProducer<TKey, TValue> delegation ───────────────────

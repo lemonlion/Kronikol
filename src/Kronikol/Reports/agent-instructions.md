@@ -105,6 +105,7 @@ person, hand them the `#sid-` link: it opens that scenario with its diagram, not
 | did it even call X? | `kronikol query services .` — absence is the answer, no payload needed |
 | where did this wrong number come from? | `kronikol query grep . "4173" --number --values` |
 | what did this field ever hold? | `kronikol query values . --path '$.status'` — aggregates without printing a payload |
+| what did a Kafka message carry? | `kronikol query values . --service Kafka --request --path '$.status'`: a message's value is the body of its request half |
 | show me the flow | `kronikol query flow . s3` — 1–2 KB instead of the diagram |
 | which assertions failed? | `kronikol query assertions . --failed` |
 | what changed since the last run? | `kronikol query diff old.json new.json` — matched on `stableId` |

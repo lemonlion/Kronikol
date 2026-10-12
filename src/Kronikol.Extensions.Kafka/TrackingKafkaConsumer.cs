@@ -80,13 +80,8 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
     {
         if (result is null || result.IsPartitionEOF) return;
 
-        EstablishTestIdentity(result.Message?.Headers);
-        AutoCorrelateOnConsume(result);
-
-        var op = new KafkaOperationInfo(KafkaOperation.Consume, result.Topic,
-            result.Partition.Value, result.Offset.Value);
-
-        _tracker.LogConsume(_tracker.Capture(), op, BuildContent(result.Message));
+        // The message's identity stays current until the next poll (F10), so no scope here.
+        _tracker.Consumed(result, _options);
     }
 
     // A consume that throws (a deserializer's error, a broker's) is drawn from the record the exception carries, as the
@@ -94,7 +89,7 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
     private void LogFailedConsume(ConsumeException exception)
     {
         var record = exception.ConsumerRecord;
-        EstablishTestIdentity(record?.Message?.Headers);
+        KafkaTracker.EstablishTestIdentity(record?.Message?.Headers, _options);
 
         var op = record is null
             ? new KafkaOperationInfo(KafkaOperation.Consume)
@@ -102,54 +97,8 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
                 record.Partition.Value >= 0 ? record.Partition.Value : null,
                 record.Offset.Value >= 0 ? record.Offset.Value : null);
 
-        _tracker.LogConsume(_tracker.Capture(), op, content: null, "!" + exception.Error.Code, FailedSend.Describe(exception));
-    }
-
-    // A message that carries no identity is nobody's: the previous one's ended when this poll began.
-    private void EstablishTestIdentity(Headers? headers)
-    {
-        if (!_options.PropagateTestIdentity || headers is null) return;
-
-        string? testName = null;
-        string? testId = null;
-
-        if (headers.TryGetLastBytes(TestTrackingMessageHeaders.TestName, out var nameBytes))
-            testName = Encoding.UTF8.GetString(nameBytes);
-        if (headers.TryGetLastBytes(TestTrackingMessageHeaders.TestId, out var idBytes))
-            testId = Encoding.UTF8.GetString(idBytes);
-
-        if (testName is not null && testId is not null)
-            TestIdentityScope.SetFromMessage(testName, testId);
-    }
-
-    private void AutoCorrelateOnConsume(ConsumeResult<TKey, TValue> result)
-    {
-        if (!_options.AutoCorrelateOnConsume) return;
-
-        var identity = TestIdentityScope.Current;
-        if (identity is null) return;
-
-        var messageKey = result.Message?.Key?.ToString();
-        if (messageKey is null) return;
-
-        var correlationKey = _options.ConsumeKeyExtractor is not null
-            ? _options.ConsumeKeyExtractor(_options.ServiceName, messageKey)
-            : CorrelationKeys.Kafka(_options.ServiceName, messageKey);
-
-        TestCorrelationStore.Correlate(correlationKey, identity.Value.Name, identity.Value.Id);
-    }
-
-    private string? BuildContent(Message<TKey, TValue>? message)
-    {
-        if (message is null) return null;
-        if (!KafkaTracker.ShowsContent(_options)) return null;
-
-        var parts = new List<string>();
-        if (_options.LogMessageKey && message.Key is not null)
-            parts.Add($"Key: {message.Key}");
-        if (_options.LogMessageValue && message.Value is not null)
-            parts.Add($"Value: {message.Value}");
-        return parts.Count > 0 ? string.Join(", ", parts) : null;
+        var (call, ids) = KafkaTracker.ConsumedTrace(_tracker.Capture(), record?.Message?.Headers);
+        _tracker.LogConsume(call, op, KafkaPayload.Empty, "!" + exception.Error.Code, FailedSend.Describe(exception), ids);
     }
 
     // ─── IConsumer<TKey, TValue> delegation ───────────────────

@@ -29,6 +29,12 @@ internal sealed class FakeProducer<TKey, TValue> : IProducer<TKey, TValue>
     /// <summary>Decides, per produce, whether to refuse it: return the exception to throw, or null to accept.</summary>
     public Func<Action<DeliveryReport<TKey, TValue>>?, Exception?>? Refuse { get; set; }
 
+    /// <summary>
+    /// Runs on each message handed over, before it is recorded, as an instrumentation wrapper between Kronikol's and
+    /// Confluent's would (one that appends a <c>traceparent</c> naming its own send span).
+    /// </summary>
+    public Action<Message<TKey, TValue>>? OnProduce { get; set; }
+
     /// <summary>What <see cref="ProduceAsync(string, Message{TKey,TValue}, CancellationToken)"/> completes with.</summary>
     public Func<string, Message<TKey, TValue>, CancellationToken, Task<DeliveryResult<TKey, TValue>>>? ProduceAsyncResult { get; set; }
 
@@ -96,6 +102,7 @@ internal sealed class FakeProducer<TKey, TValue> : IProducer<TKey, TValue>
 
     private void Record(string topic, Message<TKey, TValue> message, Action<DeliveryReport<TKey, TValue>>? handler)
     {
+        OnProduce?.Invoke(message);
         lock (_produced) _produced.Add(new Produced(topic, message, handler));
         if (Refuse?.Invoke(handler) is { } refusal)
             throw refusal;

@@ -23,7 +23,8 @@ public static class InternalFlowSpanCollector
         "OpenTelemetry.Instrumentation.SqlClient",
         "OpenTelemetry.Instrumentation.EntityFrameworkCore",
         "Kronikol.Grpc",
-        "Grpc.Net.Client"
+        "Grpc.Net.Client",
+        "Kronikol.Kafka"
     ];
 
     /// <summary>

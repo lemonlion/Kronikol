@@ -1,0 +1,82 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Grpc\Kronikol.Extensions.Grpc.csproj (in 297 ms).
+  Restored C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj (in 297 ms).
+  2 of 4 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-kafka135-red1\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.Otlp -> C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Otlp\bin\Debug\net10.0\Kronikol.Extensions.Otlp.dll
+  Kronikol.Extensions.Grpc -> C:\Code\Kronikol-kafka135-red1\src\Kronikol.Extensions.Grpc\bin\Debug\net10.0\Kronikol.Extensions.Grpc.dll
+C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\HistoryReportHelper.cs(95,42): warning CS1573: Parameter 'tempDir' has no matching param tag in the XML comment for 'HistoryReportHelper.Generate(string, string, string, Func<int, HistoryRun, HistoryRun>?, bool)' (but other parameters do) [C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\HistoryReportHelper.cs(95,58): warning CS1573: Parameter 'outputDir' has no matching param tag in the XML comment for 'HistoryReportHelper.Generate(string, string, string, Func<int, HistoryRun, HistoryRun>?, bool)' (but other parameters do) [C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\HistoryReportHelper.cs(95,76): warning CS1573: Parameter 'fileName' has no matching param tag in the XML comment for 'HistoryReportHelper.Generate(string, string, string, Func<int, HistoryRun, HistoryRun>?, bool)' (but other parameters do) [C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\ReportTestHelper.cs(2800,64): warning CS1573: Parameter 'tempDir' has no matching param tag in the XML comment for 'ReportTestHelper.GenerateReportWithEverySection(string, string, string, string?)' (but other parameters do) [C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\ReportTestHelper.cs(2800,80): warning CS1573: Parameter 'outputDir' has no matching param tag in the XML comment for 'ReportTestHelper.GenerateReportWithEverySection(string, string, string, string?)' (but other parameters do) [C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\ReportTestHelper.cs(2800,98): warning CS1573: Parameter 'fileName' has no matching param tag in the XML comment for 'ReportTestHelper.GenerateReportWithEverySection(string, string, string, string?)' (but other parameters do) [C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\Kronikol.Tests.EndToEnd.csproj]
+  Kronikol.Tests.EndToEnd -> C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\bin\Debug\net10.0\Kronikol.Tests.EndToEnd.dll
+Test run for C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\bin\Debug\net10.0\Kronikol.Tests.EndToEnd.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:24.65]     Kronikol.Tests.EndToEnd.KafkaNoteTests.Under_the_YAML_default_the_body_is_YAML_with_no_click_and_the_key_line_above_it [FAIL]
+[xUnit.net 00:00:25.34]     Kronikol.Tests.EndToEnd.KafkaNoteTests.With_headers_shown_they_are_drawn_between_the_key_line_and_the_body [FAIL]
+  Failed Kronikol.Tests.EndToEnd.KafkaNoteTests.Under_the_YAML_default_the_body_is_YAML_with_no_click_and_the_key_line_above_it [2 s]
+  Error Message:
+   the key line is not painted in: CallerKafkaCallerKafkaCallerKafka1Produce → orders: /ordersStatus: PlacedLines: - Sku: A1 Qty: 22 Show payload as JSONJWiden this note to fill the diagram↔
+  Stack Trace:
+     at Kronikol.Tests.EndToEnd.KafkaNoteTests.KeyAt(String text) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\KafkaNoteTests.cs:line 39
+   at Kronikol.Tests.EndToEnd.KafkaNoteTests.Under_the_YAML_default_the_body_is_YAML_with_no_click_and_the_key_line_above_it() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\KafkaNoteTests.cs:line 124
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.EndToEnd.KafkaNoteTests.With_headers_shown_they_are_drawn_between_the_key_line_and_the_body [675 ms]
+  Error Message:
+   the key line is not painted in: CallerKafkaCallerKafkaCallerKafka1Produce → orders: /orders[kafka-key=order-1][source=checkout] { "Status": "Placed", "Lines": [ { "Sku": "A1", "Qty": 2 } ]}2 Show payload as YAMLYWiden this note to fill the diagram↔
+  Stack Trace:
+     at Kronikol.Tests.EndToEnd.KafkaNoteTests.KeyAt(String text) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\KafkaNoteTests.cs:line 39
+   at Kronikol.Tests.EndToEnd.KafkaNoteTests.With_headers_shown_they_are_drawn_between_the_key_line_and_the_body() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\KafkaNoteTests.cs:line 60
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:26.34]     Kronikol.Tests.EndToEnd.KafkaNoteTests.With_headers_hidden_the_key_line_stays_above_the_indented_body [FAIL]
+  Failed Kronikol.Tests.EndToEnd.KafkaNoteTests.With_headers_hidden_the_key_line_stays_above_the_indented_body [1 s]
+  Error Message:
+   the key line is not painted in: CallerKafkaCallerKafkaCallerKafka1Produce → orders: /orders{ "Status": "Placed", "Lines": [ { "Sku": "A1", "Qty": 2 } ]}2 Show payload as YAMLYWiden this note to fill the diagram↔
+  Stack Trace:
+     at Kronikol.Tests.EndToEnd.KafkaNoteTests.KeyAt(String text) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\KafkaNoteTests.cs:line 39
+   at Kronikol.Tests.EndToEnd.KafkaNoteTests.With_headers_hidden_the_key_line_stays_above_the_indented_body() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\KafkaNoteTests.cs:line 49
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:27.68]     Kronikol.Tests.EndToEnd.KafkaNoteTests.The_YAML_view_is_offered_and_flips_the_body_while_the_key_line_stays [FAIL]
+  Failed Kronikol.Tests.EndToEnd.KafkaNoteTests.The_YAML_view_is_offered_and_flips_the_body_while_the_key_line_stays [1 s]
+  Error Message:
+   the key line is not painted in: CallerKafkaCallerKafkaCallerKafka1Produce → orders: /ordersStatus: PlacedLines: - Sku: A1 Qty: 22 Show payload as JSONJWiden this note to fill the diagram↔
+  Stack Trace:
+     at Kronikol.Tests.EndToEnd.KafkaNoteTests.KeyAt(String text) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\KafkaNoteTests.cs:line 39
+   at Kronikol.Tests.EndToEnd.KafkaNoteTests.The_YAML_view_is_offered_and_flips_the_body_while_the_key_line_stays() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\KafkaNoteTests.cs:line 88
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:28.84]     Kronikol.Tests.EndToEnd.KafkaNoteTests.Copy_box_text_gives_the_key_line_as_text_above_the_body [FAIL]
+[xUnit.net 00:00:29.61]     Kronikol.Tests.EndToEnd.ArrowLinkOpensPopupTests.A_consume_handled_under_its_scope_opens_a_popup_of_the_handlers_spans [FAIL]
+  Failed Kronikol.Tests.EndToEnd.KafkaNoteTests.Copy_box_text_gives_the_key_line_as_text_above_the_body [1 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Key order-1"
+Actual:   "[kafka-key=order-1]"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.EndToEnd.KafkaNoteTests.Copy_box_text_gives_the_key_line_as_text_above_the_body() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\KafkaNoteTests.cs:line 113
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.EndToEnd.ArrowLinkOpensPopupTests.A_consume_handled_under_its_scope_opens_a_popup_of_the_handlers_spans [7 s]
+  Error Message:
+   Microsoft.Playwright.PlaywrightException : Locator expected to be visible
+Error: element(s) not found 
+Call log:
+  - Expect "ToBeVisibleAsync" with timeout 5000ms
+  - waiting for Locator(".iflow-popup")
+  Stack Trace:
+     at Microsoft.Playwright.Core.AssertionsBase.ExpectImplAsync(String expression, FrameExpectOptions expectOptions, Object expected, String message, String title) in /_/src/Playwright/Core/AssertionsBase.cs:line 90
+   at Microsoft.Playwright.Core.AssertionsBase.ExpectImplAsync(String expression, ExpectedTextValue[] expectedText, Object expected, String message, String title, FrameExpectOptions options) in /_/src/Playwright/Core/AssertionsBase.cs:line 66
+   at Kronikol.Tests.EndToEnd.ArrowLinkOpensPopupTests.A_consume_handled_under_its_scope_opens_a_popup_of_the_handlers_spans() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\ArrowLinkOpensPopupTests.cs:line 180
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:30.14]     Kronikol.Tests.EndToEnd.KafkaNoteTests.Hiding_headers_with_the_toggle_takes_the_headers_and_leaves_the_key_line [FAIL]
+  Failed Kronikol.Tests.EndToEnd.KafkaNoteTests.Hiding_headers_with_the_toggle_takes_the_headers_and_leaves_the_key_line [1 s]
+  Error Message:
+   the key line is not painted in: CallerKafkaCallerKafkaCallerKafka1Produce → orders: /orders{ "Status": "Placed", "Lines": [ { "Sku": "A1", "Qty": 2 } ]}2 Show payload as YAMLYWiden this note to fill the diagram↔
+  Stack Trace:
+     at Kronikol.Tests.EndToEnd.KafkaNoteTests.KeyAt(String text) in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\KafkaNoteTests.cs:line 39
+   at Kronikol.Tests.EndToEnd.KafkaNoteTests.Hiding_headers_with_the_toggle_takes_the_headers_and_leaves_the_key_line() in C:\Code\Kronikol-kafka135-red1\tests\Kronikol.Tests.EndToEnd\KafkaNoteTests.cs:line 77
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     7, Passed:     0, Skipped:     0, Total:     7, Duration: 7 s - Kronikol.Tests.EndToEnd.dll (net10.0)

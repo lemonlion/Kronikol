@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Http;
 namespace Kronikol.Extensions.Kafka.BuildInterception;
 
 /// <summary>
-/// Intercepts <see cref="ConsumerBuilder{TKey,TValue}.Build()"/> and <see cref="ProducerBuilder{TKey,TValue}.Build()"/>
-/// at runtime via Harmony, so a client built inside the code under test is wrapped with tracking when its key and value
+/// Intercepts <see cref="ConsumerBuilder{TKey,TValue}.Build()"/>, <see cref="ProducerBuilder{TKey,TValue}.Build()"/>
+/// and <see cref="DependentProducerBuilder{TKey,TValue}.Build()"/> at runtime via Harmony, so a client built inside the code under test is wrapped with tracking when its key and value
 /// types are enabled. This enables zero-production-code-change Kafka tracking in tests.
 /// </summary>
 /// <remarks>
@@ -49,6 +49,7 @@ public static class KafkaBuildInterceptor
     private static readonly Dictionary<Type, string> ClientOf = new()
     {
         [typeof(ProducerBuilder<,>)] = "Confluent.Kafka.Producer`2",
+        [typeof(DependentProducerBuilder<,>)] = "Confluent.Kafka.Producer`2",
         [typeof(ConsumerBuilder<,>)] = "Confluent.Kafka.Consumer`2",
     };
 
@@ -96,8 +97,10 @@ public static class KafkaBuildInterceptor
     }
 
     /// <summary>
-    /// Enables producer tracking and patches <see cref="ProducerBuilder{TKey,TValue}.Build()"/>
-    /// to automatically return a <see cref="TrackingKafkaProducer{TKey,TValue}"/>.
+    /// Enables producer tracking and patches <see cref="ProducerBuilder{TKey,TValue}.Build()"/> and
+    /// <see cref="DependentProducerBuilder{TKey,TValue}.Build()"/> to automatically return a
+    /// <see cref="TrackingKafkaProducer{TKey,TValue}"/>. A dependent producer shares its owner's client, and its delivery
+    /// reports arrive on the owner's poll thread; each produce is still recorded under the test that made it.
     /// </summary>
     /// <exception cref="NotSupportedException">The referenced Confluent.Kafka has no internal constructor to build a
     /// producer from its builder; nothing is enabled or patched.</exception>
@@ -106,8 +109,10 @@ public static class KafkaBuildInterceptor
         IHttpContextAccessor? httpContextAccessor = null)
     {
         RequireConstructor(typeof(ProducerBuilder<TKey, TValue>));
+        RequireConstructor(typeof(DependentProducerBuilder<TKey, TValue>));
         KafkaTrackingInterceptor.EnableProducerTracking<TKey, TValue>(options, httpContextAccessor);
         EnsurePatched(typeof(ProducerBuilder<,>), typeof(TKey), typeof(TValue));
+        EnsurePatched(typeof(DependentProducerBuilder<,>), typeof(TKey), typeof(TValue));
         TieringCheck.ReportOnce();
     }
 

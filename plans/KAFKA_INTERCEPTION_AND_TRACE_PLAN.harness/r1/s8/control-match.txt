@@ -1,0 +1,6 @@
+entries 40: a KafkaPublish span 0, another span 0, no ids 40; probe spans 40
+   s0/i15 no trace line
+   s1/i13 no trace line
+   s2/i13 no trace line
+   s3/i13 no trace line
+   s10/i15 no trace line
