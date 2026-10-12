@@ -1,7 +1,7 @@
 namespace Kronikol.Extensions.Kafka;
 
 /// <summary>
-/// Classifies Apache Kafka HTTP requests into specific operations based on URL patterns and HTTP methods.
+/// Turns a Kafka client operation into the label and URI a diagram draws for it, at each verbosity.
 /// </summary>
 public static class KafkaOperationClassifier
 {
@@ -10,7 +10,7 @@ public static class KafkaOperationClassifier
         return verbosity switch
         {
             KafkaTrackingVerbosity.Raw =>
-                $"{op.Operation} {op.Topic}" +
+                (op.Topic is null ? op.Operation.ToString() : $"{op.Operation} {op.Topic}") +
                 (op.Partition.HasValue ? $"[{op.Partition}]" : "") +
                 (op.Offset.HasValue ? $"@{op.Offset}" : ""),
             KafkaTrackingVerbosity.Detailed => op.Operation switch

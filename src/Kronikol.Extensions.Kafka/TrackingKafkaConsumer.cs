@@ -21,23 +21,30 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
         _options = options;
     }
 
-    public ConsumeResult<TKey, TValue> Consume(int millisecondsTimeout)
-    {
-        var result = _inner.Consume(millisecondsTimeout);
-        LogConsumeResult(result);
-        return result;
-    }
+    public ConsumeResult<TKey, TValue> Consume(int millisecondsTimeout) => ConsumeCore(() => _inner.Consume(millisecondsTimeout));
 
-    public ConsumeResult<TKey, TValue> Consume(TimeSpan timeout)
-    {
-        var result = _inner.Consume(timeout);
-        LogConsumeResult(result);
-        return result;
-    }
+    public ConsumeResult<TKey, TValue> Consume(TimeSpan timeout) => ConsumeCore(() => _inner.Consume(timeout));
 
-    public ConsumeResult<TKey, TValue> Consume(CancellationToken cancellationToken = default)
+    public ConsumeResult<TKey, TValue> Consume(CancellationToken cancellationToken = default) => ConsumeCore(() => _inner.Consume(cancellationToken));
+
+    private ConsumeResult<TKey, TValue> ConsumeCore(Func<ConsumeResult<TKey, TValue>> consume)
     {
-        var result = _inner.Consume(cancellationToken);
+        // The previous message's identity ends at the next poll, whatever that poll returns (F10): an empty poll or a
+        // partition's end left it on everything the loop did next.
+        if (_options.PropagateTestIdentity)
+            TestIdentityScope.ClearMessageIdentity();
+
+        ConsumeResult<TKey, TValue> result;
+        try
+        {
+            result = consume();
+        }
+        catch (ConsumeException exception)
+        {
+            LogFailedConsume(exception);
+            throw;
+        }
+
         LogConsumeResult(result);
         return result;
     }
@@ -55,11 +62,13 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
 
     public void Subscribe(IEnumerable<string> topics)
     {
-        _inner.Subscribe(topics);
+        // Read once: the caller's sequence may be one that can only be read once.
+        var subscribed = topics.ToList();
+        _inner.Subscribe(subscribed);
 
         if (_options.TrackSubscribe)
         {
-            foreach (var topic in topics)
+            foreach (var topic in subscribed)
             {
                 var op = new KafkaOperationInfo(KafkaOperation.Subscribe, topic);
                 _tracker.LogSubscribe(op);
@@ -71,28 +80,42 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
     {
         if (result is null || result.IsPartitionEOF) return;
 
-        EstablishTestIdentityFromHeaders(result.Message);
+        EstablishTestIdentity(result.Message?.Headers);
         AutoCorrelateOnConsume(result);
 
         var op = new KafkaOperationInfo(KafkaOperation.Consume, result.Topic,
             result.Partition.Value, result.Offset.Value);
 
-        _tracker.LogConsume(op, BuildContent(result.Message));
+        _tracker.LogConsume(_tracker.Capture(), op, BuildContent(result.Message));
     }
 
-    private void EstablishTestIdentityFromHeaders(Message<TKey, TValue>? message)
+    // A consume that throws (a deserializer's error, a broker's) is drawn from the record the exception carries, as the
+    // consume of its message's test (F22). Its key and value are still bytes, so it shows no content.
+    private void LogFailedConsume(ConsumeException exception)
     {
-        if (!_options.PropagateTestIdentity) return;
-        // The previous message's identity ends here: a message that carries none is nobody's.
-        TestIdentityScope.ClearMessageIdentity();
-        if (message?.Headers is null) return;
+        var record = exception.ConsumerRecord;
+        EstablishTestIdentity(record?.Message?.Headers);
+
+        var op = record is null
+            ? new KafkaOperationInfo(KafkaOperation.Consume)
+            : new KafkaOperationInfo(KafkaOperation.Consume, record.Topic,
+                record.Partition.Value >= 0 ? record.Partition.Value : null,
+                record.Offset.Value >= 0 ? record.Offset.Value : null);
+
+        _tracker.LogConsume(_tracker.Capture(), op, content: null, "!" + exception.Error.Code, FailedSend.Describe(exception));
+    }
+
+    // A message that carries no identity is nobody's: the previous one's ended when this poll began.
+    private void EstablishTestIdentity(Headers? headers)
+    {
+        if (!_options.PropagateTestIdentity || headers is null) return;
 
         string? testName = null;
         string? testId = null;
 
-        if (message.Headers.TryGetLastBytes(TestTrackingMessageHeaders.TestName, out var nameBytes))
+        if (headers.TryGetLastBytes(TestTrackingMessageHeaders.TestName, out var nameBytes))
             testName = Encoding.UTF8.GetString(nameBytes);
-        if (message.Headers.TryGetLastBytes(TestTrackingMessageHeaders.TestId, out var idBytes))
+        if (headers.TryGetLastBytes(TestTrackingMessageHeaders.TestId, out var idBytes))
             testId = Encoding.UTF8.GetString(idBytes);
 
         if (testName is not null && testId is not null)
@@ -119,7 +142,7 @@ public class TrackingKafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue>
     private string? BuildContent(Message<TKey, TValue>? message)
     {
         if (message is null) return null;
-        if (_options.Verbosity == KafkaTrackingVerbosity.Summarised) return null;
+        if (!KafkaTracker.ShowsContent(_options)) return null;
 
         var parts = new List<string>();
         if (_options.LogMessageKey && message.Key is not null)

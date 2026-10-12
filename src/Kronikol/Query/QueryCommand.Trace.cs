@@ -3,9 +3,10 @@ using System.Globalization;
 namespace Kronikol.Query;
 
 /// <summary>
-/// <c>trace</c> — follows a W3C trace id (exported on every interaction since 3.0.47) across the whole
-/// run: the chain in chronological order with offsets, and the one smell nothing else in the tool can
-/// see — a trace id that leaks across scenarios, the classic flaky-test signature.
+/// <c>trace</c> — follows a W3C trace id across the whole run, through the interactions that record one (HTTP and gRPC
+/// calls, messages through MessageTracker, OTLP imports, ProxyTap and TcpTap captures, and a tracking proxy logging
+/// deferred with an ActivitySourceName): the chain in chronological order with offsets, and the one smell nothing else
+/// in the tool can see — a trace id that leaks across scenarios, the classic flaky-test signature.
 /// </summary>
 public static partial class QueryCommand
 {

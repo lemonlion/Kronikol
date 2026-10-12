@@ -227,11 +227,13 @@ public class TrackingKafkaProducerTests
         var producer = new TrackingKafkaProducer<string, string>(inner, tracker, options);
         var message = new Message<string, string> { Key = "key1", Value = "val1" };
 
-        await producer.ProduceAsync("topic", message);
+        await producer.ProduceAsync("topic", message, TestContext.Current.CancellationToken);
 
-        Assert.NotNull(message.Headers);
-        var nameHeader = message.Headers.GetLastBytes("kronikol-test-name");
-        var idHeader = message.Headers.GetLastBytes("kronikol-test-id");
+        // Confluent is handed a copy carrying the identity; the caller's message is never written to.
+        Assert.Null(message.Headers);
+        var sent = Assert.Single(inner.ProducedMessages).Message;
+        var nameHeader = sent.Headers.GetLastBytes("kronikol-test-name");
+        var idHeader = sent.Headers.GetLastBytes("kronikol-test-id");
         Assert.Equal("My Kafka Test", System.Text.Encoding.UTF8.GetString(nameHeader));
         Assert.Equal(_testId, System.Text.Encoding.UTF8.GetString(idHeader));
     }
@@ -246,8 +248,10 @@ public class TrackingKafkaProducerTests
         var producer = new TrackingKafkaProducer<string, string>(inner, tracker, options);
         var message = new Message<string, string> { Key = "key1", Value = "val1" };
 
-        await producer.ProduceAsync("topic", message);
+        await producer.ProduceAsync("topic", message, TestContext.Current.CancellationToken);
 
+        // Nothing to add: the caller's message is handed over as it is.
+        Assert.Same(message, Assert.Single(inner.ProducedMessages).Message);
         Assert.Null(message.Headers);
     }
 
@@ -263,8 +267,8 @@ public class TrackingKafkaProducerTests
 
         producer.Produce("topic", message);
 
-        Assert.NotNull(message.Headers);
-        var nameHeader = message.Headers.GetLastBytes("kronikol-test-name");
+        Assert.Null(message.Headers);
+        var nameHeader = Assert.Single(inner.ProducedMessages).Message.Headers.GetLastBytes("kronikol-test-name");
         Assert.Equal("My Kafka Test", System.Text.Encoding.UTF8.GetString(nameHeader));
     }
 
@@ -278,13 +282,15 @@ public class TrackingKafkaProducerTests
         options.PropagateTestIdentity = true;
         options.HttpContextAccessor = RequestHeaderAccessor.For("Header Test", headerTestId);
         var tracker = new KafkaTracker(options);
-        var producer = new TrackingKafkaProducer<string, string>(new FakeProducer<string, string>(), tracker, options);
+        var inner = new FakeProducer<string, string>();
+        var producer = new TrackingKafkaProducer<string, string>(inner, tracker, options);
         var message = new Message<string, string> { Key = "key1", Value = "val1" };
 
         await producer.ProduceAsync("topic", message, TestContext.Current.CancellationToken);
 
-        Assert.Equal("Header Test", System.Text.Encoding.UTF8.GetString(message.Headers.GetLastBytes("kronikol-test-name")));
-        Assert.Equal(headerTestId, System.Text.Encoding.UTF8.GetString(message.Headers.GetLastBytes("kronikol-test-id")));
+        var sent = Assert.Single(inner.ProducedMessages).Message;
+        Assert.Equal("Header Test", System.Text.Encoding.UTF8.GetString(sent.Headers.GetLastBytes("kronikol-test-name")));
+        Assert.Equal(headerTestId, System.Text.Encoding.UTF8.GetString(sent.Headers.GetLastBytes("kronikol-test-id")));
         Assert.Contains(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == headerTestId);
     }
 
@@ -295,47 +301,14 @@ public class TrackingKafkaProducerTests
         var options = MakeOptions();
         options.PropagateTestIdentity = true;
         var tracker = new KafkaTracker(options, RequestHeaderAccessor.For("Header Test", headerTestId));
-        var producer = new TrackingKafkaProducer<string, string>(new FakeProducer<string, string>(), tracker, options);
+        var inner = new FakeProducer<string, string>();
+        var producer = new TrackingKafkaProducer<string, string>(inner, tracker, options);
         var message = new Message<string, string> { Key = "key1", Value = "val1" };
 
         producer.Produce("topic", message);
 
-        Assert.Equal(headerTestId, System.Text.Encoding.UTF8.GetString(message.Headers.GetLastBytes("kronikol-test-id")));
+        var sent = Assert.Single(inner.ProducedMessages).Message;
+        Assert.Equal(headerTestId, System.Text.Encoding.UTF8.GetString(sent.Headers.GetLastBytes("kronikol-test-id")));
     }
 
-    #region Test Double
-
-    private class FakeProducer<TKey, TValue> : IProducer<TKey, TValue>
-    {
-        public bool FlushCalled { get; private set; }
-        public bool InitTransactionsCalled { get; private set; }
-        public bool BeginTransactionCalled { get; private set; }
-        public bool CommitTransactionCalled { get; private set; }
-        public bool AbortTransactionCalled { get; private set; }
-        public bool SendOffsetsCalled { get; private set; }
-
-        public Handle Handle => throw new NotImplementedException();
-        public string Name => "fake";
-        public void SetSaslCredentials(string username, string password) { }
-        public void Dispose() { }
-        public int AddBrokers(string brokers) => 0;
-        public void InitTransactions(TimeSpan timeout) { InitTransactionsCalled = true; }
-        public void BeginTransaction() { BeginTransactionCalled = true; }
-        public void CommitTransaction(TimeSpan timeout) { CommitTransactionCalled = true; }
-        public void CommitTransaction() { CommitTransactionCalled = true; }
-        public void AbortTransaction(TimeSpan timeout) { AbortTransactionCalled = true; }
-        public void AbortTransaction() { AbortTransactionCalled = true; }
-        public void SendOffsetsToTransaction(IEnumerable<TopicPartitionOffset> offsets, IConsumerGroupMetadata groupMetadata, TimeSpan timeout) { SendOffsetsCalled = true; }
-        public int Flush(TimeSpan timeout) { FlushCalled = true; return 0; }
-        public void Flush(CancellationToken cancellationToken = default) { FlushCalled = true; }
-        public int Poll(TimeSpan timeout) => 0;
-        public void Produce(string topic, Message<TKey, TValue> message, Action<DeliveryReport<TKey, TValue>>? deliveryHandler = null) { }
-        public void Produce(TopicPartition topicPartition, Message<TKey, TValue> message, Action<DeliveryReport<TKey, TValue>>? deliveryHandler = null) { }
-        public Task<DeliveryResult<TKey, TValue>> ProduceAsync(string topic, Message<TKey, TValue> message, CancellationToken cancellationToken = default)
-            => Task.FromResult(new DeliveryResult<TKey, TValue>());
-        public Task<DeliveryResult<TKey, TValue>> ProduceAsync(TopicPartition topicPartition, Message<TKey, TValue> message, CancellationToken cancellationToken = default)
-            => Task.FromResult(new DeliveryResult<TKey, TValue>());
-    }
-
-    #endregion
 }

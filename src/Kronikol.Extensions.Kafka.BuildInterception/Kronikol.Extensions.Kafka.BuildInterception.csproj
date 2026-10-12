@@ -12,4 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Kronikol.Extensions.Kafka\Kronikol.Extensions.Kafka.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.Kafka.BuildInterception" />
+  </ItemGroup>
 </Project>

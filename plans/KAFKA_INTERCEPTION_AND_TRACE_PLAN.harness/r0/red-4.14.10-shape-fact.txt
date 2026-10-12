@@ -1,0 +1,75 @@
+=== net8.0
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj (in 592 ms).
+  Restored C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\Kronikol.Extensions.Kafka.BuildInterception.csproj (in 592 ms).
+  Restored C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\Kronikol.Extensions.Kafka.csproj (in 592 ms).
+  Restored C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\Kronikol.Tests.Kafka.BuildInterception.csproj (in 592 ms).
+  Kronikol -> C:\Code\Kronikol-kafka135-red\src\Kronikol\bin\Debug\net8.0\Kronikol.dll
+  Kronikol.Extensions.Kafka -> C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\bin\Debug\net8.0\Kronikol.Extensions.Kafka.dll
+  Kronikol.Extensions.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\bin\Debug\net8.0\Kronikol.Extensions.Kafka.BuildInterception.dll
+  Kronikol.Tests.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net8.0\Kronikol.Tests.Kafka.BuildInterception.dll
+Test run for C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net8.0\Kronikol.Tests.Kafka.BuildInterception.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.27)
+[xUnit.net 00:00:03.31]   Discovering: Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:03.71]   Discovered:  Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:04.03]   Starting:    Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:06.73]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_whose_generic_value_type_keys_share_a_shape_share_one_patch_and_each_is_tracked [FAIL]
+[xUnit.net 00:00:06.73]       Assert.IsType() Failure: Value is not the exact type
+[xUnit.net 00:00:06.73]       Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<KeyValuePair<string, string>, string>)
+[xUnit.net 00:00:06.73]       Actual:   typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<KeyValuePair<Uri, Uri>, string>)
+[xUnit.net 00:00:06.73]       Stack Trace:
+[xUnit.net 00:00:06.74]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(223,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_whose_generic_value_type_keys_share_a_shape_share_one_patch_and_each_is_tracked()
+[xUnit.net 00:00:06.74]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:06.74]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:06.79]   Finished:    Kronikol.Tests.Kafka.BuildInterception (ID = '5a7bd369eb178138e173dbe8c235823fdf9dbeccb57b52a6e34450eba30d1bef')
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_whose_generic_value_type_keys_share_a_shape_share_one_patch_and_each_is_tracked [2 s]
+  Error Message:
+   Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<KeyValuePair<string, string>, string>)
+Actual:   typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<KeyValuePair<Uri, Uri>, string>)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_whose_generic_value_type_keys_share_a_shape_share_one_patch_and_each_is_tracked() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 223
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Test Run Failed.
+Total tests: 1
+     Failed: 1
+ Total time: 8.1504 Seconds
+=== net10.0
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-kafka135-red\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.Kafka -> C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\bin\Debug\net10.0\Kronikol.Extensions.Kafka.dll
+  Kronikol.Extensions.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Extensions.Kafka.BuildInterception.dll
+  Kronikol.Tests.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Tests.Kafka.BuildInterception.dll
+Test run for C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Tests.Kafka.BuildInterception.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:02.58]   Discovering: Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:03.14]   Discovered:  Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:03.49]   Starting:    Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:05.69]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_whose_generic_value_type_keys_share_a_shape_share_one_patch_and_each_is_tracked [FAIL]
+[xUnit.net 00:00:05.69]       Assert.IsType() Failure: Value is not the exact type
+[xUnit.net 00:00:05.69]       Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<KeyValuePair<string, string>, string>)
+[xUnit.net 00:00:05.69]       Actual:   typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<KeyValuePair<Uri, Uri>, string>)
+[xUnit.net 00:00:05.70]       Stack Trace:
+[xUnit.net 00:00:05.70]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(223,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_whose_generic_value_type_keys_share_a_shape_share_one_patch_and_each_is_tracked()
+[xUnit.net 00:00:05.70]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:05.70]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:05.73]   Finished:    Kronikol.Tests.Kafka.BuildInterception (ID = 'cbbe1383bc366ba628e0c6bd69df79e068981a23a5724e1a4ab3818a54d86370')
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_whose_generic_value_type_keys_share_a_shape_share_one_patch_and_each_is_tracked [1 s]
+  Error Message:
+   Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<KeyValuePair<string, string>, string>)
+Actual:   typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<KeyValuePair<Uri, Uri>, string>)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_whose_generic_value_type_keys_share_a_shape_share_one_patch_and_each_is_tracked() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 223
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Test Run Failed.
+Total tests: 1
+     Failed: 1
+ Total time: 7.0373 Seconds

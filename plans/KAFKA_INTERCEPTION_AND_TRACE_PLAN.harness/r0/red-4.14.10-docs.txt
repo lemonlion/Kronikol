@@ -1,0 +1,111 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-kafka135-red\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.Kafka -> C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\bin\Debug\net10.0\Kronikol.Extensions.Kafka.dll
+  Kronikol.Extensions.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Extensions.Kafka.BuildInterception.dll
+  Kronikol.Tests.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Tests.Kafka.BuildInterception.dll
+Test run for C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Tests.Kafka.BuildInterception.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.36]   Discovering: Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:00.70]   Discovered:  Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:00.97]   Starting:    Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:01.18]     Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.The_classifier_does_not_say_it_reads_HTTP_requests [FAIL]
+[xUnit.net 00:00:01.18]       Assert.DoesNotContain() Failure: Sub-string found
+[xUnit.net 00:00:01.18]                                            ↓ (pos 37)
+[xUnit.net 00:00:01.18]       String: ···" Classifies Apache Kafka HTTP requests into specif"···
+[xUnit.net 00:00:01.18]       Found:  "HTTP"
+[xUnit.net 00:00:01.18]       Stack Trace:
+[xUnit.net 00:00:01.18]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaShippedDocsTests.cs(40,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.The_classifier_does_not_say_it_reads_HTTP_requests()
+[xUnit.net 00:00:01.18]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.18]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.20]     Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Reset_says_the_patches_stay [FAIL]
+[xUnit.net 00:00:01.20]       Assert.DoesNotContain() Failure: Sub-string found
+[xUnit.net 00:00:01.20]                                            ↓ (pos 30)
+[xUnit.net 00:00:01.20]       String: ···"s all tracking state and removes all Build() patch"···
+[xUnit.net 00:00:01.20]       Found:  "removes"
+[xUnit.net 00:00:01.20]       Stack Trace:
+[xUnit.net 00:00:01.20]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaShippedDocsTests.cs(23,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Reset_says_the_patches_stay()
+[xUnit.net 00:00:01.20]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.20]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.20]     Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.The_accessor_option_says_a_message_carries_the_scenario_it_was_produced_in [FAIL]
+[xUnit.net 00:00:01.20]       Assert.Contains() Failure: Sub-string not found
+[xUnit.net 00:00:01.20]       String:    "\n            Resolves the scenario from the test-t"···
+[xUnit.net 00:00:01.20]       Not found: "whichever thread the delivery report arrives on"
+[xUnit.net 00:00:01.20]       Stack Trace:
+[xUnit.net 00:00:01.20]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaShippedDocsTests.cs(44,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.The_accessor_option_says_a_message_carries_the_scenario_it_was_produced_in()
+[xUnit.net 00:00:01.20]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.20]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.20]     Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Disabling_says_the_pair_gets_Confluents_own_client(method: "DisableProducerTracking``2") [FAIL]
+[xUnit.net 00:00:01.20]       Assert.DoesNotContain() Failure: Sub-string found
+[xUnit.net 00:00:01.20]                                                               ↓ (pos 68)
+[xUnit.net 00:00:01.20]       String: ···"ng. The Harmony patch remains but becomes a no-op."
+[xUnit.net 00:00:01.20]       Found:  "no-op"
+[xUnit.net 00:00:01.20]       Stack Trace:
+[xUnit.net 00:00:01.20]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaShippedDocsTests.cs(34,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Disabling_says_the_pair_gets_Confluents_own_client(String method)
+[xUnit.net 00:00:01.20]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.20]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.20]     Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Disabling_says_the_pair_gets_Confluents_own_client(method: "DisableConsumerTracking``2") [FAIL]
+[xUnit.net 00:00:01.20]       Assert.DoesNotContain() Failure: Sub-string found
+[xUnit.net 00:00:01.20]                                                               ↓ (pos 68)
+[xUnit.net 00:00:01.20]       String: ···"ng. The Harmony patch remains but becomes a no-op."
+[xUnit.net 00:00:01.20]       Found:  "no-op"
+[xUnit.net 00:00:01.20]       Stack Trace:
+[xUnit.net 00:00:01.20]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaShippedDocsTests.cs(34,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Disabling_says_the_pair_gets_Confluents_own_client(String method)
+[xUnit.net 00:00:01.20]            at InvokeStub_KafkaShippedDocsTests.Disabling_says_the_pair_gets_Confluents_own_client(Object, Span`1)
+[xUnit.net 00:00:01.20]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:01.21]   Finished:    Kronikol.Tests.Kafka.BuildInterception (ID = 'cbbe1383bc366ba628e0c6bd69df79e068981a23a5724e1a4ab3818a54d86370')
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.The_classifier_does_not_say_it_reads_HTTP_requests [51 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Sub-string found
+                                     ↓ (pos 37)
+String: ···" Classifies Apache Kafka HTTP requests into specif"···
+Found:  "HTTP"
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.The_classifier_does_not_say_it_reads_HTTP_requests() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaShippedDocsTests.cs:line 40
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Reset_says_the_patches_stay [1 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Sub-string found
+                                     ↓ (pos 30)
+String: ···"s all tracking state and removes all Build() patch"···
+Found:  "removes"
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Reset_says_the_patches_stay() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaShippedDocsTests.cs:line 23
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.The_accessor_option_says_a_message_carries_the_scenario_it_was_produced_in [1 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "\n            Resolves the scenario from the test-t"···
+Not found: "whichever thread the delivery report arrives on"
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.The_accessor_option_says_a_message_carries_the_scenario_it_was_produced_in() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaShippedDocsTests.cs:line 44
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Disabling_says_the_pair_gets_Confluents_own_client(method: "DisableProducerTracking``2") [< 1 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Sub-string found
+                                                        ↓ (pos 68)
+String: ···"ng. The Harmony patch remains but becomes a no-op."
+Found:  "no-op"
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Disabling_says_the_pair_gets_Confluents_own_client(String method) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaShippedDocsTests.cs:line 34
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Disabling_says_the_pair_gets_Confluents_own_client(method: "DisableConsumerTracking``2") [< 1 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Sub-string found
+                                                        ↓ (pos 68)
+String: ···"ng. The Harmony patch remains but becomes a no-op."
+Found:  "no-op"
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaShippedDocsTests.Disabling_says_the_pair_gets_Confluents_own_client(String method) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaShippedDocsTests.cs:line 34
+   at InvokeStub_KafkaShippedDocsTests.Disabling_says_the_pair_gets_Confluents_own_client(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Test Run Failed.
+Total tests: 5
+     Failed: 5
+ Total time: 1.8991 Seconds

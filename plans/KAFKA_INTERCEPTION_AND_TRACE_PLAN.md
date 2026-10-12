@@ -946,6 +946,29 @@ Each is another subsystem's, so it is recorded here rather than folded into thes
   measuring it on BreakfastProvider, as its recommendation says. Row 1.21 and D37 placed in `ROADMAP.md`, with #160
   (its helpers) and #167 under 1.21. Executed in worktree `C:/Code/Kronikol-kafka135`, a release at a time; the old
   pre-audit worktree of that name was removed first, with the stale `Kronikol-doorstep`, to free disk.
+- **2026-10-12, R0 built (S1 to S3), released as 4.16.2.** As designed in 4.1 and 4.2, with Q3, Q18 and the R0
+  half of Q1 as recommended. On the way:
+  - **Red first.** Every new fact was run on 4.14.10 with compile stubs for the new seams (harness `r0/red-4.14.10-*.txt`)
+    and fails there on its own assertion; the guards that hold today's behaviour (T6, T8, the refusal theory, the
+    delegation rows) pass there, as they should. The fact for two generic value-type keys of one shape
+    (`KeyValuePair<Uri,Uri>` beside `KeyValuePair<string,string>`), added after the first red run, was run on 4.14.10 on
+    its own (`r0/red-4.14.10-shape-fact.txt`): the second pair got the first pair's producer, F18 as measured.
+  - **Mutations** (`r0/mutate.py`, `r0/mutations.txt`): 37, each caught. Two needed work. M3's first run hung, because
+    the concurrent-enabling facts ran each host on a thread of its own and a thread's exception ends the test process
+    rather than failing the fact; the helper now records each thread's exception and bounds its wait, and M3 is caught
+    by 12 facts. M18c (the tiering check dropped from `EnableProducerTracking`) survived, since every fact that enabled
+    under tiering enabled both directions; `Enabling_one_direction_alone_where_tiering_can_lose_the_patch_says_so` now
+    catches it. The first run's process outlived its stopped shell and ran three mutations beside the second run in
+    one worktree, so those three were run again alone; `mutate.py` now stops what is left running under the worktree
+    after each mutation, and counts a hung or aborted run as no verdict.
+  - **A guard caught a placement.** `ProcessGlobalStoreTests` failed the first full core run:
+    `ProcessDiagnosticsReportTests` generates reports, which draw through the process-wide diagram cache an ingest
+    resets, so it joined the `DiagramsFetcher` collection in place of a collection of its own.
+  - **Docs.** `KafkaShippedDocsTests` (T20) reads the shipped XML: `Reset()` and `Disable…()` say the patch stays and the
+    pair gets Confluent's own client, the classifier no longer mentions HTTP, and the accessor option's sentence holds.
+    `QueryCommand.Trace.cs` names the trackers that record W3C ids (F16). The wiki edits are `wiki/r0_wiki.py`, applied
+    after publication; the Raw label table needed none, since F11's fix makes the code match it.
+  - **Checks.** On the tree rebased onto 4.16.1, the core suite passes 7,355 with 2 skipped after the version bump, Kronikol.Tests.Kafka passes 234, Kronikol.Tests.Kafka.BuildInterception 69 on net8.0 and 69 on net10.0, the full Playwright suite passes 1,026 with 28 skipped, and release.slnf builds in Release for every target.
 
 ## Appendix A. Edit sites at `d59843fa` (4.14.6)
 

@@ -1,0 +1,886 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\Kronikol.Tests.Kafka.csproj (in 374 ms).
+  2 of 3 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-kafka135-red\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.Kafka -> C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\bin\Debug\net10.0\Kronikol.Extensions.Kafka.dll
+  Kronikol.Tests.Kafka -> C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\bin\Debug\net10.0\Kronikol.Tests.Kafka.dll
+Test run for C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\bin\Debug\net10.0\Kronikol.Tests.Kafka.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:03.21]   Discovering: Kronikol.Tests.Kafka
+[xUnit.net 00:00:03.44]   Discovered:  Kronikol.Tests.Kafka
+[xUnit.net 00:00:03.63]   Starting:    Kronikol.Tests.Kafka
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_Transactions(operation: InitTransactions, expected: "InitTransactions") [598 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.Tracked_Producer_Returns_TrackingKafkaProducer_When_Enabled [601 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerFactoryTests.Created_Consumer_Tracks_Consume_Operations [607 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerFactoryTests.Created_Producer_Tracks_ProduceAsync_Operations [607 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Commit(ConsumeResult`2)") [607 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.AbortTransaction_Tracks_when_TrackTransactions_true [608 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_Transactions(operation: AbortTransaction, expected: "AbortTransaction") [1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_Transactions(operation: SendOffsetsToTransaction, expected: "SendOffsetsToTransaction") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_Transactions(operation: CommitTransaction, expected: "CommitTransaction") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_Transactions(operation: BeginTransaction, expected: "BeginTransaction") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Resume(IEnumerable`1)") [3 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerFactoryTests.Default_Factory_Implements_Interface [1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerFactoryTests.Create_Delegates_To_Inner_Factory [1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Summarised_Transactions(operation: CommitTransaction, expected: "Commit Txn") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Consume(Int32)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerFactoryTests.Create_Returns_TrackingKafkaProducer [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerFactoryTests.Create_Delegates_To_Inner_Factory [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Summarised_Transactions(operation: SendOffsetsToTransaction, expected: "Send Offsets") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Commit()") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.Tracked_Consumer_Tracks_Consume_Operations [4 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Summarised_Transactions(operation: BeginTransaction, expected: "Begin Txn") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Summarised_Transactions(operation: AbortTransaction, expected: "Abort Txn") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Unassign()") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Summarised_Transactions(operation: InitTransactions, expected: "Init Txn") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.Tracked_Consumer_Does_Not_Double_Wrap [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerFactoryTests.Create_Passes_Configure_Action_To_Inner [1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerFactoryTests.Create_Passes_Configure_Action_To_Inner [1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_Commit_ReturnsOperationName [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "StoreOffset(TopicPartitionOffset)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerFactoryTests.Create_Returns_TrackingKafkaConsumer [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerFactoryTests.Default_Factory_Implements_Interface [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.Different_Type_Combinations_Are_Independent [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.BuildUri_Detailed_UsesTopicOnly [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Subscribe(IEnumerable`1)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.WrapProducer_Returns_Tracked_When_Enabled [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Summarised_Consume [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Close()") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.Tracked_Consumer_Returns_TrackingKafkaConsumer_When_Enabled [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Assign(TopicPartition)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.Tracked_Consumer_Returns_Original_When_Not_Enabled [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Dispose()") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.Reset_Clears_All_Tracking_State [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "GetWatermarkOffsets(TopicPartition)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.Tracked_Producer_Returns_Original_When_Not_Enabled [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Pause(IEnumerable`1)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.WrapConsumer_Returns_Tracked_When_Enabled [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Subscribe(String)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.Tracked_Producer_Does_Not_Double_Wrap [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "get_Handle()") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.DisableProducerTracking_Returns_Original [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "IncrementalUnassign(IEnumerable`1)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Consume(CancellationToken)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackingInterceptorTests.DisableConsumerTracking_Returns_Original [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Committed(IEnumerable`1,TimeSpan)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.ProduceAsync_injects_the_requests_identity_when_the_options_carry_an_accessor [14 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "AddBrokers(String)") [6 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Commit(IEnumerable`1)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.ProduceAsync_does_not_inject_headers_when_PropagateTestIdentity_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "get_Subscription()") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "get_ConsumerGroupMetadata()") [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaProducerFactoryTestTracking_decorates_registered_factory [636 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "get_MemberId()") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Position(TopicPartition)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Seek(TopicPartitionOffset)") [< 1 ms]
+[xUnit.net 00:00:04.38]     Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: AbortTransaction) [FAIL]
+[xUnit.net 00:00:04.38]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:04.38]       Expected: "AbortTransaction"
+[xUnit.net 00:00:04.38]       Actual:   "AbortTransaction "
+[xUnit.net 00:00:04.38]                                  ↑ (pos 16)
+[xUnit.net 00:00:04.38]       Stack Trace:
+[xUnit.net 00:00:04.38]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs(123,0): at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation)
+[xUnit.net 00:00:04.38]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.38]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.39]     Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.An_empty_poll_ends_the_previous_messages_identity [FAIL]
+[xUnit.net 00:00:04.39]       Assert.Null() Failure: Value of type 'Nullable<ValueTuple<string, string>>' has a value
+[xUnit.net 00:00:04.39]       Expected: null
+[xUnit.net 00:00:04.39]       Actual:   Tuple ("Test 94bc426b-2f8b-4cd5-b211-c3da7c842a5b", "94bc426b-2f8b-4cd5-b211-c3da7c842a5b")
+[xUnit.net 00:00:04.39]       Stack Trace:
+[xUnit.net 00:00:04.39]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs(67,0): at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.An_empty_poll_ends_the_previous_messages_identity()
+[xUnit.net 00:00:04.39]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.39]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.39]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_whose_wait_was_cancelled_says_the_message_may_still_be_delivered [FAIL]
+[xUnit.net 00:00:04.39]       Assert.Single() Failure: The collection did not contain any matching items
+[xUnit.net 00:00:04.39]       Expected:   (predicate expression)
+[xUnit.net 00:00:04.39]       Collection: []
+[xUnit.net 00:00:04.39]       Stack Trace:
+[xUnit.net 00:00:04.39]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(26,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response()
+[xUnit.net 00:00:04.39]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(145,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_whose_wait_was_cancelled_says_the_message_may_still_be_delivered()
+[xUnit.net 00:00:04.39]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:04.39]     Kronikol.Tests.Kafka.TrackingKafkaProducerTests.ProduceAsync_injects_test_identity_headers_when_PropagateTestIdentity_true [FAIL]
+[xUnit.net 00:00:04.39]       Assert.Null() Failure: Value is not null
+[xUnit.net 00:00:04.39]       Expected: null
+[xUnit.net 00:00:04.39]       Actual:   [···]
+[xUnit.net 00:00:04.39]       Stack Trace:
+[xUnit.net 00:00:04.39]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerTests.cs(233,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerTests.ProduceAsync_injects_test_identity_headers_when_PropagateTestIdentity_true()
+[xUnit.net 00:00:04.39]         --- End of stack trace from previous location ---
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Assign(TopicPartitionOffset)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Consume(TimeSpan)") [< 1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.An_empty_poll_ends_the_previous_messages_identity [606 ms]
+  Error Message:
+   Assert.Null() Failure: Value of type 'Nullable<ValueTuple<string, string>>' has a value
+Expected: null
+Actual:   Tuple ("Test 94bc426b-2f8b-4cd5-b211-c3da7c842a5b", "94bc426b-2f8b-4cd5-b211-c3da7c842a5b")
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.An_empty_poll_ends_the_previous_messages_identity() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs:line 67
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: AbortTransaction) [3 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "AbortTransaction"
+Actual:   "AbortTransaction "
+                           ↑ (pos 16)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs:line 123
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_whose_wait_was_cancelled_says_the_message_may_still_be_delivered [606 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+Expected:   (predicate expression)
+Collection: []
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 26
+   at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_whose_wait_was_cancelled_says_the_message_may_still_be_delivered() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 145
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.ProduceAsync_injects_test_identity_headers_when_PropagateTestIdentity_true [5 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   [···]
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerTests.ProduceAsync_injects_test_identity_headers_when_PropagateTestIdentity_true() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerTests.cs:line 233
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:04.39]     Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: Commit) [FAIL]
+[xUnit.net 00:00:04.39]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:04.39]       Expected: "Commit"
+[xUnit.net 00:00:04.39]       Actual:   "Commit "
+[xUnit.net 00:00:04.39]                        ↑ (pos 6)
+[xUnit.net 00:00:04.39]       Stack Trace:
+[xUnit.net 00:00:04.39]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs(123,0): at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation)
+[xUnit.net 00:00:04.39]            at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+[xUnit.net 00:00:04.39]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.39]     Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: Flush) [FAIL]
+[xUnit.net 00:00:04.39]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:04.39]       Expected: "Flush"
+[xUnit.net 00:00:04.39]       Actual:   "Flush "
+[xUnit.net 00:00:04.39]                       ↑ (pos 5)
+[xUnit.net 00:00:04.39]       Stack Trace:
+[xUnit.net 00:00:04.39]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs(123,0): at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation)
+[xUnit.net 00:00:04.39]            at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+[xUnit.net 00:00:04.39]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "OffsetsForTimes(IEnumerable`1,TimeSpan)") [< 1 ms]
+  Failed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: Commit) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "Commit"
+Actual:   "Commit "
+                 ↑ (pos 6)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs:line 123
+   at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.Flush_CancellationToken_Tracks_when_TrackFlush_true [1 ms]
+  Failed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: Flush) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "Flush"
+Actual:   "Flush "
+                ↑ (pos 5)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs:line 123
+   at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "get_Assignment()") [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers(registration: "consumer") [6 ms]
+[xUnit.net 00:00:04.39]     Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: CommitTransaction) [FAIL]
+[xUnit.net 00:00:04.39]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:04.39]       Expected: "CommitTransaction"
+[xUnit.net 00:00:04.39]       Actual:   "CommitTransaction "
+[xUnit.net 00:00:04.39]                                   ↑ (pos 17)
+[xUnit.net 00:00:04.39]       Stack Trace:
+[xUnit.net 00:00:04.39]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs(123,0): at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation)
+[xUnit.net 00:00:04.39]            at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+[xUnit.net 00:00:04.39]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.39]     Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: Unsubscribe) [FAIL]
+[xUnit.net 00:00:04.39]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:04.39]       Expected: "Unsubscribe"
+[xUnit.net 00:00:04.39]       Actual:   "Unsubscribe "
+[xUnit.net 00:00:04.39]                             ↑ (pos 11)
+[xUnit.net 00:00:04.39]       Stack Trace:
+[xUnit.net 00:00:04.39]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs(123,0): at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation)
+[xUnit.net 00:00:04.39]            at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+[xUnit.net 00:00:04.39]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.39]     Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: InitTransactions) [FAIL]
+[xUnit.net 00:00:04.39]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:04.39]       Expected: "InitTransactions"
+[xUnit.net 00:00:04.39]       Actual:   "InitTransactions "
+[xUnit.net 00:00:04.39]                                  ↑ (pos 16)
+[xUnit.net 00:00:04.39]       Stack Trace:
+[xUnit.net 00:00:04.39]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs(123,0): at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation)
+[xUnit.net 00:00:04.39]            at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+[xUnit.net 00:00:04.39]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.A_consumed_message_is_correlated_under_its_key_and_under_the_extractors_key [2 ms]
+  Failed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: CommitTransaction) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "CommitTransaction"
+Actual:   "CommitTransaction "
+                            ↑ (pos 17)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs:line 123
+   at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.Flush_DoesNotTrack_when_TrackFlush_false [< 1 ms]
+  Failed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: Unsubscribe) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "Unsubscribe"
+Actual:   "Unsubscribe "
+                      ↑ (pos 11)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs:line 123
+   at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "SetSaslCredentials(String,String)") [< 1 ms]
+  Failed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: InitTransactions) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "InitTransactions"
+Actual:   "InitTransactions "
+                           ↑ (pos 16)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs:line 123
+   at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.39]     Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: SendOffsetsToTransaction) [FAIL]
+[xUnit.net 00:00:04.39]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:04.39]       Expected: "SendOffsetsToTransaction"
+[xUnit.net 00:00:04.39]       Actual:   "SendOffsetsToTransaction "
+[xUnit.net 00:00:04.39]                                          ↑ (pos 24)
+[xUnit.net 00:00:04.39]       Stack Trace:
+[xUnit.net 00:00:04.39]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs(123,0): at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation)
+[xUnit.net 00:00:04.39]            at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+[xUnit.net 00:00:04.39]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.40]     Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: BeginTransaction) [FAIL]
+[xUnit.net 00:00:04.40]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:04.40]       Expected: "BeginTransaction"
+[xUnit.net 00:00:04.40]       Actual:   "BeginTransaction "
+[xUnit.net 00:00:04.40]                                  ↑ (pos 16)
+[xUnit.net 00:00:04.40]       Stack Trace:
+[xUnit.net 00:00:04.40]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs(123,0): at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation)
+[xUnit.net 00:00:04.40]            at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+[xUnit.net 00:00:04.40]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.BeginTransaction_Tracks_when_TrackTransactions_true [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers(registration: "consumer factory") [1 ms]
+  Failed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: SendOffsetsToTransaction) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "SendOffsetsToTransaction"
+Actual:   "SendOffsetsToTransaction "
+                                   ↑ (pos 24)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs:line 123
+   at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers(registration: "producer factory") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.Flush_TimeSpan_Tracks_when_TrackFlush_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Committed(TimeSpan)") [< 1 ms]
+  Failed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(operation: BeginTransaction) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "BeginTransaction"
+Actual:   "BeginTransaction "
+                           ↑ (pos 16)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaOperationClassifierTests.cs:line 123
+   at InvokeStub_KafkaOperationClassifierTests.GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.40]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(byTopic: False) [FAIL]
+[xUnit.net 00:00:04.40]       Assert.Single() Failure: The collection did not contain any matching items
+[xUnit.net 00:00:04.40]       Expected:   (predicate expression)
+[xUnit.net 00:00:04.40]       Collection: []
+[xUnit.net 00:00:04.40]       Stack Trace:
+[xUnit.net 00:00:04.40]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(26,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response()
+[xUnit.net 00:00:04.40]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(106,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(Boolean byTopic)
+[xUnit.net 00:00:04.40]         --- End of stack trace from previous location ---
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.BuildUri_Detailed_NoTopic_ReturnsBase [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "QueryWatermarkOffsets(TopicPartition,TimeSpan)") [< 1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(byTopic: False) [5 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+Expected:   (predicate expression)
+Collection: []
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 26
+   at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(Boolean byTopic) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 106
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.CommitTransaction_WithTimeout_Tracks_when_TrackTransactions_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_ProduceAsync_IncludesTopic [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Unsubscribe()") [< 1 ms]
+[xUnit.net 00:00:04.40]     Kronikol.Tests.Kafka.TrackingKafkaProducerTests.Produce_sync_injects_test_identity_headers [FAIL]
+[xUnit.net 00:00:04.40]       Assert.Null() Failure: Value is not null
+[xUnit.net 00:00:04.40]       Expected: null
+[xUnit.net 00:00:04.40]       Actual:   [···]
+[xUnit.net 00:00:04.40]       Stack Trace:
+[xUnit.net 00:00:04.40]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerTests.cs(270,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerTests.Produce_sync_injects_test_identity_headers()
+[xUnit.net 00:00:04.40]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.40]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.40]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(byTopic: True) [FAIL]
+[xUnit.net 00:00:04.40]       Assert.Single() Failure: The collection did not contain any matching items
+[xUnit.net 00:00:04.40]       Expected:   (predicate expression)
+[xUnit.net 00:00:04.40]       Collection: []
+[xUnit.net 00:00:04.40]       Stack Trace:
+[xUnit.net 00:00:04.40]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(26,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response()
+[xUnit.net 00:00:04.40]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(106,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(Boolean byTopic)
+[xUnit.net 00:00:04.40]         --- End of stack trace from previous location ---
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers(registration: "producer") [1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.Produce_sync_injects_test_identity_headers [< 1 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   [···]
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerTests.Produce_sync_injects_test_identity_headers() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerTests.cs:line 270
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(byTopic: True) [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+Expected:   (predicate expression)
+Collection: []
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 26
+   at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(Boolean byTopic) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 106
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Summarised_Unsubscribe [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "StoreOffset(ConsumeResult`2)") [< 1 ms]
+[xUnit.net 00:00:04.40]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_disposed_producer_is_not_taken_for_delivery_reports_off_and_is_drawn_and_rethrown [FAIL]
+[xUnit.net 00:00:04.40]       Assert.Single() Failure: The collection did not contain any matching items
+[xUnit.net 00:00:04.40]       Expected:   (predicate expression)
+[xUnit.net 00:00:04.40]       Collection: []
+[xUnit.net 00:00:04.40]       Stack Trace:
+[xUnit.net 00:00:04.40]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(26,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response()
+[xUnit.net 00:00:04.40]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(274,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_disposed_producer_is_not_taken_for_delivery_reports_off_and_is_drawn_and_rethrown()
+[xUnit.net 00:00:04.40]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.40]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_Unsubscribe_ReturnsOperationName [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.Flush_Still_delegates_to_inner [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "IncrementalAssign(IEnumerable`1)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_OmitsPartitionWhenNull [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "Assign(IEnumerable`1)") [< 1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_disposed_producer_is_not_taken_for_delivery_reports_off_and_is_drawn_and_rethrown [1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+Expected:   (predicate expression)
+Collection: []
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 26
+   at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_disposed_producer_is_not_taken_for_delivery_reports_off_and_is_drawn_and_rethrown() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 274
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.InitTransactions_Tracks_when_TrackTransactions_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_consumer_member_reaches_the_wrapped_consumer(member: "get_Name()") [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "producer factory") [1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.Transactions_DoNotTrack_when_TrackTransactions_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.Produce_injects_the_requests_identity_when_the_tracker_was_given_an_accessor [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "SetSaslCredentials(String,String)") [1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.SendOffsetsToTransaction_Tracks_when_TrackTransactions_true [1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "consumer") [2 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.Consume_by_milliseconds_and_by_token_are_logged_and_empty_and_EOF_polls_are_not [9 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "AddBrokers(String)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.AbortTransaction_WithTimeout_Tracks_when_TrackTransactions_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "InitTransactions(TimeSpan)") [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "producer") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerTests.CommitTransaction_Tracks_when_TrackTransactions_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "get_Handle()") [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.Registration_uses_the_containers_accessor_when_the_options_carry_none(registration: "consumer factory") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "SendOffsetsToTransaction(IEnumerable`1,IConsumerGr"···) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "AbortTransaction()") [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaConsumerFactoryTestTracking_created_consumer_is_tracked [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "Produce(String,Message`2,Action`1)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "Dispose()") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "get_Name()") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "Poll(TimeSpan)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "AbortTransaction(TimeSpan)") [< 1 ms]
+[xUnit.net 00:00:04.41]     Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.An_action_phase_override_shows_content_though_the_base_verbosity_is_summarised [FAIL]
+[xUnit.net 00:00:04.41]       Assert.Equal() Failure: Collections differ
+[xUnit.net 00:00:04.41]                                                                  ↓ (pos 0)
+[xUnit.net 00:00:04.41]       Expected: <generated>                                     ["Key: k, Value: v", "Key: p, Value: paid"]
+[xUnit.net 00:00:04.41]       Actual:   ArraySelectIterator<RequestResponseLog, string> [null, null]
+[xUnit.net 00:00:04.41]                                                                  ↑ (pos 0)
+[xUnit.net 00:00:04.41]       Stack Trace:
+[xUnit.net 00:00:04.41]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs(158,0): at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.An_action_phase_override_shows_content_though_the_base_verbosity_is_summarised()
+[xUnit.net 00:00:04.41]         --- End of stack trace from previous location ---
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "Produce(TopicPartition,Message`2,Action`1)") [< 1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.An_action_phase_override_shows_content_though_the_base_verbosity_is_summarised [5 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+                                                           ↓ (pos 0)
+Expected: <generated>                                     ["Key: k, Value: v", "Key: p, Value: paid"]
+Actual:   ArraySelectIterator<RequestResponseLog, string> [null, null]
+                                                           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.An_action_phase_override_shows_content_though_the_base_verbosity_is_summarised() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs:line 158
+--- End of stack trace from previous location ---
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaConsumerFactoryTestTracking_registers_default_when_none_exists [3 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "Flush(TimeSpan)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "CommitTransaction()") [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaConsumerTestTracking_decorates_registered_consumer [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "ProduceAsync(TopicPartition,Message`2,Cancellation"···) [< 1 ms]
+[xUnit.net 00:00:04.41]     Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.A_consume_that_throws_is_drawn_as_a_failed_consume_of_the_record_under_the_test_its_headers_name [FAIL]
+[xUnit.net 00:00:04.41]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.41]       Expected: 2
+[xUnit.net 00:00:04.41]       Actual:   0
+[xUnit.net 00:00:04.41]       Stack Trace:
+[xUnit.net 00:00:04.41]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs(123,0): at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.A_consume_that_throws_is_drawn_as_a_failed_consume_of_the_record_under_the_test_its_headers_name()
+[xUnit.net 00:00:04.41]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.41]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaConsumerTestTracking_is_noop_when_no_consumer_registered [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "BeginTransaction()") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "CommitTransaction(TimeSpan)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.BuildUri_Raw_IncludesPartition [11 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.A_consume_that_throws_is_drawn_as_a_failed_consume_of_the_record_under_the_test_its_headers_name [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 2
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.A_consume_that_throws_is_drawn_as_a_failed_consume_of_the_record_under_the_test_its_headers_name() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs:line 123
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "ProduceAsync(String,Message`2,CancellationToken)") [< 1 ms]
+[xUnit.net 00:00:04.42]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_producer_that_refuses_the_handler_is_retried_once_without_one_and_remembered [FAIL]
+[xUnit.net 00:00:04.42]       System.InvalidOperationException : A delivery handler was specified, but delivery reports are disabled.
+[xUnit.net 00:00:04.42]       Stack Trace:
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaFakes.cs(101,0): at Kronikol.Tests.Kafka.FakeProducer`2.Record(String topic, Message`2 message, Action`1 handler)
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaFakes.cs(59,0): at Kronikol.Tests.Kafka.FakeProducer`2.Produce(String topic, Message`2 message, Action`1 deliveryHandler)
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\TrackingKafkaProducer.cs(70,0): at Kronikol.Extensions.Kafka.TrackingKafkaProducer`2.Produce(String topic, Message`2 message, Action`1 deliveryHandler)
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(243,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_producer_that_refuses_the_handler_is_retried_once_without_one_and_remembered()
+[xUnit.net 00:00:04.42]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.42]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.42]     Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.Subscribing_to_a_sequence_that_can_be_read_once_subscribes_and_logs_every_topic [FAIL]
+[xUnit.net 00:00:04.42]       System.InvalidOperationException : This sequence can be read once.
+[xUnit.net 00:00:04.42]       Stack Trace:
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs(259,0): at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.ReadOnce.GetEnumerator()
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\TrackingKafkaConsumer.cs(62,0): at Kronikol.Extensions.Kafka.TrackingKafkaConsumer`2.Subscribe(IEnumerable`1 topics)
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs(191,0): at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.Subscribing_to_a_sequence_that_can_be_read_once_subscribes_and_logs_every_topic()
+[xUnit.net 00:00:04.42]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.42]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Summarised_Produce [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaClientDelegationTests.Every_producer_member_reaches_the_wrapped_producer(member: "Flush(CancellationToken)") [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_Consume_IncludesTopic [< 1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_producer_that_refuses_the_handler_is_retried_once_without_one_and_remembered [1 ms]
+  Error Message:
+   System.InvalidOperationException : A delivery handler was specified, but delivery reports are disabled.
+  Stack Trace:
+     at Kronikol.Tests.Kafka.FakeProducer`2.Record(String topic, Message`2 message, Action`1 handler) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaFakes.cs:line 101
+   at Kronikol.Tests.Kafka.FakeProducer`2.Produce(String topic, Message`2 message, Action`1 deliveryHandler) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaFakes.cs:line 59
+   at Kronikol.Extensions.Kafka.TrackingKafkaProducer`2.Produce(String topic, Message`2 message, Action`1 deliveryHandler) in C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\TrackingKafkaProducer.cs:line 70
+   at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_producer_that_refuses_the_handler_is_retried_once_without_one_and_remembered() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 243
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Summarised_Commit [< 1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.Subscribing_to_a_sequence_that_can_be_read_once_subscribes_and_logs_every_topic [< 1 ms]
+  Error Message:
+   System.InvalidOperationException : This sequence can be read once.
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.ReadOnce.GetEnumerator() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs:line 259
+   at Kronikol.Extensions.Kafka.TrackingKafkaConsumer`2.Subscribe(IEnumerable`1 topics) in C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\TrackingKafkaConsumer.cs:line 62
+   at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.Subscribing_to_a_sequence_that_can_be_read_once_subscribes_and_logs_every_topic() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs:line 191
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_Produce_IncludesTopic [< 1 ms]
+[xUnit.net 00:00:04.42]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Another_refusal_is_not_taken_for_delivery_reports_off_and_is_drawn_and_rethrown [FAIL]
+[xUnit.net 00:00:04.42]       Assert.Single() Failure: The collection did not contain any matching items
+[xUnit.net 00:00:04.42]       Expected:   (predicate expression)
+[xUnit.net 00:00:04.42]       Collection: []
+[xUnit.net 00:00:04.42]       Stack Trace:
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(26,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response()
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(261,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Another_refusal_is_not_taken_for_delivery_reports_off_and_is_drawn_and_rethrown()
+[xUnit.net 00:00:04.42]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.42]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_Subscribe_IncludesTopic [< 1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Another_refusal_is_not_taken_for_delivery_reports_off_and_is_drawn_and_rethrown [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+Expected:   (predicate expression)
+Collection: []
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 26
+   at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Another_refusal_is_not_taken_for_delivery_reports_off_and_is_drawn_and_rethrown() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 261
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaConsumerTestTracking_preserves_service_lifetime [2 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.ProduceAsync_to_a_partition_is_logged_with_the_partition_the_broker_wrote_to [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.BuildUri_Summarised_ReturnsBase [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaProducerTestTracking_does_not_duplicate_registrations [< 1 ms]
+[xUnit.net 00:00:04.42]     Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.A_partition_EOF_ends_the_previous_messages_identity [FAIL]
+[xUnit.net 00:00:04.42]       Assert.Null() Failure: Value of type 'Nullable<ValueTuple<string, string>>' has a value
+[xUnit.net 00:00:04.42]       Expected: null
+[xUnit.net 00:00:04.42]       Actual:   Tuple ("Test fbe41610-3640-424a-9289-2fcbd2188b37", "fbe41610-3640-424a-9289-2fcbd2188b37")
+[xUnit.net 00:00:04.42]       Stack Trace:
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs(94,0): at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.A_partition_EOF_ends_the_previous_messages_identity()
+[xUnit.net 00:00:04.42]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.42]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Raw_IncludesPartitionAndOffset [< 1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.A_partition_EOF_ends_the_previous_messages_identity [< 1 ms]
+  Error Message:
+   Assert.Null() Failure: Value of type 'Nullable<ValueTuple<string, string>>' has a value
+Expected: null
+Actual:   Tuple ("Test fbe41610-3640-424a-9289-2fcbd2188b37", "fbe41610-3640-424a-9289-2fcbd2188b37")
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.A_partition_EOF_ends_the_previous_messages_identity() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaConsumerIdentityTests.cs:line 94
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaProducerTestTracking_is_noop_when_no_producer_registered [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaOperationClassifierTests.GetDiagramLabel_Detailed_Flush_ReturnsOperationName [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaProducerTestTracking_decorates_registered_producer [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerIdentityTests.TrackDuringSetup_false_leaves_a_setup_produce_out_and_an_action_produce_in [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaProducerFactoryTestTracking_registers_default_when_none_exists [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaProducerFactoryTestTracking_created_producer_is_tracked [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Commit_ConsumeResult_Tracks_when_TrackCommit_true [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaProducerTestTracking_applies_options_configuration [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaProducerTestTracking_preserves_service_lifetime [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.A_message_without_headers_is_not_consumed_under_the_previous_message_identity [< 1 ms]
+  Passed Kronikol.Extensions.Kafka.Tests.KafkaServiceCollectionExtensionsTests.AddKafkaConsumerFactoryTestTracking_decorates_registered_factory [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Commit_DoesNotTrack_when_TrackCommit_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Commit_NoArgs_Tracks_when_TrackCommit_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.WasInvoked_IsFalse_BeforeAnyMessages [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.Implements_ITrackingComponent [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Consume_establishes_TestIdentityScope_from_message_headers [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Commit_Offsets_Tracks_when_TrackCommit_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Consume_does_not_establish_scope_when_PropagateTestIdentity_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogProduce_Uses_event_metatype [2 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Consume_Omits_content_in_Summarised_mode [3 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogProduce_Skips_when_no_test_info [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Unsubscribe_Tracks_when_TrackUnsubscribe_true [< 1 ms]
+[xUnit.net 00:00:04.43]     Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_produce_is_stamped_at_the_call_and_at_delivery_and_stored_at_delivery [FAIL]
+[xUnit.net 00:00:04.43]       request at 2026-10-12T10:52:07.0790929+00:00, response at 2026-10-12T10:52:07.0790942+00:00
+[xUnit.net 00:00:04.43]       Stack Trace:
+[xUnit.net 00:00:04.43]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs(102,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_produce_is_stamped_at_the_call_and_at_delivery_and_stored_at_delivery()
+[xUnit.net 00:00:04.43]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.43]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogConsume_Swaps_caller_and_service [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Unsubscribe_Still_delegates_to_inner [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.Tracker_has_no_accessor_when_neither_options_nor_parameter [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Consume_Omits_Key_when_LogMessageKey_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogConsume_Includes_content [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogProduce_Uses_correct_service_and_caller [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Consume_does_not_fail_when_message_has_no_headers [< 1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_produce_is_stamped_at_the_call_and_at_delivery_and_stored_at_delivery [677 ms]
+  Error Message:
+   request at 2026-10-12T10:52:07.0790929+00:00, response at 2026-10-12T10:52:07.0790942+00:00
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_produce_is_stamped_at_the_call_and_at_delivery_and_stored_at_delivery() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs:line 102
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogConsume_Skips_when_TrackConsume_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Commit_Still_delegates_to_inner [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Unsubscribe_DoesNotTrack_when_TrackUnsubscribe_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.Constructor_AutoRegistersWithTrackingComponentRegistry [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogUnsubscribe_Skips_when_TrackUnsubscribe_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.TrackingKafkaConsumerTests.Consume_Includes_Key_in_content [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogTransaction_Uses_event_metatype [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogSubscribe_Logs_when_TrackSubscribe_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogProduce_Uses_detailed_label [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.InvocationCount_IncrementsEvenWhenTrackingDisabled [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogFlush_Logs_when_TrackFlush_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogProduce_Omits_content_in_Summarised [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogConsume_Logs_request_and_response [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogConsume_Omits_content_in_Summarised [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogSubscribe_Skips_when_TrackSubscribe_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogProduce_Skips_when_TrackProduce_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.ComponentName_MatchesServiceName [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogCommit_Skips_when_TrackCommit_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.Tracker_explicit_accessor_takes_precedence_over_options [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.WasInvoked_IsTrue_AfterProduce [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly [2 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogCommit_Logs_when_TrackCommit_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogTransaction_Logs_when_TrackTransactions_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogFlush_Skips_when_TrackFlush_false [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogUnsubscribe_Logs_when_TrackUnsubscribe_true [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogTransaction_Skips_when_TrackTransactions_false [< 1 ms]
+[xUnit.net 00:00:04.45]     Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.ProduceAsync_is_stamped_at_the_call_and_when_the_broker_answered [FAIL]
+[xUnit.net 00:00:04.45]       request at 2026-10-12T10:52:07.1535803+00:00, response at 2026-10-12T10:52:07.1535857+00:00
+[xUnit.net 00:00:04.45]       Stack Trace:
+[xUnit.net 00:00:04.45]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs(127,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.ProduceAsync_is_stamped_at_the_call_and_when_the_broker_answered()
+[xUnit.net 00:00:04.45]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:04.58]     Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_sync_produce_is_its_callers_though_its_delivery_handler_runs_under_the_builders_context [FAIL]
+[xUnit.net 00:00:04.58]       Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[xUnit.net 00:00:04.58]       [0]: Item:  RequestResponseLog { TestName = Test 704b7207-fdbb-4cfe-9c9b-4447f6c599a5, TestId = 704b7207-fdbb-4cfe-9c9b-4447f6c599a5, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = 9b174303-27c5-4819-809e-b31d7bfb96a9, RequestResponseId = 0e64e785-98cf-4e12-99e4-db7448eba9ff, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 10:52:07 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+[xUnit.net 00:00:04.58]            Error: Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:04.58]                              ↓ (pos 0)
+[xUnit.net 00:00:04.58]                   Expected: "1e33a785-8a36-4ac9-9ce3-8366c68c958e"
+[xUnit.net 00:00:04.58]                   Actual:   "704b7207-fdbb-4cfe-9c9b-4447f6c599a5"
+[xUnit.net 00:00:04.58]                              ↑ (pos 0)
+[xUnit.net 00:00:04.58]       [1]: Item:  RequestResponseLog { TestName = Test 704b7207-fdbb-4cfe-9c9b-4447f6c599a5, TestId = 704b7207-fdbb-4cfe-9c9b-4447f6c599a5, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = 9b174303-27c5-4819-809e-b31d7bfb96a9, RequestResponseId = 0e64e785-98cf-4e12-99e4-db7448eba9ff, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 10:52:07 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+[xUnit.net 00:00:04.58]            Error: Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:04.58]                              ↓ (pos 0)
+[xUnit.net 00:00:04.58]                   Expected: "1e33a785-8a36-4ac9-9ce3-8366c68c958e"
+[xUnit.net 00:00:04.58]                   Actual:   "704b7207-fdbb-4cfe-9c9b-4447f6c599a5"
+[xUnit.net 00:00:04.58]                              ↑ (pos 0)
+[xUnit.net 00:00:04.58]       Stack Trace:
+[xUnit.net 00:00:04.58]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs(57,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_sync_produce_is_its_callers_though_its_delivery_handler_runs_under_the_builders_context()
+[xUnit.net 00:00:04.58]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.58]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.58]     Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.An_identity_header_the_caller_set_is_kept_and_only_the_missing_one_is_added [FAIL]
+[xUnit.net 00:00:04.58]       Assert.Equal() Failure: Collections differ
+[xUnit.net 00:00:04.58]       Expected: <generated>                                ["traceparent", "kronikol-test-id"]
+[xUnit.net 00:00:04.58]       Actual:   IEnumerableSelectIterator<IHeader, string> ["traceparent", "kronikol-test-id", "kronikol-test-name", "kronikol-test-id"]
+[xUnit.net 00:00:04.59]                                                                                                ↑ (pos 2)
+[xUnit.net 00:00:04.59]       Stack Trace:
+[xUnit.net 00:00:04.59]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs(194,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.An_identity_header_the_caller_set_is_kept_and_only_the_missing_one_is_added()
+[xUnit.net 00:00:04.59]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.59]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.59]     Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_consume_carries_one_instant_on_both_halves_so_no_duration_is_invented [FAIL]
+[xUnit.net 00:00:04.59]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.59]       Expected: 2026-10-12T10:52:07.2925743+00:00
+[xUnit.net 00:00:04.59]       Actual:   2026-10-12T10:52:07.2925818+00:00
+[xUnit.net 00:00:04.59]       Stack Trace:
+[xUnit.net 00:00:04.59]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs(148,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_consume_carries_one_instant_on_both_halves_so_no_duration_is_invented()
+[xUnit.net 00:00:04.59]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.59]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.59]     Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.The_callers_message_is_never_written_and_each_produce_hands_Confluent_its_own_tests_identity [FAIL]
+[xUnit.net 00:00:04.59]       Assert.Null() Failure: Value is not null
+[xUnit.net 00:00:04.59]       Expected: null
+[xUnit.net 00:00:04.59]       Actual:   [···]
+[xUnit.net 00:00:04.59]       Stack Trace:
+[xUnit.net 00:00:04.59]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs(166,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.The_callers_message_is_never_written_and_each_produce_hands_Confluent_its_own_tests_identity()
+[xUnit.net 00:00:04.59]         --- End of stack trace from previous location ---
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogProduce_Includes_content [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogProduce_Logs_request_and_response [2 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.InvocationCount_StartsAtZero [< 1 ms]
+  Passed Kronikol.Tests.Kafka.KafkaTrackerTests.LogProduce_Uses_detailed_uri [< 1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.ProduceAsync_is_stamped_at_the_call_and_when_the_broker_answered [74 ms]
+  Error Message:
+   request at 2026-10-12T10:52:07.1535803+00:00, response at 2026-10-12T10:52:07.1535857+00:00
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.ProduceAsync_is_stamped_at_the_call_and_when_the_broker_answered() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs:line 127
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_sync_produce_is_its_callers_though_its_delivery_handler_runs_under_the_builders_context [127 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  RequestResponseLog { TestName = Test 704b7207-fdbb-4cfe-9c9b-4447f6c599a5, TestId = 704b7207-fdbb-4cfe-9c9b-4447f6c599a5, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = Key: k, Value: v, Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Request, TraceId = 9b174303-27c5-4819-809e-b31d7bfb96a9, RequestResponseId = 0e64e785-98cf-4e12-99e4-db7448eba9ff, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 10:52:07 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+                       ↓ (pos 0)
+            Expected: "1e33a785-8a36-4ac9-9ce3-8366c68c958e"
+            Actual:   "704b7207-fdbb-4cfe-9c9b-4447f6c599a5"
+                       ↑ (pos 0)
+[1]: Item:  RequestResponseLog { TestName = Test 704b7207-fdbb-4cfe-9c9b-4447f6c599a5, TestId = 704b7207-fdbb-4cfe-9c9b-4447f6c599a5, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = kafka:///orders, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = Kafka, CallerName = Orders, Type = Response, TraceId = 9b174303-27c5-4819-809e-b31d7bfb96a9, RequestResponseId = 0e64e785-98cf-4e12-99e4-db7448eba9ff, TrackingIgnore = False, StatusCode = , MetaType = Event, DependencyCategory = MessageQueue, CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 12/10/2026 10:52:07 +00:00, AttributionSource = TestContext, ExpiredFromTestId = , Error = , ActivitySpanId = , ActivityTraceId = , Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }
+     Error: Assert.Equal() Failure: Strings differ
+                       ↓ (pos 0)
+            Expected: "1e33a785-8a36-4ac9-9ce3-8366c68c958e"
+            Actual:   "704b7207-fdbb-4cfe-9c9b-4447f6c599a5"
+                       ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_sync_produce_is_its_callers_though_its_delivery_handler_runs_under_the_builders_context() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs:line 57
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.An_identity_header_the_caller_set_is_kept_and_only_the_missing_one_is_added [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+Expected: <generated>                                ["traceparent", "kronikol-test-id"]
+Actual:   IEnumerableSelectIterator<IHeader, string> ["traceparent", "kronikol-test-id", "kronikol-test-name", "kronikol-test-id"]
+                                                                                         ↑ (pos 2)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.An_identity_header_the_caller_set_is_kept_and_only_the_missing_one_is_added() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs:line 194
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_consume_carries_one_instant_on_both_halves_so_no_duration_is_invented [5 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 2026-10-12T10:52:07.2925743+00:00
+Actual:   2026-10-12T10:52:07.2925818+00:00
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_consume_carries_one_instant_on_both_halves_so_no_duration_is_invented() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs:line 148
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.The_callers_message_is_never_written_and_each_produce_hands_Confluent_its_own_tests_identity [< 1 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   [···]
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.The_callers_message_is_never_written_and_each_produce_hands_Confluent_its_own_tests_identity() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs:line 166
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:04.60]     Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_produce_called_in_setup_and_delivered_once_the_action_began_is_a_setup_entry_at_setup_verbosity [FAIL]
+[xUnit.net 00:00:04.60]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.60]       Expected: Setup
+[xUnit.net 00:00:04.60]       Actual:   Action
+[xUnit.net 00:00:04.60]       Stack Trace:
+[xUnit.net 00:00:04.60]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs(80,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_produce_called_in_setup_and_delivered_once_the_action_began_is_a_setup_entry_at_setup_verbosity()
+[xUnit.net 00:00:04.60]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.60]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.65]     Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_consume_recorded_between_a_produces_call_and_its_delivery_is_stored_before_it [FAIL]
+[xUnit.net 00:00:04.65]       the produce's request is stamped at its call, before the consume
+[xUnit.net 00:00:04.65]       Stack Trace:
+[xUnit.net 00:00:04.66]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs(229,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_consume_recorded_between_a_produces_call_and_its_delivery_is_stored_before_it()
+[xUnit.net 00:00:04.66]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.66]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+%4|1791802327.406|TERMINATE|rdkafka#producer-1| [thrd:app]: Producer terminating with 1 message (1 byte) still in queue or transit: use flush() to wait for outstanding message delivery
+[xUnit.net 00:00:04.70]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_dependent_producer_whose_owner_has_delivery_reports_off_is_logged_at_the_call [FAIL]
+[xUnit.net 00:00:04.70]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.70]       Expected: 2
+[xUnit.net 00:00:04.70]       Actual:   0
+[xUnit.net 00:00:04.70]       Stack Trace:
+[xUnit.net 00:00:04.70]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(214,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_dependent_producer_whose_owner_has_delivery_reports_off_is_logged_at_the_call()
+[xUnit.net 00:00:04.70]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:04.70]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:05.83]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_dependent_producer_whose_owner_reports_deliveries_is_logged_at_delivery [FAIL]
+[xUnit.net 00:00:05.83]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:05.83]       Expected: "!Local_MsgTimedOut"
+[xUnit.net 00:00:05.83]       Actual:   null
+[xUnit.net 00:00:05.83]       Stack Trace:
+[xUnit.net 00:00:05.83]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(230,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_dependent_producer_whose_owner_reports_deliveries_is_logged_at_delivery()
+[xUnit.net 00:00:05.83]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:05.83]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:05.83]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_sync_Produce_whose_serializer_fails_is_drawn_with_the_serialization_error_code [FAIL]
+[xUnit.net 00:00:05.83]       Assert.Single() Failure: The collection did not contain any matching items
+[xUnit.net 00:00:05.83]       Expected:   (predicate expression)
+[xUnit.net 00:00:05.83]       Collection: []
+[xUnit.net 00:00:05.83]       Stack Trace:
+[xUnit.net 00:00:05.83]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(26,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response()
+[xUnit.net 00:00:05.83]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(183,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_sync_Produce_whose_serializer_fails_is_drawn_with_the_serialization_error_code()
+[xUnit.net 00:00:05.83]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:05.83]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:05.83]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:05.94]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_producer_with_delivery_reports_off_produces_and_is_logged_once_at_the_call [FAIL]
+[xUnit.net 00:00:05.94]       System.InvalidOperationException : A delivery handler was specified, but delivery reports are disabled.
+[xUnit.net 00:00:05.94]       Stack Trace:
+[xUnit.net 00:00:05.94]            at Confluent.Kafka.Producer`2.Produce(TopicPartition topicPartition, Message`2 message, Action`1 deliveryHandler)
+[xUnit.net 00:00:05.94]            at Confluent.Kafka.Producer`2.Produce(String topic, Message`2 message, Action`1 deliveryHandler)
+[xUnit.net 00:00:05.94]         C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\TrackingKafkaProducer.cs(70,0): at Kronikol.Extensions.Kafka.TrackingKafkaProducer`2.Produce(String topic, Message`2 message, Action`1 deliveryHandler)
+[xUnit.net 00:00:05.94]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(195,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_producer_with_delivery_reports_off_produces_and_is_logged_once_at_the_call()
+[xUnit.net 00:00:05.94]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:05.94]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:05.94]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:05.95]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_sync_Produce_that_throws_is_drawn_at_the_call_with_its_error_code_and_rethrown [FAIL]
+[xUnit.net 00:00:05.95]       Assert.Single() Failure: The collection did not contain any matching items
+[xUnit.net 00:00:05.95]       Expected:   (predicate expression)
+[xUnit.net 00:00:05.95]       Collection: []
+[xUnit.net 00:00:05.95]       Stack Trace:
+[xUnit.net 00:00:05.95]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(26,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response()
+[xUnit.net 00:00:05.95]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(164,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_sync_Produce_that_throws_is_drawn_at_the_call_with_its_error_code_and_rethrown()
+[xUnit.net 00:00:05.95]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:05.95]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:05.95]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:05.95]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_something_else_is_drawn_by_the_exceptions_type [FAIL]
+[xUnit.net 00:00:05.95]       Assert.Single() Failure: The collection did not contain any matching items
+[xUnit.net 00:00:05.95]       Expected:   (predicate expression)
+[xUnit.net 00:00:05.95]       Collection: []
+[xUnit.net 00:00:05.95]       Stack Trace:
+[xUnit.net 00:00:05.95]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(26,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response()
+[xUnit.net 00:00:05.95]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(125,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_something_else_is_drawn_by_the_exceptions_type()
+[xUnit.net 00:00:05.95]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_produce_called_in_setup_and_delivered_once_the_action_began_is_a_setup_entry_at_setup_verbosity [4 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Setup
+Actual:   Action
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_produce_called_in_setup_and_delivered_once_the_action_began_is_a_setup_entry_at_setup_verbosity() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs:line 80
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_consume_recorded_between_a_produces_call_and_its_delivery_is_stored_before_it [55 ms]
+  Error Message:
+   the produce's request is stamped at its call, before the consume
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerContextTests.A_consume_recorded_between_a_produces_call_and_its_delivery_is_stored_before_it() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerContextTests.cs:line 229
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_dependent_producer_whose_owner_has_delivery_reports_off_is_logged_at_the_call [342 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 2
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_dependent_producer_whose_owner_has_delivery_reports_off_is_logged_at_the_call() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 214
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_dependent_producer_whose_owner_reports_deliveries_is_logged_at_delivery [1 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "!Local_MsgTimedOut"
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_dependent_producer_whose_owner_reports_deliveries_is_logged_at_delivery() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 230
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_successful_delivery_keeps_no_status [1 ms]
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_sync_Produce_whose_serializer_fails_is_drawn_with_the_serialization_error_code [< 1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+Expected:   (predicate expression)
+Collection: []
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 26
+   at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_sync_Produce_whose_serializer_fails_is_drawn_with_the_serialization_error_code() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 183
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_producer_with_delivery_reports_off_produces_and_is_logged_once_at_the_call [106 ms]
+  Error Message:
+   System.InvalidOperationException : A delivery handler was specified, but delivery reports are disabled.
+  Stack Trace:
+     at Confluent.Kafka.Producer`2.Produce(TopicPartition topicPartition, Message`2 message, Action`1 deliveryHandler)
+   at Confluent.Kafka.Producer`2.Produce(String topic, Message`2 message, Action`1 deliveryHandler)
+   at Kronikol.Extensions.Kafka.TrackingKafkaProducer`2.Produce(String topic, Message`2 message, Action`1 deliveryHandler) in C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\TrackingKafkaProducer.cs:line 70
+   at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_producer_with_delivery_reports_off_produces_and_is_logged_once_at_the_call() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 195
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_sync_Produce_that_throws_is_drawn_at_the_call_with_its_error_code_and_rethrown [1 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+Expected:   (predicate expression)
+Collection: []
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 26
+   at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_sync_Produce_that_throws_is_drawn_at_the_call_with_its_error_code_and_rethrown() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 164
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_something_else_is_drawn_by_the_exceptions_type [2 ms]
+  Error Message:
+   Assert.Single() Failure: The collection did not contain any matching items
+Expected:   (predicate expression)
+Collection: []
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.Response() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 26
+   at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_ProduceAsync_that_throws_something_else_is_drawn_by_the_exceptions_type() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 125
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:05.96]     Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_failed_delivery_is_drawn_with_its_error_code_and_reason_and_the_callers_handler_still_runs [FAIL]
+[xUnit.net 00:00:05.96]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:05.96]       Expected: "!Local_MsgTimedOut"
+[xUnit.net 00:00:05.96]       Actual:   null
+[xUnit.net 00:00:05.96]       Stack Trace:
+[xUnit.net 00:00:05.96]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs(58,0): at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_failed_delivery_is_drawn_with_its_error_code_and_reason_and_the_callers_handler_still_runs()
+[xUnit.net 00:00:05.96]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:05.96]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:05.96]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:05.96]     Kronikol.Tests.Kafka.KafkaBackgroundIdentityTests.A_produce_outside_any_scenario_carries_no_identity_and_its_consume_stays_the_backgrounds [FAIL]
+[xUnit.net 00:00:05.96]       Assert.Null() Failure: Value is not null
+[xUnit.net 00:00:05.96]       Expected: null
+[xUnit.net 00:00:05.96]       Actual:   [···]
+[xUnit.net 00:00:05.96]       Stack Trace:
+[xUnit.net 00:00:05.96]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaBackgroundIdentityTests.cs(34,0): at Kronikol.Tests.Kafka.KafkaBackgroundIdentityTests.A_produce_outside_any_scenario_carries_no_identity_and_its_consume_stays_the_backgrounds()
+[xUnit.net 00:00:05.96]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:05.97]   Finished:    Kronikol.Tests.Kafka (ID = '9c1764ab5e110eb3bfa830b0e2f7fae43a0b83861753e2b1ec10becd7aa1ddb0')
+  Failed Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_failed_delivery_is_drawn_with_its_error_code_and_reason_and_the_callers_handler_still_runs [3 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "!Local_MsgTimedOut"
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.TrackingKafkaProducerFailureTests.A_failed_delivery_is_drawn_with_its_error_code_and_reason_and_the_callers_handler_still_runs() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\TrackingKafkaProducerFailureTests.cs:line 58
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.KafkaBackgroundIdentityTests.A_produce_outside_any_scenario_carries_no_identity_and_its_consume_stays_the_backgrounds [4 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   [···]
+  Stack Trace:
+     at Kronikol.Tests.Kafka.KafkaBackgroundIdentityTests.A_produce_outside_any_scenario_carries_no_identity_and_its_consume_stays_the_backgrounds() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka\KafkaBackgroundIdentityTests.cs:line 34
+--- End of stack trace from previous location ---
+
+Test Run Failed.
+Total tests: 234
+     Passed: 197
+     Failed: 37
+ Total time: 6.9793 Seconds

@@ -2,6 +2,7 @@ using Confluent.Kafka;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Kronikol.Constants;
+using Kronikol.Tests.Kafka;
 using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
 
@@ -294,30 +295,6 @@ public class KafkaServiceCollectionExtensionsTests
             .Single(t => t.ComponentName == $"KafkaTracker ({serviceName})");
     }
 
-    private class FakeProducer<TKey, TValue> : IProducer<TKey, TValue>
-    {
-        public Handle Handle => throw new NotImplementedException();
-        public string Name => "fake";
-        public void SetSaslCredentials(string username, string password) { }
-        public void Dispose() { }
-        public int AddBrokers(string brokers) => 0;
-        public void InitTransactions(TimeSpan timeout) { }
-        public void BeginTransaction() { }
-        public void CommitTransaction(TimeSpan timeout) { }
-        public void CommitTransaction() { }
-        public void AbortTransaction(TimeSpan timeout) { }
-        public void AbortTransaction() { }
-        public void SendOffsetsToTransaction(IEnumerable<TopicPartitionOffset> offsets, IConsumerGroupMetadata groupMetadata, TimeSpan timeout) { }
-        public int Flush(TimeSpan timeout) => 0;
-        public void Flush(CancellationToken cancellationToken = default) { }
-        public int Poll(TimeSpan timeout) => 0;
-        public void Produce(string topic, Message<TKey, TValue> message, Action<DeliveryReport<TKey, TValue>>? deliveryHandler = null) { }
-        public void Produce(TopicPartition topicPartition, Message<TKey, TValue> message, Action<DeliveryReport<TKey, TValue>>? deliveryHandler = null) { }
-        public Task<DeliveryResult<TKey, TValue>> ProduceAsync(string topic, Message<TKey, TValue> message, CancellationToken cancellationToken = default)
-            => Task.FromResult(new DeliveryResult<TKey, TValue>());
-        public Task<DeliveryResult<TKey, TValue>> ProduceAsync(TopicPartition topicPartition, Message<TKey, TValue> message, CancellationToken cancellationToken = default)
-            => Task.FromResult(new DeliveryResult<TKey, TValue>());
-    }
 
     private class FakeConsumer<TKey, TValue> : IConsumer<TKey, TValue>
     {

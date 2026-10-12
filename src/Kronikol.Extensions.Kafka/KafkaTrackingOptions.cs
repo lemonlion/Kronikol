@@ -67,7 +67,9 @@ public record KafkaTrackingOptions
     /// one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c> calls).
     /// The <c>Add*TestTracking</c> registrations use the container's when this is null, and an accessor passed to the
     /// <see cref="KafkaTracker"/> constructor or to <see cref="KafkaTrackingInterceptor"/> takes precedence. When
-    /// <see cref="PropagateTestIdentity"/> is on, a produced message carries the scenario the produce is recorded under.
+    /// <see cref="PropagateTestIdentity"/> is on, a message produced inside a scenario carries that scenario, the one its
+    /// produce is recorded under, whichever thread the delivery report arrives on; one produced outside any scenario
+    /// carries none.
     /// </summary>
     public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; set; }
 }

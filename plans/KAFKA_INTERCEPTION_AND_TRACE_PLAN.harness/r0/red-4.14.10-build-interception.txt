@@ -1,0 +1,1076 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj (in 312 ms).
+  Restored C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\Kronikol.Extensions.Kafka.csproj (in 433 ms).
+  Restored C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\Kronikol.Extensions.Kafka.BuildInterception.csproj (in 453 ms).
+  Restored C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\Kronikol.Tests.Kafka.BuildInterception.csproj (in 522 ms).
+C:\Code\Kronikol-kafka135-red\src\Kronikol\PlantUml\NodeJsPlantUmlRenderer.cs(56,118): warning CS8604: Possible null reference argument for parameter 'expectedIntegrity' in 'EngineCache.EngineCache(string directory, Func<string, byte[]> download, string cdnBase, IReadOnlyDictionary<string, string> expectedIntegrity)'. [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net8.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\PlantUml\PlantUmlCreator.cs(1503,48): warning CS8604: Possible null reference argument for parameter 'content' in 'string PlantUmlCreator.FormFieldLines(string content)'. [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net8.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Reports\Merge\MergeableReportReader.cs(99,38): warning CS8604: Possible null reference argument for parameter 'testName' in 'void MergeableReportReader.ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into, Dictionary<string, List<string?>>? stepPaths, ParseNotes notes, Dictionary<Guid, WarmUpMark>? warmUpCalls = null)'. [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net8.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\PlantUml\PlantUmlCreator.cs(1503,48): warning CS8604: Possible null reference argument for parameter 'content' in 'string PlantUmlCreator.FormFieldLines(string content)'. [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\PlantUml\NodeJsPlantUmlRenderer.cs(56,118): warning CS8604: Possible null reference argument for parameter 'expectedIntegrity' in 'EngineCache.EngineCache(string directory, Func<string, byte[]> download, string cdnBase, IReadOnlyDictionary<string, string> expectedIntegrity)'. [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Reports\Merge\MergeableReportReader.cs(99,38): warning CS8604: Possible null reference argument for parameter 'testName' in 'void MergeableReportReader.ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into, Dictionary<string, List<string?>>? stepPaths, ParseNotes notes, Dictionary<Guid, WarmUpMark>? warmUpCalls = null)'. [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Query\QueryCommand.History.cs(1090,55): warning CS1573: Parameter 'Verdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Query\QueryCommand.History.cs(1090,95): warning CS1573: Parameter 'Subjects' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Query\QueryCommand.History.cs(1090,112): warning CS1573: Parameter 'LedgerPath' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Query\QueryCommand.History.cs(1090,146): warning CS1573: Parameter 'LedgerSource' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Query\QueryCommand.History.cs(1091,10): warning CS1573: Parameter 'BehaviourVerdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Query\QueryCommand.History.cs(1091,67): warning CS1573: Parameter 'Analysis' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Query\QueryCommand.History.cs(1091,108): warning CS1573: Parameter 'Shapes' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Query\QueryCommand.History.cs(1107,48): warning CS1573: Parameter 'Subject' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Query\QueryCommand.History.cs(1107,73): warning CS1573: Parameter 'Entry' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Query\QueryCommand.History.cs(1107,117): warning CS1573: Parameter 'RunId' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol\Query\QueryCommand.History.cs(1107,128): warning CS1573: Parameter 'RunsAgo' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [C:\Code\Kronikol-kafka135-red\src\Kronikol\Kronikol.csproj::TargetFramework=net10.0]
+  Kronikol -> C:\Code\Kronikol-kafka135-red\src\Kronikol\bin\Debug\net8.0\Kronikol.dll
+  Kronikol -> C:\Code\Kronikol-kafka135-red\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.Kafka -> C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\bin\Debug\net10.0\Kronikol.Extensions.Kafka.dll
+  Kronikol.Extensions.Kafka -> C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka\bin\Debug\net8.0\Kronikol.Extensions.Kafka.dll
+C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\RedStubs.cs(7,68): warning CS9113: Parameter 'environmentVariable' is unread. [C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\Kronikol.Extensions.Kafka.BuildInterception.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\RedStubs.cs(7,111): warning CS9113: Parameter 'appContextData' is unread. [C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\Kronikol.Extensions.Kafka.BuildInterception.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\RedStubs.cs(7,144): warning CS9113: Parameter 'standardError' is unread. [C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\Kronikol.Extensions.Kafka.BuildInterception.csproj::TargetFramework=net10.0]
+  Kronikol.Extensions.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Extensions.Kafka.BuildInterception.dll
+C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\RedStubs.cs(7,68): warning CS9113: Parameter 'environmentVariable' is unread. [C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\Kronikol.Extensions.Kafka.BuildInterception.csproj::TargetFramework=net8.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\RedStubs.cs(7,111): warning CS9113: Parameter 'appContextData' is unread. [C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\Kronikol.Extensions.Kafka.BuildInterception.csproj::TargetFramework=net8.0]
+C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\RedStubs.cs(7,144): warning CS9113: Parameter 'standardError' is unread. [C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\Kronikol.Extensions.Kafka.BuildInterception.csproj::TargetFramework=net8.0]
+  Kronikol.Extensions.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red\src\Kronikol.Extensions.Kafka.BuildInterception\bin\Debug\net8.0\Kronikol.Extensions.Kafka.BuildInterception.dll
+  Kronikol.Tests.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net8.0\Kronikol.Tests.Kafka.BuildInterception.dll
+  Kronikol.Tests.Kafka.BuildInterception -> C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Tests.Kafka.BuildInterception.dll
+Test run for C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net10.0\Kronikol.Tests.Kafka.BuildInterception.dll (.NETCoreApp,Version=v10.0)
+Test run for C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\bin\Debug\net8.0\Kronikol.Tests.Kafka.BuildInterception.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.27)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:02.88]   Discovering: Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:02.85]   Discovering: Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:03.15]   Discovered:  Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:03.15]   Discovered:  Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:03.38]   Starting:    Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:03.41]   Starting:    Kronikol.Tests.Kafka.BuildInterception
+[xUnit.net 00:00:04.83]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=1;COMPlus_TC_QuickJit=0", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:04.83]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.83]       Expected: True
+[xUnit.net 00:00:04.83]       Actual:   False
+[xUnit.net 00:00:04.83]       Stack Trace:
+[xUnit.net 00:00:04.83]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:04.83]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:04.83]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.83]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=false", tieredCompilation: null, quickJit: "false", canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:04.83]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.83]       Expected: True
+[xUnit.net 00:00:04.83]       Actual:   False
+[xUnit.net 00:00:04.83]       Stack Trace:
+[xUnit.net 00:00:04.83]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:04.83]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:04.83]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.83]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TieredCompilation=false", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:04.83]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.83]       Expected: True
+[xUnit.net 00:00:04.83]       Actual:   False
+[xUnit.net 00:00:04.83]       Stack Trace:
+[xUnit.net 00:00:04.83]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:04.83]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:04.83]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.83]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=false", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:04.83]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.83]       Expected: True
+[xUnit.net 00:00:04.83]       Actual:   False
+[xUnit.net 00:00:04.83]       Stack Trace:
+[xUnit.net 00:00:04.83]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:04.83]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:04.83]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=00", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [1 s]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=0x0", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=1;COMPlus_TC_QuickJit=0", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [4 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "", tieredCompilation: "false", quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=false", tieredCompilation: null, quickJit: "false", canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "COMPlus_TC_QuickJit=0", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=zzz", tieredCompilation: null, quickJit: "false", canLoseThePatch: False) [< 1 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TieredCompilation=false", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=false", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.85]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=true", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:04.85]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.85]       Expected: True
+[xUnit.net 00:00:04.85]       Actual:   False
+[xUnit.net 00:00:04.85]       Stack Trace:
+[xUnit.net 00:00:04.85]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:04.85]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:04.85]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.85]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TieredCompilation=1", tieredCompilation: "false", quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:04.85]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.85]       Expected: True
+[xUnit.net 00:00:04.85]       Actual:   False
+[xUnit.net 00:00:04.85]       Stack Trace:
+[xUnit.net 00:00:04.85]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:04.85]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:04.85]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.85]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=1", tieredCompilation: null, quickJit: "false", canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:04.85]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.85]       Expected: True
+[xUnit.net 00:00:04.85]       Actual:   False
+[xUnit.net 00:00:04.85]       Stack Trace:
+[xUnit.net 00:00:04.85]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:04.85]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:04.85]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:04.85]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:04.85]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.85]       Expected: True
+[xUnit.net 00:00:04.85]       Actual:   False
+[xUnit.net 00:00:04.85]       Stack Trace:
+[xUnit.net 00:00:04.85]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:04.85]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:04.85]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "", tieredCompilation: null, quickJit: "false", canLoseThePatch: False) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=true", tieredCompilation: null, quickJit: "false", canLoseThePatch: False) [< 1 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=true", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=0", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TieredCompilation=0", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "COMPlus_TieredCompilation=0", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TieredCompilation=1", tieredCompilation: "false", quickJit: null, canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=1", tieredCompilation: null, quickJit: "false", canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:05.49]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.Enabling_where_tiering_can_lose_the_patch_writes_one_line_and_records_one_diagnostic_naming_the_remedy [FAIL]
+[xUnit.net 00:00:05.49]       Assert.Single() Failure: The collection was empty
+[xUnit.net 00:00:05.49]       Stack Trace:
+[xUnit.net 00:00:05.49]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(82,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.Enabling_where_tiering_can_lose_the_patch_writes_one_line_and_records_one_diagnostic_naming_the_remedy()
+[xUnit.net 00:00:05.49]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:05.49]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.DisableProducer_Does_Not_Affect_Consumer [2 s]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Different_Type_Pairs_Are_Independent [9 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Enable_After_Disable_Restores_Tracking [2 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.ConsumerBuilder_Build_Returns_TrackingConsumer_When_Enabled [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.EnableTracking_Action_Overload_Works [2 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.DisableConsumer_Does_Not_Affect_Producer [112 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Reset_Stops_All_Wrapping [2 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.ProducerBuilder_Build_Returns_Original_When_Not_Enabled [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Double_Enable_Is_Idempotent [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.EnableTracking_Patches_Both_Consumer_And_Producer [104 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Subscribe_Is_Tracked_Through_Patched_Build [15 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.ConsumerBuilder_Build_Returns_Original_When_Not_Enabled [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.BuildTracked_Does_Not_Double_Wrap_When_Harmony_Patch_Active [2 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.DisableConsumerTracking_Stops_Wrapping [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.DisableProducerTracking_Stops_Wrapping [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Enable_After_Reset_Restores_Tracking [2 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.ProducerBuilder_Build_Returns_TrackingProducer_When_Enabled [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_configuration_Confluent_refuses_throws_from_the_patched_Build_what_Build_throws(property: "acks", value: "banana", expected: typeof(System.ArgumentException)) [3 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_configuration_Confluent_refuses_throws_from_the_patched_Build_what_Build_throws(property: "delivery.report.only.error", value: "true", expected: typeof(System.ArgumentException)) [< 1 ms]
+[xUnit.net 00:00:06.33]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_generic_value_type_key_shares_by_its_own_arguments_and_builds_its_own_client [FAIL]
+[xUnit.net 00:00:06.33]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:06.33]                  ↓ (pos 0)
+[xUnit.net 00:00:06.33]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:06.33]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:06.33]                  ↑ (pos 0)
+[xUnit.net 00:00:06.33]       Stack Trace:
+[xUnit.net 00:00:06.33]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:06.33]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(201,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_generic_value_type_key_shares_by_its_own_arguments_and_builds_its_own_client()
+[xUnit.net 00:00:06.33]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:06.33]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.Enabling_where_tiering_can_lose_the_patch_writes_one_line_and_records_one_diagnostic_naming_the_remedy [666 ms]
+  Error Message:
+   Assert.Single() Failure: The collection was empty
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.Enabling_where_tiering_can_lose_the_patch_writes_one_line_and_records_one_diagnostic_naming_the_remedy() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 82
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:06.66]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_key_build_their_own_clients [FAIL]
+[xUnit.net 00:00:06.66]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:06.66]                  ↓ (pos 0)
+[xUnit.net 00:00:06.66]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:06.66]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:06.66]                  ↑ (pos 0)
+[xUnit.net 00:00:06.66]       Stack Trace:
+[xUnit.net 00:00:06.66]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:06.66]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(166,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_key_build_their_own_clients()
+[xUnit.net 00:00:06.66]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:06.66]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:06.66]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Without_Confluents_internal_constructor_enabling_throws_and_patches_nothing [FAIL]
+[xUnit.net 00:00:06.66]       Assert.IsType() Failure: Value is null
+[xUnit.net 00:00:06.66]       Expected: typeof(System.NotSupportedException)
+[xUnit.net 00:00:06.66]       Actual:   null
+[xUnit.net 00:00:06.66]       Stack Trace:
+[xUnit.net 00:00:06.66]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(402,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Without_Confluents_internal_constructor_enabling_throws_and_patches_nothing()
+[xUnit.net 00:00:06.66]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:06.66]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:06.89]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_value_build_their_own_clients [FAIL]
+[xUnit.net 00:00:06.89]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:06.89]                  ↓ (pos 0)
+[xUnit.net 00:00:06.89]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:06.89]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:06.89]                  ↑ (pos 0)
+[xUnit.net 00:00:06.89]       Stack Trace:
+[xUnit.net 00:00:06.89]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:06.89]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(183,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_value_build_their_own_clients()
+[xUnit.net 00:00:06.89]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:06.89]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:07.01]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_byte_array_producer_and_a_null_keyed_consumer_build_their_own_clients_beside_an_enabled_pair [FAIL]
+[xUnit.net 00:00:07.01]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:07.01]                  ↓ (pos 0)
+[xUnit.net 00:00:07.01]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:07.01]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:07.01]                  ↑ (pos 0)
+[xUnit.net 00:00:07.01]       Stack Trace:
+[xUnit.net 00:00:07.01]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:07.01]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(47,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_byte_array_producer_and_a_null_keyed_consumer_build_their_own_clients_beside_an_enabled_pair()
+[xUnit.net 00:00:07.01]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:07.01]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:07.13]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_a_pair_twice_leaves_no_tracker_the_run_would_call_unused [FAIL]
+[xUnit.net 00:00:07.13]       Assert.Single() Failure: The collection contained 3 items
+[xUnit.net 00:00:07.13]       Collection: [KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 1, WasInvoked = True }, KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }, KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }]
+[xUnit.net 00:00:07.13]       Stack Trace:
+[xUnit.net 00:00:07.13]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(360,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_a_pair_twice_leaves_no_tracker_the_run_would_call_unused()
+[xUnit.net 00:00:07.13]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:07.13]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_configuration_Confluent_refuses_throws_from_the_patched_Build_what_Build_throws(property: "dotnet.producer.enable.delivery.reports", value: "maybe", expected: typeof(System.FormatException)) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_configuration_Confluent_refuses_throws_from_the_patched_Build_what_Build_throws(property: "no.such.property", value: "x", expected: typeof(System.InvalidOperationException)) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.An_enabled_pair_whose_shape_no_other_patch_covers_is_tracked [110 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_generic_value_type_key_shares_by_its_own_arguments_and_builds_its_own_client [237 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_generic_value_type_key_shares_by_its_own_arguments_and_builds_its_own_client() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 201
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_key_build_their_own_clients [330 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_key_build_their_own_clients() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 166
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Without_Confluents_internal_constructor_enabling_throws_and_patches_nothing [4 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is null
+Expected: typeof(System.NotSupportedException)
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Without_Confluents_internal_constructor_enabling_throws_and_patches_nothing() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 402
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_value_build_their_own_clients [229 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_value_build_their_own_clients() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 183
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_byte_array_producer_and_a_null_keyed_consumer_build_their_own_clients_beside_an_enabled_pair [113 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_byte_array_producer_and_a_null_keyed_consumer_build_their_own_clients_beside_an_enabled_pair() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 47
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_a_pair_twice_leaves_no_tracker_the_run_would_call_unused [123 ms]
+  Error Message:
+   Assert.Single() Failure: The collection contained 3 items
+Collection: [KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 1, WasInvoked = True }, KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }, KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }]
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_a_pair_twice_leaves_no_tracker_the_run_would_call_unused() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 360
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:07.29]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_threads_enabling_pairs_of_one_new_shape_at_once_each_track_their_first_build [FAIL]
+[xUnit.net 00:00:07.29]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:07.29]       Expected: 1
+[xUnit.net 00:00:07.29]       Actual:   0
+[xUnit.net 00:00:07.29]       Stack Trace:
+[xUnit.net 00:00:07.29]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(298,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_threads_enabling_pairs_of_one_new_shape_at_once_each_track_their_first_build()
+[xUnit.net 00:00:07.29]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:07.29]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:07.25]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_builder_subclass_of_a_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_pair [FAIL]
+[xUnit.net 00:00:07.25]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:07.25]                  ↓ (pos 0)
+[xUnit.net 00:00:07.25]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:07.25]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:07.25]                  ↑ (pos 0)
+[xUnit.net 00:00:07.25]       Stack Trace:
+[xUnit.net 00:00:07.25]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:07.25]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(149,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_builder_subclass_of_a_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_pair()
+[xUnit.net 00:00:07.25]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:07.25]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:07.40]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_both_directions_in_an_app_that_only_produces_leaves_no_unused_consumer_tracker [FAIL]
+[xUnit.net 00:00:07.40]       Assert.Empty() Failure: Collection was not empty
+[xUnit.net 00:00:07.40]       Collection: [KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }]
+[xUnit.net 00:00:07.40]       Stack Trace:
+[xUnit.net 00:00:07.40]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(374,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_both_directions_in_an_app_that_only_produces_leaves_no_unused_consumer_tracker()
+[xUnit.net 00:00:07.40]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:07.40]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:07.37]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_both_directions_in_an_app_that_only_produces_leaves_no_unused_consumer_tracker [FAIL]
+[xUnit.net 00:00:07.37]       Assert.Empty() Failure: Collection was not empty
+[xUnit.net 00:00:07.37]       Collection: [KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }]
+[xUnit.net 00:00:07.37]       Stack Trace:
+[xUnit.net 00:00:07.37]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(374,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_both_directions_in_an_app_that_only_produces_leaves_no_unused_consumer_tracker()
+[xUnit.net 00:00:07.37]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:07.37]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+%4|1791802314.552|TERMINATE|rdkafka#producer-47| [thrd:app]: Producer terminating with 1 message (1 byte) still in queue or transit: use flush() to wait for outstanding message delivery
+[xUnit.net 00:00:07.63]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_key_type_with_no_serializer_throws_from_the_patched_Build_what_Build_throws [FAIL]
+[xUnit.net 00:00:07.63]       Assert.NotNull() Failure: Value is null
+[xUnit.net 00:00:07.63]       Stack Trace:
+[xUnit.net 00:00:07.63]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(258,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_key_type_with_no_serializer_throws_from_the_patched_Build_what_Build_throws()
+[xUnit.net 00:00:07.63]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:07.63]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:07.60]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Disabling_one_pair_leaves_its_builder_correctly_typed_and_another_enabled_pair_tracked [FAIL]
+[xUnit.net 00:00:07.60]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:07.60]                  ↓ (pos 0)
+[xUnit.net 00:00:07.60]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:07.60]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:07.60]                  ↑ (pos 0)
+[xUnit.net 00:00:07.60]       Stack Trace:
+[xUnit.net 00:00:07.60]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:07.60]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(102,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Disabling_one_pair_leaves_its_builder_correctly_typed_and_another_enabled_pair_tracked()
+[xUnit.net 00:00:07.60]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:07.60]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.With_the_test_projects_quick_JIT_off_four_hundred_builds_are_all_tracked [1 s]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.Enabling_under_this_projects_setting_writes_and_records_nothing [2 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_configuration_Confluent_refuses_throws_from_the_patched_Build_what_Build_throws(property: "acks", value: "banana", expected: typeof(System.ArgumentException)) [2 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_configuration_Confluent_refuses_throws_from_the_patched_Build_what_Build_throws(property: "no.such.property", value: "x", expected: typeof(System.InvalidOperationException)) [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_configuration_Confluent_refuses_throws_from_the_patched_Build_what_Build_throws(property: "dotnet.producer.enable.delivery.reports", value: "maybe", expected: typeof(System.FormatException)) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_configuration_Confluent_refuses_throws_from_the_patched_Build_what_Build_throws(property: "delivery.report.only.error", value: "true", expected: typeof(System.ArgumentException)) [< 1 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_builder_subclass_of_a_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_pair [223 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_builder_subclass_of_a_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_pair() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 149
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_both_directions_in_an_app_that_only_produces_leaves_no_unused_consumer_tracker [118 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: [KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }]
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_both_directions_in_an_app_that_only_produces_leaves_no_unused_consumer_tracker() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 374
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Disabling_one_pair_leaves_its_builder_correctly_typed_and_another_enabled_pair_tracked [229 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Disabling_one_pair_leaves_its_builder_correctly_typed_and_another_enabled_pair_tracked() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 102
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:07.71]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_reference_type_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_one [FAIL]
+[xUnit.net 00:00:07.71]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:07.71]                  ↓ (pos 0)
+[xUnit.net 00:00:07.71]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:07.71]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:07.71]                  ↑ (pos 0)
+[xUnit.net 00:00:07.71]       Stack Trace:
+[xUnit.net 00:00:07.71]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:07.71]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(35,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_reference_type_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_one()
+[xUnit.net 00:00:07.71]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:07.71]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:07.72]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Reset_leaves_the_patch_in_place_and_every_pair_builds_its_own_untracked_client_until_enabled_again [FAIL]
+[xUnit.net 00:00:07.72]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:07.72]       Expected: 1
+[xUnit.net 00:00:07.72]       Actual:   0
+[xUnit.net 00:00:07.72]       Stack Trace:
+[xUnit.net 00:00:07.72]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(77,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Reset_leaves_the_patch_in_place_and_every_pair_builds_its_own_untracked_client_until_enabled_again()
+[xUnit.net 00:00:07.72]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:07.72]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:07.85]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_builder_subclass_of_a_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_pair [FAIL]
+[xUnit.net 00:00:07.85]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:07.85]                  ↓ (pos 0)
+[xUnit.net 00:00:07.85]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:07.85]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:07.85]                  ↑ (pos 0)
+[xUnit.net 00:00:07.85]       Stack Trace:
+[xUnit.net 00:00:07.85]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:07.85]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(149,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_builder_subclass_of_a_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_pair()
+[xUnit.net 00:00:07.85]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:07.85]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+%4|1791802314.920|TERMINATE|rdkafka#producer-408| [thrd:app]: Producer terminating with 1 message (1 byte) still in queue or transit: use flush() to wait for outstanding message delivery
+[xUnit.net 00:00:07.96]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_reference_type_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_one [FAIL]
+[xUnit.net 00:00:07.96]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:07.96]                  ↓ (pos 0)
+[xUnit.net 00:00:07.96]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:07.96]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:07.96]                  ↑ (pos 0)
+[xUnit.net 00:00:07.96]       Stack Trace:
+[xUnit.net 00:00:07.96]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:07.96]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(35,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_reference_type_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_one()
+[xUnit.net 00:00:07.96]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:07.96]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:07.96]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_key_type_with_no_serializer_throws_from_the_patched_Build_what_Build_throws [FAIL]
+[xUnit.net 00:00:07.96]       Assert.NotNull() Failure: Value is null
+[xUnit.net 00:00:07.96]       Stack Trace:
+[xUnit.net 00:00:07.96]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(258,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_key_type_with_no_serializer_throws_from_the_patched_Build_what_Build_throws()
+[xUnit.net 00:00:07.96]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:07.96]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.07]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_byte_array_producer_and_a_null_keyed_consumer_build_their_own_clients_beside_an_enabled_pair [FAIL]
+[xUnit.net 00:00:08.07]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:08.07]                  ↓ (pos 0)
+[xUnit.net 00:00:08.07]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:08.07]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:08.07]                  ↑ (pos 0)
+[xUnit.net 00:00:08.07]       Stack Trace:
+[xUnit.net 00:00:08.07]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:08.07]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(47,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_byte_array_producer_and_a_null_keyed_consumer_build_their_own_clients_beside_an_enabled_pair()
+[xUnit.net 00:00:08.07]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:08.07]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.18]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_of_one_shape_each_build_their_own_tracked_client [FAIL]
+[xUnit.net 00:00:08.18]       Assert.IsType() Failure: Value is not the exact type
+[xUnit.net 00:00:08.18]       Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<string, string>)
+[xUnit.net 00:00:08.18]       Actual:   typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<string, byte[]>)
+[xUnit.net 00:00:08.18]       Stack Trace:
+[xUnit.net 00:00:08.18]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(64,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_of_one_shape_each_build_their_own_tracked_client()
+[xUnit.net 00:00:08.18]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:08.18]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:08.30]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_of_one_shape_each_build_their_own_tracked_client [FAIL]
+[xUnit.net 00:00:08.30]       Assert.IsType() Failure: Value is not the exact type
+[xUnit.net 00:00:08.30]       Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<string, string>)
+[xUnit.net 00:00:08.30]       Actual:   typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<string, byte[]>)
+[xUnit.net 00:00:08.30]       Stack Trace:
+[xUnit.net 00:00:08.30]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(64,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_of_one_shape_each_build_their_own_tracked_client()
+[xUnit.net 00:00:08.30]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:08.30]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.41]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Disabling_one_pair_leaves_its_builder_correctly_typed_and_another_enabled_pair_tracked [FAIL]
+[xUnit.net 00:00:08.41]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:08.41]                  ↓ (pos 0)
+[xUnit.net 00:00:08.41]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:08.41]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:08.41]                  ↑ (pos 0)
+[xUnit.net 00:00:08.41]       Stack Trace:
+[xUnit.net 00:00:08.41]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:08.41]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(102,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Disabling_one_pair_leaves_its_builder_correctly_typed_and_another_enabled_pair_tracked()
+[xUnit.net 00:00:08.41]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:08.41]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:08.41]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_consumer_tracker_is_named_for_its_direction_and_pair [FAIL]
+[xUnit.net 00:00:08.41]       Assert.Equal() Failure: Collections differ at index 0
+[xUnit.net 00:00:08.41]                                     ↓ (pos 19)
+[xUnit.net 00:00:08.41]       Expected: "KafkaTracker (Kafka, consumer <Null,Byte[]>)"
+[xUnit.net 00:00:08.41]       Actual:   "KafkaTracker (Kafka)"
+[xUnit.net 00:00:08.41]                                     ↑ (pos 19)
+[xUnit.net 00:00:08.41]       Stack Trace:
+[xUnit.net 00:00:08.41]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(387,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_consumer_tracker_is_named_for_its_direction_and_pair()
+[xUnit.net 00:00:08.41]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:08.41]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_threads_enabling_pairs_of_one_new_shape_at_once_each_track_their_first_build [154 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_threads_enabling_pairs_of_one_new_shape_at_once_each_track_their_first_build() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 298
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_both_directions_in_an_app_that_only_produces_leaves_no_unused_consumer_tracker [115 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: [KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }]
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_both_directions_in_an_app_that_only_produces_leaves_no_unused_consumer_tracker() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 374
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_value_type_pair_enabled_alone_is_tracked_and_leaves_reference_type_pairs_alone [221 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_key_type_with_no_serializer_throws_from_the_patched_Build_what_Build_throws [2 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_key_type_with_no_serializer_throws_from_the_patched_Build_what_Build_throws() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 258
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_builder_subclass_of_a_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_pair [220 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_builder_subclass_of_a_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_pair() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 149
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_reference_type_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_one [111 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_reference_type_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_one() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 35
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_of_one_shape_each_build_their_own_tracked_client [221 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<string, string>)
+Actual:   typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<string, byte[]>)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_of_one_shape_each_build_their_own_tracked_client() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 64
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Disabling_one_pair_leaves_its_builder_correctly_typed_and_another_enabled_pair_tracked [223 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Disabling_one_pair_leaves_its_builder_correctly_typed_and_another_enabled_pair_tracked() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 102
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_consumer_tracker_is_named_for_its_direction_and_pair [5 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+                              ↓ (pos 19)
+Expected: "KafkaTracker (Kafka, consumer <Null,Byte[]>)"
+Actual:   "KafkaTracker (Kafka)"
+                              ↑ (pos 19)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_consumer_tracker_is_named_for_its_direction_and_pair() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 387
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:08.42]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_a_pair_twice_leaves_no_tracker_the_run_would_call_unused [FAIL]
+[xUnit.net 00:00:08.42]       Assert.Single() Failure: The collection contained 3 items
+[xUnit.net 00:00:08.42]       Collection: [KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 1, WasInvoked = True }, KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }, KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }]
+[xUnit.net 00:00:08.42]       Stack Trace:
+[xUnit.net 00:00:08.42]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(360,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_a_pair_twice_leaves_no_tracker_the_run_would_call_unused()
+[xUnit.net 00:00:08.42]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:08.42]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:08.42]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.55]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_hosts_enabling_one_pair_at_once_each_track_their_first_build [FAIL]
+[xUnit.net 00:00:08.55]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.55]       Expected: 10
+[xUnit.net 00:00:08.55]       Actual:   1
+[xUnit.net 00:00:08.55]       Stack Trace:
+[xUnit.net 00:00:08.55]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(308,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_hosts_enabling_one_pair_at_once_each_track_their_first_build()
+[xUnit.net 00:00:08.55]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:08.55]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:08.66]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Reset_leaves_the_patch_in_place_and_every_pair_builds_its_own_untracked_client_until_enabled_again [FAIL]
+[xUnit.net 00:00:08.66]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.66]       Expected: 1
+[xUnit.net 00:00:08.66]       Actual:   0
+[xUnit.net 00:00:08.66]       Stack Trace:
+[xUnit.net 00:00:08.66]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(77,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Reset_leaves_the_patch_in_place_and_every_pair_builds_its_own_untracked_client_until_enabled_again()
+[xUnit.net 00:00:08.66]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:08.66]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:08.67]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=false", tieredCompilation: null, quickJit: "false", canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:08.67]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.67]       Expected: True
+[xUnit.net 00:00:08.67]       Actual:   False
+[xUnit.net 00:00:08.67]       Stack Trace:
+[xUnit.net 00:00:08.67]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:08.67]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:08.67]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.67]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=1", tieredCompilation: null, quickJit: "false", canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:08.67]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.67]       Expected: True
+[xUnit.net 00:00:08.67]       Actual:   False
+[xUnit.net 00:00:08.67]       Stack Trace:
+[xUnit.net 00:00:08.67]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:08.67]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:08.67]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.67]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=1;COMPlus_TC_QuickJit=0", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:08.67]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.67]       Expected: True
+[xUnit.net 00:00:08.67]       Actual:   False
+[xUnit.net 00:00:08.67]       Stack Trace:
+[xUnit.net 00:00:08.67]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:08.67]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:08.67]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.68]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:08.68]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.68]       Expected: True
+[xUnit.net 00:00:08.68]       Actual:   False
+[xUnit.net 00:00:08.68]       Stack Trace:
+[xUnit.net 00:00:08.68]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:08.68]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:08.68]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_hosts_enabling_one_pair_at_once_each_track_their_first_build [136 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 10
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_hosts_enabling_one_pair_at_once_each_track_their_first_build() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 308
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_builder_subclass_returns_one_wrapper_of_its_own_pair_when_that_pair_is_enabled [110 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Reset_leaves_the_patch_in_place_and_every_pair_builds_its_own_untracked_client_until_enabled_again [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Reset_leaves_the_patch_in_place_and_every_pair_builds_its_own_untracked_client_until_enabled_again() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 77
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=true", tieredCompilation: null, quickJit: "false", canLoseThePatch: False) [7 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=false", tieredCompilation: null, quickJit: "false", canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=1", tieredCompilation: null, quickJit: "false", canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=1;COMPlus_TC_QuickJit=0", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "", tieredCompilation: "false", quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.68]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TieredCompilation=false", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:08.68]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.68]       Expected: True
+[xUnit.net 00:00:08.68]       Actual:   False
+[xUnit.net 00:00:08.68]       Stack Trace:
+[xUnit.net 00:00:08.68]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:08.68]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:08.68]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.68]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TieredCompilation=1", tieredCompilation: "false", quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:08.68]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.68]       Expected: True
+[xUnit.net 00:00:08.68]       Actual:   False
+[xUnit.net 00:00:08.68]       Stack Trace:
+[xUnit.net 00:00:08.68]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:08.68]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:08.68]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.68]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=false", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:08.68]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.68]       Expected: True
+[xUnit.net 00:00:08.68]       Actual:   False
+[xUnit.net 00:00:08.68]       Stack Trace:
+[xUnit.net 00:00:08.68]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:08.68]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:08.68]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TieredCompilation=false", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=00", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "COMPlus_TieredCompilation=0", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TieredCompilation=1", tieredCompilation: "false", quickJit: null, canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=zzz", tieredCompilation: null, quickJit: "false", canLoseThePatch: False) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "", tieredCompilation: null, quickJit: "false", canLoseThePatch: False) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=0x0", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "COMPlus_TC_QuickJit=0", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=false", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.68]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=true", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [FAIL]
+[xUnit.net 00:00:08.68]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.68]       Expected: True
+[xUnit.net 00:00:08.68]       Actual:   False
+[xUnit.net 00:00:08.68]       Stack Trace:
+[xUnit.net 00:00:08.68]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(68,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch)
+[xUnit.net 00:00:08.68]            at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+[xUnit.net 00:00:08.68]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:08.68]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.Enabling_where_tiering_can_lose_the_patch_writes_one_line_and_records_one_diagnostic_naming_the_remedy [FAIL]
+[xUnit.net 00:00:08.68]       Assert.Single() Failure: The collection was empty
+[xUnit.net 00:00:08.68]       Stack Trace:
+[xUnit.net 00:00:08.68]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs(82,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.Enabling_where_tiering_can_lose_the_patch_writes_one_line_and_records_one_diagnostic_naming_the_remedy()
+[xUnit.net 00:00:08.68]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:08.68]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:08.97]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_key_build_their_own_clients [FAIL]
+[xUnit.net 00:00:08.97]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:08.97]                  ↓ (pos 0)
+[xUnit.net 00:00:08.97]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:08.97]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:08.97]                  ↑ (pos 0)
+[xUnit.net 00:00:08.97]       Stack Trace:
+[xUnit.net 00:00:08.97]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:08.97]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(166,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_key_build_their_own_clients()
+[xUnit.net 00:00:08.97]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:08.97]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:08.97]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_reference_type_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_one [112 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_reference_type_pair_that_is_not_enabled_builds_its_own_producer_beside_an_enabled_one() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 35
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Reset_leaves_the_patch_in_place_and_every_pair_builds_its_own_untracked_client_until_enabled_again [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Reset_leaves_the_patch_in_place_and_every_pair_builds_its_own_untracked_client_until_enabled_again() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 77
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_value_type_pair_enabled_alone_is_tracked_and_leaves_reference_type_pairs_alone [236 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_key_type_with_no_serializer_throws_from_the_patched_Build_what_Build_throws [2 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_key_type_with_no_serializer_throws_from_the_patched_Build_what_Build_throws() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 258
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_byte_array_producer_and_a_null_keyed_consumer_build_their_own_clients_beside_an_enabled_pair [109 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_byte_array_producer_and_a_null_keyed_consumer_build_their_own_clients_beside_an_enabled_pair() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 47
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_of_one_shape_each_build_their_own_tracked_client [239 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<string, string>)
+Actual:   typeof(Kronikol.Extensions.Kafka.TrackingKafkaProducer<string, byte[]>)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Two_enabled_pairs_of_one_shape_each_build_their_own_tracked_client() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 64
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_a_pair_twice_leaves_no_tracker_the_run_would_call_unused [113 ms]
+  Error Message:
+   Assert.Single() Failure: The collection contained 3 items
+Collection: [KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 1, WasInvoked = True }, KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }, KafkaTracker { ComponentName = "KafkaTracker (Kafka)", HasHttpContextAccessor = False, InvocationCount = 0, WasInvoked = False }]
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Enabling_a_pair_twice_leaves_no_tracker_the_run_would_call_unused() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 360
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_builder_subclass_returns_one_wrapper_of_its_own_pair_when_that_pair_is_enabled [217 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_key_build_their_own_clients [332 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_key_build_their_own_clients() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 166
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:09.21]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_value_build_their_own_clients [FAIL]
+[xUnit.net 00:00:09.21]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:09.21]                  ↓ (pos 0)
+[xUnit.net 00:00:09.21]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:09.21]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:09.21]                  ↑ (pos 0)
+[xUnit.net 00:00:09.21]       Stack Trace:
+[xUnit.net 00:00:09.21]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:09.21]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(183,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_value_build_their_own_clients()
+[xUnit.net 00:00:09.21]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:09.21]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:09.21]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:09.34]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Without_Confluents_internal_constructor_enabling_throws_and_patches_nothing [FAIL]
+[xUnit.net 00:00:09.34]       Assert.IsType() Failure: Value is null
+[xUnit.net 00:00:09.34]       Expected: typeof(System.NotSupportedException)
+[xUnit.net 00:00:09.34]       Actual:   null
+[xUnit.net 00:00:09.34]       Stack Trace:
+[xUnit.net 00:00:09.34]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(402,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Without_Confluents_internal_constructor_enabling_throws_and_patches_nothing()
+[xUnit.net 00:00:09.34]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:09.34]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:09.34]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:09.47]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_threads_enabling_pairs_of_one_new_shape_at_once_each_track_their_first_build [FAIL]
+[xUnit.net 00:00:09.47]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:09.47]       Expected: 1
+[xUnit.net 00:00:09.47]       Actual:   0
+[xUnit.net 00:00:09.47]       Stack Trace:
+[xUnit.net 00:00:09.47]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(298,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_threads_enabling_pairs_of_one_new_shape_at_once_each_track_their_first_build()
+[xUnit.net 00:00:09.47]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:09.47]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:09.47]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+%3|1791802316.702|FAIL|rdkafka#producer-48| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2034ms in state CONNECT)
+%3|1791802316.702|ERROR|rdkafka#producer-48| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down
+%3|1791802316.702|ERROR|rdkafka#producer-48| [thrd:app]: rdkafka#producer-48: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2034ms in state CONNECT)
+[xUnit.net 00:00:09.67]   Finished:    Kronikol.Tests.Kafka.BuildInterception (ID = '5a7bd369eb178138e173dbe8c235823fdf9dbeccb57b52a6e34450eba30d1bef')
+[xUnit.net 00:00:09.70]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_generic_value_type_key_shares_by_its_own_arguments_and_builds_its_own_client [FAIL]
+[xUnit.net 00:00:09.70]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:09.70]                  ↓ (pos 0)
+[xUnit.net 00:00:09.70]       Expected: "Confluent.Kafka.Producer`2"
+[xUnit.net 00:00:09.70]       Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+[xUnit.net 00:00:09.70]                  ↑ (pos 0)
+[xUnit.net 00:00:09.70]       Stack Trace:
+[xUnit.net 00:00:09.70]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs(22,0): at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value)
+[xUnit.net 00:00:09.70]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(201,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_generic_value_type_key_shares_by_its_own_arguments_and_builds_its_own_client()
+[xUnit.net 00:00:09.70]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:09.70]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:09.70]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TieredCompilation=0", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=true", tieredCompilation: null, quickJit: null, canLoseThePatch: True) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(String environment, String tieredCompilation, String quickJit, Boolean canLoseThePatch) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 68
+   at InvokeStub_KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.The_check_reads_the_tiering_settings_as_the_runtime_does(environment: "DOTNET_TC_QuickJit=0", tieredCompilation: null, quickJit: null, canLoseThePatch: False) [< 1 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.Enabling_where_tiering_can_lose_the_patch_writes_one_line_and_records_one_diagnostic_naming_the_remedy [4 ms]
+  Error Message:
+   Assert.Single() Failure: The collection was empty
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.Enabling_where_tiering_can_lose_the_patch_writes_one_line_and_records_one_diagnostic_naming_the_remedy() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorTierTests.cs:line 82
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.With_the_test_projects_quick_JIT_off_four_hundred_builds_are_all_tracked [970 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTierTests.Enabling_under_this_projects_setting_writes_and_records_nothing [2 ms]
+
+Test Run Failed.
+Total tests: 61
+     Passed: 36
+     Failed: 25
+ Total time: 10.5116 Seconds
+[xUnit.net 00:00:09.83]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_hosts_enabling_one_pair_at_once_each_track_their_first_build [FAIL]
+[xUnit.net 00:00:09.83]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:09.83]       Expected: 1
+[xUnit.net 00:00:09.83]       Actual:   0
+[xUnit.net 00:00:09.83]       Stack Trace:
+[xUnit.net 00:00:09.83]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(309,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_hosts_enabling_one_pair_at_once_each_track_their_first_build()
+[xUnit.net 00:00:09.83]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:09.83]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:09.83]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:09.83]     Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_consumer_tracker_is_named_for_its_direction_and_pair [FAIL]
+[xUnit.net 00:00:09.83]       Assert.Equal() Failure: Collections differ at index 0
+[xUnit.net 00:00:09.83]                                     ↓ (pos 19)
+[xUnit.net 00:00:09.83]       Expected: "KafkaTracker (Kafka, consumer <Null,Byte[]>)"
+[xUnit.net 00:00:09.83]       Actual:   "KafkaTracker (Kafka)"
+[xUnit.net 00:00:09.83]                                     ↑ (pos 19)
+[xUnit.net 00:00:09.83]       Stack Trace:
+[xUnit.net 00:00:09.83]         C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs(387,0): at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_consumer_tracker_is_named_for_its_direction_and_pair()
+[xUnit.net 00:00:09.83]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+[xUnit.net 00:00:09.83]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:09.83]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_value_build_their_own_clients [235 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Pairs_sharing_an_enabled_pairs_value_type_value_build_their_own_clients() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 183
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.An_enabled_pair_whose_shape_no_other_patch_covers_is_tracked [126 ms]
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Without_Confluents_internal_constructor_enabling_throws_and_patches_nothing [2 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is null
+Expected: typeof(System.NotSupportedException)
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Without_Confluents_internal_constructor_enabling_throws_and_patches_nothing() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 402
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_threads_enabling_pairs_of_one_new_shape_at_once_each_track_their_first_build [132 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_threads_enabling_pairs_of_one_new_shape_at_once_each_track_their_first_build() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 298
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_generic_value_type_key_shares_by_its_own_arguments_and_builds_its_own_client [229 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Confluent.Kafka.Producer`2"
+Actual:   "Kronikol.Extensions.Kafka.TrackingKafkaProducer`2"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.BuildInterceptionTestSupport.AssertConfluentClient(Object client, String definition, Type key, Type value) in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\BuildInterceptionTestSupport.cs:line 22
+   at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_generic_value_type_key_shares_by_its_own_arguments_and_builds_its_own_client() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 201
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_hosts_enabling_one_pair_at_once_each_track_their_first_build [127 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.Ten_hosts_enabling_one_pair_at_once_each_track_their_first_build() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 309
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_consumer_tracker_is_named_for_its_direction_and_pair [3 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+                              ↓ (pos 19)
+Expected: "KafkaTracker (Kafka, consumer <Null,Byte[]>)"
+Actual:   "KafkaTracker (Kafka)"
+                              ↑ (pos 19)
+  Stack Trace:
+     at Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorPairTests.A_consumer_tracker_is_named_for_its_direction_and_pair() in C:\Code\Kronikol-kafka135-red\tests\Kronikol.Tests.Kafka.BuildInterception\KafkaBuildInterceptorPairTests.cs:line 387
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.EnableTracking_Action_Overload_Works [3 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Subscribe_Is_Tracked_Through_Patched_Build [5 ms]
+%3|1791802317.067|FAIL|rdkafka#producer-409| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2032ms in state CONNECT)
+%3|1791802317.067|ERROR|rdkafka#producer-409| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down
+%3|1791802317.067|ERROR|rdkafka#producer-409| [thrd:app]: rdkafka#producer-409: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2032ms in state CONNECT)
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.ConsumerBuilder_Build_Returns_Original_When_Not_Enabled [2 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Enable_After_Reset_Restores_Tracking [4 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.BuildTracked_Does_Not_Double_Wrap_When_Harmony_Patch_Active [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.ConsumerBuilder_Build_Returns_TrackingConsumer_When_Enabled [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.EnableTracking_Patches_Both_Consumer_And_Producer [117 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.ProducerBuilder_Build_Returns_Original_When_Not_Enabled [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.DisableProducer_Does_Not_Affect_Consumer [111 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.ProducerBuilder_Build_Returns_TrackingProducer_When_Enabled [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Enable_After_Disable_Restores_Tracking [1 ms]
+[xUnit.net 00:00:10.25]   Finished:    Kronikol.Tests.Kafka.BuildInterception (ID = 'cbbe1383bc366ba628e0c6bd69df79e068981a23a5724e1a4ab3818a54d86370')
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Different_Type_Pairs_Are_Independent [3 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Double_Enable_Is_Idempotent [4 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.Reset_Stops_All_Wrapping [2 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.DisableConsumer_Does_Not_Affect_Producer [112 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.DisableProducerTracking_Stops_Wrapping [1 ms]
+  Passed Kronikol.Tests.Kafka.BuildInterception.KafkaBuildInterceptorTests.DisableConsumerTracking_Stops_Wrapping [3 ms]
+
+Test Run Failed.
+Total tests: 61
+     Passed: 36
+     Failed: 25
+ Total time: 11.1585 Seconds

@@ -469,6 +469,11 @@ public static class ReportGenerator
             ? ComponentDiagramReportGenerator.DrawEmbedded(componentDiagramPlantUml, options)
             : null;
 
+        // Capture health a component recorded while it was set up, before any generation was scoped (Kafka build
+        // interception that tiered compilation can end): every report this process writes carries it.
+        if (ReportDiagnosticsScope.Current is { } setupDiagnostics)
+            ProcessDiagnostics.AddTo(setupDiagnostics);
+
         // Everything recorded so far — the host's entries (IngestRequest.HostDiagnostics), malformed lines,
         // diagram render failures, attachment failures — goes into the report itself. One snapshot, taken
         // before the outputs run in parallel, so the HTML and the data files agree; an OutputFailure raised

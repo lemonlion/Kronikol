@@ -4,6 +4,89 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.16.2] - 2026-10-12
+
+**Patch - Kafka build interception returns the right client for every type pair, and every Kafka call is drawn as it
+happened (#135; `plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md` R0).** Bug fixes and corrected docs, and nothing new for a
+consumer to call, so the patch part moves (4.16.1 to 4.16.2). The behaviour that changes is called out below:
+`Reset()` no longer unpatches, a produce's duration is measured, failed produces and consumes are drawn, the Raw labels
+lose a trailing space, the caller's `Message` is no longer written to, and a message produced outside any scenario no
+longer carries the background identity. The history action's `VERSION` installs `Kronikol.Tool` 4.16.2, and the
+templates pin 4.16.0, the newest release nuget.org served when this one was cut.
+
+### Fixed
+
+- **Enabling build interception for one pair broke the others.** `KafkaBuildInterceptor` patched the `Build()` of one
+  closed pair, but the runtime compiles one body for every pair whose arguments are reference types, and one for every
+  pair with the same value-type arguments. So with `<string,string>` enabled, `ProducerBuilder<Null,string>`,
+  `<string,byte[]>` and `ConsumerBuilder<Null,string>` returned a client of the enabled pair, which threw
+  `EntryPointNotFoundException` on first use; with `<int,string>` enabled, `<int,byte[]>` did the same; with two pairs
+  enabled the last one won for all of them; and `Reset()` could not repair it. One patch per code shape now builds each
+  builder's own client through Confluent's constructor and wraps it only when its pair is enabled, and a builder
+  Confluent refuses throws exactly what `Build()` throws. Hosts that enable tracking at the same time no longer lose
+  their first build to a race (9 of 10 did), and a shape is never patched twice. If the installed Confluent.Kafka lacks
+  the constructor, `Enable…` throws `NotSupportedException` naming the version and the alternatives.
+- **Behaviour change: the patch stays for the process.** `Reset()` and `Disable…()` clear tracking only; an untracked
+  pair's builder builds what Confluent's `Build()` builds. Their doc comments said they removed the patch or left a
+  no-op.
+- **Tiered compilation ended interception without a word.** The runtime can recompile a patched `Build()` after its
+  first few dozen calls (about 40 in a test run with pauses), after which nothing is tracked. `Enable…` now reads the
+  tiering settings as the runtime does (the environment first, as a hexadecimal number, then the runtimeconfig) and,
+  where the patch can be lost, writes one line to standard error and adds a `CaptureDegraded` entry to the run's
+  diagnostics, naming the remedy: `<TieredCompilationQuickJit>false</TieredCompilationQuickJit>` in the test project.
+  Core gained an internal registry of process-wide diagnostics that report generation merges in.
+- **Enabling a pair registered another tracker each time.** A suite that enabled per test, or enabled both directions
+  for an app that only produces, ended each run warning about `KafkaTracker (Kafka)` components never invoked. There is
+  now one tracker per enabled pair, registered when it wraps its first client and kept when `Enable…` is called again
+  with the same options, and its name gives the direction and pair (`KafkaTracker (Kafka, producer <String,String>)`).
+- **A sync `Produce` was recorded under the test that built the producer.** Confluent runs the delivery handler on the
+  producer's poll thread, under the context of the code that called `Build()`. The test identity, phase, verbosity,
+  content and the request's time are now taken at the call; the delivery report adds the partition, offset and outcome.
+  The `HttpContextAccessor` option's doc said a message carries the scenario its produce is recorded under, which is now
+  true.
+- **Failures were drawn as successes, or not at all.** A failed delivery report was drawn as a successful produce, and a
+  `ProduceAsync` or `Produce` that threw, or a `Consume` that threw `ConsumeException`, was drawn nowhere. Each is now
+  drawn with a status of Confluent's error code behind a bang (`!Local_MsgTimedOut`) and the error's text, and the
+  exception is rethrown; a failed consume is drawn from the record the exception carries, under the test its headers
+  name. A `ProduceAsync` whose wait was cancelled is drawn as cancelled, saying the message was queued and may still be
+  delivered.
+- **A producer with delivery reports off threw on a plain `Produce`.** The wrapper always passed a handler, which
+  Confluent refuses then. It now reads the setting (the owner's, for a dependent producer, whose own flag says on while
+  its owner registered no callback, so it logged nothing) and logs such a produce at the call, without a partition or
+  offset. Only where the setting cannot be read does it fall back to Confluent's exact refusal, once.
+- **Kafka entries carried a made-up duration.** Each half was stamped as it was queued, about 0 ms apart. A produce now
+  measures its broker round trip, and the entries logged at one instant (consume, subscribe, commit, flush, transactions
+  and the public `Log…` methods) carry one time on both halves, so they have no `durationMs`.
+- **Behaviour change: the caller's `Message` is no longer written to.** The identity headers were appended to it, so a
+  message produced twice carried two pairs. Confluent is now handed a copy holding the caller's headers and then each
+  identity header the caller's lack; a test that read Kronikol's headers off its own message reads them off the
+  message delivered.
+- **Behaviour change: a message produced outside any scenario carries no identity.** With `CaptureBackground` on, it
+  carried the background identity, which a consumer then adopted as a scenario's. This follows gRPC since 4.13.0.
+- **A consumed message's identity outlived it.** It was cleared only when the next message arrived, so an empty poll or
+  a partition end left it on everything the loop did next. It is now cleared at every poll.
+- **A phase override could not show content** when the base verbosity was `Summarised` (`ActionVerbosity = Detailed`
+  drew none). Content is now built unless every configured verbosity is `Summarised`.
+- **Behaviour change: the Raw label of an operation without a topic ended with a space** (`"Commit "`). It no longer
+  does.
+- `Subscribe(IEnumerable<string>)` read a one-pass sequence twice; it now reads it once.
+- Docs: `KafkaOperationClassifier`'s summary said it classified HTTP requests, and `kronikol query trace`'s said every
+  interaction records a W3C trace id; each now says what is true.
+
+### Notes
+
+- Kronikol's packages float on `Confluent.Kafka 2.*` and `Lib.Harmony 2.*`, so this release, like every one since
+  4.10.0, needs Confluent.Kafka 2.16.0 or later (#97).
+
+Tests: `Kronikol.Tests.Kafka.BuildInterception` now runs on net8.0 and net10.0 with quick JIT off, and covers pairs of
+every code shape, subclasses, concurrent enabling, refused builders, the constructor lookup, the tiering check's ten
+cases, tracker registration and the shipped doc comments; `Kronikol.Tests.Kafka` covers call-time capture, every failure
+path, delivery reports off, the copied message, the background identity, each poll's clear, phase content and every
+member's delegation; core covers the diagnostics registry. Proofs (plan harness `r0/`): run on 4.14.10, the new facts
+fail on their own assertions; 37 mutations, each caught by the fact named (`r0/mutations.txt`). Checks: the core suite passes 7,355 with 2 skipped
+after the version bump, `Kronikol.Tests.Kafka` passes 234 and `Kronikol.Tests.Kafka.BuildInterception` 69 on each runtime,
+the full Playwright suite passes 1,026 with 28 skipped, and `release.slnf` builds in Release for every target.
+
 ## [4.16.1] - 2026-10-12
 
 **Patch - an audit of the gRPC identity propagation releases, 4.12.1 to 4.14.3 (#134,

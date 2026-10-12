@@ -17,7 +17,7 @@ namespace Kronikol.Extensions.Kafka;
 /// </summary>
 public static class KafkaTrackingInterceptor
 {
-    private record TrackingState(KafkaTracker Tracker, KafkaTrackingOptions Options);
+    private sealed record TrackingState(KafkaTracker Tracker, KafkaTrackingOptions Options, IHttpContextAccessor? HttpContextAccessor);
 
     private static readonly ConcurrentDictionary<Type, TrackingState> ConsumerTracking = new();
     private static readonly ConcurrentDictionary<Type, TrackingState> ProducerTracking = new();
@@ -30,10 +30,7 @@ public static class KafkaTrackingInterceptor
     public static void EnableConsumerTracking<TKey, TValue>(
         KafkaTrackingOptions options,
         IHttpContextAccessor? httpContextAccessor = null)
-    {
-        var tracker = new KafkaTracker(options, httpContextAccessor);
-        ConsumerTracking[typeof(IConsumer<TKey, TValue>)] = new TrackingState(tracker, options);
-    }
+        => Enable(ConsumerTracking, typeof(IConsumer<TKey, TValue>), options, httpContextAccessor, $"consumer {PairName<TKey, TValue>()}");
 
     /// <summary>
     /// Enables consumer tracking with an options configuration action.
@@ -55,10 +52,7 @@ public static class KafkaTrackingInterceptor
     public static void EnableProducerTracking<TKey, TValue>(
         KafkaTrackingOptions options,
         IHttpContextAccessor? httpContextAccessor = null)
-    {
-        var tracker = new KafkaTracker(options, httpContextAccessor);
-        ProducerTracking[typeof(IProducer<TKey, TValue>)] = new TrackingState(tracker, options);
-    }
+        => Enable(ProducerTracking, typeof(IProducer<TKey, TValue>), options, httpContextAccessor, $"producer {PairName<TKey, TValue>()}");
 
     /// <summary>
     /// Enables producer tracking with an options configuration action.
@@ -98,7 +92,10 @@ public static class KafkaTrackingInterceptor
             return consumer;
 
         if (ConsumerTracking.TryGetValue(typeof(IConsumer<TKey, TValue>), out var state))
+        {
+            state.Tracker.EnsureRegistered();
             return new TrackingKafkaConsumer<TKey, TValue>(consumer, state.Tracker, state.Options);
+        }
 
         return consumer;
     }
@@ -114,8 +111,43 @@ public static class KafkaTrackingInterceptor
             return producer;
 
         if (ProducerTracking.TryGetValue(typeof(IProducer<TKey, TValue>), out var state))
+        {
+            state.Tracker.EnsureRegistered();
             return new TrackingKafkaProducer<TKey, TValue>(producer, state.Tracker, state.Options);
+        }
 
         return producer;
+    }
+
+    // One tracker per enabled pair and direction: enabling again with the options and accessor it holds keeps it, and a
+    // tracker registers only when it first wraps a client, so neither a replaced tracker nor one for a direction the app
+    // never builds is reported as registered but never invoked.
+    private static void Enable(
+        ConcurrentDictionary<Type, TrackingState> tracking,
+        Type client,
+        KafkaTrackingOptions options,
+        IHttpContextAccessor? httpContextAccessor,
+        string role)
+    {
+        tracking.AddOrUpdate(
+            client,
+            _ => NewState(),
+            (_, held) => ReferenceEquals(held.Options, options) && ReferenceEquals(held.HttpContextAccessor, httpContextAccessor)
+                ? held
+                : NewState());
+
+        TrackingState NewState() => new(new KafkaTracker(options, httpContextAccessor, role), options, httpContextAccessor);
+    }
+
+    // "<String,String>": the pair as the registry's unused-component warning names it.
+    private static string PairName<TKey, TValue>() => $"<{TypeName(typeof(TKey))},{TypeName(typeof(TValue))}>";
+
+    private static string TypeName(Type type)
+    {
+        if (!type.IsGenericType)
+            return type.Name;
+        var tick = type.Name.IndexOf('`');
+        var name = tick < 0 ? type.Name : type.Name[..tick];
+        return $"{name}<{string.Join(",", type.GetGenericArguments().Select(TypeName))}>";
     }
 }

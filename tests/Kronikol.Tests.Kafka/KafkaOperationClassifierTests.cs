@@ -106,6 +106,23 @@ public class KafkaOperationClassifierTests
         Assert.Equal("ProduceAsync orders-topic", label);
     }
 
+    // F11 (plans/KAFKA_INTERCEPTION_AND_TRACE_PLAN.md): an operation without a topic is its name alone, as the wiki shows it.
+    [Theory]
+    [InlineData(KafkaOperation.Commit)]
+    [InlineData(KafkaOperation.Flush)]
+    [InlineData(KafkaOperation.Unsubscribe)]
+    [InlineData(KafkaOperation.InitTransactions)]
+    [InlineData(KafkaOperation.BeginTransaction)]
+    [InlineData(KafkaOperation.CommitTransaction)]
+    [InlineData(KafkaOperation.AbortTransaction)]
+    [InlineData(KafkaOperation.SendOffsetsToTransaction)]
+    public void GetDiagramLabel_Raw_is_the_operations_name_alone_when_it_has_no_topic(KafkaOperation operation)
+    {
+        var label = KafkaOperationClassifier.GetDiagramLabel(new KafkaOperationInfo(operation), KafkaTrackingVerbosity.Raw);
+
+        Assert.Equal(operation.ToString(), label);
+    }
+
     // ──────────────────────────────────────────────────────────
     //  URI building
     // ──────────────────────────────────────────────────────────
