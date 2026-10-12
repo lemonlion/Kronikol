@@ -1102,6 +1102,9 @@ Each is another subsystem's, so it is recorded here rather than folded into thes
   (`r2/otlp-tap-race-red-4.18.0.txt`, `r2/otlp-tap-drop-reason-red.txt`). #135 and #167 are closed with a comment naming
   the releases; #160 has a comment saying its helpers shipped in 4.17.0 and stays open for per-host interception, which
   ROADMAP Appendix C carries with Q1's props for v5 and Q6's builder rule.
+- **2026-10-12, 4.18.1 published.** Release run 38278908425, CI 38278906993 (its remainder lane passed, the OTLP project
+  included) and CodeQL 38278907003 passed, and nuget.org listed all 62 ids; the wiki has the OTLP page's edit
+  (`85abe19`) and Kronikol4J's ledger a line saying there is nothing to port (`4ff5c07`).
 
 ## Appendix A. Edit sites at `d59843fa` (4.14.6)
 
