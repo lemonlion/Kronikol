@@ -4,7 +4,7 @@
 `src/Kronikol/Tracking/` is the same as at 98c4806d, the commit the issue cites) · **Status:** **green-lit in full
 by the owner on 2026-10-12** ("implement the plan in full"), every question in §11 as recommended: Q1 the scalar
 prefix, Q2 as written, Q3 taken as R2 (a minor), Q4 F7 to F10 in R1, Q5 the cuts left. Roadmap row 1.27. Executed:
-R1 as 4.14.8, R2 as 4.16.0 (the Log).
+R1 as 4.14.8, R2 as 4.16.0, both published 2026-10-12 (the Log).
 
 Evidence labels: **RUN** (measured on 2026-10-11 with the published 4.14.6 packages, Shouldly 4.3.0 and
 FluentAssertions 6.12.1 on net8.0, built by SDK 10.0.300, in Debug and Release; the probe and its saved output are in
@@ -741,3 +741,11 @@ any page this table missed, and the skill references (`.claude/skills/`, `templa
   its 65 cases changed from `r1/`, each to the value the call received (`compare-with-r1.txt`); and the issue's stack,
   R1's scratch project on `4.16.0-local.163`, prints `'A1'`, `'Blue'`, `'x'`, `'blue'`, `'Blue'` and `'S1'`
   (`issue-stack-query.txt`).
+- 2026-10-12, both releases published, and the plan is complete. 4.14.8: Release run 38225066058, CI 38225062843
+  (passed on its second attempt; the first lost one Linux Playwright fact, `ExportFilteredHtmlRenderingTests`, to a
+  60-second `DrawAll` timeout that passes locally), CodeQL 38225062772 and CI Summary Preview 38225062780 passed. 4.16.0:
+  Release 38245472402, CI 38245469525 (first attempt), CodeQL 38245469479 and Summary Preview 38245469498 passed.
+  nuget.org listed all 62 ids at each. The wiki has R1's edits (37c6537) and R2's (55c275c), Kronikol4J's ledger a line
+  for each release (4809398, 97560f3), and #163 is closed with a comment naming both releases. Left to the owner: the
+  suite the issue came from, before and after through `harness/classify.py` (§4.4), and PR #164, written as 4.15.0,
+  which has to take the next free minor when it merges, since 4.16.0 is published.
