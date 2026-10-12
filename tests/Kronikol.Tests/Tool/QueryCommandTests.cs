@@ -53,6 +53,21 @@ public class QueryCommandTests : IDisposable
     }
 
     [Fact]
+    public void Scenarios_counts_each_call_once_as_interactions_does()
+    {
+        // The listing counted every record, so a request and its response were two calls there and one in
+        // `interactions` and `services` (found by the audit of #130, whose rule is that a call's two halves are one call).
+        var report = Report();
+        var rows = Run("scenarios", report).Split('\n')
+            .Select(l => System.Text.RegularExpressions.Regex.Match(l, @"^(s\d+)\s.*?\s(\d+) calls\s"))
+            .Where(m => m.Success)
+            .ToArray();
+
+        Assert.Contains(rows, m => int.Parse(m.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) > 0);
+        Assert.All(rows, m => Assert.Equal(Run("interactions", report, m.Groups[1].Value, "--count").Trim(), m.Groups[2].Value));
+    }
+
+    [Fact]
     public void Count_prints_a_number_and_nothing_else()
     {
         Assert.Equal("1", Run("scenarios", Report(), "--result", "Failed", "--count").Trim());

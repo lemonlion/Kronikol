@@ -154,6 +154,19 @@ public class InteractionRecordTests
     }
 
     [Fact]
+    public void An_empty_pair_id_pairs_nothing_as_a_missing_one()
+    {
+        // Every ingest pass reads an empty requestResponseId as none (a Go writer emits "" for an unset string). The
+        // replay hashed it instead, so every record that carried one joined a single pair: a second call showed the
+        // first call's response.
+        var first = InteractionRecord.FromJson("""{"type":"Request","uri":"http://api/orders/1","serviceName":"api","callerName":"web","testId":"t","method":"GET","requestResponseId":"","timestamp":"2026-01-01T10:00:00.001Z"}""");
+        var second = first with { Uri = "http://api/orders/2", Timestamp = first.Timestamp!.Value.AddMilliseconds(2) };
+
+        Assert.NotEqual(first.ToLog().RequestResponseId, second.ToLog().RequestResponseId);
+        Assert.Equal((first with { RequestResponseId = null }).ToLog().RequestResponseId, first.ToLog().RequestResponseId);
+    }
+
+    [Fact]
     public void Unknown_properties_are_ignored_and_relative_uris_are_tolerated()
     {
         var record = InteractionRecord.FromJson("""{"type":"Request","uri":"/api/x","serviceName":"S","callerName":"C","testId":"t","extraDiagnostic":42,"method":"GET"}""");

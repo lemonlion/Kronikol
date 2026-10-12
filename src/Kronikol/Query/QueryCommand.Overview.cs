@@ -229,7 +229,10 @@ public static partial class QueryCommand
             var flags = scenario.Failed ? "FAIL" : scenario.Result.Length > 0 ? scenario.Result[..Math.Min(4, scenario.Result.Length)].ToLowerInvariant() : "";
             var repeats = shared.TryGetValue(scenario.StableId, out var count) ? $"  ×{count}" : "";
             var attempt = scenario.Attempt is > 1 ? $"  attempt {scenario.Attempt}" : "";
-            writer.Line($"{scenario.Address,-5} {flags,-4} {scenario.DurationSeconds,6:0.##}s  {scenario.Interactions.Count,4} calls  "
+            // A call is its request, as `interactions` and `services` count it: the records count each half (the JSON's
+            // `interactions`), and printed as calls they doubled every answered call.
+            var calls = scenario.Interactions.Count(i => i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase));
+            writer.Line($"{scenario.Address,-5} {flags,-4} {scenario.DurationSeconds,6:0.##}s  {calls,4} calls  "
                         + QueryWriter.OneLine(scenario.Name, 80) + repeats + attempt);
             if (scenario.Failed && scenario.ErrorMessage is { } message)
                 writer.Line($"        {QueryWriter.OneLine(message, 100)}");

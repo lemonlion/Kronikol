@@ -3,6 +3,8 @@
 **Date:** 2026-10-06 · **Repo version:** 4.6.0 (`main` at 37e93813; line numbers are for that commit) · **Status:**
 **green-lit 2026-10-07** by the owner ("complete the plan in full"), every open question taken as recommended
 (`ROADMAP.md` row 1.20, D35). Executed in a worktree of its own beside three other plans' sessions; see the Log.
+**Audited 2026-10-12** at the owner's ask: every item was delivered, and the audit found F11 to F14, fixed in
+4.14.9 (see the Log).
 
 Evidence labels: **RUN** (measured on 2026-10-06 on a Debug build of 37e93813; inputs, scripts and saved answers in
 [`PHASE_FROM_STEPS_PLAN.harness/`](PHASE_FROM_STEPS_PLAN.harness/README.md)), **READ** (in the source, tests, wiki or
@@ -69,6 +71,10 @@ neither is in this plan; §7 says why the order does not matter.
 | F8 | **Background steps open no phase window** (`IngestAttribution.cs:448`, pinned by `Background_and_nested_steps_open_no_phase_window`), so calls made during a Cucumber Background are never phased | READ | Q7 |
 | F9 | **`CucumberSynthesisResult.Warnings` is never read** in `src/` (`CucumberFeatureSynthesizer.cs:61`, written at 127-131, 201, 207, 664-671, 975) | READ | §8 |
 | F10 | **The wiki's ingest Diagnostics table** uses F1's line as its `Other` example and has no row for `StepAttributionMismatch`, `ResultDefaulted`, `BackgroundCalls`, `ReportRotationFailed` or `OptionNotApplied` (`Ingesting-External-Captures.md:620-634`) | READ | §6, R1 **Executed (4.7.1):** the table lacked nine kinds, the four `History*` kinds too, and each now has a row. |
+| F11 | **Window attribution and content claims judged a response read before its request on its own timestamp or content** (`IngestAttribution.cs`: both passes read the records once, in file order; section 2.3's table recorded it). Found by the audit | RUN | Log, 4.14.9 |
+| F12 | **The window pass judged a response whose request no window held on its own timestamp**, against its doc and the wiki ("never its own timestamp"), so a call made between two tests gave the second test a lone response. Found by the audit | RUN | Log, 4.14.9 |
+| F13 | **The replay made one pair of every record with an empty `requestResponseId`** (`InteractionRecord.ToLog`), where every ingest pass reads it as none. Found by the audit | RUN | Log, 4.14.9 |
+| F14 | **`kronikol query scenarios` counted each half of a call as a call** (`QueryCommand.Overview.cs`), where `interactions` and `services` count a call once. Found by the audit | RUN | Log, 4.14.9 |
 
 ## 1. How far each claim was checked
 
@@ -454,6 +460,7 @@ Each is a patch unless marked.
 | Q5 | `ExclusiveOnly`'s line at zero (F5) | **Record it only when records were left ambiguous**, and print the zero case as a console line, as R1 does. The console line still proves the mode ran; a non-zero count is a real loss and stays a diagnostic **Taken without the console line:** no CLI flag sets the mode (see the Log). |
 | Q6 | The merger's phases (F7) | **Measure first**, with a wire capture plus spans and parallel workers. If it reproduces, a merged call takes its span pair's phase when its wire pair has none (`Adopt`). A patch **Measured: it reproduced, and 4.7.2 fixes it.** |
 | Q7 | Background steps open no phase window (F8) | **Measure the in-process answer first.** It belongs with roadmap row 1.15's item 6 (four step-to-phase vocabularies that disagree on And and But) **Recorded on row 1.15** (READ: no example's Background step makes a call; see the Log). |
+| Q8 | (the audit's) A claim found only in a response's body: should it claim the whole call? | **Measure first**, on a suite that uses content claims. A response whose request matched no claim is claimed alone on its own content (4.14.9 keeps that, F12), and its request is left for the window pass, so the two can end in different tests; claiming the call by either half's claim keeps them together. A patch either way: nothing new is public |
 
 ## Appendix A. Edit sites
 
@@ -540,3 +547,45 @@ Each is a patch unless marked.
   stays; the fact now passes on the first of up to three attempts under it, as
   `Batch_of_five_is_faster_than_five_single_spawns` in the same class does, and a bound forced to 1 ms fails it with
   all three timings.
+- 2026-10-12, **audit** at the owner's ask ("make sure nothing was missed from the plan, that there isn't any bugs or
+  issues in the implementation"), in a worktree of its own on 4.14.6 (`d59843fa`). Checked and found delivered:
+  - every ask, finding (F1 to F10), question and section 8 item, against the code on 4.14.6, where no ingest file had
+    changed since 4.7.2 and `ReportGenerator.cs` still hands an ingest's history base directory through;
+  - the 17 facts by name, the 22 mutations' results (`harness/mutations/`), and every behaviour sentence of the 4.7.1
+    and 4.7.2 changelog entries but one (below);
+  - the wiki on `origin/master` (the flag rows, "Phases from steps", the window pass's console line, the Diagnostics
+    table, which still lists all 20 kinds), the XML docs, the usage, `ROADMAP.md` (D35, rows 1.20 and 1.15, Appendix
+    C) and the index row;
+  - the issue's repro on 4.14.6 (the line, four `Action` phases, no labs page, no `!` line), and no CI run since 4.7.2
+    failed one of this plan's facts.
+  What it found, each RUN on 4.14.6 (`harness/audit/`) and fixed in 4.14.9:
+  - **F11.** Window attribution and content claims read the records once, in file order, so a response read before
+    its request (captures split over two files) was judged on its own timestamp or content. A slow call answered
+    inside the next test's window went to the next test, with no phase. Section 2.3's table recorded the file-order
+    rule ("a response read first is judged alone") without raising it, though it is ask 2's defect one pass earlier.
+    Every record that is not a response is now judged first.
+  - **F12.** The window pass judged a response whose request no window held on its own timestamp, against its own
+    doc and the wiki ("never its own timestamp"). A call made between two tests gave the second test a lone
+    response, and under `ExclusiveOnly` a response whose request two windows held went to the one window that held
+    the response. Such a response now stays with its request. Content claims still judge a response whose request
+    matched no claim on its own content (Q8).
+  - **F13.** The replay (`InteractionRecord.ToLog`) hashed an empty `requestResponseId` into one pair for every record
+    that carried it, while every ingest pass, this plan's included (fact 7), reads it as none. Two calls with `""` ids
+    read as answered by the first response, a 404 as the first call's OK, with no warning.
+  - **F14.** `kronikol query scenarios` printed each scenario's record count as its calls (`QueryCommand.Overview.cs`,
+    since 3.0.47), while `interactions`, `services` and the narrative count a call once, so every answered call
+    counted twice. Found while measuring F12.
+  - **A rule with no fact.** "The request's phase, when both halves carry one" (section 3.2, rule 2; the 4.7.1
+    changelog; the XML doc) was pinned by nothing, and no mutation flipped it. A fact and two mutations (A7, A8)
+    hold it now.
+  - **Seen, fixed elsewhere.** An ingest that leaves a record unattributed recorded two `UnattributedInteractions`
+    entries for it: the ingest's count and, since 4.12.2, the generator's line for calls under a test id no scenario
+    has (here the empty id). The query header then showed the first with "(×2)", section 8 item 4's design question
+    with a new case. The #132 audit's patch, the same day, stops the generator counting records with no test id.
+  Proofs: the 13 new facts (15 cases) on 4.14.6's source, where the ten facts for F11 to F14 failed (12
+  cases), each for its own reason, and the three guards passed; 9 mutations (A1 to A9), each turning its facts red
+  and no other (`harness/audit/results.txt`, from `mutate_audit.py`); and the probes on the patched tool: empty ids
+  read as missing ones, with the unpaired warning, and a call made between two tests goes to neither, while
+  `--fold-unknown` folds it as one call. The core suite passes 7,281 with 2 skipped on the release commit, the Playwright suite 1,020
+  with 28 skipped, the search-engine suite 214, and `release.slnf` builds and packs in Release for every target
+  (62 packages). Shipped as 4.14.9, the next free number after #133's audit (4.14.7) and #163's R1 (4.14.8).

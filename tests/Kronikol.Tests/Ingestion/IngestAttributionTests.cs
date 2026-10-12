@@ -126,6 +126,95 @@ public class IngestAttributionTests : IDisposable
         Assert.Equal("first", records[1].TestId);
     }
 
+    [Theory]
+    [InlineData(WindowAttributionMode.InnermostWins)]
+    [InlineData(WindowAttributionMode.ExclusiveOnly)]
+    public void A_response_read_before_its_request_follows_it_to_its_test(WindowAttributionMode mode)
+    {
+        // The same call with its response line first, as captures split over two files can give it. The response was
+        // judged on its own timestamp and given to the next test, the case the rule above exists for.
+        var windows = IngestAttribution.BuildWindows(TwoTests);
+
+        var (records, attributed, ambiguous) = IngestAttribution.AttributeByWindow(
+        [
+            Anonymous("mongo", 11, pairId: "pair-1", type: "Response"),
+            Anonymous("mongo", 4, pairId: "pair-1"),
+        ], windows, mode);
+
+        Assert.Equal("first", records[0].TestId);
+        Assert.Equal("first", records[1].TestId);
+        Assert.Equal(2, attributed);
+        Assert.Equal(0, ambiguous);
+    }
+
+    [Fact]
+    public void A_response_read_before_a_request_that_names_its_test_follows_it()
+    {
+        var windows = IngestAttribution.BuildWindows(TwoTests);
+
+        var (records, attributed) = IngestAttribution.AttributeByWindow(
+        [
+            Anonymous("mongo", 11, pairId: "pair-1", type: "Response"),
+            Anonymous("mongo", 4, testId: "first", pairId: "pair-1"),
+        ], windows);
+
+        Assert.Equal("first", records[0].TestId);
+        Assert.Equal("first", records[1].TestId);
+        Assert.Equal(1, attributed);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void A_response_whose_request_is_in_no_window_stays_with_it(bool responseFirst)
+    {
+        // A call made between two tests and answered inside the second. Its request is in no window, so the response
+        // was judged on its own timestamp and given to the second test, which then showed half a call it never made.
+        var windows = IngestAttribution.BuildWindows(TwoTests);
+        var request = Anonymous("mongo", 8, pairId: "gap");
+        var response = Anonymous("mongo", 11, pairId: "gap", type: "Response");
+
+        var (records, attributed) = IngestAttribution.AttributeByWindow(responseFirst ? [response, request] : [request, response], windows);
+
+        Assert.All(records, r => Assert.Equal("", r.TestId));
+        Assert.Equal(0, attributed);
+    }
+
+    [Fact]
+    public void Under_exclusive_only_a_response_whose_request_two_windows_held_stays_with_it()
+    {
+        var windows = IngestAttribution.BuildWindows(
+        [
+            new TestRunRecord { Event = "start", TestId = "a", Timestamp = T0.AddSeconds(1) },
+            new TestRunRecord { Event = "end", TestId = "a", Status = "passed", Timestamp = T0.AddSeconds(20) },
+            new TestRunRecord { Event = "start", TestId = "b", Timestamp = T0.AddSeconds(5) },
+            new TestRunRecord { Event = "end", TestId = "b", Status = "passed", Timestamp = T0.AddSeconds(30) },
+        ]);
+
+        // The request is in both windows, so it stays unattributed; the response, in b's alone, went to b.
+        var (records, attributed, ambiguous) = IngestAttribution.AttributeByWindow(
+        [
+            Anonymous("mongo", 10, pairId: "both"),
+            Anonymous("mongo", 25, pairId: "both", type: "Response"),
+        ], windows, WindowAttributionMode.ExclusiveOnly);
+
+        Assert.All(records, r => Assert.Equal("", r.TestId));
+        Assert.Equal(0, attributed);
+        Assert.Equal(1, ambiguous);
+    }
+
+    [Fact]
+    public void A_response_with_no_request_in_the_capture_is_judged_on_its_own_timestamp()
+    {
+        // Nothing to follow: the request line was lost.
+        var windows = IngestAttribution.BuildWindows(TwoTests);
+
+        var (records, attributed) = IngestAttribution.AttributeByWindow([Anonymous("mongo", 11, pairId: "lost", type: "Response")], windows);
+
+        Assert.Equal("second", records[0].TestId);
+        Assert.Equal(1, attributed);
+    }
+
     [Fact]
     public void The_capturer_s_fallback_marker_counts_as_no_identity_at_all()
     {
@@ -262,6 +351,27 @@ public class IngestAttributionTests : IDisposable
         Assert.Equal(nameof(TestPhase.Setup), records[0].Phase);
         Assert.Equal(nameof(TestPhase.Action), records[1].Phase);
         Assert.Equal(0, tagged);
+    }
+
+    [Fact]
+    public void When_both_halves_carry_a_phase_the_requests_is_the_pairs()
+    {
+        // A third record of the pair (a second response line) has no phase of its own, so it takes the pair's: the
+        // request's, though the response that carries the other phase is read first.
+        var stepWindows = IngestAttribution.BuildStepWindows(
+            [new TestRunRecord { Event = "step", TestId = "t", Keyword = "When", Text = "the order is placed", DurationMs = 5000, Timestamp = T0 }]);
+
+        var (records, tagged) = IngestAttribution.ApplyPhaseFromSteps(
+        [
+            Anonymous("db", 2, testId: "t", pairId: "p", type: "Response") with { Phase = nameof(TestPhase.Action) },
+            Anonymous("db", 1, testId: "t", pairId: "p") with { Phase = nameof(TestPhase.Setup) },
+            Anonymous("db", 3, testId: "t", pairId: "p", type: "Response"),
+        ], stepWindows);
+
+        Assert.Equal(nameof(TestPhase.Action), records[0].Phase);
+        Assert.Equal(nameof(TestPhase.Setup), records[1].Phase);
+        Assert.Equal(nameof(TestPhase.Setup), records[2].Phase);
+        Assert.Equal(1, tagged);
     }
 
     [Theory]
@@ -777,6 +887,42 @@ public class IngestAttributionTests : IDisposable
         Assert.Equal("worker-a", records[0].TestId);
         Assert.Equal("worker-b", records[1].TestId);
         Assert.Equal("", records[2].TestId);
+    }
+
+    [Fact]
+    public void A_response_read_before_its_request_follows_the_test_that_claimed_the_request()
+    {
+        // The reply names no claim of its own, so read first it was left unattributed while its request went to worker-a.
+        var claimWindows = IngestAttribution.BuildClaimWindows(TwoClaimedTests);
+
+        var (records, attributed, ambiguous) = IngestAttribution.AttributeByClaims(
+        [
+            RedisKey("reply", 10, pairId: "pair-1", type: "Response"),
+            RedisKey("cust-111:loc-1111:overview", 10, pairId: "pair-1"),
+        ], claimWindows);
+
+        Assert.Equal("worker-a", records[0].TestId);
+        Assert.Equal("worker-a", records[1].TestId);
+        Assert.Equal(2, attributed);
+        Assert.Equal(0, ambiguous);
+    }
+
+    [Fact]
+    public void A_response_whose_request_matched_no_claim_is_judged_on_its_own_content()
+    {
+        // Unlike the window pass's timestamp, a claim in the reply's body names its owner, so the reply is not left with
+        // its unclaimed request; the request is left for the window pass.
+        var claimWindows = IngestAttribution.BuildClaimWindows(TwoClaimedTests);
+
+        var (records, attributed, _) = IngestAttribution.AttributeByClaims(
+        [
+            RedisKey("shared:overview", 10, pairId: "pair-1"),
+            RedisKey("shared:overview", 10.5, content: "{\"customer\":\"cust-111\"}", pairId: "pair-1", type: "Response"),
+        ], claimWindows);
+
+        Assert.Equal("", records[0].TestId);
+        Assert.Equal("worker-a", records[1].TestId);
+        Assert.Equal(1, attributed);
     }
 
     [Fact]

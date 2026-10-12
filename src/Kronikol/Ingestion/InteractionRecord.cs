@@ -70,7 +70,7 @@ public sealed record InteractionRecord
     /// <summary>Chain/trace correlation id shared by every hop of one call chain. Defaults to <see cref="RequestResponseId"/>.</summary>
     [JsonPropertyName("traceId")] public string? TraceId { get; init; }
 
-    /// <summary>Pairs a request with its response. Required for a pair to render as one arrow.</summary>
+    /// <summary>Pairs a request with its response. Required for a pair to render as one arrow; an empty id pairs nothing.</summary>
     [JsonPropertyName("requestResponseId")] public string? RequestResponseId { get; init; }
 
     /// <summary>When the request was sent / the response received (ISO-8601). Used for ordering and loop durations.</summary>
@@ -290,7 +290,9 @@ public sealed record InteractionRecord
             ? RequestResponseType.Response
             : RequestResponseType.Request;
 
-        var requestResponseId = ToGuid(RequestResponseId ?? $"{TestId}|{Uri}|{Timestamp:O}");
+        // An empty id pairs nothing, as a missing one, the way every ingest pass reads it: hashed, it made every record
+        // that carried one a half of the same call, so each call read as answered by the first response.
+        var requestResponseId = ToGuid(RequestResponseId is { Length: > 0 } pairId ? pairId : $"{TestId}|{Uri}|{Timestamp:O}");
         var traceId = string.IsNullOrEmpty(TraceId) ? requestResponseId : ToGuid(TraceId);
 
         OneOf<HttpStatusCode, string>? status = null;

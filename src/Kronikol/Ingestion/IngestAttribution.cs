@@ -101,7 +101,9 @@ public static class IngestAttribution
     /// <para>
     /// A response is never attributed on its own: it follows the request it answers (matched by
     /// <c>requestResponseId</c>), because a call that starts inside a test can easily reply after the
-    /// test's <c>end</c> record was written.
+    /// test's <c>end</c> record was written. It does wherever the two sit in the files, and a response
+    /// whose request was left unattributed stays so. Only a response whose request is not in the records
+    /// at all is judged on its own timestamp.
     /// </para>
     /// </remarks>
     /// <returns>The records with attribution applied, in the same order, and how many were attributed.</returns>
@@ -129,49 +131,51 @@ public static class IngestAttribution
         ArgumentNullException.ThrowIfNull(records);
         ArgumentNullException.ThrowIfNull(windows);
 
-        var result = new List<InteractionRecord>(records.Count);
         if (windows.Count == 0)
             return (records.ToList(), 0, 0);
 
-        // Requests decide; their responses inherit. Both passes run over the same list, so the map is
-        // filled by the time a response is reached only when the response follows its request in the
-        // file — which it does for every capturer that writes as it goes. A response that arrives first
-        // is attributed on its own timestamp.
-        var byRequestResponseId = new Dictionary<string, string>(StringComparer.Ordinal);
+        // Requests decide; their responses inherit, and are never judged on their own timestamp while their request is
+        // in the capture. Every record that is not a response is judged first, so a response finds its request's answer
+        // wherever it sits in the files (read first, it was judged alone and could go to the next test), and one whose
+        // request no window placed (or two did, under ExclusiveOnly) stays unattributed with it (until 4.14.9 it went to
+        // whichever test its own timestamp fell in). Only a response whose request is not in the capture is judged alone.
+        var byRequestResponseId = new Dictionary<string, string?>(StringComparer.Ordinal);
+        var decided = new InteractionRecord[records.Count];
         var attributed = 0;
         var ambiguous = 0;
 
-        foreach (var record in records)
+        foreach (var index in RequestsFirst(records))
         {
+            var record = records[index];
             if (!NeedsAttribution(record, fallbackTestId))
             {
                 if (record.RequestResponseId is { Length: > 0 } known && !IsResponse(record))
                     byRequestResponseId[known] = record.TestId;
-                result.Add(record);
+                decided[index] = record;
                 continue;
             }
 
-            string? testId = null;
-            if (IsResponse(record) && record.RequestResponseId is { Length: > 0 } id)
-                byRequestResponseId.TryGetValue(id, out testId);
-
-            if (testId is null)
+            string? testId;
+            if (IsResponse(record) && record.RequestResponseId is { Length: > 0 } id && byRequestResponseId.TryGetValue(id, out var requestTest))
             {
-                if (mode == WindowAttributionMode.ExclusiveOnly)
-                {
-                    testId = FindExclusive(windows, record.Timestamp, out var overlapped);
-                    if (overlapped)
-                        ambiguous++;
-                }
-                else
-                {
-                    testId = FindInnermost(windows, record.Timestamp);
-                }
+                testId = requestTest;
+            }
+            else if (mode == WindowAttributionMode.ExclusiveOnly)
+            {
+                testId = FindExclusive(windows, record.Timestamp, out var overlapped);
+                if (overlapped)
+                    ambiguous++;
+            }
+            else
+            {
+                testId = FindInnermost(windows, record.Timestamp);
             }
 
             if (testId is null)
             {
-                result.Add(record);
+                if (record.RequestResponseId is { Length: > 0 } unplaced && !IsResponse(record))
+                    byRequestResponseId.TryAdd(unplaced, null);
+                decided[index] = record;
                 continue;
             }
 
@@ -179,10 +183,30 @@ public static class IngestAttribution
                 byRequestResponseId[pairId] = testId;
 
             attributed++;
-            result.Add(record with { TestId = testId });
+            decided[index] = record with { TestId = testId };
         }
 
-        return (result, attributed, ambiguous);
+        return (decided.ToList(), attributed, ambiguous);
+    }
+
+    /// <summary>
+    /// The indexes of <paramref name="records"/>, every record that is not a response first and then the responses,
+    /// each in file order: a pass whose responses inherit their request's answer then finds the request decided
+    /// wherever it sits in the files.
+    /// </summary>
+    private static IEnumerable<int> RequestsFirst(IReadOnlyList<InteractionRecord> records)
+    {
+        for (var i = 0; i < records.Count; i++)
+        {
+            if (!IsResponse(records[i]))
+                yield return i;
+        }
+
+        for (var i = 0; i < records.Count; i++)
+        {
+            if (IsResponse(records[i]))
+                yield return i;
+        }
     }
 
     /// <summary>
@@ -226,8 +250,10 @@ public static class IngestAttribution
     /// Attributes records by <em>content</em>: a record goes to the test whose window contains its
     /// timestamp <em>and</em> whose claims literally appear in the record's URI or body — when exactly
     /// one such test exists. Two or more claimants is ambiguous (counted, left alone); none leaves the
-    /// record for the window pass. Responses inherit their request's attribution, exactly as in
-    /// <see cref="AttributeByWindow(IReadOnlyList{InteractionRecord}, IReadOnlyList{TestWindow}, string?)"/>.
+    /// record for the window pass. Responses inherit their request's attribution wherever the two sit in the
+    /// files, as in <see cref="AttributeByWindow(IReadOnlyList{InteractionRecord}, IReadOnlyList{TestWindow}, string?)"/>.
+    /// A response whose request matched no claim is judged on its own content, since a claim names its owner
+    /// where a timestamp does not.
     /// </summary>
     /// <remarks>
     /// This is what makes parallel workers exact for capturers that see no test identity on the wire
@@ -266,18 +292,20 @@ public static class IngestAttribution
             return (records.ToList(), 0, 0, []);
 
         var contests = new Dictionary<string, int>(StringComparer.Ordinal);
-        var result = new List<InteractionRecord>(records.Count);
+        // Requests first, as in the window pass, so a response read before its request still inherits.
+        var decided = new InteractionRecord[records.Count];
         var byRequestResponseId = new Dictionary<string, string>(StringComparer.Ordinal);
         var attributed = 0;
         var ambiguous = 0;
 
-        foreach (var record in records)
+        foreach (var index in RequestsFirst(records))
         {
+            var record = records[index];
             if (!NeedsAttribution(record, fallbackTestId))
             {
                 if (record.RequestResponseId is { Length: > 0 } known && !IsResponse(record))
                     byRequestResponseId[known] = record.TestId;
-                result.Add(record);
+                decided[index] = record;
                 continue;
             }
 
@@ -319,7 +347,7 @@ public static class IngestAttribution
 
             if (testId is null)
             {
-                result.Add(record);
+                decided[index] = record;
                 continue;
             }
 
@@ -327,7 +355,7 @@ public static class IngestAttribution
                 byRequestResponseId[pairId] = testId;
 
             attributed++;
-            result.Add(record with { TestId = testId });
+            decided[index] = record with { TestId = testId };
         }
 
         var named = contests
@@ -335,7 +363,7 @@ public static class IngestAttribution
             .ThenBy(c => c.Key, StringComparer.Ordinal)
             .Select(c => (c.Key, c.Value))
             .ToList();
-        return (result, attributed, ambiguous, named);
+        return (decided.ToList(), attributed, ambiguous, named);
     }
 
     /// <summary>The first claim that literally appears in the record's URI or captured body, or null. Case-sensitive: claims are ids and key fragments, not prose.</summary>

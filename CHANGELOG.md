@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.14.9] - 2026-10-12
+
+**Patch - a call's two halves stay one call through `kronikol ingest`'s attribution and pairing, and in `kronikol query scenarios` (the audit of `plans/PHASE_FROM_STEPS_PLAN.md`, #130).**
+The owner asked for an audit of #130's two releases, 4.7.1 and 4.7.2, whose rule is that a call's two halves share
+one answer. The audit found three defects of that kind outside the phase pass #130 fixed, and a fourth in
+`kronikol query`, each measured on 4.14.6.
+Bug fixes, with nothing new for a consumer to call, so the patch part moves (4.14.7 to 4.14.9). The history action's
+`VERSION` installs `Kronikol.Tool` 4.14.9, and the templates pin 4.14.7.
+
+- **A response read before its request goes to its request's test.** Window attribution (`--attribute-by-window`,
+  `IngestRequest.AttributeByTestWindow`) and content claims (`IngestRequest.AttributeByClaims`) give a response its
+  request's test, as their docs and the wiki say, but they read the records once, in file order. A response whose
+  line came before its request's (captures split over two files can give that order) was judged on its own
+  timestamp, or its own content. So a slow call answered inside the next test's window went to the next test, with no
+  phase, and the test that made the call showed it with no answer. Every record that is not a response is now judged
+  first, so a response finds its request's test wherever the two sit in the files. A capture whose requests all come
+  before their responses is attributed exactly as before.
+- **A response whose request no window holds stays with it.** The window pass judged such a response on its own
+  timestamp, which its doc and the wiki say it never does. A call made between two tests and answered during the
+  second gave the second test half a call it never made, while the request went to no test. Under
+  `WindowAttributionMode.ExclusiveOnly`, a response whose request two windows held went to the one window that held
+  the response. Such a response now stays unattributed with its request, and `--fold-unknown` folds the two together.
+  Only a response whose request is not in the capture is judged on its own timestamp. Content claims still judge a
+  response whose request matched no claim on its own content, since a claim names its owner where a timestamp does not.
+- **An empty `requestResponseId` pairs nothing, as a missing one does.** Every ingest pass reads an empty id as none,
+  but the replay hashed it, so every record that carried one became a half of the same call. In a capture whose
+  records all carry `"requestResponseId": ""` (Go's `encoding/json` writes that for an unset string), every call read
+  as answered by the first response, with its status and body, and no warning: a 404 read as the first call's OK. Such
+  calls now read as calls with no id do, and `Warning: N unpaired request(s) detected` says so.
+- **`kronikol query scenarios` counts a call once.** Each row's "N calls" counted the scenario's records, so a
+  request and its response were two calls there and one in `query interactions` and `query services`, and every
+  answered call counted twice (since 3.0.47). It now counts requests, as they do. The `--json` form's `interactions`
+  field still counts records, as its name says.
+
+Proofs (`plans/PHASE_FROM_STEPS_PLAN.harness/audit/`): the 13 new facts (15 cases) on 4.14.6's source, where the
+ten facts for the four defects failed (12 cases), each for its own reason, and the three guards passed; 9
+mutations, each turning its facts red and no other (`results.txt`, from `mutate_audit.py`). One guard pins a rule
+4.7.1 documented and no fact held: when both halves of a call carry a phase, the request's is the pair's. The core
+suite passes 7,281 with 2 skipped, the Playwright suite 1,020 with 28 skipped, the search-engine suite 214, and `release.slnf` builds and packs in
+Release for every target (62 packages). Kronikol4J has no ingest layer and no query tool, so nothing is ported; its
+ledger gets a line saying so.
+
 ## [4.14.8] - 2026-10-12
 
 **Patch - an assertion note puts a value in quotes only for code whose value Kronikol read, and only in place of
