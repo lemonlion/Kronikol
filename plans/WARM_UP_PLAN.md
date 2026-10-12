@@ -735,6 +735,12 @@ for #122 or says it did not.
     no scenario at all (`CaptureBackground`) are still kept twice, since nothing tells a copy from a call; a
     parameterized group's rows show no warm-up mark of their own (its badge sums them); and the JSON schema allows
     `first` on either kind.
+  - **4.16.3 published** (65b43fe4, tag `v4.16.3`, templates pinned to 4.16.1): Release 38257690099, CodeQL
+    38257685830 and 38258210071 and CI Summary Preview 38257685669 passed. CI 38257685767 failed in its remainder lane
+    alone, on the Kafka build-interception facts 4.16.2 added, which fail in Release; that lane stops at its first
+    failing project, so the SQL projects after it first ran on 4.16.4's CI (38259433180), which passed with them.
+    nuget.org lists all 62 ids. The wiki has the audit's edits (cc9c31b, link check clean), Kronikol4J's ledger its line
+    (92d6b28), and #113 a comment naming the release (6125895464).
 
 ## Appendix A. Edit sites at `37e93813`
 
