@@ -589,3 +589,6 @@ Each is a patch unless marked.
   `--fold-unknown` folds it as one call. The core suite passes 7,281 with 2 skipped on the release commit, the Playwright suite 1,020
   with 28 skipped, the search-engine suite 214, and `release.slnf` builds and packs in Release for every target
   (62 packages). Shipped as 4.14.9, the next free number after #133's audit (4.14.7) and #163's R1 (4.14.8).
+- 2026-10-12, **4.14.9 published**: Release 38227017346, CI 38227014947, CodeQL 38227014950 and CI Summary Preview
+  38227014948 passed; nuget.org listed all 62 ids at 10:27; the wiki has the audit's edits (`5b82460`), Kronikol4J's
+  ledger a line saying nothing is ported (`3f72d57`), and #130 a comment naming the release and Q8.
