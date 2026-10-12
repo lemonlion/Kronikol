@@ -1,0 +1,5 @@
+START kafka 1791791444.019212100
+/usr/bin/bash: line 1: bc: command not found
+kafka rc=0 wall=s
+/usr/bin/bash: line 1: bc: command not found
+bi rc=0 wall=s

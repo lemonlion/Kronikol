@@ -1,0 +1,30 @@
+net8.0 M0: intercepted=301 bypassed=1699 firstBypass=301 repatches=0 objCall=original:Object
+net8.0 M1: intercepted=301 bypassed=1699 firstBypass=301 repatches=0 objCall=original:Object
+net8.0 M2: intercepted=451 bypassed=1549 firstBypass=451 repatches=0 objCall=original:Object
+net8.0 M3: intercepted=1998 bypassed=2 firstBypass=301 repatches=2 objCall=original:String
+net8.0 M4: intercepted=1902 bypassed=98 firstBypass=651 repatches=40 objCall=original:String
+net8.0 M0+QuickJit=0: intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String
+net8.0 M0+TC=0: intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String
+net10.0 M0: intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object
+net10.0 M1: intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object
+net10.0 M2: intercepted=451 bypassed=1549 firstBypass=451 repatches=0 objCall=original:Object
+net10.0 M3: intercepted=1998 bypassed=2 firstBypass=251 repatches=2 objCall=original:String
+net10.0 M4: intercepted=1902 bypassed=98 firstBypass=601 repatches=40 objCall=original:String
+net10.0 M0+QuickJit=0: intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String
+net10.0 M0+TC=0: intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String
+net8.0 M5 run1: == mode=M5 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default intercepted=201 bypassed=1799 firstBypass=201 repatches=0 objCall=original:Object 
+net8.0 M5 run2: == mode=M5 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default intercepted=301 bypassed=1699 firstBypass=301 repatches=0 objCall=original:Object 
+net8.0 M5 run3: == mode=M5 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default intercepted=301 bypassed=1699 firstBypass=301 repatches=0 objCall=original:Object 
+net10.0 M5 run1: == mode=M5 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object 
+net10.0 M5 run2: == mode=M5 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object 
+net10.0 M5 run3: == mode=M5 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object 
+net8.0 M5 run1: warm-up: calls=1051 repatches=1 elapsedMs=641 intercepted=751 bypassed=19249 firstBypass=751 repatches=0 objCall=original:Object 
+net8.0 M5 run2: warm-up: calls=1051 repatches=1 elapsedMs=645 intercepted=701 bypassed=19299 firstBypass=701 repatches=0 objCall=original:Object 
+net8.0 M5 run3: warm-up: calls=1451 repatches=2 elapsedMs=892 intercepted=20000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+net10.0 M5 run1: warm-up: calls=1501 repatches=2 elapsedMs=914 intercepted=20000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+net10.0 M5 run2: warm-up: calls=1501 repatches=2 elapsedMs=921 intercepted=20000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+net10.0 M5 run3: warm-up: calls=1501 repatches=2 elapsedMs=917 intercepted=20000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+net8.0 runtimeconfig QuickJit=false, 20000 calls after warm-up: intercepted=20000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String
+net8.0 runtimeconfig QuickJit=false M0: intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String
+net10.0 runtimeconfig QuickJit=false, 20000 calls after warm-up: intercepted=20000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String
+net10.0 runtimeconfig QuickJit=false M0: intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String

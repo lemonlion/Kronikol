@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Probe.QuickJitOff</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>audit-b</Authors>
+    <Description>audit B E5 probe: buildTransitive props setting TieredCompilationQuickJit=false unless the project set it</Description>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="buildTransitive/Probe.QuickJitOff.props" Pack="true" PackagePath="buildTransitive/Probe.QuickJitOff.props" />
+  </ItemGroup>
+</Project>

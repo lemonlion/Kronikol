@@ -1,0 +1,4 @@
+-- h242 net8.0 DOTNET_TC_QuickJit=0: tracked=300 firstUntrackedAt=-1
+-- h243 net8.0 DOTNET_TC_QuickJit=0: tracked=300 firstUntrackedAt=-1
+-- h242 net10.0 DOTNET_TC_QuickJit=0: tracked=300 firstUntrackedAt=-1
+-- h243 net10.0 DOTNET_TC_QuickJit=0: tracked=300 firstUntrackedAt=-1

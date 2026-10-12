@@ -1,0 +1,14 @@
+Runtime: .NET 8.0.27
+enabled <string,string>; ProducerBuilder<string,string>         -> TrackingKafkaProducer`2<String,String>
+                         DependentProducerBuilder<string,string> -> Producer`2<String,String>  (claim 1 of #135)
+                         ProducerBuilder<Null,string>            -> TrackingKafkaProducer`2<String,String>  is IProducer<Null,string>: False
+  Produce threw EntryPointNotFoundException: Entry point was not found.
+after Reset();           ProducerBuilder<Null,string>            -> Producer`2<String,String>  is IProducer<Null,string>: False
+ambient Activity trace 80213798cecb08e9d3b7153432058178; entries: 2; ActivityTraceId: [null, null]; Content: Key: k, Value: {"a":1}
+Runtime: .NET 10.0.11
+enabled <string,string>; ProducerBuilder<string,string>         -> TrackingKafkaProducer`2<String,String>
+                         DependentProducerBuilder<string,string> -> Producer`2<String,String>  (claim 1 of #135)
+                         ProducerBuilder<Null,string>            -> TrackingKafkaProducer`2<String,String>  is IProducer<Null,string>: False
+  Produce threw EntryPointNotFoundException: Entry point was not found.
+after Reset();           ProducerBuilder<Null,string>            -> Producer`2<String,String>  is IProducer<Null,string>: False
+ambient Activity trace 6b8424e100f5c369a044e9b9b31b00d0; entries: 2; ActivityTraceId: [null, null]; Content: Key: k, Value: {"a":1}

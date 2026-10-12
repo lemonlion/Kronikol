@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- audit B: retargeted from 4.9.0 to 4.14.6. Confluent.Kafka moves to 2.16.0: the 4.14.6 nuspec requires >= 2.16.0 -->
+    <PackageReference Include="Kronikol.Extensions.Kafka.BuildInterception" Version="4.14.6" />
+    <PackageReference Include="Confluent.Kafka" Version="$(ConfluentVersion)" />
+  </ItemGroup>
+  <PropertyGroup>
+    <ConfluentVersion Condition="'$(ConfluentVersion)' == ''">2.16.0</ConfluentVersion>
+  </PropertyGroup>
+</Project>

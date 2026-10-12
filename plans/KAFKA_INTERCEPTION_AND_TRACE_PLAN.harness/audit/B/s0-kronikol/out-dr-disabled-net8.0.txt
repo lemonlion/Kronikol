@@ -1,0 +1,5 @@
+== mode=dr-disabled runtime=.NET 8.0.27 Kronikol.Extensions.Kafka.BuildInterception=4.14.6+98c4806d16f31639eaafece174af3723f9918af8 Confluent.Kafka=2.16.0+56ef87df3402861f0dc72ef921fcfac702ae1f16
+built TrackingKafkaProducer`2 with EnableDeliveryReports=false
+Produce (no handler) -> System.InvalidOperationException: A delivery handler was specified, but delivery reports are disabled.
+same call on an unwrapped Producer`2 -> ok
+== done

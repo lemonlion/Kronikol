@@ -1,0 +1,23 @@
+== e6  runtime=.NET 10.0.11  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.2.0
+-- (i) Confluent's own Producer<string,string>, dotnet.producer.enable.delivery.reports=false, no interception
+  out-queue length before: 0
+  Produce(topic, msg, handler) -> System.InvalidOperationException: A delivery handler was specified, but delivery reports are disabled.
+  out-queue length after the refused call: 0  (0 = nothing was queued)
+  out-queue length after a plain Produce: 1
+  ProduceAsync with reports off -> returns at once: offset=Unset [-1001] status=NotPersisted; out-queue length now 2
+-- (ii) can the prefix read the setting? ProducerBuilder<,>.Config is 'protected internal'; Producer<,> has a private field
+  ProducerBuilder<String,String>: Config found=True (getter IsFamilyOrAssembly=True) dotnet.producer.enable.delivery.reports='False' -> bool.Parse=False
+  SubBuilder: Config found=True (getter IsFamilyOrAssembly=True) dotnet.producer.enable.delivery.reports='False' -> bool.Parse=False
+  a builder that never set it: '<absent>' (absent = Confluent's default, reports on)
+  built Producer<String,String>: private field enableDeliveryReports=False
+-- (iii) a DEPENDENT producer on an owner with delivery reports off, wrapped by the 4.14.6 TrackingKafkaProducer
+  dependent producer's own enableDeliveryReports field=True
+  TrackingKafkaProducer<String,String> (owner reports off).Produce -> ok
+  TrackingKafkaProducer<String,String> (owner reports on).Produce -> ok
+  tracked owner (reports off).Produce -> System.InvalidOperationException: A delivery handler was specified, but delivery reports are disabled.  (F7)
+  entries logged for dep-of-owner-reports-off: 0
+  entries logged for dep-of-owner-reports-on: 2
+  entries logged for owner-reports-off: 0
+-- (iv) a catch (InvalidOperationException) also catches its subclasses
+  ObjectDisposedException is InvalidOperationException: True
+== done (live librdkafka handles: 0)

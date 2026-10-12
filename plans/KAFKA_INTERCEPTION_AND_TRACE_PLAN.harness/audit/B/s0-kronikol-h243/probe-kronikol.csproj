@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- audit B: published 4.14.6 with Lib.Harmony 2.4.3 (published 2026-10-11) pinned above the nuspec's 2.4.2 -->
+    <PackageReference Include="Kronikol.Extensions.Kafka.BuildInterception" Version="4.14.6" />
+    <PackageReference Include="Lib.Harmony" Version="2.4.3" />
+    <PackageReference Include="Confluent.Kafka" Version="2.16.0" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <!-- audit B: one RID to keep librdkafka's natives to win-x64 (disk); framework-dependent, same runtime behaviour -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <HarmonyVersion Condition="'$(HarmonyVersion)' == ''">2.4.2</HarmonyVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Kronikol.Extensions.Kafka.BuildInterception" Version="4.14.6" />
+    <PackageReference Include="Confluent.Kafka" Version="2.16.0" />
+    <PackageReference Include="Lib.Harmony" Version="$(HarmonyVersion)" />
+  </ItemGroup>
+</Project>

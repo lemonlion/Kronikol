@@ -1,0 +1,28 @@
+Runtime: .NET 8.0.27  mode=noop
+ProducerBuilder<Null,string>.Build() -> Producer`2<String,String>; is IProducer<Null,string>: False
+  Produce(...) threw EntryPointNotFoundException: Entry point was not found.
+ConsumerBuilder<Null,string>.Build() -> Consumer`2<String,String>; is IConsumer<Null,string>: False
+  Subscribe threw EntryPointNotFoundException: Entry point was not found.
+  Consume threw EntryPointNotFoundException: Entry point was not found.
+after UnpatchAll: ProducerBuilder<Null,string>.Build() -> Producer`2<String,String>
+Runtime: .NET 10.0.11  mode=noop
+ProducerBuilder<Null,string>.Build() -> Producer`2<String,String>; is IProducer<Null,string>: False
+  Produce(...) threw EntryPointNotFoundException: Entry point was not found.
+ConsumerBuilder<Null,string>.Build() -> Consumer`2<String,String>; is IConsumer<Null,string>: False
+  Subscribe threw EntryPointNotFoundException: Entry point was not found.
+  Consume threw EntryPointNotFoundException: Entry point was not found.
+after UnpatchAll: ProducerBuilder<Null,string>.Build() -> Producer`2<String,String>
+Runtime: .NET 8.0.27  mode=wrap
+ProducerBuilder<Null,string>.Build() -> TrackingKafkaProducer`2<String,String>; is IProducer<Null,string>: False
+  Produce(...) threw EntryPointNotFoundException: Entry point was not found.
+ConsumerBuilder<Null,string>.Build() -> TrackingKafkaConsumer`2<String,String>; is IConsumer<Null,string>: False
+  Subscribe threw EntryPointNotFoundException: Entry point was not found.
+  Consume threw EntryPointNotFoundException: Entry point was not found.
+after UnpatchAll: ProducerBuilder<Null,string>.Build() -> Producer`2<String,String>
+Runtime: .NET 10.0.11  mode=wrap
+ProducerBuilder<Null,string>.Build() -> TrackingKafkaProducer`2<String,String>; is IProducer<Null,string>: False
+  Produce(...) threw EntryPointNotFoundException: Entry point was not found.
+ConsumerBuilder<Null,string>.Build() -> TrackingKafkaConsumer`2<String,String>; is IConsumer<Null,string>: False
+  Subscribe threw EntryPointNotFoundException: Entry point was not found.
+  Consume threw EntryPointNotFoundException: Entry point was not found.
+after UnpatchAll: ProducerBuilder<Null,string>.Build() -> Producer`2<String,String>

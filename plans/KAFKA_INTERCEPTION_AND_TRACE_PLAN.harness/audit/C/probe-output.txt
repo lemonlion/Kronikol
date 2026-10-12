@@ -1,0 +1,63 @@
+P0 FailedSend.Status(ProduceException<string,string>) = !ProduceException`2
+P0 FailedSend.Describe(...)                         = Local: Message timed out
+P0 InteractionStatus.IsError(null, "!Local_MsgTimedOut") = True
+P1 headers the producer stamped while nothing resolved: kronikol-test-name=Unknown, kronikol-test-id=unknown
+P1 producer-side entries: Request test=unknown source=None | Response test=unknown source=None
+P1 consumer flow before Consume: Unknown/unknown source=None attributed=False
+P1 consumer flow after Consume:  Unknown/unknown source=Scope attributed=True
+P1 correlation stored for the key: (Unknown, unknown)
+P1 consume entries: Request test=unknown source=Scope | Response test=unknown source=Scope
+P1b consume of X's message under a fetcher that answers Y: Request test=y-id source=TestContext | Response test=y-id source=TestContext
+P2 spans recorded: db insert trace=T; POST /orders trace=T; handler db read (parented) trace=T; process (parented, vhatsura-style) trace=T; handler db read (linked) trace=other; process (linked, OTel-contrib-style) trace=other
+P2 today (no Kafka ids), consume under X:      whole-test X = 4 spans [POST /orders; db insert; process (parented, vhatsura-style); handler db read (parented)]
+P2 R1 ids, consume under X:                    whole-test X = 4 spans [POST /orders; db insert; process (parented, vhatsura-style); handler db read (parented)]
+P2 R1 ids, consume under Y (fetcher, P1b):      whole-test X = 1 spans [POST /orders]
+P2 R1 ids, consume under unknown (background): whole-test X = 1 spans [POST /orders]
+P2 R1 ids, consume under X, one-instant consume popup = 1 spans [db insert]
+P2 R1 ids + R2 window (response after handler), popup  = 3 spans [db insert; process (parented, vhatsura-style); handler db read (parented)]
+P2 POST /orders popup, today (no Kafka ids), consume under Y: 2 spans [POST /orders; db insert]
+P2 POST /orders popup, R1 ids, consume under X:              2 spans [POST /orders; db insert]
+P2 POST /orders popup, R1 ids, consume under Y:              1 spans [POST /orders]
+P2 gap between the producer host's db span and the consume entry: 46.2 ms (builder tolerance 50 ms)
+P3a Consume called directly: Activity.Current after = direct process
+P3b Consume called in await Task.Run: Activity.Current after = null (the handler's spans are not its children)
+P3c loop wraps each Consume in its own Activity: m2's parent = iteration 1 (stopped=True); expected iteration 2; m1 stop restored Current to a stopped activity
+P3d two consumers in one loop: B 2's parent = A 1 (stopped=True), same as A 1: True
+P3e handler left an Activity current: after next Consume, the leaked one stopped=False, h2's parent = null
+P4a serializer failure: Local_ValueSerialization; ex.DeliveryResult.Message is the caller's object: True
+P4b ProduceAsync with a cancelled token threw TaskCanceledException
+P4b messages still queued in librdkafka after that cancelled ProduceAsync: 1
+P4c delivery report: error=Local_MsgTimedOut reason='Local: Message timed out' report.Message is the caller's object: False
+P5 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01        .NET ActivityContext.TryParse=True  ProxyTap TraceParent.TryParse=0af76519…
+P5 00-0AF7651916CD43DD8448EB211C80319C-B7AD6B7169203331-01        .NET ActivityContext.TryParse=False ProxyTap TraceParent.TryParse=0af76519…
+P5 ff-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01        .NET ActivityContext.TryParse=False ProxyTap TraceParent.TryParse=0af76519…
+P5 00-0af7651916cd43dd8448eb211c80319c-0000000000000000-01        .NET ActivityContext.TryParse=False ProxyTap TraceParent.TryParse=0af76519…
+P5 01-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01        .NET ActivityContext.TryParse=True  ProxyTap TraceParent.TryParse=0af76519…
+P5 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01-extra  .NET ActivityContext.TryParse=False ProxyTap TraceParent.TryParse=0af76519…
+P5 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-1         .NET ActivityContext.TryParse=False ProxyTap TraceParent.TryParse=null
+P6 preset Timestamp kept by RequestResponseLogger.Log: True
+P7 the caller's message after two produces: kronikol-test-name=Test 1, kronikol-test-id=t1, kronikol-test-name=Test 2, kronikol-test-id=t2
+P7 the inner producer was handed the caller's object both times: True
+P8 S1 today, the consume recorded after the POST answered
+     POST /orders                 parent: (top level)
+     Produce (A)                  parent: POST /orders
+     Consume (B)                  parent: (top level)
+     GET C (B, in handler)        parent: (top level)
+P8 S2 today, the consume recorded while the POST still waits (A awaits a reply)
+     POST /orders                 parent: (top level)
+     Produce (A)                  parent: POST /orders
+     Consume (B)                  parent: (top level)
+     GET C (B, in handler)        parent: (top level)
+P8 S3 = S2 with the Kronikol trace id carried on the message (produce takes G1, consume reads it)
+     POST /orders                 parent: (top level)
+     Produce (A)                  parent: POST /orders
+     Consume (B)                  parent: POST /orders
+     GET C (B, in handler)        parent: (top level)
+P8 S4 = S3 with R2 (the consume answered at the next Consume, after the handler)
+     POST /orders                 parent: (top level)
+     Produce (A)                  parent: POST /orders
+     Consume (B)                  parent: POST /orders
+     GET C (B, in handler)        parent: Consume (B)
+P8 S5 F8 enqueued as two halves: produce request at the call, response at delivery; B consumes an unrelated message in between
+     Produce (A)                  parent: (top level)
+     Consume (B, other message)   parent: Produce (A)

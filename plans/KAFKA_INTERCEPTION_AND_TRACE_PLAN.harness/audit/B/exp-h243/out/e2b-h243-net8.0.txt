@@ -1,0 +1,18 @@
+== e2b  runtime=.NET 8.0.27  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.3.0
+-- prototype prefix patched on ProducerBuilder<int,string>.Build ONLY; tracking enabled for <int,string>, <int,byte[]>, <long,string>
+  ProducerBuilder<Int32,String>                 .Build() -> TrackingKafkaProducer<Int32,String>            is IProducer<Int32,String>=True  tracked=True  prototypePrefixRan=1
+        Produce -> ok
+  ProducerBuilder<Int32,Byte[]>                 .Build() -> TrackingKafkaProducer<Int32,Byte[]>            is IProducer<Int32,Byte[]>=True  tracked=True  prototypePrefixRan=1
+        Produce -> ok
+  ProducerBuilder<Int64,String>                 .Build() -> Producer<Int64,String>                         is IProducer<Int64,String>=True  tracked=False  prototypePrefixRan=0
+        Produce -> ok
+  ProducerBuilder<String,String>                .Build() -> Producer<String,String>                        is IProducer<String,String>=True  tracked=False  prototypePrefixRan=0
+        Produce -> ok
+-- generic struct key: prototype prefix patched on ProducerBuilder<KeyValuePair<string,string>,string>.Build; tracking enabled for <KeyValuePair<Uri,Uri>,string> and <KeyValuePair<string,int>,string>, neither patched
+  ProducerBuilder<KeyValuePair<Uri,Uri>,String> .Build() -> TrackingKafkaProducer<KeyValuePair<Uri,Uri>,String> is IProducer<KeyValuePair<Uri,Uri>,String>=True  tracked=True  prototypePrefixRan=1
+        Produce -> ok
+  ProducerBuilder<KeyValuePair<String,Int32>,String>.Build() -> Producer<KeyValuePair<String,Int32>,String>    is IProducer<KeyValuePair<String,Int32>,String>=True  tracked=False  prototypePrefixRan=0
+        Produce -> ok
+-- a builder SUBCLASS (class SubBuilder : ProducerBuilder<string,string>), after patching <string,string>: the prototype reads __instance.GetType().GetGenericArguments()
+  SubBuilder.Build() -> System.ArgumentException: The number of generic arguments provided doesn't equal the arity of the generic type definition. (Parameter 'instantiation')
+== done (live librdkafka handles: 0)

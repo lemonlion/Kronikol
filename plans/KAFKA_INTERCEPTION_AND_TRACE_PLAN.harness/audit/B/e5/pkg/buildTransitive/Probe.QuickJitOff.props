@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <TieredCompilationQuickJit Condition="'$(TieredCompilationQuickJit)' == ''">false</TieredCompilationQuickJit>
+  </PropertyGroup>
+</Project>

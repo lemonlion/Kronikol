@@ -1,0 +1,13 @@
+== e2a-str  runtime=.NET 8.0.27  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.2.0
+-- SHIPPED KafkaBuildInterceptor: EnableProducerTracking<string,int>() only
+  ProducerBuilder<String,Int32>                 .Build() -> TrackingKafkaProducer<String,Int32>            is IProducer<String,Int32>=True  tracked=True  prototypePrefixRan=0
+        Produce -> ok
+  ProducerBuilder<Null,Int32>                   .Build() -> TrackingKafkaProducer<String,Int32>            is IProducer<Null,Int32>=False  tracked=False  prototypePrefixRan=0
+        Produce -> System.EntryPointNotFoundException: Entry point was not found.
+  ProducerBuilder<Byte[],Int32>                 .Build() -> TrackingKafkaProducer<String,Int32>            is IProducer<Byte[],Int32>=False  tracked=False  prototypePrefixRan=0
+        Produce -> System.EntryPointNotFoundException: Entry point was not found.
+  ProducerBuilder<String,Int64>                 .Build() -> Producer<String,Int64>                         is IProducer<String,Int64>=True  tracked=False  prototypePrefixRan=0
+        Produce -> ok
+  ProducerBuilder<String,String>                .Build() -> Producer<String,String>                        is IProducer<String,String>=True  tracked=False  prototypePrefixRan=0
+        Produce -> ok
+== done (live librdkafka handles: 0)

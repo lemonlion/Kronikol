@@ -1,0 +1,14 @@
+direct: Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 2 s - Consumer.dll (net8.0)
+direct: Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 2 s - Consumer.dll (net10.0)
+direct net8.0: .NET 8.0.27 process=C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\77278bdc-858b-4173-96e8-50ec8ed0b557\scratchpad\audit\B\e5\consumer-direct\bin\Release\net8.0\Consumer.exe AppContext QuickJit=false intercepted=2000/2000 firstBypass=-1
+direct net10.0: .NET 10.0.11 process=C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\77278bdc-858b-4173-96e8-50ec8ed0b557\scratchpad\audit\B\e5\consumer-direct\bin\Release\net10.0\Consumer.exe AppContext QuickJit=false intercepted=2000/2000 firstBypass=-1
+transitive: Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 3 s - Consumer.dll (net8.0)
+transitive: Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 3 s - Consumer.dll (net10.0)
+transitive net8.0: .NET 8.0.27 process=C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\77278bdc-858b-4173-96e8-50ec8ed0b557\scratchpad\audit\B\e5\consumer-transitive\bin\Release\net8.0\Consumer.exe AppContext QuickJit=false intercepted=2000/2000 firstBypass=-1
+transitive net10.0: .NET 10.0.11 process=C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\77278bdc-858b-4173-96e8-50ec8ed0b557\scratchpad\audit\B\e5\consumer-transitive\bin\Release\net10.0\Consumer.exe AppContext QuickJit=false intercepted=2000/2000 firstBypass=-1
+override: Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 3 s - Consumer.dll (net8.0)
+override: Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 3 s - Consumer.dll (net10.0)
+override net8.0: .NET 8.0.27 process=C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\77278bdc-858b-4173-96e8-50ec8ed0b557\scratchpad\audit\B\e5\consumer-override\bin\Release\net8.0\Consumer.exe AppContext QuickJit=true intercepted=401/2000 firstBypass=401
+override net10.0: .NET 10.0.11 process=C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\77278bdc-858b-4173-96e8-50ec8ed0b557\scratchpad\audit\B\e5\consumer-override\bin\Release\net10.0\Consumer.exe AppContext QuickJit=true intercepted=551/2000 firstBypass=551
+xunit2 net8.0: .NET 8.0.27 process=C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\77278bdc-858b-4173-96e8-50ec8ed0b557\scratchpad\audit\B\e5\consumer-xunit2\bin\Release\net8.0\testhost.exe AppContext QuickJit=false intercepted=2000/2000 firstBypass=-1
+xunit2 net10.0: .NET 10.0.11 process=C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\77278bdc-858b-4173-96e8-50ec8ed0b557\scratchpad\audit\B\e5\consumer-xunit2\bin\Release\net10.0\testhost.exe AppContext QuickJit=false intercepted=2000/2000 firstBypass=-1

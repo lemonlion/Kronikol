@@ -1,0 +1,29 @@
+== mode=pairs runtime=.NET 8.0.27 Kronikol.Extensions.Kafka.BuildInterception=4.9.0+417c8e5855adb837099c9bb7f98b3a7606a79fbe Confluent.Kafka=2.15.1+12fb6718875ef13251fd5bad65b24c167407d519
+-- KafkaBuildInterceptor.EnableProducerTracking<string,string>():
+  ProducerBuilder<string,string>.Build() -> Kronikol.Extensions.Kafka.TrackingKafkaProducer`2[System.String,System.String]  isinst IProducer<String,String>=True
+    Produce -> ok
+  ProducerBuilder<Null,string>.Build() -> Kronikol.Extensions.Kafka.TrackingKafkaProducer`2[System.String,System.String]  isinst IProducer<Null,String>=False
+    Produce -> System.EntryPointNotFoundException: Entry point was not found.
+  ProducerBuilder<string,byte[]>.Build() -> Kronikol.Extensions.Kafka.TrackingKafkaProducer`2[System.String,System.String]  isinst IProducer<String,Byte[]>=False
+    Produce -> System.EntryPointNotFoundException: Entry point was not found.
+  ProducerBuilder<int,string>.Build() -> Confluent.Kafka.Producer`2[System.Int32,System.String]  isinst IProducer<Int32,String>=True
+    Produce -> ok
+-- then EnableProducerTracking<Null,string>() as well:
+  ProducerBuilder<string,string>.Build() -> Kronikol.Extensions.Kafka.TrackingKafkaProducer`2[Confluent.Kafka.Null,System.String]  isinst IProducer<String,String>=False
+    Produce -> System.EntryPointNotFoundException: Entry point was not found.
+  ProducerBuilder<Null,string>.Build() -> Kronikol.Extensions.Kafka.TrackingKafkaProducer`2[Confluent.Kafka.Null,System.String]  isinst IProducer<Null,String>=True
+    Produce -> ok
+  ProducerBuilder<string,byte[]>.Build() -> Kronikol.Extensions.Kafka.TrackingKafkaProducer`2[Confluent.Kafka.Null,System.String]  isinst IProducer<String,Byte[]>=False
+    Produce -> System.EntryPointNotFoundException: Entry point was not found.
+  ProducerBuilder<int,string>.Build() -> Confluent.Kafka.Producer`2[System.Int32,System.String]  isinst IProducer<Int32,String>=True
+    Produce -> ok
+-- then KafkaBuildInterceptor.Reset():
+  ProducerBuilder<string,string>.Build() -> Confluent.Kafka.Producer`2[Confluent.Kafka.Null,System.String]  isinst IProducer<String,String>=False
+    Produce -> System.EntryPointNotFoundException: Entry point was not found.
+  ProducerBuilder<Null,string>.Build() -> Confluent.Kafka.Producer`2[Confluent.Kafka.Null,System.String]  isinst IProducer<Null,String>=True
+    Produce -> ok
+  ProducerBuilder<string,byte[]>.Build() -> Confluent.Kafka.Producer`2[Confluent.Kafka.Null,System.String]  isinst IProducer<String,Byte[]>=False
+    Produce -> System.EntryPointNotFoundException: Entry point was not found.
+  ProducerBuilder<int,string>.Build() -> Confluent.Kafka.Producer`2[System.Int32,System.String]  isinst IProducer<Int32,String>=True
+    Produce -> ok
+== done

@@ -1,0 +1,7 @@
+== mode=attribution runtime=.NET 8.0.27 Kronikol.Extensions.Kafka.BuildInterception=4.9.0+417c8e5855adb837099c9bb7f98b3a7606a79fbe Confluent.Kafka=2.15.1+12fb6718875ef13251fd5bad65b24c167407d519
+built TrackingKafkaProducer`2 under test A
+ProduceAsync threw ProduceException`2 (Local_MsgTimedOut)
+  logged: Request  test='Test A (built the producer)' id=A label=Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String] uri=kafka:///probe-topic activityTraceId=<null>
+  logged: Response test='Test A (built the producer)' id=A label=Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String] uri=kafka:///probe-topic activityTraceId=<null>
+  (2 entries in all)
+== done

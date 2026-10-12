@@ -1,0 +1,64 @@
+h242 net8.0 proto-helper run1: tracked=34 firstUntrackedAt=34
+h242 net8.0 proto-helper run2: tracked=38 firstUntrackedAt=38
+h242 net8.0 proto-helper run3: tracked=34 firstUntrackedAt=34
+h242 net8.0 proto-direct run1: tracked=37 firstUntrackedAt=37
+h242 net8.0 proto-direct run2: tracked=36 firstUntrackedAt=36
+h242 net8.0 proto-direct run3: tracked=34 firstUntrackedAt=34
+h242 net8.0 shipped-helper run1: tracked=170 firstUntrackedAt=170
+h242 net8.0 shipped-helper run2: tracked=86 firstUntrackedAt=86
+h242 net8.0 shipped-helper run3: tracked=54 firstUntrackedAt=54
+h242 net8.0 shipped-direct run1: tracked=96 firstUntrackedAt=96
+h242 net8.0 shipped-direct run2: tracked=201 firstUntrackedAt=201
+h242 net8.0 shipped-direct run3: tracked=152 firstUntrackedAt=152
+h242 net10.0 proto-helper run1: tracked=34 firstUntrackedAt=34
+h242 net10.0 proto-helper run2: tracked=34 firstUntrackedAt=34
+h242 net10.0 proto-helper run3: tracked=33 firstUntrackedAt=33
+h242 net10.0 proto-direct run1: tracked=40 firstUntrackedAt=40
+h242 net10.0 proto-direct run2: tracked=34 firstUntrackedAt=34
+h242 net10.0 proto-direct run3: tracked=37 firstUntrackedAt=37
+h242 net10.0 shipped-helper run1: tracked=217 firstUntrackedAt=217
+h242 net10.0 shipped-helper run2: tracked=240 firstUntrackedAt=240
+h242 net10.0 shipped-helper run3: tracked=135 firstUntrackedAt=135
+h242 net10.0 shipped-direct run1: tracked=165 firstUntrackedAt=165
+h242 net10.0 shipped-direct run2: tracked=251 firstUntrackedAt=251
+h242 net10.0 shipped-direct run3: tracked=226 firstUntrackedAt=226
+h242 net8.0 proto2-helper run1: dispatching prefix, strategy 2; call site: generic helper U.Build<K,V>) tracked=151 firstUntrackedAt=151 
+h242 net8.0 proto2-helper run2: dispatching prefix, strategy 2; call site: generic helper U.Build<K,V>) tracked=86 firstUntrackedAt=86 
+h242 net8.0 proto2-helper run3: dispatching prefix, strategy 2; call site: generic helper U.Build<K,V>) tracked=116 firstUntrackedAt=116 
+h242 net8.0 proto2-direct run1: dispatching prefix, strategy 2; call site: non-generic NoInlining method) tracked=151 firstUntrackedAt=151 
+h242 net8.0 proto2-direct run2: dispatching prefix, strategy 2; call site: non-generic NoInlining method) tracked=160 firstUntrackedAt=160 
+h242 net8.0 proto2-direct run3: dispatching prefix, strategy 2; call site: non-generic NoInlining method) tracked=151 firstUntrackedAt=151 
+h242 net10.0 proto2-helper run1: dispatching prefix, strategy 2; call site: generic helper U.Build<K,V>) tracked=157 firstUntrackedAt=157 
+h242 net10.0 proto2-helper run2: dispatching prefix, strategy 2; call site: generic helper U.Build<K,V>) tracked=129 firstUntrackedAt=129 
+h242 net10.0 proto2-helper run3: dispatching prefix, strategy 2; call site: generic helper U.Build<K,V>) tracked=109 firstUntrackedAt=109 
+h242 net10.0 proto2-direct run1: dispatching prefix, strategy 2; call site: non-generic NoInlining method) tracked=157 firstUntrackedAt=157 
+h242 net10.0 proto2-direct run2: dispatching prefix, strategy 2; call site: non-generic NoInlining method) tracked=130 firstUntrackedAt=130 
+h242 net10.0 proto2-direct run3: dispatching prefix, strategy 2; call site: non-generic NoInlining method) tracked=157 firstUntrackedAt=157 
+h243 net8.0 proto-helper run1: Harmony 2.4.3.0 dispatching prefix, strategy 0; call site: generic helper U.Build<K,V>) tracked=34 firstUntrackedAt=34 
+h243 net8.0 proto-helper run2: Harmony 2.4.3.0 dispatching prefix, strategy 0; call site: generic helper U.Build<K,V>) tracked=35 firstUntrackedAt=35 
+h243 net8.0 proto2-helper run1: Harmony 2.4.3.0 dispatching prefix, strategy 2; call site: generic helper U.Build<K,V>) tracked=201 firstUntrackedAt=201 
+h243 net8.0 proto2-helper run2: Harmony 2.4.3.0 dispatching prefix, strategy 2; call site: generic helper U.Build<K,V>) tracked=201 firstUntrackedAt=201 
+h243 net8.0 shipped-helper run1: Harmony 2.4.3.0 shipped KafkaBuildInterceptor postfix; call site: generic helper U.Build<K,V>) tracked=176 firstUntrackedAt=176 
+h243 net8.0 shipped-helper run2: Harmony 2.4.3.0 shipped KafkaBuildInterceptor postfix; call site: generic helper U.Build<K,V>) tracked=201 firstUntrackedAt=201 
+h243 net8.0 shipped-direct run1: Harmony 2.4.3.0 shipped KafkaBuildInterceptor postfix; call site: non-generic NoInlining method) tracked=238 firstUntrackedAt=238 
+h243 net8.0 shipped-direct run2: Harmony 2.4.3.0 shipped KafkaBuildInterceptor postfix; call site: non-generic NoInlining method) tracked=202 firstUntrackedAt=202 
+h243 net10.0 proto-helper run1: Harmony 2.4.3.0 dispatching prefix, strategy 0; call site: generic helper U.Build<K,V>) tracked=35 firstUntrackedAt=35 
+h243 net10.0 proto-helper run2: Harmony 2.4.3.0 dispatching prefix, strategy 0; call site: generic helper U.Build<K,V>) tracked=38 firstUntrackedAt=38 
+h243 net10.0 proto2-helper run1: Harmony 2.4.3.0 dispatching prefix, strategy 2; call site: generic helper U.Build<K,V>) tracked=201 firstUntrackedAt=201 
+h243 net10.0 proto2-helper run2: Harmony 2.4.3.0 dispatching prefix, strategy 2; call site: generic helper U.Build<K,V>) tracked=60 firstUntrackedAt=60 
+h243 net10.0 shipped-helper run1: Harmony 2.4.3.0 shipped KafkaBuildInterceptor postfix; call site: generic helper U.Build<K,V>) tracked=217 firstUntrackedAt=217 
+h243 net10.0 shipped-helper run2: Harmony 2.4.3.0 shipped KafkaBuildInterceptor postfix; call site: generic helper U.Build<K,V>) tracked=154 firstUntrackedAt=154 
+h243 net10.0 shipped-direct run1: Harmony 2.4.3.0 shipped KafkaBuildInterceptor postfix; call site: non-generic NoInlining method) tracked=243 firstUntrackedAt=243 
+h243 net10.0 shipped-direct run2: Harmony 2.4.3.0 shipped KafkaBuildInterceptor postfix; call site: non-generic NoInlining method) tracked=201 firstUntrackedAt=201 
+h242 net8.0 shipped-direct-pause run1: tracked=40 firstUntrackedAt=40
+h242 net8.0 shipped-direct-pause run2: tracked=40 firstUntrackedAt=40
+h242 net8.0 proto2-direct-pause run1: tracked=40 firstUntrackedAt=40
+h242 net8.0 proto2-direct-pause run2: tracked=40 firstUntrackedAt=40
+h242 net8.0 proto-direct-pause run1: tracked=34 firstUntrackedAt=34
+h242 net8.0 proto-direct-pause run2: tracked=34 firstUntrackedAt=34
+h242 net10.0 shipped-direct-pause run1: tracked=40 firstUntrackedAt=40
+h242 net10.0 shipped-direct-pause run2: tracked=40 firstUntrackedAt=40
+h242 net10.0 proto2-direct-pause run1: tracked=40 firstUntrackedAt=40
+h242 net10.0 proto2-direct-pause run2: tracked=51 firstUntrackedAt=51
+h242 net10.0 proto-direct-pause run1: tracked=34 firstUntrackedAt=34
+h242 net10.0 proto-direct-pause run2: tracked=34 firstUntrackedAt=34

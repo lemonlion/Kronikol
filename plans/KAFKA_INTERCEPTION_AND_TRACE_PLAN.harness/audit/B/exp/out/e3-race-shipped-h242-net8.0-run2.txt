@@ -1,0 +1,20 @@
+== e3-race  runtime=.NET 8.0.27  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.2.0
+-- variant=shipped: 10 threads run enable+patch at once, each then builds its producer at once; 4 threads build <Null,string> and <string,string> throughout
+  host0: first build after its enable returned -> UNTRACKED: Producer<String,String>
+  host1: first build after its enable returned -> UNTRACKED: Producer<String,String>
+  host2: first build after its enable returned -> UNTRACKED: Producer<String,String>
+  host3: first build after its enable returned -> UNTRACKED: Producer<String,String>
+  host4: first build after its enable returned -> UNTRACKED: Producer<String,String>
+  host5: first build after its enable returned -> UNTRACKED: Producer<String,String>
+  host6: first build after its enable returned -> UNTRACKED: Producer<String,String>
+  host7: first build after its enable returned -> tracked, options of host1
+  host8: first build after its enable returned -> UNTRACKED: Producer<String,String>
+  host9: first build after its enable returned -> UNTRACKED: Producer<String,String>
+  untracked first builds: 9 of 10; exceptions: 0
+  background builds: 48; anomalies (wrong type or exception): 3 e.g. <Null,string> -> TrackingKafkaProducer<String,String>
+  GetPatchInfo after the storm: 0 prefix(es) []
+  after the storm, one build each:
+    build <String,String> -> TrackingKafkaProducer<String,String>           prefix ran 0x; librdkafka handles left after Dispose: 0
+    build <Null,String> -> TrackingKafkaProducer<String,String>           prefix ran 0x; librdkafka handles left after Dispose: 0
+    build <String,Byte[]> -> TrackingKafkaProducer<String,String>           prefix ran 0x; librdkafka handles left after Dispose: 0
+== done (live librdkafka handles: 0)

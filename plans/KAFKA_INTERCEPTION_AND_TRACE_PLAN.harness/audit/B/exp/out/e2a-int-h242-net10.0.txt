@@ -1,0 +1,19 @@
+== e2a-int  runtime=.NET 10.0.11  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.2.0
+-- SHIPPED KafkaBuildInterceptor: EnableProducerTracking<int,string>() and EnableConsumerTracking<int,string>() only
+  ProducerBuilder<Int32,String>                 .Build() -> TrackingKafkaProducer<Int32,String>            is IProducer<Int32,String>=True  tracked=True  prototypePrefixRan=0
+        Produce -> ok
+  ProducerBuilder<Int32,Byte[]>                 .Build() -> TrackingKafkaProducer<Int32,String>            is IProducer<Int32,Byte[]>=False  tracked=False  prototypePrefixRan=0
+        Produce -> System.EntryPointNotFoundException: Entry point was not found.
+  ProducerBuilder<Int32,Null>                   .Build() -> TrackingKafkaProducer<Int32,String>            is IProducer<Int32,Null>=False  tracked=False  prototypePrefixRan=0
+        Produce -> System.EntryPointNotFoundException: Entry point was not found.
+  ProducerBuilder<Int64,String>                 .Build() -> Producer<Int64,String>                         is IProducer<Int64,String>=True  tracked=False  prototypePrefixRan=0
+        Produce -> ok
+  ProducerBuilder<String,String>                .Build() -> Producer<String,String>                        is IProducer<String,String>=True  tracked=False  prototypePrefixRan=0
+        Produce -> ok
+  ConsumerBuilder<Int32,String>                 .Build() -> TrackingKafkaConsumer<Int32,String>            is IConsumer<Int32,String>=True
+        Subscribe -> ok
+  ConsumerBuilder<Int32,Byte[]>                 .Build() -> TrackingKafkaConsumer<Int32,String>            is IConsumer<Int32,Byte[]>=False
+        Subscribe -> System.EntryPointNotFoundException: Entry point was not found.
+  ConsumerBuilder<Int64,String>                 .Build() -> Consumer<Int64,String>                         is IConsumer<Int64,String>=True
+        Subscribe -> ok
+== done (live librdkafka handles: 0)

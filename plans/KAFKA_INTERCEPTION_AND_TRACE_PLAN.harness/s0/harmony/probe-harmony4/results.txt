@@ -1,0 +1,10 @@
+Runtime: .NET 8.0.27
+DependentProducerBuilder<string,string> -> TrackingKafkaProducer`2<String,String>  ok=True
+DependentProducerBuilder<Null,string>   -> TrackingKafkaProducer`2<String,String>  ok=False
+DependentProducerBuilder<int,string>    -> Producer`2<Int32,String>  ok=True
+from a TrackingKafkaProducer's Handle   -> TrackingKafkaProducer`2<String,String>  (Handle delegates to the inner producer)
+Runtime: .NET 10.0.11
+DependentProducerBuilder<string,string> -> TrackingKafkaProducer`2<String,String>  ok=True
+DependentProducerBuilder<Null,string>   -> TrackingKafkaProducer`2<String,String>  ok=False
+DependentProducerBuilder<int,string>    -> Producer`2<Int32,String>  ok=True
+from a TrackingKafkaProducer's Handle   -> TrackingKafkaProducer`2<String,String>  (Handle delegates to the inner producer)

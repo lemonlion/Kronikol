@@ -1,0 +1,37 @@
+== e8c  runtime=.NET 8.0.27  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.2.0
+  ten in-process hosts each called KafkaBuildInterceptor.EnableProducerTracking<string,string>() with its own CallerName: registered=10 unused=10
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+  -> ReportDiagnostics.Analyse would print: "Warning: 10 tracking component(s) were registered but never invoked: KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka). This usually means the component was added to the wrong pipeline or options. ..."
+  produced once through TrackingKafkaProducer<String,String> on e8c-host0: delivery report Local_MsgTimedOut (no broker; the wrapped handler logs it)
+  produced once through TrackingKafkaProducer<String,String> on e8c-host1: delivery report Local_MsgTimedOut (no broker; the wrapped handler logs it)
+  produced once through TrackingKafkaProducer<String,String> on e8c-host2: delivery report Local_MsgTimedOut (no broker; the wrapped handler logs it)
+  produced once through TrackingKafkaProducer<String,String> on e8c-host3: delivery report Local_MsgTimedOut (no broker; the wrapped handler logs it)
+  produced once through TrackingKafkaProducer<String,String> on e8c-host4: delivery report Local_MsgTimedOut (no broker; the wrapped handler logs it)
+  produced once through TrackingKafkaProducer<String,String> on e8c-host5: delivery report Local_MsgTimedOut (no broker; the wrapped handler logs it)
+  produced once through TrackingKafkaProducer<String,String> on e8c-host6: delivery report Local_MsgTimedOut (no broker; the wrapped handler logs it)
+  produced once through TrackingKafkaProducer<String,String> on e8c-host7: delivery report Local_MsgTimedOut (no broker; the wrapped handler logs it)
+  produced once through TrackingKafkaProducer<String,String> on e8c-host8: delivery report Local_MsgTimedOut (no broker; the wrapped handler logs it)
+  produced once through TrackingKafkaProducer<String,String> on e8c-host9: delivery report Local_MsgTimedOut (no broker; the wrapped handler logs it)
+  after each host built a producer and produced once: registered=10 unused=9
+     KafkaTracker (Kafka) invoked=True count=10
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+  -> ReportDiagnostics.Analyse would print: "Warning: 9 tracking component(s) were registered but never invoked: KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka), KafkaTracker (Kafka). This usually means the component was added to the wrong pipeline or options. ..."
+  CallerName on the ten hosts' produce entries: host9
+== done (live librdkafka handles: 0)

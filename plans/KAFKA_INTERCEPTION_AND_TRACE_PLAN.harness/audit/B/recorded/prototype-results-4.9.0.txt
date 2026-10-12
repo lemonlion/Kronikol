@@ -1,0 +1,16 @@
+Runtime: .NET 8.0.27
+ProducerBuilder<string,string>          -> TrackingKafkaProducer`2<String,String>  ok=True
+ProducerBuilder<Null,string>            -> Producer`2<Null,String>  ok=True
+ProducerBuilder<string,byte[]>          -> Producer`2<String,Byte[]>  ok=True
+DependentProducerBuilder<string,string> -> TrackingKafkaProducer`2<String,String>  ok=True
+DependentProducerBuilder<Null,string>   -> Producer`2<Null,String>  ok=True
+  Produce on <Null,string>: no exception (queued; no broker)
+%4|1791393271.189|TERMINATE|rdkafka#producer-2| [thrd:app]: Producer terminating with 1 message (1 byte) still in queue or transit: use flush() to wait for outstanding message delivery
+Runtime: .NET 10.0.11
+ProducerBuilder<string,string>          -> TrackingKafkaProducer`2<String,String>  ok=True
+ProducerBuilder<Null,string>            -> Producer`2<Null,String>  ok=True
+ProducerBuilder<string,byte[]>          -> Producer`2<String,Byte[]>  ok=True
+DependentProducerBuilder<string,string> -> TrackingKafkaProducer`2<String,String>  ok=True
+DependentProducerBuilder<Null,string>   -> Producer`2<Null,String>  ok=True
+  Produce on <Null,string>: no exception (queued; no broker)
+%4|1791393271.944|TERMINATE|rdkafka#producer-2| [thrd:app]: Producer terminating with 1 message (1 byte) still in queue or transit: use flush() to wait for outstanding message delivery

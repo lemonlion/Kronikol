@@ -1,0 +1,18 @@
+Runtime: .NET 8.0.27
+ProducerBuilder<string,string>         -> TrackingKafkaProducer`2<String,String>  implements its own IProducer: True  postfix calls so far: 1
+DependentProducerBuilder<string,string> -> Producer`2<String,String>  implements its own IProducer: True  postfix calls so far: 1
+ProducerBuilder<Null,string>           -> TrackingKafkaProducer`2<String,String>  implements its own IProducer: False  postfix calls so far: 2
+ProducerBuilder<string,byte[]>         -> TrackingKafkaProducer`2<String,String>  implements its own IProducer: False  postfix calls so far: 3
+ProducerBuilder<int,string>            -> Producer`2<Int32,String>  implements its own IProducer: True  postfix calls so far: 3
+  postfix saw: postfix<String,String> given Producer`2<String,String>
+  postfix saw: postfix<String,String> given Producer`2<String,String>
+  postfix saw: postfix<String,String> given Producer`2<String,String>
+Runtime: .NET 10.0.11
+ProducerBuilder<string,string>         -> TrackingKafkaProducer`2<String,String>  implements its own IProducer: True  postfix calls so far: 1
+DependentProducerBuilder<string,string> -> Producer`2<String,String>  implements its own IProducer: True  postfix calls so far: 1
+ProducerBuilder<Null,string>           -> TrackingKafkaProducer`2<String,String>  implements its own IProducer: False  postfix calls so far: 2
+ProducerBuilder<string,byte[]>         -> TrackingKafkaProducer`2<String,String>  implements its own IProducer: False  postfix calls so far: 3
+ProducerBuilder<int,string>            -> Producer`2<Int32,String>  implements its own IProducer: True  postfix calls so far: 3
+  postfix saw: postfix<String,String> given Producer`2<String,String>
+  postfix saw: postfix<String,String> given Producer`2<String,String>
+  postfix saw: postfix<String,String> given Producer`2<String,String>

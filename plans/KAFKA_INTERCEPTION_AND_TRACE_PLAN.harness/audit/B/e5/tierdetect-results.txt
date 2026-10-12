@@ -1,0 +1,240 @@
+### (a) build=default net8.0 env: none
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = True
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = True
+  MEASURED: shared-generic patch intercepted 501 of 2000 calls (first bypass 501) -> runtime re-JITted (tiering with quick JIT on)
+### (b) build=qjoff net8.0 env: none
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = String "false"
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 2000 of 2000 calls (first bypass -1) -> runtime did NOT re-JIT (quick JIT off or tiering off)
+### (c) build=default net8.0 env: DOTNET_TC_QuickJit=0
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = 0
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 2000 of 2000 calls (first bypass -1) -> runtime did NOT re-JIT (quick JIT off or tiering off)
+### (d) build=default net8.0 env: DOTNET_TieredCompilation=0
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = 0
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 2000 of 2000 calls (first bypass -1) -> runtime did NOT re-JIT (quick JIT off or tiering off)
+### (e) build=qjoff net8.0 env: DOTNET_TC_QuickJit=1
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = String "false"
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = 1
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = True
+  MEASURED: shared-generic patch intercepted 701 of 2000 calls (first bypass 701) -> runtime re-JITted (tiering with quick JIT on)
+### (f) build=default net8.0 env: DOTNET_TC_QuickJit=false
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = false
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = True
+  MEASURED: shared-generic patch intercepted 701 of 2000 calls (first bypass 701) -> runtime re-JITted (tiering with quick JIT on)
+### (g) build=default net8.0 env: COMPlus_TC_QuickJit=0
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = 0
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 2000 of 2000 calls (first bypass -1) -> runtime did NOT re-JIT (quick JIT off or tiering off)
+### (h) build=tcoff net8.0 env: none
+  AppContext.GetData("System.Runtime.TieredCompilation") = String "false"
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 2000 of 2000 calls (first bypass -1) -> runtime did NOT re-JIT (quick JIT off or tiering off)
+### (i) build=tcoff net8.0 env: DOTNET_TieredCompilation=1
+  AppContext.GetData("System.Runtime.TieredCompilation") = String "false"
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = 1
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = True
+  MEASURED: shared-generic patch intercepted 251 of 2000 calls (first bypass 251) -> runtime re-JITted (tiering with quick JIT on)
+### (j) build=qjoff net8.0 env: DOTNET_TC_QuickJit=false
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = String "false"
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = false
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 801 of 2000 calls (first bypass 801) -> runtime re-JITted (tiering with quick JIT on)
+### (a) build=default net10.0 env: none
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = True
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = True
+  MEASURED: shared-generic patch intercepted 251 of 2000 calls (first bypass 251) -> runtime re-JITted (tiering with quick JIT on)
+### (b) build=qjoff net10.0 env: none
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = String "false"
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 2000 of 2000 calls (first bypass -1) -> runtime did NOT re-JIT (quick JIT off or tiering off)
+### (c) build=default net10.0 env: DOTNET_TC_QuickJit=0
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = 0
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 2000 of 2000 calls (first bypass -1) -> runtime did NOT re-JIT (quick JIT off or tiering off)
+### (d) build=default net10.0 env: DOTNET_TieredCompilation=0
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = 0
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 2000 of 2000 calls (first bypass -1) -> runtime did NOT re-JIT (quick JIT off or tiering off)
+### (e) build=qjoff net10.0 env: DOTNET_TC_QuickJit=1
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = String "false"
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = 1
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = True
+  MEASURED: shared-generic patch intercepted 201 of 2000 calls (first bypass 201) -> runtime re-JITted (tiering with quick JIT on)
+### (f) build=default net10.0 env: DOTNET_TC_QuickJit=false
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = false
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = True
+  MEASURED: shared-generic patch intercepted 251 of 2000 calls (first bypass 251) -> runtime re-JITted (tiering with quick JIT on)
+### (g) build=default net10.0 env: COMPlus_TC_QuickJit=0
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = 0
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 2000 of 2000 calls (first bypass -1) -> runtime did NOT re-JIT (quick JIT off or tiering off)
+### (h) build=tcoff net10.0 env: none
+  AppContext.GetData("System.Runtime.TieredCompilation") = String "false"
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 2000 of 2000 calls (first bypass -1) -> runtime did NOT re-JIT (quick JIT off or tiering off)
+### (i) build=tcoff net10.0 env: DOTNET_TieredCompilation=1
+  AppContext.GetData("System.Runtime.TieredCompilation") = String "false"
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = 1
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = unset
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = True
+  MEASURED: shared-generic patch intercepted 251 of 2000 calls (first bypass 251) -> runtime re-JITted (tiering with quick JIT on)
+### (j) build=qjoff net10.0 env: DOTNET_TC_QuickJit=false
+  AppContext.GetData("System.Runtime.TieredCompilation") = null
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJit") = String "false"
+  AppContext.GetData("System.Runtime.TieredCompilation.QuickJitForLoops") = null
+  AppContext.GetData("System.Runtime.TieredPGO") = null
+  env DOTNET_TieredCompilation = unset
+  env COMPlus_TieredCompilation = unset
+  env DOTNET_TC_QuickJit = false
+  env COMPlus_TC_QuickJit = unset
+  reader A (runtimeconfig first, then env, 'false'/'0' = off): tiering can re-JIT = False
+  reader B (env first as CLRConfig does, hex DWORD, then runtimeconfig): tiering can re-JIT = False
+  MEASURED: shared-generic patch intercepted 701 of 2000 calls (first bypass 701) -> runtime re-JITted (tiering with quick JIT on)

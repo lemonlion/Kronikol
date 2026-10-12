@@ -1,0 +1,40 @@
+== e7  runtime=.NET 8.0.27  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.2.0
+-- C:\Users\cex\.nuget\packages\confluent.kafka\2.14.0\lib\net8.0\Confluent.Kafka.dll
+   assembly 2.14.0.0, informational 2.14.0+f6bba058b7dab63f12829e1f643cc85a9fa209ba
+   Producer`2 ctor(DependentProducerBuilder<TKey,TValue>)  internal
+   Producer`2 ctor(ProducerBuilder<TKey,TValue>)  internal
+   Consumer`2 ctor(ConsumerBuilder<TKey,TValue>)  internal
+   ProducerBuilder`2.Build(): virtual=True IL=0273A302000A2A (7 bytes)
+   DependentProducerBuilder`2.Build(): virtual=True IL=0273C401000A2A (7 bytes)
+   ConsumerBuilder`2.Build(): virtual=True IL=02739B01000A2A (7 bytes)
+   ProducerBuilder`2.Config getter: protected internal
+   Producer`2.enableDeliveryReports field: Boolean
+   Handle.Owner: present; Handle.Config: absent
+   DependentProducerBuilder`2 public properties: Handle, KeySerializer, ValueSerializer, AsyncKeySerializer, AsyncValueSerializer
+-- C:\Users\cex\.nuget\packages\confluent.kafka\2.15.1\lib\net8.0\Confluent.Kafka.dll
+   assembly 2.15.1.0, informational 2.15.1+12fb6718875ef13251fd5bad65b24c167407d519
+   Producer`2 ctor(DependentProducerBuilder<TKey,TValue>)  internal
+   Producer`2 ctor(ProducerBuilder<TKey,TValue>)  internal
+   Consumer`2 ctor(ConsumerBuilder<TKey,TValue>)  internal
+   ProducerBuilder`2.Build(): virtual=True IL=0273A502000A2A (7 bytes)
+   DependentProducerBuilder`2.Build(): virtual=True IL=0273C701000A2A (7 bytes)
+   ConsumerBuilder`2.Build(): virtual=True IL=02739E01000A2A (7 bytes)
+   ProducerBuilder`2.Config getter: protected internal
+   Producer`2.enableDeliveryReports field: Boolean
+   Handle.Owner: present; Handle.Config: absent
+   DependentProducerBuilder`2 public properties: Handle, KeySerializer, ValueSerializer, AsyncKeySerializer, AsyncValueSerializer
+-- C:\Users\cex\.nuget\packages\confluent.kafka\2.16.0\lib\net8.0\Confluent.Kafka.dll
+   assembly 2.16.0.0, informational 2.16.0+56ef87df3402861f0dc72ef921fcfac702ae1f16
+   Producer`2 ctor(DependentProducerBuilder<TKey,TValue>)  internal
+   Producer`2 ctor(ProducerBuilder<TKey,TValue>)  internal
+   Consumer`2 ctor(ConsumerBuilder<TKey,TValue>)  internal
+   ProducerBuilder`2.Build(): virtual=True IL=0273E302000A2A (7 bytes)
+   DependentProducerBuilder`2.Build(): virtual=True IL=0273F201000A2A (7 bytes)
+   ConsumerBuilder`2.Build(): virtual=True IL=0273B501000A2A (7 bytes)
+   ProducerBuilder`2.Config getter: protected internal
+   Producer`2.enableDeliveryReports field: Boolean
+   Handle.Owner: present; Handle.Config: present
+   DependentProducerBuilder`2 public properties: Handle, KeySerializer, ValueSerializer, AsyncKeySerializer, AsyncValueSerializer, KeySerializerBuilder, ValueSerializerBuilder, AsyncKeySerializerBuilder, AsyncValueSerializerBuilder
+-- C:\Users\cex\.nuget\packages\confluent.kafka\2.16.0\lib\net10.0\Confluent.Kafka.dll
+-- C:\Users\cex\.nuget\packages\confluent.kafka\2.16.0\lib\net10.0\Confluent.Kafka.dll: System.IO.FileNotFoundException: Could not load file or assembly 'System.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a'. The system cannot find the file specified.
+== done (live librdkafka handles: 0)

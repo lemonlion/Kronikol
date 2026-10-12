@@ -1,0 +1,27 @@
+== e1  runtime=.NET 10.0.11  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.2.0
+-- (a) unpatched: Confluent's own Build()
+  unknown property no.such.property=x            -> System.InvalidOperationException: No such configuration property: "no.such.property"
+  invalid value acks=banana                      -> System.ArgumentException: Invalid value for configuration property "request.required.acks"
+  delivery.report.only.error=true                -> System.ArgumentException: The 'delivery.report.only.error' property is not supported by this client
+  dotnet.producer.enable.delivery.reports=maybe  -> System.FormatException: String 'maybe' was not recognized as a valid Boolean.
+  <Uri,string> with no key serializer            -> System.ArgumentNullException: Value cannot be null. (Parameter 'Key serializer not specified and there is no default serializer defined for type Uri.')
+-- (b) prototype prefix patched (Activator.CreateInstance + MethodInfo.Invoke)
+  unknown property no.such.property=x            -> System.Reflection.TargetInvocationException [inner System.InvalidOperationException]: Exception has been thrown by the target of an invocation.
+  invalid value acks=banana                      -> System.Reflection.TargetInvocationException [inner System.ArgumentException]: Exception has been thrown by the target of an invocation.
+  delivery.report.only.error=true                -> System.Reflection.TargetInvocationException [inner System.ArgumentException]: Exception has been thrown by the target of an invocation.
+  dotnet.producer.enable.delivery.reports=maybe  -> System.Reflection.TargetInvocationException [inner System.FormatException]: Exception has been thrown by the target of an invocation.
+  <Uri,string> with no key serializer            -> System.Reflection.TargetInvocationException [inner System.ArgumentNullException]: Exception has been thrown by the target of an invocation.
+-- (c) fix 1: BindingFlags.DoNotWrapExceptions on CreateInstance and Invoke
+  unknown property no.such.property=x            -> System.InvalidOperationException: No such configuration property: "no.such.property"
+  invalid value acks=banana                      -> System.ArgumentException: Invalid value for configuration property "request.required.acks"
+  delivery.report.only.error=true                -> System.ArgumentException: The 'delivery.report.only.error' property is not supported by this client
+  dotnet.producer.enable.delivery.reports=maybe  -> System.FormatException: String 'maybe' was not recognized as a valid Boolean.
+  <Uri,string> with no key serializer            -> System.ArgumentNullException: Value cannot be null. (Parameter 'Key serializer not specified and there is no default serializer defined for type Uri.')
+-- (d) fix 2: cached compiled delegate (Expression.New on the internal ctor, then WrapProducer)
+  unknown property no.such.property=x            -> System.InvalidOperationException: No such configuration property: "no.such.property"
+  invalid value acks=banana                      -> System.ArgumentException: Invalid value for configuration property "request.required.acks"
+  delivery.report.only.error=true                -> System.ArgumentException: The 'delivery.report.only.error' property is not supported by this client
+  dotnet.producer.enable.delivery.reports=maybe  -> System.FormatException: String 'maybe' was not recognized as a valid Boolean.
+  <Uri,string> with no key serializer            -> System.ArgumentNullException: Value cannot be null. (Parameter 'Key serializer not specified and there is no default serializer defined for type Uri.')
+  prefix calls=15
+== done (live librdkafka handles: 0)

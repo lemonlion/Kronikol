@@ -1,0 +1,9 @@
+== proto  runtime=.NET 10.0.11  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.2.0
+ProducerBuilder<string,string>          -> TrackingKafkaProducer`2<String,String>  ok=True
+ProducerBuilder<Null,string>            -> Producer`2<Null,String>  ok=True
+ProducerBuilder<string,byte[]>          -> Producer`2<String,Byte[]>  ok=True
+DependentProducerBuilder<string,string> -> TrackingKafkaProducer`2<String,String>  ok=True
+DependentProducerBuilder<Null,string>   -> Producer`2<Null,String>  ok=True
+  Produce on <Null,string>: no exception (queued; no broker)
+%4|1791792907.691|TERMINATE|rdkafka#producer-2| [thrd:app]: Producer terminating with 1 message (1 byte) still in queue or transit: use flush() to wait for outstanding message delivery
+== done (live librdkafka handles: 0)

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- audit B: net10.0 added (the harness ran net8.0 only for this probe) -->
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- audit B: the published 4.14.6 packages (retargeted from 4.9.0); Confluent.Kafka resolves to 2.16.0 (nuspec minimum) -->
+    <PackageReference Include="Kronikol.Extensions.Kafka.BuildInterception" Version="4.14.6" />
+  </ItemGroup>
+</Project>

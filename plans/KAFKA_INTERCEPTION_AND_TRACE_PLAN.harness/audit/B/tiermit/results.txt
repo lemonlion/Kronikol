@@ -1,0 +1,24 @@
+h242-qjon net8.0 M0 run1: == mode=M0 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object 
+h242-qjon net8.0 M0 run2: == mode=M0 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object 
+h242-qjon net10.0 M0 run1: == mode=M0 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object 
+h242-qjon net10.0 M0 run2: == mode=M0 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object 
+h242-qjoff net8.0 M0 run1: == mode=M0 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h242-qjoff net8.0 M0 run2: == mode=M0 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h242-qjoff net10.0 M0 run1: == mode=M0 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h242-qjoff net10.0 M0 run2: == mode=M0 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h243-qjon net8.0 M0 run1: == mode=M0 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object 
+h243-qjon net8.0 M0 run2: == mode=M0 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object 
+h243-qjon net10.0 M0 run1: == mode=M0 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default intercepted=251 bypassed=1749 firstBypass=251 repatches=0 objCall=original:Object 
+h243-qjon net10.0 M0 run2: == mode=M0 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default intercepted=301 bypassed=1699 firstBypass=301 repatches=0 objCall=original:Object 
+h243-qjoff net8.0 M0 run1: == mode=M0 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h243-qjoff net8.0 M0 run2: == mode=M0 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h243-qjoff net10.0 M0 run1: == mode=M0 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h243-qjoff net10.0 M0 run2: == mode=M0 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h242-qjon net8.0 M0 +env DOTNET_TC_QuickJit=0: == mode=M0 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=0 intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h243-qjon net8.0 M0 +env DOTNET_TC_QuickJit=0: == mode=M0 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=0 intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h242-qjoff net8.0 M5 (20,000 calls after warm-up): == mode=M5 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default warm-up: calls=600 repatches=0 elapsedMs=373 intercepted=20000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h243-qjoff net8.0 M5 (20,000 calls after warm-up): == mode=M5 runtime=.NET 8.0.27 TieredCompilation=default QuickJit=default warm-up: calls=600 repatches=0 elapsedMs=413 intercepted=20000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h242-qjon net10.0 M0 +env DOTNET_TC_QuickJit=0: == mode=M0 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=0 intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h243-qjon net10.0 M0 +env DOTNET_TC_QuickJit=0: == mode=M0 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=0 intercepted=2000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h242-qjoff net10.0 M5 (20,000 calls after warm-up): == mode=M5 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default warm-up: calls=600 repatches=0 elapsedMs=370 intercepted=20000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 
+h243-qjoff net10.0 M5 (20,000 calls after warm-up): == mode=M5 runtime=.NET 10.0.11 TieredCompilation=default QuickJit=default warm-up: calls=600 repatches=0 elapsedMs=488 intercepted=20000 bypassed=0 firstBypass=-1 repatches=0 objCall=original:String 

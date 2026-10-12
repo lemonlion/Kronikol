@@ -1,0 +1,5 @@
+== e3-dup  runtime=.NET 10.0.11  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.3.0
+  a void pass-through prefix patched once: ran 1x per Build()
+  the same prefix patched a second time: ran 2x per Build(); GetPatchInfo: 2 prefix(es) [audit.b.dup:PassThroughPrefix, audit.b.dup:PassThroughPrefix]
+  plus the dispatching prefix patched twice: pass-through ran 2x, dispatching prefix ran 1x; handles left 0; result TrackingKafkaProducer<String,String>; GetPatchInfo: 4 prefix(es) [audit.b.dup:PassThroughPrefix, audit.b.dup:PassThroughPrefix, audit.b.proto:Prefix, audit.b.proto:Prefix]
+== done (live librdkafka handles: 0)

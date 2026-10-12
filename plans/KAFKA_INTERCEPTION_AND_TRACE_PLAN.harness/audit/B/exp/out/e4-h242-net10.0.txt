@@ -1,0 +1,21 @@
+== e4  runtime=.NET 10.0.11  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.2.0
+  enabled <string,string>, prototype patch on: <String,String> -> TrackingKafkaProducer<String,String>  ConfluentOwnProducer=False tracked=True isinst IProducer<String,String>=True
+        Produce (no handler) -> ok
+        Produce (handler) -> delivery report arrived: Local_MsgTimedOut (NotPersisted)
+  after DisableProducerTracking<string,string>, patch still on: <String,String> -> Producer<String,String>  ConfluentOwnProducer=True tracked=False isinst IProducer<String,String>=True
+        Produce (no handler) -> ok
+        Produce (handler) -> delivery report arrived: Local_MsgTimedOut (NotPersisted)
+  after DisableProducerTracking<string,string>, patch still on: <Null,String> -> Producer<Null,String>  ConfluentOwnProducer=True tracked=False isinst IProducer<Null,String>=True
+        Produce (no handler) -> ok
+        Produce (handler) -> delivery report arrived: Local_MsgTimedOut (NotPersisted)
+  after DisableProducerTracking<string,string>, patch still on: <String,Byte[]> -> Producer<String,Byte[]>  ConfluentOwnProducer=True tracked=False isinst IProducer<String,Byte[]>=True
+        Produce (no handler) -> ok
+        Produce (handler) -> delivery report arrived: Local_MsgTimedOut (NotPersisted)
+  re-enabled <string,string>: <String,String> -> TrackingKafkaProducer<String,String>  ConfluentOwnProducer=False tracked=True isinst IProducer<String,String>=True
+        Produce (no handler) -> ok
+        Produce (handler) -> delivery report arrived: Local_MsgTimedOut (NotPersisted)
+  after KafkaTrackingInterceptor.Reset(): <String,String> -> Producer<String,String>  ConfluentOwnProducer=True tracked=False isinst IProducer<String,String>=True
+        Produce (no handler) -> ok
+        Produce (handler) -> delivery report arrived: Local_MsgTimedOut (NotPersisted)
+  prefix calls=6
+== done (live librdkafka handles: 0)

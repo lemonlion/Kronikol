@@ -1,0 +1,22 @@
+== e3-stack  runtime=.NET 10.0.11  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.2.0
+  (0) no patch
+    build <String,String> -> Producer<String,String>                        prefix ran 0x; librdkafka handles left after Dispose: 0
+    build <Null,String> -> Producer<Null,String>                          prefix ran 0x; librdkafka handles left after Dispose: 0
+    build <String,Byte[]> -> Producer<String,Byte[]>                        prefix ran 0x; librdkafka handles left after Dispose: 0
+  (1) patched once via ProducerBuilder<string,string>.Build; GetPatchInfo: 1 prefix(es) [audit.b.proto:Prefix]
+    build <String,String> -> TrackingKafkaProducer<String,String>           prefix ran 1x; librdkafka handles left after Dispose: 0
+    build <Null,String> -> Producer<Null,String>                          prefix ran 1x; librdkafka handles left after Dispose: 0
+    build <String,Byte[]> -> Producer<String,Byte[]>                        prefix ran 1x; librdkafka handles left after Dispose: 0
+  (2) the same MethodInfo patched again (same Harmony id, same prefix); GetPatchInfo: 2 prefix(es) [audit.b.proto:Prefix, audit.b.proto:Prefix]
+    build <String,String> -> TrackingKafkaProducer<String,String>           prefix ran 1x; librdkafka handles left after Dispose: 0
+    build <Null,String> -> Producer<Null,String>                          prefix ran 1x; librdkafka handles left after Dispose: 0
+    build <String,Byte[]> -> Producer<String,Byte[]>                        prefix ran 1x; librdkafka handles left after Dispose: 0
+  (3) plus ProducerBuilder<Null,string>.Build (another closed MethodInfo, same shared code); GetPatchInfo <string,string>: 2 prefix(es) [audit.b.proto:Prefix, audit.b.proto:Prefix]; <Null,string>: 1 prefix(es) [audit.b.proto:Prefix]
+    build <String,String> -> TrackingKafkaProducer<String,String>           prefix ran 1x; librdkafka handles left after Dispose: 0
+    build <Null,String> -> Producer<Null,String>                          prefix ran 1x; librdkafka handles left after Dispose: 0
+    build <String,Byte[]> -> Producer<String,Byte[]>                        prefix ran 1x; librdkafka handles left after Dispose: 0
+  (4) plus a second Harmony id patching <string,string>.Build; GetPatchInfo: 3 prefix(es) [audit.b.proto:Prefix, audit.b.proto:Prefix, audit.b.other-id:Prefix]
+    build <String,String> -> TrackingKafkaProducer<String,String>           prefix ran 1x; librdkafka handles left after Dispose: 0
+    build <Null,String> -> Producer<Null,String>                          prefix ran 1x; librdkafka handles left after Dispose: 0
+    build <String,Byte[]> -> Producer<String,Byte[]>                        prefix ran 1x; librdkafka handles left after Dispose: 0
+== done (live librdkafka handles: 0)

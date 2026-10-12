@@ -1,0 +1,11 @@
+== e8b  runtime=.NET 8.0.27  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.2.0
+  after KafkaBuildInterceptor.EnableTracking<string,string>() (both directions): registered=2 unused=2
+     KafkaTracker (Kafka) invoked=False count=0
+     KafkaTracker (Kafka) invoked=False count=0
+  -> ReportDiagnostics.Analyse would print: "Warning: 2 tracking component(s) were registered but never invoked: KafkaTracker (Kafka), KafkaTracker (Kafka). This usually means the component was added to the wrong pipeline or options. ..."
+  produced once through TrackingKafkaProducer<String,String> on e8b: delivery report Local_MsgTimedOut (no broker; the wrapped handler logs it)
+  after an app that only produces built one producer and produced once: registered=2 unused=1
+     KafkaTracker (Kafka) invoked=True count=1
+     KafkaTracker (Kafka) invoked=False count=0
+  -> ReportDiagnostics.Analyse would print: "Warning: 1 tracking component(s) were registered but never invoked: KafkaTracker (Kafka). This usually means the component was added to the wrong pipeline or options. ..."
+== done (live librdkafka handles: 0)

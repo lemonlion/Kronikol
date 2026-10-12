@@ -1,0 +1,16 @@
+### build=default net8.0 env: DOTNET_TC_QuickJit=true -> intercepted 251 of 2000, first bypass 251
+### build=default net8.0 env: DOTNET_TC_QuickJit=zzz -> intercepted 301 of 2000, first bypass 301
+### build=default net8.0 env: DOTNET_TC_QuickJit=0x0 -> intercepted 2000 of 2000, first bypass -1
+### build=default net8.0 env: DOTNET_TC_QuickJit=00 -> intercepted 2000 of 2000, first bypass -1
+### build=qjoff net8.0 env: DOTNET_TC_QuickJit=zzz -> intercepted 2000 of 2000, first bypass -1
+### build=qjoff net8.0 env: DOTNET_TC_QuickJit=true -> intercepted 2000 of 2000, first bypass -1
+### build=default net8.0 env: DOTNET_TieredCompilation=false -> intercepted 301 of 2000, first bypass 301
+### build=default net8.0 env: DOTNET_TC_QuickJit=1 COMPlus_TC_QuickJit=0 -> intercepted 201 of 2000, first bypass 201
+### build=default net10.0 env: DOTNET_TC_QuickJit=true -> intercepted 301 of 2000, first bypass 301
+### build=default net10.0 env: DOTNET_TC_QuickJit=zzz -> intercepted 251 of 2000, first bypass 251
+### build=default net10.0 env: DOTNET_TC_QuickJit=0x0 -> intercepted 2000 of 2000, first bypass -1
+### build=default net10.0 env: DOTNET_TC_QuickJit=00 -> intercepted 2000 of 2000, first bypass -1
+### build=qjoff net10.0 env: DOTNET_TC_QuickJit=zzz -> intercepted 2000 of 2000, first bypass -1
+### build=qjoff net10.0 env: DOTNET_TC_QuickJit=true -> intercepted 2000 of 2000, first bypass -1
+### build=default net10.0 env: DOTNET_TieredCompilation=false -> intercepted 251 of 2000, first bypass 251
+### build=default net10.0 env: DOTNET_TC_QuickJit=1 COMPlus_TC_QuickJit=0 -> intercepted 251 of 2000, first bypass 251

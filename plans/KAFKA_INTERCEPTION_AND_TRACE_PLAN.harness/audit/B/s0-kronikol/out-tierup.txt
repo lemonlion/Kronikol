@@ -1,0 +1,18 @@
+-- net8.0 run 1
+== mode=tierup runtime=.NET 8.0.27 Kronikol.Extensions.Kafka.BuildInterception=4.14.6+98c4806d16f31639eaafece174af3723f9918af8 Confluent.Kafka=2.16.0+56ef87df3402861f0dc72ef921fcfac702ae1f16
+300 x new ProducerBuilder<string,string>(...).Build() after EnableProducerTracking<string,string>: tracked=47 firstUntrackedAt=47
+-- net8.0 run 2
+== mode=tierup runtime=.NET 8.0.27 Kronikol.Extensions.Kafka.BuildInterception=4.14.6+98c4806d16f31639eaafece174af3723f9918af8 Confluent.Kafka=2.16.0+56ef87df3402861f0dc72ef921fcfac702ae1f16
+300 x new ProducerBuilder<string,string>(...).Build() after EnableProducerTracking<string,string>: tracked=167 firstUntrackedAt=167
+-- net8.0 run 3
+== mode=tierup runtime=.NET 8.0.27 Kronikol.Extensions.Kafka.BuildInterception=4.14.6+98c4806d16f31639eaafece174af3723f9918af8 Confluent.Kafka=2.16.0+56ef87df3402861f0dc72ef921fcfac702ae1f16
+300 x new ProducerBuilder<string,string>(...).Build() after EnableProducerTracking<string,string>: tracked=201 firstUntrackedAt=201
+-- net10.0 run 1
+== mode=tierup runtime=.NET 10.0.11 Kronikol.Extensions.Kafka.BuildInterception=4.14.6+98c4806d16f31639eaafece174af3723f9918af8 Confluent.Kafka=2.16.0+56ef87df3402861f0dc72ef921fcfac702ae1f16
+300 x new ProducerBuilder<string,string>(...).Build() after EnableProducerTracking<string,string>: tracked=101 firstUntrackedAt=101
+-- net10.0 run 2
+== mode=tierup runtime=.NET 10.0.11 Kronikol.Extensions.Kafka.BuildInterception=4.14.6+98c4806d16f31639eaafece174af3723f9918af8 Confluent.Kafka=2.16.0+56ef87df3402861f0dc72ef921fcfac702ae1f16
+300 x new ProducerBuilder<string,string>(...).Build() after EnableProducerTracking<string,string>: tracked=151 firstUntrackedAt=151
+-- net10.0 run 3
+== mode=tierup runtime=.NET 10.0.11 Kronikol.Extensions.Kafka.BuildInterception=4.14.6+98c4806d16f31639eaafece174af3723f9918af8 Confluent.Kafka=2.16.0+56ef87df3402861f0dc72ef921fcfac702ae1f16
+300 x new ProducerBuilder<string,string>(...).Build() after EnableProducerTracking<string,string>: tracked=251 firstUntrackedAt=251

@@ -1,0 +1,21 @@
+== e2c  runtime=.NET 8.0.27  Kronikol.Extensions.Kafka=4.14.6  Confluent.Kafka=2.16.0  Lib.Harmony=2.4.3.0
+-- patch through the shape's representative: ProducerBuilder<Canon(K),Canon(V)>.Build, where Canon maps every reference type to object
+  enable <String,String> -> representative ProducerBuilder<Object,Object>: patched
+  enable <Int32,Byte[]> -> representative ProducerBuilder<Int32,Object>: patched
+  enable <KeyValuePair<Uri,Uri>,String> -> representative ProducerBuilder<KeyValuePair<Object,Object>,Object>: patched
+  enable <Null,String> -> representative ProducerBuilder<Object,Object>: already patched, skipped
+  enable <Int32,String> -> representative ProducerBuilder<Int32,Object>: already patched, skipped
+  ProducerBuilder<String,String>                .Build() -> TrackingKafkaProducer<String,String>           is IProducer<String,String>=True  tracked=True  prototypePrefixRan=1
+        Produce -> ok
+  ProducerBuilder<Null,String>                  .Build() -> Producer<Null,String>                          is IProducer<Null,String>=True  tracked=False  prototypePrefixRan=1
+        Produce -> ok
+  ProducerBuilder<Int32,Byte[]>                 .Build() -> TrackingKafkaProducer<Int32,Byte[]>            is IProducer<Int32,Byte[]>=True  tracked=True  prototypePrefixRan=1
+        Produce -> ok
+  ProducerBuilder<Int32,String>                 .Build() -> Producer<Int32,String>                         is IProducer<Int32,String>=True  tracked=False  prototypePrefixRan=1
+        Produce -> ok
+  ProducerBuilder<KeyValuePair<Uri,Uri>,String> .Build() -> TrackingKafkaProducer<KeyValuePair<Uri,Uri>,String> is IProducer<KeyValuePair<Uri,Uri>,String>=True  tracked=True  prototypePrefixRan=1
+        Produce -> ok
+  ProducerBuilder<Int64,String>                 .Build() -> Producer<Int64,String>                         is IProducer<Int64,String>=True  tracked=False  prototypePrefixRan=0
+        Produce -> ok
+  GetPatchInfo <object,object>: 1 prefix(es) [audit.b.proto:Prefix]; <int,object>: 1 prefix(es) [audit.b.proto:Prefix]
+== done (live librdkafka handles: 0)
