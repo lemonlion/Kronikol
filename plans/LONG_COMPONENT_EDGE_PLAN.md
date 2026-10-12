@@ -1,10 +1,11 @@
 # Long component edges in the render worker (#162)
 
 **Date:** 2026-10-09 · **Repo version:** 4.14.4 (`main` at `9f2cd394`; line numbers are for that commit) · **Status:**
-**green-lit in full 2026-10-10, EXECUTED (R1, R3 as 4.14.5; R2 as 4.14.6).** Drafted from #162 (filed 2026-10-08), at the owner's ask of 2026-10-09 to
+**green-lit in full 2026-10-10, EXECUTED (R1, R3 as 4.14.5; R2 as 4.14.6), AUDITED 2026-10-12 (fixes as 4.14.10).** Drafted from #162 (filed 2026-10-08), at the owner's ask of 2026-10-09 to
 analyse the issue critically and plan a fix for the underlying problem. The owner's ask of 2026-10-10: implement the plan
 in full, including raising the issue with TeaVM and opening any PRs for the fix, so every §9 question is taken as
-recommended (Q4 yes). R1 and R3 shipped as 4.14.5 and R2 as 4.14.6, both published (§11); the upstream half is konsoletyper/teavm#1295 and #1296.
+recommended (Q4 yes). R1 and R3 shipped as 4.14.5 and R2 as 4.14.6, both published (§11); the upstream half was konsoletyper/teavm#1295 and #1296, closed unmerged the same day for the maintainer's own fix,
+which no release carries yet (§11).
 
 Evidence labels: **RUN** (measured on 2026-10-09 on Windows 11 with the published 4.14.4 packages and the pinned engine,
 `@plantuml/core@1.2026.8`; Chrome 154.0.8037.99, Playwright 1.59.1's Chromium 147.0.7727.15, Firefox 148.0.2, WebKit 26.4,
@@ -643,6 +644,61 @@ in it beyond Q1 and Q2; R2 and R3 are hardening; U is the owner's.
   with 538 renders byte-identical. It is posted as konsoletyper/teavm#1295 (the issue) and #1296 (the pull request,
   commit `10acb854` on `lemonlion/teavm`, branch `regex-iterative-quantifiers`). The caps are raised in a later plan,
   once a published PlantUML build carries the fix and the engine is re-pinned (Appendix C).
+- **2026-10-12. Audited at the owner's ask, fixes released as 4.14.10.** The ask: "make sure nothing was missed from the
+  plan, that there isn't any bugs or issues in the implementation". Every step of §4 to §6 was read against 4.14.5 and
+  4.14.6, and each cap, the detectors, the Node message, the popup, the records and the docs against what they claim.
+  Found and fixed, each with a fact that fails without the fix:
+  - A cut or a break could fall between the two UTF-16 code units of one character (an emoji), and either half alone
+    draws as U+FFFD: `TruncateLabel`, which since 4.14.5 also cuts participant names, actions and the edge's first
+    entry; `DiagramWidth`'s hard break; `ChunksUpTo`; the note's run breaks in C# and in the page's YAML view; and the
+    probe's copy of the cut.
+  - A name written in another script lost every letter to the alias's underscores, so two names of one length shared
+    an alias and one participant. `AliasSource` gives a name holding a character outside ASCII the hash §4.3 gave a cut
+    name; every ASCII name keeps its alias.
+  - An edge's methods were sorted in the machine culture's order, in the diagram and in the mergeable file, so the cut
+    kept different entries on different machines (Czech sorts `ch` after `h`, and every culture `delete` before `Get`)
+    and Kronikol4J, which sorts in ordinal order, differed. Both sort in ordinal order now.
+  - §8's first item: a merged report's component diagram did not take `DependencyColors`; it does now. Its
+    `useC4: false` is deliberate, since the merged page draws in the browser, and the code says so.
+  - The internal-flow popup described the stack picture only. An activity action past its length fails as
+    `Syntax Error?`, and the popup now names it as the report's own diagrams do. The line read "a activity action".
+  - The harness's measurements were never committed: `.gitignore`'s `[Ll]ogs/` kept `measure/logs`,
+    `measure/follow/logs` and `r1r3/logs` out (94 files), while §2.2, §4.1 and the results file cite them.
+  - Untested: the probe's strict verdict had no fact, so the 3.30.4 verdict (F7a) could come back unseen; the page's and
+    node's detectors were not held to one list; the Node message's line was not checked against the engine's numbering
+    (measured in node: blank lines before `@startuml` are skipped and a comment there is counted, as the C# `Trim`
+    assumes); and the differ's cut was checked in its source only. Each has a fact now, the differ's drawn in the worker
+    with the optimizing compilers off.
+
+  Checked and sound: each cap's margin under its measured edge, the placeholder note, the Kronikol4J ledger lines,
+  roadmap 1.25 and Appendix C, `PLANS_STATUS.md`, the changelog's claims, the skills, and the wiki except three
+  sentences (an opener's failure form, the link row's main-thread claim and the cut's marker), corrected with this
+  release. §8's `!theme` item is `THEME_PLAN.md` Phase 5's. Not fixed, for the owner: reports sort feature and scenario
+  names, dependency filters and categories in the machine culture's order, which Kronikol4J's ordinal sort assumes is
+  not so (`ReportDataSerializer.java:51`), a choice of comparer for the whole product; two ASCII names that differ only
+  in case, separators or punctuation (`orders api`, `orders_api`) still share an alias, as they always have; and the
+  obsolete `RenderGantt` writes uncapped names.
+
+  U, the engine: #1295 and #1296 were closed unmerged on 2026-10-10 at 15:22 UTC, the maintainer having written a fix
+  of their own on master (`e68a92f45`, quantifiers over a character class or the dot matched without recursion, which
+  `2fdcdc8de` and `835886788` extend to state machines for sequences of classes and for optional, bounded, reluctant
+  and possessive quantifiers and alternatives). No release carries it by 2026-10-12; 0.16.0, of 2026-10-02, is the
+  latest. They asked whether 0.16.0 and 0.17.0-dev-1 had been compared on PlantUML's build and suggested a parser
+  without regexes; lemonlion asked on 2026-10-11 whether a benchmark is still wanted, with no answer yet. The caps stay
+  until a release carries the fix, a PlantUML build is made on it and the engine is re-pinned (Appendix C).
+
+  BreakfastProvider's xUnit lane, run with every dependency in memory on 4.14.4 and on 4.14.6, drew its component
+  diagram the same byte for byte, and 298 of its 421 sequence sources the same once durations, trace and flow ids and
+  dates are set aside; the rest differ in test data only (Cosmos `_ts` and `_rid`, random sizes, ports, a duration
+  under a millisecond shown or not). Neither run holds a cut marker, a `+N more`, a hashed alias or an engine error:
+  its data reaches no cap. The stack check 4.14.6 added runs after every drawn diagram and serializes its markup: on
+  that report's 421 diagrams (13.4 MB of SVG) it took 48 to 56 ms in all, at most 1.9 ms for one, beside a 6.0-second
+  draw, and flagged none. A check of the DOM first would save under 1% of the draw, so it stays as it is.
+
+  Proofs: each fix put back as it was, or each new fact's target broken, in 20 mutations, every one caught by the fact
+  meant to catch it. The YAML view's emoji fact first let its mutation through: it read the SVG's whole text, which
+  joins the drawn lines with nothing between them, so the two halves of a split emoji met again; it reads each line
+  now. Scripts and results: `LONG_COMPONENT_EDGE_PLAN.harness/audit/`.
 
 ## Appendix A. Edit sites at `9f2cd394`
 

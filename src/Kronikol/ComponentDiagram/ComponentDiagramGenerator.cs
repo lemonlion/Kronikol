@@ -322,7 +322,8 @@ public static partial class ComponentDiagramGenerator
     {
         var cap = PlantUml.PlantUmlStatementLimits.MaxComponentEdgeLabelChars;
         var marker = PlantUml.PlantUmlStatementLimits.TruncationMarker;
-        var methods = rel.Methods.OrderBy(m => m).ToArray();
+        // Ordinal, as Kronikol4J lists them: the cut keeps the first entries, and the machine's culture chose them.
+        var methods = rel.Methods.OrderBy(m => m, StringComparer.Ordinal).ToArray();
         var head = $"{rel.Protocol}: ";
         string Written(string listing)
         {

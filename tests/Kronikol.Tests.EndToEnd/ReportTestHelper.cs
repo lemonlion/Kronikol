@@ -3785,6 +3785,41 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// One diagram whose response note is JSON holding two runs of 150 emoji with no space in them, one starting on an
+    /// even and one on an odd code unit, built through the real formatter. Its writer escapes each emoji as
+    /// <c>\uXXXX\uXXXX</c>; the YAML view decodes them, so it is the view that draws, and breaks, a run of them.
+    /// </summary>
+    public static string GenerateReportWithEmojiRunNote(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+        var traceId = Guid.NewGuid();
+        var pairId = Guid.NewGuid();
+        var emoji = string.Concat(Enumerable.Repeat("\U0001F600", 150));
+        RequestResponseLog[] logs =
+        [
+            new("Emoji run", "emoji", HttpMethod.Get, null, new Uri("http://orders.internal/orders/1"), [],
+                "OrderService", "WebApp", RequestResponseType.Request, traceId, pairId, TrackingIgnore: false),
+            new("Emoji run", "emoji", HttpMethod.Get, "{\"even\":\"" + emoji + "\",\"odd\":\"x" + emoji + "\"}",
+                new Uri("http://orders.internal/orders/1"), [], "OrderService", "WebApp", RequestResponseType.Response,
+                traceId, pairId, TrackingIgnore: false),
+        ];
+
+        var source = Kronikol.PlantUml.PlantUmlCreator
+            .GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.First().PlainText;
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DiagramAsCode("t1", "", source)], features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart with { NotePayloadFormat = NotePayloadFormat.Yaml });
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// One diagram whose request note is a multi-line ClickHouse query — the shape that used to be
     /// sliced every 80 characters mid-identifier by the form-url-encoded formatter. Built through
     /// the REAL formatter, so the fixture carries the exact bytes a tracked SQL call produces.

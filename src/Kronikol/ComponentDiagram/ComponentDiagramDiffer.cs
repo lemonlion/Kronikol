@@ -216,7 +216,8 @@ public static partial class ComponentDiagramDiffer
     private static string RelKey(ComponentRelationship r) => $"{r.Caller}->{r.Service}";
 
     // A name past the worker's cap is cut, and its alias keeps a hash of the whole name, as in
-    // ComponentDiagramGenerator: see PlantUmlStatementLimits.MaxParticipantNameChars.
+    // ComponentDiagramGenerator: see PlantUmlStatementLimits.MaxParticipantNameChars. So does a name written in another
+    // script, whose letters become underscores (PlantUmlStatementLimits.AliasSource).
     private static string SanitizeAlias(string name) =>
         SanitizeAliasRegex().Replace(PlantUml.PlantUmlStatementLimits.AliasSource(name).Camelize(), "_");
 }

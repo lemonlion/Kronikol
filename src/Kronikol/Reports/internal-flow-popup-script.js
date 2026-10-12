@@ -142,14 +142,15 @@
                             }
                             // The engine's answer is read when it is written: a render in a worker takes longer than
                             // any fixed wait, so a check on a timer found nothing and left the engine's error text as the
-                            // diagram. A stack failure is described as the report describes one (the line it choked on);
-                            // any other failure the engine writes as text is a diagram too large to draw.
+                            // diagram. A stack failure, and a Syntax Error? picture (an action past its cap draws one),
+                            // are described as the report describes its own diagrams, naming the line the engine choked
+                            // on; any other failure the engine writes as text is a diagram too large to draw.
                             var mo = new MutationObserver(function() {
                                 mo.disconnect();
                                 el.dataset.rendered = '1';
-                                if (window._isStackOverflow && window._isStackOverflow(el.innerHTML)) {
+                                if (el.querySelector('svg') || (window._isStackOverflow && window._isStackOverflow(el.innerHTML))) {
                                     if (window._describeEngineFailure) window._describeEngineFailure(el, source);
-                                } else if (!el.querySelector('svg') && (el.textContent || '').indexOf('RuntimeException') >= 0) {
+                                } else if ((el.textContent || '').indexOf('RuntimeException') >= 0) {
                                     el.innerHTML = '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px">' +
                                         '<strong>Activity diagram too large for browser rendering.</strong><br>' +
                                         'Use <code>CallTree</code> style for large relationship flows.</div>';

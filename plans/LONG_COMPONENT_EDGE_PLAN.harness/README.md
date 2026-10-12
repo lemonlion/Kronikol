@@ -62,6 +62,17 @@ table is `tools/render-bench/results/statement-limits-worker-2026-10-10.txt`.
 | `red/` | The R2 facts copied onto 4.14.5 with the Node detector stubbed: `core-on-4.14.5.txt` (7 fail) and `e2e-on-4.14.5.txt` (5 fail) |
 | `mutate_r2.py`, `mutations.jsonl` | Each mutation puts one behaviour back as it was (the picture cached or not counted, the detector reading the whole picture or without its first line, no description or one below the picture, the popup's check, the Node renderer returning the picture), and the results |
 
+## `audit/`: the audit of 4.14.5 and 4.14.6 (plan §11, 2026-10-12, fixes as 4.14.10)
+
+| Path | What it is |
+|---|---|
+| `mutate_audit.py`, `mutations.jsonl` | Each mutation puts one of the audit's fixes back as it was, or breaks the target of one new fact, and runs the facts that should catch it: 20, every one caught. The YAML emoji fact let its mutation (B6) through at first; the second B6 line is the run after it read each drawn line |
+| `yamlprobe.js` | Prints each drawn note line of a page with its length and the halves of an emoji it holds; it showed the split halves the YAML fact's first form could not see |
+| `compare_bp.py` | Decodes the diagram sources two BreakfastProvider runs wrote and compares them with run noise set aside, printing no report |
+| `stackcheck-cost.js` | Draws every diagram of a report and times what 4.14.6's stack check costs per diagram: the markup serialized, the detector, and a DOM check that could stand before them |
+| `results.txt` | BreakfastProvider on 4.14.4 against 4.14.6, and the stack check's cost on its report |
+| `wiki_edits.py` | The wiki edits that followed publication |
+
 ## `research/`: the inventories the plan was written from
 
 | File | What it is |

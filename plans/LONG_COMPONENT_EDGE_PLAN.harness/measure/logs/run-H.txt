@@ -1,0 +1,33 @@
+{"kind":"stack","label":"F-stack","browser":"chromium-new","jsflags":"","prefs":null,"env":null,"r":{"main":{"simple":[12435,12435,12435,12435,12435,12435],"fat":[5181,5181,5181,5181,5181,5181],"hot":[11305,12435,12435,12435,12435],"err":"RangeError: Maximum call stack size exceeded"},"worker":{"simple":[6353,6353,6353,6353,6353,6353],"fat":[2647,2647,2647,2647,2647,2647],"hot":[5775,6353,6353,6353,6353],"err":"RangeError: Maximum call stack size exceeded"},"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.0.0 Safari/537.36"},"ratioSimple":"1.96","ratioFat":"1.96","ratioHot":"1.96"}
+{"kind":"stack","label":"F-stack","browser":"chromium-new","jsflags":"--no-opt --no-maglev","prefs":null,"env":null,"r":{"main":{"simple":[12433,12433,12433,12433,12433,12433],"fat":[5180,5180,5180,5180,5180,5180],"hot":[11303,11303,11303,11303,11303],"err":"RangeError: Maximum call stack size exceeded"},"worker":{"simple":[6353,6353,6353,6353,6353,6353],"fat":[2647,2647,2647,2647,2647,2647],"hot":[5775,5775,5775,5775,5775],"err":"RangeError: Maximum call stack size exceeded"},"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.0.0 Safari/537.36"},"ratioSimple":"1.96","ratioFat":"1.96","ratioHot":"1.96"}
+H-chromium-new-w4-jit real L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2927ms worker/1w
+H-chromium-new-w4-jit real L=1500 lo: drawn 1089ms worker/1w
+H-chromium-new-w4-jit real L=1740 mid: drawn 907ms worker/1w
+H-chromium-new-w4-jit real L=1860 mid: drawn 906ms worker/1w
+H-chromium-new-w4-jit real L=1920 mid: drawn 921ms worker/1w
+H-chromium-new-w4-jit real L=1950 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 973ms worker/1w
+H-chromium-new-w4-jit real L=1940 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1048ms worker/1w
+H-chromium-new-w4-jit real L=1930 mid: drawn 986ms worker/1w
+H-chromium-new-w4-jit real L=1930 edge-draw-rep: drawn 987ms worker/1w
+H-chromium-new-w4-jit real L=1940 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 767ms worker/1w
+H-chromium-new-w4-jit real L=1930 edge-draw-rep: drawn 788ms worker/1w
+H-chromium-new-w4-jit real L=1940 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 765ms worker/1w
+H-chromium-new-w4-jit real L=1920 around: drawn 991ms worker/1w
+H-chromium-new-w4-jit real L=1950 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 806ms worker/1w
+{"kind":"summary","label":"H-chromium-new-w4-jit","browser":"chromium-new","jsflags":"","page":"w4","mode":"cold","shape":"real","lastDraw":1930,"firstFail":1940,"results":{"1500":["drawn"],"1740":["drawn"],"1860":["drawn"],"1920":["drawn","drawn"],"1930":["drawn","drawn","drawn"],"1940":["STACK","STACK","STACK"],"1950":["STACK","STACK"],"1979":["STACK"]}}
+H-chromium-new-w4-off real L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2990ms worker/1w
+H-chromium-new-w4-off real L=300 lo: drawn 1195ms worker/1w
+H-chromium-new-w4-off real L=1140 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1010ms worker/1w
+H-chromium-new-w4-off real L=720 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 990ms worker/1w
+H-chromium-new-w4-off real L=510 mid: drawn 884ms worker/1w
+H-chromium-new-w4-off real L=620 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 999ms worker/1w
+H-chromium-new-w4-off real L=570 mid: drawn 914ms worker/1w
+H-chromium-new-w4-off real L=600 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 992ms worker/1w
+H-chromium-new-w4-off real L=590 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 990ms worker/1w
+H-chromium-new-w4-off real L=580 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1133ms worker/1w
+H-chromium-new-w4-off real L=570 edge-draw-rep: drawn 895ms worker/1w
+H-chromium-new-w4-off real L=580 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 988ms worker/1w
+H-chromium-new-w4-off real L=560 around: drawn 1000ms worker/1w
+H-chromium-new-w4-off real L=590 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1035ms worker/1w
+{"kind":"summary","label":"H-chromium-new-w4-off","browser":"chromium-new","jsflags":"--no-opt --no-maglev","page":"w4","mode":"cold","shape":"real","lastDraw":570,"firstFail":580,"results":{"300":["drawn"],"510":["drawn"],"560":["drawn"],"570":["drawn","drawn"],"580":["STACK","STACK"],"590":["STACK","STACK"],"600":["STACK"],"620":["STACK"],"720":["STACK"],"1140":["STACK"],"1979":["STACK"]}}
+chain3 finished

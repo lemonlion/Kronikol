@@ -172,8 +172,9 @@ public class ComponentDiagramLabelWidthTests
     [Fact]
     public void A_label_far_longer_than_any_real_one_still_fits()
     {
-        // The reported label was 1049 characters. The statement cap allows a label of nearly 2000, so the
-        // width bound has to hold at the cap rather than merely at the size that was reported.
+        // The reported label was 1049 characters, and until 4.14.5 the statement cap allowed nearly 2000. Since then
+        // the edge's own cap (PlantUmlStatementLimits.MaxComponentEdgeLabelChars, 375) cuts a list this long by whole
+        // entries, so the width bound has to hold at what that cap lets through.
         var methods = Enumerable.Range(0, 60).Select(i => $"SELECT FROM some_quite_long_table_name_{i:D2}");
         var relationships = new ComponentRelationship[]
         {

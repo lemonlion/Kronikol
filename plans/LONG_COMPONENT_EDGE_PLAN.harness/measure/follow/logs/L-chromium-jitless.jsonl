@@ -1,0 +1,19 @@
+{"t":"2026-10-09T17:57:58.991Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"message","n":1000,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T17:57:59.197Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"message","n":1500,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T17:57:59.401Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"message","n":1800,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T17:57:59.605Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"message","n":2000,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T17:57:59.719Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"loop label","n":800,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T17:57:59.923Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"loop label","n":1000,"legacyVerdict":"drawn","strict":"ERROR","detail":"PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)"}
+{"t":"2026-10-09T17:57:59.979Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"loop label","n":1200,"legacyVerdict":"drawn","strict":"ERROR","detail":"PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)"}
+{"t":"2026-10-09T17:58:00.033Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"loop label","n":1300,"legacyVerdict":"drawn","strict":"ERROR","detail":"PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)"}
+{"t":"2026-10-09T17:58:00.087Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"loop label","n":1400,"legacyVerdict":"drawn","strict":"ERROR","detail":"PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)"}
+{"t":"2026-10-09T17:58:00.139Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"loop label","n":1471,"legacyVerdict":"drawn","strict":"ERROR","detail":"PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)"}
+{"t":"2026-10-09T17:58:00.193Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"loop label","n":1600,"legacyVerdict":"drawn","strict":"ERROR","detail":"PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)"}
+{"t":"2026-10-09T17:58:00.246Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"loop label","n":2000,"legacyVerdict":"drawn","strict":"ERROR","detail":"PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)"}
+{"t":"2026-10-09T17:58:00.304Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"coloured bar","n":800,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T17:58:00.368Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"coloured bar","n":1000,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T17:58:00.435Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"coloured bar","n":1200,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T17:58:00.498Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"coloured bar","n":1300,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T17:58:00.555Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"coloured bar","n":1400,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T17:58:00.659Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"coloured bar","n":1600,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T17:58:00.765Z","kind":"legacy","browser":"chromium","jsflags":"--jitless","case":"coloured bar","n":2000,"legacyVerdict":"drawn","strict":"drawn"}

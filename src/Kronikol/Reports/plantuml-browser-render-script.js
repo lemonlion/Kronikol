@@ -1104,6 +1104,8 @@
             return null;
         }
         window._findOverLongStatement = findOverLongStatement;
+        // A kind read out in a sentence: "a block label", "an activity action".
+        function withArticle(kind) { return (/^[aeiou]/i.test(kind) ? 'an ' : 'a ') + kind; }
         // The longest statement in a source, for a stack failure no cap explains (a kind no cap knows yet, or a runtime
         // with a smaller stack). A note's body is left out, since the engine does not walk it on the stack; a one-line
         // note carrying a colour tag is kept, since it does.
@@ -1159,7 +1161,7 @@
                 var cause = '<strong>The diagram engine ran out of stack.</strong> '
                     + 'Its JavaScript build reads some statements one character at a time on its stack, so one long statement '
                     + 'can exhaust it, soonest in the Web Worker a report draws in. '
-                    + (past ? 'Line ' + past.line + ' is a ' + past.kind + ' of ' + past.length + ' characters (limit ' + past.limit + '). '
+                    + (past ? 'Line ' + past.line + ' is ' + withArticle(past.kind) + ' of ' + past.length + ' characters (limit ' + past.limit + '). '
                        : longest ? 'Its longest statement is line ' + longest.line + ', of ' + longest.length + ' characters. ' : '')
                     + '<code>PlantUmlRendering.Server</code> and <code>PlantUmlRendering.Local</code> draw it.';
                 if (svg) {
@@ -1183,7 +1185,7 @@
                 var overLong = findOverLongStatement(source || el.getAttribute('data-plantuml') || '');
                 note.innerHTML = (overLong
                     ? '<div style="color:#c00;margin-bottom:0.5em"><strong>A statement is longer than the engine parses.</strong> '
-                      + 'Line ' + overLong.line + ' is a ' + overLong.kind + ' of ' + overLong.length + ' characters (limit ' + overLong.limit + '). '
+                      + 'Line ' + overLong.line + ' is ' + withArticle(overLong.kind) + ' of ' + overLong.length + ' characters (limit ' + overLong.limit + '). '
                       + 'The parser reports nothing for this — it abandons the whole diagram, which is why every other statement in this fragment is gone too.</div>'
                     : '') + rawDetails;
                 el.appendChild(note);

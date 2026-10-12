@@ -52,6 +52,8 @@ function truncateLabel(label, budget) {
     if (label.startsWith('<U+', p)) cut = p;
     break;
   }
+  const unit = cut > 0 ? label.charCodeAt(cut - 1) : 0;
+  if (unit >= 0xD800 && unit <= 0xDBFF) cut--;
   let slashes = 0;
   while (cut - slashes > 0 && label[cut - slashes - 1] === '\\') slashes++;
   if (slashes % 2 === 1) cut--;

@@ -1,0 +1,774 @@
+
+=== once {"label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"stats-edge-asis","values":[0],"reps":2}
+K-chromium-w4-off stats-edge-asis v=0 (max line 491 arrow, arrow 491) once: drawn 2201ms worker/1
+K-chromium-w4-off stats-edge-asis v=0 (max line 491 arrow, arrow 491) once: drawn 1113ms worker/1
+=== done in 5 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"loop","lo":100,"hi":1471,"reps":2}
+K-chromium-w4-off loop v=1471 (max line 1471 opener, arrow 47) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1100ms worker/1
+K-chromium-w4-off loop v=100 (max line 100 opener, arrow 47) lo: drawn 1320ms worker/1
+K-chromium-w4-off loop v=790 (max line 790 opener, arrow 47) mid: drawn 1345ms worker/1
+K-chromium-w4-off loop v=1130 (max line 1130 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1385ms worker/1
+K-chromium-w4-off loop v=960 (max line 960 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1144ms worker/1
+K-chromium-w4-off loop v=880 (max line 880 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 944ms worker/1
+K-chromium-w4-off loop v=840 (max line 840 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 947ms worker/1
+K-chromium-w4-off loop v=820 (max line 820 opener, arrow 47) mid: drawn 916ms worker/1
+K-chromium-w4-off loop v=830 (max line 830 opener, arrow 47) mid: drawn 946ms worker/1
+K-chromium-w4-off loop v=830 (max line 830 opener, arrow 47) edge-draw-rep: drawn 951ms worker/1
+K-chromium-w4-off loop v=840 (max line 840 opener, arrow 47) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 950ms worker/1
+K-chromium-w4-off loop v=820 (max line 820 opener, arrow 47) around: drawn 940ms worker/1
+K-chromium-w4-off loop v=850 (max line 850 opener, arrow 47) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 952ms worker/1
+{"kind":"summary","label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"loop","lastDraw":830,"firstFail":840,"results":{"100":["drawn"],"790":["drawn"],"820":["drawn","drawn"],"830":["drawn","drawn"],"840":["ERROR","ERROR"],"850":["ERROR"],"880":["ERROR"],"960":["ERROR"],"1130":["ERROR"],"1471":["ERROR"]}}
+=== done in 22 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"partition","lo":100,"hi":1471,"reps":2}
+K-chromium-w4-off partition v=1471 (max line 1471 opener, arrow 52) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1347ms worker/1
+K-chromium-w4-off partition v=100 (max line 100 opener, arrow 52) lo: drawn 975ms worker/1
+K-chromium-w4-off partition v=790 (max line 790 opener, arrow 52) mid: drawn 982ms worker/1
+K-chromium-w4-off partition v=1130 (max line 1130 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1334ms worker/1
+K-chromium-w4-off partition v=960 (max line 960 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1341ms worker/1
+K-chromium-w4-off partition v=880 (max line 880 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 935ms worker/1
+K-chromium-w4-off partition v=840 (max line 840 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 950ms worker/1
+K-chromium-w4-off partition v=820 (max line 820 opener, arrow 52) mid: drawn 1322ms worker/1
+K-chromium-w4-off partition v=830 (max line 830 opener, arrow 52) mid: drawn 926ms worker/1
+K-chromium-w4-off partition v=830 (max line 830 opener, arrow 52) edge-draw-rep: drawn 931ms worker/1
+K-chromium-w4-off partition v=840 (max line 840 opener, arrow 52) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 936ms worker/1
+K-chromium-w4-off partition v=820 (max line 820 opener, arrow 52) around: drawn 832ms worker/1
+K-chromium-w4-off partition v=850 (max line 850 opener, arrow 52) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1370ms worker/1
+{"kind":"summary","label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"partition","lastDraw":830,"firstFail":840,"results":{"100":["drawn"],"790":["drawn"],"820":["drawn","drawn"],"830":["drawn","drawn"],"840":["ERROR","ERROR"],"850":["ERROR"],"880":["ERROR"],"960":["ERROR"],"1130":["ERROR"],"1471":["ERROR"]}}
+=== done in 23 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"bar-token","lo":100,"hi":1400,"reps":2}
+K-chromium-w4-off bar-token v=1400 (max line 1400 bar, arrow 43) hi: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 1157ms worker/1
+K-chromium-w4-off bar-token v=100 (max line 100 bar, arrow 43) lo: drawn 960ms worker/1
+K-chromium-w4-off bar-token v=750 (max line 750 bar, arrow 43) mid: drawn 969ms worker/1
+K-chromium-w4-off bar-token v=1080 (max line 1080 bar, arrow 43) mid: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 1367ms worker/1
+K-chromium-w4-off bar-token v=920 (max line 920 bar, arrow 43) mid: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 969ms worker/1
+K-chromium-w4-off bar-token v=840 (max line 840 bar, arrow 43) mid: drawn 1146ms worker/1
+K-chromium-w4-off bar-token v=880 (max line 880 bar, arrow 43) mid: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 957ms worker/1
+K-chromium-w4-off bar-token v=860 (max line 860 bar, arrow 43) mid: drawn 953ms worker/1
+K-chromium-w4-off bar-token v=870 (max line 870 bar, arrow 43) mid: drawn 1370ms worker/1
+K-chromium-w4-off bar-token v=870 (max line 870 bar, arrow 43) edge-draw-rep: drawn 945ms worker/1
+K-chromium-w4-off bar-token v=880 (max line 880 bar, arrow 43) edge-fail-rep: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 1188ms worker/1
+K-chromium-w4-off bar-token v=860 (max line 860 bar, arrow 43) around: drawn 957ms worker/1
+K-chromium-w4-off bar-token v=890 (max line 890 bar, arrow 43) around: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 902ms worker/1
+{"kind":"summary","label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"bar-token","lastDraw":870,"firstFail":880,"results":{"100":["drawn"],"750":["drawn"],"840":["drawn"],"860":["drawn","drawn"],"870":["drawn","drawn"],"880":["STACK-TEXT","STACK-TEXT"],"890":["STACK-TEXT"],"920":["STACK-TEXT"],"1080":["STACK-TEXT"],"1400":["STACK-TEXT"]}}
+=== done in 23 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"bar-rich","lo":100,"hi":13600,"reps":2}
+K-chromium-w4-off bar-rich v=13600 (max line 13600 bar, arrow 43) hi: drawn 1641ms worker/1
+K-chromium-w4-off bar-rich v=13600 (max line 13600 bar, arrow 43) hi-rep: drawn 1642ms worker/1
+{"kind":"summary","label":"K-chromium-w4-off","shape":"bar-rich","everyDrewTo":13600,"results":{"13600":["drawn","drawn"]}}
+=== done in 5 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"seq-entity","lo":50,"hi":2100,"reps":2}
+K-chromium-w4-off seq-entity v=2100 (max line 4142 declaration, decl 4142, arrow 2000) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 1059ms worker/1
+K-chromium-w4-off seq-entity v=50 (max line 109 declaration, decl 109, arrow 80) lo: drawn 999ms worker/1
+K-chromium-w4-off seq-entity v=1080 (max line 2135 declaration, decl 2135, arrow 1050) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 945ms worker/1
+K-chromium-w4-off seq-entity v=570 (max line 1134 declaration, decl 1134, arrow 571) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 952ms worker/1
+K-chromium-w4-off seq-entity v=310 (max line 620 declaration, decl 620, arrow 325) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 907ms worker/1
+K-chromium-w4-off seq-entity v=180 (max line 365 declaration, decl 365, arrow 202) mid: drawn 949ms worker/1
+K-chromium-w4-off seq-entity v=250 (max line 503 declaration, decl 503, arrow 268) mid: drawn 1367ms worker/1
+K-chromium-w4-off seq-entity v=280 (max line 563 declaration, decl 563, arrow 298) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 868ms worker/1
+K-chromium-w4-off seq-entity v=270 (max line 543 declaration, decl 543, arrow 288) mid: drawn 940ms worker/1
+K-chromium-w4-off seq-entity v=270 (max line 543 declaration, decl 543, arrow 288) edge-draw-rep: drawn 926ms worker/1
+K-chromium-w4-off seq-entity v=280 (max line 563 declaration, decl 563, arrow 298) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 962ms worker/1
+K-chromium-w4-off seq-entity v=260 (max line 523 declaration, decl 523, arrow 278) around: drawn 943ms worker/1
+K-chromium-w4-off seq-entity v=290 (max line 582 declaration, decl 582, arrow 307) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 961ms worker/1
+{"kind":"summary","label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"seq-entity","lastDraw":270,"firstFail":280,"results":{"50":["drawn"],"180":["drawn"],"250":["drawn"],"260":["drawn"],"270":["drawn","drawn"],"280":["ERROR","ERROR"],"290":["ERROR"],"310":["ERROR"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 21 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"seq-database","lo":50,"hi":2100,"reps":2}
+K-chromium-w4-off seq-database v=2100 (max line 4144 declaration, decl 4144, arrow 2000) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 1346ms worker/1
+K-chromium-w4-off seq-database v=50 (max line 111 declaration, decl 111, arrow 78) lo: drawn 936ms worker/1
+K-chromium-w4-off seq-database v=1080 (max line 2137 declaration, decl 2137, arrow 1048) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 923ms worker/1
+K-chromium-w4-off seq-database v=570 (max line 1136 declaration, decl 1136, arrow 569) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 954ms worker/1
+K-chromium-w4-off seq-database v=310 (max line 622 declaration, decl 622, arrow 323) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 939ms worker/1
+K-chromium-w4-off seq-database v=180 (max line 367 declaration, decl 367, arrow 200) mid: drawn 936ms worker/1
+K-chromium-w4-off seq-database v=250 (max line 505 declaration, decl 505, arrow 266) mid: drawn 948ms worker/1
+K-chromium-w4-off seq-database v=280 (max line 565 declaration, decl 565, arrow 296) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 900ms worker/1
+K-chromium-w4-off seq-database v=270 (max line 545 declaration, decl 545, arrow 286) mid: drawn 875ms worker/1
+K-chromium-w4-off seq-database v=270 (max line 545 declaration, decl 545, arrow 286) edge-draw-rep: drawn 945ms worker/1
+K-chromium-w4-off seq-database v=280 (max line 565 declaration, decl 565, arrow 296) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 955ms worker/1
+K-chromium-w4-off seq-database v=260 (max line 525 declaration, decl 525, arrow 276) around: drawn 893ms worker/1
+K-chromium-w4-off seq-database v=290 (max line 584 declaration, decl 584, arrow 305) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 940ms worker/1
+{"kind":"summary","label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"seq-database","lastDraw":270,"firstFail":280,"results":{"50":["drawn"],"180":["drawn"],"250":["drawn"],"260":["drawn"],"270":["drawn","drawn"],"280":["ERROR","ERROR"],"290":["ERROR"],"310":["ERROR"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 21 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"comp-database","lo":50,"hi":2100,"reps":2}
+K-chromium-w4-off comp-database v=2100 (max line 4144 declaration, decl 4144, arrow 2002) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1143ms worker/1
+K-chromium-w4-off comp-database v=50 (max line 203 arrow, decl 111, arrow 203) lo: drawn 1107ms worker/1
+K-chromium-w4-off comp-database v=1080 (max line 2137 declaration, decl 2137, arrow 1173) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1074ms worker/1
+K-chromium-w4-off comp-database v=570 (max line 1136 declaration, decl 1136, arrow 694) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1564ms worker/1
+K-chromium-w4-off comp-database v=310 (max line 622 declaration, decl 622, arrow 448) mid: drawn 1170ms worker/1
+K-chromium-w4-off comp-database v=440 (max line 879 declaration, decl 879, arrow 571) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1104ms worker/1
+K-chromium-w4-off comp-database v=380 (max line 759 declaration, decl 759, arrow 513) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1160ms worker/1
+K-chromium-w4-off comp-database v=350 (max line 703 declaration, decl 703, arrow 487) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1123ms worker/1
+K-chromium-w4-off comp-database v=330 (max line 663 declaration, decl 663, arrow 467) mid: drawn 1154ms worker/1
+K-chromium-w4-off comp-database v=340 (max line 683 declaration, decl 683, arrow 477) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1161ms worker/1
+K-chromium-w4-off comp-database v=330 (max line 663 declaration, decl 663, arrow 467) edge-draw-rep: drawn 1153ms worker/1
+K-chromium-w4-off comp-database v=340 (max line 683 declaration, decl 683, arrow 477) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1349ms worker/1
+K-chromium-w4-off comp-database v=320 (max line 641 declaration, decl 641, arrow 457) around: drawn 1162ms worker/1
+K-chromium-w4-off comp-database v=350 (max line 703 declaration, decl 703, arrow 487) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1364ms worker/1
+{"kind":"summary","label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"comp-database","lastDraw":330,"firstFail":340,"results":{"50":["drawn"],"310":["drawn"],"320":["drawn"],"330":["drawn","drawn"],"340":["ERROR","ERROR"],"350":["ERROR","ERROR"],"380":["ERROR"],"440":["ERROR"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 26 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"comp-system","lo":50,"hi":2100,"reps":2}
+K-chromium-w4-off comp-system v=2100 (max line 4299 declaration, decl 4299, arrow 2008) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1592ms worker/1
+K-chromium-w4-off comp-system v=50 (max line 162 declaration, decl 162, arrow 111) lo: drawn 1166ms worker/1
+K-chromium-w4-off comp-system v=1080 (max line 2240 declaration, decl 2240, arrow 1081) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1145ms worker/1
+K-chromium-w4-off comp-system v=570 (max line 1215 declaration, decl 1215, arrow 602) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1179ms worker/1
+K-chromium-w4-off comp-system v=310 (max line 685 declaration, decl 685, arrow 356) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1341ms worker/1
+K-chromium-w4-off comp-system v=180 (max line 426 declaration, decl 426, arrow 233) mid: drawn 1184ms worker/1
+K-chromium-w4-off comp-system v=250 (max line 568 declaration, decl 568, arrow 299) mid: drawn 1179ms worker/1
+K-chromium-w4-off comp-system v=280 (max line 628 declaration, decl 628, arrow 329) mid: drawn 1342ms worker/1
+K-chromium-w4-off comp-system v=300 (max line 666 declaration, decl 666, arrow 347) mid: drawn 1168ms worker/1
+K-chromium-w4-off comp-system v=300 (max line 666 declaration, decl 666, arrow 347) edge-draw-rep: drawn 1131ms worker/1
+K-chromium-w4-off comp-system v=310 (max line 685 declaration, decl 685, arrow 356) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1150ms worker/1
+K-chromium-w4-off comp-system v=290 (max line 647 declaration, decl 647, arrow 338) around: drawn 1154ms worker/1
+K-chromium-w4-off comp-system v=320 (max line 704 declaration, decl 704, arrow 365) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1158ms worker/1
+{"kind":"summary","label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"comp-system","lastDraw":300,"firstFail":310,"results":{"50":["drawn"],"180":["drawn"],"250":["drawn"],"280":["drawn"],"290":["drawn"],"300":["drawn","drawn"],"310":["ERROR","ERROR"],"320":["ERROR"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 24 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"activity","lo":50,"hi":2100,"reps":2}
+K-chromium-w4-off activity v=2100 (max line 2131 action) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 1150ms worker/1
+K-chromium-w4-off activity v=50 (max line 59 action) lo: drawn 1379ms worker/1
+K-chromium-w4-off activity v=1080 (max line 1100 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 936ms worker/1
+K-chromium-w4-off activity v=570 (max line 584 action) mid: drawn 1352ms worker/1
+K-chromium-w4-off activity v=830 (max line 847 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 956ms worker/1
+K-chromium-w4-off activity v=700 (max line 716 action) mid: drawn 1344ms worker/1
+K-chromium-w4-off activity v=770 (max line 786 action) mid: drawn 1153ms worker/1
+K-chromium-w4-off activity v=800 (max line 817 action) mid: drawn 1359ms worker/1
+K-chromium-w4-off activity v=820 (max line 837 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 964ms worker/1
+K-chromium-w4-off activity v=810 (max line 827 action) mid: drawn 1188ms worker/1
+K-chromium-w4-off activity v=810 (max line 827 action) edge-draw-rep: drawn 1156ms worker/1
+K-chromium-w4-off activity v=820 (max line 837 action) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 971ms worker/1
+K-chromium-w4-off activity v=800 (max line 817 action) around: drawn 1179ms worker/1
+K-chromium-w4-off activity v=830 (max line 847 action) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 955ms worker/1
+{"kind":"summary","label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"activity","lastDraw":810,"firstFail":820,"results":{"50":["drawn"],"570":["drawn"],"700":["drawn"],"770":["drawn"],"800":["drawn","drawn"],"810":["drawn","drawn"],"820":["ERROR","ERROR"],"830":["ERROR","ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 25 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"stats-edge","lo":50,"hi":1500,"reps":2}
+K-chromium-w4-off stats-edge v=1500 (max line 1640 arrow, arrow 1640) hi: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 1153ms worker/1
+K-chromium-w4-off stats-edge v=50 (max line 191 arrow, arrow 191) lo: drawn 1152ms worker/1
+K-chromium-w4-off stats-edge v=780 (max line 921 arrow, arrow 921) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 1166ms worker/1
+K-chromium-w4-off stats-edge v=420 (max line 561 arrow, arrow 561) mid: drawn 1133ms worker/1
+K-chromium-w4-off stats-edge v=600 (max line 741 arrow, arrow 741) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 1550ms worker/1
+K-chromium-w4-off stats-edge v=510 (max line 651 arrow, arrow 651) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 1145ms worker/1
+K-chromium-w4-off stats-edge v=470 (max line 611 arrow, arrow 611) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 1155ms worker/1
+K-chromium-w4-off stats-edge v=450 (max line 591 arrow, arrow 591) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 1178ms worker/1
+K-chromium-w4-off stats-edge v=440 (max line 581 arrow, arrow 581) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 1133ms worker/1
+K-chromium-w4-off stats-edge v=430 (max line 571 arrow, arrow 571) mid: drawn 1159ms worker/1
+K-chromium-w4-off stats-edge v=430 (max line 571 arrow, arrow 571) edge-draw-rep: drawn 1146ms worker/1
+K-chromium-w4-off stats-edge v=440 (max line 581 arrow, arrow 581) edge-fail-rep: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 1164ms worker/1
+K-chromium-w4-off stats-edge v=420 (max line 561 arrow, arrow 561) around: drawn 1154ms worker/1
+K-chromium-w4-off stats-edge v=450 (max line 591 arrow, arrow 591) around: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 1159ms worker/1
+{"kind":"summary","label":"K-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","shape":"stats-edge","lastDraw":430,"firstFail":440,"results":{"50":["drawn"],"420":["drawn","drawn"],"430":["drawn","drawn"],"440":["STACK","STACK"],"450":["STACK","STACK"],"470":["STACK"],"510":["STACK"],"600":["STACK"],"780":["STACK"],"1500":["STACK"]}}
+=== done in 25 s, exit 0
+
+=== once {"label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"stats-edge-asis","values":[0],"reps":3}
+K-chromium-w4-jit stats-edge-asis v=0 (max line 491 arrow, arrow 491) once: drawn 934ms worker/1
+K-chromium-w4-jit stats-edge-asis v=0 (max line 491 arrow, arrow 491) once: drawn 856ms worker/1
+K-chromium-w4-jit stats-edge-asis v=0 (max line 491 arrow, arrow 491) once: drawn 908ms worker/1
+=== done in 5 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"loop","lo":100,"hi":1471,"reps":3}
+K-chromium-w4-jit loop v=1471 (max line 1471 opener, arrow 47) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 753ms worker/1
+K-chromium-w4-jit loop v=100 (max line 100 opener, arrow 47) lo: drawn 733ms worker/1
+K-chromium-w4-jit loop v=790 (max line 790 opener, arrow 47) mid: drawn 1131ms worker/1
+K-chromium-w4-jit loop v=1130 (max line 1130 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 728ms worker/1
+K-chromium-w4-jit loop v=960 (max line 960 opener, arrow 47) mid: drawn 747ms worker/1
+K-chromium-w4-jit loop v=1050 (max line 1050 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1175ms worker/1
+K-chromium-w4-jit loop v=1010 (max line 1010 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 740ms worker/1
+K-chromium-w4-jit loop v=990 (max line 990 opener, arrow 47) mid: drawn 964ms worker/1
+K-chromium-w4-jit loop v=1000 (max line 1000 opener, arrow 47) mid: drawn 754ms worker/1
+K-chromium-w4-jit loop v=1000 (max line 1000 opener, arrow 47) edge-draw-rep: drawn 741ms worker/1
+K-chromium-w4-jit loop v=1010 (max line 1010 opener, arrow 47) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 751ms worker/1
+K-chromium-w4-jit loop v=1000 (max line 1000 opener, arrow 47) edge-draw-rep: drawn 1178ms worker/1
+K-chromium-w4-jit loop v=1010 (max line 1010 opener, arrow 47) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1131ms worker/1
+K-chromium-w4-jit loop v=990 (max line 990 opener, arrow 47) around: drawn 755ms worker/1
+K-chromium-w4-jit loop v=1020 (max line 1020 opener, arrow 47) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 670ms worker/1
+{"kind":"summary","label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"loop","lastDraw":1000,"firstFail":1010,"results":{"100":["drawn"],"790":["drawn"],"960":["drawn"],"990":["drawn","drawn"],"1000":["drawn","drawn","drawn"],"1010":["ERROR","ERROR","ERROR"],"1020":["ERROR"],"1050":["ERROR"],"1130":["ERROR"],"1471":["ERROR"]}}
+=== done in 22 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"partition","lo":100,"hi":1471,"reps":3}
+K-chromium-w4-jit partition v=1471 (max line 1471 opener, arrow 52) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1371ms worker/1
+K-chromium-w4-jit partition v=100 (max line 100 opener, arrow 52) lo: drawn 763ms worker/1
+K-chromium-w4-jit partition v=790 (max line 790 opener, arrow 52) mid: drawn 965ms worker/1
+K-chromium-w4-jit partition v=1130 (max line 1130 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 742ms worker/1
+K-chromium-w4-jit partition v=960 (max line 960 opener, arrow 52) mid: drawn 729ms worker/1
+K-chromium-w4-jit partition v=1050 (max line 1050 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1157ms worker/1
+K-chromium-w4-jit partition v=1010 (max line 1010 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 759ms worker/1
+K-chromium-w4-jit partition v=990 (max line 990 opener, arrow 52) mid: drawn 733ms worker/1
+K-chromium-w4-jit partition v=1000 (max line 1000 opener, arrow 52) mid: drawn 737ms worker/1
+K-chromium-w4-jit partition v=1000 (max line 1000 opener, arrow 52) edge-draw-rep: drawn 765ms worker/1
+K-chromium-w4-jit partition v=1010 (max line 1010 opener, arrow 52) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 1155ms worker/1
+K-chromium-w4-jit partition v=1000 (max line 1000 opener, arrow 52) edge-draw-rep: drawn 725ms worker/1
+K-chromium-w4-jit partition v=1010 (max line 1010 opener, arrow 52) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 738ms worker/1
+K-chromium-w4-jit partition v=990 (max line 990 opener, arrow 52) around: drawn 737ms worker/1
+K-chromium-w4-jit partition v=1020 (max line 1020 opener, arrow 52) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 740ms worker/1
+{"kind":"summary","label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"partition","lastDraw":1000,"firstFail":1010,"results":{"100":["drawn"],"790":["drawn"],"960":["drawn"],"990":["drawn","drawn"],"1000":["drawn","drawn","drawn"],"1010":["ERROR","ERROR","ERROR"],"1020":["ERROR"],"1050":["ERROR"],"1130":["ERROR"],"1471":["ERROR"]}}
+=== done in 22 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"bar-token","lo":100,"hi":1400,"reps":3}
+K-chromium-w4-jit bar-token v=1400 (max line 1400 bar, arrow 43) hi: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 742ms worker/1
+K-chromium-w4-jit bar-token v=100 (max line 100 bar, arrow 43) lo: drawn 743ms worker/1
+K-chromium-w4-jit bar-token v=750 (max line 750 bar, arrow 43) mid: drawn 1144ms worker/1
+K-chromium-w4-jit bar-token v=1080 (max line 1080 bar, arrow 43) mid: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 766ms worker/1
+K-chromium-w4-jit bar-token v=920 (max line 920 bar, arrow 43) mid: drawn 738ms worker/1
+K-chromium-w4-jit bar-token v=1000 (max line 1000 bar, arrow 43) mid: drawn 1167ms worker/1
+K-chromium-w4-jit bar-token v=1040 (max line 1040 bar, arrow 43) mid: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 727ms worker/1
+K-chromium-w4-jit bar-token v=1020 (max line 1020 bar, arrow 43) mid: drawn 749ms worker/1
+K-chromium-w4-jit bar-token v=1030 (max line 1030 bar, arrow 43) mid: drawn 1150ms worker/1
+K-chromium-w4-jit bar-token v=1030 (max line 1030 bar, arrow 43) edge-draw-rep: drawn 749ms worker/1
+K-chromium-w4-jit bar-token v=1040 (max line 1040 bar, arrow 43) edge-fail-rep: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 723ms worker/1
+K-chromium-w4-jit bar-token v=1030 (max line 1030 bar, arrow 43) edge-draw-rep: drawn 734ms worker/1
+K-chromium-w4-jit bar-token v=1040 (max line 1040 bar, arrow 43) edge-fail-rep: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 1166ms worker/1
+K-chromium-w4-jit bar-token v=1020 (max line 1020 bar, arrow 43) around: drawn 1161ms worker/1
+K-chromium-w4-jit bar-token v=1050 (max line 1050 bar, arrow 43) around: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 743ms worker/1
+{"kind":"summary","label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"bar-token","lastDraw":1030,"firstFail":1040,"results":{"100":["drawn"],"750":["drawn"],"920":["drawn"],"1000":["drawn"],"1020":["drawn","drawn"],"1030":["drawn","drawn","drawn"],"1040":["STACK-TEXT","STACK-TEXT","STACK-TEXT"],"1050":["STACK-TEXT"],"1080":["STACK-TEXT"],"1400":["STACK-TEXT"]}}
+=== done in 22 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"bar-rich","lo":100,"hi":13600,"reps":3}
+K-chromium-w4-jit bar-rich v=13600 (max line 13600 bar, arrow 43) hi: drawn 1117ms worker/1
+K-chromium-w4-jit bar-rich v=13600 (max line 13600 bar, arrow 43) hi-rep: drawn 967ms worker/1
+K-chromium-w4-jit bar-rich v=13600 (max line 13600 bar, arrow 43) hi-rep: drawn 1338ms worker/1
+{"kind":"summary","label":"K-chromium-w4-jit","shape":"bar-rich","everyDrewTo":13600,"results":{"13600":["drawn","drawn","drawn"]}}
+=== done in 6 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"seq-entity","lo":50,"hi":2100,"reps":3}
+K-chromium-w4-jit seq-entity v=2100 (max line 4142 declaration, decl 4142, arrow 2000) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 936ms worker/1
+K-chromium-w4-jit seq-entity v=50 (max line 109 declaration, decl 109, arrow 80) lo: drawn 750ms worker/1
+K-chromium-w4-jit seq-entity v=1080 (max line 2135 declaration, decl 2135, arrow 1050) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 740ms worker/1
+K-chromium-w4-jit seq-entity v=570 (max line 1134 declaration, decl 1134, arrow 571) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 1358ms worker/1
+K-chromium-w4-jit seq-entity v=310 (max line 620 declaration, decl 620, arrow 325) mid: drawn 718ms worker/1
+K-chromium-w4-jit seq-entity v=440 (max line 877 declaration, decl 877, arrow 448) mid: drawn 615ms worker/1
+K-chromium-w4-jit seq-entity v=510 (max line 1015 declaration, decl 1015, arrow 514) mid: drawn 739ms worker/1
+K-chromium-w4-jit seq-entity v=540 (max line 1073 declaration, decl 1073, arrow 542) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 747ms worker/1
+K-chromium-w4-jit seq-entity v=530 (max line 1053 declaration, decl 1053, arrow 532) mid: drawn 737ms worker/1
+K-chromium-w4-jit seq-entity v=530 (max line 1053 declaration, decl 1053, arrow 532) edge-draw-rep: drawn 726ms worker/1
+K-chromium-w4-jit seq-entity v=540 (max line 1073 declaration, decl 1073, arrow 542) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 762ms worker/1
+K-chromium-w4-jit seq-entity v=530 (max line 1053 declaration, decl 1053, arrow 532) edge-draw-rep: drawn 743ms worker/1
+K-chromium-w4-jit seq-entity v=540 (max line 1073 declaration, decl 1073, arrow 542) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 768ms worker/1
+K-chromium-w4-jit seq-entity v=520 (max line 1033 declaration, decl 1033, arrow 522) around: drawn 1159ms worker/1
+K-chromium-w4-jit seq-entity v=550 (max line 1093 declaration, decl 1093, arrow 552) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 754ms worker/1
+{"kind":"summary","label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"seq-entity","lastDraw":530,"firstFail":540,"results":{"50":["drawn"],"310":["drawn"],"440":["drawn"],"510":["drawn"],"520":["drawn"],"530":["drawn","drawn","drawn"],"540":["ERROR","ERROR","ERROR"],"550":["ERROR"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 22 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"seq-database","lo":50,"hi":2100,"reps":3}
+K-chromium-w4-jit seq-database v=2100 (max line 4144 declaration, decl 4144, arrow 2000) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 1155ms worker/1
+K-chromium-w4-jit seq-database v=50 (max line 111 declaration, decl 111, arrow 78) lo: drawn 740ms worker/1
+K-chromium-w4-jit seq-database v=1080 (max line 2137 declaration, decl 2137, arrow 1048) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 735ms worker/1
+K-chromium-w4-jit seq-database v=570 (max line 1136 declaration, decl 1136, arrow 569) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 755ms worker/1
+K-chromium-w4-jit seq-database v=310 (max line 622 declaration, decl 622, arrow 323) mid: drawn 718ms worker/1
+K-chromium-w4-jit seq-database v=440 (max line 879 declaration, decl 879, arrow 446) mid: drawn 752ms worker/1
+K-chromium-w4-jit seq-database v=510 (max line 1017 declaration, decl 1017, arrow 512) mid: drawn 747ms worker/1
+K-chromium-w4-jit seq-database v=540 (max line 1075 declaration, decl 1075, arrow 540) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 732ms worker/1
+K-chromium-w4-jit seq-database v=530 (max line 1055 declaration, decl 1055, arrow 530) mid: drawn 748ms worker/1
+K-chromium-w4-jit seq-database v=530 (max line 1055 declaration, decl 1055, arrow 530) edge-draw-rep: drawn 740ms worker/1
+K-chromium-w4-jit seq-database v=540 (max line 1075 declaration, decl 1075, arrow 540) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 753ms worker/1
+K-chromium-w4-jit seq-database v=530 (max line 1055 declaration, decl 1055, arrow 530) edge-draw-rep: drawn 772ms worker/1
+K-chromium-w4-jit seq-database v=540 (max line 1075 declaration, decl 1075, arrow 540) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 757ms worker/1
+K-chromium-w4-jit seq-database v=520 (max line 1035 declaration, decl 1035, arrow 520) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 753ms worker/1
+K-chromium-w4-jit seq-database v=550 (max line 1095 declaration, decl 1095, arrow 550) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 746ms worker/1
+{"kind":"summary","label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"seq-database","lastDraw":530,"firstFail":540,"results":{"50":["drawn"],"310":["drawn"],"440":["drawn"],"510":["drawn"],"520":["ERROR"],"530":["drawn","drawn","drawn"],"540":["ERROR","ERROR","ERROR"],"550":["ERROR"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 21 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"comp-database","lo":50,"hi":2100,"reps":3}
+K-chromium-w4-jit comp-database v=2100 (max line 4144 declaration, decl 4144, arrow 2002) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 929ms worker/1
+K-chromium-w4-jit comp-database v=50 (max line 203 arrow, decl 111, arrow 203) lo: drawn 949ms worker/1
+K-chromium-w4-jit comp-database v=1080 (max line 2137 declaration, decl 2137, arrow 1173) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 922ms worker/1
+K-chromium-w4-jit comp-database v=570 (max line 1136 declaration, decl 1136, arrow 694) mid: drawn 1144ms worker/1
+K-chromium-w4-jit comp-database v=830 (max line 1647 declaration, decl 1647, arrow 939) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 944ms worker/1
+K-chromium-w4-jit comp-database v=700 (max line 1391 declaration, decl 1391, arrow 817) mid: drawn 952ms worker/1
+K-chromium-w4-jit comp-database v=770 (max line 1528 declaration, decl 1528, arrow 882) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 953ms worker/1
+K-chromium-w4-jit comp-database v=740 (max line 1469 declaration, decl 1469, arrow 853) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 937ms worker/1
+K-chromium-w4-jit comp-database v=720 (max line 1428 declaration, decl 1428, arrow 834) mid: drawn 1335ms worker/1
+K-chromium-w4-jit comp-database v=730 (max line 1449 declaration, decl 1449, arrow 843) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 977ms worker/1
+K-chromium-w4-jit comp-database v=720 (max line 1428 declaration, decl 1428, arrow 834) edge-draw-rep: drawn 952ms worker/1
+K-chromium-w4-jit comp-database v=730 (max line 1449 declaration, decl 1449, arrow 843) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 749ms worker/1
+K-chromium-w4-jit comp-database v=720 (max line 1428 declaration, decl 1428, arrow 834) edge-draw-rep: drawn 948ms worker/1
+K-chromium-w4-jit comp-database v=730 (max line 1449 declaration, decl 1449, arrow 843) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 964ms worker/1
+K-chromium-w4-jit comp-database v=710 (max line 1409 declaration, decl 1409, arrow 825) around: drawn 1371ms worker/1
+K-chromium-w4-jit comp-database v=740 (max line 1469 declaration, decl 1469, arrow 853) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 970ms worker/1
+{"kind":"summary","label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"comp-database","lastDraw":720,"firstFail":730,"results":{"50":["drawn"],"570":["drawn"],"700":["drawn"],"710":["drawn"],"720":["drawn","drawn","drawn"],"730":["ERROR","ERROR","ERROR"],"740":["ERROR","ERROR"],"770":["ERROR"],"830":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 27 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"comp-system","lo":50,"hi":2100,"reps":3}
+K-chromium-w4-jit comp-system v=2100 (max line 4299 declaration, decl 4299, arrow 2008) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 911ms worker/1
+K-chromium-w4-jit comp-system v=50 (max line 162 declaration, decl 162, arrow 111) lo: drawn 942ms worker/1
+K-chromium-w4-jit comp-system v=1080 (max line 2240 declaration, decl 2240, arrow 1081) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 945ms worker/1
+K-chromium-w4-jit comp-system v=570 (max line 1215 declaration, decl 1215, arrow 602) mid: drawn 1367ms worker/1
+K-chromium-w4-jit comp-system v=830 (max line 1738 declaration, decl 1738, arrow 847) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 974ms worker/1
+K-chromium-w4-jit comp-system v=700 (max line 1474 declaration, decl 1474, arrow 725) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 981ms worker/1
+K-chromium-w4-jit comp-system v=640 (max line 1350 declaration, decl 1350, arrow 667) mid: drawn 1152ms worker/1
+K-chromium-w4-jit comp-system v=670 (max line 1414 declaration, decl 1414, arrow 695) mid: drawn 1372ms worker/1
+K-chromium-w4-jit comp-system v=690 (max line 1454 declaration, decl 1454, arrow 715) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 960ms worker/1
+K-chromium-w4-jit comp-system v=680 (max line 1434 declaration, decl 1434, arrow 705) mid: drawn 942ms worker/1
+K-chromium-w4-jit comp-system v=680 (max line 1434 declaration, decl 1434, arrow 705) edge-draw-rep: drawn 939ms worker/1
+K-chromium-w4-jit comp-system v=690 (max line 1454 declaration, decl 1454, arrow 715) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1179ms worker/1
+K-chromium-w4-jit comp-system v=680 (max line 1434 declaration, decl 1434, arrow 705) edge-draw-rep: drawn 961ms worker/1
+K-chromium-w4-jit comp-system v=690 (max line 1454 declaration, decl 1454, arrow 715) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 954ms worker/1
+K-chromium-w4-jit comp-system v=670 (max line 1414 declaration, decl 1414, arrow 695) around: drawn 940ms worker/1
+K-chromium-w4-jit comp-system v=700 (max line 1474 declaration, decl 1474, arrow 725) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 948ms worker/1
+{"kind":"summary","label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"comp-system","lastDraw":680,"firstFail":690,"results":{"50":["drawn"],"570":["drawn"],"640":["drawn"],"670":["drawn","drawn"],"680":["drawn","drawn","drawn"],"690":["ERROR","ERROR","ERROR"],"700":["ERROR","ERROR"],"830":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 27 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"activity","lo":50,"hi":2100,"reps":3}
+K-chromium-w4-jit activity v=2100 (max line 2131 action) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 952ms worker/1
+K-chromium-w4-jit activity v=50 (max line 59 action) lo: drawn 748ms worker/1
+K-chromium-w4-jit activity v=1080 (max line 1100 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 741ms worker/1
+K-chromium-w4-jit activity v=570 (max line 584 action) mid: drawn 1183ms worker/1
+K-chromium-w4-jit activity v=830 (max line 847 action) mid: drawn 735ms worker/1
+K-chromium-w4-jit activity v=960 (max line 978 action) mid: drawn 962ms worker/1
+K-chromium-w4-jit activity v=1020 (max line 1039 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 741ms worker/1
+K-chromium-w4-jit activity v=990 (max line 1009 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 736ms worker/1
+K-chromium-w4-jit activity v=980 (max line 999 action) mid: drawn 960ms worker/1
+K-chromium-w4-jit activity v=980 (max line 999 action) edge-draw-rep: drawn 949ms worker/1
+K-chromium-w4-jit activity v=990 (max line 1009 action) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 742ms worker/1
+K-chromium-w4-jit activity v=980 (max line 999 action) edge-draw-rep: drawn 951ms worker/1
+K-chromium-w4-jit activity v=990 (max line 1009 action) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 965ms worker/1
+K-chromium-w4-jit activity v=970 (max line 988 action) around: drawn 954ms worker/1
+K-chromium-w4-jit activity v=1000 (max line 1019 action) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 735ms worker/1
+{"kind":"summary","label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"activity","lastDraw":980,"firstFail":990,"results":{"50":["drawn"],"570":["drawn"],"830":["drawn"],"960":["drawn"],"970":["drawn"],"980":["drawn","drawn","drawn"],"990":["ERROR","ERROR","ERROR"],"1000":["ERROR"],"1020":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 22 s, exit 0
+
+=== bisect {"label":"K-chromium-w4-jit","browser":"chromium","jsflags":"","shape":"stats-edge","lo":50,"hi":1500,"reps":3}
+K-chromium-w4-jit stats-edge v=1500 (max line 1640 arrow, arrow 1640) hi: drawn 951ms worker/1
+K-chromium-w4-jit stats-edge v=1500 (max line 1640 arrow, arrow 1640) hi-rep: drawn 959ms worker/1
+K-chromium-w4-jit stats-edge v=1500 (max line 1640 arrow, arrow 1640) hi-rep: drawn 962ms worker/1
+{"kind":"summary","label":"K-chromium-w4-jit","shape":"stats-edge","everyDrewTo":1500,"results":{"1500":["drawn","drawn","drawn"]}}
+=== done in 5 s, exit 0
+
+=== once {"label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"stats-edge-asis","values":[0],"reps":2}
+K-chrome-w4-off stats-edge-asis v=0 (max line 491 arrow, arrow 491) once: drawn 853ms worker/1
+K-chrome-w4-off stats-edge-asis v=0 (max line 491 arrow, arrow 491) once: drawn 845ms worker/1
+=== done in 3 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"loop","lo":100,"hi":1471,"reps":2}
+K-chrome-w4-off loop v=1471 (max line 1471 opener, arrow 47) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 660ms worker/1
+K-chrome-w4-off loop v=100 (max line 100 opener, arrow 47) lo: drawn 657ms worker/1
+K-chrome-w4-off loop v=790 (max line 790 opener, arrow 47) mid: drawn 659ms worker/1
+K-chrome-w4-off loop v=1130 (max line 1130 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 667ms worker/1
+K-chrome-w4-off loop v=960 (max line 960 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 659ms worker/1
+K-chrome-w4-off loop v=880 (max line 880 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 657ms worker/1
+K-chrome-w4-off loop v=840 (max line 840 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 658ms worker/1
+K-chrome-w4-off loop v=820 (max line 820 opener, arrow 47) mid: drawn 665ms worker/1
+K-chrome-w4-off loop v=830 (max line 830 opener, arrow 47) mid: drawn 682ms worker/1
+K-chrome-w4-off loop v=830 (max line 830 opener, arrow 47) edge-draw-rep: drawn 661ms worker/1
+K-chrome-w4-off loop v=840 (max line 840 opener, arrow 47) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 657ms worker/1
+K-chrome-w4-off loop v=820 (max line 820 opener, arrow 47) around: drawn 656ms worker/1
+K-chrome-w4-off loop v=850 (max line 850 opener, arrow 47) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 650ms worker/1
+{"kind":"summary","label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"loop","lastDraw":830,"firstFail":840,"results":{"100":["drawn"],"790":["drawn"],"820":["drawn","drawn"],"830":["drawn","drawn"],"840":["ERROR","ERROR"],"850":["ERROR"],"880":["ERROR"],"960":["ERROR"],"1130":["ERROR"],"1471":["ERROR"]}}
+=== done in 15 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"partition","lo":100,"hi":1471,"reps":2}
+K-chrome-w4-off partition v=1471 (max line 1471 opener, arrow 52) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 864ms worker/1
+K-chrome-w4-off partition v=100 (max line 100 opener, arrow 52) lo: drawn 675ms worker/1
+K-chrome-w4-off partition v=790 (max line 790 opener, arrow 52) mid: drawn 657ms worker/1
+K-chrome-w4-off partition v=1130 (max line 1130 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 664ms worker/1
+K-chrome-w4-off partition v=960 (max line 960 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 657ms worker/1
+K-chrome-w4-off partition v=880 (max line 880 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 663ms worker/1
+K-chrome-w4-off partition v=840 (max line 840 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 659ms worker/1
+K-chrome-w4-off partition v=820 (max line 820 opener, arrow 52) mid: drawn 660ms worker/1
+K-chrome-w4-off partition v=830 (max line 830 opener, arrow 52) mid: drawn 649ms worker/1
+K-chrome-w4-off partition v=830 (max line 830 opener, arrow 52) edge-draw-rep: drawn 659ms worker/1
+K-chrome-w4-off partition v=840 (max line 840 opener, arrow 52) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 654ms worker/1
+K-chrome-w4-off partition v=820 (max line 820 opener, arrow 52) around: drawn 648ms worker/1
+K-chrome-w4-off partition v=850 (max line 850 opener, arrow 52) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 657ms worker/1
+{"kind":"summary","label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"partition","lastDraw":830,"firstFail":840,"results":{"100":["drawn"],"790":["drawn"],"820":["drawn","drawn"],"830":["drawn","drawn"],"840":["ERROR","ERROR"],"850":["ERROR"],"880":["ERROR"],"960":["ERROR"],"1130":["ERROR"],"1471":["ERROR"]}}
+=== done in 15 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"bar-token","lo":100,"hi":1400,"reps":2}
+K-chrome-w4-off bar-token v=1400 (max line 1400 bar, arrow 43) hi: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 455ms worker/1
+K-chrome-w4-off bar-token v=100 (max line 100 bar, arrow 43) lo: drawn 649ms worker/1
+K-chrome-w4-off bar-token v=750 (max line 750 bar, arrow 43) mid: drawn 647ms worker/1
+K-chrome-w4-off bar-token v=1080 (max line 1080 bar, arrow 43) mid: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 445ms worker/1
+K-chrome-w4-off bar-token v=920 (max line 920 bar, arrow 43) mid: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 864ms worker/1
+K-chrome-w4-off bar-token v=840 (max line 840 bar, arrow 43) mid: drawn 655ms worker/1
+K-chrome-w4-off bar-token v=880 (max line 880 bar, arrow 43) mid: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 449ms worker/1
+K-chrome-w4-off bar-token v=860 (max line 860 bar, arrow 43) mid: drawn 860ms worker/1
+K-chrome-w4-off bar-token v=870 (max line 870 bar, arrow 43) mid: drawn 666ms worker/1
+K-chrome-w4-off bar-token v=870 (max line 870 bar, arrow 43) edge-draw-rep: drawn 466ms worker/1
+K-chrome-w4-off bar-token v=880 (max line 880 bar, arrow 43) edge-fail-rep: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 459ms worker/1
+K-chrome-w4-off bar-token v=860 (max line 860 bar, arrow 43) around: drawn 464ms worker/1
+K-chrome-w4-off bar-token v=890 (max line 890 bar, arrow 43) around: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 450ms worker/1
+{"kind":"summary","label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"bar-token","lastDraw":870,"firstFail":880,"results":{"100":["drawn"],"750":["drawn"],"840":["drawn"],"860":["drawn","drawn"],"870":["drawn","drawn"],"880":["STACK-TEXT","STACK-TEXT"],"890":["STACK-TEXT"],"920":["STACK-TEXT"],"1080":["STACK-TEXT"],"1400":["STACK-TEXT"]}}
+=== done in 13 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"bar-rich","lo":100,"hi":13600,"reps":2}
+K-chrome-w4-off bar-rich v=13600 (max line 13600 bar, arrow 43) hi: drawn 1304ms worker/1
+K-chrome-w4-off bar-rich v=13600 (max line 13600 bar, arrow 43) hi-rep: drawn 1154ms worker/1
+{"kind":"summary","label":"K-chrome-w4-off","shape":"bar-rich","everyDrewTo":13600,"results":{"13600":["drawn","drawn"]}}
+=== done in 4 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"seq-entity","lo":50,"hi":2100,"reps":2}
+K-chrome-w4-off seq-entity v=2100 (max line 4142 declaration, decl 4142, arrow 2000) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 647ms worker/1
+K-chrome-w4-off seq-entity v=50 (max line 109 declaration, decl 109, arrow 80) lo: drawn 479ms worker/1
+K-chrome-w4-off seq-entity v=1080 (max line 2135 declaration, decl 2135, arrow 1050) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 664ms worker/1
+K-chrome-w4-off seq-entity v=570 (max line 1134 declaration, decl 1134, arrow 571) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 667ms worker/1
+K-chrome-w4-off seq-entity v=310 (max line 620 declaration, decl 620, arrow 325) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 658ms worker/1
+K-chrome-w4-off seq-entity v=180 (max line 365 declaration, decl 365, arrow 202) mid: drawn 672ms worker/1
+K-chrome-w4-off seq-entity v=250 (max line 503 declaration, decl 503, arrow 268) mid: drawn 653ms worker/1
+K-chrome-w4-off seq-entity v=280 (max line 563 declaration, decl 563, arrow 298) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 666ms worker/1
+K-chrome-w4-off seq-entity v=270 (max line 543 declaration, decl 543, arrow 288) mid: drawn 651ms worker/1
+K-chrome-w4-off seq-entity v=270 (max line 543 declaration, decl 543, arrow 288) edge-draw-rep: drawn 657ms worker/1
+K-chrome-w4-off seq-entity v=280 (max line 563 declaration, decl 563, arrow 298) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 658ms worker/1
+K-chrome-w4-off seq-entity v=260 (max line 523 declaration, decl 523, arrow 278) around: drawn 656ms worker/1
+K-chrome-w4-off seq-entity v=290 (max line 582 declaration, decl 582, arrow 307) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 671ms worker/1
+{"kind":"summary","label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"seq-entity","lastDraw":270,"firstFail":280,"results":{"50":["drawn"],"180":["drawn"],"250":["drawn"],"260":["drawn"],"270":["drawn","drawn"],"280":["ERROR","ERROR"],"290":["ERROR"],"310":["ERROR"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 16 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"seq-database","lo":50,"hi":2100,"reps":2}
+K-chrome-w4-off seq-database v=2100 (max line 4144 declaration, decl 4144, arrow 2000) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 657ms worker/1
+K-chrome-w4-off seq-database v=50 (max line 111 declaration, decl 111, arrow 78) lo: drawn 660ms worker/1
+K-chrome-w4-off seq-database v=1080 (max line 2137 declaration, decl 2137, arrow 1048) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 678ms worker/1
+K-chrome-w4-off seq-database v=570 (max line 1136 declaration, decl 1136, arrow 569) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 866ms worker/1
+K-chrome-w4-off seq-database v=310 (max line 622 declaration, decl 622, arrow 323) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 660ms worker/1
+K-chrome-w4-off seq-database v=180 (max line 367 declaration, decl 367, arrow 200) mid: drawn 682ms worker/1
+K-chrome-w4-off seq-database v=250 (max line 505 declaration, decl 505, arrow 266) mid: drawn 461ms worker/1
+K-chrome-w4-off seq-database v=280 (max line 565 declaration, decl 565, arrow 296) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 658ms worker/1
+K-chrome-w4-off seq-database v=270 (max line 545 declaration, decl 545, arrow 286) mid: drawn 450ms worker/1
+K-chrome-w4-off seq-database v=270 (max line 545 declaration, decl 545, arrow 286) edge-draw-rep: drawn 651ms worker/1
+K-chrome-w4-off seq-database v=280 (max line 565 declaration, decl 565, arrow 296) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 663ms worker/1
+K-chrome-w4-off seq-database v=260 (max line 525 declaration, decl 525, arrow 276) around: drawn 660ms worker/1
+K-chrome-w4-off seq-database v=290 (max line 584 declaration, decl 584, arrow 305) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 659ms worker/1
+{"kind":"summary","label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"seq-database","lastDraw":270,"firstFail":280,"results":{"50":["drawn"],"180":["drawn"],"250":["drawn"],"260":["drawn"],"270":["drawn","drawn"],"280":["ERROR","ERROR"],"290":["ERROR"],"310":["ERROR"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 15 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"comp-database","lo":50,"hi":2100,"reps":2}
+K-chrome-w4-off comp-database v=2100 (max line 4144 declaration, decl 4144, arrow 2002) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1085ms worker/1
+K-chrome-w4-off comp-database v=50 (max line 203 arrow, decl 111, arrow 203) lo: drawn 660ms worker/1
+K-chrome-w4-off comp-database v=1080 (max line 2137 declaration, decl 2137, arrow 1173) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 655ms worker/1
+K-chrome-w4-off comp-database v=570 (max line 1136 declaration, decl 1136, arrow 694) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 659ms worker/1
+K-chrome-w4-off comp-database v=310 (max line 622 declaration, decl 622, arrow 448) mid: drawn 656ms worker/1
+K-chrome-w4-off comp-database v=440 (max line 879 declaration, decl 879, arrow 571) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 657ms worker/1
+K-chrome-w4-off comp-database v=380 (max line 759 declaration, decl 759, arrow 513) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 661ms worker/1
+K-chrome-w4-off comp-database v=350 (max line 703 declaration, decl 703, arrow 487) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 645ms worker/1
+K-chrome-w4-off comp-database v=330 (max line 663 declaration, decl 663, arrow 467) mid: drawn 654ms worker/1
+K-chrome-w4-off comp-database v=340 (max line 683 declaration, decl 683, arrow 477) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 648ms worker/1
+K-chrome-w4-off comp-database v=330 (max line 663 declaration, decl 663, arrow 467) edge-draw-rep: drawn 651ms worker/1
+K-chrome-w4-off comp-database v=340 (max line 683 declaration, decl 683, arrow 477) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 651ms worker/1
+K-chrome-w4-off comp-database v=320 (max line 641 declaration, decl 641, arrow 457) around: drawn 656ms worker/1
+K-chrome-w4-off comp-database v=350 (max line 703 declaration, decl 703, arrow 487) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 652ms worker/1
+{"kind":"summary","label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"comp-database","lastDraw":330,"firstFail":340,"results":{"50":["drawn"],"310":["drawn"],"320":["drawn"],"330":["drawn","drawn"],"340":["ERROR","ERROR"],"350":["ERROR","ERROR"],"380":["ERROR"],"440":["ERROR"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 15 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"comp-system","lo":50,"hi":2100,"reps":2}
+K-chrome-w4-off comp-system v=2100 (max line 4299 declaration, decl 4299, arrow 2008) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 1053ms worker/1
+K-chrome-w4-off comp-system v=50 (max line 162 declaration, decl 162, arrow 111) lo: drawn 645ms worker/1
+K-chrome-w4-off comp-system v=1080 (max line 2240 declaration, decl 2240, arrow 1081) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 677ms worker/1
+K-chrome-w4-off comp-system v=570 (max line 1215 declaration, decl 1215, arrow 602) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 859ms worker/1
+K-chrome-w4-off comp-system v=310 (max line 685 declaration, decl 685, arrow 356) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 662ms worker/1
+K-chrome-w4-off comp-system v=180 (max line 426 declaration, decl 426, arrow 233) mid: drawn 654ms worker/1
+K-chrome-w4-off comp-system v=250 (max line 568 declaration, decl 568, arrow 299) mid: drawn 666ms worker/1
+K-chrome-w4-off comp-system v=280 (max line 628 declaration, decl 628, arrow 329) mid: drawn 872ms worker/1
+K-chrome-w4-off comp-system v=300 (max line 666 declaration, decl 666, arrow 347) mid: drawn 663ms worker/1
+K-chrome-w4-off comp-system v=300 (max line 666 declaration, decl 666, arrow 347) edge-draw-rep: drawn 647ms worker/1
+K-chrome-w4-off comp-system v=310 (max line 685 declaration, decl 685, arrow 356) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 664ms worker/1
+K-chrome-w4-off comp-system v=290 (max line 647 declaration, decl 647, arrow 338) around: drawn 659ms worker/1
+K-chrome-w4-off comp-system v=320 (max line 704 declaration, decl 704, arrow 365) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 648ms worker/1
+{"kind":"summary","label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"comp-system","lastDraw":300,"firstFail":310,"results":{"50":["drawn"],"180":["drawn"],"250":["drawn"],"280":["drawn"],"290":["drawn"],"300":["drawn","drawn"],"310":["ERROR","ERROR"],"320":["ERROR"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 16 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"activity","lo":50,"hi":2100,"reps":2}
+K-chrome-w4-off activity v=2100 (max line 2131 action) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 663ms worker/1
+K-chrome-w4-off activity v=50 (max line 59 action) lo: drawn 661ms worker/1
+K-chrome-w4-off activity v=1080 (max line 1100 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 678ms worker/1
+K-chrome-w4-off activity v=570 (max line 584 action) mid: drawn 649ms worker/1
+K-chrome-w4-off activity v=830 (max line 847 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 656ms worker/1
+K-chrome-w4-off activity v=700 (max line 716 action) mid: drawn 652ms worker/1
+K-chrome-w4-off activity v=770 (max line 786 action) mid: drawn 668ms worker/1
+K-chrome-w4-off activity v=800 (max line 817 action) mid: drawn 655ms worker/1
+K-chrome-w4-off activity v=820 (max line 837 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 674ms worker/1
+K-chrome-w4-off activity v=810 (max line 827 action) mid: drawn 653ms worker/1
+K-chrome-w4-off activity v=810 (max line 827 action) edge-draw-rep: drawn 659ms worker/1
+K-chrome-w4-off activity v=820 (max line 837 action) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 679ms worker/1
+K-chrome-w4-off activity v=800 (max line 817 action) around: drawn 657ms worker/1
+K-chrome-w4-off activity v=830 (max line 847 action) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 676ms worker/1
+{"kind":"summary","label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"activity","lastDraw":810,"firstFail":820,"results":{"50":["drawn"],"570":["drawn"],"700":["drawn"],"770":["drawn"],"800":["drawn","drawn"],"810":["drawn","drawn"],"820":["ERROR","ERROR"],"830":["ERROR","ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 17 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"stats-edge","lo":50,"hi":1500,"reps":2}
+K-chrome-w4-off stats-edge v=1500 (max line 1640 arrow, arrow 1640) hi: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 868ms worker/1
+K-chrome-w4-off stats-edge v=50 (max line 191 arrow, arrow 191) lo: drawn 654ms worker/1
+K-chrome-w4-off stats-edge v=780 (max line 921 arrow, arrow 921) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 651ms worker/1
+K-chrome-w4-off stats-edge v=420 (max line 561 arrow, arrow 561) mid: drawn 652ms worker/1
+K-chrome-w4-off stats-edge v=600 (max line 741 arrow, arrow 741) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 666ms worker/1
+K-chrome-w4-off stats-edge v=510 (max line 651 arrow, arrow 651) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 659ms worker/1
+K-chrome-w4-off stats-edge v=470 (max line 611 arrow, arrow 611) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 653ms worker/1
+K-chrome-w4-off stats-edge v=450 (max line 591 arrow, arrow 591) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 662ms worker/1
+K-chrome-w4-off stats-edge v=440 (max line 581 arrow, arrow 581) mid: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 658ms worker/1
+K-chrome-w4-off stats-edge v=430 (max line 571 arrow, arrow 571) mid: drawn 657ms worker/1
+K-chrome-w4-off stats-edge v=430 (max line 571 arrow, arrow 571) edge-draw-rep: drawn 653ms worker/1
+K-chrome-w4-off stats-edge v=440 (max line 581 arrow, arrow 581) edge-fail-rep: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 680ms worker/1
+K-chrome-w4-off stats-edge v=420 (max line 561 arrow, arrow 561) around: drawn 647ms worker/1
+K-chrome-w4-off stats-edge v=450 (max line 591 arrow, arrow 591) around: STACK [PlantUML version $version$ / $ | [From textarea (line 48) ] uml@gmail.com with this log (V$version$) java.lang.RuntimeException: (JavaScript) RangeErr] 652ms worker/1
+{"kind":"summary","label":"K-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","shape":"stats-edge","lastDraw":430,"firstFail":440,"results":{"50":["drawn"],"420":["drawn","drawn"],"430":["drawn","drawn"],"440":["STACK","STACK"],"450":["STACK","STACK"],"470":["STACK"],"510":["STACK"],"600":["STACK"],"780":["STACK"],"1500":["STACK"]}}
+=== done in 15 s, exit 0
+
+=== once {"label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"stats-edge-asis","values":[0],"reps":3}
+K-chrome-w4-jit stats-edge-asis v=0 (max line 491 arrow, arrow 491) once: drawn 649ms worker/1
+K-chrome-w4-jit stats-edge-asis v=0 (max line 491 arrow, arrow 491) once: drawn 653ms worker/1
+K-chrome-w4-jit stats-edge-asis v=0 (max line 491 arrow, arrow 491) once: drawn 656ms worker/1
+=== done in 3 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"loop","lo":100,"hi":1471,"reps":3}
+K-chrome-w4-jit loop v=1471 (max line 1471 opener, arrow 47) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 442ms worker/1
+K-chrome-w4-jit loop v=100 (max line 100 opener, arrow 47) lo: drawn 646ms worker/1
+K-chrome-w4-jit loop v=790 (max line 790 opener, arrow 47) mid: drawn 443ms worker/1
+K-chrome-w4-jit loop v=1130 (max line 1130 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 479ms worker/1
+K-chrome-w4-jit loop v=960 (max line 960 opener, arrow 47) mid: drawn 446ms worker/1
+K-chrome-w4-jit loop v=1050 (max line 1050 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 650ms worker/1
+K-chrome-w4-jit loop v=1010 (max line 1010 opener, arrow 47) mid: drawn 486ms worker/1
+K-chrome-w4-jit loop v=1030 (max line 1030 opener, arrow 47) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 446ms worker/1
+K-chrome-w4-jit loop v=1020 (max line 1020 opener, arrow 47) mid: drawn 446ms worker/1
+K-chrome-w4-jit loop v=1020 (max line 1020 opener, arrow 47) edge-draw-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 445ms worker/1
+K-chrome-w4-jit loop v=1030 (max line 1030 opener, arrow 47) edge-fail-rep: drawn 461ms worker/1
+K-chrome-w4-jit loop v=1020 (max line 1020 opener, arrow 47) edge-draw-rep: drawn 648ms worker/1
+K-chrome-w4-jit loop v=1030 (max line 1030 opener, arrow 47) edge-fail-rep: drawn 467ms worker/1
+K-chrome-w4-jit loop v=1010 (max line 1010 opener, arrow 47) around: drawn 449ms worker/1
+K-chrome-w4-jit loop v=1040 (max line 1040 opener, arrow 47) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 487ms worker/1
+{"kind":"summary","label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"loop","lastDraw":1020,"firstFail":1030,"results":{"100":["drawn"],"790":["drawn"],"960":["drawn"],"1010":["drawn","drawn"],"1020":["drawn","ERROR","drawn"],"1030":["ERROR","drawn","drawn"],"1040":["ERROR"],"1050":["ERROR"],"1130":["ERROR"],"1471":["ERROR"]}}
+=== done in 14 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"partition","lo":100,"hi":1471,"reps":3}
+K-chrome-w4-jit partition v=1471 (max line 1471 opener, arrow 52) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 449ms worker/1
+K-chrome-w4-jit partition v=100 (max line 100 opener, arrow 52) lo: drawn 446ms worker/1
+K-chrome-w4-jit partition v=790 (max line 790 opener, arrow 52) mid: drawn 459ms worker/1
+K-chrome-w4-jit partition v=1130 (max line 1130 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 660ms worker/1
+K-chrome-w4-jit partition v=960 (max line 960 opener, arrow 52) mid: drawn 669ms worker/1
+K-chrome-w4-jit partition v=1050 (max line 1050 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 455ms worker/1
+K-chrome-w4-jit partition v=1010 (max line 1010 opener, arrow 52) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 456ms worker/1
+K-chrome-w4-jit partition v=990 (max line 990 opener, arrow 52) mid: drawn 471ms worker/1
+K-chrome-w4-jit partition v=1000 (max line 1000 opener, arrow 52) mid: drawn 642ms worker/1
+K-chrome-w4-jit partition v=1000 (max line 1000 opener, arrow 52) edge-draw-rep: drawn 450ms worker/1
+K-chrome-w4-jit partition v=1010 (max line 1010 opener, arrow 52) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 461ms worker/1
+K-chrome-w4-jit partition v=1000 (max line 1000 opener, arrow 52) edge-draw-rep: drawn 446ms worker/1
+K-chrome-w4-jit partition v=1010 (max line 1010 opener, arrow 52) edge-fail-rep: drawn 443ms worker/1
+K-chrome-w4-jit partition v=990 (max line 990 opener, arrow 52) around: drawn 443ms worker/1
+K-chrome-w4-jit partition v=1020 (max line 1020 opener, arrow 52) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 12) ] Syntax Error? (Assumed diagram type: sequence)] 663ms worker/1
+{"kind":"summary","label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"partition","lastDraw":1000,"firstFail":1010,"results":{"100":["drawn"],"790":["drawn"],"960":["drawn"],"990":["drawn","drawn"],"1000":["drawn","drawn","drawn"],"1010":["ERROR","ERROR","drawn"],"1020":["ERROR"],"1050":["ERROR"],"1130":["ERROR"],"1471":["ERROR"]}}
+=== done in 14 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"bar-token","lo":100,"hi":1400,"reps":3}
+K-chrome-w4-jit bar-token v=1400 (max line 1400 bar, arrow 43) hi: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 442ms worker/1
+K-chrome-w4-jit bar-token v=100 (max line 100 bar, arrow 43) lo: drawn 442ms worker/1
+K-chrome-w4-jit bar-token v=750 (max line 750 bar, arrow 43) mid: drawn 457ms worker/1
+K-chrome-w4-jit bar-token v=1080 (max line 1080 bar, arrow 43) mid: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 470ms worker/1
+K-chrome-w4-jit bar-token v=920 (max line 920 bar, arrow 43) mid: drawn 444ms worker/1
+K-chrome-w4-jit bar-token v=1000 (max line 1000 bar, arrow 43) mid: drawn 666ms worker/1
+K-chrome-w4-jit bar-token v=1040 (max line 1040 bar, arrow 43) mid: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 456ms worker/1
+K-chrome-w4-jit bar-token v=1020 (max line 1020 bar, arrow 43) mid: drawn 447ms worker/1
+K-chrome-w4-jit bar-token v=1030 (max line 1030 bar, arrow 43) mid: drawn 452ms worker/1
+K-chrome-w4-jit bar-token v=1030 (max line 1030 bar, arrow 43) edge-draw-rep: drawn 658ms worker/1
+K-chrome-w4-jit bar-token v=1040 (max line 1040 bar, arrow 43) edge-fail-rep: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 453ms worker/1
+K-chrome-w4-jit bar-token v=1030 (max line 1030 bar, arrow 43) edge-draw-rep: drawn 452ms worker/1
+K-chrome-w4-jit bar-token v=1040 (max line 1040 bar, arrow 43) edge-fail-rep: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 459ms worker/1
+K-chrome-w4-jit bar-token v=1020 (max line 1020 bar, arrow 43) around: drawn 443ms worker/1
+K-chrome-w4-jit bar-token v=1050 (max line 1050 bar, arrow 43) around: STACK-TEXT [java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded] 669ms worker/1
+{"kind":"summary","label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"bar-token","lastDraw":1030,"firstFail":1040,"results":{"100":["drawn"],"750":["drawn"],"920":["drawn"],"1000":["drawn"],"1020":["drawn","drawn"],"1030":["drawn","drawn","drawn"],"1040":["STACK-TEXT","STACK-TEXT","STACK-TEXT"],"1050":["STACK-TEXT"],"1080":["STACK-TEXT"],"1400":["STACK-TEXT"]}}
+=== done in 14 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"bar-rich","lo":100,"hi":13600,"reps":3}
+K-chrome-w4-jit bar-rich v=13600 (max line 13600 bar, arrow 43) hi: drawn 652ms worker/1
+K-chrome-w4-jit bar-rich v=13600 (max line 13600 bar, arrow 43) hi-rep: drawn 681ms worker/1
+K-chrome-w4-jit bar-rich v=13600 (max line 13600 bar, arrow 43) hi-rep: drawn 673ms worker/1
+{"kind":"summary","label":"K-chrome-w4-jit","shape":"bar-rich","everyDrewTo":13600,"results":{"13600":["drawn","drawn","drawn"]}}
+=== done in 4 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"seq-entity","lo":50,"hi":2100,"reps":3}
+K-chrome-w4-jit seq-entity v=2100 (max line 4142 declaration, decl 4142, arrow 2000) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 479ms worker/1
+K-chrome-w4-jit seq-entity v=50 (max line 109 declaration, decl 109, arrow 80) lo: drawn 443ms worker/1
+K-chrome-w4-jit seq-entity v=1080 (max line 2135 declaration, decl 2135, arrow 1050) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 469ms worker/1
+K-chrome-w4-jit seq-entity v=570 (max line 1134 declaration, decl 1134, arrow 571) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 464ms worker/1
+K-chrome-w4-jit seq-entity v=310 (max line 620 declaration, decl 620, arrow 325) mid: drawn 442ms worker/1
+K-chrome-w4-jit seq-entity v=440 (max line 877 declaration, decl 877, arrow 448) mid: drawn 656ms worker/1
+K-chrome-w4-jit seq-entity v=510 (max line 1015 declaration, decl 1015, arrow 514) mid: drawn 448ms worker/1
+K-chrome-w4-jit seq-entity v=540 (max line 1073 declaration, decl 1073, arrow 542) mid: drawn 444ms worker/1
+K-chrome-w4-jit seq-entity v=560 (max line 1113 declaration, decl 1113, arrow 562) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 445ms worker/1
+K-chrome-w4-jit seq-entity v=550 (max line 1093 declaration, decl 1093, arrow 552) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 444ms worker/1
+K-chrome-w4-jit seq-entity v=540 (max line 1073 declaration, decl 1073, arrow 542) edge-draw-rep: drawn 447ms worker/1
+K-chrome-w4-jit seq-entity v=550 (max line 1093 declaration, decl 1093, arrow 552) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 452ms worker/1
+K-chrome-w4-jit seq-entity v=540 (max line 1073 declaration, decl 1073, arrow 542) edge-draw-rep: drawn 447ms worker/1
+K-chrome-w4-jit seq-entity v=550 (max line 1093 declaration, decl 1093, arrow 552) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 455ms worker/1
+K-chrome-w4-jit seq-entity v=530 (max line 1053 declaration, decl 1053, arrow 532) around: drawn 452ms worker/1
+K-chrome-w4-jit seq-entity v=560 (max line 1113 declaration, decl 1113, arrow 562) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 447ms worker/1
+{"kind":"summary","label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"seq-entity","lastDraw":540,"firstFail":550,"results":{"50":["drawn"],"310":["drawn"],"440":["drawn"],"510":["drawn"],"530":["drawn"],"540":["drawn","drawn","drawn"],"550":["ERROR","ERROR","ERROR"],"560":["ERROR","ERROR"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 14 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"seq-database","lo":50,"hi":2100,"reps":3}
+K-chrome-w4-jit seq-database v=2100 (max line 4144 declaration, decl 4144, arrow 2000) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 458ms worker/1
+K-chrome-w4-jit seq-database v=50 (max line 111 declaration, decl 111, arrow 78) lo: drawn 661ms worker/1
+K-chrome-w4-jit seq-database v=1080 (max line 2137 declaration, decl 2137, arrow 1048) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 652ms worker/1
+K-chrome-w4-jit seq-database v=570 (max line 1136 declaration, decl 1136, arrow 569) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 650ms worker/1
+K-chrome-w4-jit seq-database v=310 (max line 622 declaration, decl 622, arrow 323) mid: drawn 444ms worker/1
+K-chrome-w4-jit seq-database v=440 (max line 879 declaration, decl 879, arrow 446) mid: drawn 446ms worker/1
+K-chrome-w4-jit seq-database v=510 (max line 1017 declaration, decl 1017, arrow 512) mid: drawn 652ms worker/1
+K-chrome-w4-jit seq-database v=540 (max line 1075 declaration, decl 1075, arrow 540) mid: drawn 448ms worker/1
+K-chrome-w4-jit seq-database v=560 (max line 1115 declaration, decl 1115, arrow 560) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 670ms worker/1
+K-chrome-w4-jit seq-database v=550 (max line 1095 declaration, decl 1095, arrow 550) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 664ms worker/1
+K-chrome-w4-jit seq-database v=540 (max line 1075 declaration, decl 1075, arrow 540) edge-draw-rep: drawn 656ms worker/1
+K-chrome-w4-jit seq-database v=550 (max line 1095 declaration, decl 1095, arrow 550) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 444ms worker/1
+K-chrome-w4-jit seq-database v=540 (max line 1075 declaration, decl 1075, arrow 540) edge-draw-rep: drawn 444ms worker/1
+K-chrome-w4-jit seq-database v=550 (max line 1095 declaration, decl 1095, arrow 550) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: sequence)] 456ms worker/1
+K-chrome-w4-jit seq-database v=530 (max line 1055 declaration, decl 1055, arrow 530) around: drawn 1084ms worker/1
+K-chrome-w4-jit seq-database v=560 (max line 1115 declaration, decl 1115, arrow 560) around: drawn 447ms worker/1
+{"kind":"summary","label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"seq-database","lastDraw":540,"firstFail":550,"results":{"50":["drawn"],"310":["drawn"],"440":["drawn"],"510":["drawn"],"530":["drawn"],"540":["drawn","drawn","drawn"],"550":["ERROR","ERROR","ERROR"],"560":["ERROR","drawn"],"570":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 16 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"comp-database","lo":50,"hi":2100,"reps":3}
+K-chrome-w4-jit comp-database v=2100 (max line 4144 declaration, decl 4144, arrow 2002) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 670ms worker/1
+K-chrome-w4-jit comp-database v=50 (max line 203 arrow, decl 111, arrow 203) lo: drawn 451ms worker/1
+K-chrome-w4-jit comp-database v=1080 (max line 2137 declaration, decl 2137, arrow 1173) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 445ms worker/1
+K-chrome-w4-jit comp-database v=570 (max line 1136 declaration, decl 1136, arrow 694) mid: drawn 470ms worker/1
+K-chrome-w4-jit comp-database v=830 (max line 1647 declaration, decl 1647, arrow 939) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 652ms worker/1
+K-chrome-w4-jit comp-database v=700 (max line 1391 declaration, decl 1391, arrow 817) mid: drawn 446ms worker/1
+K-chrome-w4-jit comp-database v=770 (max line 1528 declaration, decl 1528, arrow 882) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 464ms worker/1
+K-chrome-w4-jit comp-database v=740 (max line 1469 declaration, decl 1469, arrow 853) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 450ms worker/1
+K-chrome-w4-jit comp-database v=720 (max line 1428 declaration, decl 1428, arrow 834) mid: drawn 1275ms worker/1
+K-chrome-w4-jit comp-database v=730 (max line 1449 declaration, decl 1449, arrow 843) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 443ms worker/1
+K-chrome-w4-jit comp-database v=720 (max line 1428 declaration, decl 1428, arrow 834) edge-draw-rep: drawn 449ms worker/1
+K-chrome-w4-jit comp-database v=730 (max line 1449 declaration, decl 1449, arrow 843) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 478ms worker/1
+K-chrome-w4-jit comp-database v=720 (max line 1428 declaration, decl 1428, arrow 834) edge-draw-rep: drawn 662ms worker/1
+K-chrome-w4-jit comp-database v=730 (max line 1449 declaration, decl 1449, arrow 843) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 655ms worker/1
+K-chrome-w4-jit comp-database v=710 (max line 1409 declaration, decl 1409, arrow 825) around: drawn 654ms worker/1
+K-chrome-w4-jit comp-database v=740 (max line 1469 declaration, decl 1469, arrow 853) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 655ms worker/1
+{"kind":"summary","label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"comp-database","lastDraw":720,"firstFail":730,"results":{"50":["drawn"],"570":["drawn"],"700":["drawn"],"710":["drawn"],"720":["drawn","drawn","drawn"],"730":["ERROR","ERROR","ERROR"],"740":["ERROR","ERROR"],"770":["ERROR"],"830":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 17 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"comp-system","lo":50,"hi":2100,"reps":3}
+K-chrome-w4-jit comp-system v=2100 (max line 4299 declaration, decl 4299, arrow 2008) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 449ms worker/1
+K-chrome-w4-jit comp-system v=50 (max line 162 declaration, decl 162, arrow 111) lo: drawn 669ms worker/1
+K-chrome-w4-jit comp-system v=1080 (max line 2240 declaration, decl 2240, arrow 1081) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 459ms worker/1
+K-chrome-w4-jit comp-system v=570 (max line 1215 declaration, decl 1215, arrow 602) mid: drawn 679ms worker/1
+K-chrome-w4-jit comp-system v=830 (max line 1738 declaration, decl 1738, arrow 847) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 446ms worker/1
+K-chrome-w4-jit comp-system v=700 (max line 1474 declaration, decl 1474, arrow 725) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 462ms worker/1
+K-chrome-w4-jit comp-system v=640 (max line 1350 declaration, decl 1350, arrow 667) mid: drawn 674ms worker/1
+K-chrome-w4-jit comp-system v=670 (max line 1414 declaration, decl 1414, arrow 695) mid: drawn 660ms worker/1
+K-chrome-w4-jit comp-system v=690 (max line 1454 declaration, decl 1454, arrow 715) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 448ms worker/1
+K-chrome-w4-jit comp-system v=680 (max line 1434 declaration, decl 1434, arrow 705) mid: drawn 461ms worker/1
+K-chrome-w4-jit comp-system v=680 (max line 1434 declaration, decl 1434, arrow 705) edge-draw-rep: drawn 452ms worker/1
+K-chrome-w4-jit comp-system v=690 (max line 1454 declaration, decl 1454, arrow 715) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 449ms worker/1
+K-chrome-w4-jit comp-system v=680 (max line 1434 declaration, decl 1434, arrow 705) edge-draw-rep: drawn 666ms worker/1
+K-chrome-w4-jit comp-system v=690 (max line 1454 declaration, decl 1454, arrow 715) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 448ms worker/1
+K-chrome-w4-jit comp-system v=670 (max line 1414 declaration, decl 1414, arrow 695) around: drawn 453ms worker/1
+K-chrome-w4-jit comp-system v=700 (max line 1474 declaration, decl 1474, arrow 725) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 46) ] Syntax Error? (Assumed diagram type: component)] 447ms worker/1
+{"kind":"summary","label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"comp-system","lastDraw":680,"firstFail":690,"results":{"50":["drawn"],"570":["drawn"],"640":["drawn"],"670":["drawn","drawn"],"680":["drawn","drawn","drawn"],"690":["ERROR","ERROR","ERROR"],"700":["ERROR","ERROR"],"830":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 15 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"activity","lo":50,"hi":2100,"reps":3}
+K-chrome-w4-jit activity v=2100 (max line 2131 action) hi: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 438ms worker/1
+K-chrome-w4-jit activity v=50 (max line 59 action) lo: drawn 651ms worker/1
+K-chrome-w4-jit activity v=1080 (max line 1100 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 445ms worker/1
+K-chrome-w4-jit activity v=570 (max line 584 action) mid: drawn 458ms worker/1
+K-chrome-w4-jit activity v=830 (max line 847 action) mid: drawn 678ms worker/1
+K-chrome-w4-jit activity v=960 (max line 978 action) mid: drawn 672ms worker/1
+K-chrome-w4-jit activity v=1020 (max line 1039 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 443ms worker/1
+K-chrome-w4-jit activity v=990 (max line 1009 action) mid: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 446ms worker/1
+K-chrome-w4-jit activity v=980 (max line 999 action) mid: drawn 450ms worker/1
+K-chrome-w4-jit activity v=980 (max line 999 action) edge-draw-rep: drawn 672ms worker/1
+K-chrome-w4-jit activity v=990 (max line 1009 action) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 661ms worker/1
+K-chrome-w4-jit activity v=980 (max line 999 action) edge-draw-rep: drawn 447ms worker/1
+K-chrome-w4-jit activity v=990 (max line 1009 action) edge-fail-rep: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 456ms worker/1
+K-chrome-w4-jit activity v=970 (max line 988 action) around: drawn 450ms worker/1
+K-chrome-w4-jit activity v=1000 (max line 1019 action) around: ERROR [PlantUML version $version$ / $ | [From textarea (line 9) ] Syntax Error? (Assumed diagram type: activity)] 447ms worker/1
+{"kind":"summary","label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"activity","lastDraw":980,"firstFail":990,"results":{"50":["drawn"],"570":["drawn"],"830":["drawn"],"960":["drawn"],"970":["drawn"],"980":["drawn","drawn","drawn"],"990":["ERROR","ERROR","ERROR"],"1000":["ERROR"],"1020":["ERROR"],"1080":["ERROR"],"2100":["ERROR"]}}
+=== done in 14 s, exit 0
+
+=== bisect {"label":"K-chrome-w4-jit","browser":"chrome","jsflags":"","shape":"stats-edge","lo":50,"hi":1500,"reps":3}
+K-chrome-w4-jit stats-edge v=1500 (max line 1640 arrow, arrow 1640) hi: drawn 473ms worker/1
+K-chrome-w4-jit stats-edge v=1500 (max line 1640 arrow, arrow 1640) hi-rep: drawn 458ms worker/1
+K-chrome-w4-jit stats-edge v=1500 (max line 1640 arrow, arrow 1640) hi-rep: drawn 465ms worker/1
+{"kind":"summary","label":"K-chrome-w4-jit","shape":"stats-edge","everyDrewTo":1500,"results":{"1500":["drawn","drawn","drawn"]}}
+=== done in 3 s, exit 0
+
+=== legacy {"label":"L-chromium-jitless","browser":"chromium","jsflags":"--jitless"}
+L-chromium-jitless message 1000: legacy rule says drawn; strict drawn
+L-chromium-jitless message 1500: legacy rule says drawn; strict drawn
+L-chromium-jitless message 1800: legacy rule says drawn; strict drawn
+L-chromium-jitless message 2000: legacy rule says drawn; strict drawn
+L-chromium-jitless loop label 800: legacy rule says drawn; strict drawn
+L-chromium-jitless loop label 1000: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-jitless loop label 1200: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-jitless loop label 1300: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-jitless loop label 1400: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-jitless loop label 1471: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-jitless loop label 1600: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-jitless loop label 2000: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-jitless coloured bar 800: legacy rule says drawn; strict drawn
+L-chromium-jitless coloured bar 1000: legacy rule says drawn; strict drawn
+L-chromium-jitless coloured bar 1200: legacy rule says drawn; strict drawn
+L-chromium-jitless coloured bar 1300: legacy rule says drawn; strict drawn
+L-chromium-jitless coloured bar 1400: legacy rule says drawn; strict drawn
+L-chromium-jitless coloured bar 1600: legacy rule says drawn; strict drawn
+L-chromium-jitless coloured bar 2000: legacy rule says drawn; strict drawn
+=== done in 6 s, exit 0
+
+=== legacy {"label":"L-chromium-off","browser":"chromium","jsflags":"--no-opt --no-maglev"}
+L-chromium-off message 1000: legacy rule says drawn; strict drawn
+L-chromium-off message 1500: legacy rule says drawn; strict drawn
+L-chromium-off message 1800: legacy rule says drawn; strict drawn
+L-chromium-off message 2000: legacy rule says drawn; strict drawn
+L-chromium-off loop label 800: legacy rule says drawn; strict drawn
+L-chromium-off loop label 1000: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-off loop label 1200: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-off loop label 1300: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-off loop label 1400: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-off loop label 1471: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-off loop label 1600: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-off loop label 2000: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chromium-off coloured bar 800: legacy rule says drawn; strict drawn
+L-chromium-off coloured bar 1000: legacy rule says drawn; strict drawn
+L-chromium-off coloured bar 1200: legacy rule says drawn; strict drawn
+L-chromium-off coloured bar 1300: legacy rule says drawn; strict drawn
+L-chromium-off coloured bar 1400: legacy rule says drawn; strict drawn
+L-chromium-off coloured bar 1600: legacy rule says drawn; strict drawn
+L-chromium-off coloured bar 2000: legacy rule says drawn; strict drawn
+=== done in 3 s, exit 0
+
+=== legacy {"label":"L-chrome-jitless","browser":"chrome","jsflags":"--jitless"}
+L-chrome-jitless message 1000: legacy rule says drawn; strict drawn
+L-chrome-jitless message 1500: legacy rule says drawn; strict drawn
+L-chrome-jitless message 1800: legacy rule says drawn; strict drawn
+L-chrome-jitless message 2000: legacy rule says drawn; strict drawn
+L-chrome-jitless loop label 800: legacy rule says drawn; strict drawn
+L-chrome-jitless loop label 1000: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-jitless loop label 1200: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-jitless loop label 1300: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-jitless loop label 1400: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-jitless loop label 1471: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-jitless loop label 1600: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-jitless loop label 2000: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-jitless coloured bar 800: legacy rule says drawn; strict drawn
+L-chrome-jitless coloured bar 1000: legacy rule says drawn; strict drawn
+L-chrome-jitless coloured bar 1200: legacy rule says drawn; strict drawn
+L-chrome-jitless coloured bar 1300: legacy rule says drawn; strict drawn
+L-chrome-jitless coloured bar 1400: legacy rule says drawn; strict drawn
+L-chrome-jitless coloured bar 1600: legacy rule says drawn; strict drawn
+L-chrome-jitless coloured bar 2000: legacy rule says drawn; strict drawn
+=== done in 3 s, exit 0
+
+=== legacy {"label":"L-chrome-off","browser":"chrome","jsflags":"--no-opt --no-maglev"}
+L-chrome-off message 1000: legacy rule says drawn; strict drawn
+L-chrome-off message 1500: legacy rule says drawn; strict drawn
+L-chrome-off message 1800: legacy rule says drawn; strict drawn
+L-chrome-off message 2000: legacy rule says drawn; strict drawn
+L-chrome-off loop label 800: legacy rule says drawn; strict drawn
+L-chrome-off loop label 1000: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-off loop label 1200: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-off loop label 1300: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-off loop label 1400: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-off loop label 1471: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-off loop label 1600: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-off loop label 2000: legacy rule says drawn; strict ERROR [PlantUML version $version$ / $ | [From textarea (line 6) ] Syntax Error? (Assumed diagram type: sequence)]
+L-chrome-off coloured bar 800: legacy rule says drawn; strict drawn
+L-chrome-off coloured bar 1000: legacy rule says drawn; strict drawn
+L-chrome-off coloured bar 1200: legacy rule says drawn; strict drawn
+L-chrome-off coloured bar 1300: legacy rule says drawn; strict drawn
+L-chrome-off coloured bar 1400: legacy rule says drawn; strict drawn
+L-chrome-off coloured bar 1600: legacy rule says drawn; strict drawn
+L-chrome-off coloured bar 2000: legacy rule says drawn; strict drawn
+=== done in 3 s, exit 0
+follow matrix finished
+exit 0

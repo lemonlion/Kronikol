@@ -1,0 +1,19 @@
+{"t":"2026-10-09T18:02:28.661Z","kind":"legacy","browser":"chrome","jsflags":"","case":"message","n":1000,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:28.723Z","kind":"legacy","browser":"chrome","jsflags":"","case":"message","n":1500,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:28.778Z","kind":"legacy","browser":"chrome","jsflags":"","case":"message","n":1800,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:28.831Z","kind":"legacy","browser":"chrome","jsflags":"","case":"message","n":2000,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:28.885Z","kind":"legacy","browser":"chrome","jsflags":"","case":"loop label","n":800,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:28.957Z","kind":"legacy","browser":"chrome","jsflags":"","case":"loop label","n":1000,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.018Z","kind":"legacy","browser":"chrome","jsflags":"","case":"loop label","n":1200,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.082Z","kind":"legacy","browser":"chrome","jsflags":"","case":"loop label","n":1300,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.145Z","kind":"legacy","browser":"chrome","jsflags":"","case":"loop label","n":1400,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.203Z","kind":"legacy","browser":"chrome","jsflags":"","case":"loop label","n":1471,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.259Z","kind":"legacy","browser":"chrome","jsflags":"","case":"loop label","n":1600,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.316Z","kind":"legacy","browser":"chrome","jsflags":"","case":"loop label","n":2000,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.371Z","kind":"legacy","browser":"chrome","jsflags":"","case":"coloured bar","n":800,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.428Z","kind":"legacy","browser":"chrome","jsflags":"","case":"coloured bar","n":1000,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.489Z","kind":"legacy","browser":"chrome","jsflags":"","case":"coloured bar","n":1200,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.549Z","kind":"legacy","browser":"chrome","jsflags":"","case":"coloured bar","n":1300,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.603Z","kind":"legacy","browser":"chrome","jsflags":"","case":"coloured bar","n":1400,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.660Z","kind":"legacy","browser":"chrome","jsflags":"","case":"coloured bar","n":1600,"legacyVerdict":"drawn","strict":"drawn"}
+{"t":"2026-10-09T18:02:29.721Z","kind":"legacy","browser":"chrome","jsflags":"","case":"coloured bar","n":2000,"legacyVerdict":"drawn","strict":"drawn"}

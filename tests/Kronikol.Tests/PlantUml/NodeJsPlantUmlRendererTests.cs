@@ -174,6 +174,7 @@ public class NodeJsPlantUmlRendererTests
         { Picture(VersionLine, "[From textarea (line 3) ]", "note over a: RangeError: Maximum call stack size exceeded", " Syntax Error? (Assumed diagram type: sequence)"), false, "a syntax error in a source quoting the error" },
         { Picture("Api", "Orders", "GET /orders", "Api", "Orders", "RangeError: Maximum call stack size exceeded"), false, "a drawn diagram whose last note quotes the error" },
         { "java.lang.RuntimeException: Diagram too large for browser rendering: 9000x40000 (max 98304)", false, "too large" },
+        { "java.lang.RuntimeException: (JavaScript) RangeError: Invalid array length", false, "another RangeError" },
         { "", false, "nothing" },
         { null, false, "null" },
     };
@@ -183,6 +184,41 @@ public class NodeJsPlantUmlRendererTests
     public void The_stack_detector_tells_the_engines_stack_failure_from_a_drawn_diagram(string? result, bool expected, string why)
     {
         Assert.True(expected == NodeJsPlantUmlRenderer.IsStackOverflow(result), why);
+    }
+
+    [Theory]
+    // The engine numbers the lines of what it is given from 1, skipping blank lines before the first, so these are the
+    // line numbers it reported for each form in node (measured 2026-10-12 on @plantuml/core 1.2026.8).
+    [InlineData("", 6)]
+    [InlineData("\n\n", 6)]
+    [InlineData("' a comment\n", 7)]
+    public void A_stack_failure_names_the_line_the_engine_stopped_at_and_that_lines_length(string before, int engineLine)
+    {
+        // The message names the line the engine reported and the length of that statement, which a reader compares
+        // with its cap: the edge's, not a neighbour's.
+        var source = before + OverflowingComponentDiagram(3000);
+        var edge = source.Split('\n').Single(l => l.StartsWith("caller -[", StringComparison.Ordinal));
+        var picture = Picture(VersionLine, $"[From textarea (line {engineLine}) ]", "@startuml",
+            " java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded (Assumed diagram type: component)");
+
+        var error = NodeJsPlantUmlRenderer.StackOverflowError(source, picture);
+
+        Assert.Contains($"on line {engineLine}, a statement of {edge.Length} characters", error);
+        Assert.Contains("(RangeError: Maximum call stack size exceeded)", error);
+        // CRLF line endings count the same.
+        Assert.Contains($"on line {engineLine}, a statement of {edge.Length} characters",
+            NodeJsPlantUmlRenderer.StackOverflowError(source.Replace("\n", "\r\n"), picture));
+    }
+
+    [Fact]
+    public void A_stack_failure_with_no_line_or_one_past_the_source_names_none()
+    {
+        var source = OverflowingComponentDiagram(3000);
+
+        Assert.DoesNotContain("on line", NodeJsPlantUmlRenderer.StackOverflowError(source,
+            "java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded"));
+        Assert.DoesNotContain("on line", NodeJsPlantUmlRenderer.StackOverflowError(source,
+            Picture(VersionLine, "[From textarea (line 99) ]", " java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded")));
     }
 
     internal static string Seq(string a, string b) => $"@startuml\nparticipant {a}\nparticipant {b}\n{a} -> {b} : hello from {a}\n@enduml";

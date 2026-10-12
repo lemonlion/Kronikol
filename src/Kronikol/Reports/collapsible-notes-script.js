@@ -1442,6 +1442,10 @@
                 var cut = 120;
                 var open = run.lastIndexOf('<', cut - 1);
                 if (open > 0 && run.indexOf('>', open) >= cut) cut = open;
+                // Never between the two halves of a character written as two code units (an emoji, say): each half
+                // alone draws as U+FFFD (the C# twin does the same).
+                var unit = run.charCodeAt(cut - 1);
+                if (cut > 1 && unit >= 0xD800 && unit <= 0xDBFF) cut--;
                 while (cut > 1 && (run.charAt(cut - 1) === '~' || run.charAt(cut - 1) === '\\')) cut--;
                 out += run.slice(0, cut) + '\n';
                 run = run.slice(cut);

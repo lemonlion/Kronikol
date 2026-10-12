@@ -4,6 +4,75 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.14.10] - 2026-10-12
+
+**Patch - fixes from an audit of `plans/LONG_COMPONENT_EDGE_PLAN.md` (#162; 4.14.5 and 4.14.6).** Bug fixes, and nothing
+new for a consumer to call, so the patch part moves (4.14.9 to 4.14.10). Generated PlantUML changes only where a cut or a
+break fell inside a character written as two UTF-16 code units, and where a participant's name holds a character outside
+ASCII (its alias); both are called out below. The history action's `VERSION` installs `Kronikol.Tool` 4.14.10, and the
+templates pin 4.14.9.
+
+### Fixed
+
+- **A cut or a line break could split a character in two.** An emoji, or a CJK character outside the basic plane, is
+  two UTF-16 code units, and the statement cut (`PlantUmlStatementLimits.TruncateLabel`) could cut between them, leaving
+  the first half before `…`, which every renderer draws as `�`. Since 4.14.5 that cut also takes participant names at
+  200 characters, activity actions at 600 and a component edge's first entry, so a name written with emoji met it. The
+  breaks that bound a diagram's width did the same: a name or label broken onto display lines, a note value written in
+  chunks of 80 characters and a URL in display chunks (`StringExtensions.ChunksUpTo`), and a note's whitespace-free run
+  broken past 120 characters, in the JSON view and in the page's YAML view. Each now ends one code unit early where it
+  would have split a pair. `ChunksUpTo` is public: a chunk can now be one shorter than asked for, and only there.
+- **Two services named in another script were drawn as one participant.** An alias keeps only ASCII letters, digits and
+  underscores, so two names of one length written in Cyrillic, Greek, CJK or any other script but Latin came out as the
+  same run of underscores. In a sequence diagram the second was never declared and its calls were drawn on the first
+  one's lifeline; a component diagram drew one node for both. A name that holds a character outside ASCII now takes a
+  hash of the whole name in its alias, as a name past 200 characters has since 4.14.5. Every ASCII name keeps the alias
+  it had.
+- **An edge's operations were listed, and cut, in the order of the machine's culture.** The component diagram and the
+  mergeable report file sorted an edge's methods by the culture's rules: Czech puts `chunk` after `hset`, Danish a
+  capital before its small letter, and every culture `delete` before `Get`. Since 4.14.5 the cut keeps an edge's first
+  entries, so one run kept different entries on different machines, and Kronikol4J, which sorts in ordinal order, drew
+  another. Both now sort in ordinal order. An edge whose methods mix capitals and small letters may list them in a new
+  order.
+- **A merged report's component diagram ignored `ReportConfigurationOptions.DependencyColors`.** The run report and
+  `ComponentDiagram.html` colour an edge from those options when `ComponentDiagramOptions` names no colours of its own;
+  `MergeableReportRenderer.Render` and `MergeFilesToHtml` drew the default palette for the same options (the plan's §8
+  had left it open). `kronikol merge` passes no colours, so its reports do not change.
+- **The internal-flow popup named no statement when the engine drew `Syntax Error?`.** An activity action past its
+  length fails as that picture, not as the stack picture, and the popup, where an internal flow's activity diagram is
+  drawn, described only the stack picture: it showed the engine's picture with nothing to name the line. It now
+  describes it as the report's own diagrams do.
+- The line naming an over-long statement read "is a activity action"; it reads "is an activity action".
+
+### Tests
+
+- `PlantUmlStatementLengthTests`: a cut and a hard break never fall inside a character written as two code units, at
+  every budget from 2 to 60 and at both alignments; a value chunked for a note, and a form or text payload of emoji, is
+  chunked between whole characters; names and actions written with emoji are cut and broken whole in sequence,
+  component and activity sources; two names written in Cyrillic stay two participants in both diagrams, and ASCII names
+  keep their aliases.
+- `ComponentDiagramGeneratorTests` and `MergeableReportTests`: an edge's entries, and the entries a cut keeps, come out
+  the same under en-US, cs-CZ and da-DK, in ordinal order, in the diagram and in the mergeable file; a merged report's
+  edges take the report's `DependencyColors`.
+- `NodeJsPlantUmlRendererTests`: the stack failure names the line as the engine numbers it (blank lines before
+  `@startuml` skipped, a comment there counted) and that line's length, with LF and CRLF; no line, or one past the
+  source, names none; `RangeError: Invalid array length` is not a stack failure.
+- Playwright: `LongStatementRenderingTests` draws an activity action past its length in the popup, in a worker with the
+  optimizing compilers off, and reads the line that names it; runs the render probe's own verdict against every failure
+  form the engine draws; holds the page's and the Node renderer's detectors to one list of cases; and draws the diff
+  diagram's cut name in the worker. `NoteFormatDefaultTests` draws a YAML note of two emoji runs and reads every drawn
+  line for a half of one.
+- Proofs: each fix put back as it was, or each new fact's target broken, in 20 mutations, every one caught (plan
+  harness `audit/`).
+
+### Records
+
+- The measurements every cap in 4.14.5 was set from were never committed: `.gitignore`'s `[Ll]ogs/` kept the plan
+  harness's three `logs/` directories out, while the plan, the results file and the harness README cite them. They are
+  added (94 files).
+- The audit's scripts and results are in `plans/LONG_COMPONENT_EDGE_PLAN.harness/audit/`, and the plan's log, its row
+  in `PLANS_STATUS.md` and roadmap 1.25 and Appendix C record what it found and what it left for the owner.
+
 ## [4.14.9] - 2026-10-12
 
 **Patch - a call's two halves stay one call through `kronikol ingest`'s attribution and pairing, and in `kronikol query scenarios` (the audit of `plans/PHASE_FROM_STEPS_PLAN.md`, #130).**

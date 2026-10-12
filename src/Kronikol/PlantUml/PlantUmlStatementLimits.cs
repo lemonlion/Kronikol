@@ -207,13 +207,16 @@ internal static class PlantUmlStatementLimits
     public static string CapName(string name) => TruncateLabel(name, MaxParticipantNameChars);
 
     /// <summary>
-    /// What a participant's alias is derived from: the name itself when it fits under
-    /// <see cref="MaxParticipantNameChars"/>, else its start followed by a hash of the whole name, so that two names
-    /// sharing their first <see cref="MaxParticipantNameChars"/> characters, which <see cref="CapName"/> shows alike,
-    /// stay two participants.
+    /// What a participant's alias is derived from: the name itself when it is ASCII and fits under
+    /// <see cref="MaxParticipantNameChars"/>, else its start followed by a hash of the whole name. An alias keeps only
+    /// ASCII letters, digits and underscores, so two names sharing their first <see cref="MaxParticipantNameChars"/>
+    /// characters, which <see cref="CapName"/> shows alike, or two names of one length written in another script, whose
+    /// letters all become underscores, would otherwise share an alias and be drawn as one participant.
     /// </summary>
     public static string AliasSource(string name) =>
-        name.Length <= MaxParticipantNameChars ? name : string.Concat(name.AsSpan(0, MaxParticipantNameChars - 9), "_", StableHash(name));
+        name.Length <= MaxParticipantNameChars && System.Text.Ascii.IsValid(name)
+            ? name
+            : string.Concat(name.AsSpan(0, Math.Min(name.Length, MaxParticipantNameChars - 9)), "_", StableHash(name));
 
     /// <summary>
     /// Eight hex digits of FNV-1a over the name's UTF-16 code units: the same on every runtime and in every process,
@@ -259,6 +262,11 @@ internal static class PlantUmlStatementLimits
             if (label.AsSpan(p).StartsWith("<U+", StringComparison.Ordinal)) cut = p;
             break;
         }
+
+        // Never between the two halves of a character written as two code units (an emoji, say): either half alone
+        // draws as U+FFFD.
+        if (cut > 0 && char.IsHighSurrogate(label[cut - 1]))
+            cut--;
 
         // A `\` immediately before the cut belongs to a two-character escape whose partner is gone.
         var trailingSlashes = 0;

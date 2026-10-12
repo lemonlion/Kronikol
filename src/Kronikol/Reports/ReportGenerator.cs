@@ -4929,7 +4929,9 @@ public static class ReportGenerator
                 r.Caller,
                 r.Service,
                 r.Protocol,
-                Methods = r.Methods.OrderBy(m => m).ToArray(),
+                // Ordinal, as the component diagram lists them: in the machine culture's order, shards of one run
+                // written on different machines disagreed.
+                Methods = r.Methods.OrderBy(m => m, StringComparer.Ordinal).ToArray(),
                 r.CallCount,
                 r.TestCount,
                 r.DependencyCategory

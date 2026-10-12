@@ -327,6 +327,12 @@ public class LongStatementRenderingTests : PlaywrightTestBase
                 [new("Caller", HostName(400), "HTTP", ["GET /orders"], 3, 1)], useC4: false), [("Caller", 1), ("orders-archive-replica", 1)]),
             "span name" => (ActivityOf(sql, "Microsoft.EntityFrameworkCore"), [("POST /orders", 1), ("SELECT o.Id", 1)]),
             "swimlane name" => (ActivityOf("SELECT 1", HostName(700)), [("POST /orders", 1), ("SELECT 1", 1), ("orders-archive-replica", 1)]),
+            // The diff diagram writes a name unwrapped inside bold markers, which the engine reads by another pattern than a
+            // wrapped name's (plans/LONG_COMPONENT_EDGE_PLAN.md §2.4: about five frames per character in node).
+            "diff diagram name" => (Kronikol.ComponentDiagram.ComponentDiagramDiffer.GenerateDiffPlantUml(Kronikol.ComponentDiagram.ComponentDiagramDiffer.Compare(
+                [new("Caller", "Orders", "HTTP", ["GET /orders"], 3, 1)],
+                [new("Caller", "Orders", "HTTP", ["GET /orders"], 3, 1), new("Caller", HostName(1000), "HTTP", ["GET /archive"], 2, 1)]), useC4: false),
+                [("Caller", 1), ("Orders", 1), ("orders-archive-replica", 1)]),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
         };
     }
@@ -350,6 +356,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
     [InlineData("component name", true)]
     [InlineData("span name", true)]
     [InlineData("swimlane name", true)]
+    [InlineData("diff diagram name", true)]
     public async Task A_statement_past_its_old_limit_draws_in_the_worker(string kind, bool optimizingCompilersOff)
     {
         // The step bar and the loop label failed in a cold worker with the JIT on, the default, under caps of 1,400 and
@@ -488,30 +495,62 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         // answers, so it found nothing and left the engine's failure as the diagram. It now reads the answer when the
         // engine writes it, and describes a stack failure as the report does.
         var (source, labelLength) = OverflowingComponentDiagram();
-        var content = $"<div class=\"plantuml-browser\" id=\"iflow-stack\" data-plantuml=\"{System.Net.WebUtility.HtmlEncode(source)}\"></div>";
-        var pageUri = ServePage($$"""
-            <!DOCTYPE html><html><head><title>popup stack</title>
-            <style>{{DiagramContextMenu.GetInternalFlowPopupStyles()}}</style>
-            {{DiagramContextMenu.GetPlantUmlBrowserRenderScript()}}
-            </head><body>
-            <script>window.__iflowSegments = { 'iflow-seg-stack': { title: 'Internal Flow', content: {{JsonSerializer.Serialize(content)}} } };</script>
-            {{DiagramContextMenu.GetInternalFlowConfigScript(InternalFlowHasDataBehavior.ShowLinkOnHover)}}
-            {{DiagramContextMenu.GetInternalFlowPopupScript()}}
-            </body></html>
-            """, "PopupStack");
         using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
         await using var browser = await LaunchWithTheOptimizingCompilersOff(playwright);
         var page = await OpenPageAsync(browser, new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
 
-        await page.GotoAsync(pageUri);
-        await page.EvaluateAsync("() => window._iflowShowPopup('iflow-seg-stack')");
+        var note = await OpenPopupDiagram(page, "iflow-stack", source, "PopupStack", "stack");
+        Assert.Contains($"Line 6 is a component edge label of {labelLength} characters", await note.InnerTextAsync());
+    }
+
+    [Fact]
+    public async Task A_popup_diagram_the_engine_cannot_parse_names_its_over_long_action()
+    {
+        // An activity action past the stack draws the engine's Syntax Error? picture, not its stack picture: the overflow
+        // is swallowed while the engine chooses a command. The popup, where an internal flow's activity diagram is drawn,
+        // described only the stack picture, so it showed the engine's picture with nothing to name the action, which the
+        // report's own diagrams name. Its emitter cuts an action at 600 since 4.14.5, so this one is written by hand, in
+        // the emitter's wrapped form, past the 820 characters the worker fails from with the optimizing compilers off.
+        var action = DiagramWidth.Wrap(string.Concat(Enumerable.Repeat("SELECT o.Id, o.Total FROM Orders AS o WHERE o.CustomerId = @p0 ", 20))[..1000],
+            DiagramWidth.MaxLabelLineChars);
+        var lines = ActivityOf("SELECT 1", "Microsoft.EntityFrameworkCore").Split('\n').Select(l => l.TrimEnd('\r')).ToList();
+        var at = lines.FindIndex(l => l.StartsWith(":SELECT 1 ", StringComparison.Ordinal));
+        Assert.True(at >= 0, "the emitter wrote no action to lengthen");
+        lines[at] = ":" + action + " (12ms);";
+        using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+        await using var browser = await LaunchWithTheOptimizingCompilersOff(playwright);
+        var page = await OpenPageAsync(browser, new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
+
+        var note = await OpenPopupDiagram(page, "iflow-syntax", string.Join('\n', lines), "PopupSyntax", "syntax");
+        Assert.Contains($"Line {at + 1} is an activity action of {action.Length} characters (limit {PlantUmlStatementLimits.MaxActivityActionChars})",
+            await note.InnerTextAsync());
+    }
+
+    /// <summary>
+    /// Opens the internal-flow popup of a page whose one segment draws <paramref name="source"/> into
+    /// <paramref name="id"/>, and returns Kronikol's line describing the engine's <paramref name="failure"/>.
+    /// </summary>
+    private async Task<ILocator> OpenPopupDiagram(IPage page, string id, string source, string name, string failure)
+    {
+        var content = $"<div class=\"plantuml-browser\" id=\"{id}\" data-plantuml=\"{System.Net.WebUtility.HtmlEncode(source)}\"></div>";
+        await page.GotoAsync(ServePage($$"""
+            <!DOCTYPE html><html><head><title>{{name}}</title>
+            <style>{{DiagramContextMenu.GetInternalFlowPopupStyles()}}</style>
+            {{DiagramContextMenu.GetPlantUmlBrowserRenderScript()}}
+            </head><body>
+            <script>window.__iflowSegments = { 'iflow-seg-1': { title: 'Internal Flow', content: {{JsonSerializer.Serialize(content)}} } };</script>
+            {{DiagramContextMenu.GetInternalFlowConfigScript(InternalFlowHasDataBehavior.ShowLinkOnHover)}}
+            {{DiagramContextMenu.GetInternalFlowPopupScript()}}
+            </body></html>
+            """, name));
+        await page.EvaluateAsync("() => window._iflowShowPopup('iflow-seg-1')");
         await page.WaitForFunctionAsync(
-            "() => document.querySelector('#iflow-stack')?.dataset.rendered === '1'",
+            $"() => document.querySelector('#{id}')?.dataset.rendered === '1'",
             null, new() { Timeout = 120_000, PollingInterval = 200 });
 
-        var note = page.Locator("#iflow-stack [data-engine-failure='stack']");
+        var note = page.Locator($"#{id} [data-engine-failure='{failure}']");
         await note.WaitForAsync(new() { Timeout = 10_000 });
-        Assert.Contains($"Line 6 is a component edge label of {labelLength} characters", await note.InnerTextAsync());
+        return note;
     }
 
     [Fact]
@@ -560,11 +599,65 @@ public class LongStatementRenderingTests : PlaywrightTestBase
                 false, "a syntax error in a source quoting the error"),
             (Picture("Api", "Orders", "GET /orders", "Api", "Orders", "RangeError: Maximum call stack size exceeded"), false, "a drawn diagram whose last note quotes the error"),
             ("java.lang.RuntimeException: Diagram too large for browser rendering: 9000x40000 (max 98304)", false, "too large"),
+            ("java.lang.RuntimeException: (JavaScript) RangeError: Invalid array length", false, "another RangeError"),
             ("", false, "nothing"),
             (null, false, "null"),
         ];
 
+        // The page and the Node renderer each read the engine's answer by this rule; both are held to the one list.
         foreach (var (result, expected, why) in cases)
-            Assert.True(expected == await Page.EvaluateAsync<bool>("(r) => window._isStackOverflow(r)", result), why);
+        {
+            Assert.True(expected == await Page.EvaluateAsync<bool>("(r) => window._isStackOverflow(r)", result), "page: " + why);
+            Assert.True(expected == NodeJsPlantUmlRenderer.IsStackOverflow(result), "Node renderer: " + why);
+        }
+    }
+
+    [Fact]
+    public async Task The_worker_probes_verdict_rejects_every_failure_the_engine_draws()
+    {
+        // The caps are only as good as the probe that measured them (plans/LONG_COMPONENT_EDGE_PLAN.md §5, R3). Until
+        // 4.14.5 its legacy mode counted any SVG as drawn, so 3.30.4's worker figures for block openers and coloured bars
+        // were the engine's error pictures read as passes. This runs the probe's own verdict, as it evaluates it in the
+        // page, against each answer the engine gives.
+        var probe = File.ReadAllText(Path.Combine(FullPipelineFixture.RepoRoot, "tools", "render-bench", "statement-limits-worker-probe.js"));
+        const string opener = "const CLASSIFY = `";
+        var start = probe.IndexOf(opener, StringComparison.Ordinal);
+        Assert.True(start >= 0, "the probe's verdict, CLASSIFY, was not found");
+        start += opener.Length;
+        var classify = probe[start..probe.IndexOf("`;", start, StringComparison.Ordinal)];
+
+        await Page.GotoAsync(ServePage("<!DOCTYPE html><html><head><title>probe verdict</title></head><body></body></html>"));
+        static string Picture(params string[] lines) =>
+            "<svg xmlns=\"http://www.w3.org/2000/svg\"><g>" + string.Concat(lines.Select((l, i) => $"<text x=\"5\" y=\"{14 * (i + 1)}\">{l}</text>")) + "</g></svg>";
+        const string version = "PlantUML version $version$ / $git.commit.id$ [Unknown compile time]";
+        (string Answer, string? Expected, string Why)[] cases =
+        [
+            (Picture(version, "[From textarea (line 6) ]", "@startuml", " java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded (Assumed diagram type: component)"),
+                "STACK-PICTURE", "the engine's stack picture"),
+            (Picture(version, "[From textarea (line 4) ]", "@startuml", "loop yyyy ...", " Syntax Error? (Assumed diagram type: sequence)"),
+                "ERROR-PICTURE", "a Syntax Error? picture, as an over-long opener, name or action draws"),
+            (Picture("An error has occurred : java.lang.NullPointerException"), "ERROR-PICTURE", "the engine's other error picture"),
+            (Picture(version, "Api", "Orders", "Api", "Orders"), "ERROR-PICTURE", "a picture whose first line is the engine's, holding every name"),
+            ("java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded", "STACK", "the stack failure written as text"),
+            ("java.lang.RuntimeException: (JavaScript) InternalError: too much recursion", "STACK", "the same in Firefox's words"),
+            ("Render error: worker failed", "TEXT", "any other text"),
+            (Picture("Api", "Orders", "GET /orders", "Api", "Orders"), "drawn", "a sequence diagram drawing each participant twice"),
+            (Picture("Api", "Orders", "GET /orders", "Api"), "MISSING", "a participant drawn once, as the class-diagram fallback draws it"),
+            ("", null, "nothing yet"),
+        ];
+
+        foreach (var (answer, expected, why) in cases)
+        {
+            var verdict = await Page.EvaluateAsync<string?>("""
+                ([classify, answer]) => {
+                    const verdict = (0, eval)((0, eval)('`' + classify + '`'));
+                    const el = document.createElement('div');
+                    el.innerHTML = answer;
+                    const v = verdict(el, [['Api', 2], ['Orders', 2]]);
+                    return v ? v.v : null;
+                }
+                """, new object[] { classify, answer });
+            Assert.True(expected == verdict, $"{why}: {verdict ?? "null"}, expected {expected ?? "null"}");
+        }
     }
 }

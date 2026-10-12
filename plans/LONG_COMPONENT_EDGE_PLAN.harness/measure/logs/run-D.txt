@@ -1,0 +1,77 @@
+
+##### phase D 2026-10-09T17:18:09.780Z
+
+=== bisect {"label":"D-chrome-w4-warm","browser":"chrome","page":"w4","mode":"warm","shape":"unbroken","lo":1000,"hi":1979,"reps":3}
+D-chrome-w4-warm unbroken L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2325ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1000 lo: drawn 2246ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1490 mid: drawn 2202ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1730 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2280ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1610 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2127ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1550 mid: drawn 2064ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1580 mid: drawn 2088ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1600 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2127ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1590 mid: drawn 2064ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1590 edge-draw-rep: drawn 2000ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1600 edge-fail-rep: drawn 2068ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1590 edge-draw-rep: drawn 2034ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1600 edge-fail-rep: drawn 2228ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1580 around: drawn 2246ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm unbroken L=1610 around: drawn 2037ms worker/1w warm={"drawn":50}
+{"kind":"summary","label":"D-chrome-w4-warm","browser":"chrome","jsflags":"","page":"w4","mode":"warm","shape":"unbroken","lastDraw":1590,"firstFail":1600,"results":{"1000":["drawn"],"1490":["drawn"],"1550":["drawn"],"1580":["drawn","drawn"],"1590":["drawn","drawn","drawn"],"1600":["STACK","drawn","drawn"],"1610":["STACK","drawn"],"1730":["STACK"],"1979":["STACK"]}}
+=== done in 38 s, exit 0
+
+=== bisect {"label":"D-chrome-w4-warm","browser":"chrome","page":"w4","mode":"warm","shape":"real","lo":1000,"hi":1979,"reps":3}
+D-chrome-w4-warm real L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2078ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1000 lo: drawn 2059ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1490 mid: drawn 2271ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1730 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2078ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1610 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2117ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1550 mid: drawn 2045ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1580 mid: drawn 2265ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1600 mid: drawn 2094ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1600 edge-draw-rep: drawn 2053ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1610 edge-fail-rep: drawn 2270ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1600 edge-draw-rep: drawn 2319ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1610 edge-fail-rep: drawn 2069ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1590 around: drawn 1995ms worker/1w warm={"drawn":50}
+D-chrome-w4-warm real L=1620 around: drawn 2055ms worker/1w warm={"drawn":50}
+{"kind":"summary","label":"D-chrome-w4-warm","browser":"chrome","jsflags":"","page":"w4","mode":"warm","shape":"real","lastDraw":1600,"firstFail":1610,"results":{"1000":["drawn"],"1490":["drawn"],"1550":["drawn"],"1580":["drawn"],"1590":["drawn"],"1600":["drawn","drawn","drawn"],"1610":["STACK","drawn","drawn"],"1620":["drawn"],"1730":["STACK"],"1979":["STACK"]}}
+=== done in 37 s, exit 0
+
+=== bisect {"label":"D-chromium-w4-warm","browser":"chromium","page":"w4","mode":"warm","shape":"unbroken","lo":1000,"hi":1979,"reps":3}
+D-chromium-w4-warm unbroken L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 3329ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1000 lo: drawn 2762ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1490 mid: drawn 2083ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1730 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2062ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1610 mid: drawn 2086ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1670 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2117ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1640 mid: drawn 2065ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1660 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2687ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1650 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2139ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1640 edge-draw-rep: drawn 2700ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1650 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2715ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1640 edge-draw-rep: drawn 2031ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1650 edge-fail-rep: drawn 2264ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1630 around: drawn 2045ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm unbroken L=1660 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2075ms worker/1w warm={"drawn":50}
+{"kind":"summary","label":"D-chromium-w4-warm","browser":"chromium","jsflags":"","page":"w4","mode":"warm","shape":"unbroken","lastDraw":1640,"firstFail":1650,"results":{"1000":["drawn"],"1490":["drawn"],"1610":["drawn"],"1630":["drawn"],"1640":["drawn","drawn","drawn"],"1650":["STACK","STACK","drawn"],"1660":["STACK","STACK"],"1670":["STACK"],"1730":["STACK"],"1979":["STACK"]}}
+=== done in 45 s, exit 0
+
+=== bisect {"label":"D-chromium-w4-warm","browser":"chromium","page":"w4","mode":"warm","shape":"real","lo":1000,"hi":1979,"reps":3}
+D-chromium-w4-warm real L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2282ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1000 lo: drawn 2072ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1490 mid: drawn 2657ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1730 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2693ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1610 mid: drawn 2111ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1670 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2083ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1640 mid: drawn 2137ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1660 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2136ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1650 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2095ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1640 edge-draw-rep: drawn 2705ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1650 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2147ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1640 edge-draw-rep: drawn 2048ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1650 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2136ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1630 around: drawn 2089ms worker/1w warm={"drawn":50}
+D-chromium-w4-warm real L=1660 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2272ms worker/1w warm={"drawn":50}
+{"kind":"summary","label":"D-chromium-w4-warm","browser":"chromium","jsflags":"","page":"w4","mode":"warm","shape":"real","lastDraw":1640,"firstFail":1650,"results":{"1000":["drawn"],"1490":["drawn"],"1610":["drawn"],"1630":["drawn"],"1640":["drawn","drawn","drawn"],"1650":["STACK","STACK","STACK"],"1660":["STACK","STACK"],"1670":["STACK"],"1730":["STACK"],"1979":["STACK"]}}
+=== done in 43 s, exit 0

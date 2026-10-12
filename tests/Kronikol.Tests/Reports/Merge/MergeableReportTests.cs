@@ -210,6 +210,31 @@ public class MergeableReportTests
         Assert.Null(MergeableReportReader.Parse(json).CiMetadata);
     }
 
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("cs-CZ")]
+    public void A_relationships_methods_are_written_in_one_order_whatever_the_machines_culture(string culture)
+    {
+        // The file listed them in the machine culture's order (Czech sorts "ch" after "h"), so two shards of one run
+        // written on different machines disagreed, as did the component diagram drawn from either.
+        string[] methods = ["hset orders", "chunk orders", "Get orders", "delete orders"];
+        var json = CultureRun.Under(culture, () => ReportGenerator.GenerateMergeableReportJson(
+            FeaturesA(),
+            new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
+            diagramLookup: null,
+            componentRelationships: [new ComponentRelationship("OrdersApi", "Cache", "Redis", [.. methods], 4, 1, "redis")],
+            internalFlowSegmentData: null,
+            wholeTestFlow: null,
+            WholeTestFlowVisualization.None,
+            ciMetadata: null));
+
+        using var document = JsonDocument.Parse(json);
+        var relationship = Assert.Single(document.RootElement.GetProperty("componentRelationships").EnumerateArray());
+        var written = relationship.EnumerateObject().Single(p => p.Name.Equals("methods", StringComparison.OrdinalIgnoreCase)).Value;
+        Assert.Equal(methods.Order(StringComparer.Ordinal), written.EnumerateArray().Select(m => m.GetString()));
+    }
+
     [Fact]
     public void Merge_requires_at_least_one_report()
     {
@@ -408,5 +433,48 @@ public class MergeableReportTests
         Assert.True(label.Length <= Kronikol.PlantUml.PlantUmlStatementLimits.MaxComponentEdgeLabelChars, $"{label.Length} characters");
         Assert.Contains("INSERT INTO orders_archive_001", label, StringComparison.Ordinal);
         Assert.EndsWith(" more - 66 calls across 2 tests", label.Replace("\\n", " ", StringComparison.Ordinal), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_merged_reports_component_edges_take_the_reports_dependency_colours()
+    {
+        // The run report and ComponentDiagram.html colour an edge from ReportConfigurationOptions.DependencyColors when
+        // the component options name no colours of their own; a merged report drew the default palette for the same
+        // options (plans/LONG_COMPONENT_EDGE_PLAN.md §8).
+        var json = ReportGenerator.GenerateMergeableReportJson(
+            [new Feature { DisplayName = "Inventory", Scenarios = [new Scenario { Id = "c1", DisplayName = "Count stock", Result = ExecutionResult.Passed }] }],
+            new DateTime(2026, 10, 12, 10, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 10, 12, 10, 1, 0, DateTimeKind.Utc),
+            new[] { new DiagramAsCode("c1", "", "@startuml\nA->B\n@enduml") }.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind),
+            componentRelationships: [new ComponentRelationship("OrdersApi", "InventoryDb", "SQL", new HashSet<string> { "SELECT" }, 5, 1, "sql")],
+            internalFlowSegmentData: null,
+            wholeTestFlow: null,
+            WholeTestFlowVisualization.None,
+            ciMetadata: null);
+        var merged = MergeableReportMerger.Merge([MergeableReportReader.Parse(json)]);
+
+        var outputPath = Path.Combine(Path.GetTempPath(), "kronikol-merge-colour-test", "Combined.html");
+        var written = MergeableReportRenderer.Render(merged, outputPath, title: "Combined Report",
+            options: new ReportConfigurationOptions { DependencyColors = new() { ["sql"] = "#123456" } });
+        var html = File.ReadAllText(written);
+        File.Delete(written);
+
+        var edge = ComponentSources(html).SelectMany(src => src.Split('\n')).Select(l => l.TrimEnd('\r'))
+            .Single(l => l.StartsWith("ordersApi -", StringComparison.Ordinal));
+        Assert.StartsWith("ordersApi -[#123456]-> inventoryDb", edge, StringComparison.Ordinal);
+    }
+
+    /// <summary>The diagram sources a report page carries, gunzipped from its puml-data map.</summary>
+    private static IEnumerable<string> ComponentSources(string html)
+    {
+        var data = System.Text.RegularExpressions.Regex.Match(html, "<script id=\"puml-data\" type=\"application/json\">(.*?)</script>");
+        Assert.True(data.Success, "the report carries no diagram data");
+        return JsonDocument.Parse(data.Groups[1].Value).RootElement.EnumerateObject().Select(p =>
+        {
+            using var gzip = new System.IO.Compression.GZipStream(
+                new MemoryStream(Convert.FromBase64String(p.Value.GetString()!)), System.IO.Compression.CompressionMode.Decompress);
+            using var reader = new StreamReader(gzip);
+            return reader.ReadToEnd();
+        }).ToList();
     }
 }

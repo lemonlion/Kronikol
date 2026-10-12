@@ -1436,7 +1436,8 @@ public static partial class PlantUmlCreator
     private static string SanitizePlantUmlAlias(string name)
     {
         // A name past the participant cap is shown cut, and its alias comes from the cut name and a hash of the whole
-        // one (PlantUmlStatementLimits.AliasSource): the engine walks an alias once per character on its stack too.
+        // one (PlantUmlStatementLimits.AliasSource): the engine walks an alias once per character on its stack too. A
+        // name written in another script takes the hash as well, since its letters become underscores here.
         return AliasCache.GetOrAdd(name, n => SanitizeAliasRegex().Replace(PlantUmlStatementLimits.AliasSource(n).Camelize(), "_"));
     }
 
@@ -1768,6 +1769,10 @@ public static partial class PlantUmlCreator
         var open = run[pos..cut].LastIndexOf('<');
         if (open > 0 && run[(pos + open)..cut].IndexOf('>') < 0)
             cut = pos + open;
+        // Never between the two halves of a character written as two code units (an emoji, say): each half alone
+        // draws as U+FFFD.
+        if (cut > pos + 1 && char.IsHighSurrogate(run[cut - 1]))
+            cut--;
         // Never strand a creole escape from the character it protects.
         while (cut > pos + 1 && run[cut - 1] == '~') cut--;
         // Never end a line in an escape's zero-width space: with the join marker after it the line would end in two,

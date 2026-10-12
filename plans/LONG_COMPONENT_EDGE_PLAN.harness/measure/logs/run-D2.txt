@@ -1,0 +1,109 @@
+
+##### phase D2 2026-10-09T17:25:42.861Z
+
+=== cases {"label":"D2-chrome-w4-warm-near","browser":"chrome","page":"w4","mode":"warm","cases":[{"shape":"real","L":1550},{"shape":"real","L":1580},{"shape":"real","L":1590},{"shape":"real","L":1600},{"shape":"real","L":1610},{"shape":"real","L":1620},{"shape":"real","L":1630},{"shape":"real","L":1650},{"shape":"real","L":1700},{"shape":"real","L":1750}],"reps":5}
+D2-chrome-w4-warm-near real L=1550 case: drawn 2326ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1580 case: drawn 2063ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1590 case: drawn 2025ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1600 case: drawn 2267ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1610 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2320ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1620 case: drawn 2062ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1630 case: drawn 2281ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1650 case: drawn 2064ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1700 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2311ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1750 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2094ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1550 case: drawn 2045ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1580 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2414ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1590 case: drawn 2302ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1600 case: drawn 2240ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1610 case: drawn 2028ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1620 case: drawn 2140ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1630 case: drawn 2294ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1650 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2431ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1700 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2364ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1750 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2396ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1550 case: drawn 2081ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1580 case: drawn 2078ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1590 case: drawn 2084ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1600 case: drawn 2054ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1610 case: drawn 2037ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1620 case: drawn 2271ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1630 case: drawn 2076ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1650 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2133ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1700 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2079ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1750 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2310ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1550 case: drawn 2042ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1580 case: drawn 2089ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1590 case: drawn 2174ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1600 case: drawn 2282ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1610 case: drawn 2070ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1620 case: drawn 2067ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1630 case: drawn 2125ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1650 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2466ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1700 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2310ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1750 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2148ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1550 case: drawn 2075ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1580 case: drawn 2061ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1590 case: drawn 2057ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1600 case: drawn 2328ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1610 case: drawn 2533ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1620 case: drawn 2787ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1630 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 3150ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1650 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2982ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1700 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 3853ms worker/1w warm={"drawn":50}
+D2-chrome-w4-warm-near real L=1750 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 3767ms worker/1w warm={"drawn":50}
+=== done in 139 s, exit 0
+
+=== cases {"label":"D2-chromium-w4-warm-near","browser":"chromium","page":"w4","mode":"warm","cases":[{"shape":"real","L":1600},{"shape":"real","L":1620},{"shape":"real","L":1630},{"shape":"real","L":1640},{"shape":"real","L":1650},{"shape":"real","L":1660},{"shape":"real","L":1680},{"shape":"real","L":1700},{"shape":"real","L":1750},{"shape":"real","L":1800}],"reps":5}
+D2-chromium-w4-warm-near real L=1600 case: drawn 5038ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1620 case: drawn 3776ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1630 case: drawn 3876ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1640 case: drawn 3041ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1650 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2487ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1660 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2376ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1680 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2142ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1700 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2317ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1750 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2501ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1800 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2707ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1600 case: drawn 2718ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1620 case: drawn 2711ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1630 case: drawn 2751ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1640 case: drawn 2560ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1650 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2671ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1660 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2303ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1680 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2510ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1700 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2625ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1750 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2457ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1800 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2538ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1600 case: drawn 2330ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1620 case: drawn 2459ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1630 case: drawn 2375ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1640 case: drawn 2316ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1650 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2833ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1660 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2381ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1680 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2354ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1700 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2301ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1750 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2312ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1800 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2052ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1600 case: drawn 2057ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1620 case: drawn 2026ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1630 case: drawn 2118ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1640 case: drawn 2075ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1650 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2096ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1660 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2077ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1680 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2081ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1700 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2133ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1750 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2097ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1800 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2121ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1600 case: drawn 2125ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1620 case: drawn 2108ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1630 case: drawn 2099ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1640 case: drawn 2130ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1650 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2072ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1660 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2137ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1680 case: drawn 2254ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1700 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 3382ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1750 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2198ms worker/1w warm={"drawn":50}
+D2-chromium-w4-warm-near real L=1800 case: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 2773ms worker/1w warm={"drawn":50}
+=== done in 157 s, exit 0
+D2 exit 0

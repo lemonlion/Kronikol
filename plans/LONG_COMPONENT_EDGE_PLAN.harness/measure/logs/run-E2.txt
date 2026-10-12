@@ -1,0 +1,38 @@
+
+##### phase E2 2026-10-09T17:24:50.090Z
+
+=== bisect {"label":"E2-firefox-w4-nojit","browser":"firefox","page":"w4","mode":"cold","prefs":{"javascript.options.blinterp":false,"javascript.options.baselinejit":false,"javascript.options.ion":false,"javascript.options.native_regexp":false},"shape":"unbroken","lo":300,"hi":2000,"reps":2}
+E2-firefox-w4-nojit unbroken L=2000 hi: drawn 2800ms worker/1w
+E2-firefox-w4-nojit unbroken L=2000 hi-rep: drawn 2966ms worker/1w
+{"kind":"summary","label":"E2-firefox-w4-nojit","shape":"unbroken","everyDrewTo":2000,"results":{"2000":["drawn","drawn"]}}
+=== done in 9 s, exit 0
+
+=== bisect {"label":"E2-firefox-w4-nojit","browser":"firefox","page":"w4","mode":"cold","prefs":{"javascript.options.blinterp":false,"javascript.options.baselinejit":false,"javascript.options.ion":false,"javascript.options.native_regexp":false},"shape":"real","lo":300,"hi":1979,"reps":2}
+E2-firefox-w4-nojit real L=1979 hi: drawn 2915ms worker/1w
+E2-firefox-w4-nojit real L=1979 hi-rep: drawn 2946ms worker/1w
+{"kind":"summary","label":"E2-firefox-w4-nojit","shape":"real","everyDrewTo":1979,"results":{"1979":["drawn","drawn"]}}
+=== done in 9 s, exit 0
+
+=== bisect {"label":"E2-firefox-w0-nojit","browser":"firefox","page":"w0","mode":"cold","prefs":{"javascript.options.blinterp":false,"javascript.options.baselinejit":false,"javascript.options.ion":false,"javascript.options.native_regexp":false},"shape":"unbroken","lo":300,"hi":2000,"reps":2}
+E2-firefox-w0-nojit unbroken L=2000 hi: drawn 3211ms main-thread/0w
+E2-firefox-w0-nojit unbroken L=2000 hi-rep: drawn 3068ms main-thread/0w
+{"kind":"summary","label":"E2-firefox-w0-nojit","shape":"unbroken","everyDrewTo":2000,"results":{"2000":["drawn","drawn"]}}
+=== done in 9 s, exit 0
+
+=== bisect {"label":"E2-firefox-w0-nojit","browser":"firefox","page":"w0","mode":"cold","prefs":{"javascript.options.blinterp":false,"javascript.options.baselinejit":false,"javascript.options.ion":false,"javascript.options.native_regexp":false},"shape":"real","lo":300,"hi":1979,"reps":2}
+E2-firefox-w0-nojit real L=1979 hi: drawn 2939ms main-thread/0w
+E2-firefox-w0-nojit real L=1979 hi-rep: drawn 2869ms main-thread/0w
+{"kind":"summary","label":"E2-firefox-w0-nojit","shape":"real","everyDrewTo":1979,"results":{"1979":["drawn","drawn"]}}
+=== done in 9 s, exit 0
+
+=== bisect {"label":"E2-webkit-w0-nojit","browser":"webkit","page":"w0","mode":"cold","env":{"JSC_useJIT":"false"},"shape":"unbroken","lo":300,"hi":2000,"reps":2}
+E2-webkit-w0-nojit unbroken L=2000 hi: drawn 1784ms main-thread/0w
+E2-webkit-w0-nojit unbroken L=2000 hi-rep: drawn 1810ms main-thread/0w
+{"kind":"summary","label":"E2-webkit-w0-nojit","shape":"unbroken","everyDrewTo":2000,"results":{"2000":["drawn","drawn"]}}
+=== done in 4 s, exit 0
+
+=== bisect {"label":"E2-webkit-w0-nojit","browser":"webkit","page":"w0","mode":"cold","env":{"JSC_useJIT":"false"},"shape":"real","lo":300,"hi":1979,"reps":2}
+E2-webkit-w0-nojit real L=1979 hi: drawn 1892ms main-thread/0w
+E2-webkit-w0-nojit real L=1979 hi-rep: drawn 1767ms main-thread/0w
+{"kind":"summary","label":"E2-webkit-w0-nojit","shape":"real","everyDrewTo":1979,"results":{"1979":["drawn","drawn"]}}
+=== done in 4 s, exit 0

@@ -1,0 +1,296 @@
+
+##### phase F 2026-10-09T17:04:17.355Z
+
+=== stack {"label":"F-stack","browser":"chrome"}
+{"kind":"stack","label":"F-stack","browser":"chrome","jsflags":"","prefs":null,"env":null,"r":{"main":{"simple":[15668,15367,20710,20710,20710,20710],"fat":[6287,7107,8284,8284,8284,8284],"hot":[12566,12426,12426,12426,12426],"err":"RangeError: Maximum call stack size exceeded"},"worker":{"simple":[8441,7234,10583,10583,10583,10583],"fat":[2645,3662,4233,4233,4233,4233],"hot":[5773,6350,6350,6350,6350],"err":"RangeError: Maximum call stack size exceeded"},"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"},"ratioSimple":"1.96","ratioFat":"1.96","ratioHot":"1.98"}
+=== done in 1 s, exit 0
+
+=== stack {"label":"F-stack","browser":"chrome","jsflags":"--no-opt --no-maglev"}
+{"kind":"stack","label":"F-stack","browser":"chrome","jsflags":"--no-opt --no-maglev","prefs":null,"env":null,"r":{"main":{"simple":[12447,12447,12447,12447,12447,12447],"fat":[5186,5186,5186,5186,5186,5186],"hot":[11316,11316,11316,11316,11316],"err":"RangeError: Maximum call stack size exceeded"},"worker":{"simple":[6349,6349,6349,6349,6349,6349],"fat":[2645,2645,2645,2645,2645,2645],"hot":[5773,5772,5772,5772,5772],"err":"RangeError: Maximum call stack size exceeded"},"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"},"ratioSimple":"1.96","ratioFat":"1.96","ratioHot":"1.96"}
+=== done in 1 s, exit 0
+
+=== stack {"label":"F-stack","browser":"chrome","jsflags":"--jitless"}
+{"kind":"stack","label":"F-stack","browser":"chrome","jsflags":"--jitless","prefs":null,"env":null,"r":{"main":{"simple":[12449,12449,12449,12449,12449,12449],"fat":[5187,5187,5187,5187,5187,5187],"hot":[11318,11318,11318,11318,11318],"err":"RangeError: Maximum call stack size exceeded"},"worker":{"simple":[6349,6349,6349,6349,6349,6349],"fat":[2645,2645,2645,2645,2645,2645],"hot":[5773,5773,5773,5773,5773],"err":"RangeError: Maximum call stack size exceeded"},"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"},"ratioSimple":"1.96","ratioFat":"1.96","ratioHot":"1.96"}
+=== done in 1 s, exit 0
+
+=== stack {"label":"F-stack","browser":"chromium"}
+{"kind":"stack","label":"F-stack","browser":"chromium","jsflags":"","prefs":null,"env":null,"r":{"main":{"simple":[12458,12458,12458,12458,12458,12458],"fat":[5190,5190,5190,5190,5190,5190],"hot":[11326,12458,12458,12458,12458],"err":"RangeError: Maximum call stack size exceeded"},"worker":{"simple":[6352,6352,6352,6352,6352,6352],"fat":[2647,2647,2647,2647,2647,2647],"hot":[5775,6353,6353,6353,6353],"err":"RangeError: Maximum call stack size exceeded"},"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36"},"ratioSimple":"1.96","ratioFat":"1.96","ratioHot":"1.96"}
+=== done in 2 s, exit 0
+
+=== stack {"label":"F-stack","browser":"chromium","jsflags":"--no-opt --no-maglev"}
+{"kind":"stack","label":"F-stack","browser":"chromium","jsflags":"--no-opt --no-maglev","prefs":null,"env":null,"r":{"main":{"simple":[12466,12466,12466,12466,12466,12466],"fat":[5194,5194,5194,5194,5194,5194],"hot":[11333,11333,11333,11333,11333],"err":"RangeError: Maximum call stack size exceeded"},"worker":{"simple":[6352,6352,6352,6352,6352,6352],"fat":[2647,2647,2647,2647,2647,2647],"hot":[5775,5775,5775,5775,5775],"err":"RangeError: Maximum call stack size exceeded"},"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36"},"ratioSimple":"1.96","ratioFat":"1.96","ratioHot":"1.96"}
+=== done in 1 s, exit 0
+
+=== stack {"label":"F-stack","browser":"chromium","jsflags":"--jitless"}
+{"kind":"stack","label":"F-stack","browser":"chromium","jsflags":"--jitless","prefs":null,"env":null,"r":{"main":{"simple":[12448,12448,12448,12448,12448,12448],"fat":[5186,5186,5186,5186,5186,5186],"hot":[11317,11317,11317,11317,11317],"err":"RangeError: Maximum call stack size exceeded"},"worker":{"simple":[6352,6352,6352,6352,6352,6352],"fat":[2647,2647,2647,2647,2647,2647],"hot":[5775,5775,5775,5775,5775],"err":"RangeError: Maximum call stack size exceeded"},"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36"},"ratioSimple":"1.96","ratioFat":"1.96","ratioHot":"1.96"}
+=== done in 1 s, exit 0
+
+=== stack {"label":"F-stack","browser":"firefox"}
+{"kind":"stack","label":"F-stack","browser":"firefox","jsflags":"","prefs":null,"env":null,"r":{"main":{"simple":[18455,11825,39457,39457,39457,39457],"fat":[6965,8311,16909,16909,16909,16909],"hot":[10759,29542,29545,29545,29545],"err":"InternalError: too much recursion"},"worker":{"simple":[15438,6710,21609,21609,21609,21609],"fat":[3816,3806,9260,9260,9260,9260],"hot":[5892,16156,16159,16159,16159],"err":"InternalError: too much recursion"},"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0"},"ratioSimple":"1.83","ratioFat":"1.83","ratioHot":"1.83"}
+=== done in 1 s, exit 0
+
+=== stack {"label":"F-stack","browser":"firefox","prefs":{"javascript.options.blinterp":false,"javascript.options.baselinejit":false,"javascript.options.ion":false,"javascript.options.native_regexp":false}}
+{"kind":"stack","label":"F-stack","browser":"firefox","jsflags":"","prefs":{"javascript.options.blinterp":false,"javascript.options.baselinejit":false,"javascript.options.ion":false,"javascript.options.native_regexp":false},"env":null,"r":{"main":{"simple":[49997,49997,49997,49997,49997,49997],"fat":[49997,49997,49997,49997,49997,49997],"hot":[49997,49997,49997,49997,49997],"err":"InternalError: too much recursion"},"worker":{"simple":[49997,49997,49997,49997,49997,49997],"fat":[49997,49997,49997,49997,49997,49997],"hot":[49997,49997,49997,49997,49997],"err":"InternalError: too much recursion"},"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0"},"ratioSimple":"1.00","ratioFat":"1.00","ratioHot":"1.00"}
+=== done in 2 s, exit 0
+
+=== stack {"label":"F-stack","browser":"webkit"}
+{"kind":"stack","label":"F-stack","browser":"webkit","jsflags":"","prefs":null,"env":null,"r":{"main":{"simple":[53235,59714,70978,70978,70978,70978],"fat":[25769,24384,21293,21293,21293,21293],"hot":[45630,63880,63880,63880,63880],"err":"RangeError: Maximum call stack size exceeded."},"worker":{"simple":[65181,64984,70978,70978,70978,70978],"fat":[24855,24902,21293,21293,21293,21293],"hot":[45629,63880,63880,63880,63880],"err":"RangeError: Maximum call stack size exceeded."},"ua":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.4 Safari/605.1.15"},"ratioSimple":"1.00","ratioFat":"1.03","ratioHot":"1.00"}
+=== done in 1 s, exit 0
+
+=== stack {"label":"F-stack","browser":"webkit","env":{"JSC_useJIT":"false"}}
+{"kind":"stack","label":"F-stack","browser":"webkit","jsflags":"","prefs":null,"env":{"JSC_useJIT":"false"},"r":{"main":{"simple":[53235,53235,53235,53235,53235,53235],"fat":[29037,29037,29037,29037,29037,29037],"hot":[45630,45630,45630,45630,45630],"err":"RangeError: Maximum call stack size exceeded."},"worker":{"simple":[53234,53234,53234,53234,53234,53234],"fat":[29036,29036,29036,29036,29036,29036],"hot":[45629,45629,45629,45629,45629],"err":"RangeError: Maximum call stack size exceeded."},"ua":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.4 Safari/605.1.15"},"ratioSimple":"1.00","ratioFat":"1.00","ratioHot":"1.00"}
+=== done in 1 s, exit 0
+
+##### phase A 2026-10-09T17:04:28.585Z
+
+=== bisect {"label":"A-chrome-w4-jit","browser":"chrome","page":"w4","mode":"cold","shape":"unbroken","lo":300,"hi":1979,"reps":3}
+A-chrome-w4-jit unbroken L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 470ms worker/1w
+A-chrome-w4-jit unbroken L=300 lo: drawn 656ms worker/1w
+A-chrome-w4-jit unbroken L=1140 mid: drawn 661ms worker/1w
+A-chrome-w4-jit unbroken L=1560 mid: drawn 648ms worker/1w
+A-chrome-w4-jit unbroken L=1770 mid: drawn 455ms worker/1w
+A-chrome-w4-jit unbroken L=1870 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 880ms worker/1w
+A-chrome-w4-jit unbroken L=1820 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 447ms worker/1w
+A-chrome-w4-jit unbroken L=1800 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 440ms worker/1w
+A-chrome-w4-jit unbroken L=1790 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1076ms worker/1w
+A-chrome-w4-jit unbroken L=1780 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 439ms worker/1w
+A-chrome-w4-jit unbroken L=1770 edge-draw-rep: drawn 470ms worker/1w
+A-chrome-w4-jit unbroken L=1780 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 454ms worker/1w
+A-chrome-w4-jit unbroken L=1770 edge-draw-rep: drawn 443ms worker/1w
+A-chrome-w4-jit unbroken L=1780 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 445ms worker/1w
+A-chrome-w4-jit unbroken L=1760 around: drawn 464ms worker/1w
+A-chrome-w4-jit unbroken L=1790 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 471ms worker/1w
+{"kind":"summary","label":"A-chrome-w4-jit","browser":"chrome","jsflags":"","page":"w4","mode":"cold","shape":"unbroken","lastDraw":1770,"firstFail":1780,"results":{"300":["drawn"],"1140":["drawn"],"1560":["drawn"],"1760":["drawn"],"1770":["drawn","drawn","drawn"],"1780":["STACK","STACK","STACK"],"1790":["STACK","STACK"],"1800":["STACK"],"1820":["STACK"],"1870":["STACK"],"1979":["STACK"]}}
+=== done in 15 s, exit 0
+
+=== bisect {"label":"A-chrome-w4-jit","browser":"chrome","page":"w4","mode":"cold","shape":"real","lo":300,"hi":1979,"reps":3}
+A-chrome-w4-jit real L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 462ms worker/1w
+A-chrome-w4-jit real L=300 lo: drawn 445ms worker/1w
+A-chrome-w4-jit real L=1140 mid: drawn 650ms worker/1w
+A-chrome-w4-jit real L=1560 mid: drawn 465ms worker/1w
+A-chrome-w4-jit real L=1770 mid: drawn 673ms worker/1w
+A-chrome-w4-jit real L=1870 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 447ms worker/1w
+A-chrome-w4-jit real L=1820 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 654ms worker/1w
+A-chrome-w4-jit real L=1800 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 468ms worker/1w
+A-chrome-w4-jit real L=1790 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 462ms worker/1w
+A-chrome-w4-jit real L=1780 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 471ms worker/1w
+A-chrome-w4-jit real L=1770 edge-draw-rep: drawn 890ms worker/1w
+A-chrome-w4-jit real L=1780 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 452ms worker/1w
+A-chrome-w4-jit real L=1770 edge-draw-rep: drawn 868ms worker/1w
+A-chrome-w4-jit real L=1780 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 448ms worker/1w
+A-chrome-w4-jit real L=1760 around: drawn 875ms worker/1w
+A-chrome-w4-jit real L=1790 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 464ms worker/1w
+{"kind":"summary","label":"A-chrome-w4-jit","browser":"chrome","jsflags":"","page":"w4","mode":"cold","shape":"real","lastDraw":1770,"firstFail":1780,"results":{"300":["drawn"],"1140":["drawn"],"1560":["drawn"],"1760":["drawn"],"1770":["drawn","drawn","drawn"],"1780":["STACK","STACK","STACK"],"1790":["STACK","STACK"],"1800":["STACK"],"1820":["STACK"],"1870":["STACK"],"1979":["STACK"]}}
+=== done in 15 s, exit 0
+
+=== bisect {"label":"A-chrome-w4-off","browser":"chrome","page":"w4","mode":"cold","jsflags":"--no-opt --no-maglev","shape":"unbroken","lo":300,"hi":1979,"reps":2}
+A-chrome-w4-off unbroken L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 863ms worker/1w
+A-chrome-w4-off unbroken L=300 lo: drawn 654ms worker/1w
+A-chrome-w4-off unbroken L=1140 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 659ms worker/1w
+A-chrome-w4-off unbroken L=720 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 659ms worker/1w
+A-chrome-w4-off unbroken L=510 mid: drawn 654ms worker/1w
+A-chrome-w4-off unbroken L=620 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 646ms worker/1w
+A-chrome-w4-off unbroken L=570 mid: drawn 652ms worker/1w
+A-chrome-w4-off unbroken L=600 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 656ms worker/1w
+A-chrome-w4-off unbroken L=590 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 664ms worker/1w
+A-chrome-w4-off unbroken L=580 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 652ms worker/1w
+A-chrome-w4-off unbroken L=570 edge-draw-rep: drawn 658ms worker/1w
+A-chrome-w4-off unbroken L=580 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 672ms worker/1w
+A-chrome-w4-off unbroken L=560 around: drawn 670ms worker/1w
+A-chrome-w4-off unbroken L=590 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 649ms worker/1w
+{"kind":"summary","label":"A-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","page":"w4","mode":"cold","shape":"unbroken","lastDraw":570,"firstFail":580,"results":{"300":["drawn"],"510":["drawn"],"560":["drawn"],"570":["drawn","drawn"],"580":["STACK","STACK"],"590":["STACK","STACK"],"600":["STACK"],"620":["STACK"],"720":["STACK"],"1140":["STACK"],"1979":["STACK"]}}
+=== done in 16 s, exit 0
+
+=== bisect {"label":"A-chrome-w4-off","browser":"chrome","page":"w4","mode":"cold","jsflags":"--no-opt --no-maglev","shape":"real","lo":300,"hi":1979,"reps":2}
+A-chrome-w4-off real L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1078ms worker/1w
+A-chrome-w4-off real L=300 lo: drawn 645ms worker/1w
+A-chrome-w4-off real L=1140 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 645ms worker/1w
+A-chrome-w4-off real L=720 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 654ms worker/1w
+A-chrome-w4-off real L=510 mid: drawn 662ms worker/1w
+A-chrome-w4-off real L=620 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 650ms worker/1w
+A-chrome-w4-off real L=570 mid: drawn 867ms worker/1w
+A-chrome-w4-off real L=600 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 660ms worker/1w
+A-chrome-w4-off real L=590 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 647ms worker/1w
+A-chrome-w4-off real L=580 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 657ms worker/1w
+A-chrome-w4-off real L=570 edge-draw-rep: drawn 665ms worker/1w
+A-chrome-w4-off real L=580 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 737ms worker/1w
+A-chrome-w4-off real L=560 around: drawn 857ms worker/1w
+A-chrome-w4-off real L=590 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 862ms worker/1w
+{"kind":"summary","label":"A-chrome-w4-off","browser":"chrome","jsflags":"--no-opt --no-maglev","page":"w4","mode":"cold","shape":"real","lastDraw":570,"firstFail":580,"results":{"300":["drawn"],"510":["drawn"],"560":["drawn"],"570":["drawn","drawn"],"580":["STACK","STACK"],"590":["STACK","STACK"],"600":["STACK"],"620":["STACK"],"720":["STACK"],"1140":["STACK"],"1979":["STACK"]}}
+=== done in 18 s, exit 0
+
+=== bisect {"label":"A-chrome-w0-jit","browser":"chrome","page":"w0","mode":"cold","shape":"unbroken","lo":300,"hi":2000,"reps":3}
+A-chrome-w0-jit unbroken L=2000 hi: drawn 767ms main-thread/0w
+A-chrome-w0-jit unbroken L=2000 hi-rep: drawn 407ms main-thread/0w
+A-chrome-w0-jit unbroken L=2000 hi-rep: drawn 435ms main-thread/0w
+{"kind":"summary","label":"A-chrome-w0-jit","shape":"unbroken","everyDrewTo":2000,"results":{"2000":["drawn","drawn","drawn"]}}
+=== done in 4 s, exit 0
+
+=== bisect {"label":"A-chrome-w0-jit","browser":"chrome","page":"w0","mode":"cold","shape":"real","lo":300,"hi":1979,"reps":3}
+A-chrome-w0-jit real L=1979 hi: drawn 845ms main-thread/0w
+A-chrome-w0-jit real L=1979 hi-rep: drawn 436ms main-thread/0w
+A-chrome-w0-jit real L=1979 hi-rep: drawn 424ms main-thread/0w
+{"kind":"summary","label":"A-chrome-w0-jit","shape":"real","everyDrewTo":1979,"results":{"1979":["drawn","drawn","drawn"]}}
+=== done in 3 s, exit 0
+
+=== bisect {"label":"A-chrome-w0-off","browser":"chrome","page":"w0","mode":"cold","jsflags":"--no-opt --no-maglev","shape":"unbroken","lo":300,"hi":1979,"reps":2}
+A-chrome-w0-off unbroken L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 872ms main-thread/0w
+A-chrome-w0-off unbroken L=300 lo: drawn 553ms main-thread/0w
+A-chrome-w0-off unbroken L=1140 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 564ms main-thread/0w
+A-chrome-w0-off unbroken L=720 mid: drawn 552ms main-thread/0w
+A-chrome-w0-off unbroken L=930 mid: drawn 547ms main-thread/0w
+A-chrome-w0-off unbroken L=1040 mid: drawn 560ms main-thread/0w
+A-chrome-w0-off unbroken L=1090 mid: drawn 561ms main-thread/0w
+A-chrome-w0-off unbroken L=1120 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 566ms main-thread/0w
+A-chrome-w0-off unbroken L=1110 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 886ms main-thread/0w
+A-chrome-w0-off unbroken L=1100 mid: drawn 558ms main-thread/0w
+A-chrome-w0-off unbroken L=1100 edge-draw-rep: drawn 565ms main-thread/0w
+A-chrome-w0-off unbroken L=1110 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 557ms main-thread/0w
+A-chrome-w0-off unbroken L=1090 around: drawn 549ms main-thread/0w
+A-chrome-w0-off unbroken L=1120 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 559ms main-thread/0w
+{"kind":"summary","label":"A-chrome-w0-off","browser":"chrome","jsflags":"--no-opt --no-maglev","page":"w0","mode":"cold","shape":"unbroken","lastDraw":1100,"firstFail":1110,"results":{"300":["drawn"],"720":["drawn"],"930":["drawn"],"1040":["drawn"],"1090":["drawn","drawn"],"1100":["drawn","drawn"],"1110":["STACK","STACK"],"1120":["STACK","STACK"],"1140":["STACK"],"1979":["STACK"]}}
+=== done in 14 s, exit 0
+
+=== bisect {"label":"A-chrome-w0-off","browser":"chrome","page":"w0","mode":"cold","jsflags":"--no-opt --no-maglev","shape":"real","lo":300,"hi":1979,"reps":2}
+A-chrome-w0-off real L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 583ms main-thread/0w
+A-chrome-w0-off real L=300 lo: drawn 549ms main-thread/0w
+A-chrome-w0-off real L=1140 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 566ms main-thread/0w
+A-chrome-w0-off real L=720 mid: drawn 555ms main-thread/0w
+A-chrome-w0-off real L=930 mid: drawn 556ms main-thread/0w
+A-chrome-w0-off real L=1040 mid: drawn 558ms main-thread/0w
+A-chrome-w0-off real L=1090 mid: drawn 569ms main-thread/0w
+A-chrome-w0-off real L=1120 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 739ms main-thread/0w
+A-chrome-w0-off real L=1110 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 560ms main-thread/0w
+A-chrome-w0-off real L=1100 mid: drawn 581ms main-thread/0w
+A-chrome-w0-off real L=1100 edge-draw-rep: drawn 565ms main-thread/0w
+A-chrome-w0-off real L=1110 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 883ms main-thread/0w
+A-chrome-w0-off real L=1090 around: drawn 913ms main-thread/0w
+A-chrome-w0-off real L=1120 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 558ms main-thread/0w
+{"kind":"summary","label":"A-chrome-w0-off","browser":"chrome","jsflags":"--no-opt --no-maglev","page":"w0","mode":"cold","shape":"real","lastDraw":1100,"firstFail":1110,"results":{"300":["drawn"],"720":["drawn"],"930":["drawn"],"1040":["drawn"],"1090":["drawn","drawn"],"1100":["drawn","drawn"],"1110":["STACK","STACK"],"1120":["STACK","STACK"],"1140":["STACK"],"1979":["STACK"]}}
+=== done in 14 s, exit 0
+
+=== bisect {"label":"A-chromium-w4-jit","browser":"chromium","page":"w4","mode":"cold","shape":"unbroken","lo":300,"hi":1979,"reps":3}
+A-chromium-w4-jit unbroken L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1827ms worker/1w
+A-chromium-w4-jit unbroken L=300 lo: drawn 890ms worker/1w
+A-chromium-w4-jit unbroken L=1140 mid: drawn 952ms worker/1w
+A-chromium-w4-jit unbroken L=1560 mid: drawn 1371ms worker/1w
+A-chromium-w4-jit unbroken L=1770 mid: drawn 932ms worker/1w
+A-chromium-w4-jit unbroken L=1870 mid: drawn 778ms worker/1w
+A-chromium-w4-jit unbroken L=1920 mid: drawn 929ms worker/1w
+A-chromium-w4-jit unbroken L=1950 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 929ms worker/1w
+A-chromium-w4-jit unbroken L=1940 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 973ms worker/1w
+A-chromium-w4-jit unbroken L=1930 mid: drawn 956ms worker/1w
+A-chromium-w4-jit unbroken L=1930 edge-draw-rep: drawn 943ms worker/1w
+A-chromium-w4-jit unbroken L=1940 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 946ms worker/1w
+A-chromium-w4-jit unbroken L=1930 edge-draw-rep: drawn 954ms worker/1w
+A-chromium-w4-jit unbroken L=1940 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 973ms worker/1w
+A-chromium-w4-jit unbroken L=1920 around: drawn 965ms worker/1w
+A-chromium-w4-jit unbroken L=1950 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 902ms worker/1w
+{"kind":"summary","label":"A-chromium-w4-jit","browser":"chromium","jsflags":"","page":"w4","mode":"cold","shape":"unbroken","lastDraw":1930,"firstFail":1940,"results":{"300":["drawn"],"1140":["drawn"],"1560":["drawn"],"1770":["drawn"],"1870":["drawn"],"1920":["drawn","drawn"],"1930":["drawn","drawn","drawn"],"1940":["STACK","STACK","STACK"],"1950":["STACK","STACK"],"1979":["STACK"]}}
+=== done in 27 s, exit 0
+
+=== bisect {"label":"A-chromium-w4-jit","browser":"chromium","page":"w4","mode":"cold","shape":"real","lo":300,"hi":1979,"reps":3}
+A-chromium-w4-jit real L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 928ms worker/1w
+A-chromium-w4-jit real L=300 lo: drawn 957ms worker/1w
+A-chromium-w4-jit real L=1140 mid: drawn 855ms worker/1w
+A-chromium-w4-jit real L=1560 mid: drawn 935ms worker/1w
+A-chromium-w4-jit real L=1770 mid: drawn 925ms worker/1w
+A-chromium-w4-jit real L=1870 mid: drawn 936ms worker/1w
+A-chromium-w4-jit real L=1920 mid: drawn 955ms worker/1w
+A-chromium-w4-jit real L=1950 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 954ms worker/1w
+A-chromium-w4-jit real L=1940 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 919ms worker/1w
+A-chromium-w4-jit real L=1930 mid: drawn 967ms worker/1w
+A-chromium-w4-jit real L=1930 edge-draw-rep: drawn 965ms worker/1w
+A-chromium-w4-jit real L=1940 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 949ms worker/1w
+A-chromium-w4-jit real L=1930 edge-draw-rep: drawn 976ms worker/1w
+A-chromium-w4-jit real L=1940 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1346ms worker/1w
+A-chromium-w4-jit real L=1920 around: drawn 960ms worker/1w
+A-chromium-w4-jit real L=1950 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1381ms worker/1w
+{"kind":"summary","label":"A-chromium-w4-jit","browser":"chromium","jsflags":"","page":"w4","mode":"cold","shape":"real","lastDraw":1930,"firstFail":1940,"results":{"300":["drawn"],"1140":["drawn"],"1560":["drawn"],"1770":["drawn"],"1870":["drawn"],"1920":["drawn","drawn"],"1930":["drawn","drawn","drawn"],"1940":["STACK","STACK","STACK"],"1950":["STACK","STACK"],"1979":["STACK"]}}
+=== done in 26 s, exit 0
+
+=== bisect {"label":"A-chromium-w4-off","browser":"chromium","page":"w4","mode":"cold","jsflags":"--no-opt --no-maglev","shape":"unbroken","lo":300,"hi":1979,"reps":2}
+A-chromium-w4-off unbroken L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1112ms worker/1w
+A-chromium-w4-off unbroken L=300 lo: drawn 1150ms worker/1w
+A-chromium-w4-off unbroken L=1140 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1166ms worker/1w
+A-chromium-w4-off unbroken L=720 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1165ms worker/1w
+A-chromium-w4-off unbroken L=510 mid: drawn 1127ms worker/1w
+A-chromium-w4-off unbroken L=620 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1138ms worker/1w
+A-chromium-w4-off unbroken L=570 mid: drawn 1155ms worker/1w
+A-chromium-w4-off unbroken L=600 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1107ms worker/1w
+A-chromium-w4-off unbroken L=590 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1339ms worker/1w
+A-chromium-w4-off unbroken L=580 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1063ms worker/1w
+A-chromium-w4-off unbroken L=570 edge-draw-rep: drawn 1021ms worker/1w
+A-chromium-w4-off unbroken L=580 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1134ms worker/1w
+A-chromium-w4-off unbroken L=560 around: drawn 1156ms worker/1w
+A-chromium-w4-off unbroken L=590 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1356ms worker/1w
+{"kind":"summary","label":"A-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","page":"w4","mode":"cold","shape":"unbroken","lastDraw":570,"firstFail":580,"results":{"300":["drawn"],"510":["drawn"],"560":["drawn"],"570":["drawn","drawn"],"580":["STACK","STACK"],"590":["STACK","STACK"],"600":["STACK"],"620":["STACK"],"720":["STACK"],"1140":["STACK"],"1979":["STACK"]}}
+=== done in 25 s, exit 0
+
+=== bisect {"label":"A-chromium-w4-off","browser":"chromium","page":"w4","mode":"cold","jsflags":"--no-opt --no-maglev","shape":"real","lo":300,"hi":1979,"reps":2}
+A-chromium-w4-off real L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1163ms worker/1w
+A-chromium-w4-off real L=300 lo: drawn 1184ms worker/1w
+A-chromium-w4-off real L=1140 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1185ms worker/1w
+A-chromium-w4-off real L=720 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1174ms worker/1w
+A-chromium-w4-off real L=510 mid: drawn 1351ms worker/1w
+A-chromium-w4-off real L=620 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1126ms worker/1w
+A-chromium-w4-off real L=570 mid: drawn 1103ms worker/1w
+A-chromium-w4-off real L=600 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1350ms worker/1w
+A-chromium-w4-off real L=590 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1178ms worker/1w
+A-chromium-w4-off real L=580 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1148ms worker/1w
+A-chromium-w4-off real L=570 edge-draw-rep: drawn 1159ms worker/1w
+A-chromium-w4-off real L=580 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1160ms worker/1w
+A-chromium-w4-off real L=560 around: drawn 1170ms worker/1w
+A-chromium-w4-off real L=590 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1158ms worker/1w
+{"kind":"summary","label":"A-chromium-w4-off","browser":"chromium","jsflags":"--no-opt --no-maglev","page":"w4","mode":"cold","shape":"real","lastDraw":570,"firstFail":580,"results":{"300":["drawn"],"510":["drawn"],"560":["drawn"],"570":["drawn","drawn"],"580":["STACK","STACK"],"590":["STACK","STACK"],"600":["STACK"],"620":["STACK"],"720":["STACK"],"1140":["STACK"],"1979":["STACK"]}}
+=== done in 26 s, exit 0
+
+=== bisect {"label":"A-chromium-w0-jit","browser":"chromium","page":"w0","mode":"cold","shape":"unbroken","lo":300,"hi":2000,"reps":3}
+A-chromium-w0-jit unbroken L=2000 hi: drawn 1279ms main-thread/0w
+A-chromium-w0-jit unbroken L=2000 hi-rep: drawn 794ms main-thread/0w
+A-chromium-w0-jit unbroken L=2000 hi-rep: drawn 719ms main-thread/0w
+{"kind":"summary","label":"A-chromium-w0-jit","shape":"unbroken","everyDrewTo":2000,"results":{"2000":["drawn","drawn","drawn"]}}
+=== done in 5 s, exit 0
+
+=== bisect {"label":"A-chromium-w0-jit","browser":"chromium","page":"w0","mode":"cold","shape":"real","lo":300,"hi":1979,"reps":3}
+A-chromium-w0-jit real L=1979 hi: drawn 1058ms main-thread/0w
+A-chromium-w0-jit real L=1979 hi-rep: drawn 707ms main-thread/0w
+A-chromium-w0-jit real L=1979 hi-rep: drawn 774ms main-thread/0w
+{"kind":"summary","label":"A-chromium-w0-jit","shape":"real","everyDrewTo":1979,"results":{"1979":["drawn","drawn","drawn"]}}
+=== done in 5 s, exit 0
+
+=== bisect {"label":"A-chromium-w0-off","browser":"chromium","page":"w0","mode":"cold","jsflags":"--no-opt --no-maglev","shape":"unbroken","lo":300,"hi":1979,"reps":2}
+A-chromium-w0-off unbroken L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1052ms main-thread/0w
+A-chromium-w0-off unbroken L=300 lo: drawn 911ms main-thread/0w
+A-chromium-w0-off unbroken L=1140 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 871ms main-thread/0w
+A-chromium-w0-off unbroken L=720 mid: drawn 953ms main-thread/0w
+A-chromium-w0-off unbroken L=930 mid: drawn 978ms main-thread/0w
+A-chromium-w0-off unbroken L=1040 mid: drawn 917ms main-thread/0w
+A-chromium-w0-off unbroken L=1090 mid: drawn 951ms main-thread/0w
+A-chromium-w0-off unbroken L=1120 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 945ms main-thread/0w
+A-chromium-w0-off unbroken L=1110 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 946ms main-thread/0w
+A-chromium-w0-off unbroken L=1100 mid: drawn 942ms main-thread/0w
+A-chromium-w0-off unbroken L=1100 edge-draw-rep: drawn 893ms main-thread/0w
+A-chromium-w0-off unbroken L=1110 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 854ms main-thread/0w
+A-chromium-w0-off unbroken L=1090 around: drawn 944ms main-thread/0w
+A-chromium-w0-off unbroken L=1120 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 936ms main-thread/0w
+{"kind":"summary","label":"A-chromium-w0-off","browser":"chromium","jsflags":"--no-opt --no-maglev","page":"w0","mode":"cold","shape":"unbroken","lastDraw":1100,"firstFail":1110,"results":{"300":["drawn"],"720":["drawn"],"930":["drawn"],"1040":["drawn"],"1090":["drawn","drawn"],"1100":["drawn","drawn"],"1110":["STACK","STACK"],"1120":["STACK","STACK"],"1140":["STACK"],"1979":["STACK"]}}
+=== done in 22 s, exit 0
+
+=== bisect {"label":"A-chromium-w0-off","browser":"chromium","page":"w0","mode":"cold","jsflags":"--no-opt --no-maglev","shape":"real","lo":300,"hi":1979,"reps":2}
+A-chromium-w0-off real L=1979 hi: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 1043ms main-thread/0w
+A-chromium-w0-off real L=300 lo: drawn 939ms main-thread/0w
+A-chromium-w0-off real L=1140 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 824ms main-thread/0w
+A-chromium-w0-off real L=720 mid: drawn 959ms main-thread/0w
+A-chromium-w0-off real L=930 mid: drawn 967ms main-thread/0w
+A-chromium-w0-off real L=1040 mid: drawn 937ms main-thread/0w
+A-chromium-w0-off real L=1090 mid: drawn 965ms main-thread/0w
+A-chromium-w0-off real L=1120 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 939ms main-thread/0w
+A-chromium-w0-off real L=1110 mid: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 954ms main-thread/0w
+A-chromium-w0-off real L=1100 mid: drawn 958ms main-thread/0w
+A-chromium-w0-off real L=1100 edge-draw-rep: drawn 964ms main-thread/0w
+A-chromium-w0-off real L=1110 edge-fail-rep: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 937ms main-thread/0w
+A-chromium-w0-off real L=1090 around: drawn 1544ms main-thread/0w
+A-chromium-w0-off real L=1120 around: STACK [[From textarea (line 48) ] You should send a mail to plantuml@gmail.com with this log (V$v] 940ms main-thread/0w
+{"kind":"summary","label":"A-chromium-w0-off","browser":"chromium","jsflags":"--no-opt --no-maglev","page":"w0","mode":"cold","shape":"real","lastDraw":1100,"firstFail":1110,"results":{"300":["drawn"],"720":["drawn"],"930":["drawn"],"1040":["drawn"],"1090":["drawn","drawn"],"1100":["drawn","drawn"],"1110":["STACK","STACK"],"1120":["STACK","STACK"],"1140":["STACK"],"1979":["STACK"]}}
+=== done in 23 s, exit 0

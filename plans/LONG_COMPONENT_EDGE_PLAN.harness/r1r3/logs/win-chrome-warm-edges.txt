@@ -1,0 +1,81 @@
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | chrome 154.0.8037.99, worker, one page after 50 warm-up renders, file://, win32
+{"build":"npm","shape":"formatter","n":300,"chars":300,"statement":334,"tag":"lo","result":"drawn"}
+{"build":"npm","shape":"formatter","n":1120,"chars":1120,"statement":1154,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"formatter","n":1530,"chars":1530,"statement":1564,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"formatter","n":1590,"chars":1590,"statement":1624,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"formatter","n":1600,"chars":1600,"statement":1634,"tag":"around","result":"drawn"}
+{"build":"npm","shape":"formatter","n":1610,"chars":1610,"statement":1644,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"formatter","n":1610,"chars":1610,"statement":1644,"tag":"edge-rep","result":"drawn"}
+{"build":"npm","shape":"formatter","n":1620,"chars":1620,"statement":1654,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"formatter","n":1620,"chars":1620,"statement":1654,"tag":"edge-rep","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"formatter","n":1630,"chars":1630,"statement":1664,"tag":"around","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"formatter","n":1640,"chars":1640,"statement":1674,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"formatter","n":1740,"chars":1740,"statement":1774,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"formatter","n":1944,"chars":1944,"statement":1978,"tag":"hi","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"grpc","n":300,"chars":300,"statement":339,"tag":"lo","result":"drawn"}
+{"build":"npm","shape":"grpc","n":1120,"chars":1120,"statement":1159,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"grpc","n":1530,"chars":1530,"statement":1569,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"grpc","n":1580,"chars":1580,"statement":1619,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"grpc","n":1600,"chars":1600,"statement":1639,"tag":"around","result":"drawn"}
+{"build":"npm","shape":"grpc","n":1610,"chars":1610,"statement":1649,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"grpc","n":1610,"chars":1610,"statement":1649,"tag":"edge-rep","result":"drawn"}
+{"build":"npm","shape":"grpc","n":1620,"chars":1620,"statement":1659,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"grpc","n":1620,"chars":1620,"statement":1659,"tag":"edge-rep","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"grpc","n":1630,"chars":1630,"statement":1669,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"grpc","n":1630,"chars":1630,"statement":1669,"tag":"around","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"grpc","n":1730,"chars":1730,"statement":1769,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"grpc","n":1939,"chars":1939,"statement":1978,"tag":"hi","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"kafka","n":300,"chars":300,"statement":331,"tag":"lo","result":"drawn"}
+{"build":"npm","shape":"kafka","n":1120,"chars":1120,"statement":1151,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"kafka","n":1530,"chars":1530,"statement":1561,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"kafka","n":1590,"chars":1590,"statement":1621,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"kafka","n":1600,"chars":1600,"statement":1631,"tag":"around","result":"drawn"}
+{"build":"npm","shape":"kafka","n":1610,"chars":1610,"statement":1641,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"kafka","n":1610,"chars":1610,"statement":1641,"tag":"edge-rep","result":"drawn"}
+{"build":"npm","shape":"kafka","n":1620,"chars":1620,"statement":1651,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"kafka","n":1620,"chars":1620,"statement":1651,"tag":"edge-rep","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"kafka","n":1630,"chars":1630,"statement":1661,"tag":"around","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"kafka","n":1640,"chars":1640,"statement":1671,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"kafka","n":1740,"chars":1740,"statement":1771,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"kafka","n":1947,"chars":1947,"statement":1978,"tag":"hi","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"nonascii","n":300,"chars":300,"statement":332,"tag":"lo","result":"drawn"}
+{"build":"npm","shape":"nonascii","n":1120,"chars":1120,"statement":1152,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"nonascii","n":1530,"chars":1530,"statement":1562,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"nonascii","n":1590,"chars":1590,"statement":1622,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"nonascii","n":1600,"chars":1600,"statement":1632,"tag":"around","result":"drawn"}
+{"build":"npm","shape":"nonascii","n":1610,"chars":1610,"statement":1642,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"nonascii","n":1610,"chars":1610,"statement":1642,"tag":"edge-rep","result":"drawn"}
+{"build":"npm","shape":"nonascii","n":1620,"chars":1620,"statement":1652,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"nonascii","n":1620,"chars":1620,"statement":1652,"tag":"edge-rep","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"nonascii","n":1630,"chars":1630,"statement":1662,"tag":"around","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"nonascii","n":1640,"chars":1640,"statement":1672,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"nonascii","n":1740,"chars":1740,"statement":1772,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"nonascii","n":1946,"chars":1946,"statement":1978,"tag":"hi","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"sql","n":300,"chars":300,"statement":334,"tag":"lo","result":"drawn"}
+{"build":"npm","shape":"sql","n":1120,"chars":1120,"statement":1154,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"sql","n":1530,"chars":1530,"statement":1564,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"sql","n":1590,"chars":1590,"statement":1624,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"sql","n":1600,"chars":1600,"statement":1634,"tag":"around","result":"drawn"}
+{"build":"npm","shape":"sql","n":1610,"chars":1610,"statement":1644,"tag":"mid","result":"drawn"}
+{"build":"npm","shape":"sql","n":1610,"chars":1610,"statement":1644,"tag":"edge-rep","result":"drawn"}
+{"build":"npm","shape":"sql","n":1620,"chars":1620,"statement":1654,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"sql","n":1620,"chars":1620,"statement":1654,"tag":"edge-rep","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"sql","n":1630,"chars":1630,"statement":1664,"tag":"around","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"sql","n":1640,"chars":1640,"statement":1674,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"sql","n":1740,"chars":1740,"statement":1774,"tag":"mid","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"sql","n":1944,"chars":1944,"statement":1978,"tag":"hi","result":"STACK-PICTURE","detail":"PlantUML version $version$ / $git.commit.id$ [Unknown compil"}
+{"build":"npm","shape":"stats","n":456,"chars":456,"statement":490,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"stats","n":456,"chars":456,"statement":490,"tag":"hi-rep","result":"drawn"}
+# {"build":"npm","shape":"formatter","lastDrew":1610,"firstFailed":1620,"results":{"300":["drawn"],"1120":["drawn"],"1530":["drawn"],"1590":["drawn"],"1600":["drawn"],"1610":["drawn","drawn"],"1620":["STACK-PICTURE","STACK-PICTURE"],"1630":["STACK-PICTURE"],"1640":["STACK-PICTURE"],"1740":["STACK-PICTURE"],"1944":["STACK-PICTURE"]}}
+# {"build":"npm","shape":"grpc","lastDrew":1610,"firstFailed":1620,"results":{"300":["drawn"],"1120":["drawn"],"1530":["drawn"],"1580":["drawn"],"1600":["drawn"],"1610":["drawn","drawn"],"1620":["STACK-PICTURE","STACK-PICTURE"],"1630":["STACK-PICTURE","STACK-PICTURE"],"1730":["STACK-PICTURE"],"1939":["STACK-PICTURE"]}}
+# {"build":"npm","shape":"kafka","lastDrew":1610,"firstFailed":1620,"results":{"300":["drawn"],"1120":["drawn"],"1530":["drawn"],"1590":["drawn"],"1600":["drawn"],"1610":["drawn","drawn"],"1620":["STACK-PICTURE","STACK-PICTURE"],"1630":["STACK-PICTURE"],"1640":["STACK-PICTURE"],"1740":["STACK-PICTURE"],"1947":["STACK-PICTURE"]}}
+# {"build":"npm","shape":"nonascii","lastDrew":1610,"firstFailed":1620,"results":{"300":["drawn"],"1120":["drawn"],"1530":["drawn"],"1590":["drawn"],"1600":["drawn"],"1610":["drawn","drawn"],"1620":["STACK-PICTURE","STACK-PICTURE"],"1630":["STACK-PICTURE"],"1640":["STACK-PICTURE"],"1740":["STACK-PICTURE"],"1946":["STACK-PICTURE"]}}
+# {"build":"npm","shape":"sql","lastDrew":1610,"firstFailed":1620,"results":{"300":["drawn"],"1120":["drawn"],"1530":["drawn"],"1590":["drawn"],"1600":["drawn"],"1610":["drawn","drawn"],"1620":["STACK-PICTURE","STACK-PICTURE"],"1630":["STACK-PICTURE"],"1640":["STACK-PICTURE"],"1740":["STACK-PICTURE"],"1944":["STACK-PICTURE"]}}
+# {"build":"npm","shape":"stats","everyLengthDrewTo":456,"results":{"456":["drawn","drawn"]}}
+# lowest length that did not draw, per build and shape (`chars`: the cut text as written):
+#   npm formatter: 1620 (STACK-PICTURE: PlantUML version $version$ / $git.commit.id$ [Unknown compil)
+#   npm grpc: 1620 (STACK-PICTURE: PlantUML version $version$ / $git.commit.id$ [Unknown compil)
+#   npm kafka: 1620 (STACK-PICTURE: PlantUML version $version$ / $git.commit.id$ [Unknown compil)
+#   npm nonascii: 1620 (STACK-PICTURE: PlantUML version $version$ / $git.commit.id$ [Unknown compil)
+#   npm sql: 1620 (STACK-PICTURE: PlantUML version $version$ / $git.commit.id$ [Unknown compil)
+#   npm stats: every length drew

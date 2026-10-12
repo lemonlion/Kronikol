@@ -41,6 +41,9 @@ public static class MergeableReportRenderer
         if (report.ComponentRelationships.Length > 0)
         {
             var componentOptions = options.ComponentDiagramOptions ?? new ComponentDiagramOptions();
+            // The report's colours when the component options name none, as the run report and ComponentDiagram.html
+            // take them: a merged report drew the default palette for the same options.
+            componentOptions.DependencyColors ??= options.DependencyColors;
             // Browser-rendered reports use the non-C4 PlantUML dialect.
             componentDiagramPlantUml = ComponentDiagramGenerator.GeneratePlantUml(report.ComponentRelationships, componentOptions, useC4: false);
         }

@@ -1,0 +1,26 @@
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | webkit 26.4, main-thread (OffscreenCanvas unavailable), a fresh page per case, file://, win32
+{"build":"npm","shape":"formatter","n":1944,"chars":1944,"statement":1978,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"formatter","n":1944,"chars":1944,"statement":1978,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"grpc","n":1939,"chars":1939,"statement":1978,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"grpc","n":1939,"chars":1939,"statement":1978,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"kafka","n":1947,"chars":1947,"statement":1978,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"kafka","n":1947,"chars":1947,"statement":1978,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"nonascii","n":1946,"chars":1946,"statement":1978,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"nonascii","n":1946,"chars":1946,"statement":1978,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"sql","n":1944,"chars":1944,"statement":1978,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"sql","n":1944,"chars":1944,"statement":1978,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"stats","n":456,"chars":456,"statement":490,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"stats","n":456,"chars":456,"statement":490,"tag":"hi-rep","result":"drawn"}
+# {"build":"npm","shape":"grpc","everyLengthDrewTo":1939,"results":{"1939":["drawn","drawn"]}}
+# {"build":"npm","shape":"kafka","everyLengthDrewTo":1947,"results":{"1947":["drawn","drawn"]}}
+# {"build":"npm","shape":"formatter","everyLengthDrewTo":1944,"results":{"1944":["drawn","drawn"]}}
+# {"build":"npm","shape":"sql","everyLengthDrewTo":1944,"results":{"1944":["drawn","drawn"]}}
+# {"build":"npm","shape":"stats","everyLengthDrewTo":456,"results":{"456":["drawn","drawn"]}}
+# {"build":"npm","shape":"nonascii","everyLengthDrewTo":1946,"results":{"1946":["drawn","drawn"]}}
+# lowest length that did not draw, per build and shape (`chars`: the cut text as written):
+#   npm formatter: every length drew
+#   npm grpc: every length drew
+#   npm kafka: every length drew
+#   npm nonascii: every length drew
+#   npm sql: every length drew
+#   npm stats: every length drew

@@ -427,6 +427,100 @@ public class PlantUmlStatementLengthTests
         Assert.False(beforeMarker.EndsWith('\\'), "the cut stranded a backslash from the character it escapes");
     }
 
+    /// <summary>An emoji, or a CJK character outside the basic plane: one character written as two UTF-16 code units.</summary>
+    private const string TwoUnits = "\U0001F600";
+
+    /// <summary>The index of the first code unit that is half of a pair without its other half, or -1.</summary>
+    private static int LoneSurrogateAt(string text)
+    {
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1])) i++;
+            else if (char.IsSurrogate(text[i])) return i;
+        }
+        return -1;
+    }
+
+    [Fact]
+    public void A_cut_never_splits_a_character_written_as_two_code_units()
+    {
+        // A cut between the two halves left the first before the marker, which every renderer draws as U+FFFD. Since
+        // 4.14.5 the cut takes names at 200 characters and actions at 600 too, where a name written with emoji meets it.
+        foreach (var text in new[] { string.Concat(Enumerable.Repeat(TwoUnits, 150)), "x" + string.Concat(Enumerable.Repeat(TwoUnits, 150)) })
+            for (var budget = 2; budget <= 60; budget++)
+            {
+                var cut = PlantUmlStatementLimits.TruncateLabel(text, budget);
+                Assert.True(cut.Length <= budget, $"{cut.Length} characters for a budget of {budget}");
+                Assert.EndsWith(PlantUmlStatementLimits.TruncationMarker, cut, StringComparison.Ordinal);
+                Assert.True(LoneSurrogateAt(cut) < 0, $"half a character at {LoneSurrogateAt(cut)}, budget {budget}");
+            }
+    }
+
+    [Fact]
+    public void A_value_chunked_for_a_note_is_chunked_between_whole_characters()
+    {
+        // A note writes a value in chunks of 80 characters and a long URL in display chunks (ChunksUpTo), and breaks a
+        // whitespace-free run past 120 (WrapUnbreakableRuns): each by code unit, so a chunk could end on the first half of
+        // an emoji, and both halves drew as U+FFFD.
+        foreach (var text in new[] { string.Concat(Enumerable.Repeat(TwoUnits, 150)), "x" + string.Concat(Enumerable.Repeat(TwoUnits, 150)) })
+        {
+            foreach (var size in new[] { 79, 80, 100 })
+            {
+                var chunks = Kronikol.Extensions.StringExtensions.ChunksUpTo(text, size).ToArray();
+                Assert.Equal(text, string.Concat(chunks));
+                Assert.All(chunks, chunk =>
+                {
+                    Assert.True(chunk.Length is > 0 and <= 100, $"a chunk of {chunk.Length}");
+                    Assert.True(chunk.Length <= size, $"a chunk of {chunk.Length} for {size}");
+                    Assert.True(LoneSurrogateAt(chunk) < 0, $"half a character at {LoneSurrogateAt(chunk)}, chunks of {size}");
+                });
+            }
+
+            var lines = PlantUmlCreator.WrapUnbreakableRuns(text).Split('\n');
+            Assert.True(lines.Length > 1, "the run was not broken");
+            Assert.All(lines, line => Assert.True(LoneSurrogateAt(line) < 0, $"half a character at {LoneSurrogateAt(line)}"));
+        }
+
+        // The checks a caller relied on stay eager, as Enumerable.Chunk's were.
+        Assert.Throws<ArgumentNullException>(() => Kronikol.Extensions.StringExtensions.ChunksUpTo(null!, 80));
+        Assert.Throws<ArgumentOutOfRangeException>(() => Kronikol.Extensions.StringExtensions.ChunksUpTo("abc", 0));
+    }
+
+    [Theory]
+    // A form body's values are written in chunks of 80 (ChunksUpTo), and a text body's whitespace-free run is broken
+    // past 120 (WrapUnbreakableRuns). A JSON body cannot show it: its writer escapes a character outside the basic
+    // plane as \uXXXX\uXXXX, so no half of one reaches the note.
+    [InlineData("even={0}&odd=x{0}")]
+    [InlineData("even {0} odd x{0}")]
+    public void A_payload_written_with_emoji_is_chunked_between_whole_characters(string body)
+    {
+        var emoji = string.Concat(Enumerable.Repeat(TwoUnits, 150));
+        var diagram = Diagrams([Request("http://example.com/api/orders", method: "POST", content: string.Format(body, emoji))]).Single();
+
+        Assert.Contains(TwoUnits + TwoUnits, diagram, StringComparison.Ordinal);
+        var at = LoneSurrogateAt(diagram);
+        Assert.True(at < 0, $"half a character at {at}: …{diagram[Math.Max(0, at - 30)..Math.Min(diagram.Length, at + 10)]}…");
+    }
+
+    [Fact]
+    public void A_hard_break_never_splits_a_character_written_as_two_code_units()
+    {
+        // A word longer than a display line is broken at a fixed width, which split a character across the break the
+        // same way, and both halves drew as U+FFFD: a name is broken at 80, an edge label or an action at 100.
+        foreach (var word in new[] { string.Concat(Enumerable.Repeat(TwoUnits, 150)), "x" + string.Concat(Enumerable.Repeat(TwoUnits, 150)) })
+            foreach (var budget in new[] { 40, 79, 80, 100 })
+            {
+                var lines = DiagramWidth.Wrap(word, budget).Split("\\n");
+                Assert.True(lines.Length > 1, "the word was not broken");
+                Assert.All(lines, line =>
+                {
+                    Assert.True(line.Length <= budget, $"a line of {line.Length} for a budget of {budget}");
+                    Assert.True(LoneSurrogateAt(line) < 0, $"half a character at {LoneSurrogateAt(line)}, budget {budget}");
+                });
+                Assert.Equal(word, string.Concat(lines));
+            }
+    }
+
     // ── Line classification ─────────────────────────────────────
 
     // The kind travels as a string: PlantUmlStatementKind is internal to the diagram generator, and an
@@ -555,6 +649,55 @@ public class PlantUmlStatementLengthTests
         var diagram = Diagrams([Named("Order Service")]).Single();
 
         Assert.Contains(("Order Service", "orderService"), Declarations(diagram));
+    }
+
+    [Fact]
+    public void Two_names_written_in_another_script_stay_two_participants()
+    {
+        // An alias keeps only ASCII letters, digits and underscores, so two names of one length written in another
+        // script came out as the same run of underscores: the second was never declared, and its calls were drawn on
+        // the first one's lifeline (sequence) or on one node (component).
+        var diagram = Diagrams([Named("Сервис заказа"), Named("Сервис оплаты")]).Single();
+        var declared = Declarations(diagram).Where(d => d.Name.StartsWith("Сервис", StringComparison.Ordinal)).ToArray();
+        Assert.Equal(2, declared.Length);
+        Assert.NotEqual(declared[0].Alias, declared[1].Alias);
+
+        var component = ComponentDiagramGenerator.GeneratePlantUml(
+            [new("Caller", "Сервис заказа", "HTTP", ["GET /orders"], 3, 1), new("Caller", "Сервис оплаты", "HTTP", ["GET /payments"], 2, 1)], useC4: false);
+        var nodes = Declarations(component).Where(d => d.Name.Contains("Сервис", StringComparison.Ordinal)).ToArray();
+        Assert.Equal(2, nodes.Length);
+        Assert.NotEqual(nodes[0].Alias, nodes[1].Alias);
+        Assert.All(nodes, n => Assert.True(n.Alias.Length <= PlantUmlStatementLimits.MaxParticipantNameChars, $"alias of {n.Alias.Length}"));
+    }
+
+    [Fact]
+    public void A_name_written_in_ascii_keeps_its_alias()
+    {
+        // Only a name the alias rule loses letters of takes the hash: every ASCII name keeps the alias it always had.
+        var diagram = Diagrams([Named("orders-api.internal"), Named("Billing Service")]).Single();
+
+        Assert.Contains(("orders-api.internal", "ordersApi_internal"), Declarations(diagram));
+        Assert.Contains(("Billing Service", "billingService"), Declarations(diagram));
+    }
+
+    [Fact]
+    public void A_name_or_action_written_with_emoji_is_cut_and_broken_between_whole_characters()
+    {
+        // Each emitter cuts and breaks what it is given by code unit: a service name, a component node, a swimlane and a
+        // span name written with emoji, each past its cap, came out with half a character drawn as U+FFFD.
+        var emoji = string.Concat(Enumerable.Repeat(TwoUnits, 150));
+        var sources = new Dictionary<string, string>
+        {
+            ["sequence"] = Diagrams([Named(emoji), Named("x" + emoji, category: "SQL")]).Single(),
+            ["component"] = ComponentDiagramGenerator.GeneratePlantUml([new("Caller", emoji, "HTTP", ["GET /orders"], 3, 1), new("Caller", "x" + emoji, "HTTP", ["GET /stock"], 2, 1)], useC4: false),
+            ["activity"] = ActivityDiagram(string.Concat(Enumerable.Repeat(TwoUnits, 400)), "x" + emoji),
+        };
+
+        foreach (var (kind, source) in sources)
+        {
+            var at = LoneSurrogateAt(source);
+            Assert.True(at < 0, $"{kind}: half a character at {at}: …{source[Math.Max(0, at - 20)..Math.Min(source.Length, at + 20)]}…");
+        }
     }
 
     [Fact]

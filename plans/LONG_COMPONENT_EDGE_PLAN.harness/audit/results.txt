@@ -1,0 +1,10 @@
+# BreakfastProvider 0ee43e8, xUnit lane (KRONIKOL_SUITE=xunit-in-memory, every dependency in memory), 2026-10-12
+
+## compare_bp.py bp-4.14.4-reports bp-4.14.6-reports
+component: 1 vs 1 sources, 1 identical
+sequence: 421 vs 421 sources, 298 identical once GUIDs, hex ids, timestamps, HTTP dates and durations are normalised;
+the other 123 differ in test data only (Cosmos _ts/_rid, random sizes, ports, sub-millisecond durations shown or not)
+cut markers, '+N more', hashed aliases, Syntax Error / RangeError lines: 0 in both runs
+
+## node stackcheck-cost.js bp-4.14.6-reports/TestRunReport.html 3 (Chromium 147, Windows 11)
+{"file":"bp-4.14.6-reports/TestRunReport.html","drawMs":6002,"results":[{"diagrams":421,"mb":13.4,"serializeMs":52.7,"detectorMs":4.6,"maxSerializeMs":1.7,"domPrecheckMs":0.5,"flagged":0,"workerMs":14980,"injectMs":360.8,"renders":398,"mode":"worker"},{"diagrams":421,"mb":13.4,"serializeMs":56.4,"detectorMs":6.4,"maxSerializeMs":1.9,"domPrecheckMs":0.2,"flagged":0,"workerMs":14980,"injectMs":360.8,"renders":398,"mode":"worker"},{"diagrams":421,"mb":13.4,"serializeMs":47.5,"detectorMs":5.4,"maxSerializeMs":1.7,"domPrecheckMs":0.7,"flagged":0,"workerMs":14980,"injectMs":360.8,"renders":398,"mode":"worker"}]}

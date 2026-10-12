@@ -334,10 +334,16 @@ internal static class DiagramWidth
                 started = false;
             }
 
-            for (var at = 0; at < atom.Length; at += budget)
+            for (var at = 0; at < atom.Length;)
             {
-                var piece = atom.Substring(at, Math.Min(budget, atom.Length - at));
-                if (at + budget < atom.Length)
+                var length = Math.Min(budget, atom.Length - at);
+                // Never between the two halves of a character written as two code units (an emoji, say): each half
+                // alone draws as U+FFFD.
+                if (length > 1 && at + length < atom.Length && char.IsHighSurrogate(atom[at + length - 1]))
+                    length--;
+                var piece = atom.Substring(at, length);
+                at += length;
+                if (at < atom.Length)
                     into.Add(piece + hardJoin);
                 else
                     current.Append(piece); // the tail carries on, so the next atom can join it

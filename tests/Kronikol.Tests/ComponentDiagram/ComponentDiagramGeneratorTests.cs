@@ -1390,6 +1390,39 @@ public class ComponentDiagramGeneratorTests
             $"room for another entry: {label.Length} characters with {kept.Length} entries");
     }
 
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("cs-CZ")]
+    [InlineData("da-DK")]
+    public void An_edges_entries_are_listed_in_one_order_whatever_the_machines_culture(string culture)
+    {
+        // The list was sorted by the machine's culture: Czech sorts "ch" after "h", Danish puts a capital before its
+        // small letter, and every culture puts "delete" before "Get". Kronikol4J lists them in ordinal order.
+        string[] methods = ["hset orders", "chunk orders", "Get orders", "get orders", "delete orders"];
+        var relationships = new[] { new ComponentRelationship("Caller", "Cache", "Redis", [.. methods], 5, 1, "Redis") };
+
+        var label = CultureRun.Under(culture, () => EdgeLabel(ComponentDiagramGenerator.GeneratePlantUml(relationships, useC4: false)));
+
+        Assert.Equal(methods.Order(StringComparer.Ordinal), Entries(label, "Redis"));
+    }
+
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("cs-CZ")]
+    public void A_cut_list_keeps_the_same_entries_whatever_the_machines_culture(string culture)
+    {
+        // The cut keeps the first entries (#162), so the order decides which: under the culture's order a machine kept
+        // the GETs and dropped every SET, and Kronikol4J the reverse.
+        var methods = Enumerable.Range(1, 30).SelectMany(i => new[] { $"get key_{i:00}", $"SET key_{i:00}" }).ToArray();
+        var relationships = new[] { new ComponentRelationship("Caller", "Cache", "Redis", [.. methods], 60, 1, "Redis") };
+
+        var label = CultureRun.Under(culture, () => EdgeLabel(ComponentDiagramGenerator.GeneratePlantUml(relationships, useC4: false)));
+
+        var kept = Entries(label, "Redis")[..^2];
+        Assert.Equal(methods.Order(StringComparer.Ordinal).Take(kept.Length), kept);
+        Assert.All(kept, entry => Assert.StartsWith("SET ", entry, StringComparison.Ordinal));
+    }
+
     [Fact]
     public void A_label_within_the_cap_keeps_its_bytes()
     {

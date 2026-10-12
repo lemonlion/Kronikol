@@ -37,6 +37,37 @@ public class NoteFormatDefaultTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
+    public async Task Yaml_default_breaks_a_long_run_of_emoji_between_whole_characters()
+    {
+        // The YAML view breaks a whitespace-free run past 120 characters, as the generator does for the JSON view, and
+        // it broke it by code unit: an emoji split across the break drew as two U+FFFD.
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithEmojiRunNote(TempDir, OutputDir, "FormatDefault_EmojiRun.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+        await WaitForNoteElements();
+
+        // Line by line: the svg's whole textContent joins its lines with nothing between them, so the two halves of a
+        // split emoji, drawn at the end of one line and the start of the next, read as one emoji there.
+        var drawn = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
+            () => {
+                const lines = [...document.querySelectorAll('.plantuml-browser svg text')].map(t => t.textContent);
+                const count = re => lines.reduce((n, line) => n + (line.match(re) || []).length, 0);
+                return {
+                    emoji: count(/\u{1F600}/gu),
+                    halves: count(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|�/g),
+                    broken: lines.filter(line => line.length > 100).length
+                };
+            }
+            """);
+        // Both runs are drawn in the YAML view, broken onto lines (or the fact proves nothing) and whole: 300 emoji
+        // and not one half of one.
+        Assert.True(drawn.GetProperty("broken").GetInt32() >= 4, $"{drawn.GetProperty("broken").GetInt32()} long lines drawn");
+        Assert.Equal(300, drawn.GetProperty("emoji").GetInt32());
+        Assert.Equal(0, drawn.GetProperty("halves").GetInt32());
+    }
+
+    [Fact]
     public async Task Yaml_default_renders_a_row_capped_response_as_yaml_footnote_and_all()
     {
         // The zero-click path goes through setAllNoteFormats/_preProcessSource rather

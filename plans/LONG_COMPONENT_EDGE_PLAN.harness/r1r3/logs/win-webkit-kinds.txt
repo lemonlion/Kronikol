@@ -1,0 +1,42 @@
+# npm https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8 | webkit 26.4, main-thread (OffscreenCanvas unavailable), a fresh page per case, file://, win32
+{"build":"npm","shape":"activity","n":1500,"chars":1500,"statement":1524,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"activity","n":1500,"chars":1500,"statement":1524,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"activity-lane","n":1500,"chars":1500,"statement":1530,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"activity-lane","n":1500,"chars":1500,"statement":1530,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"bar-token","n":1400,"chars":1400,"statement":1400,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"bar-token","n":1400,"chars":1400,"statement":1400,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"comp-database","n":1500,"chars":1500,"statement":2963,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"comp-database","n":1500,"chars":1500,"statement":2963,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"comp-system","n":1500,"chars":1500,"statement":3086,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"comp-system","n":1500,"chars":1500,"statement":3086,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"loop","n":1500,"chars":1500,"statement":1500,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"loop","n":1500,"chars":1500,"statement":1500,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"partition","n":1500,"chars":1500,"statement":1500,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"partition","n":1500,"chars":1500,"statement":1500,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"placeholder","n":1500,"chars":1500,"statement":1561,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"placeholder","n":1500,"chars":1500,"statement":1561,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"seq-database","n":1500,"chars":1500,"statement":2963,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"seq-database","n":1500,"chars":1500,"statement":2963,"tag":"hi-rep","result":"drawn"}
+{"build":"npm","shape":"seq-entity","n":1500,"chars":1500,"statement":2961,"tag":"hi","result":"drawn"}
+{"build":"npm","shape":"seq-entity","n":1500,"chars":1500,"statement":2961,"tag":"hi-rep","result":"drawn"}
+# {"build":"npm","shape":"partition","everyLengthDrewTo":1500,"results":{"1500":["drawn","drawn"]}}
+# {"build":"npm","shape":"bar-token","everyLengthDrewTo":1400,"results":{"1400":["drawn","drawn"]}}
+# {"build":"npm","shape":"loop","everyLengthDrewTo":1500,"results":{"1500":["drawn","drawn"]}}
+# {"build":"npm","shape":"seq-entity","everyLengthDrewTo":1500,"results":{"1500":["drawn","drawn"]}}
+# {"build":"npm","shape":"seq-database","everyLengthDrewTo":1500,"results":{"1500":["drawn","drawn"]}}
+# {"build":"npm","shape":"comp-database","everyLengthDrewTo":1500,"results":{"1500":["drawn","drawn"]}}
+# {"build":"npm","shape":"activity-lane","everyLengthDrewTo":1500,"results":{"1500":["drawn","drawn"]}}
+# {"build":"npm","shape":"activity","everyLengthDrewTo":1500,"results":{"1500":["drawn","drawn"]}}
+# {"build":"npm","shape":"comp-system","everyLengthDrewTo":1500,"results":{"1500":["drawn","drawn"]}}
+# {"build":"npm","shape":"placeholder","everyLengthDrewTo":1500,"results":{"1500":["drawn","drawn"]}}
+# lowest length that did not draw, per build and shape (`chars`: the cut text as written):
+#   npm activity: every length drew
+#   npm activity-lane: every length drew
+#   npm bar-token: every length drew
+#   npm comp-database: every length drew
+#   npm comp-system: every length drew
+#   npm loop: every length drew
+#   npm partition: every length drew
+#   npm placeholder: every length drew
+#   npm seq-database: every length drew
+#   npm seq-entity: every length drew

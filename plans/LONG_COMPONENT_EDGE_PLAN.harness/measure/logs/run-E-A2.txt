@@ -1,0 +1,236 @@
+
+##### phase E 2026-10-09T17:20:52.968Z
+
+=== bisect {"label":"E-firefox-w4-jit","browser":"firefox","page":"w4","mode":"cold","shape":"unbroken","lo":300,"hi":2000,"reps":3}
+E-firefox-w4-jit unbroken L=2000 hi: drawn 1008ms worker/1w
+E-firefox-w4-jit unbroken L=2000 hi-rep: drawn 917ms worker/1w
+E-firefox-w4-jit unbroken L=2000 hi-rep: drawn 1079ms worker/1w
+{"kind":"summary","label":"E-firefox-w4-jit","shape":"unbroken","everyDrewTo":2000,"results":{"2000":["drawn","drawn","drawn"]}}
+=== done in 6 s, exit 0
+
+=== bisect {"label":"E-firefox-w4-jit","browser":"firefox","page":"w4","mode":"cold","shape":"real","lo":300,"hi":1979,"reps":3}
+E-firefox-w4-jit real L=1979 hi: drawn 1040ms worker/1w
+E-firefox-w4-jit real L=1979 hi-rep: drawn 1072ms worker/1w
+E-firefox-w4-jit real L=1979 hi-rep: drawn 1078ms worker/1w
+{"kind":"summary","label":"E-firefox-w4-jit","shape":"real","everyDrewTo":1979,"results":{"1979":["drawn","drawn","drawn"]}}
+=== done in 6 s, exit 0
+
+=== scan {"label":"E-firefox-w4-jit-scan","browser":"firefox","page":"w4","mode":"cold","shape":"real","from":300,"to":1979,"step":100,"reps":1}
+E-firefox-w4-jit-scan real L=300 scan: drawn 932ms worker/1w
+E-firefox-w4-jit-scan real L=400 scan: drawn 1107ms worker/1w
+E-firefox-w4-jit-scan real L=500 scan: drawn 1012ms worker/1w
+E-firefox-w4-jit-scan real L=600 scan: drawn 1058ms worker/1w
+E-firefox-w4-jit-scan real L=700 scan: drawn 912ms worker/1w
+E-firefox-w4-jit-scan real L=800 scan: drawn 841ms worker/1w
+E-firefox-w4-jit-scan real L=900 scan: drawn 1009ms worker/1w
+E-firefox-w4-jit-scan real L=1000 scan: drawn 897ms worker/1w
+E-firefox-w4-jit-scan real L=1100 scan: drawn 912ms worker/1w
+E-firefox-w4-jit-scan real L=1200 scan: drawn 1002ms worker/1w
+E-firefox-w4-jit-scan real L=1300 scan: drawn 1237ms worker/1w
+E-firefox-w4-jit-scan real L=1400 scan: drawn 1049ms worker/1w
+E-firefox-w4-jit-scan real L=1500 scan: drawn 1069ms worker/1w
+E-firefox-w4-jit-scan real L=1600 scan: drawn 1017ms worker/1w
+E-firefox-w4-jit-scan real L=1700 scan: drawn 913ms worker/1w
+E-firefox-w4-jit-scan real L=1800 scan: drawn 1020ms worker/1w
+E-firefox-w4-jit-scan real L=1900 scan: drawn 1041ms worker/1w
+E-firefox-w4-jit-scan real L=1979 scan: drawn 1058ms worker/1w
+{"kind":"summary","label":"E-firefox-w4-jit-scan","browser":"firefox","jsflags":"","page":"w4","mode":"cold","shape":"real","scan":"300..1979 by 100 x1","failed":[],"everyDrew":true}
+=== done in 37 s, exit 0
+
+=== bisect {"label":"E-firefox-w0-jit","browser":"firefox","page":"w0","mode":"cold","shape":"unbroken","lo":300,"hi":2000,"reps":3}
+E-firefox-w0-jit unbroken L=2000 hi: drawn 972ms main-thread/0w
+E-firefox-w0-jit unbroken L=2000 hi-rep: drawn 1054ms main-thread/0w
+E-firefox-w0-jit unbroken L=2000 hi-rep: drawn 1053ms main-thread/0w
+{"kind":"summary","label":"E-firefox-w0-jit","shape":"unbroken","everyDrewTo":2000,"results":{"2000":["drawn","drawn","drawn"]}}
+=== done in 6 s, exit 0
+
+=== bisect {"label":"E-firefox-w0-jit","browser":"firefox","page":"w0","mode":"cold","shape":"real","lo":300,"hi":1979,"reps":3}
+E-firefox-w0-jit real L=1979 hi: drawn 1054ms main-thread/0w
+E-firefox-w0-jit real L=1979 hi-rep: drawn 930ms main-thread/0w
+E-firefox-w0-jit real L=1979 hi-rep: drawn 1068ms main-thread/0w
+{"kind":"summary","label":"E-firefox-w0-jit","shape":"real","everyDrewTo":1979,"results":{"1979":["drawn","drawn","drawn"]}}
+=== done in 6 s, exit 0
+
+=== scan {"label":"E-firefox-w0-jit-scan","browser":"firefox","page":"w0","mode":"cold","shape":"real","from":300,"to":1979,"step":100,"reps":1}
+E-firefox-w0-jit-scan real L=300 scan: drawn 1015ms main-thread/0w
+E-firefox-w0-jit-scan real L=400 scan: drawn 892ms main-thread/0w
+E-firefox-w0-jit-scan real L=500 scan: drawn 1031ms main-thread/0w
+E-firefox-w0-jit-scan real L=600 scan: drawn 1070ms main-thread/0w
+E-firefox-w0-jit-scan real L=700 scan: drawn 1071ms main-thread/0w
+E-firefox-w0-jit-scan real L=800 scan: drawn 905ms main-thread/0w
+E-firefox-w0-jit-scan real L=900 scan: drawn 1052ms main-thread/0w
+E-firefox-w0-jit-scan real L=1000 scan: drawn 891ms main-thread/0w
+E-firefox-w0-jit-scan real L=1100 scan: drawn 1041ms main-thread/0w
+E-firefox-w0-jit-scan real L=1200 scan: drawn 931ms main-thread/0w
+E-firefox-w0-jit-scan real L=1300 scan: drawn 992ms main-thread/0w
+E-firefox-w0-jit-scan real L=1400 scan: drawn 995ms main-thread/0w
+E-firefox-w0-jit-scan real L=1500 scan: drawn 1029ms main-thread/0w
+E-firefox-w0-jit-scan real L=1600 scan: drawn 1040ms main-thread/0w
+E-firefox-w0-jit-scan real L=1700 scan: drawn 979ms main-thread/0w
+E-firefox-w0-jit-scan real L=1800 scan: drawn 1035ms main-thread/0w
+E-firefox-w0-jit-scan real L=1900 scan: drawn 1065ms main-thread/0w
+E-firefox-w0-jit-scan real L=1979 scan: drawn 950ms main-thread/0w
+{"kind":"summary","label":"E-firefox-w0-jit-scan","browser":"firefox","jsflags":"","page":"w0","mode":"cold","shape":"real","scan":"300..1979 by 100 x1","failed":[],"everyDrew":true}
+=== done in 33 s, exit 0
+
+=== bisect {"label":"E-webkit-w4-jit","browser":"webkit","page":"w4","mode":"cold","shape":"unbroken","lo":300,"hi":2000,"reps":3}
+E-webkit-w4-jit unbroken L=2000 hi: drawn 1109ms main-thread/0w
+E-webkit-w4-jit unbroken L=2000 hi-rep: drawn 1126ms main-thread/0w
+E-webkit-w4-jit unbroken L=2000 hi-rep: drawn 1018ms main-thread/0w
+{"kind":"summary","label":"E-webkit-w4-jit","shape":"unbroken","everyDrewTo":2000,"results":{"2000":["drawn","drawn","drawn"]}}
+=== done in 4 s, exit 0
+
+=== bisect {"label":"E-webkit-w4-jit","browser":"webkit","page":"w4","mode":"cold","shape":"real","lo":300,"hi":1979,"reps":3}
+E-webkit-w4-jit real L=1979 hi: drawn 1053ms main-thread/0w
+E-webkit-w4-jit real L=1979 hi-rep: drawn 1203ms main-thread/0w
+E-webkit-w4-jit real L=1979 hi-rep: drawn 1103ms main-thread/0w
+{"kind":"summary","label":"E-webkit-w4-jit","shape":"real","everyDrewTo":1979,"results":{"1979":["drawn","drawn","drawn"]}}
+=== done in 4 s, exit 0
+
+=== scan {"label":"E-webkit-w4-jit-scan","browser":"webkit","page":"w4","mode":"cold","shape":"real","from":300,"to":1979,"step":100,"reps":1}
+E-webkit-w4-jit-scan real L=300 scan: drawn 979ms main-thread/0w
+E-webkit-w4-jit-scan real L=400 scan: drawn 925ms main-thread/0w
+E-webkit-w4-jit-scan real L=500 scan: drawn 1026ms main-thread/0w
+E-webkit-w4-jit-scan real L=600 scan: drawn 1163ms main-thread/0w
+E-webkit-w4-jit-scan real L=700 scan: drawn 1155ms main-thread/0w
+E-webkit-w4-jit-scan real L=800 scan: drawn 1135ms main-thread/0w
+E-webkit-w4-jit-scan real L=900 scan: drawn 1104ms main-thread/0w
+E-webkit-w4-jit-scan real L=1000 scan: drawn 1026ms main-thread/0w
+E-webkit-w4-jit-scan real L=1100 scan: drawn 1106ms main-thread/0w
+E-webkit-w4-jit-scan real L=1200 scan: drawn 1022ms main-thread/0w
+E-webkit-w4-jit-scan real L=1300 scan: drawn 1137ms main-thread/0w
+E-webkit-w4-jit-scan real L=1400 scan: drawn 1054ms main-thread/0w
+E-webkit-w4-jit-scan real L=1500 scan: drawn 1019ms main-thread/0w
+E-webkit-w4-jit-scan real L=1600 scan: drawn 1004ms main-thread/0w
+E-webkit-w4-jit-scan real L=1700 scan: drawn 1140ms main-thread/0w
+E-webkit-w4-jit-scan real L=1800 scan: drawn 1036ms main-thread/0w
+E-webkit-w4-jit-scan real L=1900 scan: drawn 1021ms main-thread/0w
+E-webkit-w4-jit-scan real L=1979 scan: drawn 1115ms main-thread/0w
+{"kind":"summary","label":"E-webkit-w4-jit-scan","browser":"webkit","jsflags":"","page":"w4","mode":"cold","shape":"real","scan":"300..1979 by 100 x1","failed":[],"everyDrew":true}
+=== done in 23 s, exit 0
+
+=== bisect {"label":"E-webkit-w0-jit","browser":"webkit","page":"w0","mode":"cold","shape":"unbroken","lo":300,"hi":2000,"reps":3}
+E-webkit-w0-jit unbroken L=2000 hi: drawn 1095ms main-thread/0w
+E-webkit-w0-jit unbroken L=2000 hi-rep: drawn 1166ms main-thread/0w
+E-webkit-w0-jit unbroken L=2000 hi-rep: drawn 993ms main-thread/0w
+{"kind":"summary","label":"E-webkit-w0-jit","shape":"unbroken","everyDrewTo":2000,"results":{"2000":["drawn","drawn","drawn"]}}
+=== done in 4 s, exit 0
+
+=== bisect {"label":"E-webkit-w0-jit","browser":"webkit","page":"w0","mode":"cold","shape":"real","lo":300,"hi":1979,"reps":3}
+E-webkit-w0-jit real L=1979 hi: drawn 1175ms main-thread/0w
+E-webkit-w0-jit real L=1979 hi-rep: drawn 1113ms main-thread/0w
+E-webkit-w0-jit real L=1979 hi-rep: drawn 1153ms main-thread/0w
+{"kind":"summary","label":"E-webkit-w0-jit","shape":"real","everyDrewTo":1979,"results":{"1979":["drawn","drawn","drawn"]}}
+=== done in 4 s, exit 0
+
+=== scan {"label":"E-webkit-w0-jit-scan","browser":"webkit","page":"w0","mode":"cold","shape":"real","from":300,"to":1979,"step":100,"reps":1}
+E-webkit-w0-jit-scan real L=300 scan: drawn 1175ms main-thread/0w
+E-webkit-w0-jit-scan real L=400 scan: drawn 1128ms main-thread/0w
+E-webkit-w0-jit-scan real L=500 scan: drawn 1001ms main-thread/0w
+E-webkit-w0-jit-scan real L=600 scan: drawn 1154ms main-thread/0w
+E-webkit-w0-jit-scan real L=700 scan: drawn 957ms main-thread/0w
+E-webkit-w0-jit-scan real L=800 scan: drawn 1081ms main-thread/0w
+E-webkit-w0-jit-scan real L=900 scan: drawn 1019ms main-thread/0w
+E-webkit-w0-jit-scan real L=1000 scan: drawn 1011ms main-thread/0w
+E-webkit-w0-jit-scan real L=1100 scan: drawn 1141ms main-thread/0w
+E-webkit-w0-jit-scan real L=1200 scan: drawn 1102ms main-thread/0w
+E-webkit-w0-jit-scan real L=1300 scan: drawn 989ms main-thread/0w
+E-webkit-w0-jit-scan real L=1400 scan: drawn 1172ms main-thread/0w
+E-webkit-w0-jit-scan real L=1500 scan: drawn 1192ms main-thread/0w
+E-webkit-w0-jit-scan real L=1600 scan: drawn 1043ms main-thread/0w
+E-webkit-w0-jit-scan real L=1700 scan: drawn 1164ms main-thread/0w
+E-webkit-w0-jit-scan real L=1800 scan: drawn 972ms main-thread/0w
+E-webkit-w0-jit-scan real L=1900 scan: drawn 1055ms main-thread/0w
+E-webkit-w0-jit-scan real L=1979 scan: drawn 1163ms main-thread/0w
+{"kind":"summary","label":"E-webkit-w0-jit-scan","browser":"webkit","jsflags":"","page":"w0","mode":"cold","shape":"real","scan":"300..1979 by 100 x1","failed":[],"everyDrew":true}
+=== done in 23 s, exit 0
+
+##### phase A2 2026-10-09T17:23:28.752Z
+
+=== scan {"label":"A2-chrome-w0-jit-scan","browser":"chrome","page":"w0","mode":"cold","shape":"unbroken","from":300,"to":2000,"step":100,"reps":1}
+A2-chrome-w0-jit-scan unbroken L=300 scan: drawn 403ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=400 scan: drawn 406ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=500 scan: drawn 391ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=600 scan: drawn 397ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=700 scan: drawn 421ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=800 scan: drawn 411ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=900 scan: drawn 406ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=1000 scan: drawn 414ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=1100 scan: drawn 413ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=1200 scan: drawn 406ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=1300 scan: drawn 408ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=1400 scan: drawn 415ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=1500 scan: drawn 408ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=1600 scan: drawn 416ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=1700 scan: drawn 411ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=1800 scan: drawn 411ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=1900 scan: drawn 408ms main-thread/0w
+A2-chrome-w0-jit-scan unbroken L=2000 scan: drawn 413ms main-thread/0w
+{"kind":"summary","label":"A2-chrome-w0-jit-scan","browser":"chrome","jsflags":"","page":"w0","mode":"cold","shape":"unbroken","scan":"300..2000 by 100 x1","failed":[],"everyDrew":true}
+=== done in 15 s, exit 0
+
+=== scan {"label":"A2-chrome-w0-jit-scan","browser":"chrome","page":"w0","mode":"cold","shape":"real","from":300,"to":1979,"step":100,"reps":1}
+A2-chrome-w0-jit-scan real L=300 scan: drawn 392ms main-thread/0w
+A2-chrome-w0-jit-scan real L=400 scan: drawn 392ms main-thread/0w
+A2-chrome-w0-jit-scan real L=500 scan: drawn 403ms main-thread/0w
+A2-chrome-w0-jit-scan real L=600 scan: drawn 404ms main-thread/0w
+A2-chrome-w0-jit-scan real L=700 scan: drawn 406ms main-thread/0w
+A2-chrome-w0-jit-scan real L=800 scan: drawn 409ms main-thread/0w
+A2-chrome-w0-jit-scan real L=900 scan: drawn 415ms main-thread/0w
+A2-chrome-w0-jit-scan real L=1000 scan: drawn 414ms main-thread/0w
+A2-chrome-w0-jit-scan real L=1100 scan: drawn 472ms main-thread/0w
+A2-chrome-w0-jit-scan real L=1200 scan: drawn 466ms main-thread/0w
+A2-chrome-w0-jit-scan real L=1300 scan: drawn 412ms main-thread/0w
+A2-chrome-w0-jit-scan real L=1400 scan: drawn 408ms main-thread/0w
+A2-chrome-w0-jit-scan real L=1500 scan: drawn 415ms main-thread/0w
+A2-chrome-w0-jit-scan real L=1600 scan: drawn 412ms main-thread/0w
+A2-chrome-w0-jit-scan real L=1700 scan: drawn 437ms main-thread/0w
+A2-chrome-w0-jit-scan real L=1800 scan: drawn 418ms main-thread/0w
+A2-chrome-w0-jit-scan real L=1900 scan: drawn 426ms main-thread/0w
+A2-chrome-w0-jit-scan real L=1979 scan: drawn 429ms main-thread/0w
+{"kind":"summary","label":"A2-chrome-w0-jit-scan","browser":"chrome","jsflags":"","page":"w0","mode":"cold","shape":"real","scan":"300..1979 by 100 x1","failed":[],"everyDrew":true}
+=== done in 15 s, exit 0
+
+=== scan {"label":"A2-chromium-w0-jit-scan","browser":"chromium","page":"w0","mode":"cold","shape":"unbroken","from":300,"to":2000,"step":100,"reps":1}
+A2-chromium-w0-jit-scan unbroken L=300 scan: drawn 1829ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=400 scan: drawn 729ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=500 scan: drawn 721ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=600 scan: drawn 733ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=700 scan: drawn 756ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=800 scan: drawn 733ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=900 scan: drawn 758ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=1000 scan: drawn 746ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=1100 scan: drawn 763ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=1200 scan: drawn 759ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=1300 scan: drawn 766ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=1400 scan: drawn 733ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=1500 scan: drawn 656ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=1600 scan: drawn 792ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=1700 scan: drawn 766ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=1800 scan: drawn 765ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=1900 scan: drawn 774ms main-thread/0w
+A2-chromium-w0-jit-scan unbroken L=2000 scan: drawn 704ms main-thread/0w
+{"kind":"summary","label":"A2-chromium-w0-jit-scan","browser":"chromium","jsflags":"","page":"w0","mode":"cold","shape":"unbroken","scan":"300..2000 by 100 x1","failed":[],"everyDrew":true}
+=== done in 26 s, exit 0
+
+=== scan {"label":"A2-chromium-w0-jit-scan","browser":"chromium","page":"w0","mode":"cold","shape":"real","from":300,"to":1979,"step":100,"reps":1}
+A2-chromium-w0-jit-scan real L=300 scan: drawn 994ms main-thread/0w
+A2-chromium-w0-jit-scan real L=400 scan: drawn 736ms main-thread/0w
+A2-chromium-w0-jit-scan real L=500 scan: drawn 737ms main-thread/0w
+A2-chromium-w0-jit-scan real L=600 scan: drawn 758ms main-thread/0w
+A2-chromium-w0-jit-scan real L=700 scan: drawn 760ms main-thread/0w
+A2-chromium-w0-jit-scan real L=800 scan: drawn 750ms main-thread/0w
+A2-chromium-w0-jit-scan real L=900 scan: drawn 739ms main-thread/0w
+A2-chromium-w0-jit-scan real L=1000 scan: drawn 731ms main-thread/0w
+A2-chromium-w0-jit-scan real L=1100 scan: drawn 734ms main-thread/0w
+A2-chromium-w0-jit-scan real L=1200 scan: drawn 738ms main-thread/0w
+A2-chromium-w0-jit-scan real L=1300 scan: drawn 748ms main-thread/0w
+A2-chromium-w0-jit-scan real L=1400 scan: drawn 765ms main-thread/0w
+A2-chromium-w0-jit-scan real L=1500 scan: drawn 725ms main-thread/0w
+A2-chromium-w0-jit-scan real L=1600 scan: drawn 777ms main-thread/0w
+A2-chromium-w0-jit-scan real L=1700 scan: drawn 787ms main-thread/0w
+A2-chromium-w0-jit-scan real L=1800 scan: drawn 757ms main-thread/0w
+A2-chromium-w0-jit-scan real L=1900 scan: drawn 645ms main-thread/0w
+A2-chromium-w0-jit-scan real L=1979 scan: drawn 753ms main-thread/0w
+{"kind":"summary","label":"A2-chromium-w0-jit-scan","browser":"chromium","jsflags":"","page":"w0","mode":"cold","shape":"real","scan":"300..1979 by 100 x1","failed":[],"everyDrew":true}
+=== done in 25 s, exit 0
