@@ -1,0 +1,12 @@
+Test run for C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Otlp\bin\Debug\net10.0\Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:05.02]     Kronikol.Tests.Otlp.OtlpExporterTests.A_payload_dropped_while_the_tap_shuts_down_is_logged_as_dropped_at_shutdown [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpExporterTests.A_payload_dropped_while_the_tap_shuts_down_is_logged_as_dropped_at_shutdown [4 s]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: ["[otlp] otlp-tap listening on http://localhost:5992"···, "[otlp] otlp-tap stopped (1 exports, 0 spans, 0 map"···, "[otlp] otlp-tap dropped an export payload (queue f"···]
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpExporterTests.A_payload_dropped_while_the_tap_shuts_down_is_logged_as_dropped_at_shutdown() in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Otlp\OtlpExporterTests.cs:line 294
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 4 s - Kronikol.Tests.Otlp.dll (net10.0)

@@ -7,7 +7,8 @@ re-ran the probes, and corrected the design itself: build interception keyed by 
 wrapped exceptions (4.1), the caller's message never written (4.2), failures drawn on every path, consume ids recorded
 only where they cannot strip another test's spans (4.3), ask 3 reconciled with #167 and the hand-written path with
 #160 (4.4, Q16, Q17), and R2's lifetime (4.5). Section 11's last entry lists every change. **Status: green-lit in
-full by the owner on 2026-10-12, every question in section 9 as recommended (D37); executing.** The probes are in the
+full by the owner on 2026-10-12, every question in section 9 as recommended (D37); done: R0 as 4.16.2, F25 as 4.16.4,
+R1 as 4.17.0 and R2 as 4.18.0, all published on 2026-10-12 (section 11).** The probes are in the
 harness. Evidence labels: **RUN** (measured here; the probe, its
 source and what it printed are in the harness), **READ** (in the source at `d59843fa`, `file:line`, unless another
 revision is named, `ROADMAP.md`'s lines being those at `5b2c3a32`, or in Confluent.Kafka 2.15.1's source), **INFERRED** (reasoned from facts, stated by none), **ISSUE**
@@ -1092,6 +1093,15 @@ Each is another subsystem's, so it is recorded here rather than folded into thes
     broker facts skipped, in Debug and in Release; the build-interception suite 75 of 75 on .NET 8 and .NET 10, in Debug
     and in Release; the full Playwright suite 1,036 with 28 skipped; and release.slnf builds in Release for every
     target.
+- **2026-10-12, 4.18.0 published; the plan is done.** Release run 38274563232 and CodeQL 38274559601 passed, and
+  nuget.org listed all 62 ids; the wiki has R2's edits (`b68653e`) and Kronikol4J's ledger R2's line (`912cd94`, nothing
+  to port). CI 38274559743 failed in its remainder lane on an OTLP fact R2 did not touch,
+  `Full_circle_an_exported_capture_round_trips_through_a_live_OtlpTap`: `OtlpTap` answered an export before it queued
+  it, so a tap disposed in between lost an export it had acknowledged, and logged it as a full queue. Fixed as 4.18.1, a
+  patch: the tap queues first, red first through a seam that disposes the tap at that point
+  (`r2/otlp-tap-race-red-4.18.0.txt`, `r2/otlp-tap-drop-reason-red.txt`). #135 and #167 are closed with a comment naming
+  the releases; #160 has a comment saying its helpers shipped in 4.17.0 and stays open for per-host interception, which
+  ROADMAP Appendix C carries with Q1's props for v5 and Q6's builder rule.
 
 ## Appendix A. Edit sites at `d59843fa` (4.14.6)
 

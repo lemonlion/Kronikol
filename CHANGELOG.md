@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.18.1] - 2026-10-12
+
+**Patch - the OTLP tap maps an export it has answered, even when it is disposed right after.** A bug fix with nothing
+new for a consumer to call, so the patch part moves (4.18.0 to 4.18.1).
+
+- **The tap queued after it answered.** `OtlpTap` wrote its 200 to the exporter and then queued the payload for
+  mapping, so a tap disposed between the two lost an export it had acknowledged and counted it as dropped. It now
+  queues first and answers second, and disposing drains the queue, so an answered export is mapped. Queuing never
+  waits, so the exporter still never waits for Kronikol. CI found it on 4.18.0 (run 38274559743):
+  `OtlpExporterTests.Full_circle_an_exported_capture_round_trips_through_a_live_OtlpTap` read no captures back.
+- **A payload dropped at shutdown says so.** One the tap could not queue because it was being disposed is logged as
+  "(the tap is shutting down)", not "(queue full)", which pointed at `QueueCapacity`.
+- **Tests:** `OtlpExporterTests.An_export_the_tap_answered_is_mapped_though_the_tap_is_disposed_right_after` disposes
+  the tap between the answer and the end of the handler, through an internal seam, and fails on 4.18.0's order;
+  `A_payload_dropped_while_the_tap_shuts_down_is_logged_as_dropped_at_shutdown` fails with the old text.
+- **Checks:** After the version bump, the OTLP suite passes 117 of 117 in Debug and in Release, and the three facts on
+  the tap's shutdown passed five runs of five in Release; the core suite passes 7,443 with 2 skipped, the Kafka suite
+  314 with its 3 broker facts skipped, the build-interception suite 75 of 75 on .NET 8 and .NET 10 in Debug and in
+  Release, the full Playwright suite 1,036 with 28 skipped, and release.slnf builds in Release for every target.
+
 ## [4.18.0] - 2026-10-12
 
 **Minor - Kafka message processing traced with no change to the consuming code (#135;

@@ -1,0 +1,13 @@
+Test run for C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Otlp\bin\Debug\net10.0\Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.64]     Kronikol.Tests.Otlp.OtlpExporterTests.An_export_the_tap_answered_is_mapped_though_the_tap_is_disposed_right_after [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpExporterTests.An_export_the_tap_answered_is_mapped_though_the_tap_is_disposed_right_after [71 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 2
+Actual:   0
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpExporterTests.An_export_the_tap_answered_is_mapped_though_the_tap_is_disposed_right_after() in C:\Code\Kronikol-kafka135-r2\tests\Kronikol.Tests.Otlp\OtlpExporterTests.cs:line 267
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 87 ms - Kronikol.Tests.Otlp.dll (net10.0)

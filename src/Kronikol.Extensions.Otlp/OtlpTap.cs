@@ -329,7 +329,19 @@ public sealed class OtlpTap : IAsyncDisposable
         if (isTraces)
             Interlocked.Increment(ref _requests);
 
-        // Answer first, map second — the exporter must never wait for Kronikol.
+        // Queue, then answer, then map: an answered export is in the queue, which disposing drains, so a tap disposed
+        // the moment the exporter has its answer still maps it. Queuing never waits (TryWrite), so the exporter never
+        // waits for Kronikol; mapping happens on the worker.
+        if (isTraces && BeforeQueued is { } beforeQueued)
+            await beforeQueued().ConfigureAwait(false);
+
+        if (isTraces && request.Body.Length > 0 && !_queue.Writer.TryWrite(new Payload(request.Body, request.ContentType, request.ContentEncoding)))
+        {
+            Interlocked.Increment(ref _dropped);
+            _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap dropped an export payload "
+                                 + (Volatile.Read(ref _disposed) == 1 ? "(the tap is shutting down)" : "(queue full)"));
+        }
+
         if (_options.ForwardBaseUri is not null)
         {
             await ForwardAsync(request, stream, ct).ConfigureAwait(false);
@@ -348,14 +360,17 @@ public sealed class OtlpTap : IAsyncDisposable
             await WriteResponseAsync(stream, 404, "Not Found", "application/json", Utf8("{\"error\":\"not found\"}"), request.KeepAlive, ct).ConfigureAwait(false);
         }
 
-        if (isTraces && request.Body.Length > 0 && !_queue.Writer.TryWrite(new Payload(request.Body, request.ContentType, request.ContentEncoding)))
-        {
-            Interlocked.Increment(ref _dropped);
-            _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap dropped an export payload (queue full)");
-        }
+        if (AfterResponseWritten is { } afterResponse)
+            await afterResponse().ConfigureAwait(false);
 
         return request.KeepAlive;
     }
+
+    // Awaited by an export's handler just before it queues the payload, and once its response is written
+    // (Kronikol.Tests.Otlp): a fact disposes the tap at either point.
+    internal Func<Task>? BeforeQueued { get; set; }
+
+    internal Func<Task>? AfterResponseWritten { get; set; }
 
     private bool IsAuthenticated(HttpRequestMessageData request)
     {

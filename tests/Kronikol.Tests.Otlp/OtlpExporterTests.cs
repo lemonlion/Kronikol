@@ -244,4 +244,54 @@ public class OtlpExporterTests
         // D4 both ways: the re-captured pair carries the exported W3C ids.
         Assert.All(redisBack, l => Assert.Equal(TestId, l.ActivityTraceId));
     }
+
+    // An export the tap answered 200 is mapped though the tap is disposed the moment the exporter has its answer: the
+    // payload is queued before the response is written, and disposing drains the queue. The tap answered first and
+    // queued after, so a dispose in between lost the payload (CI on 4.18.0, the full-circle fact above).
+    [Fact]
+    public async Task An_export_the_tap_answered_is_mapped_though_the_tap_is_disposed_right_after()
+    {
+        var sink = new ListSink();
+        var tap = new OtlpTap(new OtlpTapOptions { ListenPort = 0, Sink = sink });
+        await tap.StartAsync();
+        var disposed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        tap.AfterResponseWritten = () => disposed.Task;
+
+        using var exporter = new OtlpExporter(new OtlpExportOptions { Endpoint = tap.TracesEndpoint });
+        var (request, response) = HttpPair();
+        var result = await exporter.ExportAsync([request, response]);
+        await tap.DisposeAsync();
+        disposed.SetResult();
+
+        Assert.True(result.Success);
+        Assert.Equal(2, sink.Snapshot().Length);
+    }
+
+    // A payload the tap could not queue because it was being disposed is counted as dropped and logged as such, not
+    // as a full queue, which would send the reader to QueueCapacity.
+    [Fact]
+    public async Task A_payload_dropped_while_the_tap_shuts_down_is_logged_as_dropped_at_shutdown()
+    {
+        var log = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        var tap = new OtlpTap(new OtlpTapOptions { ListenPort = 0, Sink = new ListSink(), Log = log.Enqueue });
+        await tap.StartAsync();
+        var reached = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var disposed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        tap.BeforeQueued = () =>
+        {
+            reached.SetResult();
+            return disposed.Task;
+        };
+
+        using var exporter = new OtlpExporter(new OtlpExportOptions { Endpoint = tap.TracesEndpoint });
+        var (request, response) = HttpPair();
+        var export = exporter.ExportAsync([request, response]);
+        await reached.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        await tap.DisposeAsync();
+        disposed.SetResult();
+        await export;
+
+        Assert.Contains(log, line => line.Contains("dropped an export payload (the tap is shutting down)"));
+        Assert.DoesNotContain(log, line => line.Contains("(queue full)"));
+    }
 }
