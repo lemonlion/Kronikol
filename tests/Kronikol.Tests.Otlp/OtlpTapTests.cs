@@ -99,14 +99,7 @@ internal sealed class StubCollector : IAsyncDisposable
         }
     }
 
-    public static int FreePort()
-    {
-        var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-        return port;
-    }
+    public static int FreePort() => LoopbackPort.Free();
 
     public ValueTask DisposeAsync()
     {

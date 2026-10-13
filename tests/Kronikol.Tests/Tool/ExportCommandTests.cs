@@ -347,14 +347,7 @@ public class ExportCommandTests : IDisposable
         Assert.Single(OtlpTraceReader.ReadJson(File.ReadAllBytes(outFile)));
     }
 
-    private static int FreePort()
-    {
-        var listener = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-        return port;
-    }
+    private static int FreePort() => LoopbackPort.Free();
 }
 
 /// <summary>

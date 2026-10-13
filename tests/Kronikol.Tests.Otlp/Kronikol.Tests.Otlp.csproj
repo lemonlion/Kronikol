@@ -34,4 +34,9 @@
     <Content Include="..\Kronikol.Tests\TestData\Ingest\otel-jest-v2.spans.jsonl" Link="TestData\otel-jest-v2.spans.jsonl" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Ports for the listeners the facts start, never one twice in this process (LoopbackPort.cs says why). -->
+    <Compile Include="..\Kronikol.Tests\LoopbackPort.cs" Link="LoopbackPort.cs" />
+  </ItemGroup>
+
 </Project>

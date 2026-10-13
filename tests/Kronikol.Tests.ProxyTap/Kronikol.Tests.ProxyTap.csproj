@@ -32,4 +32,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Ports for the listeners the facts start, never one twice in this process (LoopbackPort.cs says why). -->
+    <Compile Include="..\Kronikol.Tests\LoopbackPort.cs" Link="LoopbackPort.cs" />
+  </ItemGroup>
+
 </Project>
