@@ -724,3 +724,13 @@ Playwright" / "Playwright done") and `release.slnf` in Release for every target,
   (a throwing sink on a failed forward would have become the 502's message) and the restore after a start that throws
   at both ends. Proofs: 26 of 26 facts fail on 4.19.3 with the new surface stubbed; 19 of 19 mutations killed
   (`r1r2/`).
+- 2026-10-13: R1 and R2 published as 4.19.5 (`ba85a495`). Release run 38437247650, CodeQL 38437242092 and CI Summary
+  Preview 38437242110 passed. CI 38437242072 failed once, in Template Scaffolds Build & Pack, because the templates pin
+  4.19.3 and nuget.org had indexed 4.19.3 for only 39 of the 62 ids when CI restored them. The release was checked
+  against the core id alone, and a pin has to be checked against all 62. The job passed when re-run after the other
+  23 were listed. nuget.org listed all 62 ids at 4.19.5 at 19:06Z, about 100 minutes after the push, while it worked
+  through four releases pushed within the hour. The wiki has the section "When the upstream fails" (`db93b0c`),
+  Kronikol4J's ledger its line (`518b8a7`, nothing to port), and #171 is closed with a comment naming the release.
+  On main after 4.19.5, Linux CI failed one of the new facts once: `StubUpstream.FreePort()` hands out a port it has
+  released, and the three new parallel classes made a second test getting the same number likelier. kronikol-ef's
+  test-only `ced2e03c` gives every listener a port no other test in the process got. The plan is complete.
