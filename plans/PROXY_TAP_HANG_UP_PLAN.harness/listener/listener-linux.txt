@@ -1,0 +1,20 @@
+.NET 10.0.12, Ubuntu 24.04.5 LTS, HttpListener managed
+1. body read, caller reset mid-body (try 1): HttpListenerException 400 "Unknown error 400"
+1. body read, caller reset mid-body (try 2): HttpListenerException 400 "Unknown error 400"
+1. body read, caller reset mid-body (try 3): HttpListenerException 400 "Unknown error 400"
+1. body read, caller reset mid-body (try 4): HttpListenerException 400 "Unknown error 400"
+1. body read, caller reset mid-body (try 5): HttpListenerException 400 "Unknown error 400"
+1. body read, caller FIN mid-body (try 1): HttpListenerException 400 "Unknown error 400"; after Abort() the caller receives: "HTTP/1.1 200 OK" (120 bytes)
+1. body read, caller FIN mid-body (try 2): HttpListenerException 400 "Unknown error 400"; after Abort() the caller receives: "HTTP/1.1 200 OK" (120 bytes)
+1. body read, caller FIN mid-body (try 3): HttpListenerException 400 "Unknown error 400"; after Abort() the caller receives: "HTTP/1.1 200 OK" (120 bytes)
+1. body read, caller FIN mid-body (try 4): HttpListenerException 400 "Unknown error 400"; after Abort() the caller receives: "HTTP/1.1 200 OK" (120 bytes)
+1. body read, caller FIN mid-body (try 5): HttpListenerException 400 "Unknown error 400"; after Abort() the caller receives: "HTTP/1.1 200 OK" (120 bytes)
+2. Abort(), nothing set (no exception): the caller receives "HTTP/1.1 200 OK" (120 bytes)
+2. StatusCode=400, Abort() (no exception): the caller receives "HTTP/1.1 400 Bad Request" (148 bytes)
+2. StatusCode=400, KeepAlive=false, Close() (no exception): the caller receives "HTTP/1.1 400 Bad Request" (148 bytes)
+3. answer write, caller reset mid-answer: HttpListenerException -2146232800 "Unable to write data to the transport connection: Broken pipe."
+3. then Close(): no exception; then Abort(): no exception
+4. Abort() after Close(): no exception
+4. Abort() twice: no exception
+4. keep-alive: Abort() of the closed first response: no exception; second answered: no exception, two 200s on the wire: True
+5. Abort() after HttpListener.Close(): no exception

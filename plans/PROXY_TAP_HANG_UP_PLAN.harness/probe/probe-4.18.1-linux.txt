@@ -1,0 +1,40 @@
+ProxyTap 4.18.1+244e1dde5fa59a10600d732c1ae41a45f7575e6d on .NET 10.0.12, Ubuntu 24.04.5 LTS, 10 caller(s) per path
+
+
+A  reset while the tap writes the answer
+    in flight 0, ForwardFailures 0, handled 10, captured 10
+    listener tables: _uriPrefixes=1 _listenerContexts=10 _contextQueue=0 _asyncWaitQueue=1 _connections=10
+    orphaned TCP sockets (fd held, no TCP table entry): 10
+    server-side TCP on the tap's port: none
+    'proxy-tap error' lines: 0
+    after DisposeAsync: listener tables _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0, orphaned sockets after dispose: 0
+B  reset mid-body
+    in flight 0, ForwardFailures 0, handled 0, captured 0
+    listener tables: _uriPrefixes=1 _listenerContexts=10 _contextQueue=0 _asyncWaitQueue=1 _connections=10
+    orphaned TCP sockets (fd held, no TCP table entry): 10
+    server-side TCP on the tap's port: none
+    'proxy-tap error' lines: 0
+    after DisposeAsync: listener tables _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0, orphaned sockets after dispose: 0
+C  FIN mid-body, caller still reading
+    in flight 0, ForwardFailures 0, handled 0, captured 0
+    listener tables: _uriPrefixes=1 _listenerContexts=10 _contextQueue=0 _asyncWaitQueue=1 _connections=10
+    orphaned TCP sockets (fd held, no TCP table entry): 0
+    server-side TCP on the tap's port: CloseWait=10
+    'proxy-tap error' lines: 0
+    caller saw: 10 nothing within 5 s (connection held)
+    after DisposeAsync: listener tables _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0, orphaned sockets after dispose: 0
+D  upstream fails after the caller reset
+    in flight 0, ForwardFailures 10, handled 0, captured 0
+    listener tables: _uriPrefixes=1 _listenerContexts=10 _contextQueue=0 _asyncWaitQueue=1 _connections=10
+    orphaned TCP sockets (fd held, no TCP table entry): 10
+    server-side TCP on the tap's port: none
+    'proxy-tap error' lines: 10 (10x "An error occurred while sending the request.")
+    after DisposeAsync: listener tables _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0, orphaned sockets after dispose: 0
+E  control: keep-alive
+    in flight 0, ForwardFailures 0, handled 20, captured 20
+    listener tables: _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=1 _connections=0
+    orphaned TCP sockets (fd held, no TCP table entry): 0
+    server-side TCP on the tap's port: none
+    'proxy-tap error' lines: 0
+    20/20 answered 200, server-side connections established: 1
+    after DisposeAsync: listener tables _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0, orphaned sockets after dispose: 0

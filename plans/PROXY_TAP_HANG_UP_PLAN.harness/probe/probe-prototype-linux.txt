@@ -1,0 +1,54 @@
+/repo/src/Kronikol/PlantUml/NodeJsPlantUmlRenderer.cs(56,118): warning CS8604: Possible null reference argument for parameter 'expectedIntegrity' in 'EngineCache.EngineCache(string directory, Func<string, byte[]> download, string cdnBase, IReadOnlyDictionary<string, string> expectedIntegrity)'.
+/repo/src/Kronikol/Reports/Merge/MergeableReportReader.cs(99,38): warning CS8604: Possible null reference argument for parameter 'testName' in 'void MergeableReportReader.ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into, Dictionary<string, List<string?>>? stepPaths, ParseNotes notes, Dictionary<Guid, WarmUpMark>? warmUpCalls = null)'.
+/repo/src/Kronikol/PlantUml/PlantUmlCreator.cs(1513,48): warning CS8604: Possible null reference argument for parameter 'content' in 'string PlantUmlCreator.FormFieldLines(string content)'.
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,55): warning CS1573: Parameter 'Verdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do)
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,95): warning CS1573: Parameter 'Subjects' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do)
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,112): warning CS1573: Parameter 'LedgerPath' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do)
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,146): warning CS1573: Parameter 'LedgerSource' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do)
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,10): warning CS1573: Parameter 'BehaviourVerdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do)
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,67): warning CS1573: Parameter 'Analysis' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do)
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,108): warning CS1573: Parameter 'Shapes' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do)
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,48): warning CS1573: Parameter 'Subject' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do)
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,73): warning CS1573: Parameter 'Entry' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do)
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,117): warning CS1573: Parameter 'RunId' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do)
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,128): warning CS1573: Parameter 'RunsAgo' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do)
+ProxyTap 4.18.1 on .NET 10.0.12, Ubuntu 24.04.5 LTS, 10 caller(s) per path
+
+
+A  reset while the tap writes the answer
+    in flight 0, ForwardFailures 0, handled 10, captured 10
+    listener tables: _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=1 _connections=0
+    orphaned TCP sockets (fd held, no TCP table entry): 0
+    server-side TCP on the tap's port: none
+    'proxy-tap error' lines: 0
+    after DisposeAsync: listener tables _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0, orphaned sockets after dispose: 0
+B  reset mid-body
+    in flight 0, ForwardFailures 0, handled 0, captured 0
+    listener tables: _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=1 _connections=0
+    orphaned TCP sockets (fd held, no TCP table entry): 0
+    server-side TCP on the tap's port: none
+    'proxy-tap error' lines: 0
+    after DisposeAsync: listener tables _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0, orphaned sockets after dispose: 0
+C  FIN mid-body, caller still reading
+    in flight 0, ForwardFailures 0, handled 0, captured 0
+    listener tables: _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=1 _connections=0
+    orphaned TCP sockets (fd held, no TCP table entry): 0
+    server-side TCP on the tap's port: none
+    'proxy-tap error' lines: 0
+    caller saw: 10 an answer (HTTP/1.1 400 Bad Request)
+    after DisposeAsync: listener tables _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0, orphaned sockets after dispose: 0
+D  upstream fails after the caller reset
+    in flight 0, ForwardFailures 10, handled 0, captured 0
+    listener tables: _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=1 _connections=0
+    orphaned TCP sockets (fd held, no TCP table entry): 0
+    server-side TCP on the tap's port: none
+    'proxy-tap error' lines: 10 (10x "An error occurred while sending the request.")
+    after DisposeAsync: listener tables _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0, orphaned sockets after dispose: 0
+E  control: keep-alive
+    in flight 0, ForwardFailures 0, handled 20, captured 20
+    listener tables: _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=1 _connections=0
+    orphaned TCP sockets (fd held, no TCP table entry): 0
+    server-side TCP on the tap's port: none
+    'proxy-tap error' lines: 0
+    20/20 answered 200, server-side connections established: 1
+    after DisposeAsync: listener tables _uriPrefixes=1 _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0, orphaned sockets after dispose: 0

@@ -1,0 +1,5 @@
+Kronikol.Extensions.Otlp 4.18.1+244e1dde5fa59a10600d732c1ae41a45f7575e6d on .NET 10.0.11, Microsoft Windows 10.0.26200
+O1 forward on, exporter reset before the answer: collector received 1 export(s); RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+    log: [otlp] otlp-tap listening on http://127.0.0.1:53317/v1/traces → http://127.0.0.1:53316/
+O2 chunked, FIN before the last chunk: the exporter got "HTTP/1.1 200 OK"; RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+O2b chunked, a size line that is not hex: the exporter got "HTTP/1.1 200 OK"; RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0

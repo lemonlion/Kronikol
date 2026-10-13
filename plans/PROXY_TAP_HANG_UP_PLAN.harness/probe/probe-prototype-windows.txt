@@ -1,0 +1,40 @@
+ProxyTap 4.18.1+34145c4458ee1f7e82616bbae8ad1d80594977b7 on .NET 10.0.11, Microsoft Windows 10.0.26200, 10 caller(s) per path
+
+
+A  reset while the tap writes the answer
+    in flight 0, ForwardFailures 0, handled 10, captured 10
+    listener tables: _uriPrefixes=1 _disconnectResults=0
+    server-side TCP on the tap's port: none
+    http.sys active requests in the tap's queue: 0
+    'proxy-tap error' lines: 0
+    after DisposeAsync: listener tables _uriPrefixes=1 _disconnectResults=0
+B  reset mid-body
+    in flight 0, ForwardFailures 0, handled 0, captured 0
+    listener tables: _uriPrefixes=1 _disconnectResults=0
+    server-side TCP on the tap's port: none
+    http.sys active requests in the tap's queue: 0
+    'proxy-tap error' lines: 0
+    after DisposeAsync: listener tables _uriPrefixes=1 _disconnectResults=0
+C  FIN mid-body, caller still reading
+    in flight 0, ForwardFailures 0, handled 0, captured 0
+    listener tables: _uriPrefixes=1 _disconnectResults=0
+    server-side TCP on the tap's port: none
+    http.sys active requests in the tap's queue: 0
+    'proxy-tap error' lines: 0
+    caller saw: 10 an answer (HTTP/1.1 400 Bad Request)
+    after DisposeAsync: listener tables _uriPrefixes=1 _disconnectResults=0
+D  upstream fails after the caller reset
+    in flight 0, ForwardFailures 10, handled 0, captured 0
+    listener tables: _uriPrefixes=1 _disconnectResults=0
+    server-side TCP on the tap's port: none
+    http.sys active requests in the tap's queue: 0
+    'proxy-tap error' lines: 10 (10x "An error occurred while sending the request.")
+    after DisposeAsync: listener tables _uriPrefixes=1 _disconnectResults=0
+E  control: keep-alive
+    in flight 0, ForwardFailures 0, handled 20, captured 20
+    listener tables: _uriPrefixes=1 _disconnectResults=0
+    server-side TCP on the tap's port: none
+    http.sys active requests in the tap's queue: 0
+    'proxy-tap error' lines: 0
+    20/20 answered 200, server-side connections established: 1
+    after DisposeAsync: listener tables _uriPrefixes=1 _disconnectResults=0

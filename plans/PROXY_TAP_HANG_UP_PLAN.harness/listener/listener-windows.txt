@@ -1,0 +1,21 @@
+.NET 10.0.11, Microsoft Windows 10.0.26200, HttpListener http.sys
+1. body read, caller reset mid-body (try 1): HttpListenerException 995 "The I/O operation has been aborted because of either a thread exit or an application request."
+1. body read, caller reset mid-body (try 2): HttpListenerException 995 "The I/O operation has been aborted because of either a thread exit or an application request."
+1. body read, caller reset mid-body (try 3): HttpListenerException 995 "The I/O operation has been aborted because of either a thread exit or an application request."
+1. body read, caller reset mid-body (try 4): HttpListenerException 995 "The I/O operation has been aborted because of either a thread exit or an application request."
+1. body read, caller reset mid-body (try 5): HttpListenerException 995 "The I/O operation has been aborted because of either a thread exit or an application request."
+1. body read, caller FIN mid-body (try 1): HttpListenerException 995 "The I/O operation has been aborted because of either a thread exit or an application request."; after Abort() the caller receives: "HTTP/1.1 400 Bad Request" (490 bytes)
+1. body read, caller FIN mid-body (try 2): HttpListenerException 995 "The I/O operation has been aborted because of either a thread exit or an application request."; after Abort() the caller receives: "HTTP/1.1 400 Bad Request" (490 bytes)
+1. body read, caller FIN mid-body (try 3): HttpListenerException 995 "The I/O operation has been aborted because of either a thread exit or an application request."; after Abort() the caller receives: "HTTP/1.1 400 Bad Request" (490 bytes)
+1. body read, caller FIN mid-body (try 4): HttpListenerException 995 "The I/O operation has been aborted because of either a thread exit or an application request."; after Abort() the caller receives: "HTTP/1.1 400 Bad Request" (490 bytes)
+1. body read, caller FIN mid-body (try 5): HttpListenerException 995 "The I/O operation has been aborted because of either a thread exit or an application request."; after Abort() the caller receives: "HTTP/1.1 400 Bad Request" (490 bytes)
+2. Abort(), nothing set (no exception): the caller receives "HTTP/1.1 400 Bad Request" (490 bytes)
+2. StatusCode=400, Abort() (no exception): the caller receives "HTTP/1.1 400 Bad Request" (490 bytes)
+2. StatusCode=400, KeepAlive=false, Close() (THREW HttpListenerException: An operation was attempted on a nonexistent network connection.): the caller receives "HTTP/1.1 400 Bad Request" (490 bytes)
+3. answer write, caller reset mid-answer: HttpListenerException 995 "The I/O operation has been aborted because of either a thread exit or an application request."
+3. then Close(): no exception; then Abort(): no exception
+4. Abort() after Close(): no exception
+4. Abort() twice: no exception
+4. keep-alive: Abort() of the closed first response: no exception; second answered: no exception, two 200s on the wire: True
+5. Abort() after HttpListener.Close(): THREW ObjectDisposedException: Cannot access a disposed object.
+Object name: 'System.Net.HttpRequestQueueV2Handle'.
