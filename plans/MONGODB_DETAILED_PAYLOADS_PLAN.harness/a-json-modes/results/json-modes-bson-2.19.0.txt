@@ -1,0 +1,534 @@
+MongoDB.Bson assembly 2.19.0.0 (informational 2.19.0+3db6a367ebbbabb164e24c0e74eb061b49c9e855); runtime 10.0.11
+JsonOutputMode members: Strict=0, Shell=1, JavaScript=1, TenGen=1, CanonicalExtendedJson=2, RelaxedExtendedJson=3
+RelaxedExtendedJson exists: True; CanonicalExtendedJson exists: True
+new JsonWriterSettings().OutputMode = Shell
+  new JsonWriterSettings().Encoding = System.Text.UTF8Encoding+UTF8EncodingSealed [Obsolete: Set the Encoding when you create a StreamWriter instead (this property is ignored).]
+  new JsonWriterSettings().GuidRepresentation = CSharpLegacy [Obsolete: Configure serializers instead.]
+  new JsonWriterSettings().Indent = False
+  new JsonWriterSettings().IndentChars = "  "
+  new JsonWriterSettings().IsFrozen = False
+  new JsonWriterSettings().MaxSerializationDepth = 100
+  new JsonWriterSettings().NewLineChars = "\r\n"
+  new JsonWriterSettings().OutputMode = Shell
+  new JsonWriterSettings().ShellVersion = null
+JsonWriterSettings.Defaults: present, public getter=True, public setter=True (not obsolete)
+  Defaults.OutputMode = Shell, Defaults.Indent = False, Defaults.IsFrozen = False
+
+=== Per value (compact, no Indent). 'json' = JsonDocument.Parse accepted the text.
+-- decimal128_1000_50 (Decimal128); BsonValue.ToString() of the value itself: "1000.50"
+   ToString()       [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberDecimal("1000.50") }
+   default mode     [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberDecimal("1000.50") }
+   Strict           [json] { "v" : { "$numberDecimal" : "1000.50" } }
+   Shell            [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberDecimal("1000.50") }
+   JavaScript       [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberDecimal("1000.50") }
+   TenGen           [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberDecimal("1000.50") }
+   CanonicalExtendedJson [json] { "v" : { "$numberDecimal" : "1000.50" } }
+   RelaxedExtendedJson [json] { "v" : { "$numberDecimal" : "1000.50" } }
+-- decimal128_from_decimal_1000_50m (Decimal128); BsonValue.ToString() of the value itself: "1000.50"
+   ToString()       [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberDecimal("1000.50") }
+   default mode     [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberDecimal("1000.50") }
+   Strict           [json] { "v" : { "$numberDecimal" : "1000.50" } }
+   Shell            [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberDecimal("1000.50") }
+   JavaScript       [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberDecimal("1000.50") }
+   TenGen           [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberDecimal("1000.50") }
+   CanonicalExtendedJson [json] { "v" : { "$numberDecimal" : "1000.50" } }
+   RelaxedExtendedJson [json] { "v" : { "$numberDecimal" : "1000.50" } }
+-- objectId (ObjectId); BsonValue.ToString() of the value itself: "65a1b2c3d4e5f60718293a4b"
+   ToString()       [NOT JSON: 'O' is an invalid start of a value] { "v" : ObjectId("65a1b2c3d4e5f60718293a4b") }
+   default mode     [NOT JSON: 'O' is an invalid start of a value] { "v" : ObjectId("65a1b2c3d4e5f60718293a4b") }
+   Strict           [json] { "v" : { "$oid" : "65a1b2c3d4e5f60718293a4b" } }
+   Shell            [NOT JSON: 'O' is an invalid start of a value] { "v" : ObjectId("65a1b2c3d4e5f60718293a4b") }
+   JavaScript       [NOT JSON: 'O' is an invalid start of a value] { "v" : ObjectId("65a1b2c3d4e5f60718293a4b") }
+   TenGen           [NOT JSON: 'O' is an invalid start of a value] { "v" : ObjectId("65a1b2c3d4e5f60718293a4b") }
+   CanonicalExtendedJson [json] { "v" : { "$oid" : "65a1b2c3d4e5f60718293a4b" } }
+   RelaxedExtendedJson [json] { "v" : { "$oid" : "65a1b2c3d4e5f60718293a4b" } }
+-- date_2024_01_01 (DateTime); BsonValue.ToString() of the value itself: "2024-01-01T00:00:00Z"
+   ToString()       [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("2024-01-01T00:00:00Z") }
+   default mode     [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("2024-01-01T00:00:00Z") }
+   Strict           [json] { "v" : { "$date" : 1704067200000 } }
+   Shell            [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("2024-01-01T00:00:00Z") }
+   JavaScript       [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("2024-01-01T00:00:00Z") }
+   TenGen           [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("2024-01-01T00:00:00Z") }
+   CanonicalExtendedJson [json] { "v" : { "$date" : { "$numberLong" : "1704067200000" } } }
+   RelaxedExtendedJson [json] { "v" : { "$date" : "2024-01-01T00:00:00Z" } }
+-- date_2024_03_15_millis (DateTime); BsonValue.ToString() of the value itself: "2024-03-15T10:30:45.123Z"
+   ToString()       [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("2024-03-15T10:30:45.123Z") }
+   default mode     [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("2024-03-15T10:30:45.123Z") }
+   Strict           [json] { "v" : { "$date" : 1710498645123 } }
+   Shell            [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("2024-03-15T10:30:45.123Z") }
+   JavaScript       [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("2024-03-15T10:30:45.123Z") }
+   TenGen           [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("2024-03-15T10:30:45.123Z") }
+   CanonicalExtendedJson [json] { "v" : { "$date" : { "$numberLong" : "1710498645123" } } }
+   RelaxedExtendedJson [json] { "v" : { "$date" : "2024-03-15T10:30:45.123Z" } }
+-- date_1969_07_20 (DateTime); BsonValue.ToString() of the value itself: "1969-07-20T20:17:40Z"
+   ToString()       [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("1969-07-20T20:17:40Z") }
+   default mode     [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("1969-07-20T20:17:40Z") }
+   Strict           [json] { "v" : { "$date" : -14182940000 } }
+   Shell            [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("1969-07-20T20:17:40Z") }
+   JavaScript       [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("1969-07-20T20:17:40Z") }
+   TenGen           [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("1969-07-20T20:17:40Z") }
+   CanonicalExtendedJson [json] { "v" : { "$date" : { "$numberLong" : "-14182940000" } } }
+   RelaxedExtendedJson [json] { "v" : { "$date" : { "$numberLong" : "-14182940000" } } }
+-- date_1970_01_01 (DateTime); BsonValue.ToString() of the value itself: "1970-01-01T00:00:00Z"
+   ToString()       [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("1970-01-01T00:00:00Z") }
+   default mode     [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("1970-01-01T00:00:00Z") }
+   Strict           [json] { "v" : { "$date" : 0 } }
+   Shell            [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("1970-01-01T00:00:00Z") }
+   JavaScript       [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("1970-01-01T00:00:00Z") }
+   TenGen           [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("1970-01-01T00:00:00Z") }
+   CanonicalExtendedJson [json] { "v" : { "$date" : { "$numberLong" : "0" } } }
+   RelaxedExtendedJson [json] { "v" : { "$date" : "1970-01-01T00:00:00Z" } }
+-- date_9999_12_31_end (DateTime); BsonValue.ToString() of the value itself: "9999-12-31T23:59:59.9999999Z"
+   ToString()       [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("9999-12-31T23:59:59.999Z") }
+   default mode     [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("9999-12-31T23:59:59.999Z") }
+   Strict           [json] { "v" : { "$date" : 253402300799999 } }
+   Shell            [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("9999-12-31T23:59:59.999Z") }
+   JavaScript       [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("9999-12-31T23:59:59.999Z") }
+   TenGen           [NOT JSON: 'I' is an invalid start of a value] { "v" : ISODate("9999-12-31T23:59:59.999Z") }
+   CanonicalExtendedJson [json] { "v" : { "$date" : { "$numberLong" : "253402300799999" } } }
+   RelaxedExtendedJson [json] { "v" : { "$date" : "9999-12-31T23:59:59.999Z" } }
+-- date_10000_01_01 (DateTime); BsonValue.ToString() of the value itself: "253402300800000"
+   ToString()       [NOT JSON: 'new Date(253402300800000) }' is an invalid JSON literal] { "v" : new Date(253402300800000) }
+   default mode     [NOT JSON: 'new Date(253402300800000) }' is an invalid JSON literal] { "v" : new Date(253402300800000) }
+   Strict           [json] { "v" : { "$date" : 253402300800000 } }
+   Shell            [NOT JSON: 'new Date(253402300800000) }' is an invalid JSON literal] { "v" : new Date(253402300800000) }
+   JavaScript       [NOT JSON: 'new Date(253402300800000) }' is an invalid JSON literal] { "v" : new Date(253402300800000) }
+   TenGen           [NOT JSON: 'new Date(253402300800000) }' is an invalid JSON literal] { "v" : new Date(253402300800000) }
+   CanonicalExtendedJson [json] { "v" : { "$date" : { "$numberLong" : "253402300800000" } } }
+   RelaxedExtendedJson [json] { "v" : { "$date" : { "$numberLong" : "253402300800000" } } }
+-- date_long_min (DateTime); BsonValue.ToString() of the value itself: "-9223372036854775808"
+   ToString()       [NOT JSON: 'new Date(-9223372036854775808) }' is an invalid JSON literal] { "v" : new Date(-9223372036854775808) }
+   default mode     [NOT JSON: 'new Date(-9223372036854775808) }' is an invalid JSON literal] { "v" : new Date(-9223372036854775808) }
+   Strict           [json] { "v" : { "$date" : -9223372036854775808 } }
+   Shell            [NOT JSON: 'new Date(-9223372036854775808) }' is an invalid JSON literal] { "v" : new Date(-9223372036854775808) }
+   JavaScript       [NOT JSON: 'new Date(-9223372036854775808) }' is an invalid JSON literal] { "v" : new Date(-9223372036854775808) }
+   TenGen           [NOT JSON: 'new Date(-9223372036854775808) }' is an invalid JSON literal] { "v" : new Date(-9223372036854775808) }
+   CanonicalExtendedJson [json] { "v" : { "$date" : { "$numberLong" : "-9223372036854775808" } } }
+   RelaxedExtendedJson [json] { "v" : { "$date" : { "$numberLong" : "-9223372036854775808" } } }
+-- guid_subtype4_standard (Binary, subtype UuidStandard); BsonValue.ToString() of the value itself: "UuidStandard:0x0f8fad5bd9cb469fa16570867728950e"
+   ToString()       [NOT JSON: 'C' is an invalid start of a value] { "v" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   default mode     [NOT JSON: 'C' is an invalid start of a value] { "v" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   Strict           [json] { "v" : { "$binary" : "W62PD8vZn0ahZXCGdyiVDg==", "$type" : "03" } }
+   Shell            [NOT JSON: 'C' is an invalid start of a value] { "v" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   JavaScript       [NOT JSON: 'C' is an invalid start of a value] { "v" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   TenGen           [NOT JSON: 'C' is an invalid start of a value] { "v" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   CanonicalExtendedJson [json] { "v" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } } }
+   RelaxedExtendedJson [json] { "v" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } } }
+-- guid_subtype3_csharplegacy (Binary, subtype UuidLegacy); BsonValue.ToString() of the value itself: "UuidLegacy:0x5bad8f0fcbd99f46a16570867728950e"
+   ToString()       [NOT JSON: 'C' is an invalid start of a value] { "v" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   default mode     [NOT JSON: 'C' is an invalid start of a value] { "v" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   Strict           [json] { "v" : { "$binary" : "W62PD8vZn0ahZXCGdyiVDg==", "$type" : "03" } }
+   Shell            [NOT JSON: 'C' is an invalid start of a value] { "v" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   JavaScript       [NOT JSON: 'C' is an invalid start of a value] { "v" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   TenGen           [NOT JSON: 'C' is an invalid start of a value] { "v" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   CanonicalExtendedJson [json] { "v" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } } }
+   RelaxedExtendedJson [json] { "v" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } } }
+-- binary_subtype0_small (Binary, subtype Binary); BsonValue.ToString() of the value itself: "Binary:0x010203fa"
+   ToString()       [NOT JSON: 'new BinData(0, "AQID+g==") }' is an invalid JSON literal] { "v" : new BinData(0, "AQID+g==") }
+   default mode     [NOT JSON: 'new BinData(0, "AQID+g==") }' is an invalid JSON literal] { "v" : new BinData(0, "AQID+g==") }
+   Strict           [json] { "v" : { "$binary" : "AQID+g==", "$type" : "00" } }
+   Shell            [NOT JSON: 'new BinData(0, "AQID+g==") }' is an invalid JSON literal] { "v" : new BinData(0, "AQID+g==") }
+   JavaScript       [NOT JSON: 'new BinData(0, "AQID+g==") }' is an invalid JSON literal] { "v" : new BinData(0, "AQID+g==") }
+   TenGen           [NOT JSON: 'new BinData(0, "AQID+g==") }' is an invalid JSON literal] { "v" : new BinData(0, "AQID+g==") }
+   CanonicalExtendedJson [json] { "v" : { "$binary" : { "base64" : "AQID+g==", "subType" : "00" } } }
+   RelaxedExtendedJson [json] { "v" : { "$binary" : { "base64" : "AQID+g==", "subType" : "00" } } }
+-- int64_5 (Int64); BsonValue.ToString() of the value itself: "5"
+   ToString()       [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberLong(5) }
+   default mode     [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberLong(5) }
+   Strict           [json] { "v" : 5 }
+   Shell            [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberLong(5) }
+   JavaScript       [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberLong(5) }
+   TenGen           [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberLong(5) }
+   CanonicalExtendedJson [json] { "v" : { "$numberLong" : "5" } }
+   RelaxedExtendedJson [json] { "v" : 5 }
+-- int32_5 (Int32); BsonValue.ToString() of the value itself: "5"
+   ToString()       [json] { "v" : 5 }
+   default mode     [json] { "v" : 5 }
+   Strict           [json] { "v" : 5 }
+   Shell            [json] { "v" : 5 }
+   JavaScript       [json] { "v" : 5 }
+   TenGen           [json] { "v" : 5 }
+   CanonicalExtendedJson [json] { "v" : { "$numberInt" : "5" } }
+   RelaxedExtendedJson [json] { "v" : 5 }
+-- int64_9007199254740993 (Int64); BsonValue.ToString() of the value itself: "9007199254740993"
+   ToString()       [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberLong("9007199254740993") }
+   default mode     [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberLong("9007199254740993") }
+   Strict           [json] { "v" : 9007199254740993 }
+   Shell            [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberLong("9007199254740993") }
+   JavaScript       [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberLong("9007199254740993") }
+   TenGen           [NOT JSON: 'N' is an invalid start of a value] { "v" : NumberLong("9007199254740993") }
+   CanonicalExtendedJson [json] { "v" : { "$numberLong" : "9007199254740993" } }
+   RelaxedExtendedJson [json] { "v" : 9007199254740993 }
+-- double_1_5 (Double); BsonValue.ToString() of the value itself: "1.5"
+   ToString()       [json] { "v" : 1.5 }
+   default mode     [json] { "v" : 1.5 }
+   Strict           [json] { "v" : 1.5 }
+   Shell            [json] { "v" : 1.5 }
+   JavaScript       [json] { "v" : 1.5 }
+   TenGen           [json] { "v" : 1.5 }
+   CanonicalExtendedJson [json] { "v" : { "$numberDouble" : "1.5" } }
+   RelaxedExtendedJson [json] { "v" : 1.5 }
+-- double_1_0 (Double); BsonValue.ToString() of the value itself: "1"
+   ToString()       [json] { "v" : 1.0 }
+   default mode     [json] { "v" : 1.0 }
+   Strict           [json] { "v" : 1.0 }
+   Shell            [json] { "v" : 1.0 }
+   JavaScript       [json] { "v" : 1.0 }
+   TenGen           [json] { "v" : 1.0 }
+   CanonicalExtendedJson [json] { "v" : { "$numberDouble" : "1.0" } }
+   RelaxedExtendedJson [json] { "v" : 1.0 }
+-- double_1e300 (Double); BsonValue.ToString() of the value itself: "1.0000000000000001E+300"
+   ToString()       [json] { "v" : 1.0000000000000001E+300 }
+   default mode     [json] { "v" : 1.0000000000000001E+300 }
+   Strict           [json] { "v" : 1.0000000000000001E+300 }
+   Shell            [json] { "v" : 1.0000000000000001E+300 }
+   JavaScript       [json] { "v" : 1.0000000000000001E+300 }
+   TenGen           [json] { "v" : 1.0000000000000001E+300 }
+   CanonicalExtendedJson [json] { "v" : { "$numberDouble" : "1.0000000000000001E+300" } }
+   RelaxedExtendedJson [json] { "v" : 1.0000000000000001E+300 }
+-- double_NaN (Double); BsonValue.ToString() of the value itself: "NaN"
+   ToString()       [NOT JSON: 'N' is an invalid start of a value] { "v" : NaN }
+   default mode     [NOT JSON: 'N' is an invalid start of a value] { "v" : NaN }
+   Strict           [NOT JSON: 'N' is an invalid start of a value] { "v" : NaN }
+   Shell            [NOT JSON: 'N' is an invalid start of a value] { "v" : NaN }
+   JavaScript       [NOT JSON: 'N' is an invalid start of a value] { "v" : NaN }
+   TenGen           [NOT JSON: 'N' is an invalid start of a value] { "v" : NaN }
+   CanonicalExtendedJson [json] { "v" : { "$numberDouble" : "NaN" } }
+   RelaxedExtendedJson [json] { "v" : { "$numberDouble" : "NaN" } }
+-- double_PosInfinity (Double); BsonValue.ToString() of the value itself: "Infinity"
+   ToString()       [NOT JSON: 'I' is an invalid start of a value] { "v" : Infinity }
+   default mode     [NOT JSON: 'I' is an invalid start of a value] { "v" : Infinity }
+   Strict           [NOT JSON: 'I' is an invalid start of a value] { "v" : Infinity }
+   Shell            [NOT JSON: 'I' is an invalid start of a value] { "v" : Infinity }
+   JavaScript       [NOT JSON: 'I' is an invalid start of a value] { "v" : Infinity }
+   TenGen           [NOT JSON: 'I' is an invalid start of a value] { "v" : Infinity }
+   CanonicalExtendedJson [json] { "v" : { "$numberDouble" : "Infinity" } }
+   RelaxedExtendedJson [json] { "v" : { "$numberDouble" : "Infinity" } }
+-- double_NegInfinity (Double); BsonValue.ToString() of the value itself: "-Infinity"
+   ToString()       [NOT JSON: 'I' is invalid within a number, immediately after a sign character ('+' or '-')] { "v" : -Infinity }
+   default mode     [NOT JSON: 'I' is invalid within a number, immediately after a sign character ('+' or '-')] { "v" : -Infinity }
+   Strict           [NOT JSON: 'I' is invalid within a number, immediately after a sign character ('+' or '-')] { "v" : -Infinity }
+   Shell            [NOT JSON: 'I' is invalid within a number, immediately after a sign character ('+' or '-')] { "v" : -Infinity }
+   JavaScript       [NOT JSON: 'I' is invalid within a number, immediately after a sign character ('+' or '-')] { "v" : -Infinity }
+   TenGen           [NOT JSON: 'I' is invalid within a number, immediately after a sign character ('+' or '-')] { "v" : -Infinity }
+   CanonicalExtendedJson [json] { "v" : { "$numberDouble" : "-Infinity" } }
+   RelaxedExtendedJson [json] { "v" : { "$numberDouble" : "-Infinity" } }
+-- double_neg_zero (Double); BsonValue.ToString() of the value itself: "-0"
+   ToString()       [json] { "v" : -0.0 }
+   default mode     [json] { "v" : -0.0 }
+   Strict           [json] { "v" : -0.0 }
+   Shell            [json] { "v" : -0.0 }
+   JavaScript       [json] { "v" : -0.0 }
+   TenGen           [json] { "v" : -0.0 }
+   CanonicalExtendedJson [json] { "v" : { "$numberDouble" : "-0.0" } }
+   RelaxedExtendedJson [json] { "v" : -0.0 }
+-- regex (RegularExpression); BsonValue.ToString() of the value itself: "/^loan-[0-9]+$/i"
+   ToString()       [NOT JSON: '/' is invalid after a value] { "v" : /^loan-[0-9]+$/i }
+   default mode     [NOT JSON: '/' is invalid after a value] { "v" : /^loan-[0-9]+$/i }
+   Strict           [json] { "v" : { "$regex" : "^loan-[0-9]+$", "$options" : "i" } }
+   Shell            [NOT JSON: '/' is invalid after a value] { "v" : /^loan-[0-9]+$/i }
+   JavaScript       [NOT JSON: '/' is invalid after a value] { "v" : /^loan-[0-9]+$/i }
+   TenGen           [NOT JSON: '/' is invalid after a value] { "v" : /^loan-[0-9]+$/i }
+   CanonicalExtendedJson [json] { "v" : { "$regularExpression" : { "pattern" : "^loan-[0-9]+$", "options" : "i" } } }
+   RelaxedExtendedJson [json] { "v" : { "$regularExpression" : { "pattern" : "^loan-[0-9]+$", "options" : "i" } } }
+-- timestamp (Timestamp); BsonValue.ToString() of the value itself: "7318912894186291201"
+   ToString()       [NOT JSON: 'T' is an invalid start of a value] { "v" : Timestamp(1704067200, 1) }
+   default mode     [NOT JSON: 'T' is an invalid start of a value] { "v" : Timestamp(1704067200, 1) }
+   Strict           [json] { "v" : { "$timestamp" : { "t" : 1704067200, "i" : 1 } } }
+   Shell            [NOT JSON: 'T' is an invalid start of a value] { "v" : Timestamp(1704067200, 1) }
+   JavaScript       [NOT JSON: 'T' is an invalid start of a value] { "v" : Timestamp(1704067200, 1) }
+   TenGen           [NOT JSON: 'T' is an invalid start of a value] { "v" : Timestamp(1704067200, 1) }
+   CanonicalExtendedJson [json] { "v" : { "$timestamp" : { "t" : 1704067200, "i" : 1 } } }
+   RelaxedExtendedJson [json] { "v" : { "$timestamp" : { "t" : 1704067200, "i" : 1 } } }
+-- javascript (JavaScript); BsonValue.ToString() of the value itself: "new BsonJavaScript("function() { return this.amount > 1000; }")"
+   ToString()       [json] { "v" : { "$code" : "function() { return this.amount > 1000; }" } }
+   default mode     [json] { "v" : { "$code" : "function() { return this.amount > 1000; }" } }
+   Strict           [json] { "v" : { "$code" : "function() { return this.amount > 1000; }" } }
+   Shell            [json] { "v" : { "$code" : "function() { return this.amount > 1000; }" } }
+   JavaScript       [json] { "v" : { "$code" : "function() { return this.amount > 1000; }" } }
+   TenGen           [json] { "v" : { "$code" : "function() { return this.amount > 1000; }" } }
+   CanonicalExtendedJson [json] { "v" : { "$code" : "function() { return this.amount > 1000; }" } }
+   RelaxedExtendedJson [json] { "v" : { "$code" : "function() { return this.amount > 1000; }" } }
+-- javascript_with_scope (JavaScriptWithScope); BsonValue.ToString() of the value itself: "new BsonJavaScript("function() { return x; }", { "x" : 1 })"
+   ToString()       [json] { "v" : { "$code" : "function() { return x; }", "$scope" : { "x" : 1 } } }
+   default mode     [json] { "v" : { "$code" : "function() { return x; }", "$scope" : { "x" : 1 } } }
+   Strict           [json] { "v" : { "$code" : "function() { return x; }", "$scope" : { "x" : 1 } } }
+   Shell            [json] { "v" : { "$code" : "function() { return x; }", "$scope" : { "x" : 1 } } }
+   JavaScript       [json] { "v" : { "$code" : "function() { return x; }", "$scope" : { "x" : 1 } } }
+   TenGen           [json] { "v" : { "$code" : "function() { return x; }", "$scope" : { "x" : 1 } } }
+   CanonicalExtendedJson [json] { "v" : { "$code" : "function() { return x; }", "$scope" : { "x" : { "$numberInt" : "1" } } } }
+   RelaxedExtendedJson [json] { "v" : { "$code" : "function() { return x; }", "$scope" : { "x" : 1 } } }
+-- minKey (MinKey); BsonValue.ToString() of the value itself: "BsonMinKey"
+   ToString()       [NOT JSON: 'M' is an invalid start of a value] { "v" : MinKey }
+   default mode     [NOT JSON: 'M' is an invalid start of a value] { "v" : MinKey }
+   Strict           [json] { "v" : { "$minKey" : 1 } }
+   Shell            [NOT JSON: 'M' is an invalid start of a value] { "v" : MinKey }
+   JavaScript       [NOT JSON: 'M' is an invalid start of a value] { "v" : MinKey }
+   TenGen           [NOT JSON: 'M' is an invalid start of a value] { "v" : MinKey }
+   CanonicalExtendedJson [json] { "v" : { "$minKey" : 1 } }
+   RelaxedExtendedJson [json] { "v" : { "$minKey" : 1 } }
+-- maxKey (MaxKey); BsonValue.ToString() of the value itself: "BsonMaxKey"
+   ToString()       [NOT JSON: 'M' is an invalid start of a value] { "v" : MaxKey }
+   default mode     [NOT JSON: 'M' is an invalid start of a value] { "v" : MaxKey }
+   Strict           [json] { "v" : { "$maxKey" : 1 } }
+   Shell            [NOT JSON: 'M' is an invalid start of a value] { "v" : MaxKey }
+   JavaScript       [NOT JSON: 'M' is an invalid start of a value] { "v" : MaxKey }
+   TenGen           [NOT JSON: 'M' is an invalid start of a value] { "v" : MaxKey }
+   CanonicalExtendedJson [json] { "v" : { "$maxKey" : 1 } }
+   RelaxedExtendedJson [json] { "v" : { "$maxKey" : 1 } }
+-- symbol (Symbol); BsonValue.ToString() of the value itself: "loanSymbol"
+   ToString()       [json] { "v" : { "$symbol" : "loanSymbol" } }
+   default mode     [json] { "v" : { "$symbol" : "loanSymbol" } }
+   Strict           [json] { "v" : { "$symbol" : "loanSymbol" } }
+   Shell            [json] { "v" : { "$symbol" : "loanSymbol" } }
+   JavaScript       [json] { "v" : { "$symbol" : "loanSymbol" } }
+   TenGen           [json] { "v" : { "$symbol" : "loanSymbol" } }
+   CanonicalExtendedJson [json] { "v" : { "$symbol" : "loanSymbol" } }
+   RelaxedExtendedJson [json] { "v" : { "$symbol" : "loanSymbol" } }
+-- null (Null); BsonValue.ToString() of the value itself: "BsonNull"
+   ToString()       [json] { "v" : null }
+   default mode     [json] { "v" : null }
+   Strict           [json] { "v" : null }
+   Shell            [json] { "v" : null }
+   JavaScript       [json] { "v" : null }
+   TenGen           [json] { "v" : null }
+   CanonicalExtendedJson [json] { "v" : null }
+   RelaxedExtendedJson [json] { "v" : null }
+-- undefined (Undefined); BsonValue.ToString() of the value itself: "BsonUndefined"
+   ToString()       [NOT JSON: 'u' is an invalid start of a value] { "v" : undefined }
+   default mode     [NOT JSON: 'u' is an invalid start of a value] { "v" : undefined }
+   Strict           [json] { "v" : { "$undefined" : true } }
+   Shell            [NOT JSON: 'u' is an invalid start of a value] { "v" : undefined }
+   JavaScript       [NOT JSON: 'u' is an invalid start of a value] { "v" : undefined }
+   TenGen           [NOT JSON: 'u' is an invalid start of a value] { "v" : undefined }
+   CanonicalExtendedJson [json] { "v" : { "$undefined" : true } }
+   RelaxedExtendedJson [json] { "v" : { "$undefined" : true } }
+-- boolean (Boolean); BsonValue.ToString() of the value itself: "true"
+   ToString()       [json] { "v" : true }
+   default mode     [json] { "v" : true }
+   Strict           [json] { "v" : true }
+   Shell            [json] { "v" : true }
+   JavaScript       [json] { "v" : true }
+   TenGen           [json] { "v" : true }
+   CanonicalExtendedJson [json] { "v" : true }
+   RelaxedExtendedJson [json] { "v" : true }
+-- string_escapes (String); BsonValue.ToString() of the value itself: "Café "quoted"\nline2	✓ </script>  "
+   ToString()       [json] { "v" : "Café \"quoted\"\nline2\t✓ </script> \u2028" }
+   default mode     [json] { "v" : "Café \"quoted\"\nline2\t✓ </script> \u2028" }
+   Strict           [json] { "v" : "Café \"quoted\"\nline2\t✓ </script> \u2028" }
+   Shell            [json] { "v" : "Café \"quoted\"\nline2\t✓ </script> \u2028" }
+   JavaScript       [json] { "v" : "Café \"quoted\"\nline2\t✓ </script> \u2028" }
+   TenGen           [json] { "v" : "Café \"quoted\"\nline2\t✓ </script> \u2028" }
+   CanonicalExtendedJson [json] { "v" : "Café \"quoted\"\nline2\t✓ </script> \u2028" }
+   RelaxedExtendedJson [json] { "v" : "Café \"quoted\"\nline2\t✓ </script> \u2028" }
+-- nested_array (Array); BsonValue.ToString() of the value itself: "[1, two, { "three" : 3 }, [4, 5.5]]"
+   ToString()       [NOT JSON: 'N' is an invalid start of a value] { "v" : [1, "two", { "three" : 3 }, [4, NumberDecimal("5.5")]] }
+   default mode     [NOT JSON: 'N' is an invalid start of a value] { "v" : [1, "two", { "three" : 3 }, [4, NumberDecimal("5.5")]] }
+   Strict           [json] { "v" : [1, "two", { "three" : 3 }, [4, { "$numberDecimal" : "5.5" }]] }
+   Shell            [NOT JSON: 'N' is an invalid start of a value] { "v" : [1, "two", { "three" : 3 }, [4, NumberDecimal("5.5")]] }
+   JavaScript       [NOT JSON: 'N' is an invalid start of a value] { "v" : [1, "two", { "three" : 3 }, [4, NumberDecimal("5.5")]] }
+   TenGen           [NOT JSON: 'N' is an invalid start of a value] { "v" : [1, "two", { "three" : 3 }, [4, NumberDecimal("5.5")]] }
+   CanonicalExtendedJson [json] { "v" : [{ "$numberInt" : "1" }, "two", { "three" : { "$numberInt" : "3" } }, [{ "$numberInt" : "4" }, { "$numberDecimal" : "5.5" }]] }
+   RelaxedExtendedJson [json] { "v" : [1, "two", { "three" : 3 }, [4, { "$numberDecimal" : "5.5" }]] }
+-- nested_document (Document); BsonValue.ToString() of the value itself: "{ "street" : "1 Main St", "geo" : { "lat" : 51.5, "lng" : -0.12 } }"
+   ToString()       [json] { "v" : { "street" : "1 Main St", "geo" : { "lat" : 51.5, "lng" : -0.12 } } }
+   default mode     [json] { "v" : { "street" : "1 Main St", "geo" : { "lat" : 51.5, "lng" : -0.12 } } }
+   Strict           [json] { "v" : { "street" : "1 Main St", "geo" : { "lat" : 51.5, "lng" : -0.12 } } }
+   Shell            [json] { "v" : { "street" : "1 Main St", "geo" : { "lat" : 51.5, "lng" : -0.12 } } }
+   JavaScript       [json] { "v" : { "street" : "1 Main St", "geo" : { "lat" : 51.5, "lng" : -0.12 } } }
+   TenGen           [json] { "v" : { "street" : "1 Main St", "geo" : { "lat" : 51.5, "lng" : -0.12 } } }
+   CanonicalExtendedJson [json] { "v" : { "street" : "1 Main St", "geo" : { "lat" : { "$numberDouble" : "51.5" }, "lng" : { "$numberDouble" : "-0.12" } } } }
+   RelaxedExtendedJson [json] { "v" : { "street" : "1 Main St", "geo" : { "lat" : 51.5, "lng" : -0.12 } } }
+
+=== The whole document
+--- ToString(): [NOT JSON: 'N' is an invalid start of a value]
+{ "decimal128_1000_50" : NumberDecimal("1000.50"), "decimal128_from_decimal_1000_50m" : NumberDecimal("1000.50"), "objectId" : ObjectId("65a1b2c3d4e5f60718293a4b"), "date_2024_01_01" : ISODate("2024-01-01T00:00:00Z"), "date_2024_03_15_millis" : ISODate("2024-03-15T10:30:45.123Z"), "date_1969_07_20" : ISODate("1969-07-20T20:17:40Z"), "date_1970_01_01" : ISODate("1970-01-01T00:00:00Z"), "date_9999_12_31_end" : ISODate("9999-12-31T23:59:59.999Z"), "date_10000_01_01" : new Date(253402300800000), "date_long_min" : new Date(-9223372036854775808), "guid_subtype4_standard" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e"), "guid_subtype3_csharplegacy" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e"), "binary_subtype0_small" : new BinData(0, "AQID+g=="), "int64_5" : NumberLong(5), "int32_5" : 5, "int64_9007199254740993" : NumberLong("9007199254740993"), "double_1_5" : 1.5, "double_1_0" : 1.0, "double_1e300" : 1.0000000000000001E+300, "double_NaN" : NaN, "double_PosInfinity" : Infinity, "double_NegInfinity" : -Infinity, "double_neg_zero" : -0.0, "regex" : /^loan-[0-9]+$/i, "timestamp" : Timestamp(1704067200, 1), "javascript" : { "$code" : "function() { return this.amount > 1000; }" }, "javascript_with_scope" : { "$code" : "function() { return x; }", "$scope" : { "x" : 1 } }, "minKey" : MinKey, "maxKey" : MaxKey, "symbol" : { "$symbol" : "loanSymbol" }, "null" : null, "undefined" : undefined, "boolean" : true, "string_escapes" : "Café \"quoted\"\nline2\t✓ </script> \u2028", "nested_array" : [1, "two", { "three" : 3 }, [4, NumberDecimal("5.5")]], "nested_document" : { "street" : "1 Main St", "geo" : { "lat" : 51.5, "lng" : -0.12 } } }
+--- ToJson(new JsonWriterSettings { Indent = true, IndentChars = "  ", NewLineChars = "\n" })  [Kronikol today]: [NOT JSON: 'N' is an invalid start of a value]
+{
+  "decimal128_1000_50" : NumberDecimal("1000.50"),
+  "decimal128_from_decimal_1000_50m" : NumberDecimal("1000.50"),
+  "objectId" : ObjectId("65a1b2c3d4e5f60718293a4b"),
+  "date_2024_01_01" : ISODate("2024-01-01T00:00:00Z"),
+  "date_2024_03_15_millis" : ISODate("2024-03-15T10:30:45.123Z"),
+  "date_1969_07_20" : ISODate("1969-07-20T20:17:40Z"),
+  "date_1970_01_01" : ISODate("1970-01-01T00:00:00Z"),
+  "date_9999_12_31_end" : ISODate("9999-12-31T23:59:59.999Z"),
+  "date_10000_01_01" : new Date(253402300800000),
+  "date_long_min" : new Date(-9223372036854775808),
+  "guid_subtype4_standard" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e"),
+  "guid_subtype3_csharplegacy" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e"),
+  "binary_subtype0_small" : new BinData(0, "AQID+g=="),
+  "int64_5" : NumberLong(5),
+  "int32_5" : 5,
+  "int64_9007199254740993" : NumberLong("9007199254740993"),
+  "double_1_5" : 1.5,
+  "double_1_0" : 1.0,
+  "double_1e300" : 1.0000000000000001E+300,
+  "double_NaN" : NaN,
+  "double_PosInfinity" : Infinity,
+  "double_NegInfinity" : -Infinity,
+  "double_neg_zero" : -0.0,
+  "regex" : /^loan-[0-9]+$/i,
+  "timestamp" : Timestamp(1704067200, 1),
+  "javascript" : { "$code" : "function() { return this.amount > 1000; }" },
+  "javascript_with_scope" : {
+    "$code" : "function() { return x; }",
+    "$scope" : {
+      "x" : 1
+    }
+  },
+  "minKey" : MinKey,
+  "maxKey" : MaxKey,
+  "symbol" : { "$symbol" : "loanSymbol" },
+  "null" : null,
+  "undefined" : undefined,
+  "boolean" : true,
+  "string_escapes" : "Café \"quoted\"\nline2\t✓ </script> \u2028",
+  "nested_array" : [1, "two", {
+      "three" : 3
+    }, [4, NumberDecimal("5.5")]],
+  "nested_document" : {
+    "street" : "1 Main St",
+    "geo" : {
+      "lat" : 51.5,
+      "lng" : -0.12
+    }
+  }
+}
+--- ToJson(OutputMode = RelaxedExtendedJson, indented): [json]
+{
+  "decimal128_1000_50" : { "$numberDecimal" : "1000.50" },
+  "decimal128_from_decimal_1000_50m" : { "$numberDecimal" : "1000.50" },
+  "objectId" : { "$oid" : "65a1b2c3d4e5f60718293a4b" },
+  "date_2024_01_01" : { "$date" : "2024-01-01T00:00:00Z" },
+  "date_2024_03_15_millis" : { "$date" : "2024-03-15T10:30:45.123Z" },
+  "date_1969_07_20" : { "$date" : { "$numberLong" : "-14182940000" } },
+  "date_1970_01_01" : { "$date" : "1970-01-01T00:00:00Z" },
+  "date_9999_12_31_end" : { "$date" : "9999-12-31T23:59:59.999Z" },
+  "date_10000_01_01" : { "$date" : { "$numberLong" : "253402300800000" } },
+  "date_long_min" : { "$date" : { "$numberLong" : "-9223372036854775808" } },
+  "guid_subtype4_standard" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } },
+  "guid_subtype3_csharplegacy" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } },
+  "binary_subtype0_small" : { "$binary" : { "base64" : "AQID+g==", "subType" : "00" } },
+  "int64_5" : 5,
+  "int32_5" : 5,
+  "int64_9007199254740993" : 9007199254740993,
+  "double_1_5" : 1.5,
+  "double_1_0" : 1.0,
+  "double_1e300" : 1.0000000000000001E+300,
+  "double_NaN" : { "$numberDouble" : "NaN" },
+  "double_PosInfinity" : { "$numberDouble" : "Infinity" },
+  "double_NegInfinity" : { "$numberDouble" : "-Infinity" },
+  "double_neg_zero" : -0.0,
+  "regex" : { "$regularExpression" : { "pattern" : "^loan-[0-9]+$", "options" : "i" } },
+  "timestamp" : { "$timestamp" : { "t" : 1704067200, "i" : 1 } },
+  "javascript" : { "$code" : "function() { return this.amount > 1000; }" },
+  "javascript_with_scope" : {
+    "$code" : "function() { return x; }",
+    "$scope" : {
+      "x" : 1
+    }
+  },
+  "minKey" : { "$minKey" : 1 },
+  "maxKey" : { "$maxKey" : 1 },
+  "symbol" : { "$symbol" : "loanSymbol" },
+  "null" : null,
+  "undefined" : { "$undefined" : true },
+  "boolean" : true,
+  "string_escapes" : "Café \"quoted\"\nline2\t✓ </script> \u2028",
+  "nested_array" : [1, "two", {
+      "three" : 3
+    }, [4, { "$numberDecimal" : "5.5" }]],
+  "nested_document" : {
+    "street" : "1 Main St",
+    "geo" : {
+      "lat" : 51.5,
+      "lng" : -0.12
+    }
+  }
+}
+--- ToJson(OutputMode = CanonicalExtendedJson, indented): [json]
+{
+  "decimal128_1000_50" : { "$numberDecimal" : "1000.50" },
+  "decimal128_from_decimal_1000_50m" : { "$numberDecimal" : "1000.50" },
+  "objectId" : { "$oid" : "65a1b2c3d4e5f60718293a4b" },
+  "date_2024_01_01" : { "$date" : { "$numberLong" : "1704067200000" } },
+  "date_2024_03_15_millis" : { "$date" : { "$numberLong" : "1710498645123" } },
+  "date_1969_07_20" : { "$date" : { "$numberLong" : "-14182940000" } },
+  "date_1970_01_01" : { "$date" : { "$numberLong" : "0" } },
+  "date_9999_12_31_end" : { "$date" : { "$numberLong" : "253402300799999" } },
+  "date_10000_01_01" : { "$date" : { "$numberLong" : "253402300800000" } },
+  "date_long_min" : { "$date" : { "$numberLong" : "-9223372036854775808" } },
+  "guid_subtype4_standard" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } },
+  "guid_subtype3_csharplegacy" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } },
+  "binary_subtype0_small" : { "$binary" : { "base64" : "AQID+g==", "subType" : "00" } },
+  "int64_5" : { "$numberLong" : "5" },
+  "int32_5" : { "$numberInt" : "5" },
+  "int64_9007199254740993" : { "$numberLong" : "9007199254740993" },
+  "double_1_5" : { "$numberDouble" : "1.5" },
+  "double_1_0" : { "$numberDouble" : "1.0" },
+  "double_1e300" : { "$numberDouble" : "1.0000000000000001E+300" },
+  "double_NaN" : { "$numberDouble" : "NaN" },
+  "double_PosInfinity" : { "$numberDouble" : "Infinity" },
+  "double_NegInfinity" : { "$numberDouble" : "-Infinity" },
+  "double_neg_zero" : { "$numberDouble" : "-0.0" },
+  "regex" : { "$regularExpression" : { "pattern" : "^loan-[0-9]+$", "options" : "i" } },
+  "timestamp" : { "$timestamp" : { "t" : 1704067200, "i" : 1 } },
+  "javascript" : { "$code" : "function() { return this.amount > 1000; }" },
+  "javascript_with_scope" : {
+    "$code" : "function() { return x; }",
+    "$scope" : {
+      "x" : { "$numberInt" : "1" }
+    }
+  },
+  "minKey" : { "$minKey" : 1 },
+  "maxKey" : { "$maxKey" : 1 },
+  "symbol" : { "$symbol" : "loanSymbol" },
+  "null" : null,
+  "undefined" : { "$undefined" : true },
+  "boolean" : true,
+  "string_escapes" : "Café \"quoted\"\nline2\t✓ </script> \u2028",
+  "nested_array" : [{ "$numberInt" : "1" }, "two", {
+      "three" : { "$numberInt" : "3" }
+    }, [{ "$numberInt" : "4" }, { "$numberDecimal" : "5.5" }]],
+  "nested_document" : {
+    "street" : "1 Main St",
+    "geo" : {
+      "lat" : { "$numberDouble" : "51.5" },
+      "lng" : { "$numberDouble" : "-0.12" }
+    }
+  }
+}
+
+=== 300 KB binary (307200 bytes, BSON document 307244 bytes)
+--- ToString(): 409661 chars, [NOT JSON: 'new BinData(0, "qjYUC6GwiGRa5UnY4WhpkDplmeSucuIy9RL1UGGyqbFdlSTNYr7ZP92Neoj3CGTWfeahzGD3I...], 3.2 ms; head: { "filename" : "statement.pdf", "data" : new BinData(0, "qjYUC6GwiGRa5UnY4WhpkDplmeSucuIy9RL1UGGyqbFdlSTNYr7ZP
+--- ToJson(new JsonWriterSettings { Indent = true, IndentChars = "  ", NewLineChars = "\n" })  [Kronikol today]: 409665 chars, [NOT JSON: 'new BinData(0, "qjYUC6GwiGRa5UnY4WhpkDplmeSucuIy9RL1UGGyqbFdlSTNYr7ZP92Neoj3CGTWfeahzGD3I...], 4.6 ms; head: {\n  "filename" : "statement.pdf",\n  "data" : new BinData(0, "qjYUC6GwiGRa5UnY4WhpkDplmeSucuIy9RL1UGGyqbFdlSTNY
+--- ToJson(OutputMode = RelaxedExtendedJson, indented): 409698 chars, [json], 0.7 ms; head: {\n  "filename" : "statement.pdf",\n  "data" : { "$binary" : { "base64" : "qjYUC6GwiGRa5UnY4WhpkDplmeSucuIy9RL1U
+--- ToJson(OutputMode = CanonicalExtendedJson, indented): 409698 chars, [json], 1.3 ms; head: {\n  "filename" : "statement.pdf",\n  "data" : { "$binary" : { "base64" : "qjYUC6GwiGRa5UnY4WhpkDplmeSucuIy9RL1U
+
+=== Setting JsonWriterSettings.Defaults (global, last because it mutates process state)
+before: ToString() = { "amount" : NumberDecimal("1000.50"), "at" : ISODate("2024-01-01T00:00:00Z") }
+before: ToJson() = { "amount" : NumberDecimal("1000.50"), "at" : ISODate("2024-01-01T00:00:00Z") }
+set Defaults.OutputMode = RelaxedExtendedJson
+after: new JsonWriterSettings().OutputMode = Shell
+after: ToString() = { "amount" : { "$numberDecimal" : "1000.50" }, "at" : { "$date" : "2024-01-01T00:00:00Z" } }
+after: ToJson() = { "amount" : { "$numberDecimal" : "1000.50" }, "at" : { "$date" : "2024-01-01T00:00:00Z" } }
+after: ToJson(new JsonWriterSettings { Indent = true }) = {\r\n  "amount" : NumberDecimal("1000.50"),\r\n  "at" : ISODate("2024-01-01T00:00:00Z")\r\n}
+
+=== UUID binaries under the 2.x Guid settings (global, last)
+JsonWriterSettings.GuidRepresentation: present; BsonDefaults.GuidRepresentationMode: V2; BsonDefaults.GuidRepresentation: CSharpLegacy
+-- as the process starts
+   ToString()                      { "std4" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e"), "legacy3" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   RelaxedExtendedJson             { "std4" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } }, "legacy3" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } } }
+   RelaxedExtendedJson + writer GuidRepresentation=Unspecified (ok): { "std4" : { "$binary" : { "base64" : "D4+tW9nLRp+hZXCGdyiVDg==", "subType" : "04" } }, "legacy3" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } } }
+   Shell + writer GuidRepresentation=Unspecified: { "std4" : UUID("0f8fad5b-d9cb-469f-a165-70867728950e"), "legacy3" : CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+   RelaxedExtendedJson + writer GuidRepresentation=Standard (ok): { "std4" : { "$binary" : { "base64" : "D4+tW9nLRp+hZXCGdyiVDg==", "subType" : "04" } }, "legacy3" : { "$binary" : { "base64" : "D4+tW9nLRp+hZXCGdyiVDg==", "subType" : "04" } } }
+   Shell + writer GuidRepresentation=Standard: { "std4" : UUID("0f8fad5b-d9cb-469f-a165-70867728950e"), "legacy3" : UUID("0f8fad5b-d9cb-469f-a165-70867728950e") }
+set BsonDefaults.GuidRepresentationMode = V3: ok; new JsonWriterSettings().GuidRepresentation now <THREW InvalidOperationException: BsonWriterSettings.GuidRepresentation can only be used when GuidRepresentationMode is V2.>
+-- after BsonDefaults.GuidRepresentationMode = V3
+   ToString()                      { "std4" : UUID("0f8fad5b-d9cb-469f-a165-70867728950e"), "legacy3" : HexData(3, "5bad8f0f-cbd9-9f46-a165-70867728950e") }
+   RelaxedExtendedJson             { "std4" : { "$binary" : { "base64" : "D4+tW9nLRp+hZXCGdyiVDg==", "subType" : "04" } }, "legacy3" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } } }
+   RelaxedExtendedJson + writer GuidRepresentation=Unspecified (<THREW InvalidOperationException: BsonWriterSettings.GuidRepresentation can only be used when GuidRepresentationMode is V2.>): { "std4" : { "$binary" : { "base64" : "D4+tW9nLRp+hZXCGdyiVDg==", "subType" : "04" } }, "legacy3" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } } }
+   Shell + writer GuidRepresentation=Unspecified: { "std4" : UUID("0f8fad5b-d9cb-469f-a165-70867728950e"), "legacy3" : HexData(3, "5bad8f0f-cbd9-9f46-a165-70867728950e") }
+   RelaxedExtendedJson + writer GuidRepresentation=Standard (<THREW InvalidOperationException: BsonWriterSettings.GuidRepresentation can only be used when GuidRepresentationMode is V2.>): { "std4" : { "$binary" : { "base64" : "D4+tW9nLRp+hZXCGdyiVDg==", "subType" : "04" } }, "legacy3" : { "$binary" : { "base64" : "W62PD8vZn0ahZXCGdyiVDg==", "subType" : "03" } } }
+   Shell + writer GuidRepresentation=Standard: { "std4" : UUID("0f8fad5b-d9cb-469f-a165-70867728950e"), "legacy3" : HexData(3, "5bad8f0f-cbd9-9f46-a165-70867728950e") }

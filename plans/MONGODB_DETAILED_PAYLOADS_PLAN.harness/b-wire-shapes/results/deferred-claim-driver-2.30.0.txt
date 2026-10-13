@@ -1,0 +1,82 @@
+MongoDB.Driver 2.30.0.0, Kronikol.Extensions.MongoDB.V2 4.18.1, mongodb://127.0.0.1:27217/?replicaSet=rs0
+
+## Raw, AttributeByDocumentOwner = true (the default)
+FindOneAndUpdate THREW: System.OperationCanceledException: The BinaryConnection operation has been cancelled.
+ ---> System.ObjectDisposedException: Cannot access a disposed object.
+Object name: 'RawBsonDocument'.
+   at MongoDB.Bson.RawBsonDocument.ThrowIfDisposed()
+   at MongoDB.Bson.RawBsonDocument.get_Slice()
+   at MongoDB.Bson.Serialization.Serializers.RawBsonDocumentSerializer.SerializeValue(BsonSerializationContext context, BsonSerializationArgs args, RawBsonDocument value)
+   at MongoDB.Bson.Serialization.Serializers.BsonValueSerializerBase`1.Serialize(BsonSerializationContext context, BsonSerializationArgs args, TBsonValue value)
+   at MongoDB.Bson.Serialization.Serializers.SerializerBase`1.MongoDB.Bson.Serialization.IBsonSerializer.Serialize(BsonSerializationContext context, BsonSerializationArgs args, Object value)
+   at MongoDB.Bson.Serialization.IBsonSerializerExtensions.Serialize(IBsonSerializer serializer, BsonSerializationContext context, Object value)
+   at MongoDB.Bson.Serialization.Serializers.BsonValueSerializerBase`1.Serialize(BsonSerializationContext context, BsonSerializationArgs args, TBsonValue value)
+   at MongoDB.Bson.Serialization.Serializers.SerializerBase`1.MongoDB.Bson.Serialization.IBsonSerializer.Serialize(BsonSerializationContext context, BsonSerializationArgs args, Object value)
+   at MongoDB.Bson.BsonExtensionMethods.ToJson(Object obj, Type nominalType, JsonWriterSettings writerSettings, IBsonSerializer serializer, Action`1 configurator, BsonSerializationArgs args)
+   at MongoDB.Bson.BsonExtensionMethods.ToJson[TNominalType](TNominalType obj, JsonWriterSettings writerSettings, IBsonSerializer`1 serializer, Action`1 configurator, BsonSerializationArgs args)
+   at MongoDB.Bson.BsonDocument.ToString()
+   at Kronikol.Extensions.MongoDB.MongoDbTrackingSubscriber.LogRequest(PendingOperation pending, BsonDocument command, MongoDbTrackingVerbosity effectiveVerbosity, Nullable`1 timestamp, TestPhase phase)
+   at Kronikol.Extensions.MongoDB.MongoDbTrackingSubscriber.OnCommandSucceeded(CommandSucceededEvent e)
+   at MongoDB.Driver.Core.Events.EventPublisher.Publish[TEvent](TEvent event)
+   at MongoDB.Driver.Core.Logging.EventLogger`1.LogAndPublish[TEvent](Exception exception, TEvent event, Boolean skipLogging)
+   at MongoDB.Driver.Core.Logging.EventLogger`1.LogAndPublish[TEvent](TEvent event, Boolean skipLogging)
+   at MongoDB.Driver.Core.Connections.CommandEventHelper.ProcessCommandResponseMessage(CommandState state, CommandResponseMessage message, IByteBuffer buffer, ConnectionId connectionId, Nullable`1 serviceId, MessageEncoderSettings encoderSettings, Boolean skipLogging)
+   at MongoDB.Driver.Core.Connections.CommandEventHelper.AfterReceiving(ResponseMessage message, IByteBuffer buffer, ConnectionId connectionId, Nullable`1 serviceId, MessageEncoderSettings encoderSettings, Boolean skipLogging)
+   at MongoDB.Driver.Core.Connections.BinaryConnection.ReceiveMessageHelper.ReceivedMessage(IByteBuffer buffer, ResponseMessage message)
+   at MongoDB.Driver.Core.Connections.BinaryConnection.ReceiveMessage(Int32 responseTo, IMessageEncoderSelector encoderSelector, MessageEncoderSettings messageEncoderSettings, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at MongoDB.Driver.Core.Connections.BinaryConnection.ThrowOperationCanceledExceptionIfRequired(Exception exception)
+   at MongoDB.Driver.Core.Connections.BinaryConnection.ReceiveMessage(Int32 responseTo, IMessageEncoderSelector encoderSelector, MessageEncoderSettings messageEncoderSettings, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.ConnectionPools.ExclusiveConnectionPool.PooledConnection.ReceiveMessage(Int32 responseTo, IMessageEncoderSelector encoderSelector, MessageEncoderSettings messageEncoderSettings, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.ConnectionPools.ExclusiveConnectionPool.AcquiredConnection.ReceiveMessage(Int32 responseTo, IMessageEncoderSelector encoderSelector, MessageEncoderSettings messageEncoderSettings, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.WireProtocol.CommandUsingCommandMessageWireProtocol`1.SendMessageAndProcessResponse(CommandRequestMessage message, Int32 responseTo, IConnection connection, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.WireProtocol.CommandUsingCommandMessageWireProtocol`1.Execute(IConnection connection, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.WireProtocol.CommandWireProtocol`1.Execute(IConnection connection, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.Servers.Server.ServerChannel.ExecuteProtocol[TResult](IWireProtocol`1 protocol, ICoreSession session, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.Servers.Server.ServerChannel.Command[TResult](ICoreSession session, ReadPreference readPreference, DatabaseNamespace databaseNamespace, BsonDocument command, IEnumerable`1 commandPayloads, IElementNameValidator commandValidator, BsonDocument additionalOptions, Action`1 postWriteAction, CommandResponseHandling responseHandling, IBsonSerializer`1 resultSerializer, MessageEncoderSettings messageEncoderSettings, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.Operations.CommandOperationBase`1.ExecuteProtocol(IChannelHandle channel, ICoreSessionHandle session, ReadPreference readPreference, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.Operations.CommandOperationBase`1.ExecuteProtocol(IChannelSource channelSource, ICoreSessionHandle session, ReadPreference readPreference, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.Operations.WriteCommandOperation`1.Execute(IWriteBinding binding, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.Operations.FindAndModifyOperationBase`1.ExecuteAttempt(RetryableWriteContext context, Int32 attempt, Nullable`1 transactionNumber, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.Operations.RetryableWriteOperationExecutor.Execute[TResult](IRetryableWriteOperation`1 operation, RetryableWriteContext context, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.Operations.RetryableWriteOperationExecutor.Execute[TResult](IRetryableWriteOperation`1 operation, IWriteBinding binding, Boolean retryRequested, CancellationToken cancellationToken)
+   at MongoDB.Driver.Core.Operations.FindAndModifyOperationBase`1.Execute(IWriteBinding binding, CancellationToken cancellationToken)
+   at MongoDB.Driver.OperationExecutor.ExecuteWriteOperation[TResult](IWriteBinding binding, IWriteOperation`1 operation, CancellationToken cancellationToken)
+   at MongoDB.Driver.MongoCollectionImpl`1.ExecuteWriteOperation[TResult](IClientSessionHandle session, IWriteOperation`1 operation, CancellationToken cancellationToken)
+   at MongoDB.Driver.MongoCollectionImpl`1.FindOneAndUpdate[TProjection](IClientSessionHandle session, FilterDefinition`1 filter, UpdateDefinition`1 update, FindOneAndUpdateOptions`2 options, CancellationToken cancellationToken)
+   at MongoDB.Driver.MongoCollectionImpl`1.<>c__DisplayClass65_0`1.<FindOneAndUpdate>b__0(IClientSessionHandle session)
+   at MongoDB.Driver.MongoCollectionImpl`1.UsingImplicitSession[TResult](Func`2 func, CancellationToken cancellationToken)
+   at MongoDB.Driver.MongoCollectionImpl`1.FindOneAndUpdate[TProjection](FilterDefinition`1 filter, UpdateDefinition`1 update, FindOneAndUpdateOptions`2 options, CancellationToken cancellationToken)
+   at Program.<Main>$(String[] args)
+the document on the server afterwards: status = claimed
+next command on the same client: CountDocuments = 1
+   logged Request "Insert kronikol168.claims" status= attribution=TestContext content=223 chars
+   logged Response "Insert kronikol168.claims" status=OK attribution=TestContext content=355 chars
+   logged Request "Find kronikol168.claims filter={ "_id" : "claim-1" }" status= attribution=TestContext content=323 chars
+   logged Response "Find kronikol168.claims filter={ "_id" : "claim-1" }" status=OK attribution=TestContext content=349 chars
+   logged Request "Aggregate kronikol168.claims" status= attribution=TestContext content=383 chars
+   logged Response "Aggregate kronikol168.claims" status=OK attribution=TestContext content=328 chars
+
+## Detailed, AttributeByDocumentOwner = true (the default)
+FindOneAndUpdate returned claim-2
+the document on the server afterwards: status = claimed
+next command on the same client: CountDocuments = 2
+   logged Request "Insert → claims" status= attribution=TestContext content=null
+   logged Response "Insert → claims" status=OK attribution=TestContext content=3 chars
+   logged Request "FindAndModify ↔ claims" status= attribution=DocumentOwner content=null
+   logged Response "FindAndModify ↔ claims" status=OK attribution=DocumentOwner content=null
+   logged Request "Find ← claims" status= attribution=TestContext content=21 chars
+   logged Response "Find ← claims" status=OK attribution=TestContext content=59 chars
+   logged Request "Aggregate ($match, $group) ← claims" status= attribution=TestContext content=null
+   logged Response "Aggregate ($match, $group) ← claims" status=OK attribution=TestContext content=38 chars
+
+## Raw, AttributeByDocumentOwner = false
+FindOneAndUpdate returned claim-3
+the document on the server afterwards: status = claimed
+next command on the same client: CountDocuments = 3
+   logged Request "Insert kronikol168.claims" status= attribution=TestContext content=223 chars
+   logged Response "Insert kronikol168.claims" status=OK attribution=TestContext content=352 chars
+   logged Request "Find kronikol168.claims filter={ "_id" : "claim-3" }" status= attribution=TestContext content=322 chars
+   logged Response "Find kronikol168.claims filter={ "_id" : "claim-3" }" status=OK attribution=TestContext content=349 chars
+   logged Request "Aggregate kronikol168.claims" status= attribution=TestContext content=383 chars
+   logged Response "Aggregate kronikol168.claims" status=OK attribution=TestContext content=328 chars

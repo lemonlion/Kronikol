@@ -1,0 +1,46 @@
+Runtime MongoDB.Bson 3.12.0.0; JsonOutputMode members: Shell=0, CanonicalExtendedJson=1, RelaxedExtendedJson=2
+Bson2Writer baked JsonOutputMode.RelaxedExtendedJson as 3; at run time that value is '3' (defined: False)
+--- Bson2Writer.Today (no OutputMode, as MongoDbResponseSummary does)
+{
+  "amount" : { "$numberDecimal" : "1000.50" },
+  "_id" : { "$oid" : "65a1b2c3d4e5f60718293a4b" },
+  "at" : { "$date" : "2024-01-01T00:00:00Z" },
+  "count" : 5,
+  "ratio" : { "$numberDouble" : "NaN" },
+  "id4" : { "$binary" : { "base64" : "D4+tW9nLRp+hZXCGdyiVDg==", "subType" : "04" } },
+  "pattern" : { "$regularExpression" : { "pattern" : "^loan-", "options" : "i" } }
+}
+--- Bson2Writer.RelaxedByEnum (OutputMode = JsonOutputMode.RelaxedExtendedJson in 2.x-compiled source)
+{
+  "amount" : { "$numberDecimal" : "1000.50" },
+  "_id" : ObjectId("65a1b2c3d4e5f60718293a4b"),
+  "at" : ISODate("2024-01-01T00:00:00Z"),
+  "count" : NumberLong(5),
+  "ratio" : NaN,
+  "id4" : UUID("0f8fad5b-d9cb-469f-a165-70867728950e"),
+  "pattern" : /^loan-/i
+}
+--- Bson2Writer.RelaxedWithUnspecifiedGuid (also sets the 2.x-only JsonWriterSettings.GuidRepresentation)
+<THREW System.MissingMethodException: Method not found: 'Void MongoDB.Bson.IO.BsonWriterSettings.set_GuidRepresentation(MongoDB.Bson.GuidRepresentation)'.>
+--- Bson2Writer.RelaxedByName (Enum.Parse("RelaxedExtendedJson") at run time)
+{
+  "amount" : { "$numberDecimal" : "1000.50" },
+  "_id" : { "$oid" : "65a1b2c3d4e5f60718293a4b" },
+  "at" : { "$date" : "2024-01-01T00:00:00Z" },
+  "count" : 5,
+  "ratio" : { "$numberDouble" : "NaN" },
+  "id4" : { "$binary" : { "base64" : "D4+tW9nLRp+hZXCGdyiVDg==", "subType" : "04" } },
+  "pattern" : { "$regularExpression" : { "pattern" : "^loan-", "options" : "i" } }
+}
+--- Kronikol.Extensions.TcpTap 4.18.1 MongoDbResponseSummary.ExtractDetailed(reply, true, 10)
+[
+  {
+    "amount" : { "$numberDecimal" : "1000.50" },
+    "_id" : { "$oid" : "65a1b2c3d4e5f60718293a4b" },
+    "at" : { "$date" : "2024-01-01T00:00:00Z" },
+    "count" : 5,
+    "ratio" : { "$numberDouble" : "NaN" },
+    "id4" : { "$binary" : { "base64" : "D4+tW9nLRp+hZXCGdyiVDg==", "subType" : "04" } },
+    "pattern" : { "$regularExpression" : { "pattern" : "^loan-", "options" : "i" } }
+  }
+]

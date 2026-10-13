@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Compiled against MongoDB.Bson 2.30.0, as Kronikol.Extensions.TcpTap is (its nuspec: MongoDB.Bson >= 2.30.0).
+       The app that references it brings MongoDB.Bson 3.12.0, so this code runs against 3.x: what the tap does
+       in a host on driver 3.x. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);CS0618;NU1902;NU1903</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Bson" Version="2.30.0" />
+  </ItemGroup>
+</Project>

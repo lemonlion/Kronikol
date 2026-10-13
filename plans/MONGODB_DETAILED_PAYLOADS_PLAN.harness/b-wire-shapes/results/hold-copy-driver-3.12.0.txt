@@ -1,0 +1,21 @@
+MongoDB.Driver 3.12.0.0
+insert command: the event's own document (BsonDocument)                                         -> THREW ObjectDisposedException
+insert command: DeepClone()                                                                     -> readable (541 chars)
+insert command: Clone()                                                                         -> THREW ObjectDisposedException
+insert command: new BsonDocument(doc) (top level copied)                                        -> THREW ObjectDisposedException
+insert command: BsonSerializer.Deserialize<BsonDocument>(doc.ToBson())                          -> readable (541 chars)
+insert reply: the event's own document (RawBsonDocument)                                        -> THREW ObjectDisposedException
+insert reply: DeepClone()                                                                       -> readable (436 chars)
+insert reply: Clone()                                                                           -> readable (436 chars)
+insert reply: new BsonDocument(doc) (top level copied)                                          -> THREW ObjectDisposedException
+insert reply: BsonSerializer.Deserialize<BsonDocument>(doc.ToBson())                            -> readable (436 chars)
+findAndModify command: the event's own document (RawBsonDocument)                               -> THREW ObjectDisposedException
+findAndModify command: DeepClone()                                                              -> readable (471 chars)
+findAndModify command: Clone()                                                                  -> readable (471 chars)
+findAndModify command: new BsonDocument(doc) (top level copied)                                 -> THREW ObjectDisposedException
+findAndModify command: BsonSerializer.Deserialize<BsonDocument>(doc.ToBson())                   -> readable (471 chars)
+findAndModify reply: the event's own document (RawBsonDocument)                                 -> THREW ObjectDisposedException
+findAndModify reply: DeepClone()                                                                -> readable (512 chars)
+findAndModify reply: Clone()                                                                    -> readable (512 chars)
+findAndModify reply: new BsonDocument(doc) (top level copied)                                   -> THREW ObjectDisposedException
+findAndModify reply: BsonSerializer.Deserialize<BsonDocument>(doc.ToBson())                     -> readable (512 chars)

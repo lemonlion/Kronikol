@@ -1,0 +1,45 @@
+MongoDB.Driver 3.12.0.0, Kronikol.Extensions.MongoDB 4.18.1, mongodb://127.0.0.1:27217/?replicaSet=rs0
+
+## Raw, AttributeByDocumentOwner = true (the default)
+FindOneAndUpdate THREW: System.ObjectDisposedException: Cannot access a disposed object.
+Object name: 'RawBsonDocument'.
+   at MongoDB.Driver.Core.Operations.RetryableWriteOperationExecutor.Execute[TResult](OperationContext operationContext, IRetryableWriteOperation`1 operation, RetryableWriteContext context)
+   at MongoDB.Driver.Core.Operations.RetryableWriteOperationExecutor.Execute[TResult](OperationContext operationContext, IRetryableWriteOperation`1 operation, IWriteBinding binding, Boolean retryRequested, Int32 maxAdaptiveRetries, Boolean enableOverloadRetargeting, IMayUseSecondaryCriteria mayUseSecondary)
+   at MongoDB.Driver.Core.Operations.FindAndModifyOperationBase`1.Execute(OperationContext operationContext, IWriteBinding binding)
+   at MongoDB.Driver.OperationExecutor.ExecuteWriteOperation[TResult](OperationContext operationContext, IClientSessionHandle session, IWriteOperation`1 operation, Boolean allowChannelPinning)
+   at MongoDB.Driver.MongoCollectionImpl`1.ExecuteWriteOperation[TResult](IClientSessionHandle session, IWriteOperation`1 operation, Nullable`1 timeout, CancellationToken cancellationToken)
+   at MongoDB.Driver.MongoCollectionImpl`1.FindOneAndUpdate[TProjection](IClientSessionHandle session, FilterDefinition`1 filter, UpdateDefinition`1 update, FindOneAndUpdateOptions`2 options, CancellationToken cancellationToken)
+   at MongoDB.Driver.MongoCollectionImpl`1.FindOneAndUpdate[TProjection](FilterDefinition`1 filter, UpdateDefinition`1 update, FindOneAndUpdateOptions`2 options, CancellationToken cancellationToken)
+   at Program.<Main>$(String[] args)
+the document on the server afterwards: status = claimed
+next command on the same client: CountDocuments = 1
+   logged Request "Insert kronikol168.claims" status= attribution=TestContext content=240 chars
+   logged Response "Insert kronikol168.claims" status=OK attribution=TestContext content=436 chars
+   logged Request "Find kronikol168.claims filter={ "_id" : "claim-1" }" status= attribution=TestContext content=396 chars
+   logged Response "Find kronikol168.claims filter={ "_id" : "claim-1" }" status=OK attribution=TestContext content=406 chars
+   logged Request "Aggregate kronikol168.claims" status= attribution=TestContext content=457 chars
+   logged Response "Aggregate kronikol168.claims" status=OK attribution=TestContext content=385 chars
+
+## Detailed, AttributeByDocumentOwner = true (the default)
+FindOneAndUpdate returned claim-2
+the document on the server afterwards: status = claimed
+next command on the same client: CountDocuments = 2
+   logged Request "Insert → claims" status= attribution=TestContext content=null
+   logged Response "Insert → claims" status=OK attribution=TestContext content=3 chars
+   logged Request "FindAndModify ↔ claims" status= attribution=DocumentOwner content=null
+   logged Response "FindAndModify ↔ claims" status=OK attribution=DocumentOwner content=null
+   logged Request "Find ← claims" status= attribution=TestContext content=21 chars
+   logged Response "Find ← claims" status=OK attribution=TestContext content=59 chars
+   logged Request "Aggregate ($match, $group) ← claims" status= attribution=TestContext content=null
+   logged Response "Aggregate ($match, $group) ← claims" status=OK attribution=TestContext content=38 chars
+
+## Raw, AttributeByDocumentOwner = false
+FindOneAndUpdate returned claim-3
+the document on the server afterwards: status = claimed
+next command on the same client: CountDocuments = 3
+   logged Request "Insert kronikol168.claims" status= attribution=TestContext content=240 chars
+   logged Response "Insert kronikol168.claims" status=OK attribution=TestContext content=436 chars
+   logged Request "Find kronikol168.claims filter={ "_id" : "claim-3" }" status= attribution=TestContext content=397 chars
+   logged Response "Find kronikol168.claims filter={ "_id" : "claim-3" }" status=OK attribution=TestContext content=408 chars
+   logged Request "Aggregate kronikol168.claims" status= attribution=TestContext content=458 chars
+   logged Response "Aggregate kronikol168.claims" status=OK attribution=TestContext content=387 chars
