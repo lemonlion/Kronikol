@@ -1,0 +1,23 @@
+ProxyTap 4.18.1+244e1dde5fa59a10600d732c1ae41a45f7575e6d on .NET 10.0.11, Microsoft Windows 10.0.26200, HttpListener http.sys
+
+Part 1: a bare HttpListener; the handler's CopyToAsync of the body, the caller resets mid-body
+pure RST (LingerState(true, 0), Socket.Dispose()) (try 1): the body read threw System.Net.HttpListenerException HResult=0x80004005 (-2147467259) ErrorCode=995 NativeErrorCode=995 "The I/O operation has been aborted because of either a thread exit or an application request."
+pure RST (LingerState(true, 0), Socket.Dispose()) (try 2): same as try 1
+pure RST (LingerState(true, 0), Socket.Dispose()) (try 3): same as try 1
+pure RST (LingerState(true, 0), Socket.Dispose()) (try 4): same as try 1
+pure RST (LingerState(true, 0), Socket.Dispose()) (try 5): same as try 1
+TcpClient (LingerState(true, 0), TcpClient.Dispose() after GetStream(): a FIN, then an RST) (try 1): the body read threw System.Net.HttpListenerException HResult=0x80004005 (-2147467259) ErrorCode=995 NativeErrorCode=995 "The I/O operation has been aborted because of either a thread exit or an application request."
+TcpClient (LingerState(true, 0), TcpClient.Dispose() after GetStream(): a FIN, then an RST) (try 2): same as try 1
+TcpClient (LingerState(true, 0), TcpClient.Dispose() after GetStream(): a FIN, then an RST) (try 3): same as try 1
+TcpClient (LingerState(true, 0), TcpClient.Dispose() after GetStream(): a FIN, then an RST) (try 4): same as try 1
+TcpClient (LingerState(true, 0), TcpClient.Dispose() after GetStream(): a FIN, then an RST) (try 5): same as try 1
+
+Part 2: ProxyTap 4.18.1, 10 callers reset mid-body, read 3 s after the resets
+pure RST (LingerState(true, 0), Socket.Dispose()):
+    in flight before the resets 10, 3 s after 0; ForwardFailures 0, RequestsHandled 0, RequestsCaptured 0
+    'proxy-tap error' lines: 0
+    connections the upstream accepted: 0
+TcpClient (LingerState(true, 0), TcpClient.Dispose() after GetStream(): a FIN, then an RST):
+    in flight before the resets 10, 3 s after 0; ForwardFailures 0, RequestsHandled 0, RequestsCaptured 0
+    'proxy-tap error' lines: 0
+    connections the upstream accepted: 0

@@ -1,0 +1,37 @@
+Kronikol.Extensions.Otlp 4.18.1+244e1dde5fa59a10600d732c1ae41a45f7575e6d on .NET 10.0.12, Ubuntu 24.04.5 LTS
+
+run 1:
+    t=59 ms the collector has the export (POST /v1/traces HTTP/1.1, Content-Length 64) and does not answer
+    before DisposeAsync: RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+    DisposeAsync started t=364 ms, returned t=373 ms
+    right after it returned: RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 1, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+    1.5 s later: RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 1, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+    the exporter read 0 bytes, then EOF (t=375 ms)
+    the collector's connection: t=368 ms EOF from the tap's side
+    log: t=18 ms [otlp] otlp-tap listening on http://127.0.0.1:40139/v1/traces → http://127.0.0.1:44627/
+    log: t=373 ms [otlp] otlp-tap forward failed: The operation was canceled.
+    log: t=373 ms [otlp] otlp-tap stopped (1 exports, 0 spans, 0 mapped, 0 ignored, 0 dropped, 0 unauthenticated, 1 forward failures)
+
+run 2:
+    t=1 ms the collector has the export (POST /v1/traces HTTP/1.1, Content-Length 64) and does not answer
+    before DisposeAsync: RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+    DisposeAsync started t=302 ms, returned t=302 ms
+    right after it returned: RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 1, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+    1.5 s later: RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 1, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+    the exporter read 0 bytes, then EOF (t=302 ms)
+    the collector's connection: t=302 ms EOF from the tap's side
+    log: t=0 ms [otlp] otlp-tap listening on http://127.0.0.1:42249/v1/traces → http://127.0.0.1:36971/
+    log: t=302 ms [otlp] otlp-tap forward failed: The operation was canceled.
+    log: t=302 ms [otlp] otlp-tap stopped (1 exports, 0 spans, 0 mapped, 0 ignored, 0 dropped, 0 unauthenticated, 1 forward failures)
+
+run 3:
+    t=1 ms the collector has the export (POST /v1/traces HTTP/1.1, Content-Length 64) and does not answer
+    before DisposeAsync: RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+    DisposeAsync started t=306 ms, returned t=306 ms
+    right after it returned: RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+    1.5 s later: RequestsReceived 1, UnauthenticatedRequests 0, ForwardFailures 1, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+    the exporter read 0 bytes, then EOF (t=306 ms)
+    the collector's connection: t=306 ms EOF from the tap's side
+    log: t=0 ms [otlp] otlp-tap listening on http://127.0.0.1:45681/v1/traces → http://127.0.0.1:34707/
+    log: t=306 ms [otlp] otlp-tap stopped (1 exports, 0 spans, 0 mapped, 0 ignored, 0 dropped, 0 unauthenticated, 0 forward failures)
+    log: t=306 ms [otlp] otlp-tap forward failed: The operation was canceled.

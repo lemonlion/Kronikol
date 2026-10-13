@@ -1,0 +1,69 @@
+.NET 10.0.11, Microsoft Windows 10.0.26200
+
+The client resets with LingerState(true, 0) and Socket.Dispose() (a pure RST); the server reads through Socket.ReceiveAsync
+(a) Socket.ReceiveAsync, read 300 ms after the reset, nothing pending:
+  try 1:
+    call 1: threw System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+    call 2: threw System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+    call 3: threw System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+  try 2: same as try 1
+  try 3: same as try 1
+(b) Socket.ReceiveAsync, a read pending when the reset arrives:
+  try 1:
+    first read (before the reset): returned 10 bytes "0123456789"
+    the pending read (pending when the reset was sent): threw System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+    the call after: threw System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+    and again: threw System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+  try 2: same as try 1
+  try 3: same as try 1
+
+The client resets with LingerState(true, 0) and Socket.Dispose() (a pure RST); the server reads through NetworkStream.ReadAsync
+(c-a) NetworkStream.ReadAsync, read 300 ms after the reset, nothing pending:
+  try 1:
+    call 1: threw System.IO.IOException HResult=0x80131620 "Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host.." <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+    call 2: threw System.IO.IOException HResult=0x80131620 "Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host.." <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+    call 3: threw System.IO.IOException HResult=0x80131620 "Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host.." <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+  try 2: same as try 1
+  try 3: same as try 1
+(c-b) NetworkStream.ReadAsync, a read pending when the reset arrives:
+  try 1:
+    first read (before the reset): returned 10 bytes "0123456789"
+    the pending read (pending when the reset was sent): threw System.IO.IOException HResult=0x80131620 "Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host.." <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+    the call after: threw System.IO.IOException HResult=0x80131620 "Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host.." <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+    and again: threw System.IO.IOException HResult=0x80131620 "Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host.." <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+  try 2: same as try 1
+  try 3: same as try 1
+
+(d) a TcpClient that sent through TcpClient.Client resets with LingerState(true, 0) and TcpClient.Dispose(); the server reads through Socket.ReceiveAsync
+(d) read 300 ms after the reset, nothing pending:
+  try 1:
+    call 1: returned 10 bytes "0123456789"
+    call 2: returned 0 (end of stream)
+    call 3: returned 0 (end of stream)
+  try 2: same as try 1
+  try 3: same as try 1
+(d) a read pending when the reset arrives:
+  try 1:
+    first read (before the reset): returned 10 bytes "0123456789"
+    the pending read (pending when the reset was sent): returned 0 (end of stream)
+    the call after: returned 0 (end of stream)
+    and again: returned 0 (end of stream)
+  try 2: same as try 1
+  try 3: same as try 1
+
+(e) a TcpClient that sent through TcpClient.GetStream() resets with LingerState(true, 0) and TcpClient.Dispose(); the server reads through Socket.ReceiveAsync
+(e) read 300 ms after the reset, nothing pending:
+  try 1:
+    call 1: returned 10 bytes "0123456789"
+    call 2: returned 0 (end of stream)
+    call 3: returned 0 (end of stream)
+  try 2: same as try 1
+  try 3: same as try 1
+(e) a read pending when the reset arrives:
+  try 1:
+    first read (before the reset): returned 10 bytes "0123456789"
+    the pending read (pending when the reset was sent): returned 0 (end of stream)
+    the call after: returned 0 (end of stream)
+    and again: returned 0 (end of stream)
+  try 2: same as try 1
+  try 3: same as try 1

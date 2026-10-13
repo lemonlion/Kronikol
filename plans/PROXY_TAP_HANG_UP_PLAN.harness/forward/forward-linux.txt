@@ -1,0 +1,32 @@
+.NET 10.0.12, Ubuntu 24.04.5 LTS
+
+control: Content-Length: 1000, all 1000 bytes sent, then FIN:
+  try 1 (29 ms):
+    no exception: 200, a body of 1000 bytes
+  try 2 (1 ms): same as try 1
+  try 3 (0 ms): same as try 1
+
+(a) Content-Length: 1000, 500 bytes sent, then FIN:
+  try 1 (322 ms):
+    SendAsync threw; the outer exception is IOException: False
+    System.Net.Http.HttpRequestException HResult=0x80131620 (-2146232800) HttpRequestError=ResponseEnded StatusCode=null "Error while copying content to a stream."
+    <- inner System.Net.Http.HttpIOException HResult=0x80131620 (-2146232800) HttpRequestError=ResponseEnded "The response ended prematurely. (ResponseEnded)"
+  try 2 (300 ms): same as try 1
+  try 3 (302 ms): same as try 1
+
+(b) Content-Length: 1000, 500 bytes sent, then RST:
+  try 1 (303 ms):
+    SendAsync threw; the outer exception is IOException: False
+    System.Net.Http.HttpRequestException HResult=0x80131620 (-2146232800) HttpRequestError=Unknown StatusCode=null "Error while copying content to a stream."
+    <- inner System.IO.IOException HResult=0x80131620 (-2146232800) "Unable to read data from the transport connection: Connection reset by peer."
+    <- inner System.Net.Sockets.SocketException HResult=0x80004005 (-2147467259) SocketErrorCode=ConnectionReset ErrorCode=104 NativeErrorCode=104 "Connection reset by peer"
+  try 2 (301 ms): same as try 1
+  try 3 (302 ms): same as try 1
+
+(c) Transfer-Encoding: chunked, one chunk (a\r\n0123456789\r\n), then FIN with no last chunk:
+  try 1 (300 ms):
+    SendAsync threw; the outer exception is IOException: False
+    System.Net.Http.HttpRequestException HResult=0x80131620 (-2146232800) HttpRequestError=ResponseEnded StatusCode=null "Error while copying content to a stream."
+    <- inner System.Net.Http.HttpIOException HResult=0x80131620 (-2146232800) HttpRequestError=ResponseEnded "The response ended prematurely. (ResponseEnded)"
+  try 2 (302 ms): same as try 1
+  try 3 (301 ms): same as try 1

@@ -1,0 +1,29 @@
+.NET 10.0.12, Ubuntu 24.04.5 LTS, HttpListener managed
+
+(a) Abort(), nothing set, the body unread:
+  try 1: handler: Abort(): no exception
+    the caller read 120 bytes: "HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Tue, 13 Oct 2026 13:06:28 GMT\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n"
+    then: EOF (a receive returned 0)
+  try 2: handler: Abort(): no exception; the caller read: same as try 1
+  try 3: handler: Abort(): no exception; the caller read: same as try 1
+
+(b) StatusCode = 400, then Abort(), the body unread:
+  try 1: handler: StatusCode = 400: no exception; Abort(): no exception
+    the caller read 148 bytes: "HTTP/1.1 400 Bad Request\r\nServer: Microsoft-NetCore/2.0\r\nDate: Tue, 13 Oct 2026 13:06:28 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n"
+    then: EOF (a receive returned 0)
+  try 2: handler: StatusCode = 400: no exception; Abort(): no exception; the caller read: same as try 1
+  try 3: handler: StatusCode = 400: no exception; Abort(): no exception; the caller read: same as try 1
+
+(c) one ReadAsync into a 10-byte buffer, then Abort():
+  try 1: handler: ReadAsync(10): returned 10 bytes; Abort(): no exception
+    the caller read 120 bytes: "HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Tue, 13 Oct 2026 13:06:29 GMT\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n"
+    then: EOF (a receive returned 0)
+  try 2: handler: ReadAsync(10): returned 10 bytes; Abort(): no exception; the caller read: same as try 1
+  try 3: handler: ReadAsync(10): returned 10 bytes; Abort(): no exception; the caller read: same as try 1
+
+(c2) one ReadAsync into a 4096-byte buffer (2 s cap), then Abort():
+  try 1: handler: ReadAsync(4096): returned 10 bytes; Abort(): no exception
+    the caller read 120 bytes: "HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Tue, 13 Oct 2026 13:06:29 GMT\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n"
+    then: EOF (a receive returned 0)
+  try 2: handler: ReadAsync(4096): returned 10 bytes; Abort(): no exception; the caller read: same as try 1
+  try 3: handler: ReadAsync(4096): returned 10 bytes; Abort(): no exception; the caller read: same as try 1

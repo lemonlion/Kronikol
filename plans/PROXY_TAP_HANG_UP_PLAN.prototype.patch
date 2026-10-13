@@ -167,15 +167,15 @@ index a6a2e7e7..4534b8ce 100644
 +                return;
 +
 +            // The managed listener's Abort() first writes a head not yet sent, with the status set (200 unless told
-+            // otherwise), so a failure status makes that head true; once a head is out, the setter throws and
-+            // Abort() only closes. http.sys sends nothing more.
++            // otherwise), so a failure status makes that head true; once a head is out, the late status is never
++            // sent and Abort() only closes. http.sys sends nothing more.
 +            try
 +            {
 +                Response.StatusCode = StatusIfUnclosed;
 +            }
 +            catch (Exception ex) when (ex is InvalidOperationException or ObjectDisposedException)
 +            {
-+                // The head has gone, or the response is closed.
++                // The response is closed (the setter does not throw once the head has gone).
 +            }
 +
 +            try

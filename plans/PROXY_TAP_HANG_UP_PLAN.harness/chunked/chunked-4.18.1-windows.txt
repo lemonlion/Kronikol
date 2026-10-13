@@ -1,0 +1,53 @@
+ProxyTap 4.18.1+244e1dde5fa59a10600d732c1ae41a45f7575e6d on .NET 10.0.11, Microsoft Windows 10.0.26200, HttpListener http.sys
+
+Part 1: a bare HttpListener; the handler reads the body with CopyToAsync (5 s cap) and sends nothing
+control: the whole body, 0-size chunk included; the caller stays:
+    request: HasEntityBody True, ContentLength64 -1
+    the body read completed with no exception: 10 bytes "0123456789"
+    the caller, still reading, got in 3 s: 0 bytes, then nothing more within 3 s (the connection is still open)
+(a) one whole chunk, then FIN, no 0-size chunk:
+    request: HasEntityBody True, ContentLength64 -1
+    the body read threw after 0 bytes: System.Net.HttpListenerException HResult=0x80004005 (-2147467259) ErrorCode=995 NativeErrorCode=995 "The I/O operation has been aborted because of either a thread exit or an application request."
+    the caller, still reading, got in 3 s: 490 bytes "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html; charset=us-ascii\r\nServer: Microsoft-HTTPAPI/2.0\r\nDate: Tue, 13 Oct 2026 13:13:05 GMT\r\nConnection: close\r\nContent-Length: 311\r\n\r\n<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/strict.dtd">\r\n<HTML><HEAD><TITLE>Bad Request</TITLE>\r\n<META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii"></HEAD>\r\n<BODY><h2>Bad Request</h2>\r\n<hr><p>HTTP Error 400. The request is badly formed.</p>\r\n</BODY></HTML>\r\n", then EOF (a receive returned 0)
+(b) FIN mid-chunk (5 of its 10 bytes sent):
+    request: HasEntityBody True, ContentLength64 -1
+    the body read threw after 0 bytes: System.Net.HttpListenerException HResult=0x80004005 (-2147467259) ErrorCode=995 NativeErrorCode=995 "The I/O operation has been aborted because of either a thread exit or an application request."
+    the caller, still reading, got in 3 s: 490 bytes "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html; charset=us-ascii\r\nServer: Microsoft-HTTPAPI/2.0\r\nDate: Tue, 13 Oct 2026 13:13:05 GMT\r\nConnection: close\r\nContent-Length: 311\r\n\r\n<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/strict.dtd">\r\n<HTML><HEAD><TITLE>Bad Request</TITLE>\r\n<META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii"></HEAD>\r\n<BODY><h2>Bad Request</h2>\r\n<hr><p>HTTP Error 400. The request is badly formed.</p>\r\n</BODY></HTML>\r\n", then EOF (a receive returned 0)
+(c) one whole chunk, then LingerState(true, 0) and TcpClient.Dispose() (a FIN, then an RST):
+    request: HasEntityBody True, ContentLength64 -1
+    the body read threw after 0 bytes: System.Net.HttpListenerException HResult=0x80004005 (-2147467259) ErrorCode=995 NativeErrorCode=995 "The I/O operation has been aborted because of either a thread exit or an application request."
+(d) half a chunk (5 of its 10 bytes), then LingerState(true, 0) and TcpClient.Dispose() (a FIN, then an RST):
+    request: HasEntityBody True, ContentLength64 -1
+    the body read threw after 0 bytes: System.Net.HttpListenerException HResult=0x80004005 (-2147467259) ErrorCode=995 NativeErrorCode=995 "The I/O operation has been aborted because of either a thread exit or an application request."
+(e) one whole chunk, then a pure RST (LingerState(true, 0), Socket.Dispose()):
+    request: HasEntityBody True, ContentLength64 -1
+    the body read threw after 0 bytes: System.Net.HttpListenerException HResult=0x80004005 (-2147467259) ErrorCode=995 NativeErrorCode=995 "The I/O operation has been aborted because of either a thread exit or an application request."
+(f) half a chunk (5 of its 10 bytes), then a pure RST (LingerState(true, 0), Socket.Dispose()):
+    request: HasEntityBody True, ContentLength64 -1
+    the body read threw after 0 bytes: System.Net.HttpListenerException HResult=0x80004005 (-2147467259) ErrorCode=995 NativeErrorCode=995 "The I/O operation has been aborted because of either a thread exit or an application request."
+
+Part 2: ProxyTap 4.18.1 in front of a raw socket upstream that records what reaches it and answers 200 "ok"
+control: the whole body, 0-size chunk included; the caller stays:
+    the upstream received: "POST /x HTTP/1.1\r\nHost: 127.0.0.1:65372\r\ntraceparent: 00-bf357621f1899149929c90ce114ee374-deaadd17aa2d3ff6-01\r\ntest-tracking-current-test-name: Unknown\r\ntest-tracking-current-test-id: t1\r\ntest-tracking-caller-name: api\r\ntest-tracking-trace-id: a314351c-cd18-457f-9e47-4622a888407e\r\nContent-Length: 10\r\n\r\n" and a body of 10 bytes "0123456789"
+    tap: ForwardFailures 0, RequestsHandled 1, RequestsCaptured 1, in flight 0
+    the caller, still reading, got in 3 s: 108 bytes "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nServer: Microsoft-HTTPAPI/2.0\r\nDate: Tue, 13 Oct 2026 13:13:06 GMT\r\n\r\nok", then nothing more within 3 s (the connection is still open)
+(a) one whole chunk, then FIN, no 0-size chunk:
+    the upstream received: nothing
+    tap: ForwardFailures 0, RequestsHandled 0, RequestsCaptured 0, in flight 0
+    the caller, still reading, got in 3 s: 490 bytes "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html; charset=us-ascii\r\nServer: Microsoft-HTTPAPI/2.0\r\nDate: Tue, 13 Oct 2026 13:13:11 GMT\r\nConnection: close\r\nContent-Length: 311\r\n\r\n<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/strict.dtd">\r\n<HTML><HEAD><TITLE>Bad Request</TITLE>\r\n<META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii"></HEAD>\r\n<BODY><h2>Bad Request</h2>\r\n<hr><p>HTTP Error 400. The request is badly formed.</p>\r\n</BODY></HTML>\r\n", then EOF (a receive returned 0)
+(b) FIN mid-chunk (5 of its 10 bytes sent):
+    the upstream received: nothing
+    tap: ForwardFailures 0, RequestsHandled 0, RequestsCaptured 0, in flight 0
+    the caller, still reading, got in 3 s: 490 bytes "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html; charset=us-ascii\r\nServer: Microsoft-HTTPAPI/2.0\r\nDate: Tue, 13 Oct 2026 13:13:14 GMT\r\nConnection: close\r\nContent-Length: 311\r\n\r\n<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/strict.dtd">\r\n<HTML><HEAD><TITLE>Bad Request</TITLE>\r\n<META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii"></HEAD>\r\n<BODY><h2>Bad Request</h2>\r\n<hr><p>HTTP Error 400. The request is badly formed.</p>\r\n</BODY></HTML>\r\n", then EOF (a receive returned 0)
+(c) one whole chunk, then LingerState(true, 0) and TcpClient.Dispose() (a FIN, then an RST):
+    the upstream received: nothing
+    tap: ForwardFailures 0, RequestsHandled 0, RequestsCaptured 0, in flight 0
+(d) half a chunk (5 of its 10 bytes), then LingerState(true, 0) and TcpClient.Dispose() (a FIN, then an RST):
+    the upstream received: nothing
+    tap: ForwardFailures 0, RequestsHandled 0, RequestsCaptured 0, in flight 0
+(e) one whole chunk, then a pure RST (LingerState(true, 0), Socket.Dispose()):
+    the upstream received: nothing
+    tap: ForwardFailures 0, RequestsHandled 0, RequestsCaptured 0, in flight 0
+(f) half a chunk (5 of its 10 bytes), then a pure RST (LingerState(true, 0), Socket.Dispose()):
+    the upstream received: nothing
+    tap: ForwardFailures 0, RequestsHandled 0, RequestsCaptured 0, in flight 0

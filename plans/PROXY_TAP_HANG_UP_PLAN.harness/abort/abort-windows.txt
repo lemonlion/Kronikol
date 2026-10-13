@@ -1,0 +1,29 @@
+.NET 10.0.11, Microsoft Windows 10.0.26200, HttpListener http.sys
+
+(a) Abort(), nothing set, the body unread:
+  try 1: handler: Abort(): no exception
+    the caller read 0 bytes
+    then: a reset: System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+  try 2: handler: Abort(): no exception; the caller read: same as try 1
+  try 3: handler: Abort(): no exception; the caller read: same as try 1
+
+(b) StatusCode = 400, then Abort(), the body unread:
+  try 1: handler: StatusCode = 400: no exception; Abort(): no exception
+    the caller read 0 bytes
+    then: a reset: System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+  try 2: handler: StatusCode = 400: no exception; Abort(): no exception; the caller read: same as try 1
+  try 3: handler: StatusCode = 400: no exception; Abort(): no exception; the caller read: same as try 1
+
+(c) one ReadAsync into a 10-byte buffer, then Abort():
+  try 1: handler: ReadAsync(10): returned 10 bytes; Abort(): no exception
+    the caller read 0 bytes
+    then: a reset: System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+  try 2: handler: ReadAsync(10): returned 10 bytes; Abort(): no exception; the caller read: same as try 1
+  try 3: handler: ReadAsync(10): returned 10 bytes; Abort(): no exception; the caller read: same as try 1
+
+(c2) one ReadAsync into a 4096-byte buffer (2 s cap), then Abort():
+  try 1: handler: ReadAsync(4096): still pending after 2 s; Abort(): no exception; the pending read then threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 "The I/O operation has been aborted because of either a thread exit or an application request."
+    the caller read 0 bytes
+    then: a reset: System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=ConnectionReset ErrorCode=10054 NativeErrorCode=10054 "An existing connection was forcibly closed by the remote host."
+  try 2: handler: ReadAsync(4096): still pending after 2 s; Abort(): no exception; the pending read then threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 "The I/O operation has been aborted because of either a thread exit or an application request."; the caller read: same as try 1
+  try 3: handler: ReadAsync(4096): still pending after 2 s; Abort(): no exception; the pending read then threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 "The I/O operation has been aborted because of either a thread exit or an application request."; the caller read: same as try 1
