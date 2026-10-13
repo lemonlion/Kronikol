@@ -708,6 +708,14 @@ plan's files, and is the first thing a person on a failing CI run reads, so a st
   2 skipped on 4.19.5 and 7,516 with 2 skipped rebased onto 4.19.6; `release.slnf` builds in Release for every target,
   once nuget.org listed the EF Core 10.0.13 packages it had half-published that day (two attempts failed at restore
   before) (`checks.txt`).
+- **2026-10-13, published (kronikol-21).** 4.19.7 is commit `04e27710` on the plan commit `ceaf43f3`, tag `v4.19.7`.
+  Release run 38447740240, CodeQL 38447735848 and CI Summary Preview 38447735870 passed; CI 38447735905 passed on its
+  second attempt, the first having failed one ProxyTap fact (`ProxyTapTraceContextTests`, a listener port another test
+  in the process had taken, the race kronikol-ef fixed in `ced2e03c`). nuget.org listed all 62 ids at 19:40 UTC. The
+  templates pin 4.19.4, the newest version listed at the push. The wiki has the edits (`26c0c53`), Kronikol4J's ledger
+  its line and the corrected out-of-scope line (`0b1f55c`), and #169 has a comment saying what changed and what is left
+  (Q13) and is closed. Before the tag, the Release build of `release.slnf` failed twice at restore while nuget.org
+  listed EF Core 10.0.13 ahead of its dependencies (harness `r1/checks.txt`); the tag waited until restore passed.
 
 ## Appendix A. Edit sites at `f03452fc`
 
