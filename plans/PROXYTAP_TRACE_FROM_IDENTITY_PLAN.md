@@ -2,9 +2,9 @@
 
 **Written:** 2026-10-13, at 4.18.1 (`34145c44`), the day #170 was filed, in the worktree `C:/Code/Kronikol-170`
 (branch `plan/170-proxytap-trace-from-identity`), and revised the same day after a review against the real
-OpenTelemetry SDK (section 11). **Status: green-lit in full by the owner on 2026-10-13** ("implement the plan in
-full"), every question in section 9 as recommended, and its releases go out as soon as they pass rather than after
-#172 and #171 (section 6.2). Evidence labels: **RUN** (measured here; the
+OpenTelemetry SDK (section 11). **Status: executed and published on 2026-10-13, R0 as 4.18.3 and R1 as 4.19.0; #170
+closed.** Green-lit in full by the owner the same day ("implement the plan in full"), every question in section 9 as
+recommended, and its releases went out as soon as they passed rather than after #172 and #171 (section 6.2). Evidence labels: **RUN** (measured here; the
 probe, its source and what it printed are in the harness), **READ** (in the source at `34145c44`, `file:line`, or in
 the wiki at `origin/master` of `../Kronikol.wiki` as fetched on 2026-10-13), **INFERRED** (reasoned from facts,
 stated by none), **ISSUE** (taken from #170, not re-measured), **DOC** (a third party's documentation). The harness is
@@ -722,6 +722,11 @@ The owner took every recommendation below on 2026-10-13 ("implement the plan in 
     R1-3 survived the first run); it is not counted, and the inbound fact checks it.
   - The facts read `Diagnostics()` after the tap is disposed, since its counters settle only after the response.
   - Mutations (harness `r1/mutations.txt`): 15 of 15 caught, the 10 planned rows among them.
+
+- **2026-10-13, 4.19.0 published; the plan is done.** Release run 38414250063, CI 38414231513 and 38414907388, CodeQL
+  38414231752 and 38414907876 and CI Summary Preview 38414232331 and 38414907474 passed on `baa411bb`, and nuget.org
+  listed all 62 ids. The wiki has R1's section, "A caller that cannot send a trace" (`8a85456`), and Kronikol4J's ledger
+  a line saying there is nothing to port (`ab7ba50`). #170 is closed with a comment naming both releases.
 
 ## Appendix A. Edit sites at `34145c44` (4.18.1)
 
