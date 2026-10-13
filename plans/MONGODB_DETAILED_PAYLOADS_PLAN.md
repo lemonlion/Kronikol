@@ -1,7 +1,7 @@
 # MongoDB at Detailed: what a command sent and what came back, as JSON (#168)
 
 **Date:** 2026-10-13 · **Repo version:** 4.18.1 (`main` at `34145c44`; line numbers are for that commit, and the
-issue's, at `98c4806d`, point at the same lines) · **Status:** **Green-lit in full by the owner on 2026-10-13**, every §9 question as recommended. **R1 executed as 4.19.6, R2 as 4.20.0, R3 as 4.20.1 and the driver floor (Q18) as 4.20.2** (§11). Drafted from #168 (filed by the
+issue's, at `98c4806d`, point at the same lines) · **Status:** **Green-lit in full by the owner on 2026-10-13**, every §9 question as recommended. **R1 executed as 4.19.6, R2 as 4.20.0, R3 as 4.20.1 and the driver floor (Q18) as 4.20.2, all published** (§11). Drafted from #168 (filed by the
 owner on 2026-10-11, found in #132's multi-host suite on 4.14.6 with `Kronikol.Extensions.MongoDB.V2` and MongoDB.Driver
 2.30.0) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying problem.
 
@@ -1259,6 +1259,13 @@ no row is taken here.
     passes 398 with 4 skipped (its Docker-only container facts) and its Bson 3 project 1 of 1; the full Playwright suite
     passes 1,040 with 28 skipped when run alone, on driver 3.9.0; release.slnf builds in Release for every target, and
     restores with --force-evaluate.
+
+- **2026-10-13, the driver floor published.** Release 38476808232, CI 38476808218, CodeQL 38476808295 and CI Summary
+  Preview 38476808324 passed for 4.20.2 on their first attempt, and nuget.org listed all 62 ids at 22:37 UTC. The wiki
+  has the edit (`60daf39`), Kronikol4J's ledger its line (`818b010`, nothing to port: its MongoDB module compiles
+  against the driver and publishes no dependency on it), #168 a comment closing out the plan, and #97, the issue for
+  every package's floating client reference, a comment naming the MongoDB floors, how they were chosen and the 21
+  projects that still float. #168 stays open for Q8. The plan is complete.
 
 ## Appendix A. Edit sites at `34145c44`
 
