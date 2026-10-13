@@ -1,0 +1,20 @@
+=== Q5: splitNoteCapFootnote (JS) ===
+"[1,2]\n... (3 more)" => {"lines":["[1,2]"],"footnote":"... (3 more)"}
+"[1,2]\n... (3 more documents not shown)" => {"lines":["[1,2]"],"footnote":"... (3 more documents not shown)"}
+"{\"a\":1}\n... (3 more)" => {"lines":["{\"a\":1}"],"footnote":"... (3 more)"}
+"[1,2]\n... (3 more rows not shown)" => {"lines":["[1,2]"],"footnote":"... (3 more rows not shown)"}
+"[1,2]\n... (3 more statements not shown)" => {"lines":["[1,2]","... (3 more statements not shown)"],"footnote":null}
+
+=== Q6: YAML view of {"big":9007199254740993,"d":1.0,"s":"José <b>"} ===
+reconstructNoteJson -> "{\n  \"big\": 9007199254740993,\n  \"d\": 1.0,\n  \"s\": \"José <b>\"\n}"
+jsonTextToYamlLines -> ["big: 9007199254740993","d: 1.0","s: José <b>"]
+escapeYamlLinesForNote -> ["big: 9007199254740993","d: 1.0","s: José ~<b>"]
+displayed (unescapeNoteDisplayLine) -> ["big: 9007199254740993","d: 1.0","s: José <b>"]
+for contrast, JSON.parse(...) value -> {"big":9007199254740992,"d":1,"s":"José <b>"}
+
+=== Q6 extra: one-line compact input straight (no generator re-indent) ===
+["big: 9007199254740993","d: 1.0","s: José <b>"]
+
+=== Q6 extra: extended JSON wrappers ===
+footnote: "... (3 more)"
+["_id:","  $oid: \"65a1b2c3d4e5f6a7b8c9d0e1\"","amount:","  $numberDecimal: \"1000.50\"","at:","  $date: \"2024-01-01T00:00:00Z\"","u:","  $uuid: \"0f8fad5b-d9cb-469f-a165-70867728950e\"","n: 9223372036854775807"]

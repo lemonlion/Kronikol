@@ -8,7 +8,7 @@ IMAGE=${1:-mongo:7.0}
 PORT=${2:-27217}
 NAME=${3:-kronikol168-mongo7}
 
-podman rm -f "$NAME" >/dev/null 2>&1
+podman rm -f -v "$NAME" >/dev/null 2>&1
 podman run -d --name "$NAME" --network host "$IMAGE" mongod --replSet rs0 --bind_ip_all --port "$PORT" >/dev/null || exit 1
 
 i=0

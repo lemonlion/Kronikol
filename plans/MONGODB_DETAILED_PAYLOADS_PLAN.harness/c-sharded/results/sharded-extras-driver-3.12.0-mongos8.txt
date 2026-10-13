@@ -1,0 +1,482 @@
+# Sharded extras: MongoDB.Driver 3.12.0.0
+URL: mongodb://127.0.0.1:27230/?directConnection=false
+Server 8.0.32, hello.msg=isdbgrid, setName=(none), maxWireVersion=25
+Each event: its top-level fields as name (BSON type); a command's recoveryToken when it has one; each reply whole as relaxed extended JSON, indented. Everything is read inside the event handler.
+
+## setup: empty both collections; the shard key from config.collections, through mongos
+   kronikol168sh.sharded key { "_id" : "hashed" }; kronikol168sh.plain in config.collections: 0; shards: sh0
+   started delete #7
+   succeeded delete #7
+   started delete #8
+   succeeded delete #8
+   started find #9
+   succeeded find #9
+   started aggregate #10
+   succeeded aggregate #10
+   started listShards #11
+   succeeded listShards #11
+
+## (a1) Transaction on the sharded collection: InsertOne + UpdateOne + CommitTransaction
+>> CommandStartedEvent name=insert db=kronikol168sh requestId=12
+   fields: insert (String), ordered (Boolean), $db (String), lsid (Document), $clusterTime (Document), txnNumber (Int64), startTransaction (Boolean), autocommit (Boolean), documents (Array[1])
+<< CommandSucceededEvent name=insert requestId=12 (4.8 ms)
+   fields: n (Int32), ok (Double), $clusterTime (Document), operationTime (Timestamp), recoveryToken (Document)
+   {
+     "n" : 1,
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 1 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 1 } },
+     "recoveryToken" : {
+       "recoveryShardId" : "sh0"
+     }
+   }
+>> CommandStartedEvent name=update db=kronikol168sh requestId=13
+   fields: update (String), ordered (Boolean), $db (String), lsid (Document), $clusterTime (Document), txnNumber (Int64), autocommit (Boolean), updates (Array[1])
+<< CommandSucceededEvent name=update requestId=13 (2.2 ms)
+   fields: nModified (Int32), n (Int32), ok (Double), $clusterTime (Document), operationTime (Timestamp), recoveryToken (Document)
+   {
+     "nModified" : 1,
+     "n" : 1,
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 1 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 1 } },
+     "recoveryToken" : {
+       "recoveryShardId" : "sh0"
+     }
+   }
+>> CommandStartedEvent name=commitTransaction db=admin requestId=14
+   fields: commitTransaction (Int32), recoveryToken (Document), $db (String), lsid (Document), $clusterTime (Document), txnNumber (Int64), autocommit (Boolean)
+   recoveryToken: { "recoveryShardId" : "sh0" }
+<< CommandSucceededEvent name=commitTransaction requestId=14 (10.3 ms)
+   fields: ok (Double), $clusterTime (Document), operationTime (Timestamp), recoveryToken (Document)
+   {
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 2 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 2 } },
+     "recoveryToken" : {
+       "recoveryShardId" : "sh0"
+     }
+   }
+
+## (a2) Transaction across both collections: InsertOne (unsharded) + UpdateOne (sharded) + CommitTransaction
+>> CommandStartedEvent name=insert db=kronikol168sh requestId=15
+   fields: insert (String), ordered (Boolean), $db (String), lsid (Document), $clusterTime (Document), txnNumber (Int64), startTransaction (Boolean), autocommit (Boolean), documents (Array[1])
+<< CommandSucceededEvent name=insert requestId=15 (1.1 ms)
+   fields: n (Int32), ok (Double), $clusterTime (Document), operationTime (Timestamp), recoveryToken (Document)
+   {
+     "n" : 1,
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 2 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 2 } },
+     "recoveryToken" : {
+       "recoveryShardId" : "sh0"
+     }
+   }
+>> CommandStartedEvent name=update db=kronikol168sh requestId=16
+   fields: update (String), ordered (Boolean), $db (String), lsid (Document), $clusterTime (Document), txnNumber (Int64), autocommit (Boolean), updates (Array[1])
+<< CommandSucceededEvent name=update requestId=16 (0.9 ms)
+   fields: nModified (Int32), n (Int32), ok (Double), $clusterTime (Document), operationTime (Timestamp), recoveryToken (Document)
+   {
+     "nModified" : 1,
+     "n" : 1,
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 2 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 2 } },
+     "recoveryToken" : {
+       "recoveryShardId" : "sh0"
+     }
+   }
+>> CommandStartedEvent name=commitTransaction db=admin requestId=17
+   fields: commitTransaction (Int32), recoveryToken (Document), $db (String), lsid (Document), $clusterTime (Document), txnNumber (Int64), autocommit (Boolean)
+   recoveryToken: { "recoveryShardId" : "sh0" }
+<< CommandSucceededEvent name=commitTransaction requestId=17 (1.8 ms)
+   fields: ok (Double), $clusterTime (Document), operationTime (Timestamp), recoveryToken (Document)
+   {
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 3 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 3 } },
+     "recoveryToken" : {
+       "recoveryShardId" : "sh0"
+     }
+   }
+
+## (a3) Transaction: InsertOne (sharded) + AbortTransaction
+>> CommandStartedEvent name=insert db=kronikol168sh requestId=18
+   fields: insert (String), ordered (Boolean), $db (String), lsid (Document), $clusterTime (Document), txnNumber (Int64), startTransaction (Boolean), autocommit (Boolean), documents (Array[1])
+<< CommandSucceededEvent name=insert requestId=18 (0.9 ms)
+   fields: n (Int32), ok (Double), $clusterTime (Document), operationTime (Timestamp), recoveryToken (Document)
+   {
+     "n" : 1,
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 3 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 3 } },
+     "recoveryToken" : {
+       "recoveryShardId" : "sh0"
+     }
+   }
+>> CommandStartedEvent name=abortTransaction db=admin requestId=19
+   fields: abortTransaction (Int32), recoveryToken (Document), $db (String), lsid (Document), $clusterTime (Document), txnNumber (Int64), autocommit (Boolean)
+   recoveryToken: { "recoveryShardId" : "sh0" }
+<< CommandSucceededEvent name=abortTransaction requestId=19 (0.9 ms)
+   fields: ok (Double), $clusterTime (Document), operationTime (Timestamp), recoveryToken (Document)
+   {
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 3 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 3 } },
+     "recoveryToken" : {
+       "recoveryShardId" : "sh0"
+     }
+   }
+
+## (a4) Read-only transaction: Find by _id (sharded) + CommitTransaction
+>> CommandStartedEvent name=find db=kronikol168sh requestId=20
+   fields: find (String), filter (Document), $db (String), lsid (Document), $clusterTime (Document), txnNumber (Int64), startTransaction (Boolean), autocommit (Boolean)
+<< CommandSucceededEvent name=find requestId=20 (1.0 ms)
+   fields: cursor (Document), ok (Double), $clusterTime (Document), operationTime (Timestamp), recoveryToken (Document)
+   {
+     "cursor" : {
+       "firstBatch" : [{
+           "_id" : "txn-1",
+           "status" : "Funded",
+           "amount" : { "$numberDecimal" : "100.00" }
+         }],
+       "id" : 0,
+       "ns" : "kronikol168sh.sharded"
+     },
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 3 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 3 } },
+     "recoveryToken" : { }
+   }
+>> CommandStartedEvent name=commitTransaction db=admin requestId=21
+   fields: commitTransaction (Int32), recoveryToken (Document), $db (String), lsid (Document), $clusterTime (Document), txnNumber (Int64), autocommit (Boolean)
+   recoveryToken: { }
+<< CommandSucceededEvent name=commitTransaction requestId=21 (1.9 ms)
+   fields: ok (Double), $clusterTime (Document), operationTime (Timestamp), recoveryToken (Document)
+   {
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 4 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 4 } },
+     "recoveryToken" : { }
+   }
+
+## (b1) InsertOne into the sharded collection (no transaction)
+>> CommandStartedEvent name=insert db=kronikol168sh requestId=22
+   fields: insert (String), ordered (Boolean), txnNumber (Int64), $db (String), lsid (Document), $clusterTime (Document), documents (Array[1])
+<< CommandSucceededEvent name=insert requestId=22 (3.7 ms)
+   fields: n (Int32), ok (Double), $clusterTime (Document), operationTime (Timestamp)
+   {
+     "n" : 1,
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 5 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 5 } }
+   }
+
+## (b2) InsertOne into the unsharded collection (no transaction)
+>> CommandStartedEvent name=insert db=kronikol168sh requestId=23
+   fields: insert (String), ordered (Boolean), txnNumber (Int64), $db (String), lsid (Document), $clusterTime (Document), documents (Array[1])
+<< CommandSucceededEvent name=insert requestId=23 (2.9 ms)
+   fields: n (Int32), ok (Double), $clusterTime (Document), operationTime (Timestamp)
+   {
+     "n" : 1,
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 6 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 6 } }
+   }
+
+## setup: six documents in the sharded collection
+   started insert #24
+   succeeded insert #24
+
+## (c1) Find on the sharded collection, no shard key in the filter (every shard owning a chunk), BatchSize 2
+   returned 6 documents
+>> CommandStartedEvent name=find db=kronikol168sh requestId=25
+   fields: find (String), filter (Document), batchSize (Int32), $db (String), lsid (Document), $clusterTime (Document)
+<< CommandSucceededEvent name=find requestId=25 (1.9 ms)
+   fields: cursor (Document), ok (Double), $clusterTime (Document), operationTime (Timestamp)
+   {
+     "cursor" : {
+       "firstBatch" : [{
+           "_id" : "find-0",
+           "kind" : "batch",
+           "n" : 0
+         }, {
+           "_id" : "find-1",
+           "kind" : "batch",
+           "n" : 1
+         }],
+       "id" : 6825582037390075618,
+       "ns" : "kronikol168sh.sharded"
+     },
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } }
+   }
+>> CommandStartedEvent name=getMore db=kronikol168sh requestId=26
+   fields: getMore (Int64), collection (String), batchSize (Int32), $db (String), lsid (Document), $clusterTime (Document)
+<< CommandSucceededEvent name=getMore requestId=26 (1.2 ms)
+   fields: cursor (Document), ok (Double), $clusterTime (Document), operationTime (Timestamp)
+   {
+     "cursor" : {
+       "id" : 6825582037390075618,
+       "ns" : "kronikol168sh.sharded",
+       "nextBatch" : [{
+           "_id" : "find-2",
+           "kind" : "batch",
+           "n" : 2
+         }, {
+           "_id" : "find-3",
+           "kind" : "batch",
+           "n" : 3
+         }]
+     },
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } }
+   }
+>> CommandStartedEvent name=getMore db=kronikol168sh requestId=27
+   fields: getMore (Int64), collection (String), batchSize (Int32), $db (String), lsid (Document), $clusterTime (Document)
+<< CommandSucceededEvent name=getMore requestId=27 (1.0 ms)
+   fields: cursor (Document), ok (Double), $clusterTime (Document), operationTime (Timestamp)
+   {
+     "cursor" : {
+       "id" : 6825582037390075618,
+       "ns" : "kronikol168sh.sharded",
+       "nextBatch" : [{
+           "_id" : "find-4",
+           "kind" : "batch",
+           "n" : 4
+         }, {
+           "_id" : "find-5",
+           "kind" : "batch",
+           "n" : 5
+         }]
+     },
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } }
+   }
+>> CommandStartedEvent name=getMore db=kronikol168sh requestId=28
+   fields: getMore (Int64), collection (String), batchSize (Int32), $db (String), lsid (Document), $clusterTime (Document)
+<< CommandSucceededEvent name=getMore requestId=28 (0.9 ms)
+   fields: cursor (Document), ok (Double), $clusterTime (Document), operationTime (Timestamp)
+   {
+     "cursor" : {
+       "id" : 0,
+       "ns" : "kronikol168sh.sharded",
+       "nextBatch" : []
+     },
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } }
+   }
+
+## (c2) Find on the sharded collection by _id (targeted)
+   returned 1 documents
+>> CommandStartedEvent name=find db=kronikol168sh requestId=29
+   fields: find (String), filter (Document), $db (String), lsid (Document), $clusterTime (Document)
+<< CommandSucceededEvent name=find requestId=29 (1.0 ms)
+   fields: cursor (Document), ok (Double), $clusterTime (Document), operationTime (Timestamp)
+   {
+     "cursor" : {
+       "firstBatch" : [{
+           "_id" : "find-3",
+           "kind" : "batch",
+           "n" : 3
+         }],
+       "id" : 0,
+       "ns" : "kronikol168sh.sharded"
+     },
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } }
+   }
+
+## (d) InsertOne of a duplicate _id into the sharded collection
+   API threw MongoDB.Driver.MongoWriteException: A write operation resulted in an error. WriteError: { Category : "DuplicateKey", Code : 11000, Message : "E11000 duplicate key error collection: kronikol168sh.sharded index: _id_ dup key: { _id: "ins-sharded-1" }" }.
+>> CommandStartedEvent name=insert db=kronikol168sh requestId=30
+   fields: insert (String), ordered (Boolean), txnNumber (Int64), $db (String), lsid (Document), $clusterTime (Document), documents (Array[1])
+<< CommandSucceededEvent name=insert requestId=30 (1.1 ms)
+   fields: n (Int32), writeErrors (Array[1]), ok (Double), $clusterTime (Document), operationTime (Timestamp)
+   {
+     "n" : 0,
+     "writeErrors" : [{
+         "index" : 0,
+         "code" : 11000,
+         "errmsg" : "E11000 duplicate key error collection: kronikol168sh.sharded index: _id_ dup key: { _id: \"ins-sharded-1\" }",
+         "keyPattern" : {
+           "_id" : 1
+         },
+         "keyValue" : {
+           "_id" : "ins-sharded-1"
+         }
+       }],
+     "ok" : 1.0,
+     "$clusterTime" : {
+       "clusterTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } },
+       "signature" : {
+         "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } },
+         "keyId" : 0
+       }
+     },
+     "operationTime" : { "$timestamp" : { "t" : 1791897101, "i" : 7 } }
+   }
+
+## Field summary: top-level fields per command name (first-seen order), and per reply
+- abortTransaction (x1)
+    command: abortTransaction, recoveryToken, $db, lsid, $clusterTime, txnNumber, autocommit
+    reply:   ok, $clusterTime, operationTime, recoveryToken
+- aggregate (x1)
+    command: aggregate, pipeline, cursor, $db, lsid, $clusterTime
+    reply:   cursor, ok, $clusterTime, operationTime
+- buildInfo (x1)
+    command: buildInfo, $db, lsid
+    reply:   version, gitVersion, modules, allocator, javascriptEngine, sysInfo, versionArray, openssl, buildEnvironment, bits, debug, maxBsonObjectSize, ok, $clusterTime, operationTime
+- commitTransaction (x3)
+    command: commitTransaction, recoveryToken, $db, lsid, $clusterTime, txnNumber, autocommit
+    reply:   ok, $clusterTime, operationTime, recoveryToken
+- delete (x2)
+    command: delete, ordered, $db, lsid, $clusterTime, deletes
+    reply:   n, ok, $clusterTime, operationTime
+- find (x4)
+    command: find, filter, limit, $db, lsid, $clusterTime, txnNumber, startTransaction, autocommit, batchSize
+    reply:   cursor, ok, $clusterTime, operationTime, recoveryToken
+- getMore (x3)
+    command: getMore, collection, batchSize, $db, lsid, $clusterTime
+    reply:   cursor, ok, $clusterTime, operationTime
+- hello (x1)
+    command: hello, $db, lsid, $clusterTime
+    reply:   isWritablePrimary, msg, topologyVersion, maxBsonObjectSize, maxMessageSizeBytes, maxWriteBatchSize, localTime, logicalSessionTimeoutMinutes, connectionId, maxWireVersion, minWireVersion, ok, $clusterTime, operationTime
+- insert (x7)
+    command: insert, ordered, $db, lsid, $clusterTime, txnNumber, startTransaction, autocommit, documents
+    reply:   n, ok, $clusterTime, operationTime, recoveryToken, writeErrors
+- isMaster (x1)
+    command: isMaster, helloOk, backpressure, client, compression
+    reply:   ismaster, msg, topologyVersion, helloOk, maxBsonObjectSize, maxMessageSizeBytes, maxWriteBatchSize, localTime, logicalSessionTimeoutMinutes, connectionId, maxWireVersion, minWireVersion, ok, $clusterTime, operationTime
+- listShards (x1)
+    command: listShards, $db, lsid, $clusterTime
+    reply:   shards, ok, $clusterTime, operationTime
+- update (x2)
+    command: update, ordered, $db, lsid, $clusterTime, txnNumber, autocommit, updates
+    reply:   nModified, n, ok, $clusterTime, operationTime, recoveryToken
+
+## Watched fields: where each appeared (command or reply, and the command name)
+- ok: reply isMaster, reply buildInfo, reply hello, reply delete, reply find, reply aggregate, reply listShards, reply insert, reply update, reply commitTransaction, reply abortTransaction, reply getMore
+- $clusterTime: reply isMaster, reply buildInfo, command hello, reply hello, command delete, reply delete, command find, reply find, command aggregate, reply aggregate, command listShards, reply listShards, command insert, reply insert, command update, reply update, command commitTransaction, reply commitTransaction, command abortTransaction, reply abortTransaction, command getMore, reply getMore
+- operationTime: reply isMaster, reply buildInfo, reply hello, reply delete, reply find, reply aggregate, reply listShards, reply insert, reply update, reply commitTransaction, reply abortTransaction, reply getMore
+- electionId: never
+- opTime: never
+- $configServerState: never
+- $topologyTime: never
+- lastCommittedOpTime: never
+- $gleStats: never
+- $configTime: never
+- recoveryToken: reply insert, reply update, command commitTransaction, reply commitTransaction, command abortTransaction, reply abortTransaction, reply find
+- readOnly: never
+- $replData: never
+- writeConcernError: never
+- errorLabels: never
+- events whose document could not be read inside the handler: 0
+

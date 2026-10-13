@@ -1,0 +1,4 @@
+"  \"s\": \"José ~<b>\"" => " \"s\": \"josé \"\n"
+"  \"s\": \"José ~<id>42~</id>\"" => " \"s\": \"josé 42\"\n"
+"  \"note\": \"see ~<color red> here\"" => " \"note\": \"see here\"\n"
+"  \"name\": \"ÉLODIE\"" => " \"name\": \"Élodie\"\n"

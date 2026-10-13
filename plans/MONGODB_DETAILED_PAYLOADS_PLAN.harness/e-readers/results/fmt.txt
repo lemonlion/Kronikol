@@ -1,0 +1,111 @@
+=== TryFormatAsJson ===
+IN : {"big":9007199254740993,"d":1.0,"s":"José <b>"}
+OUT:
+{
+  "big": 9007199254740993,
+  "d": 1.0,
+  "s": "José <b>"
+}
+
+IN : { "big" : 9007199254740993, "d" : 1.0, "s" : "José <b>" }
+OUT:
+{
+  "big": 9007199254740993,
+  "d": 1.0,
+  "s": "José <b>"
+}
+
+IN : {"s":"Jos\u00e9 \u003cb\u003e","e":"\ud83d\ude00 x","amp":"a&b'c","ls":"a\u2028b","nul":null,"arr":[null,1]}
+OUT:
+{
+  "s": "José <b>",
+  "e": "\uD83D\uDE00 x",
+  "amp": "a&b'c",
+  "ls": "a\u2028b",
+  "arr": [
+    null,
+    1
+  ]
+}
+
+IN : {"status":"Ready","n":1}
+OUT:
+{
+  "status": "Ready",
+  "n": 1
+}
+
+IN : { "status" : "Ready", "n" : 1 }
+OUT:
+{
+  "status": "Ready",
+  "n": 1
+}
+
+IN : { "filter" : { "deletedAt" : null } }
+OUT:
+{
+  "filter": {}
+}
+
+IN : { "updates" : [{ "q" : { "_id" : 1 }, "u" : { "$set" : { "closedAt" : null } } }] }
+OUT:
+{
+  "updates": [
+    {
+      "q": {
+        "_id": 1
+      },
+      "u": {
+        "$set": {}
+      }
+    }
+  ]
+}
+
+IN : { "lastErrorObject" : { "n" : 0, "updatedExisting" : false }, "value" : null }
+OUT:
+{
+  "lastErrorObject": {
+    "n": 0,
+    "updatedExisting": false
+  }
+}
+
+IN : {"amount":{"$numberDecimal":"1000.50"},"_id":{"$oid":"65a1b2c3d4e5f6a7b8c9d0e1"},"at":{"$date":"2024-01-01T00:00:00Z"},"u":{"$uuid":"0f8fad5b-d9cb-469f-a165-70867728950e"},"n":9223372036854775807,"e":1E+2}
+OUT:
+{
+  "amount": {
+    "$numberDecimal": "1000.50"
+  },
+  "_id": {
+    "$oid": "65a1b2c3d4e5f6a7b8c9d0e1"
+  },
+  "at": {
+    "$date": "2024-01-01T00:00:00Z"
+  },
+  "u": {
+    "$uuid": "0f8fad5b-d9cb-469f-a165-70867728950e"
+  },
+  "n": 9223372036854775807,
+  "e": 1E+2
+}
+
+compact == spaced: True
+chars: [
+  "nbsp\u00A0x",
+  "zwsp​x",
+  "bom\uFEFFx",
+  "nel\u0085x",
+  "cjk中",
+  "ctl\u0001",
+  "gt>amp&apos'plus+",
+  "bs\\q\""
+]
+
+=== TruncationMarkerRegex (C#) ===
+"[1,2]\n... (3 more)" => success=True body="[1,2]" marker="... (3 more)"
+"[1,2]\n... (3 more documents not shown)" => success=True body="[1,2]" marker="... (3 more documents not shown)"
+"{"a":1}\n... (3 more)" => success=True body="{"a":1}" marker="... (3 more)"
+"[1,2]\n... (3 more statements not shown)" => success=False body="[1,2]\n... (3 more statements not shown)" marker=null
+"[1,2]\r\n... (3 more)\r\n" => success=True body="[1,2]" marker="... (3 more)"

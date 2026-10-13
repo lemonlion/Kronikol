@@ -1,0 +1,5 @@
+1
+1
+{"mongos":"8.0.32","fcv":{"version":"8.0"},"shards":["sh0=sh0/localhost:27232"],"database":{"_id":"kronikol168sh","primary":"sh0","version":{"uuid":"582aee5e-7c95-4908-8f5c-9ba1378801d1","timestamp":{"$timestamp":"7696138493109469206"},"lastMod":1}},"sharded":{"key":{"_id":"hashed"},"chunks":1},"plainInConfigCollections":0,"collections":["plain","sharded"]}
+{"member":"cfg","version":"8.0.32","setName":"cfg","isWritablePrimary":true}
+{"member":"sh0","version":"8.0.32","setName":"sh0","isWritablePrimary":true}

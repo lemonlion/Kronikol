@@ -1,0 +1,30 @@
+
+## re-indented note (what the generator writes for either stored form)
+normalized corpus piece: "note left\n{\n \"status\": \"ready\",\n \"n\": 1,\n \"u\": {\n \"$uuid\": \"0f8fad5b-d9cb-469f-a165-70867728950e\"\n }\n}\nend note\n"
+"status":"Ready"                         {"advanced":false,"eligible":true,"tokens":"[\"status\",\"ready\",\":\"]","shallow":null,"deep":true}
+status Ready                             {"advanced":false,"eligible":true,"tokens":"[\"status\",\"ready\"]","shallow":null,"deep":true}
+0f8fad5b-d9cb-469f-a165-70867728950e     {"advanced":false,"eligible":true,"tokens":"[\"0f8fad5b-d9cb-469f-a165-70867728950e\"]","shallow":null,"deep":true}
+"status": "Ready"                        {"advanced":false,"eligible":true,"tokens":"[\"status\",\"ready\",\":\"]","shallow":null,"deep":true}
+$uuid                                    {"advanced":true,"eligible":false,"tokens":"[{\"type\":\"status\",\"value\":\"uuid\"}]","shallow":false,"deep":false}
+"$uuid"                                  {"advanced":true,"eligible":true,"tokens":"[{\"type\":\"phrase\",\"value\":\"$uuid\"}]","shallow":false,"deep":true}
+status: ready                            {"advanced":false,"eligible":true,"tokens":"[\"status:\",\"ready\"]","shallow":null,"deep":false}
+
+## verbatim compact line
+normalized corpus piece: "note left\n{\"status\":\"ready\",\"n\":1,\"u\":{\"$uuid\":\"0f8fad5b-d9cb-469f-a165-70867728950e\"}}\nend note\n"
+"status":"Ready"                         {"advanced":false,"eligible":true,"tokens":"[\"status\",\"ready\",\":\"]","shallow":null,"deep":true}
+status Ready                             {"advanced":false,"eligible":true,"tokens":"[\"status\",\"ready\"]","shallow":null,"deep":true}
+0f8fad5b-d9cb-469f-a165-70867728950e     {"advanced":false,"eligible":true,"tokens":"[\"0f8fad5b-d9cb-469f-a165-70867728950e\"]","shallow":null,"deep":true}
+"status": "Ready"                        {"advanced":false,"eligible":true,"tokens":"[\"status\",\"ready\",\":\"]","shallow":null,"deep":true}
+$uuid                                    {"advanced":true,"eligible":false,"tokens":"[{\"type\":\"status\",\"value\":\"uuid\"}]","shallow":false,"deep":false}
+"$uuid"                                  {"advanced":true,"eligible":true,"tokens":"[{\"type\":\"phrase\",\"value\":\"$uuid\"}]","shallow":false,"deep":true}
+status: ready                            {"advanced":false,"eligible":true,"tokens":"[\"status:\",\"ready\"]","shallow":null,"deep":false}
+
+## verbatim spaced line
+normalized corpus piece: "note left\n{ \"status\" : \"ready\", \"n\" : 1, \"u\" : { \"$uuid\" : \"0f8fad5b-d9cb-469f-a165-70867728950e\" } }\nend note\n"
+"status":"Ready"                         {"advanced":false,"eligible":true,"tokens":"[\"status\",\"ready\",\":\"]","shallow":null,"deep":true}
+status Ready                             {"advanced":false,"eligible":true,"tokens":"[\"status\",\"ready\"]","shallow":null,"deep":true}
+0f8fad5b-d9cb-469f-a165-70867728950e     {"advanced":false,"eligible":true,"tokens":"[\"0f8fad5b-d9cb-469f-a165-70867728950e\"]","shallow":null,"deep":true}
+"status": "Ready"                        {"advanced":false,"eligible":true,"tokens":"[\"status\",\"ready\",\":\"]","shallow":null,"deep":true}
+$uuid                                    {"advanced":true,"eligible":false,"tokens":"[{\"type\":\"status\",\"value\":\"uuid\"}]","shallow":false,"deep":false}
+"$uuid"                                  {"advanced":true,"eligible":true,"tokens":"[{\"type\":\"phrase\",\"value\":\"$uuid\"}]","shallow":false,"deep":true}
+status: ready                            {"advanced":false,"eligible":true,"tokens":"[\"status:\",\"ready\"]","shallow":null,"deep":false}

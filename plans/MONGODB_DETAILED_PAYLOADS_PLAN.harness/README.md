@@ -137,3 +137,63 @@ document owned by a scenario), one Kronikol subscriber per client:
 `hold-copy.cs` shows which copy taken inside the handler can be read after it: `DeepClone()` and
 `BsonSerializer.Deserialize<BsonDocument>(doc.ToBson())` always; `Clone()` only for a `RawBsonDocument` (not the
 insert command); `new BsonDocument(doc)` never. Same on both drivers.
+
+## d-writer/ (added by the plan's review, 2026-10-13)
+
+| Script | How to run | Output |
+|---|---|---|
+| `writer-probe.cs`, `run-writer-probe.sh` | `sh run-writer-probe.sh [versions]` (default 2.30.0 3.12.0) | `results/writer-probe-bson-<v>.txt` |
+
+What a Kronikol-owned writer has to match, measured against the driver and `System.Text.Json`. The two outputs are
+identical except for the GUID line.
+
+- **Strings.** The driver's relaxed `ToJson()` writes `é`, `<b>&'+` and a non-breaking space as themselves; `"` and `\`
+  with a backslash; and U+0001, DEL, U+2028 and an emoji's surrogate pair as lowercase `\u` escapes.
+  - `Utf8JsonWriter`'s default encoder writes `é` as `\u00E9`, `<` as `\u003C`, `&` as `\u0026`, `'` as `\u0027`, `+` as
+    `\u002B` and `"` as `\u0022`.
+  - `UnsafeRelaxedJsonEscaping` keeps `é` and `<b>&'+` but escapes the non-breaking space and DEL.
+- **Doubles.**
+  - The driver writes 17 significant digits (`0.10000000000000001`, `1.0000000000000001E+300`), keeps `1.0` and
+    `123456789.0`, and writes -0.0 as `0.0`.
+  - `Utf8JsonWriter.WriteNumberValue` writes `1`, `123456789` and `-0`, which `BsonDocument.Parse` reads as Int32.
+  - The spec's corpus (`bson-corpus/tests/double.json`) writes relaxed `1.0` and `-0.0`.
+- **`{"$uuid": "0f8fad5b-…"}`** is read back by `BsonDocument.Parse` as a Binary of subtype 4 (`UuidStandard`) on both
+  versions. 2.30.0's writer then writes it as subtype 03 under the default `GuidRepresentationMode.V2`.
+- **A DBPointer** (BSON type 0x0C) cannot be read. Both versions throw `FormatException: Detected unknown BSON type
+  "\x0c"`.
+- **One insert of ten documents** is 2,658 characters in the driver's spacing (332 bytes gzipped) and 2,225 compact
+  (314 bytes gzipped).
+
+The spec text it was checked against: `mongodb/specifications`, `source/extended-json/extended-json.md`, "Special
+rules for parsing `$uuid` fields" (parsers MUST read `$uuid` as Binary subtype 4, added 2020-09-08), its conversion
+table (Binary is `$binary` in both forms; a relaxed Double is a number with a fraction or an exponent), and footnote 5
+(three digits of milliseconds when not zero).
+
+## c-sharded/ (added by the review)
+
+A one-shard cluster on `mongo:8.0` (8.0.32), with the wire-shapes probe run through mongos and on the shard's member,
+on both drivers, and `sharded-extras.cs` for a transaction through mongos. See [`c-sharded/README.md`](c-sharded/README.md);
+`results/field-diff.txt` lists every field that differs from the replica set.
+
+## e-readers/ (added by the review)
+
+How Kronikol's own readers treat a body, from the source at the review's commit:
+
+| Script | How to run | Output |
+|---|---|---|
+| `fmt.cs` (verbatim copies of `PlantUmlCreator.TryFormatAsJson`, `WriteElementWithoutNulls` and the footnote regex) | copy outside the repo, `dotnet run fmt.cs` | `results/fmt.txt` |
+| `notes-harness.js` (the page's note script with DOM stubs) | `node notes-harness.js` | `results/notes-harness.txt` |
+| `search-harness.js`, `head120.js` | `node <file>` | `results/<file>.txt` |
+| `tools/search-bench/normalize.js` on tag-like text | see the plan's §8 | `results/normalize-tags.txt` |
+
+What they printed:
+- **Nulls are dropped from a drawn JSON note.** `{ "filter" : { "deletedAt" : null } }` is drawn `"filter": {}`,
+  `$set`'s `closedAt: null` disappears, and a findAndModify's `"value" : null` disappears. A null inside an array
+  stays.
+- **Spacing does not reach the page.** Compact and spaced input are re-indented to the same bytes.
+- **Number text is kept.** `9007199254740993`, `1.0` and `1E+2` keep their text in the C# formatter and in the YAML
+  view.
+- **Both footnote patterns take `... (N more)`.** The page's and the C# one accept it, and both refuse
+  `... (N more statements not shown)`.
+- **The search normalizer drops payload text that looks like markup.** It writes `José ~<b>` as `josé `, and
+  `ÉLODIE` as `Élodie`.

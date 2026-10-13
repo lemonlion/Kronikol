@@ -1,0 +1,341 @@
+# Top-level field differences: sharded cluster (mongo 8.0.32) against the replica set (mongo 8.0.32)
+Baselines: ../b-wire-shapes/results/wire-shapes-driver-<v>-mongo8.txt; each run is compared with the baseline
+of its own driver version, from each file's '## Field summary' section (fields per command name, unioned
+over every event of that name). sharded-extras runs other operations, so only its added fields are listed.
+
+## wire-shapes 3.12.0 mongos8 (baseline: wire-shapes-driver-3.12.0-mongo8.txt)
+   command fields per command name:
+     abortTransaction: added recoveryToken
+     commitTransaction: added recoveryToken
+   command fields in no command on the replica set: recoveryToken
+   reply fields per command name:
+     abortTransaction: added recoveryToken
+     buildInfo: missing storageEngines
+     bulkWrite: added retriedStmtIds; missing electionId, opTime
+     commitTransaction: added recoveryToken
+     count: added shards
+     createIndexes: added raw
+     delete: missing electionId, opTime
+     hello: added msg; missing hosts, setName, setVersion, secondary, primary, me, electionId, lastWrite, readOnly
+     insert: added recoveryToken; missing electionId, opTime
+     isMaster: added msg; missing hosts, setName, setVersion, secondary, primary, me, electionId, lastWrite, readOnly
+     update: added recoveryToken; missing electionId, opTime
+   reply fields in no reply on the replica set: recoveryToken, retriedStmtIds, shards, raw, msg
+
+## wire-shapes 2.30.0 mongos8 (baseline: wire-shapes-driver-2.30.0-mongo8.txt)
+   command fields per command name:
+     abortTransaction: added recoveryToken
+     commitTransaction: added recoveryToken
+   command fields in no command on the replica set: recoveryToken
+   reply fields per command name:
+     abortTransaction: added recoveryToken
+     buildInfo: missing storageEngines
+     commitTransaction: added recoveryToken
+     count: added shards
+     createIndexes: added raw
+     delete: missing electionId, opTime
+     hello: added msg; missing hosts, setName, setVersion, secondary, primary, me, electionId, lastWrite, readOnly
+     insert: added recoveryToken; missing electionId, opTime
+     isMaster: added msg; missing hosts, setName, setVersion, secondary, primary, me, electionId, lastWrite, readOnly
+     update: added recoveryToken; missing electionId, opTime
+   reply fields in no reply on the replica set: recoveryToken, shards, raw, msg
+
+## wire-shapes 3.12.0 shard8 (baseline: wire-shapes-driver-3.12.0-mongo8.txt)
+   command fields per command name:
+     (no difference)
+   command fields in no command on the replica set: (none)
+   reply fields per command name:
+     abortTransaction: added readOnly, $replData
+     bulkWrite: added readOnly
+     commitTransaction: added readOnly, $replData
+     delete: added readOnly
+     findAndModify: added readOnly
+     hello: added isImplicitDefaultMajorityWC
+     insert: added readOnly, $replData
+     isMaster: added isImplicitDefaultMajorityWC
+     update: added readOnly, $replData
+   reply fields in no reply on the replica set: $replData, isImplicitDefaultMajorityWC
+
+## wire-shapes 2.30.0 shard8 (baseline: wire-shapes-driver-2.30.0-mongo8.txt)
+   command fields per command name:
+     (no difference)
+   command fields in no command on the replica set: (none)
+   reply fields per command name:
+     abortTransaction: added readOnly, $replData
+     commitTransaction: added readOnly, $replData
+     delete: added readOnly
+     findAndModify: added readOnly
+     hello: added isImplicitDefaultMajorityWC
+     insert: added readOnly, $replData
+     isMaster: added isImplicitDefaultMajorityWC
+     update: added readOnly, $replData
+   reply fields in no reply on the replica set: $replData, isImplicitDefaultMajorityWC
+
+## sharded-extras 3.12.0 mongos8 (baseline: wire-shapes-driver-3.12.0-mongo8.txt)
+   command fields per command name:
+     abortTransaction: added recoveryToken
+     commitTransaction: added recoveryToken
+     find: added txnNumber, startTransaction, autocommit
+     listShards: not run on the replica set; fields listShards, $db, lsid, $clusterTime
+   command fields in no command on the replica set: recoveryToken, listShards
+   reply fields per command name:
+     abortTransaction: added recoveryToken
+     commitTransaction: added recoveryToken
+     find: added recoveryToken
+     hello: added msg
+     insert: added recoveryToken
+     isMaster: added msg
+     listShards: not run on the replica set; fields shards, ok, $clusterTime, operationTime
+     update: added recoveryToken
+   reply fields in no reply on the replica set: recoveryToken, msg, shards
+
+## sharded-extras 2.30.0 mongos8 (baseline: wire-shapes-driver-2.30.0-mongo8.txt)
+   command fields per command name:
+     abortTransaction: added recoveryToken
+     commitTransaction: added recoveryToken
+     find: added txnNumber, startTransaction, autocommit
+     listShards: not run on the replica set; fields listShards, $db, lsid, $clusterTime
+   command fields in no command on the replica set: recoveryToken, listShards
+   reply fields per command name:
+     abortTransaction: added recoveryToken
+     commitTransaction: added recoveryToken
+     find: added recoveryToken
+     hello: added msg
+     insert: added recoveryToken
+     isMaster: added msg
+     listShards: not run on the replica set; fields shards, ok, $clusterTime, operationTime
+     update: added recoveryToken
+   reply fields in no reply on the replica set: recoveryToken, msg, shards
+
+## The plan's reply strip list: where each field appears in replies
+- ok:
+    replica set 3.12.0             all 19 command names
+    replica set 2.30.0             all 18 command names
+    wire-shapes 3.12.0 mongos8     all 19 command names
+    wire-shapes 2.30.0 mongos8     all 18 command names
+    wire-shapes 3.12.0 shard8      all 19 command names
+    wire-shapes 2.30.0 shard8      all 18 command names
+    sharded-extras 3.12.0 mongos8  all 12 command names
+    sharded-extras 2.30.0 mongos8  all 12 command names
+- $clusterTime:
+    replica set 3.12.0             all 19 command names
+    replica set 2.30.0             all 18 command names
+    wire-shapes 3.12.0 mongos8     all 19 command names
+    wire-shapes 2.30.0 mongos8     all 18 command names
+    wire-shapes 3.12.0 shard8      all 19 command names
+    wire-shapes 2.30.0 shard8      all 18 command names
+    sharded-extras 3.12.0 mongos8  all 12 command names
+    sharded-extras 2.30.0 mongos8  all 12 command names
+- operationTime:
+    replica set 3.12.0             all 19 command names
+    replica set 2.30.0             all 18 command names
+    wire-shapes 3.12.0 mongos8     all 19 command names
+    wire-shapes 2.30.0 mongos8     all 18 command names
+    wire-shapes 3.12.0 shard8      all 19 command names
+    wire-shapes 2.30.0 shard8      all 18 command names
+    sharded-extras 3.12.0 mongos8  all 12 command names
+    sharded-extras 2.30.0 mongos8  all 12 command names
+- electionId:
+    replica set 3.12.0             bulkWrite, delete, hello, insert, isMaster, update
+    replica set 2.30.0             delete, hello, insert, isMaster, update
+    wire-shapes 3.12.0 mongos8     never
+    wire-shapes 2.30.0 mongos8     never
+    wire-shapes 3.12.0 shard8      bulkWrite, delete, hello, insert, isMaster, update
+    wire-shapes 2.30.0 shard8      delete, hello, insert, isMaster, update
+    sharded-extras 3.12.0 mongos8  never
+    sharded-extras 2.30.0 mongos8  never
+- opTime:
+    replica set 3.12.0             bulkWrite, delete, insert, update
+    replica set 2.30.0             delete, insert, update
+    wire-shapes 3.12.0 mongos8     never
+    wire-shapes 2.30.0 mongos8     never
+    wire-shapes 3.12.0 shard8      bulkWrite, delete, insert, update
+    wire-shapes 2.30.0 shard8      delete, insert, update
+    sharded-extras 3.12.0 mongos8  never
+    sharded-extras 2.30.0 mongos8  never
+- $configServerState: never
+- $topologyTime: never
+- lastCommittedOpTime: never
+- $gleStats: never
+
+## The plan's command strip list: where each field appears in commands
+- $db:
+    replica set 3.12.0             all 19 command names but isMaster
+    replica set 2.30.0             all 18 command names but isMaster
+    wire-shapes 3.12.0 mongos8     all 19 command names but isMaster
+    wire-shapes 2.30.0 mongos8     all 18 command names but isMaster
+    wire-shapes 3.12.0 shard8      all 19 command names but isMaster
+    wire-shapes 2.30.0 shard8      all 18 command names but isMaster
+    sharded-extras 3.12.0 mongos8  all 12 command names but isMaster
+    sharded-extras 2.30.0 mongos8  all 12 command names but isMaster
+- lsid:
+    replica set 3.12.0             all 19 command names but isMaster, listIndexes
+    replica set 2.30.0             all 18 command names but isMaster, listIndexes
+    wire-shapes 3.12.0 mongos8     all 19 command names but isMaster, listIndexes
+    wire-shapes 2.30.0 mongos8     all 18 command names but isMaster, listIndexes
+    wire-shapes 3.12.0 shard8      all 19 command names but isMaster, listIndexes
+    wire-shapes 2.30.0 shard8      all 18 command names but isMaster, listIndexes
+    sharded-extras 3.12.0 mongos8  all 12 command names but isMaster
+    sharded-extras 2.30.0 mongos8  all 12 command names but isMaster
+- txnNumber:
+    replica set 3.12.0             abortTransaction, bulkWrite, commitTransaction, delete, findAndModify, insert, update
+    replica set 2.30.0             abortTransaction, commitTransaction, delete, findAndModify, insert, update
+    wire-shapes 3.12.0 mongos8     abortTransaction, bulkWrite, commitTransaction, delete, findAndModify, insert, update
+    wire-shapes 2.30.0 mongos8     abortTransaction, commitTransaction, delete, findAndModify, insert, update
+    wire-shapes 3.12.0 shard8      abortTransaction, bulkWrite, commitTransaction, delete, findAndModify, insert, update
+    wire-shapes 2.30.0 shard8      abortTransaction, commitTransaction, delete, findAndModify, insert, update
+    sharded-extras 3.12.0 mongos8  abortTransaction, commitTransaction, find, insert, update
+    sharded-extras 2.30.0 mongos8  abortTransaction, commitTransaction, find, insert, update
+- $clusterTime:
+    replica set 3.12.0             all 19 command names but buildInfo, isMaster
+    replica set 2.30.0             all 18 command names but buildInfo, isMaster
+    wire-shapes 3.12.0 mongos8     all 19 command names but buildInfo, isMaster
+    wire-shapes 2.30.0 mongos8     all 18 command names but buildInfo, isMaster
+    wire-shapes 3.12.0 shard8      all 19 command names but buildInfo, isMaster
+    wire-shapes 2.30.0 shard8      all 18 command names but buildInfo, isMaster
+    sharded-extras 3.12.0 mongos8  all 12 command names but buildInfo, isMaster
+    sharded-extras 2.30.0 mongos8  all 12 command names but buildInfo, isMaster
+- startTransaction:
+    replica set 3.12.0             insert, update
+    replica set 2.30.0             insert, update
+    wire-shapes 3.12.0 mongos8     insert, update
+    wire-shapes 2.30.0 mongos8     insert, update
+    wire-shapes 3.12.0 shard8      insert, update
+    wire-shapes 2.30.0 shard8      insert, update
+    sharded-extras 3.12.0 mongos8  find, insert
+    sharded-extras 2.30.0 mongos8  find, insert
+- autocommit:
+    replica set 3.12.0             abortTransaction, commitTransaction, insert, update
+    replica set 2.30.0             abortTransaction, commitTransaction, insert, update
+    wire-shapes 3.12.0 mongos8     abortTransaction, commitTransaction, insert, update
+    wire-shapes 2.30.0 mongos8     abortTransaction, commitTransaction, insert, update
+    wire-shapes 3.12.0 shard8      abortTransaction, commitTransaction, insert, update
+    wire-shapes 2.30.0 shard8      abortTransaction, commitTransaction, insert, update
+    sharded-extras 3.12.0 mongos8  abortTransaction, commitTransaction, find, insert, update
+    sharded-extras 2.30.0 mongos8  abortTransaction, commitTransaction, find, insert, update
+- writeConcern:
+    replica set 3.12.0             commitTransaction, findAndModify, insert
+    replica set 2.30.0             commitTransaction, findAndModify, insert
+    wire-shapes 3.12.0 mongos8     commitTransaction, findAndModify, insert
+    wire-shapes 2.30.0 mongos8     commitTransaction, findAndModify, insert
+    wire-shapes 3.12.0 shard8      commitTransaction, findAndModify, insert
+    wire-shapes 2.30.0 shard8      commitTransaction, findAndModify, insert
+    sharded-extras 3.12.0 mongos8  never
+    sharded-extras 2.30.0 mongos8  never
+- readConcern:
+    replica set 3.12.0             find, update
+    replica set 2.30.0             find, update
+    wire-shapes 3.12.0 mongos8     find, update
+    wire-shapes 2.30.0 mongos8     find, update
+    wire-shapes 3.12.0 shard8      find, update
+    wire-shapes 2.30.0 shard8      find, update
+    sharded-extras 3.12.0 mongos8  never
+    sharded-extras 2.30.0 mongos8  never
+- $readPreference:
+    replica set 3.12.0             find, hello
+    replica set 2.30.0             find, hello
+    wire-shapes 3.12.0 mongos8     find, hello
+    wire-shapes 2.30.0 mongos8     find, hello
+    wire-shapes 3.12.0 shard8      find, hello
+    wire-shapes 2.30.0 shard8      find, hello
+    sharded-extras 3.12.0 mongos8  never
+    sharded-extras 2.30.0 mongos8  never
+- apiVersion:
+    replica set 3.12.0             commitTransaction, find, findAndModify, hello, insert, update
+    replica set 2.30.0             commitTransaction, find, findAndModify, hello, insert, update
+    wire-shapes 3.12.0 mongos8     commitTransaction, find, findAndModify, hello, insert, update
+    wire-shapes 2.30.0 mongos8     commitTransaction, find, findAndModify, hello, insert, update
+    wire-shapes 3.12.0 shard8      commitTransaction, find, findAndModify, hello, insert, update
+    wire-shapes 2.30.0 shard8      commitTransaction, find, findAndModify, hello, insert, update
+    sharded-extras 3.12.0 mongos8  never
+    sharded-extras 2.30.0 mongos8  never
+- apiStrict: never
+- apiDeprecationErrors: never
+- ordered:
+    replica set 3.12.0             bulkWrite, delete, insert, update
+    replica set 2.30.0             delete, insert, update
+    wire-shapes 3.12.0 mongos8     bulkWrite, delete, insert, update
+    wire-shapes 2.30.0 mongos8     delete, insert, update
+    wire-shapes 3.12.0 shard8      bulkWrite, delete, insert, update
+    wire-shapes 2.30.0 shard8      delete, insert, update
+    sharded-extras 3.12.0 mongos8  delete, insert, update
+    sharded-extras 2.30.0 mongos8  delete, insert, update
+- cursor (on aggregate):
+    replica set 3.12.0             aggregate
+    replica set 2.30.0             aggregate
+    wire-shapes 3.12.0 mongos8     aggregate
+    wire-shapes 2.30.0 mongos8     aggregate
+    wire-shapes 3.12.0 shard8      aggregate
+    wire-shapes 2.30.0 shard8      aggregate
+    sharded-extras 3.12.0 mongos8  aggregate
+    sharded-extras 2.30.0 mongos8  aggregate
+
+## Fields asked about
+### $configServerState
+  in commands:
+    never
+  in replies:
+    never
+### $topologyTime
+  in commands:
+    never
+  in replies:
+    never
+### lastCommittedOpTime
+  in commands:
+    never
+  in replies:
+    never
+### $gleStats
+  in commands:
+    never
+  in replies:
+    never
+### electionId
+  in commands:
+    never
+  in replies:
+    replica set 3.12.0             bulkWrite, delete, hello, insert, isMaster, update
+    replica set 2.30.0             delete, hello, insert, isMaster, update
+    wire-shapes 3.12.0 mongos8     never
+    wire-shapes 2.30.0 mongos8     never
+    wire-shapes 3.12.0 shard8      bulkWrite, delete, hello, insert, isMaster, update
+    wire-shapes 2.30.0 shard8      delete, hello, insert, isMaster, update
+    sharded-extras 3.12.0 mongos8  never
+    sharded-extras 2.30.0 mongos8  never
+### opTime
+  in commands:
+    never
+  in replies:
+    replica set 3.12.0             bulkWrite, delete, insert, update
+    replica set 2.30.0             delete, insert, update
+    wire-shapes 3.12.0 mongos8     never
+    wire-shapes 2.30.0 mongos8     never
+    wire-shapes 3.12.0 shard8      bulkWrite, delete, insert, update
+    wire-shapes 2.30.0 shard8      delete, insert, update
+    sharded-extras 3.12.0 mongos8  never
+    sharded-extras 2.30.0 mongos8  never
+### recoveryToken
+  in commands:
+    replica set 3.12.0             never
+    replica set 2.30.0             never
+    wire-shapes 3.12.0 mongos8     abortTransaction, commitTransaction
+    wire-shapes 2.30.0 mongos8     abortTransaction, commitTransaction
+    wire-shapes 3.12.0 shard8      never
+    wire-shapes 2.30.0 shard8      never
+    sharded-extras 3.12.0 mongos8  abortTransaction, commitTransaction
+    sharded-extras 2.30.0 mongos8  abortTransaction, commitTransaction
+  in replies:
+    replica set 3.12.0             never
+    replica set 2.30.0             never
+    wire-shapes 3.12.0 mongos8     abortTransaction, commitTransaction, insert, update
+    wire-shapes 2.30.0 mongos8     abortTransaction, commitTransaction, insert, update
+    wire-shapes 3.12.0 shard8      never
+    wire-shapes 2.30.0 shard8      never
+    sharded-extras 3.12.0 mongos8  abortTransaction, commitTransaction, find, insert, update
+    sharded-extras 2.30.0 mongos8  abortTransaction, commitTransaction, find, insert, update
+### $configTime
+  in commands:
+    never
+  in replies:
+    never
