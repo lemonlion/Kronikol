@@ -1171,6 +1171,10 @@ no row is taken here.
     lane's fixture adds `appsettings.componenttests.json` after the environment, so its real-server mode is set in
     that file: a first run with environment variables kept the file's `localhost:27017` and failed 11 scenarios on
     the driver's 30-second server selection.
+- **2026-10-13, R1 published.** Release run 38443005513, CI 38443001989 and CodeQL 38443001902 passed for 4.19.6.
+  CI's remaining-tests job first failed at restore, on Microsoft's half-published 10.0.13 servicing packages, and
+  passed when rerun once nuget.org listed them. nuget.org listed all 62 ids at 20:18. The wiki has R1's edits
+  (`e73a5ab`), Kronikol4J's ledger its two lines (`233baf7`), and #168 a comment naming the release.
 
 ## Appendix A. Edit sites at `34145c44`
 
