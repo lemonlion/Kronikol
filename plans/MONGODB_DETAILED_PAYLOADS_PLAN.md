@@ -1173,7 +1173,7 @@ no row is taken here.
     the driver's 30-second server selection.
 - **2026-10-13, R1 published.** Release run 38443005513, CI 38443001989 and CodeQL 38443001902 passed for 4.19.6.
   CI's remaining-tests job first failed at restore, on Microsoft's half-published 10.0.13 servicing packages, and
-  passed when rerun once nuget.org listed them. nuget.org listed all 62 ids at 20:18. The wiki has R1's edits
+  passed when rerun once nuget.org listed them. nuget.org listed all 62 ids at 19:18 UTC. The wiki has R1's edits
   (`e73a5ab`), Kronikol4J's ledger its two lines (`233baf7`), and #168 a comment naming the release.
 
 - **2026-10-13, R2 executed as 4.20.0**, by kronikol-cf, in the same worktree as R1.
@@ -1205,7 +1205,7 @@ no row is taken here.
     the lane writes grows by 0.2%: 4,681,138 to 4,692,053 bytes in memory and 4,676,641 to 4,689,272 against the server
     (Q5 left the budget to the owner; this is the measurement it asked for).
 - **2026-10-13, R2 published.** Release run 38457681824, CI 38457676182, CodeQL 38457676619 and CI Summary Preview
-  38457676440 passed for 4.20.0, each on its first attempt. nuget.org listed all 62 ids at 21:15. The wiki has R2's
+  38457676440 passed for 4.20.0, each on its first attempt. nuget.org listed all 62 ids at 20:15 UTC. The wiki has R2's
   edits (`1307e7c`), Kronikol4J's ledger its line (`1eb7001`), and #168 a comment naming the release.
 
 - **2026-10-13, R3 executed as 4.20.1**, by kronikol-cf, in the same worktree as R1 and R2.
@@ -1231,6 +1231,13 @@ no row is taken here.
     passes 398 with 4 skipped (its Docker-only container facts) and its Bson 3 project 1 of 1; ClickHouse passes 120
     with 9 skipped (its real-server facts); the full Playwright suite passes 1,040 with 28 skipped when run alone;
     release.slnf builds in Release for every target, and restores with --force-evaluate.
+
+- **2026-10-13, R3 published.** CI 38468447111, CodeQL 38468446852 and CI Summary Preview 38468446704 passed for
+  4.20.1, and Release 38468450102 on its second attempt: nuget.org answered the first push with 500 after one of the 62
+  packages (its status page had shown publishing degraded from 19:30 to 20:28 UTC), and the rerun, which skips a package
+  already there, pushed the rest. nuget.org listed all 62 ids at 21:52 UTC. The wiki has R3's edits (`c0aea0c`),
+  Kronikol4J's ledger its line (`17cb305`, nothing to port), and #168 a comment naming the release. The listing times
+  in R1's and R2's entries were the watcher's clock, an hour ahead of UTC; they now read UTC.
 
 ## Appendix A. Edit sites at `34145c44`
 
