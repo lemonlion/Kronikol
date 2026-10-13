@@ -23,8 +23,9 @@ edit('Internal-Flow-Tracking.md',
 edit('Integration-ProxyTap-Extension.md',
      "and a sampler that dropped the server span replaced the caller's trace.",
      f' From {version} the forward runs none of the HttpClient instrumentation in the tap\'s process: OpenTelemetry\'s'
-     ' put a span of its own in place of the forwarded `traceparent`, which started a new trace with nothing listening'
-     ' to the tap and went out `-00` beside Kronikol\'s listener; listen to `Kronikol.ProxyTap` for the forward\'s span.'
+     ' instrumentation put a span of its own in place of the forwarded `traceparent`, which started a new trace with'
+     ' nothing listening to the tap and went out `-00` beside Kronikol\'s listener; listen to `Kronikol.ProxyTap` for'
+     ' the forward\'s span.'
      ' A tap started under an activity no longer forwards that activity\'s trace and baggage either: each request'
      ' starts with no current activity.')
 print('wiki edited')

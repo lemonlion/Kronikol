@@ -3,11 +3,13 @@
 **Written:** 2026-10-13, at 4.18.1 (`34145c44`), the day #170 was filed, in the worktree `C:/Code/Kronikol-170`
 (branch `plan/170-proxytap-trace-from-identity`), and revised the same day after a review against the real
 OpenTelemetry SDK (section 11). **Status: executed and published on 2026-10-13, R0 as 4.18.3 and R1 as 4.19.0; #170
-closed. Audited the same day at the owner's request; its fixes shipped as 4.19.4 (section 12).** Green-lit in full by the owner the same day ("implement the plan in full"), every question in section 9 as
-recommended, and its releases went out as soon as they passed rather than after #172 and #171 (section 6.2). Evidence labels: **RUN** (measured here; the
-probe, its source and what it printed are in the harness), **READ** (in the source at `34145c44`, `file:line`, or in
-the wiki at `origin/master` of `../Kronikol.wiki` as fetched on 2026-10-13), **INFERRED** (reasoned from facts,
-stated by none), **ISSUE** (taken from #170, not re-measured), **DOC** (a third party's documentation). The harness is
+closed. Audited the same day at the owner's request; its fixes were released and published as 4.19.4 the same day
+(section 12).** Green-lit in full by the owner the same day ("implement the plan in full"), every question in section
+9 as recommended, and its releases went out as soon as they passed rather than after #172 and #171 (section 6.2).
+Evidence labels: **RUN** (measured here; the probe, its source and what it printed are in the harness), **READ** (in
+the source at `34145c44`, `file:line`, or in the wiki at `origin/master` of `../Kronikol.wiki` as fetched on
+2026-10-13), **INFERRED** (reasoned from facts, stated by none), **ISSUE** (taken from #170, not re-measured), **DOC**
+(a third party's documentation). The harness is
 [`PROXYTAP_TRACE_FROM_IDENTITY_PLAN.harness/`](PROXYTAP_TRACE_FROM_IDENTITY_PLAN.harness/README.md).
 
 Two other plans touch the same file at the same time: kronikol-70's `PROXY_TAP_FAILED_FORWARD_PLAN.md` (#171, a
@@ -732,6 +734,13 @@ The owner took every recommendation below on 2026-10-13 ("implement the plan in 
   was built, and fix what is not).** Section 12. Nine findings, A1 to A9, each measured before its fix; the fixes
   shipped as 4.19.4.
 
+- **2026-10-13, 4.19.4 published.** Release run 38433833330, CI 38433829415, CodeQL 38433829410 and CI Summary
+  Preview 38433829404 passed on `4a026b70`, and nuget.org listed all 62 ids at 18:11 UTC, 69 minutes after
+  the Release run finished. The wiki has the audit's two sentences (`e671682`; `tools/wiki-links` finds no dead or
+  reversed link), Kronikol4J the port of A1 and A2 with its facts (`0dc0bc4`) and its ledger line (`9532b08`),
+  and #170 a comment naming the five fixes a user can see. 4.19.5 (#171), built on 4.19.4, keeps both of the tap's
+  fixes (`ba85a495`).
+
 ## 12. The audit (2026-10-13)
 
 The owner asked, after both releases were out, for a check that the plan was completed in full and properly, with no
@@ -744,7 +753,7 @@ each fix has a fact that fails on 4.19.0 (`audit/red-4.19.0.txt`), and its mutat
 |---|---|---|---|
 | A1 | F4's nesting put the queries a service made for two of an app's calls at once inside whichever call opened last, so that call's popup showed the other call's query too. This is #170's own shape (a mobile app's parallel calls through a tap, the service's database spans recorded by the OTLP tap as calls of the test), and section 5.3's acceptance names it | Running section 5.3's acceptance for the first time (`audit/acceptance.cs`): on the published 4.19.0, three runs of three (`audit/acceptance-4.19.0.txt`) | The span tree first: an open call whose span id is above a call's span ran it; `CallNesting`'s rule only where the tree says nothing. Kronikol4J the same |
 | A2 | F4's cost: for every span of the trace and every call recording a span id above it, a fresh walk of the calls' nesting, before the time filter. One test of 300 calls under one ambient span, each with a downstream call: 22.3 s (4.18.2: 56 ms); 1,000 calls ran past 20 minutes | Reading the builder, then `audit/bench-f4.cs` (`audit/bench.txt`) | Each call's own span ids worked out once, from one walk up each call's outer calls, and checked against the spans in its time only: 71 ms for the 300 calls. Kronikol4J, which checked only spans in a call's time and never took long, takes the same form |
-| A3 | The tap's upstream `HttpClient` ran the process's HttpClient instrumentation. OpenTelemetry's puts a span of its own in place of the forwarded `traceparent`: with nothing listening to the tap, a new trace, so neither the caller's trace nor the test's reached the service; beside Kronikol's internal-flow listener, `-00` again (F3 undone) and a parent no store holds | Reading `StartAsync`, then `audit/probe-http-instrumentation.cs` against the published 4.19.0 (`audit/probe-http-instrumentation-4.19.0.txt`) | `ActivityHeadersPropagator = null` on the tap's handler; the tap's own client span is the forward's span |
+| A3 | The tap's upstream `HttpClient` ran the process's HttpClient instrumentation. OpenTelemetry's instrumentation puts a span of its own in place of the forwarded `traceparent`: with nothing listening to the tap, a new trace, so neither the caller's trace nor the test's reached the service; beside Kronikol's internal-flow listener, `-00` again (F3 undone) and a parent no store holds | Reading `StartAsync`, then `audit/probe-http-instrumentation.cs` against the published 4.19.0 (`audit/probe-http-instrumentation-4.19.0.txt`) | `ActivityHeadersPropagator = null` on the tap's handler; the tap's own client span is the forward's span |
 | A4 | A tap started under an activity forwarded that activity's trace and baggage on every call that brought no trace (R1 had cleared it for the test's trace only) | The same probe | `StartAsync` starts the accept loop with no current activity and gives its caller's back |
 | A5 | With the option on, a resolver returning a null id made the tap answer 502 | Reading `IsTraceId` | A null id counts as not applied |
 | A6 | The `OptionNotApplied` diagnostic and its log line left out "not all zero" | Reading | Added |

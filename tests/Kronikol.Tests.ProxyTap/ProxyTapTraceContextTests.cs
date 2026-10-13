@@ -457,9 +457,9 @@ public class ProxyTapTraceContextTests
     public async Task HttpClient_instrumentation_in_the_taps_process_leaves_the_forwarded_traceparent_alone(string? inbound)
     {
         // The tap forwards with an HttpClient of its own, which in 4.19.0 ran whatever HttpClient instrumentation the
-        // process had. OpenTelemetry's puts a span of its own in place of the traceparent, and with nothing listening to
-        // the tap that span is the root of a new trace: neither the caller's trace nor the test's reached the service,
-        // while the tap's records named it.
+        // process had. OpenTelemetry's instrumentation puts a span of its own in place of the traceparent, and with
+        // nothing listening to the tap that span is the root of a new trace: neither the caller's trace nor the test's
+        // reached the service, while the tap's records named it.
         using var provider = Sdk.CreateTracerProviderBuilder().AddHttpClientInstrumentation().Build();
 
         var run = await RunAsync(FromIdentity, (inbound, NoHeaders), (inbound, NoHeaders));
