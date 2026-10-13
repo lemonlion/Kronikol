@@ -1,7 +1,7 @@
 # MongoDB at Detailed: what a command sent and what came back, as JSON (#168)
 
 **Date:** 2026-10-13 · **Repo version:** 4.18.1 (`main` at `34145c44`; line numbers are for that commit, and the
-issue's, at `98c4806d`, point at the same lines) · **Status:** **Green-lit in full by the owner on 2026-10-13**, every §9 question as recommended. **R1 executed as 4.19.6, R2 as 4.20.0 and R3 as 4.20.1** (§11); the driver floor (Q18) follows. Drafted from #168 (filed by the
+issue's, at `98c4806d`, point at the same lines) · **Status:** **Green-lit in full by the owner on 2026-10-13**, every §9 question as recommended. **R1 executed as 4.19.6, R2 as 4.20.0, R3 as 4.20.1 and the driver floor (Q18) as 4.20.2** (§11). Drafted from #168 (filed by the
 owner on 2026-10-11, found in #132's multi-host suite on 4.14.6 with `Kronikol.Extensions.MongoDB.V2` and MongoDB.Driver
 2.30.0) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying problem.
 
@@ -1238,6 +1238,27 @@ no row is taken here.
   already there, pushed the rest. nuget.org listed all 62 ids at 21:52 UTC. The wiki has R3's edits (`c0aea0c`),
   Kronikol4J's ledger its line (`17cb305`, nothing to port), and #168 a comment naming the release. The listing times
   in R1's and R2's entries were the watcher's clock, an hour ahead of UTC; they now read UTC.
+
+- **2026-10-13, the driver floor (Q18) executed as 4.20.2**, by kronikol-cf, in a worktree of its own.
+  - **Measured, not taken from the example.** Q18 suggested the oldest 3.x the suite passes on. It passes on every 3.x
+    tried from 3.0.0, but a driver before 3.9.0 lets a project that takes its driver from Kronikol resolve Snappier
+    1.0.0 (a high advisory) or SharpCompress 0.30.1 (a moderate one), so `Kronikol.Extensions.MongoDB` asks for 3.9.0,
+    the oldest 3.x whose dependencies carry no advisory, and its stale `NoWarn NU1902` is gone.
+  - **The V2 package as well**, the same defect: `2.*` packed 2.30.0, and a consumer pinning 2.28 or 2.29 met NU1605.
+    The V2 suite builds from 2.21.0 (older drivers lack event constructors the tests use), but 2.x assemblies are
+    strong-named only from 2.28.0: with the extension built on an unsigned 2.x the suite, on 2.30.0, does not compile
+    (CS0012), and neither would a consumer's call into the extension. So V2 asks for 2.28.0.
+  - **The suites keep the newest driver** through a direct reference of their own, so the floor is what the extension
+    compiles against; `Kronikol.Tests.EndToEnd`, which takes the extension alone, runs on 3.9.0.
+  - **Not done here, for the owner:** TcpTap's `MongoDB.Bson` `2.*` and about fifteen other packages float their client
+    libraries the same way (F21's class); each needs its floor measured on its own suite and advisories.
+  - **Proofs** (`q18/`): `floors.txt` (the suite on each driver tried, the advisories, what each 3.x driver asks for,
+    the strong names, the red runs of `MongoDbPackageTests`) and `floor_probe.sh`.
+  - **Checks:** After the version bump the core suite passes 7,533 with 2 skipped; the MongoDB suites pass 303 of 303 on
+    driver 3.x and 303 of 303 on 2.x, their real-server facts included (a mongod 7.0 replica set); the TcpTap suite
+    passes 398 with 4 skipped (its Docker-only container facts) and its Bson 3 project 1 of 1; the full Playwright suite
+    passes 1,040 with 28 skipped when run alone, on driver 3.9.0; release.slnf builds in Release for every target, and
+    restores with --force-evaluate.
 
 ## Appendix A. Edit sites at `34145c44`
 

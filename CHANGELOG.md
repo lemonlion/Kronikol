@@ -4,6 +4,56 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.20.2] - 2026-10-13
+
+**Patch - the MongoDB packages ask for a fixed driver version, not the newest of the day (#168;
+`plans/MONGODB_DETAILED_PAYLOADS_PLAN.md` Q18).** Green-lit by the owner on 2026-10-13 with the plan, as its own patch.
+A packaging fix with no new option and no new public member, so the patch part moves (4.20.1 to 4.20.2).
+
+### Fixed
+
+- **Each release raised the MongoDB driver every consumer had to take.** `Kronikol.Extensions.MongoDB` referenced
+  MongoDB.Driver `3.*` and `Kronikol.Extensions.MongoDB.V2` referenced `2.*`, which NuGet packs as the newest version of
+  the day: 3.8.1 at Kronikol 3.0.0, 3.12.0 from 3.22.0 on, and 2.30.0 for V2. A project that pinned an older driver met
+  NuGet's downgrade error (NU1605), and a test project that took the driver through Kronikol ran its service on a driver
+  the service does not ship with. The packages now ask for fixed versions:
+  - `Kronikol.Extensions.MongoDB` asks for MongoDB.Driver 3.9.0. The suite passes on every 3.x tried from 3.0.0, but a
+    driver before 3.9.0 allows Snappier 1.0.0 (a high advisory, GHSA-pggp-6c3x-2xmx) or SharpCompress 0.30.1 (a
+    moderate one, GHSA-6c8g-7p36-r338), and a project that takes its driver from Kronikol would resolve them.
+  - `Kronikol.Extensions.MongoDB.V2` asks for 2.28.0, the first 2.x with strong-named assemblies. Built on an unsigned
+    2.x, the extension's `MongoClientSettings` is not the one a project on 2.28 or later holds, and that project's call
+    into the extension does not compile (CS0012), as the V2 suite showed with the floor at 2.21.0 and at 2.27.0. Every
+    2.x up to 2.18.0 also carries a high advisory of its own (GHSA-7j9m-j397-g4wx).
+- **The 3.x package hid moderate advisories.** It suppressed NU1902 because, its comment said, SharpCompress had no
+  patched version. 0.48.1 is patched, and at 3.9.0 the package restores with no advisory, so the suppression is gone
+  and a new moderate advisory would show.
+
+Behaviour change: a project that takes the driver only through Kronikol now resolves 3.9.0, or 2.28.0 for V2, where it
+resolved the newest; reference MongoDB.Driver yourself for a newer one. The V2 package still brings Snappier 1.0.0
+through the 2.x driver's own dependencies, as it did at 2.30.0.
+
+### Docs
+
+- The wiki's MongoDB page names each package's driver floor and why, and the V2 package's description on nuget.org
+  says 2.28.0 and later, where it said any 2.x.
+
+### Tests
+
+- `MongoDbPackageTests` (new, in both MongoDB suites) packs the extension the suite built and reads the MongoDB.Driver
+  version each of the nuspec's dependency groups asks for: 3.9.0, and 2.28.0 for V2. Before the pins it read 3.12.0
+  and 2.30.0.
+- Both MongoDB suites reference the newest driver of their line themselves, so they still run on what most consumers
+  have while the extension compiles against its floor; the V2 suite compiling on 2.30.0 against the extension on
+  2.28.0 is the check that a later 2.x can call it. `Kronikol.Tests.EndToEnd`, which takes the extension alone, runs
+  on 3.9.0.
+- Proofs (plan harness `q18/`): the suite on each driver tried (3.0.0 to 3.12.0 all pass; 2.x builds from 2.21.0), the
+  advisories nuget.org lists, what each 3.x driver asks for, the strong names, and the red runs.
+- Checks: After the version bump the core suite passes 7,533 with 2 skipped; the MongoDB suites pass 303 of 303 on
+  driver 3.x and 303 of 303 on 2.x, their real-server facts included (a mongod 7.0 replica set); the TcpTap suite passes
+  398 with 4 skipped (its Docker-only container facts) and its Bson 3 project 1 of 1; the full Playwright suite passes
+  1,040 with 28 skipped when run alone, on driver 3.9.0; release.slnf builds in Release for every target, and restores
+  with --force-evaluate.
+
 ## [4.20.1] - 2026-10-13
 
 **Patch - the query tool reads a capped body as the page does, orders numbers only against a number and refuses `..`,

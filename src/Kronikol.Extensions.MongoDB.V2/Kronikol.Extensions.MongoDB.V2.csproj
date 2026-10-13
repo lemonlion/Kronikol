@@ -3,7 +3,7 @@
     <TargetFramework />
     <TargetFrameworks>$(MultiTargetFrameworks)</TargetFrameworks>
     <Title>Test Tracking Diagrams MongoDB Extension (Driver v2)</Title>
-    <Description>MongoDB tracking for test diagrams, compatible with MongoDB.Driver v2.x. Intercepts and classifies MongoDB operations using the driver's command event system.</Description>
+    <Description>MongoDB tracking for test diagrams, for MongoDB.Driver 2.28.0 and later 2.x. Intercepts and classifies MongoDB operations using the driver's command event system.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <RootNamespace>Kronikol.Extensions.MongoDB</RootNamespace>
     <NoWarn>$(NoWarn);NU1902</NoWarn>
@@ -13,7 +13,13 @@
     <InternalsVisibleTo Include="Kronikol.Tests.MongoDB.V2" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.*" />
+    <!-- The floor this package asks for, not a float (plans/MONGODB_DETAILED_PAYLOADS_PLAN.md Q18): 2.* was packed as
+         2.30.0, the last 2.x, which NuGet refused to downgrade for a consumer pinning 2.28 or 2.29. 2.28.0 is the first
+         2.x whose assemblies are strong-named: built on an unsigned 2.27 or older, the extension's MongoClientSettings
+         is not the one a consumer on 2.30 holds, and the consumer's call does not compile (CS0012), as the suite, which
+         runs on the newest 2.x, shows. The suite passes on 2.28.0, and every 2.x up to 2.18.0 carries a high advisory.
+         MongoDbPackageTests reads the floor back from the packed nuspec. -->
+    <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />

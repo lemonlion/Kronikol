@@ -1,0 +1,57 @@
+# Q18, the driver floor (2026-10-13, measured at 4.20.1 = ce04b495, mongod 7.0 replica set for the real-server facts)
+
+## The suite on each driver (floor_probe.sh: the extension pinned to one version, the suite restored, built and run)
+
+### MongoDB.Driver 3.x, Kronikol.Tests.MongoDB (302 facts at the time)
+3.0.0 (resolved 3.0.0): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 3 s 
+3.1.0 (resolved 3.1.0): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 1 s 
+3.2.0 (resolved 3.2.0): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 1 s 
+3.4.0 (resolved 3.4.0): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 1 s 
+3.12.0 (resolved 3.12.0): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 1 s 
+3.8.1 (resolved 3.8.1): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 1 s 
+3.9.0 (resolved 3.9.0): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 1 s 
+
+### MongoDB.Driver 2.x, Kronikol.Tests.MongoDB.V2 (302 facts at the time)
+2.0.0 (resolved 2.0.0): BUILD FAILED error CS0246: The type or namespace name 'CommandFailedEvent' could not be found (are you missing a using directive or an as error CS0246: The type or namespace name 'CommandStartedEvent' could not be found (are you missing
+2.5.0 (resolved 2.5.0): BUILD FAILED error CS0117: 'JsonOutputMode' does not contain a definition for 'CanonicalExtendedJson'  error CS0117: 'JsonOutputMode' does not contain a definition for 'RelaxedExtendedJson'  error CS0117: 'MongoClientSettings' does not 
+2.10.0 (resolved 2.10.0): BUILD FAILED error CS0117: 'JsonOutputMode' does not contain a definition for 'CanonicalExtendedJson'  error CS0117: 'JsonOutputMode' does not contain a definition for 'RelaxedExtendedJson'  error CS1729: 'CommandFailedEvent' does not
+2.13.0 (resolved 2.13.0): BUILD FAILED error CS1503: Argument 2: cannot convert from 'MongoDB.Driver.DatabaseNamespace' to 'System.Exception'  error CS1503: Argument 3: cannot convert from 'MongoDB.Driver.DatabaseNamespace' to 'long?'  error CS1503: Argument 3
+2.15.0 (resolved 2.15.0): BUILD FAILED error CS1503: Argument 2: cannot convert from 'MongoDB.Driver.DatabaseNamespace' to 'System.Exception'  error CS1503: Argument 3: cannot convert from 'MongoDB.Driver.DatabaseNamespace' to 'long?'  error CS1503: Argument 3
+2.17.0 (resolved 2.17.0): BUILD FAILED error CS1503: Argument 2: cannot convert from 'MongoDB.Driver.DatabaseNamespace' to 'System.Exception'  error CS1503: Argument 3: cannot convert from 'MongoDB.Driver.DatabaseNamespace' to 'long?'  error CS1503: Argument 3
+2.19.0 (resolved 2.19.0): BUILD FAILED error CS1503: Argument 2: cannot convert from 'MongoDB.Driver.DatabaseNamespace' to 'System.Exception'  error CS1503: Argument 3: cannot convert from 'MongoDB.Driver.DatabaseNamespace' to 'long?'  error CS1503: Argument 3
+2.22.0 (resolved 2.22.0): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 3 s 
+2.25.0 (resolved 2.25.0): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 1 s 
+2.28.0 (resolved 2.28.0): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 1 s 
+2.30.0 (resolved 2.30.0): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 1 s 
+2.20.0 (resolved 2.20.0): BUILD FAILED error CS1503: Argument 2: cannot convert from 'MongoDB.Driver.DatabaseNamespace' to 'System.Exception'  error CS1503: Argument 3: cannot convert from 'MongoDB.Driver.DatabaseNamespace' to 'long?'  error CS1503: Argument 3
+2.21.0 (resolved 2.21.0): Passed!  - Failed:     0, Passed:   302, Skipped:     0, Total:   302, Duration: 1 s 
+(2.19.0's 94 errors and 2.20.0's are all in test files: the suite builds driver events with constructors added in 2.21; the extension itself compiles on 2.19.)
+
+## Advisories nuget.org lists (registration API, 2026-10-13)
+
+- MongoDB.Driver: GHSA-7j9m-j397-g4wx (high) on every version up to 2.18.0; GHSA-p9rv-qgqw-jx2w (moderate) on 2.11.0 to 2.12.1; none on any 3.x.
+- Snappier: GHSA-pggp-6c3x-2xmx (high) on every version up to 1.3.0 (and GHSA-838x-pcvx-6p5w on 1.1.0); 1.3.1 has none.
+- SharpCompress: GHSA-6c8g-7p36-r338 (moderate) on 0.30.1; 0.48.1 has none.
+- DnsClient 1.6.1, ZstdSharp.Port 0.7.3, Microsoft.Extensions.Logging.Abstractions 2.0.0, MongoDB.Bson 3.x: none.
+
+## What each 3.x driver asks for (its nuspec), and so what a project that takes the driver from Kronikol resolves
+
+- 3.0.0 to 3.8.0: Snappier >= 1.0.0 and SharpCompress >= 0.30.1 (both flagged).
+- 3.8.1: Snappier >= 1.3.1, SharpCompress >= 0.30.1 (moderate).
+- 3.9.0 to 3.12.0: Snappier >= 1.3.1, SharpCompress >= 0.48.1 (neither flagged). 3.9.0 is the floor.
+- Every 2.x from 2.19.0 to 2.30.0 asks for MongoDB.Driver.Core and MongoDB.Bson of its own version; the V2 extension resolves Snappier 1.0.0
+  at 2.21.0 and at 2.30.0 alike (NU1903), so its floor does not change that.
+
+## Strong names (AssemblyName of MongoDB.Driver.dll)
+
+- 2.19.0, 2.20.0, 2.21.0, 2.22.0, 2.25.0, 2.26.0, 2.27.0: unsigned (no public key token), assembly version = package version.
+- 2.28.0, 2.30.0 and every 3.x tried (3.0.0, 3.9.0, 3.12.0): token 94992a530f44e321, assembly version = package version.
+- An unsigned reference does not match a signed assembly at compile time. With the V2 floor at 2.21.0 the V2 suite, on 2.30.0, did not
+  compile (CS0012: 'MongoClientSettings' is defined in 'MongoDB.Driver, Version=2.21.0.0, PublicKeyToken=null'); at 2.27.0 it failed with
+  376 CS0012 errors (CommandStartedEvent 160, CommandSucceededEvent 88, BsonDocument 66, BsonValue 26, ...). At 2.28.0 it compiles and
+  passes. A consumer on a later 2.x whose code hands the extension a MongoClientSettings is in the suite's place, so 2.28.0 is the floor.
+
+## Red: MongoDbPackageTests before the pins (the floats packed as the newest driver of the day)
+
+- Kronikol.Tests.MongoDB: Assert.All() Failure: 3 out of 3 items ... Expected "3.9.0", Actual "3.12.0"
+- Kronikol.Tests.MongoDB.V2: Assert.All() Failure: 3 out of 3 items ... Expected "2.28.0" (first written as 2.21.0), Actual "2.30.0"

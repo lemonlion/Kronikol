@@ -5,16 +5,17 @@
     <Title>Test Tracking Diagrams MongoDB Extension</Title>
     <Description>MongoDB tracking for test diagrams. Intercepts and classifies MongoDB operations (Find, Insert, Update, Delete, Aggregate, BulkWrite, and more) with configurable verbosity using the MongoDB driver's command event system.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <!-- NU1902: SharpCompress has no patched version; vulnerability is in WriteToDirectory (zip slip),
-         which doesn't apply to MongoDB's internal compression usage -->
-    <NoWarn>$(NoWarn);NU1902</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Kronikol.Tests.MongoDB" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="3.*" />
+    <!-- The floor this package asks for, not a float: 3.* was packed as the newest 3.x of the day, so every release
+         raised it (plans/MONGODB_DETAILED_PAYLOADS_PLAN.md Q18). 3.9.0 is the oldest 3.x whose own dependencies carry
+         no known advisory (older ones allow Snappier 1.0.0 and SharpCompress 0.30.1), and the suite passes on it.
+         MongoDbPackageTests reads it back from the packed nuspec; the suite itself runs on the newest 3.x. -->
+    <PackageReference Include="MongoDB.Driver" Version="3.9.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
