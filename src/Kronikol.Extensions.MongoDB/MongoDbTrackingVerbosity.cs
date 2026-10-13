@@ -12,9 +12,18 @@ namespace Kronikol.Extensions.MongoDB;
 /// </summary>
 public enum MongoDbTrackingVerbosity
 {
-    /// <summary>Full detail including raw content, headers, and connection information.</summary>
+    /// <summary>
+    /// The whole command as the request note and the whole reply as the response note, the reply written as MongoDB
+    /// relaxed extended JSON on one line; the label also carries the filter.
+    /// </summary>
     Raw,
-    /// <summary>Classified labels with relevant context (e.g. operation name, target resource).</summary>
+    /// <summary>
+    /// Classified labels with relevant context (e.g. operation name, target resource). The request note is the
+    /// command's filter. The response note is what the reply returned: a cursor's documents as a JSON array, or the
+    /// reply without the server's bookkeeping as a JSON object (a write's counts and upserted ids, a findAndModify's
+    /// value, a distinct's values, write errors, a failed command's errmsg, code and codeName), in relaxed extended
+    /// JSON on one line.
+    /// </summary>
     Detailed,
     /// <summary>Minimal labels only — content and connection details are omitted.</summary>
     Summarised

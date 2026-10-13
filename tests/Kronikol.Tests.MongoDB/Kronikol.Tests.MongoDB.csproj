@@ -17,6 +17,9 @@
     <PackageReference Include="Testcontainers.MongoDb" Version="4.8.1" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="MongoJsonGolden.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.MongoDB\Kronikol.Extensions.MongoDB.csproj" />
   </ItemGroup>
 </Project>

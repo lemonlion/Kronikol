@@ -66,7 +66,7 @@ public class MongoDecoderTests
         var request = Assert.Single(harness.Sink.Requests);
         Assert.Equal("Insert → Trial", Method(request));
         Assert.Equal("mongodb:///app/Trial", request.Uri.ToString());
-        Assert.Equal("n=1", Assert.Single(harness.Sink.Responses).Content);
+        Assert.Equal("{ \"n\" : 1 }", Assert.Single(harness.Sink.Responses).Content);
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class MongoDecoderTests
     }
 
     [Fact]
-    public void AnUpdateReportsNAndNModified()
+    public void AnUpdateReplyIsItsCountsAsJson()
     {
         using var harness = DecoderHarness.Mongo();
         var body = new BsonDocument { { "update", "Trial" }, { "$db", "app" } };
@@ -91,7 +91,7 @@ public class MongoDecoderTests
         harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument { { "n", 1 }, { "nModified", 1 }, { "ok", 1.0 } }));
 
         Assert.Equal("Update → Trial", Method(Assert.Single(harness.Sink.Requests)));
-        Assert.Equal("n=1, nModified=1", Assert.Single(harness.Sink.Responses).Content);
+        Assert.Equal("{ \"n\" : 1, \"nModified\" : 1 }", Assert.Single(harness.Sink.Responses).Content);
     }
 
     [Fact]
@@ -129,29 +129,144 @@ public class MongoDecoderTests
         harness.ServerToClient(MongoWire.Msg(2, 1, CursorReply(
             new BsonDocument("_id", 1), new BsonDocument("_id", 2), new BsonDocument("_id", 3), new BsonDocument("_id", 4))));
 
-        Assert.Contains("(2 more documents not shown)", Assert.Single(harness.Sink.Responses).Content);
+        Assert.Equal("[{ \"_id\" : 1 }, { \"_id\" : 2 }]\n... (2 more documents not shown)", Assert.Single(harness.Sink.Responses).Content);
     }
 
     [Fact]
-    public void AnEmptyBatchSaysSo()
+    public void AnEmptyBatchIsAnEmptyArray()
     {
         using var harness = DecoderHarness.Mongo();
         harness.ClientToServer(MongoWire.Msg(1, 0, Find("Trial")));
         harness.ServerToClient(MongoWire.Msg(2, 1, CursorReply()));
 
-        Assert.Equal("0 documents", Assert.Single(harness.Sink.Responses).Content);
+        Assert.Equal("[]", Assert.Single(harness.Sink.Responses).Content);
     }
 
     [Fact]
-    public void ACommandThatFailedBecomesA500WithItsErrmsg()
+    public void ACommandThatFailedBecomesA500WithItsErrmsgCodeAndCodeName()
     {
         using var harness = DecoderHarness.Mongo();
         harness.ClientToServer(MongoWire.Msg(1, 0, Find("Trial")));
-        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument { { "ok", 0.0 }, { "errmsg", "not authorized on app" }, { "code", 13 } }));
+        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument
+        {
+            { "ok", 0.0 }, { "errmsg", "not authorized on app" }, { "code", 13 }, { "codeName", "Unauthorized" },
+            { "operationTime", new BsonTimestamp(1760000000, 1) },
+        }));
 
         var response = Assert.Single(harness.Sink.Responses);
         Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode!.Value);
-        Assert.Equal("not authorized on app", response.Content);
+        Assert.Equal("{ \"errmsg\" : \"not authorized on app\", \"code\" : 13, \"codeName\" : \"Unauthorized\" }", response.Content);
+        Assert.Equal("not authorized on app", response.Error);
+    }
+
+    [Fact]
+    public void AReplyThatCarriesAnErrmsgIsAFailureWithoutAnOk()
+    {
+        // The tap's rule, kept from before #168: a reply is failed when ok is 0 or it carries a top-level errmsg.
+        using var harness = DecoderHarness.Mongo();
+        harness.ClientToServer(MongoWire.Msg(1, 0, Find("Trial")));
+        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument { { "errmsg", "unknown operator: $bogus" }, { "code", 2 } }));
+
+        var response = Assert.Single(harness.Sink.Responses);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode!.Value);
+        Assert.Equal("unknown operator: $bogus", response.Error);
+        Assert.Equal("{ \"errmsg\" : \"unknown operator: $bogus\", \"code\" : 2 }", response.Content);
+    }
+
+    [Fact]
+    public void AFailedReplyAtRawIsTheWholeReply()
+    {
+        using var harness = DecoderHarness.Mongo(o => o.Verbosity = TapVerbosity.Raw);
+        harness.ClientToServer(MongoWire.Msg(1, 0, Find("Trial")));
+        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument { { "ok", 0.0 }, { "errmsg", "not authorized on app" }, { "code", 13 } }));
+
+        Assert.Equal("{ \"ok\" : 0.0, \"errmsg\" : \"not authorized on app\", \"code\" : 13 }", Assert.Single(harness.Sink.Responses).Content);
+    }
+
+    [Fact]
+    public void AWriteErrorIsA500WithItsErrmsgAsTheError()
+    {
+        // A duplicate key is ok: 1 with writeErrors; the application's insert throws MongoWriteException.
+        using var harness = DecoderHarness.Mongo();
+        var body = new BsonDocument { { "insert", "Trial" }, { "$db", "app" } };
+        harness.ClientToServer(MongoWire.Msg(1, 0, body, 0, ("documents", [new BsonDocument("_id", 1)])));
+        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument
+        {
+            { "n", 0 },
+            { "writeErrors", new BsonArray { new BsonDocument { { "index", 0 }, { "code", 11000 }, { "errmsg", "E11000 duplicate key error" } } } },
+            { "ok", 1.0 },
+        }));
+
+        var response = Assert.Single(harness.Sink.Responses);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode!.Value);
+        Assert.Equal("E11000 duplicate key error", response.Error);
+        Assert.Equal("{ \"n\" : 0, \"writeErrors\" : [{ \"index\" : 0, \"code\" : 11000, \"errmsg\" : \"E11000 duplicate key error\" }] }", response.Content);
+        Assert.Null(Assert.Single(harness.Sink.Requests).Error);
+    }
+
+    [Fact]
+    public void AWriteConcernErrorIsA500()
+    {
+        using var harness = DecoderHarness.Mongo();
+        var body = new BsonDocument { { "update", "Trial" }, { "$db", "app" } };
+        harness.ClientToServer(MongoWire.Msg(1, 0, body, 0,
+            ("updates", [new BsonDocument { { "q", new BsonDocument("_id", 1) }, { "u", new BsonDocument("$set", new BsonDocument("x", 2)) } }])));
+        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument
+        {
+            { "n", 1 }, { "nModified", 1 },
+            { "writeConcernError", new BsonDocument { { "code", 64 }, { "errmsg", "waiting for replication timed out" } } },
+            { "ok", 1.0 },
+        }));
+
+        var response = Assert.Single(harness.Sink.Responses);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode!.Value);
+        Assert.Equal("waiting for replication timed out", response.Error);
+    }
+
+    [Fact]
+    public void ASuccessfulReplyHasNoError()
+    {
+        using var harness = DecoderHarness.Mongo();
+        harness.ClientToServer(MongoWire.Msg(1, 0, Find("Trial")));
+        harness.ServerToClient(MongoWire.Msg(2, 1, CursorReply(new BsonDocument("_id", 1))));
+
+        var response = Assert.Single(harness.Sink.Responses);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode!.Value);
+        Assert.Null(response.Error);
+    }
+
+    [Fact]
+    public void AGetMoreIsDrawnAgainstItsCollectionWithItsNextBatch()
+    {
+        using var harness = DecoderHarness.Mongo(o => o.TrackGetMore = true);
+        harness.ClientToServer(MongoWire.Msg(1, 0, new BsonDocument { { "getMore", 8271923L }, { "collection", "Trial" }, { "batchSize", 2 }, { "$db", "app" } }));
+        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument
+        {
+            { "cursor", new BsonDocument { { "nextBatch", new BsonArray { new BsonDocument("_id", 3) } }, { "id", 0L }, { "ns", "app.Trial" } } },
+            { "ok", 1.0 },
+        }));
+
+        var request = Assert.Single(harness.Sink.Requests);
+        Assert.Equal("GetMore ← Trial", Method(request));
+        Assert.Equal("mongodb:///app/Trial", request.Uri.ToString());
+        Assert.Equal("[{ \"_id\" : 3 }]", Assert.Single(harness.Sink.Responses).Content);
+    }
+
+    [Fact]
+    public void TheServersBookkeepingIsNotInAReplyNote()
+    {
+        using var harness = DecoderHarness.Mongo();
+        var body = new BsonDocument { { "delete", "Trial" }, { "$db", "app" } };
+        harness.ClientToServer(MongoWire.Msg(1, 0, body, 0, ("deletes", [new BsonDocument { { "q", new BsonDocument("_id", 1) }, { "limit", 1 } }])));
+        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument
+        {
+            { "n", 1 }, { "electionId", ObjectId.Parse("7fffffff0000000000000001") },
+            { "opTime", new BsonDocument { { "ts", new BsonTimestamp(1760000000, 1) }, { "t", 1L } } },
+            { "ok", 1.0 }, { "$clusterTime", new BsonDocument("clusterTime", new BsonTimestamp(1760000000, 1)) },
+            { "operationTime", new BsonTimestamp(1760000000, 1) }, { "recoveryToken", new BsonDocument("recoveryShardId", "sh0") },
+        }));
+
+        Assert.Equal("{ \"n\" : 1 }", Assert.Single(harness.Sink.Responses).Content);
     }
 
     // ---- matching ---------------------------------------------------------------------------------
@@ -312,7 +427,7 @@ public class MongoDecoderTests
         using var on = DecoderHarness.Mongo(o => o.TrackGetMore = true);
         on.ClientToServer(MongoWire.Msg(1, 0, command));
         on.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument { { "ok", 1.0 } }));
-        Assert.Equal("GetMore", Method(Assert.Single(on.Sink.Requests)));
+        Assert.Equal("GetMore ← Trial", Method(Assert.Single(on.Sink.Requests)));
     }
 
     // ---- verbosity and redaction ------------------------------------------------------------------
@@ -433,7 +548,7 @@ public class MongoDecoderTests
         harness.Deliver(TapDirection.ClientToServer, MongoWire.Msg(3, 0, Find("Trial")));
         harness.Deliver(TapDirection.ServerToClient, MongoWire.Msg(4, 3, CursorReply()));
         Assert.Equal(2, harness.Sink.Responses.Count);
-        Assert.Equal("0 documents", harness.Sink.Responses[1].Content);
+        Assert.Equal("[]", harness.Sink.Responses[1].Content);
     }
 
     [Fact]

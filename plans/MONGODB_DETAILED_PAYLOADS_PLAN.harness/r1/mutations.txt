@@ -1,0 +1,72 @@
+R1 mutations (plans/MONGODB_DETAILED_PAYLOADS_PLAN.md section 5), run 2026-10-13 on WIP c233fc31 in a snapshot worktree.
+Each one-line change ran the facts named in mutations/mutate_r1.py and mutations/mutate_r1_extra.py on driver 3.x
+(tests/Kronikol.Tests.MongoDB), the tap (tests/Kronikol.Tests.TcpTap) or the core (tests/Kronikol.Tests), with
+KRONIKOL_TEST_MONGO set to a mongod 7.0 replica set. CAUGHT = at least one named fact failed.
+
+## Run 1: 43 of 46 caught
+
+ 1. opTime left out of the bookkeeping: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed () | tests/Kronikol.Tests.TcpTap: 1 failed (TheServersBookkeepingIsNotInAReplyNote)
+ 2. recoveryToken left out of the bookkeeping: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed () | tests/Kronikol.Tests.TcpTap: 1 failed (TheServersBookkeepingIsNotInAReplyNote)
+ 3. nextBatch left unread: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_getMore_reply_holds_its_next_batch) | tests/Kronikol.Tests.TcpTap: 1 failed (AGetMoreIsDrawnAgainstItsCollectionWithItsNextBatch)
+ 4. a write error left at 200 (writeErrors): CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_write_error_reply_is_a_failure) | tests/Kronikol.Tests.TcpTap: 1 failed (AWriteErrorIsA500WithItsErrmsgAsTheError)
+ 5. writeConcernError not a failure: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_write_concern_error_reply_is_a_failure) | tests/Kronikol.Tests.TcpTap: 1 failed (AWriteConcernErrorIsA500)
+ 6. nErrors not a failure: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_client_bulkWrite_with_errors_is_a_failure)
+ 7. server state replies kept: CAUGHT | tests/Kronikol.Tests.MongoDB: 3 failed ()
+ 8. findAndModify value kept without LogResponseContent: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (Without_LogResponseContent_the_documents_are_left_out_and_the_rest_stays)
+ 9. the $uuid branch removed: CAUGHT | tests/Kronikol.Tests.MongoDB: 3 failed (A_reply_batch_is_json_on_both_drivers, A_guid_is_written_whole_whatever_its_size_rule)
+10. the writer made compact: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_content_pattern_written_for_todays_text_still_redacts)
+11. .0 not added to an integral double: CAUGHT | tests/Kronikol.Tests.MongoDB: 6 failed ()
+12. a modifier letter written as itself: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (Every_utf16_unit_is_escaped_as_the_driver_escapes_it)
+13. regex options not sorted: SURVIVED | tests/Kronikol.Tests.MongoDB: all 1 passed
+14. milliseconds always written: CAUGHT | tests/Kronikol.Tests.MongoDB: 2 failed (A_date_in_a_batch_is_a_date)
+15. a binary of exactly 256 bytes made a placeholder: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_binary_over_256_bytes_is_a_placeholder_only_when_asked)
+16. the deferred note rendered at the reply: CAUGHT | tests/Kronikol.Tests.MongoDB: 2 failed (A_deferred_claim_keeps_a_note_for_each_phase_verbosity, A_deferred_claim_is_logged_at_Raw_after_its_command_is_disposed)
+17. OnCommandStarted lets an exception through: CAUGHT | tests/Kronikol.Tests.MongoDB: 2 failed (A_command_whose_request_could_not_be_logged_leaves_no_reply_behind, No_handler_exception_reaches_the_driver)
+18. a note that cannot be rendered throws: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_reply_that_cannot_be_read_is_drawn_saying_why_and_does_not_reach_the_driver)
+19. the diagnostic not recorded: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (No_handler_exception_reaches_the_driver)
+20. Error left unset on a write error: CAUGHT | tests/Kronikol.Tests.MongoDB: 2 failed (A_write_error_sets_Error_to_its_errmsg, Failures_md_says_why_a_mongo_write_failed)
+21. a server error's Result ignored: CAUGHT | tests/Kronikol.Tests.MongoDB: 3 failed (A_server_error_keeps_errmsg_code_and_codeName, A_failed_command_sets_Error_to_the_servers_errmsg, Failures_md_says_why_a_mongo_command_failed)
+22. getMore's collection not read: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_getMore_is_drawn_against_its_collection) | tests/Kronikol.Tests.TcpTap: 1 failed (AGetMoreIsDrawnAgainstItsCollectionWithItsNextBatch)
+23. the tap's write errors left at 200: CAUGHT | tests/Kronikol.Tests.TcpTap: 11 failed (AWriteErrorIsA500WithItsErrmsgAsTheError, AWriteConcernErrorIsA500)
+24. the tap's Error not stamped on the response: CAUGHT | tests/Kronikol.Tests.TcpTap: 2 failed (AWriteErrorIsA500WithItsErrmsgAsTheError, ACommandThatFailedBecomesA500WithItsErrmsgCodeAndCodeName)
+25. the tap's failed note is the errmsg alone: CAUGHT | tests/Kronikol.Tests.TcpTap: 2 failed (ACommandThatFailedBecomesA500WithItsErrmsgCodeAndCodeName, AMongoFailureIsA500WithTheServersWordsInBothCaptures)
+26. a null dropped again from a statement's request note: CAUGHT | tests/Kronikol.Tests: 2 failed (An_atlas_data_api_body_keeps_its_nulls, A_null_in_a_statement_note_is_drawn)
+27. a null dropped again from a statement's reply note: CAUGHT | tests/Kronikol.Tests: 2 failed (A_capped_statement_reply_keeps_its_nulls, A_null_in_a_statement_reply_is_drawn)
+28. OnCommandSucceeded lets an exception through: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (No_handler_exception_reaches_the_driver)
+29. OnCommandFailed lets an exception through: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (No_handler_exception_reaches_the_driver)
+30. a Raw reply is the detailed note: CAUGHT | tests/Kronikol.Tests.MongoDB: 4 failed (A_raw_reply_is_the_whole_reply_as_relaxed_extended_json)
+31. a Raw server error is the detailed note: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_raw_server_error_is_the_whole_reply)
+32. a failed command's Error is the driver's message: CAUGHT | tests/Kronikol.Tests.MongoDB: 2 failed (A_failed_command_sets_Error_to_the_servers_errmsg, Failures_md_says_why_a_mongo_command_failed)
+33. a deferred claim keeps only the effective verbosity's note: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_deferred_claim_keeps_a_note_for_each_phase_verbosity)
+34. distinct's values kept without LogResponseContent: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (Without_LogResponseContent_the_documents_are_left_out_and_the_rest_stays)
+35. no footnote under a capped batch: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_capped_batch_ends_with_its_footnote_and_parses_once_the_footnote_is_off) | tests/Kronikol.Tests.TcpTap: 1 failed (ReplyDocumentsAreCappedByMaxResponseDocuments)
+36. the batch not capped: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_capped_batch_ends_with_its_footnote_and_parses_once_the_footnote_is_off) | tests/Kronikol.Tests.TcpTap: 1 failed (ReplyDocumentsAreCappedByMaxResponseDocuments)
+37. a cursor beside counts written whole: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_reply_with_counts_and_a_cursor_keeps_both_with_the_batch_in_place_of_the_cursor)
+38. a lone cursor written as an object: CAUGHT | tests/Kronikol.Tests.MongoDB: 2 failed (An_empty_batch_is_an_empty_array, A_reply_batch_is_the_documents_as_a_json_array) | tests/Kronikol.Tests.TcpTap: 1 failed (AnEmptyBatchIsAnEmptyArray)
+39. an errmsg without ok:0 not a failure: SURVIVED | tests/Kronikol.Tests.MongoDB: all 3 passed | tests/Kronikol.Tests.TcpTap: all 141 passed
+40. FailureReason skips writeErrors: CAUGHT | tests/Kronikol.Tests.MongoDB: 2 failed (A_write_error_sets_Error_to_its_errmsg, Failures_md_says_why_a_mongo_write_failed) | tests/Kronikol.Tests.TcpTap: 1 failed (AWriteErrorIsA500WithItsErrmsgAsTheError)
+41. FailureReason skips writeConcernError: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_write_concern_error_reply_is_a_failure) | tests/Kronikol.Tests.TcpTap: 1 failed (AWriteConcernErrorIsA500)
+42. FailureReason skips a failed batch entry: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_client_bulkWrite_with_errors_is_a_failure)
+43. an Int64 number not read: SURVIVED | tests/Kronikol.Tests.MongoDB: all 8 passed | tests/Kronikol.Tests.TcpTap: all 141 passed
+44. an Int32 number not read: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_client_bulkWrite_with_errors_is_a_failure) | tests/Kronikol.Tests.TcpTap: all 141 passed
+45. a Raw tap reply is the detailed note: CAUGHT | tests/Kronikol.Tests.TcpTap: 46 failed (RawVerbosityRecordsTheWholeCommandAndReply)
+46. a Raw tap failure is the detailed note: CAUGHT | tests/Kronikol.Tests.TcpTap: 2 failed (AFailedReplyAtRawIsTheWholeReply)
+
+## The three that survived
+
+13. Regex options not sorted: EQUIVALENT. Bson stores a regular expression's options sorted on 2.30 and 3.12
+    alike: its constructor sorts them, and every read (wire bytes, a RawBsonDocument, a JSON parse) goes through it
+    (probed: "xmi" in BSON bytes reads back as "imx"). The writer's own sort could never change the output, so it
+    was removed; Regex_options_are_written_in_alphabetical_order now reads unsorted options from BSON bytes.
+39. An errmsg without ok:0 not a failure: no fact held the tap's rule, kept from before #168, that a reply carrying
+    a top-level errmsg is failed whatever its ok. Fact added: AReplyThatCarriesAnErrmsgIsAFailureWithoutAnOk.
+43. An Int64 number not read: no fact sent a count as a 64-bit integer. Fact added:
+    A_count_of_errors_is_read_whatever_its_integer_type (nErrors as Int64).
+
+## Run 2, on 1c9332c6 (the regex change and the two facts; a local commit, before the rebase onto 4.19.4)
+
+13. regex options not sorted: pattern gone (the sort was removed)
+39. an errmsg without ok:0 not a failure: CAUGHT | tests/Kronikol.Tests.MongoDB: all 3 passed | tests/Kronikol.Tests.TcpTap: 1 failed (AReplyThatCarriesAnErrmsgIsAFailureWithoutAnOk)
+43. an Int64 number not read: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_count_of_errors_is_read_whatever_its_integer_type) | tests/Kronikol.Tests.TcpTap: all 141 passed
+
+Result: every mutation that changes the output is caught (45 of 45); the 46th could not change it and its code is gone.

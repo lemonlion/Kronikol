@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Clusters;
@@ -548,17 +549,17 @@ public class MongoDbTrackingSubscriberTests : IDisposable
     // ─── Response metadata extraction ────────────────────────
 
     [Fact]
-    public void SucceededResponse_Detailed_IncludesRowsAffected()
+    public void An_update_reply_is_its_counts_as_json()
     {
         var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
 
         subscriber.OnCommandStarted(MakeStartedEvent("update"));
-        var reply = new BsonDocument { { "ok", 1 }, { "n", 3 }, { "nModified", 2 } };
+        var reply = new BsonDocument { { "n", 3 }, { "nModified", 2 }, { "ok", 1 } };
         subscriber.OnCommandSucceeded(MakeSucceededEvent("update", reply: reply));
 
         var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
-        Assert.Contains("n=3", log.Content!);
-        Assert.Contains("nModified=2", log.Content!);
+        Assert.Equal("{ \"n\" : 3, \"nModified\" : 2 }", log.Content);
+        Assert.Equal(HttpStatusCode.OK, log.StatusCode?.Value);
     }
 
     [Fact]
@@ -673,8 +674,7 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         subscriber.OnCommandSucceeded(MakeSucceededEvent("update", reply: reply));
 
         var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
-        Assert.NotNull(log.Content);
-        Assert.Contains("n=3", log.Content!);
+        Assert.Equal("{ \"n\" : 3, \"nModified\" : 2 }", log.Content);
     }
 
     [Fact]
@@ -706,8 +706,7 @@ public class MongoDbTrackingSubscriberTests : IDisposable
 
         var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
         Assert.NotNull(log.SetupVariant);
-        Assert.NotNull(log.SetupVariant!.Content);
-        Assert.Contains("n=5", log.SetupVariant!.Content!);
+        Assert.Equal("{ \"n\" : 5 }", log.SetupVariant!.Content);
     }
 
     [Fact]
@@ -724,148 +723,575 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         Assert.Null(log.Content);
     }
 
-    // ─── Document response formatting ────────────────────────
+    // ─── Reply notes (plans/MONGODB_DETAILED_PAYLOADS_PLAN.md, R1) ──
 
     private static BsonDocument MakeReplyWithDocuments(params BsonDocument[] documents) =>
-        new("cursor", new BsonDocument
+        new()
         {
-            { "id", 0L },
-            { "ns", "testdb.testcollection" },
-            { "firstBatch", new BsonArray(documents) }
-        });
+            { "cursor", new BsonDocument
+                {
+                    { "firstBatch", new BsonArray(documents) },
+                    { "id", 0L },
+                    { "ns", "testdb.testcollection" },
+                }
+            },
+            { "ok", 1.0 },
+        };
 
-    [Fact]
-    public void Detailed_ResponseWithDocuments_FormatsAsIndentedJson()
+    private static readonly BsonDocument ClusterTime = new()
     {
-        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
-        var doc = new BsonDocument { { "_id", "abc-123" }, { "Name", "Alice" } };
+        { "clusterTime", new BsonTimestamp(1760000000, 1) },
+        { "signature", new BsonDocument { { "hash", new BsonBinaryData(new byte[20]) }, { "keyId", 0L } } },
+    };
 
-        subscriber.OnCommandStarted(MakeStartedEvent("find"));
-        subscriber.OnCommandSucceeded(MakeSucceededEvent("find", reply: MakeReplyWithDocuments(doc)));
-
-        var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
-        Assert.NotNull(log.Content);
-
-        // Should contain indented JSON, not single-line
-        Assert.Contains("\"_id\" : \"abc-123\"", log.Content!);
-        Assert.Contains("[\n  {", log.Content!);  // array element indented
-        Assert.Contains("\n    \"Name\"", log.Content!);  // field indented inside object
+    /// <summary>The reply note a command and its reply are logged with.</summary>
+    private string? ReplyNote(string commandName, BsonDocument reply, BsonDocument? command = null, MongoDbTrackingOptions? options = null)
+    {
+        var subscriber = new MongoDbTrackingSubscriber(options ?? MakeOptions());
+        subscriber.OnCommandStarted(MakeStartedEvent(commandName, command));
+        subscriber.OnCommandSucceeded(MakeSucceededEvent(commandName, reply: reply));
+        return GetLogsFromThisTest().Last(l => l.Type == RequestResponseType.Response).Content;
     }
 
     [Fact]
-    public void Detailed_ResponseWithMultipleDocuments_FormatsAsIndentedJsonArray()
+    public void A_reply_batch_is_the_documents_as_a_json_array()
     {
-        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
-        var doc1 = new BsonDocument { { "_id", "1" }, { "Name", "Alice" } };
-        var doc2 = new BsonDocument { { "_id", "2" }, { "Name", "Bob" } };
+        var note = ReplyNote("find", MakeReplyWithDocuments(new BsonDocument { { "_id", "abc-123" }, { "Name", "Alice" } }));
 
-        subscriber.OnCommandStarted(MakeStartedEvent("find"));
-        subscriber.OnCommandSucceeded(MakeSucceededEvent("find", reply: MakeReplyWithDocuments(doc1, doc2)));
-
-        var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
-        Assert.NotNull(log.Content);
-        // Both documents should be indented in the array
-        Assert.Contains("\"Alice\"", log.Content!);
-        Assert.Contains("\"Bob\"", log.Content!);
-        Assert.Contains("[\n  {", log.Content!);
+        Assert.Equal("[{ \"_id\" : \"abc-123\", \"Name\" : \"Alice\" }]", note);
     }
 
     [Fact]
-    public void Detailed_ResponseWithDocuments_IncludesDocumentCount()
+    public void A_reply_batch_of_several_documents_is_one_array()
     {
-        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
-        var doc = new BsonDocument { { "_id", "abc" } };
+        var note = ReplyNote("find", MakeReplyWithDocuments(
+            new BsonDocument { { "_id", "1" }, { "Name", "Alice" } },
+            new BsonDocument { { "_id", "2" }, { "Name", "Bob" } }));
 
-        subscriber.OnCommandStarted(MakeStartedEvent("find"));
-        subscriber.OnCommandSucceeded(MakeSucceededEvent("find", reply: MakeReplyWithDocuments(doc)));
-
-        var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
-        Assert.StartsWith("[\n  {", log.Content!);
+        Assert.Equal("[{ \"_id\" : \"1\", \"Name\" : \"Alice\" }, { \"_id\" : \"2\", \"Name\" : \"Bob\" }]", note);
     }
 
     [Fact]
-    public void Detailed_ResponseWithDocumentsTruncated_ShowsMoreIndicator()
+    public void A_reply_batch_is_json_on_both_drivers()
     {
-        var opts = MakeOptions();
-        opts.MaxResponseDocuments = 1;
-        var subscriber = new MongoDbTrackingSubscriber(opts);
+        // The values driver 2.x wrote in the shell's syntax: NumberDecimal, ObjectId, ISODate, CSUUID, NumberLong.
+        var document = new BsonDocument
+        {
+            { "_id", ObjectId.Parse("65a1b2c3d4e5f60718293a4b") },
+            { "amount", Decimal128.Parse("1000.50") },
+            { "openedAt", new BsonDateTime(1704067200000) },
+            { "testId", BsonDocument.Parse("{ \"g\" : { \"$binary\" : { \"base64\" : \"D4+tW9nLRp+hZXCGdyiVDg==\", \"subType\" : \"04\" } } }")["g"] },
+            { "version", 5000000000L },
+        };
 
-        var doc1 = new BsonDocument { { "_id", "1" } };
-        var doc2 = new BsonDocument { { "_id", "2" } };
-        var doc3 = new BsonDocument { { "_id", "3" } };
+        var note = ReplyNote("find", MakeReplyWithDocuments(document));
 
-        subscriber.OnCommandStarted(MakeStartedEvent("find"));
-        subscriber.OnCommandSucceeded(MakeSucceededEvent("find", reply: MakeReplyWithDocuments(doc1, doc2, doc3)));
-
-        var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
-        Assert.Contains("... (2 more documents not shown)", log.Content!);
-
-        // Only the first document should be in the formatted output
-        Assert.Contains("\"_id\" : \"1\"", log.Content!);
-        Assert.DoesNotContain("\"_id\" : \"2\"", log.Content!);
+        Assert.Equal(
+            "[{ \"_id\" : { \"$oid\" : \"65a1b2c3d4e5f60718293a4b\" }, \"amount\" : { \"$numberDecimal\" : \"1000.50\" }, " +
+            "\"openedAt\" : { \"$date\" : \"2024-01-01T00:00:00Z\" }, \"testId\" : { \"$uuid\" : \"0f8fad5b-d9cb-469f-a165-70867728950e\" }, " +
+            "\"version\" : 5000000000 }]",
+            note);
+        using (JsonDocument.Parse(note!)) { }
     }
 
     [Fact]
-    public void Detailed_ResponseWithEmptyFirstBatch_ShowsZeroDocuments()
+    public void An_empty_batch_is_an_empty_array()
     {
-        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
-
-        subscriber.OnCommandStarted(MakeStartedEvent("find"));
-        subscriber.OnCommandSucceeded(MakeSucceededEvent("find", reply: MakeReplyWithDocuments()));
-
-        var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
-        Assert.NotNull(log.Content);
-        Assert.Contains("0 documents", log.Content!);
+        Assert.Equal("[]", ReplyNote("find", MakeReplyWithDocuments()));
     }
 
     [Fact]
-    public void Detailed_ResponseWithMetadataAndDocuments_CombinesBoth()
+    public void A_capped_batch_ends_with_its_footnote_and_parses_once_the_footnote_is_off()
     {
-        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
+        var options = MakeOptions();
+        options.MaxResponseDocuments = 1;
+
+        var note = ReplyNote("find", MakeReplyWithDocuments(
+            new BsonDocument("_id", "1"), new BsonDocument("_id", "2"), new BsonDocument("_id", "3")), options: options);
+
+        Assert.Equal("[{ \"_id\" : \"1\" }]\n... (2 more documents not shown)", note);
+        Assert.NotNull(note);
+        using (JsonDocument.Parse(note[..note.IndexOf('\n')])) { }
+    }
+
+    [Fact]
+    public void A_reply_with_counts_and_a_cursor_keeps_both_with_the_batch_in_place_of_the_cursor()
+    {
+        // The client-level bulkWrite (driver 3.x, server 8.0): counts beside a cursor of per-operation results.
         var reply = new BsonDocument
         {
-            { "ok", 1 },
-            { "n", 1 },
             { "cursor", new BsonDocument
                 {
                     { "id", 0L },
-                    { "ns", "testdb.testcollection" },
-                    { "firstBatch", new BsonArray { new BsonDocument { { "_id", "x" }, { "Rating", 5 } } } }
+                    { "firstBatch", new BsonArray { new BsonDocument { { "ok", 1.0 }, { "idx", 0 }, { "n", 1 } } } },
+                    { "ns", "admin.$cmd.bulkWrite" },
                 }
-            }
+            },
+            { "nErrors", 0 }, { "nInserted", 1 }, { "nUpserted", 0 }, { "nMatched", 0 }, { "nModified", 0 }, { "nDeleted", 0 },
+            { "ok", 1.0 },
         };
 
-        subscriber.OnCommandStarted(MakeStartedEvent("find"));
-        subscriber.OnCommandSucceeded(MakeSucceededEvent("find", reply: reply));
-
-        var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
-        Assert.NotNull(log.Content);
-        Assert.Contains("n=1", log.Content!);
-        Assert.Contains("\"Rating\" : 5", log.Content!);
-        Assert.DoesNotContain("document(s)", log.Content!);
+        Assert.Equal(
+            "{ \"cursor\" : [{ \"ok\" : 1.0, \"idx\" : 0, \"n\" : 1 }], \"nErrors\" : 0, \"nInserted\" : 1, \"nUpserted\" : 0, " +
+            "\"nMatched\" : 0, \"nModified\" : 0, \"nDeleted\" : 0 }",
+            ReplyNote("bulkWrite", reply));
     }
 
     [Fact]
-    public void Detailed_ResponseWithNestedObjects_FormatsNestedIndentation()
+    public void A_date_in_a_batch_is_a_date()
     {
-        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
-        var doc = new BsonDocument
+        var document = new BsonDocument
         {
             { "_id", "abc" },
             { "Tags", new BsonArray { "fluffy", "breakfast" } },
-            { "CreatedAt", new BsonDocument("$date", "2026-05-17T12:00:00Z") }
+            { "CreatedAt", new BsonDateTime(new DateTime(2026, 5, 17, 12, 0, 0, DateTimeKind.Utc)) },
         };
 
+        Assert.Equal(
+            "[{ \"_id\" : \"abc\", \"Tags\" : [\"fluffy\", \"breakfast\"], \"CreatedAt\" : { \"$date\" : \"2026-05-17T12:00:00Z\" } }]",
+            ReplyNote("find", MakeReplyWithDocuments(document)));
+    }
+
+    [Fact]
+    public void An_upsert_reply_names_its_id()
+    {
+        var reply = new BsonDocument
+        {
+            { "n", 1 },
+            { "electionId", ObjectId.Parse("7fffffff0000000000000001") },
+            { "opTime", new BsonDocument { { "ts", new BsonTimestamp(1760000000, 1) }, { "t", 1L } } },
+            { "nModified", 0 },
+            { "upserted", new BsonArray { new BsonDocument { { "index", 0 }, { "_id", ObjectId.Parse("65a1b2c3d4e5f60718293a4b") } } } },
+            { "ok", 1.0 },
+            { "$clusterTime", ClusterTime },
+            { "operationTime", new BsonTimestamp(1760000000, 1) },
+        };
+
+        Assert.Equal(
+            "{ \"n\" : 1, \"nModified\" : 0, \"upserted\" : [{ \"index\" : 0, \"_id\" : { \"$oid\" : \"65a1b2c3d4e5f60718293a4b\" } }] }",
+            ReplyNote("update", reply));
+    }
+
+    private static readonly BsonDocument ClaimById = new()
+    {
+        { "findAndModify", "loans" },
+        { "query", new BsonDocument("_id", "loan-1") },
+        { "update", new BsonDocument("$set", new BsonDocument("status", "claimed")) },
+    };
+
+    [Fact]
+    public void A_findAndModify_reply_holds_its_document()
+    {
+        var reply = new BsonDocument
+        {
+            { "lastErrorObject", new BsonDocument { { "n", 1 }, { "updatedExisting", true } } },
+            { "value", new BsonDocument { { "_id", "loan-1" }, { "status", "claimed" } } },
+            { "ok", 1.0 },
+        };
+
+        Assert.Equal(
+            "{ \"lastErrorObject\" : { \"n\" : 1, \"updatedExisting\" : true }, \"value\" : { \"_id\" : \"loan-1\", \"status\" : \"claimed\" } }",
+            ReplyNote("findAndModify", reply, ClaimById));
+    }
+
+    [Fact]
+    public void A_findAndModify_that_took_nothing_says_value_null()
+    {
+        var reply = new BsonDocument
+        {
+            { "lastErrorObject", new BsonDocument { { "n", 0 }, { "updatedExisting", false } } },
+            { "value", BsonNull.Value },
+            { "ok", 1.0 },
+        };
+
+        Assert.Equal(
+            "{ \"lastErrorObject\" : { \"n\" : 0, \"updatedExisting\" : false }, \"value\" : null }",
+            ReplyNote("findAndModify", reply, ClaimById));
+    }
+
+    [Fact]
+    public void A_distinct_reply_holds_its_values()
+    {
+        var reply = new BsonDocument
+        {
+            { "values", new BsonArray { "Draft", "Ready" } },
+            { "ok", 1.0 },
+            { "$clusterTime", ClusterTime },
+            { "operationTime", new BsonTimestamp(1760000000, 1) },
+        };
+
+        Assert.Equal("{ \"values\" : [\"Draft\", \"Ready\"] }", ReplyNote("distinct", reply));
+    }
+
+    private static readonly BsonDocument GetMoreOnLoans = new() { { "getMore", 8271923L }, { "collection", "loans" }, { "batchSize", 2 } };
+
+    [Fact]
+    public void A_getMore_reply_holds_its_next_batch()
+    {
+        var options = MakeOptions();
+        options.TrackGetMore = true;
+        var reply = new BsonDocument
+        {
+            { "cursor", new BsonDocument
+                {
+                    { "nextBatch", new BsonArray { new BsonDocument("_id", 3), new BsonDocument("_id", 4) } },
+                    { "id", 0L },
+                    { "ns", "testdb.loans" },
+                }
+            },
+            { "ok", 1.0 },
+        };
+
+        Assert.Equal("[{ \"_id\" : 3 }, { \"_id\" : 4 }]", ReplyNote("getMore", reply, GetMoreOnLoans, options));
+    }
+
+    [Fact]
+    public void A_getMore_is_drawn_against_its_collection()
+    {
+        var options = MakeOptions();
+        options.TrackGetMore = true;
+        var subscriber = new MongoDbTrackingSubscriber(options);
+
+        subscriber.OnCommandStarted(MakeStartedEvent("getMore", GetMoreOnLoans));
+
+        var request = GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Request);
+        Assert.Equal("GetMore ← loans", request.Method.Value?.ToString());
+        Assert.Equal("mongodb:///testdb/loans", request.Uri.ToString());
+    }
+
+    // Written out rather than read from the product, so a name dropped from its list fails its own case.
+    public static TheoryData<string> Bookkeeping =>
+        ["ok", "$clusterTime", "operationTime", "electionId", "opTime", "recoveryToken", "retriedStmtIds", "readOnly", "$replData"];
+
+    [Theory]
+    [MemberData(nameof(Bookkeeping))]
+    public void The_servers_bookkeeping_is_not_in_a_reply_note(string field)
+    {
+        var reply = new BsonDocument { { "n", 1 }, { field, new BsonDocument("recoveryShardId", "sh0") } };
+
+        Assert.Equal("{ \"n\" : 1 }", ReplyNote("update", reply));
+    }
+
+    [Fact]
+    public void A_sharded_count_keeps_its_count_per_shard()
+    {
+        var reply = new BsonDocument { { "shards", new BsonDocument("sh0", 11) }, { "n", 11 }, { "ok", 1.0 } };
+
+        Assert.Equal("{ \"shards\" : { \"sh0\" : 11 }, \"n\" : 11 }", ReplyNote("count", reply));
+    }
+
+    [Fact]
+    public void A_reply_with_nothing_but_bookkeeping_has_no_note()
+    {
+        var reply = new BsonDocument { { "ok", 1.0 }, { "$clusterTime", ClusterTime }, { "operationTime", new BsonTimestamp(1760000000, 1) } };
+
+        Assert.Null(ReplyNote("commitTransaction", reply));
+    }
+
+    [Theory]
+    [InlineData("serverStatus")]
+    [InlineData("dbStats")]
+    [InlineData("collStats")]
+    public void Server_state_replies_are_left_out_at_Detailed_and_whole_at_Raw(string commandName)
+    {
+        var reply = new BsonDocument { { "host", "mongo:27017" }, { "uptime", 12.0 }, { "ok", 1.0 } };
+
+        Assert.Null(ReplyNote(commandName, reply));
+        Assert.Equal(
+            "{ \"host\" : \"mongo:27017\", \"uptime\" : 12.0, \"ok\" : 1.0 }",
+            ReplyNote(commandName, reply, options: MakeOptions(MongoDbTrackingVerbosity.Raw)));
+    }
+
+    [Fact]
+    public void Without_LogResponseContent_the_documents_are_left_out_and_the_rest_stays()
+    {
+        var options = MakeOptions();
+        options.LogResponseContent = false;
+
+        Assert.Null(ReplyNote("find", MakeReplyWithDocuments(new BsonDocument("_id", 1)), options: options));
+        Assert.Equal(
+            "{ \"lastErrorObject\" : { \"n\" : 1, \"updatedExisting\" : true } }",
+            ReplyNote("findAndModify", new BsonDocument
+            {
+                { "lastErrorObject", new BsonDocument { { "n", 1 }, { "updatedExisting", true } } },
+                { "value", new BsonDocument("_id", "loan-1") },
+                { "ok", 1.0 },
+            }, ClaimById, options));
+        Assert.Null(ReplyNote("distinct", new BsonDocument { { "values", new BsonArray { "Ready" } }, { "ok", 1.0 } }, options: options));
+        Assert.Equal("{ \"n\" : 2, \"nModified\" : 2 }", ReplyNote("update", new BsonDocument { { "n", 2 }, { "nModified", 2 }, { "ok", 1.0 } }, options: options));
+    }
+
+    [Fact]
+    public void A_large_binary_is_a_placeholder_at_Detailed_and_whole_at_Raw()
+    {
+        var chunk = new BsonDocument { { "_id", 1 }, { "data", new BsonBinaryData(new byte[300]) } };
+
+        Assert.Equal(
+            "[{ \"_id\" : 1, \"data\" : \"[binary: 300 bytes, subtype 00]\" }]",
+            ReplyNote("find", MakeReplyWithDocuments(chunk)));
+        Assert.Contains(
+            "\"data\" : { \"$binary\" : { \"base64\" : \"AAAA",
+            ReplyNote("find", MakeReplyWithDocuments(chunk), options: MakeOptions(MongoDbTrackingVerbosity.Raw)));
+    }
+
+    [Fact]
+    public void A_raw_reply_is_the_whole_reply_as_relaxed_extended_json()
+    {
+        var reply = new BsonDocument { { "n", 1 }, { "ok", 1.0 }, { "operationTime", new BsonTimestamp(1760000000, 1) } };
+
+        Assert.Equal(
+            "{ \"n\" : 1, \"ok\" : 1.0, \"operationTime\" : { \"$timestamp\" : { \"t\" : 1760000000, \"i\" : 1 } } }",
+            ReplyNote("update", reply, options: MakeOptions(MongoDbTrackingVerbosity.Raw)));
+    }
+
+    // ─── Failures (plans/MONGODB_DETAILED_PAYLOADS_PLAN.md, R1) ──
+
+    private const string DuplicateKeyMessage = "E11000 duplicate key error collection: app.loans index: loanNumber_1 dup key: { loanNumber: \"L-1001\" }";
+
+    private static BsonDocument DuplicateKeyReply() => new()
+    {
+        { "n", 0 },
+        { "writeErrors", new BsonArray
+            {
+                new BsonDocument
+                {
+                    { "index", 0 }, { "code", 11000 }, { "errmsg", DuplicateKeyMessage },
+                    { "keyPattern", new BsonDocument("loanNumber", 1) }, { "keyValue", new BsonDocument("loanNumber", "L-1001") },
+                },
+            }
+        },
+        { "ok", 1.0 },
+    };
+
+    private RequestResponseLog ResponseTo(string commandName, BsonDocument reply)
+    {
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
+        subscriber.OnCommandStarted(MakeStartedEvent(commandName));
+        subscriber.OnCommandSucceeded(MakeSucceededEvent(commandName, reply: reply));
+        return GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Response);
+    }
+
+    [Fact]
+    public void A_write_error_reply_is_a_failure()
+    {
+        var response = ResponseTo("insert", DuplicateKeyReply());
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode?.Value);
+        Assert.Equal(
+            "{ \"n\" : 0, \"writeErrors\" : [{ \"index\" : 0, \"code\" : 11000, \"errmsg\" : \"E11000 duplicate key error collection: " +
+            "app.loans index: loanNumber_1 dup key: { loanNumber: \\\"L-1001\\\" }\", \"keyPattern\" : { \"loanNumber\" : 1 }, " +
+            "\"keyValue\" : { \"loanNumber\" : \"L-1001\" } }] }",
+            response.Content);
+    }
+
+    [Fact]
+    public void A_write_error_sets_Error_to_its_errmsg()
+    {
+        Assert.Equal(DuplicateKeyMessage, ResponseTo("insert", DuplicateKeyReply()).Error);
+    }
+
+    [Fact]
+    public void A_write_concern_error_reply_is_a_failure()
+    {
+        var reply = new BsonDocument
+        {
+            { "n", 1 },
+            { "writeConcernError", new BsonDocument { { "code", 64 }, { "codeName", "WriteConcernFailed" }, { "errmsg", "waiting for replication timed out" } } },
+            { "ok", 1.0 },
+        };
+
+        var response = ResponseTo("update", reply);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode?.Value);
+        Assert.Equal("waiting for replication timed out", response.Error);
+        Assert.Equal(
+            "{ \"n\" : 1, \"writeConcernError\" : { \"code\" : 64, \"codeName\" : \"WriteConcernFailed\", \"errmsg\" : \"waiting for replication timed out\" } }",
+            response.Content);
+    }
+
+    [Fact]
+    public void A_client_bulkWrite_with_errors_is_a_failure()
+    {
+        var reply = new BsonDocument
+        {
+            { "cursor", new BsonDocument
+                {
+                    { "id", 0L },
+                    { "firstBatch", new BsonArray
+                        {
+                            new BsonDocument { { "ok", 1.0 }, { "idx", 0 }, { "n", 1 } },
+                            new BsonDocument { { "ok", 0.0 }, { "idx", 1 }, { "code", 11000 }, { "errmsg", DuplicateKeyMessage } },
+                        }
+                    },
+                    { "ns", "admin.$cmd.bulkWrite" },
+                }
+            },
+            { "nErrors", 1 }, { "nInserted", 1 }, { "nUpserted", 0 }, { "nMatched", 0 }, { "nModified", 0 }, { "nDeleted", 0 },
+            { "ok", 1.0 },
+        };
+
+        var response = ResponseTo("bulkWrite", reply);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode?.Value);
+        Assert.Equal(DuplicateKeyMessage, response.Error);
+    }
+
+    [Fact]
+    public void A_count_of_errors_is_read_whatever_its_integer_type()
+    {
+        // The rule reads any number the server may send a count as, a 64-bit one included.
+        var response = ResponseTo("bulkWrite", new BsonDocument
+        {
+            { "cursor", new BsonDocument { { "id", 0L }, { "firstBatch", new BsonArray() }, { "ns", "admin.$cmd.bulkWrite" } } },
+            { "nErrors", 1L }, { "nInserted", 0L },
+            { "ok", 1.0 },
+        });
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode?.Value);
+    }
+
+    [Fact]
+    public void A_write_that_succeeded_has_no_Error()
+    {
+        var response = ResponseTo("update", new BsonDocument { { "n", 1 }, { "nModified", 1 }, { "ok", 1.0 } });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode?.Value);
+        Assert.Null(response.Error);
+    }
+
+    /// <summary>The failure the driver raises on a command's failed event: its message names the command, and the server's words are in its result.</summary>
+    private static MongoCommandException ServerError(string commandName, BsonDocument result) =>
+        new(MakeConnectionId(), $"{commandName} command failed", new BsonDocument(commandName, "loans"), result);
+
+    private static BsonDocument BadValueResult() => new()
+    {
+        { "ok", 0.0 },
+        { "errmsg", "unknown operator: $bogus" },
+        { "code", 2 },
+        { "codeName", "BadValue" },
+        { "$clusterTime", ClusterTime },
+        { "operationTime", new BsonTimestamp(1760000000, 1) },
+    };
+
+    private RequestResponseLog FailureOf(Exception exception, MongoDbTrackingVerbosity verbosity = MongoDbTrackingVerbosity.Detailed)
+    {
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions(verbosity));
         subscriber.OnCommandStarted(MakeStartedEvent("find"));
-        subscriber.OnCommandSucceeded(MakeSucceededEvent("find", reply: MakeReplyWithDocuments(doc)));
+        subscriber.OnCommandFailed(MakeFailedEvent("find", exception: exception));
+        return GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Response);
+    }
 
-        var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
-        Assert.NotNull(log.Content);
+    [Fact]
+    public void A_server_error_keeps_errmsg_code_and_codeName()
+    {
+        var response = FailureOf(ServerError("find", BadValueResult()));
 
-        // Nested array and objects should also be indented
-        Assert.Contains("\"Tags\"", log.Content!);
-        Assert.Contains("\"fluffy\"", log.Content!);
-        Assert.Contains("\"$date\"", log.Content!);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode?.Value);
+        Assert.Equal("{ \"errmsg\" : \"unknown operator: $bogus\", \"code\" : 2, \"codeName\" : \"BadValue\" }", response.Content);
+    }
+
+    [Fact]
+    public void A_failed_command_sets_Error_to_the_servers_errmsg()
+    {
+        Assert.Equal("unknown operator: $bogus", FailureOf(ServerError("find", BadValueResult())).Error);
+    }
+
+    [Fact]
+    public void A_raw_server_error_is_the_whole_reply()
+    {
+        var response = FailureOf(ServerError("find", BadValueResult()), MongoDbTrackingVerbosity.Raw);
+
+        Assert.StartsWith("{ \"ok\" : 0.0, \"errmsg\" : \"unknown operator: $bogus\", \"code\" : 2, \"codeName\" : \"BadValue\", \"$clusterTime\" : {", response.Content);
+    }
+
+    [Fact]
+    public void A_failure_with_no_reply_keeps_its_message_as_note_and_Error()
+    {
+        var response = FailureOf(new TimeoutException("A timeout occurred after 30000ms selecting a server."));
+
+        Assert.Equal("A timeout occurred after 30000ms selecting a server.", response.Content);
+        Assert.Equal("A timeout occurred after 30000ms selecting a server.", response.Error);
+    }
+
+    // ─── The driver's documents are gone when a handler returns (plans/MONGODB_DETAILED_PAYLOADS_PLAN.md, F6) ──
+
+    private static RawBsonDocument Disposable(BsonDocument document) => new(document.ToBson());
+
+    [Fact]
+    public void A_deferred_claim_is_logged_at_Raw_after_its_command_is_disposed()
+    {
+        // A claim by filter is logged when its reply names the document it took, after the driver has disposed the
+        // command. At Raw the request note was read from the command then, and the application's call threw.
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions(MongoDbTrackingVerbosity.Raw));
+        subscriber.OnCommandStarted(MakeStartedEvent("insert", InsertOne("order-7")));
+        subscriber.OnCommandSucceeded(MakeSucceededEvent("insert"));
+
+        var claim = Disposable(new BsonDocument
+        {
+            { "findAndModify", "orders" },
+            { "query", new BsonDocument("status", "Pending") },
+            { "update", new BsonDocument("$set", new BsonDocument("status", "Processing")) },
+        });
+        var asStarted = claim.ToString();
+        Exception? thrown;
+        using (TestIdentityScope.Detach())
+        {
+            subscriber.OnCommandStarted(MakeStartedEvent("findAndModify", claim, requestId: 2));
+            claim.Dispose();
+            thrown = Record.Exception(() => subscriber.OnCommandSucceeded(MakeSucceededEvent("findAndModify", requestId: 2,
+                reply: new BsonDocument { { "value", new BsonDocument { { "_id", "order-7" }, { "status", "Pending" } } }, { "ok", 1.0 } })));
+        }
+
+        Assert.Null(thrown);
+        var requests = GetLogsFromThisTest().Where(l => l.Type == RequestResponseType.Request).ToArray();
+        Assert.Equal(2, requests.Length);
+        Assert.Equal(asStarted, requests[1].Content);
+    }
+
+    [Fact]
+    public void A_deferred_claim_keeps_a_note_for_each_phase_verbosity()
+    {
+        var options = MakeOptions(MongoDbTrackingVerbosity.Detailed);
+        options.SetupVerbosity = MongoDbTrackingVerbosity.Raw;
+        options.ActionVerbosity = MongoDbTrackingVerbosity.Summarised;
+        var subscriber = new MongoDbTrackingSubscriber(options);
+        subscriber.OnCommandStarted(MakeStartedEvent("insert", InsertOne("order-8")));
+        subscriber.OnCommandSucceeded(MakeSucceededEvent("insert"));
+
+        var claim = Disposable(new BsonDocument
+        {
+            { "findAndModify", "orders" },
+            { "query", new BsonDocument("status", "Pending") },
+            { "update", new BsonDocument("$set", new BsonDocument("status", "Processing")) },
+        });
+        var asStarted = claim.ToString();
+        using (TestIdentityScope.Detach())
+        {
+            subscriber.OnCommandStarted(MakeStartedEvent("findAndModify", claim, requestId: 2));
+            claim.Dispose();
+            subscriber.OnCommandSucceeded(MakeSucceededEvent("findAndModify", requestId: 2,
+                reply: new BsonDocument { { "value", new BsonDocument { { "_id", "order-8" }, { "status", "Pending" } } }, { "ok", 1.0 } }));
+        }
+
+        var request = GetLogsFromThisTest().Where(l => l.Type == RequestResponseType.Request).ElementAt(1);
+        Assert.Equal(asStarted, request.SetupVariant?.Content);
+        Assert.Null(request.ActionVariant?.Content);
+    }
+
+    [Fact]
+    public void A_reply_that_cannot_be_read_is_drawn_saying_why_and_does_not_reach_the_driver()
+    {
+        var reply = Disposable(new BsonDocument { { "n", 1 }, { "ok", 1.0 } });
+        reply.Dispose();
+
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
+        subscriber.OnCommandStarted(MakeStartedEvent("update"));
+        var thrown = Record.Exception(() => subscriber.OnCommandSucceeded(MakeSucceededEvent("update", reply: reply)));
+
+        Assert.Null(thrown);
+        var response = GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Response);
+        Assert.Equal("<reply could not be rendered: ObjectDisposedException>", response.Content);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode?.Value);
     }
 
     // ─── Document ownership (plans/DOCUMENT_OWNERSHIP_PLAN.md) ──

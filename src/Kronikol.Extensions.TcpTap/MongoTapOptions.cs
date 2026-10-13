@@ -41,10 +41,17 @@ public sealed class MongoTapOptions : TcpTapOptions
     /// <summary>Whether the command's <c>filter</c> is included as the request note at <see cref="TapVerbosity.Detailed"/>. Default true.</summary>
     public bool LogFilterText { get; set; } = true;
 
-    /// <summary>Whether reply documents (from <c>cursor.firstBatch</c>) are included in the response note. Default true.</summary>
+    /// <summary>
+    /// Whether the response note holds the documents the reply returned: a cursor's batch (<c>firstBatch</c>, or a
+    /// getMore's <c>nextBatch</c>), a findAndModify's <c>value</c> and a distinct's <c>values</c>. Off, the note keeps
+    /// the rest of the reply (a write's counts, upserted ids, write errors). Default true.
+    /// </summary>
     public bool LogResponseContent { get; set; } = true;
 
-    /// <summary>Maximum number of documents from <c>cursor.firstBatch</c> in the response note. Default 10.</summary>
+    /// <summary>
+    /// The most documents a response note keeps from a cursor's batch; a note that left some out ends with
+    /// <c>... (N more documents not shown)</c>. Default 10.
+    /// </summary>
     public int MaxResponseDocuments { get; set; } = 10;
 
     /// <summary>Optional hook applied to every command and reply document text before it is recorded (filters, documents, reply batches).</summary>

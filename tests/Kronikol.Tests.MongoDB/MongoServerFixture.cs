@@ -4,9 +4,12 @@ using Testcontainers.MongoDb;
 namespace Kronikol.Tests.MongoDB;
 
 /// <summary>
-/// A real MongoDB server, for what only the driver does: raising its command events on the flow that ran the command.
-/// The server a connection string in <see cref="EnvironmentVariable"/> names when it is set, otherwise one
-/// Testcontainers starts when a Docker endpoint answers (CI's Linux runners). Without either the facts that need it
+/// A real MongoDB server, for what only the driver does: raising its command events on the flow that ran the command,
+/// and disposing their documents when a handler returns. The server a connection string in
+/// <see cref="EnvironmentVariable"/> names when it is set, otherwise one Testcontainers starts when a Docker endpoint
+/// answers (CI's Linux runners), as a single-node replica set, since a standalone server refuses a transaction. A
+/// server named in the variable must be a replica set too, for the transaction facts
+/// (<c>mongodb://127.0.0.1:27217/?replicaSet=rs0&amp;directConnection=true</c>). Without either the facts that need it
 /// skip, saying why.
 /// </summary>
 public sealed class MongoServerFixture : IAsyncLifetime
@@ -31,7 +34,7 @@ public sealed class MongoServerFixture : IAsyncLifetime
         // Testcontainers says when no Docker endpoint answers; any other failure to start the server fails the facts.
         try
         {
-            _container = new MongoDbBuilder().WithImage(Image).Build();
+            _container = new MongoDbBuilder().WithImage(Image).WithReplicaSet("rs0").Build();
             await _container.StartAsync();
         }
         catch (DockerUnavailableException ex)

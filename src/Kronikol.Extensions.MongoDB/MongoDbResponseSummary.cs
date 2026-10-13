@@ -15,8 +15,10 @@ namespace Kronikol.Extensions.MongoDB;
 /// <c>nUpserted</c>) and, optionally, the documents in <c>cursor.firstBatch</c>.
 /// </summary>
 /// <remarks>
-/// Pure — it needs only <c>MongoDB.Bson</c>, so both the driver-event subscriber
-/// (<c>MongoDbTrackingSubscriber</c>) and the out-of-process wire tap (<c>MongoTap</c>) produce the same text.
+/// Pure: it needs only <c>MongoDB.Bson</c>. Kronikol's own captures (<c>MongoDbTrackingSubscriber</c> and the wire
+/// tap's <c>MongoTap</c>) no longer use it: their reply notes are relaxed extended JSON, with a write's counts in the
+/// JSON, and a reply's documents written the same way on MongoDB.Bson 2.x and 3.x. It stays, unchanged, for code that
+/// calls it.
 /// </remarks>
 public static class MongoDbResponseSummary
 {

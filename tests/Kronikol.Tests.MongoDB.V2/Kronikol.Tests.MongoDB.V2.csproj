@@ -28,5 +28,11 @@
     <Compile Include="..\Kronikol.Tests.MongoDB\HeaderAccessor.cs" Link="HeaderAccessor.cs" />
     <Compile Include="..\Kronikol.Tests.MongoDB\MongoServerFixture.cs" Link="MongoServerFixture.cs" />
     <Compile Include="..\Kronikol.Tests.MongoDB\MongoDbHostAttributionTests.cs" Link="MongoDbHostAttributionTests.cs" />
+    <Compile Include="..\Kronikol.Tests.MongoDB\MongoJsonTests.cs" Link="MongoJsonTests.cs" />
+    <Compile Include="..\Kronikol.Tests.MongoDB\MongoDbProcessWideTests.cs" Link="MongoDbProcessWideTests.cs" />
+    <Compile Include="..\Kronikol.Tests.MongoDB\MongoDbFailuresDigestTests.cs" Link="MongoDbFailuresDigestTests.cs" />
+    <Compile Include="..\Kronikol.Tests.MongoDB\MongoDbRealServerTests.cs" Link="MongoDbRealServerTests.cs" />
+    <Compile Include="..\Kronikol.Tests.MongoDB\MongoDbQueryTests.cs" Link="MongoDbQueryTests.cs" />
+    <None Include="..\Kronikol.Tests.MongoDB\MongoJsonGolden.txt" Link="MongoJsonGolden.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

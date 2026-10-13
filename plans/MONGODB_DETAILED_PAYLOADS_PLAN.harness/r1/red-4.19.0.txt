@@ -1,0 +1,196 @@
+# R1 red proofs on the published 4.19.0 (tag v4.19.0, baa411bb), 2026-10-13
+
+Method: a worktree at v4.19.0; R1's test files copied in (MongoDB, MongoDB.V2, TcpTap, TcpTap.Bson3, core
+StatementNoteNullTests, E2E MongoNoteTests and their project files); the one new product type the tests name,
+MongoJson, stubbed as the driver's own `value.ToJson()` (how 4.19.0 wrote a document into a note); the internals
+access lines added so the projects compile. Real-server facts ran against mongo 7.0.43, a single-node replica set
+(KRONIKOL_TEST_MONGO=mongodb://127.0.0.1:27217/?replicaSet=rs0&directConnection=true).
+
+Every failure below is the fact's own assertion, or the defect itself reaching the caller: at Raw the application's
+FindOneAndUpdate threw ObjectDisposedException (driver 3.12.0) or OperationCanceledException (2.30.0), a deferred
+claim's note threw ObjectDisposedException out of the subscriber, and a throwing redaction hook's exception reached
+the caller. The GUID facts were first built with an in-memory BsonBinaryData, which 3.x's writer refuses; they now read
+the GUID from BSON, as a reply carries it, and fail on the note's text.
+
+New facts green on 4.19.0, each by design:
+- A_content_pattern_written_for_todays_text_still_redacts: a pin (F20). It fails if the writer drops the driver's spacing.
+- A_find_reply_offers_the_YAML_view_and_draws_YAML (E2E): on driver 3.x a find's batch was already JSON, indented.
+- Every_utf16_unit_is_escaped_as_the_driver_escapes_it, Strings_are_escaped_as_the_driver_escapes_them: the stub is the
+  driver's writer, so they hold by construction there; on R1 they hold Kronikol's writer to the driver's escaping.
+- Server_state_replies_are_left_out_at_Detailed_and_whole_at_Raw, A_reply_with_nothing_but_bookkeeping_has_no_note:
+  guards; 4.19.0 also wrote no note for those replies.
+- A_write_that_succeeded_has_no_Error, ASuccessfulReplyHasNoError: guards; 4.19.0 never set Error.
+- An_http_body_still_drops_its_nulls: the guard that keeps the null rule to statement notes.
+- Every_bson_type_has_a_case, TheShapesHoldEveryKindOfReplyTheRulesTellApart: guards over the facts' own data.
+The guards' rules are held by mutations (mutations.txt).
+
+## Kronikol.Tests.MongoDB
+   failed 54, passed 209, skipped 0, total 263
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "Binary, a subtype-4 GUID") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$uuid" : "0f8fad5b-d9cb-469f-a165-70867728950e""··· | actual "{ "$binary" : { "base64" : "D4+tW9nLRp+hZXCGdyiVDg"···
+- MongoDB.MongoDbFailuresDigestTests.Failures_md_says_why_a_mongo_write_failed (MongoDbFailuresDigestTests.cs:87): Assert.Contains() Failure: Sub-string not found
+- MongoDB.MongoDbFailuresDigestTests.Failures_md_says_why_a_mongo_command_failed (MongoDbFailuresDigestTests.cs:102): Assert.Contains() Failure: Sub-string not found
+- MongoDB.MongoJsonTests.JsonWriterSettings_Defaults_do_not_reach_the_writer (MongoJsonTests.cs:189): Assert.Equal() Failure: Strings differ | expected "{ "_id" : { "$oid" : "65a1b2c3d4e5f60718293a4b" },"··· | actual "{\r\n  "_id" : { "$oid" : "65a1b2c3d4e5f60718293a4b""···
+- MongoDB.MongoJsonTests.A_binary_over_256_bytes_is_a_placeholder_only_when_asked (MongoJsonTests.cs:166): Assert.Equal() Failure: Strings differ | expected ""[binary: 261,120 bytes, subtype 00]"" | actual "{ "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAA"···
+- MongoDB.MongoJsonTests.A_guid_is_written_whole_whatever_its_size_rule (MongoJsonTests.cs:176): Assert.Equal() Failure: Strings differ | expected "{ "$uuid" : "0f8fad5b-d9cb-469f-a165-70867728950e""··· | actual "{ "$binary" : { "base64" : "D4+tW9nLRp+hZXCGdyiVDg"···
+- MongoDB.MongoJsonTests.Doubles_keep_a_fraction_and_read_back_as_doubles(literal: "0.1", expected: "0.1") (MongoJsonTests.cs:103): Assert.Equal() Failure: Strings differ | expected "0.1" | actual "0.10000000000000001"
+- MongoDB.MongoJsonTests.Doubles_keep_a_fraction_and_read_back_as_doubles(literal: "1E+300", expected: "1E+300") (MongoJsonTests.cs:103): Assert.Equal() Failure: Strings differ | expected "1E+300" | actual "1.0000000000000001E+300"
+- MongoDB.MongoJsonTests.Doubles_keep_a_fraction_and_read_back_as_doubles(literal: "5E-324", expected: "5E-324") (MongoJsonTests.cs:103): Assert.Equal() Failure: Strings differ | expected "5E-324" | actual "4.9406564584124654E-324"
+- MongoDB.MongoDbRealServerTests.A_duplicate_key_insert_is_drawn_failed (MongoDbRealServerTests.cs:92): Assert.Equal() Failure: Values differ | expected InternalServerError | actual OK
+- MongoDB.MongoDbRealServerTests.A_raw_claim_by_filter_does_not_fail_the_applications_call (MongoDbRealServerTests.cs:60): System.ObjectDisposedException : Cannot access a disposed object.
+- MongoDB.MongoDbRealServerTests.Every_detailed_reply_note_parses_as_json (MongoDbRealServerTests.cs:141): Assert.All() Failure: 14 out of 18 items in the collection did not pass.
+- MongoDB.MongoDbQueryTests.A_write_error_counts_as_an_error_in_query_services (MongoDbQueryTests.cs:81): Assert.Equal() Failure: Strings differ | expected "1" | actual "0"
+- MongoDB.MongoDbTrackingSubscriberTests.A_sharded_count_keeps_its_count_per_shard (MongoDbTrackingSubscriberTests.cs:980): Assert.Equal() Failure: Strings differ | expected "{ "shards" : { "sh0" : 11 }, "n" : 11 }" | actual "n=11"
+- MongoDB.MongoDbTrackingSubscriberTests.A_findAndModify_reply_holds_its_document (MongoDbTrackingSubscriberTests.cs:892): Assert.Equal() Failure: Strings differ | expected "{ "lastErrorObject" : { "n" : 1, "updatedExisting""··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_write_error_reply_is_a_failure (MongoDbTrackingSubscriberTests.cs:1079): Assert.Equal() Failure: Values differ | expected InternalServerError | actual OK
+- MongoDB.MongoDbTrackingSubscriberTests.A_getMore_reply_holds_its_next_batch (MongoDbTrackingSubscriberTests.cs:945): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : 3 }, { "_id" : 4 }]" | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_capped_batch_ends_with_its_footnote_and_parses_once_the_footnote_is_off (MongoDbTrackingSubscriberTests.cs:812): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : "1" }]\n... (2 more documents not shown)" | actual "[\n  {\n    "_id" : "1"\n  }\n]\n... (2 more documents "···
+- MongoDB.MongoDbTrackingSubscriberTests.An_update_reply_is_its_counts_as_json (MongoDbTrackingSubscriberTests.cs:561): Assert.Equal() Failure: Strings differ | expected "{ "n" : 3, "nModified" : 2 }" | actual "n=3, nModified=2"
+- MongoDB.MongoDbTrackingSubscriberTests.A_date_in_a_batch_is_a_date (MongoDbTrackingSubscriberTests.cs:850): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : "abc", "Tags" : ["fluffy", "breakfast"]"··· | actual "[\n  {\n    "_id" : "abc",\n    "Tags" : ["fluffy", ""···
+- MongoDB.MongoDbTrackingSubscriberTests.Summarised_IncludesResponseContent_WhenLogResponseContentTrue (MongoDbTrackingSubscriberTests.cs:677): Assert.Equal() Failure: Strings differ | expected "{ "n" : 3, "nModified" : 2 }" | actual "n=3, nModified=2"
+- MongoDB.MongoDbTrackingSubscriberTests.Without_LogResponseContent_the_documents_are_left_out_and_the_rest_stays (MongoDbTrackingSubscriberTests.cs:1012): Assert.Equal() Failure: Strings differ | expected "{ "lastErrorObject" : { "n" : 1, "updatedExisting""··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_findAndModify_that_took_nothing_says_value_null (MongoDbTrackingSubscriberTests.cs:907): Assert.Equal() Failure: Strings differ | expected "{ "lastErrorObject" : { "n" : 0, "updatedExisting""··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_large_binary_is_a_placeholder_at_Detailed_and_whole_at_Raw (MongoDbTrackingSubscriberTests.cs:1029): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : 1, "data" : "[binary: 300 bytes, subtyp"··· | actual "[\n  {\n    "_id" : 1,\n    "data" : { "$binary" : { "···
+- MongoDB.MongoDbTrackingSubscriberTests.An_empty_batch_is_an_empty_array (MongoDbTrackingSubscriberTests.cs:800): Assert.Equal() Failure: Strings differ | expected "[]" | actual "0 documents"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "readOnly") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "retriedStmtIds") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "recoveryToken") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "operationTime") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "$clusterTime") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "opTime") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "ok") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "$replData") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "electionId") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.A_reply_with_counts_and_a_cursor_keeps_both_with_the_batch_in_place_of_the_cursor (MongoDbTrackingSubscriberTests.cs:834): Assert.Equal() Failure: Strings differ | expected "{ "cursor" : [{ "ok" : 1.0, "idx" : 0, "n" : 1 }],"··· | actual "nModified=0\n[\n  {\n    "ok" : 1.0,\n    "idx" : 0,\n "···
+- MongoDB.MongoDbTrackingSubscriberTests.A_reply_batch_is_json_on_both_drivers (MongoDbTrackingSubscriberTests.cs:789): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : { "$oid" : "65a1b2c3d4e5f60718293a4b" }"··· | actual "[\n  {\n    "_id" : { "$oid" : "65a1b2c3d4e5f6071829"···
+- MongoDB.MongoDbTrackingSubscriberTests.A_failed_command_sets_Error_to_the_servers_errmsg (MongoDbTrackingSubscriberTests.cs:1182): Assert.Equal() Failure: Strings differ | expected "unknown operator: $bogus" | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_reply_that_cannot_be_read_is_drawn_saying_why_and_does_not_reach_the_driver (MongoDbResponseSummary.cs:30): Assert.Null() Failure: Value is not null | expected null | actual System.ObjectDisposedException: Cannot access a disposed object.
+- MongoDB.MongoDbTrackingSubscriberTests.A_getMore_is_drawn_against_its_collection (MongoDbTrackingSubscriberTests.cs:958): Assert.Equal() Failure: Strings differ | expected "GetMore ← loans" | actual "GetMore"
+- MongoDB.MongoDbTrackingSubscriberTests.A_failure_with_no_reply_keeps_its_message_as_note_and_Error (MongoDbTrackingSubscriberTests.cs:1199): Assert.Equal() Failure: Strings differ | expected "A timeout occurred after 30000ms selecting a serve"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_reply_batch_of_several_documents_is_one_array (MongoDbTrackingSubscriberTests.cs:771): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : "1", "Name" : "Alice" }, { "_id" : "2","··· | actual "[\n  {\n    "_id" : "1",\n    "Name" : "Alice"\n  },\n "···
+- MongoDB.MongoDbTrackingSubscriberTests.A_deferred_claim_keeps_a_note_for_each_phase_verbosity (MongoDbTrackingSubscriber.cs:248): System.ObjectDisposedException : Cannot access a disposed object.
+- MongoDB.MongoDbTrackingSubscriberTests.A_client_bulkWrite_with_errors_is_a_failure (MongoDbTrackingSubscriberTests.cs:1135): Assert.Equal() Failure: Values differ | expected InternalServerError | actual OK
+- MongoDB.MongoDbTrackingSubscriberTests.A_write_concern_error_reply_is_a_failure (MongoDbTrackingSubscriberTests.cs:1105): Assert.Equal() Failure: Values differ | expected InternalServerError | actual OK
+- MongoDB.MongoDbTrackingSubscriberTests.A_deferred_claim_is_logged_at_Raw_after_its_command_is_disposed (MongoDbTrackingSubscriber.cs:227): Assert.Null() Failure: Value is not null | expected null | actual System.ObjectDisposedException: Cannot access a disposed object.
+- MongoDB.MongoDbTrackingSubscriberTests.Summarised_ResponseVariant_includes_content_when_LogResponseContent_true (MongoDbTrackingSubscriberTests.cs:709): Assert.Equal() Failure: Strings differ | expected "{ "n" : 5 }" | actual "n=5"
+- MongoDB.MongoDbTrackingSubscriberTests.A_reply_batch_is_the_documents_as_a_json_array (MongoDbTrackingSubscriberTests.cs:761): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : "abc-123", "Name" : "Alice" }]" | actual "[\n  {\n    "_id" : "abc-123",\n    "Name" : "Alice"\n"···
+- MongoDB.MongoDbTrackingSubscriberTests.A_write_error_sets_Error_to_its_errmsg (MongoDbTrackingSubscriberTests.cs:1090): Assert.Equal() Failure: Strings differ | expected "E11000 duplicate key error collection: app.loans i"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.An_upsert_reply_names_its_id (MongoDbTrackingSubscriberTests.cs:870): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1, "nModified" : 0, "upserted" : [{ "index"··· | actual "n=1, nModified=0"
+- MongoDB.MongoDbTrackingSubscriberTests.A_server_error_keeps_errmsg_code_and_codeName (MongoDbTrackingSubscriberTests.cs:1176): Assert.Equal() Failure: Strings differ | expected "{ "errmsg" : "unknown operator: $bogus", "code" : "··· | actual "find command failed"
+- MongoDB.MongoDbTrackingSubscriberTests.A_raw_server_error_is_the_whole_reply (MongoDbTrackingSubscriberTests.cs:1190): Assert.StartsWith() Failure: String start does not match
+- MongoDB.MongoDbTrackingSubscriberTests.A_distinct_reply_holds_its_values (MongoDbTrackingSubscriberTests.cs:923): Assert.Equal() Failure: Strings differ | expected "{ "values" : ["Draft", "Ready"] }" | actual null
+- MongoDB.MongoDbProcessWideTests.A_command_whose_request_could_not_be_logged_leaves_no_reply_behind (MongoDbProcessWideTests.cs:92): System.InvalidOperationException : a redaction hook failed
+- MongoDB.MongoDbProcessWideTests.No_handler_exception_reaches_the_driver (MongoDbProcessWideTests.cs:58): Assert.Null() Failure: Value is not null | expected null | actual System.InvalidOperationException: a redaction hook failed
+
+## Kronikol.Tests.MongoDB.V2
+   failed 73, passed 190, skipped 0, total 263
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "DateTime") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$date" : "2024-01-01T00:00:00.123Z" }" | actual "ISODate("2024-01-01T00:00:00.123Z")"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "Timestamp") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$timestamp" : { "t" : 4026531840, "i" : 2147483"··· | actual "Timestamp(4026531840, 2147483649)"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "MinKey") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$minKey" : 1 }" | actual "MinKey"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "DateTime, after 9999") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$date" : { "$numberLong" : "253402300800000" } "··· | actual "new Date(253402300800000)"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "RegularExpression") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$regularExpression" : { "pattern" : "^loan-", ""··· | actual "/^loan-/im"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "Binary, a subtype-4 GUID") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$uuid" : "0f8fad5b-d9cb-469f-a165-70867728950e""··· | actual "CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e")"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "Undefined") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$undefined" : true }" | actual "undefined"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "MaxKey") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$maxKey" : 1 }" | actual "MaxKey"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "DateTime, before 1970") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$date" : { "$numberLong" : "-1000" } }" | actual "ISODate("1969-12-31T23:59:59Z")"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "DateTime, whole seconds") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$date" : "2024-01-01T00:00:00Z" }" | actual "ISODate("2024-01-01T00:00:00Z")"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "Int64") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "9007199254740993" | actual "NumberLong("9007199254740993")"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "Decimal128") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$numberDecimal" : "1000.50" }" | actual "NumberDecimal("1000.50")"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "Binary") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$binary" : { "base64" : "AQID", "subType" : "00"··· | actual "new BinData(0, "AQID")"
+- MongoDB.MongoJsonTests.Every_bson_type_is_written_as_relaxed_extended_json(name: "ObjectId") (MongoJsonTests.cs:66): Assert.Equal() Failure: Strings differ | expected "{ "$oid" : "65a1b2c3d4e5f60718293a4b" }" | actual "ObjectId("65a1b2c3d4e5f60718293a4b")"
+- MongoDB.MongoJsonTests.The_writer_matches_the_driver_on_bson_3 (MongoJsonTests.cs:269): Assert.Equal() Failure: Collections differ at index 2 | expected ···"Ready", "n" : 1, "big" : 9007199254740993, "least""··· | actual ···"Ready", "n" : 1, "big" : NumberLong("9007199254740"···
+- MongoDB.MongoJsonTests.Regex_options_are_written_in_alphabetical_order (MongoJsonTests.cs:87): Assert.Equal() Failure: Strings differ | expected "{ "$regularExpression" : { "pattern" : "^loan-", ""··· | actual "/^loan-/im"
+- MongoDB.MongoJsonTests.Doubles_keep_a_fraction_and_read_back_as_doubles(literal: "5E-324", expected: "5E-324") (MongoJsonTests.cs:103): Assert.Equal() Failure: Strings differ | expected "5E-324" | actual "4.9406564584124654E-324"
+- MongoDB.MongoJsonTests.Doubles_keep_a_fraction_and_read_back_as_doubles(literal: "1E+300", expected: "1E+300") (MongoJsonTests.cs:103): Assert.Equal() Failure: Strings differ | expected "1E+300" | actual "1.0000000000000001E+300"
+- MongoDB.MongoJsonTests.Doubles_keep_a_fraction_and_read_back_as_doubles(literal: "0.1", expected: "0.1") (MongoJsonTests.cs:103): Assert.Equal() Failure: Strings differ | expected "0.1" | actual "0.10000000000000001"
+- MongoDB.MongoDbQueryTests.A_write_error_counts_as_an_error_in_query_services (MongoDbQueryTests.cs:81): Assert.Equal() Failure: Strings differ | expected "1" | actual "0"
+- MongoDB.MongoDbTrackingSubscriberTests.An_upsert_reply_names_its_id (MongoDbTrackingSubscriberTests.cs:870): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1, "nModified" : 0, "upserted" : [{ "index"··· | actual "n=1, nModified=0"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "recoveryToken") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "readOnly") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "opTime") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "$clusterTime") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "retriedStmtIds") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "operationTime") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "electionId") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "ok") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.The_servers_bookkeeping_is_not_in_a_reply_note(field: "$replData") (MongoDbTrackingSubscriberTests.cs:972): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- MongoDB.MongoDbTrackingSubscriberTests.A_distinct_reply_holds_its_values (MongoDbTrackingSubscriberTests.cs:923): Assert.Equal() Failure: Strings differ | expected "{ "values" : ["Draft", "Ready"] }" | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_server_error_keeps_errmsg_code_and_codeName (MongoDbTrackingSubscriberTests.cs:1176): Assert.Equal() Failure: Strings differ | expected "{ "errmsg" : "unknown operator: $bogus", "code" : "··· | actual "find command failed"
+- MongoDB.MongoDbTrackingSubscriberTests.A_client_bulkWrite_with_errors_is_a_failure (MongoDbTrackingSubscriberTests.cs:1135): Assert.Equal() Failure: Values differ | expected InternalServerError | actual OK
+- MongoDB.MongoDbTrackingSubscriberTests.A_reply_that_cannot_be_read_is_drawn_saying_why_and_does_not_reach_the_driver (MongoDbResponseSummary.cs:30): Assert.Null() Failure: Value is not null | expected null | actual System.ObjectDisposedException: Cannot access a disposed object.
+- MongoDB.MongoDbTrackingSubscriberTests.A_findAndModify_reply_holds_its_document (MongoDbTrackingSubscriberTests.cs:892): Assert.Equal() Failure: Strings differ | expected "{ "lastErrorObject" : { "n" : 1, "updatedExisting""··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.An_empty_batch_is_an_empty_array (MongoDbTrackingSubscriberTests.cs:800): Assert.Equal() Failure: Strings differ | expected "[]" | actual "0 documents"
+- MongoDB.MongoDbTrackingSubscriberTests.A_write_error_reply_is_a_failure (MongoDbTrackingSubscriberTests.cs:1079): Assert.Equal() Failure: Values differ | expected InternalServerError | actual OK
+- MongoDB.MongoDbTrackingSubscriberTests.A_failure_with_no_reply_keeps_its_message_as_note_and_Error (MongoDbTrackingSubscriberTests.cs:1199): Assert.Equal() Failure: Strings differ | expected "A timeout occurred after 30000ms selecting a serve"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_sharded_count_keeps_its_count_per_shard (MongoDbTrackingSubscriberTests.cs:980): Assert.Equal() Failure: Strings differ | expected "{ "shards" : { "sh0" : 11 }, "n" : 11 }" | actual "n=11"
+- MongoDB.MongoDbTrackingSubscriberTests.A_capped_batch_ends_with_its_footnote_and_parses_once_the_footnote_is_off (MongoDbTrackingSubscriberTests.cs:812): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : "1" }]\n... (2 more documents not shown)" | actual "[\n  {\n    "_id" : "1"\n  }\n]\n... (2 more documents "···
+- MongoDB.MongoJsonTests.A_double_json_cannot_hold_is_wrapped(value: NaN, text: "NaN") (MongoJsonTests.cs:121): Assert.Equal() Failure: Strings differ | expected "{ "$numberDouble" : "NaN" }" | actual "NaN"
+- MongoDB.MongoDbTrackingSubscriberTests.An_update_reply_is_its_counts_as_json (MongoDbTrackingSubscriberTests.cs:561): Assert.Equal() Failure: Strings differ | expected "{ "n" : 3, "nModified" : 2 }" | actual "n=3, nModified=2"
+- MongoDB.MongoJsonTests.A_double_json_cannot_hold_is_wrapped(value: ∞, text: "Infinity") (MongoJsonTests.cs:121): Assert.Equal() Failure: Strings differ | expected "{ "$numberDouble" : "Infinity" }" | actual "Infinity"
+- MongoDB.MongoJsonTests.A_double_json_cannot_hold_is_wrapped(value: -∞, text: "-Infinity") (MongoJsonTests.cs:121): Assert.Equal() Failure: Strings differ | expected "{ "$numberDouble" : "-Infinity" }" | actual "-Infinity"
+- MongoDB.MongoDbTrackingSubscriberTests.Without_LogResponseContent_the_documents_are_left_out_and_the_rest_stays (MongoDbTrackingSubscriberTests.cs:1012): Assert.Equal() Failure: Strings differ | expected "{ "lastErrorObject" : { "n" : 1, "updatedExisting""··· | actual null
+- MongoDB.MongoJsonTests.JsonWriterSettings_Defaults_do_not_reach_the_writer (MongoJsonTests.cs:189): Assert.Equal() Failure: Strings differ | expected "{ "_id" : ObjectId("65a1b2c3d4e5f60718293a4b"), "a"··· | actual "{\r\n  "_id" : { "$oid" : "65a1b2c3d4e5f60718293a4b""···
+- MongoDB.MongoJsonTests.A_guid_is_written_whole_whatever_its_size_rule (MongoJsonTests.cs:176): Assert.Equal() Failure: Strings differ | expected "{ "$uuid" : "0f8fad5b-d9cb-469f-a165-70867728950e""··· | actual "CSUUID("0f8fad5b-d9cb-469f-a165-70867728950e")"
+- MongoDB.MongoDbTrackingSubscriberTests.A_large_binary_is_a_placeholder_at_Detailed_and_whole_at_Raw (MongoDbTrackingSubscriberTests.cs:1029): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : 1, "data" : "[binary: 300 bytes, subtyp"··· | actual "[\n  {\n    "_id" : 1,\n    "data" : new BinData(0, ""···
+- MongoDB.MongoDbTrackingSubscriberTests.Summarised_IncludesResponseContent_WhenLogResponseContentTrue (MongoDbTrackingSubscriberTests.cs:677): Assert.Equal() Failure: Strings differ | expected "{ "n" : 3, "nModified" : 2 }" | actual "n=3, nModified=2"
+- MongoDB.MongoJsonTests.A_binary_over_256_bytes_is_a_placeholder_only_when_asked (MongoJsonTests.cs:166): Assert.Equal() Failure: Strings differ | expected ""[binary: 261,120 bytes, subtype 00]"" | actual "new BinData(0, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"···
+- MongoDB.MongoDbTrackingSubscriberTests.A_write_concern_error_reply_is_a_failure (MongoDbTrackingSubscriberTests.cs:1105): Assert.Equal() Failure: Values differ | expected InternalServerError | actual OK
+- MongoDB.MongoDbTrackingSubscriberTests.A_failed_command_sets_Error_to_the_servers_errmsg (MongoDbTrackingSubscriberTests.cs:1182): Assert.Equal() Failure: Strings differ | expected "unknown operator: $bogus" | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_reply_batch_is_json_on_both_drivers (MongoDbTrackingSubscriberTests.cs:789): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : { "$oid" : "65a1b2c3d4e5f60718293a4b" }"··· | actual "[\n  {\n    "_id" : ObjectId("65a1b2c3d4e5f60718293a"···
+- MongoDB.MongoDbTrackingSubscriberTests.A_reply_batch_is_the_documents_as_a_json_array (MongoDbTrackingSubscriberTests.cs:761): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : "abc-123", "Name" : "Alice" }]" | actual "[\n  {\n    "_id" : "abc-123",\n    "Name" : "Alice"\n"···
+- MongoDB.MongoDbTrackingSubscriberTests.A_getMore_reply_holds_its_next_batch (MongoDbTrackingSubscriberTests.cs:945): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : 3 }, { "_id" : 4 }]" | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.Summarised_ResponseVariant_includes_content_when_LogResponseContent_true (MongoDbTrackingSubscriberTests.cs:709): Assert.Equal() Failure: Strings differ | expected "{ "n" : 5 }" | actual "n=5"
+- MongoDB.MongoDbTrackingSubscriberTests.A_findAndModify_that_took_nothing_says_value_null (MongoDbTrackingSubscriberTests.cs:907): Assert.Equal() Failure: Strings differ | expected "{ "lastErrorObject" : { "n" : 0, "updatedExisting""··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_write_error_sets_Error_to_its_errmsg (MongoDbTrackingSubscriberTests.cs:1090): Assert.Equal() Failure: Strings differ | expected "E11000 duplicate key error collection: app.loans i"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_reply_batch_of_several_documents_is_one_array (MongoDbTrackingSubscriberTests.cs:771): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : "1", "Name" : "Alice" }, { "_id" : "2","··· | actual "[\n  {\n    "_id" : "1",\n    "Name" : "Alice"\n  },\n "···
+- MongoDB.MongoDbTrackingSubscriberTests.A_getMore_is_drawn_against_its_collection (MongoDbTrackingSubscriberTests.cs:958): Assert.Equal() Failure: Strings differ | expected "GetMore ← loans" | actual "GetMore"
+- MongoDB.MongoDbTrackingSubscriberTests.A_deferred_claim_is_logged_at_Raw_after_its_command_is_disposed (MongoDbTrackingSubscriber.cs:227): Assert.Null() Failure: Value is not null | expected null | actual System.ObjectDisposedException: Cannot access a disposed object.
+- MongoDB.MongoDbTrackingSubscriberTests.A_deferred_claim_keeps_a_note_for_each_phase_verbosity (MongoDbTrackingSubscriber.cs:248): System.ObjectDisposedException : Cannot access a disposed object.
+- MongoDB.MongoDbTrackingSubscriberTests.A_raw_reply_is_the_whole_reply_as_relaxed_extended_json (MongoDbTrackingSubscriberTests.cs:1042): Assert.Equal() Failure: Strings differ | expected ···": 1.0, "operationTime" : { "$timestamp" : { "t" : "··· | actual ···": 1.0, "operationTime" : Timestamp(1760000000, 1) "···
+- MongoDB.MongoDbTrackingSubscriberTests.A_date_in_a_batch_is_a_date (MongoDbTrackingSubscriberTests.cs:850): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : "abc", "Tags" : ["fluffy", "breakfast"]"··· | actual "[\n  {\n    "_id" : "abc",\n    "Tags" : ["fluffy", ""···
+- MongoDB.MongoDbTrackingSubscriberTests.A_raw_server_error_is_the_whole_reply (MongoDbTrackingSubscriberTests.cs:1190): Assert.StartsWith() Failure: String start does not match
+- MongoDB.MongoDbTrackingSubscriberTests.A_reply_with_counts_and_a_cursor_keeps_both_with_the_batch_in_place_of_the_cursor (MongoDbTrackingSubscriberTests.cs:834): Assert.Equal() Failure: Strings differ | expected "{ "cursor" : [{ "ok" : 1.0, "idx" : 0, "n" : 1 }],"··· | actual "nModified=0\n[\n  {\n    "ok" : 1.0,\n    "idx" : 0,\n "···
+- MongoDB.MongoDbFailuresDigestTests.Failures_md_says_why_a_mongo_command_failed (MongoDbFailuresDigestTests.cs:102): Assert.Contains() Failure: Sub-string not found
+- MongoDB.MongoDbFailuresDigestTests.Failures_md_says_why_a_mongo_write_failed (MongoDbFailuresDigestTests.cs:87): Assert.Contains() Failure: Sub-string not found
+- MongoDB.MongoDbRealServerTests.A_duplicate_key_insert_is_drawn_failed (MongoDbRealServerTests.cs:92): Assert.Equal() Failure: Values differ | expected InternalServerError | actual OK
+- MongoDB.MongoDbRealServerTests.Every_detailed_reply_note_parses_as_json (MongoDbRealServerTests.cs:141): Assert.All() Failure: 16 out of 18 items in the collection did not pass.
+- MongoDB.MongoDbRealServerTests.A_raw_claim_by_filter_does_not_fail_the_applications_call (MongoDbRealServerTests.cs:60): System.OperationCanceledException : The BinaryConnection operation has been cancelled.
+- MongoDB.MongoDbProcessWideTests.A_command_whose_request_could_not_be_logged_leaves_no_reply_behind (MongoDbProcessWideTests.cs:92): System.InvalidOperationException : a redaction hook failed
+- MongoDB.MongoDbProcessWideTests.No_handler_exception_reaches_the_driver (MongoDbProcessWideTests.cs:58): Assert.Null() Failure: Value is not null | expected null | actual System.InvalidOperationException: a redaction hook failed
+
+## Kronikol.Tests.TcpTap
+   failed 17, passed 380, skipped 4, total 401
+- TcpTap.MongoDecoderTests.AGetMoreIsDrawnAgainstItsCollectionWithItsNextBatch (MongoDecoderTests.cs:236): Assert.Equal() Failure: Strings differ | expected "GetMore ← Trial" | actual "GetMore"
+- TcpTap.MongoDecoderTests.AnInsertCarriedInAKindOneSequenceIsCounted (MongoDecoderTests.cs:69): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- TcpTap.MongoDecoderTests.ACommandThatFailedBecomesA500WithItsErrmsgCodeAndCodeName (MongoDecoderTests.cs:158): Assert.Equal() Failure: Strings differ | expected "{ "errmsg" : "not authorized on app", "code" : 13,"··· | actual "not authorized on app"
+- TcpTap.MongoDecoderTests.AFailedReplyAtRawIsTheWholeReply (MongoDecoderTests.cs:169): Assert.Equal() Failure: Strings differ | expected "{ "ok" : 0.0, "errmsg" : "not authorized on app", "··· | actual "not authorized on app"
+- TcpTap.MongoDecoderTests.AnUpdateReplyIsItsCountsAsJson (MongoDecoderTests.cs:94): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1, "nModified" : 1 }" | actual "n=1, nModified=1"
+- TcpTap.TapNoteGoldenTests.The_tap_writes_the_same_bytes_on_bson_2_and_3 (TapNoteGoldenTests.cs:47): On MongoDB.Bson 2.30.0.0 line 3 differs from the golden:
+- TcpTap.InProcessParityTests.EveryRealCommandAndReplyRendersAlikeInBothCaptures(shape: "Find with an unknown operator (server ok: 0): find", index: 30, verbosity: Detailed) (InProcessParityTests.cs:243): Assert.Equal() Failure: Strings differ | expected "find command failed" | actual "unknown operator: $bogus"
+- TcpTap.InProcessParityTests.EveryRealCommandAndReplyRendersAlikeInBothCaptures(shape: "Find with an unknown operator (server ok: 0): find", index: 30, verbosity: Raw) (InProcessParityTests.cs:243): Assert.Equal() Failure: Strings differ | expected "find command failed" | actual "unknown operator: $bogus"
+- TcpTap.InProcessParityTests.EveryRealCommandAndReplyRendersAlikeInBothCaptures(shape: "Find with an unknown operator (server ok: 0): find", index: 30, verbosity: Summarised) (InProcessParityTests.cs:243): Assert.Equal() Failure: Strings differ | expected "find command failed" | actual "unknown operator: $bogus"
+- TcpTap.InProcessParityTests.AMongoFailureIsA500WithTheServersWordsInBothCaptures (InProcessParityTests.cs:283): Assert.Equal() Failure: Strings differ | expected "{ "errmsg" : "unknown operator: $bogus", "code" : "··· | actual "find command failed"
+- TcpTap.MongoDecoderTests.AnOversizeReplyIsSkippedButStillClosesTheArrow (MongoDecoderTests.cs:537): Assert.Equal() Failure: Strings differ | expected "[]" | actual "0 documents"
+- TcpTap.MongoDecoderTests.AnEmptyBatchIsAnEmptyArray (MongoDecoderTests.cs:142): Assert.Equal() Failure: Strings differ | expected "[]" | actual "0 documents"
+- TcpTap.MongoDecoderTests.TheServersBookkeepingIsNotInAReplyNote (MongoDecoderTests.cs:255): Assert.Equal() Failure: Strings differ | expected "{ "n" : 1 }" | actual "n=1"
+- TcpTap.MongoDecoderTests.AWriteErrorIsA500WithItsErrmsgAsTheError (MongoDecoderTests.cs:187): Assert.Equal() Failure: Values differ | expected InternalServerError | actual OK
+- TcpTap.MongoDecoderTests.ReplyDocumentsAreCappedByMaxResponseDocuments (MongoDecoderTests.cs:132): Assert.Equal() Failure: Strings differ | expected "[{ "_id" : 1 }, { "_id" : 2 }]\n... (2 more documen"··· | actual "[\n  {\n    "_id" : 1\n  },\n  {\n    "_id" : 2\n  }\n]\n."···
+- TcpTap.MongoDecoderTests.GetMoreIsOffByDefaultAndCanBeTurnedOn (MongoDecoderTests.cs:416): Assert.Equal() Failure: Strings differ | expected "GetMore ← Trial" | actual "GetMore"
+- TcpTap.MongoDecoderTests.AWriteConcernErrorIsA500 (MongoDecoderTests.cs:208): Assert.Equal() Failure: Values differ | expected InternalServerError | actual OK
+
+## Kronikol.Tests.TcpTap.Bson3
+   failed 1, passed 0, skipped 0, total 1
+- TcpTap.TapNoteGoldenTests.The_tap_writes_the_same_bytes_on_bson_2_and_3 (TapNoteGoldenTests.cs:47): On MongoDB.Bson 3.12.0.0 line 3 differs from the golden:
+
+## core-nulls
+   failed 4, passed 1, skipped 0, total 5
+- PlantUml.StatementNoteNullTests.A_null_in_a_statement_note_is_drawn (StatementNoteNullTests.cs:49): Assert.Contains() Failure: Sub-string not found
+- PlantUml.StatementNoteNullTests.An_atlas_data_api_body_keeps_its_nulls (StatementNoteNullTests.cs:79): Assert.Contains() Failure: Sub-string not found
+- PlantUml.StatementNoteNullTests.A_null_in_a_statement_reply_is_drawn (StatementNoteNullTests.cs:60): Assert.Contains() Failure: Sub-string not found
+- PlantUml.StatementNoteNullTests.A_capped_statement_reply_keeps_its_nulls (StatementNoteNullTests.cs:70): Assert.Contains() Failure: Sub-string not found
+
+## e2e-mongonotes
+   failed 2, passed 1, skipped 0, total 3
+- EndToEnd.MongoNoteTests.An_update_reply_offers_the_YAML_view_and_draws_its_counts_as_YAML (MongoNoteTests.cs:116): Assert.Contains() Failure: Sub-string not found
+- EndToEnd.MongoNoteTests.A_null_in_a_filter_is_drawn_in_JSON_and_in_YAML (MongoNoteTests.cs:130): Assert.Contains() Failure: Sub-string not found
+
+Run-1 red proofs predate two facts added after the mutation run (1c9332c6): AReplyThatCarriesAnErrmsgIsAFailureWithoutAnOk (on 4.19.0 the tap set no Error and wrote the errmsg alone as the note) and A_count_of_errors_is_read_whatever_its_integer_type (4.19.0 read no nErrors, so the reply was drawn 200).

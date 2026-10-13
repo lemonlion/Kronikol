@@ -642,6 +642,7 @@ public class TcpTap : IAsyncDisposable
             DependencyCategory: _options.DependencyCategory,
             CallerDependencyCategory: _options.CallerDependencyCategory)
         {
+            Error = interaction.Error,
             Timestamp = interaction.ResponseTimestamp,
             ActivityTraceId = activityTraceId,
             ActivitySpanId = activitySpanId,

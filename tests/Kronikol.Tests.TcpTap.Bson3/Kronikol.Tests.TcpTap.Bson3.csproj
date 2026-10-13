@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The MongoDB wire tap compiles against MongoDB.Bson 2.x and runs on whichever Bson its host resolves. This
+       project runs it on 3.x and holds its notes to the golden Kronikol.Tests.TcpTap holds them to on 2.x. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <DefineConstants>$(DefineConstants);KRONIKOL_BSON3</DefineConstants>
+    <NoWarn>$(NoWarn);xUnit1051;NU1902;NU1903;NU1904</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="10.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="MongoDB.Bson" Version="3.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Kronikol\Kronikol.csproj" />
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.TcpTap\Kronikol.Extensions.TcpTap.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests.TcpTap\GlobalUsings.cs" Link="GlobalUsings.cs" />
+    <Compile Include="..\Kronikol.Tests.TcpTap\TestSupport.cs" Link="TestSupport.cs" />
+    <Compile Include="..\Kronikol.Tests.TcpTap\MongoWireShapes.cs" Link="MongoWireShapes.cs" />
+    <Compile Include="..\Kronikol.Tests.TcpTap\TapNoteGoldenTests.cs" Link="TapNoteGoldenTests.cs" />
+    <None Include="..\Kronikol.Tests.TcpTap\MongoWireShapes.json" Link="MongoWireShapes.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Kronikol.Tests.TcpTap\MongoTapNotes.golden.txt" Link="MongoTapNotes.golden.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

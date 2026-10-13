@@ -40,10 +40,13 @@
     <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbOperationClassifier.cs" Link="Protocols\Shared\MongoDbOperationClassifier.cs" />
     <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbTrackingVerbosity.cs" Link="Protocols\Shared\MongoDbTrackingVerbosity.cs" />
     <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbResponseSummary.cs" Link="Protocols\Shared\MongoDbResponseSummary.cs" />
+    <Compile Include="..\Kronikol.Extensions.MongoDB\MongoJson.cs" Link="Protocols\Shared\MongoJson.cs" />
+    <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbNotes.cs" Link="Protocols\Shared\MongoDbNotes.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Kronikol.Tests.TcpTap" />
+    <InternalsVisibleTo Include="Kronikol.Tests.TcpTap.Bson3" />
   </ItemGroup>
 
 </Project>

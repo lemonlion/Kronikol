@@ -29,5 +29,7 @@
     <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbTrackingVerbosity.cs" Link="MongoDbTrackingVerbosity.cs" />
     <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbResponseSummary.cs" Link="MongoDbResponseSummary.cs" />
     <Compile Include="..\Kronikol.Extensions.MongoDB\ChangeStreamCorrelation.cs" Link="ChangeStreamCorrelation.cs" />
+    <Compile Include="..\Kronikol.Extensions.MongoDB\MongoJson.cs" Link="MongoJson.cs" />
+    <Compile Include="..\Kronikol.Extensions.MongoDB\MongoDbNotes.cs" Link="MongoDbNotes.cs" />
   </ItemGroup>
 </Project>

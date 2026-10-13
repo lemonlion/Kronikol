@@ -39,6 +39,10 @@
 		<InternalsVisibleTo Include="Kronikol.Extensions.Spanner" />
 		<!-- InternalFlowActivityListener: the Kafka trackers start it, as the HTTP handler and gRPC interceptor do -->
 		<InternalsVisibleTo Include="Kronikol.Extensions.Kafka" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.MongoDB" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.MongoDB.V2" />
+		<InternalsVisibleTo Include="Kronikol.Tests.MongoDB" />
+		<InternalsVisibleTo Include="Kronikol.Tests.MongoDB.V2" />
 		<InternalsVisibleTo Include="Kronikol.Tests.Kafka" />
 		<!-- search-index bench harness (tools/search-bench/formatter-probe), query-bench precedent -->
 		<InternalsVisibleTo Include="formatter-probe" />

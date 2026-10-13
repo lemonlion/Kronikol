@@ -28,6 +28,10 @@
     <PackageReference Include="Testcontainers.Redis" Version="4.8.1" />
     <PackageReference Include="Testcontainers.MongoDb" Version="4.8.1" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="MongoWireShapes.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="MongoTapNotes.golden.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\CultureRun.cs" Link="CultureRun.cs" />

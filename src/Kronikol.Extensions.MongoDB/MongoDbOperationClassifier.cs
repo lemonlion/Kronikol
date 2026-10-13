@@ -130,6 +130,10 @@ public static class MongoDbOperationClassifier
     {
         if (command is null) return null;
 
+        // A getMore's own element holds the cursor id; it names its collection in `collection`.
+        if (commandName.Equals("getMore", StringComparison.OrdinalIgnoreCase))
+            return command.TryGetValue("collection", out var collection) && collection.IsString ? collection.AsString : null;
+
         // The collection name is the value of the command element itself
         // e.g., { "find": "users", "filter": {...} }
         var key = commandName.ToLowerInvariant();

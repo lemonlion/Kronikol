@@ -60,10 +60,12 @@ public record RequestResponseLog(
     public string? ExpiredFromTestId { get; set; }
 
     /// <summary>
-    /// When the call threw instead of answering: the exception's message chain (the outer message, then
-    /// each inner one after "Caused by:"). The exception's type stands where the status would, behind a
-    /// bang (<c>!HttpRequestException</c>), so the fingerprint and the diagram name it. Null on a request
-    /// and on a call that answered. See <see cref="FailedSend"/>.
+    /// Why the call failed, when its capturer knows. For a call that threw instead of answering: the exception's
+    /// message chain (the outer message, then each inner one after "Caused by:"), with the exception's type standing
+    /// where the status would, behind a bang (<c>!HttpRequestException</c>), so the fingerprint and the diagram name
+    /// it; see <see cref="FailedSend"/>. For a call that answered with a failure its capturer can read, such as a
+    /// MongoDB command error or write error or a Kafka delivery error: the service's own message, beside the failure
+    /// status. Null on a request and on a call that succeeded.
     /// </summary>
     public string? Error { get; set; }
     public string? ActivitySpanId { get; set; }

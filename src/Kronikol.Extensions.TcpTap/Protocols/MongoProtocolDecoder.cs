@@ -11,9 +11,10 @@ namespace Kronikol.Extensions.TcpTap.Protocols;
 /// </summary>
 /// <remarks>
 /// <para>Labels come from the same <see cref="MongoDbOperationClassifier"/> source file the in-process
-/// <c>Kronikol.Extensions.MongoDB</c> extension uses, and reply notes from the same
-/// <see cref="MongoDbResponseSummary"/>, so a command tapped on the wire renders with a byte-identical
-/// <c>Method</c>, <c>Uri</c> and reply note.</para>
+/// <c>Kronikol.Extensions.MongoDB</c> extension uses, and reply notes, statuses and errors from the same rules
+/// (relaxed extended JSON written by Kronikol, whichever MongoDB.Bson the host resolves), so a command tapped on the
+/// wire renders with a byte-identical <c>Method</c>, <c>Uri</c> and reply note. A reply carrying <c>writeErrors</c> or
+/// a <c>writeConcernError</c> is a failure, as a reply with <c>ok: 0</c> is.</para>
 /// <para>What is deliberately <em>not</em> decoded: the legacy OP_QUERY/OP_REPLY handshake (recognised and
 /// stepped over, recorded never) and OP_COMPRESSED (passed straight through, reported once). Replies with
 /// <c>moreToCome</c> that answer no pending request — the streaming <c>hello</c> on a monitoring connection —
@@ -342,27 +343,45 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
     {
         var label = MongoDbOperationClassifier.GetDiagramLabel(pending.Info, _verbosity);
 
-        var failed = reply is not null &&
-                     ((reply.TryGetValue("ok", out var ok) && ToDouble(ok) == 0d) || reply.Contains("errmsg"));
-
+        // The same rules as the in-process subscriber (MongoDbNotes): a failed command's note is its reply without the
+        // server's bookkeeping, a write error (ok: 1 with writeErrors) is a failure too, and either says why in Error.
         string? responseContent;
-        OneOf<HttpStatusCode, string>? status;
-        if (failed)
+        string? error = null;
+        OneOf<HttpStatusCode, string>? status = HttpStatusCode.OK;
+        try
         {
-            responseContent = reply!.TryGetValue("errmsg", out var errmsg) ? errmsg.ToString() : "command failed";
-            status = HttpStatusCode.InternalServerError;
+            if (reply is not null && MongoDbNotes.IsCommandFailure(reply))
+            {
+                responseContent = _verbosity == MongoDbTrackingVerbosity.Raw
+                    ? MongoDbNotes.Whole(reply)
+                    : MongoDbNotes.Failure(reply) ?? "command failed";
+                error = MongoDbNotes.FailureReason(reply) ?? "command failed";
+                status = HttpStatusCode.InternalServerError;
+            }
+            else
+            {
+                responseContent = replacementNote ?? ResponseContent(pending.Info, reply);
+                if (reply is not null && MongoDbNotes.IsWriteFailure(reply))
+                {
+                    error = MongoDbNotes.FailureReason(reply);
+                    status = HttpStatusCode.InternalServerError;
+                }
+            }
         }
-        else
+        catch (Exception ex)
         {
-            responseContent = replacementNote ?? ResponseContent(reply);
-            status = HttpStatusCode.OK;
+            _context.CountDecodeError();
+            responseContent = $"<reply could not be rendered: {ex.GetType().Name}>";
         }
 
         _resyncsWithoutRecord = 0;
         _context.Record(new TapInteraction(
             label, label, pending.Uri,
             Redact(pending.RequestContent), Redact(responseContent),
-            status, pending.Timestamp, timestamp));
+            status, pending.Timestamp, timestamp)
+        {
+            Error = error
+        });
     }
 
     private bool ShouldRecord(string commandName)
@@ -383,7 +402,7 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         _ => _options.LogFilterText ? info.FilterText : null,
     };
 
-    private string? ResponseContent(BsonDocument? reply)
+    private string? ResponseContent(MongoDbOperationInfo info, BsonDocument? reply)
     {
         if (reply is null)
             return null;
@@ -393,8 +412,8 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
             return _verbosity switch
             {
                 MongoDbTrackingVerbosity.Summarised when !_options.LogResponseContent => null,
-                MongoDbTrackingVerbosity.Raw => Stringify(reply),
-                _ => MongoDbResponseSummary.ExtractDetailed(reply, _options.LogResponseContent, _options.MaxResponseDocuments),
+                MongoDbTrackingVerbosity.Raw => MongoDbNotes.Whole(reply),
+                _ => MongoDbNotes.Reply(reply, info.Operation, _options.LogResponseContent, _options.MaxResponseDocuments),
             };
         }
         catch (Exception ex)
@@ -429,15 +448,6 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
             return "[REDACTION FAILED]";
         }
     }
-
-    private static double ToDouble(BsonValue value) => value.BsonType switch
-    {
-        BsonType.Double => value.AsDouble,
-        BsonType.Int32 => value.AsInt32,
-        BsonType.Int64 => value.AsInt64,
-        BsonType.Boolean => value.AsBoolean ? 1d : 0d,
-        _ => 1d,
-    };
 
     private Uri BuildUri(MongoDbOperationInfo info)
     {

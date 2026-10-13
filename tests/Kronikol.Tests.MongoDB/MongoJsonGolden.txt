@@ -1,0 +1,11 @@
+{ }
+{ "empty" : { }, "none" : [] }
+{ "status" : "Ready", "n" : 1, "big" : 9007199254740993, "least" : -2147483648, "most" : 9223372036854775807 }
+{ "_id" : { "$oid" : "65a1b2c3d4e5f60718293a4b" }, "amount" : { "$numberDecimal" : "1000.50" }, "negativeZero" : { "$numberDecimal" : "-0" }, "notANumber" : { "$numberDecimal" : "NaN" }, "infinite" : { "$numberDecimal" : "-Infinity" }, "exponent" : { "$numberDecimal" : "1E+3" } }
+{ "at" : { "$date" : "2024-01-01T00:00:00Z" }, "ms" : { "$date" : "2024-01-01T00:00:00.123Z" }, "epoch" : { "$date" : "1970-01-01T00:00:00Z" }, "before" : { "$date" : { "$numberLong" : "-1" } }, "last" : { "$date" : "9999-12-31T23:59:59.999Z" }, "after" : { "$date" : { "$numberLong" : "253402300800000" } } }
+{ "nested" : { "deeper" : { "deepest" : [1, [2, 3], { }] } } }
+{ "yes" : true, "no" : false, "nothing" : null, "undefined" : { "$undefined" : true }, "min" : { "$minKey" : 1 }, "max" : { "$maxKey" : 1 } }
+{ "re" : { "$regularExpression" : { "pattern" : "^loan-[0-9]+$", "options" : "im" } }, "ts" : { "$timestamp" : { "t" : 4026531840, "i" : 2147483649 } }, "code" : { "$code" : "function() { return \"x\"; }" }, "scoped" : { "$code" : "g()", "$scope" : { "y" : 2 } }, "sym" : { "$symbol" : "sym" } }
+{ "bytes" : { "$binary" : { "base64" : "AAEC+v8=", "subType" : "00" } }, "md5" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAA==", "subType" : "05" } }, "user" : { "$binary" : { "base64" : "AQ==", "subType" : "80" } } }
+{ "é" : "José ~<b> Élodie & Co <i>", "quote\"back\\slash" : "tab\tnewline\ncr\rff\fbs\b", "$set" : { "a.b" : 1 }, "marks" : "e\u0301\u02b0\u200b\u2029\ue000\ud83d\ude00\u007f" }
+{ "email" : "ada@example.com" }

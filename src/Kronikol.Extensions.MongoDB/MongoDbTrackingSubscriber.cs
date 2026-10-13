@@ -13,6 +13,12 @@ namespace Kronikol.Extensions.MongoDB;
 /// Also implements <see cref="IEventSubscriber"/> for use with InMemoryEmulator.MongoDB's CommandEventSubscriptionBuilder
 /// or any other event source that accepts <see cref="IEventSubscriber"/>.
 /// </summary>
+/// <remarks>
+/// The driver runs these handlers inside the application's own call, so none lets an exception through: a command
+/// that cannot be recorded is left out and reported once in the run's diagnostics. A reply with <c>writeErrors</c> or a
+/// <c>writeConcernError</c>, which the driver raises as a success and the application as an exception, is drawn as a
+/// failure (500), and a failed call carries the server's message in <see cref="RequestResponseLog.Error"/>.
+/// </remarks>
 public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
 {
     private readonly MongoDbTrackingOptions _options;
@@ -74,10 +80,51 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
         return false;
     }
 
+    // The driver runs these handlers inside the application's own call, so an exception leaving one fails that call
+    // (at Raw a claim by filter once made the application's FindOneAndUpdate throw after the server had applied it).
+    // Each handler catches: the command goes unrecorded and the run's diagnostics say so.
+
     public void OnCommandStarted(CommandStartedEvent e)
     {
         Interlocked.Increment(ref _invocationCount);
+        try
+        {
+            Started(e);
+        }
+        catch (Exception ex)
+        {
+            // A command whose request could not be logged is dropped whole: its reply finds nothing pending.
+            _pending.TryRemove(e.RequestId, out _);
+            NotRecorded(ex);
+        }
+    }
 
+    public void OnCommandSucceeded(CommandSucceededEvent e)
+    {
+        try
+        {
+            Succeeded(e);
+        }
+        catch (Exception ex)
+        {
+            NotRecorded(ex);
+        }
+    }
+
+    public void OnCommandFailed(CommandFailedEvent e)
+    {
+        try
+        {
+            Failed(e);
+        }
+        catch (Exception ex)
+        {
+            NotRecorded(ex);
+        }
+    }
+
+    private void Started(CommandStartedEvent e)
+    {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
             return;
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
@@ -106,12 +153,18 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
                 && testInfo is not { IsAttributed: true, Source: not AttributionSource.DocumentFlow })
             {
                 // A claim by filter (findAndModify on a status, not an _id) names the document it took only
-                // in the reply: the request half waits for it, and is attributed with it.
+                // in the reply: the request half waits for it, and is attributed with it. The driver disposes the
+                // command when this handler returns, so the half keeps its note at every verbosity it can be
+                // logged at, rendered now.
+                var command = e.Command;
+                var notes = new Dictionary<MongoDbTrackingVerbosity, string?>();
+                foreach (var verbosity in new[] { _options.Verbosity, _options.SetupVerbosity ?? _options.Verbosity, _options.ActionVerbosity ?? _options.Verbosity })
+                    notes.TryAdd(verbosity, RequestNote(opInfo, command, verbosity));
                 _pending[e.RequestId] = new PendingOperation(default, opInfo,
                     BuildUri(opInfo, effectiveVerbosity), MongoDbOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity),
                     Guid.NewGuid(), Guid.NewGuid())
                 {
-                    Deferred = new DeferredRequest(testInfo, e.Command, DateTimeOffset.UtcNow, TestPhaseContext.Current)
+                    Deferred = new DeferredRequest(testInfo, notes, DateTimeOffset.UtcNow, TestPhaseContext.Current)
                 };
                 return;
             }
@@ -127,10 +180,11 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             BuildUri(opInfo, effectiveVerbosity), MongoDbOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity),
             Guid.NewGuid(), Guid.NewGuid());
         _pending[e.RequestId] = pending;
-        LogRequest(pending, e.Command, effectiveVerbosity, timestamp: null, TestPhaseContext.Current);
+        var startedCommand = e.Command;
+        LogRequest(pending, verbosity => RequestNote(opInfo, startedCommand, verbosity), effectiveVerbosity, timestamp: null, TestPhaseContext.Current);
     }
 
-    public void OnCommandSucceeded(CommandSucceededEvent e)
+    private void Succeeded(CommandSucceededEvent e)
     {
         if (!_pending.TryRemove(e.RequestId, out var pending)) return;
 
@@ -144,49 +198,53 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             var testInfo = DocumentOwnership.ForOperation(deferred.Resolved, key, DocumentOperationKind.Write);
             if (testInfo is null) return;
             pending = pending with { TestInfo = testInfo.Value, OpInfo = pending.OpInfo with { DocumentId = claimed }, Deferred = null };
-            LogRequest(pending, deferred.Command, effectiveVerbosity, deferred.StartedAt, deferred.Phase);
+            LogRequest(pending, verbosity => deferred.Notes[verbosity], effectiveVerbosity, deferred.StartedAt, deferred.Phase);
         }
 
         AutoCorrelateIfWrite(pending);
 
-        var content = effectiveVerbosity switch
+        // A write error arrives as a success (ok: 1 with writeErrors), and the application's call throws.
+        var reply = e.Reply;
+        bool writeFailed;
+        string? error;
+        try
         {
-            MongoDbTrackingVerbosity.Summarised when !_options.LogResponseContent => null,
-            MongoDbTrackingVerbosity.Raw => e.Reply?.ToString(),
-            _ => ExtractDetailedResponse(e.Reply) // Detailed/Summarised+LogResponseContent: metadata + optional document preview
-        };
+            writeFailed = reply is not null && MongoDbNotes.IsWriteFailure(reply);
+            error = writeFailed ? MongoDbNotes.FailureReason(reply!) : null;
+        }
+        catch (Exception)
+        {
+            // A reply that cannot be read says nothing of a failure; its note says why it is missing.
+            writeFailed = false;
+            error = null;
+        }
+        var operation = pending.OpInfo.Operation;
 
         RequestResponseLogger.Log(new RequestResponseLog(
             pending.TestInfo.Name, pending.TestInfo.Id,
             pending.Label,
-            content, pending.Uri,
+            ReplyNote(reply, operation, effectiveVerbosity), pending.Uri,
             [], _options.ServiceName, _options.CallerName,
             RequestResponseType.Response, pending.TraceId, pending.RequestResponseId, false,
-            HttpStatusCode.OK,
+            writeFailed ? HttpStatusCode.InternalServerError : HttpStatusCode.OK,
             DependencyCategory: DependencyCategories.MongoDB)
         {
+            Error = error,
             AttributionSource = pending.TestInfo.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
-            v =>
-            {
-                var vContent = v switch
-                {
-                    MongoDbTrackingVerbosity.Summarised when !_options.LogResponseContent => null,
-                    MongoDbTrackingVerbosity.Raw => e.Reply?.ToString(),
-                    _ => ExtractDetailedResponse(e.Reply)
-                };
-                return new PhaseVariant(
-                    MongoDbOperationClassifier.GetDiagramLabel(pending.OpInfo, v),
-                    BuildUri(pending.OpInfo, v),
-                    vContent, [],
-                    v == MongoDbTrackingVerbosity.Summarised && pending.OpInfo.Operation == MongoDbOperation.Other);
-            }));
+            v => new PhaseVariant(
+                MongoDbOperationClassifier.GetDiagramLabel(pending.OpInfo, v),
+                BuildUri(pending.OpInfo, v),
+                ReplyNote(reply, operation, v), [],
+                v == MongoDbTrackingVerbosity.Summarised && pending.OpInfo.Operation == MongoDbOperation.Other)));
     }
 
-    public void OnCommandFailed(CommandFailedEvent e)
+    private void Failed(CommandFailedEvent e)
     {
         if (!_pending.TryRemove(e.RequestId, out var pending)) return;
+
+        var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
         if (pending.Deferred is { } deferred)
         {
@@ -194,44 +252,51 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             var testInfo = DocumentOwnership.ForOperation(deferred.Resolved, null, DocumentOperationKind.Write);
             if (testInfo is null) return;
             pending = pending with { TestInfo = testInfo.Value, Deferred = null };
-            var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
-            LogRequest(pending, deferred.Command, effectiveVerbosity, deferred.StartedAt, deferred.Phase);
+            LogRequest(pending, verbosity => deferred.Notes[verbosity], effectiveVerbosity, deferred.StartedAt, deferred.Phase);
+        }
+
+        // The server's words are in the reply the exception carries, not in its message ("find command failed"). The
+        // driver disposes that reply when this handler returns, so it is read now.
+        var result = (e.Failure as global::MongoDB.Driver.MongoCommandException)?.Result;
+        var message = e.Failure?.Message;
+        string? error;
+        try
+        {
+            error = (result is null ? null : MongoDbNotes.FailureReason(result)) ?? message;
+        }
+        catch (Exception)
+        {
+            error = message;
         }
 
         RequestResponseLogger.Log(new RequestResponseLog(
             pending.TestInfo.Name, pending.TestInfo.Id,
             pending.Label,
-            e.Failure?.Message, pending.Uri,
+            FailureNote(result, message, effectiveVerbosity), pending.Uri,
             [], _options.ServiceName, _options.CallerName,
             RequestResponseType.Response, pending.TraceId, pending.RequestResponseId, false,
             HttpStatusCode.InternalServerError,
             DependencyCategory: DependencyCategories.MongoDB)
         {
+            Error = error,
             AttributionSource = pending.TestInfo.Source,
             Phase = TestPhaseContext.Current
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
                 MongoDbOperationClassifier.GetDiagramLabel(pending.OpInfo, v),
                 BuildUri(pending.OpInfo, v),
-                e.Failure?.Message, [],
+                FailureNote(result, message, v), [],
                 v == MongoDbTrackingVerbosity.Summarised && pending.OpInfo.Operation == MongoDbOperation.Other)));
     }
 
-    /// <summary>The request half of a command, as it was when the command started.</summary>
-    private void LogRequest(PendingOperation pending, BsonDocument? command, MongoDbTrackingVerbosity effectiveVerbosity, DateTimeOffset? timestamp, TestPhase phase)
+    /// <summary>The request half of a command, with the note <paramref name="note"/> gives it at each verbosity.</summary>
+    private void LogRequest(PendingOperation pending, Func<MongoDbTrackingVerbosity, string?> note, MongoDbTrackingVerbosity effectiveVerbosity, DateTimeOffset? timestamp, TestPhase phase)
     {
         var opInfo = pending.OpInfo;
-        var content = effectiveVerbosity switch
-        {
-            MongoDbTrackingVerbosity.Summarised => null,
-            MongoDbTrackingVerbosity.Raw => command?.ToString(),
-            _ => _options.LogFilterText ? opInfo.FilterText : null // Detailed: show filter if enabled
-        };
-
         RequestResponseLogger.Log(new RequestResponseLog(
             pending.TestInfo.Name, pending.TestInfo.Id,
             pending.Label,
-            content, pending.Uri,
+            note(effectiveVerbosity), pending.Uri,
             [], _options.ServiceName, _options.CallerName,
             RequestResponseType.Request, pending.TraceId, pending.RequestResponseId, false,
             DependencyCategory: DependencyCategories.MongoDB)
@@ -240,24 +305,68 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             AttributionSource = pending.TestInfo.Source,
             Phase = phase
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
-            v =>
-            {
-                var vContent = v switch
-                {
-                    MongoDbTrackingVerbosity.Summarised => null,
-                    MongoDbTrackingVerbosity.Raw => command?.ToString(),
-                    _ => _options.LogFilterText ? opInfo.FilterText : null
-                };
-                return new PhaseVariant(
-                    MongoDbOperationClassifier.GetDiagramLabel(opInfo, v),
-                    BuildUri(opInfo, v),
-                    vContent, [],
-                    v == MongoDbTrackingVerbosity.Summarised && opInfo.Operation == MongoDbOperation.Other);
-            }));
+            v => new PhaseVariant(
+                MongoDbOperationClassifier.GetDiagramLabel(opInfo, v),
+                BuildUri(opInfo, v),
+                note(v), [],
+                v == MongoDbTrackingVerbosity.Summarised && opInfo.Operation == MongoDbOperation.Other)));
     }
 
-    private string? ExtractDetailedResponse(BsonDocument? reply) =>
-        MongoDbResponseSummary.ExtractDetailed(reply, _options.LogResponseContent, _options.MaxResponseDocuments);
+    /// <summary>The request note at <paramref name="verbosity"/>: the filter at Detailed (when <see cref="MongoDbTrackingOptions.LogFilterText"/>), the whole command at Raw.</summary>
+    private string? RequestNote(MongoDbOperationInfo opInfo, BsonDocument? command, MongoDbTrackingVerbosity verbosity) =>
+        Rendered("command", () => verbosity switch
+        {
+            MongoDbTrackingVerbosity.Summarised => null,
+            MongoDbTrackingVerbosity.Raw => command?.ToString(),
+            _ => _options.LogFilterText ? opInfo.FilterText : null
+        });
+
+    /// <summary>The reply note at <paramref name="verbosity"/>: the whole reply at Raw, otherwise what <see cref="MongoDbNotes.Reply"/> keeps.</summary>
+    private string? ReplyNote(BsonDocument? reply, MongoDbOperation operation, MongoDbTrackingVerbosity verbosity) =>
+        Rendered("reply", () => verbosity switch
+        {
+            MongoDbTrackingVerbosity.Summarised when !_options.LogResponseContent => null,
+            MongoDbTrackingVerbosity.Raw => MongoDbNotes.Whole(reply),
+            _ => MongoDbNotes.Reply(reply, operation, _options.LogResponseContent, _options.MaxResponseDocuments)
+        });
+
+    /// <summary>A failed command's note: the server's reply (whole at Raw, without its bookkeeping otherwise), or the exception's message when there is none.</summary>
+    private static string? FailureNote(BsonDocument? result, string? message, MongoDbTrackingVerbosity verbosity) =>
+        result is null
+            ? message
+            : Rendered("reply", () => verbosity == MongoDbTrackingVerbosity.Raw
+                ? MongoDbNotes.Whole(result)
+                : MongoDbNotes.Failure(result) ?? message);
+
+    /// <summary>A note, or what stopped it being written, as the wire tap writes its own.</summary>
+    private static string? Rendered(string what, Func<string?> render)
+    {
+        try
+        {
+            return render();
+        }
+        catch (Exception ex)
+        {
+            return $"<{what} could not be rendered: {ex.GetType().Name}>";
+        }
+    }
+
+    /// <summary>Says once, in every report this process writes, that a command went unrecorded and why.</summary>
+    private void NotRecorded(Exception ex)
+    {
+        try
+        {
+            Kronikol.Reports.ProcessDiagnostics.RecordOnce(
+                "mongodb-subscriber-failed",
+                Kronikol.Reports.DiagnosticKind.CaptureDegraded,
+                $"MongoDbTrackingSubscriber ({_options.ServiceName}) could not record a command: {ex.GetType().Name}: {ex.Message}. " +
+                "The application's call was not affected; the command, and any after it that fail the same way, are missing from the diagrams.");
+        }
+        catch (Exception)
+        {
+            // Nothing a diagnostic can fail on may reach the driver either.
+        }
+    }
 
     private Uri BuildUri(MongoDbOperationInfo opInfo, MongoDbTrackingVerbosity verbosity)
     {
@@ -286,8 +395,11 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
         public DeferredRequest? Deferred { get; init; }
     }
 
-    /// <summary>What a deferred request half needs to be logged as it was when the command started.</summary>
-    private sealed record DeferredRequest(TestIdentity? Resolved, BsonDocument? Command, DateTimeOffset StartedAt, TestPhase Phase);
+    /// <summary>
+    /// What a deferred request half needs to be logged as it was when the command started: its note at each verbosity
+    /// it can be logged at, rendered while the driver's command was still readable.
+    /// </summary>
+    private sealed record DeferredRequest(TestIdentity? Resolved, IReadOnlyDictionary<MongoDbTrackingVerbosity, string?> Notes, DateTimeOffset StartedAt, TestPhase Phase);
 
     /// <summary>The document a findAndModify reply says it took, or null when it took nothing.</summary>
     private static string? ClaimedDocument(BsonDocument? reply) =>

@@ -247,10 +247,21 @@ internal static class MongoWire
         return Frame(requestId, responseTo, OpCompressed, payload.ToArray());
     }
 
+    /// <summary>
+    /// The document's bytes as a server sends them. MongoDB.Bson 2.x's writer, in its default GUID mode, writes a
+    /// subtype-4 GUID as subtype 3 in C# legacy byte order, which no server does, so on 2.x it is told to write GUIDs
+    /// as they are.
+    /// </summary>
     public static byte[] ToBson(BsonDocument document)
     {
         using var stream = new MemoryStream();
+#if KRONIKOL_BSON3
         using (var writer = new BsonBinaryWriter(stream))
+#else
+#pragma warning disable CS0618 // GuidRepresentation is obsolete on 2.x (and gone on 3.x)
+        using (var writer = new BsonBinaryWriter(stream, new BsonBinaryWriterSettings { GuidRepresentation = GuidRepresentation.Unspecified }))
+#pragma warning restore CS0618
+#endif
             BsonSerializer.Serialize(writer, document);
         return stream.ToArray();
     }

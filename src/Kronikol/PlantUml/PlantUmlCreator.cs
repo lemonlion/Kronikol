@@ -345,7 +345,7 @@ public static partial class PlantUmlCreator
                     if (requestPreFormattingProcessor is not null)
                         content = requestPreFormattingProcessor(content);
 
-                    var noteContent = FormatNoteContent(excludeAllHeaders ? KeyHeaderOnly(effectiveHeaders) : effectiveHeaders, content, excludedHeaders, RequestResponseType.Request, requestMidFormattingProcessor, trace.FocusFields, focusEmphasis, focusDeEmphasis, graphQlBodyFormat);
+                    var noteContent = FormatNoteContent(excludeAllHeaders ? KeyHeaderOnly(effectiveHeaders) : effectiveHeaders, content, excludedHeaders, RequestResponseType.Request, requestMidFormattingProcessor, trace.FocusFields, focusEmphasis, focusDeEmphasis, graphQlBodyFormat, keepNulls: Constants.DependencyCategories.IsStatementShaped(trace.DependencyCategory));
 
                     if (requestPostFormattingProcessor is not null)
                         noteContent = requestPostFormattingProcessor(noteContent);
@@ -421,7 +421,7 @@ public static partial class PlantUmlCreator
                     if (responsePreFormattingProcessor is not null)
                         content = responsePreFormattingProcessor(content);
 
-                    var noteContent = FormatNoteContent(excludeAllHeaders ? KeyHeaderOnly(effectiveHeaders) : effectiveHeaders, content, excludedHeaders, RequestResponseType.Response, responseMidFormattingProcessor, trace.FocusFields, focusEmphasis, focusDeEmphasis);
+                    var noteContent = FormatNoteContent(excludeAllHeaders ? KeyHeaderOnly(effectiveHeaders) : effectiveHeaders, content, excludedHeaders, RequestResponseType.Response, responseMidFormattingProcessor, trace.FocusFields, focusEmphasis, focusDeEmphasis, keepNulls: Constants.DependencyCategories.IsStatementShaped(trace.DependencyCategory));
 
                     if (responsePostFormattingProcessor is not null)
                         noteContent = responsePostFormattingProcessor(noteContent);
@@ -1474,7 +1474,8 @@ public static partial class PlantUmlCreator
         string[]? focusFields = null,
         FocusEmphasis focusEmphasis = FocusEmphasis.Bold,
         FocusDeEmphasis focusDeEmphasis = FocusDeEmphasis.LightGray,
-        GraphQlBodyFormat graphQlBodyFormat = GraphQlBodyFormat.FormattedWithMetadata)
+        GraphQlBodyFormat graphQlBodyFormat = GraphQlBodyFormat.FormattedWithMetadata,
+        bool keepNulls = false)
     {
         // Detect binary/compressed content and replace with placeholder. The placeholder is Kronikol's own
         // markup rather than captured bytes, so it is the one body that must not be creole-escaped.
@@ -1493,8 +1494,8 @@ public static partial class PlantUmlCreator
                 suppressHeaders = true;
         }
 
-        parsedContent ??= TryFormatAsJson(content);
-        parsedContent ??= TryFormatTruncatedJson(content);
+        parsedContent ??= TryFormatAsJson(content, keepNulls);
+        parsedContent ??= TryFormatTruncatedJson(content, keepNulls);
 
         var isFormBody = false;
         if (parsedContent is null)
@@ -1572,7 +1573,12 @@ public static partial class PlantUmlCreator
 
     private static readonly JsonWriterOptions IndentedWriterOptions = new() { Indented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
-    private static string? TryFormatAsJson(string? content)
+    /// <summary>
+    /// The body re-indented, when it is JSON. A null property is dropped, as noise, unless <paramref name="keepNulls"/>:
+    /// in a statement's note a null is part of what the statement means (<c>{ "deletedAt" : null }</c> matches the
+    /// documents with no <c>deletedAt</c>; <c>{ }</c> matches every one).
+    /// </summary>
+    private static string? TryFormatAsJson(string? content, bool keepNulls = false)
     {
         if (content is null || (!content.StartsWith('{') && !content.StartsWith('[')))
             return null;
@@ -1583,7 +1589,7 @@ public static partial class PlantUmlCreator
             using var stream = new MemoryStream();
             using (var writer = new Utf8JsonWriter(stream, IndentedWriterOptions))
             {
-                WriteElementWithoutNulls(writer, doc.RootElement);
+                WriteElement(writer, doc.RootElement, keepNulls);
             }
             return Encoding.UTF8.GetString(stream.ToArray());
         }
@@ -1601,13 +1607,13 @@ public static partial class PlantUmlCreator
     /// — there is no document to walk).</item>
     /// <item>a <em>row/document cap</em> — the SQL, Spanner and MongoDB readers append
     /// <c>... (N more rows not shown)</c> and friends after a COMPLETE document. That document is
-    /// re-serialized through <see cref="TryFormatAsJson"/>, so a capped payload indents and drops
-    /// nulls exactly like the uncapped one above it.</item>
+    /// re-serialized through <see cref="TryFormatAsJson"/>, so a capped payload indents, and keeps or
+    /// drops its nulls, exactly like the uncapped one above it.</item>
     /// </list>
     /// Either way the marker keeps its own line; anything that is not a valid JSON <em>prefix</em>
     /// (a real non-JSON body that happens to start with a brace) is left to the plain-text path.
     /// </summary>
-    internal static string? TryFormatTruncatedJson(string? content)
+    internal static string? TryFormatTruncatedJson(string? content, bool keepNulls = false)
     {
         if (content is null || content.Length < 2 || (content[0] != '{' && content[0] != '['))
             return null;
@@ -1616,7 +1622,7 @@ public static partial class PlantUmlCreator
         if (body.Length < 2 || !IsJsonPrefix(body))
             return null;
 
-        var indented = TryFormatAsJson(body) ?? ReindentJsonPrefix(body);
+        var indented = TryFormatAsJson(body, keepNulls) ?? ReindentJsonPrefix(body);
         return marker is null ? indented : indented + "\n" + marker;
     }
 
@@ -1814,7 +1820,7 @@ public static partial class PlantUmlCreator
         return cut;
     }
 
-    private static void WriteElementWithoutNulls(Utf8JsonWriter writer, JsonElement element)
+    private static void WriteElement(Utf8JsonWriter writer, JsonElement element, bool keepNulls)
     {
         switch (element.ValueKind)
         {
@@ -1822,17 +1828,17 @@ public static partial class PlantUmlCreator
                 writer.WriteStartObject();
                 foreach (var property in element.EnumerateObject())
                 {
-                    if (property.Value.ValueKind == JsonValueKind.Null)
+                    if (!keepNulls && property.Value.ValueKind == JsonValueKind.Null)
                         continue;
                     writer.WritePropertyName(property.Name);
-                    WriteElementWithoutNulls(writer, property.Value);
+                    WriteElement(writer, property.Value, keepNulls);
                 }
                 writer.WriteEndObject();
                 break;
             case JsonValueKind.Array:
                 writer.WriteStartArray();
                 foreach (var item in element.EnumerateArray())
-                    WriteElementWithoutNulls(writer, item);
+                    WriteElement(writer, item, keepNulls);
                 writer.WriteEndArray();
                 break;
             default:

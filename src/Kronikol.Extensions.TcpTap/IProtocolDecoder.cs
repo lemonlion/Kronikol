@@ -81,4 +81,7 @@ public sealed record TapInteraction(
     /// <c>x-kronikol-capture: resynced</c> on the first interaction after a decoder reset. Null = none.
     /// </summary>
     public (string Key, string? Value)[]? Headers { get; init; }
+
+    /// <summary>Why a failed exchange failed, in the server's words; stamped on the response half's <c>Error</c>. Null when it did not fail.</summary>
+    internal string? Error { get; init; }
 }

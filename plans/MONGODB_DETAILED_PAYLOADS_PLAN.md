@@ -1,7 +1,7 @@
 # MongoDB at Detailed: what a command sent and what came back, as JSON (#168)
 
 **Date:** 2026-10-13 · **Repo version:** 4.18.1 (`main` at `34145c44`; line numbers are for that commit, and the
-issue's, at `98c4806d`, point at the same lines) · **Status:** **DRAFT, not green-lit.** Drafted from #168 (filed by the
+issue's, at `98c4806d`, point at the same lines) · **Status:** **Green-lit in full by the owner on 2026-10-13**, every §9 question as recommended. **R1 executed as 4.19.6** (§11); R2, R3 and the driver floor (Q18) follow. Drafted from #168 (filed by the
 owner on 2026-10-11, found in #132's multi-host suite on 4.14.6 with `Kronikol.Extensions.MongoDB.V2` and MongoDB.Driver
 2.30.0) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying problem.
 
@@ -549,7 +549,9 @@ A DBPointer (BSON type 12, deprecated) never reaches the writer. MongoDB.Bson 2.
     text, and so does the tap's `DocumentRedaction` (F20).
   - On 3.x, a field and its value come out byte for byte as the driver's relaxed `ToJson()` writes them today, so a
     hook that matches `"email" : "…"` keeps matching. The exceptions are a GUID, a large binary and some doubles: the
-    driver writes 17 significant digits (`0.10000000000000001`, `1.0000000000000001E+300`) and `-0.0` as `0.0`.
+    driver writes 17 significant digits (`0.10000000000000001`, `1.0000000000000001E+300`). (This said the driver
+    writes `-0.0` as `0.0`. It does not: Bson's value cache reads a reply's `-0.0` as `0.0` before either writer sees
+    it; §11, R1.)
   - The page and the query tool re-indent whatever they show (§2.3), so a reader sees no difference.
   - On one line, a request body's first line is the whole body, so the history head keeps what tells one statement
     from another (F9).
@@ -945,6 +947,9 @@ The recommended place is stage 1 (defects in shipped features), as the next free
 no decision number. The placement is the owner's. The other plans written on 2026-10-13 leave theirs the same way, so
 no row is taken here.
 
+**Placed 2026-10-13** as row 1.29 (1.28 went to #170), with no decision number, when the owner green-lit the plan
+(Q15).
+
 ## 8. Found on the way, not in this plan
 
 - **F13, GridFS's `NamespaceNotFound`:** Q10.
@@ -1133,6 +1138,39 @@ no row is taken here.
     - Q6's reasoning, and Q16 to Q20.
     - Corrections to §1 row 6, Q2, Q4, F15, F16 and the BreakfastProvider check.
     - A finding, fix and fact table.
+
+- **2026-10-13, R1 executed as 4.19.6**, by kronikol-cf, green-lit in full by the owner the same day ("implement the
+  plan in full", every §9 question as recommended), in a worktree of its own.
+  - **Built as §4.2 says**, with three changes found while building it:
+    - a client `bulkWrite` whose reply counts `nErrors` is a write failure too, and its `Error` is the first failed
+      operation's `errmsg` (the reply is `ok: 1` with the failures in its cursor; F2's rule did not name it);
+    - Bson stores a regular expression's options sorted, on 2.30 and 3.12 alike: its constructor sorts them and every
+      read (wire bytes included) goes through it, so the writer writes them as stored (the mutation that dropped the
+      writer's own sort could not change the output);
+    - the tap's test helper (`TestSupport.ToBson`) wrote a subtype-4 GUID as legacy subtype 3 on Bson 2.x (the 2.x
+      writer's V2 mode); it writes with `GuidRepresentation.Unspecified` there, and the tap's notes are pinned on both
+      Bson versions by one golden (`Kronikol.Tests.TcpTap.Bson3`, a new test project).
+  - **Corrected:** §4.1 said the driver writes `-0.0` as `0.0`. Its writer keeps the sign (`new BsonDouble(-0.0)` is
+    written `-0.0`). It is Bson's value cache that turns `-0.0` into `0.0` (`BsonDouble.Create`, the implicit
+    conversion `d-writer/` used, `BsonDocument.Parse` and `RawBsonDocument`), so a reply's `-0.0` reaches both writers
+    as `0.0` and they agree. Probed on Bson 3.12.0.
+  - **Proofs** (`r1/`): `red-4.19.0.txt`, on 4.19.0 with `MongoJson` stubbed by the driver's `ToJson()`: 54 facts fail
+    on driver 3.x, 73 on 2.x, 17 in the tap, 1 on Bson 3, 4 in the core and 2 in Playwright, each on its own assertion.
+    `mutations.txt`: 46 mutations, 43 caught on the first run, two caught once a fact was added for each (a reply
+    carrying an `errmsg` and no `ok` is failed in the tap; a 64-bit `nErrors`), and the 46th equivalent (above).
+  - **Checks:** After the version bump the core suite passes 7,467 with 2 skipped; the MongoDB suites pass 264 of 264 on
+    driver 3.x and 264 of 264 on 2.x, their real-server facts included (a mongod 7.0 replica set); the TcpTap suite
+    passes 398 with 4 skipped (its Docker-only container facts) and its new Bson 3 project 1 of 1; ClickHouse passes 120
+    with 9 skipped (its real-server facts), SearchEngine 214 and the IKVM renderer 55; the full Playwright suite passes
+    1,039 with 28 skipped when run alone; and release.slnf builds in Release for every target.
+  - **Consumer:** BreakfastProvider's xUnit lane (a clone at its 4.9.1 commit, every Kronikol reference moved to local packages at
+    4.19.6-bp168r1; its test project restores MongoDB.Driver 3.12.0) passes 212 of 212 in memory
+    (`InMemoryEmulator.MongoDB`) and against a mongod 7.0 replica set (`UseTrackedMongoClient`). Its 16 MongoDB calls
+    have 16 reply notes that parse as JSON on both paths, where the published 4.19.2 had 4 of 16 in memory; its 6
+    request notes parse, and its 10 writes have none until R2. A script counted them and printed counts only. The
+    lane's fixture adds `appsettings.componenttests.json` after the environment, so its real-server mode is set in
+    that file: a first run with environment variables kept the file's `localhost:27017` and failed 11 scenarios on
+    the driver's 30-second server selection.
 
 ## Appendix A. Edit sites at `34145c44`
 

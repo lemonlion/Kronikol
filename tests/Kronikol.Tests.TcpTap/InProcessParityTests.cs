@@ -173,9 +173,23 @@ public class InProcessParityTests
 
     private static ConnectionId MakeConnectionId() => new(new ServerId(new ClusterId(), new DnsEndPoint("localhost", 27017)));
 
-    /// <summary>Runs the in-process Mongo subscriber and returns its (label, uri, request note, reply note).</summary>
-    private static (string Method, string Uri, string? RequestContent, string? ResponseContent) InProcessMongo(
-        string commandName, BsonDocument command, BsonDocument reply, string database, MongoDbTrackingVerbosity verbosity)
+    /// <summary>
+    /// The old parity theory gave every command a top-level filter, a shape no write carries, and so compared no
+    /// write's notes; these are the driver's real commands and replies.
+    /// </summary>
+    private static IReadOnlyList<WireShape> Shapes => MongoWireShapes.All;
+
+    public static TheoryData<string, int, TapVerbosity> EveryShapeAtEveryVerbosity()
+    {
+        var data = new TheoryData<string, int, TapVerbosity>();
+        for (var i = 0; i < Shapes.Count; i++)
+            foreach (var verbosity in new[] { TapVerbosity.Detailed, TapVerbosity.Summarised, TapVerbosity.Raw })
+                data.Add($"{Shapes[i].Section}: {Shapes[i].CommandName}", i, verbosity);
+        return data;
+    }
+
+    /// <summary>Runs the in-process subscriber over a shape and returns its request and response.</summary>
+    private static (RequestResponseLog Request, RequestResponseLog Response) InProcessMongo(WireShape shape, MongoDbTrackingVerbosity verbosity)
     {
         var testId = Guid.NewGuid().ToString();
         var subscriber = new MongoDbTrackingSubscriber(new MongoDbTrackingOptions
@@ -183,157 +197,92 @@ public class InProcessParityTests
             ServiceName = "mongo",
             CallerName = "svc",
             Verbosity = verbosity,
+            TrackGetMore = true,
+            AttributeByDocumentOwner = false,
+            AutoCorrelateWrites = false,
             CurrentTestInfoFetcher = () => ("Parity", testId),
         });
 
-        subscriber.OnCommandStarted(new CommandStartedEvent(
-            commandName, command, new DatabaseNamespace(database), 1L, 1, MakeConnectionId()));
-        subscriber.OnCommandSucceeded(new CommandSucceededEvent(
-            commandName, reply, new DatabaseNamespace(database), 1L, 1, MakeConnectionId(), TimeSpan.FromMilliseconds(3)));
+        var database = new DatabaseNamespace(shape.Database);
+        subscriber.OnCommandStarted(new CommandStartedEvent(shape.CommandName, shape.Command, database, 1L, 1, MakeConnectionId()));
+        if (shape.Failed)
+        {
+            // What the driver raises on a failed command: its message names the command; the server's words are in Result.
+            var failure = new MongoCommandException(MakeConnectionId(), $"{shape.CommandName} command failed", shape.Command, shape.Reply);
+            subscriber.OnCommandFailed(new CommandFailedEvent(shape.CommandName, database, failure, 1L, 1, MakeConnectionId(), TimeSpan.FromMilliseconds(1)));
+        }
+        else
+        {
+            subscriber.OnCommandSucceeded(new CommandSucceededEvent(shape.CommandName, shape.Reply, database, 1L, 1, MakeConnectionId(), TimeSpan.FromMilliseconds(1)));
+        }
 
         var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId).ToArray();
         Assert.Equal(2, logs.Length);
-        return (Text(logs[0].Method), logs[0].Uri.ToString(), logs[0].Content, logs[1].Content);
+        return (logs[0], logs[1]);
     }
 
-    public static TheoryData<string, string> MongoCommands() => new()
+    [Theory]
+    [MemberData(nameof(EveryShapeAtEveryVerbosity))]
+    public void EveryRealCommandAndReplyRendersAlikeInBothCaptures(string shape, int index, TapVerbosity verbosity)
     {
-        { "find", "Trial" },
-        { "insert", "Trial" },
-        { "update", "Trial" },
-        { "delete", "Trial" },
-        { "count", "Trial" },
-        { "distinct", "Trial" },
-        { "findAndModify", "Trial" },
-        { "createIndexes", "Trial" },
-        { "listCollections", "Trial" },
+        _ = shape;
+        var extensionVerbosity = verbosity switch
+        {
+            TapVerbosity.Summarised => MongoDbTrackingVerbosity.Summarised,
+            TapVerbosity.Raw => MongoDbTrackingVerbosity.Raw,
+            _ => MongoDbTrackingVerbosity.Detailed,
+        };
+        var expected = InProcessMongo(Shapes[index], extensionVerbosity);
+
+        var actual = MongoWireShapes.Tap(Shapes[index], verbosity);
+
+        Assert.Equal(Text(expected.Request.Method), Text(actual.Request.Method));
+        Assert.Equal(Text(expected.Response.Method), Text(actual.Response.Method));
+        Assert.Equal(expected.Request.Uri.ToString(), actual.Request.Uri.ToString());
+        Assert.Equal(expected.Request.Content, actual.Request.Content);
+        Assert.Equal(expected.Response.Content, actual.Response.Content);
+        Assert.Equal(expected.Response.StatusCode!.Value, actual.Response.StatusCode!.Value);
+        Assert.Equal(expected.Response.Error, actual.Response.Error);
+    }
+
+    [Fact]
+    public void TheShapesHoldEveryKindOfReplyTheRulesTellApart()
+    {
+        // The theory above proves only what its data holds: each kind of reply the note and failure rules treat apart.
+        Assert.Contains(Shapes, s => s.Failed);
+        Assert.Contains(Shapes, s => s.Reply.Contains("writeErrors"));
+        Assert.Contains(Shapes, s => s.Reply.Contains("upserted"));
+        Assert.Contains(Shapes, s => s.Reply.Contains("lastErrorObject") && s.Reply["value"].IsBsonNull);
+        Assert.Contains(Shapes, s => s.Reply.Contains("values"));
+        Assert.Contains(Shapes, s => s.CommandName == "getMore");
+        Assert.Contains(Shapes, s => s.CommandName == "bulkWrite" && s.Reply.Contains("cursor") && s.Reply.Contains("nInserted"));
+        // No captured reply has an empty batch: each capture has a fact of its own for one (An_empty_batch_is_an_empty_array).
+        Assert.Contains(Shapes, s => HoldsAGuid(s.Reply));
+        Assert.Contains(Shapes, s => s.Command.Contains("documents") && s.Command["documents"].AsBsonArray.Count > 1);
+        Assert.Contains(Shapes, s => s.CommandName == "commitTransaction");
+    }
+
+    private static bool HoldsAGuid(BsonValue value) => value switch
+    {
+        BsonBinaryData binary => binary.SubType == BsonBinarySubType.UuidStandard,
+        BsonDocument document => document.Values.Any(HoldsAGuid),
+        BsonArray array => array.Any(HoldsAGuid),
+        _ => false,
     };
 
-    [Theory]
-    [MemberData(nameof(MongoCommands))]
-    public void MongoLabelsAndUrisAreIdenticalToTheInProcessExtension(string commandName, string collection)
-    {
-        var command = new BsonDocument
-        {
-            { commandName, collection },
-            { "filter", new BsonDocument("status", "active") },
-        };
-        var reply = new BsonDocument { { "n", 1 }, { "ok", 1.0 } };
-
-        var expected = InProcessMongo(commandName, command, reply, "app", MongoDbTrackingVerbosity.Detailed);
-
-        var wireCommand = command.DeepClone().AsBsonDocument;
-        wireCommand["$db"] = "app";
-
-        using var harness = DecoderHarness.Mongo();
-        harness.ClientToServer(MongoWire.Msg(1, 0, wireCommand));
-        harness.ServerToClient(MongoWire.Msg(2, 1, reply));
-
-        var request = Assert.Single(harness.Sink.Requests);
-        var response = Assert.Single(harness.Sink.Responses);
-
-        Assert.Equal(expected.Method, Text(request.Method));
-        Assert.Equal(expected.Method, Text(response.Method));
-        Assert.Equal(expected.Uri, request.Uri.ToString());
-        Assert.Equal(expected.RequestContent, request.Content);
-        Assert.Equal(expected.ResponseContent, response.Content);
-    }
-
     [Fact]
-    public void MongoInsertCountsAndReplyNotesMatch()
+    public void AMongoFailureIsA500WithTheServersWordsInBothCaptures()
     {
-        var documents = new BsonArray { new BsonDocument("_id", 1), new BsonDocument("_id", 2) };
-        var command = new BsonDocument { { "insert", "Trial" }, { "documents", documents } };
-        var reply = new BsonDocument { { "n", 2 }, { "ok", 1.0 } };
+        var failed = Shapes.First(s => s.Failed);
 
-        var expected = InProcessMongo("insert", command, reply, "app", MongoDbTrackingVerbosity.Detailed);
+        var expected = InProcessMongo(failed, MongoDbTrackingVerbosity.Detailed);
+        var actual = MongoWireShapes.Tap(failed, TapVerbosity.Detailed);
 
-        // On the wire the driver puts the documents in a kind-1 section, not inline.
-        var body = new BsonDocument { { "insert", "Trial" }, { "$db", "app" } };
-        using var harness = DecoderHarness.Mongo();
-        harness.ClientToServer(MongoWire.Msg(1, 0, body, 0,
-            ("documents", [new BsonDocument("_id", 1), new BsonDocument("_id", 2)])));
-        harness.ServerToClient(MongoWire.Msg(2, 1, reply));
-
-        Assert.Equal(expected.Method, Text(Assert.Single(harness.Sink.Requests).Method));
-        Assert.Equal(expected.ResponseContent, Assert.Single(harness.Sink.Responses).Content);
-    }
-
-    [Fact]
-    public void MongoCursorBatchNotesMatchCharacterForCharacter()
-    {
-        var command = new BsonDocument { { "find", "Trial" }, { "filter", new BsonDocument("a", 1) } };
-        var reply = new BsonDocument
-        {
-            {
-                "cursor", new BsonDocument
-                {
-                    { "firstBatch", new BsonArray { new BsonDocument { { "_id", 1 }, { "name", "one" } }, new BsonDocument { { "_id", 2 }, { "name", "two" } } } },
-                    { "id", 0L },
-                    { "ns", "app.Trial" },
-                }
-            },
-            { "ok", 1.0 },
-        };
-
-        var expected = InProcessMongo("find", command, reply, "app", MongoDbTrackingVerbosity.Detailed);
-
-        var wireCommand = command.DeepClone().AsBsonDocument;
-        wireCommand["$db"] = "app";
-
-        using var harness = DecoderHarness.Mongo();
-        harness.ClientToServer(MongoWire.Msg(1, 0, wireCommand));
-        harness.ServerToClient(MongoWire.Msg(2, 1, reply));
-
-        Assert.Equal(expected.ResponseContent, Assert.Single(harness.Sink.Responses).Content);
-    }
-
-    [Theory]
-    [InlineData(TapVerbosity.Detailed, MongoDbTrackingVerbosity.Detailed)]
-    [InlineData(TapVerbosity.Summarised, MongoDbTrackingVerbosity.Summarised)]
-    [InlineData(TapVerbosity.Raw, MongoDbTrackingVerbosity.Raw)]
-    public void MongoVerbosityLevelsLineUpOneForOne(TapVerbosity tapVerbosity, MongoDbTrackingVerbosity extensionVerbosity)
-    {
-        var command = new BsonDocument { { "find", "Trial" }, { "filter", new BsonDocument("a", 1) }, { "$db", "app" } };
-        var reply = new BsonDocument { { "n", 1 }, { "ok", 1.0 } };
-
-        var expected = InProcessMongo("find", command, reply, "app", extensionVerbosity);
-
-        using var harness = DecoderHarness.Mongo(o => o.Verbosity = tapVerbosity);
-        harness.ClientToServer(MongoWire.Msg(1, 0, command));
-        harness.ServerToClient(MongoWire.Msg(2, 1, reply));
-
-        var request = Assert.Single(harness.Sink.Requests);
-        Assert.Equal(expected.Method, Text(request.Method));
-        Assert.Equal(expected.Uri, request.Uri.ToString());
-        Assert.Equal(expected.RequestContent, request.Content);
-    }
-
-    [Fact]
-    public void AMongoFailureIsA500InBothCaptures()
-    {
-        var testId = Guid.NewGuid().ToString();
-        var subscriber = new MongoDbTrackingSubscriber(new MongoDbTrackingOptions
-        {
-            ServiceName = "mongo",
-            CallerName = "svc",
-            CurrentTestInfoFetcher = () => ("Parity", testId),
-        });
-        subscriber.OnCommandStarted(new CommandStartedEvent(
-            "find", new BsonDocument("find", "Trial"), new DatabaseNamespace("app"), 1L, 1, MakeConnectionId()));
-        subscriber.OnCommandFailed(new CommandFailedEvent(
-            "find", new DatabaseNamespace("app"), new Exception("not authorized on app"), 1L, 1, MakeConnectionId(), TimeSpan.Zero));
-
-        var expected = RequestResponseLogger.RequestAndResponseLogs
-            .Single(l => l.TestId == testId && l.Type == RequestResponseType.Response);
-
-        using var harness = DecoderHarness.Mongo();
-        harness.ClientToServer(MongoWire.Msg(1, 0, new BsonDocument { { "find", "Trial" }, { "$db", "app" } }));
-        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument { { "ok", 0.0 }, { "errmsg", "not authorized on app" } }));
-
-        var actual = Assert.Single(harness.Sink.Responses);
-        Assert.Equal(expected.StatusCode!.Value, actual.StatusCode!.Value);
-        Assert.Equal(Text(expected.Method), Text(actual.Method));
-        Assert.Equal(expected.Content, actual.Content);
+        Assert.Equal(HttpStatusCode.InternalServerError, actual.Response.StatusCode!.Value);
+        Assert.Equal(expected.Response.StatusCode!.Value, actual.Response.StatusCode!.Value);
+        Assert.Equal("{ \"errmsg\" : \"unknown operator: $bogus\", \"code\" : 2, \"codeName\" : \"BadValue\" }", expected.Response.Content);
+        Assert.Equal(expected.Response.Content, actual.Response.Content);
+        Assert.Equal("unknown operator: $bogus", expected.Response.Error);
+        Assert.Equal(expected.Response.Error, actual.Response.Error);
     }
 }

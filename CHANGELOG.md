@@ -4,6 +4,85 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.19.6] - 2026-10-13
+
+**Patch - MongoDB reply notes are JSON, a write error is a failure, a failure says why, and a `Raw` claim no longer
+fails the application's call (#168; `plans/MONGODB_DETAILED_PAYLOADS_PLAN.md` R1).** Green-lit in full by the owner on
+2026-10-13, every question in the plan's section 9 as recommended. Bug fixes, and nothing new for a consumer to call,
+so the patch part moves (4.19.5 to 4.19.6). The report's output changes (MongoDB reply notes, a failure status on a write
+error, nulls kept in a database call's drawn note), and the Kronikol4J ledger records it.
+
+### Fixed
+
+- **A MongoDB reply note at `Detailed` was not JSON.** A write's note was text (`n=1, nModified=0`), and a batch
+  followed it as the driver's indented `ToJson()`, which on driver 2.x is the mongo shell's syntax
+  (`NumberDecimal("5.5")`, `ISODate(…)`), so the page's YAML view and `kronikol query` could not read it; an empty
+  batch read `0 documents`. A reply note is now JSON on both drivers and in `MongoTap`:
+  - a cursor's batch (a find's `firstBatch`, a getMore's `nextBatch`) is an array, `[]` when it is empty, held to
+    `MaxResponseDocuments` with the `... (N more documents not shown)` line after it;
+  - any other reply is the reply without the server's bookkeeping (`ok`, `$clusterTime`, `operationTime`,
+    `electionId` and `opTime`, and a sharded cluster's `recoveryToken`, `retriedStmtIds`, `readOnly` and
+    `$replData`), with a cursor beside other fields replaced by its batch. An update reads
+    `{ "n" : 1, "nModified" : 0 }`;
+  - a reply with nothing but bookkeeping has no note, and `serverStatus`, `dbStats` and `collStats` are left out at
+    `Detailed`, as before.
+- **An upsert's id, a findAndModify's document, a distinct's values and a getMore's batch were not recorded.** Only
+  `n`, `nModified` and `nUpserted` were read, and only as 32-bit integers. The note now holds `upserted` with the new
+  `_id`, a findAndModify's `lastErrorObject` and `value` (`"value" : null` when it took nothing), a distinct's
+  `values` and a getMore's batch. With `LogResponseContent` off, the documents (a batch, a findAndModify's `value`, a
+  distinct's `values`) are left out and the rest stays, where before only the three counts did.
+- **A note's values were written by whichever Bson the host restored.** Kronikol now writes MongoDB relaxed extended
+  JSON itself, so the main package, the V2 package and the tap write the same bytes on Bson 2.x and 3.x:
+  - a date is `{ "$date" : "2024-01-01T00:00:00.123Z" }` and a GUID (binary subtype 4) `{ "$uuid" : "…" }`;
+  - a double is the shortest text that reads back as the same double, with `.0` added when it has no fraction or
+    exponent: `0.1`, where the driver wrote `0.10000000000000001`;
+  - a binary over 256 bytes is a placeholder at `Detailed`, `"[binary: 261,120 bytes, subtype 00]"`;
+  - at `Raw` the reply is the whole reply in the same JSON, where it was the driver's `ToString()` (the shell's syntax
+    on 2.x);
+  - strings are escaped as driver 3.x escapes them, and a document keeps the driver's spacing on one line, so a
+    redaction pattern written for today's text (`"email" : "…"`) keeps matching on driver 3.x.
+- **A write error was drawn as a success.** A reply that carries `writeErrors` or a `writeConcernError` is `ok: 1`,
+  so a duplicate key was drawn `OK` with `n=0` while the application's call threw. Such a reply is now drawn as a
+  failure (`500`), in the subscriber and in `MongoTap`, and so is a client `bulkWrite` whose reply counts `nErrors`
+  (found while building the fix).
+- **A failed command did not say why.** The subscriber recorded the driver's message, `find command failed`; the
+  server's `errmsg`, `code` and `codeName` were in the exception's `Result`, which nothing read. The note is now the
+  server's reply without its bookkeeping (the whole reply at `Raw`). The tap, which wrote the `errmsg` alone, writes the
+  same note.
+- **A failed MongoDB call carried no error, so `Failures.md` could not say why it failed.** `Error` is now the server's
+  `errmsg`; for a write error, the first `writeErrors[].errmsg`, the `writeConcernError`'s, or a client bulkWrite's
+  first failed operation's. A failure that brought no reply keeps the exception's message. `kronikol query services`
+  counts a write error among the service's errors.
+- **At `Raw`, a findAndModify claimed by filter threw into the application's own call.** With
+  `AttributeByDocumentOwner` on and no scenario resolved, the request half waited for the reply and read the command
+  then, after the driver had disposed it. The `ObjectDisposedException` reached the driver, which threw it from the
+  application's call after the server had applied the write. The request note is now rendered when the command
+  starts, at each verbosity it can be logged at. No exception from the subscriber reaches the driver any more: a
+  command that cannot be recorded is left out and the report says so once, as a `CaptureDegraded` diagnostic, and a
+  note that cannot be rendered reads `<reply could not be rendered: …>`.
+- **A getMore was drawn against no collection.** Its command element holds the cursor id, not a name. It now reads
+  `collection`, so it is drawn `GetMore ← loans`, in the subscriber and in the tap.
+- **A database call's drawn note dropped its nulls.** The diagram re-indents a JSON note and drops null properties as
+  noise, so `{ "deletedAt" : null }`, which matches the documents with no `deletedAt`, was drawn as `{}`, which matches
+  every document. A note on a database call (the statement-shaped categories: SQL, MongoDB, Redis, Cosmos DB,
+  DynamoDB and the rest) now keeps its nulls; an HTTP body still drops them.
+
+Behaviour changes: MongoDB reply notes change form at `Detailed` and `Raw` (request notes do not change until the
+plan's R2); a write error is drawn as a failure; a getMore names its collection. A scenario whose write error is now a
+failure, or whose getMore now names its collection, reads one "behaviour changed" verdict in the history, since the
+calls it recorded changed. On driver 2.x a note's text changes from the shell's syntax to extended JSON, so check any
+redaction pattern written against it.
+
+Tests: `MongoJsonTests` (new) holds the writer to the spec's relaxed form for every BSON type, with the escaping, doubles, dates, GUIDs and the binary placeholder, and a golden (`MongoJsonGolden.txt`) the V2 package's copy holds too. `MongoDbTrackingSubscriberTests` covers each reply shape, the bookkeeping left out, the cap and its footnote, `LogResponseContent` off, write errors and a client bulkWrite's `nErrors` (a 64-bit count included), a failed command's reply, `Error`, a getMore's collection, and the deferred claim at each verbosity. `MongoDbProcessWideTests` (new) checks that no handler exception reaches the driver, and that a redaction pattern written for today's text still redacts. `MongoDbRealServerTests` (new; against a replica set when `KRONIKOL_TEST_MONGO` is set) inserts a duplicate key, claims by filter at `Raw`, and parses every `Detailed` reply note as JSON. `MongoDbFailuresDigestTests` and `MongoDbQueryTests` (new) read the reason in `Failures.md` and the error in `kronikol query services`. In the tap, `MongoDecoderTests` gains the new reply rules, a reply carrying an `errmsg` and no `ok` among them. A parity theory over 46 real command and reply pairs (`MongoWireShapes.json`) holds the tap's notes to the subscriber's. `TapNoteGoldenTests` pins the tap's notes in a golden that the new `Kronikol.Tests.TcpTap.Bson3` project holds on Bson 3. The core's `StatementNoteNullTests` (new) draws a statement's nulls and an HTTP body without them. Playwright's `MongoNoteTests` (new) checks the YAML view of a find's and an update's reply, and a null filter drawn in JSON and in YAML. The tap's test helper wrote a GUID as legacy subtype 3 on Bson 2.x; it now writes the subtype the value has.
+
+Proofs (plan harness `r1/`): copied onto 4.19.0 with `MongoJson` stubbed by the driver's `ToJson()`, 54 facts fail on driver 3.x, 73 on 2.x, 17 in the tap, 1 on Bson 3, 4 in the core and 2 in Playwright, each on its own assertion (`red-4.19.0.txt`). Of 46 mutations, 43 were caught on the first run and two more once a fact was added for each. The 46th could not change the output, since Bson sorts a regular expression's options itself, so the code it mutated is gone (`mutations.txt`).
+
+Checks: after the version bump the core suite passes 7,467 with 2 skipped; the MongoDB suites pass 264 of 264 on driver 3.x and 264 of 264 on 2.x, their real-server facts included (a mongod 7.0 replica set); the TcpTap suite passes 398 with 4 skipped (its Docker-only container facts) and its new Bson 3 project 1 of 1; ClickHouse passes 120 with 9 skipped (its real-server facts), SearchEngine 214 and the IKVM renderer 55; the full Playwright suite passes 1,039 with 28 skipped when run alone; and release.slnf builds in Release for every target. BreakfastProvider's xUnit lane, on local packages, passes 212 of 212 in memory and against a real server, and all 16 of its MongoDB reply notes parse as JSON on both paths, where the published 4.19.2 had 4 of 16.
+
+The templates pin 4.19.3 and the history action's `VERSION` installs Kronikol.Tool 4.19.6. The wiki edits
+(`Integration-MongoDB-Extension`, `Integration-TcpTap-Extension`, `Content-Formatting`, `Ingesting-External-Captures`)
+and the Kronikol4J ledger lines follow publication.
+
 ## [4.19.5] - 2026-10-13
 
 **Patch - a proxy tap records a forward that failed as a failed call, and a fault in capture no longer fails the call
