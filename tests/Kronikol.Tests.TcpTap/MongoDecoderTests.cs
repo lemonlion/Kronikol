@@ -39,7 +39,8 @@ public class MongoDecoderTests
         Assert.Equal("Find ← Trial", Method(request));
         Assert.Equal("Find ← Trial", Method(response));
         Assert.Equal("mongodb:///app/Trial", request.Uri.ToString());
-        Assert.Equal("{ \"status\" : \"active\" }", request.Content);
+        // The command without its name and the driver's fields (#168 R2): a find is its filter.
+        Assert.Equal("{ \"filter\" : { \"status\" : \"active\" } }", request.Content);
         Assert.Contains("\"status\" : \"active\"", response.Content);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode!.Value);
         Assert.Equal(DependencyCategories.MongoDB, request.DependencyCategory);

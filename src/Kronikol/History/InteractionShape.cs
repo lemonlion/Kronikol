@@ -43,9 +43,11 @@ public static partial class InteractionShape
     /// the set of distinct calls, so a retry cannot move it; how many times is the call count, which the
     /// analyzer judges on the scenario's own record. 4: 3.22.2 - a GUID is a GUID whatever separates its
     /// groups (<c>job_09c68d49_adcf_47be_...</c>), a hex run of eight to fifteen holding a digit and a letter is
-    /// an id, and bytes captured as text are <c>{bin}</c> (#75).
+    /// an id, and bytes captured as text are <c>{bin}</c> (#75). 5: 4.20.0 - no rule changed, but what MongoDB records
+    /// as a request did: the command without the driver's fields in place of the bare filter, so every MongoDB call's
+    /// statement head moved (#168 R2).
     /// </summary>
-    public const int Version = 4;
+    public const int Version = 5;
 
     /// <summary>How much of a statement's first line is templated, and how much of the templated head is kept.</summary>
     private const int HeadRaw = 2000;

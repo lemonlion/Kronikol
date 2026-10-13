@@ -1,5 +1,6 @@
 using System.Net;
 using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Clusters;
 using MongoDB.Driver.Core.Connections;
@@ -129,5 +130,31 @@ public class MongoDbProcessWideTests
         var response = Logs().Single(l => l.Type == RequestResponseType.Response);
         Assert.DoesNotContain("ada@example.com", response.Content);
         Assert.Contains("\"email\" : \"[redacted]\"", response.Content);
+    }
+
+    [Fact]
+    public void JsonWriterSettings_Defaults_do_not_change_a_note()
+    {
+        // A host can set MongoDB.Bson's process-wide JsonWriterSettings.Defaults; a request note never reads it (F18).
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
+        var command = new BsonDocument
+        {
+            { "insert", "loans" },
+            { "documents", new BsonArray { new BsonDocument { { "_id", 1 }, { "rate", 0.1 }, { "principal", new BsonDecimal128(Decimal128.Parse("5000.00")) } } } },
+            { "$db", "app" },
+        };
+        var defaults = JsonWriterSettings.Defaults;
+        try
+        {
+            JsonWriterSettings.Defaults = new JsonWriterSettings { OutputMode = JsonOutputMode.CanonicalExtendedJson, Indent = true };
+            subscriber.OnCommandStarted(new CommandStartedEvent("insert", command, new DatabaseNamespace("app"), 1L, 1, MakeConnectionId()));
+        }
+        finally
+        {
+            JsonWriterSettings.Defaults = defaults;
+        }
+
+        var request = Assert.Single(Logs(), l => l.Type == RequestResponseType.Request);
+        Assert.Equal("{ \"documents\" : [{ \"_id\" : 1, \"rate\" : 0.1, \"principal\" : { \"$numberDecimal\" : \"5000.00\" } }] }", request.Content);
     }
 }

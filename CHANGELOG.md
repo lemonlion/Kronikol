@@ -4,6 +4,68 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.20.0] - 2026-10-13
+
+**Minor - a MongoDB request note at `Detailed` is the command it sent, without the driver's fields, and
+`MaxRequestDocuments` caps it (#168; `plans/MONGODB_DETAILED_PAYLOADS_PLAN.md` R2).** Green-lit in full by the owner on
+2026-10-13, every question in the plan's section 9 as recommended. A new public option, `MaxRequestDocuments` on
+`MongoDbTrackingOptions` and on `MongoTapOptions`, so the minor part moves (4.19.7 to 4.20.0). The report's output changes
+(MongoDB request notes, and the history's shape version), and the Kronikol4J ledger records it.
+
+### Added
+
+- **A MongoDB request note at `Detailed` is the command.** It was the command's filter, so a write had no request note:
+  an insert was drawn without its documents, and an update without its filter. The note is now the command without
+  its name and without the driver's own fields (`$db`, `lsid`, `txnNumber`, `$clusterTime`, `startTransaction`,
+  `autocommit`, `recoveryToken`, `writeConcern`, `readConcern`, `$readPreference`, `apiVersion`, `apiStrict`,
+  `apiDeprecationErrors`, `ordered` when it is `true`, and an aggregate's `cursor`), in the same relaxed extended JSON
+  as the reply note, in the subscriber and in `MongoTap`:
+  - a find is `{ "filter" : { … }, "sort" : { … }, "limit" : 5 }`;
+  - an insert is `{ "documents" : [{ … }, { … }] }`;
+  - an update or a delete is its statements, `{ "updates" : [{ "q" : { … }, "u" : { … }, "upsert" : true }] }`;
+  - a findAndModify is its `query` and `update`, an aggregate its `pipeline`, and a getMore its `collection` and
+    `batchSize`;
+  - `explain` keeps the command it explains, and a command with nothing left, such as `commitTransaction`, has no
+    note.
+
+  The command's name is dropped when its value is a string or a number (a collection, `1`, a cursor id), since the
+  label and the URI carry it. `ordered: false` stays, since it changes what the server does after a failed statement.
+  A binary over 256 bytes is a placeholder, as in a reply.
+- **`MaxRequestDocuments`** (default 10) on `MongoDbTrackingOptions` and `MongoTapOptions`: how many of an insert's
+  documents, or of an update's, a delete's or a client bulkWrite's statements, a request note keeps. A note that left
+  some out ends with `... (N more documents not shown)`, or `... (N more)` for statements, a line the page reads past.
+
+### Changed
+
+- **`LogFilterText`** turns the whole request note on or off at `Detailed`; off, a command has no request note there,
+  as before.
+- **At `Raw`** the request note is the whole command in the same JSON, and so is a label's `filter=…`. Both were the
+  driver's `ToString()`, which writes the shell's syntax on driver 2.x and follows whatever a host set in
+  `JsonWriterSettings.Defaults`.
+- **A client-level bulkWrite** (driver 3.x, server 8.0), which the driver sends to `admin`, is drawn against the
+  namespace its `nsInfo` names, when it names one.
+- **The history's shape version is 5.** A MongoDB call's statement head is the first line of its request note, so
+  every MongoDB call's head moved. The first run after the upgrade reads no behaviour verdict, and says why, rather
+  than calling every scenario that uses MongoDB changed.
+- **`Failures.md` lists a MongoDB call by its label and path** (`Insert (×3) → loans /app/loans`), as it lists an HTTP
+  call. It quoted the request note, which is now the documents a command sent.
+- **`MongoDbResponseSummary`'s two methods are obsolete.** Kronikol's captures stopped calling them at 4.19.6, and they
+  are removed in 5.0.
+
+Behaviour changes: at `Detailed`, a write's documents and statements now reach the report, and the request notes of
+every MongoDB call change form; a capture-time redaction pattern now also runs over what an insert or an update sent.
+Set `LogFilterText` to `false` to keep request notes out, or `MaxRequestDocuments` to keep fewer.
+
+Tests: `MongoDbTrackingSubscriberTests` gains a fact for each row of the plan's request table (find, insert, upsert, delete, findAndModify, aggregate, distinct, getMore, commitTransaction), a theory over every driver field, `ordered: false` kept, the documents' and the statements' caps with their footnotes, the default of 10, the binary placeholder at `Detailed` and the whole binary at `Raw`, `LogFilterText` off, `explain`, a `Raw` request and a `Raw` label in the same JSON, a client bulkWrite drawn against its namespace and one over two namespaces left on `admin`, two updates with different filters giving different shapes, and `MongoDbResponseSummary` marked obsolete. `MongoDbProcessWideTests` gains a request note that a host's `JsonWriterSettings.Defaults` does not change, and `MongoJsonTests` now runs in that process-wide collection. `MongoDbFailuresDigestTests` lists an insert and a find by label and path. In the tap, the find pins (`MongoDecoderTests`, and `ContainerEndToEndTests`, which runs in CI on Linux) expect `{ "filter" : … }`, and `CopyToCarriesEveryProtocolOption` checks every option. The core's shape-version pin is 5. Playwright's `MongoNoteTests` draws an insert's documents as YAML, and its update fact toggles the reply, now the second note.
+
+Proofs (plan harness `r2/`): copied onto 4.19.6 with `MaxRequestDocuments` stubbed, 35 facts fail on driver 3.x, 35 on 2.x, 1 in the tap, 1 in the core and 2 in Playwright, each on its own assertion (`red-4.19.6.txt`); 25 of 25 mutations are caught, one after the tap's CopyTo fact was extended (`mutations.txt`).
+
+Checks: after the version bump the core suite passes 7,519 with 2 skipped; the MongoDB suites pass 302 of 302 on driver 3.x and 302 of 302 on 2.x, their real-server facts included (a mongod 7.0 replica set); the TcpTap suite passes 398 with 4 skipped (its Docker-only container facts) and its Bson 3 project 1 of 1; ClickHouse passes 120 with 9 skipped (its real-server facts), SearchEngine 214 and the IKVM renderer 55; the full Playwright suite passes 1,040 with 28 skipped when run alone; and release.slnf builds in Release for every target. BreakfastProvider's xUnit lane, on local packages, passes 212 of 212 in memory and against a real server; all 16 of its MongoDB request notes parse as JSON on both paths, where 4.19.6 recorded 6 and left its 10 writes without one, and so do its 16 reply notes. Its TestRunReport.json grows by 0.2% (4,681,138 to 4,692,053 bytes in memory, 4,676,641 to 4,689,272 against the server).
+
+The templates pin 4.19.7 and the history action's `VERSION` installs Kronikol.Tool 4.20.0. The wiki edits
+(`Integration-MongoDB-Extension`, `Integration-TcpTap-Extension`, `Cross-Run-History`) and the Kronikol4J ledger line
+follow publication.
+
 ## [4.19.7] - 2026-10-13
 
 **Patch - the CI job summary says who each instruction is for, and its commands work where its readers are (#169;

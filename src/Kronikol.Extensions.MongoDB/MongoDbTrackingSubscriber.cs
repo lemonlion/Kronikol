@@ -159,7 +159,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
                 var command = e.Command;
                 var notes = new Dictionary<MongoDbTrackingVerbosity, string?>();
                 foreach (var verbosity in new[] { _options.Verbosity, _options.SetupVerbosity ?? _options.Verbosity, _options.ActionVerbosity ?? _options.Verbosity })
-                    notes.TryAdd(verbosity, RequestNote(opInfo, command, verbosity));
+                    notes.TryAdd(verbosity, RequestNote(command, verbosity));
                 _pending[e.RequestId] = new PendingOperation(default, opInfo,
                     BuildUri(opInfo, effectiveVerbosity), MongoDbOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity),
                     Guid.NewGuid(), Guid.NewGuid())
@@ -181,7 +181,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             Guid.NewGuid(), Guid.NewGuid());
         _pending[e.RequestId] = pending;
         var startedCommand = e.Command;
-        LogRequest(pending, verbosity => RequestNote(opInfo, startedCommand, verbosity), effectiveVerbosity, timestamp: null, TestPhaseContext.Current);
+        LogRequest(pending, verbosity => RequestNote(startedCommand, verbosity), effectiveVerbosity, timestamp: null, TestPhaseContext.Current);
     }
 
     private void Succeeded(CommandSucceededEvent e)
@@ -312,13 +312,13 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
                 v == MongoDbTrackingVerbosity.Summarised && opInfo.Operation == MongoDbOperation.Other)));
     }
 
-    /// <summary>The request note at <paramref name="verbosity"/>: the filter at Detailed (when <see cref="MongoDbTrackingOptions.LogFilterText"/>), the whole command at Raw.</summary>
-    private string? RequestNote(MongoDbOperationInfo opInfo, BsonDocument? command, MongoDbTrackingVerbosity verbosity) =>
+    /// <summary>The request note at <paramref name="verbosity"/>: at Detailed (when <see cref="MongoDbTrackingOptions.LogFilterText"/>) the command without its name and the driver's own fields, as <see cref="MongoDbNotes.Request"/> writes it; at Raw the whole command.</summary>
+    private string? RequestNote(BsonDocument? command, MongoDbTrackingVerbosity verbosity) =>
         Rendered("command", () => verbosity switch
         {
             MongoDbTrackingVerbosity.Summarised => null,
-            MongoDbTrackingVerbosity.Raw => command?.ToString(),
-            _ => _options.LogFilterText ? opInfo.FilterText : null
+            MongoDbTrackingVerbosity.Raw => MongoDbNotes.Whole(command),
+            _ => _options.LogFilterText && command is not null ? MongoDbNotes.Request(command, _options.MaxRequestDocuments) : null
         });
 
     /// <summary>The reply note at <paramref name="verbosity"/>: the whole reply at Raw, otherwise what <see cref="MongoDbNotes.Reply"/> keeps.</summary>

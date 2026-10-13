@@ -291,7 +291,7 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         if (_verbosity == MongoDbTrackingVerbosity.Summarised && info.Operation == MongoDbOperation.Other)
             return;
 
-        var pending = new PendingCommand(info, BuildUri(info), RequestContent(info, command), timestamp);
+        var pending = new PendingCommand(info, BuildUri(info), RequestContent(command), timestamp);
 
         if (parsed.MoreToCome)
         {
@@ -395,12 +395,23 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         return true;
     }
 
-    private string? RequestContent(MongoDbOperationInfo info, BsonDocument command) => _verbosity switch
+    private string? RequestContent(BsonDocument command)
     {
-        MongoDbTrackingVerbosity.Summarised => null,
-        MongoDbTrackingVerbosity.Raw => Stringify(command),
-        _ => _options.LogFilterText ? info.FilterText : null,
-    };
+        try
+        {
+            return _verbosity switch
+            {
+                MongoDbTrackingVerbosity.Summarised => null,
+                MongoDbTrackingVerbosity.Raw => MongoDbNotes.Whole(command),
+                _ => _options.LogFilterText ? MongoDbNotes.Request(command, _options.MaxRequestDocuments) : null,
+            };
+        }
+        catch (Exception ex)
+        {
+            _context.CountDecodeError();
+            return $"<command could not be rendered: {ex.GetType().Name}>";
+        }
+    }
 
     private string? ResponseContent(MongoDbOperationInfo info, BsonDocument? reply)
     {
@@ -420,18 +431,6 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         {
             _context.CountDecodeError();
             return $"<reply could not be rendered: {ex.GetType().Name}>";
-        }
-    }
-
-    private static string? Stringify(BsonDocument document)
-    {
-        try
-        {
-            return document.ToString();
-        }
-        catch (Exception ex)
-        {
-            return $"<document could not be rendered: {ex.GetType().Name}>";
         }
     }
 

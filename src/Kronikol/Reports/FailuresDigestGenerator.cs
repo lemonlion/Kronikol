@@ -427,8 +427,15 @@ public static class FailuresDigestGenerator
     /// </summary>
     private static bool ShowsStatement(RequestResponseLog log, string? method) =>
         log.DependencyCategory is { Length: > 0 } category
-            ? DependencyCategories.IsStatementShaped(category)
+            ? DependencyCategories.IsStatementShaped(category) && !IsMongoDb(category)
             : IsStatementLike(method);
+
+    /// <summary>
+    /// A MongoDB call's note is what the command sent, an insert's documents included (#168 R2), so it is a payload,
+    /// not an identity: the call is listed by its label (<c>Insert (×3) → loans</c>) and path, as an HTTP call is.
+    /// </summary>
+    private static bool IsMongoDb(string category) =>
+        string.Equals(category, DependencyCategories.MongoDB, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Whether an uncategorised call's content is its own identity — a statement — rather than a payload.

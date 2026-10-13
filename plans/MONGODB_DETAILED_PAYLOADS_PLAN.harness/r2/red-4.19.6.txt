@@ -1,0 +1,103 @@
+# R2 red proofs on the published 4.19.6 (tag v4.19.6, 964c1507), 2026-10-13
+
+R2's test files were copied onto 4.19.6's code. The one new member they need, MaxRequestDocuments on
+MongoDbTrackingOptions and on MongoTapOptions, was stubbed as a property that does nothing; nothing else was
+changed. KRONIKOL_TEST_MONGO pointed at a mongod 7.0 replica set.
+
+Every failure below is the fact's own assertion. Notes:
+- The_shape_rule_has_a_version_a_run_records is the existing pin of the shape version, rewritten from 4 to 5.
+- An_update_reply_offers_the_YAML_view_and_draws_its_counts_as_YAML (Playwright) clicks the second note's format
+  button, the reply's since R2 gives the update a request note; on 4.19.6 there is no second note, so it fails on
+  a 30 s wait for that button.
+- Guards that pass on 4.19.6 by design: A_commitTransaction_has_no_request_note, LogFilterText_off_leaves_no_request_note,
+  A_client_bulkWrite_over_two_namespaces_stays_against_admin, and in Playwright R1's find-reply and null facts.
+
+## Kronikol.Tests.MongoDB
+   failed 35, passed 267, skipped 0, total 302
+- MongoDB.MongoDbFailuresDigestTests.Failures_md_lists_a_MongoDB_call_by_its_label (MongoDbFailuresDigestTests.cs:125): Assert.Contains() Failure: Sub-string not found
+- MongoDB.MongoDbTrackingSubscriberTests.An_unordered_write_keeps_ordered_false (MongoDbTrackingSubscriberTests.cs:1596): Assert.Equal() Failure: Strings differ | expected "{ "ordered" : false, "documents" : [{ "_id" : 1 }]"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.MaxRequestDocuments_defaults_to_10 (MongoDbTrackingSubscriberTests.cs:1632): Assert.EndsWith() Failure: String end does not match
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "recoveryToken") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "apiStrict") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "$db") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "apiDeprecationErrors") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "autocommit") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "writeConcern") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "apiVersion") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "startTransaction") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "txnNumber") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "$clusterTime") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "$readPreference") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "lsid") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "ordered") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "readConcern") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.An_upsert_request_note_is_its_statement (MongoDbTrackingSubscriberTests.cs:1484): Assert.Equal() Failure: Strings differ | expected "{ "updates" : [{ "q" : { "loanNumber" : "L-2000" }"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_find_request_note_is_its_filter_sort_and_limit (MongoDbTrackingSubscriberTests.cs:1450): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "loanNumber" : "L-1001" }, "sort" :"··· | actual "{ "loanNumber" : "L-1001" }"
+- MongoDB.MongoDbTrackingSubscriberTests.Request_statements_are_capped_with_a_footnote_of_their_own (MongoDbTrackingSubscriberTests.cs:1620): Assert.Equal() Failure: Strings differ | expected "{ "updates" : [{ "q" : { "_id" : 1 }, "u" : { "$se"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.MongoDbResponseSummary_says_it_is_obsolete (MongoDbTrackingSubscriberTests.cs:1761): Assert.Single() Failure: The collection was empty
+- MongoDB.MongoDbTrackingSubscriberTests.A_raw_request_is_the_whole_command_in_relaxed_json (MongoDbTrackingSubscriberTests.cs:1679): Assert.Equal() Failure: Strings differ | expected ···""filter" : { "rate" : 0.1 }, "$db" : "app" }" | actual ···""filter" : { "rate" : 0.10000000000000001 }, "$db""···
+- MongoDB.MongoDbTrackingSubscriberTests.Request_documents_are_capped_with_a_footnote_the_page_strips (MongoDbTrackingSubscriberTests.cs:1606): Assert.Equal() Failure: Strings differ | expected "{ "documents" : [{ "_id" : 1 }, { "_id" : 2 }] }\n."··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.Two_updates_with_different_filters_have_different_shapes (MongoDbTrackingSubscriberTests.cs:1752): Assert.NotEqual() Failure: Strings are equal | expected Not "/app/loans" | actual "/app/loans"
+- MongoDB.MongoDbTrackingSubscriberTests.An_aggregate_request_note_is_its_pipeline (MongoDbTrackingSubscriberTests.cs:1524): Assert.Equal() Failure: Strings differ | expected "{ "pipeline" : [{ "$match" : { "status" : "Ready" "··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.An_insert_request_note_is_its_documents (MongoDbTrackingSubscriberTests.cs:1462): Assert.Equal() Failure: Strings differ | expected "{ "documents" : [{ "_id" : 1 }, { "_id" : 2 }, { ""··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.An_explain_keeps_the_command_it_explains (MongoDbTrackingSubscriberTests.cs:1667): Assert.Equal() Failure: Strings differ | expected "{ "explain" : { "find" : "loans", "filter" : { "a""··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_distinct_request_note_is_its_key_and_query (MongoDbTrackingSubscriberTests.cs:1536): Assert.Equal() Failure: Strings differ | expected "{ "key" : "status", "query" : { } }" | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_getMore_request_note_is_its_collection_and_batch_size (MongoDbTrackingSubscriberTests.cs:1547): Assert.Equal() Failure: Strings differ | expected "{ "collection" : "loans", "batchSize" : 2 }" | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_large_binary_in_a_request_is_a_placeholder_at_Detailed_and_whole_at_Raw (MongoDbTrackingSubscriberTests.cs:1644): Assert.Equal() Failure: Strings differ | expected "{ "documents" : [{ "_id" : 1, "data" : "[binary: 3"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_raw_label_writes_its_filter_in_the_same_json (MongoDbTrackingSubscriberTests.cs:1693): Assert.Equal() Failure: Strings differ | expected ···" app.loans filter={ "rate" : 0.1 }" | actual ···" app.loans filter={ "rate" : 0.10000000000000001 }"
+- MongoDB.MongoDbTrackingSubscriberTests.A_findAndModify_request_note_is_its_query_and_update (MongoDbTrackingSubscriberTests.cs:1511): Assert.Equal() Failure: Strings differ | expected "{ "query" : { "status" : "Ready" }, "update" : { ""··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_client_bulkWrite_is_drawn_against_its_namespace (MongoDbTrackingSubscriberTests.cs:1711): Assert.Equal() Failure: Strings differ | expected "mongodb:///app/loans" | actual "mongodb:///admin"
+- MongoDB.MongoDbTrackingSubscriberTests.A_delete_request_note_is_its_statement (MongoDbTrackingSubscriberTests.cs:1498): Assert.Equal() Failure: Strings differ | expected "{ "deletes" : [{ "q" : { "loanNumber" : "L-1001" }"··· | actual null
+- MongoDB.MongoDbProcessWideTests.JsonWriterSettings_Defaults_do_not_change_a_note (MongoDbProcessWideTests.cs:158): Assert.Equal() Failure: Strings differ | expected "{ "documents" : [{ "_id" : 1, "rate" : 0.1, "princ"··· | actual null
+
+## Kronikol.Tests.MongoDB.V2
+   failed 35, passed 267, skipped 0, total 302
+- MongoDB.MongoDbFailuresDigestTests.Failures_md_lists_a_MongoDB_call_by_its_label (MongoDbFailuresDigestTests.cs:125): Assert.Contains() Failure: Sub-string not found
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "$readPreference") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "apiVersion") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "$clusterTime") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "txnNumber") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "apiStrict") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "recoveryToken") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "startTransaction") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "$db") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "autocommit") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "ordered") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "readConcern") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "writeConcern") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "apiDeprecationErrors") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.The_driver_fields_are_not_in_the_note(field: "lsid") (MongoDbTrackingSubscriberTests.cs:1584): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "a" : 1 } }" | actual "{ "a" : 1 }"
+- MongoDB.MongoDbTrackingSubscriberTests.An_aggregate_request_note_is_its_pipeline (MongoDbTrackingSubscriberTests.cs:1524): Assert.Equal() Failure: Strings differ | expected "{ "pipeline" : [{ "$match" : { "status" : "Ready" "··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_client_bulkWrite_is_drawn_against_its_namespace (MongoDbTrackingSubscriberTests.cs:1711): Assert.Equal() Failure: Strings differ | expected "mongodb:///app/loans" | actual "mongodb:///admin"
+- MongoDB.MongoDbTrackingSubscriberTests.A_delete_request_note_is_its_statement (MongoDbTrackingSubscriberTests.cs:1498): Assert.Equal() Failure: Strings differ | expected "{ "deletes" : [{ "q" : { "loanNumber" : "L-1001" }"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_large_binary_in_a_request_is_a_placeholder_at_Detailed_and_whole_at_Raw (MongoDbTrackingSubscriberTests.cs:1644): Assert.Equal() Failure: Strings differ | expected "{ "documents" : [{ "_id" : 1, "data" : "[binary: 3"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_raw_request_is_the_whole_command_in_relaxed_json (MongoDbTrackingSubscriberTests.cs:1679): Assert.Equal() Failure: Strings differ | expected ···""filter" : { "rate" : 0.1 }, "$db" : "app" }" | actual ···""filter" : { "rate" : 0.10000000000000001 }, "$db""···
+- MongoDB.MongoDbTrackingSubscriberTests.A_findAndModify_request_note_is_its_query_and_update (MongoDbTrackingSubscriberTests.cs:1511): Assert.Equal() Failure: Strings differ | expected "{ "query" : { "status" : "Ready" }, "update" : { ""··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.Request_statements_are_capped_with_a_footnote_of_their_own (MongoDbTrackingSubscriberTests.cs:1620): Assert.Equal() Failure: Strings differ | expected "{ "updates" : [{ "q" : { "_id" : 1 }, "u" : { "$se"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.An_unordered_write_keeps_ordered_false (MongoDbTrackingSubscriberTests.cs:1596): Assert.Equal() Failure: Strings differ | expected "{ "ordered" : false, "documents" : [{ "_id" : 1 }]"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.An_insert_request_note_is_its_documents (MongoDbTrackingSubscriberTests.cs:1462): Assert.Equal() Failure: Strings differ | expected "{ "documents" : [{ "_id" : 1 }, { "_id" : 2 }, { ""··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_raw_label_writes_its_filter_in_the_same_json (MongoDbTrackingSubscriberTests.cs:1693): Assert.Equal() Failure: Strings differ | expected ···" app.loans filter={ "rate" : 0.1 }" | actual ···" app.loans filter={ "rate" : 0.10000000000000001 }"
+- MongoDB.MongoDbTrackingSubscriberTests.MongoDbResponseSummary_says_it_is_obsolete (MongoDbTrackingSubscriberTests.cs:1761): Assert.Single() Failure: The collection was empty
+- MongoDB.MongoDbTrackingSubscriberTests.A_distinct_request_note_is_its_key_and_query (MongoDbTrackingSubscriberTests.cs:1536): Assert.Equal() Failure: Strings differ | expected "{ "key" : "status", "query" : { } }" | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.A_getMore_request_note_is_its_collection_and_batch_size (MongoDbTrackingSubscriberTests.cs:1547): Assert.Equal() Failure: Strings differ | expected "{ "collection" : "loans", "batchSize" : 2 }" | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.Request_documents_are_capped_with_a_footnote_the_page_strips (MongoDbTrackingSubscriberTests.cs:1606): Assert.Equal() Failure: Strings differ | expected "{ "documents" : [{ "_id" : 1 }, { "_id" : 2 }] }\n."··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.An_upsert_request_note_is_its_statement (MongoDbTrackingSubscriberTests.cs:1484): Assert.Equal() Failure: Strings differ | expected "{ "updates" : [{ "q" : { "loanNumber" : "L-2000" }"··· | actual null
+- MongoDB.MongoDbTrackingSubscriberTests.MaxRequestDocuments_defaults_to_10 (MongoDbTrackingSubscriberTests.cs:1632): Assert.EndsWith() Failure: String end does not match
+- MongoDB.MongoDbTrackingSubscriberTests.A_find_request_note_is_its_filter_sort_and_limit (MongoDbTrackingSubscriberTests.cs:1450): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "loanNumber" : "L-1001" }, "sort" :"··· | actual "{ "loanNumber" : "L-1001" }"
+- MongoDB.MongoDbTrackingSubscriberTests.Two_updates_with_different_filters_have_different_shapes (MongoDbTrackingSubscriberTests.cs:1752): Assert.NotEqual() Failure: Strings are equal | expected Not "/app/loans" | actual "/app/loans"
+- MongoDB.MongoDbTrackingSubscriberTests.An_explain_keeps_the_command_it_explains (MongoDbTrackingSubscriberTests.cs:1667): Assert.Equal() Failure: Strings differ | expected "{ "explain" : { "find" : "loans", "filter" : { "a""··· | actual null
+- MongoDB.MongoDbProcessWideTests.JsonWriterSettings_Defaults_do_not_change_a_note (MongoDbProcessWideTests.cs:158): Assert.Equal() Failure: Strings differ | expected "{ "documents" : [{ "_id" : 1, "rate" : 0.1, "princ"··· | actual null
+
+## Kronikol.Tests.TcpTap
+   failed 1, passed 397, skipped 4, total 402
+- TcpTap.MongoDecoderTests.AFindIsLabelledAndAddressedLikeTheInProcessExtension (MongoDecoderTests.cs:43): Assert.Equal() Failure: Strings differ | expected "{ "filter" : { "status" : "active" } }" | actual "{ "status" : "active" }"
+
+## core-shape
+   failed 1, passed 59, skipped 0, total 60
+- History.InteractionShapeTests.The_shape_rule_has_a_version_a_run_records (InteractionShapeTests.cs:299): Assert.Equal() Failure: Values differ | expected 5 | actual 4
+
+## e2e-mongonotes
+   failed 2, passed 2, skipped 0, total 4
+- EndToEnd.MongoNoteTests.An_insert_request_note_draws_its_documents_as_YAML (MongoNoteTests.cs:151): Assert.Contains() Failure: Sub-string not found
+- EndToEnd.MongoNoteTests.An_update_reply_offers_the_YAML_view_and_draws_its_counts_as_YAML (DiagramNotePlaywrightBase.cs:109): System.TimeoutException : Timeout 30000ms exceeded.
+

@@ -1,0 +1,44 @@
+R2 mutations (plans/MONGODB_DETAILED_PAYLOADS_PLAN.md section 5), run 2026-10-13/14 on WIP 3123e770 in a snapshot worktree.
+Each one-line change ran the facts named in mutations/mutate_r2.py on driver 3.x (tests/Kronikol.Tests.MongoDB),
+the tap (tests/Kronikol.Tests.TcpTap) or the core (tests/Kronikol.Tests), with KRONIKOL_TEST_MONGO set to a mongod 7.0
+replica set. CAUGHT = at least one named fact failed.
+
+## Run 1: 22 of 23 caught
+
+ 1. $clusterTime kept in a request: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed ()
+ 2. recoveryToken kept in a request: CAUGHT | tests/Kronikol.Tests.MongoDB: 2 failed (A_commitTransaction_has_no_request_note)
+ 3. ordered: false stripped: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (An_unordered_write_keeps_ordered_false)
+ 4. ordered: true kept: CAUGHT | tests/Kronikol.Tests.MongoDB: 2 failed (An_insert_request_note_is_its_documents)
+ 5. an aggregate's cursor kept: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (An_aggregate_request_note_is_its_pipeline)
+ 6. the first element dropped whatever its value: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (An_explain_keeps_the_command_it_explains)
+ 7. the command's name kept: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_find_request_note_is_its_filter_sort_and_limit) | tests/Kronikol.Tests.TcpTap: 1 failed (AFindIsLabelledAndAddressedLikeTheInProcessExtension)
+ 8. documents not capped: CAUGHT | tests/Kronikol.Tests.MongoDB: 2 failed (Request_documents_are_capped_with_a_footnote_the_page_strips, MaxRequestDocuments_defaults_to_10)
+ 9. statements not capped: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (Request_statements_are_capped_with_a_footnote_of_their_own)
+10. statements given the documents footnote: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (Request_statements_are_capped_with_a_footnote_of_their_own)
+11. an empty request written as { }: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_commitTransaction_has_no_request_note)
+12. a Raw request written by ToString: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_raw_request_is_the_whole_command_in_relaxed_json)
+13. LogFilterText ignored: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (LogFilterText_off_leaves_no_request_note)
+14. MaxRequestDocuments not passed: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (Request_documents_are_capped_with_a_footnote_the_page_strips)
+15. a Raw label's filter written by ToString: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_raw_label_writes_its_filter_in_the_same_json)
+16. nsInfo ignored: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_client_bulkWrite_is_drawn_against_its_namespace)
+17. nsInfo with two namespaces taken: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (A_client_bulkWrite_over_two_namespaces_stays_against_admin)
+18. ExtractMetadata not obsolete: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (MongoDbResponseSummary_says_it_is_obsolete)
+19. the tap's request note left out: CAUGHT | tests/Kronikol.Tests.TcpTap: 43 failed (AFindIsLabelledAndAddressedLikeTheInProcessExtension)
+20. the tap's Raw request written by ToString: CAUGHT | tests/Kronikol.Tests.TcpTap: 46 failed ()
+21. the tap's MaxRequestDocuments not copied: SURVIVED | tests/Kronikol.Tests.TcpTap: all 1 passed
+22. the shape version left at 4: CAUGHT | tests/Kronikol.Tests: 1 failed (The_shape_rule_has_a_version_a_run_records)
+23. Failures.md quotes a MongoDB note again: CAUGHT | tests/Kronikol.Tests.MongoDB: 1 failed (Failures_md_lists_a_MongoDB_call_by_its_label)
+
+## The one that survived
+
+21. MongoTapOptions.CopyTo not copying MaxRequestDocuments: CopyToCarriesEveryProtocolOption lists the options it
+    checks by hand, and it also missed LogResponseContent and DocumentRedaction, so dropping any of the three copy
+    lines went unseen. The fact now sets and checks all three; mutations 24 and 25 drop the two older lines.
+
+## Run 2, with the CopyTo fact extended
+
+21. the tap's MaxRequestDocuments not copied: CAUGHT | tests/Kronikol.Tests.TcpTap: 1 failed (CopyToCarriesEveryProtocolOption)
+24. the tap's LogResponseContent not copied (found by #21): CAUGHT | tests/Kronikol.Tests.TcpTap: 1 failed (CopyToCarriesEveryProtocolOption)
+25. the tap's DocumentRedaction not copied (found by #21): CAUGHT | tests/Kronikol.Tests.TcpTap: 1 failed (CopyToCarriesEveryProtocolOption)
+
+Result: every mutation is caught (25 of 25).

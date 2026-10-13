@@ -4,7 +4,7 @@ namespace Kronikol.Extensions.TcpTap;
 /// A <see cref="TcpTap"/> that speaks the MongoDB wire protocol: point a service's Mongo client at it instead
 /// of mongod, and every command renders as a <c>service → mongo</c> arrow — <c>Find ← Trial</c>,
 /// <c>Insert → Trial</c>, <c>Aggregate ← x (match, group)</c> — with <c>mongodb:///{db}/{collection}</c> as the
-/// URI, the filter as the request note and what the reply returned as the response note (its documents, or its own
+/// URI, the command without its name and the driver's own fields as the request note and what the reply returned as the response note (its documents, or its own
 /// fields without the server's bookkeeping, in relaxed extended JSON), exactly as the in-process
 /// <c>Kronikol.Extensions.MongoDB</c> extension would render it. A reply with <c>ok: 0</c>, <c>writeErrors</c> or a
 /// <c>writeConcernError</c> is drawn as a failure (500) and carries the server's message as its error.

@@ -83,7 +83,10 @@ public record MongoDbTrackingOptions
     public HashSet<MongoDbOperation> ExcludedOperations { get; set; } = [];
 
     /// <summary>
-    /// Whether to include filter BSON text in the logged content for Detailed verbosity.
+    /// Whether the request note is recorded at <see cref="MongoDbTrackingVerbosity.Detailed"/>: the command without
+    /// its name and the driver's own fields, as relaxed extended JSON (an insert's documents included). Off, a
+    /// command has no request note at Detailed; <see cref="MongoDbTrackingVerbosity.Raw"/> always records the whole
+    /// command. Default: true.
     /// </summary>
     public bool LogFilterText { get; set; } = true;
 
@@ -122,4 +125,13 @@ public record MongoDbTrackingOptions
     /// Default: 10.
     /// </summary>
     public int MaxResponseDocuments { get; set; } = 10;
+
+    /// <summary>
+    /// The most documents or statements a request note keeps at <see cref="MongoDbTrackingVerbosity.Detailed"/>: an
+    /// insert's <c>documents</c>, an update's <c>updates</c>, a delete's <c>deletes</c> and a client bulkWrite's
+    /// <c>ops</c>. A note that left some out ends with <c>... (N more documents not shown)</c>, or <c>... (N more)</c>
+    /// for statements, a line the report and the query tool read past.
+    /// Default: 10.
+    /// </summary>
+    public int MaxRequestDocuments { get; set; } = 10;
 }

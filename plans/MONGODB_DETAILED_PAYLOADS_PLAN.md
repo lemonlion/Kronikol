@@ -1,7 +1,7 @@
 # MongoDB at Detailed: what a command sent and what came back, as JSON (#168)
 
 **Date:** 2026-10-13 · **Repo version:** 4.18.1 (`main` at `34145c44`; line numbers are for that commit, and the
-issue's, at `98c4806d`, point at the same lines) · **Status:** **Green-lit in full by the owner on 2026-10-13**, every §9 question as recommended. **R1 executed as 4.19.6** (§11); R2, R3 and the driver floor (Q18) follow. Drafted from #168 (filed by the
+issue's, at `98c4806d`, point at the same lines) · **Status:** **Green-lit in full by the owner on 2026-10-13**, every §9 question as recommended. **R1 executed as 4.19.6 and R2 as 4.20.0** (§11); R3 and the driver floor (Q18) follow. Drafted from #168 (filed by the
 owner on 2026-10-11, found in #132's multi-host suite on 4.14.6 with `Kronikol.Extensions.MongoDB.V2` and MongoDB.Driver
 2.30.0) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying problem.
 
@@ -1175,6 +1175,35 @@ no row is taken here.
   CI's remaining-tests job first failed at restore, on Microsoft's half-published 10.0.13 servicing packages, and
   passed when rerun once nuget.org listed them. nuget.org listed all 62 ids at 20:18. The wiki has R1's edits
   (`e73a5ab`), Kronikol4J's ledger its two lines (`233baf7`), and #168 a comment naming the release.
+
+- **2026-10-13, R2 executed as 4.20.0**, by kronikol-cf, in the same worktree as R1.
+  - **Built as §4.3 says.** `MongoDbNotes.Request`, shared by the subscriber and the tap, writes the command without its
+    name and the driver's fields; `MaxRequestDocuments` is on both options types; `Raw` and a label's `filter=…` go
+    through `MongoJson`; a client bulkWrite takes its namespace from `nsInfo` when it names one (Q13); the shape
+    version is 5 (Q6); `Failures.md` lists a MongoDB call by its label and path (Q20); `MongoDbResponseSummary`'s
+    methods are obsolete (Q14), with an Appendix C row for their removal in 5.0.
+  - **Found on the way:**
+    - R1's fact that sets `JsonWriterSettings.Defaults` ran in a parallel class, beside captures that still read the
+      driver's `ToString()`; `MongoJsonTests` now runs in the process-wide collection that runs alone, as §5 asked;
+    - `MongoJson`'s remarks still said the driver writes `-0.0` as `0.0`, the claim R1's entry corrects; they no
+      longer do;
+    - `CopyToCarriesEveryProtocolOption` listed the tap's options by hand and missed `LogResponseContent` and
+      `DocumentRedaction` as well as the new option (mutation 21); it now checks all three;
+    - R1's Playwright update fact clicked the first note's format button, which R2 makes the request's.
+  - **Proofs** (`r2/`): `red-4.19.6.txt`, on 4.19.6 with `MaxRequestDocuments` stubbed: 35 facts fail on driver 3.x,
+    35 on 2.x, 1 in the tap, 1 in the core and 2 in Playwright, each on its own assertion; `mutations.txt`, 25 of 25
+    caught (one after the CopyTo fact was extended).
+  - **Checks:** After the version bump the core suite passes 7,519 with 2 skipped; the MongoDB suites pass 302 of 302 on
+    driver 3.x and 302 of 302 on 2.x, their real-server facts included (a mongod 7.0 replica set); the TcpTap suite
+    passes 398 with 4 skipped (its Docker-only container facts) and its Bson 3 project 1 of 1; ClickHouse passes 120
+    with 9 skipped (its real-server facts), SearchEngine 214 and the IKVM renderer 55; the full Playwright suite passes
+    1,040 with 28 skipped when run alone; and release.slnf builds in Release for every target.
+  - **Consumer:** BreakfastProvider's xUnit lane (the same clone as R1's check, every Kronikol reference on local packages at
+    4.20.0-bp168r2, MongoDB.Driver 3.12.0) passes 212 of 212 in memory and against the mongod 7.0 replica set. All 16 of
+    its MongoDB request notes parse as JSON on both paths, where 4.19.6 recorded 6 (its finds' filters) and left its
+    10 writes without one; its 16 reply notes still parse. A script counted them and printed counts only. The report
+    the lane writes grows by 0.2%: 4,681,138 to 4,692,053 bytes in memory and 4,676,641 to 4,689,272 against the server
+    (Q5 left the budget to the owner; this is the measurement it asked for).
 
 ## Appendix A. Edit sites at `34145c44`
 

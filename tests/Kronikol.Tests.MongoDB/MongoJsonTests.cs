@@ -9,8 +9,10 @@ namespace Kronikol.Tests.MongoDB;
 
 /// <summary>
 /// The writer every MongoDB note goes through (plans/MONGODB_DETAILED_PAYLOADS_PLAN.md, section 4.1). The V2 test
-/// project links this file, so each fact runs on MongoDB.Bson 2.x and on 3.x.
+/// project links this file, so each fact runs on MongoDB.Bson 2.x and on 3.x. One fact sets
+/// <c>JsonWriterSettings.Defaults</c>, which every other capture's <c>ToString()</c> reads, so the class runs alone.
 /// </summary>
+[Collection(ProcessWideStatics.Name)]
 public class MongoJsonTests
 {
     private static bool OnBson3 => typeof(BsonDocument).Assembly.GetName().Version!.Major >= 3;

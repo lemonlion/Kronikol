@@ -115,7 +115,8 @@ public class MongoNoteTests : DiagramNotePlaywrightBase
         await Open(Report("MongoNote_UpdateYaml.html", "update", Update, UpdateReply, NotePayloadFormat.Json));
         Assert.Contains("\"nModified\": 0", await GetNormalizedSvgText());
 
-        await ClickNoteFormatButton(0);
+        // The request note (the update's statement, since #168 R2) is the first note, the reply the second.
+        await ClickNoteFormatButton(1);
 
         var text = await GetNormalizedSvgText();
         Assert.Contains("n: 1", text);
@@ -131,5 +132,29 @@ public class MongoNoteTests : DiagramNotePlaywrightBase
 
         await Open(Report("MongoNote_NullYaml.html", "find", FindActive, FindReply, NotePayloadFormat.Yaml));
         Assert.Contains("deletedAt: null", await GetNormalizedSvgText());
+    }
+
+    private static readonly BsonDocument InsertThree = new()
+    {
+        { "insert", "loans" }, { "ordered", true }, { "$db", "app" },
+        { "documents", new BsonArray
+        {
+            new BsonDocument("loanNumber", "L-3001"), new BsonDocument("loanNumber", "L-3002"), new BsonDocument("loanNumber", "L-3003"),
+        } },
+    };
+
+    [Fact]
+    public async Task An_insert_request_note_draws_its_documents_as_YAML()
+    {
+        // An insert's request note is its documents (#168 R2); before, it had no note at Detailed.
+        await Open(Report("MongoNote_InsertYaml.html", "insert", InsertThree, new BsonDocument { { "n", 3 }, { "ok", 1.0 } }, NotePayloadFormat.Json));
+        Assert.Contains("\"loanNumber\": \"L-3002\"", await GetNormalizedSvgText());
+
+        // The request note is the first note, the reply the second.
+        await ClickNoteFormatButton(0);
+
+        var text = await GetNormalizedSvgText();
+        Assert.Contains("loanNumber: L-3002", text);
+        Assert.DoesNotContain("\"loanNumber\": \"L-3002\"", text);
     }
 }

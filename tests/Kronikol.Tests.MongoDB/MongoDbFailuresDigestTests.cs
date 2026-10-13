@@ -101,4 +101,28 @@ public class MongoDbFailuresDigestTests
 
         Assert.Contains("unknown operator: $bogus", digest);
     }
+
+    [Fact]
+    public void Failures_md_lists_a_MongoDB_call_by_its_label()
+    {
+        // A MongoDB note is what the command sent, documents included (#168 R2), so the digest lists the call by its
+        // label and path, as it lists an HTTP call, and never quotes the note (F23).
+        var subscriber = Subscriber();
+        var documents = new BsonArray
+        {
+            new BsonDocument("loanNumber", "L-1001"), new BsonDocument("loanNumber", "L-1002"), new BsonDocument("loanNumber", "L-1003"),
+        };
+        subscriber.OnCommandStarted(new CommandStartedEvent("insert",
+            new BsonDocument { { "insert", "loans" }, { "documents", documents } }, new DatabaseNamespace("app"), 1L, 1, MakeConnectionId()));
+        subscriber.OnCommandSucceeded(new CommandSucceededEvent("insert", new BsonDocument { { "n", 3 }, { "ok", 1.0 } },
+            new DatabaseNamespace("app"), 1L, 1, MakeConnectionId(), TimeSpan.FromMilliseconds(2)));
+        subscriber.OnCommandStarted(new CommandStartedEvent("find",
+            new BsonDocument { { "find", "loans" }, { "filter", new BsonDocument("loanNumber", "L-1001") } }, new DatabaseNamespace("app"), 1L, 2, MakeConnectionId()));
+
+        var digest = Digest();
+
+        Assert.Contains("Insert (×3) → loans /app/loans", digest);
+        Assert.Contains("Find ← loans /app/loans", digest);
+        Assert.DoesNotContain("L-1001", digest);
+    }
 }

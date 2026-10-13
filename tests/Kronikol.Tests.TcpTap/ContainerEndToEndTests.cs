@@ -218,7 +218,7 @@ public class ContainerEndToEndTests(ITestOutputHelper output)
 
             var find = Assert.Single(responses, r => Text(r) == "Find ← Trial");
             Assert.Contains("\"status\" : \"active\"", find.Content);
-            Assert.Equal("{ \"status\" : \"active\" }", sink.Requests.Single(r => Text(r) == "Find ← Trial").Content);
+            Assert.Equal("{ \"filter\" : { \"status\" : \"active\" } }", sink.Requests.Single(r => Text(r) == "Find ← Trial").Content);
 
             // Nothing from the SCRAM handshake or the topology chatter was recorded.
             Assert.DoesNotContain(sink.Logs, r => Text(r).Contains("hello", StringComparison.OrdinalIgnoreCase));

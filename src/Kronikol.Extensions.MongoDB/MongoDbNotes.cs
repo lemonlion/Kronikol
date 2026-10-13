@@ -32,6 +32,82 @@ internal static class MongoDbNotes
     };
 
     /// <summary>
+    /// The fields the driver adds to a command about the session, the transaction, the topology or the API rather
+    /// than the statement: <c>$db</c>, <c>lsid</c>, <c>txnNumber</c>, <c>$clusterTime</c>, <c>startTransaction</c>,
+    /// <c>autocommit</c>, <c>recoveryToken</c> (copied onto a commit or an abort through mongos),
+    /// <c>writeConcern</c>, <c>readConcern</c>, <c>$readPreference</c>, <c>apiVersion</c>, <c>apiStrict</c> and
+    /// <c>apiDeprecationErrors</c> (plans/MONGODB_DETAILED_PAYLOADS_PLAN.md, section 4.3).
+    /// </summary>
+    internal static readonly IReadOnlyCollection<string> CommandBookkeeping = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "$db", "lsid", "txnNumber", "$clusterTime",
+        "startTransaction", "autocommit", "recoveryToken",
+        "writeConcern", "readConcern", "$readPreference",
+        "apiVersion", "apiStrict", "apiDeprecationErrors",
+    };
+
+    /// <summary>The arrays of a write that hold what it writes: documents, then statements.</summary>
+    private static readonly string[] RequestDocuments = ["documents"];
+    private static readonly string[] RequestStatements = ["updates", "deletes", "ops"];
+
+    /// <summary>
+    /// The note for a command at <c>Detailed</c>: the command without its name and without the driver's own fields
+    /// (<see cref="CommandBookkeeping"/>, <c>ordered</c> when it is true, and an aggregate's <c>cursor</c>). The first
+    /// element is dropped when its value is a string or a number (a collection, <c>1</c>, a getMore's cursor id), which
+    /// the label and the URI carry; any other first element stays, as <c>explain</c>'s command does. An insert's
+    /// <c>documents</c>, and an update's, a delete's or a client bulkWrite's statements, keep their first
+    /// <paramref name="maxRequestDocuments"/> entries, and a note that dropped some ends with
+    /// <c>... (N more documents not shown)</c>, or <c>... (N more)</c> for statements. A binary over 256 bytes is a
+    /// placeholder. Null when nothing is left, as for a commitTransaction.
+    /// </summary>
+    internal static string? Request(BsonDocument command, int maxRequestDocuments)
+    {
+        var kept = new List<BsonElement>();
+        var isAggregate = false;
+        for (var i = 0; i < command.ElementCount; i++)
+        {
+            var element = command.GetElement(i);
+            if (i == 0)
+            {
+                isAggregate = element.Name == "aggregate";
+                if (element.Value.IsString || element.Value.IsNumeric)
+                    continue;
+            }
+            if (CommandBookkeeping.Contains(element.Name)
+                || (element.Name == "ordered" && element.Value is BsonBoolean { Value: true })
+                || (isAggregate && element.Name == "cursor"))
+                continue;
+            kept.Add(element);
+        }
+        if (kept.Count == 0)
+            return null;
+
+        var max = Math.Max(0, maxRequestDocuments);
+        var builder = new StringBuilder();
+        int documentsNotShown = 0, statementsNotShown = 0;
+        builder.Append('{');
+        for (var i = 0; i < kept.Count; i++)
+        {
+            builder.Append(i == 0 ? " " : ", ");
+            MongoJson.WriteString(builder, kept[i].Name);
+            builder.Append(" : ");
+            if (kept[i].Value is BsonArray entries && Array.IndexOf(RequestDocuments, kept[i].Name) >= 0)
+                documentsNotShown += WriteBatch(builder, entries, max);
+            else if (kept[i].Value is BsonArray statements && Array.IndexOf(RequestStatements, kept[i].Name) >= 0)
+                statementsNotShown += WriteBatch(builder, statements, max);
+            else
+                MongoJson.Write(builder, kept[i].Value, binaryPlaceholders: true);
+        }
+        builder.Append(" }");
+
+        if (documentsNotShown > 0)
+            builder.Append('\n').Append(string.Create(CultureInfo.InvariantCulture, $"... ({documentsNotShown} more documents not shown)"));
+        if (statementsNotShown > 0)
+            builder.Append('\n').Append(string.Create(CultureInfo.InvariantCulture, $"... ({statementsNotShown} more)"));
+        return builder.ToString();
+    }
+
+    /// <summary>
     /// The note for a reply at <c>Detailed</c>. A cursor's reply is its batch as an array (<c>[]</c> when empty); any
     /// other reply is an object without the server's bookkeeping, a cursor inside it replaced by its batch. A batch
     /// keeps its first <paramref name="maxResponseDocuments"/> documents, and a note that dropped some ends with

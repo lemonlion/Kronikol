@@ -18,11 +18,12 @@ namespace Kronikol.Extensions.MongoDB;
 /// Pure: it needs only <c>MongoDB.Bson</c>. Kronikol's own captures (<c>MongoDbTrackingSubscriber</c> and the wire
 /// tap's <c>MongoTap</c>) no longer use it: their reply notes are relaxed extended JSON, with a write's counts in the
 /// JSON, and a reply's documents written the same way on MongoDB.Bson 2.x and 3.x. It stays, unchanged, for code that
-/// calls it.
+/// calls it, marked obsolete, and is removed in 5.0.
 /// </remarks>
 public static class MongoDbResponseSummary
 {
     /// <summary>Write metadata as <c>n=1, nModified=1</c>, or null when the reply carries none.</summary>
+    [Obsolete("Kronikol's MongoDB notes are relaxed extended JSON since 4.19.6 (MongoDbTrackingSubscriber and MongoTap), with a write's counts in the JSON; this text form is no longer used, and is removed in 5.0.")]
     public static string? ExtractMetadata(BsonDocument? reply)
     {
         if (reply is null) return null;
@@ -43,6 +44,7 @@ public static class MongoDbResponseSummary
     /// Metadata plus (when <paramref name="logResponseContent"/> is true) up to
     /// <paramref name="maxResponseDocuments"/> pretty-printed documents from <c>cursor.firstBatch</c>.
     /// </summary>
+    [Obsolete("Kronikol's MongoDB notes are relaxed extended JSON since 4.19.6 (MongoDbTrackingSubscriber and MongoTap), with a write's counts in the JSON; this text form is no longer used, and is removed in 5.0.")]
     public static string? ExtractDetailed(BsonDocument? reply, bool logResponseContent, int maxResponseDocuments)
     {
         var metadata = ExtractMetadata(reply);

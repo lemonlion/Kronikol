@@ -7,6 +7,7 @@ using MongoDB.Driver.Core.Connections;
 using MongoDB.Driver.Core.Events;
 using MongoDB.Driver.Core.Servers;
 using Kronikol.Extensions.MongoDB;
+using Kronikol.History;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.MongoDB;
@@ -1414,5 +1415,349 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         }
 
         Assert.Null(TestCorrelationStore.Lookup(CorrelationKeys.Mongo(options.ServiceName, id)));
+    }
+
+    // ─── The request note at Detailed (#168 R2) ──────────────
+
+    /// <summary>The note the subscriber records for <paramref name="command"/>, the newest request of this test.</summary>
+    private string? RequestNoteOf(BsonDocument command, Action<MongoDbTrackingOptions>? configure = null,
+        MongoDbTrackingVerbosity verbosity = MongoDbTrackingVerbosity.Detailed, string db = "app")
+    {
+        var options = MakeOptions(verbosity);
+        configure?.Invoke(options);
+        var subscriber = new MongoDbTrackingSubscriber(options);
+        subscriber.OnCommandStarted(MakeStartedEvent(command.GetElement(0).Name, command, db: db));
+        return GetLogsFromThisTest().Last(l => l.Type == RequestResponseType.Request).Content;
+    }
+
+    /// <summary>What the driver puts beside every command it sends (plans/MONGODB_DETAILED_PAYLOADS_PLAN.md, section 2.2).</summary>
+    private static BsonDocument WithDriverFields(BsonDocument command) => command.AddRange(new BsonDocument
+    {
+        { "$db", "app" },
+        { "lsid", new BsonDocument("id", new BsonBinaryData(Guid.Parse("0f8fad5b-d9cb-469f-a165-70867728950e"), GuidRepresentation.Standard)) },
+        { "$clusterTime", new BsonDocument { { "clusterTime", new BsonTimestamp(1, 1) }, { "signature", new BsonDocument("keyId", 0L) } } },
+    });
+
+    [Fact]
+    public void A_find_request_note_is_its_filter_sort_and_limit()
+    {
+        var note = RequestNoteOf(WithDriverFields(new BsonDocument
+        {
+            { "find", "loans" }, { "filter", new BsonDocument("loanNumber", "L-1001") },
+            { "sort", new BsonDocument("createdAt", -1) }, { "limit", 5 }, { "batchSize", 2 },
+        }));
+
+        Assert.Equal("{ \"filter\" : { \"loanNumber\" : \"L-1001\" }, \"sort\" : { \"createdAt\" : -1 }, \"limit\" : 5, \"batchSize\" : 2 }", note);
+    }
+
+    [Fact]
+    public void An_insert_request_note_is_its_documents()
+    {
+        var note = RequestNoteOf(WithDriverFields(new BsonDocument
+        {
+            { "insert", "loans" }, { "ordered", true }, { "txnNumber", 3L },
+            { "documents", new BsonArray { new BsonDocument("_id", 1), new BsonDocument("_id", 2), new BsonDocument("_id", 3) } },
+        }));
+
+        Assert.Equal("{ \"documents\" : [{ \"_id\" : 1 }, { \"_id\" : 2 }, { \"_id\" : 3 }] }", note);
+    }
+
+    [Fact]
+    public void An_upsert_request_note_is_its_statement()
+    {
+        var note = RequestNoteOf(WithDriverFields(new BsonDocument
+        {
+            { "update", "loans" }, { "ordered", true },
+            { "updates", new BsonArray { new BsonDocument
+            {
+                { "q", new BsonDocument("loanNumber", "L-2000") },
+                { "u", new BsonDocument
+                {
+                    { "$set", new BsonDocument("status", "Draft") },
+                    { "$setOnInsert", new BsonDocument("principal", new BsonDecimal128(Decimal128.Parse("5000.00"))) },
+                } },
+                { "upsert", true },
+            } } },
+            { "writeConcern", new BsonDocument("w", "majority") },
+        }));
+
+        Assert.Equal(
+            "{ \"updates\" : [{ \"q\" : { \"loanNumber\" : \"L-2000\" }, \"u\" : { \"$set\" : { \"status\" : \"Draft\" }, "
+            + "\"$setOnInsert\" : { \"principal\" : { \"$numberDecimal\" : \"5000.00\" } } }, \"upsert\" : true }] }", note);
+    }
+
+    [Fact]
+    public void A_delete_request_note_is_its_statement()
+    {
+        var note = RequestNoteOf(WithDriverFields(new BsonDocument
+        {
+            { "delete", "loans" }, { "ordered", true },
+            { "deletes", new BsonArray { new BsonDocument { { "q", new BsonDocument("loanNumber", "L-1001") }, { "limit", 1 } } } },
+        }));
+
+        Assert.Equal("{ \"deletes\" : [{ \"q\" : { \"loanNumber\" : \"L-1001\" }, \"limit\" : 1 }] }", note);
+    }
+
+    [Fact]
+    public void A_findAndModify_request_note_is_its_query_and_update()
+    {
+        var note = RequestNoteOf(WithDriverFields(new BsonDocument
+        {
+            { "findAndModify", "loans" }, { "query", new BsonDocument("status", "Ready") },
+            { "update", new BsonDocument("$set", new BsonDocument("status", "claimed")) }, { "new", true },
+            { "txnNumber", 1L },
+        }));
+
+        Assert.Equal("{ \"query\" : { \"status\" : \"Ready\" }, \"update\" : { \"$set\" : { \"status\" : \"claimed\" } }, \"new\" : true }", note);
+    }
+
+    [Fact]
+    public void An_aggregate_request_note_is_its_pipeline()
+    {
+        var note = RequestNoteOf(WithDriverFields(new BsonDocument
+        {
+            { "aggregate", "loans" },
+            { "pipeline", new BsonArray { new BsonDocument("$match", new BsonDocument("status", "Ready")), new BsonDocument("$count", "n") } },
+            { "cursor", new BsonDocument() },
+        }));
+
+        Assert.Equal("{ \"pipeline\" : [{ \"$match\" : { \"status\" : \"Ready\" } }, { \"$count\" : \"n\" }] }", note);
+    }
+
+    [Fact]
+    public void A_distinct_request_note_is_its_key_and_query()
+    {
+        var note = RequestNoteOf(WithDriverFields(new BsonDocument
+        {
+            { "distinct", "loans" }, { "key", "status" }, { "query", new BsonDocument() },
+            { "readConcern", new BsonDocument("level", "majority") },
+        }));
+
+        Assert.Equal("{ \"key\" : \"status\", \"query\" : { } }", note);
+    }
+
+    [Fact]
+    public void A_getMore_request_note_is_its_collection_and_batch_size()
+    {
+        var note = RequestNoteOf(WithDriverFields(new BsonDocument
+        {
+            { "getMore", 7429016254L }, { "collection", "loans" }, { "batchSize", 2 },
+        }), o => o.TrackGetMore = true);
+
+        Assert.Equal("{ \"collection\" : \"loans\", \"batchSize\" : 2 }", note);
+    }
+
+    [Fact]
+    public void A_commitTransaction_has_no_request_note()
+    {
+        var note = RequestNoteOf(WithDriverFields(new BsonDocument
+        {
+            { "commitTransaction", 1 }, { "txnNumber", 2L }, { "autocommit", false },
+            { "writeConcern", new BsonDocument("w", "majority") },
+            { "recoveryToken", new BsonDocument("recoveryShardId", "sh0") },
+        }), db: "admin");
+
+        Assert.Null(note);
+    }
+
+    [Theory]
+    [InlineData("$db")]
+    [InlineData("lsid")]
+    [InlineData("txnNumber")]
+    [InlineData("$clusterTime")]
+    [InlineData("startTransaction")]
+    [InlineData("autocommit")]
+    [InlineData("recoveryToken")]
+    [InlineData("writeConcern")]
+    [InlineData("readConcern")]
+    [InlineData("$readPreference")]
+    [InlineData("apiVersion")]
+    [InlineData("apiStrict")]
+    [InlineData("apiDeprecationErrors")]
+    [InlineData("ordered")]
+    public void The_driver_fields_are_not_in_the_note(string field)
+    {
+        BsonValue value = field == "ordered" ? true : new BsonDocument("x", 1);
+
+        var note = RequestNoteOf(new BsonDocument { { "find", "loans" }, { "filter", new BsonDocument("a", 1) }, { field, value } });
+
+        Assert.Equal("{ \"filter\" : { \"a\" : 1 } }", note);
+    }
+
+    [Fact]
+    public void An_unordered_write_keeps_ordered_false()
+    {
+        // ordered: false changes what the server does after a failed statement, so it is part of the statement.
+        var note = RequestNoteOf(new BsonDocument
+        {
+            { "insert", "loans" }, { "ordered", false }, { "documents", new BsonArray { new BsonDocument("_id", 1) } },
+        });
+
+        Assert.Equal("{ \"ordered\" : false, \"documents\" : [{ \"_id\" : 1 }] }", note);
+    }
+
+    [Fact]
+    public void Request_documents_are_capped_with_a_footnote_the_page_strips()
+    {
+        var documents = new BsonArray(Enumerable.Range(1, 5).Select(i => new BsonDocument("_id", i)));
+
+        var note = RequestNoteOf(new BsonDocument { { "insert", "loans" }, { "documents", documents } }, o => o.MaxRequestDocuments = 2);
+
+        Assert.Equal("{ \"documents\" : [{ \"_id\" : 1 }, { \"_id\" : 2 }] }\n... (3 more documents not shown)", note);
+        using (JsonDocument.Parse(note![..note.IndexOf('\n')])) { }
+    }
+
+    [Fact]
+    public void Request_statements_are_capped_with_a_footnote_of_their_own()
+    {
+        var updates = new BsonArray(Enumerable.Range(1, 4).Select(i => new BsonDocument
+        {
+            { "q", new BsonDocument("_id", i) }, { "u", new BsonDocument("$set", new BsonDocument("n", i)) },
+        }));
+
+        var note = RequestNoteOf(new BsonDocument { { "update", "loans" }, { "updates", updates } }, o => o.MaxRequestDocuments = 1);
+
+        Assert.Equal("{ \"updates\" : [{ \"q\" : { \"_id\" : 1 }, \"u\" : { \"$set\" : { \"n\" : 1 } } }] }\n... (3 more)", note);
+        using (JsonDocument.Parse(note![..note.IndexOf('\n')])) { }
+    }
+
+    [Fact]
+    public void MaxRequestDocuments_defaults_to_10()
+    {
+        var documents = new BsonArray(Enumerable.Range(1, 11).Select(i => new BsonDocument("_id", i)));
+
+        var note = RequestNoteOf(new BsonDocument { { "insert", "loans" }, { "documents", documents } });
+
+        Assert.Equal(10, new MongoDbTrackingOptions().MaxRequestDocuments);
+        Assert.EndsWith("{ \"_id\" : 10 }] }\n... (1 more documents not shown)", note);
+    }
+
+    [Fact]
+    public void A_large_binary_in_a_request_is_a_placeholder_at_Detailed_and_whole_at_Raw()
+    {
+        var command = new BsonDocument
+        {
+            { "insert", "fs.chunks" },
+            { "documents", new BsonArray { new BsonDocument { { "_id", 1 }, { "data", new BsonBinaryData(new byte[300]) } } } },
+        };
+
+        Assert.Equal("{ \"documents\" : [{ \"_id\" : 1, \"data\" : \"[binary: 300 bytes, subtype 00]\" }] }", RequestNoteOf(command));
+        Assert.Contains("\"$binary\"", RequestNoteOf(command, verbosity: MongoDbTrackingVerbosity.Raw));
+    }
+
+    [Fact]
+    public void LogFilterText_off_leaves_no_request_note()
+    {
+        Assert.Null(RequestNoteOf(new BsonDocument { { "find", "loans" }, { "filter", new BsonDocument("a", 1) } }, o => o.LogFilterText = false));
+        Assert.Null(RequestNoteOf(new BsonDocument
+        {
+            { "insert", "loans" }, { "documents", new BsonArray { new BsonDocument("_id", 1) } },
+        }, o => o.LogFilterText = false));
+    }
+
+    [Fact]
+    public void An_explain_keeps_the_command_it_explains()
+    {
+        var note = RequestNoteOf(WithDriverFields(new BsonDocument
+        {
+            { "explain", new BsonDocument { { "find", "loans" }, { "filter", new BsonDocument("a", 1) } } },
+            { "verbosity", "queryPlanner" },
+        }));
+
+        Assert.Equal("{ \"explain\" : { \"find\" : \"loans\", \"filter\" : { \"a\" : 1 } }, \"verbosity\" : \"queryPlanner\" }", note);
+    }
+
+    [Fact]
+    public void A_raw_request_is_the_whole_command_in_relaxed_json()
+    {
+        // The driver's ToString() writes 0.1 as 0.10000000000000001 on 3.x, and the shell's syntax on 2.x.
+        var note = RequestNoteOf(new BsonDocument
+        {
+            { "find", "loans" }, { "filter", new BsonDocument("rate", 0.1) }, { "$db", "app" },
+        }, verbosity: MongoDbTrackingVerbosity.Raw);
+
+        Assert.Equal("{ \"find\" : \"loans\", \"filter\" : { \"rate\" : 0.1 }, \"$db\" : \"app\" }", note);
+    }
+
+    [Fact]
+    public void A_raw_label_writes_its_filter_in_the_same_json()
+    {
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions(MongoDbTrackingVerbosity.Raw));
+
+        subscriber.OnCommandStarted(MakeStartedEvent("find", new BsonDocument
+        {
+            { "find", "loans" }, { "filter", new BsonDocument("rate", 0.1) },
+        }, db: "app"));
+
+        var request = GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Request);
+        Assert.Equal("Find app.loans filter={ \"rate\" : 0.1 }", request.Method.Value?.ToString());
+    }
+
+    [Fact]
+    public void A_client_bulkWrite_is_drawn_against_its_namespace()
+    {
+        // Driver 3.x on server 8.0 sends a client-level bulkWrite to admin; nsInfo names the collection it writes.
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
+
+        subscriber.OnCommandStarted(MakeStartedEvent("bulkWrite", new BsonDocument
+        {
+            { "bulkWrite", 1 }, { "errorsOnly", true }, { "ordered", true },
+            { "ops", new BsonArray { new BsonDocument { { "insert", 0 }, { "document", new BsonDocument("_id", 1) } } } },
+            { "nsInfo", new BsonArray { new BsonDocument("ns", "app.loans") } },
+            { "$db", "admin" },
+        }, db: "admin"));
+
+        var request = GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Request);
+        Assert.Equal("mongodb:///app/loans", request.Uri.ToString());
+        Assert.Equal(
+            "{ \"errorsOnly\" : true, \"ops\" : [{ \"insert\" : 0, \"document\" : { \"_id\" : 1 } }], \"nsInfo\" : [{ \"ns\" : \"app.loans\" }] }",
+            request.Content);
+    }
+
+    [Fact]
+    public void A_client_bulkWrite_over_two_namespaces_stays_against_admin()
+    {
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
+
+        subscriber.OnCommandStarted(MakeStartedEvent("bulkWrite", new BsonDocument
+        {
+            { "bulkWrite", 1 },
+            { "ops", new BsonArray { new BsonDocument { { "insert", 0 }, { "document", new BsonDocument("_id", 1) } } } },
+            { "nsInfo", new BsonArray { new BsonDocument("ns", "app.loans"), new BsonDocument("ns", "app.audit") } },
+        }, db: "admin"));
+
+        var request = GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Request);
+        Assert.Equal("mongodb:///admin", request.Uri.ToString().TrimEnd('/'));
+    }
+
+    [Fact]
+    public void Two_updates_with_different_filters_have_different_shapes()
+    {
+        // The history's fingerprint reads a statement-shaped call's templated head (#168 F9): an update's filter tells
+        // one from another, and its values are data.
+        string ShapeOf(BsonDocument q, string status)
+        {
+            RequestNoteOf(new BsonDocument
+            {
+                { "update", "loans" },
+                { "updates", new BsonArray { new BsonDocument { { "q", q }, { "u", new BsonDocument("$set", new BsonDocument("status", status)) } } } },
+            });
+            return InteractionShape.Calls([GetLogsFromThisTest().Last(l => l.Type == RequestResponseType.Request)]).Single().Uri;
+        }
+
+        var byStatus = ShapeOf(new BsonDocument("status", "Ready"), "claimed");
+        var byOwner = ShapeOf(new BsonDocument("owner", "ann"), "claimed");
+        var byStatusAgain = ShapeOf(new BsonDocument("status", "Draft"), "closed");
+
+        Assert.NotEqual(byStatus, byOwner);
+        Assert.Equal(byStatus, byStatusAgain);
+    }
+
+    [Fact]
+    public void MongoDbResponseSummary_says_it_is_obsolete()
+    {
+        // Kronikol's captures stopped calling it at 4.19.6; R2 marks it, and 5.0 removes it (plan Q14).
+        foreach (var name in new[] { "ExtractMetadata", "ExtractDetailed" })
+            Assert.Single(typeof(MongoDbResponseSummary).GetMethod(name)!.GetCustomAttributes(typeof(ObsoleteAttribute), false));
     }
 }

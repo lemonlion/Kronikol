@@ -643,7 +643,10 @@ public class TcpTapTests
             CallerName = "caller",
             TrackGetMore = true,
             MaxResponseDocuments = 3,
+            MaxRequestDocuments = 4,
             LogFilterText = false,
+            LogResponseContent = false,
+            DocumentRedaction = text => text,
             Verbosity = TapVerbosity.Raw,
         };
         source.ExcludedCommands.Clear();
@@ -657,7 +660,10 @@ public class TcpTapTests
         Assert.Equal("caller", target.CallerName);
         Assert.True(target.TrackGetMore);
         Assert.Equal(3, target.MaxResponseDocuments);
+        Assert.Equal(4, target.MaxRequestDocuments);
         Assert.False(target.LogFilterText);
+        Assert.False(target.LogResponseContent);
+        Assert.Same(source.DocumentRedaction, target.DocumentRedaction);
         Assert.Equal(TapVerbosity.Raw, target.Verbosity);
         Assert.Equal(["only"], target.ExcludedCommands.ToArray());
     }

@@ -294,8 +294,9 @@ public class InteractionShapeTests
     public void The_shape_rule_has_a_version_a_run_records()
     {
         // Fingerprints are only comparable when the same rule made them; the version rides on the run line so
-        // the analyzer can tell, and it moves when the rule does.
-        Assert.Equal(4, InteractionShape.Version);
+        // the analyzer can tell, and it moves when the rule does. 5: a MongoDB request note became the command without
+        // the driver's fields (#168 R2), so every MongoDB call's statement head moved.
+        Assert.Equal(5, InteractionShape.Version);
     }
 
     [Fact]

@@ -38,7 +38,7 @@ public sealed class MongoTapOptions : TcpTapOptions
     /// <summary>Whether cursor continuations (<c>getMore</c>) are recorded. Default false — they add noise, as in the in-process extension.</summary>
     public bool TrackGetMore { get; set; }
 
-    /// <summary>Whether the command's <c>filter</c> is included as the request note at <see cref="TapVerbosity.Detailed"/>. Default true.</summary>
+    /// <summary>Whether the request note is recorded at <see cref="TapVerbosity.Detailed"/>: the command without its name and the driver's own fields, as relaxed extended JSON (an insert's documents included). Default true.</summary>
     public bool LogFilterText { get; set; } = true;
 
     /// <summary>
@@ -53,6 +53,13 @@ public sealed class MongoTapOptions : TcpTapOptions
     /// <c>... (N more documents not shown)</c>. Default 10.
     /// </summary>
     public int MaxResponseDocuments { get; set; } = 10;
+
+    /// <summary>
+    /// The most documents or statements a request note keeps (an insert's <c>documents</c>, an update's
+    /// <c>updates</c>, a delete's <c>deletes</c>, a client bulkWrite's <c>ops</c>); a note that left some out ends with
+    /// <c>... (N more documents not shown)</c>, or <c>... (N more)</c> for statements. Default 10.
+    /// </summary>
+    public int MaxRequestDocuments { get; set; } = 10;
 
     /// <summary>Optional hook applied to every command and reply document text before it is recorded (filters, documents, reply batches).</summary>
     public Func<string, string>? DocumentRedaction { get; set; }
@@ -69,6 +76,7 @@ public sealed class MongoTapOptions : TcpTapOptions
         mongo.LogFilterText = LogFilterText;
         mongo.LogResponseContent = LogResponseContent;
         mongo.MaxResponseDocuments = MaxResponseDocuments;
+        mongo.MaxRequestDocuments = MaxRequestDocuments;
         mongo.DocumentRedaction = DocumentRedaction;
     }
 }

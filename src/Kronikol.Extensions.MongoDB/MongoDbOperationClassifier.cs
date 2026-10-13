@@ -48,6 +48,9 @@ public static class MongoDbOperationClassifier
         };
 
         var collectionName = ExtractCollectionName(commandName, command);
+        // A client-level bulkWrite runs against admin; its nsInfo names what it writes, and one namespace is drawn as itself.
+        if (operation == MongoDbOperation.BulkWrite && SingleNamespace(command) is { } written)
+            (databaseName, collectionName) = written;
         var filterText = ExtractFilter(command);
         var documentCount = ExtractDocumentCount(operation, command);
         var documentId = ExtractDocumentId(operation, command);
@@ -149,12 +152,24 @@ public static class MongoDbOperationClassifier
         return null;
     }
 
+    /// <summary>The database and collection a client-level bulkWrite's <c>nsInfo</c> names, when it names one namespace.</summary>
+    private static (string Database, string Collection)? SingleNamespace(BsonDocument? command)
+    {
+        if (command is null || !command.TryGetValue("nsInfo", out var nsInfo) || nsInfo is not BsonArray { Count: 1 } entries
+            || entries[0] is not BsonDocument entry || !entry.TryGetValue("ns", out var ns) || !ns.IsString)
+            return null;
+        var text = ns.AsString;
+        var dot = text.IndexOf('.');
+        return dot > 0 && dot < text.Length - 1 ? (text[..dot], text[(dot + 1)..]) : null;
+    }
+
     private static string? ExtractFilter(BsonDocument? command)
     {
         if (command is null) return null;
 
+        // Written by MongoJson, as the notes are, so a Raw label's filter=… is the same JSON on every driver and host.
         return command.TryGetValue("filter", out var filter)
-            ? filter.ToString()!
+            ? MongoJson.Write(filter)
             : null;
     }
 

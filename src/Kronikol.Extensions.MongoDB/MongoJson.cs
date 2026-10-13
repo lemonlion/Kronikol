@@ -23,7 +23,7 @@ namespace Kronikol.Extensions.MongoDB;
 /// <para>The spacing is the driver's because users' capture-time redaction patterns match a note's text, and they were
 /// written against the driver's. Strings are escaped as MongoDB.Bson 3.x escapes them. Where it departs from the
 /// driver: a double is the shortest text that reads back as the same double, with <c>.0</c> added when it has no
-/// fraction or exponent (the driver writes 17 significant digits, and -0.0 as 0.0); a 16-byte binary of subtype 4 is
+/// fraction or exponent (the driver writes 17 significant digits); a 16-byte binary of subtype 4 is
 /// <c>{ "$uuid" : "…" }</c>, so a GUID can be found by its text; and, where the caller asks, a binary over
 /// <see cref="MaxInlineBinaryBytes"/> bytes is a placeholder.</para>
 /// <para>It never throws for a value it does not know: it writes <c>"[unreadable BSON: …]"</c>. Reading a document the
