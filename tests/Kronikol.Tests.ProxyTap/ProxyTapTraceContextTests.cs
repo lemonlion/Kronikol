@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Kronikol.Constants;
 using Kronikol.Extensions.ProxyTap;
 using Kronikol.InternalFlow;
+using Kronikol.Reports;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.ProxyTap;
@@ -29,15 +30,19 @@ public class ProxyTapTraceContextTests
 
     private static string NewSpan() => ActivitySpanId.CreateRandom().ToString();
 
+    private sealed record TapRun(
+        List<string?> Forwarded, List<RequestResponseLog> Logs, IReadOnlyList<DiagnosticEntry> Diagnostics, List<string> LogLines);
+
     /// <summary>
-    /// Sends one request per entry through a fresh tap (a null entry sends no <c>traceparent</c>), each naming test
-    /// <c>t</c> by header, and returns the <c>traceparent</c> the upstream received for each and the tap's records.
+    /// Sends the requests in order through a fresh tap, each with its <c>traceparent</c> (none when null) and headers,
+    /// and returns the <c>traceparent</c> the upstream received for each, the tap's records, its diagnostics and its log.
     /// </summary>
-    private static async Task<(List<string?> Forwarded, List<RequestResponseLog> Logs)> SendAsync(
-        Action<ProxyTapOptions>? configure, params string?[] traceparents)
+    private static async Task<TapRun> RunAsync(
+        Action<ProxyTapOptions>? configure, params (string? Traceparent, (string Name, string Value)[] Headers)[] requests)
     {
         await using var upstream = new StubUpstream(Ok);
         var sink = new ListSink();
+        var lines = new List<string>();
         var options = new ProxyTapOptions
         {
             ListenPort = StubUpstream.FreePort(),
@@ -45,25 +50,47 @@ public class ProxyTapTraceContextTests
             CallerName = "web",
             ServiceName = "api",
             Sink = sink,
+            Log = line => { lock (lines) lines.Add(line); },
         };
         configure?.Invoke(options);
-        await using (var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(options))
+        var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(options);
+        try
         {
             await tap.StartAsync();
             using var client = new HttpClient();
-            foreach (var traceparent in traceparents)
+            foreach (var (traceparent, headers) in requests)
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(tap.ListenUri, "/i"));
-                request.Headers.TryAddWithoutValidation(TestTrackingHttpHeaders.CurrentTestIdHeader, "t");
+                foreach (var (name, value) in headers)
+                    request.Headers.TryAddWithoutValidation(name, value);
                 if (traceparent is not null)
                     request.Headers.TryAddWithoutValidation("traceparent", traceparent);
                 using var response = await client.SendAsync(request);
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             }
         }
+        finally
+        {
+            // Disposing waits for the handlers still recording, so the counters behind Diagnostics() have settled.
+            await tap.DisposeAsync();
+        }
+
+        var diagnostics = tap.Diagnostics();
 
         lock (upstream.Seen)
-            return (upstream.Seen.Select(s => s.Headers.TryGetValue("traceparent", out var v) ? v : null).ToList(), sink.Logs.ToList());
+        lock (lines)
+            return new TapRun(
+                upstream.Seen.Select(s => s.Headers.TryGetValue("traceparent", out var v) ? v : null).ToList(),
+                sink.Logs.ToList(), diagnostics, lines.ToList());
+    }
+
+    /// <summary>One request per entry (a null entry sends no <c>traceparent</c>), each naming test <c>t</c> by header.</summary>
+    private static async Task<(List<string?> Forwarded, List<RequestResponseLog> Logs)> SendAsync(
+        Action<ProxyTapOptions>? configure, params string?[] traceparents)
+    {
+        var run = await RunAsync(configure,
+            traceparents.Select(t => (t, new[] { (TestTrackingHttpHeaders.CurrentTestIdHeader, "t") })).ToArray());
+        return (run.Forwarded, run.Logs);
     }
 
     /// <summary>Listens to the tap's source only, with the given sampler, and keeps the spans it stops.</summary>
@@ -215,5 +242,277 @@ public class ProxyTapTraceContextTests
         Assert.Equal(trace, first.Groups["trace"].Value);
         Assert.Equal("01", first.Groups["flags"].Value);
         Assert.Equal("01", Parse(forwarded[1]).Groups["flags"].Value);
+    }
+
+    // ---- R1: TraceIdFromIdentity -------------------------------------------------------------------------
+
+    private const string TestId = "4bf92f3577b34da6a3ce929d0e0e4736";
+
+    private static readonly (string, string)[] NoHeaders = [];
+
+    private static void FromIdentity(ProxyTapOptions options)
+    {
+        options.TraceIdFromIdentity = true;
+        options.IdentityResolver = (_, _) => ("places an order", TestId);
+    }
+
+    private static string TraceOf(string? forwarded) => Parse(forwarded).Groups["trace"].Value;
+
+    [Fact]
+    public async Task With_TraceIdFromIdentity_a_resolved_test_id_becomes_the_forwarded_trace()
+    {
+        var run = await RunAsync(FromIdentity, (null, NoHeaders), (null, NoHeaders));
+
+        var first = Parse(run.Forwarded[0]);
+        var second = Parse(run.Forwarded[1]);
+        Assert.Equal(TestId, first.Groups["trace"].Value);
+        Assert.Equal(TestId, second.Groups["trace"].Value);
+        Assert.Equal("01", first.Groups["flags"].Value);
+        Assert.NotEqual(first.Groups["span"].Value, second.Groups["span"].Value);
+        Assert.All(run.Logs, l => Assert.Equal((TestId, TestId), (l.TestId, l.ActivityTraceId)));
+        Assert.Contains(run.Logs, l => l.ActivitySpanId == first.Groups["span"].Value);
+        Assert.Contains(run.Logs, l => l.ActivitySpanId == second.Groups["span"].Value);
+        Assert.Empty(run.Diagnostics);
+    }
+
+    [Fact]
+    public async Task With_a_listener_the_server_span_is_a_root_of_the_test_trace()
+    {
+        using var listener = new TapListener((ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded);
+
+        var run = await RunAsync(FromIdentity, (null, NoHeaders));
+
+        var header = Parse(run.Forwarded.Single());
+        var client = listener.Stopped.Single(a => a.SpanId.ToString() == header.Groups["span"].Value);
+        var server = listener.Stopped.Single(a => a.Kind == ActivityKind.Server && a.SpanId == client.ParentSpanId);
+        Assert.Equal(TestId, server.TraceId.ToString());
+        Assert.Equal(default, server.ParentSpanId);
+        Assert.True(server.HasRemoteParent);
+        Assert.Null(server.Parent);
+        Assert.Equal(TestId, client.TraceId.ToString());
+        Assert.Same(server, client.Parent);
+        Assert.Equal(TestId, header.Groups["trace"].Value);
+        Assert.Equal("01", header.Groups["flags"].Value);
+        Assert.All(run.Logs, l => Assert.Equal((TestId, client.SpanId.ToString()), (l.ActivityTraceId, l.ActivitySpanId)));
+    }
+
+    [Fact]
+    public async Task With_an_AllData_listener_the_test_trace_is_forwarded_sampled()
+    {
+        using var listener = new InternalFlowActivityListener();
+
+        var run = await RunAsync(FromIdentity, (null, NoHeaders));
+
+        var header = Parse(run.Forwarded.Single());
+        Assert.Equal(TestId, header.Groups["trace"].Value);
+        Assert.Equal("01", header.Groups["flags"].Value);
+        Assert.All(run.Logs, l => Assert.Equal((TestId, header.Groups["span"].Value), (l.ActivityTraceId, l.ActivitySpanId)));
+    }
+
+    [Fact]
+    public async Task The_test_trace_survives_a_sampler_that_drops_the_server_span()
+    {
+        using var listener = new TapListener((ref ActivityCreationOptions<ActivityContext> o) =>
+            o.Kind == ActivityKind.Server ? ActivitySamplingResult.None : ActivitySamplingResult.AllDataAndRecorded);
+
+        var run = await RunAsync(FromIdentity, (null, NoHeaders));
+
+        var header = Parse(run.Forwarded.Single());
+        Assert.Equal(TestId, header.Groups["trace"].Value);
+        var client = listener.Stopped.Single(a => a.SpanId.ToString() == header.Groups["span"].Value);
+        Assert.Equal(TestId, client.TraceId.ToString());
+        Assert.Equal(default, client.ParentSpanId);
+    }
+
+    [Fact]
+    public async Task Under_a_listener_that_only_propagates_the_test_trace_is_forwarded()
+    {
+        // The SDK's shape for a trace it drops, as under AlwaysOff: the server span exists unrecorded, no client span.
+        using var listener = new TapListener((ref ActivityCreationOptions<ActivityContext> o) =>
+            o.Parent == default || o.Parent.IsRemote ? ActivitySamplingResult.PropagationData : ActivitySamplingResult.None);
+
+        var run = await RunAsync(FromIdentity, (null, NoHeaders));
+
+        var header = Parse(run.Forwarded.Single());
+        Assert.Equal(TestId, header.Groups["trace"].Value);
+        Assert.Equal("01", header.Groups["flags"].Value);
+        Assert.All(run.Logs, l => Assert.Equal((TestId, header.Groups["span"].Value), (l.ActivityTraceId, l.ActivitySpanId)));
+    }
+
+    [Fact]
+    public async Task An_inbound_traceparent_keeps_its_trace_with_TraceIdFromIdentity_on()
+    {
+        var inbound = $"00-{NewTrace()}-{NewSpan()}-01";
+
+        var run = await RunAsync(FromIdentity, (inbound, NoHeaders));
+
+        Assert.Equal(inbound, run.Forwarded.Single());
+        Assert.Empty(run.Diagnostics);
+
+        // Nor is such a request counted: the option does not apply to a request that brings a trace, whatever its id.
+        var guid = await RunAsync(o => { o.TraceIdFromIdentity = true; o.IdentityResolver = (_, _) => ("places an order", Guid.NewGuid().ToString()); },
+            (inbound, NoHeaders));
+        Assert.Equal(inbound, guid.Forwarded.Single());
+        Assert.Empty(guid.Diagnostics);
+    }
+
+    [Fact]
+    public async Task The_server_span_is_a_root_of_the_test_trace_when_the_tap_started_under_an_activity()
+    {
+        // A tap started inside a test or a fixture under an activity hands that activity to every request it handles
+        // as Activity.Current, since its accept loop runs in the context it was started in. The test's trace is still
+        // a root of its own, not a child of whatever was current at start-up.
+        using var listener = new TapListener((ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded);
+        await using var upstream = new StubUpstream(Ok);
+        var options = new ProxyTapOptions
+        {
+            ListenPort = StubUpstream.FreePort(), ForwardBaseUri = upstream.BaseUri, CallerName = "web", ServiceName = "api", Sink = new ListSink(),
+        };
+        FromIdentity(options);
+        await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(options);
+        var ambient = new Activity("ambient").Start();
+        try
+        {
+            await tap.StartAsync();
+        }
+        finally
+        {
+            ambient.Stop();
+            Activity.Current = null;
+        }
+
+        using (var client = new HttpClient())
+        using (var response = await client.GetAsync(new Uri(tap.ListenUri, "/i")))
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        string forwarded;
+        lock (upstream.Seen)
+            forwarded = upstream.Seen.Single().Headers["traceparent"];
+        var header = Parse(forwarded);
+        Assert.Equal(TestId, header.Groups["trace"].Value);
+        var forward = listener.Stopped.Single(a => a.SpanId.ToString() == header.Groups["span"].Value);
+        var server = listener.Stopped.Single(a => a.Kind == ActivityKind.Server && a.SpanId == forward.ParentSpanId);
+        Assert.Equal(TestId, server.TraceId.ToString());
+        Assert.Equal(default, server.ParentSpanId);
+        Assert.Null(server.Parent);
+    }
+
+    [Fact]
+    public async Task The_test_id_header_and_its_fallback_headers_mint_the_trace_too()
+    {
+        var run = await RunAsync(o => { o.TraceIdFromIdentity = true; o.TestIdHeaderFallbacks.Add("x-scenario-id"); },
+            (null, [(TestTrackingHttpHeaders.CurrentTestIdHeader, TestId)]),
+            (null, [("x-scenario-id", TestId)]));
+
+        Assert.Equal([TestId, TestId], run.Forwarded.Select(TraceOf));
+    }
+
+    [Fact]
+    public async Task Unattributed_requests_keep_a_random_trace()
+    {
+        // A FallbackTestId shaped like a trace id, and the fresh per-request id (Guid "N", shaped like one too).
+        var fixedId = await RunAsync(o => { o.TraceIdFromIdentity = true; o.CaptureUnattributedRequests = true; o.FallbackTestId = TestId; },
+            (null, NoHeaders), (null, NoHeaders));
+        var freshIds = await RunAsync(o => { o.TraceIdFromIdentity = true; o.CaptureUnattributedRequests = true; },
+            (null, NoHeaders), (null, NoHeaders));
+
+        foreach (var run in new[] { fixedId, freshIds })
+        {
+            var traces = run.Forwarded.Select(TraceOf).ToArray();
+            Assert.DoesNotContain(TestId, traces);
+            Assert.NotEqual(traces[0], traces[1]);
+            Assert.NotEmpty(run.Logs);
+            Assert.All(run.Logs, l => Assert.NotEqual(l.TestId, l.ActivityTraceId));
+            Assert.DoesNotContain(run.Diagnostics, d => d.Kind == DiagnosticKind.OptionNotApplied);
+        }
+    }
+
+    [Fact]
+    public async Task An_ignored_request_keeps_a_random_trace()
+    {
+        var run = await RunAsync(FromIdentity, (null, [(TestTrackingHttpHeaders.Ignore, "true")]));
+
+        Assert.NotEqual(TestId, TraceOf(run.Forwarded.Single()));
+    }
+
+    [Theory]
+    [InlineData("4BF92F3577B34DA6A3CE929D0E0E4736")]
+    [InlineData("4bf92f35-77b3-4da6-a3ce-929d0e0e4736")]
+    [InlineData("0-1001")]
+    [InlineData("00000000000000000000000000000000")]
+    [InlineData("4bf92f3577b34da6a3ce929d0e0e473")]
+    [InlineData("4bf92f3577b34da6a3ce929d0e0e47360")]
+    [InlineData("4bf92f3577b34da6a3ce929d0e0e473g")]
+    public async Task Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted(string id)
+    {
+        var run = await RunAsync(o => { o.TraceIdFromIdentity = true; o.IdentityResolver = (_, _) => ("places an order", id); },
+            (null, NoHeaders), (null, NoHeaders), (null, NoHeaders));
+
+        var traces = run.Forwarded.Select(TraceOf).ToArray();
+        Assert.Equal(3, traces.Distinct().Count());
+        Assert.DoesNotContain(id.Replace("-", "").ToLowerInvariant(), traces);
+        var entry = Assert.Single(run.Diagnostics, d => d.Kind == DiagnosticKind.OptionNotApplied);
+        Assert.Contains("did not apply to 3 request(s)", entry.Message, StringComparison.Ordinal);
+        Assert.Single(run.LogLines, l => l.Contains("TraceIdFromIdentity", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task TraceIdFromIdentity_is_off_by_default_and_changes_nothing_when_off()
+    {
+        Assert.False(new ProxyTapOptions().TraceIdFromIdentity);
+
+        var run = await RunAsync(o => o.IdentityResolver = (_, _) => ("places an order", TestId), (null, NoHeaders));
+
+        Assert.NotEqual(TestId, TraceOf(run.Forwarded.Single()));
+        Assert.Empty(run.Diagnostics);
+    }
+
+    [Fact]
+    public async Task With_SynthesizeTraceparent_off_nothing_is_sent_and_the_records_carry_the_test_trace()
+    {
+        var run = await RunAsync(o => { FromIdentity(o); o.SynthesizeTraceparent = false; }, (null, NoHeaders));
+
+        Assert.Null(run.Forwarded.Single());
+        Assert.NotEmpty(run.Logs);
+        Assert.All(run.Logs, l => Assert.Equal(TestId, l.ActivityTraceId));
+    }
+
+    [Fact]
+    public async Task A_second_tap_behind_a_w3c_only_service_files_the_call_under_the_test()
+    {
+        // The issue's chain in one process: tap A knows the test from its resolver and passes on no test-tracking
+        // headers; the service behind it passes on traceparent alone, as OpenTelemetry's default propagators do; tap B,
+        // in front of the next service, takes the trace id as the test id.
+        await using var downstream = new StubUpstream(Ok);
+        var sinkB = new ListSink();
+        await using var tapB = new Kronikol.Extensions.ProxyTap.ProxyTap(new ProxyTapOptions
+        {
+            ListenPort = StubUpstream.FreePort(), ForwardBaseUri = downstream.BaseUri, CallerName = "api", ServiceName = "rows", Sink = sinkB,
+        });
+        await tapB.StartAsync();
+        using var onward = new HttpClient();
+        await using var service = new StubUpstream((request, _) =>
+        {
+            using var call = new HttpRequestMessage(HttpMethod.Get, new Uri(tapB.ListenUri, "/rows"));
+            if (request.Headers["traceparent"] is { } traceparent)
+                call.Headers.TryAddWithoutValidation("traceparent", traceparent);
+            onward.Send(call).Dispose();
+            return (200, Encoding.UTF8.GetBytes("{}"), "application/json", null, null);
+        });
+        var sinkA = new ListSink();
+        await using (var tapA = new Kronikol.Extensions.ProxyTap.ProxyTap(new ProxyTapOptions
+        {
+            ListenPort = StubUpstream.FreePort(), ForwardBaseUri = service.BaseUri, CallerName = "app", ServiceName = "api", Sink = sinkA,
+            ReinjectCorrelation = false, TraceIdFromIdentity = true, IdentityResolver = (_, _) => ("places an order", TestId),
+        }))
+        {
+            await tapA.StartAsync();
+            using var app = new HttpClient();
+            using var response = await app.GetAsync(new Uri(tapA.ListenUri, "/orders"));
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        Assert.NotEmpty(sinkB.Logs);
+        Assert.All(sinkB.Logs, l => Assert.Equal(TestId, l.TestId));
     }
 }

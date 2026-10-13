@@ -1,0 +1,22 @@
+Mutations for R1 (4.19.0), 2026-10-13, Windows 11, .NET 10.0.11. Each applied alone to the R1 tree, the ProxyTap test
+project rebuilt, and ProxyTapTraceContextTests (or ProxyTapRegistrationTests) run.
+
+R1-1 mint from identity after the fallback, not resolved: CAUGHT [Failed:     1, Passed:    24, Skipped:     0, Total:    25, Duration: 869 ms] by ['Unattributed_requests_keep_a_random_trace']
+R1-2 drop !ignore: CAUGHT [Failed:     1, Passed:    24, Skipped:     0, Total:    25, Duration: 1 s] by ['An_ignored_request_keeps_a_random_trace']
+R1-4 lower-case the id before checking it: CAUGHT [Failed:     1, Passed:    24, Skipped:     0, Total:    25, Duration: 722 ms] by ['Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted']
+R1-5 strip hyphens before checking it: CAUGHT [Failed:     1, Passed:    24, Skipped:     0, Total:    25, Duration: 742 ms] by ['Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted']
+R1-6 random parent span id instead of default: CAUGHT [Failed:     2, Passed:    23, Skipped:     0, Total:    25, Duration: 658 ms] by ['The_test_trace_survives_a_sampler_that_drops_the_server_span', 'With_a_listener_the_server_span_is_a_root_of_the_test_trace']
+R1-7 client back on Activity.Current: CAUGHT [Failed:     3, Passed:    22, Skipped:     0, Total:    25, Duration: 652 ms] by ['A_sampler_that_keeps_only_the_client_span_parents_it_on_the_inbound_trace', 'An_unsampled_inbound_trace_is_forwarded_unchanged_when_the_listener_drops_the_server_span', 'The_test_trace_survives_a_sampler_that_drops_the_server_span']
+R1-8 no counter increment: CAUGHT [Failed:     7, Passed:    18, Skipped:     0, Total:    25, Duration: 587 ms] by ['Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted']
+R1-9 log every request: CAUGHT [Failed:     7, Passed:    18, Skipped:     0, Total:    25, Duration: 568 ms] by ['Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted']
+R1-10 Copy without TraceIdFromIdentity: CAUGHT [Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 408 ms] by ['Registering_taps_from_a_list_copies_every_option']
+R1-11 the synthesised branch ignores identityTrace: CAUGHT [Failed:     4, Passed:    21, Skipped:     0, Total:    25, Duration: 682 ms] by ['A_second_tap_behind_a_w3c_only_service_files_the_call_under_the_test', 'The_test_id_header_and_its_fallback_headers_mint_the_trace_too', 'Under_a_listener_that_only_propagates_the_test_trace_is_forwarded', 'With_TraceIdFromIdentity_a_resolved_test_id_becomes_the_forwarded_trace']
+R1-12 the branch that sends nothing ignores identityTrace: CAUGHT [Failed:     1, Passed:    24, Skipped:     0, Total:    25, Duration: 624 ms] by ['With_SynthesizeTraceparent_off_nothing_is_sent_and_the_records_carry_the_test_trace']
+R1-13 IsTraceId accepts all zeros: CAUGHT [Failed:     1, Passed:    24, Skipped:     0, Total:    25, Duration: 697 ms] by ['Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted']
+R1-14 IsTraceId accepts upper-case hex: CAUGHT [Failed:     1, Passed:    24, Skipped:     0, Total:    25, Duration: 1 s] by ['Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted']
+R1-3 drop inboundTraceparent is null: CAUGHT [Failed:     1, Passed:    25, Skipped:     0, Total:    26, Duration: 594 ms] by ['An_inbound_traceparent_keeps_its_trace_with_TraceIdFromIdentity_on']
+R1-15 no clearing of Activity.Current for the test trace: CAUGHT [Failed:     1, Passed:    25, Skipped:     0, Total:    26, Duration: 566 ms] by ['The_server_span_is_a_root_of_the_test_trace_when_the_tap_started_under_an_activity']
+
+R1-3 survived the first run (a request that brings a traceparent was counted as not applied when its id is not a
+trace id; nothing else changes, since the inbound context wins), and An_inbound_traceparent_keeps_its_trace_... now
+also checks such a request is not counted. R1-15 is the mutation of the fix for the ambient Activity.Current.

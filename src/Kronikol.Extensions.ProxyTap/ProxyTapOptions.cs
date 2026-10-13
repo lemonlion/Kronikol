@@ -82,7 +82,8 @@ public sealed class ProxyTapOptions
     /// <summary>
     /// When the request carries no <c>test-tracking-current-test-id</c>, attribute it to the W3C trace id of
     /// its inbound <c>traceparent</c> (the model browser-driven E2E suites use: the test mints the trace, so
-    /// trace id == test id). Default true.
+    /// trace id == test id). Default true. For a caller that cannot send a trace, <see cref="TraceIdFromIdentity"/>
+    /// keeps that model behind the tap: the tap forwards the test id as the trace id.
     /// </summary>
     public bool IdentityFromTraceparent { get; set; } = true;
 
@@ -94,7 +95,8 @@ public sealed class ProxyTapOptions
 
     /// <summary>
     /// Custom identity resolver. Receives the inbound request headers (multi-valued) and the parsed
-    /// traceparent (or null); return the (name, id) to attribute to, or null to use the built-in rules.
+    /// traceparent (or null); return the (name, id) to attribute to, or null to use the built-in rules. With
+    /// <see cref="TraceIdFromIdentity"/>, the id it returns also becomes the forwarded trace of a request that brings none.
     /// </summary>
     public Func<IReadOnlyDictionary<string, string[]>, TraceParent?, (string Name, string Id)?>? IdentityResolver { get; set; }
 
@@ -148,8 +150,27 @@ public sealed class ProxyTapOptions
     /// </summary>
     public bool EmitActivities { get; set; } = true;
 
-    /// <summary>When the inbound request has no <c>traceparent</c>, synthesise one for the forwarded request (so every hop is traceable). Default true.</summary>
+    /// <summary>
+    /// When the inbound request has no <c>traceparent</c>, synthesise one for the forwarded request (so every hop is
+    /// traceable). Its trace is random, or the test id when <see cref="TraceIdFromIdentity"/> applies. Default true.
+    /// </summary>
     public bool SynthesizeTraceparent { get; set; } = true;
+
+    /// <summary>
+    /// When a request brings no <c>traceparent</c> and the tap resolves its identity (the <see cref="IdentityResolver"/>,
+    /// the <c>test-tracking-current-test-id</c> header or one of <see cref="TestIdHeaderFallbacks"/>), forward it under a
+    /// trace whose id is the test id, so the services behind the tap, and every capturer that attributes by trace id,
+    /// file what they do under the test. This mints for a caller that cannot send a trace (a mobile app, say) what a
+    /// browser test mints for itself. It applies only to a test id that is a W3C trace id as written: 32 lower-case hex
+    /// digits, not all zero, such as <c>Guid.ToString("N")</c>. Any other id keeps a random trace, and
+    /// <see cref="ProxyTap.Diagnostics"/> counts those requests. A request that brings its own <c>traceparent</c> keeps it,
+    /// and an unattributed or ignored request keeps a random trace. With a listener on
+    /// <see cref="ProxyTap.ActivitySource"/> the tap's server span is a root of the test's trace; without one the
+    /// forwarded <c>traceparent</c> is sent when <see cref="SynthesizeTraceparent"/> is on, and the tap's records carry
+    /// the test's trace either way. The trace goes out sampled, and a parent-based sampler on the tap records it whatever
+    /// its ratio, as it records a browser test's. Default false.
+    /// </summary>
+    public bool TraceIdFromIdentity { get; set; }
 
     /// <summary>Optional diagnostic log callback (listener start/stop, forwarding errors).</summary>
     public Action<string>? Log { get; set; }

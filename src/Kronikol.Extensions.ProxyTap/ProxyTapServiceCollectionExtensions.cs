@@ -71,6 +71,7 @@ public static class ProxyTapServiceCollectionExtensions
         to.ConnectTimeout = from.ConnectTimeout;
         to.EmitActivities = from.EmitActivities;
         to.SynthesizeTraceparent = from.SynthesizeTraceparent;
+        to.TraceIdFromIdentity = from.TraceIdFromIdentity;
         to.Log = from.Log;
         to.Name = from.Name;
     }

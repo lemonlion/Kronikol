@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.19.0] - 2026-10-13
+
+**Minor - `ProxyTapOptions.TraceIdFromIdentity`: a tap that knows whose call it is forwards a call that brings no
+trace under the test's trace (#170; `plans/PROXYTAP_TRACE_FROM_IDENTITY_PLAN.md` R1).** Green-lit in full by the owner
+on 2026-10-13, every question in the plan's section 9 as recommended. A new public option, so the minor part moves
+(4.18.3 to 4.19.0), though its default, off, changes nothing.
+
+### Added
+
+- **`ProxyTapOptions.TraceIdFromIdentity`** (default `false`). Kronikol's attribution across processes rests on one
+  rule: the W3C trace id is the test id. A browser test mints its trace that way, so every service behind a tap, and
+  every capturer that attributes by trace id (another tap's `IdentityFromTraceparent`, the OTLP tap's
+  `AttributeByTraceId`), files its work under the test. A caller that cannot send a trace, such as a mobile app behind
+  a tap whose `IdentityResolver` names the test, was forwarded under a new random trace, so its services, database calls
+  and the taps behind it landed in "Traffic outside any test" (#170 counted 56, 70 and 2 such calls in one run). With
+  the option on, a request that brings no `traceparent`, whose identity the tap resolves (the resolver, the
+  `test-tracking-current-test-id` header or one of `TestIdHeaderFallbacks`) and that is not ignored, is forwarded under
+  a trace whose id is the test id. With a listener on `Kronikol.ProxyTap`, the tap's server span is a root of that trace
+  (a default parent span id, so no backend shows a missing parent), whatever activity the tap was started under (its
+  accept loop hands that one to every request as `Activity.Current`, and the tap clears it first); without one, the synthesised `traceparent` names
+  it, and with `SynthesizeTraceparent` off nothing is sent but the tap's records carry it. The trace goes out sampled,
+  so a parent-based sampler records it whatever its ratio, as it records a browser test's.
+- It applies only to a test id that is a W3C trace id as written: 32 lower-case hex digits, not all zero, such as
+  `Guid.ToString("N")` (Playwright's `TestTrackingIdentity.Create(name)` mints one). The readers behind the tap turn a
+  trace id back into a test id by its text and compare test ids ordinally, so an id written any other way would still
+  land outside the test; no adapter's default id is one (ReqNRoll and xUnit 2 mint hyphenated GUIDs, xUnit v3 and NUnit
+  ids are not GUIDs). Those requests keep a random trace, `ProxyTap.Diagnostics()` counts them as `OptionNotApplied`,
+  and the first is logged. A request that brings its own `traceparent` keeps it and is not counted, and an
+  unattributed or ignored request keeps a random trace: the fallback identity is shaped like a trace id, so the rule looks at where the
+  identity came from, not at its shape.
+- Docs: `ProxyTap`'s summary and the doc comments of `IdentityFromTraceparent`, `IdentityResolver` and
+  `SynthesizeTraceparent` point at the option.
+
+### Tests
+
+- `ProxyTapTraceContextTests`: the test id forwarded as the trace with no listener, each call under a span of its own;
+  with a listener the server span a root of the test's trace (default parent span id, a remote parent, no `Parent`);
+  with Kronikol's internal-flow listener the trace forwarded sampled; a sampler that drops the server span, and one
+  that only propagates (the SDK's shape), still forward the test's trace; a tap started under an activity still roots
+  the test's trace; an inbound `traceparent` kept and not counted; the id header
+  and a fallback header mint the trace too; unattributed requests (a trace-shaped `FallbackTestId` and the fresh
+  per-request id) and an ignored request keep a random trace; ids that are not trace ids (upper case, a hyphenated
+  GUID, `0-1001`, 32 zeros, 31 and 33 digits, a non-hex letter) keep a random trace with one `OptionNotApplied` entry
+  counting every request and one log line; off by default and nothing changes off; with `SynthesizeTraceparent` off
+  nothing is sent and the records carry the test's trace; and the issue's chain in one process (a tap with a resolver,
+  a service that passes on `traceparent` alone, a second tap) files the second tap's records under the test.
+- `ProxyTapRegistrationTests` checks the new option survives registration from a list.
+
+Proofs: On 4.18.3's code with the option stubbed (a property nothing reads), 16 of the new facts and theory cases fail, each on its own assertion, and the guards pass (harness r1/red-stub.txt); the fact for a tap started under an activity failed before its fix, with the ambient span's id as the parent; 15 mutations, the 10 planned rows among them, are each caught by the facts named (harness r1/mutations.txt); one, counting a request that brought a traceparent, survived the first run and got a fact.
+
+Checks: after the version bump the core suite passes 7,458 with 2 skipped, the ProxyTap project 59 of 59, and release.slnf builds in Release for every target.
+
+The templates pin 4.18.3 and the history action's `VERSION` installs Kronikol.Tool 4.19.0. The wiki edit
+(`Integration-ProxyTap-Extension`, a new section "A caller that cannot send a trace") and the Kronikol4J ledger line
+(nothing to port: the port has no proxy tap) follow publication.
+
 ## [4.18.3] - 2026-10-13
 
 **Patch - a proxy tap keeps the caller's trace and its sampled flag, a tap registered from a list publishes its

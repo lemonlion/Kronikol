@@ -1,0 +1,55 @@
+Red run for R1 (4.19.0), 2026-10-13: R0's code with ProxyTapOptions.TraceIdFromIdentity added as a property nothing reads,
+and no line for it in Copy. dotnet test tests/Kronikol.Tests.ProxyTap (Windows 11, .NET 10.0.11). The R1 facts that pass are guards
+by design: An_inbound_traceparent_keeps_its_trace_..., Unattributed_requests_keep_a_random_trace,
+An_ignored_request_keeps_a_random_trace and TraceIdFromIdentity_is_off_by_default_... (their mutations are in mutations.txt).
+
+  Failed Kronikol.Tests.ProxyTap.ProxyTapRegistrationTests.Registering_taps_from_a_list_copies_every_option [305 ms]
+   TraceIdFromIdentity was not copied: expected True, got False
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted(id: "4bf92f3577b34da6a3ce929d0e0e473g") [16 ms]
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted(id: "4bf92f35-77b3-4da6-a3ce-929d0e0e4736") [7 ms]
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted(id: "4bf92f3577b34da6a3ce929d0e0e47360") [6 ms]
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted(id: "0-1001") [6 ms]
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted(id: "4bf92f3577b34da6a3ce929d0e0e473") [6 ms]
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted(id: "4BF92F3577B34DA6A3CE929D0E0E4736") [7 ms]
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted(id: "00000000000000000000000000000000") [8 ms]
+   Assert.Single() Failure: The collection did not contain any matching items
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.With_an_AllData_listener_the_test_trace_is_forwarded_sampled [13 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.With_a_listener_the_server_span_is_a_root_of_the_test_trace [6 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.With_TraceIdFromIdentity_a_resolved_test_id_becomes_the_forwarded_trace [6 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.Under_a_listener_that_only_propagates_the_test_trace_is_forwarded [5 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.The_test_trace_survives_a_sampler_that_drops_the_server_span [6 ms]
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.With_SynthesizeTraceparent_off_nothing_is_sent_and_the_records_carry_the_test_trace [12 ms]
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+            Expected: "4bf92f3577b34da6a3ce929d0e0e4736"
+            Actual:   "1af43ea5c6d846dca6d0276f139bdc07"
+            Expected: "4bf92f3577b34da6a3ce929d0e0e4736"
+            Actual:   "1af43ea5c6d846dca6d0276f139bdc07"
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.A_second_tap_behind_a_w3c_only_service_files_the_call_under_the_test [14 ms]
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+            Expected: "4bf92f3577b34da6a3ce929d0e0e4736"
+            Actual:   "6d56c7505cf9bab7cae1b6738489ee0c"
+            Expected: "4bf92f3577b34da6a3ce929d0e0e4736"
+            Actual:   "6d56c7505cf9bab7cae1b6738489ee0c"
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTraceContextTests.The_test_id_header_and_its_fallback_headers_mint_the_trace_too [8 ms]
+   Assert.Equal() Failure: Collections differ at index 0
+Failed!  - Failed:    16, Passed:    42, Skipped:     0, Total:    58, Duration: 9 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+
+Found while implementing R1 (not in the plan): a tap started under an activity hands it to every request as
+Activity.Current (its accept loop is Task.Run from StartAsync), and a parent context with no span id adopts it, so
+the test's trace hung off whatever was current at start-up. The fact, before the fix (the rest of R1 in place):
+  Failed The_server_span_is_a_root_of_the_test_trace_when_the_tap_started_under_an_activity
+   Assert.Equal() Failure: Values differ
+   Expected: 0000000000000000
+   Actual:   99166a7c26418d5b      (the ambient activity's span id; the trace id was the test's)
+Fixed by clearing Activity.Current before the spans start under a parent with no span id.

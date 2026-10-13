@@ -708,6 +708,21 @@ The owner took every recommendation below on 2026-10-13 ("implement the plan in 
   - Kronikol4J ported the rule and its facts (it has no #87 rule, so a trace of several tests keeps its older
     behaviour there; the ledger says so).
 
+- **2026-10-13, 4.18.3 published.** Release run 38410055097, CI 38410050086, CodeQL 38410050189 and CI Summary Preview
+  38410050233 passed on `c560c00a`, and nuget.org listed all 62 ids. The wiki has R0's edits (`0932972`), and
+  Kronikol4J the port of F4 with its facts (`1e10c71` to `efcee94`) and its ledger line (`08631cd`).
+- **2026-10-13, R1 built (4.19.0).** The option as designed (sections 4.1 to 4.3), with these differences, each with
+  its fact:
+  - Found while building it: a tap started under an activity hands that activity to every request it handles, as
+    `Activity.Current` (its accept loop is started with `Task.Run` from `StartAsync`), and a parent context with no
+    span id adopts it, so the server span kept the test's trace id but hung off whatever was current at start-up (RUN:
+    `ParentSpanId` was the ambient span's). The tap clears `Activity.Current` before its spans start under a parent
+    with no span id, inside `HandleAsync`, whose change does not reach its caller.
+  - A request that brings its own `traceparent` was counted as not applied when its test id is not a trace id (mutation
+    R1-3 survived the first run); it is not counted, and the inbound fact checks it.
+  - The facts read `Diagnostics()` after the tap is disposed, since its counters settle only after the response.
+  - Mutations (harness `r1/mutations.txt`): 15 of 15 caught, the 10 planned rows among them.
+
 ## Appendix A. Edit sites at `34145c44` (4.18.1)
 
 | File | Lines | Change | Release |

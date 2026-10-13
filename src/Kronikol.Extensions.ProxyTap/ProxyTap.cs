@@ -14,7 +14,9 @@ namespace Kronikol.Extensions.ProxyTap;
 /// request byte-for-byte to a real service, and records a copy of the exchange as a Kronikol
 /// request/response pair attributed to the running test. Nothing inside the services needs to change —
 /// the browser/test fixture stamps the <c>test-tracking-*</c> headers (or a W3C <c>traceparent</c>), the
-/// identity rides the real request through the services, and the tap on each hop is the sink.
+/// identity rides the real request through the services, and the tap on each hop is the sink. For a caller that
+/// can do neither (a mobile app), the host names the test through <see cref="ProxyTapOptions.IdentityResolver"/>,
+/// and <see cref="ProxyTapOptions.TraceIdFromIdentity"/> forwards the test id as the trace id.
 /// </summary>
 /// <remarks>
 /// <para>Modelled on <see cref="TestTrackingMessageHandler"/> (which fields it fills) and
@@ -50,6 +52,7 @@ public sealed class ProxyTap : IAsyncDisposable
     private long _handled;
     private long _captured;
     private long _forwardFailures;
+    private long _traceIdNotApplied;
 
     /// <summary>Creates a tap for the given options (validated on <see cref="StartAsync"/>).</summary>
     public ProxyTap(ProxyTapOptions options)
@@ -97,6 +100,11 @@ public sealed class ProxyTap : IAsyncDisposable
         if (uncaptured > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
                 string.Create(CultureInfo.InvariantCulture, $"{name}: {uncaptured:N0} of {handled:N0} forwarded request(s) carried no test identity and were not captured (no test-tracking headers or traceparent reached this hop; CaptureUnattributedRequests is off)")));
+
+        var notApplied = Interlocked.Read(ref _traceIdNotApplied);
+        if (notApplied > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.OptionNotApplied,
+                string.Create(CultureInfo.InvariantCulture, $"{name}: TraceIdFromIdentity did not apply to {notApplied:N0} request(s), because their test id is not a W3C trace id (32 lower-case hex digits); they were forwarded under a random trace, so the services behind this tap cannot be matched to the test")));
 
         return entries;
     }
@@ -188,6 +196,7 @@ public sealed class ProxyTap : IAsyncDisposable
 
         // ---- identity --------------------------------------------------------------------------
         var identity = ResolveIdentity(requestHeaders, inboundTraceparent);
+        var resolved = identity; // what the request named, before the fallback below: only that may name a trace
         var ignore = requestHeaders.ContainsKey(TestTrackingHttpHeaders.Ignore);
         var capture = identity is not null || _options.CaptureUnattributedRequests;
         identity ??= capture ? (_options.FallbackTestName, _options.FallbackTestId ?? Guid.NewGuid().ToString("N")) : null;
@@ -205,15 +214,27 @@ public sealed class ProxyTap : IAsyncDisposable
         var requestResponseId = Guid.NewGuid();
 
         // ---- spans + traceparent ----------------------------------------------------------------
+        // With TraceIdFromIdentity, a request that brings no trace and names a test (and is not ignored) is forwarded
+        // under the test id, as a browser test's requests arrive; an id that is not a trace id as written is counted.
+        var identityTrace = _options.TraceIdFromIdentity && inboundTraceparent is null && !ignore && resolved is { } named
+            ? IsTraceId(named.Id) ? named.Id : NotApplied()
+            : null;
         Activity? server = null;
         Activity? client = null;
         if (_options.EmitActivities)
         {
-            // One parent for both spans: the caller's trace when it sent one. A default context leaves the server span
-            // to Activity.Current, as StartActivity without a parent does.
+            // One parent for both spans: the caller's trace when it sent one, else the test's. The test's has a default
+            // span id, so the server span is a root of the test's trace rather than the child of a span no one exports.
+            // A default context leaves the server span to Activity.Current, as StartActivity without a parent does.
             var parent = inboundTraceparent is not null && ActivityContext.TryParse(inboundTraceparent.ToString(), null, isRemote: true, out var inboundContext)
                 ? inboundContext
-                : default;
+                : identityTrace is { } testTrace
+                    ? new ActivityContext(ActivityTraceId.CreateFromString(testTrace), default, ActivityTraceFlags.Recorded, isRemote: true)
+                    : default;
+            // A parent with no span id adopts Activity.Current, here whatever the tap was started under (its accept loop
+            // runs in that context), so the test's trace would hang off it. It starts here, as a root.
+            if (parent != default && parent.SpanId == default)
+                Activity.Current = null;
             server = ActivitySource.StartActivity($"tap {_options.DisplayName}", ActivityKind.Server, parent);
             server?.SetTag("kronikol.caller", _options.CallerName);
             server?.SetTag("kronikol.service", _options.ServiceName);
@@ -254,13 +275,14 @@ public sealed class ProxyTap : IAsyncDisposable
         }
         else if (_options.SynthesizeTraceparent)
         {
-            activityTraceId = ActivityTraceId.CreateRandom().ToString();
+            activityTraceId = identityTrace ?? ActivityTraceId.CreateRandom().ToString();
             activitySpanId = ActivitySpanId.CreateRandom().ToString();
             forwardedTraceparent = TraceParent.Format(activityTraceId, activitySpanId);
         }
         else
         {
-            activityTraceId = ActivityTraceId.CreateRandom().ToString();
+            // Nothing is sent, but the records belong to the test's trace when TraceIdFromIdentity applies.
+            activityTraceId = identityTrace ?? ActivityTraceId.CreateRandom().ToString();
             activitySpanId = ActivitySpanId.CreateRandom().ToString();
             forwardedTraceparent = null;
         }
@@ -330,6 +352,34 @@ public sealed class ProxyTap : IAsyncDisposable
     }
 
     // ------------------------------------------------------------------ identity
+
+    /// <summary>
+    /// Whether <paramref name="id"/> is a W3C trace id as written: 32 lower-case hex digits, not all zero, which is
+    /// what <see cref="ActivityTraceId.CreateFromString(ReadOnlySpan{char})"/> takes and what every reader behind the
+    /// tap turns back into the same test id.
+    /// </summary>
+    internal static bool IsTraceId(string id)
+    {
+        if (id.Length != 32)
+            return false;
+        var nonZero = false;
+        foreach (var c in id)
+        {
+            if (c is not ((>= '0' and <= '9') or (>= 'a' and <= 'f')))
+                return false;
+            nonZero |= c != '0';
+        }
+
+        return nonZero;
+    }
+
+    /// <summary>Counts a request <see cref="ProxyTapOptions.TraceIdFromIdentity"/> could not apply to, logs the first, and returns null.</summary>
+    private string? NotApplied()
+    {
+        if (Interlocked.Increment(ref _traceIdNotApplied) == 1)
+            _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap: TraceIdFromIdentity did not apply, because the test id is not a W3C trace id (32 lower-case hex digits); the request was forwarded under a random trace. Diagnostics() counts every such request.");
+        return null;
+    }
 
     internal (string Name, string Id)? ResolveIdentity(IReadOnlyDictionary<string, string[]> headers, TraceParent? traceparent)
     {

@@ -1,0 +1,8 @@
+Checks for R1 (4.19.0), 2026-10-13, Windows 11, .NET 10.0.11, on the release tree after the version bump.
+
+dotnet test tests/Kronikol.Tests                 Passed!  - Failed: 0, Passed: 7458, Skipped: 2, Total: 7460
+dotnet test tests/Kronikol.Tests.ProxyTap        Passed!  - Failed: 0, Passed: 59, Skipped: 0, Total: 59
+dotnet build release.slnf -c Release             Build succeeded (every target)
+
+The ProxyTap facts ran three times in a row before the release (58 of 58 each, before the ambient-activity fact).
+R1 changes no report output, so the Playwright suite is not rerun (it passed 1,036 with 28 skipped on 4.18.3).
