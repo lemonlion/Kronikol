@@ -1,0 +1,15 @@
+InternalFlowSegmentBuilder.BuildSegments on one test whose calls share one trace: N calls of the test under one ambient
+span, each with a downstream call under its own request span and 10 spans of work (bench-f4.cs, arguments N 10; the
+published versions through #:package Kronikol@<version>), Windows 11, .NET 10.0.11, 2026-10-13, one run after one
+untimed warm-up.
+
+N calls    4.18.2 (no F4)    4.19.0 (F4 as published)       this audit
+  100          9 ms              606 ms                        10 ms
+  300         56 ms           22,294 ms                        71 ms
+1,000        348 ms          stopped after 20 minutes          381 ms
+3,000      2,210 ms                -                         3,282 ms
+
+300 to 3,000 for 4.18.2 and the audit were run back to back. The audit's popups hold fewer spans than 4.18.2's
+(22,940 against 38,985 at 300 calls), which is F4 doing its job: each downstream call keeps its own work only. What
+still grows faster than the calls in both is 4.18.2's own step, which checks every span of a trace against each call's
+time.

@@ -1,0 +1,40 @@
+=== chain on, published 4.19.0 (three runs)
+TraceIdFromIdentity on: the tap recorded 4 record(s), the OTLP tap 4
+  tap call   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span 5e20d310c1172508
+  tap call   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span 59e8b967a3d6df02
+  database   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span 728f6ac92108afc3  Api -> postgresql
+  database   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span f2bb466d71a568f6  Api -> postgresql
+Report diagnostics: 8 log entries across 1 test(s).
+Spans supplied to the ingest: 2 span(s).
+Kronikol: reports written to C:\Users\cex\AppData\Local\Temp\kronikol-170-acceptance-on-1c4f6822\report  (TestRunReport.html · TestRunReport.json 12.5 KB · Failures.md · TestRunReport.labs.html)
+ingest: 8 record(s) into 1 scenario(s)
+s0    pass   0.25s     4 calls  Places an order
+1 scenarios
+  popup of the tap call 5e20d310c1172508: [SELECT for 5e20d3]  its own query only
+  popup of the tap call 59e8b967a3d6df02: [SELECT for 5e20d3, SELECT for 59e8b9]  NOT its own query only
+TraceIdFromIdentity on: the tap recorded 4 record(s), the OTLP tap 4
+  tap call   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span 86638d8b04660ca6
+  tap call   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span ab1e61f4a19d2929
+  database   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span 1359b1e5c716d6a6  Api -> postgresql
+  database   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span edd04bb35be9216c  Api -> postgresql
+Report diagnostics: 8 log entries across 1 test(s).
+Spans supplied to the ingest: 2 span(s).
+Kronikol: reports written to C:\Users\cex\AppData\Local\Temp\kronikol-170-acceptance-on-f5fb253d\report  (TestRunReport.html · TestRunReport.json 12.5 KB · Failures.md · TestRunReport.labs.html)
+ingest: 8 record(s) into 1 scenario(s)
+s0    pass   0.26s     4 calls  Places an order
+1 scenarios
+  popup of the tap call 86638d8b04660ca6: [SELECT for ab1e61, SELECT for 86638d]  NOT its own query only
+  popup of the tap call ab1e61f4a19d2929: [SELECT for ab1e61]  its own query only
+TraceIdFromIdentity on: the tap recorded 4 record(s), the OTLP tap 4
+  tap call   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span 668d8b245216291d
+  tap call   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span a443273feb354717
+  database   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span 5e78f09b715bd490  Api -> postgresql
+  database   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span a08b4059c2d8e18d  Api -> postgresql
+Report diagnostics: 8 log entries across 1 test(s).
+Spans supplied to the ingest: 2 span(s).
+Kronikol: reports written to C:\Users\cex\AppData\Local\Temp\kronikol-170-acceptance-on-46cf3e8b\report  (TestRunReport.html · TestRunReport.json 12.5 KB · Failures.md · TestRunReport.labs.html)
+ingest: 8 record(s) into 1 scenario(s)
+s0    pass   0.25s     4 calls  Places an order
+1 scenarios
+  popup of the tap call 668d8b245216291d: [SELECT for 668d8b, SELECT for a44327]  NOT its own query only
+  popup of the tap call a443273feb354717: [SELECT for a44327]  its own query only

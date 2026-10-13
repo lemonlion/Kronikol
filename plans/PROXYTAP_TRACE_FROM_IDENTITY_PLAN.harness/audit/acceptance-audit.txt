@@ -1,0 +1,37 @@
+no listener                          forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-c1b09515a5313598-01  == test id, flags 01
+no listener                          forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-46de8f0447c6a57c-01  == test id, flags 01
+Kronikol's internal-flow listener    forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-4e798bb753b689be-01  == test id, flags 01
+Kronikol's internal-flow listener    forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-98df273c1ede110c-01  == test id, flags 01
+the OpenTelemetry SDK                forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-e2eff78dd7e50834-01  == test id, flags 01
+the OpenTelemetry SDK                forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-94be1392d18cc7ed-01  == test id, flags 01
+=== chain on
+TraceIdFromIdentity on: the tap recorded 4 record(s), the OTLP tap 4
+  tap call   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span 3901aec9864cbb10
+  tap call   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span e676adfa5360551a
+  database   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span ecd2dda8c7778810  Api -> postgresql
+  database   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 4bf92f3577b34da6a3ce929d0e0e4736  span ef5fa7489efd2fcf  Api -> postgresql
+Report diagnostics: 8 log entries across 1 test(s).
+Spans supplied to the ingest: 2 span(s).
+Kronikol: reports written to C:\Users\cex\AppData\Local\Temp\kronikol-170-acceptance-on-e1b721bf\report  (TestRunReport.html · TestRunReport.json 12.9 KB · Failures.md · TestRunReport.labs.html)
+  history: nothing changed (4 runs recorded in the local stream; flakiness and duration verdicts need 5)
+ingest: 8 record(s) into 1 scenario(s)
+s0    pass   0.26s     4 calls  Places an order
+1 scenarios
+  popup of the tap call 3901aec9864cbb10: [SELECT for 3901ae]  its own query only
+  popup of the tap call e676adfa5360551a: [SELECT for e676ad]  its own query only
+=== chain off
+TraceIdFromIdentity off: the tap recorded 4 record(s), the OTLP tap 4
+  tap call   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 6ec49666783831bfdc13421413ac8f5d  span 5d7a8007c70fcdcb
+  tap call   test 4bf92f3577b34da6a3ce929d0e0e4736  trace 8013cf4b5da25a02a93d19b2acc3b930  span 9af0999e669274d5
+  database   test 6ec49666783831bfdc13421413ac8f5d  trace 6ec49666783831bfdc13421413ac8f5d  span b22f025b4e6d3e78  Api -> postgresql
+  database   test 8013cf4b5da25a02a93d19b2acc3b930  trace 8013cf4b5da25a02a93d19b2acc3b930  span 6d5850f3e0006fb3  Api -> postgresql
+Report diagnostics: 8 log entries across 2 test(s).
+Spans supplied to the ingest: 2 span(s).
+Kronikol: reports written to C:\Users\cex\AppData\Local\Temp\kronikol-170-acceptance-off-dbc17be4\report  (TestRunReport.html · TestRunReport.json 13.8 KB · Failures.md · TestRunReport.labs.html)
+ingest: 8 record(s) into 2 scenario(s)
+! 2 supplied span(s) are in no call's internal flow: 2 of a trace a call carries, which started outside the time of every call carrying it (from 50 ms before its …
+s0    pass   0.02s     2 calls  Traffic outside any test
+s1    pass   0.24s     2 calls  Places an order
+2 scenarios
+  popup of the tap call 5d7a8007c70fcdcb: []  NOT its own query only
+  popup of the tap call 9af0999e669274d5: []  NOT its own query only

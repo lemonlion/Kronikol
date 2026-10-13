@@ -1,0 +1,12 @@
+Checks for the #170 audit's release (4.19.4), 2026-10-13, Windows 11, .NET 10.0.11, on the release tree after the
+version bump. The core and Playwright suites ran on the tree rebased onto 4.19.2 and the #171 plan (c28e8948); the
+ProxyTap project ran again after the rebase onto 4.19.3, which changes only the OTLP tap.
+
+dotnet test tests/Kronikol.Tests                 Passed!  - Failed: 0, Passed: 7462, Skipped: 2, Total: 7464
+dotnet test tests/Kronikol.Tests.ProxyTap        Passed!  - Failed: 0, Passed: 85, Skipped: 4, Total: 89
+dotnet test tests/Kronikol.Tests.EndToEnd        Passed!  - Failed: 0, Passed: 1036, Skipped: 28, Total: 1064 (run alone)
+dotnet build release.slnf -c Release             Build succeeded (every target), 43 warnings, none in a file this release touches
+Kronikol4J ./gradlew :kronikol4j-report:test --tests InternalFlowSegmentBuilderTest   18 of 18
+
+The acceptance (acceptance.cs, output acceptance-audit.txt) and the probe (probe-http-instrumentation-local.cs, output
+probe-http-instrumentation-audit.txt) were run again on the rebased tree, with the same results as before the rebase.

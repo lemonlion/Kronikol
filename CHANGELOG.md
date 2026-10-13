@@ -4,6 +4,86 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.19.4] - 2026-10-13
+
+**Patch - the audit of #170's releases, 4.18.3 and 4.19.0: one test's calls in one trace keep their own internal
+flow when they ran at once, and quickly, and a proxy tap forwards the trace it chose whatever instruments HttpClient in
+its process (`plans/PROXYTAP_TRACE_FROM_IDENTITY_PLAN.md`, section 12).** The owner asked for the plan's execution to be
+checked and its problems fixed. Bug fixes, and nothing new for a consumer to call, so the patch part moves (4.19.3 to
+4.19.4).
+
+### Fixed
+
+- **Two calls that ran at once through a tap could show each other's database calls (4.18.3).** The internal-flow
+  builder tells one test's calls in one trace apart by the span tree, and keeps in a call's popup the work of the calls
+  that ran inside it. It decided "inside" by the rule `kronikol query flow` nests calls by, made while the call was open
+  by the service handling it, so when an app made two calls at once through a tap to one service, as #170's mobile app
+  does, the service's queries, which the OTLP tap records as calls of the test, each went inside the call opened last,
+  and that call's popup showed the other call's query too. The span tree comes first now: an open call whose span id
+  is above a call's span ran it, and the rule decides only where the tree says nothing. The plan's acceptance, run by
+  this audit for the first time, showed it on 4.19.0 in three runs of three.
+- **Internal flow took cubic time for one test's calls in one trace (4.18.3).** For every span of the trace, and every
+  call recording a span id above it, the builder walked the calls' nesting again to ask whether that call ran inside
+  the one whose popup it was building, before the call's time cut the spans down. A test of 300 calls under one
+  ambient span (`TestTrackingMessageHandler` records `Activity.Current`'s span for every call), each with a downstream
+  call under its own request span, took 22.3 s to build, where 4.18.2 took 66 ms; 1,000 calls took longer than 20
+  minutes. Each call's own span ids, its own and those of the calls that ran inside it, are worked out once, from one
+  walk up each call's outer calls, and only the spans in its time are checked: 71 ms for the 300 calls, the
+  popups unchanged.
+- **A tap's forward ran the process's HttpClient instrumentation.** The tap forwards with an `HttpClient` of its own,
+  whose handler ran whatever instruments HttpClient in the process, and OpenTelemetry's HttpClient instrumentation puts
+  a span of its own in place of the `traceparent`. With nothing listening to `Kronikol.ProxyTap`, that span is the root
+  of a new trace, so neither the caller's trace nor, with `TraceIdFromIdentity`, the test's reached the service behind
+  the tap, while the tap's records named it. With Kronikol's internal-flow listener attached too, as in a test process
+  that configures OpenTelemetry, the header went out `-00` again, undoing 4.18.3's fix of the sampled flag, and the
+  service's spans named a parent no store holds, so internal flow could not tie them to the call. The tap's client no
+  longer runs that instrumentation (`SocketsHttpHandler.ActivityHeadersPropagator` is null): the header is the one the
+  tap chose, and its own client span is the forward's span. Behaviour change: a listener on `System.Net.Http` no longer
+  sees a span for each forward; listen to `Kronikol.ProxyTap` for the tap's own.
+- **A tap started under an activity forwarded it on every call.** The tap's accept loop runs in the context it was
+  started in, so every request ran under the start-up activity: with a listener on `Kronikol.ProxyTap`, a call that
+  brought no trace was forwarded in that activity's trace and with its baggage, whatever test made it (4.19.0 cleared it
+  for a test's trace only). Requests now start with no current activity, so each such call gets a trace of its own, and
+  `StartAsync` gives its caller's current activity back.
+- **`TraceIdFromIdentity` answered 502 when a resolver returned a null id.** The resolver's id is declared non-null,
+  but a host can hand back null: 4.19.0 read its length and threw, so the tap answered `502 Bad Gateway` to every such
+  request, which it forwards with the option off. A null id counts as not applied now.
+- The `OptionNotApplied` diagnostic and its log line said a trace id is "32 lower-case hex digits"; they add "not all
+  zero", since 32 zeros are not one either.
+
+### Tests
+
+- `SpanAttributionTests`: two calls of an app through a tap to one service, at once, each with a query the OTLP tap
+  records as a call, keep their own query; 300 calls under one ambient span, each with a downstream call, keep their
+  own spans within a budget of a second, stretched by the machine's load.
+- `ProxyTapTraceContextTests`: with OpenTelemetry's HttpClient instrumentation in the process (the real SDK, 1.19.1),
+  a call with no trace is forwarded under the test id and a caller's `traceparent` unchanged; with Kronikol's
+  internal-flow listener too, the forward stays sampled and names the span the tap's record carries; a tap started
+  under an activity with baggage forwards neither, and `StartAsync` leaves the caller's activity current; a resolver
+  that sets `Activity.Current` still leaves the test's trace a root; a resolver that returns a null id is forwarded and
+  counted; the theory over ids that are not trace ids checks "not all zero" in the diagnostic and the log line. The
+  facts' own caller now sends nothing but what each fact says.
+
+### Records
+
+- The plan's section 5.3 acceptance had never been run. It is now (harness `audit/acceptance.cs`): the tap forwards
+  the test id sampled with no listener, with Kronikol's internal-flow listener and with the OpenTelemetry SDK; and in
+  the issue's chain, an app with no trace, the tap, a service that passes on only `traceparent` and exports a query per
+  call to an OTLP tap, one ingest draws every call in the test's scenario and none in "Traffic outside any test", where
+  the option off folds the queries, and each tap call's popup holds its own query only.
+- `plans/ROADMAP.md` had no row for #170: stage 1 gains 1.28, Appendix B its register row and Appendix C what the plan
+  left (Q2(b), Q6, section 8), and Q7, the option on by default, joins v5's candidate default changes in 12.1, as the
+  owner took it.
+
+Proofs: copied onto 4.19.0's code with nothing stubbed, two builder facts and twelve tap fact cases fail, each on its own assertion, and the guards pass by design (harness `audit/red-4.19.0.txt`); the plan's acceptance shows the mixed popups on the published 4.19.0 in three runs of three (`audit/acceptance-4.19.0.txt`); 11 of 13 mutations are caught and two are equivalent, with the reason (`audit/mutations.txt`); in Kronikol4J the tree-first fact fails without its rule, and its two new guards each catch their mutation.
+
+Checks: after the version bump the core suite passes 7,462 with 2 skipped, the ProxyTap project 85 with 4 skipped, the full Playwright suite 1,036 with 28 skipped when run alone, and release.slnf builds in Release for every target; Kronikol4J's builder facts pass 18 of 18 (harness `audit/checks.txt`).
+
+The templates pin 4.19.2 and the history action's `VERSION` installs Kronikol.Tool 4.19.4. The wiki edits
+(`Integration-ProxyTap-Extension`, `Internal-Flow-Tracking`) and the Kronikol4J ledger line (tree-first nesting and the
+own-ids form ported; the port never had the slowdown, since it checked only the spans in a call's time) follow
+publication.
+
 ## [4.19.3] - 2026-10-13
 
 **Patch - the OTLP tap reads an exporter that hangs up as a hang-up, and no longer takes a chunked export cut short as

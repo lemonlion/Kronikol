@@ -3,7 +3,7 @@
 **Written:** 2026-10-13, at 4.18.1 (`34145c44`), the day #170 was filed, in the worktree `C:/Code/Kronikol-170`
 (branch `plan/170-proxytap-trace-from-identity`), and revised the same day after a review against the real
 OpenTelemetry SDK (section 11). **Status: executed and published on 2026-10-13, R0 as 4.18.3 and R1 as 4.19.0; #170
-closed.** Green-lit in full by the owner the same day ("implement the plan in full"), every question in section 9 as
+closed. Audited the same day at the owner's request; its fixes shipped as 4.19.4 (section 12).** Green-lit in full by the owner the same day ("implement the plan in full"), every question in section 9 as
 recommended, and its releases went out as soon as they passed rather than after #172 and #171 (section 6.2). Evidence labels: **RUN** (measured here; the
 probe, its source and what it printed are in the harness), **READ** (in the source at `34145c44`, `file:line`, or in
 the wiki at `origin/master` of `../Kronikol.wiki` as fetched on 2026-10-13), **INFERRED** (reasoned from facts,
@@ -294,13 +294,13 @@ candidates. Nothing else changes:
   stays in this call's popup when that call ran inside this one, by the rule `kronikol query flow` nests calls by
   (`CallNesting`, `plans/FLOW_NESTING_PLAN.md` R4): made while this call was still waiting for its answer, by the service
   handling it, or by another party on its Kronikol trace. Two calls from one party never nest, so a mobile app's
-  parallel calls are still told apart.
+  parallel calls are still told apart. The audit found that the rule alone puts the queries a service makes for two such calls inside the call opened last, and put the span tree first (section 12, A1).
 - **Spans that descend from no call's span id** stay in every window that holds them, as today. That covers the
   in-process case where another listener creates `System.Net.Http`'s span, which Kronikol's listener skips
   (`InternalFlowActivityListener.cs:33-36`), so the store holds no link between a test's span and the service's
   (INFERRED; a fact pins it, section 5.1).
 - **No count is added** to `SpansLeftOut`: the removed spans are not ambiguous, they are shown in the other call's
-  popup.
+  popup, when its time holds them (section 12 records the case where it does not).
 
 Kronikol4J has the same builder (`../Kronikol4J/kronikol4j-report/src/main/java/io/kronikol/report/flow/InternalFlowSegmentBuilder.java`),
 so the rule is ported there in the same release (section 6.5).
@@ -382,7 +382,7 @@ then makes sure `Copy` cannot fall behind again: R1's `TraceIdFromIdentity` must
 
 In `InternalFlowSegmentBuilder.Attribute`, beside `TestsByTrace`, keep for each trace the span ids its calls record
 and which calls record each (as built: request records only, since a call is its request), and which of a test's
-calls ran inside which, by `CallNesting`'s rule over the test's records in time order (section 3.11). A span stays in
+calls ran inside which, over the test's records in time order: by the span tree first and by `CallNesting`'s rule where the tree says nothing (section 3.11; the tree came first in the audit, section 12). A span stays in
 a call's candidates when no claimed id is on its chain, or when a call that claims one is this call or ran inside it.
 When one test's calls claim a trace under two or more span ids, a call's candidates are the trace's spans less those
 that descend from another of those span ids and not from its own. The ancestry walk goes up `ParentSpanId` within the
@@ -585,7 +585,7 @@ comment naming R0's and R1's versions.
 
 ## 7. Where it sits in the roadmap
 
-No row is taken: the owner green-lit the plan directly on 2026-10-13, as #133's plan was.
+No row was taken when the owner green-lit the plan directly on 2026-10-13, as #133's plan was. The audit (section 12, A8) gave it row 1.28, done, a register row and an Appendix C row, as the other green-lit issue plans have, and put Q7 among v5's candidate default changes in 12.1, as the owner took it.
 
 ## 8. Found on the way, not in this plan
 
@@ -727,6 +727,40 @@ The owner took every recommendation below on 2026-10-13 ("implement the plan in 
   38414231752 and 38414907876 and CI Summary Preview 38414232331 and 38414907474 passed on `baa411bb`, and nuget.org
   listed all 62 ids. The wiki has R1's section, "A caller that cannot send a trace" (`8a85456`), and Kronikol4J's ledger
   a line saying there is nothing to port (`ab7ba50`). #170 is closed with a comment naming both releases.
+
+- **2026-10-13, audited (owner's request: check the plan was completed in full and properly, with no problems in what
+  was built, and fix what is not).** Section 12. Nine findings, A1 to A9, each measured before its fix; the fixes
+  shipped as 4.19.4.
+
+## 12. The audit (2026-10-13)
+
+The owner asked, after both releases were out, for a check that the plan was completed in full and properly, with no
+problems in what was built, and for fixes where there were. Every item of sections 4 to 6 was ticked against the
+diff, the harness and the published records. Each finding below was measured before it was fixed (harness `audit/`),
+each fix has a fact that fails on 4.19.0 (`audit/red-4.19.0.txt`), and its mutations are caught
+(`audit/mutations.txt`: 11 of 13, two equivalent with the reason written there).
+
+| # | Finding | How it was found | Fix in 4.19.4 |
+|---|---|---|---|
+| A1 | F4's nesting put the queries a service made for two of an app's calls at once inside whichever call opened last, so that call's popup showed the other call's query too. This is #170's own shape (a mobile app's parallel calls through a tap, the service's database spans recorded by the OTLP tap as calls of the test), and section 5.3's acceptance names it | Running section 5.3's acceptance for the first time (`audit/acceptance.cs`): on the published 4.19.0, three runs of three (`audit/acceptance-4.19.0.txt`) | The span tree first: an open call whose span id is above a call's span ran it; `CallNesting`'s rule only where the tree says nothing. Kronikol4J the same |
+| A2 | F4's cost: for every span of the trace and every call recording a span id above it, a fresh walk of the calls' nesting, before the time filter. One test of 300 calls under one ambient span, each with a downstream call: 22.3 s (4.18.2: 56 ms); 1,000 calls ran past 20 minutes | Reading the builder, then `audit/bench-f4.cs` (`audit/bench.txt`) | Each call's own span ids worked out once, from one walk up each call's outer calls, and checked against the spans in its time only: 71 ms for the 300 calls. Kronikol4J, which checked only spans in a call's time and never took long, takes the same form |
+| A3 | The tap's upstream `HttpClient` ran the process's HttpClient instrumentation. OpenTelemetry's puts a span of its own in place of the forwarded `traceparent`: with nothing listening to the tap, a new trace, so neither the caller's trace nor the test's reached the service; beside Kronikol's internal-flow listener, `-00` again (F3 undone) and a parent no store holds | Reading `StartAsync`, then `audit/probe-http-instrumentation.cs` against the published 4.19.0 (`audit/probe-http-instrumentation-4.19.0.txt`) | `ActivityHeadersPropagator = null` on the tap's handler; the tap's own client span is the forward's span |
+| A4 | A tap started under an activity forwarded that activity's trace and baggage on every call that brought no trace (R1 had cleared it for the test's trace only) | The same probe | `StartAsync` starts the accept loop with no current activity and gives its caller's back |
+| A5 | With the option on, a resolver returning a null id made the tap answer 502 | Reading `IsTraceId` | A null id counts as not applied |
+| A6 | The `OptionNotApplied` diagnostic and its log line left out "not all zero" | Reading | Added |
+| A7 | Section 5.3's acceptance had never been run: the harness held no record of it | The harness | Run, on this tree and on 4.19.0 (A1); it passes on 4.19.4 |
+| A8 | Q7, taken by the owner, was never written into the roadmap, and the plan had no roadmap row | `ROADMAP.md` held no "#170" | Row 1.28, Appendix B and C rows, Q7 in 12.1 |
+| A9 | Two nesting rules F4 relies on had no fact: nesting two deep, and two calls recording one span | Mutations that survived the first run | `A_call_keeps_the_spans_of_the_calls_nested_two_deep_inside_it`, `A_call_does_not_run_inside_another_that_records_the_same_span` |
+
+Checked and sound: every fact named in sections 5.1 and 5.2 exists, the record handed in twice among them; the
+registration fact fails on any option it cannot fill; no producer writes an empty pair id or Kronikol trace id, so
+the builder's copy of `CallNesting` cannot differ from it there (ingest hashes or mints them); the wiki's sentences
+for R0 and R1 match the code, and no recipe for a device on the network was published.
+
+Left as it is: a span the tree gives to another call of the test, which started after that call answered (work it
+left running), shows in neither popup, only in the whole-test flow; before 4.18.3 it showed in whichever call's time
+held it, as that call's work. Section 3.11's claim that the spans F4 removes "are shown in the other call's popup"
+holds only when that call's time holds them.
 
 ## Appendix A. Edit sites at `34145c44` (4.18.1)
 

@@ -1,0 +1,39 @@
+Red proofs for the #170 audit, 2026-10-13, Windows 11, .NET 10.0.11: the audit's test files copied onto v4.19.0
+(SpanAttributionTests.cs, ProxyTapTraceContextTests.cs and the ProxyTap test project file, which gains OpenTelemetry
+1.19.1 and OpenTelemetry.Instrumentation.Http 1.19.0), nothing stubbed.
+
+dotnet test tests/Kronikol.Tests.ProxyTap --filter ProxyTapTraceContextTests
+  Failed!  - Failed: 12, Passed: 20, Total: 32
+  Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted, all 7 cases
+      Assert.Contains() Failure: Sub-string not found (line 566: "32 lower-case hex digits, not all zero")
+  HttpClient_instrumentation_in_the_taps_process_leaves_the_forwarded_traceparent_alone(inbound: null)
+      Expected "4bf92f3577b34da6a3ce929d0e0e4736" (the test id), forwarded a random trace, both calls (line 445)
+  HttpClient_instrumentation_in_the_taps_process_leaves_the_forwarded_traceparent_alone(inbound: 00-0af7...-01)
+      Expected "0af7651916cd43dd8448eb211c80319c" (the caller's), forwarded a random trace, both calls (line 445)
+  Under_Kronikols_listener_and_HttpClient_instrumentation_the_forward_stays_sampled_under_the_taps_span
+      Expected "01", forwarded "00", both calls (line 463)
+  A_resolver_that_names_no_id_is_still_forwarded_and_counted
+      Expected OK, got BadGateway (RunAsync's status check)
+  A_tap_started_under_an_activity_does_not_carry_it_into_the_calls_it_forwards
+      Assert.DoesNotContain() Failure: the start-up activity's trace was forwarded (line 503)
+  Passes by design: The_server_span_is_a_root_of_the_test_trace_when_the_resolver_leaves_an_activity_current
+      (4.19.0 clears Activity.Current in HandleAsync; the fact guards that clear now that the accept loop starts
+      with none, and its mutation is in mutations.txt)
+
+dotnet test tests/Kronikol.Tests --filter SpanAttributionTests
+  Failed!  - Failed: 2, Passed: 24, Total: 26
+  Many_calls_of_one_test_in_one_trace_are_told_apart_in_time_that_grows_with_the_calls
+      the fastest of three runs took 22948 ms against 2079 (1,000 stretched 2.08 times by this machine's load)
+  Overlapping_calls_to_one_service_keep_the_database_calls_made_under_their_own_span
+      Expected "b-query", Actual "a-query" (line 463: b's popup held a's query, then its own)
+
+Kronikol4J (C:/Code/Kronikol4J, branch audit-170): the port's builder without tree-first nesting
+  ./gradlew :kronikol4j-report:test --tests InternalFlowSegmentBuilderTest: 16 tests, 1 failed
+  (buildSegments_overlappingCallsToOneService_keepTheDatabaseCallsMadeUnderTheirOwnSpan); 16 of 16 with it.
+  The port's many-calls fact passes on the port's old code too (123 ms against 79 ms): it checked only the spans in a
+  call's time, so it never had .NET's slowdown; the fact holds what each downstream call keeps.
+
+The guards added after this run, also copied onto v4.19.0, pass there by design (4.19.0 has no code for the
+mutations they catch): A_call_keeps_the_spans_of_the_calls_nested_two_deep_inside_it and
+A_call_does_not_run_inside_another_that_records_the_same_span (2 of 2), and
+Starting_a_tap_leaves_the_callers_current_activity_alone (1 of 1).

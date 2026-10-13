@@ -7,6 +7,8 @@ using Kronikol.Extensions.ProxyTap;
 using Kronikol.InternalFlow;
 using Kronikol.Reports;
 using Kronikol.Tracking;
+using OpenTelemetry;
+using OpenTelemetry.Trace;
 
 namespace Kronikol.Tests.ProxyTap;
 
@@ -57,7 +59,8 @@ public class ProxyTapTraceContextTests
         try
         {
             await tap.StartAsync();
-            using var client = new HttpClient();
+            // A caller that sends what the fact says and nothing else: no handler adds a trace whatever is listening.
+            using var client = new HttpClient(new SocketsHttpHandler { ActivityHeadersPropagator = null });
             foreach (var (traceparent, headers) in requests)
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(tap.ListenUri, "/i"));
@@ -398,6 +401,135 @@ public class ProxyTapTraceContextTests
     }
 
     [Fact]
+    public async Task Starting_a_tap_leaves_the_callers_current_activity_alone()
+    {
+        // StartAsync is not an async method, so what it does to Activity.Current would stay with its caller: the tap
+        // starts its accept loop with no current activity and gives the caller's back.
+        await using var upstream = new StubUpstream(Ok);
+        await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(new ProxyTapOptions
+        {
+            ListenPort = StubUpstream.FreePort(), ForwardBaseUri = upstream.BaseUri, CallerName = "web", ServiceName = "api", Sink = new ListSink(),
+        });
+        var fixture = new Activity("fixture").Start();
+        try
+        {
+            await tap.StartAsync();
+            Assert.Same(fixture, Activity.Current);
+        }
+        finally
+        {
+            fixture.Stop();
+            Activity.Current = null;
+        }
+    }
+
+    [Fact]
+    public async Task The_server_span_is_a_root_of_the_test_trace_when_the_resolver_leaves_an_activity_current()
+    {
+        // The resolver runs on the request's own flow. A host that sets Activity.Current there (the workaround #170
+        // describes for a tap without TraceIdFromIdentity) would otherwise leave the test's trace hanging off its activity.
+        using var listener = new TapListener((ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded);
+
+        var run = await RunAsync(o =>
+        {
+            o.TraceIdFromIdentity = true;
+            o.IdentityResolver = (_, _) =>
+            {
+                new Activity("host").Start();
+                return ("places an order", TestId);
+            };
+        }, (null, NoHeaders));
+
+        var header = Parse(run.Forwarded.Single()!);
+        Assert.Equal(TestId, header.Groups["trace"].Value);
+        var forward = listener.Stopped.Single(a => a.SpanId.ToString() == header.Groups["span"].Value);
+        var server = listener.Stopped.Single(a => a.Kind == ActivityKind.Server && a.SpanId == forward.ParentSpanId);
+        Assert.Equal(default, server.ParentSpanId);
+    }
+
+    // ─── The tap's own HttpClient (the #170 audit) ─────────────
+
+    private const string CallersTrace = "0af7651916cd43dd8448eb211c80319c";
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("00-" + CallersTrace + "-b7ad6b7169203331-01")]
+    public async Task HttpClient_instrumentation_in_the_taps_process_leaves_the_forwarded_traceparent_alone(string? inbound)
+    {
+        // The tap forwards with an HttpClient of its own, which in 4.19.0 ran whatever HttpClient instrumentation the
+        // process had. OpenTelemetry's puts a span of its own in place of the traceparent, and with nothing listening to
+        // the tap that span is the root of a new trace: neither the caller's trace nor the test's reached the service,
+        // while the tap's records named it.
+        using var provider = Sdk.CreateTracerProviderBuilder().AddHttpClientInstrumentation().Build();
+
+        var run = await RunAsync(FromIdentity, (inbound, NoHeaders), (inbound, NoHeaders));
+
+        var trace = inbound is null ? TestId : CallersTrace;
+        Assert.All(run.Forwarded, f => Assert.Equal(trace, TraceOf(f)));
+        Assert.All(run.Logs, l => Assert.Equal(trace, l.ActivityTraceId));
+        if (inbound is not null)
+            Assert.All(run.Forwarded, f => Assert.Equal(inbound, f));
+    }
+
+    [Fact]
+    public async Task Under_Kronikols_listener_and_HttpClient_instrumentation_the_forward_stays_sampled_under_the_taps_span()
+    {
+        // A test process that configures OpenTelemetry has both. 4.19.0 forwarded -00 there, the instrumentation's own
+        // span under the tap's unrecorded one put in place of the tap's header, which undid 4.18.3's sampled flag, and
+        // the service's spans named a parent no store holds, so internal flow could not tie them to the call.
+        using var provider = Sdk.CreateTracerProviderBuilder().AddHttpClientInstrumentation().Build();
+        using var internalFlow = new InternalFlowActivityListener();
+
+        var run = await RunAsync(FromIdentity, (null, NoHeaders), ("00-" + CallersTrace + "-b7ad6b7169203331-01", NoHeaders));
+
+        Assert.Equal([TestId, CallersTrace], run.Forwarded.Select(TraceOf));
+        Assert.All(run.Forwarded, f => Assert.Equal("01", Parse(f!).Groups["flags"].Value));
+        Assert.All(run.Forwarded, f => Assert.Contains(run.Logs, l => l.ActivitySpanId == Parse(f!).Groups["span"].Value));
+    }
+
+    [Fact]
+    public async Task A_tap_started_under_an_activity_does_not_carry_it_into_the_calls_it_forwards()
+    {
+        // The tap's accept loop runs in the context the tap was started in, so in 4.19.0 every request ran under the
+        // start-up activity: with a listener, a call that brought no trace was forwarded in that activity's trace and with
+        // its baggage, the same for every test. 4.19.0 cleared it for a test's trace only.
+        using var listener = new TapListener((ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded);
+        await using var upstream = new StubUpstream(Ok);
+        await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(new ProxyTapOptions
+        {
+            ListenPort = StubUpstream.FreePort(), ForwardBaseUri = upstream.BaseUri, CallerName = "web", ServiceName = "api",
+            Sink = new ListSink(), IdentityResolver = (_, _) => ("places an order", TestId),
+        });
+        var fixture = new Activity("fixture").AddBaggage("fixture", "yes").Start();
+        try
+        {
+            await tap.StartAsync();
+            // Still running, as a fixture's activity is while its tests run; only the test's own flow leaves it.
+            Activity.Current = null;
+            using var client = new HttpClient(new SocketsHttpHandler { ActivityHeadersPropagator = null });
+            for (var i = 0; i < 2; i++)
+            {
+                using var response = await client.GetAsync(new Uri(tap.ListenUri, "/i"));
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+        }
+        finally
+        {
+            fixture.Stop();
+            Activity.Current = null;
+        }
+
+        List<Dictionary<string, string>> seen;
+        lock (upstream.Seen)
+            seen = upstream.Seen.Select(s => s.Headers).ToList();
+        var traces = seen.Select(h => Parse(h["traceparent"]).Groups["trace"].Value).ToArray();
+        Assert.DoesNotContain(fixture.TraceId.ToString(), traces);
+        Assert.Equal(2, traces.Distinct().Count());
+        Assert.All(seen, h => Assert.False(h.ContainsKey("baggage"), "the start-up activity's baggage was forwarded"));
+        Assert.All(listener.Stopped.Where(a => a.Kind == ActivityKind.Server), s => Assert.Equal(default, s.ParentSpanId));
+    }
+
+    [Fact]
     public async Task The_test_id_header_and_its_fallback_headers_mint_the_trace_too()
     {
         var run = await RunAsync(o => { o.TraceIdFromIdentity = true; o.TestIdHeaderFallbacks.Add("x-scenario-id"); },
@@ -453,7 +585,23 @@ public class ProxyTapTraceContextTests
         Assert.DoesNotContain(id.Replace("-", "").ToLowerInvariant(), traces);
         var entry = Assert.Single(run.Diagnostics, d => d.Kind == DiagnosticKind.OptionNotApplied);
         Assert.Contains("did not apply to 3 request(s)", entry.Message, StringComparison.Ordinal);
-        Assert.Single(run.LogLines, l => l.Contains("TraceIdFromIdentity", StringComparison.Ordinal));
+        // Both say what a trace id is in full: 32 zeros are 32 lower-case hex digits too.
+        Assert.Contains("32 lower-case hex digits, not all zero", entry.Message, StringComparison.Ordinal);
+        Assert.Contains("32 lower-case hex digits, not all zero",
+            Assert.Single(run.LogLines, l => l.Contains("TraceIdFromIdentity", StringComparison.Ordinal)), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_resolver_that_names_no_id_is_still_forwarded_and_counted()
+    {
+        // The resolver's id is declared non-null, but a host can hand back null. 4.19.0 read its length and threw, so with
+        // the option on the tap answered 502 to every such request, which it forwards with the option off.
+        var run = await RunAsync(o => { o.TraceIdFromIdentity = true; o.IdentityResolver = (_, _) => ("places an order", null!); },
+            (null, NoHeaders), (null, NoHeaders));
+
+        Assert.Equal(2, run.Forwarded.Select(TraceOf).Distinct().Count());
+        var entry = Assert.Single(run.Diagnostics, d => d.Kind == DiagnosticKind.OptionNotApplied);
+        Assert.Contains("did not apply to 2 request(s)", entry.Message, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -1,0 +1,60 @@
+mode none; ProxyTap 4.19.2.0; OpenTelemetry 1.0.0.0
+request 1: sent (none), forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-e1a800fee79d138d-01 baggage=(none)
+  forwarded trace == test id; record activityTraceId 4bf92f3577b34da6a3ce929d0e0e4736 spanId e1a800fee79d138d
+request 2: sent (none), forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-db7c4145e85c94fb-01 baggage=(none)
+  forwarded trace == test id; record activityTraceId 4bf92f3577b34da6a3ce929d0e0e4736 spanId db7c4145e85c94fb
+
+mode otel-http; ProxyTap 4.19.2.0; OpenTelemetry 1.0.0.0
+request 1: sent (none), forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-52f92c1432c18398-01 baggage=(none)
+  forwarded trace == test id; record activityTraceId 4bf92f3577b34da6a3ce929d0e0e4736 spanId 52f92c1432c18398
+request 2: sent (none), forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-140c3b9f43bb591a-01 baggage=(none)
+  forwarded trace == test id; record activityTraceId 4bf92f3577b34da6a3ce929d0e0e4736 spanId 140c3b9f43bb591a
+
+mode otel-http+kronikol; ProxyTap 4.19.2.0; OpenTelemetry 1.0.0.0
+request 1: sent (none), forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-5829d7134d86997c-01 baggage=(none)
+  forwarded trace == test id; record activityTraceId 4bf92f3577b34da6a3ce929d0e0e4736 spanId 5829d7134d86997c
+request 2: sent (none), forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-247801f44e3a6a5e-01 baggage=(none)
+  forwarded trace == test id; record activityTraceId 4bf92f3577b34da6a3ce929d0e0e4736 spanId 247801f44e3a6a5e
+
+mode otel-http+tap; ProxyTap 4.19.2.0; OpenTelemetry 1.0.0.0
+request 1: sent (none), forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-7d40c9acf1defd62-01 baggage=(none)
+  forwarded trace == test id; record activityTraceId 4bf92f3577b34da6a3ce929d0e0e4736 spanId 7d40c9acf1defd62
+request 2: sent (none), forwarded 00-4bf92f3577b34da6a3ce929d0e0e4736-064aafdc1435d1d2-01 baggage=(none)
+  forwarded trace == test id; record activityTraceId 4bf92f3577b34da6a3ce929d0e0e4736 spanId 064aafdc1435d1d2
+  exported Client forward                  trace 4bf92f3577b34da6a3ce929d0e0e4736 parentSpan a433fa572a7b177e recorded True
+  exported Server tap app→api              trace 4bf92f3577b34da6a3ce929d0e0e4736 parentSpan 0000000000000000 recorded True
+  exported Client forward                  trace 4bf92f3577b34da6a3ce929d0e0e4736 parentSpan c37432c5ca434c36 recorded True
+  exported Server tap app→api              trace 4bf92f3577b34da6a3ce929d0e0e4736 parentSpan 0000000000000000 recorded True
+
+mode ambient; ProxyTap 4.19.2.0; OpenTelemetry 1.0.0.0
+ambient activity at start-up: 00-f0c545c3683a9631686d36acdb9d985a-978d5e6c87c2a4c6-00
+request 1: sent (none), forwarded (none) baggage=(none)
+  forwarded trace DIFFERS from the record's; record activityTraceId 4bf92f3577b34da6a3ce929d0e0e4736 spanId 00b39027676993ba
+request 2: sent (none), forwarded (none) baggage=(none)
+  forwarded trace DIFFERS from the record's; record activityTraceId 4bf92f3577b34da6a3ce929d0e0e4736 spanId 2874ec3c64e9dbdc
+
+mode ambient+tap; ProxyTap 4.19.2.0; OpenTelemetry 1.0.0.0
+ambient activity at start-up: 00-1bf49b34593162215cf195cbff0e22c0-a42f9d66a66df310-00
+request 1: sent (none), forwarded 00-3393623fa1bb25cf5125ca5790fc56a0-a05cfe0852407b70-01 baggage=(none)
+  forwarded trace == the record's trace; record activityTraceId 3393623fa1bb25cf5125ca5790fc56a0 spanId a05cfe0852407b70
+request 2: sent (none), forwarded 00-b6d42eee79f54de7717cf0d80b015bf5-bc0e8ac325fabe93-01 baggage=(none)
+  forwarded trace == the record's trace; record activityTraceId b6d42eee79f54de7717cf0d80b015bf5 spanId bc0e8ac325fabe93
+
+mode none; ProxyTap 4.19.2.0; OpenTelemetry 1.0.0.0
+request 1: sent 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01, forwarded 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01 baggage=(none)
+  forwarded trace == the caller's; record activityTraceId 0af7651916cd43dd8448eb211c80319c spanId b7ad6b7169203331
+request 2: sent 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01, forwarded 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01 baggage=(none)
+  forwarded trace == the caller's; record activityTraceId 0af7651916cd43dd8448eb211c80319c spanId b7ad6b7169203331
+
+mode otel-http; ProxyTap 4.19.2.0; OpenTelemetry 1.0.0.0
+request 1: sent 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01, forwarded 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01 baggage=(none)
+  forwarded trace == the caller's; record activityTraceId 0af7651916cd43dd8448eb211c80319c spanId b7ad6b7169203331
+request 2: sent 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01, forwarded 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01 baggage=(none)
+  forwarded trace == the caller's; record activityTraceId 0af7651916cd43dd8448eb211c80319c spanId b7ad6b7169203331
+
+mode otel-http+kronikol; ProxyTap 4.19.2.0; OpenTelemetry 1.0.0.0
+request 1: sent 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01, forwarded 00-0af7651916cd43dd8448eb211c80319c-fadf4be5bd0b9d43-01 baggage=(none)
+  forwarded trace == the caller's; record activityTraceId 0af7651916cd43dd8448eb211c80319c spanId fadf4be5bd0b9d43
+request 2: sent 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01, forwarded 00-0af7651916cd43dd8448eb211c80319c-a39c294b80c1353e-01 baggage=(none)
+  forwarded trace == the caller's; record activityTraceId 0af7651916cd43dd8448eb211c80319c spanId a39c294b80c1353e
+

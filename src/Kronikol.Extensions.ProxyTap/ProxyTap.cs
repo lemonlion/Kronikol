@@ -115,7 +115,7 @@ public sealed class ProxyTap : IAsyncDisposable
         var notApplied = Interlocked.Read(ref _traceIdNotApplied);
         if (notApplied > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.OptionNotApplied,
-                string.Create(CultureInfo.InvariantCulture, $"{name}: TraceIdFromIdentity did not apply to {notApplied:N0} request(s), because their test id is not a W3C trace id (32 lower-case hex digits); they were forwarded under a random trace, so the services behind this tap cannot be matched to the test")));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: TraceIdFromIdentity did not apply to {notApplied:N0} request(s), because their test id is not a W3C trace id (32 lower-case hex digits, not all zero); they were forwarded under a random trace, so the services behind this tap cannot be matched to the test")));
 
         return entries;
     }
@@ -133,6 +133,11 @@ public sealed class ProxyTap : IAsyncDisposable
             AutomaticDecompression = DecompressionMethods.None,
             ConnectTimeout = _options.ConnectTimeout,
             UseCookies = false,
+            // None: the traceparent a forward carries is the tap's to choose, and its client span is the forward's span.
+            // With a propagator the handler runs whatever HttpClient instrumentation the process has, and OpenTelemetry's
+            // puts a span of its own in place of the header: a new trace when nothing listens to the tap, the sampled
+            // flag cleared under Kronikol's internal-flow listener.
+            ActivityHeadersPropagator = null,
         })
         {
             BaseAddress = _options.ForwardBaseUri,
@@ -143,7 +148,19 @@ public sealed class ProxyTap : IAsyncDisposable
         _listener.Start();
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        _loop = Task.Run(() => AcceptLoopAsync(_cts.Token), CancellationToken.None);
+        // The accept loop, and every request it hands on, runs in the context it is started in. Started under an activity
+        // (a fixture's, a host's), every call that brought no trace would be forwarded in that activity's trace, with its
+        // baggage, whatever test made it. Requests start with no current activity.
+        var current = Activity.Current;
+        Activity.Current = null;
+        try
+        {
+            _loop = Task.Run(() => AcceptLoopAsync(_cts.Token), CancellationToken.None);
+        }
+        finally
+        {
+            Activity.Current = current;
+        }
         _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap listening on {ListenUri} → {_options.ForwardBaseUri}");
         return Task.CompletedTask;
     }
@@ -266,8 +283,8 @@ public sealed class ProxyTap : IAsyncDisposable
                 : identityTrace is { } testTrace
                     ? new ActivityContext(ActivityTraceId.CreateFromString(testTrace), default, ActivityTraceFlags.Recorded, isRemote: true)
                     : default;
-            // A parent with no span id adopts Activity.Current, here whatever the tap was started under (its accept loop
-            // runs in that context), so the test's trace would hang off it. It starts here, as a root.
+            // A parent with no span id adopts Activity.Current, and the test's trace would hang off it. The accept loop
+            // starts with none, but the host's IdentityResolver runs on this flow and can set one. It starts here, as a root.
             if (parent != default && parent.SpanId == default)
                 Activity.Current = null;
             server = ActivitySource.StartActivity($"tap {_options.DisplayName}", ActivityKind.Server, parent);
@@ -393,9 +410,10 @@ public sealed class ProxyTap : IAsyncDisposable
     /// what <see cref="ActivityTraceId.CreateFromString(ReadOnlySpan{char})"/> takes and what every reader behind the
     /// tap turns back into the same test id.
     /// </summary>
-    internal static bool IsTraceId(string id)
+    internal static bool IsTraceId(string? id)
     {
-        if (id.Length != 32)
+        // Null too: the resolver's id is declared non-null, but a host can return null, and the request is forwarded then.
+        if (id is not { Length: 32 })
             return false;
         var nonZero = false;
         foreach (var c in id)
@@ -412,7 +430,7 @@ public sealed class ProxyTap : IAsyncDisposable
     private string? NotApplied()
     {
         if (Interlocked.Increment(ref _traceIdNotApplied) == 1)
-            _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap: TraceIdFromIdentity did not apply, because the test id is not a W3C trace id (32 lower-case hex digits); the request was forwarded under a random trace. Diagnostics() counts every such request.");
+            _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap: TraceIdFromIdentity did not apply, because the test id is not a W3C trace id (32 lower-case hex digits, not all zero); the request was forwarded under a random trace. Diagnostics() counts every such request.");
         return null;
     }
 

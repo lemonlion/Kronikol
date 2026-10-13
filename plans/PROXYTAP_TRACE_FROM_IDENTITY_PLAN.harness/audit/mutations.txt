@@ -1,0 +1,68 @@
+Mutations of the #170 audit's fixes, 2026-10-13 (mutate.py: each applied alone, the named facts run, the file put
+back from memory). First run, all thirteen:
+
+CAUGHT   D3: the tap client runs the process HttpClient instrumentation again
+         ('Failed!', '3', '30')
+         - HttpClient_instrumentation_in_the_taps_process_leaves_the_forwarded_traceparent_alone
+         - Under_Kronikols_listener_and_HttpClient_instrumentation_the_forward_stays_sampled_under_the_taps_span
+CAUGHT   D4: the accept loop starts under the caller activity again
+         ('Failed!', '1', '32')
+         - A_tap_started_under_an_activity_does_not_carry_it_into_the_calls_it_forwards
+CAUGHT   D4: StartAsync does not give the caller activity back
+         ('Failed!', '1', '32')
+         - Starting_a_tap_leaves_the_callers_current_activity_alone
+CAUGHT   D4: no clear in HandleAsync for a parent with no span id
+         ('Failed!', '1', '32')
+         - The_server_span_is_a_root_of_the_test_trace_when_the_resolver_leaves_an_activity_current
+CAUGHT   D5: the diagnostic leaves out "not all zero"
+         ('Failed!', '7', '26')
+         - Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted
+CAUGHT   D5: the log line leaves out "not all zero"
+         ('Failed!', '7', '26')
+         - Ids_that_are_not_trace_ids_keep_a_random_trace_and_are_counted
+CAUGHT   D6: IsTraceId reads the length of a null id
+         ('Failed!', '1', '32')
+         - A_resolver_that_names_no_id_is_still_forwarded_and_counted
+CAUGHT   D12: no span tree in the nesting
+         ('Failed!', '1', '213')
+         - Overlapping_calls_to_one_service_keep_the_database_calls_made_under_their_own_span
+SURVIVED D12: the ids above a call include its own span id
+         ('Passed!', '0', '214')
+SURVIVED D12: tree evidence from a candidate in another trace
+         ('Passed!', '0', '214')
+SURVIVED D1: a call owns only the calls directly inside it
+         ('Passed!', '0', '214')
+SURVIVED D1: a call owns its inner calls of every trace
+         ('Passed!', '0', '214')
+CAUGHT   D1: a call does not own its own span id
+         ('Failed!', '14', '200')
+         - A_span_supplied_twice_is_drawn_once_and_counted
+         - Manual_sources_narrow_the_supplied_spans
+         - The_graphql_calls_popup_holds_the_resolver_tree_and_the_test_its_whole_flow
+         - The_span_store_is_neither_read_nor_written_by_an_ingest_given_spans
+         - A_call_keeps_the_spans_of_a_delivery_on_its_kronikol_trace
+         - A_call_keeps_the_spans_of_the_calls_made_inside_it_whatever_span_they_recorded
+         - A_call_made_after_another_was_answered_did_not_run_inside_it
+         - A_call_of_the_test_that_records_no_span_id_keeps_every_span_of_the_trace_in_its_time
+         - A_call_record_handed_in_twice_does_not_hang_the_builder
+         - A_nested_call_of_one_test_still_shows_inside_its_outer_call
+         - Many_calls_of_one_test_in_one_trace_are_told_apart_in_time_that_grows_with_the_calls
+         - Overlapping_calls_of_one_test_in_one_trace_keep_their_own_spans
+         - Overlapping_calls_to_one_service_keep_the_database_calls_made_under_their_own_span
+         - Spans_that_descend_from_no_call_stay_in_every_overlapping_window
+
+Of the four that survived the first run:
+- "the ids above a call include its own span id" and "a call owns only the calls directly inside it" were real gaps:
+  no fact had two calls recording one span with a call nested in one of them by the flow rule alone, or nesting two
+  deep. Facts A_call_does_not_run_inside_another_that_records_the_same_span and
+  A_call_keeps_the_spans_of_the_calls_nested_two_deep_inside_it were added (both pass on 4.19.0, whose rule had no such
+  mutation to make). Second run of those two, after the facts (python -u mutate.py "own span id" "directly inside"),
+  with the builder's facts at 216 of 216 unmutated:
+    CAUGHT   D12: the ids above a call include its own span id - A_call_does_not_run_inside_another_that_records_the_same_span
+    CAUGHT   D1: a call owns only the calls directly inside it - A_call_keeps_the_spans_of_the_calls_nested_two_deep_inside_it
+- "tree evidence from a candidate in another trace" and "a call owns its inner calls of every trace" are equivalent: a
+  call's own ids are compared only with the chains of its own trace's spans, and span ids are random per trace, so an
+  id from another trace matches nothing there unless two traces share an id by construction. Each check states the
+  rule and is kept.
+
+Result: 11 of 13 caught, 2 equivalent with the reason above.

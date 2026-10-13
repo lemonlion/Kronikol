@@ -19,3 +19,11 @@ before anything else has touched the `ProxyTap` type fails with `TypeInitializat
 source, created inside `HttpListener.AddPrefix`. Creating `ProxyTap.ActivitySource` calls `ShouldListenTo`
 synchronously while the field is still null. Compare with the constant `ProxyTap.ActivitySourceName`, as
 `ProxyTapTests` does. The issue's repro reads `ActivitySource.Name` and works only because it builds the tap first.
+
+## audit/ (2026-10-13)
+
+The audit of both releases (plan section 12). `probe-http-instrumentation.cs` shows what reaches the service behind a
+tap whose process instruments HttpClient or that was started under an activity (`-local` runs this tree); `acceptance.cs`
+is section 5.3's acceptance (`acceptance-4.19.0.cs` runs the published 4.19.0); `bench-f4.cs` times the builder on one
+test whose calls share one trace; `mutate.py` runs the mutations. Each has its output beside it, and `red-4.19.0.txt`
+holds the red proofs. `plan_edits.py`, `roadmap_edits.py` and `../wiki/audit_wiki.py` hold the record's edits.
