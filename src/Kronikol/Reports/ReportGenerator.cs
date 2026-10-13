@@ -153,10 +153,9 @@ public static class ReportGenerator
     /// </summary>
     /// <remarks>
     /// <paramref name="getEnv"/> answers for CI detection, history resolution and run retention — the
-    /// three that decide what is on disk afterwards. The CI <em>channels</em> further down (the step
-    /// summary, the artifact publisher, the pointer's annotation) still read the real environment: they
-    /// write outside the reports directory, and a test that injects "on CI" does not mean "append to the
-    /// real job summary".
+    /// three that decide what is on disk afterwards — and for the CI channels further down: the step
+    /// summary, the artifact publisher, and what the CI text says of the run (<see cref="CiReader"/>). A test
+    /// that injects "on CI" names its own step summary, and never appends to the real job summary.
     ///
     /// <para><paramref name="beforeFirstWrite"/> is handed the reports directory after the previous run has
     /// been rotated out of it and before this run writes its first byte into it — the one moment a host
@@ -671,6 +670,11 @@ public static class ReportGenerator
             agentInstructionsWritten: options.WriteAgentInstructions
                                       && File.Exists(Path.Combine(reportsDir, AgentInstructionsGenerator.ClaudeFileName)),
             suite: suite,
+            // A data file the directory lookup would not find (a custom HtmlTestRunReportFileName) is named, as a
+            // merge names its own; without it every printed query answered "No TestRunReport.json under".
+            queryTarget: options.TestRunReportDataFormat == DataFormat.Json && written.Contains($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}")
+                ? RunSummaryConsoleWriter.QueryTargetFor(Path.Combine(reportsDir, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"))
+                : null,
             // Only when it has something to say, or when the pointer is speaking anyway: a line on every
             // green run is a line people learn to skip.
             history: history is not null && (history.Verdicts?.HasAnything == true || features.Any(f => (f.Scenarios ?? []).Any(s => s.Result == ExecutionResult.Failed)))
@@ -690,6 +694,8 @@ public static class ReportGenerator
         // The CI writes below read the run's environment (getEnv), as the rest of the run does, and each is
         // isolated as the output list is: an exception in one costs a diagnostic, never Run.json or the pointer.
         var ciEnvironment = CiEnvironmentDetector.Detect(getEnv);
+        // Who reads the CI text, and from where: off the runner, from the run's page or a download of its artifacts.
+        var ciReader = CiReader.Detect(getEnv, options);
         if (options.WriteCiSummary)
         {
             string? markdown = null;
@@ -699,9 +705,11 @@ public static class ReportGenerator
                 markdown = CiSummaryGenerator.GenerateMarkdown(features, truncatedDiagrams, fullDiagrams, startRunTime, endRunTime, options.MaxCiSummaryDiagrams,
                     options.DiagramFormat, options.PlantUmlServerBaseUrl, options.LocalDiagramRenderer);
 
-                // The job summary is written to a file descriptor rather than to stdout, so unlike the console
-                // pointer it survives every runner — which makes it the reliable place to say how to debug.
-                markdown += RunSummaryConsoleWriter.BuildCiSummarySection(runSummary);
+                // On GitHub the job summary is a file the runner reads rather than stdout, so unlike the console
+                // pointer it survives the runners that swallow output; Azure DevOps takes it as a logging command on
+                // stdout, which dotnet test swallows (plans/CI_SUMMARY_AUDIENCE_PLAN.md F10). A failing run's ends
+                // with how to debug it, a green run's with where the report is.
+                markdown += RunSummaryConsoleWriter.BuildCiSummarySection(runSummary, ciReader);
 
                 var directory = CurrentReportsDirectory;
                 Directory.CreateDirectory(directory);
@@ -709,7 +717,7 @@ public static class ReportGenerator
                 RunFileCollector.Record(Path.Combine(directory, CiSummaryFileName));
             });
 
-            // Written even when CiSummary.md could not be: the job summary is the channel that survives.
+            // Written even when CiSummary.md could not be: on GitHub the job summary is the channel that survives.
             if (markdown is { } summary)
                 RunIsolated("the CI job summary", () => CiSummaryWriter.Write(summary, ciEnvironment, getEnv, File.AppendAllText, Console.WriteLine));
         }
@@ -753,7 +761,7 @@ public static class ReportGenerator
         {
             RunIsolated("the CI debug section", () =>
             {
-                var debugSection = RunSummaryConsoleWriter.BuildCiSummarySection(runSummary);
+                var debugSection = RunSummaryConsoleWriter.BuildCiSummarySection(runSummary, ciReader);
                 Console.WriteLine(debugSection);
                 CiSummaryWriter.Write(debugSection, ciEnvironment, getEnv, File.AppendAllText, Console.WriteLine);
             });
@@ -761,7 +769,7 @@ public static class ReportGenerator
 
         // Last, so it is the final thing the run says.
         if (options.WriteRunSummaryToConsole)
-            RunIsolated("the run summary", () => RunSummaryConsoleWriter.Write(runSummary, ciEnvironment, Console.WriteLine));
+            RunIsolated("the run summary", () => RunSummaryConsoleWriter.Write(runSummary, ciEnvironment, Console.WriteLine, Console.WriteLine, ciReader));
     }
 
     /// <summary>

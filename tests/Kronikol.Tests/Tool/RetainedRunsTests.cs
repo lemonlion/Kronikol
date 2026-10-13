@@ -200,6 +200,39 @@ public class RetainedRunsTests : IDisposable
         Assert.Contains("0 failed", output, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// A download of a matrix's or a sharded run's artifacts holds a report per leg, under artifact names that need not
+    /// say which leg is which, and the list of several gave bare paths (plans/CI_SUMMARY_AUDIENCE_PLAN.md F12, Q12). Each
+    /// line now carries the report's size and, from the Run.json its run wrote beside it, its suite and failures; a merge
+    /// writes no Run.json, and a Run.json that does not list the report is another run's.
+    /// </summary>
+    [Fact]
+    public void Several_reports_are_listed_with_their_size_suite_and_failures()
+    {
+        var download = Path.Combine(_dir, "kronikol-7");
+        WriteRun(Path.Combine(download, "leg-a"), "7", "Failed", Noon);
+        WriteRun(Path.Combine(download, "leg-b"), "7", "Passed", Noon);
+        Directory.CreateDirectory(Path.Combine(download, "merged"));
+        File.WriteAllText(Path.Combine(download, "merged", "TestRunReport.json"), Report("Failed", "7"));
+        Directory.CreateDirectory(Path.Combine(download, "stale"));
+        File.WriteAllText(Path.Combine(download, "stale", "TestRunReport.json"), Report("Passed", "6"));
+        new RunManifest { Run = "gh:6:1", At = Noon, Suite = "Other", Scenarios = 9, Failed = 9, Files = ["Checkout.json"] }.Write(Path.Combine(download, "stale"));
+
+        var (output, error, exit) = Query("failures", download);
+
+        Assert.Equal(2, exit);
+        Assert.Equal("", output);
+        var lines = error.Split('\n').Select(l => l.TrimEnd('\r')).Where(l => l.Length > 0).ToArray();
+        Assert.Equal($"Several reports under {download} — name the one you mean:", lines[0]);
+        Assert.Equal(5, lines.Length);
+        string Line(string leg) =>
+            $"  {Path.Combine(download, leg, "TestRunReport.json")}  {RunSummaryConsoleWriter.Size(new FileInfo(Path.Combine(download, leg, "TestRunReport.json")).Length)}";
+        Assert.Contains(Line("leg-a") + " · suite Suite · 1 of 2 failed", lines);
+        Assert.Contains(Line("leg-b") + " · suite Suite · 0 of 2 failed", lines);
+        Assert.Contains(Line("merged"), lines);
+        Assert.Contains(Line("stale"), lines);
+    }
+
     [Fact]
     public void Merge_sweeps_neither_the_retained_runs_nor_the_files_kronikol_writes_beside_a_report()
     {

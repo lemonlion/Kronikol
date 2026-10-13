@@ -9,7 +9,7 @@ namespace Kronikol.Tests.Reports;
 /// in all of them. Two things were not: <c>diagnostics</c> and <c>annotations</c> reached the JSON
 /// writer and nowhere else.
 ///
-/// <para>The mechanism is one line each. <see cref="ReportGenerator.GenerateTestRunReportData"/> resolves
+/// <para>The mechanism is one line each. <c>ReportGenerator.GenerateTestRunReportData</c> resolves
 /// both and then passes them on the JSON arm of its switch only — the XML and YAML writers do not take
 /// the parameters, so there was nothing to drop: a reader could not tell a run with no diagnostics from
 /// a format that cannot carry them. <c>diagnostics</c> is where a degraded capture, a diagram that

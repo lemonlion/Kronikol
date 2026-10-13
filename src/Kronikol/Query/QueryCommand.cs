@@ -469,9 +469,37 @@ public static partial class QueryCommand
             default:
                 error.WriteLine($"Several reports under {path} — name the one you mean:");
                 foreach (var file in found)
-                    error.WriteLine("  " + file);
+                    error.WriteLine("  " + DescribeReport(file));
                 return null;
         }
+    }
+
+    /// <summary>
+    /// One report in the list of several: its path and size and, from the <c>Run.json</c> its run wrote beside it, its
+    /// suite and how many of its scenarios failed. A download of a matrix's or a sharded run's artifacts holds a
+    /// report per leg, under artifact names that need not say which is which (plans/CI_SUMMARY_AUDIENCE_PLAN.md F12).
+    /// A merge writes no <c>Run.json</c>, and one that does not list the report is another run's: either way the
+    /// line is the path and the size.
+    /// </summary>
+    private static string DescribeReport(string file)
+    {
+        var line = file;
+        try
+        {
+            line += "  " + RunSummaryConsoleWriter.Size(new FileInfo(file).Length);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return line;
+        }
+
+        var directory = Path.GetDirectoryName(file);
+        if (directory is null || RunManifest.TryRead(Path.Combine(directory, RunManifest.FileName)) is not { } manifest
+            || !manifest.Files.Contains(Path.GetFileName(file), StringComparer.OrdinalIgnoreCase))
+            return line;
+
+        var suite = string.IsNullOrWhiteSpace(manifest.Suite) ? "" : $" · suite {QueryWriter.OneLine(manifest.Suite, 80)}";
+        return $"{line}{suite} · {manifest.Failed} of {manifest.Scenarios} failed";
     }
 
     /// <summary>The conventional folder name a <c>--baseline</c> report lives in, beside the current one.</summary>

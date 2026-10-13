@@ -136,7 +136,7 @@ public static class MergedRunOutputs
             candidates,
             agentInstructionsWritten: written.Contains(AgentInstructionsGenerator.ClaudeFileName),
             suite: report.Suite,
-            queryTarget: QueryTarget(dataFilePath),
+            queryTarget: RunSummaryConsoleWriter.QueryTargetFor(dataFilePath),
             history: history is not null && (history.HasAnything || report.Features.Any(f => (f.Scenarios ?? []).Any(s => s.Result == ExecutionResult.Failed)))
                 ? "history: " + History.HistorySummary.Line(history)
                 : null) with
@@ -145,6 +145,8 @@ public static class MergedRunOutputs
         };
 
         var ci = CiEnvironmentDetector.Detect(getEnv);
+        // Who reads the CI text, and from where: as for a run, off the runner (plans/CI_SUMMARY_AUDIENCE_PLAN.md).
+        var reader = CiReader.Detect(getEnv, options);
 
         if (options.WriteCiSummary)
         {
@@ -155,7 +157,7 @@ public static class MergedRunOutputs
                 var markdown = CiSummaryGenerator.GenerateMarkdown(
                         report.Features, report.Diagrams, report.Diagrams, report.StartTime, report.EndTime,
                         options.MaxCiSummaryDiagrams, options.DiagramFormat, options.PlantUmlServerBaseUrl, options.LocalDiagramRenderer)
-                    + RunSummaryConsoleWriter.BuildCiSummarySection(summary);
+                    + RunSummaryConsoleWriter.BuildCiSummarySection(summary, reader);
 
                 File.WriteAllText(Path.Combine(directory, "CiSummary.md"), markdown);
                 CiSummaryWriter.Write(markdown, ci, getEnv, File.AppendAllText, output.WriteLine);
@@ -164,9 +166,8 @@ public static class MergedRunOutputs
         else if (options.WriteCiDebugSection && summary.Failures.Count > 0 && ci != CiEnvironment.None)
         {
             // A failing merge on CI says how to debug itself on both channels, exactly as a failing run
-            // does: the job summary survives the runners that swallow stdout, and the log is what
-            // `gh run view --log` shows.
-            var section = RunSummaryConsoleWriter.BuildCiSummarySection(summary);
+            // does: the job summary is what people read, and the log is what `gh run view --log` shows.
+            var section = RunSummaryConsoleWriter.BuildCiSummarySection(summary, reader);
             output.WriteLine(section);
             CiSummaryWriter.Write(section, ci, getEnv, File.AppendAllText, output.WriteLine);
         }
@@ -179,23 +180,9 @@ public static class MergedRunOutputs
 
         // Last, so it is the final thing the merge says.
         if (options.WriteRunSummaryToConsole)
-            RunSummaryConsoleWriter.Write(summary, ci, output.WriteLine);
+            RunSummaryConsoleWriter.Write(summary, ci, output.WriteLine, output.WriteLine, reader);
 
         return written;
-    }
-
-    /// <summary>
-    /// The file <c>kronikol query</c> has to be handed, when the directory would not find it: a directory
-    /// lookup finds <c>TestRunReport.json</c> and nothing else, and a merge names its data file after
-    /// <c>-o</c>.
-    /// </summary>
-    private static string? QueryTarget(string? dataFilePath)
-    {
-        if (dataFilePath is null)
-            return null;
-
-        var full = Path.GetFullPath(dataFilePath);
-        return string.Equals(Path.GetFileName(full), "TestRunReport.json", StringComparison.OrdinalIgnoreCase) ? null : full;
     }
 
     /// <summary>

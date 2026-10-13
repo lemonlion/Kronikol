@@ -331,7 +331,9 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
 
         var summary = File.ReadAllText(Path.Combine(_dir, "CiSummary.md"));
         Assert.Contains("## Debug this run", summary);
-        Assert.Contains($"kronikol query failures {_dir}", summary);
+        // This reads the process's CI: on this repository's own pipeline a download of the run, off it the folder.
+        Assert.Contains("kronikol query failures ", summary);
+        Assert.Contains(_dir, summary);
         Assert.Contains("Failures.md", summary);
     }
 

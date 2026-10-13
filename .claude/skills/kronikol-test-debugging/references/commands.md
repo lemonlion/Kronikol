@@ -3,7 +3,8 @@
 `kronikol query <command> <report> [args]`
 
 `<report>` is a `TestRunReport.json`, or a directory holding one. When a directory holds several the tool
-lists them and stops rather than guessing.
+lists them, each with its size and, from the `Run.json` beside it, its suite and failure count, and stops
+rather than guessing.
 
 Everything here also runs with nothing installed, from a reports directory:
 `dotnet run --file query.cs -- <command> <report> [args]` takes the same commands, addresses and flags and

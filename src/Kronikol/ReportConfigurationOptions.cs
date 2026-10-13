@@ -283,10 +283,13 @@ public record ReportConfigurationOptions
     /// </summary>
     /// <remarks>
     /// The console is a best-effort channel, not a guaranteed one: measured on .NET 10, every VSTest-hosted
-    /// runner under <c>dotnet test</c> swallows what a library writes from a run-end hook unless the
-    /// verbosity is <c>detailed</c>, and TUnit's runner suppresses it at any verbosity. The channels that
-    /// always work are the files — see <see cref="GenerateFailuresDigest"/> and
-    /// <see cref="WriteAgentInstructions"/> — and the CI job summary.
+    /// runner under <c>dotnet test</c> swallows what a library writes from a run-end hook, at <c>detailed</c>
+    /// verbosity too (xUnit v3 through its VSTest adapter, measured again on 2026-10-13), and TUnit's runner
+    /// suppresses it at any verbosity. A directly run MTP host, <c>kronikol merge</c> and <c>kronikol ingest</c>
+    /// own their stdout and show it. The channels that always work are the files — see
+    /// <see cref="GenerateFailuresDigest"/> and <see cref="WriteAgentInstructions"/> — and, on GitHub Actions,
+    /// the job summary, which is a file the runner reads. Azure DevOps takes its summary as a logging command
+    /// on stdout, so under <c>dotnet test</c> that is swallowed too.
     /// </remarks>
     public bool WriteRunSummaryToConsole { get; set; } = true;
 
@@ -346,13 +349,30 @@ public record ReportConfigurationOptions
     /// </summary>
     public bool GenerateSpecificationsMarkdown { get; set; }
 
-    /// <summary>When <c>true</c>, writes a test summary to the CI job summary (e.g. GitHub Actions).</summary>
+    /// <summary>
+    /// When <c>true</c>, writes a test summary to the CI job summary (e.g. GitHub Actions) and to
+    /// <c>CiSummary.md</c> beside the report. It ends with the section <see cref="WriteCiDebugSection"/>
+    /// describes when something failed, and on a green run with that section's part for people, under
+    /// "The report": which file to open and where the run's artifacts are, then the history line and where the
+    /// previous run is kept when either has something to say.
+    /// </summary>
     public bool WriteCiSummary { get; set; }
 
     /// <summary>
-    /// When <c>true</c> (the default), a CI run with failures prints a short "Debug this run" block naming
-    /// the reports directory and the two commands that explain it - to <b>stdout and, additionally, to the
-    /// job summary</b>.
+    /// When <c>true</c> (the default), a CI run with failures writes a short "Debug this run" section - to
+    /// <b>stdout and, additionally, to the job summary</b>. It speaks to people first: which report to open
+    /// (<c>TestRunReport.html</c>, or <c>Failures.md</c>), the folder this job wrote it to, relative to the
+    /// workspace, and a link to the run's artifacts, with an upload stated only where Kronikol made one. Then,
+    /// labelled for AI agents, the rule not to open the report and the commands that query it: on GitHub Actions
+    /// a download of the run's artifacts (<c>gh run download</c>) and queries on the download, since the
+    /// runner's folder is gone once the job ends; off CI, the folder.
+    ///
+    /// <para><b>Who reads which channel</b> (plans/CI_SUMMARY_AUDIENCE_PLAN.md, measured 2026-10-13): a GitHub
+    /// job summary is read by signed-in people in a browser, and by no API, <c>gh</c> command or MCP tool; the
+    /// job log by agents (<c>gh run view --log</c>) and people; the <c>::notice</c> annotation by both, which is
+    /// why it carries the download and the query on its own. On Azure DevOps the summary travels as a logging
+    /// command on stdout, like the log copy, so under <c>dotnet test</c> neither arrives; from
+    /// <c>kronikol merge</c>, <c>kronikol ingest</c> or a directly run MTP host both do.</para>
     ///
     /// <para><b>Why it is separate from <see cref="WriteCiSummary"/>.</b> That option generates the full
     /// <c>CiSummary.md</c>, which carries rendered diagrams and has been measured at 48&#160;KB; turning it
@@ -364,11 +384,12 @@ public record ReportConfigurationOptions
     ///
     /// <para><b>Why both channels, measured.</b> The step summary is not the job log: content written only
     /// to <c>$GITHUB_STEP_SUMMARY</c> is absent from <c>gh run view --log</c>, which is the command an
-    /// agent reaches for - so a summary-only block is invisible to the reader it is written for. And the
-    /// console alone is not enough either: measured on .NET&#160;10, <c>dotnet test</c> under NUnit&#160;4
-    /// swallowed a library's stdout while letting its stderr through, and under xUnit&#160;2 swallowed
-    /// <b>both</b>. No console channel survives every runner, which is why this writes to two places and
-    /// why the files beside the report remain the channel that always works.</para>
+    /// agent reaches for, and no API returns a job summary at all - so a summary-only block reaches agents
+    /// only through a person who pastes it. And the console alone is not enough either: measured on
+    /// .NET&#160;10, <c>dotnet test</c> under NUnit&#160;4 swallowed a library's stdout while letting its
+    /// stderr through, and under xUnit&#160;2 swallowed <b>both</b>. No console channel survives every
+    /// runner, which is why this writes to two places and why the files beside the report remain the
+    /// channel that always works.</para>
     ///
     /// <para>Silent on a green run and off CI: a block that speaks on every run is a block people learn to
     /// skip. Default: <c>true</c>.</para>
@@ -378,7 +399,14 @@ public record ReportConfigurationOptions
     /// <summary>Maximum number of diagrams to include in the CI summary output. Default: <c>10</c>.</summary>
     public int MaxCiSummaryDiagrams { get; set; } = 10;
 
-    /// <summary>When <c>true</c>, publishes report files as CI artifacts (GitHub Actions).</summary>
+    /// <summary>
+    /// When <c>true</c>, hands the reports to the CI's artifact store. On Azure DevOps it asks the agent to
+    /// upload each file as <see cref="CiArtifactName"/>, with an <c>##vso[artifact.upload]</c> logging command
+    /// on stdout, which <c>dotnet test</c> swallows like the rest of a run's console output (from
+    /// <c>kronikol merge</c> or <c>kronikol ingest</c> it arrives). On GitHub Actions it uploads nothing: it
+    /// writes <c>reports-path</c> and <c>reports-retention-days</c> to <c>$GITHUB_OUTPUT</c> for the job's own
+    /// <c>actions/upload-artifact</c> step to read, and that step names the artifact.
+    /// </summary>
     public bool PublishCiArtifacts { get; set; }
 
     /// <summary>Name of the CI artifact containing the reports. Default: <c>"TestReports"</c>.</summary>

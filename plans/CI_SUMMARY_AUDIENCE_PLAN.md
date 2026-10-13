@@ -5,9 +5,10 @@ and checked again at `f03452fc`, where no file cited here had changed, and none 
 4.19.0; the wiki's are for `origin/master` at `e5c5a5b`,
 Kronikol4J's for `origin/main` at `4ff5c07`) · **Status:** **green-lit in full by the owner on 2026-10-13** ("implement
 the plan in full"), every §9 question as recommended, with a roadmap row (Q9) and the Azure DevOps issue (Q13) left to
-the owner; being implemented (§11). Drafted from #169 (filed 2026-10-12 against 4.14.10) at the owner's ask of
-2026-10-13 to analyse the issue critically and plan a fix for the underlying problem, then checked again at the owner's
-ask the same day (§11). Not placed in `ROADMAP.md` (Q9).
+the owner; **executed as 4.19.7** (R1, R2 and R3 in one patch, §11). Drafted from #169 (filed 2026-10-12 against
+4.14.10) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying problem,
+then checked again at the owner's ask the same day (§11). No stage row in `ROADMAP.md` (Q9); its leftovers are a row of
+Appendix C.
 
 Evidence labels: **RUN** (measured on 2026-10-13 on Windows 11 with the .NET SDK 10.0.300: the published Kronikol
 4.18.1 from nuget.org, by [`CI_SUMMARY_AUDIENCE_PLAN.harness/probe.cs`](CI_SUMMARY_AUDIENCE_PLAN.harness/README.md), whose
@@ -659,6 +660,54 @@ plan's files, and is the first thing a person on a failing CI run reads, so a st
   (Q11), the counts in the list (Q12) and the run-end pointer as it is (Q14). Two answers are acts only the owner
   takes, a roadmap row (Q9) and filing the Azure DevOps code fix as an issue (Q13), so neither is done here. Moved
   onto `b7c633f4` first: no file cited here changed.
+- **2026-10-13, implemented (kronikol-21)** as 4.19.7, one patch, in worktree `C:/Code/Kronikol-169` (branch
+  `impl/169`). An internal `CiReader` (`src/Kronikol/Reports/CiReader.cs`) carries what the CI text needs: the run's
+  page, id and attempt, the repository, the host on GitHub Enterprise, the workspace, the artifact Kronikol uploads on
+  Azure DevOps, whether `PublishCiArtifacts` handed the folder to a GitHub upload step, and the Kronikol version. The
+  section, the annotation and `Write` take it through internal overloads; the public ones read the process's CI with
+  default options (Q11). The agent part has three forms: a guarded download on GitHub with a run id and a repository,
+  the uploaded artifact on Azure DevOps with `PublishCiArtifacts`, and today's commands on the folder otherwise.
+  `RunSummaryConsoleWriter.QueryTargetFor` is the merge's rule, now shared with the run (F11). `kronikol query`'s list
+  of several reports reads each one's `Run.json` (F12, Q12), and takes it only when it lists the report.
+  Decided while building, beyond the plan's text:
+  - **A green run's "The report" keeps the history line and the previous-run line** when either has something to
+    say. §4.5 said "the people part alone"; read literally it would have dropped the ledger's line, which
+    `Cross-Run-History.md` says the job summary carries, and the previous-run line #80 added so that a green re-run
+    does not hide the failing run before it. Neither speaks on every run.
+  - **The `find` for a data file the folder lookup misses skips `runs/` and `baseline/`**, as the lookup does
+    (`ReportFolders.IsReserved`): `-print -quit` takes the first match in directory order, which can be a kept run.
+    In a download of several legs it takes the first leg's file, and the sentence after the block says so and how
+    to list them.
+  - **No part names a file the run did not write, the pointer included**: with no data file the pointer forbids the
+    HTML, and with no JSON data file it prints no query command (F6, F11). `RunEndPointerSafetyTests`' fixture gained
+    a `TestRunReport.json`, since its facts quote the commands.
+  - **The Azure DevOps build link encodes spaces and parentheses**, which `SYSTEM_TEAMPROJECT` may hold.
+  - Found on the way: the remark on `CreateStandardReportsWithDiagramsInEnvironment` said the CI channels read the
+    real environment; they read `getEnv` (corrected). `CiArtifactPublisher`'s summary said it uploads on GitHub
+    (corrected, F13). The plan's pin list missed `RunEndPointerTests.GitHub_notice_is_one_line_with_counts_and_paths_only`,
+    which the public builder would have broken on this repository's own CI, and `Generated-Reports.md` and
+    `Querying-Reports.md` in the wiki.
+  - Both copies of the skill's `references/commands.md` (the tool embeds one, the templates package packs the other)
+    now say the list of several reports gives each one's size, suite and failure count.
+  - `ROADMAP.md`: no stage row (Q9 is the owner's); this plan's leftovers (Q13, Q6 and §8's catches) are a row of
+    Appendix C.
+  Real-run check (§5), before the release: the implementation was snapshotted on a throwaway branch
+  (`check/169-ci-summary`, deleted after) and `ci-summary-preview.yml` dispatched on it, run 38433876527. The All
+  Passing leg, whose `PublishCiArtifacts` is on, ends with "## The report" and says the job's upload step puts the report
+  in the run's artifacts; the three failing legs put people first, with the folder relative to the workspace and "when
+  the job uploads that folder", then the labelled rule and the guarded download of run 38433876527. The run page holds
+  `id="artifacts"`. The All Failing leg's block, pasted into an empty folder on Windows with the built tool standing in
+  for `kronikol`, downloaded the run's artifacts and listed the four reports with their sizes, suites and failures (11 of
+  11, 0 of 11, 5 of 6 and 15 of 20; the history artifacts hold no report), and the listed All Failing path answered
+  `failures`. Pasted again, the guard did nothing; the same download without it failed on the existing folder.
+  Tests: `CiSummaryAudienceTests` (new, 40 cases), `CiSummaryRunTests` (new, 8 cases: the printed commands run against
+  the layout `gh run download` gives), one new `RetainedRunsTests` fact, and the pins moved in four classes. Proofs
+  (harness `r1/`): 41 of the 108 facts in the touched classes fail on 4.19.0, each on its own assertion
+  (`red-stub.txt`); 33 of 33 mutations are killed (`mutations.txt`), among them M33 for the fact added after the red
+  run; the probe prints the plan's examples (`probe.out.txt`). Checks: after the bump, the core suite passed 7,511 with
+  2 skipped on 4.19.5 and 7,516 with 2 skipped rebased onto 4.19.6; `release.slnf` builds in Release for every target,
+  once nuget.org listed the EF Core 10.0.13 packages it had half-published that day (two attempts failed at restore
+  before) (`checks.txt`).
 
 ## Appendix A. Edit sites at `f03452fc`
 

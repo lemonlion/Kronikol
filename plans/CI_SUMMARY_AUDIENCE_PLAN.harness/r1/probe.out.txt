@@ -1,0 +1,84 @@
+==================== GitHub, failing, attempt 2
+## Debug this run
+
+**People:** open `TestRunReport.html` in a browser to read the whole run, diagrams included, or `Failures.md` for every failure in context. This job wrote them to `tests/Acceptance/bin/Release/net10.0/Reports`; they are in this run's [artifacts](https://github.com/acme/shop/actions/runs/123456789#artifacts) when the job uploads that folder.
+
+**AI agents:** do not open `TestRunReport.json` or `TestRunReport.html` — a real report reaches megabytes, and a single embedded diagram can be larger than a context window. Download the run's artifacts and query them instead:
+
+```bash
+test -d kronikol-123456789 || gh run download 123456789 --repo acme/shop --dir kronikol-123456789
+dotnet tool install -g Kronikol.Tool
+kronikol query summary kronikol-123456789
+kronikol query failures kronikol-123456789
+```
+
+Read `Failures.md` in the download first. If the run uploaded several reports (a matrix, or shards beside their merge), the query lists them with their counts: pass the one you mean. This is attempt 2. After a re-run, `gh run download` keeps one upload of each artifact name, not always this attempt's: `kronikol query summary` names the report's attempt. With nothing installed, `dotnet run --file query.cs -- failures .` in the folder that holds the report runs the same engine, given the .NET 10 SDK and Kronikol 4.19.7 in the NuGet cache. A later step of this job finds the folder at `/home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports`.
+
+The previous run (3 failed) is kept beside the report in `runs/gh_123456789_1`: add `--run last-failed` to a query.
+
+-- annotation:
+::notice title=Kronikol::1 failed of 42 scenarios. Reports in tests/Acceptance/bin/Release/net10.0/Reports (people: TestRunReport.html or Failures.md; agents: gh run download 123456789 --repo acme/shop --dir kronikol-123456789, then kronikol query failures kronikol-123456789)
+==================== GitHub, green
+## The report
+
+**People:** open `TestRunReport.html` in a browser to read the whole run, diagrams included. This job wrote it to `tests/Acceptance/bin/Release/net10.0/Reports`; it is in this run's [artifacts](https://github.com/acme/shop/actions/runs/123456789#artifacts) when the job uploads that folder.
+
+-- annotation:
+(none)
+==================== GitHub without a run id
+## Debug this run
+
+**People:** open `TestRunReport.html` in a browser to read the whole run, diagrams included, or `Failures.md` for every failure in context. This job wrote them to `tests/Acceptance/bin/Release/net10.0/Reports`; they are in this run's artifacts when the job uploads that folder.
+
+**AI agents:** do not open `TestRunReport.json` or `TestRunReport.html` — a real report reaches megabytes, and a single embedded diagram can be larger than a context window. Query it instead:
+
+```bash
+dotnet tool install -g Kronikol.Tool
+kronikol query summary /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports
+kronikol query failures /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports
+```
+
+Read `Failures.md` beside the report first. Nothing to install and no network needed: `dotnet run --file /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports\query.cs -- summary /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports` runs the same engine from the `query.cs` written beside the report, given the .NET 10 SDK.
+
+The previous run (3 failed) is kept in `/home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports/runs/gh_123456789_1` — `kronikol query failures /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports --run last-failed`.
+
+-- annotation:
+::notice title=Kronikol::1 failed of 42 scenarios — kronikol query failures /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports · Failures.md
+==================== Azure DevOps, PublishCiArtifacts off (the public builder's default options)
+## Debug this run
+
+**People:** open `TestRunReport.html` in a browser to read the whole run, diagrams included, or `Failures.md` for every failure in context. This job wrote them to `tests/Acceptance/bin/Release/net10.0/Reports`; they are in this build's artifacts ([build](https://dev.azure.com/acme/My%20Project/_build/results?buildId=77)) when the pipeline publishes that folder.
+
+**AI agents:** do not open `TestRunReport.json` or `TestRunReport.html` — a real report reaches megabytes, and a single embedded diagram can be larger than a context window. Query it instead:
+
+```bash
+dotnet tool install -g Kronikol.Tool
+kronikol query summary /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports
+kronikol query failures /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports
+```
+
+Read `Failures.md` beside the report first. Nothing to install and no network needed: `dotnet run --file /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports\query.cs -- summary /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports` runs the same engine from the `query.cs` written beside the report, given the .NET 10 SDK.
+
+The previous run (3 failed) is kept in `/home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports/runs/gh_123456789_1` — `kronikol query failures /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports --run last-failed`.
+
+-- annotation:
+::notice title=Kronikol::1 failed of 42 scenarios — kronikol query failures /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports · Failures.md
+==================== Off CI
+## Debug this run
+
+**People:** open `TestRunReport.html` in a browser to read the whole run, diagrams included, or `Failures.md` for every failure in context. This run wrote them to `/home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports`.
+
+**AI agents:** do not open `TestRunReport.json` or `TestRunReport.html` — a real report reaches megabytes, and a single embedded diagram can be larger than a context window. Query it instead:
+
+```bash
+dotnet tool install -g Kronikol.Tool
+kronikol query summary /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports
+kronikol query failures /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports
+```
+
+Read `Failures.md` beside the report first. Nothing to install and no network needed: `dotnet run --file /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports\query.cs -- summary /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports` runs the same engine from the `query.cs` written beside the report, given the .NET 10 SDK.
+
+The previous run (3 failed) is kept in `/home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports/runs/gh_123456789_1` — `kronikol query failures /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports --run last-failed`.
+
+-- annotation:
+::notice title=Kronikol::1 failed of 42 scenarios — kronikol query failures /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports · Failures.md

@@ -21,14 +21,18 @@ jobs:
           # until 3.2.0 and had been wrong the whole time.
           - name: "CI Preview — All Passing (11 tests)"
             project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing
+            slug: all-passing
           - name: "CI Preview — All Failing (11 tests)"
             project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllFailing
+            slug: all-failing
           - name: "CI Preview — Mixed (5 pass, 15 fail)"
             project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.Mixed
+            slug: mixed
           # The only fixture in the repository that fails INSIDE a step, which is the only shape that can
           # populate the digest's calls table. Everything else with failures is step-less.
           - name: "CI Preview — Failing Inside a Step (1 pass, 5 fail)"
             project: examples/Example.Api/tests/Example.Api.Tests.CiPreview.FailingWithSteps
+            slug: failing-inside-a-step
     steps:
       - uses: actions/checkout@v7
 
@@ -50,6 +54,18 @@ jobs:
         env:
           PROJECT: ${{ matrix.project }}
         run: dotnet test "$PROJECT" --configuration Release --verbosity normal
+
+      # The reports folder this leg wrote, which its job summary sends people to and whose download its agent part
+      # queries (plans/CI_SUMMARY_AUDIENCE_PLAN.md Q8). One artifact per leg, so a download of the run holds four
+      # reports, as every matrix run's does.
+      - name: Upload the reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: kronikol-reports-${{ matrix.slug }}
+          path: ${{ matrix.project }}/bin/Release/net10.0/Reports
+          retention-days: 7
+          if-no-files-found: error
 
       - name: Build the tool
         if: ${{ !cancelled() }}

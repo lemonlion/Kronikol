@@ -232,7 +232,9 @@ public class LabsReportRunTests : IDisposable
             File.WriteAllText(Path.Combine(dir, name), "x");
         var summary = RunSummaryConsoleWriter.Summarise(Features(ExecutionResult.Failed), dir, ["TestRunReport.json", "Failures.md", "TestRunReport.labs.html"], agentInstructionsWritten: false);
 
+        // Nor names a report the run did not write: the rule is the data file's alone (plans/CI_SUMMARY_AUDIENCE_PLAN.md F6).
         var section = RunSummaryConsoleWriter.BuildCiSummarySection(summary);
-        Assert.Contains("Do not open `TestRunReport.json` or `TestRunReport.html`", section);
+        Assert.Contains("do not open `TestRunReport.json` — ", section);
+        Assert.DoesNotContain(".html", section);
     }
 }

@@ -49,9 +49,10 @@ public class RunEndPointerTests
         Assert.Contains($"kronikol query failures {merged}", text);
         Assert.Contains("never open Combined.json", text);
         Assert.DoesNotContain("TestRunReport.json", text);
-        Assert.Contains($"kronikol query failures {merged}", RunSummaryConsoleWriter.BuildCiSummarySection(summary));
-        Assert.Contains("Do not open `Combined.json` or `Combined.html`", RunSummaryConsoleWriter.BuildCiSummarySection(summary));
-        Assert.Contains($"kronikol query failures {merged}", RunSummaryConsoleWriter.BuildGitHubNotice(summary)!);
+        // Off CI, where the reader has the folder: on CI the section queries a download (CiSummaryAudienceTests).
+        Assert.Contains($"kronikol query failures {merged}", RunSummaryConsoleWriter.BuildCiSummarySection(summary, CiReader.None));
+        Assert.Contains("do not open `Combined.json` or `Combined.html`", RunSummaryConsoleWriter.BuildCiSummarySection(summary, CiReader.None));
+        Assert.Contains($"kronikol query failures {merged}", RunSummaryConsoleWriter.BuildGitHubNotice(summary, CiReader.None)!);
     }
 
     [Fact]
@@ -118,7 +119,8 @@ public class RunEndPointerTests
     [Fact]
     public void The_CI_summary_names_query_cs_when_the_run_wrote_one()
     {
-        var section = RunSummaryConsoleWriter.BuildCiSummarySection(Summary(1) with { QueryScriptWritten = true });
+        // Off CI, beside the report: a reader of a download is told what it needs there (CiSummaryAudienceTests).
+        var section = RunSummaryConsoleWriter.BuildCiSummarySection(Summary(1) with { QueryScriptWritten = true }, CiReader.None);
 
         Assert.Contains($"dotnet run --file {Path.Combine(Dir, "query.cs")} -- summary {Dir}", section);
     }
@@ -173,7 +175,8 @@ public class RunEndPointerTests
     [Fact]
     public void GitHub_notice_is_one_line_with_counts_and_paths_only()
     {
-        var notice = RunSummaryConsoleWriter.BuildGitHubNotice(Summary(3));
+        // With no run to download (CiReader.None) it queries the folder; with one, the download (CiSummaryAudienceTests).
+        var notice = RunSummaryConsoleWriter.BuildGitHubNotice(Summary(3), CiReader.None);
 
         Assert.NotNull(notice);
         Assert.StartsWith("::notice title=Kronikol::", notice);

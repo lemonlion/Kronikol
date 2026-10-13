@@ -1,0 +1,80 @@
+Mutations of the release (plans/CI_SUMMARY_AUDIENCE_PLAN.md section 5), run on 2026-10-13 with mutate.pl and
+scratchpad run-mutations.sh: each mutation applied alone, by exact text, to a copy of the five sources in a separate
+worktree, then tests/Kronikol.Tests built for net10.0 and the classes that pin the CI text run (CiSummaryAudienceTests,
+CiSummaryRunTests, RetainedRunsTests, RunEndPointer*, CiDebugSectionTests, LabsReportRunTests,
+ReportGeneratorAgentOutputsTests, MergeWritesTheRunOutputsTests, HistoryOutputsTests, IngestPointerTests). "caught by N"
+lists the facts that failed. The plan's named mutations are M01 to M13 ("drop either label" is M01 and M02; M10 is "name an artifact on GitHub"); M14
+to M33 cover the rest of the change. M11 appears twice: before and after a green run's section kept its history and
+previous-run lines (the second run also caught it with the new fact). The run was paused twice (the machine's disk
+filled, then a peer's Playwright run) and resumed at the next mutation; no result was lost.
+
+Result: 33 of 33 mutations caught; none survived, none failed to build, none failed to apply.
+
+M01 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the People label
+  caught by 14: CiSummaryAudienceTests.A_folder_outside_the_workspace_is_named_in_full; CiSummaryAudienceTests.A_folder_with_spaces_quotes_and_line_breaks_is_flattened_and_its_commands_quoted; CiSummaryAudienceTests.A_green_run_s_section_is_the_report_for_people; CiSummaryAudienceTests.A_merge_is_named_by_its_own_files; CiSummaryAudienceTests.A_run_with_no_report_and_no_digest_still_says_where_its_folder_is; CiSummaryAudienceTests.An_azure_devops_project_with_a_space_still_links_its_build; CiSummaryAudienceTests.No_part_names_an_html_file_the_run_did_not_write; CiSummaryAudienceTests.People_come_first_and_the_rule_is_for_AI_agents; CiSummaryAudienceTests.The_folder_is_named_relative_to_the_workspace_with_forward_slashes; CiSummaryAudienceTests.The_people_part_links_the_run_s_artifacts; CiSummaryAudienceTests.The_people_part_names_the_report_and_the_digest_the_run_wrote; CiSummaryAudienceTests.The_upload_is_stated_only_where_Kronikol_made_it; CiSummaryRunTests.A_failing_run_s_full_summary_still_ends_with_how_to_debug_it; CiSummaryRunTests.A_green_run_s_full_summary_ends_with_the_report_for_people
+M02 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the AI agents label
+  caught by 8: CiSummaryAudienceTests.No_part_names_an_html_file_the_run_did_not_write; CiSummaryAudienceTests.People_come_first_and_the_rule_is_for_AI_agents; CiSummaryAudienceTests.Without_a_json_data_file_no_query_command_is_printed(data: "TestRunReport.xml"); CiSummaryAudienceTests.Without_a_json_data_file_no_query_command_is_printed(data: "TestRunReport.yml"); CiSummaryAudienceTests.Without_a_json_data_file_no_query_command_is_printed(data: null); CiSummaryAudienceTests.Without_a_run_id_or_a_repository_the_agent_part_queries_the_folder(missing: "GITHUB_REPOSITORY"); CiSummaryAudienceTests.Without_a_run_id_or_a_repository_the_agent_part_queries_the_folder(missing: "GITHUB_RUN_ID"); CiSummaryRunTests.A_failing_run_s_full_summary_still_ends_with_how_to_debug_it
+M03 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: swap the parts
+  caught by 2: CiSummaryAudienceTests.People_come_first_and_the_rule_is_for_AI_agents; CiSummaryRunTests.A_failing_run_s_full_summary_still_ends_with_how_to_debug_it
+M04 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: put the runner's folder back in the bash block
+  caught by 6: CiSummaryAudienceTests.A_data_file_the_folder_lookup_would_miss_is_found_by_name_in_the_download; CiSummaryAudienceTests.The_bash_block_downloads_the_run_behind_a_guard_and_queries_the_download; CiSummaryAudienceTests.The_runner_s_folder_appears_once_for_a_later_step_of_the_job; CiSummaryRunTests.Several_reports_in_a_download_are_listed_with_their_suites_and_counts; CiSummaryRunTests.The_printed_commands_answer_on_the_layout_gh_run_download_gives; CiSummaryRunTests.The_printed_commands_find_a_merged_report_by_its_name
+M05 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the guard
+  caught by 3: CiSummaryAudienceTests.A_data_file_the_folder_lookup_would_miss_is_found_by_name_in_the_download; CiSummaryAudienceTests.The_bash_block_downloads_the_run_behind_a_guard_and_queries_the_download; CiSummaryRunTests.The_printed_commands_answer_on_the_layout_gh_run_download_gives
+M06 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the host
+  caught by 1: CiSummaryAudienceTests.On_GitHub_Enterprise_the_download_names_the_host
+M07 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the attempt sentence
+  caught by 1: CiSummaryAudienceTests.A_re_run_says_its_attempt_and_that_a_download_may_hold_another
+M08 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the file-name check in the download target
+  caught by 2: CiSummaryAudienceTests.A_data_file_the_folder_lookup_would_miss_is_found_by_name_in_the_download; CiSummaryRunTests.The_printed_commands_find_a_merged_report_by_its_name
+M09 applied to src/Kronikol/Reports/ReportGenerator.cs: drop the run's data-file target
+  caught by 1: CiSummaryRunTests.A_custom_data_file_name_is_named_by_the_pointer_the_section_and_the_annotation
+M10 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: state an upload on GitHub that Kronikol cannot see
+  caught by 5: CiSummaryAudienceTests.A_run_with_no_report_and_no_digest_still_says_where_its_folder_is; CiSummaryAudienceTests.No_part_names_an_html_file_the_run_did_not_write; CiSummaryAudienceTests.The_people_part_links_the_run_s_artifacts; CiSummaryAudienceTests.The_upload_is_stated_only_where_Kronikol_made_it; CiSummaryRunTests.A_green_run_s_full_summary_ends_with_the_report_for_people
+M11 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the green-run branch
+  caught by 2: CiSummaryAudienceTests.A_green_run_s_section_is_the_report_for_people; CiSummaryRunTests.A_green_run_s_full_summary_ends_with_the_report_for_people
+M12 applied to src/Kronikol/Query/QueryCommand.cs: drop the list's counts
+  caught by 2: CiSummaryRunTests.Several_reports_in_a_download_are_listed_with_their_suites_and_counts; RetainedRunsTests.Several_reports_are_listed_with_their_size_suite_and_failures
+M13 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: print the annotation's old target
+  caught by 4: CiSummaryAudienceTests.On_GitHub_Enterprise_the_download_names_the_host; CiSummaryAudienceTests.The_annotation_names_only_files_the_run_wrote_and_a_query_only_for_json; CiSummaryAudienceTests.The_annotation_names_the_folder_the_download_and_the_query_and_never_the_runner; CiSummaryRunTests.The_printed_commands_find_a_merged_report_by_its_name
+M14 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: name an HTML file the run did not write
+  caught by 4: CiSummaryAudienceTests.A_run_with_no_report_and_no_digest_still_says_where_its_folder_is; CiSummaryAudienceTests.No_part_names_an_html_file_the_run_did_not_write; CiSummaryAudienceTests.The_annotation_names_only_files_the_run_wrote_and_a_query_only_for_json; LabsReportRunTests.The_debug_section_never_tells_a_reader_not_to_open_the_page
+M11 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the green-run branch
+  caught by 3: CiSummaryAudienceTests.A_green_run_s_section_is_the_report_for_people; CiSummaryAudienceTests.A_green_run_s_section_keeps_the_history_and_the_previous_run; CiSummaryRunTests.A_green_run_s_full_summary_ends_with_the_report_for_people
+M15 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: query a data file the tool cannot read
+  caught by 8: CiSummaryAudienceTests.A_run_with_no_report_and_no_digest_still_says_where_its_folder_is; CiSummaryAudienceTests.The_annotation_names_only_files_the_run_wrote_and_a_query_only_for_json; CiSummaryAudienceTests.The_pointer_without_a_json_data_file_says_what_failed_and_where_to_read_it; CiSummaryAudienceTests.Without_a_json_data_file_no_query_command_is_printed(data: "TestRunReport.xml"); CiSummaryAudienceTests.Without_a_json_data_file_no_query_command_is_printed(data: "TestRunReport.yml"); CiSummaryAudienceTests.Without_a_json_data_file_no_query_command_is_printed(data: null); CiSummaryRunTests.A_run_without_a_json_data_file_prints_no_query_command(xml: False); CiSummaryRunTests.A_run_without_a_json_data_file_prints_no_query_command(xml: True)
+M16 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the link target's encoding
+  caught by 1: CiSummaryAudienceTests.An_azure_devops_project_with_a_space_still_links_its_build
+M17 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: name the folder in full, never relative to the workspace
+  caught by 10: CiSummaryAudienceTests.A_folder_with_spaces_quotes_and_line_breaks_is_flattened_and_its_commands_quoted; CiSummaryAudienceTests.A_run_with_no_report_and_no_digest_still_says_where_its_folder_is; CiSummaryAudienceTests.No_part_names_an_html_file_the_run_did_not_write; CiSummaryAudienceTests.On_azure_devops_the_agent_part_queries_the_artifact_Kronikol_uploaded; CiSummaryAudienceTests.The_annotation_names_the_folder_the_download_and_the_query_and_never_the_runner; CiSummaryAudienceTests.The_folder_is_named_relative_to_the_workspace_with_forward_slashes; CiSummaryAudienceTests.The_people_part_names_the_report_and_the_digest_the_run_wrote; CiSummaryAudienceTests.The_runner_s_folder_appears_once_for_a_later_step_of_the_job; CiSummaryRunTests.A_green_run_s_full_summary_ends_with_the_report_for_people; CiSummaryRunTests.The_printed_commands_find_a_merged_report_by_its_name
+M18 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop find's runs/ and baseline/ exclusions
+  caught by 2: CiSummaryAudienceTests.A_data_file_the_folder_lookup_would_miss_is_found_by_name_in_the_download; CiSummaryRunTests.The_printed_commands_find_a_merged_report_by_its_name
+M19 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: name Failures.md for people on a green run
+  caught by 2: CiSummaryAudienceTests.A_green_run_s_section_is_the_report_for_people; CiSummaryRunTests.A_green_run_s_full_summary_ends_with_the_report_for_people
+M20 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: name the previous run by its runner folder
+  caught by 3: CiSummaryAudienceTests.A_green_run_s_section_keeps_the_history_and_the_previous_run; CiSummaryAudienceTests.The_previous_run_is_named_beside_the_report; CiSummaryAudienceTests.The_runner_s_folder_appears_once_for_a_later_step_of_the_job
+M21 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop what query.cs needs off the runner
+  caught by 1: CiSummaryAudienceTests.The_query_cs_line_says_what_it_needs_off_the_runner
+M22 applied to src/Kronikol/Reports/CiReader.cs: hand the folder over without $GITHUB_OUTPUT
+  caught by 1: CiSummaryAudienceTests.The_upload_is_stated_only_where_Kronikol_made_it
+M23 applied to src/Kronikol/Query/QueryCommand.cs: take another run's Run.json for the report
+  caught by 1: RetainedRunsTests.Several_reports_are_listed_with_their_size_suite_and_failures
+M24 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: the pointer forbids a data file the run did not write
+  caught by 2: CiSummaryAudienceTests.The_pointer_without_a_json_data_file_says_what_failed_and_where_to_read_it; CiSummaryRunTests.A_run_without_a_json_data_file_prints_no_query_command(xml: False)
+M25 applied to src/Kronikol/Reports/CiReader.cs: name an Azure DevOps artifact Kronikol did not upload
+  caught by 2: CiSummaryAudienceTests.On_azure_devops_without_an_upload_the_agent_part_queries_the_folder; CiSummaryAudienceTests.The_upload_is_stated_only_where_Kronikol_made_it
+M26 applied to src/Kronikol/Reports/CiReader.cs: download without a repository
+  caught by 1: CiSummaryAudienceTests.Without_a_run_id_or_a_repository_the_agent_part_queries_the_folder(missing: "GITHUB_REPOSITORY")
+M27 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the several-reports sentence
+  caught by 1: CiSummaryAudienceTests.The_paragraph_after_the_block_says_what_a_download_holds
+M28 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the later-step sentence
+  caught by 2: CiSummaryAudienceTests.The_paragraph_after_the_block_says_what_a_download_holds; CiSummaryAudienceTests.The_runner_s_folder_appears_once_for_a_later_step_of_the_job
+M29 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop OneLine on the people part's folder
+  caught by 1: CiSummaryAudienceTests.A_folder_with_spaces_quotes_and_line_breaks_is_flattened_and_its_commands_quoted
+M30 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop Quote on the download's repository
+  caught by 1: CiSummaryAudienceTests.A_ci_variable_holding_a_line_break_stays_on_its_line(name: "GITHUB_REPOSITORY", value: "acme/shop\n::error::forged")
+M31 applied to src/Kronikol/Reports/ReportGenerator.cs: a run ignores its CI
+  caught by 3: CiSummaryRunTests.A_green_run_s_full_summary_ends_with_the_report_for_people; CiSummaryRunTests.Several_reports_in_a_download_are_listed_with_their_suites_and_counts; CiSummaryRunTests.The_printed_commands_answer_on_the_layout_gh_run_download_gives
+M32 applied to src/Kronikol/Reports/Merge/MergedRunOutputs.cs: a merge ignores its CI
+  caught by 1: CiSummaryRunTests.The_printed_commands_find_a_merged_report_by_its_name
+M33 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop a green run's history and previous-run lines
+  caught by 1: CiSummaryAudienceTests.A_green_run_s_section_keeps_the_history_and_the_previous_run

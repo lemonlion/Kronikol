@@ -1,0 +1,114 @@
+Red run for the release (R1, R2 and R3 in one patch), 2026-10-13, Windows 11, .NET SDK 10.0.300: the released 4.19.0
+(baa411bb) with the new internal entry points stubbed, so the new and moved facts compile against it. The stub is
+CiReader.cs as released here (the facts' input) and three internal overloads in RunSummaryConsoleWriter that each return
+4.19.0's text:
+
+    internal static string BuildCiSummarySection(RunSummary summary, CiReader reader) => BuildCiSummarySection(summary);
+    internal static string? BuildGitHubNotice(RunSummary summary, CiReader reader) => BuildGitHubNotice(summary);
+    internal static void Write(RunSummary summary, CiEnvironment environment, Action<string> write,
+        Action<string> writeAnnotation, CiReader reader) => Write(summary, environment, write, writeAnnotation);
+
+The test files are the release's: CiSummaryAudienceTests.cs and CiSummaryRunTests.cs (new), RetainedRunsTests.cs (one new
+fact), and the four classes whose pins moved (RunEndPointerTests, RunEndPointerSafetyTests, LabsReportRunTests,
+ReportGeneratorAgentOutputsTests). dotnet test tests/Kronikol.Tests --filter on those classes: 108 run, 67 passed, 41
+failed, each on its own assertion (no exception). The first line of each failure's message:
+
+  Failed Reports.CiSummaryAudienceTests.People_come_first_and_the_rule_is_for_AI_agents
+     Assert.StartsWith() Failure: String start does not match
+  Failed Reports.RunEndPointerTests.The_pointer_hands_query_the_file_when_a_directory_lookup_would_not_find_it
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryAudienceTests.Without_a_json_data_file_no_query_command_is_printed(data: null)
+     Assert.DoesNotContain() Failure: Sub-string found
+  Failed Reports.CiSummaryAudienceTests.Without_a_json_data_file_no_query_command_is_printed(data: "TestRunReport.xml")
+     Assert.DoesNotContain() Failure: Sub-string found
+  Failed Reports.CiSummaryAudienceTests.Without_a_json_data_file_no_query_command_is_printed(data: "TestRunReport.yml")
+     Assert.DoesNotContain() Failure: Sub-string found
+  Failed Reports.CiSummaryAudienceTests.A_re_run_says_its_attempt_and_that_a_download_may_hold_another
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryAudienceTests.An_azure_devops_project_with_a_space_still_links_its_build
+     no **People:** in:
+  Failed Reports.CiSummaryAudienceTests.Without_a_run_id_or_a_repository_the_agent_part_queries_the_folder(missing: "GITHUB_RUN_ID")
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryAudienceTests.Without_a_run_id_or_a_repository_the_agent_part_queries_the_folder(missing: "GITHUB_REPOSITORY")
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryAudienceTests.The_bash_block_downloads_the_run_behind_a_guard_and_queries_the_download
+     Assert.Equal() Failure: Strings differ
+  Failed Reports.CiSummaryAudienceTests.No_part_names_an_html_file_the_run_did_not_write
+     Assert.DoesNotContain() Failure: Sub-string found
+  Failed Reports.CiSummaryAudienceTests.The_people_part_names_the_report_and_the_digest_the_run_wrote
+     no **People:** in:
+  Failed Reports.CiSummaryAudienceTests.A_run_with_no_report_and_no_digest_still_says_where_its_folder_is
+     no **People:** in:
+  Failed Reports.CiSummaryAudienceTests.A_folder_with_spaces_quotes_and_line_breaks_is_flattened_and_its_commands_quoted
+     no **People:** in:
+  Failed Reports.CiSummaryAudienceTests.The_paragraph_after_the_block_says_what_a_download_holds
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryAudienceTests.A_data_file_the_folder_lookup_would_miss_is_found_by_name_in_the_download
+     Assert.Equal() Failure: Strings differ
+  Failed Reports.CiSummaryAudienceTests.The_previous_run_is_named_beside_the_report
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryAudienceTests.The_upload_is_stated_only_where_Kronikol_made_it
+     no **People:** in:
+  Failed Reports.CiSummaryAudienceTests.Off_ci_the_agent_part_queries_the_folder
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryAudienceTests.A_green_run_s_section_is_the_report_for_people
+     Assert.StartsWith() Failure: String start does not match
+  Failed Reports.CiSummaryAudienceTests.On_azure_devops_the_agent_part_queries_the_artifact_Kronikol_uploaded
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryAudienceTests.The_folder_is_named_relative_to_the_workspace_with_forward_slashes
+     no **People:** in:
+  Failed Reports.CiSummaryAudienceTests.The_annotation_names_only_files_the_run_wrote_and_a_query_only_for_json
+     Assert.EndsWith() Failure: String end does not match
+  Failed Reports.CiSummaryAudienceTests.A_merge_is_named_by_its_own_files
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryAudienceTests.The_query_cs_line_says_what_it_needs_off_the_runner
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryAudienceTests.The_people_part_links_the_run_s_artifacts
+     no **People:** in:
+  Failed Reports.CiSummaryAudienceTests.On_GitHub_Enterprise_the_download_names_the_host
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryAudienceTests.A_folder_outside_the_workspace_is_named_in_full
+     no **People:** in:
+  Failed Reports.CiSummaryAudienceTests.The_runner_s_folder_appears_once_for_a_later_step_of_the_job
+     Assert.Single() Failure: The collection contained 6 items
+  Failed Reports.CiSummaryAudienceTests.The_annotation_names_the_folder_the_download_and_the_query_and_never_the_runner
+     Assert.Equal() Failure: Strings differ
+  Failed Reports.CiSummaryAudienceTests.The_pointer_without_a_json_data_file_says_what_failed_and_where_to_read_it
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryRunTests.The_printed_commands_find_a_merged_report_by_its_name
+     Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+  Failed Tool.RetainedRunsTests.Several_reports_are_listed_with_their_size_suite_and_failures
+     Assert.Contains() Failure: Item not found in collection
+  Failed Reports.CiSummaryRunTests.A_run_without_a_json_data_file_prints_no_query_command(xml: False)
+     Assert.DoesNotContain() Failure: Sub-string found
+  Failed Reports.CiSummaryRunTests.A_run_without_a_json_data_file_prints_no_query_command(xml: True)
+     Assert.DoesNotContain() Failure: Sub-string found
+  Failed Reports.CiSummaryRunTests.Several_reports_in_a_download_are_listed_with_their_suites_and_counts
+     Assert.Equal() Failure: Values differ
+  Failed Reports.CiSummaryRunTests.The_printed_commands_answer_on_the_layout_gh_run_download_gives
+     Assert.Contains() Failure: Sub-string not found
+  Failed Reports.CiSummaryRunTests.A_green_run_s_full_summary_ends_with_the_report_for_people
+     Assert.DoesNotContain() Failure: Sub-string found
+  Failed Reports.CiSummaryRunTests.A_failing_run_s_full_summary_still_ends_with_how_to_debug_it
+     # Diagrammed Test Run Summary
+  Failed Reports.CiSummaryRunTests.A_custom_data_file_name_is_named_by_the_pointer_the_section_and_the_annotation
+     Assert.Equal() Failure: Strings differ
+  Failed Reports.LabsReportRunTests.The_debug_section_never_tells_a_reader_not_to_open_the_page
+     Assert.Contains() Failure: Sub-string not found
+
+The new facts that pass on 4.19.0, by design: the line-break theory is a guard on values 4.19.0 never prints (its
+mutations are M29 and M30 in mutations.txt); the Azure DevOps fact without an upload and the annotation without a run
+id pin what the release keeps (today's commands on the folder); Detect is the new CiReader's own fact, and the stub
+carries the CiReader; the public builders' fact checks that they print what the internal ones print for the process's
+CI, which the stub does by construction (off CI the two are the same text; on this repository's CI they differ only
+if the public builder ignores its CI).
+
+  Passed Reports.CiSummaryAudienceTests.A_ci_variable_holding_a_line_break_stays_on_its_line(name: "GITHUB_RUN_ATTEMPT", value: "2<U+2028>::error::forged")
+  Passed Reports.CiSummaryAudienceTests.A_ci_variable_holding_a_line_break_stays_on_its_line(name: "GITHUB_WORKSPACE", value: "/home/runner\n::error::forged")
+  Passed Reports.CiSummaryAudienceTests.A_ci_variable_holding_a_line_break_stays_on_its_line(name: "GITHUB_SERVER_URL", value: "https://ghe.example.com\n::error::forged")
+  Passed Reports.CiSummaryAudienceTests.A_ci_variable_holding_a_line_break_stays_on_its_line(name: "GITHUB_REPOSITORY", value: "acme/shop\n::error::forged")
+  Passed Reports.CiSummaryAudienceTests.A_ci_variable_holding_a_line_break_stays_on_its_line(name: "GITHUB_RUN_ID", value: "123\r\n::error::forged")
+  Passed Reports.CiSummaryAudienceTests.On_azure_devops_without_an_upload_the_agent_part_queries_the_folder
+  Passed Reports.CiSummaryAudienceTests.Without_a_run_to_download_the_annotation_queries_the_folder
+  Passed Reports.CiSummaryAudienceTests.Detect_reads_the_run_off_the_ci_s_variables
+  Passed Reports.CiSummaryAudienceTests.The_public_builders_read_the_process_s_ci

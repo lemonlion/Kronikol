@@ -1,0 +1,51 @@
+Real-run check (plan section 5), 2026-10-13. The implementation, uncommitted at the time, was snapshotted as 4be692df on
+the throwaway branch check/169-ci-summary (deleted afterwards) and ci-summary-preview.yml was dispatched on it: run
+38433876527 (https://github.com/lemonlion/Kronikol/actions/runs/38433876527). The four legs finished as the fixtures
+say (All Passing green; All Failing, Mixed and Failing Inside a Step red), the history job recorded the branch's own
+stream, and each leg uploaded kronikol-reports-<slug>.
+
+Each leg's CiSummary.md (downloaded from its artifact):
+- All Passing (PublishCiArtifacts on): ends "## The report", the people part naming TestRunReport.html, the folder
+  relative to the workspace (examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing/bin/Release/net10.0/Reports)
+  and "the job's upload step puts it in this run's [artifacts](.../actions/runs/38433876527#artifacts)". No history
+  line: a green run with nothing to say writes none (ReportGenerator, unchanged).
+- All Failing, Mixed, Failing Inside a Step: "## Debug this run", people first (TestRunReport.html or Failures.md, the
+  folder, "when the job uploads that folder"), then "**AI agents:** do not open TestRunReport.json or
+  TestRunReport.html", the guarded download block for run 38433876527 and --repo lemonlion/Kronikol, "Read
+  Failures.md in the download first", the several-reports sentence, the query.cs sentence, the runner's folder once
+  for a later step, and the history line.
+- The run page answers 200 and holds id="artifacts", the anchor the link targets.
+
+The All Failing leg's block, pasted into an empty folder on Windows (Git Bash), with the built tool standing in for
+kronikol (dotnet Kronikol.Tool.dll query ...):
+- gh run download fetched every artifact of the run into kronikol-38433876527 (exit 0).
+- kronikol query summary kronikol-38433876527 and kronikol query failures kronikol-38433876527 each listed the four
+  reports and stopped (exit 2), each line with its size, suite and failures:
+    kronikol-38433876527/kronikol-reports-all-failing/TestRunReport.json  140.7 KB · suite Example.Api.Tests.CiPreview.AllFailing · 11 of 11 failed
+    kronikol-38433876527/kronikol-reports-all-passing/TestRunReport.json  150.5 KB · suite Example.Api.Tests.CiPreview.AllPassing · 0 of 11 failed
+    kronikol-38433876527/kronikol-reports-failing-inside-a-step/TestRunReport.json  146.2 KB · suite Example.Api.Tests.CiPreview.FailingWithSteps · 5 of 6 failed
+    kronikol-38433876527/kronikol-reports-mixed/TestRunReport.json  232.8 KB · suite Example.Api.Tests.CiPreview.Mixed · 15 of 20 failed
+  The history artifacts hold no report and are not listed.
+- kronikol query failures on the listed All Failing path answered with its failures (s0 "Cake Failures › Creating a
+  cake response should contain sugar", thrown at, rerun, open, message), exit 0.
+- Pasted a second time, the guarded line did nothing (exit 0). Control: the same download without the guard, into
+  the existing folder, failed (exit 1, "error extracting zip archive"), which is what the guard is for.
+  (Git Bash on Windows prints these paths with backslashes; shortened here to the download's own folder.)
+
+Core suite (tests/Kronikol.Tests, net10.0), after the version bump to 4.19.7:
+- on 4.19.5 (ba85a495): 7,511 passed, 2 skipped, 0 failed (3 m 51 s);
+- rebased onto 4.19.6 (964c1507), the tree released: 7,516 passed, 2 skipped, 0 failed (4 m 10 s).
+  The two skips are environmental and not in a class this release touches:
+  - QueryStreamingTests.A_hundred_megabyte_report_answers_from_the_index_without_being_read_into_memory, which
+    skips where the machine has no query-bench corpus;
+  - RunRotationTests.A_read_only_previous_report_this_process_can_write_is_kept_like_any_other, which skips where
+    a read-only file refuses this process a write (its sibling fact covers that case).
+
+release.slnf, Release, every target framework: 0 errors, and 21 warnings, none in a file this release touches. The first two attempts failed at restore
+(NU1103): on 2026-10-13 nuget.org listed EF Core Relational 10.0.13 before the Microsoft.EntityFrameworkCore and
+Microsoft.Extensions.Caching.Abstractions 10.0.13 it depends on, and Kronikol.Extensions.EfCore.Relational floats
+`10.*` on net10.0. Once both were listed, `dotnet restore release.slnf --no-http-cache` passed (a plain restore kept
+NuGet's cached listing) and the build above followed. The release did not cause it and changes nothing there.
+
+probe.out.txt: the section, the annotation and the pointer for the plan's example inputs, printed by probe.cs on the
+released tree.

@@ -9,7 +9,7 @@ namespace Kronikol.Tests.Reports;
 /// payloads, never true of names, which producers take from feature files, theory arguments and
 /// parameterised titles.
 ///
-/// <para>A line ending is the whole problem. <see cref="RunSummaryConsoleWriter.Write"/> splits the built
+/// <para>A line ending is the whole problem. <see cref="RunSummaryConsoleWriter.Write(RunSummary, CiEnvironment, Action{string}, Action{string})"/> splits the built
 /// text on newlines and writes one line per call, so a newline inside a name becomes an extra line the
 /// writer never composed — and on GitHub Actions a line the run controls, starting at column zero, is a
 /// workflow command. A scenario called <c>"a\n::error::gone"</c> does not produce a pointer with an odd
@@ -21,9 +21,11 @@ namespace Kronikol.Tests.Reports;
 /// </summary>
 public class RunEndPointerSafetyTests
 {
+    // With a JSON data file: a run without one prints no query command (plans/CI_SUMMARY_AUDIENCE_PLAN.md F11), and the
+    // commands are what these facts quote.
     private static RunSummary Summary(string directory, string feature, string scenario) => new(
         directory,
-        [new RunSummaryFile("TestRunReport.html", 1_200_000), new RunSummaryFile("Failures.md", 12_000)],
+        [new RunSummaryFile("TestRunReport.html", 1_200_000), new RunSummaryFile("TestRunReport.json", 50_540_000), new RunSummaryFile("Failures.md", 12_000)],
         ScenarioCount: 40,
         Failures: [new RunSummaryFailure("00000000000000ff", feature, scenario)],
         AgentInstructionsWritten: true);
@@ -108,8 +110,9 @@ public class RunEndPointerSafetyTests
     public void Ci_summary_quotes_a_path_containing_a_space()
     {
         // Same contract, and this one survives runners that swallow stdout — so it is the copy-paste
-        // command that actually gets used.
-        var markdown = RunSummaryConsoleWriter.BuildCiSummarySection(Summary("/home/ci/My Reports", "Checkout", "Pay"));
+        // command that actually gets used. On a machine that has the folder (CiReader.None); a run that can be
+        // downloaded queries the download instead, quoted the same way (CiSummaryAudienceTests).
+        var markdown = RunSummaryConsoleWriter.BuildCiSummarySection(Summary("/home/ci/My Reports", "Checkout", "Pay"), CiReader.None);
 
         Assert.Contains("kronikol query summary \"/home/ci/My Reports\"", markdown, StringComparison.Ordinal);
         Assert.Contains("kronikol query failures \"/home/ci/My Reports\"", markdown, StringComparison.Ordinal);

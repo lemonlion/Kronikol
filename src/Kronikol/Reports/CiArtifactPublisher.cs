@@ -1,8 +1,9 @@
 namespace Kronikol.Reports;
 
 /// <summary>
-/// Publishes generated report files as CI artifacts using platform-specific mechanisms
-/// (GitHub Actions artifact upload commands or Azure DevOps artifact publishing).
+/// Hands generated report files to the CI's artifact store: on Azure DevOps an <c>##vso[artifact.upload]</c>
+/// logging command per file, written to stdout; on GitHub Actions, which has no such command, the reports
+/// folder and retention written to <c>$GITHUB_OUTPUT</c> for the job's own upload step.
 /// </summary>
 public static class CiArtifactPublisher
 {

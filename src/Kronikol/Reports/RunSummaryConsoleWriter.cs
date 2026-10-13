@@ -24,9 +24,9 @@ public sealed record RunSummaryFailure(string StableId, string FeatureName, stri
 /// <param name="AgentInstructionsWritten">Whether <c>CLAUDE.md</c> / <c>AGENTS.md</c> sit in the directory.</param>
 /// <param name="QueryTarget">
 /// What to hand <c>kronikol query</c> when the directory alone would not do. A directory lookup finds a
-/// <c>TestRunReport.json</c> and nothing else, and a merge names its data file after its <c>-o</c> - so a
-/// pointer that printed the directory for <c>Combined.json</c> printed a command that fails. Null means
-/// the directory is enough.
+/// <c>TestRunReport.json</c> and nothing else, and a merge names its data file after its <c>-o</c>, as a run does
+/// after a custom <see cref="ReportConfigurationOptions.HtmlTestRunReportFileName"/> - so a pointer that printed
+/// the directory for <c>Combined.json</c> printed a command that fails. Null means the directory is enough.
 /// </param>
 /// <param name="History">
 /// The one line the cross-run ledger has to say about this run — what broke, what was fixed, what flips —
@@ -82,9 +82,17 @@ public sealed record RunSummaryPreviousRun(string Directory, int Failed);
 /// swallows what the library writes from a run-end hook at every verbosity, and TUnit's own runner
 /// suppresses it too; only a directly executed MTP host (<c>dotnet run --project</c>, xUnit v3) shows it.
 /// The durable channels are the files this release adds next to the report — <c>Failures.md</c> and
-/// <c>CLAUDE.md</c>/<c>AGENTS.md</c> — plus the CI job summary, which is written to a file descriptor
-/// rather than to stdout and therefore survives. The pointer is free where it lands and harmless where it
-/// does not.</para>
+/// <c>CLAUDE.md</c>/<c>AGENTS.md</c> — plus GitHub's job summary, which is a file the runner reads rather
+/// than stdout and therefore survives. Azure DevOps takes its summary as a logging command on stdout, so
+/// under <c>dotnet test</c> that one is swallowed with the rest (measured again on 2026-10-13,
+/// plans/CI_SUMMARY_AUDIENCE_PLAN.md F10). The pointer is free where it lands and harmless where it does
+/// not.</para>
+///
+/// <para><b>Who reads the CI text</b> (plans/CI_SUMMARY_AUDIENCE_PLAN.md): a GitHub job summary is read by
+/// people only, in a browser, since no API, <c>gh</c> command or MCP tool returns one; the annotation by
+/// people and by agents through <c>gh run view</c>; <c>CiSummary.md</c> by whoever downloads the artifact.
+/// None of them is on the runner. So the CI section speaks to people first, labels its rule for AI agents,
+/// and names what exists where its readers are (<see cref="CiReader"/>).</para>
 /// </summary>
 public static class RunSummaryConsoleWriter
 {
@@ -157,36 +165,48 @@ public static class RunSummaryConsoleWriter
         if (summary.History is { Length: > 0 } history)
             text.Append("  ").Append(OneLine(history)).Append('\n');
 
+        // `kronikol query` reads a JSON data file and nothing else, so a run that wrote XML, YAML or no data
+        // file gets no command that would answer "No TestRunReport.json under" (plans/CI_SUMMARY_AUDIENCE_PLAN.md F11).
+        var queryable = QueryableDataFile(summary) is not null;
+
         // "Nothing warned me" (#80): the failing report that was on top a moment ago is no longer the one
         // `kronikol query failures <dir>` opens, so the run that replaced it says where it went. Paths and
         // a count, like everything else here — never anything the previous run captured.
         if (summary.PreviousRun is { } previousRun)
-            text.Append($"  previous run ({previousRun.Failed} failed) kept: {Quote(previousRun.Directory)} — kronikol query failures {QueryTarget(summary)} --run last-failed\n");
+            text.Append(queryable
+                ? $"  previous run ({previousRun.Failed} failed) kept: {Quote(previousRun.Directory)} — kronikol query failures {QueryTarget(summary)} --run last-failed\n"
+                : $"  previous run ({previousRun.Failed} failed) kept: {Quote(previousRun.Directory)}\n");
 
         if (summary.Failures.Count > 0)
         {
             var target = QueryTarget(summary);
-            text.Append($"  {summary.Failures.Count} failed — kronikol query failures {target}\n");
+            text.Append(queryable ? $"  {summary.Failures.Count} failed — kronikol query failures {target}\n"
+                : HasDigest(summary) ? $"  {summary.Failures.Count} failed — see {DigestFileName}\n"
+                : $"  {summary.Failures.Count} failed\n");
             foreach (var failure in summary.Failures.Take(MaxFailureLines))
                 text.Append($"    {OneLine(failure.StableId)}  {OneLine(failure.FeatureName)} › {OneLine(failure.ScenarioName)}\n");
 
             var remaining = summary.Failures.Count - MaxFailureLines;
             if (remaining > 0)
-                text.Append(HasDigest(summary)
-                    ? $"    … and {remaining} more (see {DigestFileName})\n"
-                    : $"    … and {remaining} more (kronikol query failures {target})\n");
+                text.Append(HasDigest(summary) ? $"    … and {remaining} more (see {DigestFileName})\n"
+                    : queryable ? $"    … and {remaining} more (kronikol query failures {target})\n"
+                    : $"    … and {remaining} more\n");
 
             // The bait for the nested instruction file: an agent that reads anything in this directory
             // loads the CLAUDE.md sitting beside it, and that file is what teaches it never to open the
             // JSON. Only printed when something failed — a green run has nothing to debug, and a pointer
             // that speaks on every run is a pointer people learn to skip.
-            text.Append(summary.AgentInstructionsWritten
-                ? $"  agents: read {Quote(Path.Combine(summary.Directory, "CLAUDE.md"))} first; never open {DataFileName(summary)}\n"
-                : $"  agents: run kronikol query --help; never open {DataFileName(summary)}\n");
+            var neverOpen = NeverOpen(summary) is { } file ? $"; never open {OneLine(file)}" : "";
+            if (summary.AgentInstructionsWritten)
+                text.Append($"  agents: read {Quote(Path.Combine(summary.Directory, "CLAUDE.md"))} first{neverOpen}\n");
+            else if (queryable)
+                text.Append($"  agents: run kronikol query --help{neverOpen}\n");
+            else if (neverOpen.Length > 0)
+                text.Append($"  agents: {neverOpen[2..]}\n");
 
             // The line above names a tool an agent that may not install anything cannot run. The query.cs
             // this run wrote is the same engine with nothing installed and no network.
-            if (summary.QueryScriptWritten)
+            if (summary.QueryScriptWritten && queryable)
                 text.Append($"  no tool: dotnet run --file {Quote(Path.Combine(summary.Directory, QueryScriptGenerator.FileName))} -- failures {QueryTarget(summary)}\n");
         }
 
@@ -194,18 +214,41 @@ public static class RunSummaryConsoleWriter
     }
 
     /// <summary>
-    /// The GitHub Actions annotation for a failing run, or null when nothing failed or the run is not on
-    /// GitHub. One line, same content rules as the pointer.
+    /// The GitHub Actions annotation for a failing run, or null when nothing failed. One line, same content
+    /// rules as the pointer. Built for the CI the process runs on, read from its environment.
     /// </summary>
-    public static string? BuildGitHubNotice(RunSummary summary)
+    public static string? BuildGitHubNotice(RunSummary summary) => BuildGitHubNotice(summary, CiReader.FromProcess());
+
+    /// <summary>
+    /// The annotation for <paramref name="reader"/>: the one CI channel people and agents both read, and the
+    /// only one an agent reads through <c>gh run view</c>, so it is complete without the job summary. Where the
+    /// run can be downloaded it names the folder relative to the workspace, the files for people, and the
+    /// download and the query for agents, never the runner's folder; elsewhere the query on the folder.
+    /// </summary>
+    internal static string? BuildGitHubNotice(RunSummary summary, CiReader reader)
     {
         ArgumentNullException.ThrowIfNull(summary);
+        ArgumentNullException.ThrowIfNull(reader);
         if (summary.Failures.Count == 0)
             return null;
 
-        var digest = HasDigest(summary) ? $" · {DigestFileName}" : "";
-        return $"::notice title=Kronikol::{summary.Failures.Count} failed of {summary.ScenarioCount} scenarios "
-               + $"— kronikol query failures {QueryTarget(summary)}{digest}";
+        var head = $"::notice title=Kronikol::{summary.Failures.Count} failed of {summary.ScenarioCount} scenarios";
+        var queryable = QueryableDataFile(summary) is not null;
+        if (!reader.CanDownload)
+        {
+            var digest = HasDigest(summary) ? $" · {DigestFileName}" : "";
+            return queryable ? $"{head} — kronikol query failures {QueryTarget(summary)}{digest}"
+                : HasDigest(summary) ? $"{head} — {DigestFileName}"
+                : head;
+        }
+
+        var download = $"gh run download {Quote(reader.RunId)} --repo {Quote(RepositoryArgument(reader))} --dir {DownloadFolder(reader)}";
+        var agents = queryable ? $"agents: {download}, then kronikol query failures {DownloadTarget(summary, DownloadFolder(reader))}"
+            : HasDigest(summary) ? $"agents: {download}, then read {DigestFileName} in it"
+            : $"agents: {download}";
+        var forPeople = new[] { HtmlFileName(summary), HasDigest(summary) ? DigestFileName : null }.OfType<string>().Select(OneLine).ToArray();
+        var readers = forPeople.Length > 0 ? $"people: {string.Join(" or ", forPeople)}; {agents}" : agents;
+        return $"{head}. Reports in {OneLine(FolderForPeople(summary.Directory, reader.Workspace))} ({readers})";
     }
 
     /// <summary>
@@ -232,53 +275,340 @@ public static class RunSummaryConsoleWriter
     /// separation stands anyway, because the constraint is real whatever the default is.</para>
     /// </summary>
     public static void Write(RunSummary summary, CiEnvironment environment, Action<string> write, Action<string> writeAnnotation)
+        => Write(summary, environment, write, writeAnnotation,
+            // The annotation is the only part that reads the CI, and only GitHub's.
+            environment == CiEnvironment.GitHubActions ? CiReader.FromProcess() : CiReader.None);
+
+    /// <summary>The pointer, and on GitHub Actions the annotation for <paramref name="reader"/>.</summary>
+    internal static void Write(RunSummary summary, CiEnvironment environment, Action<string> write, Action<string> writeAnnotation, CiReader reader)
     {
         ArgumentNullException.ThrowIfNull(summary);
         ArgumentNullException.ThrowIfNull(write);
         ArgumentNullException.ThrowIfNull(writeAnnotation);
+        ArgumentNullException.ThrowIfNull(reader);
 
         foreach (var line in Build(summary).TrimEnd('\n').Split('\n'))
             write(line);
 
-        if (environment == CiEnvironment.GitHubActions && BuildGitHubNotice(summary) is { } notice)
+        if (environment == CiEnvironment.GitHubActions && BuildGitHubNotice(summary, reader) is { } notice)
             writeAnnotation(notice);
     }
 
     /// <summary>
-    /// The "Debug this run" section appended to <c>CiSummary.md</c>: the CI job summary is written to a
-    /// file descriptor rather than to stdout, so it survives the runners that swallow console output.
+    /// The section appended to <c>CiSummary.md</c> and the CI job summary, for the CI the process runs on (read
+    /// from its environment, with default options): "Debug this run" when something failed, "The report" when
+    /// nothing did. See <see cref="ReportConfigurationOptions.WriteCiDebugSection"/> for who reads it.
     /// </summary>
-    public static string BuildCiSummarySection(RunSummary summary)
+    public static string BuildCiSummarySection(RunSummary summary) => BuildCiSummarySection(summary, CiReader.FromProcess());
+
+    /// <summary>
+    /// The section for <paramref name="reader"/>. People first: a GitHub job summary is read by people only, in a
+    /// browser, so it says which report to open, where this job wrote it and where the run's artifacts are. Then,
+    /// labelled for AI agents, the rule not to open the report and the commands that query it where an agent is:
+    /// a download of the run's artifacts, or the folder off CI. It names only the files the run wrote, and an
+    /// upload only where Kronikol made one (plans/CI_SUMMARY_AUDIENCE_PLAN.md R1, R2).
+    ///
+    /// <para>A green run gets no part for agents, under "The report" (R3): there is nothing to debug, and a
+    /// block that speaks on every run is a block people learn to skip, while the full summary's diagrams are a
+    /// preview of the report it names. The history and previous-run lines stay, each only when it has something
+    /// to say.</para>
+    ///
+    /// <para>On GitHub the job summary is a file the runner reads, so it survives the runners that swallow
+    /// console output. Azure DevOps takes it as a logging command on stdout, which <c>dotnet test</c> swallows
+    /// (F10): there it arrives from <c>kronikol merge</c>, <c>kronikol ingest</c> or a directly run MTP host.</para>
+    /// </summary>
+    internal static string BuildCiSummarySection(RunSummary summary, CiReader reader)
     {
         ArgumentNullException.ThrowIfNull(summary);
+        ArgumentNullException.ThrowIfNull(reader);
 
-        var target = QueryTarget(summary);
         var markdown = new StringBuilder();
-        markdown.Append("## Debug this run\n\n");
-        markdown.Append($"Do not open `{DataFileName(summary)}` or `{HtmlFileName(summary)}` — a real report reaches megabytes, ");
-        markdown.Append("and a single embedded diagram can be larger than a context window. Query it instead:\n\n");
-        markdown.Append("```bash\ndotnet tool install -g Kronikol.Tool\n");
-        markdown.Append($"kronikol query summary {target}\n");
-        if (summary.Failures.Count > 0)
-            markdown.Append($"kronikol query failures {target}\n");
-        markdown.Append("```\n\n");
+        if (summary.Failures.Count == 0)
+        {
+            markdown.Append("## The report\n\n").Append(PeoplePart(summary, reader)).Append("\n\n");
+            AppendRunLines(markdown, summary, reader);
+            return markdown.ToString();
+        }
 
-        if (summary.QueryScriptWritten)
-            markdown.Append($"Nothing to install and no network needed: `dotnet run --file {Quote(Path.Combine(summary.Directory, QueryScriptGenerator.FileName))} -- summary {target}` "
-                            + "runs the same engine from the `query.cs` written beside the report, given the .NET 10 SDK.\n\n");
+        markdown.Append("## Debug this run\n\n").Append(PeoplePart(summary, reader)).Append("\n\n");
+        AppendAgentPart(markdown, summary, reader);
+        AppendRunLines(markdown, summary, reader);
+        return markdown.ToString();
+    }
 
+    /// <summary>
+    /// What the cross-run ledger says of the run and where the previous run is kept, each only when it has something
+    /// to say: facts about the run for every reader, so a green run's section carries them too. A green run after a
+    /// failing one is the case #80 is about, the failure no longer on top. The console is the channel most runners
+    /// swallow, and on CI the run this is about may be a retry's first attempt: the job summary is where it has to be
+    /// said to be read.
+    /// </summary>
+    private static void AppendRunLines(StringBuilder markdown, RunSummary summary, CiReader reader)
+    {
         if (summary.History is { Length: > 0 } history)
             markdown.Append(OneLine(history)).Append("\n\n");
 
-        // The console is the channel most runners swallow, and on CI the run this is about is a retry's
-        // first attempt: the job summary is where it has to be said to be read.
         if (summary.PreviousRun is { } previousRun)
-            markdown.Append($"The previous run ({previousRun.Failed} failed) is kept in `{OneLine(previousRun.Directory)}` — `kronikol query failures {target} --run last-failed`.\n\n");
+            markdown.Append(PreviousRunLine(summary, previousRun, reader)).Append("\n\n");
+    }
 
-        if (HasDigest(summary))
-            markdown.Append($"The artifact also carries `{DigestFileName}` — every failure in context, ready to read.\n\n");
+    /// <summary>
+    /// What a person opens, where this job wrote it, and where the run's artifacts are: only the files the run
+    /// wrote (F6), and an upload stated only where Kronikol made one. Kronikol cannot see a GitHub job's upload
+    /// step, so there it says what has to be true (<see cref="UploadClause"/>).
+    /// </summary>
+    private static string PeoplePart(RunSummary summary, CiReader reader)
+    {
+        var html = HtmlFileName(summary);
+        // Failures.md says "No failures" on a green run: named for people only when something is in it.
+        var digest = summary.Failures.Count > 0 && HasDigest(summary);
+        var folder = OneLine(FolderForPeople(summary.Directory, reader.Workspace));
+        var writer = reader.Provider == CiEnvironment.None ? "run" : "job";
 
-        return markdown.ToString();
+        var text = new StringBuilder("**People:** ");
+        bool several;
+        if (html is not null)
+        {
+            text.Append($"open `{OneLine(html)}` in a browser to read the whole run, diagrams included");
+            if (digest)
+                text.Append($", or `{DigestFileName}` for every failure in context");
+            several = digest;
+            text.Append($". This {writer} wrote {(several ? "them" : "it")} to `{folder}`");
+        }
+        else if (digest)
+        {
+            text.Append($"open `{DigestFileName}` for every failure in context. This {writer} wrote it to `{folder}`");
+            several = false;
+        }
+        else
+        {
+            text.Append($"this {writer} wrote its reports to `{folder}`");
+            several = true;
+        }
+
+        return text.Append(UploadClause(reader, several)).Append('.').ToString();
+    }
+
+    /// <summary>
+    /// Where the files are after the job, by what Kronikol knows of the upload (plans/CI_SUMMARY_AUDIENCE_PLAN.md
+    /// §4.3): on GitHub nothing, or that it handed the folder to the job's upload step; on Azure DevOps the artifact
+    /// it asked the agent to upload, or nothing. Off CI, nothing to say.
+    /// </summary>
+    private static string UploadClause(CiReader reader, bool several)
+    {
+        var (them, theyAre) = several ? ("them", "they are") : ("it", "it is");
+        switch (reader.Provider)
+        {
+            case CiEnvironment.GitHubActions:
+            {
+                var artifacts = reader.RunUrl is { } run ? $"[artifacts]({LinkTarget(run)}#artifacts)" : "artifacts";
+                return reader.HandsFolderToUpload
+                    ? $"; the job's upload step puts {them} in this run's {artifacts}"
+                    : $"; {theyAre} in this run's {artifacts} when the job uploads that folder";
+            }
+            case CiEnvironment.AzureDevOps:
+            {
+                var build = reader.RunUrl is { } run ? $" ([build]({LinkTarget(run)}))" : "";
+                return reader.ArtifactName is { } artifact
+                    ? $"; {theyAre} in this build's `{OneLine(artifact)}` artifact{build}"
+                    : $"; {theyAre} in this build's artifacts{build} when the pipeline publishes that folder";
+            }
+            default:
+                return "";
+        }
+    }
+
+    /// <summary>
+    /// The agent part: the rule, then the commands that answer where an agent is. On GitHub with a run id and a
+    /// repository, a guarded download of the run's artifacts and queries on it, since a GitHub job summary has no
+    /// agent readers and the runner's folder is gone; on Azure DevOps with an artifact, queries on its download;
+    /// elsewhere today's queries on the folder, for a reader on that machine. A query only for a JSON data file,
+    /// the one format the tool reads (F11).
+    /// </summary>
+    private static void AppendAgentPart(StringBuilder markdown, RunSummary summary, CiReader reader)
+    {
+        var queryable = QueryableDataFile(summary) is not null;
+        var digest = HasDigest(summary);
+        var artifact = reader.Provider == CiEnvironment.AzureDevOps && !reader.CanDownload ? reader.ArtifactName : null;
+
+        var named = new[] { DataFile(summary), HtmlFileName(summary) }.OfType<string>().Select(n => $"`{OneLine(n)}`").ToArray();
+        var rule = named.Length > 0
+            ? $"do not open {string.Join(" or ", named)} — a real report reaches megabytes, and a single embedded diagram can be larger than a context window."
+            : null;
+        // "instead" only says something beside the rule, and the label is followed by lower case.
+        string Lead(string what, string end) =>
+            rule is not null ? $"{what} instead{end}" : char.ToLowerInvariant(what[0]) + what[1..] + end;
+
+        var block = new List<string>();
+        var after = new List<string>();
+        string? lead = null;
+
+        if (reader.CanDownload)
+        {
+            var folder = DownloadFolder(reader);
+            var guard = $"test -d {folder} || gh run download {Quote(reader.RunId)} --repo {Quote(RepositoryArgument(reader))} --dir {folder}";
+            if (queryable)
+            {
+                var target = DownloadTarget(summary, folder);
+                lead = Lead("Download the run's artifacts and query them", ":");
+                block.AddRange([guard, "dotnet tool install -g Kronikol.Tool", $"kronikol query summary {target}", $"kronikol query failures {target}"]);
+                if (digest)
+                    after.Add($"Read `{DigestFileName}` in the download first.");
+                after.Add(summary.QueryTarget is { } file
+                    ? $"The `find` takes the first `{OneLine(Path.GetFileName(file))}` in the download: if the run uploaded several (a matrix, or shards), `find {folder} -name {Quote(Path.GetFileName(file))}` lists them, and a query takes the path of the one you mean."
+                    : "If the run uploaded several reports (a matrix, or shards beside their merge), the query lists them with their counts: pass the one you mean.");
+            }
+            else if (digest)
+            {
+                lead = Lead($"Download the run's artifacts and read `{DigestFileName}` in them", ":");
+                block.Add(guard);
+            }
+
+            if (reader.Attempt > 1)
+                after.Add($"This is attempt {reader.Attempt}. After a re-run, `gh run download` keeps one upload of each artifact name, not always this attempt's: `kronikol query summary` names the report's attempt.");
+            if (queryable && summary.QueryScriptWritten)
+                after.Add(QueryScriptOffTheRunner(summary, reader));
+            after.Add($"A later step of this job finds the folder at `{OneLine(summary.Directory)}`.");
+        }
+        else if (artifact is not null)
+        {
+            var folder = Quote(artifact);
+            if (queryable)
+            {
+                var target = DownloadTarget(summary, folder);
+                lead = Lead($"Download this build's `{OneLine(artifact)}` artifact and query it", ":");
+                block.AddRange(["dotnet tool install -g Kronikol.Tool", $"kronikol query summary {target}", $"kronikol query failures {target}"]);
+                if (digest)
+                    after.Add($"Read `{DigestFileName}` in the artifact first.");
+                if (summary.QueryScriptWritten)
+                    after.Add(QueryScriptOffTheRunner(summary, reader));
+            }
+            else if (digest)
+            {
+                lead = Lead($"Download this build's `{OneLine(artifact)}` artifact and read `{DigestFileName}` in it", ".");
+            }
+
+            after.Add($"A later step of this job finds the folder at `{OneLine(summary.Directory)}`.");
+        }
+        else if (queryable)
+        {
+            var target = QueryTarget(summary);
+            lead = Lead("Query it", ":");
+            block.AddRange(["dotnet tool install -g Kronikol.Tool", $"kronikol query summary {target}", $"kronikol query failures {target}"]);
+            if (digest)
+                after.Add($"Read `{DigestFileName}` beside the report first.");
+            if (summary.QueryScriptWritten)
+                after.Add($"Nothing to install and no network needed: `dotnet run --file {Quote(Path.Combine(summary.Directory, QueryScriptGenerator.FileName))} -- summary {target}` "
+                          + "runs the same engine from the `query.cs` written beside the report, given the .NET 10 SDK.");
+        }
+        else if (digest)
+        {
+            lead = Lead($"Read `{DigestFileName}` beside the report", ".");
+        }
+
+        var opening = string.Join(" ", new[] { rule, lead }.OfType<string>());
+        if (opening.Length > 0)
+            markdown.Append("**AI agents:** ").Append(opening).Append("\n\n");
+        if (block.Count > 0)
+            markdown.Append("```bash\n").Append(string.Join("\n", block)).Append("\n```\n\n");
+        if (opening.Length > 0 && after.Count > 0)
+            markdown.Append(string.Join(" ", after)).Append("\n\n");
+    }
+
+    /// <summary>
+    /// <c>query.cs</c> as it is read off the runner: the test run's own build is not there, so it runs only with the
+    /// Kronikol that wrote the report in the reader's NuGet cache, and "no network needed" is true on the runner alone.
+    /// </summary>
+    private static string QueryScriptOffTheRunner(RunSummary summary, CiReader reader)
+    {
+        var argument = summary.QueryTarget is { } file ? Quote(Path.GetFileName(file)) : ".";
+        var engine = reader.KronikolVersion is { Length: > 0 } version ? $"Kronikol {OneLine(version)}" : "the Kronikol that wrote it";
+        return $"With nothing installed, `dotnet run --file {QueryScriptGenerator.FileName} -- failures {argument}` in the folder that holds the report runs the same engine, "
+               + $"given the .NET 10 SDK and {engine} in the NuGet cache.";
+    }
+
+    /// <summary>
+    /// The run kept under <c>runs/</c>: beside the report where a reader has a copy of it, by its folder on this
+    /// machine otherwise.
+    /// </summary>
+    private static string PreviousRunLine(RunSummary summary, RunSummaryPreviousRun previousRun, CiReader reader)
+    {
+        var queryable = QueryableDataFile(summary) is not null;
+        if (reader.CanDownload || (reader.Provider == CiEnvironment.AzureDevOps && reader.ArtifactName is not null))
+        {
+            var where = Relative(summary.Directory, previousRun.Directory) is { } kept
+                ? $"is kept beside the report in `{OneLine(kept)}`"
+                : $"is kept in `{OneLine(previousRun.Directory)}`";
+            return $"The previous run ({previousRun.Failed} failed) {where}" + (queryable ? ": add `--run last-failed` to a query." : ".");
+        }
+
+        return queryable
+            ? $"The previous run ({previousRun.Failed} failed) is kept in `{OneLine(previousRun.Directory)}` — `kronikol query failures {QueryTarget(summary)} --run last-failed`."
+            : $"The previous run ({previousRun.Failed} failed) is kept in `{OneLine(previousRun.Directory)}`.";
+    }
+
+    /// <summary>The folder <c>gh run download</c> is told to fill: named by the run, so two runs' downloads never meet.</summary>
+    private static string DownloadFolder(CiReader reader) => Quote($"kronikol-{reader.RunId}");
+
+    /// <summary><c>gh</c>'s <c>--repo</c>: <c>owner/name</c> on github.com, <c>HOST/owner/name</c> on GitHub Enterprise.</summary>
+    private static string RepositoryArgument(CiReader reader) =>
+        reader.Host is { } host ? $"{host}/{reader.Repository}" : reader.Repository ?? "";
+
+    /// <summary>
+    /// What a query on a download is handed: the folder, whose lookup finds a <c>TestRunReport.json</c> anywhere in
+    /// it, or, for a data file named otherwise, that file as <c>find</c> finds it outside the earlier runs and the
+    /// baseline, which a folder lookup skips too (ReportFolders.IsReserved).
+    /// </summary>
+    private static string DownloadTarget(RunSummary summary, string folder) =>
+        summary.QueryTarget is { } file
+            ? $"\"$(find {folder} -name {Quote(Path.GetFileName(file))} -not -path '*/runs/*' -not -path '*/baseline/*' -print -quit)\""
+            : folder;
+
+    /// <summary>
+    /// The reports folder as a person finds it: relative to the workspace, with <c>/</c>, when it lies inside it;
+    /// otherwise, or with no workspace, as written.
+    /// </summary>
+    private static string FolderForPeople(string directory, string? workspace) =>
+        workspace is null ? directory : Relative(workspace, directory) ?? directory;
+
+    /// <summary><paramref name="path"/> relative to <paramref name="root"/> with <c>/</c>, or null when it is not inside it.</summary>
+    private static string? Relative(string root, string path)
+    {
+        try
+        {
+            var relative = Path.GetRelativePath(root, path);
+            if (Path.IsPathRooted(relative))
+                return null;
+            var first = relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
+            return first == ".." ? null : relative.Replace(Path.DirectorySeparatorChar, '/');
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// A URL as a markdown link's target. A space ends the target and a parenthesis can close it, and Azure DevOps'
+    /// build URL carries <c>SYSTEM_TEAMPROJECT</c> as the agent gives it (<see cref="CiMetadataDetector"/>), so a project
+    /// called "My Project" broke the link.
+    /// </summary>
+    private static string LinkTarget(string url) =>
+        OneLine(url).Replace(" ", "%20", StringComparison.Ordinal).Replace("(", "%28", StringComparison.Ordinal).Replace(")", "%29", StringComparison.Ordinal);
+
+    /// <summary>
+    /// The file <c>kronikol query</c> has to be handed when the directory would not find it, or null when the
+    /// directory is enough: a directory lookup finds a <c>TestRunReport.json</c> and nothing else, and a merge, or a
+    /// run with a custom <see cref="ReportConfigurationOptions.HtmlTestRunReportFileName"/>, names its data file
+    /// otherwise (plans/CI_SUMMARY_AUDIENCE_PLAN.md F11).
+    /// </summary>
+    internal static string? QueryTargetFor(string? dataFilePath)
+    {
+        if (dataFilePath is null)
+            return null;
+
+        var full = Path.GetFullPath(dataFilePath);
+        return string.Equals(Path.GetFileName(full), "TestRunReport.json", StringComparison.OrdinalIgnoreCase) ? null : full;
     }
 
     /// <summary>
@@ -325,15 +655,24 @@ public static class RunSummaryConsoleWriter
     private static string QueryTarget(RunSummary summary) => Quote(summary.QueryTarget ?? summary.Directory);
 
     /// <summary>
-    /// The data file this run wrote, by name: <c>TestRunReport.json</c> unless the run named it otherwise,
-    /// as a merge does after its <c>-o</c>. The "never open" rule has to name the file that exists.
+    /// The data file this run wrote, by name, in whatever format, or null when it wrote none: <c>TestRunReport.json</c>
+    /// unless the run named it otherwise, as a merge does after its <c>-o</c>. The "never open" rule has to name the
+    /// file that exists, and never one that does not.
     /// </summary>
-    private static string DataFileName(RunSummary summary) =>
-        summary.Files.FirstOrDefault(f => IsDataFile(f.Name))?.Name ?? "TestRunReport.json";
+    private static string? DataFile(RunSummary summary) =>
+        summary.Files.FirstOrDefault(f => IsDataFile(f.Name))?.Name;
 
-    private static string HtmlFileName(RunSummary summary) =>
+    /// <summary>The data file when it is JSON, the one format <c>kronikol query</c> reads; null otherwise.</summary>
+    private static string? QueryableDataFile(RunSummary summary) =>
+        DataFile(summary) is { } name && name.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ? name : null;
+
+    /// <summary>What the pointer tells an agent never to open: the data file, or the report when the run wrote no data file.</summary>
+    private static string? NeverOpen(RunSummary summary) => DataFile(summary) ?? HtmlFileName(summary);
+
+    /// <summary>The report this run wrote, never the labs page beside it, or null when it wrote none.</summary>
+    private static string? HtmlFileName(RunSummary summary) =>
         summary.Files.FirstOrDefault(f => f.Name.EndsWith(".html", StringComparison.OrdinalIgnoreCase)
-                                          && !f.Name.EndsWith(LabsReportGenerator.Suffix, StringComparison.OrdinalIgnoreCase))?.Name ?? "TestRunReport.html";
+                                          && !f.Name.EndsWith(LabsReportGenerator.Suffix, StringComparison.OrdinalIgnoreCase))?.Name;
 
     /// <summary>
     /// A file name, plus its size when the size is the point: the data file is the one an agent is tempted

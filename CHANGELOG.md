@@ -4,6 +4,107 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.19.7] - 2026-10-13
+
+**Patch - the CI job summary says who each instruction is for, and its commands work where its readers are (#169;
+`plans/CI_SUMMARY_AUDIENCE_PLAN.md` R1, R2 and R3).** Green-lit in full by the owner on 2026-10-13, every question in the
+plan's section 9 as recommended. Bug fixes in generated CI text and in the query tool's error output, with no new
+option and no new public member, so the patch part moves (4.19.6 to 4.19.7).
+
+### Fixed
+
+- **The job summary told every reader not to open the report people are meant to read.** The "Debug this run" section
+  opened with "Do not open `TestRunReport.json` or `TestRunReport.html`", a rule for AI agents, on a page only people
+  read: GitHub shows a job summary to signed-in people in a browser, and no API, `gh` command or MCP tool returns one.
+  The section now speaks to people first: open `TestRunReport.html` in a browser, or `Failures.md` for every failure
+  in context, with the folder this job wrote them to, relative to the workspace, and a link to the run's artifacts.
+  The rule follows, labelled for AI agents.
+- **Every command in the section named the runner's folder, which is gone once the job ends.** On GitHub Actions the
+  agent part now downloads the run's artifacts, `test -d kronikol-<run> || gh run download <run> --repo <owner/repo>
+  --dir kronikol-<run>`, and queries the download. The guard lets the block be pasted twice (a second download into
+  the same folder stops with "The file exists"), and on GitHub Enterprise `--repo` carries the host. The runner's
+  folder is named once, for a later step of the same job. A re-run says which attempt wrote the block, since
+  `gh run download` keeps one upload of each artifact name. The `query.cs` line says what it needs off the runner (the
+  .NET 10 SDK and the Kronikol version that wrote the report, in the NuGet cache) where it said "no network needed",
+  and the previous run is named beside the report (`runs/<run>`). The `::notice` annotation, the one CI channel both
+  people and agents read (`gh run view` lists it), names the folder, the files for people, and the download and the
+  query for agents. Off CI, or when the run's id or repository is unknown, the commands name the folder as before.
+- **The section stated uploads Kronikol cannot see.** "The artifact also carries `Failures.md`" was printed whenever the
+  digest was written, artifact or not. The people part states an upload only where Kronikol made one: on GitHub, that
+  the files are in the run's artifacts when the job uploads that folder, or, with `PublishCiArtifacts`, that the job's
+  upload step puts them there; on Azure DevOps with `PublishCiArtifacts`, the `CiArtifactName` artifact. An Azure
+  DevOps project whose name holds a space no longer breaks the build link.
+- **Files the run did not write were named.** A run with `GenerateTestRunReport = false` was told not to open a
+  `TestRunReport.html` it never wrote. The section, the run-end pointer and the annotation now name only the files the
+  run wrote.
+- **A data file the folder lookup cannot find got a command that failed.** A run with a custom
+  `HtmlTestRunReportFileName` (`Checkout` writes `Checkout.json`) printed `kronikol query failures <folder>` in its
+  pointer, section and annotation, which answered "No TestRunReport.json under <folder>". They now name the file, as a
+  merge already did, and in a download the section finds it by name with `find`. A run whose data file is XML or YAML,
+  or that wrote none, prints no query command, since the tool reads JSON only.
+- **A download holding several reports was listed by bare paths.** `kronikol query <folder>` over a matrix's or a
+  sharded run's download lists the reports and stops. Each line now carries the report's size and, from the `Run.json`
+  beside it, its suite and failure count (`… · suite Checkout · 1 of 2 failed`); a merged report has no `Run.json`,
+  and its line is the path and the size.
+- **A green run's full summary ended with "Debug this run".** With `WriteCiSummary` on, a green run's `CiSummary.md`
+  and job summary now end with the part for people under "The report", followed by the history line and where the
+  previous run is kept when either has something to say, where the wiki had documented "Debug this run" on every run.
+- **Doc comments said what the code does not do.** `PublishCiArtifacts` said it publishes artifacts on GitHub Actions,
+  where it writes the folder for the job's upload step and uploads nothing, and `CiArtifactPublisher`'s summary said
+  the same; `WriteRunSummaryToConsole` said a VSTest runner shows run-end output at `detailed` verbosity, where xUnit v3
+  swallows it there too; and the comments said the job summary survives every runner, which holds on GitHub only.
+
+Behaviour changes: the section, `CiSummary.md`, the section's copy in the job log, the annotation and the list of
+several reports read differently, and a script matching the old first sentence stops matching. A run with a custom
+data file name names that file in its commands, and a run without a JSON data file prints no query command.
+
+### Docs
+
+- **On Azure DevOps under `dotnet test`, neither the summary nor the artifact upload reached the pipeline.** Both are
+  logging commands Kronikol writes to stdout at the end of the run (`##vso[task.uploadsummary]` and
+  `##vso[artifact.upload]`), and `dotnet test` swallows that output, as measured with `TF_BUILD=True` at normal and
+  detailed verbosity and with VSTest's two switches for test-host output (plan harness `ado-stdout.sh`). The README
+  and the wiki said no pipeline step was needed. They now give the two steps, a `PublishPipelineArtifact@1` of the
+  reports folder (named literally, since no publishing task takes a wildcard) and a script that uploads `CiSummary.md`,
+  and say that from `kronikol merge`, `kronikol ingest` or a directly run MTP host, which own their stdout, both
+  arrive. A fix in code is left to the owner (plan Q13).
+- `.github/workflows/ci-summary-preview.yml` uploads each leg's reports folder, so the dogfood's summaries have the
+  artifacts they name.
+- The skill's command reference (`references/commands.md`, in `Kronikol.Tool` and in the templates package) says the
+  list of several reports gives each one's size, suite and failure count.
+
+### Tests
+
+- `CiSummaryAudienceTests` (new, 40 cases) builds the section, the annotation and the pointer from the CI a given
+  environment describes: people first and the rule labelled for AI agents; only the files the run wrote; the folder
+  relative to the workspace with `/`, and in full outside it; the upload stated per provider; the guarded download, the
+  host on GitHub Enterprise, the attempt after a re-run and the runner's folder named once; the `find` for a data file
+  the folder lookup misses; no query command without a JSON data file; Azure DevOps with and without
+  `PublishCiArtifacts`, and a project whose name holds a space; a green run's "The report" with its history and
+  previous-run lines; CI values holding line breaks; and the public builders reading the process's CI.
+- `CiSummaryRunTests` (new, 8 cases) runs `ReportGenerator` and `kronikol merge` under a GitHub Actions environment and
+  then runs the printed commands against the layout `gh run download` gives: one report, a merge found by its name,
+  several reports listed with their suites and counts, and a custom data file name; and a run with no JSON data file,
+  and a green and a failing run's full summary.
+- `RetainedRunsTests.Several_reports_are_listed_with_their_size_suite_and_failures`: each line of the list, a merged
+  report with no `Run.json`, and a `Run.json` that does not list the report beside it.
+- Pins moved with the text in `RunEndPointerTests`, `RunEndPointerSafetyTests` (its fixture gained a
+  `TestRunReport.json`, since its facts quote the commands), `LabsReportRunTests` and `ReportGeneratorAgentOutputsTests`,
+  which now holds on CI and off it.
+
+Proofs (plan harness `r1/`): copied onto 4.19.0 with three internal overloads stubbed to return 4.19.0's text, 41 of the
+108 facts in the touched classes fail, each on its own assertion; the 67 that pass are guards and fallbacks that hold on
+both. The fact added after that run (a green run keeps its history lines) is proved by mutation instead: 33 of 33
+mutations are killed. On a real run (`ci-summary-preview.yml`, run 38433876527), each leg wrote its section as designed,
+and the All Failing leg's commands, pasted into an empty folder, downloaded the run, listed its four reports with their
+sizes, suites and failures, and answered for the one named; pasted again, the guard held.
+
+Checks: after the version bump the core suite passes 7,516 with 2 skipped, and `release.slnf` builds in Release
+for every target.
+
+The templates pin 4.19.4 and the history action's `VERSION` installs Kronikol.Tool 4.19.7. The wiki edits and
+the Kronikol4J ledger line follow publication.
+
 ## [4.19.6] - 2026-10-13
 
 **Patch - MongoDB reply notes are JSON, a write error is a failure, a failure says why, and a `Raw` claim no longer
