@@ -1,8 +1,9 @@
 # A caller that hangs up on a tap (#172)
 
 **Date:** 2026-10-13 · **Repo version:** 4.18.1 (`origin/main` at `34145c44`, the commit the issue's line numbers are for;
-every line number below is for it) · **Status:** 🟡 green-lit in full by the owner on 2026-10-13 ("implement the plan in
-full", every §9 question as recommended); **R1 released as 4.19.2 and R2 as 4.19.3** (§11). Drafted from #172
+every line number below is for it) · **Status:** ✅ executed and published: green-lit in full by the owner on
+2026-10-13 ("implement the plan in full", every §9 question as recommended); **R1 published as 4.19.2 and R2 as
+4.19.3, #172 closed** (§11). Drafted from #172
 (filed 2026-10-13) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying
 problem. Written alongside the plans for #171 (`PROXY_TAP_FAILED_FORWARD_PLAN.md`, session kronikol-70) and #170
 (session kronikol-ef), which change the same method; §7 is the order (#170's releases and #171's first went before R1).
@@ -538,6 +539,18 @@ written.
     trailer line back on 1,024 bytes) is caught.
   - Checks (harness `r2/checks.txt`): after the bump, the Otlp project passes 142 of 142 on Windows, and on Linux in
     Debug and in Release; the core suite 7,458 with 2 skipped; and `release.slnf` builds in Release for every target.
+- 2026-10-13, both published, and the plan is complete.
+  - 4.19.2: Release 38427362315, CI 38427358439, CodeQL 38427358602 and CI Summary Preview 38427357935 passed, and
+    nuget.org listed all 62 ids at 16:42Z. The wiki has R1's edits (`20aba0a`: Integration-ProxyTap-Extension's "A
+    caller that hangs up" section and a Limitations bullet citing dotnet/runtime#135680, and Diagnostics-and-Debugging's
+    line on `ProxyTap`'s forward-failure entry), Kronikol4J's ledger its line (`659fbf3`), and #172 is closed with a
+    comment naming both releases.
+  - 4.19.3: Release 38432846123, CI 38432844358, CodeQL 38432844574 and CI Summary Preview 38432844649 passed, and
+    nuget.org listed all 62 ids at 17:47Z. The wiki has R2's edits (`dcfdefa`: Integration-Otlp-Extension's
+    options table and counters line) and Kronikol4J's ledger its line (`882de10`).
+  - #171's R1 and R2 followed as 4.19.5 (session kronikol-70), on R1's `CallerAnswer` as §7 agreed, and removed the
+    typed hang-up catch R1 had kept (§4.1 item 4).
+  - Left open as their own work, per §9: #173 (Q2) and #174 (Q7); dotnet/runtime#135680 (Q6) is with .NET.
 
 ## Appendix A. Edit sites at `34145c44`
 
