@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using Kronikol.Constants;
 using Kronikol.Reports;
 using Kronikol.Tracking;
@@ -52,6 +54,11 @@ public sealed class ProxyTap : IAsyncDisposable
     private long _handled;
     private long _captured;
     private long _forwardFailures;
+    private long _failuresRecorded;
+    private long _failuresWithoutIdentity;
+    private long _uncaptured;
+    private long _captureFaults;
+    private string? _firstCaptureFault;
     private long _traceIdNotApplied;
 
     /// <summary>Creates a tap for the given options (validated on <see cref="StartAsync"/>).</summary>
@@ -66,16 +73,18 @@ public sealed class ProxyTap : IAsyncDisposable
     /// <summary>The URI callers should dial.</summary>
     public Uri ListenUri => new($"http://{_options.ListenHost}:{_options.ListenPort}/");
 
-    /// <summary>Exchanges forwarded so far.</summary>
+    /// <summary>Exchanges answered from the upstream so far. A forward that failed is not one.</summary>
     public long RequestsHandled => Interlocked.Read(ref _handled);
 
-    /// <summary>Exchanges captured (attributed to a test) so far.</summary>
+    /// <summary>Of <see cref="RequestsHandled"/>, the exchanges captured (attributed to a test and recorded). A failed forward that was recorded is not added here.</summary>
     public long RequestsCaptured => Interlocked.Read(ref _captured);
 
     /// <summary>
     /// Requests the tap could not forward (the upstream was unreachable, timed out or the exchange threw) and answered
-    /// <c>502 Bad Gateway</c> instead. A request whose caller hangs up before it has arrived whole is not counted: it was
-    /// never forwarded, and its caller is not there to answer.
+    /// <c>502 Bad Gateway</c> instead. One that names a test, or that <see cref="ProxyTapOptions.CaptureUnattributedRequests"/>
+    /// takes, is recorded as a failed call. A request whose caller hangs up before it has arrived whole is not counted: it
+    /// was never forwarded, and its caller is not there to answer. Nor is a forward the tap's own disposal cut short, nor
+    /// a fault in capture, which <see cref="Diagnostics"/> reports on a line of its own.
     /// </summary>
     public long ForwardFailures => Interlocked.Read(ref _forwardFailures);
 
@@ -104,10 +113,12 @@ public sealed class ProxyTap : IAsyncDisposable
         var forwardFailures = ForwardFailures;
         if (forwardFailures > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
-                string.Create(CultureInfo.InvariantCulture, $"{name}: {forwardFailures:N0} request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; those calls are missing from the diagrams")));
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {forwardFailures:N0} request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; {WhichWereRecorded(forwardFailures)}")));
 
+        // Counted where it happens, not worked out as handled - captured: a record that threw is a capture fault, not a
+        // request without a test identity.
         var handled = RequestsHandled;
-        var uncaptured = handled - RequestsCaptured;
+        var uncaptured = Interlocked.Read(ref _uncaptured);
         if (uncaptured > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
                 string.Create(CultureInfo.InvariantCulture, $"{name}: {uncaptured:N0} of {handled:N0} forwarded request(s) carried no test identity and were not captured (no test-tracking headers or traceparent reached this hop; CaptureUnattributedRequests is off)")));
@@ -117,7 +128,44 @@ public sealed class ProxyTap : IAsyncDisposable
             entries.Add(new DiagnosticEntry(DiagnosticKind.OptionNotApplied,
                 string.Create(CultureInfo.InvariantCulture, $"{name}: TraceIdFromIdentity did not apply to {notApplied:N0} request(s), because their test id is not a W3C trace id (32 lower-case hex digits, not all zero); they were forwarded under a random trace, so the services behind this tap cannot be matched to the test")));
 
+        var captureFaults = CaptureFaults;
+        if (captureFaults > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {captureFaults:N0} capture fault(s): the IdentityResolver, the sink, the body decoder or an ActivityListener threw, so a call may be missing, unattributed or untraced (the first: {Volatile.Read(ref _firstCaptureFault)}); what the callers got was not changed")));
+
         return entries;
+    }
+
+    /// <summary>The forward-failure line's last clause: which of the failed requests are recorded as failed calls.</summary>
+    private string WhichWereRecorded(long total)
+    {
+        var recorded = Interlocked.Read(ref _failuresRecorded);
+        var withoutIdentity = Interlocked.Read(ref _failuresWithoutIdentity);
+        var other = total - recorded - withoutIdentity;
+        if (recorded == total)
+            return "each is recorded as a failed call";
+        if (withoutIdentity == total)
+            return "they carried no test identity and were not recorded";
+
+        var parts = new List<string>();
+        if (recorded > 0)
+            parts.Add(string.Create(CultureInfo.InvariantCulture, $"{recorded:N0} {(recorded == 1 ? "is" : "are")} recorded as {(recorded == 1 ? "a failed call" : "failed calls")}"));
+        if (withoutIdentity > 0)
+            parts.Add(string.Create(CultureInfo.InvariantCulture, $"{withoutIdentity:N0} carried no test identity and {(withoutIdentity == 1 ? "was" : "were")} not recorded"));
+        if (other > 0)
+            parts.Add(string.Create(CultureInfo.InvariantCulture, $"{other:N0} {(other == 1 ? "was" : "were")} not recorded"));
+        return string.Join(", ", parts);
+    }
+
+    // Faults in capture (the IdentityResolver, the sink, the body decoder, an ActivityListener, or anything the tap did
+    // not expect once the caller had its answer): logged, counted, and never what the caller gets.
+    internal long CaptureFaults => Interlocked.Read(ref _captureFaults);
+
+    private void CaptureFault(string what, Exception exception)
+    {
+        if (Interlocked.Increment(ref _captureFaults) == 1)
+            Volatile.Write(ref _firstCaptureFault, $"{exception.GetType().Name}, {exception.Message}");
+        _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap: {what} threw {exception.GetType().Name}: {exception.Message}");
     }
 
     /// <summary>Starts listening. Throws if the options are invalid or the port cannot be bound.</summary>
@@ -191,17 +239,21 @@ public sealed class ProxyTap : IAsyncDisposable
         {
             await HandleAsync(context, answer).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is HttpListenerException or ObjectDisposedException)
-        {
-            // Not the caller: reading its request and writing its answer have catches of their own, so the listener no
-            // longer throws here. What still lands here is an ObjectDisposedException from another step, such as the
-            // upstream client disposed by DisposeAsync after its drain, or a disposed sink. The finally ends the response.
-        }
         catch (Exception ex)
         {
-            Interlocked.Increment(ref _forwardFailures);
+            // Only a fault the tap did not expect lands here: the caller's request and answer, the forward, the record, the
+            // identity resolver and the span listeners all have catches of their own. It is counted by what the caller
+            // got: a 502, when it had no answer yet, is a forward failure; after its answer, a capture fault.
             _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap error: {ex.Message}");
-            TryRespondBadGateway(answer, ex.Message);
+            if (answer.Closed)
+            {
+                CaptureFault("the tap", ex);
+            }
+            else
+            {
+                Interlocked.Increment(ref _forwardFailures);
+                TryRespondBadGateway(answer, BadGatewayBody(ex.Message));
+            }
         }
         finally
         {
@@ -271,6 +323,7 @@ public sealed class ProxyTap : IAsyncDisposable
         var identityTrace = _options.TraceIdFromIdentity && inboundTraceparent is null && !ignore && resolved is { } named
             ? IsTraceId(named.Id) ? named.Id : NotApplied()
             : null;
+        Activity? outer = null; // what was current before the server span: put back if a listener throws as one ends
         Activity? server = null;
         Activity? client = null;
         if (_options.EmitActivities)
@@ -287,7 +340,8 @@ public sealed class ProxyTap : IAsyncDisposable
             // starts with none, but the host's IdentityResolver runs on this flow and can set one. It starts here, as a root.
             if (parent != default && parent.SpanId == default)
                 Activity.Current = null;
-            server = ActivitySource.StartActivity($"tap {_options.DisplayName}", ActivityKind.Server, parent);
+            outer = Activity.Current;
+            server = StartSpan(() => ActivitySource.StartActivity($"tap {_options.DisplayName}", ActivityKind.Server, parent));
             server?.SetTag("kronikol.caller", _options.CallerName);
             server?.SetTag("kronikol.service", _options.ServiceName);
             server?.SetTag("http.request.method", request.HttpMethod);
@@ -301,8 +355,8 @@ public sealed class ProxyTap : IAsyncDisposable
             // The client span is the server span's child. When a listener dropped the server span, it starts under
             // the same parent, so a sampler that keeps it cannot start a new trace in place of the caller's.
             client = server is not null
-                ? ActivitySource.StartActivity("forward", ActivityKind.Client)
-                : ActivitySource.StartActivity("forward", ActivityKind.Client, parent);
+                ? StartSpan(() => ActivitySource.StartActivity("forward", ActivityKind.Client))
+                : StartSpan(() => ActivitySource.StartActivity("forward", ActivityKind.Client, parent));
         }
 
         string? forwardedTraceparent;
@@ -359,6 +413,8 @@ public sealed class ProxyTap : IAsyncDisposable
         if (_options.ReinjectCorrelation && identity is not null && !ignore)
             Reinject(message, requestHeaders, identity.Value, kronikolTraceId);
 
+        BeforeForward?.Invoke();
+
         var watch = Stopwatch.StartNew();
         int status;
         byte[] responseBody;
@@ -376,6 +432,46 @@ public sealed class ProxyTap : IAsyncDisposable
                 .SelectMany(h => h.Value.Select(v => (h.Key, (string?)v)))
                 .ToArray();
         }
+        catch (Exception ex)
+        {
+            // Everything in the try is the forward's, so whatever it threw is the forward's failure (#171).
+            var failure = ForwardFailure.Classify(ex, deadline.Token, lifetime);
+            var reason = ForwardFailure.Reason(failure, ex, _options);
+            var error = failure == ForwardFailureKind.Failed ? reason : "proxy-tap: " + reason;
+            var badGateway = BadGatewayBody(reason);
+
+            client?.SetStatus(ActivityStatusCode.Error, error);
+            client?.SetTag("error.type", ForwardFailure.ErrorType(ex));
+            EndSpan(client, restore: server ?? outer);
+            server?.SetTag("http.response.status_code", 502);
+            server?.SetStatus(ActivityStatusCode.Error);
+            EndSpan(server, restore: outer);
+
+            // Recorded, counted and logged before the 502 goes out, so a caller holding its 502 finds the failure in the
+            // records, the counters and the log, as it found the count before the record existed.
+            var recorded = capture && identity is not null && TryRecord(identity.Value, ignore, kronikolTraceId, requestResponseId,
+                request.HttpMethod, forwardUri, requestHeaders, requestBody, request.Headers["Content-Encoding"], requestStarted,
+                new ResponseHalf(FailedSend.Status(ex), [("Content-Type", "application/json")], badGateway, null, DateTimeOffset.UtcNow, error),
+                activityTraceId, activitySpanId);
+
+            if (failure == ForwardFailureKind.Stopping)
+            {
+                _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap stopping: {error}");
+            }
+            else
+            {
+                if (recorded)
+                    Interlocked.Increment(ref _failuresRecorded);
+                else if (!capture || identity is null)
+                    Interlocked.Increment(ref _failuresWithoutIdentity);
+                Interlocked.Increment(ref _forwardFailures);
+                _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap error: {error}");
+            }
+
+            // Tried for a stopping tap too: the listener may still be open, and if it is not, the response is aborted.
+            TryRespondBadGateway(answer, badGateway);
+            return;
+        }
         finally
         {
             watch.Stop();
@@ -386,22 +482,101 @@ public sealed class ProxyTap : IAsyncDisposable
         server?.SetTag("http.response.status_code", status);
         if (status >= 500)
             server?.SetStatus(ActivityStatusCode.Error);
-        client?.Dispose();
-        server?.Dispose();
+        EndSpan(client, restore: server ?? outer);
+        EndSpan(server, restore: outer);
 
         // Respond first, record second.
         await RespondAsync(answer, status, responseHeaders, responseContentType, responseContentEncoding, responseBody).ConfigureAwait(false);
         Interlocked.Increment(ref _handled);
+        AfterAnswered?.Invoke();
 
         if (!capture || identity is null)
+        {
+            Interlocked.Increment(ref _uncaptured);
             return;
+        }
 
-        Record(identity.Value, ignore, kronikolTraceId, requestResponseId, request.HttpMethod, forwardUri,
-            requestHeaders, requestBody, request.Headers["Content-Encoding"], requestStarted,
-            status, responseHeaders, responseBody, responseContentEncoding, responseReceived,
-            activityTraceId, activitySpanId);
-        Interlocked.Increment(ref _captured);
+        if (TryRecord(identity.Value, ignore, kronikolTraceId, requestResponseId, request.HttpMethod, forwardUri,
+                requestHeaders, requestBody, request.Headers["Content-Encoding"], requestStarted,
+                new ResponseHalf((HttpStatusCode)status, responseHeaders, responseBody, responseContentEncoding, responseReceived, null),
+                activityTraceId, activitySpanId))
+            Interlocked.Increment(ref _captured);
     }
+
+    /// <summary>
+    /// Starts a span, and treats a listener that throws as a capture fault: the call goes on as if nobody listened.
+    /// <see cref="Activity.Start"/> makes the span current before it tells the listeners, so a throw there leaves that
+    /// span current and running; it is stopped, and what was current is put back.
+    /// </summary>
+    internal Activity? StartSpan(Func<Activity?> start)
+    {
+        var before = Activity.Current;
+        try
+        {
+            return start();
+        }
+        catch (Exception ex)
+        {
+            if (Activity.Current is { } orphan && orphan != before && orphan.Source == ActivitySource)
+            {
+                try
+                {
+                    orphan.Stop();
+                }
+                catch (Exception)
+                {
+                    // The same listener again; the span is stopped either way.
+                }
+            }
+
+            Activity.Current = before;
+            CaptureFault("an ActivityListener", ex);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Ends a span, and treats a listener that throws as a capture fault. The span is stopped by then, but a throw leaves
+    /// it current, so <paramref name="restore"/> is put back.
+    /// </summary>
+    internal void EndSpan(Activity? span, Activity? restore)
+    {
+        if (span is null)
+            return;
+        try
+        {
+            span.Dispose();
+        }
+        catch (Exception ex)
+        {
+            if (Activity.Current == span)
+                Activity.Current = restore;
+            CaptureFault("an ActivityListener", ex);
+        }
+    }
+
+    /// <summary>Records the exchange, and treats a sink (or anything else in the record) that throws as a capture fault.</summary>
+    private bool TryRecord(
+        (string Name, string Id) identity, bool ignore, Guid traceId, Guid requestResponseId, string method, Uri uri,
+        IReadOnlyDictionary<string, string[]> requestHeaders, byte[] requestBody, string? requestEncoding, DateTimeOffset requestStarted,
+        ResponseHalf response, string activityTraceId, string activitySpanId)
+    {
+        try
+        {
+            Record(identity, ignore, traceId, requestResponseId, method, uri, requestHeaders, requestBody, requestEncoding, requestStarted,
+                response, activityTraceId, activitySpanId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            CaptureFault("the sink", ex);
+            return false;
+        }
+    }
+
+    /// <summary>The response half of a record: the upstream's answer, or a failed forward's status, 502 body and cause.</summary>
+    private readonly record struct ResponseHalf(
+        OneOf<HttpStatusCode, string> Status, (string Key, string? Value)[] Headers, byte[] Body, string? Encoding, DateTimeOffset Received, string? Error);
 
     // ------------------------------------------------------------------ identity
 
@@ -438,9 +613,18 @@ public sealed class ProxyTap : IAsyncDisposable
     {
         if (_options.IdentityResolver is not null)
         {
-            var custom = _options.IdentityResolver(headers, traceparent);
-            if (custom is not null)
-                return custom;
+            try
+            {
+                var custom = _options.IdentityResolver(headers, traceparent);
+                if (custom is not null)
+                    return custom;
+            }
+            catch (Exception ex)
+            {
+                // The host's rule failed for this request: the built-in rules decide, as when it returns null, and the
+                // call is forwarded either way.
+                CaptureFault("the IdentityResolver", ex);
+            }
         }
 
         // Kronikol's own headers carry a value that is not plain ASCII in the UTF-8'' form (TrackingHeaderValue).
@@ -485,16 +669,16 @@ public sealed class ProxyTap : IAsyncDisposable
         (string Name, string Id) identity, bool ignore, Guid traceId, Guid requestResponseId,
         string method, Uri uri,
         IReadOnlyDictionary<string, string[]> requestHeaders, byte[] requestBody, string? requestEncoding, DateTimeOffset requestStarted,
-        int status, (string Key, string? Value)[] responseHeaders, byte[] responseBody, string? responseEncoding, DateTimeOffset responseReceived,
+        ResponseHalf response,
         string activityTraceId, string activitySpanId)
     {
         var httpMethod = new HttpMethod(method);
 
         var capturedRequestHeaders = FilterHeaders(requestHeaders.SelectMany(h => h.Value.Select(v => (h.Key, (string?)v))));
-        var capturedResponseHeaders = FilterHeaders(responseHeaders);
+        var capturedResponseHeaders = FilterHeaders(response.Headers);
 
         var requestContent = _options.CaptureBodies ? CapturedBody(requestBody, requestEncoding) : null;
-        var responseContent = _options.CaptureBodies ? CapturedBody(responseBody, responseEncoding) : null;
+        var responseContent = _options.CaptureBodies ? CapturedBody(response.Body, response.Encoding) : null;
 
         _options.Sink.Log(new RequestResponseLog(
             identity.Name, identity.Id, httpMethod, requestContent, uri, capturedRequestHeaders,
@@ -510,10 +694,11 @@ public sealed class ProxyTap : IAsyncDisposable
         _options.Sink.Log(new RequestResponseLog(
             identity.Name, identity.Id, httpMethod, responseContent, uri, capturedResponseHeaders,
             _options.ServiceName, _options.CallerName, RequestResponseType.Response, traceId, requestResponseId, ignore,
-            (HttpStatusCode)status,
+            response.Status,
             DependencyCategory: _options.DependencyCategory, CallerDependencyCategory: _options.CallerDependencyCategory)
         {
-            Timestamp = responseReceived,
+            Timestamp = response.Received,
+            Error = response.Error,
             ActivityTraceId = activityTraceId,
             ActivitySpanId = activitySpanId,
             Phase = _options.Phase,
@@ -597,7 +782,7 @@ public sealed class ProxyTap : IAsyncDisposable
                     return false;
             }
         }
-        catch (Exception ex) when (ex is InvalidDataException or DecoderFallbackException or IOException)
+        catch (Exception ex) when (ex is InvalidDataException or DecoderFallbackException or IOException or InvalidOperationException)
         {
             return false;
         }
@@ -673,14 +858,38 @@ public sealed class ProxyTap : IAsyncDisposable
         }
     }
 
-    private static void TryRespondBadGateway(CallerAnswer answer, string message)
+    /// <summary>
+    /// The body of the tap's own <c>502</c>: <c>{"error":{"code":502,"message":"proxy-tap: …"}}</c>, valid JSON whatever the
+    /// message holds (a quote stays a quote, a line break is escaped, non-ASCII stays readable).
+    /// </summary>
+    internal static byte[] BadGatewayBody(string message)
+    {
+        using var buffer = new MemoryStream();
+        using (var json = new Utf8JsonWriter(buffer, new JsonWriterOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }))
+        {
+            json.WriteStartObject();
+            json.WriteStartObject("error");
+            json.WriteNumber("code", 502);
+            json.WriteString("message", "proxy-tap: " + message);
+            json.WriteEndObject();
+            json.WriteEndObject();
+        }
+
+        return buffer.ToArray();
+    }
+
+    // Called just before the forward, and once the caller has its answer (Kronikol.Tests.ProxyTap): a fact throws from
+    // either to stand for a fault the tap does not expect. Null in production.
+    internal Action? BeforeForward { get; set; }
+
+    internal Action? AfterAnswered { get; set; }
+
+    private static void TryRespondBadGateway(CallerAnswer answer, byte[] payload)
     {
         var response = answer.Response;
         try
         {
             response.StatusCode = 502;
-            var payload = Encoding.UTF8.GetBytes(
-                "{\"error\":{\"code\":502,\"message\":\"proxy-tap: " + message.Replace("\\", "\\\\").Replace("\"", "'") + "\"}}");
             response.ContentType = "application/json";
             response.ContentLength64 = payload.Length;
             response.OutputStream.Write(payload);

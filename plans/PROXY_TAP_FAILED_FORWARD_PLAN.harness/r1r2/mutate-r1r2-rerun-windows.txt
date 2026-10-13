@@ -1,0 +1,4 @@
+M8 record catch removed: KILLED (Failed:     2, Passed:    24)
+M18 span start guard leaves the orphan current: KILLED (Failed:     1, Passed:    25)
+M19 span end guard leaves the span current: KILLED (Failed:     1, Passed:    25)
+done

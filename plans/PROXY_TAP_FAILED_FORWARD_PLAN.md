@@ -1,8 +1,8 @@
 # ProxyTap failed forward plan (#171)
 
 **Status:** written 2026-10-13 at 4.18.1 (`34145c44`) by kronikol-70, and green-lit in full by the owner the same day,
-every question in section 9 as recommended. R0 is released as 4.19.1 (`4de3ee16`). R1 and R2 follow as one patch after
-#172's R1 (section 8).
+every question in section 9 as recommended, and executed: R0 as 4.19.1 (`4de3ee16`), R1 and R2 as one patch, 4.19.5,
+on #172's `CallerAnswer` (section 8).
 
 **Disclosure note.** Section 3.5 describes a security defect found while writing this plan: a request whose target
 started with `//` (or, through `ProxyTap`'s listener, `/\`) was forwarded to whatever host it named, by `ProxyTap` and by
@@ -713,3 +713,14 @@ Playwright" / "Playwright done") and `release.slnf` in Release for every target,
   the OTLP page's forwarding step), Kronikol4J's ledger its line (`8cc145c`, nothing to port), and #171 a comment
   naming the release; the issue stays open for R1. This file and its harness were committed once 4.19.1 was on
   nuget.org (Q8).
+- 2026-10-13: R1 and R2 released as one patch, 4.19.5, on #172's `CallerAnswer` (4.19.2) and after #170's audit
+  (4.19.4). Changed while writing them: a failed forward is recorded, counted and logged before its 502 goes out, not
+  after (4.2's step order), because 4.19.2 counted it before answering and its facts, and hosts, read `ForwardFailures`
+  as soon as the caller has its 502; fact 15 reads the diagram through `PlantUmlCreator` rather than a whole report;
+  the generic catch is driven by two internal seams (`BeforeForward`, `AfterAnswered`), as OtlpTap's are; the span
+  guards are internal so a fact can drive them. Measured (`r1r2/listener.cs`): a listener that throws at the start
+  leaves the half-started span current, and one that throws at the stop leaves the stopped span current, so both guards
+  put `Activity.Current` back. Two mutations survived the plan's facts and got facts of their own: the record's catch
+  (a throwing sink on a failed forward would have become the 502's message) and the restore after a start that throws
+  at both ends. Proofs: 26 of 26 facts fail on 4.19.3 with the new surface stubbed; 19 of 19 mutations killed
+  (`r1r2/`).

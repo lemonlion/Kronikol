@@ -1,0 +1,14 @@
+    // ---- R1/R2 red-step stubs: the new internal surface the facts call, with 4.19.3's behaviour ----
+    internal static byte[] BadGatewayBody(string message) => Encoding.UTF8.GetBytes(
+        "{\"error\":{\"code\":502,\"message\":\"proxy-tap: " + message.Replace("\\", "\\\\").Replace("\"", "'") + "\"}}");
+
+    internal Action? BeforeForward { get; set; }
+
+    internal Action? AfterAnswered { get; set; }
+
+    internal long CaptureFaults => 0;
+
+    internal Activity? StartSpan(Func<Activity?> start) => start();
+
+    internal void EndSpan(Activity? span, Activity? restore) => span?.Dispose();
+

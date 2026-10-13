@@ -4,6 +4,72 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.19.5] - 2026-10-13
+
+**Patch - a proxy tap records a forward that failed as a failed call, and a fault in capture no longer fails the call
+(#171; `plans/PROXY_TAP_FAILED_FORWARD_PLAN.md` R1 and R2).** Green-lit in full by the owner on 2026-10-13, every
+question in the plan's section 9 as recommended. Bug fixes, and nothing new for a consumer to call, so the patch part
+moves (4.19.4 to 4.19.5); the behaviour changes are listed below. It builds on 4.19.2's ownership of the caller's
+answer.
+
+### Fixed
+
+- **A forward that failed was recorded nowhere, and its spans never ended.** A refused, failed, timed-out or cut-short
+  forward was answered 502 and counted, but nothing reached the sink, so the call was missing from the diagram, and
+  its server and client spans were started and never stopped, so a trace backend never received them. It is now
+  recorded as a failed call, as the in-process handler records a failed send: the request half as on success, and a
+  response half whose status is the exception's type (`!HttpRequestException`, `!TaskCanceledException`), whose
+  content is the 502 body the caller got, and whose `Error` holds the cause. The client span ends with an error
+  status, the cause as its description and `error.type` in .NET's own words (`connection_error`, `response_ended`, or
+  the type name); the server span ends with an error status and `http.response.status_code` 502. The record, the
+  count and the log line are all in place by the time the caller has its 502.
+- **A timeout said only "The operation was canceled."** The 502 body and `Error` now say `proxy-tap: no answer from
+  {host} within ForwardTimeout ({t})` or `proxy-tap: could not connect to {host} within ConnectTimeout ({t})`, then
+  the exception's message chain. Every other failure's body carries the whole chain too, where it held only the outer
+  message (`Error while copying content to a stream.` hid `The response ended prematurely.`).
+- **A forward cut short by the tap's own disposal was counted as a forward failure.** It is recorded as
+  `proxy-tap: the tap stopped before {ServiceName} answered`, logged as `proxy-tap stopping:` and not counted.
+- **The 502 body was not valid JSON when the message held a line break or a tab, and a quote became an apostrophe.**
+  It is written with a JSON writer, which keeps non-ASCII text readable.
+- **A throwing `IdentityResolver` failed the call with a 502**, though the upstream was never asked. The built-in rules
+  now decide, as when it returns null, and the throw is a capture fault.
+- **A sink that threw turned an answered call into a forward failure and a false "carried no test identity" line, and
+  a `br` body that is not brotli threw out of `TryDecodeBody`.** A throwing sink is now a capture fault and the
+  caller's answer stands; `TryDecodeBody` returns false for such a body, which is recorded as
+  `<N bytes, undecodable content-encoding 'br'>`.
+- **An `ActivityListener` that threw as a tap span started or stopped answered the caller 502**, even after the
+  upstream had answered. The call goes on as if nobody listened, the throw is a capture fault, and `Activity.Current`
+  is put back as it was.
+- **The catch 4.19.2 kept for a caller hanging up took any `ObjectDisposedException` silently.** It is gone: what it
+  took is now the tap stopping (the upstream client released after the drain) or a capture fault (a disposed sink),
+  and anything the tap does not expect is logged as `proxy-tap error:` and counted, as a forward failure answered 502
+  when the caller had no answer yet, or as a capture fault after it.
+
+Behaviour changes: sinks receive failed forwards; `Diagnostics()`'s forward-failure line keeps its text up to the
+semicolon and then says which failures are recorded (`each is recorded as a failed call`, `they carried no test
+identity and were not recorded`, or a count of each), its no-identity line is counted where it happens rather than
+worked out from the other counters, and a new `CaptureDegraded` line counts capture faults with the first one's type
+and message; the 502 body's message carries the cause chain, and for a timeout the deadline.
+
+Tests: `ProxyTapFailureTests` (new) records a refused forward as a failed call (both halves, their ids, the status, the
+502 body as content, `Error`), names the deadline for a timeout, records a body cut short by a FIN and by an RST alone,
+records a forward cut by disposal without counting it, checks `ForwardFailure.Classify` against the measured shapes
+and the `ConnectTimeout` wording, maps every `HttpRequestError` to its `error.type`, records an unattributed failure
+only when opted in and an ignored one as ignored, parses the 502 body as JSON, checks that every resolved request ends
+in one response record across refused, timed-out, cut-short, healthy and disposal-cut calls, checks the three
+diagnostic wordings, the NDJSON round trip and the drawn arrow and note, records a failure whose caller hung up, sorts a
+fault the tap does not expect before and after the answer, and covers a throwing resolver, a throwing sink on an
+answered and on a failed call, and a `br` body that is not brotli. `ProxyTapFailureSpanTests` runs in the trace-context
+facts' collection, since listeners are process-wide: a failed forward's spans, a listener that throws at the start or
+the stop of an answered call and at the stop of a failed one, and `Activity.Current` left as it was. Proofs (plan
+harness `r1r2/`): copied onto 4.19.3 with the new internal surface stubbed, 26 of 26 facts fail on their own
+assertions; 19 of 19 mutations are killed, two of them only after facts were added for a throwing sink on a failed
+forward and for putting `Activity.Current` back when a listener throws at both ends. Checks: the core suite passes
+7,462 with 2 skipped after the version bump, the full Playwright suite passes 1,036 with 28 skipped, `release.slnf`
+builds in Release for every target, and on Linux (.NET 10.0.12, the sdk container) the ProxyTap suite passes 115 of
+115 twice each in Debug and Release. The templates pin 4.19.3, the newest on nuget.org at the push, and the history
+action's VERSION installs Kronikol.Tool 4.19.5.
+
 ## [4.19.4] - 2026-10-13
 
 **Patch - the audit of #170's releases, 4.18.3 and 4.19.0: one test's calls in one trace keep their own internal

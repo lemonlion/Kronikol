@@ -1,0 +1,79 @@
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_throwing_sink_does_not_change_a_failed_forwards_answer [2 s]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_fault_the_tap_does_not_expect_before_the_answer_is_answered_502_and_counted [42 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_forward_cut_by_disposal_is_recorded_and_not_counted_as_a_forward_failure [10 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_failed_forward_is_recorded_though_its_caller_hung_up [10 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_response_cut_short_is_recorded_with_its_cause(reset: True, cause: "Unable to read data from the transport connection") [10 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_response_cut_short_is_recorded_with_its_cause(reset: False, cause: "The response ended prematurely") [10 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_throwing_sink_is_a_capture_fault_not_a_forward_failure [10 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.TryDecodeBody_returns_false_for_a_br_body_that_is_not_brotli [2 ms]
+  Error Message:
+   System.InvalidOperationException : Decoder ran into invalid data.
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.An_unattributed_failed_forward_is_recorded_only_when_opted_in [2 s]
+  Error Message:
+   Assert.EndsWith() Failure: String end does not match
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.Forward_failure_diagnostics_say_which_calls_are_recorded [4 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.An_ignored_failed_forward_is_recorded_as_ignored [12 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.Every_resolved_request_ends_in_one_response_record [13 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_fault_the_tap_does_not_expect_after_the_answer_is_a_capture_fault [10 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.Error_type_uses_dotnets_words [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.Forward_failures_are_classified_by_the_token_that_ended_them [4 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.The_bad_gateway_body_is_valid_json_and_keeps_the_message_exactly [1 ms]
+  Error Message:
+   System.Text.Json.JsonReaderException : '0x0A' is invalid within a JSON string. The string should be correctly escaped. LineNumber: 0 | BytePositionInLine: 75.
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_forward_that_timed_out_names_the_deadline [11 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_forward_the_upstream_refused_is_recorded_as_a_failed_call [12 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_throwing_IdentityResolver_does_not_fail_the_call [6 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_failed_forward_is_drawn_with_its_cause [12 s]
+  Error Message:
+   System.InvalidOperationException : Sequence contains no elements
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureTests.A_failed_forward_survives_the_ndjson_round_trip [2 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureSpanTests.A_listener_that_throws_leaves_Activity_Current_as_it_was [2 ms]
+  Error Message:
+   System.InvalidOperationException : listener threw
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureSpanTests.A_failed_forward_under_a_listener_that_throws_at_the_stop_is_still_answered_and_recorded [12 s]
+  Error Message:
+   System.InvalidOperationException : Sequence contains no matching element
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureSpanTests.A_throwing_ActivityListener_does_not_fail_the_call(throwIn: "ActivityStarted") [7 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureSpanTests.A_throwing_ActivityListener_does_not_fail_the_call(throwIn: "ActivityStopped") [6 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapFailureSpanTests.A_failed_forward_ends_its_spans_with_an_error_status [12 s]
+  Error Message:
+   System.InvalidOperationException : Sequence contains no matching element
+Failed!  - Failed:    26, Passed:     0, Skipped:     0, Total:    26, Duration: 2 m 35 s - Kronikol.Tests.ProxyTap.dll (net10.0)

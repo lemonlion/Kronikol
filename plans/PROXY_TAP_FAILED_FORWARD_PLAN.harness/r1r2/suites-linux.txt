@@ -1,0 +1,8 @@
+== ProxyTap Debug run 1
+Passed!  - Failed:     0, Passed:   115, Skipped:     0, Total:   115, Duration: 4 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+== ProxyTap Debug run 2
+Passed!  - Failed:     0, Passed:   115, Skipped:     0, Total:   115, Duration: 4 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+== ProxyTap Release run 1
+Passed!  - Failed:     0, Passed:   115, Skipped:     0, Total:   115, Duration: 4 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+== ProxyTap Release run 2
+Passed!  - Failed:     0, Passed:   115, Skipped:     0, Total:   115, Duration: 4 s - Kronikol.Tests.ProxyTap.dll (net10.0)
