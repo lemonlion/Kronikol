@@ -1204,6 +1204,9 @@ no row is taken here.
     10 writes without one; its 16 reply notes still parse. A script counted them and printed counts only. The report
     the lane writes grows by 0.2%: 4,681,138 to 4,692,053 bytes in memory and 4,676,641 to 4,689,272 against the server
     (Q5 left the budget to the owner; this is the measurement it asked for).
+- **2026-10-13, R2 published.** Release run 38457681824, CI 38457676182, CodeQL 38457676619 and CI Summary Preview
+  38457676440 passed for 4.20.0, each on its first attempt. nuget.org listed all 62 ids at 21:15. The wiki has R2's
+  edits (`1307e7c`), Kronikol4J's ledger its line (`1eb7001`), and #168 a comment naming the release.
 
 ## Appendix A. Edit sites at `34145c44`
 
