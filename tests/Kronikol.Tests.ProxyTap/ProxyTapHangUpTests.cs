@@ -478,11 +478,10 @@ public class ProxyTapHangUpTests
     /// <summary>An upstream on a raw socket, for answers an <see cref="HttpListener"/> cannot give: its <c>Abort()</c> writes a whole <c>200</c> when nothing was sent.</summary>
     private sealed class RawUpstream : IDisposable
     {
-        private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
+        private readonly TcpListener _listener = LoopbackPort.Listening();
 
         public RawUpstream(Func<Socket, Task> serve)
         {
-            _listener.Start();
             Port = ((IPEndPoint)_listener.LocalEndpoint).Port;
             _ = Task.Run(async () =>
             {

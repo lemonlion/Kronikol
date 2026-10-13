@@ -31,6 +31,21 @@ public class LoopbackPortTests
     }
 
     [Fact]
+    public void A_holder_given_a_port_handed_out_already_lets_it_go_and_binds_again()
+    {
+        // A socket bound to port 0 and held (ClosedPort, a raw TCP stub) could be given the port a listener was handed
+        // a moment before and has not started on yet; the listener then failed to start.
+        Assert.Equal(1004, LoopbackPort.Free(() => 1004));
+        var offered = new Queue<int>([1004, 1005]);
+        var released = new List<int>();
+
+        var held = LoopbackPort.Hold(offered.Dequeue, port => port, released.Add);
+
+        Assert.Equal(1005, held);
+        Assert.Equal([1004], released);
+    }
+
+    [Fact]
     public void Ports_handed_out_one_after_another_are_all_different()
     {
         // Windows offers ports in turn, so this holds there whatever the helper does; Linux offers them at random, and

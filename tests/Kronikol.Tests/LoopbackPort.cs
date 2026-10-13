@@ -30,6 +30,54 @@ internal static class LoopbackPort
         throw new InvalidOperationException("The OS offered only loopback ports this process has handed out already.");
     }
 
+    /// <summary>
+    /// Binds something that keeps its port for as long as it lives (a socket that never listens, a raw TCP stub) to
+    /// port 0, on a port this process has not handed out. The OS can give it a port <see cref="Free()"/> has just
+    /// handed to a listener not started yet, which then could not start: such a port is let go at once and the
+    /// binding tried again.
+    /// </summary>
+    internal static T Hold<T>(Func<T> bind, Func<T, int> portOf, Action<T> release)
+    {
+        for (var attempt = 0; attempt < 1000; attempt++)
+        {
+            var holder = bind();
+            lock (HandedOut)
+            {
+                if (HandedOut.Add(portOf(holder)))
+                    return holder;
+            }
+
+            release(holder);
+        }
+
+        throw new InvalidOperationException("The OS offered only loopback ports this process has handed out already.");
+    }
+
+    /// <summary>A started listener on a loopback port this process has not handed out (see <see cref="Hold"/>).</summary>
+    internal static TcpListener Listening() => Hold(
+        () =>
+        {
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            return listener;
+        },
+        listener => ((IPEndPoint)listener.LocalEndpoint).Port,
+        listener => listener.Stop());
+
+    /// <summary>
+    /// A socket bound to a loopback port this process has not handed out and never listening, so a connection to it is
+    /// refused (see <see cref="Hold"/>).
+    /// </summary>
+    internal static Socket Closed() => Hold(
+        () =>
+        {
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            return socket;
+        },
+        socket => ((IPEndPoint)socket.LocalEndPoint!).Port,
+        socket => socket.Dispose());
+
     private static int Probe()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);

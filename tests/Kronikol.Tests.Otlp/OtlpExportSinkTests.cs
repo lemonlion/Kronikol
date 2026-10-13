@@ -16,8 +16,7 @@ internal sealed class BlackHoleCollector : IDisposable
 
     public BlackHoleCollector()
     {
-        _listener = new TcpListener(IPAddress.Loopback, 0);
-        _listener.Start();
+        _listener = LoopbackPort.Listening();
         Port = ((IPEndPoint)_listener.LocalEndpoint).Port;
         _ = Task.Run(async () =>
         {

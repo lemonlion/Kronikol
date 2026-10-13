@@ -320,14 +320,13 @@ public class OtlpTapHangUpTests
     /// </summary>
     private sealed class HeldCollector : IDisposable
     {
-        private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
+        private readonly TcpListener _listener = LoopbackPort.Listening();
         private readonly TaskCompletionSource _answer = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly TaskCompletionSource _closed = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private int _received;
 
         public HeldCollector()
         {
-            _listener.Start();
             Port = ((IPEndPoint)_listener.LocalEndpoint).Port;
             _ = Task.Run(async () =>
             {

@@ -126,10 +126,7 @@ public class PlaywrightBrowserTests : IAsyncLifetime
 
         public EchoServer()
         {
-            var probe = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
-            probe.Start();
-            Port = ((IPEndPoint)probe.LocalEndpoint).Port;
-            probe.Stop();
+            Port = FreePort();
             _listener.Prefixes.Add($"http://localhost:{Port}/");
             _listener.Start();
             _ = Task.Run(async () =>

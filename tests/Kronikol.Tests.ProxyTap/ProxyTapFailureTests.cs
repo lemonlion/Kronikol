@@ -15,12 +15,11 @@ namespace Kronikol.Tests.ProxyTap;
 /// <summary>An upstream that takes connections and never answers.</summary>
 internal sealed class SilentUpstream : IDisposable
 {
-    private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
+    private readonly TcpListener _listener = LoopbackPort.Listening();
     private readonly List<Socket> _held = [];
 
     public SilentUpstream()
     {
-        _listener.Start();
         Port = ((IPEndPoint)_listener.LocalEndpoint).Port;
         _ = AcceptAsync();
     }
@@ -65,13 +64,12 @@ internal sealed class SilentUpstream : IDisposable
 /// </summary>
 internal sealed class CutShortUpstream : IDisposable
 {
-    private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
+    private readonly TcpListener _listener = LoopbackPort.Listening();
     private readonly bool _reset;
 
     public CutShortUpstream(bool reset)
     {
         _reset = reset;
-        _listener.Start();
         Port = ((IPEndPoint)_listener.LocalEndpoint).Port;
         _ = ServeAsync();
     }

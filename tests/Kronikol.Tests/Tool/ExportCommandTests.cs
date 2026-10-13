@@ -359,15 +359,11 @@ public class ExportCommandTests : IDisposable
 /// </summary>
 public sealed class ClosedPort : IDisposable
 {
-    private readonly System.Net.Sockets.Socket _socket = new(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+    private readonly System.Net.Sockets.Socket _socket = LoopbackPort.Closed();
 
     public int Port { get; }
 
-    public ClosedPort()
-    {
-        _socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-        Port = ((IPEndPoint)_socket.LocalEndPoint!).Port;
-    }
+    public ClosedPort() => Port = ((IPEndPoint)_socket.LocalEndPoint!).Port;
 
     public void Dispose() => _socket.Dispose();
 }
