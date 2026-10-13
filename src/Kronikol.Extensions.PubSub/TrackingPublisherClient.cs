@@ -92,7 +92,8 @@ public class TrackingPublisherClient : PublisherClient
     {
         if (!_options.PropagateTestIdentity) return;
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_options.HttpContextAccessor, _options.CurrentTestInfoFetcher);
+        // The tracker's accessor, so that the message carries the scenario its send is recorded under.
+        var testInfo = TestInfoResolver.ResolveWithSource(_tracker.HttpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null) return;
 
         message.Attributes[TestTrackingMessageHeaders.TestName] = testInfo.Value.Name;

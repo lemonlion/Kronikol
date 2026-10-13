@@ -25,10 +25,11 @@ public record MediatorTrackingOptions
 
     /// <summary>
     /// Resolves the scenario from the test-tracking request headers when a request or notification is sent inside a host's request
-    /// pipeline (a host <c>WebApplicationFactory</c> starts, or any other host in the test process). Pass the host's own
-    /// (<c>sp.GetService&lt;IHttpContextAccessor&gt;()</c>): ASP.NET Core fills an accessor only in a host that registers
-    /// one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c> calls).
-    /// <see cref="MediatorTrackingExtensions.TrackMediatorForDiagrams"/> uses the container's when this is null.
+    /// pipeline (a host <c>WebApplicationFactory</c> starts, or any other host in the test process). In a host, leave it
+    /// null: <see cref="MediatorTrackingExtensions.TrackMediatorForDiagrams"/> takes these options before the host's
+    /// services are built, and uses the container's accessor, the host's own, when this is null. ASP.NET Core fills an
+    /// accessor only in a host that registers one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c>
+    /// calls). Set it to read the headers through another accessor.
     /// </summary>
     public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; init; }
 }

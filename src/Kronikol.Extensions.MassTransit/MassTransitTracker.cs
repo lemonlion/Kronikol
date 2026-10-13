@@ -26,6 +26,9 @@ public class MassTransitTracker : ITrackingComponent
     public int InvocationCount => _invocationCount;
     public bool HasHttpContextAccessor => _httpContextAccessor is not null;
 
+    /// <summary>The accessor this tracker resolves the scenario through: the constructor's, else the options'.</summary>
+    internal IHttpContextAccessor? HttpContextAccessor => _httpContextAccessor;
+
     public void LogSend(MassTransitOperationInfo op, object? message)
     {
         Interlocked.Increment(ref _invocationCount);

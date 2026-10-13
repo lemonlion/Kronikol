@@ -1,0 +1,15 @@
+A1 src/Kronikol.Extensions.BigQuery/BigQueryTracker.cs: caught exactly; failed ['BigQueryTrackerTests.Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly']
+A2 src/Kronikol.Extensions.PubSub/PubSubTracker.cs: caught exactly; failed ['PubSubTrackerTests.Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly']
+A3 src/Kronikol.Extensions.Dapper/TrackingDbCommand.cs: caught exactly; failed ['TrackingDbCommandTests.A_command_built_directly_reads_HttpContextAccessor_from_options']
+B1 src/Kronikol.Extensions.BigQuery/BigQueryServiceCollectionExtensions.cs: caught exactly; failed ['BigQueryServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers']
+B2 src/Kronikol.Extensions.BigQuery/BigQueryServiceCollectionExtensions.cs: caught exactly; failed ['BigQueryServiceCollectionExtensionsTests.Registration_uses_the_containers_accessor_when_the_options_carry_none']
+B3 src/Kronikol.Extensions.PubSub/PubSubServiceCollectionExtensions.cs: caught exactly; failed ['PubSubServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers']
+B4 src/Kronikol.Extensions.PubSub/PubSubServiceCollectionExtensions.cs: caught exactly; failed ['PubSubServiceCollectionExtensionsTests.Registration_uses_the_containers_accessor_when_the_options_carry_none']
+B5 src/Kronikol.Extensions.AtlasDataApi/AtlasDataApiServiceCollectionExtensions.cs: caught exactly; failed ['AtlasDataApiServiceCollectionExtensionsTests.Registration_prefers_the_options_accessor_to_the_containers']
+B6 src/Kronikol.Extensions.AtlasDataApi/AtlasDataApiServiceCollectionExtensions.cs: caught exactly; failed ['AtlasDataApiServiceCollectionExtensionsTests.Registration_uses_the_containers_accessor_when_the_options_carry_none']
+C1 src/Kronikol.Extensions.PubSub/TrackingPublisherClient.cs: caught exactly; failed ['TrackingPublisherClientTests.PublishAsync_stamps_the_scenario_the_publish_is_logged_under_when_given_an_accessor']
+C2 src/Kronikol.Extensions.ServiceBus/TrackingServiceBusSender.cs: caught exactly; failed ['TrackingServiceBusSenderIdentityTests.SendMessageAsync_stamps_the_scenario_the_send_is_logged_under_when_the_tracker_was_given_an_accessor']
+C3 src/Kronikol.Extensions.MassTransit/TrackingSendObserver.cs: caught exactly; failed ['TrackingObserverIdentityTests.PreSend_stamps_the_trackers_scenario_when_the_tracker_was_given_an_accessor']
+C4 src/Kronikol.Extensions.MassTransit/TrackingPublishObserver.cs: caught exactly; failed ['TrackingObserverIdentityTests.PrePublish_stamps_the_trackers_scenario_when_the_tracker_was_given_an_accessor']
+C5 src/Kronikol.Extensions.EventHubs/TrackingEventHubProducerClient.cs: caught exactly; failed nothing
+ALL AS EXPECTED

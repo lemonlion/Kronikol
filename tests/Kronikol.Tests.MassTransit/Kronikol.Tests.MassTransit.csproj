@@ -15,4 +15,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.MassTransit\Kronikol.Extensions.MassTransit.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
+  </ItemGroup>
+
 </Project>

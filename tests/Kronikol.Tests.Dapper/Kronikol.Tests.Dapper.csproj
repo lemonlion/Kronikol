@@ -16,4 +16,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Dapper\Kronikol.Extensions.Dapper.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
+  </ItemGroup>
+
 </Project>

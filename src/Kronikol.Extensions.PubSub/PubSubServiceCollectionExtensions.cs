@@ -24,7 +24,7 @@ public static class PubSubServiceCollectionExtensions
         var options = new PubSubTrackingOptions();
         configure?.Invoke(options);
 
-        services.AddSingleton(sp => new PubSubTracker(options, sp.GetService<IHttpContextAccessor>()));
+        services.AddSingleton(sp => new PubSubTracker(options, options.HttpContextAccessor ?? sp.GetService<IHttpContextAccessor>()));
 
         services.DecorateAll<PublisherClient>((sp, inner) =>
         {

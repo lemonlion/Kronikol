@@ -1,0 +1,24 @@
+  Determining projects to restore...
+C:\Code\Kronikol-audit136\tests\Kronikol.Tests\Kronikol.Tests.csproj : warning NU1902: Package 'AngleSharp' 1.4.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-pgww-w46g-26qg
+  All projects are up-to-date for restore.
+C:\Code\Kronikol-audit136\tests\Kronikol.Tests\Kronikol.Tests.csproj : warning NU1902: Package 'AngleSharp' 1.4.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-pgww-w46g-26qg
+  Kronikol -> C:\Code\Kronikol-audit136\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.Otlp -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.Otlp\bin\Debug\net10.0\Kronikol.Extensions.Otlp.dll
+  Kronikol.Extensions.OpenTelemetry -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.OpenTelemetry\bin\Debug\net10.0\Kronikol.Extensions.OpenTelemetry.dll
+  Kronikol.LightBDD.Core -> C:\Code\Kronikol-audit136\src\Kronikol.LightBDD.Core\bin\Debug\net10.0\Kronikol.LightBDD.Core.dll
+  Kronikol.Extensions.AtlasDataApi -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.AtlasDataApi\bin\Debug\net10.0\Kronikol.Extensions.AtlasDataApi.dll
+  Kronikol.Extensions.BigQuery -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.BigQuery\bin\Debug\net10.0\Kronikol.Extensions.BigQuery.dll
+  Kronikol.Extensions.DispatchProxy -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.DispatchProxy\bin\Debug\net10.0\Kronikol.Extensions.DispatchProxy.dll
+  Kronikol.ReqNRoll.Core -> C:\Code\Kronikol-audit136\src\Kronikol.ReqNRoll.Core\bin\Debug\net10.0\Kronikol.ReqNRoll.Core.dll
+  Kronikol.xUnit3 -> C:\Code\Kronikol-audit136\src\Kronikol.xUnit3\bin\Debug\net10.0\Kronikol.xUnit3.dll
+  Kronikol.BDDfy.xUnit3 -> C:\Code\Kronikol-audit136\src\Kronikol.BDDfy.xUnit3\bin\Debug\net10.0\Kronikol.BDDfy.xUnit3.dll
+  Kronikol.LightBDD.xUnit3 -> C:\Code\Kronikol-audit136\src\Kronikol.LightBDD.xUnit3\bin\Debug\net10.0\Kronikol.LightBDD.xUnit3.dll
+  Kronikol.ReqNRoll.xUnit3 -> C:\Code\Kronikol-audit136\src\Kronikol.ReqNRoll.xUnit3\bin\Debug\net10.0\Kronikol.ReqNRoll.xUnit3.dll
+  Kronikol.ReqNRoll.TUnit -> C:\Code\Kronikol-audit136\src\Kronikol.ReqNRoll.TUnit\bin\Debug\net10.0\Kronikol.ReqNRoll.TUnit.dll
+  Kronikol.ReqNRoll.xUnit2 -> C:\Code\Kronikol-audit136\src\Kronikol.ReqNRoll.xUnit2\bin\Debug\net10.0\Kronikol.ReqNRoll.xUnit2.dll
+  Kronikol.Tool -> C:\Code\Kronikol-audit136\src\Kronikol.Tool\bin\Debug\net10.0\Kronikol.Tool.dll
+  Kronikol.Tests -> C:\Code\Kronikol-audit136\tests\Kronikol.Tests\bin\Debug\net10.0\Kronikol.Tests.dll
+Test run for C:\Code\Kronikol-audit136\tests\Kronikol.Tests\bin\Debug\net10.0\Kronikol.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 1 s - Kronikol.Tests.dll (net10.0)

@@ -1,0 +1,12 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-audit136\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+C:\Code\Kronikol-audit136\src\Kronikol.Extensions.PubSub\TrackingSubscriberClient.cs(58,26): warning CS0672: Member 'TrackingSubscriberClient.StopAsync(CancellationToken)' overrides obsolete member 'SubscriberClient.StopAsync(CancellationToken)'. Add the Obsolete attribute to 'TrackingSubscriberClient.StopAsync(CancellationToken)'. [C:\Code\Kronikol-audit136\src\Kronikol.Extensions.PubSub\Kronikol.Extensions.PubSub.csproj::TargetFramework=net10.0]
+C:\Code\Kronikol-audit136\src\Kronikol.Extensions.PubSub\TrackingSubscriberClient.cs(58,76): warning CS0618: 'SubscriberClient.StopAsync(CancellationToken)' is obsolete: 'Use StopAsync(ShutdownOptions, CancellationToken) instead.' [C:\Code\Kronikol-audit136\src\Kronikol.Extensions.PubSub\Kronikol.Extensions.PubSub.csproj::TargetFramework=net10.0]
+  Kronikol.Extensions.PubSub -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.PubSub\bin\Debug\net10.0\Kronikol.Extensions.PubSub.dll
+C:\Code\Kronikol-audit136\tests\Kronikol.Tests.PubSub\PubSubServiceCollectionExtensionsTests.cs(4,7): warning CS0105: The using directive for 'Microsoft.AspNetCore.Http' appeared previously in this namespace [C:\Code\Kronikol-audit136\tests\Kronikol.Tests.PubSub\Kronikol.Tests.PubSub.csproj]
+  Kronikol.Tests.PubSub -> C:\Code\Kronikol-audit136\tests\Kronikol.Tests.PubSub\bin\Debug\net10.0\Kronikol.Tests.PubSub.dll
+Test run for C:\Code\Kronikol-audit136\tests\Kronikol.Tests.PubSub\bin\Debug\net10.0\Kronikol.Tests.PubSub.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    47, Skipped:     0, Total:    47, Duration: 211 ms - Kronikol.Tests.PubSub.dll (net10.0)

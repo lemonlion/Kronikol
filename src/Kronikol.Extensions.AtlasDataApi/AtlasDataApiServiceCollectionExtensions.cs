@@ -17,7 +17,7 @@ public static class AtlasDataApiServiceCollectionExtensions
 
         services.AddSingleton(options);
         services.AddSingleton(sp =>
-            new AtlasDataApiTrackingMessageHandler(options, httpContextAccessor: sp.GetService<IHttpContextAccessor>()));
+            new AtlasDataApiTrackingMessageHandler(options, httpContextAccessor: options.HttpContextAccessor ?? sp.GetService<IHttpContextAccessor>()));
 
         return services;
     }

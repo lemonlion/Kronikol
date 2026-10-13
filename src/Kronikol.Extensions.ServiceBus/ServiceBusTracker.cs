@@ -24,6 +24,9 @@ public class ServiceBusTracker : ITrackingComponent
 
     /// <summary><c>true</c> when the tracker holds an <c>IHttpContextAccessor</c>, from its constructor or its options.</summary>
     public bool HasHttpContextAccessor => _httpContextAccessor is not null;
+
+    /// <summary>The accessor this tracker resolves the scenario through: the constructor's, else the options'.</summary>
+    internal IHttpContextAccessor? HttpContextAccessor => _httpContextAccessor;
     public bool WasInvoked => _invocationCount > 0;
     public int InvocationCount => _invocationCount;
 

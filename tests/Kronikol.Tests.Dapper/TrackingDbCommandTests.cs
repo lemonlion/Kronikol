@@ -1,5 +1,6 @@
 using System.Data;
 using Kronikol.Tests.Dapper.Fakes;
+using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Dapper;
@@ -32,6 +33,28 @@ public class TrackingDbCommandTests : IDisposable
     {
         _trackingConnection.Dispose();
         TrackingComponentRegistry.Clear();
+    }
+
+    // A command built directly, not through its connection, reads the request through the options' accessor too.
+    [Fact]
+    public void A_command_built_directly_reads_HttpContextAccessor_from_options()
+    {
+        var headerTestId = Guid.NewGuid().ToString();
+        var options = new DapperTrackingOptions
+        {
+            CurrentTestInfoFetcher = () => ("TestMethod", _testId),
+            ServiceName = "TestDB",
+            CallerName = "TestCaller",
+            HttpContextAccessor = RequestHeaderAccessor.For("Header Test", headerTestId),
+        };
+        using var cmd = new TrackingDbCommand(new FakeDbCommand(), _trackingConnection, options);
+        cmd.CommandText = "UPDATE breakfasts SET name = 'x'";
+
+        cmd.ExecuteNonQuery();
+
+        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs,
+            l => l.TestId == headerTestId && l.AttributionSource == AttributionSource.RequestHeader);
+        Assert.Empty(GetLogsForTest());
     }
 
     private TrackingDbCommand CreateCommand(string sql, CommandType type = CommandType.Text)

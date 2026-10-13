@@ -1,0 +1,3 @@
+D1 src/Kronikol.Extensions.AtlasDataApi/AtlasDataApiTrackingMessageHandler.cs: caught exactly; failed ['HttpContextAccessorOptionsTests.AtlasDataApi_handler_explicit_accessor_takes_precedence_over_options']
+D2 src/Kronikol.Extensions.BigQuery/BigQueryTrackingMessageHandler.cs: caught exactly; failed ['HttpContextAccessorOptionsTests.BigQuery_handler_explicit_accessor_takes_precedence_over_options']
+ALL AS EXPECTED

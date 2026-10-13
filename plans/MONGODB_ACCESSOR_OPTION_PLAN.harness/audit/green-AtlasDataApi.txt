@@ -1,0 +1,9 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-audit136\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.AtlasDataApi -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.AtlasDataApi\bin\Debug\net10.0\Kronikol.Extensions.AtlasDataApi.dll
+  Kronikol.Tests.AtlasDataApi -> C:\Code\Kronikol-audit136\tests\Kronikol.Tests.AtlasDataApi\bin\Debug\net10.0\Kronikol.Tests.AtlasDataApi.dll
+Test run for C:\Code\Kronikol-audit136\tests\Kronikol.Tests.AtlasDataApi\bin\Debug\net10.0\Kronikol.Tests.AtlasDataApi.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    54, Skipped:     0, Total:    54, Duration: 68 ms - Kronikol.Tests.AtlasDataApi.dll (net10.0)

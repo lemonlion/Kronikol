@@ -1,0 +1,20 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-audit136\src\Kronikol.Extensions.ServiceBus\Kronikol.Extensions.ServiceBus.csproj (in 399 ms).
+  Restored C:\Code\Kronikol-audit136\tests\Kronikol.Tests.ServiceBus\Kronikol.Tests.ServiceBus.csproj (in 398 ms).
+  1 of 3 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-audit136\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.ServiceBus -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.ServiceBus\bin\Debug\net10.0\Kronikol.Extensions.ServiceBus.dll
+  Kronikol.Tests.ServiceBus -> C:\Code\Kronikol-audit136\tests\Kronikol.Tests.ServiceBus\bin\Debug\net10.0\Kronikol.Tests.ServiceBus.dll
+Test run for C:\Code\Kronikol-audit136\tests\Kronikol.Tests.ServiceBus\bin\Debug\net10.0\Kronikol.Tests.ServiceBus.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:03.77]     Kronikol.Tests.ServiceBus.TrackingServiceBusSenderIdentityTests.SendMessageAsync_stamps_the_scenario_the_send_is_logged_under_when_the_tracker_was_given_an_accessor [FAIL]
+  Failed Kronikol.Tests.ServiceBus.TrackingServiceBusSenderIdentityTests.SendMessageAsync_stamps_the_scenario_the_send_is_logged_under_when_the_tracker_was_given_an_accessor [43 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Header Test
+Actual:   My Service Bus Test
+  Stack Trace:
+     at Kronikol.Tests.ServiceBus.TrackingServiceBusSenderIdentityTests.SendMessageAsync_stamps_the_scenario_the_send_is_logged_under_when_the_tracker_was_given_an_accessor() in C:\Code\Kronikol-audit136\tests\Kronikol.Tests.ServiceBus\TrackingServiceBusSenderIdentityTests.cs:line 37
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:   116, Skipped:     0, Total:   117, Duration: 729 ms - Kronikol.Tests.ServiceBus.dll (net10.0)

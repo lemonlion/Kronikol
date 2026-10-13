@@ -16,7 +16,7 @@ public class BigQueryTracker : ITrackingComponent
     public BigQueryTracker(BigQueryTrackingMessageHandlerOptions options, IHttpContextAccessor? httpContextAccessor = null)
     {
         _options = options;
-        _httpContextAccessor = httpContextAccessor;
+        _httpContextAccessor = httpContextAccessor ?? options.HttpContextAccessor;
         TrackingComponentRegistry.Register(this);
     }
 

@@ -1,0 +1,10 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-audit136\tests\Kronikol.Tests.MediatR\Kronikol.Tests.MediatR.csproj (in 439 ms).
+  2 of 3 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-audit136\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.MediatR -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.MediatR\bin\Debug\net10.0\Kronikol.Extensions.MediatR.dll
+  Kronikol.Tests.MediatR -> C:\Code\Kronikol-audit136\tests\Kronikol.Tests.MediatR\bin\Debug\net10.0\Kronikol.Tests.MediatR.dll
+Test run for C:\Code\Kronikol-audit136\tests\Kronikol.Tests.MediatR\bin\Debug\net10.0\Kronikol.Tests.MediatR.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 704 ms - Kronikol.Tests.MediatR.dll (net10.0)

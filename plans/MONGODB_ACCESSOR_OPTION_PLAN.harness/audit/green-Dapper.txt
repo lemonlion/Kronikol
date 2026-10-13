@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-audit136\src\Kronikol.Extensions.Dapper\Kronikol.Extensions.Dapper.csproj (in 251 ms).
+  Restored C:\Code\Kronikol-audit136\tests\Kronikol.Tests.Dapper\Kronikol.Tests.Dapper.csproj (in 251 ms).
+  1 of 3 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-audit136\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.Dapper -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.Dapper\bin\Debug\net10.0\Kronikol.Extensions.Dapper.dll
+  Kronikol.Tests.Dapper -> C:\Code\Kronikol-audit136\tests\Kronikol.Tests.Dapper\bin\Debug\net10.0\Kronikol.Tests.Dapper.dll
+Test run for C:\Code\Kronikol-audit136\tests\Kronikol.Tests.Dapper\bin\Debug\net10.0\Kronikol.Tests.Dapper.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   125, Skipped:     0, Total:   125, Duration: 884 ms - Kronikol.Tests.Dapper.dll (net10.0)

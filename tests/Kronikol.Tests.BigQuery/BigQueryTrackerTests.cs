@@ -1,4 +1,5 @@
 using Kronikol.Extensions.BigQuery;
+using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.BigQuery;
@@ -24,6 +25,46 @@ public class BigQueryTrackerTests
         Verbosity = verbosity,
         CurrentTestInfoFetcher = () => ("My BigQuery Test", _testId),
     };
+
+    // ─── HttpContextAccessor ────────────────────────────────
+
+    [Fact]
+    public void Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly()
+    {
+        var headerTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = RequestHeaderAccessor.For("Header Test", headerTestId);
+        var tracker = new BigQueryTracker(options);
+
+        tracker.LogRequest(new BigQueryOperationInfo(BigQueryOperation.Query, "query", null, "my-project", null), "SELECT 1");
+
+        // The request's headers outrank the fetcher, which answers this class's own test.
+        var log = Assert.Single(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == headerTestId);
+        Assert.Equal(AttributionSource.RequestHeader, log.AttributionSource);
+        Assert.Empty(GetLogsFromThisTest());
+        Assert.True(tracker.HasHttpContextAccessor);
+    }
+
+    [Fact]
+    public void Tracker_explicit_accessor_takes_precedence_over_options()
+    {
+        var explicitTestId = Guid.NewGuid().ToString();
+        var optionsTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = RequestHeaderAccessor.For("Options Test", optionsTestId);
+        var tracker = new BigQueryTracker(options, RequestHeaderAccessor.For("Explicit Test", explicitTestId));
+
+        tracker.LogRequest(new BigQueryOperationInfo(BigQueryOperation.Query, "query", null, "my-project", null), "SELECT 1");
+
+        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == explicitTestId);
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == optionsTestId);
+    }
+
+    [Fact]
+    public void Tracker_has_no_accessor_when_neither_options_nor_parameter()
+    {
+        Assert.False(new BigQueryTracker(MakeOptions()).HasHttpContextAccessor);
+    }
 
     // ─── LogRequest ─────────────────────────────────────────
 

@@ -15,7 +15,7 @@ public static class BigQueryServiceCollectionExtensions
         var options = new BigQueryTrackingMessageHandlerOptions();
         configure?.Invoke(options);
 
-        services.AddSingleton(sp => new BigQueryTracker(options, sp.GetService<IHttpContextAccessor>()));
+        services.AddSingleton(sp => new BigQueryTracker(options, options.HttpContextAccessor ?? sp.GetService<IHttpContextAccessor>()));
 
         return services;
     }

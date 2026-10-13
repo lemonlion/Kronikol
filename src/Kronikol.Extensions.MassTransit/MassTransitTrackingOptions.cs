@@ -32,6 +32,15 @@ public record MassTransitTrackingOptions
     public MassTransitTrackingVerbosity? ActionVerbosity { get; set; }
     public bool TrackDuringSetup { get; set; } = true;
     public bool TrackDuringAction { get; set; } = true;
+    /// <summary>
+    /// Resolves the scenario from the test-tracking request headers when a message is sent, published or consumed inside a host's request
+    /// pipeline (a host <c>WebApplicationFactory</c> starts, or any other host in the test process). Pass the host's own
+    /// (<c>sp.GetService&lt;IHttpContextAccessor&gt;()</c>): ASP.NET Core fills an accessor only in a host that registers
+    /// one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c> calls).
+    /// An accessor passed to the <see cref="MassTransitTracker"/> constructor takes precedence. When
+    /// <see cref="PropagateTestIdentity"/> is on, a sent or published message carries the scenario its send is
+    /// recorded under.
+    /// </summary>
     public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; set; }
 
     /// <summary>

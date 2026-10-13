@@ -88,19 +88,30 @@ public class HttpContextAccessorOptionsTests
     }
 
     [Fact]
-    public void AtlasDataApi_handler_explicit_accessor_takes_precedence_over_options()
+    public async Task AtlasDataApi_handler_explicit_accessor_takes_precedence_over_options()
     {
-        var optionsAccessor = new TestHttpContextAccessor(new DefaultHttpContext());
-        var explicitAccessor = new TestHttpContextAccessor(new DefaultHttpContext());
+        // Each accessor serves a request from a different scenario, so the call the handler logs says which one it read.
+        // This fact asserted only HasHttpContextAccessor, which holds whichever accessor wins.
+        var explicitId = Guid.NewGuid().ToString();
+        var optionsId = Guid.NewGuid().ToString();
         var options = new AtlasDataApiTrackingMessageHandlerOptions
         {
             ServiceName = "Atlas",
-            HttpContextAccessor = optionsAccessor
+            HttpContextAccessor = new TestHttpContextAccessor(ServingRequestOf("Options scenario", optionsId))
+        };
+        using var invoker = new HttpMessageInvoker(new AtlasDataApiTrackingMessageHandler(
+            options, new OkHandler(), new TestHttpContextAccessor(ServingRequestOf("Explicit scenario", explicitId))));
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://data.mongodb-api.com/app/myapp/endpoint/data/v1/action/find")
+        {
+            Content = new StringContent(@"{""dataSource"":""C"",""database"":""db"",""collection"":""col""}", System.Text.Encoding.UTF8, "application/json")
         };
 
-        var handler = new AtlasDataApiTrackingMessageHandler(options, httpContextAccessor: explicitAccessor);
+        await invoker.SendAsync(request, TestContext.Current.CancellationToken);
 
-        Assert.True(handler.HasHttpContextAccessor);
+        var logged = RequestResponseLogger.RequestAndResponseLogs
+            .Where(l => l.Type == RequestResponseType.Request && (l.TestId == explicitId || l.TestId == optionsId))
+            .ToArray();
+        Assert.Equal(["Explicit scenario"], logged.Select(l => l.TestName));
     }
 
     [Fact]
@@ -131,19 +142,30 @@ public class HttpContextAccessorOptionsTests
     }
 
     [Fact]
-    public void BigQuery_handler_explicit_accessor_takes_precedence_over_options()
+    public async Task BigQuery_handler_explicit_accessor_takes_precedence_over_options()
     {
-        var optionsAccessor = new TestHttpContextAccessor(new DefaultHttpContext());
-        var explicitAccessor = new TestHttpContextAccessor(new DefaultHttpContext());
+        // Each accessor serves a request from a different scenario, so the call the handler logs says which one it read.
+        // This fact asserted only HasHttpContextAccessor, which holds whichever accessor wins.
+        var explicitId = Guid.NewGuid().ToString();
+        var optionsId = Guid.NewGuid().ToString();
         var options = new BigQueryTrackingMessageHandlerOptions
         {
             ServiceName = "BQ",
-            HttpContextAccessor = optionsAccessor
+            HttpContextAccessor = new TestHttpContextAccessor(ServingRequestOf("Options scenario", optionsId))
+        };
+        using var invoker = new HttpMessageInvoker(new BigQueryTrackingMessageHandler(
+            options, new OkHandler(), new TestHttpContextAccessor(ServingRequestOf("Explicit scenario", explicitId))));
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://bigquery.googleapis.com/bigquery/v2/projects/my-project/queries")
+        {
+            Content = new StringContent(@"{""query"":""SELECT 1""}", System.Text.Encoding.UTF8, "application/json")
         };
 
-        var handler = new BigQueryTrackingMessageHandler(options, httpContextAccessor: explicitAccessor);
+        await invoker.SendAsync(request, TestContext.Current.CancellationToken);
 
-        Assert.True(handler.HasHttpContextAccessor);
+        var logged = RequestResponseLogger.RequestAndResponseLogs
+            .Where(l => l.Type == RequestResponseType.Request && (l.TestId == explicitId || l.TestId == optionsId))
+            .ToArray();
+        Assert.Equal(["Explicit scenario"], logged.Select(l => l.TestName));
     }
 
     [Fact]

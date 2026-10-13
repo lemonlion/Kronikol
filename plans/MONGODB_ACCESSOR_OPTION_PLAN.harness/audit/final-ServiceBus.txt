@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-audit136\tests\Kronikol.Tests.ServiceBus\Kronikol.Tests.ServiceBus.csproj (in 289 ms).
+  Restored C:\Code\Kronikol-audit136\src\Kronikol.Extensions.ServiceBus\Kronikol.Extensions.ServiceBus.csproj (in 290 ms).
+  1 of 3 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-audit136\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.ServiceBus -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.ServiceBus\bin\Debug\net10.0\Kronikol.Extensions.ServiceBus.dll
+  Kronikol.Tests.ServiceBus -> C:\Code\Kronikol-audit136\tests\Kronikol.Tests.ServiceBus\bin\Debug\net10.0\Kronikol.Tests.ServiceBus.dll
+Test run for C:\Code\Kronikol-audit136\tests\Kronikol.Tests.ServiceBus\bin\Debug\net10.0\Kronikol.Tests.ServiceBus.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   117, Skipped:     0, Total:   117, Duration: 363 ms - Kronikol.Tests.ServiceBus.dll (net10.0)

@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-audit136\src\Kronikol.Extensions.EventHubs\Kronikol.Extensions.EventHubs.csproj (in 310 ms).
+  Restored C:\Code\Kronikol-audit136\tests\Kronikol.Tests.EventHubs\Kronikol.Tests.EventHubs.csproj (in 310 ms).
+  1 of 3 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-audit136\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.EventHubs -> C:\Code\Kronikol-audit136\src\Kronikol.Extensions.EventHubs\bin\Debug\net10.0\Kronikol.Extensions.EventHubs.dll
+  Kronikol.Tests.EventHubs -> C:\Code\Kronikol-audit136\tests\Kronikol.Tests.EventHubs\bin\Debug\net10.0\Kronikol.Tests.EventHubs.dll
+Test run for C:\Code\Kronikol-audit136\tests\Kronikol.Tests.EventHubs\bin\Debug\net10.0\Kronikol.Tests.EventHubs.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    47, Skipped:     0, Total:    47, Duration: 549 ms - Kronikol.Tests.EventHubs.dll (net10.0)

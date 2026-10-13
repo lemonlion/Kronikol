@@ -17,4 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.AtlasDataApi\Kronikol.Extensions.AtlasDataApi.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
+  </ItemGroup>
+
 </Project>

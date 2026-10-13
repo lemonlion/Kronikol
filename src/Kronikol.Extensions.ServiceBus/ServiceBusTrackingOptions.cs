@@ -27,6 +27,15 @@ public record ServiceBusTrackingOptions
     public ServiceBusTrackingVerbosity? ActionVerbosity { get; set; }
     public bool TrackDuringSetup { get; set; } = true;
     public bool TrackDuringAction { get; set; } = true;
+    /// <summary>
+    /// Resolves the scenario from the test-tracking request headers when a message is sent or received inside a host's request
+    /// pipeline (a host <c>WebApplicationFactory</c> starts, or any other host in the test process). Pass the host's own
+    /// (<c>sp.GetService&lt;IHttpContextAccessor&gt;()</c>): ASP.NET Core fills an accessor only in a host that registers
+    /// one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c> calls).
+    /// The <c>Add*TestTracking</c> registrations use the container's when this is null, and an accessor passed to the
+    /// <see cref="ServiceBusTracker"/> constructor takes precedence. When <see cref="PropagateTestIdentity"/> is on, a
+    /// sent message carries the scenario the send is recorded under.
+    /// </summary>
     public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; set; }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using Kronikol.Extensions.PubSub;
+using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.PubSub;
@@ -24,6 +25,46 @@ public class PubSubTrackerTests
         Verbosity = verbosity,
         CurrentTestInfoFetcher = () => ("My PubSub Test", _testId),
     };
+
+    // ─── HttpContextAccessor ────────────────────────────────
+
+    [Fact]
+    public void Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly()
+    {
+        var headerTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = RequestHeaderAccessor.For("Header Test", headerTestId);
+        var tracker = new PubSubTracker(options);
+
+        tracker.LogRequest(new PubSubOperationInfo(PubSubOperation.Publish, "projects/p/topics/my-topic", null, 1), "hello");
+
+        // The request's headers outrank the fetcher, which answers this class's own test.
+        var log = Assert.Single(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == headerTestId);
+        Assert.Equal(AttributionSource.RequestHeader, log.AttributionSource);
+        Assert.Empty(GetLogsFromThisTest());
+        Assert.True(tracker.HasHttpContextAccessor);
+    }
+
+    [Fact]
+    public void Tracker_explicit_accessor_takes_precedence_over_options()
+    {
+        var explicitTestId = Guid.NewGuid().ToString();
+        var optionsTestId = Guid.NewGuid().ToString();
+        var options = MakeOptions();
+        options.HttpContextAccessor = RequestHeaderAccessor.For("Options Test", optionsTestId);
+        var tracker = new PubSubTracker(options, RequestHeaderAccessor.For("Explicit Test", explicitTestId));
+
+        tracker.LogRequest(new PubSubOperationInfo(PubSubOperation.Publish, "projects/p/topics/my-topic", null, 1), "hello");
+
+        Assert.Contains(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == explicitTestId);
+        Assert.DoesNotContain(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == optionsTestId);
+    }
+
+    [Fact]
+    public void Tracker_has_no_accessor_when_neither_options_nor_parameter()
+    {
+        Assert.False(new PubSubTracker(MakeOptions()).HasHttpContextAccessor);
+    }
 
     // ─── LogRequest ─────────────────────────────────────────
 

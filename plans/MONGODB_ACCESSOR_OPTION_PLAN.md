@@ -1,10 +1,12 @@
 # MongoDB accessor option plan: #136
 
-**Written:** 2026-10-07, at 4.9.0 (`417c8e58`), the day #136 was filed. **Status: green-lit 2026-10-08, executing**
+**Written:** 2026-10-07, at 4.9.0 (`417c8e58`), the day #136 was filed. **Status: executed and published 2026-10-08; audited 2026-10-13 (§12)**
 (the owner: "implement the plan in full", and "also fix the problems you found"; roadmap row 1.22). R1, a minor, is
 4.10.0 (§6). The problems found (§3) come with it: R2, a minor, the plan's Q1, is 4.11.0. It gives the property to the
 five other options types without it, and makes Kafka's producer stamp the scenario its produce is recorded under. **Both
-were published on 2026-10-08**, with the wiki (`289a25a`); #136 is closed. The log (§11) records what was run.
+were published on 2026-10-08**, with the wiki (`289a25a`); #136 is closed. The log (§11) records what was run. An
+audit on 2026-10-13, at the owner's request, found the same three defects in four more extensions and released the
+fixes as 4.18.2 (§12).
 
 Evidence levels: **RUN** measured here, with the harness; **READ** read in the source at `417c8e58` (`file:line`);
 **DOC** the wiki at `db4e473`; **ISSUE** the issue's own report; **INFERRED** reasoned, not measured.
@@ -304,7 +306,7 @@ plan is green-lit, because several sessions are writing plans for the same batch
 | Multi-Host-Test-Architectures' "HttpContextAccessor Wiring Order" covers Cosmos only | DOC `:151-179` | #142 |
 | `MessageTrackerOptions` is the one core options type with a `CurrentTestInfoFetcher` and no `HttpContextAccessor`: `MessageTracker` takes an accessor by constructor only. R2's guard covers extension options types, since the wiki's claim is about those (found 2026-10-08) | READ `MessageTrackerOptions.cs`, `MessageTracker.cs:37-80` | kronikol-94, whose #134 edits `MessageTracker.cs`, keeps it out for now |
 | `HttpContextAccessorOptionsTests.TestTrackingMessageHandler_explicit_accessor_takes_precedence_over_options` asserts only that the handler is not null (found 2026-10-08; R2 strengthens the fallback fact beside it) | READ | kronikol-94: its #134 R3 changes how the handler reads the accessor |
-| `CurrentStepTypeFetcher` is declared by the options of 24 extensions and read by none (EF Core's `WithTestInfoFrom` copies it from the HTTP options, and nothing reads the copy): only the core HTTP handler and `MessageTracker` read theirs. The phase an extension acts on is `TestPhaseContext`'s, which the framework adapters set (found 2026-10-08, writing R1's doc comments) | READ: a grep of each extension's sources for the member | R1 documents MongoDB's as unread. Removing the member from the others is a breaking change, so it waits for the owner (v5) |
+| `CurrentStepTypeFetcher` is declared by the options of 24 extensions and read by none (EF Core's `WithTestInfoFrom` copies it from the HTTP options, and nothing reads the copy): only the core HTTP handler reads its own (`MessageTracker` declares one and does not read it: §12, F16). The phase an extension acts on is `TestPhaseContext`'s, which the framework adapters set (found 2026-10-08, writing R1's doc comments) | READ: a grep of each extension's sources for the member | R1 documents MongoDB's as unread. Removing the member from the others is a breaking change, so it waits for the owner (v5) |
 | Eight `MongoDbTrackingOptions` members have no doc comment: `ServiceName`, `Verbosity`, both fetchers, `SetupVerbosity`, `ActionVerbosity`, `TrackDuringSetup` and `TrackDuringAction` | READ | Whenever they are next touched; not R1 |
 
 ## 9. Questions, with recommendations
@@ -379,3 +381,68 @@ plan is green-lit, because several sessions are writing plans for the same batch
 - Left to peers, as agreed by message: F9 and the diagnostic accessor column (kronikol-94, #134/#137), #133
   (kronikol-28), the stale resolver order in HTTP-Tracking-Setup's "How It Works Internally" (kronikol-94, whose #134
   changes the resolver), and Multi-Host-Test-Architectures' Cosmos-only wiring section (#142).
+
+## 12. Audit (2026-10-13), released as 4.18.2
+
+The owner asked to "make sure nothing was missed from the plan, that there isn't any bugs or issues in the
+implementation". kronikol-f1 ran the audit in worktree `Kronikol-audit136`, on 4.18.1 (`34145c44`). Harness: `audit/`.
+
+**What held.** The plan's facts T1 to T7 are all on main, and so are the 41 facts R1 and R2 added. Every later commit to
+R1's and R2's files keeps the behaviour. 4.16.2 moved Kafka's resolution into `KafkaTracker.Capture()`, which still
+uses the tracker's accessor, and the producer stamps the scenario its call is recorded under. Forty of the 41 wiki lines
+`289a25a` added are unchanged; the 41st, Kafka's row, was extended by 4.16.2. Three of §8's hand-offs are done:
+
+- F9 and the diagnostic column were fixed by kronikol-94 in 4.12.1 (`e8b8141e`).
+- The `TestTrackingMessageHandler` precedence fact was fixed in 4.14.3 (`f9c67188`).
+- HTTP-Tracking-Setup's resolver order was fixed in wiki `35286a1`.
+
+`KafkaTrackingOptions`' claim that an accessor passed to `KafkaTrackingInterceptor` wins is true.
+
+**What the plan did not look at.** R1 and R2 fixed three defects in six options types. The plan never asked whether the
+19 types that already had the property had the same defects. Four extensions did:
+
+| # | Finding | Level | Fixed in |
+|---|---|---|---|
+| F10 | `BigQueryTracker` and `PubSubTracker` stored only the accessor passed to their constructor and never read `options.HttpContextAccessor`. Dapper's public `TrackingDbCommand` constructor did the same. So a tracker built from options that carried an accessor read no request headers. BigQuery's message handler did read it, so the same options behaved differently by entry point. R2's guard checks that a property is declared, not that anything reads it | RUN (red facts), READ | 4.18.2, plus a guard |
+| F11 | `AddBigQueryTestTracking`, `AddPubSubTestTracking`'s `PubSubTracker` and `AddAtlasDataApiTestTracking` handed the container's accessor to the constructor, so it beat the options' one. This is M4's defect, outside MongoDB. In the same method, `AddPubSubTestTracking`'s client decorators already put the options' accessor first | RUN | 4.18.2, plus a guard |
+| F12 | Four senders stamped a message's `kronikol-test-name` and `kronikol-test-id` through the options' accessor alone, while the tracker recorded the send through its own: Pub/Sub's `TrackingPublisherClient`, Service Bus's `TrackingServiceBusSender`, and MassTransit's `TrackingSendObserver` and `TrackingPublishObserver`. So given an accessor the options did not carry, the message carried another scenario than its send. This is R2's Kafka defect. `PropagateTestIdentity` is on by default in all three packages | RUN | 4.18.2, plus a guard |
+| F13 | `HttpContextAccessorOptionsTests`' Atlas and BigQuery precedence facts asserted only `HasHttpContextAccessor`, which holds whichever accessor wins. §8 named only the HTTP handler's fact | READ, mutation | 4.18.2 |
+| F14 | The wiki's Atlas `IHttpClientFactory` recipe throws `InvalidOperationException` when the client is created, because the handler sets its own inner handler. Tracking-Dependencies' line `handler.InnerHandler = null!` throws `ArgumentNullException`, because `DelegatingHandler` refuses null | RUN (`audit/recipes.cs`) | Wiki after publication; facts hold the corrected shapes |
+| F15 | R2's doc comment on `MediatorTrackingOptions.HttpContextAccessor`, and the wiki row copied from it, say to pass `sp.GetService<IHttpContextAccessor>()`. `TrackMediatorForDiagrams` takes its options at registration, where there is no `sp`, and already uses the container's accessor when the property is null | READ | 4.18.2 (doc comment); wiki |
+| F16 | §8 said `MessageTracker` reads its `CurrentStepTypeFetcher`. It does not | READ | This section |
+| F17 | Wiki errors. MassTransit's page says the accessor is auto-resolved by DI extensions, which the package does not have. Spanner's options table has no `HttpContextAccessor` row (R2). "Every extension options class has an `HttpContextAccessor`" also covers the TcpTap, ProxyTap and OTLP taps, which take neither it nor a fetcher. HTTP-Tracking-Setup's "The Solution" says the fetcher is used only when there is no `HttpContext`. The plan had no `ROADMAP.md` Appendix C row, and `PLANS_STATUS.md` still listed F9 as open | DOC, READ | Wiki after publication; this release |
+
+**The fixes.**
+
+- F10: each constructor falls back to the options' accessor.
+- F11: each registration passes `options.HttpContextAccessor ?? sp.GetService<IHttpContextAccessor>()`.
+- F12: each sender stamps through its tracker's accessor, as Kafka's producer does (`internal HttpContextAccessor` on `PubSubTracker`, `ServiceBusTracker`, `MassTransitTracker` and `EventHubsTracker`). Event Hubs' producer already built its tracker from the options' accessor, so its change does nothing yet. It makes the rule hold in one place.
+- `PubSubTrackingOptions`, `ServiceBusTrackingOptions`, `EventHubsTrackingOptions`, `MassTransitTrackingOptions`, `BigQueryTrackingMessageHandlerOptions` and `AtlasDataApiTrackingMessageHandlerOptions` had no doc comment on the property. Each now has one, worded as R2's are; every claim in them was checked against the code.
+
+`ExtensionOptionsAccessorTests` gains three source guards, one per defect:
+
+- A class that resolves through `_httpContextAccessor` fills it from the options.
+- A line that reads the container's accessor puts the options' first.
+- No extension stamps through the options' accessor alone.
+
+Each guard has a fact that the scan finds what it guards.
+
+**Proofs.**
+
+- **Red facts.** On 4.18.1, nine behaviour facts failed, each on its own assertion: BigQuery 2, Pub/Sub 3, Atlas 1, Service Bus 1, MassTransit 2 (`audit/red-*.txt`). The four guard facts named exactly the sites above (`audit/red-guard.txt`). The facts for behaviour that was already right passed: the precedence, no-accessor and container-only facts, and the stamps when the options carry the accessor.
+- **Mutations.** 17 mutations (`audit/mutate.py`, `audit/mutations*.txt`), each caught by exactly the fact it names. The Dapper fact was written after the fix and is proved red by A3. C5 (Event Hubs) is equivalent, and only its guard holds it. D1 and D2 prove the two strengthened precedence facts, which pass on 4.18.1 as a strengthened vacuous fact does.
+- **Recipes.** `audit/recipes.cs` measured the two broken recipes and the two shapes that work. Two facts hold the working shapes, the core handler under `AddHttpMessageHandler` and Atlas's under `ConfigurePrimaryHttpMessageHandler`. They pass on 4.18.1 too, since the code did not change.
+
+**Checks.**
+
+- Every touched extension project passes: Atlas 55, BigQuery 95, Pub/Sub 47, Service Bus 117, MassTransit 44, Dapper 125 and Event Hubs 47.
+- The core suite passes 7,448 with 2 skipped, after the version bump.
+- `release.slnf` builds in Release for every target: no warning in a file this release touches (the 22 it prints are `QueryCommand.History.cs`'s, as before).
+
+**Left** (`ROADMAP.md` Appendix C):
+
+- `MessageTrackerOptions` has a fetcher and no accessor property. A property would be new surface, so a minor, and the owner's call.
+- `CurrentStepTypeFetcher` is v5's question 9.
+- A1 (bulk writes, transactions and cursors) is still INFERRED. Testing it needs a replica set in the host lane.
+- `TrackingSpannerCommand` keeps an accessor it never reads.
+- Multi-Host-Test-Architectures' wiring section is #142's.

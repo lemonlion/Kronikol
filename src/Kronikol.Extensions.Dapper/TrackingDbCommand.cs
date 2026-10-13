@@ -25,7 +25,7 @@ public class TrackingDbCommand : DbCommand
         _inner = inner;
         _connection = connection;
         _options = options;
-        _httpContextAccessor = httpContextAccessor;
+        _httpContextAccessor = httpContextAccessor ?? options.HttpContextAccessor;
     }
 
     [AllowNull]

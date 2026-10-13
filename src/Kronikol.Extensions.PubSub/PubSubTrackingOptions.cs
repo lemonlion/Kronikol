@@ -27,6 +27,15 @@ public record PubSubTrackingOptions
     public PubSubTrackingVerbosity? ActionVerbosity { get; set; }
     public bool TrackDuringSetup { get; set; } = true;
     public bool TrackDuringAction { get; set; } = true;
+    /// <summary>
+    /// Resolves the scenario from the test-tracking request headers when a message is published or received inside a host's request
+    /// pipeline (a host <c>WebApplicationFactory</c> starts, or any other host in the test process). Pass the host's own
+    /// (<c>sp.GetService&lt;IHttpContextAccessor&gt;()</c>): ASP.NET Core fills an accessor only in a host that registers
+    /// one (<c>AddHttpContextAccessor</c>, which <c>TrackDependenciesForDiagrams</c> calls).
+    /// <see cref="PubSubServiceCollectionExtensions.AddPubSubTestTracking"/> uses the container's when this is null, and an
+    /// accessor passed to a constructor takes precedence. When <see cref="PropagateTestIdentity"/> is on, a published
+    /// message carries the scenario the publish is recorded under.
+    /// </summary>
     public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; set; }
 
     /// <summary>

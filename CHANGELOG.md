@@ -4,6 +4,93 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.18.2] - 2026-10-13
+
+**Patch - fixes from an audit of `plans/MONGODB_ACCESSOR_OPTION_PLAN.md` (#136; 4.10.0 and 4.11.0).** At the owner's
+request to make sure nothing was missed from the plan and that the implementation has no bugs (the plan's section 12).
+Bug fixes, and nothing new for a consumer to call, so the patch part moves (4.18.1 to 4.18.2). 4.10.0 and 4.11.0 fixed
+three defects in six options types:
+
+- an `HttpContextAccessor` nothing read;
+- a registration that put the container's accessor before the options' one;
+- a message stamped through another accessor than its send.
+
+The audit found the same three in BigQuery, Pub/Sub, the Atlas Data API, Service Bus, MassTransit and Dapper.
+Behaviour changes only where it was wrong, each called out below. The history action's `VERSION` installs
+`Kronikol.Tool` 4.18.2, and the templates pin 4.18.1.
+
+### Fixed
+
+- **BigQuery's and Pub/Sub's trackers ignored `HttpContextAccessor` on their options.** `BigQueryTracker` and
+  `PubSubTracker` kept only an accessor passed to their constructor. A tracker built from options that carried one read
+  no request headers, so a call made while a host served a request went to the fetcher's scenario, or to none.
+  BigQuery's message handler read the same options' accessor, so one options object behaved differently by entry point.
+  - Both trackers now fall back to the options' accessor, as every other tracker does.
+  - So does Dapper's public `TrackingDbCommand` constructor, for a command built directly rather than through its
+    connection.
+- **Three registrations put the container's accessor before the options' one.** `AddBigQueryTestTracking`,
+  `AddPubSubTestTracking` (its `PubSubTracker`) and `AddAtlasDataApiTestTracking` handed the container's
+  `IHttpContextAccessor` to the constructor, where it beat the one set on the options. They now use the options'
+  accessor first, and the container's when the options carry none, as every other registration has since 4.11.0.
+  Behaviour change: only when both are set and differ.
+- **A sent message could carry another scenario than its send.** Four senders recorded a send through their tracker's
+  accessor, but stamped the message's `kronikol-test-name` and `kronikol-test-id` through the options' accessor alone:
+  Pub/Sub's `TrackingPublisherClient`, Service Bus's `TrackingServiceBusSender`, and MassTransit's `TrackingSendObserver`
+  and `TrackingPublishObserver`. Given an accessor the options did not carry, the send was drawn in the request's
+  scenario and its consumer in the fetcher's. That accessor is the publisher's own `httpContextAccessor` parameter, or
+  one a tracker was built with.
+  - Each now stamps the scenario its send is recorded under, as Kafka's producer has since 4.11.0.
+  - Event Hubs' producer reads its tracker's accessor too. That changes nothing there, since it already built its
+    tracker from the options' accessor.
+  - Behaviour change: only for code that gives a tracker or a publisher an accessor its options do not carry.
+- **MediatR's `HttpContextAccessor` doc comment gave advice its registration cannot take.** It said to pass
+  `sp.GetService<IHttpContextAccessor>()`, but `TrackMediatorForDiagrams` takes its options when services are
+  registered, where there is no provider. It now says to leave the property null in a host: the registration then uses
+  the container's accessor, which is the host's own.
+
+### Documentation
+
+- The `HttpContextAccessor` properties of `PubSubTrackingOptions`, `ServiceBusTrackingOptions`,
+  `EventHubsTrackingOptions`, `MassTransitTrackingOptions`, `BigQueryTrackingMessageHandlerOptions` and
+  `AtlasDataApiTrackingMessageHandlerOptions` had no doc comment. Each now says what the property is for and which
+  accessor wins.
+- The wiki, after publication:
+  - The Atlas Data API's `IHttpClientFactory` recipe threw `InvalidOperationException` when the client was created,
+    since the handler brings its own inner handler. It now adds the handler as the primary one.
+  - Tracking-Dependencies' first recipe set `handler.InnerHandler = null!`, which throws `ArgumentNullException`. The
+    line is gone.
+  - MassTransit's page no longer says DI extensions resolve the accessor; the package has none.
+  - Spanner's options table gains its `HttpContextAccessor` row, and MediatR's row says to leave the property null in a
+    host.
+  - "Every extension options class has an `HttpContextAccessor`" now says every one with a `CurrentTestInfoFetcher`. The
+    taps take neither.
+
+### Tests
+
+- `ExtensionOptionsAccessorTests` gains three source guards, one per defect:
+  - a class that resolves through its accessor falls back to the options' one;
+  - a registration puts the options' accessor before the container's;
+  - no extension stamps a message through the options' accessor alone.
+
+  A fourth fact checks that each scan finds what it guards.
+- New facts:
+  - fallback, precedence and no-accessor facts for `BigQueryTracker` and `PubSubTracker`;
+  - options-first and container-only facts for the BigQuery, Pub/Sub and Atlas Data API registrations;
+  - a fact for a Dapper command built directly;
+  - stamp facts for Pub/Sub's publisher, Service Bus's sender, and MassTransit's send and publish observers. These are
+    the observers' and the publisher's first tests.
+- `HttpContextAccessorOptionsTests`' Atlas and BigQuery precedence facts asserted only `HasHttpContextAccessor`, which
+  holds whichever accessor wins. Each now sends a request and checks the scenario it was logged under.
+- Two facts hold recipes the wiki shows: the core handler going into an `IHttpClientFactory` pipeline as constructed,
+  and the Atlas handler as a primary handler.
+
+**Proofs** (plan harness `audit/`): on 4.18.1, the nine behaviour facts failed, each on its own assertion, and the
+guards named exactly the sites above. 17 mutations, one per changed line, were each caught by exactly the fact they
+name. The Event Hubs one is equivalent, and its guard alone holds it.
+
+**Checks:** the touched extension projects pass, the core suite passes 7,448 with 2 skipped after the version bump, and
+`release.slnf` builds in Release for every target.
+
 ## [4.18.1] - 2026-10-12
 
 **Patch - the OTLP tap maps an export it has answered, even when it is disposed right after.** A bug fix with nothing

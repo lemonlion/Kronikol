@@ -13,7 +13,8 @@ public class TrackingSendObserver(MassTransitTracker tracker, MassTransitTrackin
     {
         if (options.PropagateTestIdentity)
         {
-            var testInfo = TestInfoResolver.ResolveWithSource(options.HttpContextAccessor, options.CurrentTestInfoFetcher);
+            // The tracker's accessor, so that the message carries the scenario its send is recorded under.
+            var testInfo = TestInfoResolver.ResolveWithSource(tracker.HttpContextAccessor, options.CurrentTestInfoFetcher);
             if (testInfo is not null)
             {
                 context.Headers.Set(TestTrackingMessageHeaders.TestName, testInfo.Value.Name);

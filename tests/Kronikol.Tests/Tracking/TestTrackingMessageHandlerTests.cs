@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Kronikol.Constants;
 using Kronikol.Tracking;
 
@@ -2215,5 +2216,23 @@ public class TestTrackingMessageHandlerTests : IDisposable
         var sent = _innerHandler.CapturedRequest!.Headers;
         Assert.DoesNotContain(sent, h => h.Key.StartsWith("test-tracking-", StringComparison.OrdinalIgnoreCase));
         Assert.False(sent.Contains("traceparent"));
+    }
+
+    // ─── IHttpClientFactory ─────────────────────────────────────
+
+    // Tracking-Dependencies' recipe: the handler leaves InnerHandler unset, so the pipeline builder sets it. The recipe also
+    // set it to null, which threw ArgumentNullException, since DelegatingHandler refuses null.
+    [Fact]
+    public async Task Goes_into_an_HttpClientFactory_pipeline_as_constructed()
+    {
+        var services = new ServiceCollection();
+        services.AddHttpClient("tracked")
+            .ConfigurePrimaryHttpMessageHandler(() => new StubInnerHandler())
+            .AddHttpMessageHandler(_ => new TestTrackingMessageHandler(DefaultOptions()));
+        var client = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>().CreateClient("tracked");
+
+        await client.SendAsync(MakeGetRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal([RequestResponseType.Request, RequestResponseType.Response], GetLogsFromThisTest().Select(l => l.Type));
     }
 }
