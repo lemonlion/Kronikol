@@ -82,6 +82,7 @@ public static partial class QueryCommand
             writer.Note("nothing matched");
             if (unevaluable > 0)
                 writer.Note($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
+            NoteNotNumbers(writer, clauses);
             writer.Footer($"{inScope} calls in {(only is null ? "the run" : only.Address)} · drop a filter, or try services");
             return 0;
         }
@@ -103,6 +104,7 @@ public static partial class QueryCommand
 
             if (unevaluable > 0)
                 writer.Note($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
+            NoteNotNumbers(writer, clauses);
 
             return 0;
         }
@@ -166,6 +168,7 @@ public static partial class QueryCommand
 
         if (unevaluable > 0)
             writer.Note($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
+        NoteNotNumbers(writer, clauses);
 
         return 0;
     }
@@ -454,7 +457,7 @@ public static partial class QueryCommand
             return 1;
         }
 
-        if (body.Contains("…truncated (", StringComparison.Ordinal))
+        if (BodyCache.CappedAtCapture(body))
             writer.Note("! this body was capped at capture time — the rest was never recorded");
 
         if (options.Out is { } path)
@@ -521,12 +524,7 @@ public static partial class QueryCommand
             return 2;
         }
 
-        System.Text.Json.JsonDocument document;
-        try
-        {
-            document = System.Text.Json.JsonDocument.Parse(body);
-        }
-        catch (System.Text.Json.JsonException)
+        if (BodyCache.ParseJson(body) is not { } document)
         {
             writer.Line($"{jsonPath} is not in this body — the body is not JSON ({QueryWriter.Size(Encoding.UTF8.GetByteCount(body))} of text)");
             writer.Footer("--lines to window the text · --out F to save it");

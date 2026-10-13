@@ -322,8 +322,14 @@ public static partial class QueryCommand
         writer.Line($"+ {right.Label}  {right.Hash}  {QueryWriter.Size(Encoding.UTF8.GetByteCount(right.Content))}");
         if (call is not null)
             writer.Line(call);
-        if (left.Content.Contains("…truncated (", StringComparison.Ordinal) || right.Content.Contains("…truncated (", StringComparison.Ordinal))
-            writer.Note("! a body was capped at capture time — the rest was never recorded, so this diff covers what was");
+        if (BodyCache.CappedAtCapture(left.Content) || BodyCache.CappedAtCapture(right.Content))
+        {
+            // Two batches whose first documents agree can still differ in how many more there were.
+            var before = Tracking.CaptureFootnote.Split(left.Content)?.Footnote;
+            var after = Tracking.CaptureFootnote.Split(right.Content)?.Footnote;
+            writer.Note("! a body was capped at capture time — the rest was never recorded, so this diff covers what was"
+                + (before != after ? $": {before ?? "(no footnote)"} → {after ?? "(no footnote)"}" : ""));
+        }
         writer.Line();
         // No flags to repeat: a body diff is addressed positionally, so the text footer's `next` is
         // appended to the original command, addresses and all. The JSON argv rebuilds them from the
@@ -344,21 +350,10 @@ public static partial class QueryCommand
 
     private static List<DiffRow> DiffBodies(string leftBody, string rightBody)
     {
-        JsonDocument leftDocument;
-        JsonDocument rightDocument;
-        try
-        {
-            leftDocument = JsonDocument.Parse(leftBody);
-        }
-        catch (JsonException)
-        {
+        // A capped body is read as its document, as the page reads it (#168 F8); the note above names the footnotes.
+        if (BodyCache.ParseJson(leftBody) is not { } leftDocument)
             return DiffLines(leftBody, rightBody);
-        }
-        try
-        {
-            rightDocument = JsonDocument.Parse(rightBody);
-        }
-        catch (JsonException)
+        if (BodyCache.ParseJson(rightBody) is not { } rightDocument)
         {
             leftDocument.Dispose();
             return DiffLines(leftBody, rightBody);
@@ -512,11 +507,21 @@ public static partial class QueryCommand
     private static bool ScalarEquals(JsonElement a, JsonElement b)
     {
         if (a.ValueKind == JsonValueKind.Number)
+        {
+            // Two integers compare by their digits: as doubles, 9007199254740993 and 9007199254740992 were one value
+            // (#168 F25), and MongoDB's relaxed JSON writes every Int64 as a plain number.
+            if (b.ValueKind == JsonValueKind.Number && IsInteger(a) && IsInteger(b))
+                return System.Numerics.BigInteger.Parse(a.GetRawText(), System.Globalization.CultureInfo.InvariantCulture)
+                       == System.Numerics.BigInteger.Parse(b.GetRawText(), System.Globalization.CultureInfo.InvariantCulture);
             return a.TryGetDouble(out var x) && b.TryGetDouble(out var y) && x == y;
+        }
         if (a.ValueKind == JsonValueKind.String)
             return a.GetString() == b.GetString();
         return a.GetRawText() == b.GetRawText();
     }
+
+    /// <summary>Whether a JSON number is written as an integer: no fraction and no exponent.</summary>
+    private static bool IsInteger(JsonElement number) => number.GetRawText().AsSpan().IndexOfAny('.', 'e', 'E') < 0;
 
     private static string RenderScalar(JsonElement element) =>
         QueryWriter.OneLine(element.GetRawText(), 60);

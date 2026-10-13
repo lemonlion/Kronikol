@@ -4,6 +4,66 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.20.1] - 2026-10-13
+
+**Patch - the query tool reads a capped body as the page does, orders numbers only against a number and refuses `..`,
+and `MaxContentLength` caps a phase variant (#168; `plans/MONGODB_DETAILED_PAYLOADS_PLAN.md` R3).** Green-lit in full by
+the owner on 2026-10-13, every question in the plan's section 9 as recommended. Bug fixes in the query tool and the
+logger, with no new option and no new public member, so the patch part moves (4.20.0 to 4.20.1).
+
+### Fixed
+
+- **`--path` read `$..x` as `$.x`.** The path parser skipped every dot, so JSONPath's recursive descent quietly matched
+  nothing in an array body, such as a MongoDB batch. `..` is refused now, and the error names the `[*]` path to use:
+  `recursive descent (..) is not supported; [*] walks an array: $[*].price`.
+- **`--where` ordered a value that is not a number as text.** With `<`, `>`, `<=` or `>=` and a number, an object such
+  as `{ "$numberDecimal" : "1000.50" }`, an array or a string was compared with the number as text, and `{` comes after
+  every digit, as does `[`, so `--where '$.total > 500'` held for every object and array. An ordering against a number
+  now compares numbers only: a value that is not a number fails the clause, and the footer counts it
+  (`1 value was not a number for --where "$.total > 500", and failed it`). Reading `$numberDecimal` as a number is a
+  separate feature (the plan's Q8).
+- **The query tool called a capped batch "not JSON".** A capture that caps a MongoDB batch or a SQL rows body writes a
+  complete document and then `... (N more documents not shown)` or `... (N more rows not shown)` on its own line. The
+  page reads past that line; `values`, `--where`, `--path`, `--keys`, `grep --values` and `grep --number` read the body
+  as text, `--body` printed it unindented, and `diff --body` fell back to a line diff that printed both bodies' lines.
+  Each now reads the document before the footnote, from one definition the page's note formatter shares
+  (`CaptureFootnote`); `--body` prints the document indented with its footnote after it, such a body is counted as
+  capped, and `diff --body`'s capped note names both footnotes when they differ, since two batches whose first documents
+  agree can still differ in how many more there were.
+- **`diff --body` compared integers as doubles.** 9007199254740993 and 9007199254740992 are one double, so two Int64
+  values past 2^53 that differ, which MongoDB's relaxed JSON writes as plain numbers, were reported as equal. Two
+  integers are compared by their digits; a number with a fraction or an exponent is still compared as a double.
+- **`RequestResponseLogger.MaxContentLength` left a phase variant whole.** A call's setup and action variants, the notes
+  the diagram draws for those phases at another verbosity, kept their full content past the cap. The cap applies to them
+  as it does to `Content`.
+
+Behaviour change: a `--where` ordering that matched an object, an array or a string against a number no longer matches
+it, and `--body` on a capped body prints the document indented.
+
+### Docs
+
+- The wiki's Querying Reports page (`--where`, `--path`, the capped body and `diff --body`) and Tracking Custom
+  Dependencies page (`MaxContentLength`), and the skill's command reference (`references/commands.md`, in
+  `Kronikol.Tool` and in the templates package).
+
+### Tests
+
+- `QueryCommandTests`: `$..price` and `$.items..price` refused with the `[*]` path; `> 5` on an array and `> 500` on
+  `{ "$numberDecimal" : "12" }` excluded and counted, and an inequality counting nothing; a capped MongoDB batch and a
+  capped SQL rows body read by `values` and counted as capped; a capped body answering `--where` and `--path`, showing
+  its keys, printing indented with its footnote, and naming its path to `grep --values` and `grep --number`; two capped
+  batches diffed by path with both footnotes named; and two integers past 2^53 reported as different while `1` and `1.0`
+  are not.
+- `RequestResponseLoggerTests`: `MaxContentLength` caps a setup and an action variant's content.
+- Proofs (plan harness `r3/`): copied onto 4.20.0, 12 facts fail, each on its own assertion, and the inequality guard
+  passes; 21 of 21 mutations are caught, one after the variant fact was extended to give each variant a long body on its
+  own.
+- Checks: After the version bump the core suite passes 7,533 with 2 skipped; the MongoDB suites pass 302 of 302 on
+  driver 3.x and 302 of 302 on 2.x, their real-server facts included (a mongod 7.0 replica set); the TcpTap suite passes
+  398 with 4 skipped (its Docker-only container facts) and its Bson 3 project 1 of 1; ClickHouse passes 120 with 9
+  skipped (its real-server facts); the full Playwright suite passes 1,040 with 28 skipped when run alone; release.slnf
+  builds in Release for every target, and restores with --force-evaluate.
+
 ## [4.20.0] - 2026-10-13
 
 **Minor - a MongoDB request note at `Detailed` is the command it sent, without the driver's fields, and

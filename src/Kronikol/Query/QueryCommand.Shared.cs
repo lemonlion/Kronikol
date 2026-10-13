@@ -171,6 +171,19 @@ public static partial class QueryCommand
         return true;
     }
 
+    /// <summary>
+    /// Says how many values an ordering clause against a number met that were not numbers, so a call that dropped out
+    /// for it is not dropped unseen (#168 F7).
+    /// </summary>
+    private static void NoteNotNumbers(QueryWriter writer, IReadOnlyList<WhereClause>? clauses)
+    {
+        foreach (var clause in clauses ?? [])
+        {
+            if (clause.NotNumbers > 0)
+                writer.Note($"{clause.NotNumbers} {(clause.NotNumbers == 1 ? "value was not a number" : "values were not numbers")} for --where \"{clause.Raw}\", and failed it");
+        }
+    }
+
     /// <summary>The orderings <c>services --sort</c> understands.</summary>
     internal static readonly string[] ServiceSorts = ["calls", "duration", "bytes", "errors"];
 

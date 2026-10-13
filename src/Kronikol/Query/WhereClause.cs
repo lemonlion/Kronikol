@@ -24,6 +24,9 @@ internal sealed class WhereClause
     public required string Operator { get; init; }
     public string? Literal { get; init; }
 
+    /// <summary>How many values an ordering against a number met that were not numbers; each failed the clause.</summary>
+    public int NotNumbers { get; private set; }
+
     public static bool TryParse(string expression, out WhereClause? clause, out string? error)
     {
         clause = null;
@@ -131,10 +134,17 @@ internal sealed class WhereClause
             : value.Element.ValueKind == JsonValueKind.String ? value.Element.GetString() ?? ""
             : value.Element.GetRawText();
 
-        var numeric = value.TryNumber(out var number)
-                      && double.TryParse(Literal, NumberStyles.Float, CultureInfo.InvariantCulture, out var literalNumber);
-        var comparison = numeric
-            ? number.CompareTo(double.Parse(Literal!, NumberStyles.Float, CultureInfo.InvariantCulture))
+        var isNumber = value.TryNumber(out var number);
+        var literalIsNumber = double.TryParse(Literal, NumberStyles.Float, CultureInfo.InvariantCulture, out var literalNumber);
+        if (literalIsNumber && !isNumber && Operator is "<" or ">" or "<=" or ">=")
+        {
+            // An ordering against a number compares numbers only (#168 F7). Ordered as text, an array or an object
+            // ({ "$numberDecimal" : "1000.50" }) came after every number, so `> 500` held for every one of them.
+            NotNumbers++;
+            return false;
+        }
+        var comparison = isNumber && literalIsNumber
+            ? number.CompareTo(literalNumber)
             : string.Compare(text, Literal, StringComparison.OrdinalIgnoreCase);
 
         return Operator switch

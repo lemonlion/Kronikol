@@ -221,6 +221,34 @@ public class RequestResponseLoggerTests
     }
 
     [Fact]
+    public void Log_MaxContentLength_caps_each_phase_variants_content_too()
+    {
+        // A phase variant is the note the diagram draws at another verbosity (MongoDB's Raw beside Detailed, say);
+        // the cap left it whole, so a capped call's Setup or Action note could run to megabytes (#168 F14).
+        RequestResponseLogger.MaxContentLength = 100;
+        try
+        {
+            var variant = new PhaseVariant("GET", new Uri("http://localhost/api"), new string('v', 500), [], false);
+            var capped = new string('v', 100) + "\n\n…truncated (500 chars total)";
+
+            // Each variant on its own: a long setup beside a short action, then the other way round.
+            RequestResponseLogger.Log(MakeLog(new string('x', 500)) with { SetupVariant = variant, ActionVariant = variant with { Content = "short" } });
+            RequestResponseLogger.Log(MakeLog(new string('x', 500)) with { SetupVariant = variant with { Content = "short" }, ActionVariant = variant });
+
+            var logs = GetLogsFromThisTest().ToList();
+            Assert.Equal(2, logs.Count);
+            Assert.Equal(capped, logs[0].SetupVariant!.Content);
+            Assert.Equal("short", logs[0].ActionVariant!.Content);
+            Assert.Equal("short", logs[1].SetupVariant!.Content);
+            Assert.Equal(capped, logs[1].ActionVariant!.Content);
+        }
+        finally
+        {
+            RequestResponseLogger.MaxContentLength = null;
+        }
+    }
+
+    [Fact]
     public void Log_MaxContentLength_AddsMarker()
     {
         RequestResponseLogger.MaxContentLength = 50;

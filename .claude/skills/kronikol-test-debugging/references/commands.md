@@ -256,14 +256,17 @@ kronikol query interactions <report> --where '$.items[*].price < 0' --where 'req
 
 Grammar: `[req:]PATH OP LITERAL` · ops `= != < > <= >= ~ !~ exists !exists` (`exists` takes no
 literal) · literals: `null`/`true`/`false`, numbers, quoted or bare strings. Both sides numeric →
-numeric comparison; otherwise case-insensitive string comparison; `~` is substring.
+numeric comparison; otherwise case-insensitive string comparison; `~` is substring. `<`, `>`, `<=` and
+`>=` against a number compare numbers only: a value that is not a number (an object such as
+`{ "$numberDecimal": "1000.50" }`, an array, a string) fails the clause, and the footer counts it.
 
 - Wildcards use **any**-semantics: `$.items[*].price < 0` passes when any element satisfies.
 - Repeated `--where` is AND. OR is deliberately absent — run the command twice.
 - Default target is the **response** body; a `req:` prefix targets the request per-expression;
   `--request` shifts the default.
 - A call whose targeted body is missing or not JSON fails the predicate; the footer reports how many
-  were excluded that way.
+  were excluded that way. A body a capture capped (a document, then `... (N more documents not shown)` or
+  `... (N more rows not shown)`) is read as the document, and counted as capped.
 - Works on `interactions` and `values`. Single-quote the expression — `>`, `?` and `[*]` are shell-active.
 
 #### `--group-by` — generic bucketing
@@ -319,6 +322,8 @@ lists the cheap ways to look at it.
 | `[*]` | every element — prints one row per match, each with its concrete path (`$.items[2].price = 4173`), paged |
 | `['a.b']` | bracket-quoted property, for keys containing dots |
 | `.length()` | terminal only: array → element count, object → property count, string → char count |
+
+`..` (recursive descent) is refused, and the error names the `[*]` path to use: `$..price` → `$[*].price`.
 
 **Always single-quote a path** (`--path '$.items[*].price'`): `[*]` is shell-active in bash and
 PowerShell, and an unquoted one surfaces as a baffling miss rather than a shell error.
@@ -439,6 +444,10 @@ $.total: 4173 → 3902
 - An array where one insert shifted everything collapses to one honest row
   (`$.items: elements shifted/reordered — 9 vs 10, 8 identical`) instead of a page of misleading per-index rows.
 - Non-JSON bodies fall back to a line diff (`line 12:  - … / + …`).
+- Two integers are compared by their digits, so Int64 values past 2^53 that differ are reported; a number with a
+  fraction or an exponent is compared as a double.
+- A capped body (a document, then `... (N more documents not shown)`) is diffed as its document, and the
+  capped note names both footnotes when they differ.
 - Two scenario addresses are refused with a pointer at `compare`.
 
 **Run diff** (two files) reports what broke, was fixed, is new, got slower, disappeared — matched on

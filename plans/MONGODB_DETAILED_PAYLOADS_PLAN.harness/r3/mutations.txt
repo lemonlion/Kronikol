@@ -1,0 +1,27 @@
+# R3 mutations (r3/mutations/mutate_r3.py, each in a snapshot worktree): 21 of 21 caught.
+# 19 and 20 first did not compile (if (false) dropped the pattern variable) and were rewritten to compare with int.MaxValue.
+# 20 then survived: the variant fact never gave the action variant a long body. It now checks each variant on its own.
+# 21 (grep --number) was added with its fact. The lines below are each mutation's last run.
+# 3, 5 and 6 were run again once the --where facts checked the count first and the decimal fact was added.
+
+ 1. `..` read as `.` again: CAUGHT | tests/Kronikol.Tests: 2 failed (Path_recursive_descent_is_refused_with_the_wildcard_to_use, Path_recursive_descent_inside_a_path_names_the_wildcard_there)
+ 2. the suggestion drops `[*]`: CAUGHT | tests/Kronikol.Tests: 2 failed (Path_recursive_descent_is_refused_with_the_wildcard_to_use, Path_recursive_descent_inside_a_path_names_the_wildcard_there)
+ 3. an ordering against a number orders text again: CAUGHT | tests/Kronikol.Tests: 2 failed (Where_never_orders_a_non_number_against_a_number_and_counts_it, Where_does_not_order_an_extended_json_decimal_against_a_number_as_text)
+ 4. an inequality counts a non-number too: CAUGHT | tests/Kronikol.Tests: 1 failed (Where_only_an_ordering_counts_a_value_that_is_not_a_number)
+ 5. a non-number is not counted: CAUGHT | tests/Kronikol.Tests: 2 failed (Where_never_orders_a_non_number_against_a_number_and_counts_it, Where_does_not_order_an_extended_json_decimal_against_a_number_as_text)
+ 6. the count is never noted: CAUGHT | tests/Kronikol.Tests: 2 failed (Where_never_orders_a_non_number_against_a_number_and_counts_it, Where_does_not_order_an_extended_json_decimal_against_a_number_as_text)
+ 7. the footnote pattern forgets documents: CAUGHT | tests/Kronikol.Tests: 4 failed (A_capped_batch_and_a_capped_rows_body_are_read_as_json_and_counted_as_capped, A_capped_body_shows_its_keys_and_prints_as_json_with_its_footnote, A_capped_body_answers_where_and_path, Diff_bodies_reads_two_capped_batches_as_json_and_names_both_footnotes)
+ 8. no reading past the footnote: CAUGHT | tests/Kronikol.Tests: 5 failed (A_capped_batch_and_a_capped_rows_body_are_read_as_json_and_counted_as_capped, A_capped_body_shows_its_keys_and_prints_as_json_with_its_footnote, A_capped_body_answers_where_and_path, Diff_bodies_reads_two_capped_batches_as_json_and_names_both_footnotes)
+ 9. a footnoted body is not counted as capped: CAUGHT | tests/Kronikol.Tests: 3 failed (A_capped_batch_and_a_capped_rows_body_are_read_as_json_and_counted_as_capped, A_capped_body_shows_its_keys_and_prints_as_json_with_its_footnote, Diff_bodies_reads_two_capped_batches_as_json_and_names_both_footnotes)
+10. --body drops the footnote: CAUGHT | tests/Kronikol.Tests: 1 failed (A_capped_body_shows_its_keys_and_prints_as_json_with_its_footnote)
+11. --keys reads a capped body as text: CAUGHT | tests/Kronikol.Tests: 1 failed (A_capped_body_shows_its_keys_and_prints_as_json_with_its_footnote)
+12. grep --values reads a capped body as text: CAUGHT | tests/Kronikol.Tests: 1 failed (Grep_values_names_the_json_path_in_a_capped_body)
+13. --path parses the whole body: CAUGHT | tests/Kronikol.Tests: 1 failed (A_capped_body_answers_where_and_path)
+14. diff --body notes only a cut body: CAUGHT | tests/Kronikol.Tests: 1 failed (Diff_bodies_reads_two_capped_batches_as_json_and_names_both_footnotes)
+15. diff --body does not name the footnotes: CAUGHT | tests/Kronikol.Tests: 1 failed (Diff_bodies_reads_two_capped_batches_as_json_and_names_both_footnotes)
+16. diff --body reads a capped body as text: CAUGHT | tests/Kronikol.Tests: 1 failed (Diff_bodies_reads_two_capped_batches_as_json_and_names_both_footnotes)
+17. integers compared as doubles: CAUGHT | tests/Kronikol.Tests: 1 failed (Diff_bodies_reports_two_integers_that_differ_past_2_to_the_53)
+18. every number compared by its digits: CAUGHT | tests/Kronikol.Tests: 1 failed (Diff_bodies_reports_two_integers_that_differ_past_2_to_the_53)
+19. a setup variant left whole: CAUGHT | tests/Kronikol.Tests: 1 failed (Log_MaxContentLength_caps_each_phase_variants_content_too)
+20. an action variant left whole: CAUGHT | tests/Kronikol.Tests: 1 failed (Log_MaxContentLength_caps_each_phase_variants_content_too)
+21. grep --number reads a capped body as text: CAUGHT | tests/Kronikol.Tests: 1 failed (Grep_number_names_the_json_path_in_a_capped_body)

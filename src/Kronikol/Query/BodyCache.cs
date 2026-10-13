@@ -39,20 +39,32 @@ internal sealed class BodyCache(ReportIndex index) : IDisposable
         if (_parsed.TryGetValue(hash, out var cached))
             return cached;
 
-        JsonDocument? document = null;
-        if (Raw(hash) is { } content)
-        {
-            try
-            {
-                document = JsonDocument.Parse(content);
-            }
-            catch (JsonException)
-            {
-                // Not JSON — remembered as null so the miss is as cheap as the hit.
-            }
-        }
-        return _parsed[hash] = document;
+        // Not JSON is remembered as null, so the miss is as cheap as the hit.
+        return _parsed[hash] = Raw(hash) is { } content ? ParseJson(content) : null;
     }
+
+    /// <summary>
+    /// A body as a JSON document, or null when it is not JSON. A capped body is a complete document and the capture's
+    /// footnote after it (#168 F8): the page reads past the footnote, and every reader of a body here does the same.
+    /// </summary>
+    internal static JsonDocument? ParseJson(string body) =>
+        Parse(body) ?? (Tracking.CaptureFootnote.DocumentBefore(body) is { } before ? Parse(before) : null);
+
+    private static JsonDocument? Parse(string text)
+    {
+        try
+        {
+            return JsonDocument.Parse(text);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Whether a capture capped this body: cut short (<c>…truncated</c>), or a document followed by its footnote.</summary>
+    public static bool CappedAtCapture(string body) =>
+        body.Contains("…truncated (", StringComparison.Ordinal) || Tracking.CaptureFootnote.DocumentBefore(body) is not null;
 
     public void Dispose()
     {

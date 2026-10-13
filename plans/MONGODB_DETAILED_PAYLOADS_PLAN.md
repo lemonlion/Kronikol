@@ -1,7 +1,7 @@
 # MongoDB at Detailed: what a command sent and what came back, as JSON (#168)
 
 **Date:** 2026-10-13 · **Repo version:** 4.18.1 (`main` at `34145c44`; line numbers are for that commit, and the
-issue's, at `98c4806d`, point at the same lines) · **Status:** **Green-lit in full by the owner on 2026-10-13**, every §9 question as recommended. **R1 executed as 4.19.6 and R2 as 4.20.0** (§11); R3 and the driver floor (Q18) follow. Drafted from #168 (filed by the
+issue's, at `98c4806d`, point at the same lines) · **Status:** **Green-lit in full by the owner on 2026-10-13**, every §9 question as recommended. **R1 executed as 4.19.6, R2 as 4.20.0 and R3 as 4.20.1** (§11); the driver floor (Q18) follows. Drafted from #168 (filed by the
 owner on 2026-10-11, found in #132's multi-host suite on 4.14.6 with `Kronikol.Extensions.MongoDB.V2` and MongoDB.Driver
 2.30.0) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying problem.
 
@@ -1207,6 +1207,30 @@ no row is taken here.
 - **2026-10-13, R2 published.** Release run 38457681824, CI 38457676182, CodeQL 38457676619 and CI Summary Preview
   38457676440 passed for 4.20.0, each on its first attempt. nuget.org listed all 62 ids at 21:15. The wiki has R2's
   edits (`1307e7c`), Kronikol4J's ledger its line (`1eb7001`), and #168 a comment naming the release.
+
+- **2026-10-13, R3 executed as 4.20.1**, by kronikol-cf, in the same worktree as R1 and R2.
+  - **Built as §4.4 says.** `--path` refuses `..` and names the `[*]` path; an ordering against a number compares
+    numbers only and the footer counts what was not one (`WhereClause.NotNumbers`); one footnote definition
+    (`CaptureFootnote`) serves the page's `TruncationMarkerRegex` and the query tool, whose `BodyCache` reads a capped
+    body as its document and counts it as capped; `MaxContentLength` caps a phase variant's content (F14); `diff --body`
+    compares two integers by their digits (F25).
+  - **Found on the way:** the plan named `BodyCache`, but five other readers of a body parsed it themselves and called a
+    capped batch text: `--keys`, `grep --values`, `grep --number`, the pretty-printer behind `--body`, `--lines` and
+    `--out`, and `diff --body`, which fell back to a line diff that printed both bodies' lines and whose capped note
+    only knew the `…truncated` marker. All of them now parse through `BodyCache.ParseJson`; `--body` prints the document
+    indented with its footnote after it, and `diff --body`'s note names both footnotes when they differ. The variant
+    fact capped a long setup variant beside a short action variant and never gave the action variant a long body, so
+    leaving it whole survived (mutation 20); it now checks each variant on its own. The first `--where` fact said an
+    address was absent that the listing never prints, so on 4.20.0 it failed only at its note; it now checks the count
+    first, beside a second fact with the issue's own `{ "$numberDecimal" : … }`, and both fail on 4.20.0 at the count.
+  - **Proofs** (`r3/`): `red-4.20.0.txt`, the facts copied onto 4.20.0 with no stubs: 12 fail, each on its own
+    assertion, and the inequality guard passes; `mutations.txt`, 21 of 21 caught: 19 and 20 were rewritten after their
+    first form did not compile, and 20 then survived until the variant fact gave each variant a long body on its own.
+  - **Checks:** After the version bump the core suite passes 7,533 with 2 skipped; the MongoDB suites pass 302 of 302 on
+    driver 3.x and 302 of 302 on 2.x, their real-server facts included (a mongod 7.0 replica set); the TcpTap suite
+    passes 398 with 4 skipped (its Docker-only container facts) and its Bson 3 project 1 of 1; ClickHouse passes 120
+    with 9 skipped (its real-server facts); the full Playwright suite passes 1,040 with 28 skipped when run alone;
+    release.slnf builds in Release for every target, and restores with --force-evaluate.
 
 ## Appendix A. Edit sites at `34145c44`
 

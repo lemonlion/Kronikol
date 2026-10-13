@@ -41,6 +41,9 @@ public static class RequestResponseLogger
     /// </summary>
     public static bool CaptureBackground { get; set; }
 
+    /// <summary>The first <paramref name="max"/> characters and the marker that says how long the content was.</summary>
+    private static string Capped(string content, int max) => $"{content[..max]}\n\n…truncated ({content.Length} chars total)";
+
     public static void Log(RequestResponseLog log)
     {
         if (Redaction is { } redaction)
@@ -51,8 +54,16 @@ public static class RequestResponseLogger
             log = redacted;
         }
 
-        if (MaxContentLength is { } max && log.Content is { Length: var len } && len > max)
-            log = log with { Content = $"{log.Content[..max]}\n\n…truncated ({len} chars total)" };
+        if (MaxContentLength is { } max)
+        {
+            if (log.Content is { } content && content.Length > max)
+                log = log with { Content = Capped(content, max) };
+            // A phase variant is the note the diagram draws at another verbosity; the cap left it whole (#168 F14).
+            if (log.SetupVariant is { Content: { } setup } && setup.Length > max)
+                log = log with { SetupVariant = log.SetupVariant with { Content = Capped(setup, max) } };
+            if (log.ActionVariant is { Content: { } action } && action.Length > max)
+                log = log with { ActionVariant = log.ActionVariant with { Content = Capped(action, max) } };
+        }
 
         // Only the HTTP handler and LogPair stamp the time; every capturer that builds its own log left it
         // null, and two thirds of a docker-lane report's dependency calls could not be placed in time.

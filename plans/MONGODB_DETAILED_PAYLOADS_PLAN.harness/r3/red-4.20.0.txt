@@ -1,0 +1,59 @@
+# R3 red proofs: the R3 facts (QueryCommandTests.cs and RequestResponseLoggerTests.cs at R3) copied onto v4.20.0, no stubs needed.
+# 10 R3 facts fail, each on its own assertion (12 with the facts proved below). Where_only_an_ordering_counts_a_value_that_is_not_a_number is a guard
+# (an equality never counts a non-number) and passes on both. The two other 'A_capped_' passes are older facts the filter matched.
+
+== R3 facts copied onto v4.20.0 (2026-10-13)
+  Passed Kronikol.Tests.PlantUml.CapturedTextEscapeTests.A_capped_label_never_ends_inside_a_code_point [324 ms]
+  Failed Kronikol.Tests.Tracking.RequestResponseLoggerTests.Log_MaxContentLength_caps_each_phase_variants_content_too [325 ms]
+  Passed Kronikol.Tests.PlantUml.StatementNoteNullTests.A_capped_statement_reply_keeps_its_nulls [405 ms]
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Diff_bodies_reports_two_integers_that_differ_past_2_to_the_53 [458 ms]
+  Failed Kronikol.Tests.Tool.QueryCommandTests.A_capped_batch_and_a_capped_rows_body_are_read_as_json_and_counted_as_capped [32 ms]
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Path_recursive_descent_inside_a_path_names_the_wildcard_there [47 ms]
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Diff_bodies_reads_two_capped_batches_as_json_and_names_both_footnotes [22 ms]
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Where_never_orders_a_non_number_against_a_number_and_counts_it [41 ms]
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Grep_values_names_the_json_path_in_a_capped_body [21 ms]
+  Failed Kronikol.Tests.Tool.QueryCommandTests.A_capped_body_shows_its_keys_and_prints_as_json_with_its_footnote [16 ms]
+  Failed Kronikol.Tests.Tool.QueryCommandTests.A_capped_body_answers_where_and_path [21 ms]
+  Passed Kronikol.Tests.Tool.QueryCommandTests.Where_only_an_ordering_counts_a_value_that_is_not_a_number [27 ms]
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Path_recursive_descent_is_refused_with_the_wildcard_to_use [35 ms]
+   Assert.Equal() Failure: Strings differ
+Expected: ···"vvvvvvvvvvvvvvvvvvvvvvvvv\n\n…truncated (500 chars t"···
+   Assert.Contains() Failure: Sub-string not found
+Not found: "$.id: 9007199254740993 → 9007199254740992"
+   Assert.Matches() Failure: Pattern not found in value
+   Assert.Equal() Failure: Values differ
+Expected: 2
+Actual:   0
+   Assert.Contains() Failure: Sub-string not found
+Not found: "$[1].total: 7 → 8"
+   Assert.Matches() Failure: Pattern not found in value
+   Assert.Contains() Failure: Sub-string not found
+Not found: "$[0].total"
+   Assert.Contains() Failure: Sub-string not found
+Not found: "$[]  array (2)"
+   Assert.Equal() Failure: Strings differ
+Expected: "1"
+   Assert.Equal() Failure: Values differ
+Expected: 2
+Actual:   0
+
+# Added after the first run: grep --number reads bodies through the same cache, so its fact was proved red on its own.
+== grep --number fact copied onto v4.20.0 (2026-10-13)
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Grep_number_names_the_json_path_in_a_capped_body [552 ms]
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Grep_values_names_the_json_path_in_a_capped_body [20 ms]
+   Assert.Contains() Failure: Sub-string not found
+Not found: "$[0].total"
+   Assert.Contains() Failure: Sub-string not found
+Not found: "$[0].total"
+
+# Rewritten after the first run: Where_never_orders_a_non_number_against_a_number_and_counts_it failed there only at its
+# note, since the address it said was absent is one the listing never prints. It now checks the count first, and
+# Where_does_not_order_an_extended_json_decimal_against_a_number_as_text is the issue's own case; both fail at the count.
+== --where facts copied onto v4.20.0 (2026-10-13)
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Where_never_orders_a_non_number_against_a_number_and_counts_it [462 ms]
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Where_does_not_order_an_extended_json_decimal_against_a_number_as_text [21 ms]
+  Passed Kronikol.Tests.Tool.QueryCommandTests.Where_only_an_ordering_counts_a_value_that_is_not_a_number [49 ms]
+   Assert.Equal() Failure: Strings differ
+Expected: "0"
+   Assert.Equal() Failure: Strings differ
+Expected: "1"

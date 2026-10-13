@@ -1626,7 +1626,7 @@ public static partial class PlantUmlCreator
         return marker is null ? indented : indented + "\n" + marker;
     }
 
-    [GeneratedRegex(@"(?:\r?\n\r?\n…truncated \(\d+ chars total\)|\s…\[bulk string truncated: [^\]]*\]|\r?\n\.\.\. \(\d+ more(?: (?:rows|documents) not shown)?\))\s*$")]
+    [GeneratedRegex(@"(?:\r?\n\r?\n…truncated \(\d+ chars total\)|\s…\[bulk string truncated: [^\]]*\]|" + Tracking.CaptureFootnote.Pattern + @")\s*$")]
     private static partial Regex TruncationMarkerRegex();
 
     private static (string Body, string? Marker) SplitTruncationMarker(string content)

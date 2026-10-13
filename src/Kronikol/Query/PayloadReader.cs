@@ -231,19 +231,16 @@ internal static partial class PayloadReader
 
     /// <summary>
     /// Pretty-prints a JSON body, leaving anything else as it was. Report bodies are usually captured
-    /// minified, and a line range is only addressable once there are lines.
+    /// minified, and a line range is only addressable once there are lines. A capped body keeps the capture's
+    /// footnote on its own line after the document (#168 F8).
     /// </summary>
     public static string Pretty(string body)
     {
-        try
-        {
-            using var document = JsonDocument.Parse(body);
-            return JsonSerializer.Serialize(document.RootElement, PrettyJson);
-        }
-        catch (JsonException)
-        {
+        using var document = BodyCache.ParseJson(body);
+        if (document is null)
             return body;
-        }
+        var pretty = JsonSerializer.Serialize(document.RootElement, PrettyJson);
+        return Tracking.CaptureFootnote.Split(body) is { } capped ? pretty + "\n" + capped.Footnote : pretty;
     }
 
     /// <summary>

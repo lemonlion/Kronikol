@@ -847,6 +847,157 @@ public class QueryCommandTests : IDisposable
     }
 
     [Fact]
+    public void Path_recursive_descent_is_refused_with_the_wildcard_to_use()
+    {
+        // #168 F7: the parser skipped every dot, so `$..price` was read as `$.price` and quietly matched nothing.
+        var (_, error, exit) = RunFull("http", Report(), "s3/i11", "--path", "$..price");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("recursive descent (`..`) is not supported", error);
+        Assert.Contains("`$[*].price`", error);
+    }
+
+    [Fact]
+    public void Path_recursive_descent_inside_a_path_names_the_wildcard_there()
+    {
+        var (_, error, exit) = RunFull("http", Report(), "s3/i11", "--path", "$.items..price");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("`$.items[*].price`", error);
+    }
+
+    [Fact]
+    public void Where_never_orders_a_non_number_against_a_number_and_counts_it()
+    {
+        // #168 F7: ordered as text, an array or an object ("[…", { "$numberDecimal" : … }) came after every number,
+        // so `> 5` was true for it. An ordering against a number compares numbers only, and says what it left out.
+        Assert.Equal("0", Run("interactions", Report(), "s3", "--where", "$.items > 5", "--count").Trim());
+
+        var (output, _, exit) = RunFull("interactions", Report(), "s3", "--where", "$.items > 5");
+        Assert.Equal(0, exit);
+        Assert.Matches(@"\d+ values? (was not a number|were not numbers) for --where ""\$\.items > 5""", output);
+    }
+
+    [Fact]
+    public void Where_does_not_order_an_extended_json_decimal_against_a_number_as_text()
+    {
+        // The issue's own question: relaxed extended JSON writes a decimal as { "$numberDecimal" : "…" }, and as text
+        // "{" comes after every digit, so `> 500` held for a decimal of 12. It is not a number, so it fails the clause.
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = new List<RequestResponseLog>();
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start,
+            responseBody: "{ \"CurrentAmount\" : { \"$numberDecimal\" : \"12\" } }"));
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start.AddSeconds(1),
+            responseBody: "{ \"CurrentAmount\" : 600 }"));
+        var report = Write("Decimals.json", BuildFeatures(false), logs.ToArray());
+
+        Assert.Equal("1", Run("interactions", report, "s0", "--where", "$.CurrentAmount > 500", "--count").Trim());
+        Assert.Contains("1 value was not a number for --where \"$.CurrentAmount > 500\", and failed it",
+            Run("interactions", report, "s0", "--where", "$.CurrentAmount > 500"));
+    }
+
+    [Fact]
+    public void Where_only_an_ordering_counts_a_value_that_is_not_a_number()
+    {
+        var (output, _, exit) = RunFull("interactions", Report(), "s3", "--where", "$.status != 5");
+
+        Assert.Equal(0, exit);
+        Assert.DoesNotContain("not a number", output);
+        Assert.DoesNotContain("not numbers", output);
+    }
+
+    /// <summary>Two bodies a capture capped: a MongoDB batch and a SQL rows body, each a complete document and a footnote.</summary>
+    private string CappedReport()
+    {
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = new List<RequestResponseLog>();
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{ \"filter\" : { } }", HttpStatusCode.OK, start,
+            responseBody: "[{ \"total\" : 5 }, { \"total\" : 7 }]\n... (3 more documents not shown)"));
+        logs.AddRange(Pair("t0", "sql", "Query", "sql://db/orders", "SELECT total FROM orders", HttpStatusCode.OK, start.AddSeconds(1),
+            responseBody: "[{\"total\":11}]\n... (40 more rows not shown)"));
+        return Write("Capped.json", BuildFeatures(false), logs.ToArray());
+    }
+
+    [Fact]
+    public void A_capped_batch_and_a_capped_rows_body_are_read_as_json_and_counted_as_capped()
+    {
+        // #168 F8: a capture that capped a batch or a rows body ends it with "... (N more documents not shown)" or
+        // "... (N more rows not shown)" after a complete document. The page reads past that line; the query tool
+        // called the body not JSON.
+        var output = Run("values", CappedReport(), "--path", "$[*].total");
+
+        Assert.Matches(@"\b5\s+×1", output);
+        Assert.Matches(@"\b11\s+×1", output);
+        Assert.DoesNotContain("not JSON", output);
+        Assert.Contains("2 bodies were capped at capture time", output);
+    }
+
+    [Fact]
+    public void A_capped_body_answers_where_and_path()
+    {
+        var report = CappedReport();
+
+        Assert.Equal("1", Run("interactions", report, "s0", "--where", "$[*].total > 9", "--count").Trim());
+        Assert.Contains("$[1].total = 7", Run("http", report, "s0/i1", "--path", "$[*].total"));
+    }
+
+    [Fact]
+    public void A_capped_body_shows_its_keys_and_prints_as_json_with_its_footnote()
+    {
+        // #168 F8, the same footnote in the other views: --keys called the body "not JSON" and --body printed it as
+        // the capture wrote it, where every other body is printed indented.
+        var report = CappedReport();
+
+        var keys = Run("http", report, "s0/i1", "--keys");
+        Assert.Contains("$[]  array (2)", keys);
+        Assert.Contains("$[0].total  number = 5", keys);
+        Assert.DoesNotContain("not JSON", keys);
+
+        var body = Run("http", report, "s0/i1", "--body").ReplaceLineEndings("\n");
+        Assert.Contains("\n    \"total\": 7\n", body);
+        Assert.Contains("]\n... (3 more documents not shown)", body);
+        Assert.Contains("capped at capture time", body);
+    }
+
+    [Fact]
+    public void Grep_values_names_the_json_path_in_a_capped_body()
+    {
+        var output = Run("grep", CappedReport(), "11", "--values");
+
+        Assert.Contains("$[0].total", output);
+    }
+
+    [Fact]
+    public void Grep_number_names_the_json_path_in_a_capped_body()
+    {
+        // A number grep token-scanned a body it could not parse, so a capped batch's match came with no path.
+        var output = Run("grep", CappedReport(), "11", "--number");
+
+        Assert.Contains("$[0].total", output);
+    }
+
+    [Fact]
+    public void Diff_bodies_reads_two_capped_batches_as_json_and_names_both_footnotes()
+    {
+        // A capped batch was not JSON to diff --body, which fell back to a line diff and printed both bodies' lines.
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = new List<RequestResponseLog>();
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start,
+            responseBody: "[{ \"total\" : 5, \"sku\" : \"A1\" }, { \"total\" : 7, \"sku\" : \"B2\" }]\n... (3 more documents not shown)"));
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start.AddSeconds(1),
+            responseBody: "[{ \"total\" : 5, \"sku\" : \"A1\" }, { \"total\" : 8, \"sku\" : \"B2\" }]\n... (4 more documents not shown)"));
+        var report = Write("CappedBatches.json", BuildFeatures(false), logs.ToArray());
+
+        var output = Run("diff", report, "s0/i1", "s0/i3");
+
+        Assert.Contains("$[1].total: 7 → 8", output);
+        Assert.Contains("1 paths differ", output);
+        Assert.DoesNotContain("\"sku\"", output);
+        Assert.Contains("capped at capture time", output);
+        Assert.Contains("... (3 more documents not shown) → ... (4 more documents not shown)", output);
+    }
+
+    [Fact]
     public void Where_wildcard_passes_when_any_element_satisfies()
     {
         var output = Run("interactions", Report(), "s3", "--where", "$.items[*].price < 0");
@@ -1205,6 +1356,25 @@ public class QueryCommandTests : IDisposable
         Assert.Contains("→ null", output);
         Assert.Contains("$.total: 4173 → 3902", output);
         Assert.DoesNotContain("\"sku\"", output);
+    }
+
+    [Fact]
+    public void Diff_bodies_reports_two_integers_that_differ_past_2_to_the_53()
+    {
+        // #168 F25: numbers were compared as doubles, and 9007199254740993 and 9007199254740992 are one double.
+        // MongoDB's relaxed JSON writes every Int64 as a plain number. A number with a fraction is still a double.
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = new List<RequestResponseLog>();
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start,
+            responseBody: "{\"id\":9007199254740993,\"rate\":1}"));
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start.AddSeconds(1),
+            responseBody: "{\"id\":9007199254740992,\"rate\":1.0}"));
+        var report = Write("BigIntegers.json", BuildFeatures(false), logs.ToArray());
+
+        var output = Run("diff", report, "s0/i1", "s0/i3");
+
+        Assert.Contains("$.id: 9007199254740993 → 9007199254740992", output);
+        Assert.DoesNotContain("$.rate", output);
     }
 
     [Fact]

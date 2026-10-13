@@ -32,6 +32,14 @@ internal static class PathEngine
         {
             if (text[i] == '.')
             {
+                if (i + 1 < text.Length && text[i + 1] == '.')
+                {
+                    // JSONPath's recursive descent. Read as `.`, `$..x` quietly meant `$.x` and never matched an
+                    // array body (#168 F7); `[*]` is the walk this grammar has.
+                    var suggestion = (path.TrimStart().StartsWith('$') ? "$" : "") + text[..i] + "[*]." + text[(i + 2)..];
+                    error = $"recursive descent (`..`) is not supported; `[*]` walks an array: `{suggestion}`";
+                    return false;
+                }
                 i++;
                 continue;
             }
@@ -230,14 +238,12 @@ internal static class PathEngine
     public static List<string> Keys(string body, int maxDepth = 3)
     {
         var lines = new List<string>();
-        try
+        using (var document = BodyCache.ParseJson(body))
         {
-            using var document = JsonDocument.Parse(body);
-            Walk(document.RootElement, "$", 0);
-        }
-        catch (JsonException)
-        {
-            lines.Add("(not JSON — " + QueryWriter.Size(Encoding.UTF8.GetByteCount(body)) + " of text)");
+            if (document is null)
+                lines.Add("(not JSON — " + QueryWriter.Size(Encoding.UTF8.GetByteCount(body)) + " of text)");
+            else
+                Walk(document.RootElement, "$", 0);
         }
 
         return lines;
@@ -274,14 +280,10 @@ internal static class PathEngine
     public static IEnumerable<string> PathsContaining(string body, string needle)
     {
         List<string> found = [];
-        try
+        using (var document = BodyCache.ParseJson(body))
         {
-            using var document = JsonDocument.Parse(body);
-            Walk(document.RootElement, "$");
-        }
-        catch (JsonException)
-        {
-            return [];
+            if (document is not null)
+                Walk(document.RootElement, "$");
         }
 
         return found;

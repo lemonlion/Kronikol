@@ -132,7 +132,7 @@ public static partial class QueryCommand
                 bodiless++;
                 return;
             }
-            if (cache.Raw(hash) is { } raw && raw.Contains("…truncated (", StringComparison.Ordinal))
+            if (cache.Raw(hash) is { } raw && BodyCache.CappedAtCapture(raw))
                 truncated++;
             var document = cache.Json(hash);
             if (document is null)
@@ -186,6 +186,7 @@ public static partial class QueryCommand
                 writer.Line($"{nonJson} {(nonJson == 1 ? "body was" : "bodies were")} not JSON — counted, not evaluated");
             if (unevaluable > 0)
                 writer.Line($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
+            NoteNotNumbers(writer, clauses);
             if (truncated > 0)
                 writer.Note($"! {truncated} {(truncated == 1 ? "body was" : "bodies were")} capped at capture time — the rest was never recorded");
         }
