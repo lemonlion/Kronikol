@@ -19,7 +19,11 @@ public static class InternalFlowSegmentBuilder
     /// of two tests would both take goes to neither; the segment counts it in
     /// <see cref="InternalFlowSegment.SpansLeftOut"/> (#87, <c>plans/SPAN_ATTRIBUTION_PLAN.md</c>). Before, a call
     /// with no trace id took every span of the run in its time, and calls sharing an ambient trace were told apart by
-    /// time alone, so one request's popup could show the queries of sixty concurrent requests as its own.
+    /// time alone, so one request's popup could show the queries of sixty concurrent requests as its own. Calls of
+    /// one test that share a trace under span ids of their own (one trace per test, as a browser test sends or a
+    /// proxy tap forwards) are told apart by the tree too: a span that descends from another of those calls' span ids
+    /// is that call's, and is not counted as left out, unless that call ran inside this one, as <c>kronikol query
+    /// flow</c> nests calls (#170). A span that descends from none of them stays in every call whose time holds it.
     /// </remarks>
     public static Dictionary<string, InternalFlowSegment> BuildSegments(
         RequestResponseLog[] logs,
@@ -130,6 +134,10 @@ public static class InternalFlowSegmentBuilder
             return attribution;
 
         var timed = logs.Where(l => l.Timestamp.HasValue).ToArray();
+        // The span ids each test's calls record in each trace, and which calls record each: what tells one test's calls
+        // apart in a trace they share.
+        var claimedByTest = new Dictionary<(string Trace, string Test), HashSet<string>>();
+        var claimers = new Dictionary<(string Trace, string Test, string Span), List<RequestResponseLog>>();
         foreach (var log in timed)
         {
             if (!IsCall(log) || log.ActivityTraceId is not { } trace)
@@ -137,6 +145,15 @@ public static class InternalFlowSegmentBuilder
             if (!attribution.TestsByTrace.TryGetValue(trace, out var tests))
                 attribution.TestsByTrace[trace] = tests = new HashSet<string>(StringComparer.Ordinal);
             tests.Add(log.TestId);
+            if (log.Type == RequestResponseType.Request && log.ActivitySpanId is { } claimedSpan)
+            {
+                if (!claimedByTest.TryGetValue((trace, log.TestId), out var claimed))
+                    claimedByTest[(trace, log.TestId)] = claimed = new HashSet<string>(StringComparer.Ordinal);
+                claimed.Add(claimedSpan);
+                if (!claimers.TryGetValue((trace, log.TestId, claimedSpan), out var by))
+                    claimers[(trace, log.TestId, claimedSpan)] = by = [];
+                by.Add(log);
+            }
         }
 
         // Spans of a trace no call claims: all a call with no trace id can take, when its test's calls claim none.
@@ -159,6 +176,111 @@ public static class InternalFlowSegmentBuilder
                     return subtree;
             }
             return attribution.SpansByTrace.TryGetValue(trace, out var ofTrace) ? ofTrace : [];
+        }
+
+        // Which of a test's calls ran inside which, by the rule kronikol query flow nests calls by (CallNesting,
+        // plans/FLOW_NESTING_PLAN.md R4): made while the other was still waiting for its answer, by the service
+        // handling it, or by another party on its Kronikol trace. Two calls from one party are never nested.
+        var outerOf = new Dictionary<RequestResponseLog, RequestResponseLog>(ReferenceEqualityComparer.Instance);
+        foreach (var testLogs in timed.GroupBy(l => l.TestId))
+        {
+            // In time order, as the segments are cut; records that tie keep the order they were captured in.
+            var entries = testLogs.OrderBy(l => l.Timestamp!.Value).ToArray();
+            var answeredAt = new Dictionary<Guid, int>();
+            for (var i = 0; i < entries.Length; i++)
+                if (entries[i].Type == RequestResponseType.Response)
+                    answeredAt.TryAdd(entries[i].RequestResponseId, i);
+
+            var open = new List<RequestResponseLog>();
+            for (var i = 0; i < entries.Length; i++)
+            {
+                var entry = entries[i];
+                if (entry.Type == RequestResponseType.Response)
+                {
+                    open.RemoveAll(o => o.RequestResponseId == entry.RequestResponseId);
+                    continue;
+                }
+                if (!IsCall(entry))
+                    continue;
+
+                for (var k = open.Count - 1; k >= 0; k--)
+                {
+                    // A record handed in twice is one call: it never runs inside itself.
+                    var candidate = open[k];
+                    if (ReferenceEquals(candidate, entry))
+                        continue;
+                    if (string.Equals(candidate.ServiceName, entry.CallerName, StringComparison.Ordinal)
+                        || (!string.Equals(candidate.CallerName, entry.CallerName, StringComparison.Ordinal)
+                            && entry.TraceId != Guid.Empty && candidate.TraceId == entry.TraceId))
+                    {
+                        outerOf[entry] = candidate;
+                        break;
+                    }
+                }
+                if (answeredAt.TryGetValue(entry.RequestResponseId, out var answer) && answer > i)
+                    open.Add(entry);
+            }
+        }
+
+        bool IsOrRanInside(RequestResponseLog call, RequestResponseLog outer)
+        {
+            // Each call's outer call opened before it, so the walk ends; the set keeps it ending whatever it is handed.
+            var visited = new HashSet<RequestResponseLog>(ReferenceEqualityComparer.Instance);
+            for (RequestResponseLog? at = call; at is not null && visited.Add(at); at = outerOf.GetValueOrDefault(at))
+                if (ReferenceEquals(at, outer))
+                    return true;
+            return false;
+        }
+
+        // Calls of one test that share a trace under span ids of their own (one trace per test, as a browser test
+        // sends, or as a tap forwards the test's trace) are told apart by the span tree too: a span that descends from
+        // the span of another of those calls is that call's, unless the call recording it ran inside this one, whose
+        // work it then is. A span that descends from none stays wherever its time puts it, and a trace of several
+        // tests keeps the rule above.
+        var spanById = new Dictionary<string, Dictionary<string, FlowSpan>>(StringComparer.Ordinal);
+        var claimedAbove = new Dictionary<FlowSpan, HashSet<string>>(ReferenceEqualityComparer.Instance);
+
+        // The claimed span ids on the span's chain: its own, its parent's, and up through every parent the store
+        // holds. A parent the store does not hold (the span a tap forwarded, recorded in another process) is
+        // checked too; the walk stops there.
+        HashSet<string> ClaimedAbove(string trace, FlowSpan span, HashSet<string> claimed)
+        {
+            if (claimedAbove.TryGetValue(span, out var known))
+                return known;
+            if (!spanById.TryGetValue(trace, out var byId))
+            {
+                byId = new Dictionary<string, FlowSpan>(StringComparer.Ordinal);
+                foreach (var held in attribution.SpansByTrace[trace])
+                    byId.TryAdd(held.SpanId, held);
+                spanById[trace] = byId;
+            }
+
+            var found = new HashSet<string>(StringComparer.Ordinal);
+            var visited = new HashSet<string>(StringComparer.Ordinal);
+            string? id = span.SpanId;
+            while (id is not null && visited.Add(id))
+            {
+                if (claimed.Contains(id))
+                    found.Add(id);
+                id = byId.TryGetValue(id, out var held) ? held.ParentSpanId : null;
+            }
+
+            claimedAbove[span] = found;
+            return found;
+        }
+
+        IReadOnlyCollection<FlowSpan> OwnCallsOnly(RequestResponseLog call, string trace, IReadOnlyCollection<FlowSpan> candidates)
+        {
+            if (call.ActivitySpanId is null
+                || attribution.TestsByTrace[trace].Count > 1
+                || !claimedByTest.TryGetValue((trace, call.TestId), out var claimed)
+                || claimed.Count < 2)
+                return candidates;
+            return candidates
+                .Where(s => ClaimedAbove(trace, s, claimed) is var above
+                    && (above.Count == 0
+                        || above.Any(id => claimers[(trace, call.TestId, id)].Any(by => IsOrRanInside(by, call)))))
+                .ToArray();
         }
 
         var selections = new List<Selection>();
@@ -221,7 +343,7 @@ public static class InternalFlowSegmentBuilder
                 // none of those either, the spans no call claims. Never every span of the run: that pooled the spans
                 // of every concurrent test (#87).
                 IEnumerable<FlowSpan> candidateSpans = log.ActivityTraceId is { } callTrace
-                    ? ByTraceAndTree(callTrace, log.ActivitySpanId)
+                    ? OwnCallsOnly(log, callTrace, ByTraceAndTree(callTrace, log.ActivitySpanId))
                     : testCalls.Length > 0 ? testSpans : unclaimed;
 
                 // Allow a small tolerance before segmentStart to capture root

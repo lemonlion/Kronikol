@@ -287,7 +287,14 @@ The fix (R0, in core): when calls of one test claim a trace under more than one 
 `ParentSpanId` within the trace) from another call's span id, and not from this call's, leaves this call's
 candidates. Nothing else changes:
 
-- **A nested call** keeps showing inside its outer call, since its spans descend from both span ids.
+- **A nested call** keeps showing inside its outer call. As first written, the rule relied on the nested call's
+  spans descending from both span ids. A real capture breaks that: Fastify records the test's call under its request
+  hook's span, and the calls the resolver makes under the resolver's span, a sibling of the hook's (RUN, the core
+  suite's `IngestSpanTests` on the first build, 15 spans down to 7). As built, a span another call's span id claims
+  stays in this call's popup when that call ran inside this one, by the rule `kronikol query flow` nests calls by
+  (`CallNesting`, `plans/FLOW_NESTING_PLAN.md` R4): made while this call was still waiting for its answer, by the service
+  handling it, or by another party on its Kronikol trace. Two calls from one party never nest, so a mobile app's
+  parallel calls are still told apart.
 - **Spans that descend from no call's span id** stay in every window that holds them, as today. That covers the
   in-process case where another listener creates `System.Net.Http`'s span, which Kronikol's listener skips
   (`InternalFlowActivityListener.cs:33-36`), so the store holds no link between a test's span and the service's
@@ -373,7 +380,10 @@ then makes sure `Copy` cannot fall behind again: R1's `TraceIdFromIdentity` must
 
 ### 4.5 F4: the builder tells one test's calls apart by span tree (R0, core)
 
-In `InternalFlowSegmentBuilder.Attribute`, beside `TestsByTrace`, keep for each trace the span ids its calls record.
+In `InternalFlowSegmentBuilder.Attribute`, beside `TestsByTrace`, keep for each trace the span ids its calls record
+and which calls record each (as built: request records only, since a call is its request), and which of a test's
+calls ran inside which, by `CallNesting`'s rule over the test's records in time order (section 3.11). A span stays in
+a call's candidates when no claimed id is on its chain, or when a call that claims one is this call or ran inside it.
 When one test's calls claim a trace under two or more span ids, a call's candidates are the trace's spans less those
 that descend from another of those span ids and not from its own. The ancestry walk goes up `ParentSpanId` within the
 trace and checks each parent id, held or not, against the claimed set, since the span a tap forwarded is often not in
@@ -423,6 +433,11 @@ README).
 - `Overlapping_calls_of_one_test_in_one_trace_keep_their_own_spans` (F4, builder): the harness probe as a fact, two
   calls of one test overlapping in time, one trace, each with a child span under its own span id; each segment holds
   its own span only. Red on 4.18.1 (RUN).
+- As built, four more F4 facts: `A_call_keeps_the_spans_of_the_calls_made_inside_it_whatever_span_they_recorded`
+  (the Fastify capture's shape), `A_call_keeps_the_spans_of_a_delivery_on_its_kronikol_trace`,
+  `A_call_of_the_test_that_records_no_span_id_keeps_every_span_of_the_trace_in_its_time` and
+  `A_trace_of_several_tests_keeps_the_rule_of_87_for_a_call_with_nothing_under_its_span`, each for a mutation the
+  planned facts let through. The F4 facts live in `SpanAttributionTests`, #87's file, whose helpers build span trees.
 - `A_nested_call_of_one_test_still_shows_inside_its_outer_call` (F4): an outer call whose span is the ancestor of a
   nested call's span; the outer segment holds both calls' descendants, the nested one only its own. Passes on 4.18.1.
 - `Spans_that_descend_from_no_call_stay_in_every_overlapping_window` (F4): one test, one trace, two span ids, and a
@@ -674,6 +689,24 @@ The owner took every recommendation below on 2026-10-13 ("implement the plan in 
   recommended, and chose to release R0 and R1 as soon as they pass instead of after #172 and #171, whose plans had
   not been built; kronikol-a5 and kronikol-70 agreed to rebase onto them (section 6.2). `origin/main` was `2b7508d5`
   (4.18.2 and the #172 and #168 plans), with no change to the tap, the builder or their tests since `34145c44`.
+
+- **2026-10-13, R0 built (4.18.3).** F1 to F4 as designed, with these differences, each with its fact:
+  - F4's rule as first written failed the core suite: `IngestSpanTests` replays a Jest and OpenTelemetry capture whose
+    nested calls' span is a sibling of the outer call's, and the GraphQL call's popup fell from 15 spans to 7. A span
+    another call claims now stays in a call's popup when that call ran inside it, by `CallNesting`'s rule (section
+    3.11).
+  - The nested-call fact could not pass on 4.18.2 as section 5.1 said: the nested call's window also holds the outer
+    call's own work, which 4.18.2 shows in both popups.
+  - The tap's facts that attach a listener run in a collection of their own, apart from every other (a listener is
+    process-wide), in `ProxyTapTraceContextTests`; the registration facts are in `ProxyTapRegistrationTests`.
+  - Mutations (harness `r0/mutations.txt`): the planned R0 rows were all caught. Three more survived first and each
+    got a fact: the one-test rule applied to traces of several tests too (a fact pins #87's rule there), the rule
+    applied to a traced call with no span id, and a call kept open after its answer. Of the rule as built, eleven of
+    twelve are caught and one is equivalent.
+  - Kronikol4J's port found that a request record handed in twice could become its own outer call, and the walk up
+    the outer calls would never end. A call now never runs inside itself, and the walk is bounded; a fact holds it.
+  - Kronikol4J ported the rule and its facts (it has no #87 rule, so a trace of several tests keeps its older
+    behaviour there; the ledger says so).
 
 ## Appendix A. Edit sites at `34145c44` (4.18.1)
 

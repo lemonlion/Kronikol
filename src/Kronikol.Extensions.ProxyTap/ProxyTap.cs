@@ -209,9 +209,12 @@ public sealed class ProxyTap : IAsyncDisposable
         Activity? client = null;
         if (_options.EmitActivities)
         {
-            server = inboundTraceparent is not null && ActivityContext.TryParse(inboundTraceparent.ToString(), null, isRemote: true, out var parent)
-                ? ActivitySource.StartActivity($"tap {_options.DisplayName}", ActivityKind.Server, parent)
-                : ActivitySource.StartActivity($"tap {_options.DisplayName}", ActivityKind.Server);
+            // One parent for both spans: the caller's trace when it sent one. A default context leaves the server span
+            // to Activity.Current, as StartActivity without a parent does.
+            var parent = inboundTraceparent is not null && ActivityContext.TryParse(inboundTraceparent.ToString(), null, isRemote: true, out var inboundContext)
+                ? inboundContext
+                : default;
+            server = ActivitySource.StartActivity($"tap {_options.DisplayName}", ActivityKind.Server, parent);
             server?.SetTag("kronikol.caller", _options.CallerName);
             server?.SetTag("kronikol.service", _options.ServiceName);
             server?.SetTag("http.request.method", request.HttpMethod);
@@ -222,7 +225,11 @@ public sealed class ProxyTap : IAsyncDisposable
                 server?.SetTag("kronikol.test.id", identity.Value.Id);
             }
 
-            client = ActivitySource.StartActivity("forward", ActivityKind.Client);
+            // The client span is the server span's child. When a listener dropped the server span, it starts under
+            // the same parent, so a sampler that keeps it cannot start a new trace in place of the caller's.
+            client = server is not null
+                ? ActivitySource.StartActivity("forward", ActivityKind.Client)
+                : ActivitySource.StartActivity("forward", ActivityKind.Client, parent);
         }
 
         string? forwardedTraceparent;
@@ -230,9 +237,14 @@ public sealed class ProxyTap : IAsyncDisposable
         string activitySpanId;
         if (client is not null)
         {
-            forwardedTraceparent = client.Id;
             activityTraceId = client.TraceId.ToString();
             activitySpanId = client.SpanId.ToString();
+            // Not client.Id: a listener that records without sampling (AllData, as Kronikol's internal-flow listener
+            // does) leaves the span's sampled flag clear, and forwarding that would tell every service behind the tap
+            // to drop a trace the caller sampled. The caller's flags go on, or sampled for a trace the tap starts, as
+            // without a listener; a recorded span still says sampled.
+            forwardedTraceparent = TraceParent.Format(activityTraceId, activitySpanId,
+                (byte)((inboundTraceparent?.Flags ?? 1) | (client.Recorded ? 1 : 0)));
         }
         else if (inboundTraceparent is not null)
         {

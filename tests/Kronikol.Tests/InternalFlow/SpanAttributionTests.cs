@@ -235,6 +235,211 @@ public class SpanAttributionTests : IDisposable
         Assert.Single(segments[Key(inner)].Spans);
     }
 
+    // ─── One test's calls in one trace (#170, F4) ──────────────────────────────────
+
+    [Fact]
+    public void Overlapping_calls_of_one_test_in_one_trace_keep_their_own_spans()
+    {
+        // One trace per test, as a browser test sends or a tap minting the test's trace forwards: two calls that
+        // overlap in time, each forwarded under its own span id, which the store does not hold (the tap's client
+        // span is in another process). The span tree gives each server span to one call.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var aSpan = ActivitySpanId.CreateRandom().ToString();
+        var bSpan = ActivitySpanId.CreateRandom().ToString();
+        var a = Request("test-a", 0, 100, trace, aSpan);
+        var b = Request("test-a", 10, 110, trace, bSpan);
+        var aServer = Span("a-server", 20, trace, aSpan);
+        var bServer = Span("b-server", 25, trace, bSpan);
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. a, .. b],
+            [aServer, bServer, .. Children("a-query", aServer, 30), .. Children("b-query", bServer, 35)]);
+
+        Assert.Equal(["a-server", "a-query"], segments[Key(a)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["b-server", "b-query"], segments[Key(b)].Spans.Select(s => s.OperationName));
+        Assert.Equal(0, segments[Key(a)].SpansLeftOut + segments[Key(b)].SpansLeftOut);
+    }
+
+    [Fact]
+    public void A_nested_call_of_one_test_still_shows_inside_its_outer_call()
+    {
+        // The outer call's service calls onward inside it, and the nested call is forwarded under the span the
+        // service started for that: its spans descend from both calls' span ids, so both popups show them. A span
+        // of the outer call's own work is the outer call's, though it starts inside the nested call's time.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = ActivitySpanId.CreateRandom().ToString();
+        var outer = Request("test-a", 0, 200, trace, outerSpan);
+        var outerServer = Span("outer-server", 10, trace, outerSpan);
+        var outerClient = Children("outer-client", outerServer, 40).Single();
+        var nested = Request("test-a", 40, 150, trace, outerClient.SpanId.ToString());
+        var nestedServer = Span("nested-server", 50, trace, outerClient.SpanId.ToString());
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. nested],
+            [outerServer, outerClient, nestedServer, .. Children("nested-query", nestedServer, 60), .. Children("outer-side", outerServer, 70)]);
+
+        Assert.Equal(["outer-server", "outer-client", "nested-server", "nested-query", "outer-side"],
+            segments[Key(outer)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["outer-client", "nested-server", "nested-query"], segments[Key(nested)].Spans.Select(s => s.OperationName));
+        Assert.Equal(0, segments[Key(outer)].SpansLeftOut + segments[Key(nested)].SpansLeftOut);
+    }
+
+    [Fact]
+    public void Spans_that_descend_from_no_call_stay_in_every_overlapping_window()
+    {
+        // A span whose chain names neither call's span id (in process, its parent was a span no listener kept)
+        // cannot be given to either call by the tree, so it stays where its time puts it, as before.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var aSpan = ActivitySpanId.CreateRandom().ToString();
+        var bSpan = ActivitySpanId.CreateRandom().ToString();
+        var a = Request("test-a", 0, 100, trace, aSpan);
+        var b = Request("test-a", 10, 110, trace, bSpan);
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. a, .. b],
+            [Span("a-server", 20, trace, aSpan), Span("b-server", 25, trace, bSpan), Span("unlinked", 30, trace, ActivitySpanId.CreateRandom().ToString())]);
+
+        Assert.Equal(["a-server", "unlinked"], segments[Key(a)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["b-server", "unlinked"], segments[Key(b)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void One_tests_calls_under_one_span_id_keep_todays_selection()
+    {
+        // In process, every call of a test may record the one ambient span it runs under: nothing tells the calls
+        // apart by tree, so each keeps every span of the trace in its time.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var ambient = ActivitySpanId.CreateRandom().ToString();
+        var a = Request("test-a", 0, 100, trace, ambient);
+        var b = Request("test-a", 10, 110, trace, ambient);
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. a, .. b],
+            [Span("under", 20, trace, ambient), Span("beside", 30, trace, ActivitySpanId.CreateRandom().ToString())]);
+
+        Assert.Equal(["under", "beside"], segments[Key(a)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["under", "beside"], segments[Key(b)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_trace_of_several_tests_keeps_the_rule_of_87_for_a_call_with_nothing_under_its_span()
+    {
+        // #87's rule decides a trace that calls of several tests share: a call whose span has nothing under it takes
+        // the trace's spans in its time, less those another test's calls take too. The one-test rule is not applied
+        // on top, so a span under another call of the same test stays in that call's popup as before.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var aSecondSpan = ActivitySpanId.CreateRandom().ToString();
+        var bSpan = ActivitySpanId.CreateRandom().ToString();
+        var aFirst = Request("test-a", 0, 100, trace, ActivitySpanId.CreateRandom().ToString());
+        var aSecond = Request("test-a", 10, 110, trace, aSecondSpan);
+        var b = Request("test-b", 0, 100, trace, bSpan);
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. aFirst, .. aSecond, .. b],
+            [Span("a-second-server", 20, trace, aSecondSpan), Span("b-server", 25, trace, bSpan)]);
+
+        Assert.Equal(["a-second-server"], segments[Key(aFirst)].Spans.Select(s => s.OperationName));
+        Assert.Equal(1, segments[Key(aFirst)].SpansLeftOut);
+        Assert.Equal(["a-second-server"], segments[Key(aSecond)].Spans.Select(s => s.OperationName));
+        Assert.Empty(segments[Key(b)].Spans);
+        Assert.Equal(1, segments[Key(b)].SpansLeftOut);
+    }
+
+    [Fact]
+    public void A_call_keeps_the_spans_of_the_calls_made_inside_it_whatever_span_they_recorded()
+    {
+        // The shape of the Jest and OpenTelemetry capture IngestSpanTests replays: the test's call is recorded under the
+        // span of the service's request hook, and the calls the service makes while handling it under its resolver's
+        // span, a sibling of the hook's. Those calls ran inside the test's call (made by the service handling it, while
+        // it waited), so their spans are its work too; each inner call keeps out the hook's.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var server = Span("server", 5, trace, null);
+        var hook = Children("hook", server, 6).Single();
+        var resolver = Children("resolver", server, 10).Single();
+        var outer = Request("test-a", 0, 100, trace, hook.SpanId.ToString(), service: "Payments", caller: "Test");
+        var psp = Request("test-a", 20, 50, trace, resolver.SpanId.ToString(), service: "PSP", caller: "Payments");
+        var risk = Request("test-a", 55, 80, trace, resolver.SpanId.ToString(), service: "Risk", caller: "Payments");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. psp, .. risk],
+            [server, hook, resolver, .. Children("psp-post", resolver, 25), .. Children("risk-get", resolver, 60)]);
+
+        Assert.Equal(["server", "hook", "resolver", "psp-post", "risk-get"], segments[Key(outer)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["server", "resolver", "psp-post"], segments[Key(psp)].Spans.Select(s => s.OperationName));
+        Assert.DoesNotContain("hook", segments[Key(risk)].Spans.Select(s => s.OperationName));
+        Assert.Contains("risk-get", segments[Key(risk)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_call_keeps_the_spans_of_a_delivery_on_its_kronikol_trace()
+    {
+        // A message published inside the test's call is delivered broker to consumer: the broker is not the service
+        // the test called, but the delivery carries the call's Kronikol trace id, which is how kronikol query flow
+        // nests it inside the call. Its handler's spans are the call's work too.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var kronikolTrace = Guid.NewGuid();
+        var callSpan = ActivitySpanId.CreateRandom().ToString();
+        var deliverySpan = ActivitySpanId.CreateRandom().ToString();
+        var call = Request("test-a", 0, 100, trace, callSpan, service: "Orders", caller: "Test", kronikolTrace: kronikolTrace);
+        var delivery = Request("test-a", 30, 60, trace, deliverySpan, service: "Worker", caller: "Broker", kronikolTrace: kronikolTrace);
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. call, .. delivery],
+            [Span("orders-server", 10, trace, callSpan), Span("worker-handler", 40, trace, deliverySpan)]);
+
+        Assert.Equal(["orders-server", "worker-handler"], segments[Key(call)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["worker-handler"], segments[Key(delivery)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_call_of_the_test_that_records_no_span_id_keeps_every_span_of_the_trace_in_its_time()
+    {
+        // A tracker that records the trace but no span of its own gives the tree nothing to tell its call by.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var aSpan = ActivitySpanId.CreateRandom().ToString();
+        var bSpan = ActivitySpanId.CreateRandom().ToString();
+        var a = Request("test-a", 0, 100, trace, aSpan);
+        var b = Request("test-a", 10, 110, trace, bSpan);
+        var c = Request("test-a", 20, 120, trace);
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. a, .. b, .. c],
+            [Span("a-server", 30, trace, aSpan), Span("b-server", 35, trace, bSpan)]);
+
+        Assert.Equal(["a-server", "b-server"], segments[Key(c)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["a-server"], segments[Key(a)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["b-server"], segments[Key(b)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_call_made_after_another_was_answered_did_not_run_inside_it()
+    {
+        // A call is open until its answer: the database call the service makes after the test's call was answered is
+        // not that call's work, so what the tree gives to it stays out of the answered call's popup, even what started
+        // in its time (a job the service began then, which the later call is recorded under).
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var callSpan = ActivitySpanId.CreateRandom().ToString();
+        var job = Span("job", 35, trace, null);
+        var call = Request("test-a", 0, 50, trace, callSpan, service: "Api", caller: "Test");
+        var later = Request("test-a", 70, 90, trace, job.SpanId.ToString(), service: "Db", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. call, .. later],
+            [Span("api-server", 5, trace, callSpan), job, .. Children("job-step", job, 40)]);
+
+        Assert.Equal(["api-server"], segments[Key(call)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public async Task A_call_record_handed_in_twice_does_not_hang_the_builder()
+    {
+        // Records are told apart by reference. One handed in twice, by a service that calls itself, must not become its
+        // own outer call, or the walk up the outer calls would never end.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var aSpan = ActivitySpanId.CreateRandom().ToString();
+        var bSpan = ActivitySpanId.CreateRandom().ToString();
+        var a = Request("test-a", 0, 100, trace, aSpan, service: "Orders", caller: "Orders");
+        var b = Request("test-a", 10, 110, trace, bSpan);
+
+        var segments = await Task.Run(() => InternalFlowSegmentBuilder.BuildSegments([.. a, .. b, a[0]],
+                [Span("a-server", 20, trace, aSpan), Span("b-server", 25, trace, bSpan)]))
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+
+        Assert.Equal(["a-server"], segments[Key(a)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["b-server"], segments[Key(b)].Spans.Select(s => s.OperationName));
+    }
+
     // ─── What the reader sees ──────────────────────────────────
 
     [Theory]
@@ -275,12 +480,13 @@ public class SpanAttributionTests : IDisposable
     private static string Key(RequestResponseLog[] call) => $"iflow-{call[0].RequestResponseId}";
 
     /// <summary>A request and its response, <paramref name="fromMs"/> to <paramref name="toMs"/> after T0.</summary>
-    private static RequestResponseLog[] Request(string testId, int fromMs, int toMs, string? traceId = null, string? spanId = null)
+    private static RequestResponseLog[] Request(string testId, int fromMs, int toMs, string? traceId = null, string? spanId = null,
+        string service = "Orders", string caller = "Caller", Guid? kronikolTrace = null)
     {
         var id = Guid.NewGuid();
         RequestResponseLog Log(RequestResponseType type, int ms) =>
-            new("Test", testId, HttpMethod.Get, null, new Uri("http://sut/api/orders"), [], "Orders", "Caller", type,
-                Guid.NewGuid(), id, false)
+            new("Test", testId, HttpMethod.Get, null, new Uri("http://sut/api/orders"), [], service, caller, type,
+                kronikolTrace ?? Guid.NewGuid(), id, false)
             { Timestamp = T0.AddMilliseconds(ms), ActivityTraceId = traceId, ActivitySpanId = spanId };
         return [Log(RequestResponseType.Request, fromMs), Log(RequestResponseType.Response, toMs)];
     }

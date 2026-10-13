@@ -1,0 +1,9 @@
+Checks for R0 (4.18.3), 2026-10-13, Windows 11, .NET 10.0.11, on the release tree after the version bump.
+
+dotnet test tests/Kronikol.Tests                 Passed!  - Failed: 0, Passed: 7458, Skipped: 2, Total: 7460
+dotnet test tests/Kronikol.Tests.ProxyTap        Passed!  - Failed: 0, Passed: 39, Skipped: 0, Total: 39
+dotnet test tests/Kronikol.Tests.EndToEnd        Passed!  - Failed: 0, Passed: 1036, Skipped: 28, Total: 1064 (run alone)
+dotnet build release.slnf -c Release             Build succeeded (62 projects, every target, the 4.18.3 packages packed)
+
+The first core run, on F4's first rule, failed IngestSpanTests 3 of 8 ("Internal Flow (7 spans)" where 15 were
+expected); that is what moved F4 onto CallNesting's rule (plan section 11).

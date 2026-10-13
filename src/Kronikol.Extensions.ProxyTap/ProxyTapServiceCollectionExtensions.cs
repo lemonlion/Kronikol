@@ -64,6 +64,7 @@ public static class ProxyTapServiceCollectionExtensions
         to.FallbackTestName = from.FallbackTestName;
         to.CaptureUnattributedRequests = from.CaptureUnattributedRequests;
         to.FallbackTestId = from.FallbackTestId;
+        to.InFlightRegistry = from.InFlightRegistry;
         to.Sink = from.Sink;
         to.Phase = from.Phase;
         to.ForwardTimeout = from.ForwardTimeout;

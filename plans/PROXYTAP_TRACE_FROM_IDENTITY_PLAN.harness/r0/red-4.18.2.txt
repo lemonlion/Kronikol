@@ -1,0 +1,38 @@
+Red runs for R0 (4.18.3), 2026-10-13, on the tree at f03452fc: 4.18.2's code (the tap, the builder and their tests
+unchanged since 34145c44) with the new facts added and nothing fixed. Windows 11, .NET 10.0.11.
+
+dotnet test tests/Kronikol.Tests.ProxyTap --filter FullyQualifiedName~ProxyTapTraceContextTests
+  Failed An_unsampled_inbound_trace_is_forwarded_unchanged_when_the_listener_drops_the_server_span
+   Assert.Equal() Failure: Strings differ
+   Expected: "00-8c0be23acf6022aee3bdeb3c870ea8af-9c13b18579c93d"...
+   Actual:   "00-b8c07057c9551aa66079b2acd12ef916-ef12f108cd44b9"...      (F2: a new trace in place of the caller's)
+  Failed Kronikols_internal_flow_listener_does_not_clear_the_sampled_flag
+   Assert.Equal() Failure: Strings differ   Expected: "01"  Actual: "00"   (F3)
+  Failed A_sampler_that_keeps_only_the_client_span_parents_it_on_the_inbound_trace
+   Assert.Equal() Failure: Strings differ
+   Expected: "cbe745c2122cc9b67c23447f04336e91"  Actual: "bd6bfc9b151aef28c3e65539ef364532"   (F2)
+  Failed An_unrecorded_forward_span_keeps_the_callers_sampled_flag
+   Assert.Equal() Failure: Strings differ   Expected: "01"  Actual: "00"   (F3)
+  Passed A_listener_that_only_propagates_leaves_the_callers_header_unchanged   (guard: the SDK's shape, by design)
+  Passed A_recorded_forward_span_is_forwarded_sampled                          (guard for the Recorded half of F3's rule)
+  Failed: 4, Passed: 2, Total: 6
+
+dotnet test tests/Kronikol.Tests.ProxyTap --filter FullyQualifiedName~ProxyTapRegistrationTests
+  Failed Registering_taps_from_a_list_copies_every_option
+   InFlightRegistry was not copied: expected Kronikol.Extensions.ProxyTap.InFlightIdentityRegistry, got     (F1)
+  Failed A_tap_registered_from_a_list_publishes_its_in_flight_identity
+   Assert.NotNull() Failure: Value is null   (F1)
+  Failed: 2, Passed: 0, Total: 2
+
+dotnet test tests/Kronikol.Tests --filter FullyQualifiedName~SpanAttributionTests
+  Failed Overlapping_calls_of_one_test_in_one_trace_keep_their_own_spans
+   Assert.Equal() Failure: Collections differ at index 1      (F4: b-server in a's popup)
+  Failed A_nested_call_of_one_test_still_shows_inside_its_outer_call
+   Assert.Equal() Failure: Collections differ at index 0      (F4: outer-server in the nested call's popup)
+  Failed Spans_that_descend_from_no_call_stay_in_every_overlapping_window
+   Assert.Equal() Failure: Collections differ at index 1      (F4: b-server in a's popup; the unlinked span is the guard)
+  Passed One_tests_calls_under_one_span_id_keep_todays_selection   (guard, by design)
+  Failed: 3, Passed: 15, Total: 18
+
+The plan (5.1) expected the nested-call fact to pass on 4.18.1. It cannot: the nested call's window also holds a span
+of the outer call's own work, which 4.18.1 shows in both popups. The fact keeps that span, so it checks both halves.

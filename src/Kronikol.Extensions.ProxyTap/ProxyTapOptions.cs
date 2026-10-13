@@ -139,7 +139,11 @@ public sealed class ProxyTapOptions
     /// <summary>
     /// Emit a server span (parented on the inbound <c>traceparent</c>) and a client span for the forwarded
     /// call on <see cref="ProxyTap.ActivitySource"/>, re-parenting the forwarded <c>traceparent</c> on the
-    /// client span so the downstream service nests under the tap in a distributed trace. Free when no
+    /// client span so the downstream service nests under the tap in a distributed trace. When a listener drops
+    /// the server span, the client span is parented on the inbound <c>traceparent</c> itself, so the caller's
+    /// trace is kept. The forwarded header keeps the caller's sampled flag when the client span is not recorded
+    /// (a listener that samples with <see cref="System.Diagnostics.ActivitySamplingResult.AllData"/>, as
+    /// Kronikol's internal-flow listener does), and says sampled for a trace the tap starts. Free when no
     /// listener is attached. Default true.
     /// </summary>
     public bool EmitActivities { get; set; } = true;

@@ -4,6 +4,72 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.18.3] - 2026-10-13
+
+**Patch - a proxy tap keeps the caller's trace and its sampled flag, a tap registered from a list publishes its
+in-flight identity, and one test's calls in one trace keep their own internal flow (#170;
+`plans/PROXYTAP_TRACE_FROM_IDENTITY_PLAN.md` R0).** Green-lit in full by the owner on 2026-10-13, every question in the
+plan's section 9 as recommended. Bug fixes, and nothing new for a consumer to call, so the patch part moves (4.18.2 to
+4.18.3). They come first because `ProxyTapOptions.TraceIdFromIdentity`, the plan's R1 and the next minor, needs them:
+without the first, the trace it starts for a test would reach the services behind the tap unsampled.
+
+### Fixed
+
+- **A tap whose spans are not recorded forwarded every call unsampled.** In a test process, Kronikol's internal-flow
+  listener (started by `TestTrackingMessageHandler`, the gRPC interceptor and the Kafka tracker) samples every
+  source but `System.Net.Http` with `AllData`, so the tap's spans exist without being recorded. The tap forwarded its
+  client span's id with that span's flags: a caller's `-01` reached the next service as `-00`, and a trace the tap
+  started went out as `-00`. A service with a parent-based sampler, OpenTelemetry's default, then recorded nothing,
+  so the OTLP tap had no spans to attribute. The forwarded `traceparent` now names the client span with the caller's
+  flags, or says sampled for a trace the tap starts, as the tap does with no listener; a recorded span still says
+  sampled.
+- **A listener that dropped the tap's server span replaced the caller's trace.** The client span started under
+  `Activity.Current`, which is null when the server span was dropped, so a listener that returns `None` for a caller
+  that is not sampled and samples a root, or one that keeps only client spans, started a new random trace and
+  forwarded it sampled. The client span now starts under the caller's `traceparent` when there is no server span. The
+  OpenTelemetry SDK does not do this (it answers a trace it drops with `PropagationData`, and the tap forwards the
+  caller's header unchanged), so it took a listener written by hand.
+- **`AddProxyTapTestTracking(IEnumerable<ProxyTapOptions>)` dropped `InFlightRegistry`.** It copied every other
+  option, so a tap registered from a list never published its in-flight identity, and a database tee relying on it
+  attributed nothing.
+- **Calls of one test in one trace showed each other's internal flow.** The internal-flow builder tells calls apart by
+  the span tree only when calls of several tests share a trace (#87), so two calls of one test that overlapped in time
+  in one trace each showed both calls' spans. That is a browser test's shape behind a tap with a listener: the browser
+  sends one trace, and the tap forwards each call under a span of its own. When one test's calls claim a trace under
+  two or more span ids, a span that descends from another of those calls' span ids now shows only in that call's
+  popup, unless that call ran inside this one, by the rule `kronikol query flow` nests calls by (made while this call
+  waited for its answer, by the service handling it or on its Kronikol trace), so a call's popup keeps the work of the
+  calls made inside it whatever span their capturer recorded. A span that descends from no call stays in every call
+  whose time holds it, a call that records no span id and a trace of several tests keep today's rules, and the
+  whole-test flow is unchanged. Kronikol4J's builder takes the same rule.
+
+Behaviour changes: the sampled flag a tap forwards when its client span is not recorded; the trace it forwards under a
+listener that drops its server span; and the popups of one test's overlapping calls in one trace.
+
+### Tests
+
+- `ProxyTapTraceContextTests` (new, in a collection that runs apart, since a listener is process-wide): an unsampled
+  caller's trace forwarded unchanged when the listener drops the server span; a sampler that keeps only the client
+  span parents it on the caller's trace; a listener that only propagates (the SDK's shape) leaves the caller's header
+  unchanged; an `AllData` listener and Kronikol's own `InternalFlowActivityListener` keep the caller's flag and say
+  sampled for a trace the tap starts; a recorded span is forwarded sampled.
+- `ProxyTapRegistrationTests` (new): every public option survives registration from a list, set by reflection so an
+  option added later without its copy fails; a tap registered from a list publishes its in-flight identity during a
+  slow forward.
+- `SpanAttributionTests`: overlapping calls of one test keep their own spans; a nested call still shows inside its
+  outer call; a call keeps the spans of the calls made inside it whatever span they recorded (the shape of the Jest
+  and OpenTelemetry capture `IngestSpanTests` replays, which caught the rule as first written) and of a delivery on its
+  Kronikol trace; spans that descend from no call stay in every overlapping window; calls under one span id, a traced
+  call with no span id, and a trace of several tests keep today's selection; a call made after another was answered
+  did not run inside it; and a record handed in twice cannot hang the builder.
+
+Proofs: on 4.18.2's code six tap facts and three builder facts fail, each on its own assertion, and the guards pass (harness r0/red-4.18.2.txt), and the two nesting facts failed against F4's first rule; of 16 mutations the tap's 4 and 11 of the builder's 12 are each caught by the facts named and 1 is equivalent (harness r0/mutations.txt); three that survived the first runs each got a fact.
+
+Checks: after the version bump the core suite passes 7,458 with 2 skipped, the ProxyTap project 39 of 39, the full Playwright suite 1,036 with 28 skipped when run alone, and release.slnf builds in Release for every target.
+
+The templates pin 4.18.2 and the history action's `VERSION` installs Kronikol.Tool 4.18.3. The wiki edit
+(`Internal-Flow-Tracking`) and the Kronikol4J ledger line follow publication.
+
 ## [4.18.2] - 2026-10-13
 
 **Patch - fixes from an audit of `plans/MONGODB_ACCESSOR_OPTION_PLAN.md` (#136; 4.10.0 and 4.11.0).** At the owner's
