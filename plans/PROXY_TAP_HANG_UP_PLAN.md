@@ -257,8 +257,8 @@ The prototype is [`PROXY_TAP_HANG_UP_PLAN.prototype.patch`](PROXY_TAP_HANG_UP_PL
    the answer write both have their own catches. What still lands there is an `ObjectDisposedException` from another
    step, such as the upstream client disposed by `DisposeAsync` after its 2 s drain, or a disposed sink. Its comment
    ("The caller hung up") changes to say so. #171's plan then routes both, the client disposed after the drain as the
-   tap stopping and the disposed sink as a capture fault, and its first release removes this catch, so nothing else
-   unexpected passes for a hang-up (§4.3).
+   tap stopping and the disposed sink as a capture fault, and the #171 release that builds on R1 removes this catch,
+   so nothing else unexpected passes for a hang-up (§4.3).
 5. **`RespondAsync` and `TryRespondBadGateway`** take the `CallerAnswer` and call its `Close()`. Their catches stay as they
    are; their comments say the `finally` aborts. `TryRespondBadGateway` keeps setting 502 first (L565) and
    `StatusIfUnclosed` is 502 by default, so whatever stops a 502 before it is written, a managed-listener caller still
