@@ -1,0 +1,58 @@
+C:\Code\Kronikol-171\plans\PROXY_TAP_FAILED_FORWARD_PLAN.harness\probe\probe.cs(50,68): warning CA2022: Avoid inexact read with 'System.Net.Sockets.NetworkStream.ReadAsync(System.Memory<byte>, System.Threading.CancellationToken)' (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2022)
+Kronikol.Extensions.ProxyTap 4.18.1.0, .NET 10.0.11, Microsoft Windows 10.0.26200
+== 1. upstream refuses the connection
+   client got HTTP 502, body 139 chars (valid JSON): {"error":{"code":502,"message":"proxy-tap: No connection could be made because the target machine actively refused it. (127.0.0.1:52750)"}}
+   upstream reached: n/a; sink got 0 record(s)
+   ForwardFailures=1 RequestsHandled=0 RequestsCaptured=0
+   diagnostic: app→api: 1 request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; those calls are missing from the diagrams
+   log: [app→api] proxy-tap error: No connection could be made because the target machine actively refused it. (127.0.0.1:52750)
+   activities started 2 (Server, Client), stopped 0 ()
+== 2. upstream accepts and never answers (ForwardTimeout 1 s)
+   client got HTTP 502, body 73 chars (valid JSON): {"error":{"code":502,"message":"proxy-tap: The operation was canceled."}}
+   upstream reached: n/a; sink got 0 record(s)
+   ForwardFailures=1 RequestsHandled=0 RequestsCaptured=0
+   diagnostic: app→api: 1 request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; those calls are missing from the diagrams
+   log: [app→api] proxy-tap error: The operation was canceled.
+   activities started 2 (Server, Client), stopped 0 ()
+== 3. upstream sends half its declared body and closes
+   client got HTTP 502, body 86 chars (valid JSON): {"error":{"code":502,"message":"proxy-tap: Error while copying content to a stream."}}
+   upstream reached: n/a; sink got 0 record(s)
+   ForwardFailures=1 RequestsHandled=0 RequestsCaptured=0
+   diagnostic: app→api: 1 request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; those calls are missing from the diagrams
+   log: [app→api] proxy-tap error: Error while copying content to a stream.
+   activities started 2 (Server, Client), stopped 0 ()
+== 4. IdentityResolver throws (message with a quote and a line break)
+   client got HTTP 502, body 82 chars (NOT valid JSON): {"error":{"code":502,"message":"proxy-tap: no test holds 'device-7'\nsecond line"}}
+   upstream reached: 0; sink got 0 record(s)
+   ForwardFailures=1 RequestsHandled=0 RequestsCaptured=0
+   diagnostic: app→api: 1 request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; those calls are missing from the diagrams
+   log: [app→api] proxy-tap error: no test holds "device-7"
+second line
+   activities started 0 (), stopped 0 ()
+== 5. sink throws
+   client got HTTP 200, body 11 chars (valid JSON): {"ok":true}
+   upstream reached: 1; sink got 0 record(s)
+   ForwardFailures=1 RequestsHandled=1 RequestsCaptured=0
+   diagnostic: app→api: 1 request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; those calls are missing from the diagrams
+   diagnostic: app→api: 1 of 1 forwarded request(s) carried no test identity and were not captured (no test-tracking headers or traceparent reached this hop; CaptureUnattributedRequests is off)
+   log: [app→api] proxy-tap error: disk full
+   activities started 2 (Server, Client), stopped 2 (Client:Unset, Server:Unset)
+== 6. upstream answers 200 with Content-Encoding: br and a body that is not brotli
+   client got HTTP 200, body 36 chars (NOT valid JSON): this is not brotli at all, just text
+   upstream reached: n/a; sink got 0 record(s)
+   ForwardFailures=1 RequestsHandled=1 RequestsCaptured=0
+   diagnostic: app→api: 1 request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; those calls are missing from the diagrams
+   diagnostic: app→api: 1 of 1 forwarded request(s) carried no test identity and were not captured (no test-tracking headers or traceparent reached this hop; CaptureUnattributedRequests is off)
+   log: [app→api] proxy-tap error: Decoder ran into invalid data.
+   activities started 2 (Server, Client), stopped 2 (Client:Unset, Server:Unset)
+== 7. healthy upstream (control)
+   client got HTTP 200, body 11 chars (valid JSON): {"ok":true}
+   upstream reached: 1; sink got 2 record(s): Request -, Response Kronikol.Tracking.OneOf`2[System.Net.HttpStatusCode,System.String]
+   ForwardFailures=0 RequestsHandled=1 RequestsCaptured=1
+   activities started 2 (Server, Client), stopped 2 (Client:Unset, Server:Unset)
+-- refused: !HttpRequestException | No connection could be made because the target machine actively refused it. (127.0.0.1:52750) Caused by: No connection could be made because the target machine actively refused it.
+-- caller token CancelAfter(1 s), no answer: !TaskCanceledException | The operation was canceled. Caused by: The operation was canceled. Caused by: Unable to read data from the transport connection: The I/O operation has been aborted because of either a thread exit or an application request.. Caused by: The I/O operation has been aborted because of either a thread exit or an application request.
+-- HttpClient.Timeout 1 s, no answer: !TaskCanceledException | The request was canceled due to the configured HttpClient.Timeout of 1 seconds elapsing. Caused by: The operation was canceled. Caused by: The operation was canceled. Caused by: Unable to read data from the transport connection: The I/O operation has been aborted because of either a thread exit or an application request.. Caused by: The I/O operation has been aborted because of either a thread exit or an application request.
+-- half body (ResponseContentRead): !HttpRequestException | Error while copying content to a stream. Caused by: The response ended prematurely. (ResponseEnded)
+-- BrotliStream over garbage: !InvalidOperationException | Decoder ran into invalid data.
+-- ProxyTap.TryDecodeBody(garbage, "br"): threw InvalidOperationException: Decoder ran into invalid data.

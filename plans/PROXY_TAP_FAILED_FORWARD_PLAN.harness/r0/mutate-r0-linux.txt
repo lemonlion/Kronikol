@@ -1,0 +1,8 @@
+M1 ProxyTap forward by relative resolution: KILLED (Failed:     4, Passed:     3)
+M2 ProxyTap record by relative resolution: KILLED (Failed:     3, Passed:     4)
+M3 ProxyTap Validate without the scheme test: KILLED (Failed:     2, Passed:     5)
+M4 OtlpTap Validate without the scheme test: KILLED (Failed:     2, Passed:     7)
+M6 OtlpTap absolute target of any scheme: KILLED (Failed:     2, Passed:     7)
+M7 OtlpTap forwards a target with no path as written: KILLED (Failed:     3, Passed:     6)
+M5 OtlpTap path test after the absolute test: SURVIVED (Passed!  - Failed:     0, Passed:     9, Skipped:     0, Total:     9, Duration: 96 ms - Kronikol.Tests.Otlp.dll (net10.0))
+done

@@ -1,0 +1,2 @@
+M5 OtlpTap path test after the absolute test: KILLED (Failed:     1, Passed:     9)
+done

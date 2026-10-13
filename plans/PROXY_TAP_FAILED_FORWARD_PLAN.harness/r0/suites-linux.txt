@@ -1,0 +1,9 @@
+== ProxyTap Debug
+[xUnit.net 00:00:00.64]     Kronikol.Tests.ProxyTap.ProxyTapTests.Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent [FAIL]
+Failed!  - Failed:     1, Passed:    65, Skipped:     0, Total:    66, Duration: 677 ms - Kronikol.Tests.ProxyTap.dll (net10.0)
+== Otlp Debug
+Passed!  - Failed:     0, Passed:   126, Skipped:     0, Total:   126, Duration: 1 s - Kronikol.Tests.Otlp.dll (net10.0)
+== ProxyTap Release
+Passed!  - Failed:     0, Passed:    66, Skipped:     0, Total:    66, Duration: 611 ms - Kronikol.Tests.ProxyTap.dll (net10.0)
+== Otlp Release
+Passed!  - Failed:     0, Passed:   126, Skipped:     0, Total:   126, Duration: 1 s - Kronikol.Tests.Otlp.dll (net10.0)

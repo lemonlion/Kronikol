@@ -1,0 +1,2 @@
+ftp://127.0.0.1:21/: StartAsync accepted it; GET /x -> 502 {"error":{"code":502,"message":"proxy-tap: The 'ftp' scheme is not supported."}}; ForwardFailures=1
+file:///tmp/: StartAsync accepted it; GET /x -> 502 {"error":{"code":502,"message":"proxy-tap: The 'file' scheme is not supported."}}; ForwardFailures=1

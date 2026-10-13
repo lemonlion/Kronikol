@@ -1,0 +1,47 @@
+== Otlp Debug
+Passed!  - Failed:     0, Passed:   127, Skipped:     0, Total:   127, Duration: 1 s - Kronikol.Tests.Otlp.dll (net10.0)
+== ProxyTap Debug run 1
+[xUnit.net 00:00:01.06]     Kronikol.Tests.ProxyTap.ProxyTapTests.Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTests.Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent [158 ms]
+  Error Message:
+   System.InvalidOperationException : Sequence contains more than one matching element
+  Stack Trace:
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:    65, Skipped:     0, Total:    66, Duration: 1 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+== ProxyTap Debug run 2
+[xUnit.net 00:00:01.06]     Kronikol.Tests.ProxyTap.ProxyTapTests.Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTests.Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent [171 ms]
+  Error Message:
+   System.InvalidOperationException : Sequence contains more than one matching element
+  Stack Trace:
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:    65, Skipped:     0, Total:    66, Duration: 957 ms - Kronikol.Tests.ProxyTap.dll (net10.0)
+== ProxyTap Debug run 3
+[xUnit.net 00:00:00.89]     Kronikol.Tests.ProxyTap.ProxyTapTests.Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTests.Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent [145 ms]
+  Error Message:
+   System.InvalidOperationException : Sequence contains more than one matching element
+  Stack Trace:
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:    65, Skipped:     0, Total:    66, Duration: 845 ms - Kronikol.Tests.ProxyTap.dll (net10.0)
+== ProxyTap Debug run 4
+[xUnit.net 00:00:00.77]     Kronikol.Tests.ProxyTap.ProxyTapTests.Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTests.Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent [131 ms]
+  Error Message:
+   System.InvalidOperationException : Sequence contains more than one matching element
+  Stack Trace:
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:    65, Skipped:     0, Total:    66, Duration: 763 ms - Kronikol.Tests.ProxyTap.dll (net10.0)
+== ProxyTap Debug run 5
+[xUnit.net 00:00:00.81]     Kronikol.Tests.ProxyTap.ProxyTapTests.Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTests.Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent [135 ms]
+  Error Message:
+   System.InvalidOperationException : Sequence contains more than one matching element
+  Stack Trace:
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:    65, Skipped:     0, Total:    66, Duration: 793 ms - Kronikol.Tests.ProxyTap.dll (net10.0)

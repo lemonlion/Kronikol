@@ -1,0 +1,9 @@
+Kronikol.Extensions.ProxyTap 4.18.1.0, .NET 10.0.11, Microsoft Windows 10.0.26200
+request-target /plain                       -> client got: HTTP/1.1 200 OK / body 'configured'
+request-target //127.0.0.1:51525/x          -> client got: HTTP/1.1 200 OK / body 'OTHER'
+request-target //api/v1/items               -> client got: HTTP/1.1 502 Bad Gateway / body '{"error":{"code":502,"message":"proxy-tap: No such host is known. (api:80)"}}'
+   configured got GET /plain
+   OTHER got GET /x
+   recorded request uri: http://127.0.0.1:51524/plain
+   recorded request uri: http://127.0.0.1:51525/x
+   ForwardFailures=1

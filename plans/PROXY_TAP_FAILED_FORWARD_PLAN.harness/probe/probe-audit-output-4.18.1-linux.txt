@@ -1,0 +1,42 @@
+Kronikol 4.18.1.0, .NET 10.0.12, Ubuntu 24.04.5 LTS
+A. ProxyTap
+  GET http://127.0.0.1:37817/abs-other -> HTTP/1.1 404 Not Found / body '<h1>Not Found (Not Found)</h1>'
+  GET http://localhost:34891/abs-self -> HTTP/1.1 200 OK / body 'configured'
+     configured got GET /abs-self
+  GET /\127.0.0.1:37817/backslash -> HTTP/1.1 200 OK / body 'OTHER'
+     OTHER got GET /backslash
+  GET ///127.0.0.1:37817/triple -> HTTP/1.1 502 Bad Gateway / body '{"error":{"code":502,"message":"proxy-tap: Invalid URI: The hostname could not be parsed."…'
+  GET /%5C127.0.0.1:37817/encoded-backslash -> HTTP/1.1 200 OK / body 'configured'
+     configured got GET /%5C127.0.0.1:37817/encoded-backslash
+     recorded uri http://127.0.0.1:36281/abs-self
+     recorded uri http://127.0.0.1:37817/backslash
+     recorded uri http://127.0.0.1:36281/%5C127.0.0.1:37817/encoded-backslash
+A. OtlpTap (forward mode)
+  POST /\127.0.0.1:37817/v1/traces HTTP/1.1 -> HTTP/1.1 200 OK / body 'configured'
+     configured got POST //127.0.0.1:37817/v1/traces
+  POST ///127.0.0.1:37817/v1/traces HTTP/1.1 ->  / body ''
+  OPTIONS * HTTP/1.1 -> HTTP/1.1 200 OK / body 'configured'
+     configured got OPTIONS /*
+  CONNECT 127.0.0.1:37817 HTTP/1.1 -> HTTP/1.1 502 Bad Gateway / body '{"error":"otlp-tap: upstream collector unreachable"}'
+  GET 127.0.0.1:37817/no-slash HTTP/1.1 -> HTTP/1.1 200 OK / body 'configured'
+     configured got GET /127.0.0.1:37817/no-slash
+B. failure shapes (FailedSend.Status | HttpRequestError | elapsed | Describe)
+  connect timeout (10.255.255.1, ConnectTimeout 1 s): !TaskCanceledException |  | 1011 ms | deadline cancelled=False
+     The operation was canceled. Caused by: A connection could not be established within the configured ConnectTimeout.
+  refused: !HttpRequestException | ConnectionError | 1 ms | deadline cancelled=False
+     Connection refused (127.0.0.1:38445) Caused by: Connection refused
+  no such host: !HttpRequestException | NameResolutionError | 23 ms | deadline cancelled=False
+     Name or service not known (kronikol-no-such-host.invalid:80) Caused by: Name or service not known
+  through the tap: 502 after 1003 ms, body {"error":{"code":502,"message":"proxy-tap: The operation was canceled."}}, ForwardFailures=1
+C. ActivityListener throwing (healthy upstream, request carries a test id)
+  ActivityStarted throws: client got 502 '{"error":{"code":502,"message":"proxy-tap: listener threw"}}', records=0, ForwardFailures=1, handled=0
+  ActivityStopped throws: client got 502 '{"error":{"code":502,"message":"proxy-tap: listener threw"}}', records=0, ForwardFailures=1, handled=0
+     configured got GET /healthy
+D. candidate rule: new Uri(base.GetLeftPart(Authority) + target)
+  /plain?q=1         rule -> 127.0.0.1:5000/plain?q=1             | today's relative -> 127.0.0.1:5000/plain?q=1
+  //other:6000/x     rule -> 127.0.0.1:5000//other:6000/x         | today's relative -> other:6000/x
+  /\other:6000/x     rule -> 127.0.0.1:5000//other:6000/x         | today's relative -> 127.0.0.1:5000//other:6000/x
+  ///other:6000/x    rule -> 127.0.0.1:5000///other:6000/x        | today's relative -> UriFormatException: Invalid URI: The hostname could not be parsed.
+  /a/../b            rule -> 127.0.0.1:5000/b                     | today's relative -> 127.0.0.1:5000/b
+  Uri.TryCreate("/v1/traces", Absolute): True file:///v1/traces
+  new Uri("/v1/traces", RelativeOrAbsolute).IsAbsoluteUri: False

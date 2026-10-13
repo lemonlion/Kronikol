@@ -1,0 +1,47 @@
+  Failed Kronikol.Tests.ProxyTap.ProxyTapForwardTargetTests.A_path_with_leading_slashes_reaches_the_upstream(target: "///api/v1/items") [68 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapForwardTargetTests.A_path_with_leading_slashes_reaches_the_upstream(target: "//api/v1/items") [2 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapForwardTargetTests.A_forward_base_that_is_not_http_is_rejected_at_start(forwardBase: "ftp://127.0.0.1:21/") [4 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+  Failed Kronikol.Tests.ProxyTap.ProxyTapForwardTargetTests.A_forward_base_that_is_not_http_is_rejected_at_start(forwardBase: "file:///tmp/") [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+  Failed Kronikol.Tests.ProxyTap.ProxyTapForwardTargetTests.A_request_target_naming_another_host_is_forwarded_to_the_forward_base(template: "//localhost:{other}/x") [5 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.ProxyTap.ProxyTapForwardTargetTests.A_request_target_naming_another_host_is_forwarded_to_the_forward_base(template: "/\\localhost:{other}/x") [4 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Failed!  - Failed:     6, Passed:     1, Skipped:     0, Total:     7, Duration: 2 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  Failed Kronikol.Tests.Otlp.OtlpTapForwardTargetTests.A_target_naming_another_host_is_forwarded_to_the_forward_base(requestLine: "POST ///localhost:{other}/v1/traces", forwarded: "///localhost:{other}/v1/traces") [56 ms]
+  Error Message:
+   no answer to POST ///localhost:59312/v1/traces
+  Failed Kronikol.Tests.Otlp.OtlpTapForwardTargetTests.A_target_naming_another_host_is_forwarded_to_the_forward_base(requestLine: "POST http://localhost:{other}/v1/traces?x=1", forwarded: "/v1/traces?x=1") [38 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+  Failed Kronikol.Tests.Otlp.OtlpTapForwardTargetTests.A_target_naming_another_host_is_forwarded_to_the_forward_base(requestLine: "GET http://localhost:{other}/anything", forwarded: "/anything") [4 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+  Failed Kronikol.Tests.Otlp.OtlpTapForwardTargetTests.A_target_naming_another_host_is_forwarded_to_the_forward_base(requestLine: "POST //localhost:{other}/v1/traces", forwarded: "//localhost:{other}/v1/traces") [2 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+  Failed Kronikol.Tests.Otlp.OtlpTapForwardTargetTests.A_forward_base_that_is_not_http_is_rejected_at_start(forwardBase: "ftp://127.0.0.1:21/") [2 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+  Failed Kronikol.Tests.Otlp.OtlpTapForwardTargetTests.A_forward_base_that_is_not_http_is_rejected_at_start(forwardBase: "file:///tmp/") [17 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+  Failed Kronikol.Tests.Otlp.OtlpTapForwardTargetTests.A_target_with_no_origin_form_gets_400(requestLine: "CONNECT localhost:{other} HTTP/1.1") [16 ms]
+  Error Message:
+   no answer to CONNECT localhost:59333 HTTP/1.1
+  Failed Kronikol.Tests.Otlp.OtlpTapForwardTargetTests.A_target_with_no_origin_form_gets_400(requestLine: "GET localhost:{other}/x HTTP/1.1") [2 ms]
+  Error Message:
+   no answer to GET localhost:59337/x HTTP/1.1
+  Failed Kronikol.Tests.Otlp.OtlpTapForwardTargetTests.A_target_with_no_origin_form_gets_400(requestLine: "OPTIONS * HTTP/1.1") [3 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Failed!  - Failed:     9, Passed:     0, Skipped:     0, Total:     9, Duration: 175 ms - Kronikol.Tests.Otlp.dll (net10.0)

@@ -1,0 +1,9 @@
+Kronikol.Extensions.Otlp 4.18.1.0, .NET 10.0.11, Microsoft Windows 10.0.26200
+POST /v1/traces                                   -> client got: HTTP/1.1 200 OK / body 'configured'
+POST //127.0.0.1:65075/v1/traces                  -> client got: HTTP/1.1 200 OK / body 'OTHER'
+POST http://127.0.0.1:65075/v1/traces             -> client got: HTTP/1.1 200 OK / body 'OTHER'
+GET http://127.0.0.1:65075/anything              -> client got: HTTP/1.1 200 OK / body 'OTHER'
+   configured got POST /v1/traces
+   OTHER got POST /v1/traces
+   OTHER got POST /v1/traces
+   OTHER got GET /anything

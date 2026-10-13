@@ -1,0 +1,16 @@
+== ProxyTap Debug run 1
+Passed!  - Failed:     0, Passed:    66, Skipped:     0, Total:    66, Duration: 1 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+== ProxyTap Debug run 2
+Passed!  - Failed:     0, Passed:    66, Skipped:     0, Total:    66, Duration: 984 ms - Kronikol.Tests.ProxyTap.dll (net10.0)
+== ProxyTap Debug run 3
+Passed!  - Failed:     0, Passed:    66, Skipped:     0, Total:    66, Duration: 984 ms - Kronikol.Tests.ProxyTap.dll (net10.0)
+== Otlp Debug
+Passed!  - Failed:     0, Passed:   127, Skipped:     0, Total:   127, Duration: 1 s - Kronikol.Tests.Otlp.dll (net10.0)
+== ProxyTap Release run 1
+Passed!  - Failed:     0, Passed:    66, Skipped:     0, Total:    66, Duration: 1 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+== ProxyTap Release run 2
+Passed!  - Failed:     0, Passed:    66, Skipped:     0, Total:    66, Duration: 909 ms - Kronikol.Tests.ProxyTap.dll (net10.0)
+== ProxyTap Release run 3
+Passed!  - Failed:     0, Passed:    66, Skipped:     0, Total:    66, Duration: 966 ms - Kronikol.Tests.ProxyTap.dll (net10.0)
+== Otlp Release
+Passed!  - Failed:     0, Passed:   127, Skipped:     0, Total:   127, Duration: 1 s - Kronikol.Tests.Otlp.dll (net10.0)
