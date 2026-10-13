@@ -1,0 +1,12 @@
+R1 checks, 2026-10-13, on 4.19.1 (4de3ee16) with R1 and the version bump to 4.19.2.
+
+- Kronikol.Tests.ProxyTap, Windows 11 26200 (.NET 10.0.11, http.sys): 78 passed, 4 skipped (the facts that read the
+  managed listener's tables; 82 in all).
+- Kronikol.Tests.ProxyTap, Linux in mcr.microsoft.com/dotnet/sdk:10.0 (.NET 10.0.12, the managed listener): 82 of 82
+  in Debug and 82 of 82 in Release.
+- Core suite (tests/Kronikol.Tests, Windows, after the bump): 7,458 passed, 2 skipped.
+- release.slnf in Release, every target framework: 0 errors; 43 warnings, none in the ProxyTap or OTLP projects.
+
+Before the rebase onto 4.19.1, on 4.19.0's code with R1 (Linux): the new class 16 of 16; the ProxyTap project 75 of 75
+in Release and 74 of 75 in Debug, where ProxyTapTests' span fact, which took every tap span in the process, failed
+beside the new class's traffic. 4.19.1 made that fact count only its own trace.

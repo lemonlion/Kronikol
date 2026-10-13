@@ -1,0 +1,74 @@
+R1 red step: the new facts (tests/Kronikol.Tests.ProxyTap/ProxyTapHangUpTests.cs) on 4.19.0's code (b7c633f4) with only
+what they need to compile: the WrapRequestBody seam on the body read, InFlight, and a CallerAnswer whose EndUnclosed()
+is the issue's bare Abort(), wired to nothing. Windows 11 26200, .NET 10.0.11 (http.sys); Ubuntu 24.04 in
+mcr.microsoft.com/dotnet/sdk:10.0, .NET 10.0.12 (the managed HttpListener). Managed-only facts skip on Windows; the
+Linux run lists failures only (R1-6, R1-7 and R1-8 passed there, as plan section 5 says they would).
+
+== Windows: Passed: 7, Failed: 5, Skipped: 4
+  Failed  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "HttpListenerException")
+  Failed  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "IOException")
+  Failed  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "InvalidOperationException")
+  Failed  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "ObjectDisposedException")
+  Failed  Ending_an_unclosed_response_never_throws(when: "after the listener closed")
+  Passed  A_caller_that_half_closes_mid_body_is_answered_400_and_let_go
+  Passed  An_upstream_body_cut_short_stays_a_forward_failure
+  Passed  Ending_an_unclosed_response_never_throws(when: "after Abort()")
+  Passed  Ending_an_unclosed_response_never_throws(when: "after Close()")
+  Passed  Ending_an_unclosed_response_never_throws(when: "after a failed write")
+  Passed  Ending_an_unclosed_response_never_throws(when: "twice")
+  Passed  Keep_alive_requests_are_answered_on_one_connection
+  Skipped A_caller_that_resets_mid_body_leaves_no_connection_held_and_is_no_forward_failure(hangUp: "a FIN, then an RST")
+  Skipped A_caller_that_resets_mid_body_leaves_no_connection_held_and_is_no_forward_failure(hangUp: "an RST alone")
+  Skipped A_caller_that_resets_while_the_answer_is_written_leaves_no_connection_held
+  Skipped An_upstream_that_fails_after_its_caller_hung_up_is_a_forward_failure_and_leaves_no_connection_held
+  -- failure messages
+  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "IOException")
+      the caller was answered BadGateway
+  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "ObjectDisposedException")
+      the caller heard nothing within 5 s
+  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "HttpListenerException")
+      the caller heard nothing within 5 s
+  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "InvalidOperationException")
+      the caller was answered BadGateway
+  Ending_an_unclosed_response_never_throws(when: "after the listener closed")
+      Assert.Null() Failure: Value is not null
+      Expected: null
+      Actual:   System.ObjectDisposedException: Cannot access a disposed object.
+      Object name: 'System.Net.HttpRequestQueueV2Handle'.
+
+== Linux: Failed! - Failed: 9, Passed: 7, Skipped: 0, Total: 16, Duration: 36 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  Failed  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "HttpListenerException")
+  Failed  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "IOException")
+  Failed  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "InvalidOperationException")
+  Failed  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "ObjectDisposedException")
+  Failed  A_caller_that_half_closes_mid_body_is_answered_400_and_let_go
+  Failed  A_caller_that_resets_mid_body_leaves_no_connection_held_and_is_no_forward_failure(hangUp: "a FIN, then an RST")
+  Failed  A_caller_that_resets_mid_body_leaves_no_connection_held_and_is_no_forward_failure(hangUp: "an RST alone")
+  Failed  A_caller_that_resets_while_the_answer_is_written_leaves_no_connection_held
+  Failed  An_upstream_that_fails_after_its_caller_hung_up_is_a_forward_failure_and_leaves_no_connection_held
+  -- failure messages
+  A_caller_that_half_closes_mid_body_is_answered_400_and_let_go
+      Assert.StartsWith() Failure: String start does not match
+      String:         "nothing within 5 s"
+      Expected start: "HTTP/1.1 400 "
+  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "InvalidOperationException")
+      Assert.Equal() Failure: Values differ
+      Expected: BadRequest
+      Actual:   BadGateway
+  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "HttpListenerException")
+      the caller heard nothing within 5 s
+  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "ObjectDisposedException")
+      the caller heard nothing within 5 s
+  A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "IOException")
+      Assert.Equal() Failure: Values differ
+      Expected: BadRequest
+      Actual:   BadGateway
+  A_caller_that_resets_while_the_answer_is_written_leaves_no_connection_held
+      the listener still holds 1 context(s) and 1 connection(s) 5 s after the exchange ended
+  An_upstream_that_fails_after_its_caller_hung_up_is_a_forward_failure_and_leaves_no_connection_held
+      the listener still holds 1 context(s) and 1 connection(s) 5 s after the exchange ended
+  A_caller_that_resets_mid_body_leaves_no_connection_held_and_is_no_forward_failure(hangUp: "an RST alone")
+      the listener still holds 1 context(s) and 1 connection(s) 5 s after the exchange ended
+  A_caller_that_resets_mid_body_leaves_no_connection_held_and_is_no_forward_failure(hangUp: "a FIN, then an RST")
+      the listener still holds 1 context(s) and 1 connection(s) 5 s after the exchange ended
+

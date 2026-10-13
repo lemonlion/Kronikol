@@ -59,9 +59,12 @@ internal sealed class StubUpstream : IAsyncDisposable
                 await context.Response.OutputStream.WriteAsync(reply);
                 context.Response.Close();
             }
-            catch (Exception ex) when (ex is HttpListenerException or ObjectDisposedException)
+            catch (Exception)
             {
-                // client gone
+                // The client is gone or the exchange failed. Which exception says so differs by platform (an IOException
+                // on macOS ended this loop), and the managed HttpListener holds a connection whose response is neither
+                // closed nor aborted (#172), so end it whatever was thrown.
+                try { context.Response.Abort(); } catch (Exception) { }
             }
         }
     }

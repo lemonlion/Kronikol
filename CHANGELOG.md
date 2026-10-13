@@ -4,6 +4,57 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.19.2] - 2026-10-13
+
+**Patch - a proxy tap lets go of a caller that hangs up, and no longer counts one as a failed forward (#172;
+`plans/PROXY_TAP_HANG_UP_PLAN.md` R1).** Green-lit in full by the owner on 2026-10-13, every question in the plan's
+section 9 as recommended. Bug fixes, and nothing new for a consumer to call, so the patch part moves (4.19.1 to
+4.19.2).
+
+### Fixed
+
+- **A caller that hung up kept its connection open until the tap was disposed (Linux and macOS).** The managed
+  `HttpListener` that .NET uses off Windows holds a connection until its response is closed or aborted, and `ProxyTap`
+  did neither when it gave up on a response. A caller that hung up while its answer was being written, in the middle
+  of its body, or before a failed forward was answered left its connection open until the tap was disposed (10 of 10
+  on each path, measured on Linux). Every response the tap does not answer is now aborted, in one `finally` that every
+  exit passes through, with a failure status set first: the managed listener's `Abort()` writes a whole empty response
+  when none was sent, `200 OK` unless told otherwise. Windows (http.sys) drops such a request by itself and held nothing.
+- **A caller that half-closed in the middle of a Content-Length body heard nothing (Linux and macOS).** It is answered
+  `400 Bad Request` at once, as http.sys answers it on Windows.
+- **A request whose caller hung up before its body arrived could count as a failed forward (Linux and macOS).** A
+  reset makes the body read throw an `IOException` there, and that reached the catch for forward failures: it was
+  counted in `ForwardFailures`, logged as `proxy-tap error`, reported by `Diagnostics()` as a request that could not
+  be forwarded, and answered with a 502 nobody heard. Reading the request now has a catch of its own: whatever the
+  exception, a request that never arrived whole is not forwarded, counted, logged or recorded, and a caller still
+  listening is answered `400`. The step that failed decides, not the exception's type, which differs by platform and by
+  how the caller closed. A forward that fails is still counted, whether or not its caller is still there.
+
+Behaviour changes: on Linux and macOS a caller that hangs up no longer holds a connection, one that half-closes mid-body
+is answered `400 Bad Request`, and a request whose caller hangs up mid-body is no longer counted, logged or answered
+`502`. Not changed: on Linux and macOS a chunked request cut short by the caller's FIN still reaches the upstream as if
+whole, since the managed listener's read of it ends without an error. That is a .NET defect, reported as
+dotnet/runtime#135680. `ForwardFailures`' doc comment says a request whose caller hangs up before it has arrived whole
+is not counted.
+
+Tests: `ProxyTapHangUpTests` (new) drives each path from a raw socket: a reset while an 8 MB answer is written, a reset
+mid-body (an RST alone, and a FIN then an RST), a half-close mid-body, and an upstream that fails after its caller
+reset. It also has a body read that throws `IOException`, `HttpListenerException`, `ObjectDisposedException` or
+`InvalidOperationException` through an internal seam; ending an unclosed response after `Close()`, after `Abort()`,
+twice, after the listener closed and after a failed write; and two guards: an upstream body cut short stays a forward
+failure, and 20 keep-alive requests use one connection. The facts that read the managed listener's connection tables
+skip on Windows, where http.sys owns the connection, and run in CI on Linux. `StubUpstream` stopped serving after an
+`IOException` and never ended a response that failed; it now aborts it, whatever was thrown. Proofs (plan harness
+`r1/`): against 4.19.0's code with only the seam, 9 runs fail on Linux and 5 on Windows, each on its own assertion,
+and the guards pass. Of 12 mutations, 10 are caught by the facts named, and the 2 that survive are the pair plan section
+4.1 calls harmless on .NET 10 (aborting a response already closed).
+
+Checks: after the version bump the core suite passes 7,458 with 2 skipped, the ProxyTap project 82 of 82 on Linux in
+Debug and Release (78 with 4 skipped on Windows), and release.slnf builds in Release for every target.
+
+The templates pin 4.19.1 and the history action's `VERSION` installs Kronikol.Tool 4.19.2. The wiki edits and the
+Kronikol4J ledger line (nothing to port: the port has no proxy tap) follow publication.
+
 ## [4.19.1] - 2026-10-13
 
 **Patch - a proxy tap, and the OTLP tap in forward mode, send every request to the configured upstream, whatever

@@ -1,0 +1,41 @@
+R1 mutations (plan section 5), each run against ProxyTapHangUpTests: on Linux in mcr.microsoft.com/dotnet/sdk:10.0
+(.NET 10.0.12, the managed HttpListener) and on Windows 11 26200 (.NET 10.0.11, http.sys). Each mutant is one exact-string
+replacement in ProxyTap.cs, written by ../mutation/make_mutants.py; logs in the session's scratchpad. 10 of 12 are caught,
+each by the facts the plan names; the two that survive are the pair section 4.1 calls harmless on .NET 10.
+
+M01  drop EndUnclosed() from the finally
+     Linux:   caught by R1-1, R1-2 (both closes), R1-3, R1-4 and R1-5 (all four types): connections held, nothing heard
+     Windows: caught by R1-5 (all four types): http.sys holds the request, so the caller hears nothing
+M02  drop the status set before Abort()
+     Linux:   caught by R1-3 (the half-closed caller hears "HTTP/1.1 200 OK") and R1-5 (OK in place of 400, four types)
+     Windows: survives, as expected: http.sys's Abort() sends nothing, so no status reaches the caller there
+M03  the body read's catch takes a type filter (IOException or HttpListenerException) in place of every exception
+     Linux:   caught by R1-5 (InvalidOperationException, ObjectDisposedException: 502 in place of 400)
+     Windows: caught by R1-5 (InvalidOperationException: answered 502)
+M04  Abort() unguarded
+     Linux:   survives, as expected: the managed Abort() does not throw
+     Windows: caught by R1-6 after the listener closed (ObjectDisposedException, HttpRequestQueueV2Handle)
+M05  the status setter unguarded
+     Linux:   caught by R1-6 after Close(), after Abort(), twice, after the listener closed
+     Windows: caught by R1-6 after Close(), after Abort(), twice
+M06  no catch of its own on the body read (the finally still aborts)
+     Linux:   caught by R1-2 (an RST alone: counted and logged as proxy-tap error), R1-3 (502) and R1-5 (four types)
+     Windows: caught by R1-5 (IOException, InvalidOperationException: answered 502)
+M07  the body read's catch leaves the status at 502
+     Linux:   caught by R1-3 ("HTTP/1.1 502 Bad Gateway") and R1-5 (four types)
+     Windows: survives, as expected: as M02, the status never reaches the caller there
+M08  the body read's catch forwards what arrived instead of returning
+     Linux:   caught by R1-2 (both), R1-3 and R1-5 (four types): the upstream sees a request
+     Windows: caught by R1-3 and R1-5 (four types)
+M09  Abort() whether or not the tap closed the response
+     Linux, Windows: survives. Abort() after Close() does nothing on .NET 10 (plan section 2.3, listener/), and a closed
+     keep-alive response's connection still serves the next request (R1-8 passes): harmless on this runtime, which is
+     why the release keeps the flag (plan section 4.1).
+M10  the 502 closes the response without marking the answer closed
+     Linux, Windows: survives, for the same reason as M09.
+M11  an IOException anywhere in the exception's chain is a hang-up
+     Linux:   caught by R1-4 and R1-7 (ForwardFailures 0)
+     Windows: caught by R1-7
+M12  every failure is a hang-up (the catch-all stops counting)
+     Linux:   caught by R1-4 and R1-7
+     Windows: caught by R1-7

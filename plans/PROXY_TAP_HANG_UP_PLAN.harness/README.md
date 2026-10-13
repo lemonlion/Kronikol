@@ -20,6 +20,10 @@ managed `HttpListener`, as on macOS). Every probe is a file-based app: `dotnet r
 | `forward/forward-probe.cs` | What `HttpClient.SendAsync` with `ResponseContentRead` throws when the upstream cuts its body short by a FIN or an RST, Content-Length or chunked (plan §3.3) |
 | `abort/abort-probe.cs` | `Abort()` with no head sent while the caller is still sending and reading, with and without a status set first (plan §2.3) |
 | `otlp/otlp-dispose-probe.cs` | `Kronikol.Extensions.Otlp` 4.18.1 disposed while its forward waits on a collector that never answers (plan §2.4 O1, §5 R2-2) |
+| `chunked/runtime-repro.cs` | The report to dotnet/runtime (#135680, plan Q6): a bare `HttpListener` reads a chunked body its client cut short with a FIN as whole on Linux, where a Content-Length body cut the same way throws; output in `runtime-repro-{linux,windows}.txt` |
+| `r1/red-4.19.0.txt` | R1's facts on 4.19.0's code with only what they need to compile, on both platforms (plan §11) |
+| `r1/mutations.txt`, `r1/checks.txt` | R1's 12 mutations on both platforms, and the checks before its release |
+| `mutation/make_mutants.py`, `mutation/run_windows.sh` | Writes each mutant as one exact-string replacement (`M` for R1, `N` for R2) and runs them against a test class, restoring each file from a copy |
 
 The `probe/` and `listener/` resets are `TcpClient.Dispose()` with a zero linger, which shuts the socket down before closing it:
 a FIN, then an RST. Linux reads that as an end of stream. `reset/` and `socket/` show the difference from an RST alone.

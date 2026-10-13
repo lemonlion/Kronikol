@@ -1,12 +1,13 @@
 # A caller that hangs up on a tap (#172)
 
 **Date:** 2026-10-13 · **Repo version:** 4.18.1 (`origin/main` at `34145c44`, the commit the issue's line numbers are for;
-every line number below is for it) · **Status:** ❌ plan written, nothing implemented, **NOT green-lit**. Drafted from #172
+every line number below is for it) · **Status:** 🟡 green-lit in full by the owner on 2026-10-13 ("implement the plan in
+full", every §9 question as recommended); **R1 released as 4.19.2**, R2 next (§11). Drafted from #172
 (filed 2026-10-13) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying
 problem. Written alongside the plans for #171 (`PROXY_TAP_FAILED_FORWARD_PLAN.md`, session kronikol-70) and #170
-(session kronikol-ef), which change the same method; §7 is the order (the owner has since put #170 first). Checked again
-the same day against the source, the wiki, Kronikol4J and six more probes (§11); the cited files are unchanged
-through 4.18.2 (`9cf89794`).
+(session kronikol-ef), which change the same method; §7 is the order (#170's releases and #171's first went before R1).
+Checked again the same day against the source, the wiki, Kronikol4J and six more probes (§11); the cited files are
+unchanged through 4.18.2 (`9cf89794`).
 
 Evidence labels: **RUN** (measured on 2026-10-13 with the published 4.18.1 packages from nuget.org and with the prototype
 in [`PROXY_TAP_HANG_UP_PLAN.prototype.patch`](PROXY_TAP_HANG_UP_PLAN.prototype.patch): Windows 11 26200 with .NET 10.0.11,
@@ -304,10 +305,11 @@ short by a FIN is still forwarded as if whole (§3.10). Cost on the success path
   the deadline is linked to the lifetime token, so a disposal mid-forward counts today), and the 502 body. Its 502 goes
   through `TryRespondBadGateway`, so it sets `Closed` like any other answer, and R1's `finally` aborts whatever its new
   exits leave. It builds on R1.
-- **#170** ships first (the owner's call, §7). It changes `HandleAsync` L189-254, `ProxyTapOptions`,
+- **#170** shipped first (4.18.3 and 4.19.0, the owner's call, §7). It changes `HandleAsync` L189-254, `ProxyTapOptions`,
   `ProxyTapServiceCollectionExtensions.Copy` (the DI defect in §8) and core's `InternalFlowSegmentBuilder`, and appends
-  facts to ProxyTapTests.cs. None of those lines is R1's, so R1 rebases over it; Appendix A's numbers are at `34145c44`,
-  and from L189 on they move by #170's diff. R1's facts go in a class of their own.
+  facts to ProxyTapTests.cs. None of those lines is R1's, so R1 rebased over it, and over 4.19.1, #171's first release;
+  Appendix A's numbers are at `34145c44`, and both moved them (`GuardedHandleAsync` starts at L158 in 4.19.1). R1's
+  facts are in a class of their own.
 
 ### 4.4 Not in this plan
 
@@ -363,9 +365,10 @@ and `release.slnf` in Release for every target.
 
 ### 6.1 Releases
 
-R1 is the next free patch when it is ready (4.18.2 went to the #136 audit on 2026-10-13; the number is claimed with
-"taking X now" at push, §7). R2 is the patch after it, or rides with it (Q3). Both are patches: bug fixes, nothing new
-for a consumer to call (`CallerAnswer` is internal); the behaviour changes are listed in the changelog, not in the bump.
+R1 is 4.19.2, the next free patch when it was ready (4.18.3 and 4.19.0 went to #170, 4.19.1 to #171's first release;
+each number claimed with "taking X now" at push, §7). R2 is the patch after it (Q3). Both are patches: bug fixes,
+nothing new for a consumer to call (`CallerAnswer` is internal); the behaviour changes are listed in the changelog, not
+in the bump.
 
 ### 6.2 Changelog draft (R1)
 
@@ -411,6 +414,12 @@ pass, without waiting for the others. After them, a release from #171's plan may
 R1 (#172); then #171, which builds on R1's `CallerAnswer`. Version numbers are claimed with "taking X now" just before
 each push. R2 touches only `Kronikol.Extensions.Otlp` and can go at any point after R1.
 
+As it went, the same day: #170 shipped as 4.18.3 and 4.19.0. The owner then asked for #171 and for this plan in full,
+and #171's first release went out as 4.19.1. R1 followed as 4.19.2, and #171's next release builds on its
+`CallerAnswer`, taking the two follow-ups §4.1 item 4 names (the typed hang-up catch removed, and the catch-all counting
+a 502 that was the answer as a forward failure and anything after a closed answer as a capture fault). R2 rebases over
+4.19.1, which changed the start of `OtlpTap.ForwardAsync`.
+
 ## 8. Found on the way, not in this plan
 
 - **Handed to #171:** the capture-side throws counted as forward failures, the disposal mid-forward counted as one, the
@@ -424,6 +433,10 @@ each push. R2 touches only `Kronikol.Extensions.Otlp` and can go at any point af
   its Content-Length up front (L150), up to `MaxRequestBytes` (32 MiB), until disposal. Part of Q2.
 
 ## 9. Questions, with recommendations
+
+**Answered 2026-10-13:** the owner green-lit the plan in full, so each question took its recommendation. Q2 is #173, Q6
+is dotnet/runtime#135680 with the wiki's Limitations bullet, and Q7 is #174; Q1, Q3, Q4 and Q5 shaped the releases as
+written.
 
 - **Q1.** Should a request whose caller hung up before its body arrived be drawn? *Recommendation: no.* Nothing reached
   the service; #171 draws failed forwards, which did. As planned such a request leaves no trace at all, which is what
@@ -476,6 +489,29 @@ each push. R2 touches only `Kronikol.Extensions.Otlp` and can go at any point af
     lines, the wiki's prose line (L158) and dotnet/runtime#39183, which is the FIN going unnoticed, not the chunked
     case.
   - The owner put #170 first (§7).
+- 2026-10-13, R1 released as 4.19.2 (session kronikol-a5, in a worktree of its own), the owner having asked for the
+  plan in full. It is §4.1 as written: `CallerAnswer` is internal and nested in `ProxyTap`, `EndUnclosed()` swallows
+  every exception, the body read has its own untyped catch (status 400, return), the typed hang-up catch stays with its
+  new comment (#171's next release removes it, §7), `RespondAsync` and `TryRespondBadGateway` take the answer, and the
+  facts get an internal `InFlight` and the `WrapRequestBody` seam.
+  - Red (harness `r1/red-4.19.0.txt`): on 4.19.0's code with only the seam, `InFlight` and a `CallerAnswer` whose
+    `EndUnclosed()` is the bare `Abort()`, 9 runs fail on Linux and 5 on Windows, each on its own assertion. On Linux
+    the leak facts find 1 context and 1 connection still held, the half-closed caller hears nothing, and R1-5 gets a
+    502 or nothing. On Windows R1-5 fails for all four types and R1-6 after the listener closed
+    (`ObjectDisposedException`). R1-6's other cases and the two guards pass, as §5 says they would.
+  - Mutations (harness `r1/mutations.txt`, tools in `mutation/`): of 12, 10 are caught by the facts §5 names, on the
+    platform it names. The 2 that survive are §4.1's harmless pair: `Abort()` without the flag, and the 502 closing
+    the response without setting it. Without the status, the half-closed caller hears `HTTP/1.1 200 OK` (M02), the trap
+    §3 finding 4 describes.
+  - Found on the way: `StubUpstream`'s per-request catch took only `HttpListenerException` and
+    `ObjectDisposedException`, so an `IOException` (macOS) ended its loop, and it never ended a failed response. It now
+    aborts the response whatever was thrown (§4.4 left the stubs alone except where R1's facts use them, and they use
+    this one).
+  - Checks (harness `r1/checks.txt`): after the bump, the ProxyTap project passes 82 of 82 on Linux in Debug and in
+    Release and 78 with 4 skipped on Windows, the core suite 7,458 with 2 skipped, and `release.slnf` builds in Release
+    for every target.
+  - Outward, per §9: #173 (Q2), #174 (Q7) and dotnet/runtime#135680 (Q6), whose repro is `chunked/runtime-repro.cs`
+    with its output on both platforms.
 
 ## Appendix A. Edit sites at `34145c44`
 

@@ -1,0 +1,4 @@
+.NET 10.0.11, Microsoft Windows 10.0.26200, HttpListener http.sys
+Content-Length: 20, 10 bytes sent: the read threw System.Net.HttpListenerException: An operation was attempted on a nonexistent network connection.
+chunked, one 10-byte chunk sent, no last chunk: the read threw System.Net.HttpListenerException: An operation was attempted on a nonexistent network connection.
+chunked, 5 of a 10-byte chunk sent: the read threw System.Net.HttpListenerException: Incorrect function.
