@@ -446,3 +446,13 @@ Each guard has a fact that the scan finds what it guards.
 - A1 (bulk writes, transactions and cursors) is still INFERRED. Testing it needs a replica set in the host lane.
 - `TrackingSpannerCommand` keeps an accessor it never reads.
 - Multi-Host-Test-Architectures' wiring section is #142's.
+
+**Published 2026-10-13.** 4.18.2 is `9cf89794`, tag `v4.18.2`, pushed at 12:06 UTC.
+
+- Release 38394893449, CI 38394891531 and CodeQL 38394892076 passed. CI's log shows the eight touched projects with
+  the local counts.
+- nuget.org listed all 62 ids at 12:30 UTC, 14 minutes after the Release run finished.
+- The wiki edits (`audit/wiki_audit.py`, dry-run first on copies of `85abe19`) went in as `e5c5a5b`: nine pages, 15
+  lines added and 12 removed. `tools/wiki-links` finds no dead or reversed link.
+- #136 stays closed with no new comment, since none of these fixes is in MongoDB.
+
