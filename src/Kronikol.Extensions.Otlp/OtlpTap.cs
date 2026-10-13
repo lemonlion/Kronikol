@@ -412,6 +412,11 @@ public sealed class OtlpTap : IAsyncDisposable
             return;
         }
 
+        int status;
+        string reason;
+        byte[] body;
+        string? contentType;
+        string? contentEncoding;
         try
         {
             using var message = new HttpRequestMessage(new HttpMethod(request.Method), new Uri(_options.ForwardBaseUri!.GetLeftPart(UriPartial.Authority) + origin));
@@ -427,21 +432,28 @@ public sealed class OtlpTap : IAsyncDisposable
             }
 
             using var response = await _upstream!.SendAsync(message, HttpCompletionOption.ResponseContentRead, ct).ConfigureAwait(false);
-            var body = await response.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false);
-            var contentType = response.Content.Headers.ContentType?.ToString();
-            var contentEncoding = response.Content.Headers.ContentEncoding.Count > 0
+            body = await response.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false);
+            status = (int)response.StatusCode;
+            reason = response.ReasonPhrase ?? "OK";
+            contentType = response.Content.Headers.ContentType?.ToString();
+            contentEncoding = response.Content.Headers.ContentEncoding.Count > 0
                 ? string.Join(",", response.Content.Headers.ContentEncoding)
                 : null;
-            await WriteResponseAsync(stream, (int)response.StatusCode, response.ReasonPhrase ?? "OK", contentType, body,
-                request.KeepAlive, ct, contentEncoding).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or SocketException)
+        catch (Exception ex) when ((ex is HttpRequestException or TaskCanceledException or IOException or SocketException) && !ct.IsCancellationRequested)
         {
+            // The collector was unreachable or did not answer in time. A cancellation of the tap's own token is not that:
+            // the tap is stopping, and the exception ends the connection uncounted and unanswered (ServeAsync).
             Interlocked.Increment(ref _forwardFailures);
             _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap forward failed: {ex.Message}");
             await WriteResponseAsync(stream, 502, "Bad Gateway", "application/json",
                 Utf8("{\"error\":\"otlp-tap: upstream collector unreachable\"}"), request.KeepAlive, ct).ConfigureAwait(false);
+            return;
         }
+
+        // The collector has the export. A failure from here on is the exporter's, which hung up before its answer, and
+        // falls to ServeAsync's hang-up catch.
+        await WriteResponseAsync(stream, status, reason, contentType, body, request.KeepAlive, ct, contentEncoding).ConfigureAwait(false);
     }
 
     private static async Task WriteResponseAsync(

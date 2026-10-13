@@ -4,6 +4,56 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.19.3] - 2026-10-13
+
+**Patch - the OTLP tap reads an exporter that hangs up as a hang-up, and no longer takes a chunked export cut short as
+whole (#172's plan, `plans/PROXY_TAP_HANG_UP_PLAN.md` R2).** Found while planning #172's fix for the proxy tap, and part
+of the plan the owner green-lit in full on 2026-10-13. Bug fixes, and nothing new for a consumer to call, so the patch
+part moves (4.19.2 to 4.19.3).
+
+### Fixed
+
+- **An exporter that hung up before its answer counted as a failed forward.** With `ForwardBaseUri` set, the tap wrote
+  the collector's answer inside the `try` that counts `ForwardFailures`. An exporter gone by then was counted and logged
+  as `otlp-tap forward failed`, and `Diagnostics()` said its export could not be forwarded and the real collector never
+  saw it, when the collector had it. The answer is now written after the forward; a failure there is the exporter's and
+  ends the connection quietly.
+- **A tap disposed in the middle of a forward counted it as a failed forward.** The tap's own cancellation is now the
+  tap stopping: the connection ends without a count, a log line or a 502.
+- **A chunked export cut short was answered `200` and counted as received.** The reader took the bytes that had arrived
+  as the whole body when the stream ended before the last chunk, when a size line was not hex or ran past 1,024 bytes,
+  and when a chunk's data was not followed by its CRLF (a chunk longer than its size lost its tail unseen). Such an
+  export is now no request at all, as a `Content-Length` body cut short already was: not answered, counted or mapped,
+  and the connection is closed.
+- **Trailers put a keep-alive connection out of step.** The reader took the one line after the last chunk as the end of
+  the trailers. With one trailer field the next request on the connection was closed unanswered; with two, a trailer
+  line was answered as a request of its own, one answer ahead of the exporter. It now reads the trailer section to its
+  blank line (RFC 9112 section 7.1.2), and a section past 64 KiB is malformed, as a head that long is; a single field
+  line is held only to that cap, as a header line is.
+- **A chunk size past `int` threw.** A size of `80000000` or more parsed as a negative number, and the read threw an
+  `OverflowException`, logged as an `otlp-tap connection error`, with nothing counted and no answer. Such a chunk is now
+  too large: it is answered `413 Payload Too Large` and counted in `PayloadsRejected`, as a body over `MaxRequestBytes`
+  is, and the connection is closed, since a chunk that large is not drained.
+
+Behaviour changes: an exporter that hangs up, and a tap disposed in the middle of a forward, no longer count as forward
+failures; a chunked export cut short or malformed gets no answer and is not received; a chunk size past `int` gets a
+`413` and closes the connection.
+
+Tests: `OtlpTapHangUpTests` (new) drives each case from raw sockets: an exporter that resets while a held collector has
+its export; a tap disposed while its forward waits; a chunked export with no last chunk, half a chunk, a size line that
+is not hex or runs past 1,024 bytes, chunk data longer than its size, or trailers past 64 KiB; one and two trailer
+fields, and one field of 2,000 bytes, each followed by a second export on the same connection; chunk sizes
+`80000000`, `ffffffff` and `100000000000000000`; and a guard, a complete chunked export with a chunk extension. Proofs (plan harness `r2/`): against 4.19.2's code 14
+runs fail on Windows and on Linux, each on its own assertion, and the guard passes; 12 of 12 mutations are caught by
+the facts named.
+
+Checks: after the version bump the core suite passes 7,458 with 2 skipped and the Otlp project 142 of 142 (as it does
+on Linux in Debug and Release), and release.slnf builds in Release for every target.
+
+The templates pin 4.19.2 and the history action's `VERSION` installs Kronikol.Tool 4.19.3. The wiki edit
+(`Integration-Otlp-Extension`) and the Kronikol4J ledger line (nothing to port: the port has no OTLP tap) follow
+publication.
+
 ## [4.19.2] - 2026-10-13
 
 **Patch - a proxy tap lets go of a caller that hangs up, and no longer counts one as a failed forward (#172;

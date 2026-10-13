@@ -1,0 +1,10 @@
+R2 checks, 2026-10-13, on 4.19.2 (3607253a) with R2 and the version bump to 4.19.3.
+
+- Kronikol.Tests.Otlp, Windows 11 26200 (.NET 10.0.11): 142 of 142, before and after the bump.
+- Kronikol.Tests.Otlp, Linux in mcr.microsoft.com/dotnet/sdk:10.0 (.NET 10.0.12): 142 of 142 in Debug and 142 of 142 in
+  Release (on R2's code before the bump, which changes no Otlp code).
+- Core suite (tests/Kronikol.Tests, Windows, after the bump): 7,458 passed, 2 skipped.
+- release.slnf in Release, every target framework: 0 errors; 43 warnings, none in the ProxyTap or OTLP projects (rebuilt after the review fix).
+
+4.19.2's own CI (run 38427358439) ran ProxyTapHangUpTests' 16 runs in "Extension Tests" on Linux, all passing, with the
+ProxyTap project at 82.

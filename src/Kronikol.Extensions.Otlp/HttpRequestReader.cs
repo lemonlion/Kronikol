@@ -34,12 +34,13 @@ internal sealed record HttpRequestMessageData(
 internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
 {
     private const int MaxHeaderBytes = 64 * 1024;
+    private const int MaxChunkLineBytes = 1024;
 
     private readonly byte[] _buffer = new byte[16 * 1024];
     private int _start;
     private int _end;
 
-    /// <summary>Reads the next request, or null when the peer closed the connection (or sent something unparsable).</summary>
+    /// <summary>Reads the next request, or null when the peer closed the connection, cut a body short or sent something unparsable.</summary>
     public async Task<HttpRequestMessageData?> ReadAsync(CancellationToken ct)
     {
         var head = await ReadHeadAsync(ct).ConfigureAwait(false);
@@ -83,7 +84,10 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
         if (headers.TryGetValue("Transfer-Encoding", out var transferEncoding)
             && transferEncoding.Contains("chunked", StringComparison.OrdinalIgnoreCase))
         {
-            (body, tooLarge) = await ReadChunkedAsync(ct).ConfigureAwait(false);
+            if (await ReadChunkedAsync(ct).ConfigureAwait(false) is not { } chunked)
+                return null; // cut short or malformed, as a Content-Length body cut short below
+            (body, tooLarge) = (chunked.Body, chunked.TooLarge);
+            keepAlive &= chunked.Reusable;
         }
         else if (headers.TryGetValue("Content-Length", out var lengthText)
                  && int.TryParse(lengthText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var length)
@@ -162,41 +166,90 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
         return written == count ? result : result[..written];
     }
 
-    private async Task<(byte[] Body, bool TooLarge)> ReadChunkedAsync(CancellationToken ct)
+    /// <summary>
+    /// Reads a chunked body through its last chunk and trailer section. Null when the body is cut short or malformed: the
+    /// stream ends first, a size line is not hex or runs past 1,024 bytes, a chunk is shorter than its size or not followed
+    /// by its CRLF, or the trailers run past <see cref="MaxHeaderBytes"/>. A body over the cap is drained, so the connection
+    /// stays usable; a chunk size past <see cref="int.MaxValue"/> is too large to drain, so the connection is not reused.
+    /// </summary>
+    private async Task<(byte[] Body, bool TooLarge, bool Reusable)?> ReadChunkedAsync(CancellationToken ct)
     {
         using var body = new MemoryStream();
         var tooLarge = false;
         while (true)
         {
-            var sizeLine = await ReadLineAsync(ct).ConfigureAwait(false);
+            var sizeLine = await ReadLineAsync(MaxChunkLineBytes, ct).ConfigureAwait(false);
             if (sizeLine is null)
-                return (tooLarge ? [] : body.ToArray(), tooLarge);
+                return null;
             var semicolon = sizeLine.IndexOf(';');
-            var hex = (semicolon < 0 ? sizeLine : sizeLine[..semicolon]).Trim();
-            if (!int.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var size))
-                return (tooLarge ? [] : body.ToArray(), tooLarge);
+            if (!TryParseChunkSize((semicolon < 0 ? sizeLine : sizeLine[..semicolon]).Trim(), out var size))
+                return null;
+            if (size > int.MaxValue)
+                return ([], true, false);
             if (size == 0)
-            {
-                await ReadLineAsync(ct).ConfigureAwait(false); // trailer terminator
                 break;
-            }
 
             if (tooLarge || body.Length + size > maxBodyBytes)
             {
                 // Keep draining so the connection stays usable, but stop buffering.
                 tooLarge = true;
-                await DiscardAsync(size, ct).ConfigureAwait(false);
+                await DiscardAsync((int)size, ct).ConfigureAwait(false);
             }
             else
             {
-                var chunk = await ReadExactAsync(size, ct).ConfigureAwait(false);
+                var chunk = await ReadExactAsync((int)size, ct).ConfigureAwait(false);
                 body.Write(chunk, 0, chunk.Length);
             }
 
-            await ReadLineAsync(ct).ConfigureAwait(false); // trailing CRLF
+            // A chunk's data ends with a CRLF. A chunk or a drain cut short ends with the stream, before it.
+            if (await ReadLineAsync(MaxChunkLineBytes, ct).ConfigureAwait(false) is not "")
+                return null;
         }
 
-        return (tooLarge ? [] : body.ToArray(), tooLarge);
+        // The trailer section: field lines up to an empty one (RFC 9112 section 7.1.2), so the next request on the
+        // connection starts where it should. The fields are not kept. A field line, like a header line, is held only
+        // to the section's cap.
+        var trailerBytes = 0;
+        while (true)
+        {
+            var trailer = await ReadLineAsync(MaxHeaderBytes, ct).ConfigureAwait(false);
+            if (trailer is null)
+                return null;
+            if (trailer.Length == 0)
+                break;
+            trailerBytes += trailer.Length + 2;
+            if (trailerBytes > MaxHeaderBytes)
+                return null;
+        }
+
+        return (tooLarge ? [] : body.ToArray(), tooLarge, true);
+    }
+
+    /// <summary>
+    /// A chunk size's hex digits as a number. A value past <see cref="int.MaxValue"/> stays past it rather than wrapping,
+    /// as an <c>int</c> parse would (<c>80000000</c> is negative there), so the caller can call it too large.
+    /// </summary>
+    private static bool TryParseChunkSize(string hex, out long size)
+    {
+        size = 0;
+        if (hex.Length == 0)
+            return false;
+        foreach (var c in hex)
+        {
+            var digit = c switch
+            {
+                >= '0' and <= '9' => c - '0',
+                >= 'a' and <= 'f' => c - 'a' + 10,
+                >= 'A' and <= 'F' => c - 'A' + 10,
+                _ => -1,
+            };
+            if (digit < 0)
+                return false;
+            if (size <= int.MaxValue)
+                size = size * 16 + digit;
+        }
+
+        return true;
     }
 
     private async Task DiscardAsync(int count, CancellationToken ct)
@@ -212,7 +265,8 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
         }
     }
 
-    private async Task<string?> ReadLineAsync(CancellationToken ct)
+    /// <summary>The next line without its line break, or null when it runs past <paramref name="maxBytes"/> or the stream ends before it starts.</summary>
+    private async Task<string?> ReadLineAsync(int maxBytes, CancellationToken ct)
     {
         var line = new List<byte>(16);
         while (true)
@@ -223,7 +277,7 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
             if (b == (byte)'\n')
                 return Encoding.ASCII.GetString(line.ToArray()).TrimEnd('\r');
             line.Add(b);
-            if (line.Count > 1024)
+            if (line.Count > maxBytes)
                 return null;
         }
     }

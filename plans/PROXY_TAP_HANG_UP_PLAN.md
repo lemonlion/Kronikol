@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-13 · **Repo version:** 4.18.1 (`origin/main` at `34145c44`, the commit the issue's line numbers are for;
 every line number below is for it) · **Status:** 🟡 green-lit in full by the owner on 2026-10-13 ("implement the plan in
-full", every §9 question as recommended); **R1 released as 4.19.2**, R2 next (§11). Drafted from #172
+full", every §9 question as recommended); **R1 released as 4.19.2 and R2 as 4.19.3** (§11). Drafted from #172
 (filed 2026-10-13) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying
 problem. Written alongside the plans for #171 (`PROXY_TAP_FAILED_FORWARD_PLAN.md`, session kronikol-70) and #170
 (session kronikol-ef), which change the same method; §7 is the order (#170's releases and #171's first went before R1).
@@ -289,11 +289,14 @@ short by a FIN is still forwarded as if whole (§3.10). Cost on the success path
    the connection without a count or a 502 (the same split #171 makes for `ProxyTap`, §7).
 3. **`ReadChunkedAsync`** returns "incomplete" when the stream ends before the zero-size chunk, or a size line is not hex,
    and `ReadAsync` returns `null` for it, as the Content-Length path already does (L101). The export is not counted, not
-   queued and not answered; the connection closes (Q5 asks whether a broken size line should get a 400 instead).
+   queued and not answered; the connection closes (Q5 asks whether a broken size line should get a 400 instead). The
+   release also takes as incomplete a size line over 1,024 bytes (O2) and a chunk not followed by its CRLF, which the
+   reader skipped as one line, so a chunk longer than its size lost its tail unseen (found while building R2, §11).
 4. **The rest of `ReadChunkedAsync` (O3, found while checking the plan).** It reads trailer lines up to the blank line
-   that ends them (RFC 9112 §7.1.2), so the next request on the connection starts where it should. A size that does not
-   fit an `int`, which today parses as negative, is too large: `413`, as a body over `MaxRequestBytes` is, not an
-   `OverflowException`.
+   that ends them (RFC 9112 §7.1.2), so the next request on the connection starts where it should; a trailer section past
+   64 KiB is malformed, as a head that long is. A size that does not fit an `int`, which today parses as negative, is too
+   large: `413`, as a body over `MaxRequestBytes` is, not an `OverflowException`. Such a chunk is not drained, so the
+   connection then closes.
 5. **Doc comment** of `OtlpTap.ForwardFailures` (L93) and the diagnostic's wording (L151) stay true once 1 and 2 hold;
    no change.
 
@@ -343,12 +346,12 @@ the fix" means on `34145c44` with only the test seam added (R1-5); R1-6 tests th
 | R1-6 `Ending_an_unclosed_response_never_throws` | all | Windows (after `HttpListener.Close()`), against the issue's bare `Abort()` | `CallerAnswer.EndUnclosed()` after `Close()`, after `Abort()`, twice, after the listener closed, after a failed write |
 | R1-7 `An_upstream_body_cut_short_stays_a_forward_failure` | all | none (a guard) | an upstream that sends half its Content-Length and resets: `ForwardFailures` 1 and a 502. It kills a fix that takes every failure, or an `IOException` anywhere in the exception's chain, as a hang-up; a filter on the outer type alone passes it, since `SendAsync` wraps the cut in `HttpRequestException` (§3.3) |
 | R1-8 `Keep_alive_requests_are_answered_on_one_connection` | all | none (a guard) | 20 requests on one connection after the change |
-| R2-1 `An_exporter_that_hangs_up_before_its_answer_is_no_forward_failure` | all | Linux | O1: the collector got it, `ForwardFailures` 0, no `forward failed` line |
+| R2-1 `An_exporter_that_hangs_up_before_its_answer_is_no_forward_failure` | all | Linux, and Windows with an RST alone (the probe's close sent a FIN first) | O1: the collector got it, `ForwardFailures` 0, no `forward failed` line |
 | R2-2 `A_forward_cut_short_by_disposal_is_no_forward_failure` | all | all (RUN `otlp/otlp-dispose-*`: `ForwardFailures` 1, `otlp-tap forward failed: The operation was canceled.`, and the exporter gets no 502) | a collector held open, the tap disposed mid-forward. The fact waits for the handler: `DisposeAsync` returns before it ends (on Windows the count reached 1 only after it returned) |
-| R2-3 `A_chunked_export_cut_short_is_not_received` (theory: no zero-size chunk; a size line that is not hex) | all | all | O2: no `200`, `RequestsReceived` 0, nothing queued |
+| R2-3 `A_chunked_export_cut_short_is_not_received` (theory: no zero-size chunk; half a chunk; a size line that is not hex; a size line over 1,024 bytes; chunk data longer than its size; trailers past 64 KiB) | all | all | O2: no `200`, `RequestsReceived` 0, nothing queued |
 | R2-4 `A_complete_chunked_export_is_received_and_answered` | all | none (a guard) | the reader still takes a whole chunked body, with a chunk extension |
-| R2-5 `A_chunked_export_with_trailers_keeps_the_connection_in_step` (theory: one trailer field, two) | all | all | O3: a second export on the same connection is answered `200` and received |
-| R2-6 `A_chunk_size_past_int_is_too_large` (theory: `80000000`, `ffffffff`) | all | all | O3: `413`, `PayloadsRejected` 1, no `connection error` line |
+| R2-5 `A_chunked_export_with_trailers_keeps_the_connection_in_step` (theory: one trailer field, two, one of 2,000 bytes) | all | all | O3: a second export on the same connection is answered `200` and received |
+| R2-6 `A_chunk_size_past_int_is_too_large` (theory: `80000000`, `ffffffff`, `100000000000000000`) | all | all | O3: `413`, `PayloadsRejected` 1, no `connection error` line, the connection closed |
 
 Proofs, as the recent plans give them: each fact that is not a guard red on `34145c44` (Linux container for the managed
 ones, recipe in the harness README) and green on the fix; and these mutations killed: drop `EndUnclosed()` from the `finally` (R1-1, -2,
@@ -366,7 +369,7 @@ and `release.slnf` in Release for every target.
 ### 6.1 Releases
 
 R1 is 4.19.2, the next free patch when it was ready (4.18.3 and 4.19.0 went to #170, 4.19.1 to #171's first release;
-each number claimed with "taking X now" at push, §7). R2 is the patch after it (Q3). Both are patches: bug fixes,
+each number claimed with "taking X now" at push, §7). R2 is 4.19.3, the patch after it (Q3). Both are patches: bug fixes,
 nothing new for a consumer to call (`CallerAnswer` is internal); the behaviour changes are listed in the changelog, not
 in the bump.
 
@@ -512,6 +515,29 @@ written.
     for every target.
   - Outward, per §9: #173 (Q2), #174 (Q7) and dotnet/runtime#135680 (Q6), whose repro is `chunked/runtime-repro.cs`
     with its output on both platforms.
+- 2026-10-13, R2 released as 4.19.3 (the same session, in a second worktree on R1's commit). It is §4.2 as written, plus
+  what building it found.
+  - `ForwardAsync` keeps the forward in its `try` and writes the answer after it. A cancellation while the tap's own
+    token is cancelled passes through to `ServeAsync`, uncounted and unanswered. R2 rebased over 4.19.1's change to the
+    start of `ForwardAsync`, whose target check runs first.
+  - `ReadChunkedAsync` returns null for a body cut short or malformed: the stream ending before the last chunk, a size
+    line that is not hex or runs past 1,024 bytes, a chunk not followed by its CRLF, a trailer section past 64 KiB. The
+    CRLF was read as any line and dropped, so chunk data longer than its size lost its tail and the export was answered
+    `200`; that was found while building R2, and is a case of R2-3. Trailers are read to their blank line. A size past
+    `int` is too large: `413`, `PayloadsRejected`, and the connection closed, since such a chunk is not drained. The size
+    is parsed by hand, so a value past `int` stays past it rather than wrapping (17 hex digits wrapped a `long` too).
+  - R2-1 is red on Windows as well as Linux. The plan's probe closed the exporter with a FIN first (`TcpClient.Dispose()`
+    with a zero linger); the fact sends an RST alone, and Windows then fails the answer write too.
+  - Red (harness `r2/red-4.19.2.txt`): on 4.19.2's code, 14 runs fail on Windows and on Linux, each on its own
+    assertion, and the guard passes.
+  - Mutations (harness `r2/mutations.txt`): 12 of 12 are caught on both platforms, the five §5 names among them.
+  - Found in review before the push: the trailer loop read its lines through `ReadLineAsync`, whose 1,024-byte cap is
+    for size lines, so one trailer field longer than that dropped a whole export as malformed, where a header line of
+    the same length is taken. The cap is now `ReadLineAsync`'s parameter, and a trailer line is held to the section's
+    64 KiB. R2-5 has the case (a 2,000-byte field), red on R2's first version and on 4.19.2's code, and N12 (the
+    trailer line back on 1,024 bytes) is caught.
+  - Checks (harness `r2/checks.txt`): after the bump, the Otlp project passes 142 of 142 on Windows, and on Linux in
+    Debug and in Release; the core suite 7,458 with 2 skipped; and `release.slnf` builds in Release for every target.
 
 ## Appendix A. Edit sites at `34145c44`
 

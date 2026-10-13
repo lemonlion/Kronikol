@@ -1,0 +1,122 @@
+R2 red step: the new facts (tests/Kronikol.Tests.Otlp/OtlpTapHangUpTests.cs) on 4.19.2's code (3607253a), which needs
+nothing added to compile them. Windows 11 26200, .NET 10.0.11; Ubuntu 24.04 in mcr.microsoft.com/dotnet/sdk:10.0,
+.NET 10.0.12. On both, 14 runs fail, each on its own assertion, and the one pass is the guard.
+
+== Windows: Passed: 1, Failed: 14
+  Failed  A_chunk_size_past_int_is_too_large(size: "100000000000000000")
+  Failed  A_chunk_size_past_int_is_too_large(size: "80000000")
+  Failed  A_chunk_size_past_int_is_too_large(size: "ffffffff")
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "a size line over 1,024 bytes", chunks: "10;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"···, halfClose: False)
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "a size line that is not hex", chunks: "10\r\n0123456789abcdef\r\nzz\r\n", halfClose: False)
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "chunk data longer than its size", chunks: "5\r\n0123456789\r\n0\r\n\r\n", halfClose: False)
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "half a chunk, then a FIN", chunks: "10\r\n01234567", halfClose: True)
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "no zero-size chunk, then a FIN", chunks: "10\r\n0123456789abcdef\r\n", halfClose: True)
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "trailers past 64 KiB", chunks: "a\r\n0123456789\r\n0\r\nX-Pad-0: xxxxxxxxxxxxxxxxx"···, halfClose: False)
+  Failed  A_chunked_export_with_trailers_keeps_the_connection_in_step(trailers: "X-Checksum: 1\r\n")
+  Failed  A_chunked_export_with_trailers_keeps_the_connection_in_step(trailers: "X-Checksum: 1\r\nX-Signature: 2\r\n")
+  Failed  A_forward_cut_short_by_disposal_is_no_forward_failure
+  Failed  An_exporter_that_hangs_up_before_its_answer_is_no_forward_failure
+  Passed  A_complete_chunked_export_is_received_and_answered
+  -- failure messages
+  A_chunked_export_cut_short_is_not_received(variant: "half a chunk, then a FIN", chunks: "10\r\n01234567", halfClose: True)
+      half a chunk, then a FIN: the exporter was answered HTTP/1.1 200 OK
+  A_chunked_export_cut_short_is_not_received(variant: "a size line that is not hex", chunks: "10\r\n0123456789abcdef\r\nzz\r\n", halfClose: False)
+      a size line that is not hex: the exporter was answered HTTP/1.1 200 OK
+  A_chunked_export_cut_short_is_not_received(variant: "trailers past 64 KiB", chunks: "a\r\n0123456789\r\n0\r\nX-Pad-0: xxxxxxxxxxxxxxxxx"···, halfClose: False)
+      trailers past 64 KiB: the exporter was answered HTTP/1.1 200 OK
+  A_chunked_export_cut_short_is_not_received(variant: "no zero-size chunk, then a FIN", chunks: "10\r\n0123456789abcdef\r\n", halfClose: True)
+      no zero-size chunk, then a FIN: the exporter was answered HTTP/1.1 200 OK
+  A_chunked_export_cut_short_is_not_received(variant: "chunk data longer than its size", chunks: "5\r\n0123456789\r\n0\r\n\r\n", halfClose: False)
+      chunk data longer than its size: the exporter was answered HTTP/1.1 200 OK
+  A_chunked_export_cut_short_is_not_received(variant: "a size line over 1,024 bytes", chunks: "10;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"···, halfClose: False)
+      a size line over 1,024 bytes: the exporter was answered HTTP/1.1 200 OK
+  A_chunk_size_past_int_is_too_large(size: "100000000000000000")
+      Assert.StartsWith() Failure: String start does not match
+      String:         "HTTP/1.1 200 OK"
+      Expected start: "HTTP/1.1 413 "
+  A_chunk_size_past_int_is_too_large(size: "ffffffff")
+      Assert.StartsWith() Failure: String start does not match
+      String:         "an end of stream"
+      Expected start: "HTTP/1.1 413 "
+  A_chunk_size_past_int_is_too_large(size: "80000000")
+      Assert.StartsWith() Failure: String start does not match
+      String:         "an end of stream"
+      Expected start: "HTTP/1.1 413 "
+  A_chunked_export_with_trailers_keeps_the_connection_in_step(trailers: "X-Checksum: 1\r\n")
+      the tap closed the connection after 1 of 2 answer(s): [200]
+  A_chunked_export_with_trailers_keeps_the_connection_in_step(trailers: "X-Checksum: 1\r\nX-Signature: 2\r\n")
+      Assert.Equal() Failure: Collections differ
+      ↓ (pos 1)
+      Expected: [200, 200]
+      Actual:   [200, 404]
+  An_exporter_that_hangs_up_before_its_answer_is_no_forward_failure
+      Assert.Equal() Failure: Values differ
+      Expected: 0
+      Actual:   1
+  A_forward_cut_short_by_disposal_is_no_forward_failure
+      Assert.Equal() Failure: Values differ
+      Expected: 0
+      Actual:   1
+
+== Linux: Passed: 1, Failed: 14
+  Failed  A_chunk_size_past_int_is_too_large(size: "100000000000000000")
+  Failed  A_chunk_size_past_int_is_too_large(size: "80000000")
+  Failed  A_chunk_size_past_int_is_too_large(size: "ffffffff")
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "a size line over 1,024 bytes", chunks: "10;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"···, halfClose: False)
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "a size line that is not hex", chunks: "10\r\n0123456789abcdef\r\nzz\r\n", halfClose: False)
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "chunk data longer than its size", chunks: "5\r\n0123456789\r\n0\r\n\r\n", halfClose: False)
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "half a chunk, then a FIN", chunks: "10\r\n01234567", halfClose: True)
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "no zero-size chunk, then a FIN", chunks: "10\r\n0123456789abcdef\r\n", halfClose: True)
+  Failed  A_chunked_export_cut_short_is_not_received(variant: "trailers past 64 KiB", chunks: "a\r\n0123456789\r\n0\r\nX-Pad-0: xxxxxxxxxxxxxxxxx"···, halfClose: False)
+  Failed  A_chunked_export_with_trailers_keeps_the_connection_in_step(trailers: "X-Checksum: 1\r\n")
+  Failed  A_chunked_export_with_trailers_keeps_the_connection_in_step(trailers: "X-Checksum: 1\r\nX-Signature: 2\r\n")
+  Failed  A_forward_cut_short_by_disposal_is_no_forward_failure
+  Failed  An_exporter_that_hangs_up_before_its_answer_is_no_forward_failure
+  Passed  A_complete_chunked_export_is_received_and_answered
+  -- failure messages
+  A_chunked_export_cut_short_is_not_received(variant: "trailers past 64 KiB", chunks: "a\r\n0123456789\r\n0\r\nX-Pad-0: xxxxxxxxxxxxxxxxx"···, halfClose: False)
+      trailers past 64 KiB: the exporter was answered HTTP/1.1 200 OK
+  A_chunked_export_cut_short_is_not_received(variant: "a size line that is not hex", chunks: "10\r\n0123456789abcdef\r\nzz\r\n", halfClose: False)
+      a size line that is not hex: the exporter was answered HTTP/1.1 200 OK
+  A_chunked_export_cut_short_is_not_received(variant: "half a chunk, then a FIN", chunks: "10\r\n01234567", halfClose: True)
+      half a chunk, then a FIN: the exporter was answered HTTP/1.1 200 OK
+  A_chunked_export_cut_short_is_not_received(variant: "chunk data longer than its size", chunks: "5\r\n0123456789\r\n0\r\n\r\n", halfClose: False)
+      chunk data longer than its size: the exporter was answered HTTP/1.1 200 OK
+  A_chunked_export_cut_short_is_not_received(variant: "a size line over 1,024 bytes", chunks: "10;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"···, halfClose: False)
+      a size line over 1,024 bytes: the exporter was answered HTTP/1.1 200 OK
+  A_chunked_export_cut_short_is_not_received(variant: "no zero-size chunk, then a FIN", chunks: "10\r\n0123456789abcdef\r\n", halfClose: True)
+      no zero-size chunk, then a FIN: the exporter was answered HTTP/1.1 200 OK
+  A_chunked_export_with_trailers_keeps_the_connection_in_step(trailers: "X-Checksum: 1\r\nX-Signature: 2\r\n")
+      Assert.Equal() Failure: Collections differ
+      ↓ (pos 1)
+      Expected: [200, 200]
+      Actual:   [200, 404]
+  A_chunked_export_with_trailers_keeps_the_connection_in_step(trailers: "X-Checksum: 1\r\n")
+      the tap closed the connection after 1 of 2 answer(s): [200]
+  A_forward_cut_short_by_disposal_is_no_forward_failure
+      Assert.Equal() Failure: Values differ
+      Expected: 0
+      Actual:   1
+  A_chunk_size_past_int_is_too_large(size: "80000000")
+      Assert.StartsWith() Failure: String start does not match
+      String:         "an end of stream"
+      Expected start: "HTTP/1.1 413 "
+  A_chunk_size_past_int_is_too_large(size: "100000000000000000")
+      Assert.StartsWith() Failure: String start does not match
+      String:         "HTTP/1.1 200 OK"
+      Expected start: "HTTP/1.1 413 "
+  A_chunk_size_past_int_is_too_large(size: "ffffffff")
+      Assert.StartsWith() Failure: String start does not match
+      String:         "an end of stream"
+      Expected start: "HTTP/1.1 413 "
+  An_exporter_that_hangs_up_before_its_answer_is_no_forward_failure
+      Assert.Equal() Failure: Values differ
+      Expected: 0
+      Actual:   1
+
+
+Added after review, before the push: R2-5 became a theory over (variant, trailers), so its runs are now named by
+variant ("one field", "two fields"), with a third, "a field longer than a size line may be" (one 2,000-byte field).
+On 4.19.2's code it fails too, on its own assertion, which the counts above include:
+  Windows: the tap reset the connection (ConnectionReset) after 0 of 2 answer(s): []
+  Linux:   the tap closed the connection after 1 of 2 answer(s): [200]

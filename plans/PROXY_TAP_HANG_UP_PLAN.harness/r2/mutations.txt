@@ -1,0 +1,33 @@
+R2 mutations (plan section 5), each run against OtlpTapHangUpTests on 4.19.2's code with R2: on Linux in
+mcr.microsoft.com/dotnet/sdk:10.0 (.NET 10.0.12) and on Windows 11 26200 (.NET 10.0.11). Each mutant is one exact-string
+replacement in OtlpTap.cs or HttpRequestReader.cs, written by ../mutation/make_mutants.py (prefix N), and N12 by hand after
+review. 12 of 12 are caught, each by the same facts on both platforms.
+
+N01  the answer write counted as a forward failure again (the plan's "move the answer write back into the try")
+     caught by R2-1 (ForwardFailures 1)
+N02  the tap's own cancellation counted as a forward failure
+     caught by R2-2
+N03  an end of stream before the last chunk returns the body read so far (the plan's "return the partial body again")
+     caught by R2-3: no zero-size chunk, a size line over 1,024 bytes
+N04  a size line that is not hex returns the body read so far
+     caught by R2-3: a size line that is not hex
+N05  one line read as the whole trailer section (the plan's "read one trailer line again")
+     caught by R2-5 (one field, two fields) and R2-3 trailers past 64 KiB
+N06  no check for a size past int (the plan's "drop the negative-size check")
+     caught by R2-6 (all three sizes)
+N07  the size parse keeps multiplying past int, so 17 hex digits wrap to a negative long
+     caught by R2-6 100000000000000000
+N08  a chunk's CRLF not checked
+     caught by R2-3 chunk data longer than its size
+N09  no cap on the trailer section
+     caught by R2-3 trailers past 64 KiB
+N10  a size past int keeps the connection, which then waits for a chunk the tap never drains
+     caught by R2-6 (all three sizes: the exporter is not let go)
+N11  a size past int is no request at all (no 413)
+     caught by R2-6 (all three sizes)
+N12  a trailer line held to a size line's 1,024 bytes (R2's first version, found in review before the push)
+     caught by R2-5 a field longer than a size line may be
+
+Removed while building R2: a check that a chunk's data came in full. A chunk is short only when the stream has ended,
+and then the read of its CRLF returns null anyway, so the check could not change an outcome, and no fact could tell it
+was gone.

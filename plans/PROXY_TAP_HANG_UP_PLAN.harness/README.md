@@ -24,6 +24,8 @@ managed `HttpListener`, as on macOS). Every probe is a file-based app: `dotnet r
 | `r1/red-4.19.0.txt` | R1's facts on 4.19.0's code with only what they need to compile, on both platforms (plan §11) |
 | `r1/mutations.txt`, `r1/checks.txt` | R1's 12 mutations on both platforms, and the checks before its release |
 | `mutation/make_mutants.py`, `mutation/run_windows.sh` | Writes each mutant as one exact-string replacement (`M` for R1, `N` for R2) and runs them against a test class, restoring each file from a copy |
+| `r2/red-4.19.2.txt`, `r2/mutations.txt`, `r2/checks.txt` | R2's facts on 4.19.2's code on both platforms, its 11 mutations, and the checks before its release |
+| `wiki/r1_wiki.py`, `wiki/r2_wiki.py` | Each release's wiki edits as exact-string insertions, applied after its publication (plan §6.3) |
 
 The `probe/` and `listener/` resets are `TcpClient.Dispose()` with a zero linger, which shuts the socket down before closing it:
 a FIN, then an RST. Linux reads that as an end of stream. `reset/` and `socket/` show the difference from an RST alone.
