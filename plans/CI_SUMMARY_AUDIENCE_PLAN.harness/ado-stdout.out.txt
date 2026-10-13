@@ -1,0 +1,28 @@
+2026-10-13, Windows 11, .NET SDK 10.0.300, xunit.v3 3.2.2 with xunit.runner.visualstudio 3.1.5 (VSTest), the
+repository at 71426b3f (Kronikol built from source, as the dogfood workflow builds it). `bash ado-stdout.sh` from the
+repository root printed:
+
+verbosity normal: exit=1
+  ##vso lines on stdout: 0, on stderr: 0
+  pointer lines ('Kronikol: reports written'): 0
+verbosity detailed: exit=1
+  ##vso lines on stdout: 0, on stderr: 0
+  pointer lines ('Kronikol: reports written'): 0
+VSTEST_DISABLE_STANDARD_OUTPUT_CAPTURING=1: exit=1
+  ##vso lines on stdout: 0, on stderr: 0
+  pointer lines ('Kronikol: reports written'): 0
+console logger at normal: exit=1
+  ##vso lines on stdout: 0, on stderr: 0
+  pointer lines ('Kronikol: reports written'): 0
+both, console logger at detailed: exit=1
+  ##vso lines on stdout: 0, on stderr: 0
+  pointer lines ('Kronikol: reports written'): 0
+CiSummary.md written: yes
+
+(exit=1 is the example's eleven deliberate failures.) Each run took the Azure DevOps path: CiSummaryWriter left a
+temporary ci-summary-<guid>.md in %TEMP% holding that run's "Debug this run" section, and wrote
+"##vso[task.uploadsummary]<that file>" through Console.WriteLine (CiSummaryWriter.cs:30-32). Neither that line nor
+the pointer reached dotnet test's stdout or stderr in any configuration; detailed verbosity was in effect (MSBuild's
+property reassignments and the xUnit adapter's lines are in its output). An Azure DevOps agent running this step
+therefore receives no summary, and with PublishCiArtifacts no ##vso[artifact.upload] either, since
+CiArtifactPublisher writes those the same way.

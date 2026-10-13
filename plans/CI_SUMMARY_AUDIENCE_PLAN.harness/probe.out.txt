@@ -1,0 +1,49 @@
+=== A. failing run: the Debug this run block (job summary and log)
+## Debug this run
+
+Do not open `TestRunReport.json` or `TestRunReport.html` — a real report reaches megabytes, and a single embedded diagram can be larger than a context window. Query it instead:
+
+```bash
+dotnet tool install -g Kronikol.Tool
+kronikol query summary /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports
+kronikol query failures /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports
+```
+
+Nothing to install and no network needed: `dotnet run --file /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports\query.cs -- summary /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports` runs the same engine from the `query.cs` written beside the report, given the .NET 10 SDK.
+
+The artifact also carries `Failures.md` — every failure in context, ready to read.
+
+=== end
+
+=== B. failing run: the ::notice annotation
+::notice title=Kronikol::1 failed of 42 scenarios — kronikol query failures /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports · Failures.md
+=== end
+
+=== C. green run with WriteCiSummary: the block CiSummary.md ends with
+## Debug this run
+
+Do not open `TestRunReport.json` or `TestRunReport.html` — a real report reaches megabytes, and a single embedded diagram can be larger than a context window. Query it instead:
+
+```bash
+dotnet tool install -g Kronikol.Tool
+kronikol query summary /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports
+```
+
+Nothing to install and no network needed: `dotnet run --file /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports\query.cs -- summary /home/runner/work/shop/shop/tests/Acceptance/bin/Release/net10.0/Reports` runs the same engine from the `query.cs` written beside the report, given the .NET 10 SDK.
+
+The artifact also carries `Failures.md` — every failure in context, ready to read.
+
+=== end
+
+=== D. failing run with WriteCiSummary, 11 failures: the lines that point at the report
+# Diagrammed Test Run Summary
+## ❌ Failed Scenarios (11)
+*1 more failed scenario(s) not shown — see full report*
+## Debug this run
+Do not open `TestRunReport.json` or `TestRunReport.html` — a real report reaches megabytes, and a single embedded diagram can be larger than a context window. Query it instead:
+=== end
+
+=== E. failing run that wrote no HTML: the first sentence
+Do not open `TestRunReport.json` or `TestRunReport.html` — a real report reaches megabytes, and a single embedded diagram can be larger than a context window. Query it instead:
+=== end
+
