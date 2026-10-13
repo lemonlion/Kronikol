@@ -478,6 +478,8 @@ public class ProxyTapTests
     [Fact]
     public async Task Emits_server_and_client_activities_and_reparents_the_forwarded_traceparent()
     {
+        // Listeners are process-wide and other classes' taps run in parallel, so only this fact's own trace counts.
+        var traceId = ActivityTraceId.CreateRandom().ToString();
         var activities = new List<Activity>();
         using var listener = new ActivityListener
         {
@@ -494,13 +496,15 @@ public class ProxyTapTests
             await tap.StartAsync();
             using var client = new HttpClient();
             using var request = Request(HttpMethod.Get, tap.ListenUri, "/i", null,
-                (TestTrackingHttpHeaders.CurrentTestIdHeader, "t"), ("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"));
+                (TestTrackingHttpHeaders.CurrentTestIdHeader, "t"), ("traceparent", $"00-{traceId}-b7ad6b7169203331-01"));
             await client.SendAsync(request);
         }
 
-        var server = activities.Single(a => a.Kind == ActivityKind.Server);
-        var clientSpan = activities.Single(a => a.Kind == ActivityKind.Client);
-        Assert.Equal("0af7651916cd43dd8448eb211c80319c", server.TraceId.ToString());
+        List<Activity> mine;
+        lock (activities) mine = activities.Where(a => a.TraceId.ToString() == traceId).ToList();
+        var server = mine.Single(a => a.Kind == ActivityKind.Server);
+        var clientSpan = mine.Single(a => a.Kind == ActivityKind.Client);
+        Assert.Equal(traceId, server.TraceId.ToString());
         Assert.Equal(server.SpanId, clientSpan.ParentSpanId);
         // The forwarded traceparent is the client span's id, same trace.
         Assert.Equal(clientSpan.Id, upstream.Seen.Single().Headers["traceparent"]);

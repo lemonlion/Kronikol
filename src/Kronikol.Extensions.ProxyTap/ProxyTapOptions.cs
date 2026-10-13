@@ -32,7 +32,10 @@ public sealed class ProxyTapOptions
     /// <summary>Host name the listener binds to. Default <c>localhost</c> (no URL ACL needed on Windows).</summary>
     public string ListenHost { get; set; } = "localhost";
 
-    /// <summary>Base URI of the real service the tap forwards to (scheme + host + port). Required.</summary>
+    /// <summary>
+    /// Base URI of the real service the tap forwards to (http or https, host and port). Required. Every request goes to its
+    /// scheme and authority with the request's own path and query; a path in it is not used.
+    /// </summary>
     public Uri? ForwardBaseUri { get; set; }
 
     /// <summary>The calling participant as it should appear in diagrams (the service that dials the tap). Required.</summary>
@@ -184,8 +187,9 @@ public sealed class ProxyTapOptions
     {
         if (ListenPort is <= 0 or > 65535)
             throw new ArgumentOutOfRangeException(nameof(ListenPort), "ListenPort must be a valid TCP port.");
-        if (ForwardBaseUri is null || !ForwardBaseUri.IsAbsoluteUri)
-            throw new ArgumentException("ForwardBaseUri must be an absolute URI (scheme + host + port).", nameof(ForwardBaseUri));
+        // HttpClient forwards only http and https: any other scheme would start and then answer every request 502.
+        if (ForwardBaseUri is null || !ForwardBaseUri.IsAbsoluteUri || (ForwardBaseUri.Scheme != Uri.UriSchemeHttp && ForwardBaseUri.Scheme != Uri.UriSchemeHttps))
+            throw new ArgumentException("ForwardBaseUri must be an absolute http or https URI (scheme + host + port).", nameof(ForwardBaseUri));
         if (string.IsNullOrWhiteSpace(CallerName))
             throw new ArgumentException("CallerName is required.", nameof(CallerName));
         if (string.IsNullOrWhiteSpace(ServiceName))

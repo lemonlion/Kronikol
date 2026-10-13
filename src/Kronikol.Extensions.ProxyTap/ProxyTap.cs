@@ -182,6 +182,10 @@ public sealed class ProxyTap : IAsyncDisposable
     {
         var request = context.Request;
         var pathAndQuery = request.Url?.PathAndQuery ?? "/";
+        // The base's scheme and authority with the request's own path, never a relative resolution against the base: a
+        // path starting with "//" is a network-path reference there and names a host of its own (the listener also
+        // reads "/\" as "//"). The path always starts with "/", so this is the configured upstream for every request.
+        var forwardUri = new Uri(_options.ForwardBaseUri!.GetLeftPart(UriPartial.Authority) + pathAndQuery);
         var requestHeaders = ReadHeaders(request.Headers);
         var inboundTraceparent = TraceParent.TryParse(request.Headers["traceparent"]);
         var requestStarted = DateTimeOffset.UtcNow;
@@ -292,7 +296,7 @@ public sealed class ProxyTap : IAsyncDisposable
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(lifetime);
         deadline.CancelAfter(_options.ForwardTimeout);
 
-        using var message = new HttpRequestMessage(new HttpMethod(request.HttpMethod), pathAndQuery);
+        using var message = new HttpRequestMessage(new HttpMethod(request.HttpMethod), forwardUri);
         if (requestBody.Length > 0 || request.HasEntityBody)
             message.Content = new ByteArrayContent(requestBody);
 
@@ -344,7 +348,7 @@ public sealed class ProxyTap : IAsyncDisposable
         if (!capture || identity is null)
             return;
 
-        Record(identity.Value, ignore, kronikolTraceId, requestResponseId, request.HttpMethod, pathAndQuery,
+        Record(identity.Value, ignore, kronikolTraceId, requestResponseId, request.HttpMethod, forwardUri,
             requestHeaders, requestBody, request.Headers["Content-Encoding"], requestStarted,
             status, responseHeaders, responseBody, responseContentEncoding, responseReceived,
             activityTraceId, activitySpanId);
@@ -430,12 +434,11 @@ public sealed class ProxyTap : IAsyncDisposable
 
     private void Record(
         (string Name, string Id) identity, bool ignore, Guid traceId, Guid requestResponseId,
-        string method, string pathAndQuery,
+        string method, Uri uri,
         IReadOnlyDictionary<string, string[]> requestHeaders, byte[] requestBody, string? requestEncoding, DateTimeOffset requestStarted,
         int status, (string Key, string? Value)[] responseHeaders, byte[] responseBody, string? responseEncoding, DateTimeOffset responseReceived,
         string activityTraceId, string activitySpanId)
     {
-        var uri = new Uri(_options.ForwardBaseUri!, pathAndQuery);
         var httpMethod = new HttpMethod(method);
 
         var capturedRequestHeaders = FilterHeaders(requestHeaders.SelectMany(h => h.Value.Select(v => (h.Key, (string?)v))));

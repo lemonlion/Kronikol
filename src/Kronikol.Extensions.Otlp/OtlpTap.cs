@@ -386,11 +386,35 @@ public sealed class OtlpTap : IAsyncDisposable
         return true;
     }
 
+    /// <summary>
+    /// The path and query a request target forwards with: the forward always goes to
+    /// <see cref="OtlpTapOptions.ForwardBaseUri"/>'s scheme and authority, whatever host the target names. Null for a
+    /// target with no path to forward (the asterisk form, the authority form, a target with no leading slash).
+    /// </summary>
+    internal static string? OriginForm(string target)
+    {
+        // A path first: on Linux "/v1/traces" also parses as an absolute URI (file:///v1/traces).
+        if (target.StartsWith('/'))
+            return target;
+        return Uri.TryCreate(target, UriKind.Absolute, out var absolute) && (absolute.Scheme == Uri.UriSchemeHttp || absolute.Scheme == Uri.UriSchemeHttps)
+            ? absolute.PathAndQuery
+            : null;
+    }
+
     private async Task ForwardAsync(HttpRequestMessageData request, Stream stream, CancellationToken ct)
     {
+        // Never resolved against the base: a target starting with "//" would name a host of its own.
+        if (OriginForm(request.Target) is not { } origin)
+        {
+            _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap refused a request target with no path to forward: {request.Method} {request.Target}");
+            await WriteResponseAsync(stream, 400, "Bad Request", "application/json",
+                Utf8("{\"error\":\"otlp-tap: the request target must be a path or an http URI\"}"), request.KeepAlive, ct).ConfigureAwait(false);
+            return;
+        }
+
         try
         {
-            using var message = new HttpRequestMessage(new HttpMethod(request.Method), request.Target);
+            using var message = new HttpRequestMessage(new HttpMethod(request.Method), new Uri(_options.ForwardBaseUri!.GetLeftPart(UriPartial.Authority) + origin));
             if (request.Body.Length > 0)
                 message.Content = new ByteArrayContent(request.Body);
 

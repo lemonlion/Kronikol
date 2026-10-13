@@ -47,7 +47,8 @@ public sealed class OtlpTapOptions
     /// Optional real collector to forward every request to, byte-for-byte (same method, path, headers and
     /// body, including <c>Content-Encoding</c>); its status and body are relayed to the caller. Null (the
     /// default) answers <c>200</c> with an empty <c>ExportTraceServiceResponse</c> locally — the shape for a
-    /// fan-out leaf, where the collector already keeps its own copy.
+    /// fan-out leaf, where the collector already keeps its own copy. http or https; every request goes to its scheme
+    /// and authority with the request target's path and query, and a target with no path is answered <c>400</c>.
     /// </summary>
     public Uri? ForwardBaseUri { get; set; }
 
@@ -142,8 +143,9 @@ public sealed class OtlpTapOptions
             throw new ArgumentOutOfRangeException(nameof(ListenPort), "ListenPort must be a valid TCP port (or 0 for a free one).");
         if (string.IsNullOrWhiteSpace(ListenHost))
             throw new ArgumentException("ListenHost is required.", nameof(ListenHost));
-        if (ForwardBaseUri is not null && !ForwardBaseUri.IsAbsoluteUri)
-            throw new ArgumentException("ForwardBaseUri must be an absolute URI (scheme + host + port).", nameof(ForwardBaseUri));
+        // HttpClient forwards only http and https: any other scheme would start and then fail every forward.
+        if (ForwardBaseUri is not null && (!ForwardBaseUri.IsAbsoluteUri || (ForwardBaseUri.Scheme != Uri.UriSchemeHttp && ForwardBaseUri.Scheme != Uri.UriSchemeHttps)))
+            throw new ArgumentException("ForwardBaseUri must be an absolute http or https URI (scheme + host + port).", nameof(ForwardBaseUri));
         if (string.IsNullOrWhiteSpace(TracesPath) || !TracesPath.StartsWith('/'))
             throw new ArgumentException("TracesPath must be an absolute path such as /v1/traces.", nameof(TracesPath));
         if (QueueCapacity <= 0)

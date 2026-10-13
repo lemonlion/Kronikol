@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.19.1] - 2026-10-13
+
+**Patch - a proxy tap, and the OTLP tap in forward mode, send every request to the configured upstream, whatever
+host its request target names (`plans/PROXY_TAP_FAILED_FORWARD_PLAN.md` R0).** Green-lit in full by the owner on
+2026-10-13, every question in the plan's section 9 as recommended. Bug fixes, and nothing new for a consumer to call,
+so the patch part moves (4.19.0 to 4.19.1). It is a security fix: anyone who could reach a tap's port could make it
+fetch another host and read the answer, so upgrade any tap that listens where others can reach it.
+
+### Fixed
+
+- **A request target starting with `//` was forwarded to the host it named.** `ProxyTap` resolved the request's path
+  against `ForwardBaseUri` as a relative URI, where a path starting with `//` is a network-path reference that
+  replaces the host: `GET //other-host:8080/x` was forwarded to `other-host:8080`, its answer went back to the caller,
+  and the record named that host. The listener reads `/\` as `//`, so `GET /\other-host:8080/x` did the same, and a
+  path starting with `///` was answered 502 (`Invalid URI`) and counted as a forward failure. The tap now forwards to
+  `ForwardBaseUri`'s scheme and authority with the request's own path and query, and records that URI, so a path
+  with leading slashes reaches the configured upstream as it was sent. Every other path forwards as before.
+- **`OtlpTap` in forward mode had the same defect, and forwarded absolute-form targets too.** It forwarded the raw
+  request target, so `POST //other-host/v1/traces` and `POST http://other-host/v1/traces` went to that host, a target
+  starting with `///` got no answer, `OPTIONS *` was forwarded as `/*`, and a target with no leading slash was
+  forwarded under the base. It now forwards the target's path and query (for an absolute `http` or `https` target,
+  that URI's own) to `ForwardBaseUri`'s scheme and authority, and answers `400 Bad Request` to a target with no path
+  to forward: the asterisk form, the authority form and a target with no leading slash.
+- **A `ForwardBaseUri` that is not `http` or `https` was accepted.** `ftp://` or `file:///` passed validation, and the
+  tap then answered every request 502. `StartAsync` now throws `ArgumentException` naming `ForwardBaseUri`, in both
+  taps, as it does for other invalid options.
+
+Behaviour changes: a path with leading slashes reaches the configured upstream in both taps; `OtlpTap` answers 400
+where it forwarded an asterisk, authority or slashless target; a `ForwardBaseUri` other than `http` or `https` fails
+at start.
+
+Tests: `ProxyTapForwardTargetTests` sends `//` and `/\` targets naming another host (they reach the configured stub
+and the record names it), `//` and `///` paths (each gets the configured stub's 200 with its path as sent), an
+absolute-form target naming another host (it never reaches that host: the listener answers it, or hands the tap the
+request under its own authority and the tap forwards the path) and `ftp://` and `file:///` bases.
+`OtlpTapForwardTargetTests` sends an ordinary path, `//`, `///` and absolute-form targets naming another host, the
+asterisk, authority and slashless forms, and the same bases. `ProxyTapTests`' span fact took every tap span in the
+process, and failed on Linux once the new class sent traffic through taps alongside it; it now sends a trace of its
+own and counts only that trace's spans. Proofs (plan harness `r0/`): against 4.19.0's code, 6 ProxyTap facts and 9
+Otlp facts fail on their own assertions, and the absolute-form pin and the ordinary path pass. 7 of 7 mutations are killed; the one that
+tests for an absolute URI before a path dies only on Linux, where `/v1/traces` parses as `file:///v1/traces`, so the
+Otlp facts run there too.
+
 ## [4.19.0] - 2026-10-13
 
 **Minor - `ProxyTapOptions.TraceIdFromIdentity`: a tap that knows whose call it is forwards a call that brings no
