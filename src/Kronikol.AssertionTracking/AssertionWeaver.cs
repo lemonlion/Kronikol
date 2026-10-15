@@ -165,13 +165,10 @@ public class AssertionWeaver
         var weaveMs = sw.ElapsedMilliseconds;
         _log?.LogMessage(MessageImportance.Normal, "AssertionTracking: {0} types, {1} methods, {2} assertions weaved in {3}ms", typeCount, methodCount, result.WeavedCount, weaveMs);
 
-        // Where each document was read from, when not under its own name, and the documents nothing reached.
+        // Where each document was read from, when not under its own name. The documents nothing reached go to the
+        // task, which warns about them (KRONIKOL002).
         result.DiagMessages.AddRange(_sources.Found);
-        foreach (var unread in _sources.Unread)
-        {
-            result.UnreadSources.Add(unread);
-            result.DiagMessages.Add($"Could not read the source of {unread.Document}; tried {string.Join(", ", unread.Tried)}");
-        }
+        result.UnreadSources.AddRange(_sources.Unread);
 
         if (result.WeavedCount > 0)
         {

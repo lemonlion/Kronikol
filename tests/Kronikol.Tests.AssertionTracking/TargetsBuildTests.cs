@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using Kronikol.AssertionTracking;
 
 namespace Kronikol.Tests.AssertionTracking;
@@ -85,9 +86,10 @@ public class TargetsBuildTests
     private sealed record FixtureBuild(string Directory, string Assembly, string Output);
 
     /// <summary>Builds a copy of the fixture in <c>{name}</c> (under <paramref name="parent"/> when given) with the
-    /// properties given, and returns its woven assembly and the build's output.</summary>
+    /// properties given, and <paramref name="extraProject"/> placed before the SDK's targets, and returns its woven
+    /// assembly and the build's output.</summary>
     private static FixtureBuild Build(string name, IReadOnlyList<string> properties, string? parent = null, string? assemblyName = null,
-        string source = Statements)
+        string source = Statements, string extraProject = "")
     {
         var directory = Path.Combine(parent ?? Root, name);
         Directory.CreateDirectory(directory);
@@ -113,6 +115,7 @@ public class TargetsBuildTests
                 <!-- The fixture's own source root, as Source Link names a repository's: no git needed. -->
                 <SourceRoot Include="$(MSBuildProjectDirectory){Path.DirectorySeparatorChar}" />
               </ItemGroup>
+            {extraProject}
               <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
               <Import Project="{Path.Combine(WeaverBuildDirectory, "Kronikol.AssertionTracking.targets")}" />
             </Project>
@@ -246,4 +249,39 @@ public class TargetsBuildTests
     }
 
     private static string Hash(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
+
+    // Fact 24 (R2): a statement whose source no candidate reaches. The fixture moves its source away between the
+    // compiler and the weave, so neither the file the map leads back to nor the PDB's own name is there: the build warns
+    // once, KRONIKOL002, naming the document and the paths tried; <NoWarn> silences it; and a build that reads every
+    // document has none.
+    private const string HideSource = """
+          <Target Name="_HideIssueCases" BeforeTargets="_WeaveAssertionTracking">
+            <Move SourceFiles="IssueCases.cs" DestinationFolder="$(MSBuildProjectDirectory)-hidden" />
+          </Target>
+        """;
+
+    [Fact]
+    public void A_statement_whose_source_cannot_be_read_warns_once()
+    {
+        var unread = Build("Unread", ["-p:ContinuousIntegrationBuild=true"], extraProject: HideSource);
+
+        // The SDK numbers the source roots it maps, and outside a repository the NuGet folders come first: the fixture's
+        // own root is /_/ on one machine and /_2/ on another.
+        var file = Path.Combine(unread.Directory, "IssueCases.cs");
+        Assert.Matches(Regex.Escape("warning KRONIKOL002: Kronikol.AssertionTracking: the source of 11 assertion statement(s) "
+            + "in 1 file(s) could not be read, so they are labelled by line number, show no values, and their pragma comments "
+            + "were not read. First: ") + @"(?<name>/_\d*/)IssueCases\.cs; tried " + Regex.Escape(file) + @", \k<name>IssueCases\.cs\.",
+            unread.Output);
+        Assert.Contains("    1 Warning(s)", unread.Output);
+        Assert.All(Notes(unread.Assembly), n => Assert.StartsWith("Assertion at line", n.Label, StringComparison.Ordinal));
+
+        var silenced = Build("UnreadNoWarn", ["-p:ContinuousIntegrationBuild=true"],
+            extraProject: HideSource + "<PropertyGroup><NoWarn>$(NoWarn);KRONIKOL002</NoWarn></PropertyGroup>");
+        Assert.DoesNotContain("warning KRONIKOL002", silenced.Output);
+        Assert.Contains("Kronikol.AssertionTracking: Could not read the source of 1 file(s)", silenced.Output);
+
+        var read = Build("ReadAll", ["-p:ContinuousIntegrationBuild=true"]);
+        Assert.DoesNotContain("KRONIKOL002", read.Output);
+        Assert.DoesNotContain("Could not read the source", read.Output);
+    }
 }

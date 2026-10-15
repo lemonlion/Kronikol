@@ -6,7 +6,7 @@ by eight lines above its two calls, so every other number holds for both.
 The weaver's three source-reading methods, `ReadSourceText`, `CutColumns` and `IsPragmaDisabled`, are byte for byte
 the same as at 98c4806d, the commit the issue cites, 93 lines lower: the issue's L775, L783 and L979 are L868, L876
 and L1072 here · **Status:** green-lit in full by the owner on 2026-10-15 ("Can you implement the plan in full"),
-every question in §9 as recommended. R1 executed as 4.20.4 (§11); R2, a minor of its own (Q1), next.
+every question in §9 as recommended. R1 executed as 4.20.4 and R2, a minor of its own (Q1), as 4.21.0 (§11).
 
 Evidence labels: **RUN** (measured on 2026-10-13 with the published 4.18.1 packages, SDK 10.0.300, xUnit 2.9.3,
 Shouldly 4.3.0 and FluentAssertions 6.12.1 on net8.0; the project, the scripts and the saved output are in
@@ -726,6 +726,15 @@ no row is taken until the owner green-lights the plan ("taking row 1.N now" to t
   CI 38718437768, CodeQL 38718437838 and CI Summary Preview 38718437816 passed on their first attempt, and nuget.org
   listed all 62 ids at 10:41 UTC. The wiki has R1's edits (`993fe1f`), Kronikol4J's ledger its line (`1644fab`, nothing
   to port), and #165 a comment naming the release; R2 is next.
+- **2026-10-15** (kronikol-2a): R2 executed as 4.21.0, a minor of its own (Q1), from 4.20.4. Facts first:
+  `WeaveAssertionsTaskTests` gains the task with a document it cannot read (one `KRONIKOL002`, its text whole, and the
+  file listed at normal importance) and a fact counting three statements in two unread files beside one read; facts 3,
+  4 and 18 check the build has no warning; `TargetsBuildTests` gains fact 24, the source moved away between the compiler
+  and the weave in a target of its own. Red (`harness/r2/`): on 4.20.4 the three new facts fail, each on its warning,
+  and facts 3, 4 and 18 pass there by design; M11 is caught by them and by fact 24's last clause. The weave's line at low
+  importance for an unread document (R1) is gone: the task lists each such file at normal importance with the warning.
+  Found at execution: outside a git repository the SDK maps the NuGet folders first, so the fixture's own root is
+  `/_2/` on this machine; fact 24 reads the number from the warning rather than naming `/_/`. The core suite's `TrackingSafeSerializerTests` fact for a pending `ValueTask` timed out once under load, its serialization queued on a busy thread pool; it runs on a thread of its own now (`harness/r2/starve.cs`). Checks: after the version bump the core suite passes 7,551 with 2 skipped, the weaver suite 421 facts on each of net8.0, net9.0 and net10.0 (the cross-SDK facts for SDKs not installed skipped) and on Linux but for the older fact that needs SDK 8.0.420, the full Playwright suite 1,040 with 28 skipped when run alone, and `release.slnf` builds in Release for every target.
 
 ## Appendix A. Edit sites at 34145c44
 

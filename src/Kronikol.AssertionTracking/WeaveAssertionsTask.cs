@@ -12,7 +12,8 @@ namespace Kronikol.AssertionTracking;
 /// FluentAssertions and AwesomeAssertions (<c>.Should()</c>), Shouldly (<c>ShouldBe()</c> and the rest) and TUnit
 /// (<c>Assert.That()</c>) with assertion tracking: a try/catch around each statement that calls
 /// Track.AssertionPassed/Track.AssertionFailed. Only activates if <c>[assembly: TrackAssertions]</c> is found in the
-/// compiled assembly, and warns (KRONIKOL001) when that attribute finds nothing to instrument. It finds the
+/// compiled assembly, and warns (KRONIKOL001) when that attribute finds nothing to instrument, and (KRONIKOL002) when
+/// a statement it instruments has no source it can read. It finds the
 /// statements through the build's symbols, a portable PDB beside the assembly or one embedded in it, and reads each
 /// statement's text where the compiler read it: the file the PDB names, mapped back through <see cref="PathMap"/> and
 /// <see cref="SourceRoots"/> when the build wrote other names (deterministic source paths, #165), or else the source
@@ -123,6 +124,28 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
                 lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0,
                 message: "Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: {0}.",
                 reason);
+        }
+
+        // A woven statement whose source the weave could not read is labelled by its line, shows no values, and its
+        // pragma comments were not read (#165): the build says so once, as a warning a project can silence with
+        // <NoWarn>, naming the first such file and every path tried, and lists each file where a build shows it.
+        var unread = result.UnreadSources.Where(u => u.Statements > 0).ToList();
+        if (result.WeavedCount > 0 && unread.Count > 0)
+        {
+            var first = unread[0];
+            Log.LogWarning(subcategory: null, warningCode: "KRONIKOL002", helpKeyword: null, file: null,
+                lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0,
+                message: "Kronikol.AssertionTracking: the source of {0} assertion statement(s) in {1} file(s) could not be read, "
+                    + "so they are labelled by line number, show no values, and their pragma comments were not read. First: {2}; "
+                    + "tried {3}. Setting <EmbedAllSources>true</EmbedAllSources> puts the source in the symbols, where the weave "
+                    + "finds it without the file.",
+                unread.Sum(u => u.Statements), unread.Count, first.Document, string.Join(", ", first.Tried));
+            Log.LogMessage(MessageImportance.Normal,
+                "Kronikol.AssertionTracking: Could not read the source of {0} file(s); their statements are labelled by line number:",
+                unread.Count);
+            foreach (var source in unread)
+                Log.LogMessage(MessageImportance.Normal, "  {0}: {1} statement(s); tried {2}",
+                    source.Document, source.Statements, string.Join(", ", source.Tried));
         }
 
         if (result.WeavedCount > 0)

@@ -1,0 +1,7 @@
+The weaver suite on Linux with R2, 2026-10-15: podman's WSL machine, mcr.microsoft.com/dotnet/sdk:10.0 (SDK 10.0.401),
+net10.0 (r1/run-linux.sh, mode suite).
+
+Failed!  - Failed:     1, Passed:   336, Skipped:    84, Total:   421, Duration: 1 m 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+Skipped: 84, every one a CrossSdkWeaverTests fact for an SDK the container lacks; the one failure is the
+older fact that pins SDK 8.0.420, as in r1/linux.txt:
+Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_Sdk8_AwesomeAssertions_LinqOrderByDescending_DoesNotThrowBadImageFormat(configuration: "Release") [FAIL]

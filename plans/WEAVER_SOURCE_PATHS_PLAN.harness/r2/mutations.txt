@@ -1,0 +1,14 @@
+WEAVER_SOURCE_PATHS_PLAN section 5.5, M11 (R2), 2026-10-15: KRONIKOL002 given whenever a statement was woven, every
+document read or not (WeaveAssertionsTask.cs: the condition loses 'unread.Count > 0', the first file a blank one when
+none), on R1 (61720a1b) with R2's files. CAUGHT: the three task facts that read a mapped document fail on their
+no-warning clause, and the targets fact on its last (a build that reads every document has no KRONIKOL002).
+
+- WeaveAssertionsTaskTests.The_task_takes_the_builds_PathMap_source_roots_and_code_page @ WeaveAssertionsTaskTests.cs:383
+    Assert.Empty() Failure: Collection was not empty | Collection: [BuildWarningEventArgs { BuildEventContext = null, Code = "KRONIKOL002", ColumnNumber = 0, EndColumnNumber = 0, EndLineNumber = 0, ··· }]
+- WeaveAssertionsTaskTests.The_task_reads_a_mapped_document_through_the_source_roots @ WeaveAssertionsTaskTests.cs:336
+    Assert.Empty() Failure: Collection was not empty | Collection: [BuildWarningEventArgs { BuildEventContext = null, Code = "KRONIKOL002", ColumnNumber = 0, EndColumnNumber = 0, EndLineNumber = 0, ··· }]
+- WeaveAssertionsTaskTests.The_task_reads_a_document_a_projects_own_PathMap_named @ WeaveAssertionsTaskTests.cs:356
+    Assert.Empty() Failure: Collection was not empty | Collection: [BuildWarningEventArgs { BuildEventContext = null, Code = "KRONIKOL002", ColumnNumber = 0, EndColumnNumber = 0, EndLineNumber = 0, ··· }]
+- TargetsBuildTests.A_statement_whose_source_cannot_be_read_warns_once @ TargetsBuildTests.cs:284
+    Assert.DoesNotContain() Failure: Sub-string found |                                      ↓ (pos 50761) | String: ···"g.targets(53,5): warning KRONIKOL002: Kronikol.Ass"··· | Found:  "KRONIKOL002"
+Failed!  - Failed:     4, Passed:     0, Skipped:     0, Total:     4, Duration: 12 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

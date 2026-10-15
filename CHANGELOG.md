@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.21.0] - 2026-10-15
+
+**Minor - a build warns when the weave cannot read a woven assertion's source (`KRONIKOL002`; #165,
+`plans/WEAVER_SOURCE_PATHS_PLAN.md` R2).** Green-lit with the plan on 2026-10-15, as a minor of its own after R1 (the
+plan's Q1). A new warning code is surface a project can act on (`<NoWarn>`, `-warnaserror`), as `KRONIKOL001` was in
+4.14.0, so the minor part moves (4.20.6 to 4.21.0).
+
+### Added
+
+- **`KRONIKOL002`.** When the weave cannot read the source of a statement it instruments (no file where the build's
+  map or the PDB's own name points, and no source embedded in the PDB), the statement is still woven, labelled by its
+  line number, with no values, and its pragma comments unread. Until now the build said nothing at its default
+  verbosity, so such a run looked tracked. The build now warns once: how many statements in how many files, the first
+  file with every path tried, and that `<EmbedAllSources>true</EmbedAllSources>` puts the source in the symbols, where
+  the weave finds it without the file. At normal verbosity it lists each file with its statements and the paths tried,
+  in place of 4.20.4's line at low importance. `<NoWarn>KRONIKOL002</NoWarn>` silences it. Since 4.20.4 the weave
+  reads every source the compiler read, so the warning means a source moved, deleted or rewritten between the compiler
+  and the weave, or a `#line` directive naming a file that is not there.
+
+### Tests
+
+- `WeaveAssertionsTaskTests` gains the task with a document it cannot read: one `KRONIKOL002`, its text whole (the
+  statement and file counts, the first file and the paths tried), and the file listed at normal importance; a second
+  fact counts three statements in two unread files beside one the weave read, which neither names. The facts that read
+  a mapped document (through the source roots, a project's `PathMap`, and a CI build's map with `CodePage`) now also
+  check the build has no warning.
+- `TargetsBuildTests` gains a CI build whose source is moved away between the compiler and the weave, in a target of
+  its own: the build prints one `KRONIKOL002` naming the document and the paths tried, and its notes are labelled by
+  line; `<NoWarn>KRONIKOL002</NoWarn>` silences it and leaves the listing; and a build that reads every document has
+  neither.
+- Proofs (plan harness `r2/`): on 4.20.4, the three new facts fail, each on its warning, and the facts that read a
+  mapped document pass there by design; M11, the warning given when every document was read, is caught by those
+  three facts and by the targets fact's last clause.
+- `TrackingSafeSerializerTests`' fact for a pending `ValueTask` ran its serialization on the thread pool and allowed it
+  five seconds; in a loaded parallel run the work did not start in time and the fact failed as if the serializer
+  blocked (once, in this release's core run). It runs on a thread of its own now: with the pool saturated, a pool
+  task does not start within five seconds and a thread of its own does (plan harness `r2/starve.cs`).
+- Checks: after the version bump the core suite passes 7,551 with 2 skipped; the weaver suite passes on net8.0, net9.0
+  and net10.0 (421 facts each; 84, 56 and 28 skipped, the cross-SDK facts for SDKs not installed here), and on Linux
+  in the `dotnet/sdk:10.0` container but for the older fact that needs SDK 8.0.420, which CI installs; the full
+  Playwright suite passes 1,040 with 28 skipped when run alone; `release.slnf` builds in Release for every target.
+
 ## [4.20.6] - 2026-10-15
 
 **Patch - fixes from an audit of the CI job summary's text (#169; `plans/CI_SUMMARY_AUDIENCE_PLAN.md` section 12,

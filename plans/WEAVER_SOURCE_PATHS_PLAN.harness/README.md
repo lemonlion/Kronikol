@@ -93,3 +93,12 @@ the key `FailureText.ClusterKey` gives it (copied into `Program.cs`, being inter
   0ee43e8, its 27 Kronikol references moved, its seven tracked test projects built with and without
   `ContinuousIntegrationBuild` and what the weave wrote compared (`breakfast.sh`, `wovenlabels.cs`):
   `breakfast-r1.txt` on the acceptance packages, `breakfast-control.txt` on the published 4.20.2.
+
+## r2/ (R2, 4.21.0, 2026-10-15)
+
+- `red-summary.txt` and `red-totals.txt`: R2's facts on 4.20.4 (R1's release with R2's test files), the three new
+  facts failing on their warning and the three that read a mapped document passing.
+- `mutations.txt`: M11, `KRONIKOL002` given whenever a statement was woven, and the four facts it turns red.
+- `linux.txt`: the weaver suite on Linux with R2 (`r1/run-linux.sh`).
+- `starve.cs` and `starve.txt`: with the thread pool saturated, a pool task does not start within five seconds and a
+  thread of its own does, the cause of the core suite's one timed-out fact in R2's checks.

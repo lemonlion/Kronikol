@@ -65,7 +65,10 @@ public class TrackingSafeSerializerTests
         var source = new TaskCompletionSource<string>();
         try
         {
-            var serializing = Task.Run(() => TrackingSafeSerializer.Serialize(new ValueTask<string>(source.Task)));
+            // On a thread of its own: on the pool, a parallel run's load can keep the work from starting in the time
+            // allowed, which reads as the serializer blocking.
+            var serializing = Task.Factory.StartNew(() => TrackingSafeSerializer.Serialize(new ValueTask<string>(source.Task)),
+                CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             Assert.True(serializing.Wait(TimeSpan.FromSeconds(5)), "serializing a pending ValueTask blocked");
             Assert.Equal("\"<ValueTask>\"", serializing.Result);

@@ -333,6 +333,7 @@ public class WeaveAssertionsTaskTests
 
         Assert.True(succeeded, string.Join("\n", engine.Errors.Select(e => e.Message)));
         Assert.Equal("Name should be \"café\"", Label(path));
+        Assert.Empty(engine.Warnings);
     }
 
     // WEAVER_SOURCE_PATHS_PLAN fact 4: a project's own PathMap, as the user writes it (no trailing separator), and no
@@ -352,6 +353,7 @@ public class WeaveAssertionsTaskTests
 
         Assert.True(succeeded, string.Join("\n", engine.Errors.Select(e => e.Message)));
         Assert.Equal("Name should be \"café\"", Label(path));
+        Assert.Empty(engine.Warnings);
     }
 
     // WEAVER_SOURCE_PATHS_PLAN fact 18: the task as the targets run it in a CI build: PathMap with the SDK's trailing
@@ -378,5 +380,101 @@ public class WeaveAssertionsTaskTests
         Assert.Contains(engine.Messages, m => m.Importance == MessageImportance.Low
             && m.Message == $"AssertionTracking: Read the source of /_/tests/Cases.cs from {file}");
         Assert.DoesNotContain(engine.Visible(), m => m.Contains("/_/tests/Cases.cs", StringComparison.Ordinal));
+        Assert.Empty(engine.Warnings);
+    }
+
+    // WEAVER_SOURCE_PATHS_PLAN R2: a woven statement whose source no candidate reaches is labelled by its line, shows no
+    // values, and its pragma comments were not read. The build says so once, as KRONIKOL002, a warning a project can
+    // silence with <NoWarn>, naming the first such file and every path tried, and lists each file where a build shows it.
+    [Fact]
+    public void The_task_warns_once_when_a_statements_source_cannot_be_read()
+    {
+        var root = TestAssemblyBuilder.NewSourceRoot("TaskUnread");
+        var file = Path.Combine(root, "tests", "Cases.cs");
+        var path = TestAssemblyBuilder.BuildMapped("TaskUnread",
+            [TestAssemblyBuilder.FixtureFile.Utf8(file, Mapped) with { OnDisk = false }], [new(WithSeparator(root), "/_/")]);
+
+        var (succeeded, engine) = RunTask(path, task => task.SourceRoots =
+            [new TaskItem(WithSeparator(root), new Dictionary<string, string> { ["MappedPath"] = "/_/" })]);
+
+        Assert.True(succeeded, string.Join("\n", engine.Errors.Select(e => e.Message)));
+        Assert.Equal("Assertion at line 11", Label(path));
+        var warning = Assert.Single(engine.Warnings);
+        Assert.Equal("KRONIKOL002", warning.Code);
+        Assert.Equal("Kronikol.AssertionTracking: the source of 1 assertion statement(s) in 1 file(s) could not be read, so "
+            + "they are labelled by line number, show no values, and their pragma comments were not read. First: "
+            + $"/_/tests/Cases.cs; tried {file}, /_/tests/Cases.cs. Setting <EmbedAllSources>true</EmbedAllSources> puts the "
+            + "source in the symbols, where the weave finds it without the file.", warning.Message);
+        Assert.Contains("Kronikol.AssertionTracking: Could not read the source of 1 file(s); their statements are labelled by line number:",
+            engine.Visible());
+        Assert.Contains($"  /_/tests/Cases.cs: 1 statement(s); tried {file}, /_/tests/Cases.cs", engine.Visible());
+    }
+
+    // R2: the warning counts every statement and file it could not read and names the first; the listing names each,
+    // and a file the weave read is in neither.
+    [Fact]
+    public void The_warning_counts_the_statements_and_files_it_could_not_read()
+    {
+        var root = TestAssemblyBuilder.NewSourceRoot("TaskUnreadCounts");
+        var first = Path.Combine(root, "tests", "First.cs");
+        var read = Path.Combine(root, "tests", "Read.cs");
+        var last = Path.Combine(root, "tests", "Last.cs");
+        var path = TestAssemblyBuilder.BuildMapped("TaskUnreadCounts",
+            [
+                TestAssemblyBuilder.FixtureFile.Utf8(first, """
+                    using FluentAssertions;
+                    using Kronikol.Tracking;
+
+                    [assembly: TrackAssertions]
+
+                    public static class First
+                    {
+                        public static void Statements()
+                        {
+                            var total = 3;
+                            total.Should().Be(3);
+                            total.Should().BePositive();
+                        }
+                    }
+                    """) with { OnDisk = false },
+                TestAssemblyBuilder.FixtureFile.Utf8(read, """
+                    using FluentAssertions;
+
+                    public static class Read
+                    {
+                        public static void Statements()
+                        {
+                            var total = 3;
+                            total.Should().Be(3);
+                        }
+                    }
+                    """),
+                TestAssemblyBuilder.FixtureFile.Utf8(last, """
+                    using FluentAssertions;
+
+                    public static class Last
+                    {
+                        public static void Statements()
+                        {
+                            var total = 3;
+                            total.Should().Be(3);
+                        }
+                    }
+                    """) with { OnDisk = false },
+            ], [new(WithSeparator(root), "/_/")]);
+
+        var (succeeded, engine) = RunTask(path, task => task.SourceRoots =
+            [new TaskItem(WithSeparator(root), new Dictionary<string, string> { ["MappedPath"] = "/_/" })]);
+
+        Assert.True(succeeded, string.Join("\n", engine.Errors.Select(e => e.Message)));
+        var warning = Assert.Single(engine.Warnings);
+        Assert.StartsWith("Kronikol.AssertionTracking: the source of 3 assertion statement(s) in 2 file(s) could not be read,",
+            warning.Message);
+        Assert.Contains($"First: /_/tests/First.cs; tried {first}, /_/tests/First.cs.", warning.Message);
+        Assert.Contains("Kronikol.AssertionTracking: Could not read the source of 2 file(s); their statements are labelled by line number:",
+            engine.Visible());
+        Assert.Contains($"  /_/tests/First.cs: 2 statement(s); tried {first}, /_/tests/First.cs", engine.Visible());
+        Assert.Contains($"  /_/tests/Last.cs: 1 statement(s); tried {last}, /_/tests/Last.cs", engine.Visible());
+        Assert.DoesNotContain(engine.Visible(), m => m.Contains("Read.cs", StringComparison.Ordinal));
     }
 }

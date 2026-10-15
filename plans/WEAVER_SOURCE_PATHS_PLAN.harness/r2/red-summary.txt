@@ -1,0 +1,6 @@
+- WeaveAssertionsTaskTests.The_warning_counts_the_statements_and_files_it_could_not_read @ WeaveAssertionsTaskTests.cs:470
+    Assert.Single() Failure: The collection was empty
+- WeaveAssertionsTaskTests.The_task_warns_once_when_a_statements_source_cannot_be_read @ WeaveAssertionsTaskTests.cs:402
+    Assert.Single() Failure: The collection was empty
+- TargetsBuildTests.A_statement_whose_source_cannot_be_read_warns_once @ TargetsBuildTests.cs:271
+    Assert.Matches() Failure: Pattern not found in value | Regex: "warning\\ KRONIKOL002:\\ Kronikol\\.AssertionTrack"··· | Value: "Build started 15/10/2026 10:52:32.\r\n     1>Proje"···
