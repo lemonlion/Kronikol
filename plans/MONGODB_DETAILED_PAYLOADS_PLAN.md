@@ -1313,6 +1313,13 @@ no row is taken here.
     148; the full Playwright suite passes 1,040 with 28 skipped when run alone; release.slnf builds in Release for every
     target, and restores with --force-evaluate.
 
+- **2026-10-15, the audit published.** Release 38722321576, CI 38722318406, CodeQL 38722318418 and CI Summary
+  Preview 38722318315 passed for 4.20.5 on their first attempt, and nuget.org listed all 62 ids at 11:11 UTC
+  (`Kronikol.Extensions.EventBridge`, pushed at 10:51, was the last to list). The wiki has the edits (`e703abf`),
+  Kronikol4J's ledger its line (`b57564f`, worth porting in part: a negative `setMaxContentLength` and the surrogate
+  cut, the `admin.null` label, and, once 4.19.6's write errors are ported, a refused write's claim), and #168 a comment
+  naming the release. #168 stays open for Q8.
+
 ## Appendix A. Edit sites at `34145c44`
 
 **R1:**
