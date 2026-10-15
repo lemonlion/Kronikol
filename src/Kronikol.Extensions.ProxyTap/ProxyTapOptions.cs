@@ -149,6 +149,31 @@ public sealed class ProxyTapOptions
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>
+    /// How long a caller may move no bytes while it sends its request body or reads its answer before the tap cuts it.
+    /// Default 100 s; <c>null</c> or <see cref="Timeout.InfiniteTimeSpan"/> means no limit, and zero or another negative
+    /// value is refused at start. It measures a stall, not a duration: every read or write that moves bytes starts the
+    /// wait again, so a slow caller that keeps moving is never cut. The tap reads the body and writes the answer in pieces
+    /// of 16 KiB (an answer's last piece up to 32 KiB), so a caller has to move one piece per limit, about 164 bytes a
+    /// second at the default.
+    /// <para>
+    /// A caller cut while it sends its body is answered <c>408 Request Timeout</c> and closed (on Windows, where http.sys
+    /// writes nothing on an abort, its connection is reset), and the request is neither forwarded nor recorded. One cut
+    /// while it reads its answer is closed, and the exchange is recorded as any whose caller hangs up mid-answer. Each
+    /// counts in <see cref="ProxyTap.CallerTimeouts"/> and is logged. The forward is <see cref="ForwardTimeout"/>'s, and
+    /// a connection idle between requests is the listener's.
+    /// </para>
+    /// <para>
+    /// The limit does not reach a caller that stalls inside its request head, which the listener reads before the tap
+    /// sees the request: the managed listener (Linux, macOS) times only the wait for a head's first bytes. On Windows,
+    /// http.sys keeps its own timers, which reset a stalled head, body or idle connection at about two minutes and a stalled
+    /// piece of an answer at about 115 s, so a longer limit does not hold such a caller longer there. No limit fires while a
+    /// debugger is attached to this process; a service paused in a debugger in a process of its own is cut after the limit,
+    /// so set it to <c>null</c> for such a session.
+    /// </para>
+    /// </summary>
+    public TimeSpan? CallerStallTimeout { get; set; } = TimeSpan.FromSeconds(100);
+
+    /// <summary>
     /// Emit a server span (parented on the inbound <c>traceparent</c>) and a client span for the forwarded
     /// call on <see cref="ProxyTap.ActivitySource"/>, re-parenting the forwarded <c>traceparent</c> on the
     /// client span so the downstream service nests under the tap in a distributed trace. When a listener drops
@@ -213,7 +238,12 @@ public sealed class ProxyTapOptions
             throw new ArgumentOutOfRangeException(nameof(ForwardTimeout), "ForwardTimeout must be positive, or Timeout.InfiniteTimeSpan for no deadline.");
         if (ConnectTimeout <= TimeSpan.Zero && ConnectTimeout != Timeout.InfiniteTimeSpan)
             throw new ArgumentOutOfRangeException(nameof(ConnectTimeout), "ConnectTimeout must be positive, or Timeout.InfiniteTimeSpan for none.");
+        if (CallerStallTimeout is { } stall && stall <= TimeSpan.Zero && stall != Timeout.InfiniteTimeSpan)
+            throw new ArgumentOutOfRangeException(nameof(CallerStallTimeout), "CallerStallTimeout must be positive, or null or Timeout.InfiniteTimeSpan for no limit.");
     }
+
+    /// <summary>The caller's stall limit, or null for none: <c>null</c> or <see cref="Timeout.InfiniteTimeSpan"/>.</summary>
+    internal TimeSpan? StallLimit => CallerStallTimeout is { } stall && stall != Timeout.InfiniteTimeSpan ? stall : null;
 
     /// <summary>
     /// The longest timeout <see cref="HttpClient.Timeout"/> and <see cref="SocketsHttpHandler.ConnectTimeout"/> take:

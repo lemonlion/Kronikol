@@ -70,6 +70,9 @@ public sealed class ProxyTap : IAsyncDisposable
     private long _captureFaults;
     private string? _firstCaptureFault;
     private long _traceIdNotApplied;
+    private StallWatch? _watch;
+    private long _bodyTimeouts;
+    private long _answerTimeouts;
 
     /// <summary>Creates a tap for the given options (validated on <see cref="StartAsync"/>).</summary>
     public ProxyTap(ProxyTapOptions options)
@@ -98,6 +101,13 @@ public sealed class ProxyTap : IAsyncDisposable
     /// </summary>
     public long ForwardFailures => Interlocked.Read(ref _forwardFailures);
 
+    /// <summary>
+    /// Callers cut by <see cref="ProxyTapOptions.CallerStallTimeout"/>: ones that stalled while sending a request body,
+    /// which were not forwarded, and ones that stalled while reading an answer, whose exchanges were recorded when captured.
+    /// <see cref="Diagnostics"/> says how many of each.
+    /// </summary>
+    public long CallerTimeouts => Interlocked.Read(ref _bodyTimeouts) + Interlocked.Read(ref _answerTimeouts);
+
     /// <summary>Whether the listener is accepting connections.</summary>
     public bool IsListening => _listener.IsListening;
 
@@ -111,6 +121,23 @@ public sealed class ProxyTap : IAsyncDisposable
     // Wraps the caller's request body before it is read (Kronikol.Tests.ProxyTap): a fact throws from the read whatever
     // exception it names, on any platform. Null in production.
     internal Func<Stream, Stream>? WrapRequestBody { get; set; }
+
+    // The phases a caller is watched in, as the watch and the tap's messages name them.
+    internal const string BodyPhase = "request body";
+    internal const string AnswerPhase = "answer";
+
+    // The size of each read of a request body and each write of an answer. A body read on Windows, and a chunked one on
+    // Linux, returns only once its buffer is full or the body ends, so a read is progress only if its buffer is small.
+    internal const int PieceBytes = 16 * 1024;
+
+    // The tap's clock (Kronikol.Tests.ProxyTap): a fact moves a fake one past the stall limit. Set before StartAsync.
+    internal TimeProvider Clock { get; set; } = TimeProvider.System;
+
+    // Whether a debugger is attached (Kronikol.Tests.ProxyTap): every fact says no, so the suite passes under one too.
+    internal Func<bool> DebuggerAttached { get; set; } = static () => Debugger.IsAttached;
+
+    // The watch over callers' transfers, or null when there is no limit (Kronikol.Tests.ProxyTap).
+    internal StallWatch? Watch => _watch;
 
     /// <summary>
     /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per
@@ -128,6 +155,12 @@ public sealed class ProxyTap : IAsyncDisposable
         if (forwardFailures > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
                 string.Create(CultureInfo.InvariantCulture, $"{name}: {forwardFailures:N0} request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; {WhichWereRecorded(forwardFailures)}")));
+
+        var bodyTimeouts = Interlocked.Read(ref _bodyTimeouts);
+        var answerTimeouts = Interlocked.Read(ref _answerTimeouts);
+        if (bodyTimeouts + answerTimeouts > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {bodyTimeouts + answerTimeouts:N0} caller(s) stalled for CallerStallTimeout ({_options.CallerStallTimeout}) and were cut: {bodyTimeouts:N0} sending a request body (not forwarded), {answerTimeouts:N0} reading an answer (recorded when captured)")));
 
         // Counted where it happens, not worked out as handled - captured: a record that threw is a capture fault, not a
         // request without a test identity.
@@ -230,6 +263,9 @@ public sealed class ProxyTap : IAsyncDisposable
         _listener.Prefixes.Add(ListenUri.ToString());
         _listener.Start();
 
+        if (_options.StallLimit is not null)
+            _watch = new StallWatch(Clock, DebuggerAttached, line => TryLog($"[{_options.DisplayName}] proxy-tap: {line}"));
+
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _lifetime = _cts.Token;
         // The accept loop, and every request it hands on, runs in the context it is started in. Started under an activity
@@ -260,8 +296,12 @@ public sealed class ProxyTap : IAsyncDisposable
             {
                 context = await _listener.GetContextAsync().WaitAsync(_listenerClosed.Token).ConfigureAwait(false);
             }
-            catch (Exception ex) when (ex is OperationCanceledException or HttpListenerException or ObjectDisposedException or InvalidOperationException)
+            catch (Exception ex) when (ex is OperationCanceledException or HttpListenerException or ObjectDisposedException or InvalidOperationException
+                || Volatile.Read(ref _disposed) == 1)
             {
+                // The listener closed under the wait. One that closes as the wait begins throws what the platform throws
+                // then: on Windows an ArgumentException ("The handle is invalid"), which failed up to one disposal in seven
+                // of a tap disposed straight after it started.
                 return;
             }
 
@@ -277,7 +317,7 @@ public sealed class ProxyTap : IAsyncDisposable
         try
         {
             if (Stopping)
-                RefuseWhileStopping(answer);
+                await RefuseWhileStoppingAsync(answer).ConfigureAwait(false);
             else
                 await HandleAsync(context, answer).ConfigureAwait(false);
         }
@@ -286,12 +326,13 @@ public sealed class ProxyTap : IAsyncDisposable
             // Only a fault the tap did not expect lands here: the caller's request and answer, the forward, the record, the
             // identity resolver and the span listeners all have catches of their own. It is counted by what the caller
             // got: a 502, when it had no answer yet, is a forward failure; after its answer, a capture fault. An answer the
-            // tap's stopping ended is neither: what its I/O throws from then on is the stop's.
+            // tap's stopping ended, or the stall limit cut, is neither: what its I/O throws from then on is the stop's or
+            // the limit's, and the cut was logged when it was made.
             if (answer.IsEnded)
             {
                 TryLog($"[{_options.DisplayName}] proxy-tap stopping: {ex.Message}");
             }
-            else
+            else if (!answer.IsTimedOut)
             {
                 TryLog($"[{_options.DisplayName}] proxy-tap error: {ex.Message}");
                 if (answer.IsClosed)
@@ -301,7 +342,7 @@ public sealed class ProxyTap : IAsyncDisposable
                 else
                 {
                     Interlocked.Increment(ref _forwardFailures);
-                    TryRespond(answer, 502, BadGatewayBody(ex.Message));
+                    await TryRespondAsync(answer, 502, BadGatewayBody(ex.Message)).ConfigureAwait(false);
                 }
             }
         }
@@ -319,7 +360,49 @@ public sealed class ProxyTap : IAsyncDisposable
     /// Answers a request that arrived while the tap stops: <c>503</c> and <c>Connection: close</c>, never forwarded, so
     /// the caller is told the truth rather than left to the listener's close.
     /// </summary>
-    private void RefuseWhileStopping(CallerAnswer answer) => TryRespond(answer, 503, ErrorBody(503, "the tap is stopping"));
+    private Task RefuseWhileStoppingAsync(CallerAnswer answer) => TryRespondAsync(answer, 503, ErrorBody(503, "the tap is stopping"));
+
+    /// <summary>
+    /// Reads a request body in pieces of at most <see cref="PieceBytes"/>, recording progress after each: a larger read
+    /// would show progress only once its whole buffer had arrived.
+    /// </summary>
+    private static async Task<byte[]> ReadBodyAsync(Stream body, StallWatch.Entry? reading)
+    {
+        using var buffer = new MemoryStream();
+        var piece = new byte[PieceBytes];
+        int read;
+        while ((read = await body.ReadAsync(piece.AsMemory()).ConfigureAwait(false)) > 0)
+        {
+            buffer.Write(piece, 0, read);
+            reading?.Progress();
+        }
+
+        return buffer.ToArray();
+    }
+
+    /// <summary>
+    /// Cuts a caller that stalled past <see cref="ProxyTapOptions.CallerStallTimeout"/>, unless its answer was closed or
+    /// ended first: <c>408</c> and a close while it sends its body (on Windows a reset, since http.sys writes nothing on an
+    /// abort), a close while it reads its answer. Called by the limit's action and by the handler that lost the race to it,
+    /// and only one of them cuts, counts and logs.
+    /// </summary>
+    private void CutStalled(CallerAnswer answer, string phase)
+    {
+        var body = phase == BodyPhase;
+        if (!answer.TimeOut(body ? 408 : null))
+            return;
+
+        if (body)
+        {
+            Interlocked.Increment(ref _bodyTimeouts);
+            TryLog($"[{_options.DisplayName}] proxy-tap caller stalled {_options.CallerStallTimeout} sending its request body; not forwarded, {(OperatingSystem.IsWindows() ? "connection reset" : "answered 408 and closed")}");
+        }
+        else
+        {
+            Interlocked.Increment(ref _answerTimeouts);
+            TryLog($"[{_options.DisplayName}] proxy-tap caller stalled {_options.CallerStallTimeout} reading its answer; closed");
+        }
+    }
 
     private async Task HandleAsync(HttpListenerContext context, CallerAnswer answer)
     {
@@ -336,21 +419,35 @@ public sealed class ProxyTap : IAsyncDisposable
         byte[] requestBody = [];
         if (request.HasEntityBody)
         {
+            // Watched from the first read, so a caller that sends a head and no byte of its body is cut too.
+            var reading = _watch?.Watch(BodyPhase, _options.StallLimit, () => CutStalled(answer, BodyPhase));
             try
             {
-                using var buffer = new MemoryStream();
                 var body = WrapRequestBody is { } wrap ? wrap(request.InputStream) : request.InputStream;
-                await body.CopyToAsync(buffer).ConfigureAwait(false);
-                requestBody = buffer.ToArray();
+                requestBody = await ReadBodyAsync(body, reading).ConfigureAwait(false);
             }
             catch (Exception)
             {
                 // The request never arrived whole: the caller hung up or half-closed mid-body, sent a broken chunked
-                // body, or the tap is stopping. The exception says which only by platform and by how the caller closed
-                // (an IOException for a reset on Linux and macOS, an HttpListenerException for a FIN there and for
-                // everything on Windows), so the step decides, not the type. Nothing reached the upstream: no forward
-                // failure, and a 400 for a caller still listening.
+                // body, the tap is stopping, or the stall limit cut it. The exception says which only by platform and by
+                // how the caller closed (an IOException for a reset on Linux and macOS, an HttpListenerException for a
+                // FIN there and for everything on Windows), so the step decides, not the type. Nothing reached the
+                // upstream: no forward failure, and a 400 for a caller still listening.
+                if (reading is not null && !reading.TryEnd())
+                {
+                    CutStalled(answer, BodyPhase);
+                    return;
+                }
+
                 answer.StatusIfUnclosed = 400;
+                return;
+            }
+
+            // The body's end and its limit settle by one move on the entry: a lost move is the limit's, whatever the read
+            // returned (a chunked read cut by the abort can end as if the body were whole).
+            if (reading is not null && !reading.TryEnd())
+            {
+                CutStalled(answer, BodyPhase);
                 return;
             }
         }
@@ -367,9 +464,10 @@ public sealed class ProxyTap : IAsyncDisposable
         // nor recorded, and a caller still being answered hears the 503.
         if (Stopping)
         {
-            RefuseWhileStopping(answer);
+            await RefuseWhileStoppingAsync(answer).ConfigureAwait(false);
             return;
         }
+
         var resolved = identity; // what the request named, before the fallback below: only that may name a trace
         var ignore = requestHeaders.ContainsKey(TestTrackingHttpHeaders.Ignore);
         var capture = identity is not null || _options.CaptureUnattributedRequests;
@@ -541,7 +639,7 @@ public sealed class ProxyTap : IAsyncDisposable
 
             // Written for a stopping tap too: DisposeAsync keeps the listener open until the drain is over, and a forward it
             // cut short is answered the 502 its record names.
-            TryRespond(answer, 502, badGateway);
+            await TryRespondAsync(answer, 502, badGateway).ConfigureAwait(false);
             return;
         }
         finally
@@ -923,16 +1021,58 @@ public sealed class ProxyTap : IAsyncDisposable
             if (contentEncoding is not null)
                 response.Headers["Content-Encoding"] = contentEncoding;
 
-            response.ContentLength64 = body.Length;
-            await response.OutputStream.WriteAsync(body).ConfigureAwait(false);
-            answer.Close();
+            await WriteAndCloseAsync(answer, body).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is HttpListenerException or ObjectDisposedException or InvalidOperationException || answer.IsEnded)
+        catch (Exception ex) when (ex is HttpListenerException or ObjectDisposedException or InvalidOperationException || answer.IsEnded || answer.IsTimedOut)
         {
-            // The client hung up, or the tap's stopping ended the answer (whatever its write threw then); the exchange is
-            // still recorded, and GuardedHandleAsync aborts the response.
+            // The client hung up, the tap's stopping ended the answer, or the stall limit cut it (whatever its write threw
+            // then); the exchange is still recorded, and GuardedHandleAsync aborts the response.
         }
     }
+
+    /// <summary>
+    /// Writes an answer's body in pieces (<see cref="PieceLength"/>), recording progress after each, and closes the response
+    /// unless the stall limit cut it. The body keeps its <c>Content-Length</c>: the managed listener would send it chunked
+    /// otherwise, and there a chunked answer's abort waits until the caller reads.
+    /// </summary>
+    private async Task WriteAndCloseAsync(CallerAnswer answer, byte[] body)
+    {
+        var response = answer.Response;
+        response.ContentLength64 = body.Length;
+        var writing = _watch?.Watch(AnswerPhase, _options.StallLimit, () => CutStalled(answer, AnswerPhase));
+        var written = false;
+        try
+        {
+            var output = response.OutputStream;
+            // A write pending when the limit aborts the response completes without an error on the managed listener, so
+            // the loop reads the answer's state, not the write's outcome.
+            for (var offset = 0; offset < body.Length && !answer.IsTimedOut;)
+            {
+                var length = PieceLength(body.Length - offset);
+                await output.WriteAsync(body.AsMemory(offset, length)).ConfigureAwait(false);
+                offset += length;
+                writing?.Progress();
+            }
+
+            written = true;
+        }
+        finally
+        {
+            // The answer's end and its limit settle by one move on the entry: a lost move is the limit's.
+            if (writing is not null && !writing.TryEnd())
+                CutStalled(answer, AnswerPhase);
+        }
+
+        if (written && !answer.IsTimedOut)
+            answer.Close();
+    }
+
+    /// <summary>
+    /// The length of an answer's next piece, given what is left of it: <see cref="PieceBytes"/>, or all of the rest once
+    /// less than two pieces' worth is left. The last piece is so 16 to 32 KiB long, and never short enough for http.sys to
+    /// reset it, at its send rate, before the tap's own limit acts.
+    /// </summary>
+    internal static int PieceLength(int remaining) => remaining < 2 * PieceBytes ? remaining : PieceBytes;
 
     /// <summary>
     /// Once the tap is stopping, an answer closes its connection after it (<c>Connection: close</c>): closing the listener
@@ -973,11 +1113,14 @@ public sealed class ProxyTap : IAsyncDisposable
 
     internal Action? AfterAnswered { get; set; }
 
-    /// <summary>Writes an answer of the tap's own, a JSON body with <paramref name="status"/>, unless the answer has already ended.</summary>
-    private void TryRespond(CallerAnswer answer, int status, byte[] payload)
+    /// <summary>
+    /// Writes an answer of the tap's own, a JSON body with <paramref name="status"/>, unless the answer has already ended.
+    /// The write is awaited and watched like any answer's: on Windows an abort cannot interrupt a synchronous write.
+    /// </summary>
+    private async Task TryRespondAsync(CallerAnswer answer, int status, byte[] payload)
     {
         if (!answer.IsOpen)
-            return; // closed, or ended by the tap's stopping: nothing left to tell
+            return; // closed, ended by the tap's stopping, or cut by the stall limit: nothing left to tell
 
         var response = answer.Response;
         try
@@ -985,11 +1128,9 @@ public sealed class ProxyTap : IAsyncDisposable
             CloseAfterIfStopping(response);
             response.StatusCode = status;
             response.ContentType = "application/json";
-            response.ContentLength64 = payload.Length;
-            response.OutputStream.Write(payload);
-            answer.Close();
+            await WriteAndCloseAsync(answer, payload).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is HttpListenerException or ObjectDisposedException or InvalidOperationException || answer.IsEnded)
+        catch (Exception ex) when (ex is HttpListenerException or ObjectDisposedException or InvalidOperationException || answer.IsEnded || answer.IsTimedOut)
         {
             // Nothing left to tell; GuardedHandleAsync aborts the response.
         }
@@ -1009,8 +1150,8 @@ public sealed class ProxyTap : IAsyncDisposable
     internal sealed class CallerAnswer(HttpListenerResponse response)
     {
         // Open phases first: the request body is being read (or not yet begun), the forward is running, the answer is
-        // being written. Then the ends: closing, closed by the tap, or ended by an abort.
-        private const int Reading = 0, Forwarding = 1, Answering = 2, Closing = 3, Closed = 4, Ended = 5;
+        // being written. Then the ends: closing, closed by the tap, ended by an abort, or cut by the stall limit.
+        private const int Reading = 0, Forwarding = 1, Answering = 2, Closing = 3, Closed = 4, Ended = 5, TimedOut = 6;
 
         private int _state;
 
@@ -1025,6 +1166,9 @@ public sealed class ProxyTap : IAsyncDisposable
         /// <summary>Whether the response was ended by an abort: whatever its I/O throws from then on is that end's, never a forward failure.</summary>
         public bool IsEnded => Volatile.Read(ref _state) == Ended;
 
+        /// <summary>Whether the stall limit cut the caller: whatever the response's I/O throws from then on is the limit's.</summary>
+        public bool IsTimedOut => Volatile.Read(ref _state) == TimedOut;
+
         /// <summary>Whether neither a close nor an end has begun.</summary>
         public bool IsOpen => Volatile.Read(ref _state) <= Answering;
 
@@ -1035,18 +1179,20 @@ public sealed class ProxyTap : IAsyncDisposable
         public bool TryBeginAnswer() => Interlocked.CompareExchange(ref _state, Answering, Forwarding) == Forwarding;
 
         /// <summary>
-        /// Closes the response, unless it was ended first. A <see cref="HttpListenerResponse.Close()"/> that throws (on Windows,
-        /// 1229 for a caller gone) is passed on and leaves the answer open, so <see cref="EndUnclosed"/> still aborts it.
+        /// Closes the response, unless it was ended first; true when this call closed it. A
+        /// <see cref="HttpListenerResponse.Close()"/> that throws (on Windows, 1229 for a caller gone) is passed on and leaves
+        /// the answer open, so <see cref="EndUnclosed"/> still aborts it.
         /// </summary>
-        public void Close()
+        public bool Close()
         {
             var phase = Volatile.Read(ref _state);
             if (phase > Answering || Interlocked.CompareExchange(ref _state, Closing, phase) != phase)
-                return;
+                return false;
             try
             {
                 Response.Close();
                 Volatile.Write(ref _state, Closed);
+                return true;
             }
             catch
             {
@@ -1058,36 +1204,47 @@ public sealed class ProxyTap : IAsyncDisposable
         /// <summary>
         /// Aborts the response unless the tap closed it, with <see cref="StatusIfUnclosed"/> set first, and never throws: it
         /// runs in a <c>finally</c> before the in-flight count goes down, and a failed end leaves the response as it was.
+        /// True when this call ended it.
         /// </summary>
-        public void EndUnclosed() => TryEnd(StatusIfUnclosed, readingOnly: false, closeConnection: false);
+        public bool EndUnclosed() => TryEnd(StatusIfUnclosed, readingOnly: false, closeConnection: false, Ended);
 
         /// <summary>Ends the answer of a request whose body is still being read, or not yet begun, with <paramref name="status"/>; false in any other phase.</summary>
-        public bool EndWhileReading(int status) => TryEnd(status, readingOnly: true, closeConnection: true);
+        public bool EndWhileReading(int status) => TryEnd(status, readingOnly: true, closeConnection: true, Ended);
 
         /// <summary>Ends the answer in whatever open phase it is, with <paramref name="status"/> where its head is not yet sent.</summary>
-        public bool EndWith(int status) => TryEnd(status, readingOnly: false, closeConnection: true);
+        public bool EndWith(int status) => TryEnd(status, readingOnly: false, closeConnection: true, Ended);
 
-        private bool TryEnd(int status, bool readingOnly, bool closeConnection)
+        /// <summary>
+        /// Cuts a caller that stalled past the limit, in whatever open phase its answer is, with <paramref name="status"/>
+        /// where the head is not yet sent (408 while the body is read) and the connection closed; false when the answer was
+        /// closed or ended first.
+        /// </summary>
+        public bool TimeOut(int? status) => TryEnd(status, readingOnly: false, closeConnection: true, TimedOut);
+
+        private bool TryEnd(int? status, bool readingOnly, bool closeConnection, int end)
         {
             while (true)
             {
                 var phase = Volatile.Read(ref _state);
                 if (phase > Answering || (readingOnly && phase != Reading))
                     return false;
-                if (Interlocked.CompareExchange(ref _state, Ended, phase) == phase)
+                if (Interlocked.CompareExchange(ref _state, end, phase) == phase)
                     break;
             }
 
             // The managed listener's Abort() first writes a head not yet sent, with the status set (200 unless told
             // otherwise), so a failure status makes that head true; once a head is out, the late status is never sent
             // and Abort() only closes. http.sys sends nothing more.
-            try
+            if (status is { } code)
             {
-                Response.StatusCode = status;
-            }
-            catch (Exception)
-            {
-                // The response is closed (the setter does not throw once the head has gone).
+                try
+                {
+                    Response.StatusCode = code;
+                }
+                catch (Exception)
+                {
+                    // The response is closed (the setter does not throw once the head has gone).
+                }
             }
 
             if (closeConnection)
@@ -1128,6 +1285,9 @@ public sealed class ProxyTap : IAsyncDisposable
     {
         if (Interlocked.Exchange(ref _disposed, 1) == 1)
             return;
+
+        // The stall limit's heartbeat stops first: the stop settles every exchange itself from here on.
+        _watch?.Dispose();
 
         // Stopping from here on: a forward in flight is cut and answers its own 502 (HandleAsync), and a request that
         // arrives is answered 503 (GuardedHandleAsync).

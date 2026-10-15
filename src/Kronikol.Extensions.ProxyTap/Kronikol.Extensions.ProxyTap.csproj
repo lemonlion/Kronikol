@@ -7,11 +7,17 @@
     <Description>Out-of-process HTTP capture for Kronikol: a transparent tee proxy that sits on a service-to-service hop, forwards byte-for-byte, attributes each exchange to the running test via the test-tracking headers (or the W3C trace id), re-injects the correlation headers across non-cooperating hops, redacts secrets at capture, and writes to the Kronikol log store and/or an NDJSON file for `kronikol ingest`. Enables sequence diagrams for polyglot, third-party or legacy backends that cannot be instrumented.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageTags>$(PackageTags);proxy;tee;e2e;playwright;polyglot</PackageTags>
+    <!-- Shared sources from Kronikol.Extensions.TcpTap compile in this package's own namespace. -->
+    <DefineConstants>$(DefineConstants);KRONIKOL_PROXYTAP_SHARED</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Hosting/DI abstractions arrive transitively through Kronikol (Microsoft.AspNetCore.Mvc.Testing). -->
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Extensions.TcpTap\StallWatch.cs" Link="Shared\StallWatch.cs" />
   </ItemGroup>
 
   <ItemGroup>

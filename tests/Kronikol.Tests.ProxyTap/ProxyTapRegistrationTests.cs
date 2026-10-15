@@ -22,6 +22,7 @@ public class ProxyTapRegistrationTests
         var t when t == typeof(bool) => !(bool)fresh!,
         var t when t.IsEnum => Enum.GetValues(t).Cast<object>().First(v => !v.Equals(fresh)),
         var t when t == typeof(TimeSpan) => (TimeSpan)fresh! + TimeSpan.FromSeconds(1),
+        var t when t == typeof(TimeSpan?) => ((TimeSpan?)fresh ?? TimeSpan.Zero) + TimeSpan.FromSeconds(1),
         var t when t == typeof(IRequestResponseSink) => new ListSink(),
         var t when t == typeof(InFlightIdentityRegistry) => new InFlightIdentityRegistry(),
         var t when t == typeof(Action<string>) => new Action<string>(_ => { }),

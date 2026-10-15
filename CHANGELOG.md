@@ -4,6 +4,70 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.23.0] - 2026-10-16
+
+**Minor - a `ProxyTap` cuts a caller that stalls in its request body or in reading its answer (#173;
+`plans/TAP_CALLER_TIME_LIMITS_PLAN.md` R1).** Green-lit in full by the owner on 2026-10-15, every question in the plan's
+section 9 as recommended. A new option, `ProxyTapOptions.CallerStallTimeout`, and a new counter,
+`ProxyTap.CallerTimeouts`, so the minor part moves (4.22.3 to 4.23.0). The limit is on by default (Q1); a caller that
+moves bytes at least once a limit is never cut.
+
+### Added
+
+- **`ProxyTapOptions.CallerStallTimeout`** (default 100 s; `null` or `Timeout.InfiniteTimeSpan` for none; zero or
+  another negative value fails at start). A caller that moves no bytes for that long while it sends its request body or
+  reads its answer is cut. It times silence, not the transfer: every read of the body and every write of the answer that
+  moves bytes starts the wait again. A caller cut while it sends its body is answered `408 Request Timeout` and closed
+  (on Windows, where http.sys writes nothing on an abort, its connection is reset), and the request is neither forwarded
+  nor recorded; one cut while it reads its answer is closed, and the exchange is recorded as one whose caller hangs up
+  mid-answer. No limit fires while a debugger is attached to the tap's process. Registered taps copy the option.
+- **`ProxyTap.CallerTimeouts`**, the callers cut, and a `CaptureDegraded` line in `Diagnostics()` saying how many were
+  cut sending a request body and how many reading an answer. Each cut is logged (`proxy-tap caller stalled 00:01:40
+  sending its request body; not forwarded, answered 408 and closed`, or `... reading its answer; closed`).
+
+### Changed
+
+- The tap reads a request body in pieces of at most 16 KiB and writes an answer in pieces of 16 KiB, the last taking
+  the remainder (16 to 32 KiB), each piece counting as progress. A body read on Windows, and a chunked one on Linux,
+  returns only once its buffer is full, and an answer went out in one write, in which no progress shows. The last piece
+  is never short enough for http.sys to reset it, at its send rate, before the tap's 100 s limit acts. The tap's own
+  `502` and `503` answers are written the same way, awaited: on Windows an abort cannot interrupt a synchronous write.
+
+### Fixed
+
+- **`ProxyTap.DisposeAsync` could throw `ArgumentException` ("The handle is invalid") on Windows** when the tap was
+  disposed straight after it started. The accept loop's first wait for a request could begin while the listener was
+  closing, and http.sys threw from it, which reached `DisposeAsync`: on 4.22.2, 4 to 61 of every 400 such disposals
+  threw. The loop now ends quietly on whatever a closing listener throws.
+
+Before 4.23.0 a caller that stopped sending in the middle of its body was held on Linux and macOS until the tap was
+disposed (on Windows, until http.sys reset it at about two minutes), and one that stopped reading a large answer was
+held on both platforms, its request still published as in flight to an `InFlightRegistry`. Behaviour change: such a
+caller is cut after 100 s; set `CallerStallTimeout` to `null` to keep the old behaviour, for instance while a service in
+another process is paused in a debugger.
+
+Tests: `ProxyTapStallTests`, 36 cases: a caller stalled in its body is cut and not forwarded (a Content-Length body, a
+chunked one and a head with no body byte, each on the fake clock and on the real one); a body read the limit raced is
+not forwarded; a caller that stops reading its answer is cut and its exchange recorded, its in-flight identity released;
+a slow steady body and a slow steady reader are never cut; an answer cut by the limit ends at once; a slow upstream is
+not the caller's stall; the limit, the close and the abort racing on an answer end it once (1,000 rounds); no limit
+fires while a debugger is attached; the option's default, refused values and no-limit values; exchanges leave no entry
+behind (20 kept-alive requests, a 400 and a 502); a read completing as the limit fires is forwarded or cut, never both
+(body and answer); the answer's pieces. `ProxyTapStoppingTests` gains
+`Disposing_a_tap_straight_after_starting_it_never_throws` (1,000 rounds), and `ProxyTapRegistrationTests` a value for
+the new option. Proofs (plan harness `r1/`): copied onto 4.22.2 with R1's seams stubbed (the option with no default and
+no check, a counter that stays 0, the clock and debugger seams, no watch, one piece for any answer, an answer that never
+times out), 27 of the 39 cases in `ProxyTapStallTests`, `ProxyTapRegistrationTests` and the disposal fact fail on
+Windows, the disposal fact with 123 of its 1,000 disposals throwing; the 12 that pass are the steady bodies, no limit as
+null or infinite, six answer lengths a single piece already serves, the race (proven by mutation) and an older
+registration fact. Of 20 mutations, 20 are killed, the one that writes no `408` on Linux only, where the abort writes
+the head; the first run left one alive, a body read the limit raced that `TryBeginForward` refused anyway, and the fact
+was rewritten to hold the limit's action so the read ends in the gap. Checks: after the version bump the core suite
+passes 7,620 with 2 skipped; the ProxyTap suite passes 177 with 4 skipped (its Docker-only facts) on Windows and 181 on
+Linux, and the TcpTap suite, which compiles the watch, 444 with 4 skipped on Windows and 443 with 5 skipped on Linux;
+release.slnf builds in Release for every target. The templates pin 4.22.3 and the history action's VERSION installs
+Kronikol.Tool 4.23.0. The wiki edits and the Kronikol4J ledger line follow publication; R2 (`OtlpTap`'s limits) is next.
+
 ## [4.22.3] - 2026-10-15
 
 **Patch - an audit of #165's two releases (4.20.4 and 4.21.0) against `plans/WEAVER_SOURCE_PATHS_PLAN.md`, at the

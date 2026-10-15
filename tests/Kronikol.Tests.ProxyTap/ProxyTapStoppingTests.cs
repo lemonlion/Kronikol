@@ -200,6 +200,30 @@ public class ProxyTapStoppingTests
     }
 
     [Fact]
+    public async Task Disposing_a_tap_straight_after_starting_it_never_throws()
+    {
+        // The accept loop's first wait can begin while the stop closes the listener, and on Windows that wait threw an
+        // ArgumentException ("The handle is invalid") out of DisposeAsync: 4 to 61 of every 400 disposals on 4.22.2.
+        var thrown = new List<string>();
+        for (var round = 0; round < 1000; round++)
+        {
+            var tap = new Tap(new ProxyTapOptions
+            {
+                ListenPort = StubUpstream.FreePort(),
+                ForwardBaseUri = new Uri("http://localhost:1"),
+                CallerName = "web",
+                ServiceName = "api",
+                Sink = new ListSink(),
+            });
+            await tap.StartAsync();
+            if (await Record.ExceptionAsync(() => tap.DisposeAsync().AsTask()) is { } exception)
+                thrown.Add($"{exception.GetType().Name}: {exception.Message}");
+        }
+
+        Assert.True(thrown.Count == 0, $"{thrown.Count} of 1,000 disposals threw: {string.Join(" | ", thrown.Distinct())}");
+    }
+
+    [Fact]
     public async Task A_request_the_stop_reaches_before_its_forward_is_refused_and_not_recorded()
     {
         await using var upstream = new StubUpstream(Ok);

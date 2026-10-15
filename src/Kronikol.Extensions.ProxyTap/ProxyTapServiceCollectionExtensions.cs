@@ -69,6 +69,7 @@ public static class ProxyTapServiceCollectionExtensions
         to.Phase = from.Phase;
         to.ForwardTimeout = from.ForwardTimeout;
         to.ConnectTimeout = from.ConnectTimeout;
+        to.CallerStallTimeout = from.CallerStallTimeout;
         to.EmitActivities = from.EmitActivities;
         to.SynthesizeTraceparent = from.SynthesizeTraceparent;
         to.TraceIdFromIdentity = from.TraceIdFromIdentity;

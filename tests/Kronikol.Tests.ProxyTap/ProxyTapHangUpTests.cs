@@ -229,7 +229,7 @@ public class ProxyTapHangUpTests
                     break;
             }
 
-            Assert.Null(Record.Exception(answer.EndUnclosed));
+            Assert.Null(Record.Exception(() => answer.EndUnclosed()));
         }
         finally
         {
