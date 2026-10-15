@@ -732,6 +732,14 @@ R3 follows the same shape: **Patch**, with "a tap on localhost no longer costs 2
   theory's two, red on their own assertions on Windows, with the two guards green; on Linux the timing fact passes, as
   §5 said of L2, and the ::1 forward fact skips. 11 of 11 mutations are killed (`r3/mutations-windows.txt`); P8, the
   connect by name, is killed on Windows alone. The checks are in the changelog's 4.22.1 entry.
+- **2026-10-15, 4.22.1 published; the plan is complete.** Release 38733692951, CodeQL 38733689456 and CI Summary
+  Preview 38733689436 passed on their first attempt. CI 38733689473 failed its first in the template job alone: its
+  restore at 12:20 UTC did not see 4.22.0's `Kronikol.ReqNRoll.Core` (NU1102, nearest 4.21.0), though nuget.org's
+  flat container had listed all 62 ids at 4.22.0 here at 12:13 UTC, so a runner can still read an older listing for a
+  few minutes after the check. The job passed when run again, with nothing changed. nuget.org listed all 62 ids at
+  4.22.1 at 12:44 UTC. The wiki has R3's edit (`32dc356`), Kronikol4J's ledger its line (`cc2e2a8`, nothing to
+  port), and #174, closed with 4.22.0, a comment naming the release. Left to the owner: R3's departure from §4.3
+  above (the name `localhost` alone takes both loopbacks; `OtlpTap` also does for `127.0.0.1`).
 
 ## Appendix A. Edit sites at `3240c983`
 
