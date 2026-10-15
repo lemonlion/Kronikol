@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Documentation
+
+- **The doc comments said agents read Kronikol's `::notice` annotation through `gh run view`, without saying when it
+  arrives.** The annotation is a workflow command on stdout, and under `dotnet test` a test run's stdout never reaches
+  the job log, so a GitHub run tested that way shows no Kronikol annotation: this repository's preview workflow shows
+  none in the runs of 4.19.7, 4.20.4 and 4.20.6. `WriteCiDebugSection`, `RunSummaryConsoleWriter`,
+  `BuildGitHubNotice` and `CiReader` now say that the annotation arrives from `kronikol merge`, `kronikol ingest` or a
+  directly run MTP host, and that under `dotnet test` the job summary, a file the runner reads, is the channel left.
+  The plan had measured this (`plans/CI_SUMMARY_AUDIENCE_PLAN.md` section 2), but the docs dropped it; the wiki's
+  CI-Summary-Integration page says it too, with a troubleshooting row.
+
 ## [4.21.0] - 2026-10-15
 
 **Minor - a build warns when the weave cannot read a woven assertion's source (`KRONIKOL002`; #165,

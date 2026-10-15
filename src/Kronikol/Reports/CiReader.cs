@@ -9,7 +9,7 @@ namespace Kronikol.Reports;
 ///
 /// <para>None of those readers is on the runner. A GitHub job summary is read by signed-in people in a browser, and
 /// by no API, <c>gh</c> command or MCP tool; the <c>::notice</c> annotation by people and by agents through
-/// <c>gh run view</c>; <c>CiSummary.md</c> by whoever downloads the artifact. A hosted runner is gone once its job
+/// <c>gh run view</c>, where it arrives (on stdout, it does not under <c>dotnet test</c>); <c>CiSummary.md</c> by whoever downloads the artifact. A hosted runner is gone once its job
 /// ends, so a command naming its folder works nowhere a reader is. What the text names has to exist where they are:
 /// the run's artifacts, a download of them, and the folder relative to the workspace.</para>
 ///

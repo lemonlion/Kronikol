@@ -5,8 +5,8 @@ and checked again at `f03452fc`, where no file cited here had changed, and none 
 4.19.0; the wiki's are for `origin/master` at `e5c5a5b`,
 Kronikol4J's for `origin/main` at `4ff5c07`) · **Status:** **green-lit in full by the owner on 2026-10-13** ("implement
 the plan in full"), every §9 question as recommended, with a roadmap row (Q9) and the Azure DevOps issue (Q13) left to
-the owner; **executed as 4.19.7** (R1, R2 and R3 in one patch, §11); **audited on 2026-10-15, its fixes released as
-4.20.6** (§12). Drafted from #169 (filed 2026-10-12 against
+the owner; **executed as 4.19.7** (R1, R2 and R3 in one patch, §11); **audited on 2026-10-15, its fixes released and
+published as 4.20.6** (§12). Drafted from #169 (filed 2026-10-12 against
 4.14.10) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying problem,
 then checked again at the owner's ask the same day (§11). No stage row in `ROADMAP.md` (Q9); its leftovers are a row of
 Appendix C.
@@ -719,6 +719,14 @@ plan's files, and is the first thing a person on a failing CI run reads, so a st
   listed EF Core 10.0.13 ahead of its dependencies (harness `r1/checks.txt`); the tag waited until restore passed.
 - **2026-10-15, audited (kronikol-21)** at the owner's ask, in worktree `C:/Code/Kronikol-169-audit` (branch
   `audit/169`) on 4.20.2: one gap and fourteen defects, fixed as 4.20.6 (§12, harness `audit/`).
+- **2026-10-15, published (kronikol-21).** 4.20.6 is commit `43e963e3`, tag `v4.20.6`, rebased onto 4.20.5
+  (`e80eb4b5`): #174's R1 (4.20.3), #165's R1 (4.20.4) and #168's audit (4.20.5) took the numbers before it. Release
+  38723272350, CI 38723268002, CodeQL 38723268038 and CI Summary Preview 38723267999 passed on their first attempt, and
+  nuget.org listed all 62 ids by 11:19 UTC. The templates pin 4.20.4, the newest version listed for all 62 ids at the
+  push. The wiki has the audit's edits (`d4093aa`), Kronikol4J's ledger its line (`3c02ee9`, nothing to port), and #169
+  a comment naming the release. On the real run, the All Failing leg's block from run 38723267999, pasted into an empty
+  folder with the built tool, downloaded the run, listed its four reports with their counts and answered for the one
+  named (exit 0). The same run showed G16 (§12), fixed in the docs without a bump.
 
 ## 12. Audit, 2026-10-15
 
@@ -749,6 +757,7 @@ named the agent's folder (G1 below). The plan was silent on that case; principle
 | G13 | plan | Wiki: `Report-Configuration.md`'s console row kept F13's "unless verbosity is `detailed`"; `CI-Summary-Integration.md` said `PublishCiArtifacts` uploads the CTRF | Corrected | (docs) |
 | G14 | plan | Harness: `r1/red-stub.txt` credited M29 to the line-break theory; only the folder fact catches it | Note corrected; A20 to A22 prove the server URL and run id cases | mutations |
 | G15 | plan | The changelog said `CiSummaryRunTests` ran a custom data file name through a download; that fact had no run id | `A_custom_data_file_name_is_found_in_the_download_and_its_kept_run_opens` does | (fact) |
+| G16 | real run | Kronikol's `::notice` never reaches a GitHub run tested under `dotnet test`: none in preview runs 38433876527 (4.19.7), 38718437816 (4.20.4) or 38723267999 (4.20.6). §2 measured it, yet the wiki and four doc comments said agents read the annotation through `gh run view` | The wiki says so, with a troubleshooting row (`d4093aa`); the doc comments (`WriteCiDebugSection`, `RunSummaryConsoleWriter`, `BuildGitHubNotice`, `CiReader`) in a commit without a bump, under the changelog's `[Unreleased]`. Nothing in the code can carry it there: GitHub reads a workflow command only from a step's output | (docs) |
 
 Left as they are, for the owner:
 

@@ -90,7 +90,8 @@ public sealed record RunSummaryPreviousRun(string Directory, int Failed);
 ///
 /// <para><b>Who reads the CI text</b> (plans/CI_SUMMARY_AUDIENCE_PLAN.md): a GitHub job summary is read by
 /// people only, in a browser, since no API, <c>gh</c> command or MCP tool returns one; the annotation by
-/// people and by agents through <c>gh run view</c>; <c>CiSummary.md</c> by whoever downloads the artifact.
+/// people and by agents through <c>gh run view</c>, where it arrives (a workflow command on stdout, it does not
+/// under <c>dotnet test</c>); <c>CiSummary.md</c> by whoever downloads the artifact.
 /// None of them is on the runner. So the CI section speaks to people first, labels its rule for AI agents,
 /// and names what exists where its readers are (<see cref="CiReader"/>).</para>
 /// </summary>
@@ -223,7 +224,9 @@ public static class RunSummaryConsoleWriter
     /// The annotation for <paramref name="reader"/>: the one CI channel people and agents both read, and the
     /// only one an agent reads through <c>gh run view</c>, so it is complete without the job summary. Where the
     /// run can be downloaded it names the folder relative to the workspace, the files for people, and the
-    /// download and the query for agents, never the runner's folder; elsewhere the query on the folder.
+    /// download and the query for agents, never the runner's folder; elsewhere the query on the folder. It is a
+    /// workflow command on stdout, so it reaches a run only where the run's stdout does: from <c>kronikol merge</c>,
+    /// <c>kronikol ingest</c> or a directly run MTP host, never under <c>dotnet test</c>.
     /// </summary>
     internal static string? BuildGitHubNotice(RunSummary summary, CiReader reader)
     {

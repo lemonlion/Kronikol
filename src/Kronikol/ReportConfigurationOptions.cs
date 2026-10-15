@@ -371,7 +371,9 @@ public record ReportConfigurationOptions
     /// <para><b>Who reads which channel</b> (plans/CI_SUMMARY_AUDIENCE_PLAN.md, measured 2026-10-13): a GitHub
     /// job summary is read by signed-in people in a browser, and by no API, <c>gh</c> command or MCP tool; the
     /// job log by agents (<c>gh run view --log</c>) and people; the <c>::notice</c> annotation by both, which is
-    /// why it carries the download and the query on its own. On Azure DevOps the summary travels as a logging
+    /// why it carries the download and the query on its own. The log copy and the annotation are written to
+    /// stdout, so under <c>dotnet test</c> neither reaches a GitHub run (measured on this repository's preview
+    /// workflow); the job summary, a file the runner reads, does. On Azure DevOps the summary travels as a logging
     /// command on stdout, like the log copy, so under <c>dotnet test</c> neither arrives; from
     /// <c>kronikol merge</c>, <c>kronikol ingest</c> or a directly run MTP host both do.</para>
     ///
