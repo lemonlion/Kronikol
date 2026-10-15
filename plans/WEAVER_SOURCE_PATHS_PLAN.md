@@ -6,7 +6,7 @@ by eight lines above its two calls, so every other number holds for both.
 The weaver's three source-reading methods, `ReadSourceText`, `CutColumns` and `IsPragmaDisabled`, are byte for byte
 the same as at 98c4806d, the commit the issue cites, 93 lines lower: the issue's L775, L783 and L979 are L868, L876
 and L1072 here · **Status:** green-lit in full by the owner on 2026-10-15 ("Can you implement the plan in full"),
-every question in §9 as recommended. R1 executed as 4.20.4 and R2, a minor of its own (Q1), as 4.21.0, both published (§11); #165 closed. Audited at the owner's ask as 4.22.3 (§11).
+every question in §9 as recommended. R1 executed as 4.20.4 and R2, a minor of its own (Q1), as 4.21.0, both published (§11); #165 closed. Audited at the owner's ask as 4.22.3, published (§11).
 
 Evidence labels: **RUN** (measured on 2026-10-13 with the published 4.18.1 packages, SDK 10.0.300, xUnit 2.9.3,
 Shouldly 4.3.0 and FluentAssertions 6.12.1 on net8.0; the project, the scripts and the saved output are in
@@ -780,6 +780,13 @@ no row is taken until the owner green-lights the plan ("taking row 1.N now" to t
     only`, Cecil's async stepping record and MSBuild's quoting of `PathMap`.
   Red (`harness/audit/red.txt`): on 4.22.1, with stubs where it lacked a member, 24 of the audit's facts and theory rows fail, each on its own assertion, and the rest, guards of branches that held, pass there by design, each with a mutant. Mutations (`harness/audit/mutations.txt`): 30 of 30 caught, each by the facts named for it. Linux (`harness/audit/linux.txt`): the weaver suite passes in the dotnet/sdk:10.0 container but for the older fact that needs SDK 8.0.420, which CI installs; with the released rule the three decoding facts fail there, the compiler having read U+FFFD where the weave read é.
   Checks: after the version bump the core suite passes 7,620 with 2 skipped; the weaver suite passes on net8.0, net9.0 and net10.0 (434 facts each; 84, 56 and 28 skipped, the cross-SDK facts for SDKs not installed here); the step weaver's 46 pass; the full Playwright suite passes 1,040 with 28 skipped when run alone; and `release.slnf` builds in Release for every target.
+- **2026-10-15** (kronikol-2a): 4.22.3, the audit, published, after kronikol-51's 4.22.2. The Release run 38818206350,
+  CI 38818203946, CodeQL 38818203957 and CI Summary Preview 38818203885 passed (CI's E2E (Remainder) job on its second
+  attempt: on the first, `ExportFilteredHtmlRenderingTests` timed out after 60 s waiting for an export's diagrams to
+  draw, in a test the audit does not touch, and the class passed three runs of three locally on the release commit), and
+  nuget.org listed all 62 ids at 23:03 UTC. The wiki has the audit's edits (`2c876e7`), Kronikol4J's ledger its line
+  (`2ea6e51`: the diff's bound and code points are worth porting, since the port's diff has both defects), and #165 a
+  comment naming the release.
 
 ## Appendix A. Edit sites at 34145c44
 
