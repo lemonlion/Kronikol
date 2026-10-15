@@ -720,6 +720,12 @@ no row is taken until the owner green-lights the plan ("taking row 1.N now" to t
   - The control's first clone of BreakfastProvider lost a file to Windows' path limit; `breakfast.sh` clones with
     `core.longpaths` now.
   Checks: after the version bump the core suite passes 7,551 with 2 skipped, the weaver suite 418 facts on each of net8.0, net9.0 and net10.0 (the cross-SDK facts for SDKs not installed skipped), the full Playwright suite 1,040 with 28 skipped when run alone, and `release.slnf` builds in Release for every target.
+- **2026-10-15** (kronikol-2a): 4.20.4 published. kronikol-71 took 4.20.3 for #174 R1 while R1's checks ran, so R1
+  was renumbered 4.20.4 (its packages, the template pins at 4.20.3, the changelog, the plan and the roadmap) and
+  rebased on 4.20.3 after its packages were on nuget.org, since the templates pin it. The Release run 38718440756,
+  CI 38718437768, CodeQL 38718437838 and CI Summary Preview 38718437816 passed on their first attempt, and nuget.org
+  listed all 62 ids at 10:41 UTC. The wiki has R1's edits (`993fe1f`), Kronikol4J's ledger its line (`1644fab`, nothing
+  to port), and #165 a comment naming the release; R2 is next.
 
 ## Appendix A. Edit sites at 34145c44
 
