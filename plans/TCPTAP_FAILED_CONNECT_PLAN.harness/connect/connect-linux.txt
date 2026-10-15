@@ -1,0 +1,95 @@
+.NET 10.0.12, Ubuntu 24.04.5 LTS, TcpTap 4.20.2.0
+Full-backlog listener on 127.0.0.1:44783: connect 3 did not complete within 500 ms (queue full, SYN dropped)
+
+A1 refused, ForwardHost 127.0.0.1
+  client: EOF (a FIN) after 20 ms
+  counters: accepted 1, live 0, interactions 0, decode errors 0, decoding disabled 0
+  Diagnostics(): (none)
+  OnCaptureDegraded: (none)
+  log: [svc→redis] tcp-tap connection 1 error: SocketException: Connection refused
+  log: [svc→redis] tcp-tap stopped (1 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+
+A2 refused, ForwardHost localhost
+  client: EOF (a FIN) after 3 ms
+  counters: accepted 1, live 0, interactions 0, decode errors 0, decoding disabled 0
+  Diagnostics(): (none)
+  OnCaptureDegraded: (none)
+  log: [svc→redis] tcp-tap connection 1 error: SocketException: Connection refused
+  log: [svc→redis] tcp-tap stopped (1 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+
+A3 refused, ForwardHost localhost, ConnectTimeout 5 s (the default)
+  client: EOF (a FIN) after 0 ms
+  counters: accepted 1, live 0, interactions 0, decode errors 0, decoding disabled 0
+  Diagnostics(): (none)
+  OnCaptureDegraded: (none)
+  log: [svc→redis] tcp-tap connection 1 error: SocketException: Connection refused
+  log: [svc→redis] tcp-tap stopped (1 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+
+B1 no SYN answer (full backlog), ForwardHost 127.0.0.1
+  client: EOF (a FIN) after 1500 ms
+  counters: accepted 1, live 0, interactions 0, decode errors 0, decoding disabled 0
+  Diagnostics(): (none)
+  OnCaptureDegraded: (none)
+  log: [svc→redis] tcp-tap stopped (1 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+
+B2 no SYN answer, ForwardHost 192.0.2.1 (TEST-NET-1)
+  client: EOF (a FIN) after 1501 ms
+  counters: accepted 1, live 0, interactions 0, decode errors 0, decoding disabled 0
+  Diagnostics(): (none)
+  OnCaptureDegraded: (none)
+  log: [svc→redis] tcp-tap stopped (1 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+
+C host name that does not resolve
+  client: EOF (a FIN) after 16 ms
+  counters: accepted 1, live 0, interactions 0, decode errors 0, decoding disabled 0
+  Diagnostics(): (none)
+  OnCaptureDegraded: (none)
+  log: [svc→redis] tcp-tap connection 1 error: SocketException: Name or service not known
+  log: [svc→redis] tcp-tap stopped (1 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+
+D DecoderFactory throws, upstream healthy
+  client: EOF (a FIN) after 1 ms
+  counters: accepted 1, live 0, interactions 0, decode errors 0, decoding disabled 0
+  Diagnostics(): (none)
+  OnCaptureDegraded: (none)
+  log: [svc→redis] tcp-tap connection 1 error: InvalidOperationException: factory failed
+  log: [svc→redis] tcp-tap stopped (1 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+
+D0 control: the same tap with the Redis decoder, upstream healthy
+  client: 7 bytes: +PONG\r\n after 11 ms
+  counters: accepted 1, live 1, interactions 0, decode errors 0, decoding disabled 0
+  Diagnostics(): (none)
+  OnCaptureDegraded: (none)
+  log: [svc→redis] tcp-tap stopped (1 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+
+E the tap disposed 700 ms into a connect that waits (B2's address, ConnectTimeout 5 s)
+  DisposeAsync took 29 ms
+  client: EOF (a FIN) after 730 ms
+  counters: accepted 1, live 0, interactions 0, decode errors 0, decoding disabled 0
+  Diagnostics(): (none)
+  OnCaptureDegraded: (none)
+  log: [svc→redis] tcp-tap stopped (1 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+
+F1 a client's connect to a tap listening on ListenHost "localhost" (TcpTap binds what ResolveBindAddress returns)
+  connect to 127.0.0.1:38021 took 0 ms, remote [::ffff:127.0.0.1]:38021
+  connect to localhost:38021 took 0 ms, remote [::ffff:127.0.0.1]:38021
+  connect to 127.0.0.1:38021 took 0 ms, remote [::ffff:127.0.0.1]:38021
+  connect to localhost:38021 took 0 ms, remote [::ffff:127.0.0.1]:38021
+  Dns.GetHostAddresses("localhost") = 127.0.0.1
+F2 the first PONG through a tap whose ForwardHost is "localhost" or "127.0.0.1", the server on 127.0.0.1 only
+  ForwardHost 127.0.0.1: 7 bytes: +PONG\r\n after 0 ms
+  ForwardHost localhost: 7 bytes: +PONG\r\n after 0 ms
+  ForwardHost 127.0.0.1: 7 bytes: +PONG\r\n after 0 ms
+  ForwardHost localhost: 7 bytes: +PONG\r\n after 0 ms
+
+G TcpClient.ConnectAsync(host, port, token) with CancelAfter(1.5 s), as TcpTap calls it
+  refused, 127.0.0.1: after 0 ms, token cancelled False: System.Net.Sockets.SocketException [ConnectionRefused, 111]: Connection refused
+  refused, localhost: after 0 ms, token cancelled False: System.Net.Sockets.SocketException [ConnectionRefused, 111]: Connection refused
+  full backlog, 127.0.0.1: after 1503 ms, token cancelled True: System.OperationCanceledException: The operation was canceled.
+  TEST-NET-1: after 1500 ms, token cancelled True: System.OperationCanceledException: The operation was canceled.
+  no such host: after 12 ms, token cancelled False: System.Net.Sockets.SocketException [HostNotFound, -131073]: Name or service not known
+G2 the same connect with the caller's own token cancelled 700 ms in (TEST-NET-1), linked as TcpTap links it
+  after 700 ms, lifetime cancelled True: System.OperationCanceledException: The operation was canceled.
+
+done
+exit 0

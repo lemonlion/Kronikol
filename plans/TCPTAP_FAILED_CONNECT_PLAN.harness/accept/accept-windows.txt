@@ -1,0 +1,30 @@
+.NET 10.0.11, Microsoft Windows 10.0.26200, TcpTap 4.20.2.0, OtlpTap 4.20.2.0
+TcpTap on 127.0.0.1:52855, OtlpTap on 127.0.0.1:52856, ProxyTap on localhost:52858; alive at start: True / True / True
+
+E0 a bare TcpListener (backlog 128, as TcpTap's AcceptBacklog) whose accept loop records every exception and continues
+  round 1: resets 200; accepted so far 200; thrown so far: nothing
+  round 2: resets 200; accepted so far 400; thrown so far: nothing
+  round 3: resets 200; accepted so far 600; thrown so far: nothing
+  round 4: resets 200; accepted so far 800; thrown so far: nothing
+  round 5: resets 200; accepted so far 1000; thrown so far: nothing
+
+E1 rounds of 200 connect-then-reset clients
+  round 1: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 2: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 3: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 4: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 5: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 6: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 7: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 8: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 9: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 10: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 11: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 12: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 13: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 14: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 15: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  after E1: TcpTap IsListening True, ConnectionsAccepted 3016, LiveConnections 0; OtlpTap IsListening True
+  after E1: TcpTap accept loop WaitingForActivation; OtlpTap accept loops (WhenAll over its listeners) WaitingForActivation; ProxyTap request loop WaitingForActivation, IsListening True, RequestsHandled 16
+
+done
