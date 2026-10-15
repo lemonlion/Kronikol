@@ -1,0 +1,100 @@
+- DeterministicSourcePathsTests.A_bom_less_windows_1252_file_is_read_as_the_compiler_reads_it @ DeterministicSourcePathsTests.cs:566
+    Assert.Equal() Failure: Strings differ |                               ↓ (pos 19) | Expected: "Name should be "café"" | Actual:   "Name should be "caf�"" |                               ↑ (pos 19)
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "a=b=c") @ DeterministicSourcePathsTests.cs:304
+    Assert.Equal() Failure: Values differ | Expected: 1 | Actual:   0
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "a,,b==c=v") @ DeterministicSourcePathsTests.cs:303
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: ["a,b=c\\\0v\\"] | Actual:   []
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "k=") @ DeterministicSourcePathsTests.cs:304
+    Assert.Equal() Failure: Values differ | Expected: 1 | Actual:   0
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "=v") @ DeterministicSourcePathsTests.cs:304
+    Assert.Equal() Failure: Values differ | Expected: 1 | Actual:   0
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "k=v,") @ DeterministicSourcePathsTests.cs:303
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: ["k\\\0v\\"] | Actual:   []
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "k=v,,w=x") @ DeterministicSourcePathsTests.cs:304
+    Assert.Equal() Failure: Values differ | Expected: 1 | Actual:   0
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "C:\\Users\\m @ DeterministicSourcePathsTests.cs:303
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: ["C:\\Program Files (x86)\\Microsoft Visual Studio\\"···, "C:\\Users\\me\\.nuget\\packages\\\0/_1/", "C:\\work\\repo\\\0/_/"] | Actual:   []
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "noseparators @ DeterministicSourcePathsTests.cs:303
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: ["noseparators\\\0either\\"] | Actual:   []
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "C:/mixed\\di @ DeterministicSourcePathsTests.cs:303
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: ["C:/mixed\\dir\\\0/src/"] | Actual:   []
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "k=v,,,w=x") @ DeterministicSourcePathsTests.cs:303
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: ["k\\\0v,\\", "w\\\0x\\"] | Actual:   []
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "k/=v/") @ DeterministicSourcePathsTests.cs:303
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: ["k/\0v/"] | Actual:   []
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "/home/me/.nu @ DeterministicSourcePathsTests.cs:303
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: ["/home/me/.nuget/packages/\0/_1/", "/home/me/repo/\0/_/", "/home/me/repo/sub/\0/_/sub/"] | Actual:   []
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: ",k=v") @ DeterministicSourcePathsTests.cs:303
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: ["k\\\0v\\"] | Actual:   []
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "k=v") @ DeterministicSourcePathsTests.cs:303
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: ["k\\\0v\\"] | Actual:   []
+- DeterministicSourcePathsTests.The_PathMap_is_parsed_as_the_compiler_parses_it(pathMap: "k\\=v\\") @ DeterministicSourcePathsTests.cs:303
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: ["k\\\0v\\"] | Actual:   []
+- WeaveAssertionsTaskTests.The_task_reads_a_mapped_document_through_the_source_roots @ WeaveAssertionsTaskTests.cs:335
+    Assert.Equal() Failure: Strings differ |            ↓ (pos 0) | Expected: "Name should be "café"" | Actual:   "Assertion at line 11" |            ↑ (pos 0)
+- DeterministicSourcePathsTests.A_mapped_build_labels_each_statement_as_a_local_build_does(optimizatio @ DeterministicSourcePathsTests.cs:129
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: [Note { Passed = True, Label = Actual id should be 'A1', Message = , Source = IssueCases.cs:L24 }, Note { Passed = True, Label = Actual colour should be 'Blue', Message = , Source = IssueCases.cs:L25 }, Note { Passed = Tru
+- DeterministicSourcePathsTests.A_mapped_build_labels_each_statement_as_a_local_build_does(optimizatio @ DeterministicSourcePathsTests.cs:129
+    Assert.Equal() Failure: Collections differ |            ↓ (pos 0) | Expected: [Note { Passed = True, Label = Actual id should be 'A1', Message = , Source = IssueCases.cs:L24 }, Note { Passed = True, Label = Actual colour should be 'Blue', Message = , Source = IssueCases.cs:L25 }, Note { Passed = Tru
+- DeterministicSourcePathsTests.The_weaves_windows_1252_is_the_runtimes @ DeterministicSourcePathsTests.cs:639
+    Assert.Equal() Failure: Strings differ |                                        ↓ (pos 128) | Expected: ···"ghijklmnopqrstuvwxyz{|}~€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜"··· | Actual:   ···"ghijklmnopqrstuvwxyz{|}~�������������������������"··· |                                        ↑ (pos 128)
+- WeaveAssertionsTaskTests.The_task_takes_the_builds_PathMap_source_roots_and_code_page @ WeaveAssertionsTaskTests.cs:377
+    Assert.Equal() Failure: Strings differ |            ↓ (pos 0) | Expected: "Name should be "cafÃ©"" | Actual:   "Assertion at line 11" |            ↑ (pos 0)
+- DeterministicSourcePathsTests.A_mapped_value_written_with_the_other_separator_is_read_back @ DeterministicSourcePathsTests.cs:321
+    Assert.Equal() Failure: Strings differ |            ↓ (pos 0) | Expected: "Total should be 3" | Actual:   "Assertion at line 11" |            ↑ (pos 0)
+- DeterministicSourcePathsTests.The_builds_code_page_is_read_as_the_compiler_reads_it(value: "1251", c @ DeterministicSourcePathsTests.cs:621
+    Assert.Equal() Failure: Values differ | Expected: 1251 | Actual:   null
+- DeterministicSourcePathsTests.The_builds_code_page_is_read_as_the_compiler_reads_it(value: "1252", c @ DeterministicSourcePathsTests.cs:621
+    Assert.Equal() Failure: Values differ | Expected: 1252 | Actual:   null
+- DeterministicSourcePathsTests.The_builds_code_page_is_read_as_the_compiler_reads_it(value: "65001",  @ DeterministicSourcePathsTests.cs:621
+    Assert.Equal() Failure: Values differ | Expected: 65001 | Actual:   null
+- DeterministicSourcePathsTests.A_file_under_its_own_name_that_fails_the_checksum_is_still_read @ DeterministicSourcePathsTests.cs:375
+    Assert.Contains() Failure: Filter not matched in collection | Collection: []
+- WeaveAssertionsTaskTests.The_task_reads_a_document_a_projects_own_PathMap_named @ WeaveAssertionsTaskTests.cs:354
+    Assert.Equal() Failure: Strings differ |            ↓ (pos 0) | Expected: "Name should be "café"" | Actual:   "Assertion at line 11" |            ↑ (pos 0)
+- TargetsBuildTests.Two_ci_builds_at_different_paths_weave_the_same_bytes_with_the_statements_labels @ TargetsBuildTests.cs:162
+    Assert.Contains() Failure: Sub-string not found | String:    "Build started 15/10/2026 09:54:26.\r\n     1>Project"··· | Not found: "Kronikol.AssertionTracking: Instrumented 8 asserti"···
+- DeterministicSourcePathsTests.A_statement_after_a_unicode_line_break_is_labelled_with_its_own_text(l @ DeterministicSourcePathsTests.cs:537
+    Assert.Equal() Failure: Collections differ at index 0 |            ↓ (pos 0) | Expected: "First should be 1" | Actual:   "Second should be 2" |            ↑ (pos 0)
+- DeterministicSourcePathsTests.A_statement_after_a_unicode_line_break_is_labelled_with_its_own_text(l @ DeterministicSourcePathsTests.cs:537
+    Assert.Equal() Failure: Collections differ at index 0 |            ↓ (pos 0) | Expected: "First should be 1" | Actual:   "Second should be 2" |            ↑ (pos 0)
+- DeterministicSourcePathsTests.A_statement_after_a_unicode_line_break_is_labelled_with_its_own_text(l @ DeterministicSourcePathsTests.cs:537
+    Assert.Equal() Failure: Collections differ at index 0 |            ↓ (pos 0) | Expected: "First should be 1" | Actual:   "Second should be 2" |            ↑ (pos 0)
+- DeterministicSourcePathsTests.Overlapping_mapped_values_are_told_apart_by_the_checksum @ DeterministicSourcePathsTests.cs:227
+    Assert.Equal() Failure: Strings differ |            ↓ (pos 0) | Expected: "Total should be 3" | Actual:   "Assertion at line 11" |            ↑ (pos 0)
+- TargetsBuildTests.A_ci_build_that_embeds_its_sources_draws_its_assertions_as_a_local_build_does @ TargetsBuildTests.cs:162
+    Assert.Contains() Failure: Sub-string not found | String:    "Build started 15/10/2026 09:54:32.\r\n     1>Project"··· | Not found: "Kronikol.AssertionTracking: Instrumented 8 asserti"···
+- DeterministicSourcePathsTests.A_document_without_a_checksum_is_read_through_the_longer_mapped_value @ DeterministicSourcePathsTests.cs:274
+    Assert.Equal() Failure: Strings differ |            ↓ (pos 0) | Expected: "Total should be 3" | Actual:   "Assertion at line 1" |            ↑ (pos 0)
+- DeterministicSourcePathsTests.A_code_page_that_is_not_a_number_is_noted_and_not_followed @ DeterministicSourcePathsTests.cs:629
+    Assert.Equal() Failure: Strings differ | Expected: "CodePage 'utf-8' is not a code page; the sources a"··· | Actual:   null
+- DeterministicSourcePathsTests.A_file_with_the_checksum_is_read_and_the_embedded_blob_stays_the_compi @ DeterministicSourcePathsTests.cs:390
+    Assert.Contains() Failure: Filter not matched in collection | Collection: []
+- DeterministicSourcePathsTests.The_woven_pdb_holds_no_type_record_that_names_another_types_document @ DeterministicSourcePathsTests.cs:670
+    IOnly is recorded in Cases.cs
+- DeterministicSourcePathsTests.A_build_code_page_decodes_a_bom_less_utf8_file_as_the_compiler_does @ DeterministicSourcePathsTests.cs:581
+    Assert.Equal() Failure: Strings differ |                               ↓ (pos 19) | Expected: "Name should be "cafÃ©"" | Actual:   "Name should be "café"" |                               ↑ (pos 19)
+- DeterministicSourcePathsTests.Embedded_source_is_read_when_no_file_is_there @ DeterministicSourcePathsTests.cs:336
+    Assert.Equal() Failure: Values differ | Expected: 8 | Actual:   11
+- DeterministicSourcePathsTests.A_nested_roots_document_is_read_through_the_top_level_entry @ DeterministicSourcePathsTests.cs:425
+    Assert.Equal() Failure: Strings differ |            ↓ (pos 0) | Expected: "Total should be 3" | Actual:   "Assertion at line 11" |            ↑ (pos 0)
+- TargetsBuildTests.A_ci_build_draws_its_assertions_as_a_local_build_does(debugType: "portable") @ TargetsBuildTests.cs:162
+    Assert.Contains() Failure: Sub-string not found | String:    "Build started 15/10/2026 09:54:34.\r\n     1>Project"··· | Not found: "Kronikol.AssertionTracking: Instrumented 8 asserti"···
+- DeterministicSourcePathsTests.A_mapped_build_reads_the_pragma_comments @ DeterministicSourcePathsTests.cs:150
+    Assert.Equal() Failure: Values differ | Expected: 8 | Actual:   11
+- DeterministicSourcePathsTests.Embedded_source_wins_over_a_file_that_fails_the_checksum @ DeterministicSourcePathsTests.cs:356
+    Assert.Equal() Failure: Strings differ |            ↓ (pos 0) | Expected: "Total should be 3" | Actual:   "Assertion at line 11" |            ↑ (pos 0)
+- DeterministicSourcePathsTests.Documents_under_two_roots_are_each_read_from_their_own @ DeterministicSourcePathsTests.cs:456
+    Assert.Equal() Failure: Strings differ |            ↓ (pos 0) | Expected: "Total should be 3" | Actual:   "Assertion at line 11" |            ↑ (pos 0)
+- DeterministicSourcePathsTests.A_document_nothing_reaches_falls_back_and_is_recorded @ DeterministicSourcePathsTests.cs:499
+    Assert.Single() Failure: The collection was empty
+- DeterministicSourcePathsTests.Two_directories_mapped_to_one_name_are_told_apart_by_the_checksum @ DeterministicSourcePathsTests.cs:207
+    Assert.Equal() Failure: Strings differ |            ↓ (pos 0) | Expected: "Total should be 3" | Actual:   "Assertion at line 11" |            ↑ (pos 0)
+- TargetsBuildTests.A_ci_build_draws_its_assertions_as_a_local_build_does(debugType: "embedded") @ TargetsBuildTests.cs:162
+    Assert.Contains() Failure: Sub-string not found | String:    "Build started 15/10/2026 09:54:37.\r\n     1>Project"··· | Not found: "Kronikol.AssertionTracking: Instrumented 8 asserti"···
+- TargetsBuildTests.A_build_with_a_code_page_labels_its_statements_as_the_compiler_read_them @ TargetsBuildTests.cs:201
+    Assert.Equal() Failure: Strings differ |            ↓ (pos 0) | Expected: "Name should be "cafÃ©"" | Actual:   "Assertion at line 10" |            ↑ (pos 0)
+- TargetsBuildTests.The_off_switch_builds_a_project_that_declares_the_attribute_and_weaves_nothing @ TargetsBuildTests.cs:149
+    dotnet build Fixture.csproj -c Debug -nodeReuse:false -v:n -p:_AssertionTrackingTaskDir=<TEMP>\KRONIKOL_TargetsTests\03161055\tasks\ -p:TrackAssertionsEnabled=false failed: | Build started 15/10/2026 09:54:42. |      1>Project "<TEMP>\KRONIKOL_Target
+- TargetsBuildTests.A_projects_own_PathMap_draws_its_assertions_as_a_local_build_does @ TargetsBuildTests.cs:162
+    Assert.Contains() Failure: Sub-string not found | String:    "Build started 15/10/2026 09:54:43.\r\n     1>Project"··· | Not found: "Kronikol.AssertionTracking: Instrumented 8 asserti"···

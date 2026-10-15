@@ -1,0 +1,23 @@
+BreakfastProvider 0ee43e8, Kronikol 4.20.3-acceptance.1
+references moved: 27
+local BDDfy: build exit 0;  1 Instrumented 524 assertion(s) in 233 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+local LightBDD: build exit 0;  1 Instrumented 477 assertion(s) in 377 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+local NUnit: build exit 0;  1 Instrumented 563 assertion(s) in 174 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+local ReqNRoll: build exit 0;  1 Instrumented 439 assertion(s) in 201 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+local Shared: build exit 0;  1 Instrumented 58 assertion(s) in 56 method(s)
+local TUnit: build exit 0;  1 Instrumented 563 assertion(s) in 174 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+local xUnit: build exit 0;  1 Instrumented 563 assertion(s) in 174 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+ci BDDfy: build exit 0;  1 Instrumented 524 assertion(s) in 233 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+ci LightBDD: build exit 0;  1 Instrumented 477 assertion(s) in 377 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+ci NUnit: build exit 0;  1 Instrumented 563 assertion(s) in 174 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+ci ReqNRoll: build exit 0;  1 Instrumented 439 assertion(s) in 201 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+ci Shared: build exit 0;  1 Instrumented 58 assertion(s) in 56 method(s)
+ci TUnit: build exit 0;  1 Instrumented 563 assertion(s) in 174 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+ci xUnit: build exit 0;  1 Instrumented 563 assertion(s) in 174 method(s); 1 Instrumented 58 assertion(s) in 56 method(s)
+BDDfy: local [woven 524, fallback labels 0, literals 1954] ci [woven 524, fallback labels 0, literals 1954] -> same
+LightBDD: local [woven 477, fallback labels 0, literals 1734] ci [woven 477, fallback labels 0, literals 1734] -> same
+NUnit: local [woven 563, fallback labels 0, literals 2435] ci [woven 563, fallback labels 0, literals 2435] -> same
+ReqNRoll: local [woven 439, fallback labels 0, literals 1644] ci [woven 439, fallback labels 0, literals 1644] -> same
+Shared: local [woven 58, fallback labels 0, literals 203] ci [woven 58, fallback labels 0, literals 203] -> same
+TUnit: local [woven 563, fallback labels 0, literals 2796] ci [woven 563, fallback labels 0, literals 2796] -> same
+xUnit: local [woven 563, fallback labels 0, literals 2435] ci [woven 563, fallback labels 0, literals 2435] -> same

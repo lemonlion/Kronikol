@@ -4,6 +4,101 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.20.4] - 2026-10-15
+
+**Patch - assertion tracking reads each statement in a CI build (#165; `plans/WEAVER_SOURCE_PATHS_PLAN.md` R1).**
+Green-lit in full by the owner on 2026-10-15, every question in the plan's section 9 as recommended. Bug fixes with no
+new option and nothing new for a project to call: the weave task's two new parameters are set by the package's own
+targets, and the task assembly ships in the package's `tasks/` folder, which no project compiles against. So the patch
+part moves (4.20.3 to 4.20.4).
+
+### Fixed
+
+- **A build with deterministic source paths labelled every woven assertion by its line.** `ContinuousIntegrationBuild`
+  turns on `DeterministicSourcePaths`, and the compiler then names each source file in the PDB `/_/…`, `/_1/…` and so
+  on, names no machine has. The weave read each statement from that name, so in such a build every note read
+  "Assertion at line N", carried no values (the statement's text chooses which variables, and since 4.16.0 which
+  arguments, are captured), and a statement a pragma comment disables was woven anyway, all without a warning. The
+  weave now reads the file the compiler read: the document's name mapped back through the build's own `PathMap` and
+  source roots (`@(SourceRoot)` with each root's `MappedPath`, handed to the task since 2.30.7 and never read until
+  now), parsed by the compiler's rules, and taken only when its bytes hash to the checksum the PDB records; else the
+  source the PDB embeds (`EmbedAllSources`, a source generator's output); else the name as written, as before. A
+  project's own `PathMap`, whatever prefix it writes, is read back the same way. The woven calls still carry the name
+  the compiler wrote, so a deterministic build weaves the same bytes from any clone and holds no local path.
+- **The weave read a file differently from the compiler, in every build.** The compiler ends a line at U+0085, U+2028
+  and U+2029 as well as at CR and LF, and the weave did not, so every statement after such a character was labelled
+  with another line's text. A file with no byte order mark that is not UTF-8 (Windows-1252, say) was read as UTF-8,
+  its accented letters as U+FFFD, and a build's `CodePage` was not followed. Each file is now decoded and split as the
+  compiler does it: a byte order mark; else the build's `CodePage`, for every file without a mark; else strict UTF-8;
+  else Windows-1252.
+- **`TrackAssertionsEnabled=false` broke the build of a project that declares `[assembly: TrackAssertions]`**
+  (`CS0234`): the attributes were generated only when the switch was on. They are generated either way now, and the
+  switch, which the wiki documents, turns off only the weave.
+- **Shouldly's text written without its source had no expected or actual value in the report, and a cluster per actual
+  value.** When Shouldly cannot read the caller's file, it writes the actual value where the code would be and ends
+  `but was not` (`4` / `should be` / `5` / `but was not`). Shouldly 4.3.0 does so in a CI build's tests run straight
+  from the DLL, since it gets the build's path map only from MSBuild's test task, and when the tests run where the
+  sources are not. `Failures.md` and the report's diff now read the expected and actual values of its `should be`, as
+  with the source. The failures digest, the report's failure clusters and the history ledger key such a failure by
+  its check and expected value (`should be 5`), for the nine Shouldly checks written that way, so the failures of one
+  assertion share a cluster whatever their actual values. A check whose text ends the same with the source and
+  without it (`should not be`, `should contain key`, `should throw`) keeps its key.
+- **The weave's rewrite of the PDB pointed Roslyn's type-to-document records at other files.** A
+  `TypeDefinitionDocuments` record (the documents a type without method bodies lives in) was copied with the document
+  rows it had, while the rewrite keeps only the documents with sequence points and numbers them afresh, so a type was
+  recorded in another type's file, and a type with none could take another's. The woven PDB now holds none of them.
+
+Behaviour change: in a build with deterministic source paths the notes read as in a local build: their labels, their
+values, and the pragma comments followed, so a statement a pragma disables is no longer woven there. A statement after
+a U+0085, U+2028 or U+2029, in a file with no byte order mark that is not UTF-8, or in a build that sets `CodePage`,
+gets its own text. A Shouldly failure written without its source clusters by its check and expected value; since the
+cluster is also the history ledger's error key, history reads such a failure as a new cause once, in the first run
+after the upgrade.
+
+### Docs
+
+- The wiki's Assertion-Tracking page says where the weave reads a statement from (the file the compiler read, through
+  the build's map, or the source the PDB embeds), that pragma comments are read in a CI build too, that the off switch
+  builds a project that declares the attribute from 4.20.4, and what an older version does in a CI build
+  (`DeterministicSourcePaths=false` is the workaround there, at the cost of local paths in the PDB).
+
+### Tests
+
+- `DeterministicSourcePathsTests` (new) compiles each fixture as `csc /pathmap` does, with the compiler's own resolver
+  naming its documents (`TestAssemblyBuilder.BuildMapped`): the #163 statements under `/_/`, in Debug and Release,
+  labelled as a local build labels them with their values, and their pragma comments read; two directories mapped to
+  one name, and overlapping names (`/src/` and `/src/sub/`), told apart by the checksum; a `#line` target with no
+  checksum read through the longer mapped name; the `PathMap` parser against the compiler's own on fifteen strings; a
+  map whose value uses the other separator; embedded source with no file, and before a file that fails the checksum;
+  the compiler's embedded blob left as it was when the file is read; a file under its own name that fails the checksum
+  still read; a nested root; `/_/` and `/_1/` in one assembly; the woven literals and the PDB keeping the compiler's
+  names; a document nothing reaches recorded with the paths tried; U+0085, U+2028 and U+2029; Windows-1252, a
+  `CodePage` over UTF-8, and the Unicode encodings; the `CodePage` value; the Windows-1252 table against the runtime's;
+  and no type record naming another type's document.
+- `WeaveAssertionsTaskTests` gains the task with source roots alone, with a project's own `PathMap`, and with a CI
+  build's `PathMap` (its trailing comma), source roots and `CodePage`, listing each mapped document at low importance.
+- `TargetsBuildTests` (new) runs the package's props and targets in a real `dotnet build`, which no test did: a CI build
+  with a portable and with an embedded PDB, one with `CodePage`, a project's `PathMap` and `EmbedAllSources` each draw
+  their notes as a local build does; the off switch builds a project that declares the attribute; and two clones at
+  different paths weave the same bytes with the statements' labels.
+- `ErrorDiffParserTests`, `FailureClusterKeyTests` and `FailuresDigestGeneratorTests` gain Shouldly 4.3.0's texts
+  without the source, as measured (plan harness `shouldly/forms.txt`).
+- Proofs (plan harness `r1/`): copied onto 4.20.2 with stubs for the members it lacks, 50 of the weave's 68 facts and
+  14 of the report's 92 fail, each on its own assertion; the 18 that pass there are the task's ten older facts, the
+  guards (the woven names, the Unicode encodings) and the three `CodePage` values that set none, which hold by design.
+  25 of 25 mutations are caught, one of them (the rest of a mapped name keeping its separators) on Linux, the only
+  place it can fail. Acceptance: the plan's probe on locally
+  packed packages labels all eleven builds of section 2.2 as a local build does (9 statements woven in each, 10 with
+  the extra test of rows j and k, and no note reads "Assertion at line N"; on 4.18.1, eight of the eleven fell back on
+  every note and wove the statements the pragmas disable); two clones built for CI weave identical bytes; and the off
+  switch builds. BreakfastProvider at its current commit, its 27 Kronikol references moved to the same packages: each
+  of its seven tracked test projects weaves the same statements with the same labels, values and literals with and
+  without `ContinuousIntegrationBuild`, where on the published 4.20.2 every statement of the CI build fell back.
+- Checks: after the version bump the core suite passes 7,551 with 2 skipped; the weaver suite passes on net8.0, net9.0
+  and net10.0 (418 facts each; 84, 56 and 28 skipped, the cross-SDK facts for SDKs not installed here), and on Linux
+  in the `dotnet/sdk:10.0` container but for an older fact that needs SDK 8.0.420, which CI installs; the full
+  Playwright suite passes 1,040 with 28 skipped when run alone; `release.slnf` builds in Release for every target.
+
 ## [4.20.3] - 2026-10-15
 
 **Patch - a tap whose accept fails keeps accepting (`plans/TCPTAP_FAILED_CONNECT_PLAN.md` R1, found while planning

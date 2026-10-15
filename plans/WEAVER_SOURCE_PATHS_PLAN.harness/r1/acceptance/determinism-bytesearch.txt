@@ -1,0 +1,6 @@
+== woven-a.dll (20992 bytes): '/_/' u8=0 u16=2; '/_/IssueStack/' u8=0 u16=2; 'IssueFeature.cs' u8=0 u16=1
+   utf16 literal: /_/IssueStack/Scenarios/IssueFeature.cs
+   utf16 literal: /_/IssueStack/Scenarios/SampleFeature.cs
+== woven-b.dll (20992 bytes): '/_/' u8=0 u16=2; '/_/IssueStack/' u8=0 u16=2; 'IssueFeature.cs' u8=0 u16=1
+   utf16 literal: /_/IssueStack/Scenarios/IssueFeature.cs
+   utf16 literal: /_/IssueStack/Scenarios/SampleFeature.cs

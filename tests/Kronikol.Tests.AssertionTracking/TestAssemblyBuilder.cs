@@ -121,6 +121,132 @@ public static class TestAssemblyBuilder
         return assemblyPath;
     }
 
+    /// <summary>
+    /// One source file of a fixture built by <see cref="BuildMapped"/>: where it is, the bytes the compiler reads, and
+    /// what the weave finds there afterwards.
+    /// </summary>
+    /// <param name="Path">The file's full path.</param>
+    /// <param name="Bytes">The bytes the compiler reads and hashes.</param>
+    public sealed record FixtureFile(string Path, byte[] Bytes)
+    {
+        /// <summary>The PDB embeds the file's source, as under <c>EmbedAllSources</c>.</summary>
+        public bool Embedded { get; init; }
+
+        /// <summary>What the file holds when the weave reads it: its compiled bytes unless set, nothing when
+        /// <see cref="OnDisk"/> is false.</summary>
+        public byte[]? BytesAfterCompile { get; init; }
+
+        /// <summary>False when no file is left at <see cref="Path"/> after the compile.</summary>
+        public bool OnDisk { get; init; } = true;
+
+        /// <summary>A UTF-8 file with no byte order mark, as an editor writes one.</summary>
+        public static FixtureFile Utf8(string path, string text) => new(path, new UTF8Encoding(false).GetBytes(text));
+    }
+
+    /// <summary>A fresh directory for one fixture's source files, under this run's output directory.</summary>
+    public static string NewSourceRoot(string name)
+    {
+        var root = Path.Combine(OutputDir, name + "_src");
+        if (Directory.Exists(root))
+            Directory.Delete(root, recursive: true);
+        Directory.CreateDirectory(root);
+        return root;
+    }
+
+    /// <summary>
+    /// Compiles <paramref name="files"/> as <c>csc</c> does in a build that passes <paramref name="pathMap"/> to its
+    /// <c>/pathmap</c>, as deterministic source paths (<c>ContinuousIntegrationBuild</c>) and a project's own
+    /// <c>PathMap</c> do (#165): each PDB document is the file's path mapped by the compiler's own resolver, its checksum
+    /// is the SHA-256 of the file's bytes, and the bytes are decoded as the compiler decodes them (a byte order mark;
+    /// else <paramref name="codePage"/>; else strict UTF-8, and Windows-1252 when they are not UTF-8). Returns the
+    /// assembly's path; the files are left on disk as each <see cref="FixtureFile"/> says.
+    /// </summary>
+    public static string BuildMapped(
+        string name, IReadOnlyList<FixtureFile> files, IReadOnlyList<KeyValuePair<string, string>> pathMap,
+        OptimizationLevel optimization = OptimizationLevel.Debug,
+        DebugInformationFormat symbols = DebugInformationFormat.PortablePdb, Encoding? codePage = null,
+        SourceHashAlgorithm checksum = SourceHashAlgorithm.Sha256)
+    {
+        var assemblyPath = Path.Combine(OutputDir, $"{name}.dll");
+        var pdbPath = Path.ChangeExtension(assemblyPath, ".pdb");
+        if (File.Exists(pdbPath))
+            File.Delete(pdbPath);
+
+        var parseOptions = new CSharpParseOptions(LanguageVersion.Latest);
+        var texts = files.Select(f => (File: f, Text: AsCompilerReadsIt(f.Bytes, codePage, checksum, f.Embedded))).ToList();
+        var trees = texts.Select(t => CSharpSyntaxTree.ParseText(t.Text, parseOptions, path: t.File.Path))
+            .Append(CSharpSyntaxTree.ParseText(SourceText.From(AttributeSource, Encoding.UTF8), parseOptions))
+            .ToArray();
+
+        // The compiler sorts its map by key, the longest first (CommandLineParser.SortPathMap), before handing it to the
+        // resolver that names each document.
+        var resolver = new SourceFileResolver(
+            [], Path.GetDirectoryName(files[0].Path),
+            [.. pathMap.OrderByDescending(e => e.Key.Length)]);
+        var compilation = CSharpCompilation.Create(
+            name,
+            trees,
+            GetReferences(),
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                .WithOptimizationLevel(optimization)
+                .WithSourceReferenceResolver(resolver));
+
+        var embedded = texts.Where(t => t.File.Embedded).Select(t => EmbeddedText.FromSource(t.File.Path, t.Text)).ToArray();
+        EmitResult result;
+        using (var peStream = File.Create(assemblyPath))
+        {
+            if (symbols == DebugInformationFormat.PortablePdb)
+            {
+                using var pdbStream = File.Create(pdbPath);
+                result = compilation.Emit(peStream, pdbStream,
+                    options: new EmitOptions(debugInformationFormat: symbols), embeddedTexts: embedded);
+            }
+            else
+            {
+                result = compilation.Emit(peStream,
+                    options: new EmitOptions(debugInformationFormat: symbols), embeddedTexts: embedded);
+            }
+        }
+
+        if (!result.Success)
+            throw new InvalidOperationException($"Compilation failed for '{name}':\n" + string.Join("\n",
+                result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.ToString())));
+
+        foreach (var file in files)
+        {
+            if (file.OnDisk)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(file.Path)!);
+                File.WriteAllBytes(file.Path, file.BytesAfterCompile ?? file.Bytes);
+            }
+            else if (File.Exists(file.Path))
+            {
+                File.Delete(file.Path);
+            }
+        }
+
+        return assemblyPath;
+    }
+
+    /// <summary>The text the compiler makes of a file's bytes (Roslyn's <c>EncodedStringText.Create</c>): a byte order
+    /// mark wins; else the build's code page; else strict UTF-8, and on bytes that are not UTF-8 the code page 1252 (the
+    /// ANSI code page of the machines this suite runs on, and the compiler's fallback where there is none).</summary>
+    public static SourceText AsCompilerReadsIt(byte[] bytes, Encoding? codePage, SourceHashAlgorithm checksum, bool embedded)
+    {
+        if (codePage is not null)
+            return SourceText.From(bytes, bytes.Length, codePage, checksum, throwIfBinaryDetected: false, canBeEmbedded: embedded);
+        try
+        {
+            return SourceText.From(bytes, bytes.Length, new UTF8Encoding(false, throwOnInvalidBytes: true), checksum,
+                throwIfBinaryDetected: false, canBeEmbedded: embedded);
+        }
+        catch (DecoderFallbackException)
+        {
+            return SourceText.From(bytes, bytes.Length, CodePagesEncodingProvider.Instance.GetEncoding(1252)!, checksum,
+                throwIfBinaryDetected: false, canBeEmbedded: embedded);
+        }
+    }
+
     private static MetadataReference[] GetReferences()
     {
         var refs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

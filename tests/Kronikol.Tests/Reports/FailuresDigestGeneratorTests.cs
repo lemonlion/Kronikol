@@ -140,6 +140,19 @@ public class FailuresDigestGeneratorTests
         Assert.Contains("3902", digest.Markdown);
     }
 
+    // WEAVER_SOURCE_PATHS_PLAN fact 27: Shouldly's text without the caller's source, as Shouldly 4.3.0 writes it when a
+    // CI build's test DLL is run directly, gets its Expected/Actual table.
+    [Fact]
+    public void Expected_and_actual_are_parsed_out_of_Shouldlys_text_without_its_source()
+    {
+        var features = OneFailure();
+        features[0].Scenarios[2].ErrorMessage = "4\r\n    should be\r\n5\r\n    but was not";
+
+        var digest = Generate(features);
+
+        Assert.Contains("| Expected | Actual |\n|---|---|\n| `5` | `4` |", digest.Markdown);
+    }
+
     [Fact]
     public void The_failing_step_its_predecessors_and_its_source_location_are_named()
     {

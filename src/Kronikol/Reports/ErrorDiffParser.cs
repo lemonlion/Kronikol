@@ -6,7 +6,8 @@ namespace Kronikol.Reports;
 /// <summary>
 /// Extracts expected/actual value pairs from assertion failure messages
 /// for side-by-side diff display in the report. Supports xUnit, NUnit,
-/// FluentAssertions, and Shouldly assertion formats.
+/// FluentAssertions, and Shouldly assertion formats; Shouldly's "should be" is read whether its text names the
+/// subject's code (Shouldly read the caller's source) or begins with the actual value (it could not).
 /// </summary>
 public static class ErrorDiffParser
 {
@@ -27,6 +28,14 @@ public static class ErrorDiffParser
         // the custom message's "Additional Info" may follow it.
         new(@"^ {4}should be\r?\n(.*?)\r?\n {4}but was\r?\n(.*?)(?=\r?\n {4}difference(?:\r?\n|\z)|\r?\n\r?\nAdditional Info:|\s*\z)",
             RegexOptions.Multiline | RegexOptions.Singleline),
+
+        // Shouldly without the caller's source: when it cannot read the file (its path map not handed to the test
+        // process, as when a CI build's test DLL is run directly, the tests run where the sources are not, or
+        // ShouldlyConfiguration.DisableSourceInErrors()), it writes the actual value where the code would be, then
+        // "should be", the expected value and "but was not" (Shouldly 4.3.0, WEAVER_SOURCE_PATHS_PLAN F8). Only the
+        // "should be" check is read, as with the source.
+        new(@"\A(?<actual>.*?)\r?\n {4}should be\r?\n(?<expected>.*?)\r?\n {4}but was not(?=\r?\n {4}difference(?:\r?\n|\z)|\r?\n\r?\nAdditional Info:|\s*\z)",
+            RegexOptions.Singleline),
 
         // FluentAssertions, a string, whatever the subject is called:
         // Expected text to be "b", but "a" differs near "a" (index 0).
@@ -52,8 +61,9 @@ public static class ErrorDiffParser
             var match = pattern.Match(errorMessage);
             if (match.Success)
             {
-                var expected = Unquote(match.Groups[1].Value.Trim());
-                var actual = Unquote(match.Groups[2].Value.Trim());
+                // A pattern that reads the actual value first names its groups.
+                var expected = Unquote((match.Groups["expected"] is { Success: true } named ? named : match.Groups[1]).Value.Trim());
+                var actual = Unquote((match.Groups["actual"] is { Success: true } other ? other : match.Groups[2]).Value.Trim());
                 return new DiffResult(expected, actual);
             }
         }

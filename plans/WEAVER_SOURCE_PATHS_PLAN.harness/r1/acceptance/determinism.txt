@@ -1,0 +1,26 @@
+commit: a=1d23379d94c89b907d8364490c6f85304e97f655 b=1d23379d94c89b907d8364490c6f85304e97f655
+clone-a: <S>/clone-a
+clone-b: <S>/deeper/path/clone-b
+== (1) woven: dotnet build -c Debug -p:ContinuousIntegrationBuild=true
+build woven-a exit 0 : 0 Error(s)|0 Warning(s)|Kronikol.AssertionTracking: Instrumented 9 assertion(s) in 2 method(s) (300ms)
+build woven-b exit 0 : 0 Error(s)|0 Warning(s)|Kronikol.AssertionTracking: Instrumented 9 assertion(s) in 2 method(s) (286ms)
+  a bd85966f7ce2f10209903c9e79fed4322ae7d0efa136103b8dcb5e25861827ae  17920  obj/Debug/net8.0/preweave/IssueStack.dll
+  a cfde9ba0cffc0b9e9229eb886541546f3f9114c614a3253c36c8b5a64a526d4a  26172  obj/Debug/net8.0/preweave/IssueStack.pdb
+  a a1daaaab4d8cd288e4bda7ebb77e7e44d7838ee60f0c5a27e5d9545964fd5406  20992  obj/Debug/net8.0/IssueStack.dll
+  a 7232f770bf5f13930be3de88b191124c7bb8bbc5ff031410b105e5cce0eae21a  24396  obj/Debug/net8.0/IssueStack.pdb
+  b bd85966f7ce2f10209903c9e79fed4322ae7d0efa136103b8dcb5e25861827ae  17920  obj/Debug/net8.0/preweave/IssueStack.dll
+  b cfde9ba0cffc0b9e9229eb886541546f3f9114c614a3253c36c8b5a64a526d4a  26172  obj/Debug/net8.0/preweave/IssueStack.pdb
+  b a1daaaab4d8cd288e4bda7ebb77e7e44d7838ee60f0c5a27e5d9545964fd5406  20992  obj/Debug/net8.0/IssueStack.dll
+  b 7232f770bf5f13930be3de88b191124c7bb8bbc5ff031410b105e5cce0eae21a  24396  obj/Debug/net8.0/IssueStack.pdb
+== (2) unwoven: dotnet build -c Debug -p:ContinuousIntegrationBuild=true -p:TrackAssertionsEnabled=false
+build unwoven-a exit 0 : 0 Error(s)|0 Warning(s)
+build unwoven-b exit 0 : 0 Error(s)|0 Warning(s)
+  a bd85966f7ce2f10209903c9e79fed4322ae7d0efa136103b8dcb5e25861827ae  17920  obj/Debug/net8.0/preweave/IssueStack.dll
+  a cfde9ba0cffc0b9e9229eb886541546f3f9114c614a3253c36c8b5a64a526d4a  26172  obj/Debug/net8.0/preweave/IssueStack.pdb
+  a bd85966f7ce2f10209903c9e79fed4322ae7d0efa136103b8dcb5e25861827ae  17920  obj/Debug/net8.0/IssueStack.dll
+  a cfde9ba0cffc0b9e9229eb886541546f3f9114c614a3253c36c8b5a64a526d4a  26172  obj/Debug/net8.0/IssueStack.pdb
+  b bd85966f7ce2f10209903c9e79fed4322ae7d0efa136103b8dcb5e25861827ae  17920  obj/Debug/net8.0/preweave/IssueStack.dll
+  b cfde9ba0cffc0b9e9229eb886541546f3f9114c614a3253c36c8b5a64a526d4a  26172  obj/Debug/net8.0/preweave/IssueStack.pdb
+  b bd85966f7ce2f10209903c9e79fed4322ae7d0efa136103b8dcb5e25861827ae  17920  obj/Debug/net8.0/IssueStack.dll
+  b cfde9ba0cffc0b9e9229eb886541546f3f9114c614a3253c36c8b5a64a526d4a  26172  obj/Debug/net8.0/IssueStack.pdb
+DONE

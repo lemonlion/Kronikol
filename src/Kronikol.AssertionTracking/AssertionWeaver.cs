@@ -20,12 +20,29 @@ public class AssertionWeaver
 {
     private readonly TaskLoggingHelper? _log;
     private readonly string[] _searchDirectories;
-    private readonly Dictionary<string, string[]?> _sourceFileCache = new(StringComparer.Ordinal);
+    private readonly IReadOnlyList<KeyValuePair<string, string>> _sourceMap;
+    private readonly System.Text.Encoding? _codePage;
+    private SourceDocuments _sources;
 
     public AssertionWeaver(TaskLoggingHelper? log = null, string[]? searchDirectories = null)
+        : this(log, searchDirectories, Array.Empty<KeyValuePair<string, string>>(), null)
+    {
+    }
+
+    /// <param name="log">The build's log, or null.</param>
+    /// <param name="searchDirectories">Directories the assembly's references are resolved from.</param>
+    /// <param name="sourceMap">Each local directory and the name the compiler wrote for it: the build's
+    /// <c>PathMap</c> entries, then its source roots with their <c>MappedPath</c>. A build with deterministic source
+    /// paths names its documents through them (#165), and the weave reads each statement through them back.</param>
+    /// <param name="codePage">The encoding of the build's <c>CodePage</c>, or null when it sets none.</param>
+    internal AssertionWeaver(TaskLoggingHelper? log, string[]? searchDirectories,
+        IReadOnlyList<KeyValuePair<string, string>> sourceMap, System.Text.Encoding? codePage)
     {
         _log = log;
         _searchDirectories = searchDirectories ?? Array.Empty<string>();
+        _sourceMap = sourceMap;
+        _codePage = codePage;
+        _sources = new SourceDocuments(sourceMap, codePage);
     }
 
     /// <summary>
@@ -34,11 +51,14 @@ public class AssertionWeaver
     /// <param name="assemblyPath">The compiled assembly.</param>
     /// <param name="pdbPath">Its portable PDB file, or null when the assembly embeds its symbols
     /// (<c>DebugType=embedded</c>) or has none; embedded symbols are read from the assembly and written
-    /// back into it.</param>
+    /// back into it. Each statement's source is read from the file the symbols name, taken back through the source
+    /// map when the build mapped its paths and checked against the checksum the symbols record, else from the source
+    /// they embed; the woven calls keep the names as the symbols write them.</param>
     public WeaveResult Weave(string assemblyPath, string? pdbPath)
     {
         var result = new WeaveResult();
         var sw = System.Diagnostics.Stopwatch.StartNew();
+        _sources = new SourceDocuments(_sourceMap, _codePage);
 
         // Read assembly from a byte array to avoid holding file locks (ReadWrite=true
         // can stall on Linux overlay filesystems used by CI runners).
@@ -145,8 +165,19 @@ public class AssertionWeaver
         var weaveMs = sw.ElapsedMilliseconds;
         _log?.LogMessage(MessageImportance.Normal, "AssertionTracking: {0} types, {1} methods, {2} assertions weaved in {3}ms", typeCount, methodCount, result.WeavedCount, weaveMs);
 
+        // Where each document was read from, when not under its own name, and the documents nothing reached.
+        result.DiagMessages.AddRange(_sources.Found);
+        foreach (var unread in _sources.Unread)
+        {
+            result.UnreadSources.Add(unread);
+            result.DiagMessages.Add($"Could not read the source of {unread.Document}; tried {string.Join(", ", unread.Tried)}");
+        }
+
         if (result.WeavedCount > 0)
         {
+            // Before anything is added to the module, while every type still has the compiler's token.
+            DropTypeDefinitionDocuments(assembly.MainModule);
+
             // Add sentinel attribute to prevent double-weaving
             AddWeavedSentinel(assembly);
 
@@ -203,6 +234,27 @@ public class AssertionWeaver
     {
         return assembly.MainModule.CustomAttributes.Any(a =>
             a.AttributeType.Name == "__AssertionTrackingWeaved__");
+    }
+
+    /// <summary>
+    /// Drops Roslyn's <c>TypeDefinitionDocuments</c> records (WEAVER_SOURCE_PATHS_PLAN R1d, F13). Each names the documents
+    /// a type without method bodies lives in, by their rows in the PDB's document table. Cecil writes only the documents
+    /// that hold sequence points, numbered afresh, and copied the records' rows as they were, so a record named another
+    /// document; and it reads a type's records by the token the type has when it writes it, so a type that had none took
+    /// those of the type whose row it took. Every type's records are read here, while the tokens are the compiler's, and
+    /// these are removed: the woven PDB holds none, as from a compiler that writes none, rather than wrong ones.
+    /// </summary>
+    private static void DropTypeDefinitionDocuments(ModuleDefinition module)
+    {
+        foreach (var type in module.GetTypes())
+        {
+            var informations = type.CustomDebugInformations;
+            for (var i = informations.Count - 1; i >= 0; i--)
+            {
+                if (informations[i].Identifier == SourceDocuments.TypeDefinitionDocumentsKind)
+                    informations.RemoveAt(i);
+            }
+        }
     }
 
     private static void AddWeavedSentinel(AssemblyDefinition assembly)
@@ -673,6 +725,7 @@ public class AssertionWeaver
 
             var capturedVariables = DetectCapturedVariables(method, statementInstructions, sourceText,
                 () => analysis ??= StackAnalysis.Analyze(method.Body));
+            _sources.CountStatement(sp.Document);
             results.Add(new AssertionStatement
             {
                 FirstInstruction = statementInstructions.First(),
@@ -869,14 +922,7 @@ public class AssertionWeaver
     {
         try
         {
-            var documentUrl = sp.Document.Url;
-
-            if (!_sourceFileCache.TryGetValue(documentUrl, out var lines))
-            {
-                lines = File.Exists(documentUrl) ? File.ReadAllLines(documentUrl) : null;
-                _sourceFileCache[documentUrl] = lines;
-            }
-
+            var lines = _sources.Lines(sp.Document);
             if (lines == null)
                 return $"assertion at line {sp.StartLine}";
 
@@ -1065,14 +1111,7 @@ public class AssertionWeaver
     /// </summary>
     private bool IsPragmaDisabled(SequencePoint sp)
     {
-        var documentUrl = sp.Document.Url;
-
-        if (!_sourceFileCache.TryGetValue(documentUrl, out var lines))
-        {
-            lines = File.Exists(documentUrl) ? File.ReadAllLines(documentUrl) : null;
-            _sourceFileCache[documentUrl] = lines;
-        }
-
+        var lines = _sources.Lines(sp.Document);
         if (lines == null || sp.StartLine < 1 || sp.StartLine > lines.Length)
             return false;
 
@@ -2710,14 +2749,12 @@ public class AssertionWeaver
         var capture = assertion.ArgumentCapture;
         var hasValues = assertion.CapturedVariables.Count > 0 || capture != null;
 
-        // Expression string and file/line for tracking
+        // Expression string and file/line for tracking. The file is the PDB's name for the document, as the compiler
+        // wrote it, never the path the weave read it from: in a build with deterministic source paths that is /_/...,
+        // so the woven bytes are the same in every clone and carry no local path (#165). Track keeps its file name.
         var expressionText = assertion.SourceText;
         var filePath = assertion.SequencePoint.Document.Url;
         var lineNumber = assertion.SequencePoint.StartLine;
-
-        // Get the file name only (for shorter display)
-        var separatorIdx = filePath.LastIndexOfAny(new[] { '/', '\\' });
-        var fileName = separatorIdx >= 0 ? filePath.Substring(separatorIdx + 1) : filePath;
 
         var firstInstr = assertion.FirstInstruction;
         var lastInstr = assertion.LastInstruction;
@@ -3101,7 +3138,7 @@ public class AssertionWeaver
         var hasValues = assertion.CapturedVariables.Count > 0;
 
         var expressionText = assertion.SourceText;
-        var filePath = assertion.SequencePoint.Document.Url;
+        var filePath = assertion.SequencePoint.Document.Url; // the PDB's name, as above
         var lineNumber = assertion.SequencePoint.StartLine;
 
         var getResultInstr = assertion.GetResultInstruction!;
@@ -3429,4 +3466,8 @@ public class WeaveResult
 
     /// <summary>The assertion statements found but left unwoven, each with where it is and why.</summary>
     public List<string> Unwoven { get; set; } = new List<string>();
+
+    /// <summary>The documents whose source no candidate reached, each with the paths tried: their statements are
+    /// labelled by line, show no values, and their pragma comments were not read.</summary>
+    public List<UnreadSource> UnreadSources { get; set; } = new List<UnreadSource>();
 }

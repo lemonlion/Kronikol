@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Text;
 using Kronikol.AssertionTracking;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -63,7 +64,7 @@ public class WeaveAssertionsTaskTests
                 .Concat(Errors.Select(e => e.Message ?? ""));
     }
 
-    internal static (bool Succeeded, RecordingBuildEngine Engine) RunTask(string assemblyPath)
+    internal static (bool Succeeded, RecordingBuildEngine Engine) RunTask(string assemblyPath, Action<WeaveAssertionsTask>? configure = null)
     {
         var engine = new RecordingBuildEngine();
         var references = new[]
@@ -76,6 +77,7 @@ public class WeaveAssertionsTaskTests
             .Select(p => (ITaskItem)new TaskItem(p))
             .ToArray();
         var task = new WeaveAssertionsTask { BuildEngine = engine, AssemblyPath = assemblyPath, References = references };
+        configure?.Invoke(task);
         var unwoven = File.ReadAllBytes(assemblyPath);
         var succeeded = task.Execute();
         if (succeeded)
@@ -289,5 +291,92 @@ public class WeaveAssertionsTaskTests
 
         Assert.True(succeeded);
         Assert.Empty(engine.Warnings);
+    }
+
+    // #165: a build with deterministic source paths names each document /_/…; the task hands the weave the build's map.
+    private const string Mapped = """
+        using FluentAssertions;
+        using Kronikol.Tracking;
+
+        [assembly: TrackAssertions]
+
+        public static class Cases
+        {
+            public static void Statements()
+            {
+                var name = "café";
+                name.Should().Be("café");
+            }
+        }
+        """;
+
+    private static string WithSeparator(string directory) =>
+        directory.EndsWith(Path.DirectorySeparatorChar) ? directory : directory + Path.DirectorySeparatorChar;
+
+    private static string Label(string path)
+    {
+        var (thrown, notes) = WovenRun.Run(path, "Cases", "Statements");
+        Assert.Null(thrown);
+        return Assert.Single(notes).Label;
+    }
+
+    // WEAVER_SOURCE_PATHS_PLAN fact 3: the map in @(SourceRoot) alone, each root's MappedPath, with no PathMap.
+    [Fact]
+    public void The_task_reads_a_mapped_document_through_the_source_roots()
+    {
+        var root = TestAssemblyBuilder.NewSourceRoot("TaskSourceRoots");
+        var path = TestAssemblyBuilder.BuildMapped("TaskSourceRoots",
+            [TestAssemblyBuilder.FixtureFile.Utf8(Path.Combine(root, "tests", "Cases.cs"), Mapped)], [new(WithSeparator(root), "/_/")]);
+
+        var (succeeded, engine) = RunTask(path, task => task.SourceRoots =
+            [new TaskItem(WithSeparator(root), new Dictionary<string, string> { ["MappedPath"] = "/_/" })]);
+
+        Assert.True(succeeded, string.Join("\n", engine.Errors.Select(e => e.Message)));
+        Assert.Equal("Name should be \"café\"", Label(path));
+    }
+
+    // WEAVER_SOURCE_PATHS_PLAN fact 4: a project's own PathMap, as the user writes it (no trailing separator), and no
+    // deterministic source paths: the source roots' MappedPath is the root itself.
+    [Fact]
+    public void The_task_reads_a_document_a_projects_own_PathMap_named()
+    {
+        var root = TestAssemblyBuilder.NewSourceRoot("TaskPathMap");
+        var path = TestAssemblyBuilder.BuildMapped("TaskPathMap",
+            [TestAssemblyBuilder.FixtureFile.Utf8(Path.Combine(root, "Scenarios", "Cases.cs"), Mapped)], [new(WithSeparator(root), "/src/")]);
+
+        var (succeeded, engine) = RunTask(path, task =>
+        {
+            task.PathMap = root.TrimEnd(Path.DirectorySeparatorChar) + "=/src/";
+            task.SourceRoots = [new TaskItem(WithSeparator(root), new Dictionary<string, string> { ["MappedPath"] = WithSeparator(root) })];
+        });
+
+        Assert.True(succeeded, string.Join("\n", engine.Errors.Select(e => e.Message)));
+        Assert.Equal("Name should be \"café\"", Label(path));
+    }
+
+    // WEAVER_SOURCE_PATHS_PLAN fact 18: the task as the targets run it in a CI build: PathMap with the SDK's trailing
+    // comma, the source roots with their MappedPath, and the build's CodePage. Each mapped document is listed at low
+    // importance with the file it was read from.
+    [Fact]
+    public void The_task_takes_the_builds_PathMap_source_roots_and_code_page()
+    {
+        var root = TestAssemblyBuilder.NewSourceRoot("TaskCiBuild");
+        var codePage = CodePagesEncodingProvider.Instance.GetEncoding(1252)!;
+        var file = Path.Combine(root, "tests", "Cases.cs");
+        var path = TestAssemblyBuilder.BuildMapped("TaskCiBuild",
+            [TestAssemblyBuilder.FixtureFile.Utf8(file, Mapped)], [new(WithSeparator(root), "/_/")], codePage: codePage);
+
+        var (succeeded, engine) = RunTask(path, task =>
+        {
+            task.PathMap = WithSeparator(root).Replace(",", ",,").Replace("=", "==") + "=/_/,";
+            task.SourceRoots = [new TaskItem(WithSeparator(root), new Dictionary<string, string> { ["MappedPath"] = "/_/" })];
+            task.CodePage = "1252";
+        });
+
+        Assert.True(succeeded, string.Join("\n", engine.Errors.Select(e => e.Message)));
+        Assert.Equal("Name should be \"cafÃ©\"", Label(path));
+        Assert.Contains(engine.Messages, m => m.Importance == MessageImportance.Low
+            && m.Message == $"AssertionTracking: Read the source of /_/tests/Cases.cs from {file}");
+        Assert.DoesNotContain(engine.Visible(), m => m.Contains("/_/tests/Cases.cs", StringComparison.Ordinal));
     }
 }

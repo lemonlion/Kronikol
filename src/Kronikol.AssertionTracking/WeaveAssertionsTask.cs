@@ -12,8 +12,11 @@ namespace Kronikol.AssertionTracking;
 /// FluentAssertions and AwesomeAssertions (<c>.Should()</c>), Shouldly (<c>ShouldBe()</c> and the rest) and TUnit
 /// (<c>Assert.That()</c>) with assertion tracking: a try/catch around each statement that calls
 /// Track.AssertionPassed/Track.AssertionFailed. Only activates if <c>[assembly: TrackAssertions]</c> is found in the
-/// compiled assembly, and warns (KRONIKOL001) when that attribute finds nothing to instrument. It reads the
-/// statements from the build's symbols, a portable PDB beside the assembly or one embedded in it.
+/// compiled assembly, and warns (KRONIKOL001) when that attribute finds nothing to instrument. It finds the
+/// statements through the build's symbols, a portable PDB beside the assembly or one embedded in it, and reads each
+/// statement's text where the compiler read it: the file the PDB names, mapped back through <see cref="PathMap"/> and
+/// <see cref="SourceRoots"/> when the build wrote other names (deterministic source paths, #165), or else the source
+/// the PDB embeds.
 /// </summary>
 public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
 {
@@ -21,9 +24,24 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
     public string AssemblyPath { get; set; } = string.Empty;
 
     /// <summary>
-    /// Root paths for source files, used to locate source code referenced by PDB sequence points.
+    /// The build's source roots (<c>@(SourceRoot)</c>). A root whose <c>MappedPath</c> metadata differs from its path
+    /// is a name the compiler wrote for that directory, and a document under that name is read from the directory.
     /// </summary>
     public ITaskItem[] SourceRoots { get; set; } = Array.Empty<ITaskItem>();
+
+    /// <summary>
+    /// The compiler's path map (<c>$(PathMap)</c>, its <c>/pathmap</c>), as the build passed it: <c>key=value</c>
+    /// entries separated by <c>,</c>, with a doubled <c>,</c> or <c>=</c> standing for the character. Deterministic
+    /// source paths (<c>ContinuousIntegrationBuild</c>) write each source root here as <c>/_/</c>, <c>/_1/</c> and on,
+    /// and a project can add its own. A document named under a value is read from the key's directory.
+    /// </summary>
+    public string? PathMap { get; set; }
+
+    /// <summary>
+    /// The build's code page (<c>$(CodePage)</c>, the compiler's <c>/codepage</c>), or empty: the compiler decodes every
+    /// source file without a byte order mark in it, and so does the weave.
+    /// </summary>
+    public string? CodePage { get; set; }
 
     /// <summary>
     /// Resolved reference paths (from MSBuild @(ReferencePath)). Used to configure
@@ -64,10 +82,24 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
             .Where(d => !string.IsNullOrEmpty(d))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
-        var weaver = new AssertionWeaver(Log, searchDirectories!);
+        var refused = new List<string>();
+        var map = SourceDocuments.ParsePathMap(PathMap, refused);
+        foreach (var root in SourceRoots)
+        {
+            var mapped = root.GetMetadata("MappedPath");
+            if (!string.IsNullOrEmpty(mapped) && !string.Equals(mapped, root.ItemSpec, StringComparison.Ordinal))
+                map.Add(new KeyValuePair<string, string>(root.ItemSpec, mapped));
+        }
+
+        var codePage = SourceDocuments.CodePageEncoding(CodePage, out var codePageNote);
+        var weaver = new AssertionWeaver(Log, searchDirectories!, map, codePage);
         var result = weaver.Weave(AssemblyPath, pdbPath);
         sw.Stop();
 
+        foreach (var entry in refused)
+            Log.LogMessage(MessageImportance.Low, "AssertionTracking: PathMap entry '{0}' is not key=value; it is not read", entry);
+        if (codePageNote != null)
+            Log.LogMessage(MessageImportance.Low, "AssertionTracking: {0}", codePageNote);
         foreach (var message in result.DiagMessages)
             Log.LogMessage(MessageImportance.Low, "AssertionTracking: {0}", message);
 

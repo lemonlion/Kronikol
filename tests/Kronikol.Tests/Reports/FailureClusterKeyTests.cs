@@ -137,6 +137,51 @@ public class FailureClusterKeyTests
         Assert.Equal([cluster.ClusterKey], DigestClusterHeadings(scenarios));
     }
 
+    // WEAVER_SOURCE_PATHS_PLAN fact 26: without the caller's source Shouldly writes the ACTUAL value on the first line
+    // and ends "but was not" (Shouldly 4.3.0, plan harness shouldly/forms.txt), so on today's key every actual value was
+    // a cause of its own. The check and its expected value are the key.
+    [Theory]
+    [InlineData("4\r\n    should be\r\n5\r\n    but was not", "3\r\n    should be\r\n5\r\n    but was not", "should be 5")]
+    [InlineData("1\r\n    should be greater than\r\n2\r\n    but was not", "0\r\n    should be greater than\r\n2\r\n    but was not", "should be greater than 2")]
+    [InlineData("1d\r\n    should be within\r\n0.1d\r\n    of\r\n2d\r\n    but was not", "3d\r\n    should be within\r\n0.1d\r\n    of\r\n2d\r\n    but was not", "should be within 0.1d of 2d")]
+    [InlineData("\"a\"\r\n    should be\r\n\"b\"\r\n    but was not\r\n    difference\r\nDifference     |  |   \r\nIndex          | 0    ", "\"c\"\r\n    should be\r\n\"b\"\r\n    but was not\r\n    difference\r\nDifference     |  |   \r\nIndex          | 0    ", "should be \"b\"")]
+    [InlineData("4\r\n    should be\r\n5\r\n    but was not\r\n\r\nAdditional Info:\r\n    custom message", "3\r\n    should be\r\n5\r\n    but was not\r\n\r\nAdditional Info:\r\n    custom message", "should be 5")]
+    public void Shouldly_failures_without_the_source_cluster_by_the_check_and_its_expected_value(string first, string second, string key)
+    {
+        Scenario[] scenarios = [Failed("t0", first), Failed("t1", second)];
+
+        var cluster = Assert.Single(FailureClusterer.Cluster(scenarios));
+        Assert.Equal(key, cluster.ClusterKey);
+        Assert.Equal([key], DigestClusterHeadings(scenarios));
+    }
+
+    [Fact]
+    public void Shouldly_failures_without_the_source_expecting_different_values_cluster_apart()
+    {
+        Scenario[] scenarios =
+        [
+            Failed("t0", "4\r\n    should be\r\n5\r\n    but was not"),
+            Failed("t1", "3\r\n    should be\r\n5\r\n    but was not"),
+            Failed("t2", "4\r\n    should be\r\n6\r\n    but was not"),
+            Failed("t3", "3\r\n    should be\r\n6\r\n    but was not"),
+        ];
+
+        var panel = FailureClusterer.Cluster(scenarios).Select(c => c.ClusterKey).Order(StringComparer.Ordinal).ToArray();
+
+        Assert.Equal(["should be 5", "should be 6"], panel);
+        Assert.Equal(panel, DigestClusterHeadings(scenarios).Order(StringComparer.Ordinal).ToArray());
+    }
+
+    // A check whose text ends the same with the source and without it says nothing of which form it is: its first line
+    // may be the subject's code, so it keeps today's key.
+    [Fact]
+    public void Shouldly_should_not_be_without_the_source_keeps_its_first_line_key()
+    {
+        var scenarios = Pair("5\r\n    should not be\r\n5\r\n    but was");
+
+        Assert.Equal("5 should not be", Assert.Single(FailureClusterer.Cluster(scenarios)).ClusterKey);
+    }
+
     [Fact]
     public void A_second_line_that_only_looks_like_Shouldly_keeps_the_first_line_key()
     {

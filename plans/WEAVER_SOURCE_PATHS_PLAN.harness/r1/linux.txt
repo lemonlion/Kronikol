@@ -1,0 +1,19 @@
+The weaver suite on Linux, 2026-10-15: podman's WSL machine, mcr.microsoft.com/dotnet/sdk:10.0 (SDK 10.0.401, the only SDK
+there), the worktree at R1 (4.20.4), net10.0 (linux165/run-linux.sh: suite, then m20).
+
+== suite: dotnet test tests/Kronikol.Tests.AssertionTracking -f net10.0
+Failed!  - Failed:     1, Passed:   333, Skipped:    84, Total:   418, Duration: 2 m 26 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+Skipped: 84, every one a CrossSdkWeaverTests fact for an SDK the container lacks (8.0, 9.0, 11.0).
+The one failure, an older fact that pins SDK 8.0.420 (CI installs 8.0.x beside 10.0.x):
+Kronikol.Tests.AssertionTracking.AssertionWeaverTests.Weave_Sdk8_AwesomeAssertions_LinqOrderByDescending_DoesNotThrowBadImageFormat(configuration: "Release") [FAIL]
+System.InvalidOperationException : dotnet restore failed for 'Sdk8AALinqOrderBy_Release' (SDK 8.0.420):
+Requested SDK version: 8.0.420
+
+== m20: SourceDocuments.Candidates joins the rest of a mapped name to the local directory as the name has it
+(var candidate = entry.Key + name.Substring(entry.Value.Length);), filter FullyQualifiedName~DeterministicSourcePathsTests
+Kronikol.Tests.AssertionTracking.DeterministicSourcePathsTests.A_mapped_value_written_with_the_other_separator_is_read_back [FAIL]
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Total should be 3"
+Actual:   "Assertion at line 11"
+Failed!  - Failed:     1, Passed:    47, Skipped:     0, Total:    48, Duration: 12 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

@@ -78,3 +78,18 @@ checks, first with the caller's source and then under `ShouldlyConfiguration.Dis
 writes when it cannot read the file, and print each message JSON-escaped with what `ErrorDiffParser` reads from it and
 the key `FailureText.ClusterKey` gives it (copied into `Program.cs`, being internal). `forms.txt` is the output of
 `dotnet run` on 2026-10-13. It is what scopes the plan's R1c.
+
+## r1/ (R1, 4.20.4, 2026-10-15)
+
+- `red/`: R1's facts copied onto a worktree at v4.20.2 (`setup_red.py`, with `Stubs165.cs.txt` standing in for the
+  members 4.20.2 lacks), and each red run summarized by `summarize_red.py`: `weave-red-summary.txt` and
+  `report-red-summary.txt` hold one entry per failing fact, with the assertion that failed and its line; `totals.txt`
+  the two runs' totals.
+- `mutations.txt` and `mutate.py`: each mutation of the plan's §5.5 applied to a copy of R1, the facts it turned red
+  and the run's totals. M20 can only fail where the path separator is `/`; its Linux run is in `linux.txt`.
+- `linux.txt`: the weaver suite in the `mcr.microsoft.com/dotnet/sdk:10.0` container, and M20's run there.
+- `acceptance/`: the probe's rows a to k on locally packed packages (versioned 4.20.3-acceptance.1, before the release took 4.20.4) (`run_rows.sh`,
+  `<row>-summary.txt`); the two-clone build (`determinism.txt`, `determinism-bytesearch.txt`); BreakfastProvider at
+  0ee43e8, its 27 Kronikol references moved, its seven tracked test projects built with and without
+  `ContinuousIntegrationBuild` and what the weave wrote compared (`breakfast.sh`, `wovenlabels.cs`):
+  `breakfast-r1.txt` on the acceptance packages, `breakfast-control.txt` on the published 4.20.2.

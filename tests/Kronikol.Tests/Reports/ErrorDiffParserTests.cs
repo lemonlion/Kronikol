@@ -200,6 +200,16 @@ public class ErrorDiffParserTests
         { "Expected text to be <null>, but found \"a\".", "<null>", "a" },
         { "Expected date to be <2026-10-09>, but found <2026-10-08>.", "<2026-10-09>", "<2026-10-08>" },
         { "Expected result to be 5 because the total must match, but found 3.", "5", "3" },
+        // WEAVER_SOURCE_PATHS_PLAN fact 25: Shouldly 4.3.0 without the caller's source (its map not handed to the test
+        // process, as when a CI build's DLL is run directly, or ShouldlyConfiguration.DisableSourceInErrors()) writes the
+        // actual value where the code would be and ends "but was not" (measured, plan harness shouldly/forms.txt).
+        { "4\r\n    should be\r\n5\r\n    but was not", "5", "4" },
+        { "\"a\"\r\n    should be\r\n\"b\"\r\n    but was not\r\n    difference\r\nDifference     |  |   \r\n               | \\|/  \r\nIndex          | 0    \r\nExpected Value | b    \r\nActual Value   | a    \r\nExpected Code  | 98   \r\nActual Code    | 97   ", "b", "a" },
+        { "4\r\n    should be\r\n5\r\n    but was not\r\n\r\nAdditional Info:\r\n    custom message", "5", "4" },
+        { "[1, 2]\r\n    should be\r\n[1, 3]\r\n    but was not\r\n    difference\r\n[1, *2*]", "[1, 3]", "[1, 2]" },
+        { "\"x\"\r\n    should be\r\nnull\r\n    but was not", "null", "x" },
+        { "DayOfWeek.Monday\r\n    should be\r\nDayOfWeek.Friday\r\n    but was not", "DayOfWeek.Friday", "DayOfWeek.Monday" },
+        { "False\r\n    should be\r\nTrue\r\n    but was not", "True", "False" },
     };
 
     [Theory]
@@ -218,6 +228,10 @@ public class ErrorDiffParserTests
     [InlineData("result\n    should be greater than\n10\n    but was\n3")]
     [InlineData("name\n    should not be null but was")]
     [InlineData("result\n    should not be\n3\n    but was\n3")]
+    // The same checks without the caller's source (WEAVER_SOURCE_PATHS_PLAN fact 25): only "should be" is read.
+    [InlineData("1\r\n    should be greater than\r\n2\r\n    but was not")]
+    [InlineData("1d\r\n    should be within\r\n0.1d\r\n    of\r\n2d\r\n    but was not")]
+    [InlineData("5\r\n    should not be\r\n5\r\n    but was")]
     public void A_check_that_is_not_an_equality_has_no_expected_and_actual(string message)
     {
         Assert.Null(ErrorDiffParser.TryParseExpectedActual(message));

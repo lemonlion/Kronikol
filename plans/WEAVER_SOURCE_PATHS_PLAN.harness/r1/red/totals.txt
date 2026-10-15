@@ -1,0 +1,2 @@
+weave-red.txt:Failed!  - Failed:    50, Passed:    18, Skipped:     0, Total:    68, Duration: 19 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+report-red.txt:Failed!  - Failed:    14, Passed:    78, Skipped:     0, Total:    92, Duration: 435 ms - Kronikol.Tests.dll (net10.0)

@@ -5,7 +5,8 @@ packages; the line numbers are 3240c983's. Of the files cited, only `ReportGener
 by eight lines above its two calls, so every other number holds for both.
 The weaver's three source-reading methods, `ReadSourceText`, `CutColumns` and `IsPragmaDisabled`, are byte for byte
 the same as at 98c4806d, the commit the issue cites, 93 lines lower: the issue's L775, L783 and L979 are L868, L876
-and L1072 here · **Status:** a plan. It green-lights nothing; the questions are in §9.
+and L1072 here · **Status:** green-lit in full by the owner on 2026-10-15 ("Can you implement the plan in full"),
+every question in §9 as recommended. R1 executed as 4.20.4 (§11); R2, a minor of its own (Q1), next.
 
 Evidence labels: **RUN** (measured on 2026-10-13 with the published 4.18.1 packages, SDK 10.0.300, xUnit 2.9.3,
 Shouldly 4.3.0 and FluentAssertions 6.12.1 on net8.0; the project, the scripts and the saved output are in
@@ -472,6 +473,12 @@ facts, in a new `DeterministicSourcePathsTests.cs`:
     metadata: the statements are labelled, and each mapped document is listed at low importance with the file it was
     read from.
 
+Added at execution: a file under its own name that fails the checksum, with no embedded source, is still read (R1a's
+third source; its label is a guard, holding before R1, and M23 proves it); the build's `CodePage` as the compiler takes
+it (empty and 0 set none; a value that is not a number is noted and not followed); and the weave's own Windows-1252
+table, every byte against the runtime's decoder (the task runs in MSBuild on .NET, which has no code pages of its own
+but the Unicode ones).
+
 ### 5.2 Through the targets (`tests/Kronikol.Tests.AssertionTracking`, a new `TargetsBuildTests.cs`)
 
 None exists (F10). A fixture project, built by `dotnet build` in a temp directory with a sandboxed
@@ -484,7 +491,9 @@ a `SourceRoot` for its directory (so the facts need no git; row h shows the SDK 
     honoured, with a portable PDB and with `-p:DebugType=embedded` (DotNet.ReproducibleBuilds' default). Red
     before R1 ("Assertion at line N").
 20. `-p:PathMap=<fixture dir>=/src/`: the same.
-21. `-p:ContinuousIntegrationBuild=true -p:EmbedAllSources=true`: the same.
+21. `-p:ContinuousIntegrationBuild=true -p:EmbedAllSources=true`: the same. Added at execution: a CI build with
+    `-p:CodePage=1252` over a UTF-8 file labels its statement as the compiler read it (`cafÃ©`), the code page found in
+    MSBuild's own process.
 22. `-p:TrackAssertionsEnabled=false` with `[assembly: TrackAssertions]` declared: builds, and nothing is woven. Red
     before R1 (CS0234; F7).
 23. **Determinism:** the fixture copied to two directories at different depths, each built with
@@ -530,7 +539,9 @@ records (17); M15 read embedded source before the files (9, its byte-identical b
 that fails the checksum (9); M17 ignore a byte order mark (16); M18 answer an empty text when nothing is readable
 (13); M19 take the shorter matched value first (6); M20 leave the rest's separators as the name has them (7, on
 Linux); M21 read every check that ends `    but was not` in the parser (25); M22 key `should not be` by its check
-and value (26).
+and value (26). Added at execution (§11): M23 drop the name as written, unchecked (R1a's third source; the fact that a
+file under its own name that fails the checksum is still read); M24 take 0 as a code page (the `CodePage` parsing
+fact).
 
 ## 6. Releases and records
 
@@ -547,7 +558,8 @@ and value (26).
 
 Both bump every package (CLAUDE.md), and each moves the templates' package pins and the history action's `VERSION`
 as every release does. The labels change only where they were wrong. R1c changes report output (the expected and
-actual values and the cluster of a Shouldly failure written without its source), which Kronikol4J renders too (§6.5).
+actual values and the cluster of a Shouldly failure written without its source), which Kronikol4J does not read in
+either form (§6.5).
 
 ### 6.2 Changelog draft (R1)
 
@@ -589,10 +601,13 @@ actual values and the cluster of a Shouldly failure written without its source),
 
 - `PLANS_STATUS.md`: a row (added with this plan), kept current.
 - Close #165 with a comment naming the release(s) (a commit saying "#165" closes nothing).
-- Kronikol4J: its assertion agent (`kronikol4j-assertj-agent`) reads no source file (READ), so R1a, R1b, R1d and R2
-  have nothing to port. R1c does: Kronikol4J renders the same expected and actual values and clusters through its own
-  `ErrorDiffParser.java` and `FailureClusterer` (READ), so the new Shouldly form and its key are ported there, or the
-  divergence ledger records them, in the release's ledger line.
+- Kronikol4J: its AssertJ agent reads the caller's line at run time (`Tier2Recorder` through
+  `SourceExpression.readLine`), but by the frame's class and file name under fixed source roots (`src/test/java` and
+  the like), with no symbols file and no path map, so a CI build's names never reach it; it reads a file as `javac`
+  does by default (UTF-8, lines at CR, LF and CRLF only: Java has no U+2028 line break). So R1a, R1b, R1d and R2 have
+  nothing to port (READ at execution, 2026-10-15; this line first said the agent read no source file). R1c has nothing
+  to port either: the port's `ErrorDiffParser.java` has none of Shouldly's unquoted forms and its `FailureClusterer`
+  keys by the first line alone, a divergence 4.12.3's ledger entry already records; the release's ledger line says so.
 - Leftovers go to `ROADMAP.md` Appendix C.
 
 ## 7. Where it sits in the roadmap
@@ -673,6 +688,38 @@ no row is taken until the owner green-lights the plan ("taking row 1.N now" to t
   mutation turns red, M19 to M22 and the guards' list; why R1 is a patch though the task gains parameters (the task
   assembly ships in `tasks/`); how the targets fixture points at the test's build of the task; two designs considered
   and not taken.
+- **2026-10-15** (kronikol-2a, formerly kronikol-1b): green-lit in full by the owner ("Can you implement the plan in
+  full"), every §9 question as recommended; roadmap row 1.30 taken by message to the other sessions, with no decision
+  number (Q7). R1 executed as 4.20.4 from `origin/main` 3240c983 (4.20.2), in a worktree of its own: the facts first
+  (§5.1 to §5.3), then `SourceDocuments` (R1a), the targets (R1b), the parser and the key (R1c) and the type records
+  (R1d). Red (`harness/r1/red/`): on a worktree at v4.20.2 with stubs for the members it lacks, 50 of the weave's 68
+  facts and 14 of the report's 92 fail, each on its own assertion; the 18 that pass there are the task's ten older
+  facts, the guards (fact 12, fact 16's four rows) and the three `CodePage` values that set none. Mutations
+  (`harness/r1/mutations.txt`): every one of §5.5's for R1 is caught (M11 is R2's; M13 is run three ways), M20 on Linux
+  only, as planned (`harness/r1/linux.txt`, where the whole weaver suite passes but for an older fact that needs SDK
+  8.0.420, which the container lacks and CI installs). Acceptance (`harness/r1/acceptance/`), on packages packed from
+  the release as 4.20.3-acceptance.1 (before the release took 4.20.4): rows a to k label as row a does, 9 woven in each (10 in j and k) and none falling
+  back; the two clones built for CI are byte-identical (woven DLL `a1daaaab…`, PDB `7232f770…`) and the woven DLL holds
+  `/_/` names and no local path; the off switch builds. BreakfastProvider at 0ee43e8, its 27 references moved: its seven
+  tracked test projects weave the same statements with the same labels and literals with and without
+  `ContinuousIntegrationBuild`, where on the published 4.20.2 every statement of the CI build fell back (1,048 fallback
+  literals for BDDfy's 524 statements). The owner's suite (747 notes, §5.4) is the owner's to run. Found at execution:
+  - §6.5 was wrong about Kronikol4J: its AssertJ agent does read the caller's line, by class name under fixed source
+    roots, with no symbols file and no map, so there is nothing to port; §6.5, §6.1 and Appendix A say so now.
+  - R1a's third source, the name as written though it fails the checksum, had no fact. One is added: its label is a
+    guard, holding on 4.20.2, and it fails there on its message; M23 proves the label. The build's `CodePage` is taken
+    as the compiler takes it (empty and 0 set none; a value that is not a number is noted and not followed), a theory
+    and a fact, with M24.
+  - MSBuild on .NET has no code pages but the Unicode ones unless one is registered, so the weave reads a file that is
+    not UTF-8 with a Windows-1252 table of its own, checked byte for byte against the runtime's decoder. A build's
+    `CodePage` is taken from the process's encodings, else from `System.Text.Encoding.CodePages` when the process has
+    it, else, for 1252, from that table; any other is noted at low importance and not followed. A targets fact builds
+    with `CodePage=1252` in MSBuild's own process.
+  - On 4.20.2 the four targets facts that compare a build with a local one, the determinism fact among them, fail on
+    their woven count (11 for 8: the pragmas were not read), the first clause of that comparison, before the labels.
+  - The control's first clone of BreakfastProvider lost a file to Windows' path limit; `breakfast.sh` clones with
+    `core.longpaths` now.
+  Checks: after the version bump the core suite passes 7,551 with 2 skipped, the weaver suite 418 facts on each of net8.0, net9.0 and net10.0 (the cross-SDK facts for SDKs not installed skipped), the full Playwright suite 1,040 with 28 skipped when run alone, and `release.slnf` builds in Release for every target.
 
 ## Appendix A. Edit sites at 34145c44
 
@@ -689,6 +736,6 @@ no row is taken until the owner green-lights the plan ("taking row 1.N now" to t
 | `tests/Kronikol.Tests.AssertionTracking/WeaveAssertionsTaskTests.cs` | L66 to L84 | fact 18 |
 | `tests/Kronikol.Tests/Reports/ErrorDiffParserTests.cs`, `FailureClusterKeyTests.cs` | L176 to L186; new facts | §5.3 |
 | `tests/Kronikol.Tests/Reports/FailuresDigestGeneratorTests.cs` | new fact | fact 27 |
-| Kronikol4J `ErrorDiffParser.java`, `FailureClusterer` | | R1c: the port, or a divergence ledger line (§6.5) |
+| Kronikol4J `docs/REMAINING_PARITY.md` | | a ledger line per release; nothing to port (§6.5) |
 | `CHANGELOG.md`, every package's version | | §6.1, §6.2 |
 | Wiki `Assertion-Tracking.md` | L72, L136 to L155, L306 to L345 | §6.3 |

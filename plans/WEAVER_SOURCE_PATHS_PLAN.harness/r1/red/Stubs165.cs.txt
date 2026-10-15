@@ -1,0 +1,26 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Kronikol.AssertionTracking;
+
+// Red-proof stubs (WEAVER_SOURCE_PATHS_PLAN section 5): the helpers R1 adds, with none of its behaviour.
+internal static class SourceDocuments
+{
+    internal static List<KeyValuePair<string, string>> ParsePathMap(string? pathMap, ICollection<string> refused) => new();
+
+    internal static string Windows1252(byte[] bytes) => Encoding.UTF8.GetString(bytes);
+
+    internal static Encoding? CodePageEncoding(string? value, out string? note)
+    {
+        note = null;
+        return null;
+    }
+}
+
+public sealed class UnreadSource
+{
+    public string Document { get; } = "";
+    public IReadOnlyList<string> Tried { get; } = Array.Empty<string>();
+    public int Statements { get; internal set; }
+}

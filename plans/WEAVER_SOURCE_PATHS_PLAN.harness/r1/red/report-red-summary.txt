@@ -1,0 +1,28 @@
+- FailureClusterKeyTests.Shouldly_failures_without_the_source_cluster_by_the_check_and_its_expected_va @ FailureClusterKeyTests.cs:153
+    Assert.Single() Failure: The collection was empty
+- ErrorDiffParserTests.An_unquoted_failure_has_an_expected_and_actual(message: "\"x\"\r\n    should be @ ErrorDiffParserTests.cs:221
+    Assert.NotNull() Failure: Value is null
+- FailureClusterKeyTests.Shouldly_failures_without_the_source_cluster_by_the_check_and_its_expected_va @ FailureClusterKeyTests.cs:153
+    Assert.Single() Failure: The collection was empty
+- ErrorDiffParserTests.An_unquoted_failure_has_an_expected_and_actual(message: "False\r\n    should be @ ErrorDiffParserTests.cs:221
+    Assert.NotNull() Failure: Value is null
+- FailureClusterKeyTests.Shouldly_failures_without_the_source_cluster_by_the_check_and_its_expected_va @ FailureClusterKeyTests.cs:153
+    Assert.Single() Failure: The collection was empty
+- FailureClusterKeyTests.Shouldly_failures_without_the_source_cluster_by_the_check_and_its_expected_va @ FailureClusterKeyTests.cs:153
+    Assert.Single() Failure: The collection was empty
+- FailureClusterKeyTests.Shouldly_failures_without_the_source_cluster_by_the_check_and_its_expected_va @ FailureClusterKeyTests.cs:153
+    Assert.Single() Failure: The collection was empty
+- ErrorDiffParserTests.An_unquoted_failure_has_an_expected_and_actual(message: "[1, 2]\r\n    should b @ ErrorDiffParserTests.cs:221
+    Assert.NotNull() Failure: Value is null
+- ErrorDiffParserTests.An_unquoted_failure_has_an_expected_and_actual(message: "4\r\n    should be\r\n @ ErrorDiffParserTests.cs:221
+    Assert.NotNull() Failure: Value is null
+- ErrorDiffParserTests.An_unquoted_failure_has_an_expected_and_actual(message: "4\r\n    should be\r\n @ ErrorDiffParserTests.cs:221
+    Assert.NotNull() Failure: Value is null
+- ErrorDiffParserTests.An_unquoted_failure_has_an_expected_and_actual(message: "\"a\"\r\n    should be @ ErrorDiffParserTests.cs:221
+    Assert.NotNull() Failure: Value is null
+- ErrorDiffParserTests.An_unquoted_failure_has_an_expected_and_actual(message: "DayOfWeek.Monday\r\n   @ ErrorDiffParserTests.cs:221
+    Assert.NotNull() Failure: Value is null
+- FailureClusterKeyTests.Shouldly_failures_without_the_source_expecting_different_values_cluster_apart @ FailureClusterKeyTests.cs:171
+    Assert.Equal() Failure: Collections differ at index 0 |            ↓ (pos 0) | Expected: "should be 5" | Actual:   "3 should be" |            ↑ (pos 0)
+- FailuresDigestGeneratorTests.Expected_and_actual_are_parsed_out_of_Shouldlys_text_without_its_source @ FailuresDigestGeneratorTests.cs:153
+    Assert.Contains() Failure: Sub-string not found | String:    "# Failures — 1 of 3 scenarios\n\nWritten by Kronikol"··· | Not found: "| Expected | Actual |\n|---|---|\n| `5` | `4` |"

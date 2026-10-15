@@ -37,9 +37,11 @@ public static class FailureText
     public static string? OrNull(string? text) => string.IsNullOrWhiteSpace(text) ? null : text;
 
     /// <summary>
-    /// The first line of <paramref name="message"/> — what the failures digest and the HTML cluster panel
-    /// group a failure by. One implementation, because there were two and they disagreed three ways: on
-    /// bare-CR line endings, on empty versus null messages, and on which characters count as whitespace.
+    /// The first line of <paramref name="message"/>, with its whitespace collapsed: what the failures digest and the
+    /// HTML cluster panel group a failure by, through <see cref="ClusterKey"/>, which adds a Shouldly message's check
+    /// (or, for Shouldly's text without the caller's source, whose first line is the actual value, keys it by the
+    /// check and the expected value instead). One implementation, because there were two and they disagreed three
+    /// ways: on bare-CR line endings, on empty versus null messages, and on which characters count as whitespace.
     /// Two surfaces of one report that group the same failures differently are worse than either rule.
     /// </summary>
     public static string FirstLine(string? message)
@@ -59,6 +61,13 @@ public static class FailureText
     /// (<c>result</c>, <c>    should be</c>), so on the first line alone an equality and a comparison on one
     /// variable read as one cause (SHOULDLY_ASSERTIONS_PLAN F15). The key stops before the values, so two
     /// failures of one check on one subject still share it.
+    ///
+    /// <para>When Shouldly could not read the caller's source, it writes the actual value where the code would be
+    /// and ends the check <c>    but was not</c> (<c>4</c>, <c>    should be</c>, <c>5</c>, <c>    but was not</c>),
+    /// as Shouldly 4.3.0 does for nine checks (WEAVER_SOURCE_PATHS_PLAN F8). Such a message is keyed by its check and
+    /// its expected value (<c>should be 5</c>), so the failures of one assertion share a key whatever their actual
+    /// values. A check that ends alike with the source and without it (<c>should not be</c>,
+    /// <c>should contain key</c>, <c>should throw</c>) says nothing of which form it is, and keeps the first line.</para>
     /// </summary>
     internal static string ClusterKey(string? message)
     {
@@ -69,13 +78,29 @@ public static class FailureText
         var end = message.AsSpan().IndexOfAny('\r', '\n');
         if (end < 0)
             return first;
-        var rest = message.AsSpan(end + (message[end] == '\r' && end + 1 < message.Length && message[end + 1] == '\n' ? 2 : 1));
+        var restStart = end + (message[end] == '\r' && end + 1 < message.Length && message[end + 1] == '\n' ? 2 : 1);
+        var rest = message.AsSpan(restStart);
         var secondEnd = rest.IndexOfAny('\r', '\n');
         var second = (secondEnd < 0 ? rest : rest[..secondEnd]).ToString();
-        return second.StartsWith("    should ", StringComparison.Ordinal)
-            ? first + " " + CollapseWhitespace(second)
-            : first;
+        if (!second.StartsWith("    should ", StringComparison.Ordinal))
+            return first;
+
+        if (secondEnd >= 0)
+        {
+            var afterCheck = restStart + secondEnd + (rest[secondEnd] == '\r' && secondEnd + 1 < rest.Length && rest[secondEnd + 1] == '\n' ? 2 : 1);
+            if (ShouldlyWithoutSource.Match(message, afterCheck) is { Success: true } sourceless)
+                return CollapseWhitespace(second) + " " + CollapseWhitespace(sourceless.Groups["expected"].Value);
+        }
+
+        return first + " " + CollapseWhitespace(second);
     }
+
+    /// <summary>The rest of a Shouldly message written without the caller's source, after its check's line: the
+    /// expected value and <c>    but was not</c>, then nothing but a <c>difference</c> table or the custom message's
+    /// <c>Additional Info</c>.</summary>
+    private static readonly Regex ShouldlyWithoutSource = new(
+        @"\G(?<expected>.*?)\r?\n {4}but was not(?=\r?\n {4}difference(?:\r?\n|\z)|\r?\n\r?\nAdditional Info:|\s*\z)",
+        RegexOptions.Singleline);
 
     /// <summary>
     /// Cuts <paramref name="text"/> to at most <paramref name="limit"/> UTF-16 code units, marking the
