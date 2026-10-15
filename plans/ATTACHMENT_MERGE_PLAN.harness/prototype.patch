@@ -1,0 +1,347 @@
+diff --git a/src/Kronikol/Ingestion/Cucumber/CucumberFeatureMerger.cs b/src/Kronikol/Ingestion/Cucumber/CucumberFeatureMerger.cs
+index 72f1aea7..2dea3138 100644
+--- a/src/Kronikol/Ingestion/Cucumber/CucumberFeatureMerger.cs
++++ b/src/Kronikol/Ingestion/Cucumber/CucumberFeatureMerger.cs
+@@ -62,7 +62,7 @@ public static FeatureSynthesizer.Result Merge(
+             foreach (var scenario in feature.Scenarios)
+             {
+                 if (replaced.TryGetValue(scenario.Id, out var target))
+-                    CarryOver(scenario, target);
++                    CarryOver(scenario, target, cucumber);
+             }
+         }
+ 
+@@ -103,26 +103,173 @@ public static bool IsReplacedStep(TestRunRecord record, CucumberSynthesisResult
+     }
+ 
+     /// <summary>
+-    /// The reporter's attachments win over the messages' copies of the SAME artefact (playwright-bdd inlines
+-    /// every attachment as BASE64 into the messages file, so a screenshot the reporter already materialised
+-    /// would otherwise appear twice); anything only the messages carry is kept.
++    /// PROTOTYPE (#175). Joins the tests file's attachments of a scenario the messages own with the messages' copies of
++    /// the same artefacts, wherever the messages put them (the scenario, a Gherkin step, a background or hook step).
++    /// A pair is the same producer name on both sides (the messages' own <c>fileName</c>, before the synthesis gave it an
++    /// extension), one to one in order, with the same bytes when the tests file can be read. The pair keeps the tests
++    /// file's name and file when its file exists, else the messages' copy, and sits where the messages put it.
++    /// Unpaired attachments of either side are kept. The test id and bypass signals are never attachments.
+     /// </summary>
+-    internal static FileAttachment[] MergeAttachments(FileAttachment[]? fromMessages, FileAttachment[] fromTests)
++    internal static void MergeAttachments(Scenario target, FileAttachment[] fromTests, CucumberSynthesisResult cucumber)
+     {
+-        if (fromMessages is not { Length: > 0 })
+-            return fromTests;
+-        var names = new HashSet<string>(fromTests.Select(a => a.Name), StringComparer.OrdinalIgnoreCase);
+-        return fromTests.Concat(fromMessages.Where(a => !names.Contains(a.Name))).ToArray();
++        // Every list on the messages side, in reading order: the scenario's first.
++        var holders = new List<(Action<FileAttachment[]?> Set, List<FileAttachment?> Items, bool IsScenario)>
++        {
++            (a => target.Attachments = a, [.. target.Attachments ?? []], true),
++        };
++        void Walk(ScenarioStep[]? steps)
++        {
++            foreach (var step in steps ?? [])
++            {
++                if (step.Attachments is { Length: > 0 } own)
++                    holders.Add((a => step.Attachments = a, [.. own], false));
++                Walk(step.SubSteps);
++            }
++        }
++        if (!(Environment.GetEnvironmentVariable("KRONIKOL_175_ISSUE1") == "1"))
++        {
++            Walk(target.BackgroundSteps);
++            Walk(target.Steps);
++        }
++
++        var hashes = new Dictionary<string, (long Length, byte[] Hash)?>(StringComparer.OrdinalIgnoreCase);
++        // A slot that took its pair is never a candidate again: per-step screenshots of an unchanged page share a name and
++        // their bytes, and a merged entry written back into its step otherwise takes the next one's pair.
++        var consumed = new HashSet<(int Holder, int Index)>();
++        var scenarioList = new List<FileAttachment>();
++        var unpairedTests = new List<FileAttachment>();
++        foreach (var fromTest in fromTests)
++        {
++            if (cucumber.SignalAttachmentNames.Contains(fromTest.Name) && Environment.GetEnvironmentVariable("KRONIKOL_175_ISSUE1") != "1")
++                continue;
++            if (!TryPair(fromTest, byName: true, out var holder, out var index, out var merged))
++            {
++                scenarioList.Add(fromTest);
++                unpairedTests.Add(fromTest);
++                continue;
++            }
++
++            holders[holder].Items[index] = null;
++            if (holders[holder].IsScenario)
++                scenarioList.Add(merged);
++            else
++                holders[holder].Items[index] = merged;
++        }
++
++        // The issue's second suggestion: what no name joined may still be one artefact, named differently on each side
++        // (a reporter that writes no name, so the tests side falls back to the file's). Exact bytes only.
++        // Bytes that more than one leftover holds on either side (screenshots of an unchanged page) say nothing about which
++        // is which: pairing them anyway moved a failure screenshot onto a Gherkin step in the probe. Unique bytes only.
++        string? Key(string path) => Describe(path) is { } d ? $"{d.Length}:{Convert.ToHexString(d.Hash)}" : null;
++        var leftoverMessages = holders.SelectMany((h, hi) => h.Items.Select((a, ai) => (a, hi, ai)))
++            .Where(x => x.a is { IsUrl: false } && !consumed.Contains((x.hi, x.ai)))
++            .Select(x => cucumber.AttachmentOrigins.GetValueOrDefault(x.a!) is { Length: { } l, Sha256: { } h } ? $"{l}:{Convert.ToHexString(h)}" : Key(x.a!.RelativePath))
++            .Where(k => k is not null)
++            .GroupBy(k => k!).ToDictionary(g => g.Key, g => g.Count());
++        var leftoverTests = unpairedTests.Where(t => !t.IsUrl && File.Exists(t.RelativePath)).Select(t => Key(t.RelativePath))
++            .Where(k => k is not null).GroupBy(k => k!).ToDictionary(g => g.Key, g => g.Count());
++        foreach (var fromTest in Environment.GetEnvironmentVariable("KRONIKOL_175_PASS2") == "0" ? new List<FileAttachment>() : unpairedTests)
++        {
++            if (fromTest.IsUrl || !File.Exists(fromTest.RelativePath) || Key(fromTest.RelativePath) is not { } key
++                || leftoverTests.GetValueOrDefault(key) != 1 || leftoverMessages.GetValueOrDefault(key) != 1)
++                continue;
++            if (!TryPair(fromTest, byName: false, out var holder, out var index, out var merged))
++                continue;
++            holders[holder].Items[index] = null;
++            var at = scenarioList.IndexOf(fromTest);
++            if (holders[holder].IsScenario)
++                scenarioList[at] = merged;
++            else
++            {
++                scenarioList.RemoveAt(at);
++                holders[holder].Items[index] = merged;
++            }
++        }
++
++        foreach (var (set, items, isScenario) in holders)
++        {
++            var kept = isScenario ? [.. scenarioList, .. items.OfType<FileAttachment>()] : items.OfType<FileAttachment>().ToArray();
++            set(kept.Length > 0 ? kept : null);
++        }
++
++        bool TryPair(FileAttachment fromTest, bool byName, out int holder, out int index, out FileAttachment merged)
++        {
++            var testsFile = fromTest.IsUrl ? null : fromTest.RelativePath;
++            var testsFileExists = testsFile is not null && File.Exists(testsFile);
++            for (holder = 0; holder < holders.Count; holder++)
++            {
++                var items = holders[holder].Items;
++                for (index = 0; index < items.Count; index++)
++                {
++                    if (items[index] is not { } candidate || fromTest.IsUrl || candidate.IsUrl || consumed.Contains((holder, index)))
++                        continue;
++                    var origin = cucumber.AttachmentOrigins.GetValueOrDefault(candidate);
++                    // The producer's own name, or the one the synthesis displays (its own plus the media type's extension),
++                    // which is what a reporter that names a record by its file writes: Playwright's trace.zip, video.webm.
++                    if (byName && !string.Equals(origin?.OriginalName ?? candidate.Name, fromTest.Name, StringComparison.OrdinalIgnoreCase)
++                               && !string.Equals(candidate.Name, fromTest.Name, StringComparison.OrdinalIgnoreCase))
++                        continue;
++                    // A tests file that is not there is matched by name alone, and the copy that exists wins.
++                    if (!testsFileExists)
++                    {
++                        if (!byName)
++                            continue;
++                        consumed.Add((holder, index));
++                        merged = new FileAttachment(fromTest.Name, Environment.GetEnvironmentVariable("KRONIKOL_175_ISSUE1") == "1" ? fromTest.RelativePath : candidate.RelativePath, fromTest.MediaType ?? candidate.MediaType);
++                        return true;
++                    }
++                    if (Environment.GetEnvironmentVariable("KRONIKOL_175_VERIFY") != "0" && !(Environment.GetEnvironmentVariable("KRONIKOL_175_ISSUE1") == "1") && !SameBytes(testsFile!, candidate, origin))
++                        continue;
++                    if (origin?.WrittenPath is { } written)
++                        TryDelete(written);
++                    consumed.Add((holder, index));
++                    merged = new FileAttachment(fromTest.Name, fromTest.RelativePath, fromTest.MediaType ?? candidate.MediaType);
++                    return true;
++                }
++            }
++
++            index = -1;
++            merged = fromTest;
++            return false;
++        }
++
++        bool SameBytes(string testsFile, FileAttachment candidate, CucumberAttachmentOrigin? origin)
++        {
++            var mine = Describe(testsFile);
++            var theirs = origin is { Length: { } length, Sha256: { } hash } ? (length, hash) : Describe(candidate.RelativePath);
++            return mine is { } m && theirs is { } t && m.Length == t.Length && m.Hash.AsSpan().SequenceEqual(t.Hash);
++        }
++
++        (long Length, byte[] Hash)? Describe(string path)
++        {
++            if (hashes.TryGetValue(path, out var known))
++                return known;
++            try
++            {
++                using var stream = File.OpenRead(path);
++                return hashes[path] = (stream.Length, System.Security.Cryptography.SHA256.HashData(stream));
++            }
++            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
++            {
++                return hashes[path] = null;
++            }
++        }
++    }
++
++    private static void TryDelete(string path)
++    {
++        try { File.Delete(path); }
++        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+     }
+ 
+     /// <summary>
+     /// Keeps the scenario-level facts only the reporter has: attachments it recorded, and the failure text
+     /// when the messages carried none (a Playwright timeout fails the test without failing a Gherkin step).
+     /// </summary>
+-    private static void CarryOver(Scenario fromTests, Scenario target)
++    private static void CarryOver(Scenario fromTests, Scenario target, CucumberSynthesisResult cucumber)
+     {
+         if (fromTests.Attachments is { Length: > 0 } attachments)
+-            target.Attachments = MergeAttachments(target.Attachments, attachments);
++            MergeAttachments(target, attachments, cucumber);
+ 
+         target.ErrorMessage ??= fromTests.ErrorMessage;
+         target.ErrorStackTrace ??= fromTests.ErrorStackTrace;
+diff --git a/src/Kronikol/Ingestion/Cucumber/CucumberFeatureSynthesizer.cs b/src/Kronikol/Ingestion/Cucumber/CucumberFeatureSynthesizer.cs
+index f8e37ee2..6032bea2 100644
+--- a/src/Kronikol/Ingestion/Cucumber/CucumberFeatureSynthesizer.cs
++++ b/src/Kronikol/Ingestion/Cucumber/CucumberFeatureSynthesizer.cs
+@@ -51,6 +51,14 @@ public sealed class CucumberSynthesisOptions
+ /// </param>
+ public sealed record CucumberStepWindow(ScenarioStep Step, DateTimeOffset Start, DateTimeOffset End, string? KeywordType = null);
+ 
++/// <summary>
++/// A materialised attachment's provenance (#175). <paramref name="OriginalName"/> is the producer's own name, before the
++/// synthesis gave it an extension for display; <paramref name="Length"/> and <paramref name="Sha256"/> describe the decoded
++/// bytes (null for an attachment the messages only point at); <paramref name="WrittenPath"/> is the file the synthesis
++/// wrote, which nothing needs once the tests file's copy of the same artefact wins.
++/// </summary>
++internal sealed record CucumberAttachmentOrigin(string? OriginalName, long? Length, byte[]? Sha256, string? WrittenPath);
++
+ /// <summary>Outcome of <see cref="CucumberFeatureSynthesizer.Build(CucumberMessages, CucumberSynthesisOptions?)"/>.</summary>
+ /// <param name="Features">The Gherkin structure as Kronikol's report model.</param>
+ /// <param name="Start">Run start (UTC).</param>
+@@ -91,6 +99,17 @@ public sealed record CucumberSynthesisResult(
+     /// </summary>
+     internal int UnmatchedTestsFileBypasses { get; init; }
+ 
++    /// <summary>
++    /// What each attachment the synthesis materialised was before it became a <see cref="FileAttachment"/>: the name the
++    /// producer gave it, the bytes' length and hash, and the file the synthesis wrote. Keyed by reference, so the merger
++    /// can pair a messages copy with the tests file's record of the same artefact (#175).
++    /// </summary>
++    internal IReadOnlyDictionary<FileAttachment, CucumberAttachmentOrigin> AttachmentOrigins { get; init; } =
++        new Dictionary<FileAttachment, CucumberAttachmentOrigin>(ReferenceEqualityComparer.Instance);
++
++    /// <summary>The attachment names the messages read as signals, never as files: the test id's and <c>kronikol-bypass</c>.</summary>
++    internal IReadOnlySet<string> SignalAttachmentNames { get; init; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
++
+     /// <summary>
+     /// What the producing run executed on, as the messages' own <c>meta</c> envelope reports it, or
+     /// <see cref="RunEnvironment.Unrecorded"/> when it does not report it.
+@@ -329,6 +348,8 @@ internal static CucumberSynthesisResult Build(
+             Environment = messages.Meta?.ToRunEnvironment() ?? RunEnvironment.Unrecorded,
+             EarlierAttemptTestIds = earlierIds,
+             UnmatchedTestsFileBypasses = unmatchedBypasses,
++            AttachmentOrigins = attachmentWriter.Origins,
++            SignalAttachmentNames = new HashSet<string>([options.TestIdAttachmentName, BypassAttachmentName], StringComparer.OrdinalIgnoreCase),
+         };
+     }
+ 
+@@ -854,7 +875,7 @@ private static bool IsTestIdAttachment(CucumberAttachment attachment, CucumberSy
+     /// The attachment a step makes to say it was bypassed, its body the reason (#105). Its name is fixed: the convention
+     /// is the test id's, and the CLI sets neither.
+     /// </summary>
+-    private const string BypassAttachmentName = "kronikol-bypass";
++    internal const string BypassAttachmentName = "kronikol-bypass";
+ 
+     private static bool IsBypassAttachment(CucumberAttachment attachment) =>
+         string.Equals(attachment.FileName, BypassAttachmentName, StringComparison.OrdinalIgnoreCase);
+@@ -1114,6 +1135,8 @@ private sealed class AttachmentWriter(CucumberSynthesisOptions options, List<str
+         private string? _directory;
+         private int _counter;
+ 
++        public Dictionary<FileAttachment, CucumberAttachmentOrigin> Origins { get; } = new(ReferenceEqualityComparer.Instance);
++
+         public FileAttachment? Materialise(CucumberAttachment attachment)
+         {
+             var name = NullIfBlank(attachment.FileName) ?? "attachment";
+@@ -1123,7 +1146,11 @@ private sealed class AttachmentWriter(CucumberSynthesisOptions options, List<str
+             var displayName = Path.HasExtension(name) ? name : name + extension;
+ 
+             if (NullIfBlank(attachment.Url) is { } url)
+-                return new FileAttachment(displayName, ToLocalPath(url), NullIfBlank(attachment.MediaType));
++            {
++                var linked = new FileAttachment(displayName, ToLocalPath(url), NullIfBlank(attachment.MediaType));
++                Origins[linked] = new CucumberAttachmentOrigin(NullIfBlank(attachment.FileName), null, null, null);
++                return linked;
++            }
+ 
+             if (attachment.Body is not { Length: > 0 } body)
+                 return null;
+@@ -1139,11 +1166,12 @@ private sealed class AttachmentWriter(CucumberSynthesisOptions options, List<str
+                 Directory.CreateDirectory(directory);
+                 var fileName = $"{_counter++:D4}-{Sanitise(displayName)}";
+                 var path = Path.Combine(directory, fileName);
+-                if (isBase64)
+-                    File.WriteAllBytes(path, Convert.FromBase64String(body));
+-                else
+-                    File.WriteAllText(path, body);
+-                return new FileAttachment(displayName, path, NullIfBlank(attachment.MediaType));
++                var bytes = isBase64 ? Convert.FromBase64String(body) : Encoding.UTF8.GetBytes(body);
++                File.WriteAllBytes(path, bytes);
++                var written = new FileAttachment(displayName, path, NullIfBlank(attachment.MediaType));
++                Origins[written] = new CucumberAttachmentOrigin(
++                    NullIfBlank(attachment.FileName), bytes.LongLength, System.Security.Cryptography.SHA256.HashData(bytes), path);
++                return written;
+             }
+             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or FormatException)
+             {
+diff --git a/src/Kronikol/Ingestion/IngestPipeline.cs b/src/Kronikol/Ingestion/IngestPipeline.cs
+index 7bc572fd..bbef795f 100644
+--- a/src/Kronikol/Ingestion/IngestPipeline.cs
++++ b/src/Kronikol/Ingestion/IngestPipeline.cs
+@@ -363,17 +363,39 @@ public static IngestResult Run(IngestRequest request)
+         // agree with this run's options for as long as the replay lasts, and be handed back afterwards.
+         var previousCapitalisation = StepText.CapitaliseEnabled;
+         StepText.CapitaliseEnabled = options.CapitaliseStepText;
++        // PROTOTYPE (#175): the messages' attachment bodies are decoded into a folder this run owns, and the folder goes
++        // once the report has copied what it links to, unless a copy failed and the report still links into it.
++        var decodedAttachments = request.CucumberMessagesFiles.Count == 0 ? null
++            : Path.Combine(Path.GetTempPath(), "kronikol-cucumber-attachments", Guid.NewGuid().ToString("N"));
++        IngestResult? result = null;
+         try
+         {
+-            return RunCore(request, options);
++            return result = RunCore(request, options, decodedAttachments);
+         }
+         finally
+         {
+             StepText.CapitaliseEnabled = previousCapitalisation;
++            DeleteDecodedAttachments(decodedAttachments, result);
+         }
+     }
+ 
+-    private static IngestResult RunCore(IngestRequest request, ReportConfigurationOptions options)
++    private static void DeleteDecodedAttachments(string? directory, IngestResult? result)
++    {
++        if (directory is null || !Directory.Exists(directory))
++            return;
++        static IEnumerable<FileAttachment> All(ScenarioStep[]? steps) =>
++            (steps ?? []).SelectMany(s => (s.Attachments ?? []).Concat(All(s.SubSteps)));
++        var linked = (result?.Features ?? [])
++            .SelectMany(f => f.Scenarios)
++            .SelectMany(s => (s.Attachments ?? []).Concat(All(s.Steps)).Concat(All(s.BackgroundSteps)))
++            .Any(a => a.RelativePath.StartsWith(directory, StringComparison.OrdinalIgnoreCase));
++        if (linked)
++            return;
++        try { Directory.Delete(directory, recursive: true); }
++        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
++    }
++
++    private static IngestResult RunCore(IngestRequest request, ReportConfigurationOptions options, string? decodedAttachments)
+     {
+         var diagnostics = new ReportDiagnosticsCollector();
+         // The host's entries go in first, so they reach the report's diagnostics section (the collector is
+@@ -399,7 +421,7 @@ private static IngestResult RunCore(IngestRequest request, ReportConfigurationOp
+         // record said about a bypass is read first and applied to the Gherkin step it reports on.
+         var cucumber = request.CucumberMessagesFiles.Count == 0 ? null
+             : CucumberFeatureSynthesizer.BuildFromFiles(request.CucumberMessagesFiles,
+-                new CucumberSynthesisOptions { IncludeHooks = request.IncludeHooks, DefaultFeatureName = request.DefaultFeatureName },
++                new CucumberSynthesisOptions { IncludeHooks = request.IncludeHooks, DefaultFeatureName = request.DefaultFeatureName, AttachmentsDirectory = decodedAttachments },
+                 CucumberTestsFileBypass.Collect(testRecords));
+         var earlierAttemptRecords = 0;
+         if (cucumber is not null)

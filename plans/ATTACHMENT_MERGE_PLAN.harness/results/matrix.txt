@@ -1,0 +1,16 @@
+normal     control    18/10/6/7     41 listed  41 files   280605 B   0 dead
+normal     issue-1    14/10/6/7     37 listed  37 files   238021 B   0 dead
+normal     name-only  10/7/4/4      25 listed  25 files   166354 B   0 dead
+normal     prototype  10/7/4/4      25 listed  25 files   166354 B   0 dead
+gone       control    18/10/6/7     41 listed  15 files   114227 B  26 dead
+gone       issue-1    14/10/6/7     37 listed  11 files    71643 B  26 dead
+gone       name-only  10/7/4/4      25 listed  23 files   166331 B   2 dead
+gone       prototype  10/7/4/4      25 listed  23 files   166331 B   2 dead
+noattempt  control    18/10/6/7     41 listed  41 files   280605 B   0 dead
+noattempt  issue-1    14/10/6/7     37 listed  37 files   238021 B   0 dead
+noattempt  name-only  10/7/4/4      25 listed  25 files   166354 B   0 dead
+noattempt  prototype  10/7/4/4      25 listed  25 files   166354 B   0 dead
+noname     control    17/12/8/9     46 listed  46 files   296638 B   0 dead
+noname     issue-1    17/12/8/9     46 listed  46 files   296638 B   0 dead
+noname     name-only  17/12/8/9     46 listed  46 files   296638 B   0 dead
+noname     prototype  17/12/8/9     46 listed  46 files   296638 B   0 dead

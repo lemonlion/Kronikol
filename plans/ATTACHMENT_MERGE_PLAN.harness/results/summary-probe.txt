@@ -1,0 +1,102 @@
+== messages
+-- "A failing UI scenario keeps Playwright's artefacts" attempt 0 (e4be725cb8587577c56b-6489e773f71e15ecddfc-attempt-0)
+   'kronikol-test-id'           text/plain             IDENTITY        32 B  url=None  on hook 'BeforeEach hook'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the page is open'
+   'step-shot.png'              image/png              BASE64        6513 B  url=None  on step 'a step attaches a named image'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'a step attaches a named image'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the check fails'
+   'screenshot'                 image/png              BASE64        6513 B  url=None  on hook 'After Hooks'
+   'screenshot-start.png'       image/png              BASE64        6513 B  url=None  on hook 'After Hooks'
+   'error-context'              text/markdown          BASE64        3635 B  url=None  on hook 'After Hooks'
+   'trace'                      application/zip        BASE64       28426 B  url=None  on hook 'After Hooks'
+   'screenshot-end.png'         image/png              BASE64        6513 B  url=None  on hook 'Fixture "screenshots"'
+   'video'                      video/webm             BASE64        5151 B  url=None  on hook 'Fixture "context"'
+-- "A failing UI scenario keeps Playwright's artefacts" attempt 1 (e4be725cb8587577c56b-6489e773f71e15ecddfc-attempt-1)
+   'kronikol-test-id'           text/plain             IDENTITY        32 B  url=None  on hook 'BeforeEach hook'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the page is open'
+   'step-shot.png'              image/png              BASE64        6513 B  url=None  on step 'a step attaches a named image'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'a step attaches a named image'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the check fails'
+   'screenshot'                 image/png              BASE64        6513 B  url=None  on hook 'After Hooks'
+   'screenshot-start.png'       image/png              BASE64        6513 B  url=None  on hook 'After Hooks'
+   'error-context'              text/markdown          BASE64        3635 B  url=None  on hook 'After Hooks'
+   'trace'                      application/zip        BASE64       26511 B  url=None  on hook 'After Hooks'
+   'screenshot-end.png'         image/png              BASE64        6513 B  url=None  on hook 'Fixture "screenshots"'
+   'video'                      video/webm             BASE64        5925 B  url=None  on hook 'Fixture "context"'
+-- 'A passing scenario attaches the same name twice' attempt 0 (e4be725cb8587577c56b-c6bd71f580c255361161-attempt-0)
+   'kronikol-test-id'           text/plain             IDENTITY        32 B  url=None  on hook 'BeforeEach hook'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the page is open'
+   'note'                       application/json       IDENTITY        11 B  url=None  on step 'a step attaches two notes with one name'
+   'note'                       application/json       IDENTITY        12 B  url=None  on step 'a step attaches two notes with one name'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'a step attaches two notes with one name'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the figure is right'
+   'screenshot-end.png'         image/png              BASE64        6513 B  url=None  on hook 'Fixture "screenshots"'
+   'screenshot-start.png'       image/png              BASE64        6513 B  url=None  on hook 'After Hooks'
+-- 'A flaky scenario passes on its retry' attempt 0 (e4be725cb8587577c56b-ac474bf8eb0a29d0be9d-attempt-0)
+   'kronikol-test-id'           text/plain             IDENTITY        32 B  url=None  on hook 'BeforeEach hook'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the page is open'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the check fails on the first attempt only'
+   'screenshot'                 image/png              BASE64        6513 B  url=None  on hook 'After Hooks'
+   'screenshot-start.png'       image/png              BASE64        6513 B  url=None  on hook 'After Hooks'
+   'error-context'              text/markdown          BASE64        3649 B  url=None  on hook 'After Hooks'
+   'trace'                      application/zip        BASE64       27765 B  url=None  on hook 'After Hooks'
+   'screenshot-end.png'         image/png              BASE64        6513 B  url=None  on hook 'Fixture "screenshots"'
+   'video'                      video/webm             BASE64        5151 B  url=None  on hook 'Fixture "context"'
+-- 'A flaky scenario passes on its retry' attempt 1 (e4be725cb8587577c56b-ac474bf8eb0a29d0be9d-attempt-1)
+   'kronikol-test-id'           text/plain             IDENTITY        32 B  url=None  on hook 'BeforeEach hook'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the page is open'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the check fails on the first attempt only'
+   'screenshot-start.png'       image/png              BASE64        6513 B  url=None  on hook 'After Hooks'
+   'screenshot-end.png'         image/png              BASE64        6513 B  url=None  on hook 'Fixture "screenshots"'
+-- 'A step attaches kronikol-bypass' attempt 0 (e4be725cb8587577c56b-05262006042bb80a7a3d-attempt-0)
+   'kronikol-test-id'           text/plain             IDENTITY        32 B  url=None  on hook 'BeforeEach hook'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the page is open'
+   'kronikol-bypass'            text/plain             IDENTITY        24 B  url=None  on step 'the local-only check attaches a bypass and returns'
+   'after-step.png'             image/png              BASE64        6513 B  url=None  on step 'the local-only check attaches a bypass and returns'
+   'screenshot-end.png'         image/png              BASE64        6513 B  url=None  on hook 'Fixture "screenshots"'
+   'screenshot-start.png'       image/png              BASE64        6513 B  url=None  on hook 'After Hooks'
+== tests
+   40f746a6 attempt 1  'screenshot-start.png'   image/png                   6513 B  0-screenshot-start.png
+   40f746a6 attempt 1  'after-step.png'         image/png                   6513 B  1-after-step.png
+   40f746a6 attempt 1  'step-shot.png'          image/png                   6513 B  2-step-shot.png
+   40f746a6 attempt 1  'after-step.png'         image/png                   6513 B  3-after-step.png
+   40f746a6 attempt 1  'after-step.png'         image/png                   6513 B  4-after-step.png
+   40f746a6 attempt 1  'screenshot'             image/png                   6513 B  test-failed-1.png
+   40f746a6 attempt 1  'screenshot-end.png'     image/png                   6513 B  5-screenshot-end.png
+   40f746a6 attempt 1  'video'                  video/webm                  5151 B  video.webm
+   40f746a6 attempt 1  'error-context'          text/markdown               3635 B  error-context.md
+   40f746a6 attempt 1  'trace'                  application/zip            28426 B  trace.zip
+   40f746a6 attempt 2  'screenshot-start.png'   image/png                   6513 B  6-screenshot-start.png
+   40f746a6 attempt 2  'after-step.png'         image/png                   6513 B  7-after-step.png
+   40f746a6 attempt 2  'step-shot.png'          image/png                   6513 B  8-step-shot.png
+   40f746a6 attempt 2  'after-step.png'         image/png                   6513 B  9-after-step.png
+   40f746a6 attempt 2  'after-step.png'         image/png                   6513 B  10-after-step.png
+   40f746a6 attempt 2  'screenshot'             image/png                   6513 B  test-failed-1.png
+   40f746a6 attempt 2  'screenshot-end.png'     image/png                   6513 B  11-screenshot-end.png
+   40f746a6 attempt 2  'video'                  video/webm                  5925 B  video.webm
+   40f746a6 attempt 2  'error-context'          text/markdown               3635 B  error-context.md
+   40f746a6 attempt 2  'trace'                  application/zip            26511 B  trace.zip
+   a6ccb30b attempt 1  'screenshot-start.png'   image/png                   6513 B  12-screenshot-start.png
+   a6ccb30b attempt 1  'after-step.png'         image/png                   6513 B  13-after-step.png
+   a6ccb30b attempt 1  'note'                   application/json              11 B  14-note
+   a6ccb30b attempt 1  'note'                   application/json              12 B  15-note
+   a6ccb30b attempt 1  'after-step.png'         image/png                   6513 B  16-after-step.png
+   a6ccb30b attempt 1  'after-step.png'         image/png                   6513 B  17-after-step.png
+   a6ccb30b attempt 1  'screenshot-end.png'     image/png                   6513 B  18-screenshot-end.png
+   172c1366 attempt 1  'screenshot-start.png'   image/png                   6513 B  19-screenshot-start.png
+   172c1366 attempt 1  'after-step.png'         image/png                   6513 B  20-after-step.png
+   172c1366 attempt 1  'after-step.png'         image/png                   6513 B  21-after-step.png
+   172c1366 attempt 1  'screenshot'             image/png                   6513 B  test-failed-1.png
+   172c1366 attempt 1  'screenshot-end.png'     image/png                   6513 B  22-screenshot-end.png
+   172c1366 attempt 1  'video'                  video/webm                  5151 B  video.webm
+   172c1366 attempt 1  'error-context'          text/markdown               3649 B  error-context.md
+   172c1366 attempt 1  'trace'                  application/zip            27765 B  trace.zip
+   172c1366 attempt 2  'screenshot-start.png'   image/png                   6513 B  23-screenshot-start.png
+   172c1366 attempt 2  'after-step.png'         image/png                   6513 B  24-after-step.png
+   172c1366 attempt 2  'after-step.png'         image/png                   6513 B  25-after-step.png
+   172c1366 attempt 2  'screenshot-end.png'     image/png                   6513 B  26-screenshot-end.png
+   5cd5c01e attempt 1  'screenshot-start.png'   image/png                   6513 B  27-screenshot-start.png
+   5cd5c01e attempt 1  'after-step.png'         image/png                   6513 B  28-after-step.png
+   5cd5c01e attempt 1  'kronikol-bypass'        text/plain                    24 B  29-kronikol-bypass
+   5cd5c01e attempt 1  'after-step.png'         image/png                   6513 B  30-after-step.png
+   5cd5c01e attempt 1  'screenshot-end.png'     image/png                   6513 B  31-screenshot-end.png

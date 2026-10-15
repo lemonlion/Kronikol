@@ -1,0 +1,92 @@
+#175 measurements, 2026-10-14, Windows 11, .NET SDK 10.0.300, node 25.9.0, Playwright 1.62.1, playwright-bdd 9.2.0.
+Control = Kronikol.Tool built at 3240c983 (4.20.2). Prototype = the same plus prototype.patch.
+Every line below is copied from the run's output.
+
+== 1. The machine's staging folder before anything ran (%TEMP%/kronikol-cucumber-attachments)
+2,929 folders, 52 MB. Each is one synthesis's decoded attachment bodies, never deleted.
+
+== 2. The probe (probe/), four scenarios, Playwright retries 1: see matrix.txt for the full table
+normal     control    18/10/6/7     41 listed  41 files   280605 B   0 dead
+normal     prototype  10/7/4/4      25 listed  25 files   166354 B   0 dead
+gone       control    18/10/6/7     41 listed  15 files   114227 B  26 dead
+gone       prototype  10/7/4/4      25 listed  23 files   166331 B   2 dead
+
+== 3. Issue scale: one failing scenario attaching a 58 MB "trace" and a 7.5 MB "video" by path inside a Gherkin step
+   (as Playwright attaches its own), plus Playwright's own trace and video; two attempts; messages file 185.8 MB
+4.20.2 round 1: exit 0, 1.2 s, peak 1,381 MB, attachments/ 18 files 139.4 MB, temp dirs +1 (69.7 MB left)
+proto round 1: exit 0, 1.3 s, peak 1,377 MB, attachments/ 10 files 69.7 MB, temp dirs +0 (0 MB left)
+4.20.2 round 2: exit 0, 1.2 s, peak 1,373 MB, attachments/ 18 files 139.4 MB, temp dirs +1 (69.7 MB left)
+proto round 2: exit 0, 1.4 s, peak 1,381 MB, attachments/ 10 files 69.7 MB, temp dirs +0 (0 MB left)
+
+Where each entry landed, sizes in KB:
+== 4.20.2
+scenario: [('screenshot-start.png', 6), ('after-step.png', 6), ('trace', 58000), ('video', 7500), ('after-step.png', 6), ('screenshot', 6), ('screenshot-end.png', 6), ('video', 4), ('error-context', 3), ('trace', 7527), ('screenshot.png', 6), ('error-context.md', 3), ('trace.zip', 7527), ('video.webm', 4)]
+  step 'the page is open' [('after-step.png', 6)]
+  step 'the big check fails with a big' [('trace.zip', 58000), ('video.webm', 7500), ('after-step.png', 6)]
+== prototype
+scenario: [('screenshot-start.png', 6), ('screenshot', 6), ('screenshot-end.png', 6), ('video', 4), ('error-context', 3), ('trace', 7527)]
+  step 'the page is open' [('after-step.png', 6)]
+  step 'the big check fails with a big' [('trace', 58000), ('video', 7500), ('after-step.png', 6)]
+== prototype without byte verification (KRONIKOL_175_VERIFY=0): the two traces and the two videos swap places
+scenario: [('screenshot-start.png', 6), ('trace', 58000), ('video', 7500), ('screenshot', 6), ('screenshot-end.png', 6), ('error-context', 3)]
+  step 'the page is open' [('after-step.png', 6)]
+  step 'the big check fails with a big' [('trace', 7527), ('video', 4), ('after-step.png', 6)]
+
+== 4. Memory (control): the messages reader holds every body
+small: messages 0.5 MB, peak working set 75 MB (4.20.2)
+big: messages 185.8 MB, peak working set 1,380 MB (4.20.2)
+
+== 5. `kronikol query failures`, the failing probe scenario's attachment lines (it prints a scenario's first four)
+control:   screenshot-start.png, after-step.png, step-shot.png, after-step.png
+prototype: screenshot-start.png, screenshot, screenshot-end.png, video
+
+== 6. The test suite's own staging folders: Cucumber|Ingest facts, net10.0, one run each
+prototype: Passed 414 (the old MergeAttachments fact excluded), temp dirs +13
+4.20.2:    Passed 415, temp dirs +23
+
+== 7. Two defects of the prototype's own first cuts, kept as the facts that must catch them
+(a) A merged entry written back into its step stayed a candidate, so three identical after-step.png screenshots
+    collapsed onto the first step and the other two steps kept the decoded copies:
+    [('after-step.png', 'attachments/10-after-step.png'), ('step-shot.png', 'attachments/8-step-shot.png'),
+     ('after-step.png', 'attachments/0002-after-step.png'), ('after-step.png', 'attachments/0003-after-step.png')]
+(b) Pairing by bytes alone (the issue's second suggestion) on the noname variant, where every screenshot of the
+    unchanged page has the same bytes, put the failure screenshot on a Gherkin step:
+    scenario: ['6-screenshot-start.png', '7-after-step.png', '8-step-shot.png', 'video.webm', 'error-context.md', 'trace.zip']
+      step 'the page is open' ['9-after-step.png']
+      step 'a step attaches a named image' ['10-after-step.png', 'test-failed-1.png']
+      step 'the check fails' ['11-screenshot-end.png']
+    Limited to bytes that occur once on each side, and with the name rule accepting the displayed name, the
+    second pass changed nothing on any variant (matrix.txt was measured with it off; with it on, identical).
+
+== 8. Content identity on the probe (sha256 of every attachment on both sides, by hash)
+Every messages attachment has a byte-identical tests-file twin. Every screenshot of the unchanged page, whatever
+its name (screenshot, screenshot-start.png, screenshot-end.png, step-shot.png, after-step.png), has the same bytes,
+and the two attempts' error-context.md files are identical too: bytes cannot be the key, only a check on a pair.
+
+== 9. The sweep, 2026-10-15, on 4.22.1 (85f849f7): control = Kronikol.Tool built there, prototype = prototype.patch
+   applied there unchanged. matrix-4.22.1.txt: every listed/files/dead count equals matrix.txt; bytes differ by the
+   re-recorded media only (control 284,609 B, prototype 168,356 B, 40.8% less).
+
+== 10. A Background: step and --include-hooks (probe/features/background.feature, one failing scenario)
+playwright-bdd pins the background step's after-step.png to the background step.
+4.22.1 default:          18 entries: scenario 14, backgroundStep 'the page is open' 1, steps 3
+4.22.1 --include-hooks:  20 entries: scenario 10 (the reporter's copies), backgroundStep 1, steps 3, hook steps 6
+                         ('After Hooks': screenshot.png, screenshot-start.png, error-context.md, trace.zip;
+                          'Fixture "screenshots"': screenshot-end.png; 'Fixture "context"': video.webm)
+prototype default:       10 entries: scenario 6, backgroundStep 1, steps 3
+prototype --include-hooks: 10 entries: scenario 0, backgroundStep 1, steps 3, hook steps 6 (each once, run's names)
+
+== 11. Failures.md's attachment list for the failing scenario (F9)
+four-scenario probe, 4.22.1:  14  screenshot-start.png, after-step.png, step-shot.png, after-step.png, after-step.png,
+                                  screenshot, screenshot-end.png, video, error-context, trace, screenshot.png,
+                                  error-context.md, trace.zip, video.webm
+four-scenario probe, prototype: 6  screenshot-start.png, screenshot, screenshot-end.png, video, error-context, trace
+background probe, 4.22.1 --include-hooks:    10  (the reporter's copies on the scenario)
+background probe, prototype --include-hooks:  0
+FailuresDigestGenerator reads scenario.Attachments only (L285); query failures the scenario's first four (L136, L205).
+
+== 12. Producers and protocol
+playwright-bdd 8.5.1 (npm pack, read only): TestStepAttachments.js L46 `fileName: pwAttachment.name`; message.js L29
+`toEmbeddedAttachment`: the same naming and embedding as 9.2.0.
+@cucumber/messages (as installed with playwright-bdd 9.2.0): Attachment has `mediaType: string` (required),
+`fileName?: string` and `url?: string` (optional).
