@@ -1,0 +1,12 @@
+P4 a body read the limit raced is forwarded (R1-2): KILLED
+    proxy: [('Failed!', '1', '45')] failed facts: ['A_body_read_that_ends_after_the_limit_fired_is_not_forwarded']
+P11 no Diagnostics() line for cut callers (R1-1, R1-3): KILLED
+    proxy: [('Failed!', '7', '39')] failed facts: ['A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind:', 'A_caller_that_stops_reading_its_answer_is_cut_and_recorded']
+D1 the accept loop throws what a closing listener throws (the disposal fact): KILLED
+    proxy: [('Failed!', '1', '45')] failed facts: ['Disposing_a_tap_straight_after_starting_it_never_throws']
+O1 zero accepted as a limit (R1-9): KILLED
+    proxy: [('Failed!', '1', '45')] failed facts: ['A_stall_timeout_of_zero_or_less_is_refused(milliseconds:']
+O2 another default (R1-9): KILLED
+    proxy: [('Failed!', '1', '45')] failed facts: ['The_stall_timeout_is_100_seconds_by_default']
+O3 the option not copied for registered taps (R1-9): KILLED
+    proxy: [('Failed!', '1', '45')] failed facts: ['Registering_taps_from_a_list_copies_every_option']

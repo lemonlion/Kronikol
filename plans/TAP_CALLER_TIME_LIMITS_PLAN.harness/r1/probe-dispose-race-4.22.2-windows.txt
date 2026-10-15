@@ -1,0 +1,16 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-173-red1\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.ProxyTap -> C:\Code\Kronikol-173-red1\src\Kronikol.Extensions.ProxyTap\bin\Debug\net10.0\Kronikol.Extensions.ProxyTap.dll
+  Kronikol.Tests.ProxyTap -> C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\bin\Debug\net10.0\Kronikol.Tests.ProxyTap.dll
+Test run for C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\bin\Debug\net10.0\Kronikol.Tests.ProxyTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.95]     Kronikol.Tests.ProxyTap.DisposeRaceProbe.Probe [FAIL]
+  Failed Kronikol.Tests.ProxyTap.DisposeRaceProbe.Probe [219 ms]
+  Error Message:
+   61 of 400 disposals threw: ArgumentException: The handle is invalid. (Parameter 'handle')
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.DisposeRaceProbe.Probe() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\DisposeRaceProbe.cs:line 34
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 236 ms - Kronikol.Tests.ProxyTap.dll (net10.0)

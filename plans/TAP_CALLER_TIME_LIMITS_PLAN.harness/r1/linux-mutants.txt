@@ -1,0 +1,18 @@
+== mutant-P7 exit 1
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: NoByte, realClock: False) [268 ms]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: NoByte, realClock: True) [2 s]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: ContentLength, realClock: False) [224 ms]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: Chunked, realClock: True) [1 s]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: Chunked, realClock: False) [224 ms]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: ContentLength, realClock: True) [1 s]
+Failed!  - Failed:     6, Passed:    30, Skipped:     0, Total:    36, Duration: 14 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+== mutant-P8 exit 1
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stops_reading_its_answer_is_cut_and_recorded [15 s]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(phase: "answer") [469 ms]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(phase: "body") [224 ms]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_answer_cut_by_the_limit_ends_at_once [15 s]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_steady_body_is_never_cut(chunked: False) [315 ms]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_steady_body_is_never_cut(chunked: True) [79 ms]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.Keep_alive_requests_leave_no_entry_behind [3 ms]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_steady_reader_is_never_cut [289 ms]
+Failed!  - Failed:     8, Passed:    28, Skipped:     0, Total:    36, Duration: 41 s - Kronikol.Tests.ProxyTap.dll (net10.0)

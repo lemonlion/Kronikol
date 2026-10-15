@@ -1,15 +1,15 @@
 # Caller-side time limits for the taps (#173)
 
 **Date:** 2026-10-14 · **Repo version:** 4.20.2 (`origin/main` at `3240c983`; every line number below is for it unless
-it says otherwise) · **Status:** 🚧 green-lit in full by the owner on 2026-10-15, every question in §9 as
-recommended; R0 published as 4.22.2 on 2026-10-15, R1 being implemented (§11). Drafted from #173 (filed 2026-10-13 from
-`PROXY_TAP_HANG_UP_PLAN.md` §3 finding 9, §8 and Q2) at the owner's ask of 2026-10-14 to analyse the issue critically
-and plan a fix for the underlying problem. Written alongside the plan for #174 (`TCPTAP_FAILED_CONNECT_PLAN.md`, session
-kronikol-71), which owns both taps' accept loops and `TcpTap`'s connect path; §7 is the split. #174 was green-lit on
-2026-10-15 and released the same day as 4.20.3, 4.22.0 and 4.22.1, which moved the lines this plan cites in `TcpTap.cs`,
-`OtlpTap.cs`, `TcpTapOptions.cs`, `CaptureDegradation.cs` and `DiagnosticEntry.cs`; they stay at `3240c983`, where the
-code was read, and Appendix A gives each edit site at 4.22.1 too (§7). Swept for completeness and accuracy on 2026-10-15
-(§11).
+it says otherwise) · **Status:** 🚧 green-lit in full by the owner on 2026-10-15, every question in §9 as recommended; R0
+published as 4.22.2 on 2026-10-15 and R1 as 4.23.0 on 2026-10-16, R2 being implemented (§11). Drafted from #173 (filed
+2026-10-13 from `PROXY_TAP_HANG_UP_PLAN.md` §3 finding 9, §8 and Q2) at the owner's ask of 2026-10-14 to analyse the
+issue critically and plan a fix for the underlying problem. Written alongside the plan for #174
+(`TCPTAP_FAILED_CONNECT_PLAN.md`, session kronikol-71), which owns both taps' accept loops and `TcpTap`'s connect path;
+§7 is the split. #174 was green-lit on 2026-10-15 and released the same day as 4.20.3, 4.22.0 and 4.22.1, which moved
+the lines this plan cites in `TcpTap.cs`, `OtlpTap.cs`, `TcpTapOptions.cs`, `CaptureDegradation.cs` and
+`DiagnosticEntry.cs`; they stay at `3240c983`, where the code was read, and Appendix A gives each edit site at 4.22.1
+too (§7). Swept for completeness and accuracy on 2026-10-15 (§11).
 
 Evidence labels: **RUN** (measured on 2026-10-14 with the published 4.20.2 packages from nuget.org or a bare
 `HttpListener`, and on 2026-10-15 with the sweep's socket, `HttpListener` and BCL probes, one of them on .NET 8 too:
@@ -972,6 +972,20 @@ kronikol-71 (#174, `TCPTAP_FAILED_CONNECT_PLAN.md`):
     2 s drain, the mutation that settles nothing before the close passed under 2.5 s. R0-5's theories throw only on
     their own case's line, so each case fails at its own site on the old release.
   - R1 started the same evening, in worktree `C:/Code/Kronikol-173-r1` from `9b7886d9`.
+- 2026-10-16: R1 released as 4.23.0 (`c7eef4b3`, worktree `C:/Code/Kronikol-173-r1`, rebased onto 4.22.3 before its
+  release). Release 38821776017, CI 38821772775, CodeQL 38821772767 and CI Summary Preview 38821772690 passed, and
+  nuget.org listed all 62 ids at 23:31 UTC on 2026-10-15; wiki `01b1578`, Kronikol4J ledger `323c3a0`. The proofs are in
+  the harness's `r1/` (its README): 27 of R1's 39 cases fail on 4.22.2 with R1's seams stubbed, the 12 that pass being
+  guards, six answer lengths a single piece already serves, the race R1-7 (proven by mutation) and an older registration
+  fact; of 20 mutations, 20 are killed, the one that writes no `408` on Linux only.
+  - Found while implementing. `ProxyTap.DisposeAsync` threw `ArgumentException` ("The handle is invalid") on Windows for a
+    tap disposed straight after it started, 4 to 61 of every 400 on 4.22.2: the accept loop's first wait began while the
+    listener closed, a window R0 widened when the loop began to wait for the listener's close. Fixed in 4.23.0, with a
+    fact of 1,000 disposals. The first mutation run left alive a body read that the limit raced, which `TryBeginForward`
+    refused anyway, so R1-2 holds the limit's action through a seam on the watch (`BeforeAct`) until the read has ended.
+  - Departures from §5. `-1` ms is `Timeout.InfiniteTimeSpan`, so the refused-values theory uses `-2` and `-1000` ms; the
+    `400` path of R1-10 is a reset on Windows, where http.sys writes nothing on an abort.
+  - R2 started the same night, in worktree `C:/Code/Kronikol-173-r2` from `c7eef4b3`.
 
 ## Appendix A. Edit sites at `3240c983`
 

@@ -1,0 +1,6 @@
+== suite exit 0
+Passed!  - Failed:     0, Passed:   181, Skipped:     0, Total:   181, Duration: 20 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+== mutant-P7 exit 0
+Passed!  - Failed:     0, Passed:    36, Skipped:     0, Total:    36, Duration: 12 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+== mutant-P8 exit 0
+Passed!  - Failed:     0, Passed:    36, Skipped:     0, Total:    36, Duration: 12 s - Kronikol.Tests.ProxyTap.dll (net10.0)

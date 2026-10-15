@@ -1,0 +1,30 @@
+S1 progress never recorded: a total deadline (R1-4, R1-5): KILLED
+    proxy: [('Failed!', '3', '35')] failed facts: ['A_slow_steady_body_is_never_cut(chunked:', 'A_slow_steady_reader_is_never_cut']
+S2 a transfer's end leaves its entry behind (R1-10): KILLED
+    proxy: [('Failed!', '3', '35')] failed facts: ['An_exchange_answered_by_the_tap_leaves_no_entry_behind(status:', 'Keep_alive_requests_leave_no_entry_behind']
+S3 limits fire under a debugger (R1-8): KILLED
+    proxy: [('Failed!', '1', '37')] failed facts: ['No_limit_applies_while_a_debugger_is_attached']
+S4 the limit added to a timestamp (R1-9, TimeSpan.MaxValue): KILLED
+    proxy: [('Failed!', '1', '37')] failed facts: ['A_stall_timeout_of_none_never_cuts(value:']
+S5 the heartbeat fires whatever the transfer did meanwhile: no swap (R1-11): KILLED
+    proxy: [('Failed!', '1', '37')] failed facts: ['A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(phase:']
+P1 reads larger than 16 KiB (R1-4 chunked): KILLED
+    proxy: [('Failed!', '2', '36')] failed facts: ['A_slow_steady_body_is_never_cut(chunked:']
+P2 the answer in one write (R1-5): KILLED
+    proxy: [('Failed!', '1', '37')] failed facts: ['A_slow_steady_reader_is_never_cut']
+P3 a short last piece (R1-12): KILLED
+    proxy: [('Failed!', '3', '35')] failed facts: ['The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(length:']
+P4 a body read the limit raced is forwarded (R1-2): SURVIVED
+    proxy: [('Passed!', '0', '38')] failed facts: []
+P5 a check in place of the body's swap (R1-11): KILLED
+    proxy: [('Failed!', '3', '35')] failed facts: ['A_slow_upstream_is_not_the_callers_stall', 'An_exchange_answered_by_the_tap_leaves_no_entry_behind(status:', 'Keep_alive_requests_leave_no_entry_behind']
+P6 a cut not counted (R1-1): KILLED
+    proxy: [('Failed!', '8', '30')] failed facts: ['A_body_read_that_ends_after_the_limit_fired_is_not_forwarded', 'A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind:', 'No_limit_applies_while_a_debugger_is_attached']
+P7 the cut sends no 408 (R1-1, managed listener only): SURVIVED
+    proxy: [('Passed!', '0', '38')] failed facts: []
+P8 the answer sent chunked (R1-5b, managed listener only): KILLED
+    proxy: [('Failed!', '6', '32')] failed facts: ['A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(phase:', 'A_slow_steady_body_is_never_cut(chunked:', 'A_slow_steady_reader_is_never_cut', 'Keep_alive_requests_leave_no_entry_behind']
+P9 a timeout wins after a close began (R1-7): KILLED
+    proxy: [('Failed!', '1', '37')] failed facts: ['The_limit_and_the_answer_racing_end_it_once']
+P10 no answer's write is watched (R1-3): KILLED
+    proxy: [('Failed!', '4', '34')] failed facts: ['A_caller_that_stops_reading_its_answer_is_cut_and_recorded', 'A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(phase:', 'A_slow_steady_reader_is_never_cut', 'An_answer_cut_by_the_limit_ends_at_once']

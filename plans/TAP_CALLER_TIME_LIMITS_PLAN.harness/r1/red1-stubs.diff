@@ -1,0 +1,94 @@
+diff --git a/src/Kronikol.Extensions.ProxyTap/Kronikol.Extensions.ProxyTap.csproj b/src/Kronikol.Extensions.ProxyTap/Kronikol.Extensions.ProxyTap.csproj
+index 3d8dd65d..d5f3f3b7 100644
+--- a/src/Kronikol.Extensions.ProxyTap/Kronikol.Extensions.ProxyTap.csproj
++++ b/src/Kronikol.Extensions.ProxyTap/Kronikol.Extensions.ProxyTap.csproj
+@@ -7,6 +7,7 @@
+     <Description>Out-of-process HTTP capture for Kronikol: a transparent tee proxy that sits on a service-to-service hop, forwards byte-for-byte, attributes each exchange to the running test via the test-tracking headers (or the W3C trace id), re-injects the correlation headers across non-cooperating hops, redacts secrets at capture, and writes to the Kronikol log store and/or an NDJSON file for `kronikol ingest`. Enables sequence diagrams for polyglot, third-party or legacy backends that cannot be instrumented.</Description>
+     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+     <PackageTags>$(PackageTags);proxy;tee;e2e;playwright;polyglot</PackageTags>
++    <DefineConstants>$(DefineConstants);KRONIKOL_PROXYTAP_SHARED</DefineConstants>
+   </PropertyGroup>
+ 
+   <ItemGroup>
+@@ -15,6 +16,7 @@
+   </ItemGroup>
+ 
+   <ItemGroup>
++    <Compile Include="..\Kronikol.Extensions.TcpTap\StallWatch.cs" Link="Shared\StallWatch.cs" />
+     <InternalsVisibleTo Include="Kronikol.Tests.ProxyTap" />
+   </ItemGroup>
+ 
+diff --git a/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs b/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+index 31b3f7e7..380e9964 100644
+--- a/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
++++ b/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+@@ -112,6 +112,16 @@ public ProxyTap(ProxyTapOptions options)
+     // exception it names, on any platform. Null in production.
+     internal Func<Stream, Stream>? WrapRequestBody { get; set; }
+ 
++    // Stubs (red proof): R1's seams, read by nothing.
++    public long CallerTimeouts => 0;
++    internal const string BodyPhase = "request body";
++    internal const string AnswerPhase = "answer";
++    internal const int PieceBytes = 16 * 1024;
++    internal TimeProvider Clock { get; set; } = TimeProvider.System;
++    internal Func<bool> DebuggerAttached { get; set; } = static () => Debugger.IsAttached;
++    internal StallWatch? Watch => null;
++    internal static int PieceLength(int remaining) => remaining;
++
+     /// <summary>
+     /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per
+     /// non-zero problem counter, worded for a report reader (<c>web→graphql: 3 request(s) could not be
+@@ -1025,6 +1035,10 @@ internal sealed class CallerAnswer(HttpListenerResponse response)
+         /// <summary>Whether the response was ended by an abort: whatever its I/O throws from then on is that end's, never a forward failure.</summary>
+         public bool IsEnded => Volatile.Read(ref _state) == Ended;
+ 
++        public bool IsTimedOut => false;
++
++        public bool TimeOut(int? status) => false;
++
+         /// <summary>Whether neither a close nor an end has begun.</summary>
+         public bool IsOpen => Volatile.Read(ref _state) <= Answering;
+ 
+@@ -1038,15 +1052,16 @@ internal sealed class CallerAnswer(HttpListenerResponse response)
+         /// Closes the response, unless it was ended first. A <see cref="HttpListenerResponse.Close()"/> that throws (on Windows,
+         /// 1229 for a caller gone) is passed on and leaves the answer open, so <see cref="EndUnclosed"/> still aborts it.
+         /// </summary>
+-        public void Close()
++        public bool Close()
+         {
+             var phase = Volatile.Read(ref _state);
+             if (phase > Answering || Interlocked.CompareExchange(ref _state, Closing, phase) != phase)
+-                return;
++                return false;
+             try
+             {
+                 Response.Close();
+                 Volatile.Write(ref _state, Closed);
++                return true;
+             }
+             catch
+             {
+@@ -1059,7 +1074,7 @@ public void Close()
+         /// Aborts the response unless the tap closed it, with <see cref="StatusIfUnclosed"/> set first, and never throws: it
+         /// runs in a <c>finally</c> before the in-flight count goes down, and a failed end leaves the response as it was.
+         /// </summary>
+-        public void EndUnclosed() => TryEnd(StatusIfUnclosed, readingOnly: false, closeConnection: false);
++        public bool EndUnclosed() => TryEnd(StatusIfUnclosed, readingOnly: false, closeConnection: false);
+ 
+         /// <summary>Ends the answer of a request whose body is still being read, or not yet begun, with <paramref name="status"/>; false in any other phase.</summary>
+         public bool EndWhileReading(int status) => TryEnd(status, readingOnly: true, closeConnection: true);
+diff --git a/src/Kronikol.Extensions.ProxyTap/ProxyTapOptions.cs b/src/Kronikol.Extensions.ProxyTap/ProxyTapOptions.cs
+index 2226358b..030321ab 100644
+--- a/src/Kronikol.Extensions.ProxyTap/ProxyTapOptions.cs
++++ b/src/Kronikol.Extensions.ProxyTap/ProxyTapOptions.cs
+@@ -148,6 +148,9 @@ public sealed class ProxyTapOptions
+     /// </summary>
+     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
+ 
++    /// <summary>Stub (red proof): read by nothing.</summary>
++    public TimeSpan? CallerStallTimeout { get; set; }
++
+     /// <summary>
+     /// Emit a server span (parented on the inbound <c>traceparent</c>) and a client span for the forwarded
+     /// call on <see cref="ProxyTap.ActivitySource"/>, re-parenting the forwarded <c>traceparent</c> on the

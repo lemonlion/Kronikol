@@ -1,0 +1,262 @@
+Test run for C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\bin\Debug\net10.0\Kronikol.Tests.ProxyTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:04.23]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(length: 32768) [FAIL]
+[xUnit.net 00:00:04.24]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(length: 8388608) [FAIL]
+[xUnit.net 00:00:04.24]     Kronikol.Tests.ProxyTap.ProxyTapRegistrationTests.Registering_taps_from_a_list_copies_every_option [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(length: 32768) [2 ms]
+  Error Message:
+   Assert.InRange() Failure: Value not in range
+Range:  (16384 - 32767)
+Actual: 32768
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(Int32 length) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 480
+   at InvokeStub_ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(length: 8388608) [< 1 ms]
+  Error Message:
+   Assert.InRange() Failure: Value not in range
+Range:  (16384 - 32767)
+Actual: 8388608
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(Int32 length) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 480
+   at InvokeStub_ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.ProxyTap.ProxyTapRegistrationTests.Registering_taps_from_a_list_copies_every_option [406 ms]
+  Error Message:
+   CallerStallTimeout was not copied: expected 00:00:01, got 
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapRegistrationTests.Registering_taps_from_a_list_copies_every_option() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapRegistrationTests.cs:line 73
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.24]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(length: 32769) [FAIL]
+[xUnit.net 00:00:04.26]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(milliseconds: -1000) [FAIL]
+[xUnit.net 00:00:04.27]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(milliseconds: 0) [FAIL]
+[xUnit.net 00:00:04.27]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(milliseconds: -2) [FAIL]
+[xUnit.net 00:00:04.33]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_upstream_is_not_the_callers_stall [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(length: 32769) [< 1 ms]
+  Error Message:
+   Assert.InRange() Failure: Value not in range
+Range:  (16384 - 32767)
+Actual: 32769
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(Int32 length) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 480
+   at InvokeStub_ProxyTapStallTests.The_answer_is_cut_into_pieces_of_16_KiB_and_a_longer_last(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(milliseconds: -1000) [21 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(Int32 milliseconds) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 319
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(Int32 milliseconds) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 320
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(milliseconds: 0) [1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(Int32 milliseconds) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 319
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(Int32 milliseconds) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 320
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(milliseconds: -2) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(Int32 milliseconds) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 319
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_zero_or_less_is_refused(Int32 milliseconds) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 320
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_upstream_is_not_the_callers_stall [64 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_upstream_is_not_the_callers_stall() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 245
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_upstream_is_not_the_callers_stall() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 252
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_upstream_is_not_the_callers_stall() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 252
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:19.39]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_answer_cut_by_the_limit_ends_at_once [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_answer_cut_by_the_limit_ends_at_once [15 s]
+  Error Message:
+   System.TimeoutException : no answer entry appeared
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.EntryAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 524
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_answer_cut_by_the_limit_ends_at_once() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 224
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_answer_cut_by_the_limit_ends_at_once() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 228
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_answer_cut_by_the_limit_ends_at_once() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 228
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:34.44]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: NoByte, realClock: False) [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: NoByte, realClock: False) [15 s]
+  Error Message:
+   System.TimeoutException : no request body entry appeared
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.EntryAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 524
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.StalledAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 535
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 63
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:49.48]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: ContentLength, realClock: False) [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: ContentLength, realClock: False) [15 s]
+  Error Message:
+   System.TimeoutException : no request body entry appeared
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.EntryAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 524
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.StalledAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 535
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 63
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:04.54]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: Chunked, realClock: False) [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: Chunked, realClock: False) [15 s]
+  Error Message:
+   System.TimeoutException : no request body entry appeared
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.EntryAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 524
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.StalledAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 535
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 63
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:19.59]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: NoByte, realClock: True) [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: NoByte, realClock: True) [15 s]
+  Error Message:
+   the stalled caller was held: nothing more within 15 s (0 bytes, then nothing more within 15 s)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 68
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:34.64]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: Chunked, realClock: True) [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: Chunked, realClock: True) [15 s]
+  Error Message:
+   the stalled caller was held: nothing more within 15 s (0 bytes, then nothing more within 15 s)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 68
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:49.69]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: ContentLength, realClock: True) [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: ContentLength, realClock: True) [15 s]
+  Error Message:
+   the stalled caller was held: nothing more within 15 s (0 bytes, then nothing more within 15 s)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 68
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 86
+--- End of stack trace from previous location ---
+[xUnit.net 00:02:04.81]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_none_never_cuts(value: "max") [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_none_never_cuts(value: "max") [15 s]
+  Error Message:
+   System.TimeoutException : no request body entry appeared
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.EntryAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 524
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.StalledAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 535
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_none_never_cuts(String value) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 342
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_none_never_cuts(String value) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 349
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_timeout_of_none_never_cuts(String value) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 349
+--- End of stack trace from previous location ---
+[xUnit.net 00:02:21.01]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(phase: "body") [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(phase: "body") [15 s]
+  Error Message:
+   System.TimeoutException : no request body entry appeared
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.EntryAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 524
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.StalledAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 535
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 415
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 446
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 446
+--- End of stack trace from previous location ---
+[xUnit.net 00:02:36.24]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(phase: "answer") [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(phase: "answer") [15 s]
+  Error Message:
+   System.TimeoutException : no answer entry appeared
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.EntryAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 524
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.StalledAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 535
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 415
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 446
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 446
+--- End of stack trace from previous location ---
+[xUnit.net 00:02:36.24]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_stall_timeout_is_100_seconds_by_default [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_stall_timeout_is_100_seconds_by_default [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 00:01:40
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.The_stall_timeout_is_100_seconds_by_default() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 303
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:02:51.49]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_steady_reader_is_never_cut [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_steady_reader_is_never_cut [15 s]
+  Error Message:
+   System.TimeoutException : no answer entry appeared
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.EntryAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 524
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_steady_reader_is_never_cut() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 190
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_steady_reader_is_never_cut() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 211
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_slow_steady_reader_is_never_cut() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 211
+--- End of stack trace from previous location ---
+[xUnit.net 00:02:53.53]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_exchange_answered_by_the_tap_leaves_no_entry_behind(status: 502) [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_exchange_answered_by_the_tap_leaves_no_entry_behind(status: 502) [2 s]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_exchange_answered_by_the_tap_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 395
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_exchange_answered_by_the_tap_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 398
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_exchange_answered_by_the_tap_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 398
+--- End of stack trace from previous location ---
+[xUnit.net 00:02:53.54]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_exchange_answered_by_the_tap_leaves_no_entry_behind(status: 400) [FAIL]
+[xUnit.net 00:02:53.54]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.Keep_alive_requests_leave_no_entry_behind [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_exchange_answered_by_the_tap_leaves_no_entry_behind(status: 400) [8 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_exchange_answered_by_the_tap_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 395
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_exchange_answered_by_the_tap_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 398
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.An_exchange_answered_by_the_tap_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 398
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.Keep_alive_requests_leave_no_entry_behind [5 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.Keep_alive_requests_leave_no_entry_behind() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 367
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.Keep_alive_requests_leave_no_entry_behind() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 371
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.Keep_alive_requests_leave_no_entry_behind() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 371
+--- End of stack trace from previous location ---
+[xUnit.net 00:03:08.59]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.No_limit_applies_while_a_debugger_is_attached [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.No_limit_applies_while_a_debugger_is_attached [15 s]
+  Error Message:
+   System.TimeoutException : no request body entry appeared
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.EntryAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 524
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.StalledAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 535
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.No_limit_applies_while_a_debugger_is_attached() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 290
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.No_limit_applies_while_a_debugger_is_attached() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 298
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.No_limit_applies_while_a_debugger_is_attached() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 298
+--- End of stack trace from previous location ---
+[xUnit.net 00:03:24.46]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stops_reading_its_answer_is_cut_and_recorded [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stops_reading_its_answer_is_cut_and_recorded [15 s]
+  Error Message:
+   System.TimeoutException : no answer entry appeared
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.EntryAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 524
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.StalledAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 535
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stops_reading_its_answer_is_cut_and_recorded() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 126
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stops_reading_its_answer_is_cut_and_recorded() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 141
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stops_reading_its_answer_is_cut_and_recorded() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 141
+--- End of stack trace from previous location ---
+[xUnit.net 00:03:41.99]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_body_read_that_ends_after_the_limit_fired_is_not_forwarded [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_body_read_that_ends_after_the_limit_fired_is_not_forwarded [17 s]
+  Error Message:
+   System.TimeoutException : no request body entry appeared
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.EntryAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 524
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.StalledAsync(ProxyTap tap, String phase) in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 535
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_body_read_that_ends_after_the_limit_fired_is_not_forwarded() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 104
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_body_read_that_ends_after_the_limit_fired_is_not_forwarded() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 111
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_body_read_that_ends_after_the_limit_fired_is_not_forwarded() in C:\Code\Kronikol-173-red1\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 111
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:    26, Passed:    12, Skipped:     0, Total:    38, Duration: 3 m 38 s - Kronikol.Tests.ProxyTap.dll (net10.0)
