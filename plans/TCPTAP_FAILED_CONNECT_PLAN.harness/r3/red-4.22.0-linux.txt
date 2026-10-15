@@ -1,0 +1,88 @@
+R3's facts on 4.22.0 (v4.22.0, 1caa58e1) with red-stub.diff, on Ubuntu 24.04 in mcr.microsoft.com/dotnet/sdk:10.0, 2026-10-15.
+Four cases red on their own assertions. The timing fact passes, since Linux answers a refused address at once; the ::1
+forward fact skips, since this container's hosts file gives localhost 127.0.0.1 alone (::1 is ip6-localhost), so
+nothing reaches ::1 by that name, with or without R3; the address-alone guard passes.
+
+  Determining projects to restore...
+  Restored /repo/src/Kronikol/Kronikol.csproj (in 801 ms).
+  Restored /repo/src/Kronikol.Extensions.TcpTap/Kronikol.Extensions.TcpTap.csproj (in 801 ms).
+  Restored /repo/src/Kronikol.Extensions.Redis/Kronikol.Extensions.Redis.csproj (in 802 ms).
+  Restored /repo/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj (in 802 ms).
+  Restored /repo/src/Kronikol.Extensions.MongoDB.V2/Kronikol.Extensions.MongoDB.V2.csproj (in 801 ms).
+/repo/src/Kronikol.Extensions.MongoDB.V2/Kronikol.Extensions.MongoDB.V2.csproj : warning NU1902: Package 'SharpCompress' 0.30.1 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-6c8g-7p36-r338 [TargetFramework=net10.0]
+/repo/src/Kronikol.Extensions.MongoDB.V2/Kronikol.Extensions.MongoDB.V2.csproj : warning NU1903: Package 'Snappier' 1.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-pggp-6c3x-2xmx [TargetFramework=net10.0]
+/repo/src/Kronikol/PlantUml/PlantUmlCreator.cs(1514,48): warning CS8604: Possible null reference argument for parameter 'content' in 'string PlantUmlCreator.FormFieldLines(string content)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/PlantUml/NodeJsPlantUmlRenderer.cs(56,118): warning CS8604: Possible null reference argument for parameter 'expectedIntegrity' in 'EngineCache.EngineCache(string directory, Func<string, byte[]> download, string cdnBase, IReadOnlyDictionary<string, string> expectedIntegrity)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Reports/Merge/MergeableReportReader.cs(99,38): warning CS8604: Possible null reference argument for parameter 'testName' in 'void MergeableReportReader.ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into, Dictionary<string, List<string?>>? stepPaths, ParseNotes notes, Dictionary<Guid, WarmUpMark>? warmUpCalls = null)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,55): warning CS1573: Parameter 'Verdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,95): warning CS1573: Parameter 'Subjects' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,112): warning CS1573: Parameter 'LedgerPath' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,146): warning CS1573: Parameter 'LedgerSource' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,10): warning CS1573: Parameter 'BehaviourVerdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,67): warning CS1573: Parameter 'Analysis' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,108): warning CS1573: Parameter 'Shapes' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,48): warning CS1573: Parameter 'Subject' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,73): warning CS1573: Parameter 'Entry' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,117): warning CS1573: Parameter 'RunId' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,128): warning CS1573: Parameter 'RunsAgo' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+  Kronikol -> /repo/src/Kronikol/bin/Debug/net10.0/Kronikol.dll
+  Kronikol.Extensions.Redis -> /repo/src/Kronikol.Extensions.Redis/bin/Debug/net10.0/Kronikol.Extensions.Redis.dll
+  Kronikol.Extensions.MongoDB.V2 -> /repo/src/Kronikol.Extensions.MongoDB.V2/bin/Debug/net10.0/Kronikol.Extensions.MongoDB.V2.dll
+  Kronikol.Extensions.TcpTap -> /repo/src/Kronikol.Extensions.TcpTap/bin/Debug/net10.0/Kronikol.Extensions.TcpTap.dll
+/repo/tests/Kronikol.Tests.TcpTap/RespStreamParserTests.cs(271,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [/repo/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj]
+/repo/tests/Kronikol.Tests.TcpTap/TcpTapTests.cs(451,13): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [/repo/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj]
+  Kronikol.Tests.TcpTap -> /repo/tests/Kronikol.Tests.TcpTap/bin/Debug/net10.0/Kronikol.Tests.TcpTap.dll
+Test run for /repo/tests/Kronikol.Tests.TcpTap/bin/Debug/net10.0/Kronikol.Tests.TcpTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.73]     Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo [FAIL]
+[xUnit.net 00:00:00.75]     Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost: "LocalHost") [FAIL]
+[xUnit.net 00:00:00.75]     Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost: "localhost") [FAIL]
+[xUnit.net 00:00:00.75]     Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapForwardingToLocalhostStillReachesAnIPv6OnlyServer [SKIP]
+[xUnit.net 00:00:00.76]     Kronikol.Tests.TcpTap.TcpTapLocalhostTests.TheForwardAddressesAreTriedIPv4First [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo [42 ms]
+  Error Message:
+   Assert.Single() Failure: The collection was empty
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo() in /repo/tests/Kronikol.Tests.TcpTap/TcpTapLocalhostTests.cs:line 201
+   at Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo() in /repo/tests/Kronikol.Tests.TcpTap/TcpTapLocalhostTests.cs:line 207
+   at Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo() in /repo/tests/Kronikol.Tests.TcpTap/TcpTapLocalhostTests.cs:line 180
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost: "LocalHost") [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "+PONG\r\n"
+Actual:   "no connection (ConnectionRefused)"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(String listenHost) in /repo/tests/Kronikol.Tests.TcpTap/TcpTapLocalhostTests.cs:line 113
+   at Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(String listenHost) in /repo/tests/Kronikol.Tests.TcpTap/TcpTapLocalhostTests.cs:line 121
+   at Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(String listenHost) in /repo/tests/Kronikol.Tests.TcpTap/TcpTapLocalhostTests.cs:line 121
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost: "localhost") [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "+PONG\r\n"
+Actual:   "no connection (ConnectionRefused)"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(String listenHost) in /repo/tests/Kronikol.Tests.TcpTap/TcpTapLocalhostTests.cs:line 113
+   at Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(String listenHost) in /repo/tests/Kronikol.Tests.TcpTap/TcpTapLocalhostTests.cs:line 121
+   at Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(String listenHost) in /repo/tests/Kronikol.Tests.TcpTap/TcpTapLocalhostTests.cs:line 121
+--- End of stack trace from previous location ---
+  Skipped Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapForwardingToLocalhostStillReachesAnIPv6OnlyServer [1 ms]
+  Failed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.TheForwardAddressesAreTriedIPv4First [10 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [127.0.0.1, ::1]
+Actual:   [::1, 127.0.0.1]
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLocalhostTests.TheForwardAddressesAreTriedIPv4First() in /repo/tests/Kronikol.Tests.TcpTap/TcpTapLocalhostTests.cs:line 219
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     4, Passed:     2, Skipped:     1, Total:     7, Duration: 129 ms - Kronikol.Tests.TcpTap.dll (net10.0)
+exit 1

@@ -709,6 +709,29 @@ R3 follows the same shape: **Patch**, with "a tap on localhost no longer costs 2
   never calls). 18 of 20 mutations are killed (`r2/mutations-windows.txt`); N6 (the catch restored) and N8 (the
   catch-all's line unguarded) are equivalent, since nothing reaches either. §5's N7 was killed by the fact that reads
   the counter from inside the event. The checks are in the changelog's 4.22.0 entry.
+- **2026-10-15, 4.22.0 published.** Release 38730169594, CI 38730166027, CodeQL 38730165898 and CI Summary Preview
+  38730166120 passed on their first attempt, and nuget.org listed all 62 ids at 12:13 UTC. The wiki has R2's edits
+  (`977d49f`), Kronikol4J's ledger its line (`89035e0`, nothing to port), and #174 is closed with a comment naming
+  the release.
+- **2026-10-15, R3 released as 4.22.1.** As §4.3 recommends, with forwarding approach (a): a tap whose `ListenHost`
+  is the name `localhost` listens on ::1 too, on the same port, with an R1 accept loop of its own, and a failure to
+  bind it is logged and skipped; the forward resolves `ForwardHost` within `ConnectTimeout` and tries its IPv4
+  addresses first. One departure from §4.3, for the owner to confirm: §4.3 binds the second listener when `ListenHost`
+  *resolves to* the IPv4 loopback, as `OtlpTap` does for `localhost` and for `127.0.0.1`. R3 binds it for the name
+  alone, as Kestrel does, so an address listens on that address alone: a host that names 127.0.0.1 has said which
+  socket it wants, and F1's 2 s comes from a client that dials the name, which the default `localhost` covers.
+  `OtlpTap` keeps its rule. Making the two match, either way, would be a patch. Found while building it:
+  - **§5's two facts could not catch five of the mutations**: neither takes a ::1 port that is already taken (P4 fatal,
+    P5 not logged, P11 the failed listener kept and given a loop), stops the tap (P10, one listener closed) or spells
+    the name in capitals (P3). R3 adds a fact for the taken port, and L1 becomes a theory over the name's casing that
+    stops the tap and finds both ports closed.
+  - **The ::1 forward fact cannot apply in the dotnet/sdk container.** Its hosts file gives `localhost` 127.0.0.1
+    alone (::1 is `ip6-localhost`), so nothing reaches ::1 by that name, with R3 or without it; on 4.22.0 the fact
+    failed there for that reason alone. It skips where `localhost` does not name ::1, and runs where it does, as on Windows.
+  Red on 4.22.0 (`r3/red-4.22.0-{windows,linux}.txt`, with `r3/red-stub.diff`): four facts, five cases with the
+  theory's two, red on their own assertions on Windows, with the two guards green; on Linux the timing fact passes, as
+  §5 said of L2, and the ::1 forward fact skips. 11 of 11 mutations are killed (`r3/mutations-windows.txt`); P8, the
+  connect by name, is killed on Windows alone. The checks are in the changelog's 4.22.1 entry.
 
 ## Appendix A. Edit sites at `3240c983`
 

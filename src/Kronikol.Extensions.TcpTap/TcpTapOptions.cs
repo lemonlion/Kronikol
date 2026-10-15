@@ -37,10 +37,18 @@ public class TcpTapOptions
     /// <summary>Port the tap listens on (the address the service is pointed at). Required; <c>0</c> binds a free ephemeral port (see <see cref="TcpTap.BoundPort"/>).</summary>
     public int ListenPort { get; set; }
 
-    /// <summary>Host name or address the listener binds to. Default <c>localhost</c>.</summary>
+    /// <summary>
+    /// Host name or address the listener binds to. Default <c>localhost</c>, which listens on both loopbacks, 127.0.0.1 and
+    /// ::1, on the same port: a client that dials <c>localhost</c> may try either first, and on Windows a refused address
+    /// costs about 2 s. An address listens on that address alone.
+    /// </summary>
     public string ListenHost { get; set; } = "localhost";
 
-    /// <summary>Host name or address of the real server the tap forwards to. Default <c>localhost</c>.</summary>
+    /// <summary>
+    /// Host name or address of the real server the tap forwards to. Default <c>localhost</c>. A name's addresses are tried
+    /// IPv4 first, so a server listening on 127.0.0.1 alone is reached at once; one listening on ::1 alone is reached after
+    /// the IPv4 address refuses, which on Windows takes about 2 s.
+    /// </summary>
     public string ForwardHost { get; set; } = "localhost";
 
     /// <summary>Port of the real server the tap forwards to. Required.</summary>

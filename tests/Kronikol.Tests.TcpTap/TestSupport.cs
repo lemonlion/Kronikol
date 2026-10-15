@@ -294,10 +294,12 @@ internal sealed class StubServer : IAsyncDisposable
     private readonly List<byte> _received = [];
     private readonly TaskCompletionSource _closed = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    public StubServer(Func<byte[], byte[]?> reply)
+    /// <param name="reply">The answer to each chunk that arrives; null or empty for none.</param>
+    /// <param name="address">The address it listens on: the IPv4 loopback alone unless the test names another.</param>
+    public StubServer(Func<byte[], byte[]?> reply, IPAddress? address = null)
     {
         _reply = reply;
-        _listener = new TcpListener(IPAddress.Loopback, 0);
+        _listener = new TcpListener(address ?? IPAddress.Loopback, 0);
         _listener.Start();
         Port = ((IPEndPoint)_listener.LocalEndpoint).Port;
         _ = Task.Run(AcceptAsync);

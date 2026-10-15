@@ -16,6 +16,8 @@ file-based app that names its packages with `#:package`: `dotnet run <file>.cs`,
 | `r1/accept-probe-r1.cs`, `r1/accept-r1-linux.txt` | `accept/accept-probe.cs` built against the R1 source tree it sits in (`#:project`), and its Linux run: E2, the process out of descriptors, with both taps answering once they are back |
 | `r2/red-stubs.diff`, `r2/red-4.20.3-{windows,linux}.txt` | R2's red proof: R2's facts on 4.20.3 with only the members they name, given no behaviour, and their runs. Every fact red on its own assertion but two guards: stopping the tap during a connect counts nothing (the fact that kills a classification by type), and a throwing `OnCaptureDegraded` stops no accept loop, which 4.20.3 holds by raising no event at all |
 | `r2/mutations.py`, `r2/mutations-windows.txt` | R2's mutations and their verdicts |
+| `r3/red-stub.diff`, `r3/red-4.22.0-{windows,linux}.txt` | R3's red proof: R3's facts on 4.22.0 with `IPv4First` stubbed to keep the resolver's order, and their runs. On Windows every fact is red on its own assertion but the two guards (a tap on an address listens there alone; a tap forwarding to `localhost` still reaches a server on ::1 alone); on Linux the timing fact passes, since Linux answers a refused address at once, and the ::1 forward fact skips, since the container's `localhost` names 127.0.0.1 alone |
+| `r3/mutations.py`, `r3/mutations-windows.txt` | R3's mutations and their verdicts |
 
 ## Notes on the runs
 

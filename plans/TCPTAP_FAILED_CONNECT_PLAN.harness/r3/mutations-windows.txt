@@ -1,0 +1,26 @@
+R3's mutations (mutations.py) on Windows 11, .NET 10.0.11, 2026-10-15, each in a copy of the release's tree (R3 on 4.22.0).
+11 of 11 killed. P8 is killed on Windows alone: Linux answers a refused address at once, so a forward by name there costs
+nothing for the timing fact to see.
+
+P1 no listener on ::1: KILLED
+    tcp: [('Failed!', '3', '4')] failed facts: ['ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost:', 'ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo']
+P2 an address listens on ::1 too: KILLED
+    tcp: [('Failed!', '1', '6')] failed facts: ['ATapOnAnAddressListensThereAlone']
+P3 the name compared by case: KILLED
+    tcp: [('Failed!', '1', '6')] failed facts: ['ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost:']
+P4 the second listener's failure fatal: KILLED
+    tcp: [('Failed!', '1', '6')] failed facts: ['ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo']
+P5 the second listener's failure not logged: KILLED
+    tcp: [('Failed!', '1', '6')] failed facts: ['ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo']
+P6 the forward addresses in the resolver's order: KILLED
+    tcp: [('Failed!', '2', '5')] failed facts: ['ATapForwardingToLocalhostReachesAnIPv4OnlyServerAtOnce', 'TheForwardAddressesAreTriedIPv4First']
+P7 the forward addresses IPv6 first: KILLED
+    tcp: [('Failed!', '2', '5')] failed facts: ['ATapForwardingToLocalhostReachesAnIPv4OnlyServerAtOnce', 'TheForwardAddressesAreTriedIPv4First']
+P8 the forward connect by name, as before: KILLED
+    tcp: [('Failed!', '1', '6')] failed facts: ['ATapForwardingToLocalhostReachesAnIPv4OnlyServerAtOnce']
+P9 one accept loop, the first listener's: KILLED
+    tcp: [('Failed!', '2', '5')] failed facts: ['ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost:']
+P10 stopping closes the first listener alone: KILLED
+    tcp: [('Failed!', '2', '5')] failed facts: ['ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost:']
+P11 a failed second listener kept in the list: KILLED
+    tcp: [('Failed!', '1', '6')] failed facts: ['ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo']

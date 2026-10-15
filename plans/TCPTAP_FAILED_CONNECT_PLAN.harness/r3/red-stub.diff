@@ -1,0 +1,14 @@
+diff --git a/src/Kronikol.Extensions.TcpTap/TcpTap.cs b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+index 015c55e4..14925354 100644
+--- a/src/Kronikol.Extensions.TcpTap/TcpTap.cs
++++ b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+@@ -332,6 +332,9 @@ private void CountConnectFailure(long id, IPEndPoint? caller, Exception? excepti
+         Degrade(id, CaptureDegradationKind.UpstreamConnectFailed, detail);
+     }
+ 
++    /// <summary>Red stub: the resolver's order, unchanged.</summary>
++    internal static IPAddress[] IPv4First(IPAddress[] addresses) => addresses;
++
+     private string ForwardTarget => _options.ForwardHost.Contains(':', StringComparison.Ordinal)
+         ? $"[{_options.ForwardHost}]:{_options.ForwardPort}"
+         : $"{_options.ForwardHost}:{_options.ForwardPort}";

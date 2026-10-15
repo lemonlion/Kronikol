@@ -4,6 +4,50 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.22.1] - 2026-10-15
+
+**Patch - a tap on `localhost` no longer costs 2 s per connection on Windows (`plans/TCPTAP_FAILED_CONNECT_PLAN.md` R3,
+found while planning #174).** Green-lit with the plan on 2026-10-15, its Q6 as recommended: both loopbacks for a tap
+that listens on `localhost`, IPv4 first for one that forwards to a name. Bug fixes, with no new option and no new public
+member, so the patch part moves (4.22.0 to 4.22.1).
+
+### Fixed
+
+- **A client that dialled a `TcpTap` by `localhost` waited about 2 s on every connect on Windows.** There `localhost` is
+  two addresses, ::1 first, and the tap listened on 127.0.0.1 alone, so each connect waited for ::1 to be refused
+  (Windows sends the SYN again after a reset) before it tried 127.0.0.1. A tap whose `ListenHost` is the name
+  `localhost`, the default, now listens on ::1 too, on the same port and with an accept loop of its own. If ::1 cannot
+  be bound on that port, the tap says so in its log and keeps listening on 127.0.0.1. An address listens on that address
+  alone, as in Kestrel: `ListenHost = "127.0.0.1"` still takes 127.0.0.1 only.
+- **A tap that forwarded to `localhost` made every connection wait about 2 s on Windows for a server listening on
+  127.0.0.1 alone,** for the same reason on the other side. The tap now resolves `ForwardHost` and tries its IPv4
+  addresses first, each family in the resolver's order, so such a server is reached at once. A server listening on ::1
+  alone is reached after the IPv4 address refuses, which on Windows takes the 2 s instead. The name is still resolved
+  within `ConnectTimeout`.
+
+Behaviour change: a tap on `localhost` holds its port on ::1 as well, and a tap that forwards to a name tries its IPv4
+addresses first.
+
+### Tests
+
+- `TcpTapLocalhostTests` (new, 6 facts, one a theory of two cases): a tap on `localhost`, however it is cased, answers
+  on ::1 and on 127.0.0.1 and closes both when it stops; a tap on an address listens there alone; a tap whose ::1 port
+  is taken says so once, serves 127.0.0.1 and runs no accept loop on the listener that failed; a tap that forwards to
+  `localhost` reaches a server on 127.0.0.1 alone within a second, twice, and still reaches one on ::1 alone; and the
+  forward addresses are put IPv4 first. Linux answers a refused address at once, so the timing fact is red only on
+  Windows; the facts that need the IPv6 loopback skip only where it cannot be bound, and the one that forwards to it by
+  name only where `localhost` does not name it (the dotnet/sdk container's hosts file names ::1 `ip6-localhost`).
+  `StubServer` takes the address it listens on.
+- Proofs (plan harness `r3/`): copied onto 4.22.0 with `IPv4First` stubbed to keep the resolver's order
+  (`red-stub.diff`), four facts fail on Windows (five cases with the theory's two), each on its own assertion, and the
+  two guards pass. On Linux the same facts fail but the timing fact, which passes there since Linux answers a refused
+  address at once, and the fact that forwards to a server on ::1 alone skips, since the container's `localhost` names
+  127.0.0.1 alone. 11 of 11 mutations are killed.
+- Checks: after the version bump the core suite passes 7,602 with 2 skipped; the TcpTap suite passes 434 with 4 skipped
+  (its Docker-only container facts) on Windows and 433 with 5 skipped on Linux (there the ::1 forward fact too), and the
+  Otlp suite 148 on both; release.slnf builds in Release for every target. The Playwright suite was not run, since
+  nothing a page draws changed. The templates pin 4.22.0 and the history action's VERSION installs Kronikol.Tool 4.22.1.
+
 ## [4.22.0] - 2026-10-15
 
 **Minor - a `TcpTap` connection that could not be forwarded is counted and reported (#174;

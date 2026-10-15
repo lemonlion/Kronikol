@@ -46,7 +46,7 @@ public class TcpTap : IAsyncDisposable
     private static readonly TimeSpan DropReportInterval = TimeSpan.FromMinutes(1);
 
     private readonly TcpTapOptions _options;
-    private TcpListener? _listener;
+    private readonly List<TcpListener> _listeners = [];
     private CancellationTokenSource? _cts;
     private Task? _loop;
     private int _disposed;
@@ -95,7 +95,7 @@ public class TcpTap : IAsyncDisposable
     public int BoundPort { get; private set; }
 
     /// <summary>Whether the listener is accepting connections.</summary>
-    public bool IsListening => _listener is not null && _disposed == 0;
+    public bool IsListening => _listeners.Count > 0 && _disposed == 0;
 
     /// <summary>Connections accepted so far.</summary>
     public long ConnectionsAccepted => Interlocked.Read(ref _connections);
@@ -186,13 +186,35 @@ public class TcpTap : IAsyncDisposable
         var address = ResolveBindAddress(_options.ListenHost);
         var listener = new TcpListener(address, _options.ListenPort);
         listener.Start(_options.AcceptBacklog);
-        _listener = listener;
+        _listeners.Add(listener);
         BoundPort = ((IPEndPoint)listener.LocalEndpoint).Port;
 
+        // "localhost" is two addresses, and Windows tries ::1 first and takes about 2 s to give up on one that refuses: a
+        // client that dialled the tap by name paid that on every connect while the tap listened on 127.0.0.1 alone.
+        if (_options.ListenHost.Equals("localhost", StringComparison.OrdinalIgnoreCase) && Socket.OSSupportsIPv6)
+            AlsoListen(IPAddress.IPv6Loopback);
+
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        _loop = Task.Run(() => AcceptLoopAsync(listener, _cts.Token), CancellationToken.None);
+        var token = _cts.Token;
+        _loop = Task.WhenAll(_listeners.Select(l => Task.Run(() => AcceptLoopAsync(l, token), CancellationToken.None)));
         TryLog($"[{_options.DisplayName}] tcp-tap listening on {_options.ListenHost}:{BoundPort} → {_options.ForwardHost}:{_options.ForwardPort}");
         return Task.CompletedTask;
+    }
+
+    /// <summary>Listens on <paramref name="address"/> too, on the same port; a failure is logged and skipped, never fatal.</summary>
+    private void AlsoListen(IPAddress address)
+    {
+        var listener = new TcpListener(address, BoundPort);
+        try
+        {
+            listener.Start(_options.AcceptBacklog);
+            _listeners.Add(listener);
+        }
+        catch (Exception ex) when (ex is SocketException or NotSupportedException)
+        {
+            listener.Stop();
+            TryLog($"[{_options.DisplayName}] tcp-tap could not also listen on {new IPEndPoint(address, BoundPort)} ({ex.Message}); a client that dials {_options.ListenHost} may try it first and wait for the refusal");
+        }
     }
 
     private static IPAddress ResolveBindAddress(string host)
@@ -291,7 +313,10 @@ public class TcpTap : IAsyncDisposable
         connectCts.CancelAfter(_options.ConnectTimeout);
         try
         {
-            await upstream.ConnectAsync(_options.ForwardHost, _options.ForwardPort, connectCts.Token).ConfigureAwait(false);
+            // IPv4 first: "localhost" is ::1 first on Windows, which takes about 2 s to give up on an address that refuses,
+            // so a server on 127.0.0.1 alone cost every connection 2 s. A server on ::1 alone pays that instead.
+            var addresses = await Dns.GetHostAddressesAsync(_options.ForwardHost, connectCts.Token).ConfigureAwait(false);
+            await upstream.ConnectAsync(IPv4First(addresses), _options.ForwardPort, connectCts.Token).ConfigureAwait(false);
             return true;
         }
         catch (Exception) when (ct.IsCancellationRequested)
@@ -331,6 +356,13 @@ public class TcpTap : IAsyncDisposable
         TryLog($"[{_options.DisplayName}] tcp-tap connection {id} from {caller?.ToString() ?? "an unknown address"}: {detail}");
         Degrade(id, CaptureDegradationKind.UpstreamConnectFailed, detail);
     }
+
+    /// <summary>The addresses a name resolved to, IPv4 first, each family in the resolver's order.</summary>
+    internal static IPAddress[] IPv4First(IPAddress[] addresses) =>
+    [
+        .. addresses.Where(a => a.AddressFamily == AddressFamily.InterNetwork),
+        .. addresses.Where(a => a.AddressFamily != AddressFamily.InterNetwork),
+    ];
 
     private string ForwardTarget => _options.ForwardHost.Contains(':', StringComparison.Ordinal)
         ? $"[{_options.ForwardHost}]:{_options.ForwardPort}"
@@ -839,8 +871,11 @@ public class TcpTap : IAsyncDisposable
         if (_cts is not null)
             await _cts.CancelAsync().ConfigureAwait(false);
 
-        try { _listener?.Stop(); }
-        catch (Exception ex) when (ex is ObjectDisposedException or SocketException) { /* already stopped */ }
+        foreach (var listener in _listeners)
+        {
+            try { listener.Stop(); }
+            catch (Exception ex) when (ex is ObjectDisposedException or SocketException) { /* already stopped */ }
+        }
 
         if (_loop is not null)
         {
