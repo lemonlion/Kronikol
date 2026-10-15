@@ -1,0 +1,19 @@
+ Version:           10.0.300
+ OS Name:     Windows
+ OS Version:  10.0.26200
+ RID:         win-x64
+Host:
+
+TimeSpan.MaxValue + 10s: OverflowException: TimeSpan overflowed because the duration is too long.
+HttpClient.Timeout = 25 days: ArgumentOutOfRangeException: value ('25.00:00:00') must be less than or equal to '24.20:31:23.6470000'. (Parameter 'value')
+Actual value was 25.00:00:00.
+HttpClient.Timeout = 24 days: ok
+CancelAfter(60 days): ArgumentOutOfRangeException: Specified argument was out of the range of valid values. (Parameter 'delay')
+CancelAfter(40 days): ok
+SocketsHttpHandler.ConnectTimeout = 0: ArgumentOutOfRangeException: Specified argument was out of the range of valid values. (Parameter 'value')
+SocketsHttpHandler.ConnectTimeout = MaxValue: ArgumentOutOfRangeException: Specified argument was out of the range of valid values. (Parameter 'value')
+  -> 00:00:09.9990000
+HttpClient.Timeout = Infinite + 10s: ok
+Stopwatch.Frequency=10000000
+TimeProvider.System.CreateTimer(MaxValue): ArgumentOutOfRangeException: dueTime ('5184000000') must be less than or equal to '4294967294'. (Parameter 'dueTime')
+Actual value was 5184000000.

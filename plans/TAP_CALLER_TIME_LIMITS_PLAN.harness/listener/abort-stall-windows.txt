@@ -1,0 +1,382 @@
+.NET 10.0.11 (.NET 10.0.11), Microsoft Windows 10.0.26200, win-x64, 20 CPUs
+HttpListener: http.sys. abort-stall-probe.cs started 2026-10-14 08:59:17Z.
+Callers are raw sockets to ::1 (localhost's first address). 5 runs per case. Times are in seconds.
+FIN: the caller's pending receive returned 0. RST: it threw SocketException ConnectionReset.
+
+== 1. A chunked answer (SendChunked = true; 16 MB as 256 awaited WriteAsync calls of 64 KiB, on a thread of their own) to a caller
+   that stops reading (receive buffer 16 KiB). A stall: no write completed for 1 s. 1 s after the stall Response.Abort() runs on a
+   thread of its own with a 10 s watchdog. Then the caller reads what it is sent, until FIN, RST or 3 s without a byte.
+  run 1: at the stall (1.09 s after the first call): 0 of 256 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.783 ms and the Task has been pending for 1.092 s
+    Abort(): returned after 0.5 ms
+    the writes then: write 1 (its Task pending at the Abort) FAULTED 0.002 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the caller then read no bytes; then RST 0.034 s after it started reading
+    Abort() in the end: returned after 0.5 ms, before the caller started reading
+    the writes in the end: write 1 (its Task pending at the Abort) FAULTED 0.002 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.783 ms (call 1)
+  run 2: at the stall (1.08 s after the first call): 0 of 256 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.109 ms and the Task has been pending for 1.080 s
+    Abort(): returned after 0.3 ms
+    the writes then: write 1 (its Task pending at the Abort) FAULTED 0.000 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    Abort() in the end: returned after 0.3 ms, before the caller started reading
+    the writes in the end: write 1 (its Task pending at the Abort) FAULTED 0.000 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.109 ms (call 1)
+  run 3: at the stall (1.11 s after the first call): 0 of 256 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.115 ms and the Task has been pending for 1.111 s
+    Abort(): returned after 1.0 ms
+    the writes then: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    Abort() in the end: returned after 1.0 ms, before the caller started reading
+    the writes in the end: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.115 ms (call 1)
+  run 4: at the stall (1.11 s after the first call): 0 of 256 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.109 ms and the Task has been pending for 1.113 s
+    Abort(): returned after 0.4 ms
+    the writes then: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    Abort() in the end: returned after 0.4 ms, before the caller started reading
+    the writes in the end: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.109 ms (call 1)
+  run 5: at the stall (1.10 s after the first call): 0 of 256 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.112 ms and the Task has been pending for 1.104 s
+    Abort(): returned after 0.5 ms
+    the writes then: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    Abort() in the end: returned after 0.5 ms, before the caller started reading
+    the writes in the end: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.112 ms (call 1)
+  tally: stalled inside a WriteAsync call (no Task returned) 0/5; Abort() blocked >10 s 0/5; the caller's chunked body MALFORMED 0/5, looks complete 0/5
+
+== 1b. As 1, but 4 MB as awaited WriteAsync calls of 1 to 8 bytes (sizes drawn at random, seeded by the run). With 64 KiB and with
+   1 KiB writes the stall fell on the asynchronous data write every time; tiny writes give the managed listener's synchronous writes
+   (a chunk's size line, inside the WriteAsync call; its closing CRLF, in the completion callback) a real share of the bytes. The
+   caller's chunked parse tells them apart: data in flight leaves a chunk without its CRLF (MALFORMED); a CRLF that was already
+   queued leaves whole chunks (looks COMPLETE); a size line with no data after it is cut or MALFORMED at the size.
+  run 1: at the stall (1.06 s after the first call): 2631 of 932892 writes completed (11938 bytes); WriteAsync call 2632 returned its Task after 0.013 ms and the Task has been pending for 1.025 s
+    Abort(): returned after 2.4 ms
+    the writes then: write 2632 (its Task pending at the Abort) FAULTED 0.003 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    Abort() in the end: returned after 2.4 ms, before the caller started reading
+    the writes in the end: write 2632 (its Task pending at the Abort) FAULTED 0.003 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.179 ms (call 1087)
+  run 2: at the stall (1.11 s after the first call): 2638 of 931425 writes completed (11870 bytes); WriteAsync call 2639 returned its Task after 0.014 ms and the Task has been pending for 1.077 s
+    Abort(): returned after 2.4 ms
+    the writes then: write 2639 (its Task pending at the Abort) FAULTED 0.003 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    Abort() in the end: returned after 2.4 ms, before the caller started reading
+    the writes in the end: write 2639 (its Task pending at the Abort) FAULTED 0.003 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.266 ms (call 1099)
+  run 3: at the stall (1.12 s after the first call): 2642 of 931731 writes completed (11851 bytes); WriteAsync call 2643 returned its Task after 0.013 ms and the Task has been pending for 1.085 s
+    Abort(): returned after 1.9 ms
+    the writes then: write 2643 (its Task pending at the Abort) FAULTED 0.002 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    Abort() in the end: returned after 1.9 ms, before the caller started reading
+    the writes in the end: write 2643 (its Task pending at the Abort) FAULTED 0.002 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.094 ms (call 1)
+  run 4: at the stall (1.06 s after the first call): 3488 of 931998 writes completed (15808 bytes); WriteAsync call 3489 returned its Task after 0.012 ms and the Task has been pending for 1.024 s
+    Abort(): returned after 2.7 ms
+    the writes then: write 3489 (its Task pending at the Abort) FAULTED 0.003 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    Abort() in the end: returned after 2.7 ms, before the caller started reading
+    the writes in the end: write 3489 (its Task pending at the Abort) FAULTED 0.003 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.142 ms (call 104)
+  run 5: at the stall (1.11 s after the first call): 3499 of 931096 writes completed (15798 bytes); WriteAsync call 3500 returned its Task after 0.014 ms and the Task has been pending for 1.074 s
+    Abort(): returned after 3.3 ms
+    the writes then: write 3500 (its Task pending at the Abort) FAULTED 0.004 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    Abort() in the end: returned after 3.3 ms, before the caller started reading
+    the writes in the end: write 3500 (its Task pending at the Abort) FAULTED 0.004 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.113 ms (call 2239)
+  tally: stalled inside a WriteAsync call (no Task returned) 0/5; Abort() blocked >10 s 0/5; the caller's chunked body MALFORMED 0/5, looks complete 0/5
+
+== 2a. A Content-Length answer (ContentLength64 = 16 MB) in ONE WriteAsync of 16 MB, to a caller that stops reading (receive buffer 16 KiB).
+   As in 1: a stall, Response.Abort() 1 s later on a thread of its own (10 s watchdog), then the caller reads. The listener's tables
+   (reflection; on Windows, http.sys's active requests from netsh) and the server side's TCP sockets (Linux: /proc, 'no fd' = the
+   process no longer holds it) are read before the Abort, 0.2 s after it, and after the caller's read.
+  run 1: at the stall (1.06 s after the first call): 0 of 1 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.128 ms and the Task has been pending for 1.063 s
+    before the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: Established
+    Abort(): returned after 0.8 ms
+    the writes: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'; the write loop has ended
+    0.2 s after the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    after the caller's read: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+  run 2: at the stall (1.11 s after the first call): 0 of 1 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.129 ms and the Task has been pending for 1.105 s
+    before the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: Established
+    Abort(): returned after 0.7 ms
+    the writes: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'; the write loop has ended
+    0.2 s after the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    after the caller's read: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+  run 3: at the stall (1.11 s after the first call): 0 of 1 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.127 ms and the Task has been pending for 1.109 s
+    before the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: Established
+    Abort(): returned after 0.4 ms
+    the writes: write 1 (its Task pending at the Abort) FAULTED 0.000 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'; the write loop has ended
+    0.2 s after the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    after the caller's read: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+  run 4: at the stall (1.08 s after the first call): 0 of 1 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.117 ms and the Task has been pending for 1.076 s
+    before the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: Established
+    Abort(): returned after 0.8 ms
+    the writes: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'; the write loop has ended
+    0.2 s after the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    after the caller's read: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+  run 5: at the stall (1.06 s after the first call): 0 of 1 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.130 ms and the Task has been pending for 1.064 s
+    before the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: Established
+    Abort(): returned after 0.3 ms
+    the writes: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'; the write loop has ended
+    0.2 s after the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    after the caller's read: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+  tally: the write pending at the Abort completed without an exception 0/5; Abort() blocked >10 s 0/5; no active request 0.2 s after the Abort 5/5
+
+== 2b. A Content-Length answer (ContentLength64 = 16 MB) in 256 awaited WriteAsync calls of 64 KiB, to a caller that stops reading (16 KiB).
+   As in 1: a stall, Response.Abort() 1 s later on a thread of its own (10 s watchdog), then the caller reads. The listener's tables
+   (reflection; on Windows, http.sys's active requests from netsh) and the server side's TCP sockets (Linux: /proc, 'no fd' = the
+   process no longer holds it) are read before the Abort, 0.2 s after it, and after the caller's read.
+  run 1: at the stall (1.11 s after the first call): 0 of 256 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.190 ms and the Task has been pending for 1.113 s
+    before the Abort: _disconnectResults=0 http.sys active requests=1 server-side TCP: Established
+    Abort(): returned after 0.3 ms
+    the writes: write 1 (its Task pending at the Abort) FAULTED 0.000 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    0.2 s after the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    after the caller's read: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+  run 2: at the stall (1.07 s after the first call): 0 of 256 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.123 ms and the Task has been pending for 1.073 s
+    before the Abort: _disconnectResults=0 http.sys active requests=1 server-side TCP: Established
+    Abort(): returned after 0.2 ms
+    the writes: write 1 (its Task pending at the Abort) FAULTED 0.000 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    0.2 s after the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    after the caller's read: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+  run 3: at the stall (1.06 s after the first call): 0 of 256 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.118 ms and the Task has been pending for 1.063 s
+    before the Abort: _disconnectResults=0 http.sys active requests=1 server-side TCP: Established
+    Abort(): returned after 0.3 ms
+    the writes: write 1 (its Task pending at the Abort) FAULTED 0.000 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    0.2 s after the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    after the caller's read: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+  run 4: at the stall (1.12 s after the first call): 0 of 256 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.102 ms and the Task has been pending for 1.118 s
+    before the Abort: _disconnectResults=0 http.sys active requests=1 server-side TCP: Established
+    Abort(): returned after 0.3 ms
+    the writes: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    0.2 s after the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    after the caller's read: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+  run 5: at the stall (1.07 s after the first call): 0 of 256 writes completed (0 bytes); WriteAsync call 1 returned its Task after 0.212 ms and the Task has been pending for 1.070 s
+    before the Abort: _disconnectResults=0 http.sys active requests=1 server-side TCP: Established
+    Abort(): returned after 0.9 ms
+    the writes: write 1 (its Task pending at the Abort) FAULTED 0.001 s after the Abort (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'; the write loop has ended
+    0.2 s after the Abort: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+    the caller then read no bytes; then RST 0.000 s after it started reading
+    after the caller's read: _disconnectResults=0 http.sys active requests=0 server-side TCP: none
+  tally: the write pending at the Abort completed without an exception 0/5; Abort() blocked >10 s 0/5; no active request 0.2 s after the Abort 5/5
+
+== 3a. A pending body ReadAsync: a head with Content-Length: 100000 and 1,000 body bytes, then the
+   caller stalls with the socket open and keeps a receive pending. The server reads until a ReadAsync stays pending for 0.5 s; 1 s
+   later StatusCode = 408 and Response.Abort() (a thread of its own, 10 s watchdog). Reported: what the pending read did and when,
+   and what the caller received (its receive waits up to 3 s for FIN or RST).
+  run 1: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.3 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.', 0.001 s after the Abort() call
+    the caller received no bytes; then RST 0.000 s after the Abort() call
+  run 2: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.3 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.', 0.000 s after the Abort() call
+    the caller received no bytes; then RST 0.000 s after the Abort() call
+  run 3: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.3 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.', 0.000 s after the Abort() call
+    the caller received no bytes; then RST 0.000 s after the Abort() call
+  run 4: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.4 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.', 0.001 s after the Abort() call
+    the caller received no bytes; then RST 0.001 s after the Abort() call
+  run 5: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.7 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.', 0.001 s after the Abort() call
+    the caller received no bytes; then RST 0.001 s after the Abort() call
+  tally of the pending read: HttpListenerException 995 5/5
+
+== 3b. A pending body ReadAsync on a CHUNKED request body: a head with Transfer-Encoding: chunked, one 1,000-byte chunk (3E8), then the
+   caller stalls with the socket open and keeps a receive pending. The server reads until a ReadAsync stays pending for 0.5 s; 1 s
+   later StatusCode = 408 and Response.Abort() (a thread of its own, 10 s watchdog). Reported: what the pending read did and when,
+   and what the caller received (its receive waits up to 3 s for FIN or RST).
+  run 1: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.3 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.', 0.000 s after the Abort() call
+    the caller received no bytes; then RST 0.000 s after the Abort() call
+  run 2: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.3 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.', 0.001 s after the Abort() call
+    the caller received no bytes; then RST 0.000 s after the Abort() call
+  run 3: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.2 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.', 0.000 s after the Abort() call
+    the caller received no bytes; then RST 0.000 s after the Abort() call
+  run 4: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.3 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.', 0.000 s after the Abort() call
+    the caller received no bytes; then RST 0.000 s after the Abort() call
+  run 5: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.3 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.', 0.000 s after the Abort() call
+    the caller received no bytes; then RST 0.000 s after the Abort() call
+  tally of the pending read: HttpListenerException 995 5/5
+
+== 3c-length. Beyond the six claims: when does a pending ReadAsync(64 KiB) return while the body trickles in? The caller sends
+   a head with Content-Length: 100000 and 1,000 body bytes, 100 more bytes at 1 s and at 2 s, 70,000 more at 3 s, then stalls.
+   The server keeps one ReadAsync(64 KiB) pending at a time from the moment it has the context. Listed: each read's result, timed from
+   when the head was sent; at 6 s Response.Abort() ends the run (what it did to the pending read is listed too).
+  run 1: reads: (100 more sent at 1.01 s); (100 more sent at 2.00 s); (70,000 more sent at 3.01 s); 65536 bytes at 3.01 s; (Abort() at 6.01 s); threw at 6.01 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+  run 2: reads: (100 more sent at 1.01 s); (100 more sent at 2.00 s); (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; (Abort() at 6.01 s); threw at 6.01 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+  run 3: reads: (100 more sent at 1.00 s); (100 more sent at 2.01 s); (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; (Abort() at 6.01 s); threw at 6.01 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+  run 4: reads: (100 more sent at 1.01 s); (100 more sent at 2.01 s); (70,000 more sent at 3.01 s); 65536 bytes at 3.01 s; (Abort() at 6.00 s); threw at 6.01 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+  run 5: reads: (100 more sent at 1.00 s); (100 more sent at 2.00 s); (70,000 more sent at 3.01 s); 65536 bytes at 3.01 s; (Abort() at 6.01 s); threw at 6.01 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+
+== 3c-chunked. Beyond the six claims: when does a pending ReadAsync(64 KiB) return while the body trickles in? The caller sends
+   a head with Transfer-Encoding: chunked and one 1,000-byte chunk, a 100-byte chunk at 1 s and at 2 s, a 70,000-byte chunk at 3 s, then stalls.
+   The server keeps one ReadAsync(64 KiB) pending at a time from the moment it has the context. Listed: each read's result, timed from
+   when the head was sent; at 6 s Response.Abort() ends the run (what it did to the pending read is listed too).
+  run 1: reads: (100 more sent at 1.00 s); (100 more sent at 2.00 s); (70,000 more sent at 3.01 s); 65536 bytes at 3.01 s; (Abort() at 6.00 s); threw at 6.00 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+  run 2: reads: (100 more sent at 1.01 s); (100 more sent at 2.01 s); (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; (Abort() at 6.01 s); threw at 6.01 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+  run 3: reads: (100 more sent at 1.01 s); (100 more sent at 2.00 s); (70,000 more sent at 3.02 s); 65536 bytes at 3.02 s; (Abort() at 6.01 s); threw at 6.01 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+  run 4: reads: (100 more sent at 1.00 s); (100 more sent at 2.00 s); (70,000 more sent at 3.01 s); 65536 bytes at 3.01 s; (Abort() at 6.01 s); threw at 6.01 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+  run 5: reads: (100 more sent at 1.00 s); (100 more sent at 2.01 s); (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; (Abort() at 6.01 s); threw at 6.01 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+
+== 4. HttpListener.Close() (a thread of its own, 10 s watchdog) with (a) a caller stalled mid-head (request line and Host, no blank
+   line) and (b) an idle kept-alive connection after one complete exchange (GET; 200 with Content-Length: 2, read whole). Both keep
+   a receive pending; reported is what each receives in the 6 s after the Close() call. A new listener per run.
+  run 1: (b)'s first exchange read whole (108 bytes)
+    HttpListener.Close(): returned after 0.6 ms
+    (a) the mid-head caller received no bytes; then RST 0.001 s after the Close() call
+    (b) the idle kept-alive caller received no bytes; then RST 0.001 s after the Close() call
+  run 2: (b)'s first exchange read whole (108 bytes)
+    HttpListener.Close(): returned after 0.7 ms
+    (a) the mid-head caller received no bytes; then RST 0.001 s after the Close() call
+    (b) the idle kept-alive caller received no bytes; then RST 0.001 s after the Close() call
+  run 3: (b)'s first exchange read whole (108 bytes)
+    HttpListener.Close(): returned after 0.5 ms
+    (a) the mid-head caller received no bytes; then RST 0.000 s after the Close() call
+    (b) the idle kept-alive caller received no bytes; then RST 0.000 s after the Close() call
+  run 4: (b)'s first exchange read whole (108 bytes)
+    HttpListener.Close(): returned after 0.7 ms
+    (a) the mid-head caller received no bytes; then RST 0.001 s after the Close() call
+    (b) the idle kept-alive caller received no bytes; then RST 0.001 s after the Close() call
+  run 5: (b)'s first exchange read whole (108 bytes)
+    HttpListener.Close(): returned after 0.8 ms
+    (a) the mid-head caller received no bytes; then RST 0.001 s after the Close() call
+    (b) the idle kept-alive caller received no bytes; then RST 0.001 s after the Close() call
+  tally: a 200 head reached (a) 0/5 and (b) 0/5
+
+== 5. Callers that never complete a head, so the application has no context for them (the managed listener's first-read
+   timer; on Windows, http.sys's own timers). Each case's 5 callers start together and keep a receive pending; watched to
+   210 s after the case starts, concurrently with cases 1 to 4 and 6. Its own listener and port per case.
+  5a: connects and sends nothing
+    run 1: no bytes; then RST 125.187 s after connecting
+    run 2: no bytes; then RST 125.186 s after connecting
+    run 3: no bytes; then RST 125.185 s after connecting
+    run 4: no bytes; then RST 125.185 s after connecting
+    run 5: no bytes; then RST 125.185 s after connecting
+    summary: RST 5/5 at 125.2 to 125.2 s, bytes before it 0/0/0/0/0
+  5b: one complete exchange (GET; 200 with Content-Length: 2, read whole), then idle on keep-alive
+    run 1: no bytes; then RST 125.157 s after the first answer was read
+    run 2: no bytes; then RST 125.128 s after the first answer was read
+    run 3: no bytes; then RST 125.097 s after the first answer was read
+    run 4: no bytes; then RST 125.067 s after the first answer was read
+    run 5: no bytes; then RST 125.035 s after the first answer was read
+    summary: RST 5/5 at 125.0 to 125.2 s, bytes before it 0/0/0/0/0
+  5c: sends one byte of a head (G), then nothing
+    run 1: no bytes; then RST 125.187 s after the byte was sent
+    run 2: no bytes; then RST 125.186 s after the byte was sent
+    run 3: no bytes; then RST 125.185 s after the byte was sent
+    run 4: no bytes; then RST 125.185 s after the byte was sent
+    run 5: no bytes; then RST 125.185 s after the byte was sent
+    summary: RST 5/5 at 125.2 to 125.2 s, bytes before it 0/0/0/0/0
+
+== 6. HttpListenerTimeoutManager. On a new listener that is never started: each getter, then each setter in turn.
+  getters: EntityBody=00:00:00 DrainEntityBody=00:00:00 RequestQueue=00:00:00 IdleConnection=00:00:00 HeaderWait=00:00:00 MinSendBytesPerSecond=0
+  EntityBody = 5 s: set; reads back 00:00:05
+  DrainEntityBody = 5 s: set; reads back 00:00:05
+  RequestQueue = 5 s: set; reads back 00:00:05
+  IdleConnection = 5 s: set; reads back 00:00:05
+  HeaderWait = 5 s: set; reads back 00:00:05
+  MinSendBytesPerSecond = 10000: set; reads back 10000
+   http.sys's timers firing: each case has its own listener and port, its 5 callers start together, watched to 210 s
+   (6b and 6b10k to 540 s). 'netsh' is the URL group's Timeouts section as http.sys reports it after the set.
+  6a: EntityBody at its default, the FIRST request on a connection: a head with Content-Length: 100000 and 1,000 body bytes, then the caller stalls with the socket open and keeps a receive pending; the server reads and keeps a ReadAsync pending
+    run 1: the caller received no bytes; then RST 125.186 s after the body stalled; server: read 0 body bytes, then the pending ReadAsync threw 125.19 s after the body stalled: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+    run 2: the caller received no bytes; then RST 125.185 s after the body stalled; server: read 0 body bytes, then the pending ReadAsync threw 125.19 s after the body stalled: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+    run 3: the caller received no bytes; then RST 125.185 s after the body stalled; server: read 0 body bytes, then the pending ReadAsync threw 125.19 s after the body stalled: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+    run 4: the caller received no bytes; then RST 125.184 s after the body stalled; server: read 0 body bytes, then the pending ReadAsync threw 125.18 s after the body stalled: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+    run 5: the caller received no bytes; then RST 125.184 s after the body stalled; server: read 0 body bytes, then the pending ReadAsync threw 125.18 s after the body stalled: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+    summary: RST 5/5 at 125.2 to 125.2 s, bytes before it 0/0/0/0/0
+  6a5: EntityBody = 5 s, the FIRST request on a connection: a head with Content-Length: 100000 and 1,000 body bytes, then the caller stalls with the socket open and keeps a receive pending; the server reads and keeps a ReadAsync pending
+    netsh: Entity body timeout (secs): 5; Drain entity body timeout (secs): 0; Request queue timeout (secs): 0; Idle connection timeout (secs): 0; Header wait timeout (secs): 0; Minimum send rate (bytes/sec): 0
+    run 1: the caller received no bytes; then RST 9.913 s after the body stalled; server: read 0 body bytes, then the pending ReadAsync threw 9.91 s after the body stalled: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+    run 2: the caller received no bytes; then RST 9.910 s after the body stalled; server: read 0 body bytes, then the pending ReadAsync threw 9.91 s after the body stalled: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+    run 3: the caller received no bytes; then RST 9.909 s after the body stalled; server: read 0 body bytes, then the pending ReadAsync threw 9.91 s after the body stalled: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+    run 4: the caller received no bytes; then RST 9.912 s after the body stalled; server: read 0 body bytes, then the pending ReadAsync threw 9.91 s after the body stalled: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+    run 5: the caller received no bytes; then RST 9.911 s after the body stalled; server: read 0 body bytes, then the pending ReadAsync threw 9.91 s after the body stalled: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=995 NativeErrorCode=995 'The I/O operation has been aborted because of either a thread exit or an application request.'
+    summary: RST 5/5 at 9.9 to 9.9 s, bytes before it 0/0/0/0/0
+  6b: MinSendBytesPerSecond at its default (150 bytes/s), the FIRST request on a connection: GET for a 64 MB Content-Length answer, written as 1,024 awaited WriteAsync calls of 64 KiB; the caller (receive buffer 16 KiB) does not read until the server's write fails or 540 s pass, then reads
+    run 1: server, 446 s into the case, before the caller reads: 0 of 1024 writes completed (0 bytes); write 1 FAULTED 445.70 s after the request, 445.68 s after the first call (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+      then the caller read no bytes; then RST 0.002 s after it started reading
+    run 2: server, 446 s into the case, before the caller reads: 0 of 1024 writes completed (0 bytes); write 1 FAULTED 445.70 s after the request, 445.68 s after the first call (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+      then the caller read no bytes; then RST 0.002 s after it started reading
+    run 3: server, 446 s into the case, before the caller reads: 0 of 1024 writes completed (0 bytes); write 1 FAULTED 445.70 s after the request, 445.68 s after the first call (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+      then the caller read no bytes; then RST 0.002 s after it started reading
+    run 4: server, 446 s into the case, before the caller reads: 0 of 1024 writes completed (0 bytes); write 1 FAULTED 445.70 s after the request, 445.68 s after the first call (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+      then the caller read no bytes; then RST 0.002 s after it started reading
+    run 5: server, 446 s into the case, before the caller reads: 0 of 1024 writes completed (0 bytes); write 1 FAULTED 445.70 s after the request, 445.68 s after the first call (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+      then the caller read no bytes; then RST 0.002 s after it started reading
+    summary: the server's write faulted in 5/5 before the caller read
+  6b10k: MinSendBytesPerSecond = 10000, the FIRST request on a connection: GET for a 64 MB Content-Length answer, written as 1,024 awaited WriteAsync calls of 64 KiB; the caller (receive buffer 16 KiB) does not read until the server's write fails or 540 s pass, then reads
+    netsh: Entity body timeout (secs): 0; Drain entity body timeout (secs): 0; Request queue timeout (secs): 0; Idle connection timeout (secs): 0; Header wait timeout (secs): 0; Minimum send rate (bytes/sec): 10000
+    run 1: server, 15 s into the case, before the caller reads: 0 of 1024 writes completed (0 bytes); write 1 FAULTED 14.92 s after the request, 14.92 s after the first call (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+      then the caller read no bytes; then RST 0.000 s after it started reading
+    run 2: server, 15 s into the case, before the caller reads: 0 of 1024 writes completed (0 bytes); write 1 FAULTED 14.92 s after the request, 14.92 s after the first call (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+      then the caller read no bytes; then RST 0.000 s after it started reading
+    run 3: server, 15 s into the case, before the caller reads: 0 of 1024 writes completed (0 bytes); write 1 FAULTED 14.92 s after the request, 14.92 s after the first call (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+      then the caller read no bytes; then RST 0.000 s after it started reading
+    run 4: server, 15 s into the case, before the caller reads: 0 of 1024 writes completed (0 bytes); write 1 FAULTED 14.92 s after the request, 14.92 s after the first call (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+      then the caller read no bytes; then RST 0.000 s after it started reading
+    run 5: server, 15 s into the case, before the caller reads: 0 of 1024 writes completed (0 bytes); write 1 FAULTED 14.92 s after the request, 14.92 s after the first call (its Task faulted): System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+      then the caller read no bytes; then RST 0.000 s after it started reading
+    summary: the server's write faulted in 5/5 before the caller read
+  6c: HeaderWait at its default, a LATER request: one complete exchange, then a partial second head (request line and Host, no blank line)
+    run 1: no bytes; then RST 125.157 s after the partial head was sent
+    run 2: no bytes; then RST 125.128 s after the partial head was sent
+    run 3: no bytes; then RST 125.097 s after the partial head was sent
+    run 4: no bytes; then RST 125.067 s after the partial head was sent
+    run 5: no bytes; then RST 125.035 s after the partial head was sent
+    summary: RST 5/5 at 125.0 to 125.2 s, bytes before it 0/0/0/0/0
+  6c5: HeaderWait = 5 s, a LATER request: one complete exchange, then a partial second head
+    netsh: Entity body timeout (secs): 0; Drain entity body timeout (secs): 0; Request queue timeout (secs): 0; Idle connection timeout (secs): 0; Header wait timeout (secs): 5; Minimum send rate (bytes/sec): 0
+    run 1: no bytes; then RST 9.889 s after the partial head was sent
+    run 2: no bytes; then RST 9.857 s after the partial head was sent
+    run 3: no bytes; then RST 9.826 s after the partial head was sent
+    run 4: no bytes; then RST 9.795 s after the partial head was sent
+    run 5: no bytes; then RST 9.760 s after the partial head was sent
+    summary: RST 5/5 at 9.8 to 9.9 s, bytes before it 0/0/0/0/0
+  6c5first: HeaderWait = 5 s, the FIRST request on a connection: a partial head (request line and Host, no blank line)
+    netsh: Entity body timeout (secs): 0; Drain entity body timeout (secs): 0; Request queue timeout (secs): 0; Idle connection timeout (secs): 0; Header wait timeout (secs): 5; Minimum send rate (bytes/sec): 0
+    run 1: no bytes; then RST 125.088 s after the partial head was sent
+    run 2: no bytes; then RST 125.088 s after the partial head was sent
+    run 3: no bytes; then RST 125.087 s after the partial head was sent
+    run 4: no bytes; then RST 125.087 s after the partial head was sent
+    run 5: no bytes; then RST 125.087 s after the partial head was sent
+    summary: RST 5/5 at 125.1 to 125.1 s, bytes before it 0/0/0/0/0
+  6d5: IdleConnection = 5 s: one complete exchange, then idle on keep-alive
+    netsh: Entity body timeout (secs): 0; Drain entity body timeout (secs): 0; Request queue timeout (secs): 0; Idle connection timeout (secs): 5; Header wait timeout (secs): 0; Minimum send rate (bytes/sec): 0
+    run 1: no bytes; then RST 9.890 s after the first answer was read
+    run 2: no bytes; then RST 9.857 s after the first answer was read
+    run 3: no bytes; then RST 9.826 s after the first answer was read
+    run 4: no bytes; then RST 9.795 s after the first answer was read
+    run 5: no bytes; then RST 9.760 s after the first answer was read
+    summary: RST 5/5 at 9.8 to 9.9 s, bytes before it 0/0/0/0/0
+  6d5first: IdleConnection = 5 s: connects and sends nothing (no first request)
+    netsh: Entity body timeout (secs): 0; Drain entity body timeout (secs): 0; Request queue timeout (secs): 0; Idle connection timeout (secs): 5; Header wait timeout (secs): 0; Minimum send rate (bytes/sec): 0
+    run 1: no bytes; then RST 125.088 s after connecting
+    run 2: no bytes; then RST 125.088 s after connecting
+    run 3: no bytes; then RST 125.087 s after connecting
+    run 4: no bytes; then RST 125.087 s after connecting
+    run 5: no bytes; then RST 125.087 s after connecting
+    summary: RST 5/5 at 125.1 to 125.1 s, bytes before it 0/0/0/0/0
+
+Done at 446 s.

@@ -1,0 +1,160 @@
+dotnet --info (excerpt):
+.NET SDK:
+ Version:           10.0.300
+ Commit:            caa81fa497
+Runtime Environment:
+ OS Name:     Windows
+ OS Version:  10.0.26200
+ OS Platform: Windows
+ RID:         win-x64
+Host:
+  Version:      10.0.11
+  Architecture: x64
+  Commit:       e2f47b0110
+
+send-rate-piece-probe on .NET 10.0.11, Microsoft Windows 10.0.26200 (win-x64), 20 logical CPUs
+Windows build 10.0.26200.9711 (25H2); http.sys file version 6.2.26100.9711
+started 2026-10-15 08:45:41Z, capped at 480 s. Times are seconds from the probe's start.
+server: HttpListener on http://localhost:56578/ with its default timeouts (TimeoutManager untouched); callers connect to ::1, localhost's first address
+
+netsh http show servicestate view=requestq, the request queue that serves the port:
+  URL group FE00000720000011, Timeouts: Timeout values inherited
+  registered URL: HTTP://LOCALHOST:56578/
+  server session F60000071000001B, Timeouts: Entity body timeout (secs): 120; Drain entity body timeout (secs): 120; Request queue timeout (secs): 120; Idle connection timeout (secs): 120; Header wait timeout (secs): 120; Minimum send rate (bytes/sec): 150
+
+the answer's head, read from a HEAD exchange on a separate connection: 112 bytes, 'HTTP/1.1 200 OK\r\nContent-Length: 8388608\r\nServer: Microsoft-HTTPAPI/2.0\r\nDate: Thu, 15 Oct 2026 08:45:41 GMT\r\n\r\n'
+callers: 9 raw sockets, 3 per piece size, each with ReceiveBufferSize = 16,384; none posts a receive until the server's write has failed
+the nine requests were sent from 0.744 to 0.744 s
+
+== Each connection. The stall began when the last write completed or, if none did, when write 1 was called (write 1 carries the
+   head). 'model' is ../listener/README.md's: the pending send's bytes / 150 B/s, rounded up to a multiple of 5 s, plus 5 s. A
+   timer that is checked every 5 s fires between that rounded value and the model, depending on its phase: the 'window'.
+   'all bytes' is the same rule over every byte posted since write 1 was called, the head included, timed from that call.
+   'not at the caller' is the same rule over the bytes posted (head, completed writes and the pending one) less the bytes the
+   caller's socket held when the probe saw the stall: what TCP still had to deliver.
+
+16 KiB #1 (caller port 56580): request sent at 0.744; the server had its context at 0.756 (piece=16384)
+  writes: 1 of 512 completed, 16,384 body bytes (the 112-byte head went out with write 1); the longest WriteAsync call took 1.709 ms to return its Task
+  completions, ms after write 1 was called: 2.084
+  the stall began at 0.760, when write 1 completed; write 2 was called 0.001 ms later; the caller held 16,384 B when the probe saw the stall at 1.794
+  posted (head, 1 completed writes and the pending one): 32,880 B; not at the caller when the probe saw the stall: 16,496 B, so 109.97 s, model 115 s
+  write 2 (16,384 B) FAILED at 120.972 (its Task faulted), 120.212 s after the stall began: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+  model for that send: 16,384 / 150 = 109.23 s, rounded up to 110 s, + 5 s = 115 s (window 110 to 115 s); measured minus model = +5.212 s
+  all bytes since write 1 was called: 32,880 B, so 219.20 s, model 225 s; measured 120.214 s after write 1 was called
+  the caller held 16,384 B at its last poll before the failure; Available over the run: 16,384 B from 1.02, 0 B from 121.11
+  TCP table: the caller's end was Established at 120.85 and gone at 121.11; http.sys's end was Established at 120.85 and gone at 121.11
+  the caller was told to read at 121.113 and read 0 bytes, then RST 0.001 s after it started reading
+
+16 KiB #2 (caller port 56581): request sent at 0.744; the server had its context at 0.757 (piece=16384)
+  writes: 1 of 512 completed, 16,384 body bytes (the 112-byte head went out with write 1); the longest WriteAsync call took 1.708 ms to return its Task
+  completions, ms after write 1 was called: 2.081
+  the stall began at 0.760, when write 1 completed; write 2 was called 0.001 ms later; the caller held 16,384 B when the probe saw the stall at 1.794
+  posted (head, 1 completed writes and the pending one): 32,880 B; not at the caller when the probe saw the stall: 16,496 B, so 109.97 s, model 115 s
+  write 2 (16,384 B) FAILED at 120.972 (its Task faulted), 120.212 s after the stall began: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+  model for that send: 16,384 / 150 = 109.23 s, rounded up to 110 s, + 5 s = 115 s (window 110 to 115 s); measured minus model = +5.212 s
+  all bytes since write 1 was called: 32,880 B, so 219.20 s, model 225 s; measured 120.214 s after write 1 was called
+  the caller held 16,384 B at its last poll before the failure; Available over the run: 16,384 B from 1.02, 0 B from 121.11
+  TCP table: the caller's end was Established at 120.85 and gone at 121.11; http.sys's end was Established at 120.85 and gone at 121.11
+  the caller was told to read at 121.113 and read 0 bytes, then RST 0.001 s after it started reading
+
+16 KiB #3 (caller port 56582): request sent at 0.744; the server had its context at 0.758 (piece=16384)
+  writes: 1 of 512 completed, 16,384 body bytes (the 112-byte head went out with write 1); the longest WriteAsync call took 1.561 ms to return its Task
+  completions, ms after write 1 was called: 1.968
+  the stall began at 0.760, when write 1 completed; write 2 was called 0.001 ms later; the caller held 16,384 B when the probe saw the stall at 1.794
+  posted (head, 1 completed writes and the pending one): 32,880 B; not at the caller when the probe saw the stall: 16,496 B, so 109.97 s, model 115 s
+  write 2 (16,384 B) FAILED at 120.972 (its Task faulted), 120.212 s after the stall began: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+  model for that send: 16,384 / 150 = 109.23 s, rounded up to 110 s, + 5 s = 115 s (window 110 to 115 s); measured minus model = +5.212 s
+  all bytes since write 1 was called: 32,880 B, so 219.20 s, model 225 s; measured 120.214 s after write 1 was called
+  the caller held 16,384 B at its last poll before the failure; Available over the run: 16,384 B from 1.02, 0 B from 121.11
+  TCP table: the caller's end was Established at 120.85 and gone at 121.11; http.sys's end was Established at 120.85 and gone at 121.11
+  the caller was told to read at 121.113 and read 0 bytes, then RST 0.000 s after it started reading
+
+4 KiB #1 (caller port 56583): request sent at 0.744; the server had its context at 0.758 (piece=4096)
+  writes: 8 of 2048 completed, 32,768 body bytes (the 112-byte head went out with write 1); the longest WriteAsync call took 1.311 ms to return its Task
+  completions, ms after write 1 was called: 1.709, 1.845, 1.978, 2.055, 2.171, 2.308, 2.408, 2.507
+  the stall began at 0.761, when write 8 completed; write 9 was called 0.000 ms later; the caller held 16,384 B when the probe saw the stall at 1.794
+  posted (head, 8 completed writes and the pending one): 36,976 B; not at the caller when the probe saw the stall: 20,592 B, so 137.28 s, model 145 s
+  write 9 (4,096 B) FAILED at 40.779 (its Task faulted), 40.019 s after the stall began: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+  model for that send: 4,096 / 150 = 27.31 s, rounded up to 30 s, + 5 s = 35 s (window 30 to 35 s); measured minus model = +5.019 s
+  all bytes since write 1 was called: 36,976 B, so 246.51 s, model 255 s; measured 40.021 s after write 1 was called
+  the caller held 16,384 B at its last poll before the failure; Available over the run: 16,384 B from 1.02, 0 B from 40.86
+  TCP table: the caller's end was Established at 40.61 and gone at 40.86; http.sys's end was Established at 40.61 and gone at 40.86
+  the caller was told to read at 40.864 and read 0 bytes, then RST 0.027 s after it started reading
+
+4 KiB #2 (caller port 56584): request sent at 0.744; the server had its context at 0.758 (piece=4096)
+  writes: 8 of 2048 completed, 32,768 body bytes (the 112-byte head went out with write 1); the longest WriteAsync call took 1.085 ms to return its Task
+  completions, ms after write 1 was called: 1.485, 1.825, 1.969, 2.088, 2.172, 2.275, 2.354, 2.431
+  the stall began at 0.761, when write 8 completed; write 9 was called 0.000 ms later; the caller held 16,384 B when the probe saw the stall at 1.794
+  posted (head, 8 completed writes and the pending one): 36,976 B; not at the caller when the probe saw the stall: 20,592 B, so 137.28 s, model 145 s
+  write 9 (4,096 B) FAILED at 40.779 (its Task faulted), 40.019 s after the stall began: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+  model for that send: 4,096 / 150 = 27.31 s, rounded up to 30 s, + 5 s = 35 s (window 30 to 35 s); measured minus model = +5.019 s
+  all bytes since write 1 was called: 36,976 B, so 246.51 s, model 255 s; measured 40.021 s after write 1 was called
+  the caller held 16,384 B at its last poll before the failure; Available over the run: 16,384 B from 1.02, 0 B from 40.87
+  TCP table: the caller's end was Established at 40.61 and gone at 40.87; http.sys's end was Established at 40.61 and gone at 40.87
+  the caller was told to read at 40.866 and read 0 bytes, then RST 0.025 s after it started reading
+
+4 KiB #3 (caller port 56585): request sent at 0.744; the server had its context at 0.758 (piece=4096)
+  writes: 8 of 2048 completed, 32,768 body bytes (the 112-byte head went out with write 1); the longest WriteAsync call took 0.648 ms to return its Task
+  completions, ms after write 1 was called: 1.062, 1.492, 1.858, 2.306, 2.417, 2.565, 2.927, 3.051
+  the stall began at 0.762, when write 8 completed; write 9 was called 0.000 ms later; the caller held 16,384 B when the probe saw the stall at 1.794
+  posted (head, 8 completed writes and the pending one): 36,976 B; not at the caller when the probe saw the stall: 20,592 B, so 137.28 s, model 145 s
+  write 9 (4,096 B) FAILED at 40.779 (its Task faulted), 40.018 s after the stall began: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+  model for that send: 4,096 / 150 = 27.31 s, rounded up to 30 s, + 5 s = 35 s (window 30 to 35 s); measured minus model = +5.018 s
+  all bytes since write 1 was called: 36,976 B, so 246.51 s, model 255 s; measured 40.021 s after write 1 was called
+  the caller held 16,384 B at its last poll before the failure; Available over the run: 16,384 B from 1.02, 0 B from 40.87
+  TCP table: the caller's end was Established at 40.61 and gone at 40.87; http.sys's end was Established at 40.61 and gone at 40.87
+  the caller was told to read at 40.866 and read 0 bytes, then RST 0.025 s after it started reading
+
+1 KiB #1 (caller port 56586): request sent at 0.744; the server had its context at 0.759 (piece=1024)
+  writes: 96 of 8192 completed, 98,304 body bytes (the 112-byte head went out with write 1); the longest WriteAsync call took 0.558 ms to return its Task
+  completions, ms after write 1 was called: 0.559, 0.689, 0.750, 0.816, 0.861, 0.909, 0.954, 1.008, 1.059, 1.101, 1.150, 1.207, 1.260, 1.308, 1.352, 1.410, 1.457, 1.505, 1.553, 1.612, 1.667, 1.700, 1.724, 1.752, 1.775, 1.801, 1.827, 1.853, 1.884, 1.908, 1.939, 1.972, 1.980, 1.995, 2.004, 2.014, 2.025, 2.032, 2.040, 2.048, 2.056, 2.066, 2.075, 2.082, 2.091, 2.100, 2.110, 2.119, 2.128, 2.143, 2.152, 2.160, 2.170, 2.178, 2.186, 2.196, 2.204, 2.213, 2.221, 2.230, 2.239, 2.247, 2.256, 2.265, 2.275, 2.283, 2.292, 2.305, 2.313, 2.322, 2.330, 2.339, 2.348, 2.357, 2.365, 2.375, 2.383, 2.392, 2.401, 2.412, 2.422, 2.431, 2.440, 2.450, 2.460, 2.478, 2.488, 2.498, 2.508, 2.517, 2.526, 2.537, 2.545, 2.553, 2.560, 2.567
+  the stall began at 0.762, when write 96 completed; write 97 was called 0.000 ms later; the caller held 16,384 B when the probe saw the stall at 1.794
+  posted (head, 96 completed writes and the pending one): 99,440 B; not at the caller when the probe saw the stall: 83,056 B, so 553.71 s, model 560 s
+  write 97 (1,024 B) FAILED at 396.732 (its Task faulted), 395.971 s after the stall began: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+  model for that send: 1,024 / 150 = 6.83 s, rounded up to 10 s, + 5 s = 15 s (window 10 to 15 s); measured minus model = +380.971 s
+  all bytes since write 1 was called: 99,440 B, so 662.93 s, model 670 s; measured 395.973 s after write 1 was called
+  the caller held 16,384 B at its last poll before the failure; Available over the run: 16,384 B from 1.02, 0 B from 396.87
+  TCP table: the caller's end was Established at 396.62 and gone at 396.87; http.sys's end was Established at 396.62 and gone at 396.87
+  the caller was told to read at 396.874 and read 0 bytes, then RST 0.001 s after it started reading
+
+1 KiB #2 (caller port 56587): request sent at 0.744; the server had its context at 0.759 (piece=1024)
+  writes: 96 of 8192 completed, 98,304 body bytes (the 112-byte head went out with write 1); the longest WriteAsync call took 0.262 ms to return its Task
+  completions, ms after write 1 was called: 0.165, 0.313, 0.367, 0.420, 0.463, 0.512, 0.559, 0.614, 0.667, 0.710, 0.753, 0.811, 0.867, 0.916, 0.959, 1.015, 1.061, 1.106, 1.158, 1.213, 1.285, 1.342, 1.393, 1.439, 1.490, 1.536, 1.580, 1.624, 1.672, 1.714, 1.977, 2.052, 2.078, 2.091, 2.104, 2.116, 2.137, 2.154, 2.163, 2.176, 2.185, 2.194, 2.203, 2.211, 2.219, 2.227, 2.235, 2.252, 2.277, 2.301, 2.314, 2.323, 2.331, 2.339, 2.348, 2.357, 2.365, 2.373, 2.381, 2.390, 2.400, 2.408, 2.417, 2.424, 2.431, 2.439, 2.452, 2.459, 2.466, 2.474, 2.485, 2.493, 2.502, 2.510, 2.519, 2.527, 2.536, 2.544, 2.553, 2.563, 2.570, 2.579, 2.586, 2.595, 2.607, 2.615, 2.623, 2.631, 2.641, 2.649, 2.657, 2.665, 2.674, 2.682, 2.691, 2.699
+  the stall began at 0.762, when write 96 completed; write 97 was called 0.000 ms later; the caller held 16,384 B when the probe saw the stall at 1.794
+  posted (head, 96 completed writes and the pending one): 99,440 B; not at the caller when the probe saw the stall: 83,056 B, so 553.71 s, model 560 s
+  write 97 (1,024 B) FAILED at 406.744 (its Task faulted), 405.982 s after the stall began: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+  model for that send: 1,024 / 150 = 6.83 s, rounded up to 10 s, + 5 s = 15 s (window 10 to 15 s); measured minus model = +390.982 s
+  all bytes since write 1 was called: 99,440 B, so 662.93 s, model 670 s; measured 405.984 s after write 1 was called
+  the caller held 16,384 B at its last poll before the failure; Available over the run: 16,384 B from 1.02, 0 B from 406.84
+  TCP table: the caller's end was Established at 406.57 and gone at 406.84; http.sys's end was Established at 406.57 and gone at 406.84
+  the caller was told to read at 406.837 and read 0 bytes, then RST 0.000 s after it started reading
+
+1 KiB #3 (caller port 56588): request sent at 0.744; the server had its context at 0.760 (piece=1024)
+  writes: 96 of 8192 completed, 98,304 body bytes (the 112-byte head went out with write 1); the longest WriteAsync call took 0.086 ms to return its Task
+  completions, ms after write 1 was called: 0.087, 0.123, 0.150, 0.176, 0.197, 0.225, 0.282, 0.367, 0.399, 0.432, 0.453, 0.480, 0.510, 0.536, 0.565, 0.590, 0.614, 0.635, 0.659, 0.684, 0.710, 0.741, 0.763, 0.781, 0.798, 0.820, 0.840, 0.869, 0.902, 0.929, 0.951, 0.984, 0.990, 1.002, 1.011, 1.018, 1.027, 1.035, 1.042, 1.050, 1.057, 1.066, 1.073, 1.080, 1.088, 1.096, 1.105, 1.115, 1.123, 1.138, 1.146, 1.154, 1.162, 1.171, 1.180, 1.190, 1.197, 1.204, 1.211, 1.219, 1.226, 1.235, 1.242, 1.248, 1.255, 1.262, 1.275, 1.283, 1.294, 1.303, 1.312, 1.324, 1.334, 1.345, 1.351, 1.362, 1.373, 1.408, 1.421, 1.429, 1.439, 1.447, 1.478, 1.490, 1.503, 1.513, 1.522, 1.550, 1.567, 1.582, 1.593, 1.602, 1.614, 1.634, 1.645, 1.658
+  the stall began at 0.762, when write 96 completed; write 97 was called 0.000 ms later; the caller held 16,384 B when the probe saw the stall at 1.794
+  posted (head, 96 completed writes and the pending one): 99,440 B; not at the caller when the probe saw the stall: 83,056 B, so 553.71 s, model 560 s
+  write 97 (1,024 B) FAILED at 396.732 (its Task faulted), 395.971 s after the stall began: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=1236 NativeErrorCode=1236 'The network connection was aborted by the local system.'
+  model for that send: 1,024 / 150 = 6.83 s, rounded up to 10 s, + 5 s = 15 s (window 10 to 15 s); measured minus model = +380.971 s
+  all bytes since write 1 was called: 99,440 B, so 662.93 s, model 670 s; measured 395.972 s after write 1 was called
+  the caller held 16,384 B at its last poll before the failure; Available over the run: 16,384 B from 1.02, 0 B from 396.87
+  TCP table: the caller's end was Established at 396.62 and gone at 396.87; http.sys's end was Established at 396.62 and gone at 396.87
+  the caller was told to read at 396.874 and read 0 bytes, then RST 0.001 s after it started reading
+
+== Summary, one row per connection. Times in seconds; 'after stall' is when the pending write failed, less when the stall began.
+piece   caller writes done bytes before stall pending send stall began failed at after stall model minus model all-bytes model not-at-caller model  exception
+16 KiB  #1               1             16,384       16,384       0.760   120.972     120.212   115      +5.212             225                 115  HttpListenerException 1236
+16 KiB  #2               1             16,384       16,384       0.760   120.972     120.212   115      +5.212             225                 115  HttpListenerException 1236
+16 KiB  #3               1             16,384       16,384       0.760   120.972     120.212   115      +5.212             225                 115  HttpListenerException 1236
+4 KiB   #1               8             32,768        4,096       0.761    40.779      40.019    35      +5.019             255                 145  HttpListenerException 1236
+4 KiB   #2               8             32,768        4,096       0.761    40.779      40.019    35      +5.019             255                 145  HttpListenerException 1236
+4 KiB   #3               8             32,768        4,096       0.762    40.779      40.018    35      +5.018             255                 145  HttpListenerException 1236
+1 KiB   #1              96             98,304        1,024       0.762   396.732     395.971    15    +380.971             670                 560  HttpListenerException 1236
+1 KiB   #2              96             98,304        1,024       0.762   406.744     405.982    15    +390.982             670                 560  HttpListenerException 1236
+1 KiB   #3              96             98,304        1,024       0.762   396.732     395.971    15    +380.971             670                 560  HttpListenerException 1236
+
+16 KiB: the pending write failed in 3 of 3, 120.212 to 120.212 s after the stall; model 115 s (window 110 to 115 s); body bytes before the stall 16,384/16,384/16,384
+4 KiB: the pending write failed in 3 of 3, 40.018 to 40.019 s after the stall; model 35 s (window 30 to 35 s); body bytes before the stall 32,768/32,768/32,768
+1 KiB: the pending write failed in 3 of 3, 395.971 to 405.982 s after the stall; model 15 s (window 10 to 15 s); body bytes before the stall 98,304/98,304/98,304
+
+done at 407.1 s

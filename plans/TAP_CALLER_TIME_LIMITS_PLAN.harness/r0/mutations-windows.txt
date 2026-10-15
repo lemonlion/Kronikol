@@ -1,0 +1,84 @@
+P1 the client's timeout ForwardTimeout plus 10 s again (R0-1): KILLED
+    proxy: [('Failed!', '4', '24')] failed facts: ['A_timeout_too_long_to_set_means_no_deadline(option:', 'An_infinite_forward_timeout_never_cuts_a_slow_upstream']
+P2 a zero ForwardTimeout accepted (R0-7): KILLED
+    proxy: [('Failed!', '1', '27')] failed facts: ['Forward_and_connect_timeouts_are_checked_at_start(option:']
+P3 the forward's deadline set whatever its length (R0-7): KILLED
+    proxy: [('Failed!', '1', '27')] failed facts: ['A_timeout_too_long_to_set_means_no_deadline(option:']
+P4 ConnectTimeout handed to the handler whatever its length (R0-7): KILLED
+    proxy: [('Failed!', '2', '26')] failed facts: ['A_timeout_too_long_to_set_means_no_deadline(option:']
+P5 no answer still reading its body ended as the stop begins (R0-8): KILLED
+    proxy: [('Failed!', '2', '26')] failed facts: ['A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded', 'Stopping_the_tap_never_tells_a_caller_still_sending_its_body_that_it_succeeded']
+P6 no drain before the listener closes (R0-8): KILLED
+    proxy: [('Failed!', '4', '24')] failed facts: ['A_throwing_log_callback_changes_nothing(line:', 'Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names', 'Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it', 'Stopping_the_tap_lets_an_answer_in_hand_finish']
+P7 a request that arrives while the tap stops is forwarded (R0-8): KILLED
+    proxy: [('Failed!', '1', '27')] failed facts: ['Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it']
+P8 an answer written while the tap stops keeps its connection (R0-8): KILLED
+    proxy: [('Failed!', '3', '25')] failed facts: ['A_throwing_log_callback_changes_nothing(line:', 'Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names', 'Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it']
+P9 a forward cut short by the stop not answered (R0-8): KILLED
+    proxy: [('Failed!', '3', '25')] failed facts: ['A_throwing_log_callback_changes_nothing(line:', 'Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names', 'Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it']
+P10 the lifetime read from _cts again (R0-12): SURVIVED
+    proxy: [('Passed!', '0', '28')] failed facts: []
+P11 the forward begun after the stop ended the answer (R0-8): SURVIVED
+    proxy: [('Passed!', '0', '28')] failed facts: []
+P12 the start line unguarded (R0-5): KILLED
+    proxy: [('Failed!', '2', '26')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+P13 a capture fault's line unguarded (R0-5): KILLED
+    proxy: [('Failed!', '1', '27')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+P14 the catch-all's line unguarded (R0-5): KILLED
+    proxy: [('Failed!', '1', '27')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+P15 a negative BodyCapBytes accepted (R0-6): KILLED
+    proxy: [('Failed!', '1', '27')] failed facts: ['A_negative_cap_is_refused']
+O1 the answer closed at once, no FIN and no linger (R0-2): KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['An_unauthenticated_export_still_sending_its_body_hears_its_401']
+O2 a FIN, then the close at once (R0-2): KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['An_unauthenticated_export_still_sending_its_body_hears_its_401']
+O3 the secret checked after the body is read (R0-2): KILLED
+    otlp: [('Failed!', '8', '18')] failed facts: ['A_throwing_log_callback_changes_nothing(line:', 'The_stop_line_names_every_counter', 'A_content_length_of_zero_is_still_an_empty_body', 'An_unauthenticated_export_is_refused_before_its_body_is_read']
+O4 the body allocated at its declared length (R0-3): KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['A_declared_length_is_not_allocated_before_it_arrives']
+O5 a sign taken in Content-Length (R0-4): KILLED
+    otlp: [('Failed!', '2', '24')] failed facts: ['A_content_length_that_is_not_digits_in_range_is_refused(contentLength:']
+O6 digits past int answered 400, not 413 (R0-4): KILLED
+    otlp: [('Failed!', '2', '24')] failed facts: ['A_content_length_that_is_not_digits_in_range_is_refused(contentLength:']
+O7 an over-cap drain cut short still refused as too large (R0-9): KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['An_over_cap_body_cut_short_is_not_counted']
+O8 both framings keep the connection (R0-11): KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['A_request_with_both_framings_closes_its_connection']
+O9 the stop line without the new counters (R0-10): KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['The_stop_line_names_every_counter']
+O10 the unauthenticated line unguarded (R0-5): KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+O11 the map loop's line unguarded (R0-5): KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+O12 the queue-full line unguarded (R0-5): KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+O13 a negative ContentCapBytes accepted (R0-6): KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['A_negative_cap_is_refused']
+E1 the exporter's refused-batch line unguarded: KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+E2 the sink's drop line unguarded: KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+E3 the sink's flush-timeout line unguarded: KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+E4 the sink's stop line unguarded: KILLED
+    otlp: [('Failed!', '1', '25')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+T1 the decoder's dispose line unguarded (R0-5): KILLED
+    tcp: [('Failed!', '1', '9')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+T2 the reap line unguarded (R0-5): KILLED
+    tcp: [('Failed!', '1', '9')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+T3 the queue-full line unguarded (R0-5): KILLED
+    tcp: [('Failed!', '1', '9')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+T4 the decoder-reset line unguarded (R0-5): KILLED
+    tcp: [('Failed!', '1', '9')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+T5 the reset-threw line unguarded (R0-5): KILLED
+    tcp: [('Failed!', '1', '9')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+T6 the decoding-disabled line unguarded (R0-5): KILLED
+    tcp: [('Failed!', '1', '9')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+T7 the closed-mid-message line unguarded (R0-5): KILLED
+    tcp: [('Failed!', '1', '9')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+T8 the identity resolver's line unguarded (R0-5): KILLED
+    tcp: [('Failed!', '1', '9')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+T9 a decoder's own line unguarded (R0-5): KILLED
+    tcp: [('Failed!', '1', '9')] failed facts: ['A_throwing_log_callback_changes_nothing(line:']
+T10 a negative BodyCapBytes accepted (R0-6): KILLED
+    tcp: [('Failed!', '1', '9')] failed facts: ['A_negative_cap_is_refused']

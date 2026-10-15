@@ -1,0 +1,49 @@
+dotnet --info (excerpt):
+.NET SDK:
+ Version:           10.0.401
+ Commit:            e34a38d2ae
+Runtime Environment:
+ OS Name:     ubuntu
+ OS Version:  24.04
+ OS Platform: Linux
+ RID:         linux-x64
+Host:
+  Version:      10.0.12
+  Architecture: x64
+  Commit:       95017c711e
+
+ProxyTap 4.20.2+83e9783bb2677a12cd8c42acd18001a696686a9b on .NET 10.0.12, Ubuntu 24.04.5 LTS (linux-x64)
+upstream answers 20 s after each request; 3 concurrent caller(s) per case; ProxyTapOptions defaults: ForwardTimeout 00:03:20, ConnectTimeout 00:00:05; started 2026-10-14 08:27:43Z
+
+---- ForwardTimeout = Timeout.InfiniteTimeSpan (-00:00:00.0010000)
+  the tap's HttpClient.Timeout: 00:00:09.9990000
+  3x after 10.1-10.1 s: 502 Bad Gateway, body {"error":{"code":502,"message":"proxy-tap: could not connect to 127.0.0.1:38663 within ConnectTimeout (00:00:05). Caused by: The request was canceled due to the configured HttpClient.Timeout of 9.999 seconds elapsing. Caused by: The operation was canceled. Caused by: The operation was canceled. Caused by: Unable to read data from the transport connection: Operation canceled. Caused by: Operation canceled"}}
+  upstream saw 3 request(s); handled 0, captured 0, ForwardFailures 3
+  Diagnostics(): CaptureDegraded: web→api: 3 request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; each is recorded as a failed call
+  log (3x): [web→api] proxy-tap error: proxy-tap: could not connect to 127.0.0.1:38663 within ConnectTimeout (00:00:05). Caused by: The request was canceled due to the configured HttpClient.Timeout of 9.999 seconds elapsing. Caused by: The operation was canceled. Caused by: The operation was canceled. Caused by: Unable to read data from the transport connection: Operation canceled. Caused by: Operation canceled
+
+---- ForwardTimeout = 30 s (control) (00:00:30)
+  the tap's HttpClient.Timeout: 00:00:40
+  3x after 20.0-20.0 s: 200 OK, body ok
+  upstream saw 3 request(s); handled 3, captured 3, ForwardFailures 0
+
+---- ForwardTimeout = TimeSpan.Zero (00:00:00)
+  the tap's HttpClient.Timeout: 00:00:10
+  2x after 0.0-0.0 s: 502 Bad Gateway, body {"error":{"code":502,"message":"proxy-tap: no answer from 127.0.0.1:40603 within ForwardTimeout (00:00:00). Caused by: The operation was canceled. Caused by: The operation was canceled. Caused by: Cannot access a disposed object.\nObject name: 'System.Net.Sockets.NetworkStream'."}}
+  1x after 0.0-0.0 s: 502 Bad Gateway, body {"error":{"code":502,"message":"proxy-tap: no answer from 127.0.0.1:40603 within ForwardTimeout (00:00:00). Caused by: A task was canceled. Caused by: A task was canceled."}}
+  upstream saw 0 request(s); handled 0, captured 0, ForwardFailures 3
+  Diagnostics(): CaptureDegraded: web→api: 3 request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; each is recorded as a failed call
+  log (1x): [web→api] proxy-tap error: proxy-tap: no answer from 127.0.0.1:40603 within ForwardTimeout (00:00:00). Caused by: A task was canceled. Caused by: A task was canceled.
+  log (2x): [web→api] proxy-tap error: proxy-tap: no answer from 127.0.0.1:40603 within ForwardTimeout (00:00:00). Caused by: The operation was canceled. Caused by: The operation was canceled. Caused by: Cannot access a disposed object.
+Object name: 'System.Net.Sockets.NetworkStream'.
+
+---- ForwardTimeout = -5 s (-00:00:05)
+  the tap's HttpClient.Timeout: 00:00:05
+  3x after 0.0-0.0 s: 502 Bad Gateway, body {"error":{"code":502,"message":"proxy-tap: Specified argument was out of the range of valid values. (Parameter 'delay')"}}
+  upstream saw 0 request(s); handled 0, captured 0, ForwardFailures 3
+  Diagnostics(): CaptureDegraded: web→api: 3 request(s) could not be forwarded and were answered 502 Bad Gateway — the upstream was unreachable, timed out or the exchange threw; 3 were not recorded
+  log (3x): [web→api] proxy-tap error: Specified argument was out of the range of valid values. (Parameter 'delay')
+
+---- ForwardTimeout = -10 s (-00:00:10)
+  StartAsync threw ArgumentOutOfRangeException: value ('00:00:00') must be greater than '00:00:00'. (Parameter 'value') Actual value was 00:00:00.
+

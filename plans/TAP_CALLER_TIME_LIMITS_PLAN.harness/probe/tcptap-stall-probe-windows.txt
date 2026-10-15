@@ -1,0 +1,193 @@
+dotnet --info (excerpt):
+.NET SDK:
+ Version:           10.0.300
+ Commit:            caa81fa497
+Runtime Environment:
+ OS Name:     Windows
+ OS Version:  10.0.26200
+ OS Platform: Windows
+ RID:         win-x64
+Host:
+  Version:      10.0.11
+  Architecture: x64
+  Commit:       e2f47b0110
+
+Kronikol.Extensions.TcpTap 4.20.2+83e9783bb2677a12cd8c42acd18001a696686a9b on .NET 10.0.11, Microsoft Windows 10.0.26200 (win-x64)
+3 pair(s) per case; a sample every 15 s to 90 s; ReapStuckConnectionsAfter 20 s for T3N and T3R, default (null, off) elsewhere; started 2026-10-14 08:27:36Z
+TcpTapOptions defaults: ReapStuckConnectionsAfter null, ConnectTimeout 00:00:05, DrainTimeout 00:00:02, ReadBufferBytes 32,768
+
+---- t = 0 s
+  T1   LiveConnections 3, accepted 3, bytes client>server 21, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap FinWait2/CloseWait
+       upstream: 3x FIN from the tap at 0 s, read 7 B, tcp upstream/tap CloseWait/FinWait2
+  T2   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x FIN from the tap at 0 s, tcp client/tap CloseWait/FinWait2
+       upstream: 3x open, tcp upstream/tap FinWait2/CloseWait
+  T3   LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 1x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 2x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T4   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap Established/Established
+       upstream: 3x open, tcp upstream/tap Established/Established
+  T3N  LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 2x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 1x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T3R  LiveConnections 3, accepted 3, bytes client>server 60, server>client 294,942, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 2x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 1x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+---- t = 15 s
+  T1   LiveConnections 3, accepted 3, bytes client>server 21, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap FinWait2/CloseWait
+       upstream: 3x FIN from the tap at 0 s, read 7 B, tcp upstream/tap CloseWait/FinWait2
+  T2   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x FIN from the tap at 0 s, tcp client/tap CloseWait/FinWait2
+       upstream: 3x open, tcp upstream/tap FinWait2/CloseWait
+  T3   LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 1x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 2x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T4   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap Established/Established
+       upstream: 3x open, tcp upstream/tap Established/Established
+  T3N  LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 2x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 1x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T3R  LiveConnections 3, accepted 3, bytes client>server 60, server>client 294,942, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 2x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 1x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+---- t = 30 s
+  T1   LiveConnections 3, accepted 3, bytes client>server 21, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap FinWait2/CloseWait
+       upstream: 3x FIN from the tap at 0 s, read 7 B, tcp upstream/tap CloseWait/FinWait2
+  T2   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x FIN from the tap at 0 s, tcp client/tap CloseWait/FinWait2
+       upstream: 3x open, tcp upstream/tap FinWait2/CloseWait
+  T3   LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 1x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 2x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T4   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap Established/Established
+       upstream: 3x open, tcp upstream/tap Established/Established
+  T3N  LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 2x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 1x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T3R  LiveConnections 0, accepted 3, bytes client>server 60, server>client 294,942, StuckConnectionsReaped 3, ConnectionsClosedMidMessage 3, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/FinWait1
+       upstream: 2x RST (ConnectionReset) from the tap at 20 s, wrote 786,432 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone | 1x RST (ConnectionReset) from the tap at 20 s, wrote 393,216 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone
+---- t = 45 s
+  T1   LiveConnections 3, accepted 3, bytes client>server 21, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap FinWait2/CloseWait
+       upstream: 3x FIN from the tap at 0 s, read 7 B, tcp upstream/tap CloseWait/FinWait2
+  T2   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x FIN from the tap at 0 s, tcp client/tap CloseWait/FinWait2
+       upstream: 3x open, tcp upstream/tap FinWait2/CloseWait
+  T3   LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 1x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 2x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T4   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap Established/Established
+       upstream: 3x open, tcp upstream/tap Established/Established
+  T3N  LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 2x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 1x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T3R  LiveConnections 0, accepted 3, bytes client>server 60, server>client 294,942, StuckConnectionsReaped 3, ConnectionsClosedMidMessage 3, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/FinWait1
+       upstream: 2x RST (ConnectionReset) from the tap at 20 s, wrote 786,432 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone | 1x RST (ConnectionReset) from the tap at 20 s, wrote 393,216 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone
+---- t = 60 s
+  T1   LiveConnections 3, accepted 3, bytes client>server 21, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap FinWait2/CloseWait
+       upstream: 3x FIN from the tap at 0 s, read 7 B, tcp upstream/tap CloseWait/FinWait2
+  T2   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x FIN from the tap at 0 s, tcp client/tap CloseWait/FinWait2
+       upstream: 3x open, tcp upstream/tap FinWait2/CloseWait
+  T3   LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 1x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 2x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T4   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap Established/Established
+       upstream: 3x open, tcp upstream/tap Established/Established
+  T3N  LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 2x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 1x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T3R  LiveConnections 0, accepted 3, bytes client>server 60, server>client 294,942, StuckConnectionsReaped 3, ConnectionsClosedMidMessage 3, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/FinWait1
+       upstream: 2x RST (ConnectionReset) from the tap at 20 s, wrote 786,432 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone | 1x RST (ConnectionReset) from the tap at 20 s, wrote 393,216 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone
+---- t = 75 s
+  T1   LiveConnections 3, accepted 3, bytes client>server 21, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap FinWait2/CloseWait
+       upstream: 3x FIN from the tap at 0 s, read 7 B, tcp upstream/tap CloseWait/FinWait2
+  T2   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x FIN from the tap at 0 s, tcp client/tap CloseWait/FinWait2
+       upstream: 3x open, tcp upstream/tap FinWait2/CloseWait
+  T3   LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 1x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 2x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T4   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap Established/Established
+       upstream: 3x open, tcp upstream/tap Established/Established
+  T3N  LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 2x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 1x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T3R  LiveConnections 0, accepted 3, bytes client>server 60, server>client 294,942, StuckConnectionsReaped 3, ConnectionsClosedMidMessage 3, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/FinWait1
+       upstream: 2x RST (ConnectionReset) from the tap at 20 s, wrote 786,432 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone | 1x RST (ConnectionReset) from the tap at 20 s, wrote 393,216 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone
+---- t = 90 s
+  T1   LiveConnections 3, accepted 3, bytes client>server 21, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap FinWait2/CloseWait
+       upstream: 3x FIN from the tap at 0 s, read 7 B, tcp upstream/tap CloseWait/FinWait2
+  T2   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x FIN from the tap at 0 s, tcp client/tap CloseWait/FinWait2
+       upstream: 3x open, tcp upstream/tap FinWait2/CloseWait
+  T3   LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 1x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 2x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T4   LiveConnections 3, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x open, tcp client/tap Established/Established
+       upstream: 3x open, tcp upstream/tap Established/Established
+  T3N  LiveConnections 3, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/Established
+       upstream: 2x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 1x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established
+  T3R  LiveConnections 0, accepted 3, bytes client>server 60, server>client 294,942, StuckConnectionsReaped 3, ConnectionsClosedMidMessage 3, SegmentsDropped 0
+       clients:  3x not read (16,384 B waiting), tcp client/tap Established/FinWait1
+       upstream: 2x RST (ConnectionReset) from the tap at 20 s, wrote 786,432 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone | 1x RST (ConnectionReset) from the tap at 20 s, wrote 393,216 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone
+
+---- DisposeAsync
+  T1   DisposeAsync at t = 90 s took 2 ms | LiveConnections 0, accepted 3, bytes client>server 21, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       log: [T1] tcp-tap stopped (3 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+       clients 1.5 s after:  3x FIN from the tap at 90 s, tcp client/tap TimeWait/gone
+       upstream 1.5 s after: 3x FIN from the tap at 0 s, read 7 B, tcp upstream/tap CloseWait/FinWait2
+  T2   DisposeAsync at t = 92 s took 30 ms | LiveConnections 0, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       log: [T2] tcp-tap stopped (3 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+       clients 1.5 s after:  3x FIN from the tap at 0 s, tcp client/tap CloseWait/FinWait2
+       upstream 1.5 s after: 3x FIN from the tap at 92 s, tcp upstream/tap TimeWait/gone
+  T3   DisposeAsync at t = 93 s took 30 ms | LiveConnections 0, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       log: [T3] tcp-tap stopped (3 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+       clients 1.5 s after:  3x not read (16,384 B waiting), tcp client/tap Established/FinWait1
+       upstream 1.5 s after: 1x FIN from the tap at 93 s, wrote 393,216 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone | 2x FIN from the tap at 93 s, wrote 786,432 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone
+  T4   DisposeAsync at t = 95 s took 31 ms | LiveConnections 0, accepted 3, bytes client>server 0, server>client 0, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       log: [T4] tcp-tap stopped (3 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+       clients 1.5 s after:  3x FIN from the tap at 95 s, tcp client/tap CloseWait/FinWait2
+       upstream 1.5 s after: 3x FIN from the tap at 95 s, tcp upstream/tap CloseWait/FinWait2
+  T3N  DisposeAsync at t = 96 s took 540 ms | LiveConnections 0, accepted 3, bytes client>server 0, server>client 294,912, StuckConnectionsReaped 0, ConnectionsClosedMidMessage 0, SegmentsDropped 0
+       log: [T3N] tcp-tap stopped (3 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+       clients 1.5 s after:  3x not read (16,384 B waiting), tcp client/tap Established/FinWait1
+       upstream 1.5 s after: 2x FIN from the tap at 96 s, wrote 393,216 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone | 1x FIN from the tap at 96 s, wrote 786,432 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone
+  T3R  DisposeAsync at t = 98 s took 0 ms | LiveConnections 0, accepted 3, bytes client>server 60, server>client 294,942, StuckConnectionsReaped 3, ConnectionsClosedMidMessage 3, SegmentsDropped 0
+       log: [T3R] tcp-tap connection 1 reaped: a command sent at 08:27:36Z is still unanswered after 00:00:20 — closed so a wedged client can reconnect
+       log: [T3R] tcp-tap connection 2 reaped: a command sent at 08:27:36Z is still unanswered after 00:00:20 — closed so a wedged client can reconnect
+       log: [T3R] tcp-tap connection 3 reaped: a command sent at 08:27:36Z is still unanswered after 00:00:20 — closed so a wedged client can reconnect
+       log: [T3R] tcp-tap connection 3 closed mid-message (1 unanswered command(s), a partial reply (10 B held, streaming past an oversize payload)); its last interaction(s) were not recorded.
+       log: [T3R] tcp-tap connection 1 closed mid-message (1 unanswered command(s), a partial reply (10 B held, streaming past an oversize payload)); its last interaction(s) were not recorded.
+       log: [T3R] tcp-tap connection 2 closed mid-message (1 unanswered command(s), a partial reply (10 B held, streaming past an oversize payload)); its last interaction(s) were not recorded.
+       log: [T3R] tcp-tap stopped (3 connections, 0 interactions, 0 segments dropped, 0 decode errors, 0 oversize payloads skipped, 0 decoder resets, 0 connections with decoding disabled)
+       Diagnostics(): CaptureDegraded: T3R: 3 connection(s) closed mid-message — their last command(s) were not recorded
+       Diagnostics(): CaptureDegraded: T3R: 3 stuck connection(s) reaped (a command unanswered for 00:00:20) so a wedged client could reconnect
+       clients 1.5 s after:  3x not read (16,384 B waiting), tcp client/tap Established/FinWait1
+       upstream 1.5 s after: 2x RST (ConnectionReset) from the tap at 20 s, wrote 786,432 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone | 1x RST (ConnectionReset) from the tap at 20 s, wrote 393,216 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone
+
+---- summary at the end of sampling, before DisposeAsync (times are seconds after the stall began; live = the tap's LiveConnections over time, value@second)
+  T1   client sends 7 B then Shutdown(Send); upstream reads, stays open and silent: live 3@0; clients: 3x open, tcp client/tap FinWait2/CloseWait; upstream: 3x FIN from the tap at 0 s, read 7 B, tcp upstream/tap CloseWait/FinWait2; DisposeAsync 2 ms
+  T2   upstream Shutdown(Send) on accept; client open and silent: live 3@0; clients: 3x FIN from the tap at 0 s, tcp client/tap CloseWait/FinWait2; upstream: 3x open, tcp upstream/tap FinWait2/CloseWait; DisposeAsync 30 ms
+  T3   upstream writes 8 MB; client never reads: live 3@0; clients: 3x not read (16,384 B waiting), tcp client/tap Established/Established; upstream: 1x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 2x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established; DisposeAsync 30 ms
+  T4   control: idle pair, nothing sent: live 3@0; clients: 3x open, tcp client/tap Established/Established; upstream: 3x open, tcp upstream/tap Established/Established; DisposeAsync 31 ms
+  T3N  T3, reaper on (20 s), pass-through decoder: live 3@0; clients: 3x not read (16,384 B waiting), tcp client/tap Established/Established; upstream: 2x open, wrote 393,216 of 8,388,608 B (writing), tcp upstream/tap Established/Established | 1x open, wrote 786,432 of 8,388,608 B (writing), tcp upstream/tap Established/Established; DisposeAsync 540 ms
+  T3R  T3 through RedisTap, reaper on (20 s): RESP GET, 8 MB bulk reply: live 3@0 > 0@21; clients: 3x not read (16,384 B waiting), tcp client/tap Established/FinWait1 [tcp client Established@0; tap Established@0 > FinWait1@21]; upstream: 2x RST (ConnectionReset) from the tap at 20 s, wrote 786,432 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone [tcp upstream Established@0 > gone@21; tap Established@0 > gone@21] | 1x RST (ConnectionReset) from the tap at 20 s, wrote 393,216 of 8,388,608 B (write failed: ConnectionReset), tcp upstream/tap gone/gone [tcp upstream Established@0 > gone@21; tap Established@0 > gone@21]; DisposeAsync 0 ms

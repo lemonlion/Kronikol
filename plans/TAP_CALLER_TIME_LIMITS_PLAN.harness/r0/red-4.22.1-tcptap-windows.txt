@@ -1,0 +1,126 @@
+Test run for C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\bin\Debug\net10.0\Kronikol.Tests.TcpTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:16.02]     Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a reap", throwsOn: "reaped:") [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a reap", throwsOn: "reaped:") [15 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "an end of stream or a reset"
+Actual:   "nothing"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 84
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:16.06]     Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a decoder reset that throws", throwsOn: "decoder reset threw") [FAIL]
+[xUnit.net 00:00:16.09]     Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a decoder's own line", throwsOn: "a line of the decoder's own") [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a decoder reset that throws", throwsOn: "decoder reset threw") [34 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   2
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 130
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a decoder's own line", throwsOn: "a line of the decoder's own") [26 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 145
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:31.12]     Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "an identity resolver that throws", throwsOn: "identity resolver threw") [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "an identity resolver that throws", throwsOn: "identity resolver threw") [15 s]
+  Error Message:
+   the exchange was not recorded
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 139
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:31.16]     Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a connection closed mid-message", throwsOn: "closed mid-message") [FAIL]
+[xUnit.net 00:00:31.48]     Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a full decode queue", throwsOn: "decode queue full") [FAIL]
+[xUnit.net 00:00:31.51]     Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a decoder reset", throwsOn: "decoder reset on connection") [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a connection closed mid-message", throwsOn: "closed mid-message") [30 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 135
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a full decode queue", throwsOn: "decode queue full") [327 ms]
+  Error Message:
+   System.IO.IOException : Unable to write data to the transport connection: An established connection was aborted by the software in your host machine..
+---- System.Net.Sockets.SocketException : An established connection was aborted by the software in your host machine.
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 97
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.CreateException(SocketError error, Boolean forAsyncThrow)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.SendAsyncForNetworkStream(Socket socket, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.SendAsyncForNetworkStream(ReadOnlyMemory`1 buffer, SocketFlags socketFlags, CancellationToken cancellationToken)
+   at System.Net.Sockets.NetworkStream.WriteAsync(ReadOnlyMemory`1 buffer, CancellationToken cancellationToken)
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 97
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(IAsyncStateMachineBox box, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Threading.Tasks.Task.DelayPromise.CompleteTimedOut()
+   at System.Threading.TimerQueue.FireNextTimers()
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+--- End of stack trace from previous location ---
+
+  Failed Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a decoder reset", throwsOn: "decoder reset on connection") [29 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   2
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 124
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:49.02]     Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a decoder whose Dispose throws", throwsOn: "decoder dispose failed") [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a decoder whose Dispose throws", throwsOn: "decoder dispose failed") [17 s]
+  Error Message:
+   the pair was never released
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 118
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:49.05]     Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "decoding disabled", throwsOn: "decoder gave up") [FAIL]
+[xUnit.net 00:00:49.06]     Kronikol.Tests.TcpTap.TcpTapLogTests.A_negative_cap_is_refused [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(line: "decoding disabled", throwsOn: "decoder gave up") [27 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   2
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 130
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 151
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapLogTests.A_negative_cap_is_refused [5 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapLogTests.A_negative_cap_is_refused() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 169
+   at Kronikol.Tests.TcpTap.TcpTapLogTests.A_negative_cap_is_refused() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapLogTests.cs:line 171
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:    10, Passed:     0, Skipped:     0, Total:    10, Duration: 48 s - Kronikol.Tests.TcpTap.dll (net10.0)

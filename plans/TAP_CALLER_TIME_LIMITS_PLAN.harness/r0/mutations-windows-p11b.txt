@@ -1,0 +1,4 @@
+P5 no answer still reading its body ended as the stop begins (R0-8): KILLED
+    proxy: [('Failed!', '2', '27')] failed facts: ['A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded', 'Stopping_the_tap_never_tells_a_caller_still_sending_its_body_that_it_succeeded']
+P11 the forward begun after the stop ended the answer (R0-8): KILLED
+    proxy: [('Failed!', '1', '28')] failed facts: ['A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded']

@@ -1,0 +1,648 @@
+dotnet --info (excerpt):
+.NET SDK:
+ Version:           10.0.401
+ Commit:            e34a38d2ae
+Runtime Environment:
+ OS Name:     ubuntu
+ OS Version:  24.04
+ OS Platform: Linux
+ RID:         linux-x64
+Host:
+  Version:      10.0.12
+  Architecture: x64
+  Commit:       95017c711e
+
+early-answer-probe on .NET 10.0.12, Ubuntu 24.04.5 LTS (linux-x64), 20 logical CPUs
+20 trials per cell, each on a new connection; started 2026-10-15 08:19:14Z
+server: TcpListener on 127.0.0.1:34815; its answer: HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n
+context, loopback buffering with a peer that accepts and never reads (sender and peer at default buffer sizes):
+  64 KiB sends accepted before one waited 500 ms: 2,621,440 B (the peer held 128,512); 2,621,440 B (the peer held 128,512); 2,621,440 B (the peer held 128,512)
+  one SendAsync of 8 MiB: pending after 1 s (the peer held 127,973); pending after 1 s (the peer held 127,973); pending after 1 s (the peer held 127,973)
+warm-up: one exchange per caller against variant d, not counted
+
+== variant a: write the 401, then dispose at once (NetworkStream.Dispose: Shutdown(Both), Close)
+a http-4K         #01  status 401 in 0.9 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #02  status 401 in 1.9 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #03  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #04  status 401 in 0.9 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #05  status 401 in 6.1 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #06  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #07  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #08  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #09  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #10  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #11  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #12  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #13  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #14  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #15  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #16  status 401 in 0.6 ms  | server: 3,985 B of body read with the head; answer written
+a http-4K         #17  status 401 in 0.7 ms  | server: 3,985 B of body read with the head; answer written
+a http-4K         #18  status 401 in 0.9 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #19  status 401 in 1.2 ms  | server: 4,096 B of body read with the head; answer written
+a http-4K         #20  status 401 in 3.7 ms  | server: 3,985 B of body read with the head; answer written
+a http-4K         => 401 20, reset 0, aborted 0, other 0
+a http-64K        #01  status 401 in 1.0 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #02  status 401 in 0.9 ms  | server: 3,984 B of body read with the head; answer written
+a http-64K        #03  status 401 in 1.3 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #04  status 401 in 1.6 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #05  status 401 in 1.4 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #06  status 401 in 1.6 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #07  status 401 in 0.9 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #08  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #09  status 401 in 0.8 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #10  status 401 in 1.3 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #11  status 401 in 0.8 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #12  status 401 in 4.0 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #13  status 401 in 2.3 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #14  status 401 in 1.8 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #15  status 401 in 1.0 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #16  status 401 in 0.9 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #17  status 401 in 1.0 ms  | server: 3,984 B of body read with the head; answer written
+a http-64K        #18  status 401 in 4.9 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #19  status 401 in 0.9 ms  | server: 16,272 B of body read with the head; answer written
+a http-64K        #20  status 401 in 0.9 ms  | server: 3,984 B of body read with the head; answer written
+a http-64K        => 401 20, reset 0, aborted 0, other 0
+a http-1M         #01  status 401 in 0.9 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #02  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 33.7 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #03  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.1 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #04  status 401 in 1.3 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #05  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.2 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #06  status 401 in 0.8 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #07  status 401 in 0.8 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #08  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.3 ms  | server: 3,982 B of body read with the head; answer written
+a http-1M         #09  status 401 in 0.9 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #10  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.9 ms  | server: 3,982 B of body read with the head; answer written
+a http-1M         #11  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.9 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #12  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.5 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #13  status 401 in 1.1 ms  | server: 3,982 B of body read with the head; answer written
+a http-1M         #14  status 401 in 0.6 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #15  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.2 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #16  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.3 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #17  status 401 in 0.9 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #18  status 401 in 0.7 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #19  status 401 in 0.6 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         #20  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.0 ms  | server: 16,270 B of body read with the head; answer written
+a http-1M         => 401 10, reset 0, aborted 0, other 10
+a http-8M         #01  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.3 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #02  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.3 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #03  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.5 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #04  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.6 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #05  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 3.0 ms  | server: 3,982 B of body read with the head; answer written
+a http-8M         #06  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.6 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #07  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.3 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #08  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.4 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #09  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 4.1 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #10  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.9 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #11  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.6 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #12  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.3 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #13  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.9 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #14  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.4 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #15  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.0 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #16  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.9 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #17  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.4 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #18  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.1 ms  | server: 3,982 B of body read with the head; answer written
+a http-8M         #19  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.6 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         #20  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.7 ms  | server: 16,270 B of body read with the head; answer written
+a http-8M         => 401 0, reset 0, aborted 0, other 20
+a http-chunked-1M #01  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 3.4 ms  | server: 3,979 B of body read with the head; answer written
+a http-chunked-1M #02  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.7 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #03  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.6 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #04  status 401 in 1.3 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #05  status 401 in 1.8 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #06  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 3.7 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #07  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 5.7 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #08  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 10.7 ms  | server: 3,979 B of body read with the head; answer written
+a http-chunked-1M #09  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 9.0 ms  | server: 3,979 B of body read with the head; answer written
+a http-chunked-1M #10  status 401 in 3.2 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #11  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.9 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #12  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.8 ms  | server: 3,979 B of body read with the head; answer written
+a http-chunked-1M #13  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.4 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #14  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.2 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #15  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.5 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #16  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.7 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #17  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.1 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #18  status 401 in 4.2 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M #19  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.2 ms  | server: 3,979 B of body read with the head; answer written
+a http-chunked-1M #20  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.5 ms  | server: 16,267 B of body read with the head; answer written
+a http-chunked-1M => 401 4, reset 0, aborted 0, other 16
+a raw-1M          #01  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #02  send ok; read 401 (67 B), then FIN in 0.8 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #03  send SocketException(Shutdown); read 401 (67 B), then FIN in 0.7 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #04  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #05  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #06  send ok; read 401 (67 B), then FIN in 0.6 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #07  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #08  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #09  send SocketException(Shutdown); read 401 (67 B), then FIN in 4.4 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #10  send ok; read 401 (67 B), then FIN in 0.8 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #11  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #12  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #13  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #14  send SocketException(Shutdown); read 401 (67 B), then FIN in 0.9 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #15  send ok; read 401 (67 B), then FIN in 0.6 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #16  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #17  send SocketException(Shutdown); read 401 (67 B), then FIN in 0.7 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #18  send ok; read 401 (67 B), then FIN in 0.6 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #19  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          #20  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written
+a raw-1M          => 401 20, reset 0, aborted 0, other 0
+
+== variant b: write the 401, Shutdown(Send), then dispose at once
+b http-4K         #01  status 401 in 1.5 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #02  status 401 in 1.0 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #03  status 401 in 0.9 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #04  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #05  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #06  status 401 in 0.5 ms  | server: 3,985 B of body read with the head; answer written
+b http-4K         #07  status 401 in 0.6 ms  | server: 3,985 B of body read with the head; answer written
+b http-4K         #08  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #09  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #10  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #11  status 401 in 0.5 ms  | server: 3,985 B of body read with the head; answer written
+b http-4K         #12  status 401 in 0.7 ms  | server: 3,985 B of body read with the head; answer written
+b http-4K         #13  status 401 in 0.9 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #14  status 401 in 0.8 ms  | server: 3,985 B of body read with the head; answer written
+b http-4K         #15  status 401 in 0.8 ms  | server: 3,985 B of body read with the head; answer written
+b http-4K         #16  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #17  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #18  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #19  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         #20  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written
+b http-4K         => 401 20, reset 0, aborted 0, other 0
+b http-64K        #01  status 401 in 1.1 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #02  status 401 in 0.8 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #03  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #04  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #05  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #06  status 401 in 0.5 ms  | server: 3,984 B of body read with the head; answer written
+b http-64K        #07  status 401 in 0.7 ms  | server: 3,984 B of body read with the head; answer written
+b http-64K        #08  status 401 in 0.9 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #09  status 401 in 0.8 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #10  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #11  status 401 in 0.8 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #12  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #13  status 401 in 0.8 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #14  status 401 in 0.6 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #15  status 401 in 0.6 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #16  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #17  status 401 in 0.5 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #18  status 401 in 0.6 ms  | server: 3,984 B of body read with the head; answer written
+b http-64K        #19  status 401 in 0.5 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        #20  status 401 in 0.6 ms  | server: 16,272 B of body read with the head; answer written
+b http-64K        => 401 20, reset 0, aborted 0, other 0
+b http-1M         #01  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.1 ms  | server: 3,982 B of body read with the head; answer written
+b http-1M         #02  status 401 in 0.8 ms  | server: 3,982 B of body read with the head; answer written
+b http-1M         #03  status 401 in 8.2 ms  | server: 16,270 B of body read with the head; answer written
+b http-1M         #04  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.2 ms  | server: 3,982 B of body read with the head; answer written
+b http-1M         #05  status 401 in 0.6 ms  | server: 16,270 B of body read with the head; answer written
+b http-1M         #06  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 3.4 ms  | server: 16,270 B of body read with the head; answer written
+b http-1M         #07  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.2 ms  | server: 3,982 B of body read with the head; answer written
+b http-1M         #08  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.4 ms  | server: 16,270 B of body read with the head; answer written
+b http-1M         #09  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.4 ms  | server: 3,982 B of body read with the head; answer written
+b http-1M         #10  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 21.3 ms  | server: 16,270 B of body read with the head; answer written
+b http-1M         #11  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 7.1 ms  | server: 3,982 B of body read with the head; answer written
+b http-1M         #12  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.8 ms  | server: 3,982 B of body read with the head; answer written
+b http-1M         #13  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.1 ms  | server: 3,982 B of body read with the head; answer written
+b http-1M         #14  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.2 ms  | server: 3,982 B of body read with the head; answer written
+b http-1M         #15  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.2 ms  | server: 16,270 B of body read with the head; answer written
+b http-1M         #16  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.3 ms  | server: 16,270 B of body read with the head; answer written
+b http-1M         #17  status 401 in 0.8 ms  | server: 16,270 B of body read with the head; answer written
+b http-1M         #18  status 401 in 0.9 ms  | server: 16,270 B of body read with the head; answer written
+b http-1M         #19  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.2 ms  | server: 16,270 B of body read with the head; answer written
+b http-1M         #20  status 401 in 1.0 ms  | server: 16,270 B of body read with the head; answer written
+b http-1M         => 401 6, reset 0, aborted 0, other 14
+b http-8M         #01  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.8 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #02  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.4 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #03  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.3 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #04  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.2 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #05  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.0 ms  | server: 3,982 B of body read with the head; answer written
+b http-8M         #06  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.1 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #07  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.1 ms  | server: 3,982 B of body read with the head; answer written
+b http-8M         #08  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.2 ms  | server: 3,982 B of body read with the head; answer written
+b http-8M         #09  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.1 ms  | server: 3,982 B of body read with the head; answer written
+b http-8M         #10  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.6 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #11  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.0 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #12  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.0 ms  | server: 3,982 B of body read with the head; answer written
+b http-8M         #13  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.5 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #14  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.9 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #15  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 6.3 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #16  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 5.1 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #17  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 17.0 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #18  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 5.3 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         #19  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.1 ms  | server: 3,982 B of body read with the head; answer written
+b http-8M         #20  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.5 ms  | server: 16,270 B of body read with the head; answer written
+b http-8M         => 401 0, reset 0, aborted 0, other 20
+b http-chunked-1M #01  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.5 ms  | server: 3,979 B of body read with the head; answer written
+b http-chunked-1M #02  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.5 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #03  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.7 ms  | server: 3,979 B of body read with the head; answer written
+b http-chunked-1M #04  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.8 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #05  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 2.0 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #06  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 6.4 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #07  status 401 in 3.3 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #08  status 401 in 7.9 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #09  status 401 in 1.7 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #10  status 401 in 1.4 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #11  status 401 in 5.4 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #12  status 401 in 9.0 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #13  status 401 in 11.2 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #14  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.7 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #15  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.6 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #16  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.5 ms  | server: 3,979 B of body read with the head; answer written
+b http-chunked-1M #17  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown) in 1.5 ms  | server: 3,979 B of body read with the head; answer written
+b http-chunked-1M #18  status 401 in 1.0 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #19  status 401 in 0.7 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M #20  status 401 in 0.7 ms  | server: 16,267 B of body read with the head; answer written
+b http-chunked-1M => 401 10, reset 0, aborted 0, other 10
+b raw-1M          #01  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #02  send ok; read 401 (67 B), then FIN in 2.8 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #03  send ok; read 401 (67 B), then FIN in 1.0 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #04  send ok; read 401 (67 B), then FIN in 0.8 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #05  send ok; read 401 (67 B), then FIN in 1.3 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #06  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #07  send ok; read 401 (67 B), then FIN in 0.6 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #08  send ok; read 401 (67 B), then FIN in 1.0 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #09  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #10  send ok; read 401 (67 B), then FIN in 2.5 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #11  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #12  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #13  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #14  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #15  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #16  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #17  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #18  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #19  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          #20  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written
+b raw-1M          => 401 20, reset 0, aborted 0, other 0
+
+== variant c: write the 401, Shutdown(Send), discard until EOF, 2 s or the Content-Length, then dispose (lingering close)
+c http-4K         #01  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #02  status 401 in 0.9 ms  | server: 3,985 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #03  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #04  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #05  status 401 in 0.6 ms  | server: 3,985 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #06  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #07  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #08  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #09  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #10  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #11  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #12  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #13  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #14  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #15  status 401 in 3.4 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #16  status 401 in 0.9 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #17  status 401 in 0.9 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #18  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #19  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         #20  status 401 in 0.9 ms  | server: 4,096 B of body read with the head; answer written; drain: Content-Length reached (4,096 B) in 0 ms
+c http-4K         => 401 20, reset 0, aborted 0, other 0
+c http-64K        #01  status 401 in 0.7 ms  | server: 3,984 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 1 ms
+c http-64K        #02  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #03  status 401 in 0.6 ms  | server: 3,984 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #04  status 401 in 0.6 ms  | server: 3,984 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #05  status 401 in 0.8 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #06  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #07  status 401 in 0.6 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #08  status 401 in 0.5 ms  | server: 3,984 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #09  status 401 in 0.5 ms  | server: 3,984 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #10  status 401 in 1.0 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #11  status 401 in 4.2 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #12  status 401 in 3.7 ms  | server: 3,984 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #13  status 401 in 0.9 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #14  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #15  status 401 in 1.3 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #16  status 401 in 1.3 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #17  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #18  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #19  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        #20  status 401 in 0.6 ms  | server: 16,272 B of body read with the head; answer written; drain: Content-Length reached (65,536 B) in 0 ms
+c http-64K        => 401 20, reset 0, aborted 0, other 0
+c http-1M         #01  status 401 in 0.6 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c http-1M         #02  status 401 in 0.8 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c http-1M         #03  status 401 in 3.7 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c http-1M         #04  status 401 in 1.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c http-1M         #05  status 401 in 0.9 ms  | server: 3,982 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c http-1M         #06  status 401 in 0.7 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c http-1M         #07  status 401 in 0.7 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c http-1M         #08  status 401 in 0.6 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c http-1M         #09  status 401 in 0.6 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c http-1M         #10  status 401 in 0.6 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c http-1M         #11  status 401 in 0.7 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c http-1M         #12  status 401 in 0.7 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c http-1M         #13  status 401 in 0.8 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c http-1M         #14  status 401 in 0.6 ms  | server: 3,982 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c http-1M         #15  status 401 in 0.7 ms  | server: 3,982 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c http-1M         #16  status 401 in 0.7 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c http-1M         #17  status 401 in 0.9 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c http-1M         #18  status 401 in 1.1 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c http-1M         #19  status 401 in 0.6 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c http-1M         #20  status 401 in 1.0 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c http-1M         => 401 20, reset 0, aborted 0, other 0
+c http-8M         #01  status 401 in 3.8 ms  | server: 3,982 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 4 ms
+c http-8M         #02  status 401 in 3.6 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 4 ms
+c http-8M         #03  status 401 in 2.7 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         #04  status 401 in 3.2 ms  | server: 3,982 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         #05  status 401 in 2.1 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 2 ms
+c http-8M         #06  status 401 in 2.7 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         #07  status 401 in 2.4 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 4 ms
+c http-8M         #08  status 401 in 2.6 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 2 ms
+c http-8M         #09  status 401 in 2.4 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         #10  status 401 in 2.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         #11  status 401 in 2.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 2 ms
+c http-8M         #12  status 401 in 3.4 ms  | server: 3,982 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         #13  status 401 in 3.5 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 4 ms
+c http-8M         #14  status 401 in 3.2 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         #15  status 401 in 3.2 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         #16  status 401 in 3.0 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         #17  status 401 in 1.7 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 2 ms
+c http-8M         #18  status 401 in 2.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         #19  status 401 in 2.6 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         #20  status 401 in 3.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (8,388,608 B) in 3 ms
+c http-8M         => 401 20, reset 0, aborted 0, other 0
+c http-chunked-1M #01  status 401 in 0.8 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M #02  status 401 in 1.1 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 0 ms
+c http-chunked-1M #03  status 401 in 0.6 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 0 ms
+c http-chunked-1M #04  status 401 in 0.6 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 0 ms
+c http-chunked-1M #05  status 401 in 0.5 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 0 ms
+c http-chunked-1M #06  status 401 in 1.0 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 0 ms
+c http-chunked-1M #07  status 401 in 0.7 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M #08  status 401 in 1.1 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M #09  status 401 in 0.9 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 0 ms
+c http-chunked-1M #10  status 401 in 1.0 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M #11  status 401 in 1.1 ms  | server: 3,979 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M #12  status 401 in 1.8 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M #13  status 401 in 1.5 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M #14  status 401 in 0.7 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M #15  status 401 in 1.1 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 0 ms
+c http-chunked-1M #16  status 401 in 1.0 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M #17  status 401 in 1.5 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M #18  status 401 in 0.9 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 0 ms
+c http-chunked-1M #19  status 401 in 0.9 ms  | server: 16,267 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M #20  status 401 in 0.8 ms  | server: 3,979 B of body read with the head; answer written; drain: EOF after 1,048,653 B in 1 ms
+c http-chunked-1M => 401 20, reset 0, aborted 0, other 0
+c raw-1M          #01  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #02  send ok; read 401 (67 B), then FIN in 0.7 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c raw-1M          #03  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c raw-1M          #04  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #05  send ok; read 401 (67 B), then FIN in 0.2 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #06  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c raw-1M          #07  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #08  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #09  send ok; read 401 (67 B), then FIN in 0.8 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c raw-1M          #10  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #11  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #12  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #13  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #14  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #15  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #16  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #17  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 1 ms
+c raw-1M          #18  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #19  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          #20  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: Content-Length reached (1,048,576 B) in 0 ms
+c raw-1M          => 401 20, reset 0, aborted 0, other 0
+
+== variant d: discard the whole body first (the 413 path), then write the 401 and dispose
+d http-4K         #01  status 401 in 0.5 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #02  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #03  status 401 in 0.5 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #04  status 401 in 0.4 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #05  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #06  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #07  status 401 in 0.9 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #08  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #09  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #10  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #11  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #12  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #13  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #14  status 401 in 0.5 ms  | server: 3,985 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #15  status 401 in 0.5 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #16  status 401 in 0.8 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #17  status 401 in 0.6 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #18  status 401 in 0.5 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #19  status 401 in 0.7 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         #20  status 401 in 1.0 ms  | server: 4,096 B of body read with the head; answer written; drain: body drained (4,096 B) in 0 ms
+d http-4K         => 401 20, reset 0, aborted 0, other 0
+d http-64K        #01  status 401 in 1.0 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #02  status 401 in 0.6 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #03  status 401 in 0.7 ms  | server: 3,984 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #04  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #05  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #06  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #07  status 401 in 0.9 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #08  status 401 in 0.6 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #09  status 401 in 0.7 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #10  status 401 in 0.5 ms  | server: 3,984 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #11  status 401 in 0.6 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #12  status 401 in 0.5 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #13  status 401 in 0.6 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #14  status 401 in 0.6 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #15  status 401 in 0.4 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #16  status 401 in 0.3 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #17  status 401 in 0.5 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #18  status 401 in 0.4 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #19  status 401 in 0.5 ms  | server: 16,272 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        #20  status 401 in 0.7 ms  | server: 3,984 B of body read with the head; answer written; drain: body drained (65,536 B) in 0 ms
+d http-64K        => 401 20, reset 0, aborted 0, other 0
+d http-1M         #01  status 401 in 1.6 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #02  status 401 in 1.0 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d http-1M         #03  status 401 in 0.9 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d http-1M         #04  status 401 in 1.6 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #05  status 401 in 1.2 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d http-1M         #06  status 401 in 1.4 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #07  status 401 in 1.3 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #08  status 401 in 1.1 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d http-1M         #09  status 401 in 1.3 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #10  status 401 in 1.2 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #11  status 401 in 1.2 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #12  status 401 in 1.3 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d http-1M         #13  status 401 in 1.0 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d http-1M         #14  status 401 in 1.1 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #15  status 401 in 1.8 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #16  status 401 in 1.1 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #17  status 401 in 1.1 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d http-1M         #18  status 401 in 1.3 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #19  status 401 in 1.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d http-1M         #20  status 401 in 1.3 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d http-1M         => 401 20, reset 0, aborted 0, other 0
+d http-8M         #01  status 401 in 4.3 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 4 ms
+d http-8M         #02  status 401 in 4.6 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 4 ms
+d http-8M         #03  status 401 in 5.2 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 4 ms
+d http-8M         #04  status 401 in 4.1 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 3 ms
+d http-8M         #05  status 401 in 4.6 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 4 ms
+d http-8M         #06  status 401 in 3.9 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 3 ms
+d http-8M         #07  status 401 in 5.1 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 4 ms
+d http-8M         #08  status 401 in 5.7 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 5 ms
+d http-8M         #09  status 401 in 3.9 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 3 ms
+d http-8M         #10  status 401 in 4.2 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 3 ms
+d http-8M         #11  status 401 in 4.2 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 4 ms
+d http-8M         #12  status 401 in 3.3 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 3 ms
+d http-8M         #13  status 401 in 3.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 3 ms
+d http-8M         #14  status 401 in 2.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 2 ms
+d http-8M         #15  status 401 in 3.4 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 3 ms
+d http-8M         #16  status 401 in 2.8 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 2 ms
+d http-8M         #17  status 401 in 2.9 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 2 ms
+d http-8M         #18  status 401 in 3.7 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 3 ms
+d http-8M         #19  status 401 in 3.0 ms  | server: 3,982 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 2 ms
+d http-8M         #20  status 401 in 3.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (8,388,608 B) in 3 ms
+d http-8M         => 401 20, reset 0, aborted 0, other 0
+d http-chunked-1M #01  status 401 in 1.8 ms  | server: 3,979 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 1 ms
+d http-chunked-1M #02  status 401 in 3.2 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 2 ms
+d http-chunked-1M #03  status 401 in 1.3 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 0 ms
+d http-chunked-1M #04  status 401 in 1.2 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 1 ms
+d http-chunked-1M #05  status 401 in 2.2 ms  | server: 3,979 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 2 ms
+d http-chunked-1M #06  status 401 in 1.1 ms  | server: 3,979 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 0 ms
+d http-chunked-1M #07  status 401 in 1.0 ms  | server: 3,979 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 0 ms
+d http-chunked-1M #08  status 401 in 1.1 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 0 ms
+d http-chunked-1M #09  status 401 in 1.2 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 1 ms
+d http-chunked-1M #10  status 401 in 1.1 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 0 ms
+d http-chunked-1M #11  status 401 in 3.0 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 2 ms
+d http-chunked-1M #12  status 401 in 2.2 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 1 ms
+d http-chunked-1M #13  status 401 in 1.4 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 0 ms
+d http-chunked-1M #14  status 401 in 1.7 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 0 ms
+d http-chunked-1M #15  status 401 in 1.2 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 1 ms
+d http-chunked-1M #16  status 401 in 1.0 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 0 ms
+d http-chunked-1M #17  status 401 in 0.8 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 0 ms
+d http-chunked-1M #18  status 401 in 1.4 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 1 ms
+d http-chunked-1M #19  status 401 in 1.2 ms  | server: 3,979 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 1 ms
+d http-chunked-1M #20  status 401 in 1.0 ms  | server: 16,267 B of body read with the head; answer written; drain: chunked body drained (1,048,576 B of data) in 0 ms
+d http-chunked-1M => 401 20, reset 0, aborted 0, other 0
+d raw-1M          #01  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #02  send ok; read 401 (67 B), then FIN in 0.9 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d raw-1M          #03  send ok; read 401 (67 B), then FIN in 0.7 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #04  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #05  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #06  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #07  send ok; read 401 (67 B), then FIN in 0.9 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #08  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #09  send ok; read 401 (67 B), then FIN in 0.7 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 1 ms
+d raw-1M          #10  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #11  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #12  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #13  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #14  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #15  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #16  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #17  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #18  send ok; read 401 (67 B), then FIN in 0.5 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #19  send ok; read 401 (67 B), then FIN in 0.4 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          #20  send ok; read 401 (67 B), then FIN in 0.3 ms  | server: 16,270 B of body read with the head; answer written; drain: body drained (1,048,576 B) in 0 ms
+d raw-1M          => 401 20, reset 0, aborted 0, other 0
+
+== the heads the server read (first counted trial of each caller)
+http-4K          POST /v1/traces HTTP/1.1 | Host: 127.0.0.1:34815 | Content-Type: application/x-protobuf | Content-Length: 4096
+http-64K         POST /v1/traces HTTP/1.1 | Host: 127.0.0.1:34815 | Content-Type: application/x-protobuf | Content-Length: 65536
+http-1M          POST /v1/traces HTTP/1.1 | Host: 127.0.0.1:34815 | Content-Type: application/x-protobuf | Content-Length: 1048576
+http-8M          POST /v1/traces HTTP/1.1 | Host: 127.0.0.1:34815 | Content-Type: application/x-protobuf | Content-Length: 8388608
+http-chunked-1M  POST /v1/traces HTTP/1.1 | Host: 127.0.0.1:34815 | Transfer-Encoding: chunked | Content-Type: application/x-protobuf
+raw-1M           POST /v1/traces HTTP/1.1 | Host: 127.0.0.1:34815 | Content-Type: application/x-protobuf | Content-Length: 1048576
+
+== summary. 401: the caller got the 401. reset: it did not, and SocketException(ConnectionReset) ended its send or
+   read. aborted: it did not, and SocketException(ConnectionAborted) did. other: anything else. Each cell's
+   outcomes are listed below the table. ms: from the start of the send to the outcome. body read with the
+   head: body bytes the server had read, in the same reads as the head, when it answered.
+
+variant  caller            401  reset  aborted  other  median ms   max ms  body read with the head (B)  connections
+a        http-4K            20      0        0      0        0.8      6.1  3,985 to 4,096                        20
+a        http-64K           20      0        0      0        1.0      4.9  3,984 to 16,272                       20
+a        http-1M            10      0        0     10        1.2     33.7  3,982 to 16,270                       20
+a        http-8M             0      0        0     20        1.7      4.1  3,982 to 16,270                       20
+a        http-chunked-1M     4      0        0     16        2.5     10.7  3,979 to 16,267                       20
+a        raw-1M             20      0        0      0        0.5      4.4  16,270                                20
+b        http-4K            20      0        0      0        0.7      1.5  3,985 to 4,096                        20
+b        http-64K           20      0        0      0        0.7      1.1  3,984 to 16,272                       20
+b        http-1M             6      0        0     14        1.2     21.3  3,982 to 16,270                       20
+b        http-8M             0      0        0     20        1.4     17.0  3,982 to 16,270                       20
+b        http-chunked-1M    10      0        0     10        1.7     11.2  3,979 to 16,267                       20
+b        raw-1M             20      0        0      0        0.5      2.8  16,270                                20
+c        http-4K            20      0        0      0        0.7      3.4  3,985 to 4,096                        20
+c        http-64K           20      0        0      0        0.7      4.2  3,984 to 16,272                       20
+c        http-1M            20      0        0      0        0.7      3.7  3,982 to 16,270                       20
+c        http-8M            20      0        0      0        2.7      3.8  3,982 to 16,270                       20
+c        http-chunked-1M    20      0        0      0        0.9      1.8  3,979 to 16,267                       20
+c        raw-1M             20      0        0      0        0.3      0.8  16,270                                20
+d        http-4K            20      0        0      0        0.6      1.0  3,985 to 4,096                        20
+d        http-64K           20      0        0      0        0.6      1.0  3,984 to 16,272                       20
+d        http-1M            20      0        0      0        1.3      1.8  3,982 to 16,270                       20
+d        http-8M            20      0        0      0        3.9      5.7  3,982 to 16,270                       20
+d        http-chunked-1M    20      0        0      0        1.2      3.2  3,979 to 16,267                       20
+d        raw-1M             20      0        0      0        0.5      0.9  16,270                                20
+
+== outcomes per cell (count, then the outcome; an exception's messages once per outcome; the server's drain in c and d)
+a http-4K
+   20  status 401
+a http-64K
+   20  status 401
+a http-1M
+   10  status 401
+   10  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown)
+       messages: Error while copying content to a stream. | Unable to write data to the transport connection: Broken pipe. | Broken pipe
+a http-8M
+   20  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown)
+       messages: Error while copying content to a stream. | Unable to write data to the transport connection: Broken pipe. | Broken pipe
+a http-chunked-1M
+   16  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown)
+       messages: Error while copying content to a stream. | Unable to write data to the transport connection: Broken pipe. | Broken pipe
+    4  status 401
+a raw-1M
+   16  send ok; read 401 (67 B), then FIN
+    4  send SocketException(Shutdown); read 401 (67 B), then FIN
+       messages: Broken pipe
+b http-4K
+   20  status 401
+b http-64K
+   20  status 401
+b http-1M
+   14  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown)
+       messages: Error while copying content to a stream. | Unable to write data to the transport connection: Broken pipe. | Broken pipe
+    6  status 401
+b http-8M
+   20  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown)
+       messages: Error while copying content to a stream. | Unable to write data to the transport connection: Broken pipe. | Broken pipe
+b http-chunked-1M
+   10  sending: HttpRequestException(Unknown) > IOException > SocketException(Shutdown)
+       messages: Error while copying content to a stream. | Unable to write data to the transport connection: Broken pipe. | Broken pipe
+   10  status 401
+b raw-1M
+   20  send ok; read 401 (67 B), then FIN
+c http-4K
+   20  status 401
+   20  server drain: Content-Length reached
+c http-64K
+   20  status 401
+   20  server drain: Content-Length reached
+c http-1M
+   20  status 401
+   20  server drain: Content-Length reached
+c http-8M
+   20  status 401
+   20  server drain: Content-Length reached
+c http-chunked-1M
+   20  status 401
+   20  server drain: EOF
+c raw-1M
+   20  send ok; read 401 (67 B), then FIN
+   20  server drain: Content-Length reached
+d http-4K
+   20  status 401
+   20  server drain: body drained
+d http-64K
+   20  status 401
+   20  server drain: body drained
+d http-1M
+   20  status 401
+   20  server drain: body drained
+d http-8M
+   20  status 401
+   20  server drain: body drained
+d http-chunked-1M
+   20  status 401
+   20  server drain: chunked body drained
+d raw-1M
+   20  send ok; read 401 (67 B), then FIN
+   20  server drain: body drained
+
+finished 2026-10-15 08:19:19Z

@@ -1,0 +1,18 @@
+ Version:           10.0.300
+ OS Name:     Windows
+ OS Version:  10.0.26200
+ RID:         win-x64
+
+Content-Length 'abc': TryParse=False, value=0, takes body path=False
+Content-Length '-5': TryParse=True, value=-5, takes body path=False
+Content-Length '10, 10': TryParse=False, value=0, takes body path=False
+Content-Length '3000000000': TryParse=False, value=0, takes body path=False
+Content-Length '+5': TryParse=True, value=5, takes body path=True
+Content-Length '0': TryParse=True, value=0, takes body path=False
+Content-Length '2147483648': TryParse=False, value=0, takes body path=False
+Content-Length '2147483647': TryParse=True, value=2147483647, takes body path=True
+CopyToAsync read sizes requested: 131072
+NoDelay after peer reset (round 0): no exception
+NoDelay after peer reset (round 1): no exception
+NoDelay after peer reset (round 2): no exception
+OS: Microsoft Windows NT 10.0.26200.0, runtime 10.0.11

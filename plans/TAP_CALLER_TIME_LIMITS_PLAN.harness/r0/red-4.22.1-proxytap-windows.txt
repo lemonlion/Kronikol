@@ -1,0 +1,281 @@
+Test run for C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\bin\Debug\net10.0\Kronikol.Tests.ProxyTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.77]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(option: "ForwardTimeout", value: "int.MaxValue ms less 5 s") [FAIL]
+[xUnit.net 00:00:00.77]     Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "the stop line", throwsOn: "proxy-tap stopped (") [FAIL]
+[xUnit.net 00:00:00.80]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(option: "ForwardTimeout", value: "30 days") [FAIL]
+[xUnit.net 00:00:00.80]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(option: "ConnectTimeout", value: "TimeSpan.MaxValue") [FAIL]
+[xUnit.net 00:00:00.81]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(option: "ConnectTimeout", value: "30 days") [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(option: "ForwardTimeout", value: "int.MaxValue ms less 5 s") [34 ms]
+  Error Message:
+   System.ArgumentOutOfRangeException : value ('24.20:31:28.6470000') must be less than or equal to '24.20:31:23.6470000'. (Parameter 'value')
+Actual value was 24.20:31:28.6470000.
+  Stack Trace:
+     at System.ArgumentOutOfRangeException.ThrowGreater[T](T value, T other, String paramName)
+   at System.ArgumentOutOfRangeException.ThrowIfGreaterThan[T](T value, T other, String paramName)
+   at System.Net.Http.HttpClient.set_Timeout(TimeSpan value)
+   at Kronikol.Extensions.ProxyTap.ProxyTap.StartAsync(CancellationToken cancellationToken) in C:\Code\Kronikol-173-red\src\Kronikol.Extensions.ProxyTap\ProxyTap.cs:line 179
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.StartAsync(Uri forward, Action`1 configure) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 120
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(String option, String value) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 72
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(String option, String value) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 78
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "the stop line", throwsOn: "proxy-tap stopped (") [37 ms]
+  Error Message:
+   System.InvalidOperationException : There is no currently active test.
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapLogTests.<>c__DisplayClass3_1.<A_throwing_log_callback_changes_nothing>b__2(String text) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 61
+   at Kronikol.Extensions.ProxyTap.ProxyTap.DisposeAsync() in C:\Code\Kronikol-173-red\src\Kronikol.Extensions.ProxyTap\ProxyTap.cs:line 1007
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 116
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 120
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(option: "ForwardTimeout", value: "30 days") [< 1 ms]
+  Error Message:
+   System.ArgumentOutOfRangeException : value ('30.00:00:10') must be less than or equal to '24.20:31:23.6470000'. (Parameter 'value')
+Actual value was 30.00:00:10.
+  Stack Trace:
+     at System.ArgumentOutOfRangeException.ThrowGreater[T](T value, T other, String paramName)
+   at System.ArgumentOutOfRangeException.ThrowIfGreaterThan[T](T value, T other, String paramName)
+   at System.Net.Http.HttpClient.set_Timeout(TimeSpan value)
+   at Kronikol.Extensions.ProxyTap.ProxyTap.StartAsync(CancellationToken cancellationToken) in C:\Code\Kronikol-173-red\src\Kronikol.Extensions.ProxyTap\ProxyTap.cs:line 179
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.StartAsync(Uri forward, Action`1 configure) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 120
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(String option, String value) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 72
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(String option, String value) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 78
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(option: "ConnectTimeout", value: "TimeSpan.MaxValue") [< 1 ms]
+  Error Message:
+   System.ArgumentOutOfRangeException : Specified argument was out of the range of valid values. (Parameter 'value')
+  Stack Trace:
+     at System.Net.Http.SocketsHttpHandler.set_ConnectTimeout(TimeSpan value)
+   at Kronikol.Extensions.ProxyTap.ProxyTap.StartAsync(CancellationToken cancellationToken) in C:\Code\Kronikol-173-red\src\Kronikol.Extensions.ProxyTap\ProxyTap.cs:line 179
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.StartAsync(Uri forward, Action`1 configure) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 120
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(String option, String value) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 72
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(String option, String value) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 78
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(option: "ConnectTimeout", value: "30 days") [< 1 ms]
+  Error Message:
+   System.ArgumentOutOfRangeException : Specified argument was out of the range of valid values. (Parameter 'value')
+  Stack Trace:
+     at System.Net.Http.SocketsHttpHandler.set_ConnectTimeout(TimeSpan value)
+   at Kronikol.Extensions.ProxyTap.ProxyTap.StartAsync(CancellationToken cancellationToken) in C:\Code\Kronikol-173-red\src\Kronikol.Extensions.ProxyTap\ProxyTap.cs:line 179
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.StartAsync(Uri forward, Action`1 configure) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 120
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(String option, String value) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 72
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(String option, String value) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 78
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:00.83]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(option: "ForwardTimeout", value: "TimeSpan.MaxValue") [FAIL]
+[xUnit.net 00:00:00.83]     Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "a forward cut short by stopping", throwsOn: "proxy-tap stopping") [FAIL]
+[xUnit.net 00:00:00.83]     Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "a fault the tap did not expect", throwsOn: "proxy-tap error") [FAIL]
+[xUnit.net 00:00:00.83]     Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "the start line", throwsOn: "proxy-tap listening on") [FAIL]
+[xUnit.net 00:00:00.83]     Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "a sink that throws", throwsOn: "proxy-tap: the sink threw") [FAIL]
+[xUnit.net 00:00:00.84]     Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "a test id that is not a trace id", throwsOn: "TraceIdFromIdentity did not apply") [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(option: "ForwardTimeout", value: "TimeSpan.MaxValue") [< 1 ms]
+  Error Message:
+   System.OverflowException : TimeSpan overflowed because the duration is too long.
+  Stack Trace:
+     at System.TimeSpan.op_Addition(TimeSpan t1, TimeSpan t2)
+   at Kronikol.Extensions.ProxyTap.ProxyTap.StartAsync(CancellationToken cancellationToken) in C:\Code\Kronikol-173-red\src\Kronikol.Extensions.ProxyTap\ProxyTap.cs:line 179
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.StartAsync(Uri forward, Action`1 configure) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 120
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(String option, String value) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 72
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(String option, String value) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 78
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "a forward cut short by stopping", throwsOn: "proxy-tap stopping") [51 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+String:         "a reset (ConnectionReset)"
+Expected start: "HTTP/1.1 502 "
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 107
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 117
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 120
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "a fault the tap did not expect", throwsOn: "proxy-tap error") [2 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+String:         "a reset (ConnectionReset)"
+Expected start: "HTTP/1.1 502 "
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 86
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 117
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 120
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "the start line", throwsOn: "proxy-tap listening on") [1 ms]
+  Error Message:
+   System.InvalidOperationException : There is no currently active test.
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapLogTests.<>c__DisplayClass3_1.<A_throwing_log_callback_changes_nothing>b__2(String text) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 61
+   at Kronikol.Extensions.ProxyTap.ProxyTap.StartAsync(CancellationToken cancellationToken) in C:\Code\Kronikol-173-red\src\Kronikol.Extensions.ProxyTap\ProxyTap.cs:line 215
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 68
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 120
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "a sink that throws", throwsOn: "proxy-tap: the sink threw") [5 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   2
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 78
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 117
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 120
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "a test id that is not a trace id", throwsOn: "TraceIdFromIdentity did not apply") [3 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: OK
+Actual:   BadGateway
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 97
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 117
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 120
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:02.89]     Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "a forward that failed", throwsOn: "proxy-tap error") [FAIL]
+[xUnit.net 00:00:03.30]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_handler_that_outlives_disposal_is_not_a_forward_failure [FAIL]
+[xUnit.net 00:00:03.84]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(line: "a forward that failed", throwsOn: "proxy-tap error") [2 s]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+String:         "a reset (ConnectionReset)"
+Expected start: "HTTP/1.1 502 "
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 86
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 117
+   at Kronikol.Tests.ProxyTap.ProxyTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLogTests.cs:line 120
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_handler_that_outlives_disposal_is_not_a_forward_failure [2 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_handler_that_outlives_disposal_is_not_a_forward_failure() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 185
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_handler_that_outlives_disposal_is_not_a_forward_failure() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 187
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_handler_that_outlives_disposal_is_not_a_forward_failure() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 187
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded [539 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: [RequestResponseLog { TestName = Unknown, TestId = stopping, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://localhost:54250/late-body, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = api, CallerName = web, Type = Request, TraceId = f8d5cdd8-a34a-4ba4-8637-905345c7303c, RequestResponseId = 9f975a50-a973-41c1-81be-3e519e7e6e10, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 15/10/2026 20:47:41 +00:00, AttributionSource = , ExpiredFromTestId = , Error = , ActivitySpanId = 13e846dfad370e60, ActivityTraceId = 625db11006fc6b045b0d7fddc262a743, Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }, RequestResponseLog { TestName = Unknown, TestId = stopping, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = {"error":{"code":502,"message":"proxy-tap: the tap stopped before api answered. Caused by: A task was canceled. Caused by: A task was canceled."}}, Uri = http://localhost:54250/late-body, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = api, CallerName = web, Type = Response, TraceId = f8d5cdd8-a34a-4ba4-8637-905345c7303c, RequestResponseId = 9f975a50-a973-41c1-81be-3e519e7e6e10, TrackingIgnore = False, StatusCode = Kronikol.Tracking.OneOf`2[System.Net.HttpStatusCode,System.String], MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 15/10/2026 20:47:42 +00:00, AttributionSource = , ExpiredFromTestId = , Error = proxy-tap: the tap stopped before api answered. Caused by: A task was canceled. Caused by: A task was canceled., ActivitySpanId = 13e846dfad370e60, ActivityTraceId = 625db11006fc6b045b0d7fddc262a743, Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }]
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 161
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 162
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 162
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:03.92]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names [FAIL]
+[xUnit.net 00:00:04.19]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_lets_an_answer_in_hand_finish [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names [45 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+String:         "a reset (ConnectionReset)"
+Expected start: "HTTP/1.1 502 "
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 71
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 76
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_lets_an_answer_in_hand_finish [267 ms]
+  Error Message:
+   the answer was cut short: 65,363 of 8,388,608 bytes
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_lets_an_answer_in_hand_finish() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 102
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_lets_an_answer_in_hand_finish() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 109
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_lets_an_answer_in_hand_finish() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 109
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:08.28]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it [4 s]
+  Error Message:
+   System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it.
+  Stack Trace:
+     at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Threading.Tasks.ValueTask.ValueTaskSourceAsTask.<>c.<.cctor>b__4_0(Object state)
+--- End of stack trace from previous location ---
+   at System.Net.Sockets.TcpClient.CompleteConnectAsync(Task task)
+   at Kronikol.Tests.ProxyTap.RawCaller.SendAsync(Int32 port, String request, Nullable`1 receiveBuffer) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\RawCaller.cs:line 24
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 127
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 137
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 137
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:10.82]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.An_infinite_forward_timeout_never_cuts_a_slow_upstream [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.An_infinite_forward_timeout_never_cuts_a_slow_upstream [10 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: OK
+Actual:   BadGateway
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.An_infinite_forward_timeout_never_cuts_a_slow_upstream() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 29
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.An_infinite_forward_timeout_never_cuts_a_slow_upstream() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 31
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.An_infinite_forward_timeout_never_cuts_a_slow_upstream() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 31
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:10.83]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ForwardTimeout", seconds: 0) [FAIL]
+[xUnit.net 00:00:10.84]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ForwardTimeout", seconds: -5) [FAIL]
+[xUnit.net 00:00:10.84]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ForwardTimeout", seconds: -10) [FAIL]
+[xUnit.net 00:00:10.84]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ConnectTimeout", seconds: -10) [FAIL]
+[xUnit.net 00:00:10.84]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ConnectTimeout", seconds: 0) [FAIL]
+[xUnit.net 00:00:10.84]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ConnectTimeout", seconds: -5) [FAIL]
+[xUnit.net 00:00:10.85]     Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_negative_cap_is_refused [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ForwardTimeout", seconds: 0) [6 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 47
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 51
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ForwardTimeout", seconds: -5) [2 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 47
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 51
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ForwardTimeout", seconds: -10) [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "ForwardTimeout"
+Actual:   "value"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 49
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 51
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ConnectTimeout", seconds: -10) [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "ConnectTimeout"
+Actual:   "value"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 49
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 51
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ConnectTimeout", seconds: 0) [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "ConnectTimeout"
+Actual:   "value"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 49
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 51
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(option: "ConnectTimeout", seconds: -5) [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "ConnectTimeout"
+Actual:   "value"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 49
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.Forward_and_connect_timeouts_are_checked_at_start(String option, Int32 seconds) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 51
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_negative_cap_is_refused [2 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_negative_cap_is_refused() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 87
+   at Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_negative_cap_is_refused() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapOptionRangeTests.cs:line 90
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:    25, Passed:     3, Skipped:     0, Total:    28, Duration: 10 s - Kronikol.Tests.ProxyTap.dll (net10.0)

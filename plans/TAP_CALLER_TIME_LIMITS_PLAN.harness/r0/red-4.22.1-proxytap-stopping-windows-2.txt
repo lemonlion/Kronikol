@@ -1,0 +1,75 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-173-red\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.ProxyTap -> C:\Code\Kronikol-173-red\src\Kronikol.Extensions.ProxyTap\bin\Debug\net10.0\Kronikol.Extensions.ProxyTap.dll
+  Kronikol.Tests.ProxyTap -> C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\bin\Debug\net10.0\Kronikol.Tests.ProxyTap.dll
+Test run for C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\bin\Debug\net10.0\Kronikol.Tests.ProxyTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:03.32]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_handler_that_outlives_disposal_is_not_a_forward_failure [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_handler_that_outlives_disposal_is_not_a_forward_failure [2 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_handler_that_outlives_disposal_is_not_a_forward_failure() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 192
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_handler_that_outlives_disposal_is_not_a_forward_failure() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 199
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_handler_that_outlives_disposal_is_not_a_forward_failure() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 199
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:03.87]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded [FAIL]
+[xUnit.net 00:00:03.98]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names [FAIL]
+[xUnit.net 00:00:04.26]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_lets_an_answer_in_hand_finish [FAIL]
+[xUnit.net 00:00:04.27]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_the_stop_reaches_before_its_forward_is_refused_and_not_recorded [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded [550 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: [RequestResponseLog { TestName = Unknown, TestId = stopping, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = , Uri = http://localhost:52220/late-body, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = api, CallerName = web, Type = Request, TraceId = 041b4be1-250b-4057-9fab-7eac7f6111a0, RequestResponseId = 567540b3-edeb-4e18-934d-2c3c2bbf29c3, TrackingIgnore = False, StatusCode = , MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 15/10/2026 21:26:22 +00:00, AttributionSource = , ExpiredFromTestId = , Error = , ActivitySpanId = 7234196d55dee859, ActivityTraceId = ad895bdbfd78f3d60a6e38ee9065799e, Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }, RequestResponseLog { TestName = Unknown, TestId = stopping, Method = Kronikol.Tracking.OneOf`2[System.Net.Http.HttpMethod,System.String], Content = {"error":{"code":502,"message":"proxy-tap: the tap stopped before api answered. Caused by: A task was canceled. Caused by: A task was canceled."}}, Uri = http://localhost:52220/late-body, Headers = System.ValueTuple`2[System.String,System.String][], ServiceName = api, CallerName = web, Type = Response, TraceId = 041b4be1-250b-4057-9fab-7eac7f6111a0, RequestResponseId = 567540b3-edeb-4e18-934d-2c3c2bbf29c3, TrackingIgnore = False, StatusCode = Kronikol.Tracking.OneOf`2[System.Net.HttpStatusCode,System.String], MetaType = Default, DependencyCategory = , CallerDependencyCategory = , NoteOnRight = False, IsOverrideStart = False, IsOverrideEnd = False, IsActionStart = False, IsDiagramMarker = False, MarkerKind = Custom, PlantUml = , FocusFields = , Timestamp = 15/10/2026 21:26:22 +00:00, AttributionSource = , ExpiredFromTestId = , Error = proxy-tap: the tap stopped before api answered. Caused by: A task was canceled. Caused by: A task was canceled., ActivitySpanId = 7234196d55dee859, ActivityTraceId = ad895bdbfd78f3d60a6e38ee9065799e, Phase = Unknown, SetupVariant = , ActionVariant = , CollapsedCount = 0, CollapsedSummary = , IsUserAction = False, CapturedBy = , DurationMs =  }]
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 166
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 168
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 168
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names [55 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+String:         "a reset (ConnectionReset)"
+Expected start: "HTTP/1.1 502 "
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 71
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 76
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_lets_an_answer_in_hand_finish [285 ms]
+  Error Message:
+   the answer was cut short: 98,130 of 8,388,608 bytes
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_lets_an_answer_in_hand_finish() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 102
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_lets_an_answer_in_hand_finish() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 109
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_lets_an_answer_in_hand_finish() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 109
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_the_stop_reaches_before_its_forward_is_refused_and_not_recorded [4 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+String:         "a reset (ConnectionReset)"
+Expected start: "HTTP/1.1 503 "
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_the_stop_reaches_before_its_forward_is_refused_and_not_recorded() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 226
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_the_stop_reaches_before_its_forward_is_refused_and_not_recorded() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 233
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_the_stop_reaches_before_its_forward_is_refused_and_not_recorded() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 233
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:08.34]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it [4 s]
+  Error Message:
+   System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it.
+  Stack Trace:
+     at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Threading.Tasks.ValueTask.ValueTaskSourceAsTask.<>c.<.cctor>b__4_0(Object state)
+--- End of stack trace from previous location ---
+   at System.Net.Sockets.TcpClient.CompleteConnectAsync(Task task)
+   at Kronikol.Tests.ProxyTap.RawCaller.SendAsync(Int32 port, String request, Nullable`1 receiveBuffer) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\RawCaller.cs:line 24
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 127
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 137
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStoppingTests.cs:line 137
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     6, Passed:     1, Skipped:     0, Total:     7, Duration: 7 s - Kronikol.Tests.ProxyTap.dll (net10.0)

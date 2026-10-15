@@ -1,0 +1,54 @@
+Test run for C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\bin\Debug\net10.0\Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:15.77]     Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(line: "a batch the collector refuses", throwsOn: "answered 503") [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(line: "a batch the collector refuses", throwsOn: "answered 503") [15 s]
+  Error Message:
+   System.InvalidOperationException : There is no currently active test.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.<>c__DisplayClass4_1.<A_throwing_log_callback_changes_nothing>b__0(String text) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 45
+   at Kronikol.Extensions.Otlp.OtlpExporter.PostAsync(IReadOnlyList`1 page, CancellationToken cancellationToken) in C:\Code\Kronikol-173-r0\src\Kronikol.Extensions.Otlp\OtlpExporter.cs:line 152
+   at Kronikol.Extensions.Otlp.OtlpExporter.ExportSpansAsync(IReadOnlyList`1 spans, CancellationToken cancellationToken) in C:\Code\Kronikol-173-r0\src\Kronikol.Extensions.Otlp\OtlpExporter.cs:line 98
+   at Kronikol.Extensions.Otlp.OtlpExportSink.FlushBatchAsync(List`1 batch, CancellationToken ct) in C:\Code\Kronikol-173-r0\src\Kronikol.Extensions.Otlp\OtlpExportSink.cs:line 304
+   at Kronikol.Extensions.Otlp.OtlpExportSink.RunAsync(CancellationToken ct) in C:\Code\Kronikol-173-r0\src\Kronikol.Extensions.Otlp\OtlpExportSink.cs:line 177
+   at Kronikol.Extensions.Otlp.OtlpExportSink.DisposeAsync() in C:\Code\Kronikol-173-r0\src\Kronikol.Extensions.Otlp\OtlpExportSink.cs:line 323
+   at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 86
+   at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 90
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:16.80]     Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(line: "a full queue", throwsOn: "dropped a captured entry") [FAIL]
+[xUnit.net 00:00:16.80]     Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(line: "the stop line", throwsOn: "export sink stopped") [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(line: "a full queue", throwsOn: "dropped a captured entry") [1 s]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   System.InvalidOperationException: There is no currently active test.
+   at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.<>c__DisplayClass4_1.<A_throwing_log_callback_changes_nothing>b__0(String text) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 45
+   at Kronikol.Extensions.Otlp.OtlpExportSink.Log(RequestResponseLog log) in C:\Code\Kronikol-173-r0\src\Kronikol.Extensions.Otlp\OtlpExportSink.cs:line 99
+   at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.<>c__DisplayClass4_2.<A_throwing_log_callback_changes_nothing>b__1() in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 69
+   at Xunit.Record.Exception(Action testCode) in /_/src/xunit.v3.core/Record.cs:line 30
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 69
+   at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 87
+   at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 90
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(line: "the stop line", throwsOn: "export sink stopped") [2 ms]
+  Error Message:
+   System.InvalidOperationException : There is no currently active test.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.<>c__DisplayClass4_1.<A_throwing_log_callback_changes_nothing>b__0(String text) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 45
+   at Kronikol.Extensions.Otlp.OtlpExportSink.DisposeAsync() in C:\Code\Kronikol-173-r0\src\Kronikol.Extensions.Otlp\OtlpExportSink.cs:line 344
+   at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 86
+   at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 90
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:18.02]     Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(line: "a flush that times out", throwsOn: "flush timed out") [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(line: "a flush that times out", throwsOn: "flush timed out") [1 s]
+  Error Message:
+   System.InvalidOperationException : There is no currently active test.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.<>c__DisplayClass4_1.<A_throwing_log_callback_changes_nothing>b__0(String text) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 45
+   at Kronikol.Extensions.Otlp.OtlpExportSink.FlushAsync(Nullable`1 timeout, CancellationToken cancellationToken) in C:\Code\Kronikol-173-r0\src\Kronikol.Extensions.Otlp\OtlpExportSink.cs:line 154
+   at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 79
+   at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 87
+   at Kronikol.Tests.Otlp.OtlpExportSinkLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-r0\tests\Kronikol.Tests.Otlp\OtlpExportSinkLogTests.cs:line 90
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     4, Passed:     0, Skipped:     0, Total:     4, Duration: 17 s - Kronikol.Tests.Otlp.dll (net10.0)

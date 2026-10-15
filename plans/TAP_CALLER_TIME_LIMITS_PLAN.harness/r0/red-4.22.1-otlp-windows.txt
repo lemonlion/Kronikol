@@ -1,0 +1,221 @@
+Test run for C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\bin\Debug\net10.0\Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.91]     Kronikol.Tests.Otlp.HttpRequestReaderTests.A_declared_length_is_not_allocated_before_it_arrives [FAIL]
+  Failed Kronikol.Tests.Otlp.HttpRequestReaderTests.A_declared_length_is_not_allocated_before_it_arrives [236 ms]
+  Error Message:
+   Assert.InRange() Failure: Value not in range
+Range:  (1 - 1048575)
+Actual: 33554432
+  Stack Trace:
+     at Kronikol.Tests.Otlp.HttpRequestReaderTests.A_declared_length_is_not_allocated_before_it_arrives() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\HttpRequestReaderTests.cs:line 37
+   at Kronikol.Tests.Otlp.HttpRequestReaderTests.A_declared_length_is_not_allocated_before_it_arrives() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\HttpRequestReaderTests.cs:line 47
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:10.69]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "abc", status: 400) [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "abc", status: 400) [10 s]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+                    ↓ (pos 9)
+Expected: "HTTP/1.1 400 Bad Request"
+Actual:   "HTTP/1.1 200 OK"
+                    ↑ (pos 9)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 98
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 102
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:10.74]     Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a payload that cannot be mapped", throwsOn: "could not map an export payload") [FAIL]
+[xUnit.net 00:00:10.75]     Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "an unauthenticated export", throwsOn: "rejected an unauthenticated") [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a payload that cannot be mapped", throwsOn: "could not map an export payload") [10 s]
+  Error Message:
+   System.InvalidOperationException : There is no currently active test.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapLogTests.<>c__DisplayClass5_1.<A_throwing_log_callback_changes_nothing>b__0(String text) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 52
+   at Kronikol.Extensions.Otlp.OtlpTap.MapPayload(Payload payload) in C:\Code\Kronikol-173-red\src\Kronikol.Extensions.Otlp\OtlpTap.cs:line 525
+   at Kronikol.Extensions.Otlp.OtlpTap.MapLoopAsync(CancellationToken ct) in C:\Code\Kronikol-173-red\src\Kronikol.Extensions.Otlp\OtlpTap.cs:line 487
+   at Kronikol.Extensions.Otlp.OtlpTap.DisposeAsync() in C:\Code\Kronikol-173-red\src\Kronikol.Extensions.Otlp\OtlpTap.cs:line 600
+   at Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 120
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "an unauthenticated export", throwsOn: "rejected an unauthenticated") [7 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: ["HTTP/1.1 401 Unauthorized"]
+Actual:   []
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 85
+   at Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 121
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:12.80]     Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a forward that failed", throwsOn: "forward failed") [FAIL]
+[xUnit.net 00:00:12.80]     Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "an export over MaxRequestBytes", throwsOn: "refused an export over MaxRequestBytes") [FAIL]
+[xUnit.net 00:00:12.80]     Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a target with no path", throwsOn: "refused a request target with no path") [FAIL]
+[xUnit.net 00:00:12.83]     Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a full queue", throwsOn: "dropped an export payload") [FAIL]
+[xUnit.net 00:00:12.83]     Kronikol.Tests.Otlp.OtlpTapLogTests.A_negative_cap_is_refused [FAIL]
+[xUnit.net 00:00:12.83]     Kronikol.Tests.Otlp.OtlpTapLogTests.The_stop_line_names_every_counter [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a forward that failed", throwsOn: "forward failed") [2 s]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: ["HTTP/1.1 502 Bad Gateway"]
+Actual:   []
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 103
+   at Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 121
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "an export over MaxRequestBytes", throwsOn: "refused an export over MaxRequestBytes") [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: ["HTTP/1.1 413 Payload Too Large"]
+Actual:   []
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 81
+   at Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 121
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a target with no path", throwsOn: "refused a request target with no path") [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: ["HTTP/1.1 400 Bad Request"]
+Actual:   []
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 100
+   at Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 121
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a full queue", throwsOn: "dropped an export payload") [22 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: ["HTTP/1.1 200 OK"]
+Actual:   []
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 94
+   at Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(String line, String throwsOn) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 121
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapLogTests.A_negative_cap_is_refused [2 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapLogTests.A_negative_cap_is_refused() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 157
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapLogTests.The_stop_line_names_every_counter [3 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "[otlp] otlp-tap stopped (1 exports, 1 spans, 0 map"···
+Not found: ", 1 rejected, 1 failed, "
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapLogTests.The_stop_line_names_every_counter() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapLogTests.cs:line 149
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:20.71]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "2147483648", status: 413) [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "2147483648", status: 413) [10 s]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+                    ↓ (pos 9)
+Expected: "HTTP/1.1 413 Payload Too Large"
+Actual:   "HTTP/1.1 200 OK"
+                    ↑ (pos 9)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 98
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 102
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:30.71]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "3000000000", status: 413) [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "3000000000", status: 413) [10 s]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+                    ↓ (pos 9)
+Expected: "HTTP/1.1 413 Payload Too Large"
+Actual:   "HTTP/1.1 200 OK"
+                    ↑ (pos 9)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 98
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 102
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:40.72]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "10, 10", status: 400) [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "10, 10", status: 400) [10 s]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+                    ↓ (pos 9)
+Expected: "HTTP/1.1 400 Bad Request"
+Actual:   "HTTP/1.1 200 OK"
+                    ↑ (pos 9)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 98
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 102
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:50.73]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "", status: 400) [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "", status: 400) [10 s]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+                    ↓ (pos 9)
+Expected: "HTTP/1.1 400 Bad Request"
+Actual:   "HTTP/1.1 200 OK"
+                    ↑ (pos 9)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 98
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 102
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:00.74]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "-5", status: 400) [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "-5", status: 400) [10 s]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+                    ↓ (pos 9)
+Expected: "HTTP/1.1 400 Bad Request"
+Actual:   "HTTP/1.1 200 OK"
+                    ↑ (pos 9)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 98
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 102
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:10.75]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "+5", status: 400) [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(contentLength: "+5", status: 400) [10 s]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+                    ↓ (pos 9)
+Expected: "HTTP/1.1 400 Bad Request"
+Actual:   "HTTP/1.1 200 OK"
+                    ↑ (pos 9)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 98
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_content_length_that_is_not_digits_in_range_is_refused(String contentLength, Int32 status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 102
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:20.78]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_unauthenticated_export_is_refused_before_its_body_is_read [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_unauthenticated_export_is_refused_before_its_body_is_read [10 s]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+String:         "nothing more within 10 s"
+Expected start: "HTTP/1.1 401 "
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_unauthenticated_export_is_refused_before_its_body_is_read() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 35
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_unauthenticated_export_is_refused_before_its_body_is_read() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 41
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:30.82]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_request_with_both_framings_closes_its_connection [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_request_with_both_framings_closes_its_connection [10 s]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+Expected: ["HTTP/1.1 200 OK"]
+Actual:   ["HTTP/1.1 200 OK", "HTTP/1.1 200 OK"]
+                              ↑ (pos 1)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_request_with_both_framings_closes_its_connection() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 147
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_request_with_both_framings_closes_its_connection() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 150
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:40.83]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_unauthenticated_export_over_the_cap_is_401_not_413 [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_unauthenticated_export_over_the_cap_is_401_not_413 [10 s]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+String:         "HTTP/1.1 413 Payload Too Large"
+Expected start: "HTTP/1.1 401 "
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_unauthenticated_export_over_the_cap_is_401_not_413() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 73
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_unauthenticated_export_over_the_cap_is_401_not_413() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 75
+--- End of stack trace from previous location ---
+[xUnit.net 00:01:40.83]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_over_cap_body_cut_short_is_not_counted [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_over_cap_body_cut_short_is_not_counted [3 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: [72, 84, 84, 80, 47, ···]
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_over_cap_body_cut_short_is_not_counted() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 132
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.An_over_cap_body_cut_short_is_not_counted() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 133
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:    20, Passed:     2, Skipped:     0, Total:    22, Duration: 1 m 40 s - Kronikol.Tests.Otlp.dll (net10.0)

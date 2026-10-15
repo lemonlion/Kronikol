@@ -1,0 +1,302 @@
+.NET 10.0.12 (.NET 10.0.12), Ubuntu 24.04.5 LTS, linux-x64, 20 CPUs
+HttpListener: managed. abort-stall-probe.cs started 2026-10-14 08:59:25Z.
+Callers are raw sockets to 127.0.0.1 (localhost's first address). 5 runs per case. Times are in seconds.
+FIN: the caller's pending receive returned 0. RST: it threw SocketException ConnectionReset.
+
+== 1. A chunked answer (SendChunked = true; 16 MB as 256 awaited WriteAsync calls of 64 KiB, on a thread of their own) to a caller
+   that stops reading (receive buffer 16 KiB). A stall: no write completed for 1 s. 1 s after the stall Response.Abort() runs on a
+   thread of its own with a 10 s watchdog. Then the caller reads what it is sent, until FIN, RST or 3 s without a byte.
+  run 1: at the stall (1.10 s after the first call): 36 of 256 writes completed (2359296 bytes); WriteAsync call 37 returned its Task after 0.017 ms and the Task has been pending for 1.096 s
+    Abort(): BLOCKED >10 s (had not returned 10 s after it was called)
+    the writes then: write 37 (its Task pending at the Abort) still pending 10.502 s after the Abort; the write loop is still running
+    the caller then read 2425283 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 37 chunks, 2424832 data bytes, then MALFORMED: '0\r\n\r\n' where chunk 37's closing CRLF belongs (first byte 0.001 s after it started reading); then FIN 0.005 s after it started reading
+    Abort() in the end: returned after 10504.2 ms in all, 0.002 s after the caller started reading
+    the writes in the end: write 37 (its Task pending at the Abort) completed WITHOUT an exception 10.505 s after the Abort; then 219 more WriteAsync calls completed without an exception, the last 10.505 s after the Abort; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.828 ms (call 1)
+  run 2: at the stall (1.09 s after the first call): 36 of 256 writes completed (2359296 bytes); WriteAsync call 37 returned its Task after 0.009 ms and the Task has been pending for 1.092 s
+    Abort(): BLOCKED >10 s (had not returned 10 s after it was called)
+    the writes then: write 37 (its Task pending at the Abort) still pending 10.508 s after the Abort; the write loop is still running
+    the caller then read 2425283 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 37 chunks, 2424832 data bytes, then MALFORMED: '0\r\n\r\n' where chunk 37's closing CRLF belongs (first byte 0.000 s after it started reading); then FIN 0.003 s after it started reading
+    Abort() in the end: returned after 10509.4 ms in all, 0.001 s after the caller started reading
+    the writes in the end: write 37 (its Task pending at the Abort) completed WITHOUT an exception 10.509 s after the Abort; then 219 more WriteAsync calls completed without an exception, the last 10.515 s after the Abort; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.102 ms (call 1)
+  run 3: at the stall (1.09 s after the first call): 36 of 256 writes completed (2359296 bytes); WriteAsync call 37 returned its Task after 0.007 ms and the Task has been pending for 1.092 s
+    Abort(): BLOCKED >10 s (had not returned 10 s after it was called)
+    the writes then: write 37 (its Task pending at the Abort) still pending 10.502 s after the Abort; the write loop is still running
+    the caller then read 2425283 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 37 chunks, 2424832 data bytes, then MALFORMED: '0\r\n\r\n' where chunk 37's closing CRLF belongs (first byte 0.000 s after it started reading); then FIN 0.005 s after it started reading
+    Abort() in the end: returned after 10505.9 ms in all, 0.004 s after the caller started reading
+    the writes in the end: write 37 (its Task pending at the Abort) completed WITHOUT an exception 10.506 s after the Abort; then 219 more WriteAsync calls completed without an exception, the last 10.507 s after the Abort; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.156 ms (call 1)
+  run 4: at the stall (1.09 s after the first call): 36 of 256 writes completed (2359296 bytes); WriteAsync call 37 returned its Task after 0.160 ms and the Task has been pending for 1.092 s
+    Abort(): BLOCKED >10 s (had not returned 10 s after it was called)
+    the writes then: write 37 (its Task pending at the Abort) still pending 10.504 s after the Abort; the write loop is still running
+    the caller then read 2425283 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 37 chunks, 2424832 data bytes, then MALFORMED: '0\r\n\r\n' where chunk 37's closing CRLF belongs (first byte 0.000 s after it started reading); then FIN 0.003 s after it started reading
+    Abort() in the end: returned after 10507.0 ms in all, 0.003 s after the caller started reading
+    the writes in the end: write 37 (its Task pending at the Abort) completed WITHOUT an exception 10.505 s after the Abort; then 219 more WriteAsync calls completed without an exception, the last 10.508 s after the Abort; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.160 ms (call 37)
+  run 5: at the stall (1.10 s after the first call): 36 of 256 writes completed (2359296 bytes); WriteAsync call 37 returned its Task after 0.009 ms and the Task has been pending for 1.094 s
+    Abort(): BLOCKED >10 s (had not returned 10 s after it was called)
+    the writes then: write 37 (its Task pending at the Abort) still pending 10.500 s after the Abort; the write loop is still running
+    the caller then read 2425283 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 37 chunks, 2424832 data bytes, then MALFORMED: '0\r\n\r\n' where chunk 37's closing CRLF belongs (first byte 0.000 s after it started reading); then FIN 0.004 s after it started reading
+    Abort() in the end: returned after 10502.8 ms in all, 0.003 s after the caller started reading
+    the writes in the end: write 37 (its Task pending at the Abort) completed WITHOUT an exception 10.505 s after the Abort; then 219 more WriteAsync calls completed without an exception, the last 10.506 s after the Abort; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 0.096 ms (call 1)
+  tally: stalled inside a WriteAsync call (no Task returned) 0/5; Abort() blocked >10 s 5/5; the caller's chunked body MALFORMED 5/5, looks complete 0/5
+
+== 1b. As 1, but 4 MB as awaited WriteAsync calls of 1 to 8 bytes (sizes drawn at random, seeded by the run). With 64 KiB and with
+   1 KiB writes the stall fell on the asynchronous data write every time; tiny writes give the managed listener's synchronous writes
+   (a chunk's size line, inside the WriteAsync call; its closing CRLF, in the completion callback) a real share of the bytes. The
+   caller's chunked parse tells them apart: data in flight leaves a chunk without its CRLF (MALFORMED); a CRLF that was already
+   queued leaves whole chunks (looks COMPLETE); a size line with no data after it is cut or MALFORMED at the size.
+  run 1: at the stall (1.36 s after the first call): 251063 of 932892 writes completed (1128612 bytes); WriteAsync call 251064 has NOT returned a Task: blocked inside the call for 1.057 s
+    Abort(): BLOCKED >10 s (had not returned 10 s after it was called)
+    the writes then: write 251064 (blocked inside its WriteAsync call at the Abort) still pending 10.504 s after the Abort; the write loop is still running
+    the caller then read 2384050 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 251063 chunks, 1128612 data bytes, then cut inside chunk 251064 (5 of its 8 bytes) (first byte 0.000 s after it started reading); then FIN 0.003 s after it started reading
+    Abort() in the end: returned after 10507.5 ms in all, 0.002 s after the caller started reading
+    the writes in the end: write 251064 (blocked inside its WriteAsync call at the Abort) completed WITHOUT an exception 10.508 s after the Abort; then 681828 more WriteAsync calls completed without an exception, the last 11.287 s after the Abort; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 12563.947 ms (call 251064)
+  run 2: at the stall (1.35 s after the first call): 250717 of 931425 writes completed (1130346 bytes); WriteAsync call 250718 has NOT returned a Task: blocked inside the call for 1.062 s
+    Abort(): BLOCKED >10 s (had not returned 10 s after it was called)
+    the writes then: write 250718 (blocked inside its WriteAsync call at the Abort) still pending 10.501 s after the Abort; the write loop is still running
+    the caller then read 2384054 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 250717 chunks, 1130346 data bytes, then cut inside chunk 250718 (5 of its 8 bytes) (first byte 0.000 s after it started reading); then FIN 0.005 s after it started reading
+    Abort() in the end: returned after 10508.2 ms in all, 0.005 s after the caller started reading
+    the writes in the end: write 250718 (blocked inside its WriteAsync call at the Abort) completed WITHOUT an exception 10.508 s after the Abort; then 680707 more WriteAsync calls completed without an exception, the last 11.339 s after the Abort; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 12568.537 ms (call 250718)
+  run 3: at the stall (1.31 s after the first call): 250908 of 931731 writes completed (1129386 bytes); WriteAsync call 250909 has NOT returned a Task: blocked inside the call for 1.019 s
+    Abort(): BLOCKED >10 s (had not returned 10 s after it was called)
+    the writes then: write 250909 (blocked inside its WriteAsync call at the Abort) still pending 10.501 s after the Abort; the write loop is still running
+    the caller then read 2384052 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 250909 chunks, 1129389 data bytes, then cut inside a chunk-size line ('xxx') (first byte 0.000 s after it started reading); then FIN 0.003 s after it started reading
+    Abort() in the end: returned after 10503.6 ms in all, 0.001 s after the caller started reading
+    the writes in the end: write 250909 (blocked inside its WriteAsync call at the Abort) completed WITHOUT an exception 10.504 s after the Abort; then 680822 more WriteAsync calls completed without an exception, the last 11.466 s after the Abort; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 12524.029 ms (call 250909)
+  run 4: at the stall (1.35 s after the first call): 250891 of 931998 writes completed (1129465 bytes); WriteAsync call 250892 returned its Task after 0.010 ms and the Task has been pending for 1.063 s
+    Abort(): BLOCKED >10 s (had not returned 10 s after it was called)
+    the writes then: write 250892 (its Task pending at the Abort) still pending 10.504 s after the Abort; the write loop is still running
+    the caller then read 2384050 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 250892 chunks, 1129472 data bytes, then MALFORMED: '0\r\n\r\n' where chunk 250892's closing CRLF belongs (first byte 0.000 s after it started reading); then FIN 0.002 s after it started reading
+    Abort() in the end: returned after 10506.3 ms in all, 0.001 s after the caller started reading
+    the writes in the end: write 250892 (its Task pending at the Abort) completed WITHOUT an exception 10.507 s after the Abort; then 681106 more WriteAsync calls completed without an exception, the last 11.507 s after the Abort; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 3.675 ms (call 849377)
+  run 5: at the stall (1.41 s after the first call): 250922 of 931096 writes completed (1129313 bytes); WriteAsync call 250923 has NOT returned a Task: blocked inside the call for 1.094 s
+    Abort(): BLOCKED >10 s (had not returned 10 s after it was called)
+    the writes then: write 250923 (blocked inside its WriteAsync call at the Abort) still pending 10.502 s after the Abort; the write loop is still running
+    the caller then read 2384050 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 250923 chunks, 1129315 data bytes, then a well-formed last chunk (0, CRLF, CRLF): looks COMPLETE (first byte 0.000 s after it started reading); then FIN 0.006 s after it started reading
+    Abort() in the end: returned after 10505.2 ms in all, 0.003 s after the caller started reading
+    the writes in the end: write 250923 (blocked inside its WriteAsync call at the Abort) completed WITHOUT an exception 10.504 s after the Abort; then 680173 more WriteAsync calls completed without an exception, the last 11.370 s after the Abort; the write loop has ended
+    the longest any WriteAsync call took to return its Task: 12601.433 ms (call 250923)
+  tally: stalled inside a WriteAsync call (no Task returned) 4/5; Abort() blocked >10 s 5/5; the caller's chunked body MALFORMED 1/5, looks complete 1/5
+
+== 2a. A Content-Length answer (ContentLength64 = 16 MB) in ONE WriteAsync of 16 MB, to a caller that stops reading (receive buffer 16 KiB).
+   As in 1: a stall, Response.Abort() 1 s later on a thread of its own (10 s watchdog), then the caller reads. The listener's tables
+   (reflection; on Windows, http.sys's active requests from netsh) and the server side's TCP sockets (Linux: /proc, 'no fd' = the
+   process no longer holds it) are read before the Abort, 0.2 s after it, and after the caller's read.
+  run 1: at the stall (1.09 s after the first call): 0 of 1 writes completed (0 bytes); WriteAsync call 1 returned its Task after 6.485 ms and the Task has been pending for 1.088 s
+    before the Abort: _listenerContexts=1 _contextQueue=0 _asyncWaitQueue=0 _connections=1 server-side TCP: ESTABLISHED (fd held, 2342912 bytes unsent)
+    Abort(): returned after 0.6 ms
+    the writes: write 1 (its Task pending at the Abort) completed WITHOUT an exception 0.001 s after the Abort; the write loop has ended
+    0.2 s after the Abort: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: FIN_WAIT1 (no fd, 2342913 bytes unsent)
+    the caller then read 2367488 bytes: 'HTTP/1.1 200 OK' (no Connection header, Content-Length: 16777216), body SHORT: 2367375 of 16777216 bytes (first byte 0.000 s after it started reading); then FIN 0.001 s after it started reading
+    after the caller's read: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: FIN_WAIT2 (no fd)
+  run 2: at the stall (1.10 s after the first call): 0 of 1 writes completed (0 bytes); WriteAsync call 1 returned its Task after 8.678 ms and the Task has been pending for 1.092 s
+    before the Abort: _listenerContexts=1 _contextQueue=0 _asyncWaitQueue=0 _connections=1 server-side TCP: ESTABLISHED (fd held, 2342912 bytes unsent), TIME_WAIT (no fd)
+    Abort(): returned after 0.5 ms
+    the writes: write 1 (its Task pending at the Abort) completed WITHOUT an exception 0.001 s after the Abort; the write loop has ended
+    0.2 s after the Abort: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: FIN_WAIT1 (no fd, 2342913 bytes unsent), TIME_WAIT (no fd)
+    the caller then read 2367488 bytes: 'HTTP/1.1 200 OK' (no Connection header, Content-Length: 16777216), body SHORT: 2367375 of 16777216 bytes (first byte 0.000 s after it started reading); then FIN 0.003 s after it started reading
+    after the caller's read: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: FIN_WAIT2 (no fd), TIME_WAIT (no fd)
+  run 3: at the stall (1.10 s after the first call): 0 of 1 writes completed (0 bytes); WriteAsync call 1 returned its Task after 2.327 ms and the Task has been pending for 1.095 s
+    before the Abort: _listenerContexts=1 _contextQueue=0 _asyncWaitQueue=0 _connections=1 server-side TCP: ESTABLISHED (fd held, 2342912 bytes unsent), TIME_WAIT (no fd), TIME_WAIT (no fd)
+    Abort(): returned after 0.4 ms
+    the writes: write 1 (its Task pending at the Abort) completed WITHOUT an exception 0.001 s after the Abort; the write loop has ended
+    0.2 s after the Abort: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: FIN_WAIT1 (no fd, 2342913 bytes unsent), TIME_WAIT (no fd), TIME_WAIT (no fd)
+    the caller then read 2367488 bytes: 'HTTP/1.1 200 OK' (no Connection header, Content-Length: 16777216), body SHORT: 2367375 of 16777216 bytes (first byte 0.000 s after it started reading); then FIN 0.003 s after it started reading
+    after the caller's read: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: FIN_WAIT2 (no fd), TIME_WAIT (no fd), TIME_WAIT (no fd)
+  run 4: at the stall (1.10 s after the first call): 0 of 1 writes completed (0 bytes); WriteAsync call 1 returned its Task after 8.284 ms and the Task has been pending for 1.088 s
+    before the Abort: _listenerContexts=1 _contextQueue=0 _asyncWaitQueue=0 _connections=1 server-side TCP: TIME_WAIT (no fd), TIME_WAIT (no fd), TIME_WAIT (no fd), ESTABLISHED (fd held, 2342912 bytes unsent)
+    Abort(): returned after 0.4 ms
+    the writes: write 1 (its Task pending at the Abort) completed WITHOUT an exception 0.001 s after the Abort; the write loop has ended
+    0.2 s after the Abort: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), TIME_WAIT (no fd), TIME_WAIT (no fd), FIN_WAIT1 (no fd, 2342913 bytes unsent)
+    the caller then read 2367488 bytes: 'HTTP/1.1 200 OK' (no Connection header, Content-Length: 16777216), body SHORT: 2367375 of 16777216 bytes (first byte 0.000 s after it started reading); then FIN 0.003 s after it started reading
+    after the caller's read: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), TIME_WAIT (no fd), TIME_WAIT (no fd), FIN_WAIT2 (no fd)
+  run 5: at the stall (1.10 s after the first call): 0 of 1 writes completed (0 bytes); WriteAsync call 1 returned its Task after 2.858 ms and the Task has been pending for 1.097 s
+    before the Abort: _listenerContexts=1 _contextQueue=0 _asyncWaitQueue=0 _connections=1 server-side TCP: TIME_WAIT (no fd), TIME_WAIT (no fd), TIME_WAIT (no fd), ESTABLISHED (fd held, 2342912 bytes unsent), TIME_WAIT (no fd)
+    Abort(): returned after 0.3 ms
+    the writes: write 1 (its Task pending at the Abort) completed WITHOUT an exception 0.000 s after the Abort; the write loop has ended
+    0.2 s after the Abort: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), TIME_WAIT (no fd), TIME_WAIT (no fd), FIN_WAIT1 (no fd, 2342913 bytes unsent), TIME_WAIT (no fd)
+    the caller then read 2367488 bytes: 'HTTP/1.1 200 OK' (no Connection header, Content-Length: 16777216), body SHORT: 2367375 of 16777216 bytes (first byte 0.000 s after it started reading); then FIN 0.002 s after it started reading
+    after the caller's read: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), TIME_WAIT (no fd), TIME_WAIT (no fd), FIN_WAIT2 (no fd), TIME_WAIT (no fd)
+  tally: the write pending at the Abort completed without an exception 5/5; Abort() blocked >10 s 0/5; _connections and _listenerContexts both 0 0.2 s after the Abort 5/5
+
+== 2b. A Content-Length answer (ContentLength64 = 16 MB) in 256 awaited WriteAsync calls of 64 KiB, to a caller that stops reading (16 KiB).
+   As in 1: a stall, Response.Abort() 1 s later on a thread of its own (10 s watchdog), then the caller reads. The listener's tables
+   (reflection; on Windows, http.sys's active requests from netsh) and the server side's TCP sockets (Linux: /proc, 'no fd' = the
+   process no longer holds it) are read before the Abort, 0.2 s after it, and after the caller's read.
+  run 1: at the stall (1.10 s after the first call): 36 of 256 writes completed (2359296 bytes); WriteAsync call 37 returned its Task after 0.004 ms and the Task has been pending for 1.101 s
+    before the Abort: _listenerContexts=1 _contextQueue=0 _asyncWaitQueue=0 _connections=1 server-side TCP: ESTABLISHED (fd held, 2342912 bytes unsent)
+    Abort(): returned after 0.4 ms
+    the writes: write 37 (its Task pending at the Abort) completed WITHOUT an exception 0.001 s after the Abort; then 219 more WriteAsync calls completed without an exception, the last 0.001 s after the Abort; the write loop has ended
+    0.2 s after the Abort: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: FIN_WAIT1 (no fd, 2342913 bytes unsent)
+    the caller then read 2367488 bytes: 'HTTP/1.1 200 OK' (no Connection header, Content-Length: 16777216), body SHORT: 2367375 of 16777216 bytes (first byte 0.000 s after it started reading); then FIN 0.002 s after it started reading
+    after the caller's read: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: FIN_WAIT2 (no fd)
+  run 2: at the stall (1.10 s after the first call): 36 of 256 writes completed (2359296 bytes); WriteAsync call 37 returned its Task after 0.006 ms and the Task has been pending for 1.095 s
+    before the Abort: _listenerContexts=1 _contextQueue=0 _asyncWaitQueue=0 _connections=1 server-side TCP: TIME_WAIT (no fd), ESTABLISHED (fd held, 2342912 bytes unsent)
+    Abort(): returned after 0.4 ms
+    the writes: write 37 (its Task pending at the Abort) completed WITHOUT an exception 0.001 s after the Abort; then 219 more WriteAsync calls completed without an exception, the last 0.007 s after the Abort; the write loop has ended
+    0.2 s after the Abort: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), FIN_WAIT1 (no fd, 2342913 bytes unsent)
+    the caller then read 2367488 bytes: 'HTTP/1.1 200 OK' (no Connection header, Content-Length: 16777216), body SHORT: 2367375 of 16777216 bytes (first byte 0.000 s after it started reading); then FIN 0.003 s after it started reading
+    after the caller's read: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), FIN_WAIT2 (no fd)
+  run 3: at the stall (1.11 s after the first call): 36 of 256 writes completed (2359296 bytes); WriteAsync call 37 returned its Task after 0.004 ms and the Task has been pending for 1.105 s
+    before the Abort: _listenerContexts=1 _contextQueue=0 _asyncWaitQueue=0 _connections=1 server-side TCP: TIME_WAIT (no fd), ESTABLISHED (fd held, 2342912 bytes unsent), TIME_WAIT (no fd)
+    Abort(): returned after 0.5 ms
+    the writes: write 37 (its Task pending at the Abort) completed WITHOUT an exception 0.001 s after the Abort; then 219 more WriteAsync calls completed without an exception, the last 0.002 s after the Abort; the write loop has ended
+    0.2 s after the Abort: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), FIN_WAIT1 (no fd, 2342913 bytes unsent), TIME_WAIT (no fd)
+    the caller then read 2367488 bytes: 'HTTP/1.1 200 OK' (no Connection header, Content-Length: 16777216), body SHORT: 2367375 of 16777216 bytes (first byte 0.000 s after it started reading); then FIN 0.004 s after it started reading
+    after the caller's read: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), FIN_WAIT2 (no fd), TIME_WAIT (no fd)
+  run 4: at the stall (1.10 s after the first call): 36 of 256 writes completed (2359296 bytes); WriteAsync call 37 returned its Task after 0.005 ms and the Task has been pending for 1.095 s
+    before the Abort: _listenerContexts=1 _contextQueue=0 _asyncWaitQueue=0 _connections=1 server-side TCP: TIME_WAIT (no fd), ESTABLISHED (fd held, 2342912 bytes unsent), TIME_WAIT (no fd), TIME_WAIT (no fd)
+    Abort(): returned after 0.4 ms
+    the writes: write 37 (its Task pending at the Abort) completed WITHOUT an exception 0.001 s after the Abort; then 219 more WriteAsync calls completed without an exception, the last 0.004 s after the Abort; the write loop has ended
+    0.2 s after the Abort: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), FIN_WAIT1 (no fd, 2342913 bytes unsent), TIME_WAIT (no fd), TIME_WAIT (no fd)
+    the caller then read 2367488 bytes: 'HTTP/1.1 200 OK' (no Connection header, Content-Length: 16777216), body SHORT: 2367375 of 16777216 bytes (first byte 0.000 s after it started reading); then FIN 0.005 s after it started reading
+    after the caller's read: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), FIN_WAIT2 (no fd), TIME_WAIT (no fd), TIME_WAIT (no fd)
+  run 5: at the stall (1.10 s after the first call): 36 of 256 writes completed (2359296 bytes); WriteAsync call 37 returned its Task after 0.005 ms and the Task has been pending for 1.095 s
+    before the Abort: _listenerContexts=1 _contextQueue=0 _asyncWaitQueue=0 _connections=1 server-side TCP: TIME_WAIT (no fd), TIME_WAIT (no fd), TIME_WAIT (no fd), ESTABLISHED (fd held, 2342912 bytes unsent), TIME_WAIT (no fd)
+    Abort(): returned after 0.3 ms
+    the writes: write 37 (its Task pending at the Abort) completed WITHOUT an exception 0.000 s after the Abort; then 219 more WriteAsync calls completed without an exception, the last 0.001 s after the Abort; the write loop has ended
+    0.2 s after the Abort: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), TIME_WAIT (no fd), TIME_WAIT (no fd), FIN_WAIT1 (no fd, 2342913 bytes unsent), TIME_WAIT (no fd)
+    the caller then read 2367488 bytes: 'HTTP/1.1 200 OK' (no Connection header, Content-Length: 16777216), body SHORT: 2367375 of 16777216 bytes (first byte 0.000 s after it started reading); then FIN 0.005 s after it started reading
+    after the caller's read: _listenerContexts=0 _contextQueue=0 _asyncWaitQueue=0 _connections=0 server-side TCP: TIME_WAIT (no fd), TIME_WAIT (no fd), TIME_WAIT (no fd), FIN_WAIT2 (no fd), TIME_WAIT (no fd)
+  tally: the write pending at the Abort completed without an exception 5/5; Abort() blocked >10 s 0/5; _connections and _listenerContexts both 0 0.2 s after the Abort 5/5
+
+== 3a. A pending body ReadAsync: a head with Content-Length: 100000 and 1,000 body bytes, then the
+   caller stalls with the socket open and keeps a receive pending. The server reads until a ReadAsync stays pending for 0.5 s; 1 s
+   later StatusCode = 408 and Response.Abort() (a thread of its own, 10 s watchdog). Reported: what the pending read did and when,
+   and what the caller received (its receive waits up to 3 s for FIN or RST).
+  run 1: the server read 1000 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.5 ms
+    the pending ReadAsync threw System.IO.IOException HResult=0x80131620 'Unable to read data from the transport connection: Operation canceled.' <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=OperationAborted ErrorCode=125 'Operation canceled', 0.001 s after the Abort() call
+    the caller received 152 bytes: 'HTTP/1.1 408 Request Timeout' (Connection: close, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF): looks COMPLETE; all of it: 'HTTP/1.1 408 Request Timeout\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:02:03 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n' (first byte 0.001 s after the Abort() call); then FIN 0.001 s after the Abort() call
+  run 2: the server read 1000 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.7 ms
+    the pending ReadAsync threw System.IO.IOException HResult=0x80131620 'Unable to read data from the transport connection: Operation canceled.' <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=OperationAborted ErrorCode=125 'Operation canceled', 0.001 s after the Abort() call
+    the caller received 152 bytes: 'HTTP/1.1 408 Request Timeout' (Connection: close, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF): looks COMPLETE; all of it: 'HTTP/1.1 408 Request Timeout\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:02:04 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n' (first byte 0.001 s after the Abort() call); then FIN 0.001 s after the Abort() call
+  run 3: the server read 1000 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.4 ms
+    the pending ReadAsync threw System.IO.IOException HResult=0x80131620 'Unable to read data from the transport connection: Operation canceled.' <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=OperationAborted ErrorCode=125 'Operation canceled', 0.001 s after the Abort() call
+    the caller received 152 bytes: 'HTTP/1.1 408 Request Timeout' (Connection: close, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF): looks COMPLETE; all of it: 'HTTP/1.1 408 Request Timeout\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:02:06 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n' (first byte 0.000 s after the Abort() call); then FIN 0.000 s after the Abort() call
+  run 4: the server read 1000 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 4.2 ms
+    the pending ReadAsync threw System.IO.IOException HResult=0x80131620 'Unable to read data from the transport connection: Operation canceled.' <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=OperationAborted ErrorCode=125 'Operation canceled', 0.004 s after the Abort() call
+    the caller received 152 bytes: 'HTTP/1.1 408 Request Timeout' (Connection: close, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF): looks COMPLETE; all of it: 'HTTP/1.1 408 Request Timeout\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:02:07 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n' (first byte 0.004 s after the Abort() call); then FIN 0.004 s after the Abort() call
+  run 5: the server read 1000 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 2.9 ms
+    the pending ReadAsync threw System.IO.IOException HResult=0x80131620 'Unable to read data from the transport connection: Operation canceled.' <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=OperationAborted ErrorCode=125 'Operation canceled', 0.003 s after the Abort() call
+    the caller received 152 bytes: 'HTTP/1.1 408 Request Timeout' (Connection: close, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF): looks COMPLETE; all of it: 'HTTP/1.1 408 Request Timeout\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:02:09 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n' (first byte 0.003 s after the Abort() call); then FIN 0.003 s after the Abort() call
+  tally of the pending read: IOException (inner SocketException) 5/5
+
+== 3b. A pending body ReadAsync on a CHUNKED request body: a head with Transfer-Encoding: chunked, one 1,000-byte chunk (3E8), then the
+   caller stalls with the socket open and keeps a receive pending. The server reads until a ReadAsync stays pending for 0.5 s; 1 s
+   later StatusCode = 408 and Response.Abort() (a thread of its own, 10 s watchdog). Reported: what the pending read did and when,
+   and what the caller received (its receive waits up to 3 s for FIN or RST).
+  run 1: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.6 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=400 NativeErrorCode=400 'I/O operation aborted: 'Unable to read data from the transport connection: Operation canceled.'.', 0.001 s after the Abort() call
+    the caller received 152 bytes: 'HTTP/1.1 408 Request Timeout' (Connection: close, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF): looks COMPLETE; all of it: 'HTTP/1.1 408 Request Timeout\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:02:10 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n' (first byte 0.001 s after the Abort() call); then FIN 0.001 s after the Abort() call
+  run 2: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.6 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=400 NativeErrorCode=400 'I/O operation aborted: 'Unable to read data from the transport connection: Operation canceled.'.', 0.001 s after the Abort() call
+    the caller received 152 bytes: 'HTTP/1.1 408 Request Timeout' (Connection: close, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF): looks COMPLETE; all of it: 'HTTP/1.1 408 Request Timeout\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:02:12 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n' (first byte 0.001 s after the Abort() call); then FIN 0.001 s after the Abort() call
+  run 3: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.6 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=400 NativeErrorCode=400 'I/O operation aborted: 'Unable to read data from the transport connection: Operation canceled.'.', 0.001 s after the Abort() call
+    the caller received 152 bytes: 'HTTP/1.1 408 Request Timeout' (Connection: close, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF): looks COMPLETE; all of it: 'HTTP/1.1 408 Request Timeout\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:02:13 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n' (first byte 0.001 s after the Abort() call); then FIN 0.001 s after the Abort() call
+  run 4: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.5 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=400 NativeErrorCode=400 'I/O operation aborted: 'Unable to read data from the transport connection: Operation canceled.'.', 0.001 s after the Abort() call
+    the caller received 152 bytes: 'HTTP/1.1 408 Request Timeout' (Connection: close, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF): looks COMPLETE; all of it: 'HTTP/1.1 408 Request Timeout\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:02:15 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n' (first byte 0.001 s after the Abort() call); then FIN 0.001 s after the Abort() call
+  run 5: the server read 0 body bytes; the next ReadAsync is pending
+    StatusCode = 408: no exception; Abort(): returned after 0.6 ms
+    the pending ReadAsync threw System.Net.HttpListenerException HResult=0x80004005 ErrorCode=400 NativeErrorCode=400 'I/O operation aborted: 'Unable to read data from the transport connection: Operation canceled.'.', 0.001 s after the Abort() call
+    the caller received 152 bytes: 'HTTP/1.1 408 Request Timeout' (Connection: close, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF): looks COMPLETE; all of it: 'HTTP/1.1 408 Request Timeout\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:02:16 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n' (first byte 0.001 s after the Abort() call); then FIN 0.001 s after the Abort() call
+  tally of the pending read: HttpListenerException 400 5/5
+
+== 3c-length. Beyond the six claims: when does a pending ReadAsync(64 KiB) return while the body trickles in? The caller sends
+   a head with Content-Length: 100000 and 1,000 body bytes, 100 more bytes at 1 s and at 2 s, 70,000 more at 3 s, then stalls.
+   The server keeps one ReadAsync(64 KiB) pending at a time from the moment it has the context. Listed: each read's result, timed from
+   when the head was sent; at 6 s Response.Abort() ends the run (what it did to the pending read is listed too).
+  run 1: reads: 1000 bytes at 0.00 s; (100 more sent at 1.00 s); 100 bytes at 1.00 s; (100 more sent at 2.00 s); 100 bytes at 2.00 s; (70,000 more sent at 3.00 s); 65536 bytes at 3.01 s; 4464 bytes at 3.01 s; (Abort() at 6.00 s); threw at 6.01 s: System.IO.IOException HResult=0x80131620 'Unable to read data from the transport connection: Operation canceled.' <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=OperationAborted ErrorCode=125 'Operation canceled'
+  run 2: reads: 1000 bytes at 0.00 s; (100 more sent at 1.00 s); 100 bytes at 1.00 s; (100 more sent at 2.00 s); 100 bytes at 2.00 s; (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; 4464 bytes at 3.00 s; (Abort() at 6.00 s); threw at 6.00 s: System.IO.IOException HResult=0x80131620 'Unable to read data from the transport connection: Operation canceled.' <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=OperationAborted ErrorCode=125 'Operation canceled'
+  run 3: reads: 1000 bytes at 0.00 s; (100 more sent at 1.00 s); 100 bytes at 1.00 s; (100 more sent at 2.00 s); 100 bytes at 2.00 s; (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; 4464 bytes at 3.00 s; (Abort() at 6.00 s); threw at 6.00 s: System.IO.IOException HResult=0x80131620 'Unable to read data from the transport connection: Operation canceled.' <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=OperationAborted ErrorCode=125 'Operation canceled'
+  run 4: reads: 1000 bytes at 0.00 s; (100 more sent at 1.00 s); 100 bytes at 1.00 s; (100 more sent at 2.00 s); 100 bytes at 2.00 s; (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; 4464 bytes at 3.00 s; (Abort() at 6.00 s); threw at 6.00 s: System.IO.IOException HResult=0x80131620 'Unable to read data from the transport connection: Operation canceled.' <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=OperationAborted ErrorCode=125 'Operation canceled'
+  run 5: reads: 1000 bytes at 0.00 s; (100 more sent at 1.00 s); 100 bytes at 1.00 s; (100 more sent at 2.00 s); 100 bytes at 2.00 s; (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; 4464 bytes at 3.00 s; (Abort() at 6.01 s); threw at 6.01 s: System.IO.IOException HResult=0x80131620 'Unable to read data from the transport connection: Operation canceled.' <- inner System.Net.Sockets.SocketException HResult=0x80004005 SocketErrorCode=OperationAborted ErrorCode=125 'Operation canceled'
+
+== 3c-chunked. Beyond the six claims: when does a pending ReadAsync(64 KiB) return while the body trickles in? The caller sends
+   a head with Transfer-Encoding: chunked and one 1,000-byte chunk, a 100-byte chunk at 1 s and at 2 s, a 70,000-byte chunk at 3 s, then stalls.
+   The server keeps one ReadAsync(64 KiB) pending at a time from the moment it has the context. Listed: each read's result, timed from
+   when the head was sent; at 6 s Response.Abort() ends the run (what it did to the pending read is listed too).
+  run 1: reads: (100 more sent at 1.00 s); (100 more sent at 2.00 s); (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; (Abort() at 6.00 s); threw at 6.00 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=400 NativeErrorCode=400 'I/O operation aborted: 'Unable to read data from the transport connection: Operation canceled.'.'
+  run 2: reads: (100 more sent at 1.00 s); (100 more sent at 2.00 s); (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; (Abort() at 6.00 s); threw at 6.00 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=400 NativeErrorCode=400 'I/O operation aborted: 'Unable to read data from the transport connection: Operation canceled.'.'
+  run 3: reads: (100 more sent at 1.00 s); (100 more sent at 2.00 s); (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; (Abort() at 6.00 s); threw at 6.00 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=400 NativeErrorCode=400 'I/O operation aborted: 'Unable to read data from the transport connection: Operation canceled.'.'
+  run 4: reads: (100 more sent at 1.00 s); (100 more sent at 2.00 s); (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; (Abort() at 6.00 s); threw at 6.01 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=400 NativeErrorCode=400 'I/O operation aborted: 'Unable to read data from the transport connection: Operation canceled.'.'
+  run 5: reads: (100 more sent at 1.00 s); (100 more sent at 2.00 s); (70,000 more sent at 3.00 s); 65536 bytes at 3.00 s; (Abort() at 6.00 s); threw at 6.00 s: System.Net.HttpListenerException HResult=0x80004005 ErrorCode=400 NativeErrorCode=400 'I/O operation aborted: 'Unable to read data from the transport connection: Operation canceled.'.'
+
+== 4. HttpListener.Close() (a thread of its own, 10 s watchdog) with (a) a caller stalled mid-head (request line and Host, no blank
+   line) and (b) an idle kept-alive connection after one complete exchange (GET; 200 with Content-Length: 2, read whole). Both keep
+   a receive pending; reported is what each receives in the 6 s after the Close() call. A new listener per run.
+  run 1: (b)'s first exchange read whole (108 bytes)
+    HttpListener.Close(): returned after 1.8 ms
+    (a) the mid-head caller received 125 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF) and 5 more bytes: looks COMPLETE; all of it: 'HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:03:17 GMT\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n0\r\n\r\n' (first byte 0.002 s after the Close() call); then FIN 0.002 s after the Close() call
+    (b) the idle kept-alive caller received 106 bytes: 'HTTP/1.1 200 OK' (Connection: close, no Content-Length), body 0 bytes, no length; all of it: 'HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:03:17 GMT\r\nConnection: close\r\n\r\n' (first byte 0.002 s after the Close() call); then FIN 0.002 s after the Close() call
+  run 2: (b)'s first exchange read whole (108 bytes)
+    HttpListener.Close(): returned after 0.6 ms
+    (a) the mid-head caller received 125 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF) and 5 more bytes: looks COMPLETE; all of it: 'HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:03:18 GMT\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n0\r\n\r\n' (first byte 0.001 s after the Close() call); then FIN 0.001 s after the Close() call
+    (b) the idle kept-alive caller received 106 bytes: 'HTTP/1.1 200 OK' (Connection: close, no Content-Length), body 0 bytes, no length; all of it: 'HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:03:18 GMT\r\nConnection: close\r\n\r\n' (first byte 0.001 s after the Close() call); then FIN 0.001 s after the Close() call
+  run 3: (b)'s first exchange read whole (108 bytes)
+    HttpListener.Close(): returned after 0.6 ms
+    (a) the mid-head caller received 125 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF) and 5 more bytes: looks COMPLETE; all of it: 'HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:03:19 GMT\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n0\r\n\r\n' (first byte 0.001 s after the Close() call); then FIN 0.001 s after the Close() call
+    (b) the idle kept-alive caller received 106 bytes: 'HTTP/1.1 200 OK' (Connection: close, no Content-Length), body 0 bytes, no length; all of it: 'HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:03:19 GMT\r\nConnection: close\r\n\r\n' (first byte 0.001 s after the Close() call); then FIN 0.001 s after the Close() call
+  run 4: (b)'s first exchange read whole (108 bytes)
+    HttpListener.Close(): returned after 1.7 ms
+    (a) the mid-head caller received 125 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF) and 5 more bytes: looks COMPLETE; all of it: 'HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:03:20 GMT\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n0\r\n\r\n' (first byte 0.002 s after the Close() call); then FIN 0.002 s after the Close() call
+    (b) the idle kept-alive caller received 106 bytes: 'HTTP/1.1 200 OK' (Connection: close, no Content-Length), body 0 bytes, no length; all of it: 'HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:03:20 GMT\r\nConnection: close\r\n\r\n' (first byte 0.002 s after the Close() call); then FIN 0.002 s after the Close() call
+  run 5: (b)'s first exchange read whole (108 bytes)
+    HttpListener.Close(): returned after 0.6 ms
+    (a) the mid-head caller received 125 bytes: 'HTTP/1.1 200 OK' (no Connection header, no Content-Length, Transfer-Encoding: chunked), chunked body: 0 chunks, 0 data bytes, then a well-formed last chunk (0, CRLF, CRLF) and 5 more bytes: looks COMPLETE; all of it: 'HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:03:21 GMT\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n0\r\n\r\n' (first byte 0.001 s after the Close() call); then FIN 0.001 s after the Close() call
+    (b) the idle kept-alive caller received 106 bytes: 'HTTP/1.1 200 OK' (Connection: close, no Content-Length), body 0 bytes, no length; all of it: 'HTTP/1.1 200 OK\r\nServer: Microsoft-NetCore/2.0\r\nDate: Wed, 14 Oct 2026 09:03:21 GMT\r\nConnection: close\r\n\r\n' (first byte 0.001 s after the Close() call); then FIN 0.001 s after the Close() call
+  tally: a 200 head reached (a) 5/5 and (b) 5/5
+
+== 5. Callers that never complete a head, so the application has no context for them (the managed listener's first-read
+   timer; on Windows, http.sys's own timers). Each case's 5 callers start together and keep a receive pending; watched to
+   210 s after the case starts, concurrently with cases 1 to 4 and 6. Its own listener and port per case.
+  5a: connects and sends nothing
+    run 1: no bytes; then RST 90.004 s after connecting
+    run 2: no bytes; then RST 90.003 s after connecting
+    run 3: no bytes; then RST 90.003 s after connecting
+    run 4: no bytes; then RST 90.003 s after connecting
+    run 5: no bytes; then RST 90.002 s after connecting
+    summary: RST 5/5 at 90.0 to 90.0 s, bytes before it 0/0/0/0/0
+  5b: one complete exchange (GET; 200 with Content-Length: 2, read whole), then idle on keep-alive
+    run 1: no bytes; then RST 14.989 s after the first answer was read
+    run 2: no bytes; then RST 14.986 s after the first answer was read
+    run 3: no bytes; then RST 14.984 s after the first answer was read
+    run 4: no bytes; then RST 14.982 s after the first answer was read
+    run 5: no bytes; then RST 14.982 s after the first answer was read
+    summary: RST 5/5 at 15.0 to 15.0 s, bytes before it 0/0/0/0/0
+  5c: sends one byte of a head (G), then nothing
+    run 1: no bytes; then no FIN or RST: still open 210.0 s after the byte was sent
+    run 2: no bytes; then no FIN or RST: still open 210.0 s after the byte was sent
+    run 3: no bytes; then no FIN or RST: still open 210.0 s after the byte was sent
+    run 4: no bytes; then no FIN or RST: still open 210.0 s after the byte was sent
+    run 5: no bytes; then no FIN or RST: still open 210.0 s after the byte was sent
+    summary: still open 5/5 when the watch ended (210 s), bytes before it 0/0/0/0/0
+
+== 6. HttpListenerTimeoutManager. On a new listener that is never started: each getter, then each setter in turn.
+  getters: EntityBody=00:00:00 DrainEntityBody=00:00:00 RequestQueue=00:00:00 IdleConnection=00:00:00 HeaderWait=00:00:00 MinSendBytesPerSecond=0
+  EntityBody = 5 s: THREW System.PlatformNotSupportedException HResult=0x80131539 'Operation is not supported on this platform.'; reads back 00:00:00
+  DrainEntityBody = 5 s: set; reads back 00:00:05
+  RequestQueue = 5 s: THREW System.PlatformNotSupportedException HResult=0x80131539 'Operation is not supported on this platform.'; reads back 00:00:00
+  IdleConnection = 5 s: set; reads back 00:00:05
+  HeaderWait = 5 s: THREW System.PlatformNotSupportedException HResult=0x80131539 'Operation is not supported on this platform.'; reads back 00:00:00
+  MinSendBytesPerSecond = 10000: THREW System.PlatformNotSupportedException HResult=0x80131539 'Operation is not supported on this platform.'; reads back 0
+   (the cases where http.sys's timers fire run on Windows only)
+
+Done at 236 s.

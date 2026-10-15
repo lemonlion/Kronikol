@@ -1,0 +1,147 @@
+dotnet --info (excerpt):
+.NET SDK:
+ Version:           10.0.401
+ Commit:            e34a38d2ae
+Runtime Environment:
+ OS Name:     ubuntu
+ OS Version:  24.04
+ OS Platform: Linux
+ RID:         linux-x64
+Host:
+  Version:      10.0.12
+  Architecture: x64
+  Commit:       95017c711e
+
+Kronikol.Extensions.Otlp 4.20.2+83e9783bb2677a12cd8c42acd18001a696686a9b on .NET 10.0.12, Ubuntu 24.04.5 LTS (linux-x64)
+3 exporter(s) for H1 and K1, 10 for B1; a sample every 15 s to 200 s; OtlpTapOptions.MaxRequestBytes default 33,554,432 B (32 MiB); Server GC False; started 2026-10-14 08:27:43Z
+memory before any exporter connects (after a full collection): GC.GetTotalMemory(false) 0.1 MiB, GC heap 0.2 MiB, GC committed 0.6 MiB, working set 42.8 MiB, private 108.3 MiB
+
+memory 2 s after the B1 exporters stalled: GC.GetTotalMemory(false) 321.9 MiB, GC heap 161.3 MiB, GC committed 161.5 MiB, working set 49.2 MiB, private 560.1 MiB
+  and after a full collection: GC.GetTotalMemory(false) 321.5 MiB, GC heap 321.5 MiB, GC committed 323.9 MiB, working set 50.6 MiB, private 561.4 MiB
+K1's answer head: HTTP/1.1 200 OK | Content-Type: application/json | Content-Length: 2 | Connection: keep-alive
+
+---- t = 0 s   memory: GC.GetTotalMemory(false) 321.9 MiB, GC heap 321.5 MiB, GC committed 323.9 MiB, working set 51.1 MiB, private 561.4 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 15 s   memory: GC.GetTotalMemory(false) 326.8 MiB, GC heap 321.5 MiB, GC committed 323.9 MiB, working set 57.4 MiB, private 565.9 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 30 s   memory: GC.GetTotalMemory(false) 331.5 MiB, GC heap 321.5 MiB, GC committed 323.9 MiB, working set 66.6 MiB, private 479.2 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 45 s   memory: GC.GetTotalMemory(false) 324.1 MiB, GC heap 321.6 MiB, GC committed 333.9 MiB, working set 64.3 MiB, private 473.4 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 60 s   memory: GC.GetTotalMemory(false) 328.6 MiB, GC heap 321.6 MiB, GC committed 333.9 MiB, working set 64.7 MiB, private 473.4 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 75 s   memory: GC.GetTotalMemory(false) 333.1 MiB, GC heap 321.6 MiB, GC committed 333.9 MiB, working set 64.8 MiB, private 473.4 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 90 s   memory: GC.GetTotalMemory(false) 325.1 MiB, GC heap 321.7 MiB, GC committed 334.1 MiB, working set 64.9 MiB, private 473.5 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 105 s   memory: GC.GetTotalMemory(false) 328.0 MiB, GC heap 321.7 MiB, GC committed 334.1 MiB, working set 65.6 MiB, private 473.5 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 120 s   memory: GC.GetTotalMemory(false) 330.7 MiB, GC heap 321.7 MiB, GC committed 334.1 MiB, working set 65.7 MiB, private 473.5 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 135 s   memory: GC.GetTotalMemory(false) 333.4 MiB, GC heap 321.7 MiB, GC committed 334.1 MiB, working set 65.2 MiB, private 473.5 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 150 s   memory: GC.GetTotalMemory(false) 323.9 MiB, GC heap 321.7 MiB, GC committed 334.1 MiB, working set 65.2 MiB, private 473.5 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 165 s   memory: GC.GetTotalMemory(false) 325.9 MiB, GC heap 321.7 MiB, GC committed 334.1 MiB, working set 65.3 MiB, private 473.5 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 180 s   memory: GC.GetTotalMemory(false) 327.7 MiB, GC heap 321.7 MiB, GC committed 334.1 MiB, working set 65.3 MiB, private 473.5 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 195 s   memory: GC.GetTotalMemory(false) 329.4 MiB, GC heap 321.7 MiB, GC committed 334.1 MiB, working set 65.3 MiB, private 473.5 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+---- t = 200 s   memory: GC.GetTotalMemory(false) 330.2 MiB, GC heap 321.7 MiB, GC committed 334.1 MiB, working set 65.3 MiB, private 473.5 MiB
+  H1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+  B1  RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 10x open, tcp exporter/tap Established/Established
+  K1  RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      exporters: 3x open, tcp exporter/tap Established/Established
+
+---- DisposeAsync
+  H1  DisposeAsync at t = 200 s took 6 ms | RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      log: [H1] otlp-tap stopped (0 exports, 0 spans, 0 mapped, 0 ignored, 0 dropped, 0 unauthenticated, 0 forward failures)
+      exporters 1.5 s after: 3x FIN at 202 s, tcp exporter/tap CloseWait/FinWait2
+  B1  DisposeAsync at t = 202 s took 1 ms | RequestsReceived 0, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      log: [B1] otlp-tap stopped (0 exports, 0 spans, 0 mapped, 0 ignored, 0 dropped, 0 unauthenticated, 0 forward failures)
+      exporters 1.5 s after: 10x FIN at 204 s, tcp exporter/tap CloseWait/FinWait2
+  K1  DisposeAsync at t = 203 s took 0 ms | RequestsReceived 3, UnauthenticatedRequests 0, ForwardFailures 0, PayloadsDropped 0, PayloadsRejected 0, PayloadsFailed 0, SpansReceived 0, SpansMapped 0, SpansIgnored 0
+      log: [K1] otlp-tap stopped (3 exports, 0 spans, 0 mapped, 0 ignored, 0 dropped, 0 unauthenticated, 0 forward failures)
+      exporters 1.5 s after: 3x FIN at 205 s, tcp exporter/tap CloseWait/FinWait2
+memory after every tap was disposed (after a full collection): GC.GetTotalMemory(false) 0.2 MiB, GC heap 0.2 MiB, GC committed 12.7 MiB, working set 67.2 MiB, private 520.5 MiB
+
+---- summary before DisposeAsync (times are seconds after each exporter's stall began)
+  H1  partial head (request line + Host), stalls: 3x heard nothing, held through 200 s; DisposeAsync 6 ms
+  B1  head with Content-Length 33,554,432 + 10 body bytes, stalls: 10x heard nothing, held through 200 s; DisposeAsync 1 ms
+  K1  one export (JSON {}) read whole, then idle on keep-alive: 3x heard nothing, held through 200 s; DisposeAsync 0 ms
+  memory: before GC.GetTotalMemory(false) 0.1 MiB, GC heap 0.2 MiB, GC committed 0.6 MiB, working set 42.8 MiB, private 108.3 MiB
+          B1 stalled GC.GetTotalMemory(false) 321.9 MiB, GC heap 161.3 MiB, GC committed 161.5 MiB, working set 49.2 MiB, private 560.1 MiB
+          B1 stalled, after a full collection GC.GetTotalMemory(false) 321.5 MiB, GC heap 321.5 MiB, GC committed 323.9 MiB, working set 50.6 MiB, private 561.4 MiB

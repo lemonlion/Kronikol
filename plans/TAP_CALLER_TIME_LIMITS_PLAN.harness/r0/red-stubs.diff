@@ -1,0 +1,37 @@
+diff --git a/src/Kronikol.Extensions.Otlp/HttpRequestReader.cs b/src/Kronikol.Extensions.Otlp/HttpRequestReader.cs
+index 961c7b28..a217b3e0 100644
+--- a/src/Kronikol.Extensions.Otlp/HttpRequestReader.cs
++++ b/src/Kronikol.Extensions.Otlp/HttpRequestReader.cs
+@@ -39,6 +39,10 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
+     private readonly byte[] _buffer = new byte[16 * 1024];
+     private int _start;
+     private int _end;
++    private int _bodyBytesHeld;
++
++    // Seam for the red proof: the size of the array 4.22.1 makes for a body.
++    internal int BodyBytesHeld => Volatile.Read(ref _bodyBytesHeld);
+ 
+     /// <summary>Reads the next request, or null when the peer closed the connection, cut a body short or sent something unparsable.</summary>
+     public async Task<HttpRequestMessageData?> ReadAsync(CancellationToken ct)
+@@ -152,6 +156,7 @@ private static string PathOf(string target)
+     private async Task<byte[]> ReadExactAsync(int count, CancellationToken ct)
+     {
+         var result = new byte[count];
++        Volatile.Write(ref _bodyBytesHeld, count);
+         var written = 0;
+         while (written < count)
+         {
+diff --git a/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs b/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+index 57f3509c..e2469d79 100644
+--- a/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
++++ b/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+@@ -94,6 +94,9 @@ public ProxyTap(ProxyTapOptions options)
+     // Exchanges whose handler has not finished (Kronikol.Tests.ProxyTap): a fact hangs up only once the tap holds the request.
+     internal int InFlight => Volatile.Read(ref _inflight);
+ 
++    // Seam for the red proof: 4.22.1 has no stopping phase of its own, so the tap is stopping once DisposeAsync has begun.
++    internal bool Stopping => Volatile.Read(ref _disposed) == 1;
++
+     // Wraps the caller's request body before it is read (Kronikol.Tests.ProxyTap): a fact throws from the read whatever
+     // exception it names, on any platform. Null in production.
+     internal Func<Stream, Stream>? WrapRequestBody { get; set; }

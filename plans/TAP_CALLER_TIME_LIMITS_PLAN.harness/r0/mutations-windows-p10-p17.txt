@@ -1,0 +1,8 @@
+P10 the lifetime read from _cts again (R0-12): SURVIVED
+    proxy: [('Passed!', '0', '29')] failed facts: []
+P11 the forward begun after the stop ended the answer (R0-8): SURVIVED
+    proxy: [('Passed!', '0', '29')] failed facts: []
+P16 a forward the stop came before still begun (R0-8, R0-12): KILLED
+    proxy: [('Failed!', '2', '27')] failed facts: ['A_handler_that_outlives_disposal_is_not_a_forward_failure', 'A_request_the_stop_reaches_before_its_forward_is_refused_and_not_recorded']
+P17 the refusal before the forward never answered (R0-8): KILLED
+    proxy: [('Failed!', '1', '28')] failed facts: ['A_request_the_stop_reaches_before_its_forward_is_refused_and_not_recorded']

@@ -1,0 +1,211 @@
+dotnet --info (excerpt):
+.NET SDK:
+ Version:           10.0.300
+ Commit:            caa81fa497
+Runtime Environment:
+ OS Name:     Windows
+ OS Version:  10.0.26200
+ OS Platform: Windows
+ RID:         win-x64
+Host:
+  Version:      10.0.11
+  Architecture: x64
+  Commit:       e2f47b0110
+
+ProxyTap 4.20.2+83e9783bb2677a12cd8c42acd18001a696686a9b on .NET 10.0.11, Microsoft Windows 10.0.26200 (win-x64)
+HttpListener: http.sys; 3 caller(s) per case; a sample every 15 s to 200 s; started 2026-10-14 08:33:26Z
+TimeoutManager getters on the tap's listener: EntityBody=00:00:00, DrainEntityBody=00:00:00, RequestQueue=00:00:00, IdleConnection=00:00:00, HeaderWait=00:00:00, MinSendBytesPerSecond=0
+http.sys server session timeouts for the tap's queue (netsh): Timeout values inherited; Entity body timeout (secs): 120; Drain entity body timeout (secs): 120; Request queue timeout (secs): 120; Idle connection timeout (secs): 120; Header wait timeout (secs): 120; Minimum send rate (bytes/sec): 150
+
+K1's answer head: HTTP/1.1 200 OK | Content-Length: 2 | Content-Type: text/plain | Server: Microsoft-HTTPAPI/2.0 | Date: Wed, 14 Oct 2026 08:33:26 GMT
+
+---- t = 0 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  B1  in-flight 3 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 3, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+---- t = 15 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  B1  in-flight 3 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 3, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+---- t = 30 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  B1  in-flight 3 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 3, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+---- t = 45 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  B1  in-flight 3 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 3, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+---- t = 60 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  B1  in-flight 3 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 3, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+---- t = 75 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  B1  in-flight 3 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 3, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+---- t = 90 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  B1  in-flight 3 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 3, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+---- t = 105 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  B1  in-flight 3 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 3, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+---- t = 120 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x open, tcp caller/tap Established/Established
+  B1  in-flight 3 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 3, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x open, tcp caller/tap Established/Established
+---- t = 135 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  B1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 1x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone | 2x RST (ConnectionReset) at 125.1 s, tcp caller/tap gone/gone
+---- t = 150 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  B1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 1x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone | 2x RST (ConnectionReset) at 125.1 s, tcp caller/tap gone/gone
+---- t = 165 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  B1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 1x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone | 2x RST (ConnectionReset) at 125.1 s, tcp caller/tap gone/gone
+---- t = 180 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  B1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 1x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone | 2x RST (ConnectionReset) at 125.1 s, tcp caller/tap gone/gone
+---- t = 195 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  B1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 1x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone | 2x RST (ConnectionReset) at 125.1 s, tcp caller/tap gone/gone
+---- t = 200 s
+  H0  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  H1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 0
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  B1  in-flight 0 | upstream saw 0 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  W1  in-flight 3 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 3x not read, tcp caller/tap Established/Established | unread B: 16,384/16,384/16,384
+  K1  in-flight 0 | upstream saw 3 | listener tables n/a (http.sys) | http.sys active requests 0, queued 0, arrived 3
+      callers: 1x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone | 2x RST (ConnectionReset) at 125.1 s, tcp caller/tap gone/gone
+
+---- DisposeAsync
+  H0  DisposeAsync at t = 200 s took 2 ms (in-flight 0 before, 0 after) | listener tables n/a (http.sys)
+      handled 0, captured 0, ForwardFailures 0, 'proxy-tap error' lines 0
+      callers 1.5 s after: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  H1  DisposeAsync at t = 202 s took 0 ms (in-flight 0 before, 0 after) | listener tables n/a (http.sys)
+      handled 0, captured 0, ForwardFailures 0, 'proxy-tap error' lines 0
+      callers 1.5 s after: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  B1  DisposeAsync at t = 203 s took 0 ms (in-flight 0 before, 0 after) | listener tables n/a (http.sys)
+      handled 0, captured 0, ForwardFailures 0, 'proxy-tap error' lines 0
+      callers 1.5 s after: 3x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone
+  W1  DisposeAsync at t = 205 s took 31 ms (in-flight 3 before, 0 after) | listener tables n/a (http.sys)
+      handled 3, captured 3, ForwardFailures 0, 'proxy-tap error' lines 0
+      callers 1.5 s after: 3x not read, tcp caller/tap gone/gone | unread B: 0/0/0
+      W1 callers read what was left: 0 B then RST (ConnectionReset); 0 B then RST (ConnectionReset); 0 B then RST (ConnectionReset)
+  K1  DisposeAsync at t = 206 s took 0 ms (in-flight 0 before, 0 after) | listener tables n/a (http.sys)
+      handled 3, captured 3, ForwardFailures 0, 'proxy-tap error' lines 0
+      callers 1.5 s after: 1x RST (ConnectionReset) at 125.2 s, tcp caller/tap gone/gone | 2x RST (ConnectionReset) at 125.1 s, tcp caller/tap gone/gone
+
+---- summary before DisposeAsync (times are seconds after each caller's stall began; tcp histories are state@second from the 1 s watch)
+  H0  connects, sends nothing: 3x heard nothing, RST (ConnectionReset) at 125.2 s [tcp caller Established@0 > gone@126; tap Established@0 > gone@126]; DisposeAsync 2 ms
+  H1  request line + Host, no blank line, stalls: 3x heard nothing, RST (ConnectionReset) at 125.2 s [tcp caller Established@0 > gone@126; tap Established@0 > gone@126]; DisposeAsync 0 ms
+  B1  head with Content-Length: 100000 + 1,000 body bytes, stalls (no FIN): 3x heard nothing, RST (ConnectionReset) at 125.2 s [tcp caller Established@0 > gone@126; tap Established@0 > gone@126]; DisposeAsync 0 ms
+  W1  whole request for an 8 MB answer, never reads (receive buffer 16 KiB): 3x heard nothing, held through 200 s; DisposeAsync 31 ms
+  K1  one small exchange read whole, then idle on keep-alive: 1x heard nothing, RST (ConnectionReset) at 125.2 s [tcp caller Established@0 > gone@126; tap Established@0 > gone@126] | 2x heard nothing, RST (ConnectionReset) at 125.1 s [tcp caller Established@0 > gone@126; tap Established@0 > gone@126]; DisposeAsync 0 ms

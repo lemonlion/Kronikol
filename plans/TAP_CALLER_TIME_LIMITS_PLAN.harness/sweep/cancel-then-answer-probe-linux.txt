@@ -1,0 +1,205 @@
+dotnet --info (excerpt):
+.NET SDK:
+ Version:           10.0.401
+ Commit:            e34a38d2ae
+Runtime Environment:
+ OS Name:     ubuntu
+ OS Version:  24.04
+ OS Platform: Linux
+ RID:         linux-x64
+Host:
+  Version:      10.0.12
+  Architecture: x64
+  Commit:       95017c711e
+
+cancel-then-answer-probe on .NET 10.0.12, Ubuntu 24.04.5 LTS (linux-x64), 20 logical CPUs
+20 trials per variant, each on a new connection; started 2026-10-15 08:19:24Z
+server: TcpListener on 127.0.0.1:44993
+the caller's partial head (35 B): POST /v1/traces HTTP/1.1\r\nHost: x\r\n
+the server's answer (70 B): HTTP/1.1 408 Request Timeout\r\nContent-Length: 0\r\nConnection: close\r\n\r\n
+the caller's later bytes in d and e (100 B): X-Later: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\r\n
+times: ms after the cut (the cancel in a, b, d and e; the start of the other thread's Send in c)
+warm-up: one trial per variant, not counted
+
+== variant a: NetworkStream.ReadAsync(Memory<byte>, token) cancelled after 200 ms; WriteAsync + FlushAsync of the 408 (fresh 5 s token); Shutdown(Send); dispose
+a #01  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.3, then FIN at +0.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #02  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.2, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #03  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #04  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #05  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.3 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.4, then FIN at +0.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #06  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #07  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #08  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #09  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #10  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.3, then FIN at +0.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #11  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #12  read pending at the cut: yes | read: OperationCanceledException at +0.2 | write: ok at +0.3 | Shutdown(Send): ok | disposed at +0.4 | caller: the 408 at +0.4, then FIN at +0.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #13  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.3, then FIN at +0.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #14  read pending at the cut: yes | read: OperationCanceledException at +0.2 | write: ok at +0.4 | Shutdown(Send): ok | disposed at +0.4 | caller: the 408 at +0.5, then FIN at +0.5 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #15  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #16  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #17  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #18  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.3 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.4, then FIN at +0.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #19  read pending at the cut: yes | read: OperationCanceledException at +0.2 | write: ok at +0.3 | Shutdown(Send): ok | disposed at +0.4 | caller: the 408 at +0.4, then FIN at +0.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+a #20  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+
+== variant b: Socket.ReceiveAsync(Memory<byte>, SocketFlags.None, token) cancelled after 200 ms; then as a
+b #01  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.1 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #02  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.3 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #03  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.3 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.4, then FIN at +0.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #04  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.4, then FIN at +0.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #05  read pending at the cut: yes | read: OperationCanceledException at +0.2 | write: ok at +0.3 | Shutdown(Send): ok | disposed at +0.4 | caller: the 408 at +0.5, then FIN at +0.5 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #06  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.3 | Shutdown(Send): ok | disposed at +0.4 | caller: the 408 at +0.5, then FIN at +0.5 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #07  read pending at the cut: yes | read: OperationCanceledException at +0.2 | write: ok at +0.3 | Shutdown(Send): ok | disposed at +0.4 | caller: the 408 at +0.4, then FIN at +0.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #08  read pending at the cut: yes | read: OperationCanceledException at +0.2 | write: ok at +0.4 | Shutdown(Send): ok | disposed at +0.4 | caller: the 408 at +0.5, then FIN at +0.5 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #09  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.3 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #10  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #11  read pending at the cut: yes | read: OperationCanceledException at +0.0 | write: ok at +0.1 | Shutdown(Send): ok | disposed at +0.1 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #12  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.1 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #13  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #14  read pending at the cut: yes | read: OperationCanceledException at +0.2 | write: ok at +0.3 | Shutdown(Send): ok | disposed at +0.4 | caller: the 408 at +0.5, then FIN at +0.5 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #15  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #16  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.1 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #17  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.3 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #18  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #19  read pending at the cut: yes | read: OperationCanceledException at +0.0 | write: ok at +0.1 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+b #20  read pending at the cut: yes | read: OperationCanceledException at +0.1 | write: ok at +0.2 | Shutdown(Send): ok | disposed at +0.2 | caller: the 408 at +0.4, then FIN at +0.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+
+== variant c: no cancellation: 200 ms into the pending NetworkStream.ReadAsync another thread does Socket.Send of the 408, Shutdown(Both), and 100 ms later disposes
+c #01  read pending at the cut: yes | Socket.Send: ok at +0.2 | Shutdown(Both): ok at +0.2 | read: returned 0 B at +0.3 (before the dispose) | disposed at +100.4 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #02  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.2 (before the dispose) | disposed at +100.3 | caller: the 408 at +0.1, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #03  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.2 (before the dispose) | disposed at +100.2 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #04  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.2 (before the dispose) | disposed at +100.3 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #05  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.1 (before the dispose) | disposed at +100.2 | caller: the 408 at +0.1, then FIN at +0.1 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #06  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.1 (before the dispose) | disposed at +100.2 | caller: the 408 at +0.1, then FIN at +0.1 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #07  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.2 (before the dispose) | disposed at +100.3 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #08  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.1 (before the dispose) | disposed at +100.3 | caller: the 408 at +0.1, then FIN at +0.1 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #09  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.1 (before the dispose) | disposed at +100.4 | caller: the 408 at +0.1, then FIN at +0.1 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #10  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.2 (before the dispose) | disposed at +100.5 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #11  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.2 (before the dispose) | disposed at +100.3 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #12  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.2 (before the dispose) | disposed at +100.3 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #13  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.2 (before the dispose) | disposed at +100.3 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #14  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.3 (before the dispose) | disposed at +100.4 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #15  read pending at the cut: yes | Socket.Send: ok at +0.2 | Shutdown(Both): ok at +0.2 | read: returned 0 B at +0.3 (before the dispose) | disposed at +100.4 | caller: the 408 at +0.3, then FIN at +0.3 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #16  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.2 (before the dispose) | disposed at +100.4 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #17  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.1 (before the dispose) | disposed at +100.6 | caller: the 408 at +0.1, then FIN at +0.1 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #18  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.2 (before the dispose) | disposed at +100.4 | caller: the 408 at +0.2, then FIN at +0.2 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #19  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.1 (before the dispose) | disposed at +100.2 | caller: the 408 at +0.1, then FIN at +0.1 | tcp 50 ms later: caller CloseWait, server FinWait2
+c #20  read pending at the cut: yes | Socket.Send: ok at +0.1 | Shutdown(Both): ok at +0.1 | read: returned 0 B at +0.1 (before the dispose) | disposed at +100.3 | caller: the 408 at +0.1, then FIN at +0.1 | tcp 50 ms later: caller CloseWait, server FinWait2
+
+== variant d: as a; the caller sends 100 more bytes 50 ms after the cancel, the server writes 50 ms after that, then reads once more (fresh 1 s token)
+d #01  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +54.6 | write: ok at +105.6 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +105.6 | caller: the 408 at +105.6, then FIN at +105.6 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #02  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +49.8 | write: ok at +104.5 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +104.5 | caller: the 408 at +104.5, then FIN at +104.5 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #03  read pending at the cut: yes | read: OperationCanceledException at +0.0 | caller's later bytes: 100 B sent at +49.3 | write: ok at +102.3 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +102.4 | caller: the 408 at +102.4, then FIN at +102.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #04  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +50.4 | write: ok at +103.3 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +103.3 | caller: the 408 at +103.4, then FIN at +103.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #05  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +51.9 | write: ok at +104.4 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +104.5 | caller: the 408 at +104.5, then FIN at +104.5 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #06  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +51.1 | write: ok at +103.9 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +103.9 | caller: the 408 at +104.0, then FIN at +104.0 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #07  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +54.7 | write: ok at +107.1 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +107.1 | caller: the 408 at +107.1, then FIN at +107.1 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #08  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +52.3 | write: ok at +105.3 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +105.5 | caller: the 408 at +105.4, then FIN at +105.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #09  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +54.5 | write: ok at +107.3 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +107.3 | caller: the 408 at +107.4, then FIN at +107.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #10  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +52.2 | write: ok at +105.0 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +105.1 | caller: the 408 at +105.1, then FIN at +105.1 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #11  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +51.8 | write: ok at +102.7 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +102.8 | caller: the 408 at +102.8, then FIN at +102.8 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #12  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +52.0 | write: ok at +104.9 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +105.1 | caller: the 408 at +105.0, then FIN at +105.0 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #13  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +49.5 | write: ok at +102.3 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +102.3 | caller: the 408 at +102.4, then FIN at +102.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #14  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +52.2 | write: ok at +102.8 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +102.9 | caller: the 408 at +102.9, then FIN at +102.9 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #15  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +50.8 | write: ok at +102.6 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +102.7 | caller: the 408 at +102.7, then FIN at +102.7 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #16  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +53.4 | write: ok at +106.7 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +106.8 | caller: the 408 at +106.9, then FIN at +106.9 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #17  read pending at the cut: yes | read: OperationCanceledException at +0.2 | caller's later bytes: 100 B sent at +52.0 | write: ok at +102.9 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +103.1 | caller: the 408 at +103.1, then FIN at +103.1 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #18  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +51.6 | write: ok at +102.3 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +102.5 | caller: the 408 at +102.5, then FIN at +102.5 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #19  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +50.3 | write: ok at +100.9 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +101.0 | caller: the 408 at +101.0, then FIN at +101.0 | tcp 50 ms later: caller CloseWait, server FinWait2
+d #20  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +49.6 | write: ok at +100.3 | later read: 100 B, the caller's bytes | Shutdown(Send): ok | disposed at +100.3 | caller: the 408 at +100.4, then FIN at +100.4 | tcp 50 ms later: caller CloseWait, server FinWait2
+
+== variant e: as d without the later read: the server closes with the caller's 100 bytes unread
+e #01  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +51.9 | write: ok at +102.6 | Shutdown(Send): ok | disposed at +102.7 | caller: the 408 at +102.7, then FIN at +102.7 | tcp 50 ms later: caller gone, server gone
+e #02  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +53.1 | write: ok at +103.7 | Shutdown(Send): ok | disposed at +103.8 | caller: the 408 at +103.8, then FIN at +103.8 | tcp 50 ms later: caller gone, server gone
+e #03  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +49.5 | write: ok at +100.2 | Shutdown(Send): ok | disposed at +100.3 | caller: the 408 at +100.4, then FIN at +100.4 | tcp 50 ms later: caller gone, server gone
+e #04  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +50.7 | write: ok at +101.4 | Shutdown(Send): ok | disposed at +101.4 | caller: the 408 at +101.4, then FIN at +101.4 | tcp 50 ms later: caller gone, server gone
+e #05  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +53.1 | write: ok at +105.9 | Shutdown(Send): ok | disposed at +105.9 | caller: the 408 at +106.1, then FIN at +106.1 | tcp 50 ms later: caller gone, server gone
+e #06  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +53.4 | write: ok at +104.1 | Shutdown(Send): ok | disposed at +104.2 | caller: the 408 at +104.2, then FIN at +104.2 | tcp 50 ms later: caller gone, server gone
+e #07  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +49.9 | write: ok at +104.9 | Shutdown(Send): ok | disposed at +105.0 | caller: the 408 at +105.0, then FIN at +105.0 | tcp 50 ms later: caller gone, server gone
+e #08  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +50.8 | write: ok at +101.4 | Shutdown(Send): ok | disposed at +101.5 | caller: the 408 at +101.5, then FIN at +101.5 | tcp 50 ms later: caller gone, server gone
+e #09  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +53.0 | write: ok at +104.8 | Shutdown(Send): ok | disposed at +104.9 | caller: the 408 at +104.9, then FIN at +104.9 | tcp 50 ms later: caller gone, server gone
+e #10  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +49.6 | write: ok at +104.8 | Shutdown(Send): ok | disposed at +104.9 | caller: the 408 at +104.9, then FIN at +104.9 | tcp 50 ms later: caller gone, server gone
+e #11  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +50.4 | write: ok at +101.1 | Shutdown(Send): ok | disposed at +101.1 | caller: the 408 at +101.2, then FIN at +101.2 | tcp 50 ms later: caller gone, server gone
+e #12  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +47.9 | write: ok at +102.8 | Shutdown(Send): ok | disposed at +102.9 | caller: the 408 at +102.9, then FIN at +102.9 | tcp 50 ms later: caller gone, server gone
+e #13  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +50.8 | write: ok at +103.7 | Shutdown(Send): ok | disposed at +103.8 | caller: the 408 at +103.8, then FIN at +103.8 | tcp 50 ms later: caller gone, server gone
+e #14  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +51.5 | write: ok at +102.1 | Shutdown(Send): ok | disposed at +102.1 | caller: the 408 at +102.1, then FIN at +102.1 | tcp 50 ms later: caller gone, server gone
+e #15  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +50.3 | write: ok at +102.1 | Shutdown(Send): ok | disposed at +102.3 | caller: the 408 at +102.3, then FIN at +102.3 | tcp 50 ms later: caller gone, server gone
+e #16  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +52.8 | write: ok at +103.4 | Shutdown(Send): ok | disposed at +103.4 | caller: the 408 at +103.4, then FIN at +103.5 | tcp 50 ms later: caller gone, server gone
+e #17  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +50.5 | write: ok at +104.1 | Shutdown(Send): ok | disposed at +104.3 | caller: the 408 at +104.3, then FIN at +104.3 | tcp 50 ms later: caller gone, server gone
+e #18  read pending at the cut: yes | read: OperationCanceledException at +0.1 | caller's later bytes: 100 B sent at +49.5 | write: ok at +104.5 | Shutdown(Send): ok | disposed at +104.5 | caller: the 408 at +104.5, then FIN at +104.5 | tcp 50 ms later: caller gone, server gone
+e #19  read pending at the cut: yes | read: OperationCanceledException at +0.0 | caller's later bytes: 100 B sent at +51.8 | write: ok at +104.4 | Shutdown(Send): ok | disposed at +104.5 | caller: the 408 at +104.5, then FIN at +104.5 | tcp 50 ms later: caller gone, server gone
+e #20  read pending at the cut: yes | read: OperationCanceledException at +0.0 | caller's later bytes: 100 B sent at +49.4 | write: ok at +104.3 | Shutdown(Send): ok | disposed at +104.3 | caller: the 408 at +104.3, then FIN at +104.3 | tcp 50 ms later: caller gone, server gone
+
+== summary. 408 heard: the caller received the whole answer (and nothing else). then: how its connection ended after
+   that (FIN: a receive of 0; RST: ConnectionReset). ms: median and max after the cut. clean in tcp: 50 ms after
+   the end the caller was in CloseWait and the server in FinWait2 (no RST, even after the FIN).
+
+variant  read pending at the cut  408 heard  then FIN  then RST  other end  408 at ms     end at ms     clean in tcp
+a        20/20                    20/20      20        0         0          0.3/0.5       0.3/0.5       20/20       
+b        20/20                    20/20      20        0         0          0.3/0.5       0.3/0.5       20/20       
+c        20/20                    20/20      20        0         0          0.2/0.3       0.2/0.3       20/20       
+d        20/20                    20/20      20        0         0          103.7/107.4   103.7/107.4   20/20       
+e        20/20                    20/20      20        0         0          103.8/106.1   103.8/106.1   0/20        
+
+== per variant: how the server's read ended, its write, its shutdown, the later read (d), the caller's view
+a
+  read ended: OperationCanceledException x20
+  write: ok x20
+  Shutdown(Send): ok x20
+  caller heard: the 408 and nothing else x20
+  caller's end: FIN x20
+  tcp 50 ms after the end: caller CloseWait, server FinWait2 x20
+  read ended at ms (median/max): 0.1/0.2
+  write done at ms (median/max): 0.2/0.4
+  closed at ms (median/max): 0.3/0.4
+  the 408 heard at ms (median/max): 0.3/0.5; the end at ms (median/max): 0.3/0.5
+b
+  read ended: OperationCanceledException x20
+  write: ok x20
+  Shutdown(Send): ok x20
+  caller heard: the 408 and nothing else x20
+  caller's end: FIN x20
+  tcp 50 ms after the end: caller CloseWait, server FinWait2 x20
+  read ended at ms (median/max): 0.1/0.2
+  write done at ms (median/max): 0.2/0.4
+  closed at ms (median/max): 0.3/0.4
+  the 408 heard at ms (median/max): 0.3/0.5; the end at ms (median/max): 0.3/0.5
+c
+  read ended: returned 0 B, before the dispose x20
+  write: ok x20
+  Shutdown(Both): ok x20
+  caller heard: the 408 and nothing else x20
+  caller's end: FIN x20
+  tcp 50 ms after the end: caller CloseWait, server FinWait2 x20
+  read ended at ms (median/max): 0.2/0.3
+  write done at ms (median/max): 0.1/0.2
+  closed at ms (median/max): 100.3/100.6
+  the 408 heard at ms (median/max): 0.2/0.3; the end at ms (median/max): 0.2/0.3
+d
+  read ended: OperationCanceledException x20
+  caller's later bytes: 100 B sent x20
+  write: ok x20
+  later read: 100 B, the caller's bytes x20
+  Shutdown(Send): ok x20
+  caller heard: the 408 and nothing else x20
+  caller's end: FIN x20
+  tcp 50 ms after the end: caller CloseWait, server FinWait2 x20
+  read ended at ms (median/max): 0.1/0.2
+  write done at ms (median/max): 103.6/107.3
+  closed at ms (median/max): 103.6/107.3
+  the 408 heard at ms (median/max): 103.7/107.4; the end at ms (median/max): 103.7/107.4
+e
+  read ended: OperationCanceledException x20
+  caller's later bytes: 100 B sent x20
+  write: ok x20
+  Shutdown(Send): ok x20
+  caller heard: the 408 and nothing else x20
+  caller's end: FIN x20
+  tcp 50 ms after the end: caller gone, server gone x20
+  read ended at ms (median/max): 0.1/0.1
+  write done at ms (median/max): 103.7/105.9
+  closed at ms (median/max): 103.8/105.9
+  the 408 heard at ms (median/max): 103.8/106.1; the end at ms (median/max): 103.8/106.1
+
+finished 2026-10-15 08:19:58Z
