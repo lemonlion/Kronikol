@@ -4,9 +4,9 @@
 and checked again at `f03452fc`, where no file cited here had changed, and none has changed since, through 4.18.3 and
 4.19.0; the wiki's are for `origin/master` at `e5c5a5b`,
 Kronikol4J's for `origin/main` at `4ff5c07`) · **Status:** **green-lit in full by the owner on 2026-10-13** ("implement
-the plan in full"), every §9 question as recommended, with a roadmap row (Q9) and the Azure DevOps issue (Q13) left to
-the owner; **executed as 4.19.7** (R1, R2 and R3 in one patch, §11); **audited on 2026-10-15, its fixes released and
-published as 4.20.6** (§12). Drafted from #169 (filed 2026-10-12 against
+the plan in full"), every §9 question as recommended, with a roadmap row (Q9) left to the owner and the Azure DevOps
+issue (Q13) filed as #177 at the owner's word on 2026-10-15; **executed as 4.19.7** (R1, R2 and R3 in one patch, §11);
+**audited on 2026-10-15, its fixes released and published as 4.20.6** (§12). Drafted from #169 (filed 2026-10-12 against
 4.14.10) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying problem,
 then checked again at the owner's ask the same day (§11). No stage row in `ROADMAP.md` (Q9); its leftovers are a row of
 Appendix C.
@@ -609,7 +609,7 @@ plan's files, and is the first thing a person on a failing CI run reads, so a st
 | Q10 | The annotation's wording (§4.4), the one text both audiences read | **As drafted:** complete on its own, because its agent readers cannot see the summary |
 | Q11 | Should the public `BuildCiSummarySection(RunSummary)` read the process's CI environment? | **Yes.** Called from a CI job, it then prints what the run prints; off CI the people part has no link |
 | Q12 | Put each report's size, suite and failure count, from its `Run.json`, in the query tool's list of several reports? | **Yes, with R2.** The download-everything recipe lands on that list on every matrix and sharded run, and in the dogfood (F12). Dropping it leaves bare paths, which still work |
-| Q13 | Fix the Azure DevOps delivery in code (F10)? | **Not in this plan; file it as its own issue.** The options are a `kronikol` command that a pipeline step runs after the tests and that owns its stdout (new surface, a minor), or the section written to a fixed file beside the report for a documented step to upload (a patch). This plan corrects the docs and gives the two steps (§6.3) |
+| Q13 | Fix the Azure DevOps delivery in code (F10)? | **Not in this plan; file it as its own issue.** The options are a `kronikol` command that a pipeline step runs after the tests and that owns its stdout (new surface, a minor), or the section written to a fixed file beside the report for a documented step to upload (a patch). This plan corrects the docs and gives the two steps (§6.3). **Filed as #177 (2026-10-15).** |
 | Q14 | Leave the run-end pointer on CI as it is? | **Yes** (§4.7): it rarely reaches a CI log, its folder is true for a later step, and the annotation after it carries the off-runner route |
 
 ## 10. Assumption ledger
@@ -727,6 +727,9 @@ plan's files, and is the first thing a person on a failing CI run reads, so a st
   a comment naming the release. On the real run, the All Failing leg's block from run 38723267999, pasted into an empty
   folder with the built tool, downloaded the run, listed its four reports with their counts and answered for the one
   named (exit 0). The same run showed G16 (§12), fixed in the docs without a bump.
+- **2026-10-15, Q13 filed (kronikol-21).** At the owner's word, the Azure DevOps delivery fix is #177, with F10's
+  measurement and both options; option 1 would also carry GitHub's `::notice` (G16). G16's doc comments shipped
+  with 4.22.0, which folded the changelog's `[Unreleased]` section.
 
 ## 12. Audit, 2026-10-15
 
@@ -771,7 +774,8 @@ Left as they are, for the owner:
 - **`act`, Gitea and Forgejo set `GITHUB_*`,** so the block names a run `gh` cannot reach there.
 - **`reports-path` holds one folder per step** (G7). Holding every folder of the step (a multi-line output, which
   `upload-artifact` takes) would change what the output's readers get: new behaviour, the owner's call.
-- **Q13** (the Azure DevOps delivery fix) is still the owner's, as is Q9.
+- **Q13** (the Azure DevOps delivery fix) was filed as #177 on 2026-10-15, at the owner's word. Q9 is still the
+  owner's.
 
 ## Appendix A. Edit sites at `f03452fc`
 
