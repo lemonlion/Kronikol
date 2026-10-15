@@ -1,0 +1,59 @@
+diff --git a/src/Kronikol.Extensions.Otlp/OtlpTap.cs b/src/Kronikol.Extensions.Otlp/OtlpTap.cs
+index db83c042..2bb0c775 100644
+--- a/src/Kronikol.Extensions.Otlp/OtlpTap.cs
++++ b/src/Kronikol.Extensions.Otlp/OtlpTap.cs
+@@ -106,6 +106,8 @@ public OtlpTap(OtlpTapOptions options)
+     /// <summary>Accepted payloads whose decode, span mapping or sink write threw (a sink that cannot write, an unexpected span shape); their spans are lost.</summary>
+     public long PayloadsFailed => Interlocked.Read(ref _failed);
+ 
++    public long AcceptFailures => Accepting.Failures; // R2 stub
++
+     /// <summary>Spans decoded from accepted payloads.</summary>
+     public long SpansReceived => Interlocked.Read(ref _spansReceived);
+ 
+diff --git a/src/Kronikol.Extensions.TcpTap/CaptureDegradation.cs b/src/Kronikol.Extensions.TcpTap/CaptureDegradation.cs
+index 2cc21df6..6d4a9381 100644
+--- a/src/Kronikol.Extensions.TcpTap/CaptureDegradation.cs
++++ b/src/Kronikol.Extensions.TcpTap/CaptureDegradation.cs
+@@ -27,6 +27,10 @@ public enum CaptureDegradationKind
+     /// and an idle connection has nothing unanswered.
+     /// </summary>
+     StuckConnectionReaped,
++
++    UpstreamConnectFailed, // R2 stub
++
++    AcceptFailed, // R2 stub
+ }
+ 
+ /// <summary>
+diff --git a/src/Kronikol.Extensions.TcpTap/TcpTap.cs b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+index 545022f3..e1656911 100644
+--- a/src/Kronikol.Extensions.TcpTap/TcpTap.cs
++++ b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+@@ -139,6 +139,14 @@ public TcpTap(TcpTapOptions options)
+     /// <summary>Connections the tap closed because a decoded command sat unanswered for <see cref="TcpTapOptions.ReapStuckConnectionsAfter"/> — see that option for why.</summary>
+     public long StuckConnectionsReaped => Interlocked.Read(ref _stuckConnectionsReaped);
+ 
++    public long UpstreamConnectFailures => 0; // R2 stub
++
++    public long AcceptFailures => Accepting.Failures; // R2 stub: R1 counts already
++
++    internal static string ConnectFailureLine(
++        string name, string target, string caller, string service, long failed, long timedOut, string? lastFailure,
++        TimeSpan connectTimeout, DateTimeOffset first) => ""; // R2 stub
++
+     /// <summary>When the last interaction was recorded, or null when none has been.</summary>
+     public DateTimeOffset? LastInteractionAt
+     {
+diff --git a/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj b/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj
+index e560010e..b5ec4b36 100644
+--- a/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj
++++ b/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj
+@@ -35,6 +35,7 @@
+ 
+   <ItemGroup>
+     <Compile Include="..\Kronikol.Tests\CultureRun.cs" Link="CultureRun.cs" />
++    <Compile Include="..\Kronikol.Tests\LoopbackPort.cs" Link="LoopbackPort.cs" />
+   </ItemGroup>
+ 
+   <ItemGroup>

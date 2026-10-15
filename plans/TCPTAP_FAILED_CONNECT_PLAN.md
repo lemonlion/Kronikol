@@ -260,7 +260,7 @@ The edit sites are `TcpTap.cs:181-199` and `OtlpTap.cs:259-275`.
   exactly as the `return` does today. A host's `Log` callback can throw: one that writes to xUnit's `ITestOutputHelper`
   after its test has ended gets an `InvalidOperationException`. (READ; kronikol-51 found every `Log` call in `TcpTap`
   unguarded at 3240c983.) In R2 the same holds for the `AcceptFailed` event. `Degrade` already guards the callback, but
-  its own fallback `Log` call at `TcpTap.cs:495` is unguarded.
+  its own fallback `Log` call at `TcpTap.cs:495` is unguarded, so R2 takes that line too (§4.4).
 - **A seam for the facts.** An `internal Func<TcpListener, CancellationToken, ValueTask<TcpClient>> AcceptClient` on
   each tap, defaulting to `AcceptTcpClientAsync`. A fact makes it throw a `SocketException` a set number of times. It
   follows `ProxyTap.WrapRequestBody` and `OtlpTap.BeforeQueued`, and is not public.
@@ -399,10 +399,12 @@ Three `TcpTap` findings from kronikol-51's read (`TAP_CALLER_TIME_LIMITS_PLAN.ha
   takes it** (validation at start). Until it lands, R2 item 7 changes the symptom: each Redis connection would be
   forwarded undecoded and counted as decoding disabled, instead of closed. Either order works.
 - **F2, a throwing `DecoderFactory` closes the pair.** This is §3.3; **#174 takes it** (R2 item 7).
-- **F3, unguarded `Log` calls.** **#173 takes** `TcpTap.cs:257`, 365, 383, 447, 466, 478, 495, 517 and 672 (the
-  pumps, the reaper, the decode loop, the `finally`, `TryReset` and `ResolveIdentity`), `OtlpTap`'s outside its accept
-  loop (among them `MapPayload`'s catch at L526, whose throw ends the mapping loop for good), and `ProxyTap`'s, which
-  this plan does not touch. **#174 takes** L253 and every line it adds (R1, R2 item 8).
+- **F3, unguarded `Log` calls.** **#173 takes** `TcpTap.cs:257`, 365, 383, 447, 466, 478, 517 and 672 (the pumps,
+  the reaper, the decode loop, the `finally`, `TryReset` and `ResolveIdentity`), `OtlpTap`'s outside its accept loop
+  (among them `MapPayload`'s catch at L526, whose throw ends the mapping loop for good), and `ProxyTap`'s, which this
+  plan does not touch. **#174 takes** L253, `Degrade`'s fallback line at L495 (R2 raises its events through `Degrade`,
+  so a throwing `OnCaptureDegraded` and a throwing `Log` together would otherwise escape it), and every line it adds
+  (R1, R2 item 8). Agreed with kronikol-51 on 2026-10-15; the start and stop lines (L162, L715) went to R1.
 
 Both plans need the same guarded helper, named with kronikol-51: `private void TryLog(string message)`, the one line
 `try { _options.Log?.Invoke(message); } catch { }`. The callback is user code, and nothing it throws should change what
@@ -683,6 +685,30 @@ R3 follows the same shape: **Patch**, with "a tap on localhost no longer costs 2
   (`r1/accept-probe-r1.cs`) shows both taps logging seven failed accepts under EMFILE and answering again once the
   descriptors are back (`r1/accept-r1-linux.txt`), the real-world proof §5 asked for. Version order agreed with
   kronikol-2a (#165, 4.20.4) and kronikol-77 (#168's audit, 4.20.5).
+- **2026-10-15, 4.20.3 published.** Release 38715167392, CI 38715162223, CodeQL 38715162220 and CI Summary Preview
+  38715162217 passed on their first attempt, and nuget.org listed all 62 ids at 10:11 UTC. The wiki has R1's edits
+  (`bc5d6e3`), Kronikol4J's ledger its line (`fd5a366`, nothing to port), and #174 a comment naming the release.
+- **2026-10-15, R2 released as 4.22.0**, after kronikol-2a's 4.21.0 (#165 R2), the next minor free. The connect is
+  sorted by `ConnectUpstreamAsync`, as §4.2 item 1 sketches; a failure is counted before anything is logged or raised
+  (`CountConnectFailure`), with failures and timeouts in two counters that `UpstreamConnectFailures` adds, so no reader
+  ever sees a timeout counted as a failure in passing. Found while building it:
+  - **The outer "shutting down" catch could not be reached** once the connect sorts its own failures: the pumps, the
+    decode loop and the reaper end quietly, and nothing else throws on the way to the pumps. §5 said to delete it
+    rather than keep it untested if N6 proved equivalent, and it did, so the catch is gone; anything that reaches the
+    catch-all is unexpected and logged through `TryLog`, stopping or not.
+  - **`Degrade`'s own fallback line (L495) let a throwing `OnCaptureDegraded` and a throwing `Log` escape together**,
+    from the connection's failure path and, with `AcceptFailed`, from the accept loop. R2 sends it through `TryLog`
+    (§4.4, agreed with kronikol-51). With that, `Degrade` cannot throw, so the accept loop does not guard the callback
+    it is handed, and N7 (the count after the log line) would be equivalent: a fact reads the counter from inside the
+    event instead, the contract every other kind already keeps.
+  - **The factory fault counts as a decode error** too, as every decoder failure does, and `ForwardTarget` puts an IPv6
+    literal in brackets.
+  - **R2's red baseline is R1's release**, 4.20.3, with only the members R2's facts name (`r2/red-stubs.diff`).
+  Red on 4.20.3 (`r2/red-4.20.3-{windows,linux}.txt`): nine facts, 11 cases with the theory's three, red on their own
+  assertions on both platforms, with two guards green by design (C4, and a throwing `OnCaptureDegraded` that 4.20.3
+  never calls). 18 of 20 mutations are killed (`r2/mutations-windows.txt`); N6 (the catch restored) and N8 (the
+  catch-all's line unguarded) are equivalent, since nothing reaches either. §5's N7 was killed by the fact that reads
+  the counter from inside the event. The checks are in the changelog's 4.22.0 entry.
 
 ## Appendix A. Edit sites at `3240c983`
 

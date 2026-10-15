@@ -61,7 +61,10 @@ public class TcpTapOptions
     /// <summary>Optional human-readable name of this tap for diagnostics (defaults to <c>caller→service</c>).</summary>
     public string? Name { get; set; }
 
-    /// <summary>Optional diagnostic log callback (listener start/stop, connection errors, decoder give-ups, drop counts).</summary>
+    /// <summary>
+    /// Optional diagnostic log callback: the listener starting and stopping, accepts that failed, connects to the real server
+    /// that failed or ran past <see cref="ConnectTimeout"/>, connection errors, decoder resets and give-ups, drop counts.
+    /// </summary>
     public Action<string>? Log { get; set; }
 
     /// <summary>Where captured entries go. Default: the in-process <see cref="RequestResponseLogger"/> store. Use <c>CompositeRequestResponseSink</c> to add an NDJSON file.</summary>
@@ -107,7 +110,14 @@ public class TcpTapOptions
     /// <summary>Backlog passed to the listening socket. Default 128.</summary>
     public int AcceptBacklog { get; set; } = 128;
 
-    /// <summary>Connect timeout to the forward target. Default 5 s.</summary>
+    /// <summary>
+    /// How long the tap waits to connect to <see cref="ForwardHost"/>:<see cref="ForwardPort"/> for each connection it
+    /// accepts, the name's resolution included. A connect that fails or runs past it closes the caller's connection without
+    /// forwarding anything, and is counted (<see cref="TcpTap.UpstreamConnectFailures"/>), logged, raised
+    /// (<see cref="CaptureDegradationKind.UpstreamConnectFailed"/>) and reported by <see cref="TcpTap.Diagnostics"/>. On
+    /// Windows a refused connect takes about 2 s per address, because Windows sends the SYN again after a reset, so under a
+    /// shorter timeout a refusal arrives as a timeout. Default 5 s.
+    /// </summary>
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>How long <see cref="TcpTap.DisposeAsync"/> waits for live connections to finish so their captures land. Default 2 s.</summary>
@@ -141,10 +151,12 @@ public class TcpTapOptions
 
     /// <summary>
     /// Called as capture-loss events happen — an oversize payload streamed past, a decoder reset or give-up, dropped
-    /// segments, a connection closed mid-message — so a host can flag the tap before the report is generated. The
-    /// same facts are available afterwards as counters and through <see cref="TcpTap.Diagnostics"/>. Invoked on the
-    /// decoder task (never on a byte pump, except for dropped segments, which are reported at most once per connection
-    /// per minute); an exception it throws is caught and logged. Default null.
+    /// segments, a connection closed mid-message or reaped, a connection the tap could not forward, an accept that
+    /// failed — so a host can flag the tap before the report is generated. The same facts are available afterwards as
+    /// counters and through <see cref="TcpTap.Diagnostics"/>. Invoked on the task where the event happens: the decoder's
+    /// for decoding events, a byte pump's for dropped segments (reported at most once per connection per minute), the
+    /// reaper's for a reaped connection, the connection's own for a failed connect and the accept loop's for a failed
+    /// accept, so keep it quick. An exception it throws is caught and logged. Default null.
     /// </summary>
     public Action<CaptureDegradation>? OnCaptureDegraded { get; set; }
 

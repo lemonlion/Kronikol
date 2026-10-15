@@ -4,7 +4,51 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [4.22.0] - 2026-10-15
+
+**Minor - a `TcpTap` connection that could not be forwarded is counted and reported (#174;
+`plans/TCPTAP_FAILED_CONNECT_PLAN.md` R2).** Green-lit in full by the owner on 2026-10-15, every question in the plan's
+section 9 as recommended. New public members, so the minor part moves (4.21.0 to 4.22.0).
+
+### Added
+
+- `TcpTap.UpstreamConnectFailures`: connections the tap closed without forwarding anything, because it could not connect
+  to `ForwardHost:ForwardPort` within `ConnectTimeout`, or at all. A connect cut short by the tap's own disposal is not
+  counted. It is the counterpart of `ProxyTap.ForwardFailures` and `OtlpTap.ForwardFailures`.
+- `TcpTap.AcceptFailures` and `OtlpTap.AcceptFailures`: the accepts that failed while the tap ran (4.20.3's count, made
+  public).
+- `CaptureDegradationKind.UpstreamConnectFailed`, raised once per connection the tap could not forward, and
+  `CaptureDegradationKind.AcceptFailed`, raised tap-wide (`ConnectionId` 0) with the first failed accept in a row and
+  then at most once a minute.
+
+### Fixed
+
+- **A connect to the real server that failed was not counted, and one that timed out was not even logged (#174).** A
+  timeout's `OperationCanceledException` landed in the catch kept for the tap shutting down, and a refusal or a name
+  that did not resolve was one log line. On Windows a refusal takes about 2 s per address, because Windows sends the SYN
+  again after a reset, so under a `ConnectTimeout` shorter than that a refusal arrived as a timeout and was just as
+  silent. The tap now tells the three endings apart by its own tokens, never by the exception's type: the tap stopping
+  (its lifetime token) is nobody's failure; a connect that ran past `ConnectTimeout` and one that failed are counted,
+  logged with the caller's address and the cause, raised through `OnCaptureDegraded` and reported by `Diagnostics()`, in
+  one line that names the address and the last error, for example: `svc→redis: 12 connection(s) could not be forwarded,
+  because the tap could not connect to localhost:6379 (9 failed, the last with SocketException ConnectionRefused:
+  Connection refused; 3 got no connection within ConnectTimeout 00:00:05), the first at 14:03:35Z; the tap closed each
+  one, so svc's commands on them never reached redis`. The stop line counts them too.
+- **A `DecoderFactory` that threw closed a connection whose server was healthy.** The connection is now forwarded
+  undecoded, and the failure is counted as a decode error and as decoding disabled, with its `Log` line, its
+  `DecodingDisabled` event and the existing `Diagnostics()` line.
+- **`OnCaptureDegraded` and `Log` throwing together could undo the tap's work.** When the host's event callback threw,
+  the tap logged that through the host's `Log` callback unguarded, so a `Log` that threw as well escaped the event: out
+  of the connection's failure path, and with R2's accept event, out of the accept loop. That line now goes through the
+  guarded writer.
+- Documentation: `CaptureDegradationKind` no longer says forwarding is never affected by any of its kinds,
+  `DiagnosticKind.CaptureDegraded` no longer says forwarding was never affected, `OnCaptureDegraded` names the task each
+  kind is raised on, and `ConnectTimeout` and `Log` say what a failed connect does. `TcpTap`'s class remarks extend the
+  promise that capture loss is never silent to accepting and connecting.
+
+Behaviour change: a failed connect is a new log line, event and `Diagnostics()` line, and a throwing `DecoderFactory`
+forwards undecoded instead of closing the connection. `CaptureDegradationKind` gains two values, so a host that
+switches over it exhaustively will see them.
 
 ### Documentation
 
@@ -16,6 +60,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
   directly run MTP host, and that under `dotnet test` the job summary, a file the runner reads, is the channel left.
   The plan had measured this (`plans/CI_SUMMARY_AUDIENCE_PLAN.md` section 2), but the docs dropped it; the wiki's
   CI-Summary-Integration page says it too, with a troubleshooting row.
+
+### Tests
+
+- `TcpTapConnectFailureTests` (new, 11 facts, one a theory of three cases): a refused connect is counted, logged with
+  the caller and the cause, raised on its connection with the counter already up to date, and reported in one line; a
+  connect that runs past `ConnectTimeout` (a listener whose queue is full, so the SYN goes unanswered on Windows and
+  Linux) is counted as timed out and worded "no connection within ConnectTimeout"; a name that does not resolve is
+  counted as failed; a connect cut short by stopping the tap counts nothing, the fact that kills a sort by the
+  exception's type; the line leaves out a cause with nothing in it, names the last failure and the first one's time; a
+  throwing `DecoderFactory` forwards undecoded; the stop line counts failed connects and failed accepts; throwing `Log`
+  and `OnCaptureDegraded` callbacks lose neither the count nor the connection, and nothing escapes `Degrade`; and a
+  failed accept is raised tap-wide and counted in public, while a throwing `OnCaptureDegraded` stops no accept loop.
+  `OtlpTapAcceptTests` reads the public `AcceptFailures`.
+- Proofs (plan harness `r2/`): copied onto 4.20.3 with only the members R2's facts name, given no behaviour
+  (`red-stubs.diff`), nine facts fail on Windows and on Linux (11 cases with the theory's three), each on its own
+  assertion. Two guards pass there by design: stopping the tap during a connect counts nothing, and a throwing
+  `OnCaptureDegraded` stops no accept loop, which 4.20.3 holds by raising no event at all. The `OtlpTap` facts pass
+  there too, since R2 only makes R1's count public; a mutation shows they read it. 18 of 20 mutations are killed. The
+  other two are equivalent, because once the connect sorts its own failures nothing reaches the outer catch of a
+  connection: one restores the catch kept for "shutting down", which took a connect timeout for one and is deleted
+  rather than kept untested, and the other unguards the log line of the catch-all behind it.
+- Checks: after the version bump the core suite passes 7,602 with 2 skipped; the TcpTap suite passes 427 with 4 skipped
+  (its Docker-only container facts) and the Otlp suite 148, on Windows and on Linux; release.slnf builds in Release for
+  every target. The Playwright suite was not run, since nothing a page draws changed. The templates pin 4.21.0 and the
+  history action's VERSION installs Kronikol.Tool 4.22.0. The changelog's Unreleased documentation entry, the
+  `::notice` annotation's doc comments, ships with this release.
 
 ## [4.21.0] - 2026-10-15
 
@@ -410,7 +480,7 @@ carry new lines.
   runs the process out of file descriptors, built from this tree, shows both taps logging seven failed accepts and
   answering again once the descriptors are back, on Linux (`accept-r1-linux.txt`), where on 4.20.2 neither answered again.
 - Checks: after the version bump the core suite passes 7,533 with 2 skipped; the TcpTap suite passes 407 with 4 skipped
-  (its Docker-only container facts) and the Otlp suite 147, on Windows and on Linux; release.slnf builds in Release for
+  (its Docker-only container facts) and the Otlp suite 148, on Windows and on Linux; release.slnf builds in Release for
   every target. The Playwright suite was not run, since nothing a page draws changed. The templates pin 4.20.2 and the
   history action's VERSION installs Kronikol.Tool 4.20.3.
 

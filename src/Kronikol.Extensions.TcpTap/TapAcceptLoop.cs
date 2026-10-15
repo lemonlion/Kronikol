@@ -22,12 +22,22 @@ internal sealed class TapAcceptLoop
     private static readonly TimeSpan ReportInterval = TimeSpan.FromMinutes(1);
 
     private readonly Action<string> _log;
+    private readonly Action<string>? _failed;
     private long _failures;
     private long _firstFailureAtTicks;
     private string? _firstFailure;
 
     /// <param name="log">Writes one line; the tap adds its name and guards the host's callback.</param>
-    internal TapAcceptLoop(Action<string> log) => _log = log;
+    /// <param name="failed">
+    /// Told of each failure the log reports (the first in a row, then at most one a minute), with the line's text;
+    /// <c>TcpTap</c> raises it as an event. It must not throw, as the loop would end: <c>TcpTap.Degrade</c> catches what
+    /// the host's callback throws and logs it through the guarded writer.
+    /// </param>
+    internal TapAcceptLoop(Action<string> log, Action<string>? failed = null)
+    {
+        _log = log;
+        _failed = failed;
+    }
 
     /// <summary>Accepts one caller. A fact makes it throw.</summary>
     internal Func<TcpListener, CancellationToken, ValueTask<TcpClient>> Accept { get; set; } =
@@ -100,13 +110,13 @@ internal sealed class TapAcceptLoop
                 {
                     firstInARow = now;
                     lastReported = now;
-                    _log(string.Create(CultureInfo.InvariantCulture,
+                    ReportFailure(string.Create(CultureInfo.InvariantCulture,
                         $"accept on {Endpoint(listener)} failed ({Describe(ex)}); still listening, and trying again with pauses of up to {LongestPause.TotalSeconds:0} s"));
                 }
                 else if (now - lastReported >= ReportInterval)
                 {
                     lastReported = now;
-                    _log(string.Create(CultureInfo.InvariantCulture,
+                    ReportFailure(string.Create(CultureInfo.InvariantCulture,
                         $"accept on {Endpoint(listener)} still failing: {failuresInARow:N0} failed accept(s) since {firstInARow:HH:mm:ss}Z, the last {Describe(ex)}"));
                 }
 
@@ -135,9 +145,16 @@ internal sealed class TapAcceptLoop
         }
     }
 
+    private void ReportFailure(string line)
+    {
+        _log(line);
+        _failed?.Invoke(line);
+    }
+
     private static string Endpoint(TcpListener listener) => listener.LocalEndpoint.ToString() ?? "its listener";
 
-    private static string Describe(Exception ex) => ex is SocketException socket
+    /// <summary>An exception as the taps' lines name it: its type, a socket error's code, and its message.</summary>
+    internal static string Describe(Exception ex) => ex is SocketException socket
         ? $"{ex.GetType().Name} {socket.SocketErrorCode}: {ex.Message}"
         : $"{ex.GetType().Name}: {ex.Message}";
 }

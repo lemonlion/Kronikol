@@ -106,6 +106,13 @@ public sealed class OtlpTap : IAsyncDisposable
     /// <summary>Accepted payloads whose decode, span mapping or sink write threw (a sink that cannot write, an unexpected span shape); their spans are lost.</summary>
     public long PayloadsFailed => Interlocked.Read(ref _failed);
 
+    /// <summary>
+    /// Accepts that failed while the tap was running; on Linux, a process out of file descriptors is one cause. The tap
+    /// keeps listening and tries again, pausing up to a second between tries, so exporters that arrive meanwhile wait in
+    /// the listen queue. Reported by <see cref="Diagnostics"/>.
+    /// </summary>
+    public long AcceptFailures => Accepting.Failures;
+
     /// <summary>Spans decoded from accepted payloads.</summary>
     public long SpansReceived => Interlocked.Read(ref _spansReceived);
 
@@ -603,7 +610,7 @@ public sealed class OtlpTap : IAsyncDisposable
         TryLog(
             $"[{_options.DisplayName}] otlp-tap stopped ({RequestsReceived} exports, {SpansReceived} spans, {SpansMapped} mapped, "
             + $"{SpansIgnored} ignored, {PayloadsDropped} dropped, {UnauthenticatedRequests} unauthenticated, {ForwardFailures} forward failures, "
-            + $"{Accepting.Failures} failed accepts)");
+            + $"{AcceptFailures} failed accepts)");
     }
 
     /// <summary>

@@ -24,10 +24,13 @@ namespace Kronikol.Extensions.TcpTap;
 /// (<see cref="TapProtocolException.Recoverable"/>) and <see cref="TcpTapOptions.ResyncAfterOverflow"/> is on
 /// the decoder is reset and resumes at the next command boundary (<see cref="DecoderResets"/>), otherwise it is
 /// switched off for that one connection (<see cref="DecodingDisabledConnections"/>) — the connection keeps
-/// forwarding either way.</para>
-/// <para><b>Capture loss is never silent.</b> Every skip, reset, give-up and drop is a counter, a
-/// <see cref="TcpTapOptions.Log"/> line, a <see cref="TcpTapOptions.OnCaptureDegraded"/> event and an entry in
-/// <see cref="Diagnostics"/> — the list a host hands to the ingest so it lands in the report.</para>
+/// forwarding either way. A <see cref="TcpTapOptions.DecoderFactory"/> that throws costs the connection its decoding
+/// the same way, never its forwarding.</para>
+/// <para><b>Capture loss is never silent.</b> Every skip, reset, give-up and drop, every connection the tap closed because
+/// it could not connect to the real server (<see cref="UpstreamConnectFailures"/>), and every accept that failed
+/// (<see cref="AcceptFailures"/>) is a counter, a <see cref="TcpTapOptions.Log"/> line, a
+/// <see cref="TcpTapOptions.OnCaptureDegraded"/> event and an entry in <see cref="Diagnostics"/> — the list a host hands
+/// to the ingest so it lands in the report.</para>
 /// <para>The tap never learns a connection string or a password: it sees only the bytes on an already-open
 /// socket, and the decoders drop authentication and handshake commands before anything reaches a sink.</para>
 /// <para>Use <see cref="RedisTap"/> or <see cref="MongoTap"/> for the two decoders that ship with the package.</para>
@@ -64,6 +67,10 @@ public class TcpTap : IAsyncDisposable
     private long _decodingDisabledConnections;
     private long _connectionsClosedMidMessage;
     private long _stuckConnectionsReaped;
+    private long _connectsFailed;
+    private long _connectsTimedOut;
+    private long _firstConnectFailureAtTicks;
+    private string? _lastConnectFailure;
     private long _firstDisabledAtTicks;
     private string? _lastDisabledReason;
     private long _lastInteractionAtTicks;
@@ -73,7 +80,9 @@ public class TcpTap : IAsyncDisposable
     public TcpTap(TcpTapOptions options)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        Accepting = new TapAcceptLoop(line => TryLog($"[{_options.DisplayName}] tcp-tap {line}"));
+        Accepting = new TapAcceptLoop(
+            line => TryLog($"[{_options.DisplayName}] tcp-tap {line}"),
+            line => Degrade(0, CaptureDegradationKind.AcceptFailed, line));
     }
 
     /// <summary>The options this tap runs with.</summary>
@@ -139,6 +148,22 @@ public class TcpTap : IAsyncDisposable
     /// <summary>Connections the tap closed because a decoded command sat unanswered for <see cref="TcpTapOptions.ReapStuckConnectionsAfter"/> — see that option for why.</summary>
     public long StuckConnectionsReaped => Interlocked.Read(ref _stuckConnectionsReaped);
 
+    /// <summary>
+    /// Connections the tap closed without forwarding anything, because it could not connect to
+    /// <see cref="TcpTapOptions.ForwardHost"/>:<see cref="TcpTapOptions.ForwardPort"/> within
+    /// <see cref="TcpTapOptions.ConnectTimeout"/>, or at all. A connect cut short by the tap's own disposal is not counted.
+    /// Each is also logged, raised as <see cref="CaptureDegradationKind.UpstreamConnectFailed"/> and reported by
+    /// <see cref="Diagnostics"/>.
+    /// </summary>
+    public long UpstreamConnectFailures => Interlocked.Read(ref _connectsFailed) + Interlocked.Read(ref _connectsTimedOut);
+
+    /// <summary>
+    /// Accepts that failed while the tap was running; on Linux, a process out of file descriptors is one cause. The tap
+    /// keeps listening and tries again, pausing up to a second between tries, so callers that arrive meanwhile wait in the
+    /// listen queue. Raised as <see cref="CaptureDegradationKind.AcceptFailed"/> and reported by <see cref="Diagnostics"/>.
+    /// </summary>
+    public long AcceptFailures => Accepting.Failures;
+
     /// <summary>When the last interaction was recorded, or null when none has been.</summary>
     public DateTimeOffset? LastInteractionAt
     {
@@ -201,15 +226,13 @@ public class TcpTap : IAsyncDisposable
         {
             client.NoDelay = true;
             upstream = new TcpClient { NoDelay = true };
+            var caller = client.Client.RemoteEndPoint as IPEndPoint;
 
-            using (var connectCts = CancellationTokenSource.CreateLinkedTokenSource(ct))
-            {
-                connectCts.CancelAfter(_options.ConnectTimeout);
-                await upstream.ConnectAsync(_options.ForwardHost, _options.ForwardPort, connectCts.Token).ConfigureAwait(false);
-            }
+            if (!await ConnectUpstreamAsync(upstream, id, caller, ct).ConfigureAwait(false))
+                return;
 
-            var context = new TcpTapConnectionContext(this, id, client.Client.RemoteEndPoint as IPEndPoint);
-            decoder = _options.DecoderFactory!(context);
+            var context = new TcpTapConnectionContext(this, id, caller);
+            decoder = CreateDecoder(context);
 
             var channel = Channel.CreateBounded<TapSegment>(new BoundedChannelOptions(_options.ChannelCapacity)
             {
@@ -220,6 +243,8 @@ public class TcpTap : IAsyncDisposable
             });
 
             var pumpState = new ConnectionPumpState(id);
+            if (decoder is null)
+                Volatile.Write(ref pumpState.DecodingBroken, 1);
             var decodeTask = Task.Run(() => DecodeLoopAsync(channel.Reader, decoder, context, pumpState), CancellationToken.None);
 
             var clientStream = client.GetStream();
@@ -227,7 +252,8 @@ public class TcpTap : IAsyncDisposable
             var toServer = PumpAsync(clientStream, upstreamStream, upstream.Client, TapDirection.ClientToServer, channel.Writer, pumpState, ct);
             var toClient = PumpAsync(upstreamStream, clientStream, client.Client, TapDirection.ServerToClient, channel.Writer, pumpState, ct);
 
-            var reaper = _options.ReapStuckConnectionsAfter is { } threshold
+            // The reaper reads the decoder; a connection without one has nothing for it to read.
+            var reaper = _options.ReapStuckConnectionsAfter is { } threshold && decoder is not null
                 ? Task.Run(() => ReapWhenStuckAsync(client, upstream, decoder, pumpState, threshold), CancellationToken.None)
                 : Task.CompletedTask;
 
@@ -237,13 +263,11 @@ public class TcpTap : IAsyncDisposable
             await decodeTask.ConfigureAwait(false);
             await reaper.ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException)
-        {
-            // Shutting down.
-        }
         catch (Exception ex)
         {
-            _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap connection {id} error: {ex.GetType().Name}: {ex.Message}");
+            // Unexpected, whether or not the tap is stopping: the connect sorts its own failures, and the pumps, the decode
+            // loop and the reaper end quietly. A catch kept here for "shutting down" used to take a connect timeout for one.
+            TryLog($"[{_options.DisplayName}] tcp-tap connection {id} error: {ex.GetType().Name}: {ex.Message}");
         }
         finally
         {
@@ -251,6 +275,100 @@ public class TcpTap : IAsyncDisposable
             upstream?.Dispose();
             client.Dispose();
             Interlocked.Decrement(ref _live);
+        }
+    }
+
+    /// <summary>
+    /// Connects the upstream half of a connection and sorts a failure by the tap's own tokens, never by the exception's
+    /// type: a connect that ran past <see cref="TcpTapOptions.ConnectTimeout"/> and one cut short because the tap is
+    /// stopping throw the same <see cref="OperationCanceledException"/> (plans/TCPTAP_FAILED_CONNECT_PLAN.md §2.3). The
+    /// tap stopping is nobody's failure; a timeout and any other failure are counted, logged, raised and reported.
+    /// Returns whether the connect succeeded.
+    /// </summary>
+    private async Task<bool> ConnectUpstreamAsync(TcpClient upstream, long id, IPEndPoint? caller, CancellationToken ct)
+    {
+        using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        connectCts.CancelAfter(_options.ConnectTimeout);
+        try
+        {
+            await upstream.ConnectAsync(_options.ForwardHost, _options.ForwardPort, connectCts.Token).ConfigureAwait(false);
+            return true;
+        }
+        catch (Exception) when (ct.IsCancellationRequested)
+        {
+            return false; // the tap is stopping: not the upstream's doing
+        }
+        catch (OperationCanceledException) when (connectCts.IsCancellationRequested)
+        {
+            CountConnectFailure(id, caller, exception: null);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            CountConnectFailure(id, caller, ex);
+            return false;
+        }
+    }
+
+    /// <summary>A connect to the real server that failed (<paramref name="exception"/>) or ran out of time (null).</summary>
+    private void CountConnectFailure(long id, IPEndPoint? caller, Exception? exception)
+    {
+        // Counted before anything is logged or raised: a callback that throws can lose neither the count nor the pair.
+        Interlocked.CompareExchange(ref _firstConnectFailureAtTicks, DateTimeOffset.UtcNow.UtcTicks, 0);
+        if (exception is null)
+        {
+            Interlocked.Increment(ref _connectsTimedOut);
+        }
+        else
+        {
+            Volatile.Write(ref _lastConnectFailure, TapAcceptLoop.Describe(exception));
+            Interlocked.Increment(ref _connectsFailed);
+        }
+
+        var detail = exception is null
+            ? string.Create(CultureInfo.InvariantCulture, $"could not connect to {ForwardTarget} within ConnectTimeout ({_options.ConnectTimeout}); closed it without forwarding anything")
+            : $"could not connect to {ForwardTarget} ({TapAcceptLoop.Describe(exception)}); closed it without forwarding anything";
+        TryLog($"[{_options.DisplayName}] tcp-tap connection {id} from {caller?.ToString() ?? "an unknown address"}: {detail}");
+        Degrade(id, CaptureDegradationKind.UpstreamConnectFailed, detail);
+    }
+
+    private string ForwardTarget => _options.ForwardHost.Contains(':', StringComparison.Ordinal)
+        ? $"[{_options.ForwardHost}]:{_options.ForwardPort}"
+        : $"{_options.ForwardHost}:{_options.ForwardPort}";
+
+    /// <summary>
+    /// The <see cref="Diagnostics"/> line for connections the tap could not forward. A cause whose count is zero is left
+    /// out, and the words hold on Windows, where a refusal can arrive as a timeout: "no connection within ConnectTimeout",
+    /// never "the server did not answer".
+    /// </summary>
+    internal static string ConnectFailureLine(
+        string name, string target, string caller, string service, long failed, long timedOut, string? lastFailure,
+        TimeSpan connectTimeout, DateTimeOffset first)
+    {
+        var causes = new List<string>(2);
+        if (failed > 0)
+            causes.Add(string.Create(CultureInfo.InvariantCulture, $"{failed:N0} failed, the last with {lastFailure}"));
+        if (timedOut > 0)
+            causes.Add(string.Create(CultureInfo.InvariantCulture, $"{timedOut:N0} got no connection within ConnectTimeout {connectTimeout}"));
+        return string.Create(CultureInfo.InvariantCulture,
+            $"{name}: {failed + timedOut:N0} connection(s) could not be forwarded, because the tap could not connect to {target} ({string.Join("; ", causes)}), the first at {first:HH:mm:ss}Z; the tap closed each one, so {caller}'s commands on them never reached {service}");
+    }
+
+    /// <summary>
+    /// Builds the connection's decoder. A factory that throws is user code whenever a host tees its own protocol, and it
+    /// costs the connection its decoding, never its forwarding: counted and reported as decoding disabled, and null.
+    /// </summary>
+    private IProtocolDecoder? CreateDecoder(TcpTapConnectionContext context)
+    {
+        try
+        {
+            return _options.DecoderFactory!(context);
+        }
+        catch (Exception ex)
+        {
+            Interlocked.Increment(ref _decodeErrors);
+            DisableDecoding(context.ConnectionId, ex, "the decoder factory threw");
+            return null;
         }
     }
 
@@ -385,14 +503,15 @@ public class TcpTap : IAsyncDisposable
                 $"decode queue full ({direction}) — segments dropped; interactions on this connection may be missing or mis-paired");
     }
 
-    private async Task DecodeLoopAsync(ChannelReader<TapSegment> reader, IProtocolDecoder decoder, TcpTapConnectionContext context, ConnectionPumpState state)
+    private async Task DecodeLoopAsync(ChannelReader<TapSegment> reader, IProtocolDecoder? decoder, TcpTapConnectionContext context, ConnectionPumpState state)
     {
-        var decoding = true;
+        // A connection whose decoder factory threw has none: its segments are drained undecoded.
+        var decoding = decoder is not null;
         try
         {
             await foreach (var segment in reader.ReadAllAsync(CancellationToken.None).ConfigureAwait(false))
             {
-                if (!decoding)
+                if (!decoding || decoder is null)
                     continue; // keep draining so the pumps never see a full queue
 
                 try
@@ -414,7 +533,7 @@ public class TcpTap : IAsyncDisposable
                 }
             }
 
-            if (decoding)
+            if (decoding && decoder is not null)
                 decoder.OnConnectionClosed();
         }
         catch (Exception ex)
@@ -485,7 +604,7 @@ public class TcpTap : IAsyncDisposable
         }
         catch (Exception ex)
         {
-            _options.Log?.Invoke($"[{_options.DisplayName}] OnCaptureDegraded threw ({ex.GetType().Name}: {ex.Message}); ignored.");
+            TryLog($"[{_options.DisplayName}] OnCaptureDegraded threw ({ex.GetType().Name}: {ex.Message}); ignored.");
         }
     }
 
@@ -513,7 +632,8 @@ public class TcpTap : IAsyncDisposable
 
     /// <summary>
     /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per non-zero
-    /// counter — accepts that failed, connections whose decoding was disabled (and since when), oversize payloads streamed past, decoder
+    /// counter — accepts that failed, connections that could not be forwarded because the connect to the real server failed or
+    /// ran past <see cref="TcpTapOptions.ConnectTimeout"/>, connections whose decoding was disabled (and since when), oversize payloads streamed past, decoder
     /// resets, dropped segments, connections closed mid-message — plus a heuristic "decoding may have stalled" entry
     /// when bytes keep flowing without an interaction being recorded (<see cref="TcpTapOptions.DecodingStallBytes"/>).
     /// Empty when capture was complete. A host hands the list to <c>IngestRequest.HostDiagnostics</c> so it appears
@@ -526,6 +646,14 @@ public class TcpTap : IAsyncDisposable
 
         if (Accepting.DiagnosticLine(name) is { } acceptLine)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded, acceptLine));
+
+        var failedConnects = Interlocked.Read(ref _connectsFailed);
+        var timedOutConnects = Interlocked.Read(ref _connectsTimedOut);
+        if (failedConnects + timedOutConnects > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded, ConnectFailureLine(
+                name, ForwardTarget, _options.CallerName, _options.ServiceName, failedConnects, timedOutConnects,
+                Volatile.Read(ref _lastConnectFailure), _options.ConnectTimeout,
+                new DateTimeOffset(Interlocked.Read(ref _firstConnectFailureAtTicks), TimeSpan.Zero))));
 
         var disabled = DecodingDisabledConnections;
         if (disabled > 0)
@@ -728,7 +856,8 @@ public class TcpTap : IAsyncDisposable
         TryLog(
             $"[{_options.DisplayName}] tcp-tap stopped ({ConnectionsAccepted} connections, {InteractionsCaptured} interactions, " +
             $"{SegmentsDropped} segments dropped, {DecodeErrors} decode errors, {OversizePayloadsSkipped} oversize payloads skipped, " +
-            $"{DecoderResets} decoder resets, {DecodingDisabledConnections} connections with decoding disabled, {Accepting.Failures} failed accepts)");
+            $"{DecoderResets} decoder resets, {DecodingDisabledConnections} connections with decoding disabled, {AcceptFailures} failed accepts, " +
+            $"{UpstreamConnectFailures} failed connects)");
         GC.SuppressFinalize(this);
     }
 

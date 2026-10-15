@@ -1,0 +1,49 @@
+R2's mutations (mutations.py) on Windows 11, .NET 10.0.11, 2026-10-15, each in a copy of the release's tree (R2 on 4.20.3).
+The run was paused twice for peers' Playwright suites and resumed with the ids not yet run, so it is three runs.
+N1a was rewritten after its first form did not compile (CS0160: a catch after one that catches the same type).
+18 of 20 killed. N6 and N8 survive, and are equivalent: nothing reaches the outer catch of HandleConnectionAsync once the
+connect sorts its own failures (N6 restores the deleted 'shutting down' catch; N8 unguards the catch-all's log line, which
+only an unexpected exception reaches, and whose throw could only end a connection already ending, in a task nothing observes).
+
+N1b an OperationCanceledException taken for a timeout: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['AConnectCutShortByStoppingTheTapIsNotAFailure']
+N2 a timeout counted as failed: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['AConnectThatRunsPastConnectTimeoutIsCountedAsTimedOut']
+N3 no event for a failed connect: KILLED
+    tcp: [('Failed!', '4', '19')] failed facts: ['AConnectThatRunsPastConnectTimeoutIsCountedAsTimedOut', 'AHostNameThatDoesNotResolveIsCountedAsFailed', 'ARefusedConnectIsCountedLoggedRaisedAndReported', 'CallbacksThatThrowLoseNeitherTheCountNorTheConnection']
+N4 the factory fault still closes the connection: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['ADecoderFactoryThatThrowsForwardsTheConnectionUndecoded']
+N5 the line dropped when there are only timeouts: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['AConnectThatRunsPastConnectTimeoutIsCountedAsTimedOut']
+(part 1 ended at N5: paused)
+N1a an OperationCanceledException taken for the tap stopping: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['AConnectThatRunsPastConnectTimeoutIsCountedAsTimedOut']
+N6 the outer catch keeping its type filter: SURVIVED
+    tcp: [('Passed!', '0', '23')] failed facts: []
+N7 the count taken after the log line: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['ARefusedConnectIsCountedLoggedRaisedAndReported']
+N8 the catch-all's line unguarded: SURVIVED
+    tcp: [('Passed!', '0', '23')] failed facts: []
+N9 Degrade's own line unguarded: KILLED
+    tcp: [('Failed!', '2', '21')] failed facts: ['ACaptureDegradedCallbackThatThrowsDoesNotStopTheAcceptLoop', 'CallbacksThatThrowLoseNeitherTheCountNorTheConnection']
+N10 no AcceptFailed event: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['AFailedAcceptIsRaisedAsATapWideEventAndCountedInPublic']
+N11 AcceptFailed raised on a connection's id: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['AFailedAcceptIsRaisedAsATapWideEventAndCountedInPublic']
+N12 the factory fault not counted as a decode error: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['ADecoderFactoryThatThrowsForwardsTheConnectionUndecoded']
+N13 the last failure not kept: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['TheDiagnosticLineNamesTheLastFailureAndWhenTheFirstHappened']
+N14 the first failure's time not kept: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['TheDiagnosticLineNamesTheLastFailureAndWhenTheFirstHappened']
+N15 the stop line without failed connects: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['TheStopLineNamesFailedConnectsAndFailedAccepts']
+N16 UpstreamConnectFailures leaves out timeouts: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['AConnectThatRunsPastConnectTimeoutIsCountedAsTimedOut']
+N17 OtlpTap's public count reads nothing: KILLED
+    otlp: [('Failed!', '1', '4')] failed facts: ['A_failed_accept_does_not_stop_the_tap']
+N18 the accept failure not handed to the tap: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['AFailedAcceptIsRaisedAsATapWideEventAndCountedInPublic']
+    otlp: [('Passed!', '0', '5')] failed facts: []
+N19 the formatter's parts joined with a comma: KILLED
+    tcp: [('Failed!', '1', '22')] failed facts: ['TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed:']

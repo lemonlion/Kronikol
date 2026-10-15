@@ -14,6 +14,8 @@ file-based app that names its packages with `#:package`: `dotnet run <file>.cs`,
 | `r1/red-4.20.2-{windows,linux}.txt` | R1's facts there: every fact red on its own assertion but the two guards (stopping a tap that waits for a caller counts nothing, in each tap), which hold on 4.20.2 too |
 | `r1/mutations.py`, `r1/mutations-windows.txt` | R1's mutations, each an exact-string replacement in a copy of the release's tree, and their verdicts |
 | `r1/accept-probe-r1.cs`, `r1/accept-r1-linux.txt` | `accept/accept-probe.cs` built against the R1 source tree it sits in (`#:project`), and its Linux run: E2, the process out of descriptors, with both taps answering once they are back |
+| `r2/red-stubs.diff`, `r2/red-4.20.3-{windows,linux}.txt` | R2's red proof: R2's facts on 4.20.3 with only the members they name, given no behaviour, and their runs. Every fact red on its own assertion but two guards: stopping the tap during a connect counts nothing (the fact that kills a classification by type), and a throwing `OnCaptureDegraded` stops no accept loop, which 4.20.3 holds by raising no event at all |
+| `r2/mutations.py`, `r2/mutations-windows.txt` | R2's mutations and their verdicts |
 
 ## Notes on the runs
 

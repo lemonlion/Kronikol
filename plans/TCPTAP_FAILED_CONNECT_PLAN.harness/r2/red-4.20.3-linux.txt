@@ -1,0 +1,92 @@
+R2's facts on 4.20.3 with red-stubs.diff, as red-4.20.3-windows.txt, on Ubuntu 24.04 in mcr.microsoft.com/dotnet/sdk:10.0
+(podman), 2026-10-15.
+
+/repo/src/Kronikol/PlantUml/NodeJsPlantUmlRenderer.cs(56,118): warning CS8604: Possible null reference argument for parameter 'expectedIntegrity' in 'EngineCache.EngineCache(string directory, Func<string, byte[]> download, string cdnBase, IReadOnlyDictionary<string, string> expectedIntegrity)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/PlantUml/PlantUmlCreator.cs(1514,48): warning CS8604: Possible null reference argument for parameter 'content' in 'string PlantUmlCreator.FormFieldLines(string content)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Reports/Merge/MergeableReportReader.cs(99,38): warning CS8604: Possible null reference argument for parameter 'testName' in 'void MergeableReportReader.ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into, Dictionary<string, List<string?>>? stepPaths, ParseNotes notes, Dictionary<Guid, WarmUpMark>? warmUpCalls = null)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,55): warning CS1573: Parameter 'Verdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,95): warning CS1573: Parameter 'Subjects' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,112): warning CS1573: Parameter 'LedgerPath' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,146): warning CS1573: Parameter 'LedgerSource' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,10): warning CS1573: Parameter 'BehaviourVerdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,67): warning CS1573: Parameter 'Analysis' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,108): warning CS1573: Parameter 'Shapes' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,48): warning CS1573: Parameter 'Subject' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,73): warning CS1573: Parameter 'Entry' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,117): warning CS1573: Parameter 'RunId' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,128): warning CS1573: Parameter 'RunsAgo' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+  Kronikol -> /repo/src/Kronikol/bin/Debug/net10.0/Kronikol.dll
+  Kronikol.Extensions.Redis -> /repo/src/Kronikol.Extensions.Redis/bin/Debug/net10.0/Kronikol.Extensions.Redis.dll
+  Kronikol.Extensions.MongoDB.V2 -> /repo/src/Kronikol.Extensions.MongoDB.V2/bin/Debug/net10.0/Kronikol.Extensions.MongoDB.V2.dll
+  Kronikol.Extensions.TcpTap -> /repo/src/Kronikol.Extensions.TcpTap/bin/Debug/net10.0/Kronikol.Extensions.TcpTap.dll
+/repo/tests/Kronikol.Tests.TcpTap/RespStreamParserTests.cs(271,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [/repo/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj]
+/repo/tests/Kronikol.Tests.TcpTap/TcpTapTests.cs(451,13): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [/repo/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj]
+  Kronikol.Tests.TcpTap -> /repo/tests/Kronikol.Tests.TcpTap/bin/Debug/net10.0/Kronikol.Tests.TcpTap.dll
+Test run for /repo/tests/Kronikol.Tests.TcpTap/bin/Debug/net10.0/Kronikol.Tests.TcpTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:15.73]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineNamesTheLastFailureAndWhenTheFirstHappened [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineNamesTheLastFailureAndWhenTheFirstHappened [15 s]
+  Error Message:
+   the first failed connect was not counted
+[xUnit.net 00:00:15.74]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 9, timedOut: 0, causes: "(9 failed, the last with SocketException Connectio"···) [FAIL]
+[xUnit.net 00:00:15.74]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 9, timedOut: 3, causes: "(9 failed, the last with SocketException Connectio"···) [FAIL]
+[xUnit.net 00:00:15.74]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 0, timedOut: 3, causes: "(3 got no connection within ConnectTimeout 00:00:0"···) [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 9, timedOut: 0, causes: "(9 failed, the last with SocketException Connectio"···) [3 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "svc→redis: 9 connection(s) could not be forwarded,"···
+Actual:   ""
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 9, timedOut: 3, causes: "(9 failed, the last with SocketException Connectio"···) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "svc→redis: 12 connection(s) could not be forwarded"···
+Actual:   ""
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 0, timedOut: 3, causes: "(3 got no connection within ConnectTimeout 00:00:0"···) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "svc→redis: 3 connection(s) could not be forwarded,"···
+Actual:   ""
+[xUnit.net 00:00:30.92]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AHostNameThatDoesNotResolveIsCountedAsFailed [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AHostNameThatDoesNotResolveIsCountedAsFailed [15 s]
+  Error Message:
+   the failed connect was not counted
+[xUnit.net 00:00:31.03]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AFailedAcceptIsRaisedAsATapWideEventAndCountedInPublic [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AFailedAcceptIsRaisedAsATapWideEventAndCountedInPublic [103 ms]
+  Error Message:
+   Assert.Single() Failure: The collection was empty
+[xUnit.net 00:00:46.03]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ARefusedConnectIsCountedLoggedRaisedAndReported [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ARefusedConnectIsCountedLoggedRaisedAndReported [15 s]
+  Error Message:
+   the failed connect was not counted
+[xUnit.net 00:01:01.03]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheStopLineNamesFailedConnectsAndFailedAccepts [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheStopLineNamesFailedConnectsAndFailedAccepts [15 s]
+  Error Message:
+   the failed connect was not counted
+[xUnit.net 00:01:01.88]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ADecoderFactoryThatThrowsForwardsTheConnectionUndecoded [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ADecoderFactoryThatThrowsForwardsTheConnectionUndecoded [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "+PONG\r\n"
+Actual:   ""
+[xUnit.net 00:01:16.89]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.CallbacksThatThrowLoseNeitherTheCountNorTheConnection [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.CallbacksThatThrowLoseNeitherTheCountNorTheConnection [15 s]
+  Error Message:
+   the failed connect was not counted
+[xUnit.net 00:01:33.42]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectThatRunsPastConnectTimeoutIsCountedAsTimedOut [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectThatRunsPastConnectTimeoutIsCountedAsTimedOut [16 s]
+  Error Message:
+   the timed-out connect was not counted
+Failed!  - Failed:    11, Passed:     2, Skipped:     0, Total:    13, Duration: 1 m 32 s - Kronikol.Tests.TcpTap.dll (net10.0)
+exit 1
+  1 of 3 projects are up-to-date for restore.
+  Kronikol -> /repo/src/Kronikol/bin/Debug/net10.0/Kronikol.dll
+  Kronikol.Extensions.Otlp -> /repo/src/Kronikol.Extensions.Otlp/bin/Debug/net10.0/Kronikol.Extensions.Otlp.dll
+  Kronikol.Tests.Otlp -> /repo/tests/Kronikol.Tests.Otlp/bin/Debug/net10.0/Kronikol.Tests.Otlp.dll
+Test run for /repo/tests/Kronikol.Tests.Otlp/bin/Debug/net10.0/Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 317 ms - Kronikol.Tests.Otlp.dll (net10.0)
+exit 0

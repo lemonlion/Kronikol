@@ -82,6 +82,7 @@ public class OtlpTapAcceptTests
 
         Assert.Equal("HTTP/1.1 404 Not Found", await AskAsync(tap));
         Assert.Equal(3, tap.Accepting.Failures);
+        Assert.Equal(3, tap.AcceptFailures);
 
         var failed = Assert.Single(Lines(log, "failed ("));
         Assert.Contains($"otlp-tap accept on 127.0.0.1:{tap.BoundPort} failed (SocketException TooManyOpenSockets: ", failed);

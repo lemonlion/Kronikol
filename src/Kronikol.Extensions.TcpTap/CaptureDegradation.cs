@@ -1,6 +1,10 @@
 namespace Kronikol.Extensions.TcpTap;
 
-/// <summary>What kind of capture loss a <see cref="CaptureDegradation"/> reports. Forwarding is never affected by any of them.</summary>
+/// <summary>
+/// What kind of capture loss a <see cref="CaptureDegradation"/> reports. Most leave forwarding untouched; three are about
+/// connections the tap closed or could not carry: <see cref="StuckConnectionReaped"/>, <see cref="UpstreamConnectFailed"/>
+/// and <see cref="AcceptFailed"/>.
+/// </summary>
 public enum CaptureDegradationKind
 {
     /// <summary>A bulk payload longer than the capture cap was streamed past; the interaction was still recorded, with a preview and the length on the wire.</summary>
@@ -27,6 +31,21 @@ public enum CaptureDegradationKind
     /// and an idle connection has nothing unanswered.
     /// </summary>
     StuckConnectionReaped,
+
+    /// <summary>
+    /// The tap could not connect to the real server (<see cref="TcpTapOptions.ForwardHost"/>:<see cref="TcpTapOptions.ForwardPort"/>)
+    /// within <see cref="TcpTapOptions.ConnectTimeout"/>, or at all, and closed the caller's connection without forwarding
+    /// anything; nothing on it reached the server, so nothing on it was recorded. Raised once per connection.
+    /// </summary>
+    UpstreamConnectFailed,
+
+    /// <summary>
+    /// Accepting a caller failed; on Linux, a process out of file descriptors is one cause. The tap keeps listening and
+    /// tries again, pausing up to a second between tries, so callers that arrive meanwhile wait in the listen queue, or find
+    /// it full. Tap-wide (<see cref="CaptureDegradation.ConnectionId"/> 0), raised with the first failure in a row and then
+    /// at most once a minute while they go on.
+    /// </summary>
+    AcceptFailed,
 }
 
 /// <summary>

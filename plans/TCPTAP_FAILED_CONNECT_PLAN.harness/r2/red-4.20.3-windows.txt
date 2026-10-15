@@ -1,0 +1,66 @@
+R2's facts on 4.20.3 (v4.20.3, 18b11332) with red-stubs.diff: the new members R2's facts name, with no behaviour
+(UpstreamConnectFailures 0, AcceptFailures reading R1's count, the formatter empty, the two enum members).
+Windows 11 26200, .NET 10.0.11, 2026-10-15.
+
+Test run for C:\Code\Kronikol-174-red\tests\Kronikol.Tests.TcpTap\bin\Debug\net10.0\Kronikol.Tests.TcpTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:21.22]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectThatRunsPastConnectTimeoutIsCountedAsTimedOut [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectThatRunsPastConnectTimeoutIsCountedAsTimedOut [16 s]
+  Error Message:
+   the timed-out connect was not counted
+[xUnit.net 00:00:21.24]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 9, timedOut: 3, causes: "(9 failed, the last with SocketException Connectio"···) [FAIL]
+[xUnit.net 00:00:21.24]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 0, timedOut: 3, causes: "(3 got no connection within ConnectTimeout 00:00:0"···) [FAIL]
+[xUnit.net 00:00:21.24]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 9, timedOut: 0, causes: "(9 failed, the last with SocketException Connectio"···) [FAIL]
+[xUnit.net 00:00:21.50]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AFailedAcceptIsRaisedAsATapWideEventAndCountedInPublic [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 9, timedOut: 3, causes: "(9 failed, the last with SocketException Connectio"···) [4 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "svc→redis: 12 connection(s) could not be forwarded"···
+Actual:   ""
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 0, timedOut: 3, causes: "(3 got no connection within ConnectTimeout 00:00:0"···) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "svc→redis: 3 connection(s) could not be forwarded,"···
+Actual:   ""
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 9, timedOut: 0, causes: "(9 failed, the last with SocketException Connectio"···) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "svc→redis: 9 connection(s) could not be forwarded,"···
+Actual:   ""
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AFailedAcceptIsRaisedAsATapWideEventAndCountedInPublic [117 ms]
+  Error Message:
+   Assert.Single() Failure: The collection was empty
+[xUnit.net 00:00:38.54]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ARefusedConnectIsCountedLoggedRaisedAndReported [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ARefusedConnectIsCountedLoggedRaisedAndReported [17 s]
+  Error Message:
+   the failed connect was not counted
+[xUnit.net 00:00:55.57]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheStopLineNamesFailedConnectsAndFailedAccepts [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheStopLineNamesFailedConnectsAndFailedAccepts [17 s]
+  Error Message:
+   the failed connect was not counted
+[xUnit.net 00:00:55.57]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ADecoderFactoryThatThrowsForwardsTheConnectionUndecoded [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ADecoderFactoryThatThrowsForwardsTheConnectionUndecoded [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "+PONG\r\n"
+Actual:   ""
+[xUnit.net 00:01:12.61]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineNamesTheLastFailureAndWhenTheFirstHappened [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineNamesTheLastFailureAndWhenTheFirstHappened [17 s]
+  Error Message:
+   the first failed connect was not counted
+[xUnit.net 00:01:27.65]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AHostNameThatDoesNotResolveIsCountedAsFailed [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AHostNameThatDoesNotResolveIsCountedAsFailed [15 s]
+  Error Message:
+   the failed connect was not counted
+[xUnit.net 00:01:44.69]     Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.CallbacksThatThrowLoseNeitherTheCountNorTheConnection [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.CallbacksThatThrowLoseNeitherTheCountNorTheConnection [17 s]
+  Error Message:
+   the failed connect was not counted
+Failed!  - Failed:    11, Passed:     2, Skipped:     0, Total:    13, Duration: 1 m 41 s - Kronikol.Tests.TcpTap.dll (net10.0)
+Test run for C:\Code\Kronikol-174-red\tests\Kronikol.Tests.Otlp\bin\Debug\net10.0\Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 555 ms - Kronikol.Tests.Otlp.dll (net10.0)
