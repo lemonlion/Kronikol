@@ -420,8 +420,9 @@ error. That is on #173's side of the split (decoding).
   tap cannot refuse after the fact. Whether it then closes with a FIN or an RST stays as it is.
 - **Retrying the upstream connect inside the tap.** The client retries on its own. A tap that retried would hide a
   server that is down and stretch the caller's wait past `ConnectTimeout`.
-- **Owned by #173:** caller-side time limits, a pair held after a half-close, and a cap on connections at the accept
-  loop (#173's open question).
+- **Owned by #173:** caller-side time limits, and a pair held after a half-close. A cap on connections at the accept
+  loop was never #173's question, as this plan said; kronikol-51 made it that plan's Q13 (recommended: not now; if ever,
+  in `TapAcceptLoop`).
 - **`ProxyTap`'s request loop** (§8).
 
 ## 5. Tests, red first
@@ -665,6 +666,23 @@ R3 follows the same shape: **Patch**, with "a tap on localhost no longer costs 2
   (Q8), the pause as stated (Q9). kronikol-51 confirmed that #173 is not being implemented, so this plan adds `TryLog`
   to both taps. Neither plan's F3 list had the start and stop lines (`TcpTap.cs:162`, 715; `OtlpTap.cs:182`, 210, 611),
   so this plan takes them, and kronikol-51 was told.
+- **2026-10-15, R1 released as 4.20.3.** Both taps run one accept loop, `TapAcceptLoop`, a file `Kronikol.Extensions.Otlp`
+  links from `Kronikol.Extensions.TcpTap` and compiles into its own namespace (`KRONIKOL_OTLP_SHARED`), as the TcpTap
+  package links the Redis and MongoDB classifiers. Its seams are `Accept`, `Pause` and a `TimeProvider` clock, so the
+  pauses and the once-a-minute rule are pinned without waiting 45 s; §4.1's `AcceptClient` seam on each tap became
+  `Accepting.Accept`. Each log line names the listener's address, since R3 gives a tap two. Found while building it:
+  `OtlpTap` binds both loopbacks for "127.0.0.1" too, not only for "localhost", so its facts make the IPv4 listener's
+  accepts fail, the one E2 saw stop. Two facts beyond §5 pin branches the plan named and listed no fact for: a listening
+  socket closed under a running tap is logged and ends its loop, and stopping a tap that waits for a caller counts
+  nothing (the latter is M4's fact: A5 stops the loop in a pause, where no accept is under way). The start and stop
+  lines and `OtlpTap`'s "could not also bind" line go through `TryLog` too, each with a fact. Red on 4.20.2
+  (`r1/red-4.20.2-{windows,linux}.txt`, with `r1/red-seam.diff` and `r1/TapAcceptLoop.red-stub.cs` wrapping the seam
+  round 4.20.2's own loop): 12 facts red on their own assertions on both platforms, and the two "stopping counts
+  nothing" guards green, as they are on 4.20.2. 25 of 25 mutations are killed (`r1/mutations-windows.txt`): M1 to M8
+  as §5 lists them, and seventeen more for the lines and branches R1 added. On Linux, E2 built from the release's tree
+  (`r1/accept-probe-r1.cs`) shows both taps logging seven failed accepts under EMFILE and answering again once the
+  descriptors are back (`r1/accept-r1-linux.txt`), the real-world proof §5 asked for. Version order agreed with
+  kronikol-2a (#165, 4.20.4) and kronikol-77 (#168's audit, 4.20.5).
 
 ## Appendix A. Edit sites at `3240c983`
 

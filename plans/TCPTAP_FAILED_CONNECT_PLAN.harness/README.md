@@ -10,6 +10,10 @@ file-based app that names its packages with `#:package`: `dotnet run <file>.cs`,
 | `connect/connect-{windows,linux}.txt` | Its output (plan §2.2, §3.2, §3.4) |
 | `accept/accept-probe.cs` | The two taps that run their own accept loop, `TcpTap` and `OtlpTap`, and `ProxyTap`, whose `HttpListener` accepts for it: E0, a bare `TcpListener` whose loop records what `AcceptTcpClientAsync` throws under 1,000 clients that connect and reset at once; E1, 15 rounds of 200 such clients against each tap, each round followed by a liveness check of up to three tries; E2 (Linux), the process out of descriptors (`setrlimit` lowers `RLIMIT_NOFILE`, `/dev/null` handles take the rest) at the moment a client arrives, then every descriptor given back, with a bare listener alongside whose loop keeps going |
 | `accept/accept-{windows,linux}.txt` | Its output (plan §3.1) |
+| `r1/TapAcceptLoop.red-stub.cs`, `r1/red-seam.diff` | R1's red proof: the seam the facts drive (`Accept`, `Pause`, `Clock`), wrapped round 4.20.2's own loop, which returns on any `SocketException`, and its unguarded log calls. Applied to `v4.20.2` with the facts copied in |
+| `r1/red-4.20.2-{windows,linux}.txt` | R1's facts there: every fact red on its own assertion but the two guards (stopping a tap that waits for a caller counts nothing, in each tap), which hold on 4.20.2 too |
+| `r1/mutations.py`, `r1/mutations-windows.txt` | R1's mutations, each an exact-string replacement in a copy of the release's tree, and their verdicts |
+| `r1/accept-probe-r1.cs`, `r1/accept-r1-linux.txt` | `accept/accept-probe.cs` built against the R1 source tree it sits in (`#:project`), and its Linux run: E2, the process out of descriptors, with both taps answering once they are back |
 
 ## Notes on the runs
 

@@ -4,6 +4,57 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.20.3] - 2026-10-15
+
+**Patch - a tap whose accept fails keeps accepting (`plans/TCPTAP_FAILED_CONNECT_PLAN.md` R1, found while planning
+#174).** Green-lit in full by the owner on 2026-10-15, every question in the plan's section 9 as recommended. A bug fix
+with no new option and no new public member, so the patch part moves (4.20.2 to 4.20.3).
+
+### Fixed
+
+- **One failed accept stopped `TcpTap` and `OtlpTap` from accepting for good.** Their accept loops returned on any
+  `SocketException`, and nothing started them again. The listening socket stayed open and `IsListening` stayed true, so
+  later callers connected, the kernel completed their handshake, and nobody ever served them; nothing was logged.
+  Measured on Linux with the process out of file descriptors (EMFILE): neither tap answered again once the descriptors
+  were back, while a plain loop that keeps going accepts again at once, and `ProxyTap`, whose `HttpListener` re-arms its
+  own accept, kept answering. Both taps now run one accept loop that counts the failure, pauses and tries again until the
+  tap is disposed. The pause starts at 10 ms, doubles up to 1 s and starts again after an accept succeeds (without it the
+  loop failed some 46,000 times a second), and it waits on the tap's own token, so disposing the tap never waits for it.
+  The first failure in a row is logged at once and a run of them at most once a minute, with a line when accepting
+  resumes; `Diagnostics()` names how many accepts failed and the first one's cause, and each tap's stop line counts them.
+  A listening socket closed under a running tap is logged instead of passed over.
+- **A `Log` callback that threw could fail `StartAsync` and `DisposeAsync`.** The taps wrote their start and stop lines
+  (and `OtlpTap` its "could not also bind" line) through the host's callback unguarded, so a callback that writes to a
+  test's output after the test has ended, which xUnit's `ITestOutputHelper` refuses with an exception, made `StartAsync`
+  throw after the listener had started, and `DisposeAsync` throw once it had stopped. Those lines and every line of the
+  accept loop now go through a guarded writer.
+
+Behaviour change: a tap whose accept fails keeps accepting, where it used to go quiet, and its log and `Diagnostics()`
+carry new lines.
+
+### Tests
+
+- `TcpTapAcceptTests` (new, 9 facts) makes the accept fail through the loop's internal seam, as the process out of
+  descriptors does: the tap answers a PING after three failures, with one line for the failure, one for accepting again,
+  a `Diagnostics()` line and a stop line that count them; a run of failures is tried at a pace (2 to 12 tries in half a
+  second, where the old loop's 46,000 a second would show); the pauses double to a second and start again after an
+  accept; fifty failures are logged once, then once a minute by a clock the fact moves; stopping the tap in the middle of
+  a 1 s pause returns at once and counts nothing; a listener closed under a running tap is logged and ends its loop;
+  stopping a tap that waits for a caller counts nothing; and a `Log` callback that throws stops neither the loop nor
+  `StartAsync` nor `DisposeAsync`. `OtlpTapAcceptTests` (new, 4 facts) pins the same for `OtlpTap`'s IPv4 listener, the
+  one the Linux measurement saw stop.
+- `OtlpTapAcceptTests` also holds the "could not also bind" line: with `[::1]` taken, a `Log` callback that throws no
+  longer fails `StartAsync`.
+- Proofs (plan harness `r1/`): copied onto 4.20.2 with the seam wrapped round 4.20.2's own loop and log calls
+  (`red-seam.diff`, `TapAcceptLoop.red-stub.cs`), 12 facts fail on Windows and on Linux, each on its own assertion, and
+  the two "stopping counts nothing" guards pass, as they do on 4.20.2; 25 of 25 mutations are killed; and the probe that
+  runs the process out of file descriptors, built from this tree, shows both taps logging seven failed accepts and
+  answering again once the descriptors are back, on Linux (`accept-r1-linux.txt`), where on 4.20.2 neither answered again.
+- Checks: after the version bump the core suite passes 7,533 with 2 skipped; the TcpTap suite passes 407 with 4 skipped
+  (its Docker-only container facts) and the Otlp suite 147, on Windows and on Linux; release.slnf builds in Release for
+  every target. The Playwright suite was not run, since nothing a page draws changed. The templates pin 4.20.2 and the
+  history action's VERSION installs Kronikol.Tool 4.20.3.
+
 ## [4.20.2] - 2026-10-13
 
 **Patch - the MongoDB packages ask for a fixed driver version, not the newest of the day (#168;

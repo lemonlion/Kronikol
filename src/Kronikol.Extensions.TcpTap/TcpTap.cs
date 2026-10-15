@@ -70,10 +70,17 @@ public class TcpTap : IAsyncDisposable
     private long _bytesSinceLastInteraction;
 
     /// <summary>Creates a tap for the given options (validated on <see cref="StartAsync"/>).</summary>
-    public TcpTap(TcpTapOptions options) => _options = options ?? throw new ArgumentNullException(nameof(options));
+    public TcpTap(TcpTapOptions options)
+    {
+        _options = options ?? throw new ArgumentNullException(nameof(options));
+        Accepting = new TapAcceptLoop(line => TryLog($"[{_options.DisplayName}] tcp-tap {line}"));
+    }
 
     /// <summary>The options this tap runs with.</summary>
     public TcpTapOptions Options => _options;
+
+    /// <summary>The accept loop; a fact makes an accept fail through its seams.</summary>
+    internal TapAcceptLoop Accepting { get; }
 
     /// <summary>The port actually bound — the configured <see cref="TcpTapOptions.ListenPort"/>, or the ephemeral port chosen when it was 0. Zero until started.</summary>
     public int BoundPort { get; private set; }
@@ -158,9 +165,8 @@ public class TcpTap : IAsyncDisposable
         BoundPort = ((IPEndPoint)listener.LocalEndpoint).Port;
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        _loop = Task.Run(() => AcceptLoopAsync(_cts.Token), CancellationToken.None);
-        _options.Log?.Invoke(
-            $"[{_options.DisplayName}] tcp-tap listening on {_options.ListenHost}:{BoundPort} → {_options.ForwardHost}:{_options.ForwardPort}");
+        _loop = Task.Run(() => AcceptLoopAsync(listener, _cts.Token), CancellationToken.None);
+        TryLog($"[{_options.DisplayName}] tcp-tap listening on {_options.ListenHost}:{BoundPort} → {_options.ForwardHost}:{_options.ForwardPort}");
         return Task.CompletedTask;
     }
 
@@ -178,25 +184,12 @@ public class TcpTap : IAsyncDisposable
                ?? IPAddress.Loopback;
     }
 
-    private async Task AcceptLoopAsync(CancellationToken ct)
-    {
-        var listener = _listener!;
-        while (!ct.IsCancellationRequested)
+    private Task AcceptLoopAsync(TcpListener listener, CancellationToken ct) =>
+        Accepting.RunAsync(listener, client =>
         {
-            TcpClient client;
-            try
-            {
-                client = await listener.AcceptTcpClientAsync(ct).ConfigureAwait(false);
-            }
-            catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException or SocketException)
-            {
-                return;
-            }
-
             Interlocked.Increment(ref _connections);
             _ = Task.Run(() => HandleConnectionAsync(client, ct), CancellationToken.None);
-        }
-    }
+        }, ct);
 
     private async Task HandleConnectionAsync(TcpClient client, CancellationToken ct)
     {
@@ -520,7 +513,7 @@ public class TcpTap : IAsyncDisposable
 
     /// <summary>
     /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per non-zero
-    /// counter — connections whose decoding was disabled (and since when), oversize payloads streamed past, decoder
+    /// counter — accepts that failed, connections whose decoding was disabled (and since when), oversize payloads streamed past, decoder
     /// resets, dropped segments, connections closed mid-message — plus a heuristic "decoding may have stalled" entry
     /// when bytes keep flowing without an interaction being recorded (<see cref="TcpTapOptions.DecodingStallBytes"/>).
     /// Empty when capture was complete. A host hands the list to <c>IngestRequest.HostDiagnostics</c> so it appears
@@ -530,6 +523,9 @@ public class TcpTap : IAsyncDisposable
     {
         var name = _options.DisplayName;
         var entries = new List<DiagnosticEntry>();
+
+        if (Accepting.DiagnosticLine(name) is { } acceptLine)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded, acceptLine));
 
         var disabled = DecodingDisabledConnections;
         if (disabled > 0)
@@ -689,6 +685,22 @@ public class TcpTap : IAsyncDisposable
 
     internal void Diagnostic(string message) => _options.Log?.Invoke($"[{_options.DisplayName}] {message}");
 
+    /// <summary>
+    /// Writes a line through <see cref="TcpTapOptions.Log"/>. The callback is the host's code, and nothing it throws
+    /// changes what the tap does: one that writes to a test's output after the test has ended throws.
+    /// </summary>
+    private void TryLog(string message)
+    {
+        try
+        {
+            _options.Log?.Invoke(message);
+        }
+        catch
+        {
+            // The host's callback failed; the tap carries on.
+        }
+    }
+
     /// <summary>Stops listening, briefly drains live connections so their captures land, and releases the socket.</summary>
     public async ValueTask DisposeAsync()
     {
@@ -712,10 +724,10 @@ public class TcpTap : IAsyncDisposable
             await Task.Delay(25).ConfigureAwait(false);
 
         _cts?.Dispose();
-        _options.Log?.Invoke(
+        TryLog(
             $"[{_options.DisplayName}] tcp-tap stopped ({ConnectionsAccepted} connections, {InteractionsCaptured} interactions, " +
             $"{SegmentsDropped} segments dropped, {DecodeErrors} decode errors, {OversizePayloadsSkipped} oversize payloads skipped, " +
-            $"{DecoderResets} decoder resets, {DecodingDisabledConnections} connections with decoding disabled)");
+            $"{DecoderResets} decoder resets, {DecodingDisabledConnections} connections with decoding disabled, {Accepting.Failures} failed accepts)");
         GC.SuppressFinalize(this);
     }
 

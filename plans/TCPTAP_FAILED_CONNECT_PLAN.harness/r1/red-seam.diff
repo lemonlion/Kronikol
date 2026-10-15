@@ -1,0 +1,133 @@
+diff --git a/src/Kronikol.Extensions.Otlp/Kronikol.Extensions.Otlp.csproj b/src/Kronikol.Extensions.Otlp/Kronikol.Extensions.Otlp.csproj
+index 4171bade..7480ee6a 100644
+--- a/src/Kronikol.Extensions.Otlp/Kronikol.Extensions.Otlp.csproj
++++ b/src/Kronikol.Extensions.Otlp/Kronikol.Extensions.Otlp.csproj
+@@ -7,6 +7,8 @@
+     <Description>Out-of-process OpenTelemetry capture for Kronikol: an OTLP/HTTP trace receiver-tee that accepts `POST /v1/traces` (protobuf and JSON, gzip), optionally forwards the export byte-for-byte to a real collector, and maps database, HTTP, messaging and RPC client spans to Kronikol interactions attributed by W3C trace id. Gives sequence diagrams exact attribution for hops that cannot be proxied, in any language that already exports OTLP. Also the outbound direction: `OtlpExporter` and the streaming `OtlpExportSink` push Kronikol's captured interactions to Tempo/Jaeger/any collector as OTel spans over OTLP/JSON, preserving captured W3C ids and grouping one test as one trace.</Description>
+     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+     <PackageTags>$(PackageTags);opentelemetry;otlp;tracing;tee;e2e;polyglot;export;exporter;tempo;jaeger</PackageTags>
++    <!-- Compiles the accept loop linked from Kronikol.Extensions.TcpTap into this package's own namespace. -->
++    <DefineConstants>$(DefineConstants);KRONIKOL_OTLP_SHARED</DefineConstants>
+   </PropertyGroup>
+ 
+   <ItemGroup>
+@@ -14,6 +16,11 @@
+     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
+   </ItemGroup>
+ 
++  <ItemGroup>
++    <!-- The accept loop both socket taps run, so a failed accept is handled the same way in each. -->
++    <Compile Include="..\Kronikol.Extensions.TcpTap\TapAcceptLoop.cs" Link="Shared\TapAcceptLoop.cs" />
++  </ItemGroup>
++
+   <ItemGroup>
+     <InternalsVisibleTo Include="Kronikol.Tests.Otlp" />
+   </ItemGroup>
+diff --git a/src/Kronikol.Extensions.Otlp/OtlpTap.cs b/src/Kronikol.Extensions.Otlp/OtlpTap.cs
+index 752546c2..2b9978a2 100644
+--- a/src/Kronikol.Extensions.Otlp/OtlpTap.cs
++++ b/src/Kronikol.Extensions.Otlp/OtlpTap.cs
+@@ -70,11 +70,15 @@ public OtlpTap(OtlpTapOptions options)
+             SingleReader = true,
+             SingleWriter = false,
+         });
++        Accepting = new TapAcceptLoop(line => _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap {line}"));
+     }
+ 
+     /// <summary>The options this tap runs with.</summary>
+     public OtlpTapOptions Options => _options;
+ 
++    /// <summary>The accept loop each listener runs; a fact makes an accept fail through its seams.</summary>
++    internal TapAcceptLoop Accepting { get; }
++
+     /// <summary>The port actually bound (equals <c>ListenPort</c> unless that was 0). Zero before <see cref="StartAsync"/>.</summary>
+     public int BoundPort { get; private set; }
+ 
+@@ -256,23 +260,8 @@ internal static IPAddress ResolveBindAddress(string host)
+ 
+     // ------------------------------------------------------------------ accept / serve
+ 
+-    private async Task AcceptLoopAsync(TcpListener listener, CancellationToken ct)
+-    {
+-        while (!ct.IsCancellationRequested)
+-        {
+-            TcpClient client;
+-            try
+-            {
+-                client = await listener.AcceptTcpClientAsync(ct).ConfigureAwait(false);
+-            }
+-            catch (Exception ex) when (ex is OperationCanceledException or SocketException or ObjectDisposedException or InvalidOperationException)
+-            {
+-                return;
+-            }
+-
+-            _ = Task.Run(() => ServeAsync(client, ct), CancellationToken.None);
+-        }
+-    }
++    private Task AcceptLoopAsync(TcpListener listener, CancellationToken ct) =>
++        Accepting.RunAsync(listener, client => _ = Task.Run(() => ServeAsync(client, ct), CancellationToken.None), ct);
+ 
+     private async Task ServeAsync(TcpClient client, CancellationToken ct)
+     {
+diff --git a/src/Kronikol.Extensions.TcpTap/TcpTap.cs b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+index bb2854e3..ff84bff7 100644
+--- a/src/Kronikol.Extensions.TcpTap/TcpTap.cs
++++ b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+@@ -70,11 +70,18 @@ public class TcpTap : IAsyncDisposable
+     private long _bytesSinceLastInteraction;
+ 
+     /// <summary>Creates a tap for the given options (validated on <see cref="StartAsync"/>).</summary>
+-    public TcpTap(TcpTapOptions options) => _options = options ?? throw new ArgumentNullException(nameof(options));
++    public TcpTap(TcpTapOptions options)
++    {
++        _options = options ?? throw new ArgumentNullException(nameof(options));
++        Accepting = new TapAcceptLoop(line => _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap {line}"));
++    }
+ 
+     /// <summary>The options this tap runs with.</summary>
+     public TcpTapOptions Options => _options;
+ 
++    /// <summary>The accept loop; a fact makes an accept fail through its seams.</summary>
++    internal TapAcceptLoop Accepting { get; }
++
+     /// <summary>The port actually bound — the configured <see cref="TcpTapOptions.ListenPort"/>, or the ephemeral port chosen when it was 0. Zero until started.</summary>
+     public int BoundPort { get; private set; }
+ 
+@@ -158,7 +165,7 @@ public Task StartAsync(CancellationToken cancellationToken = default)
+         BoundPort = ((IPEndPoint)listener.LocalEndpoint).Port;
+ 
+         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+-        _loop = Task.Run(() => AcceptLoopAsync(_cts.Token), CancellationToken.None);
++        _loop = Task.Run(() => AcceptLoopAsync(listener, _cts.Token), CancellationToken.None);
+         _options.Log?.Invoke(
+             $"[{_options.DisplayName}] tcp-tap listening on {_options.ListenHost}:{BoundPort} → {_options.ForwardHost}:{_options.ForwardPort}");
+         return Task.CompletedTask;
+@@ -178,25 +185,12 @@ private static IPAddress ResolveBindAddress(string host)
+                ?? IPAddress.Loopback;
+     }
+ 
+-    private async Task AcceptLoopAsync(CancellationToken ct)
+-    {
+-        var listener = _listener!;
+-        while (!ct.IsCancellationRequested)
++    private Task AcceptLoopAsync(TcpListener listener, CancellationToken ct) =>
++        Accepting.RunAsync(listener, client =>
+         {
+-            TcpClient client;
+-            try
+-            {
+-                client = await listener.AcceptTcpClientAsync(ct).ConfigureAwait(false);
+-            }
+-            catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException or SocketException)
+-            {
+-                return;
+-            }
+-
+             Interlocked.Increment(ref _connections);
+             _ = Task.Run(() => HandleConnectionAsync(client, ct), CancellationToken.None);
+-        }
+-    }
++        }, ct);
+ 
+     private async Task HandleConnectionAsync(TcpClient client, CancellationToken ct)
+     {

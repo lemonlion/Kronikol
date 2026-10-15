@@ -1,0 +1,52 @@
+accept-probe-r1.cs on Ubuntu 24.04.5 in mcr.microsoft.com/dotnet/sdk:10.0 (podman), 2026-10-15, built from the R1 source tree
+(its assemblies still say 4.20.2: the run came before the version bump). Compare accept/accept-linux.txt, the same probe
+on the 4.20.2 packages, where neither tap answered again after E2.
+
+.NET 10.0.12, Ubuntu 24.04.5 LTS, TcpTap 4.20.2.0, OtlpTap 4.20.2.0
+TcpTap on 127.0.0.1:34479, OtlpTap on 127.0.0.1:34461, ProxyTap on localhost:44363; alive at start: True / True / True
+
+E0 a bare TcpListener (backlog 128, as TcpTap's AcceptBacklog) whose accept loop records every exception and continues
+  round 1: resets 200; accepted so far 200; thrown so far: nothing
+  round 2: resets 200; accepted so far 400; thrown so far: nothing
+  round 3: resets 200; accepted so far 600; thrown so far: nothing
+  round 4: resets 200; accepted so far 800; thrown so far: nothing
+  round 5: resets 200; accepted so far 1000; thrown so far: nothing
+
+E1 rounds of 200 connect-then-reset clients
+  round 1: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 2: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 3: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 4: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 5: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 6: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 7: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 8: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 9: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 10: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 11: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 12: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 13: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 14: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  round 15: resets 200 / 200 / 200; TcpTap answered, OtlpTap answered, ProxyTap answered
+  after E1: TcpTap IsListening True, ConnectionsAccepted 3016, LiveConnections 0; OtlpTap IsListening True
+  after E1: TcpTap accept loop WaitingForActivation; OtlpTap accept loops (WhenAll over its listeners) WaitingForActivation; ProxyTap request loop WaitingForActivation, IsListening True, RequestsHandled 16
+
+E2 the process out of descriptors when a client arrives (EMFILE), then every descriptor given back
+  108 descriptors open; RLIMIT_NOFILE soft 1048576 -> 156: set
+  58 /dev/null handles open, then: Too many open files : '/dev/null'
+  four clients connected (the kernel completed each handshake); waiting 1 s for the accepts
+  the bare loop in that second: accepted 0; thrown: SocketException TooManyOpenSockets (23, native 23): Too many open files in system x21666
+  every descriptor given back; RLIMIT_NOFILE soft back to 1048576
+  the bare loop 500 ms later: accepted 1 (the queued client)
+  a new client to the bare listener: accepted 2
+  liveness now: TcpTap answered, OtlpTap answered, ProxyTap answered
+  and 5 s later: TcpTap answered, OtlpTap answered, ProxyTap answered
+  after E2: TcpTap IsListening True, ConnectionsAccepted 3019, LiveConnections 0; OtlpTap IsListening True
+  after E2: TcpTap accept loop WaitingForActivation; OtlpTap accept loops (WhenAll over its listeners) WaitingForActivation; ProxyTap request loop WaitingForActivation, IsListening True, RequestsHandled 18
+  TcpTap log: [svc→redis] tcp-tap accept on 127.0.0.1:34479 failed (SocketException TooManyOpenSockets: Too many open files in system); still listening, and trying again with pauses of up to 1 s  (x1)
+  TcpTap log: [svc→redis] tcp-tap accepting again on 127.0.0.1:34479 after 7 failed accept(s) since 08:46:28Z  (x1)
+  OtlpTap log: [otlp] otlp-tap accept on 127.0.0.1:34461 failed (SocketException TooManyOpenSockets: Too many open files in system); still listening, and trying again with pauses of up to 1 s  (x1)
+  OtlpTap log: [otlp] otlp-tap accepting again on 127.0.0.1:34461 after 7 failed accept(s) since 08:46:28Z  (x1)
+
+done
+exit 0

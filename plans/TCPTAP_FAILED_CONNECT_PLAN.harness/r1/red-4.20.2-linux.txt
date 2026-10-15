@@ -1,0 +1,128 @@
+R1's facts on 4.20.2 with red-seam.diff and TapAcceptLoop.red-stub.cs, as red-4.20.2-windows.txt, on Ubuntu 24.04 in
+mcr.microsoft.com/dotnet/sdk:10.0 (podman), 2026-10-15.
+
+/repo/src/Kronikol/PlantUml/NodeJsPlantUmlRenderer.cs(56,118): warning CS8604: Possible null reference argument for parameter 'expectedIntegrity' in 'EngineCache.EngineCache(string directory, Func<string, byte[]> download, string cdnBase, IReadOnlyDictionary<string, string> expectedIntegrity)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/PlantUml/PlantUmlCreator.cs(1514,48): warning CS8604: Possible null reference argument for parameter 'content' in 'string PlantUmlCreator.FormFieldLines(string content)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Reports/Merge/MergeableReportReader.cs(99,38): warning CS8604: Possible null reference argument for parameter 'testName' in 'void MergeableReportReader.ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into, Dictionary<string, List<string?>>? stepPaths, ParseNotes notes, Dictionary<Guid, WarmUpMark>? warmUpCalls = null)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,55): warning CS1573: Parameter 'Verdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,95): warning CS1573: Parameter 'Subjects' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,112): warning CS1573: Parameter 'LedgerPath' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,146): warning CS1573: Parameter 'LedgerSource' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,10): warning CS1573: Parameter 'BehaviourVerdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,67): warning CS1573: Parameter 'Analysis' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,108): warning CS1573: Parameter 'Shapes' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,48): warning CS1573: Parameter 'Subject' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,73): warning CS1573: Parameter 'Entry' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,117): warning CS1573: Parameter 'RunId' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,128): warning CS1573: Parameter 'RunsAgo' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+  Kronikol -> /repo/src/Kronikol/bin/Debug/net10.0/Kronikol.dll
+  Kronikol.Extensions.Redis -> /repo/src/Kronikol.Extensions.Redis/bin/Debug/net10.0/Kronikol.Extensions.Redis.dll
+  Kronikol.Extensions.MongoDB.V2 -> /repo/src/Kronikol.Extensions.MongoDB.V2/bin/Debug/net10.0/Kronikol.Extensions.MongoDB.V2.dll
+  Kronikol.Extensions.TcpTap -> /repo/src/Kronikol.Extensions.TcpTap/bin/Debug/net10.0/Kronikol.Extensions.TcpTap.dll
+/repo/tests/Kronikol.Tests.TcpTap/RespStreamParserTests.cs(271,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [/repo/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj]
+/repo/tests/Kronikol.Tests.TcpTap/TcpTapTests.cs(451,13): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [/repo/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj]
+  Kronikol.Tests.TcpTap -> /repo/tests/Kronikol.Tests.TcpTap/bin/Debug/net10.0/Kronikol.Tests.TcpTap.dll
+Test run for /repo/tests/Kronikol.Tests.TcpTap/bin/Debug/net10.0/Kronikol.Tests.TcpTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:16.15]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.AListenerClosedUnderARunningTapIsLoggedAndEndsItsLoop [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AListenerClosedUnderARunningTapIsLoggedAndEndsItsLoop [15 s]
+  Error Message:
+   nothing said the tap stopped accepting
+[xUnit.net 00:00:16.68]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.AnAcceptThatKeepsFailingIsTriedAtAPace [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AnAcceptThatKeepsFailingIsTriedAtAPace [505 ms]
+  Error Message:
+   Assert.InRange() Failure: Value not in range
+Range:  (2 - 12)
+Actual: 1
+[xUnit.net 00:00:31.69]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.AFailingAcceptIsLoggedOnceAMinute [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AFailingAcceptIsLoggedOnceAMinute [15 s]
+  Error Message:
+   the loop stopped trying after 1 accept(s)
+[xUnit.net 00:00:46.75]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.ALogCallbackThatThrowsDoesNotStopTheAcceptLoop [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.ALogCallbackThatThrowsDoesNotStopTheAcceptLoop [15 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "+PONG\r\n"
+Actual:   ""
+[xUnit.net 00:01:01.79]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.AFailedAcceptDoesNotStopTheTap [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AFailedAcceptDoesNotStopTheTap [15 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "+PONG\r\n"
+Actual:   ""
+[xUnit.net 00:01:01.87]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.ALogCallbackThatThrowsDoesNotFailStartingOrStopping [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.ALogCallbackThatThrowsDoesNotFailStartingOrStopping [82 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   System.InvalidOperationException: There is no currently active test.
+[xUnit.net 00:01:16.89]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.ThePauseDoublesUpToASecondAndStartsAgainAfterAnAccept [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.ThePauseDoublesUpToASecondAndStartsAgainAfterAnAccept [15 s]
+  Error Message:
+   the loop stopped trying after 1 accept(s)
+[xUnit.net 00:01:32.05]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.StoppingTheTapEndsTheAcceptLoopQuietly [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.StoppingTheTapEndsTheAcceptLoopQuietly [15 s]
+  Error Message:
+   the loop stopped trying after 1 accept(s)
+Failed!  - Failed:     8, Passed:     1, Skipped:     0, Total:     9, Duration: 1 m 31 s - Kronikol.Tests.TcpTap.dll (net10.0)
+exit 1
+  1 of 3 projects are up-to-date for restore.
+  Kronikol -> /repo/src/Kronikol/bin/Debug/net10.0/Kronikol.dll
+  Kronikol.Extensions.Otlp -> /repo/src/Kronikol.Extensions.Otlp/bin/Debug/net10.0/Kronikol.Extensions.Otlp.dll
+  Kronikol.Tests.Otlp -> /repo/tests/Kronikol.Tests.Otlp/bin/Debug/net10.0/Kronikol.Tests.Otlp.dll
+Test run for /repo/tests/Kronikol.Tests.Otlp/bin/Debug/net10.0/Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.10]     Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_fail_starting_or_stopping [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_fail_starting_or_stopping [15 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   System.InvalidOperationException: There is no currently active test.
+[xUnit.net 00:00:16.10]     Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_failed_accept_does_not_stop_the_tap [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_failed_accept_does_not_stop_the_tap [15 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "HTTP/1.1 404 Not Found"
+Actual:   ""
+[xUnit.net 00:00:31.10]     Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_stop_the_accept_loop [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_stop_the_accept_loop [15 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "HTTP/1.1 404 Not Found"
+Actual:   ""
+Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 30 s - Kronikol.Tests.Otlp.dll (net10.0)
+exit 1
+
+The fact for OtlpTap's could-not-also-bind line, added after the run above, on the same tree:
+
+/repo/src/Kronikol/PlantUml/NodeJsPlantUmlRenderer.cs(56,118): warning CS8604: Possible null reference argument for parameter 'expectedIntegrity' in 'EngineCache.EngineCache(string directory, Func<string, byte[]> download, string cdnBase, IReadOnlyDictionary<string, string> expectedIntegrity)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/PlantUml/PlantUmlCreator.cs(1514,48): warning CS8604: Possible null reference argument for parameter 'content' in 'string PlantUmlCreator.FormFieldLines(string content)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Reports/Merge/MergeableReportReader.cs(99,38): warning CS8604: Possible null reference argument for parameter 'testName' in 'void MergeableReportReader.ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into, Dictionary<string, List<string?>>? stepPaths, ParseNotes notes, Dictionary<Guid, WarmUpMark>? warmUpCalls = null)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,55): warning CS1573: Parameter 'Verdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,95): warning CS1573: Parameter 'Subjects' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,112): warning CS1573: Parameter 'LedgerPath' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,146): warning CS1573: Parameter 'LedgerSource' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,10): warning CS1573: Parameter 'BehaviourVerdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,67): warning CS1573: Parameter 'Analysis' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,108): warning CS1573: Parameter 'Shapes' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,48): warning CS1573: Parameter 'Subject' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,73): warning CS1573: Parameter 'Entry' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,117): warning CS1573: Parameter 'RunId' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,128): warning CS1573: Parameter 'RunsAgo' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+  Kronikol -> /repo/src/Kronikol/bin/Debug/net10.0/Kronikol.dll
+  Kronikol.Extensions.Otlp -> /repo/src/Kronikol.Extensions.Otlp/bin/Debug/net10.0/Kronikol.Extensions.Otlp.dll
+  Kronikol.Tests.Otlp -> /repo/tests/Kronikol.Tests.Otlp/bin/Debug/net10.0/Kronikol.Tests.Otlp.dll
+Test run for /repo/tests/Kronikol.Tests.Otlp/bin/Debug/net10.0/Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.78]     Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_fail_a_start_whose_second_bind_fails [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_fail_a_start_whose_second_bind_fails [44 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   System.InvalidOperationException: There is no currently active test.
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 57 ms - Kronikol.Tests.Otlp.dll (net10.0)
+exit 1

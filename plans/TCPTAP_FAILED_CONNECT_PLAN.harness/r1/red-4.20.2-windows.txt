@@ -1,0 +1,81 @@
+R1's facts on 4.20.2 (v4.20.2, 83e9783b) with red-seam.diff applied and TapAcceptLoop.red-stub.cs as TapAcceptLoop.cs:
+the seam the facts drive, around 4.20.2's own loop and log calls. Windows 11 26200, .NET 10.0.11, 2026-10-15.
+
+    0 Error(s)
+    0 Error(s)
+Test run for C:\Code\Kronikol-174-red\tests\Kronikol.Tests.TcpTap\bin\Debug\net10.0\Kronikol.Tests.TcpTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:05.80]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.ALogCallbackThatThrowsDoesNotFailStartingOrStopping [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.ALogCallbackThatThrowsDoesNotFailStartingOrStopping [451 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   System.InvalidOperationException: There is no currently active test.
+[xUnit.net 00:00:20.80]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.AListenerClosedUnderARunningTapIsLoggedAndEndsItsLoop [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AListenerClosedUnderARunningTapIsLoggedAndEndsItsLoop [14 s]
+  Error Message:
+   nothing said the tap stopped accepting
+[xUnit.net 00:00:35.83]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.AFailedAcceptDoesNotStopTheTap [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AFailedAcceptDoesNotStopTheTap [15 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "+PONG\r\n"
+Actual:   ""
+[xUnit.net 00:00:51.02]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.AFailingAcceptIsLoggedOnceAMinute [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AFailingAcceptIsLoggedOnceAMinute [15 s]
+  Error Message:
+   the loop stopped trying after 1 accept(s)
+[xUnit.net 00:01:06.03]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.ALogCallbackThatThrowsDoesNotStopTheAcceptLoop [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.ALogCallbackThatThrowsDoesNotStopTheAcceptLoop [15 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "+PONG\r\n"
+Actual:   ""
+[xUnit.net 00:01:21.03]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.ThePauseDoublesUpToASecondAndStartsAgainAfterAnAccept [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.ThePauseDoublesUpToASecondAndStartsAgainAfterAnAccept [15 s]
+  Error Message:
+   the loop stopped trying after 1 accept(s)
+[xUnit.net 00:01:36.03]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.StoppingTheTapEndsTheAcceptLoopQuietly [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.StoppingTheTapEndsTheAcceptLoopQuietly [14 s]
+  Error Message:
+   the loop stopped trying after 1 accept(s)
+[xUnit.net 00:01:36.55]     Kronikol.Tests.TcpTap.TcpTapAcceptTests.AnAcceptThatKeepsFailingIsTriedAtAPace [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AnAcceptThatKeepsFailingIsTriedAtAPace [517 ms]
+  Error Message:
+   Assert.InRange() Failure: Value not in range
+Range:  (2 - 12)
+Actual: 1
+Failed!  - Failed:     8, Passed:     1, Skipped:     0, Total:     9, Duration: 1 m 31 s - Kronikol.Tests.TcpTap.dll (net10.0)
+Test run for C:\Code\Kronikol-174-red\tests\Kronikol.Tests.Otlp\bin\Debug\net10.0\Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:31.47]     Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_stop_the_accept_loop [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_stop_the_accept_loop [15 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "HTTP/1.1 404 Not Found"
+Actual:   ""
+[xUnit.net 00:00:31.51]     Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_fail_starting_or_stopping [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_fail_starting_or_stopping [31 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   System.InvalidOperationException: There is no currently active test.
+[xUnit.net 00:00:46.65]     Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_failed_accept_does_not_stop_the_tap [FAIL]
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_failed_accept_does_not_stop_the_tap [15 s]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "HTTP/1.1 404 Not Found"
+Actual:   ""
+Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 30 s - Kronikol.Tests.Otlp.dll (net10.0)
+
+The fact for OtlpTap's could-not-also-bind line, added after the run above, on the same tree (Windows):
+
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_fail_a_start_whose_second_bind_fails
+
+   Assert.Null() Failure: Value is not null
+
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1 - Kronikol.Tests.Otlp.dll (net10.0)

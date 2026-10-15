@@ -70,10 +70,14 @@ public sealed class OtlpTap : IAsyncDisposable
             SingleReader = true,
             SingleWriter = false,
         });
+        Accepting = new TapAcceptLoop(line => TryLog($"[{_options.DisplayName}] otlp-tap {line}"));
     }
 
     /// <summary>The options this tap runs with.</summary>
     public OtlpTapOptions Options => _options;
+
+    /// <summary>The accept loop each listener runs; a fact makes an accept fail through its seams.</summary>
+    internal TapAcceptLoop Accepting { get; }
 
     /// <summary>The port actually bound (equals <c>ListenPort</c> unless that was 0). Zero before <see cref="StartAsync"/>.</summary>
     public int BoundPort { get; private set; }
@@ -113,7 +117,7 @@ public sealed class OtlpTap : IAsyncDisposable
 
     /// <summary>
     /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per
-    /// non-zero problem counter — payloads dropped, rejected or failed, exports refused as
+    /// non-zero problem counter — accepts that failed, payloads dropped, rejected or failed, exports refused as
     /// unauthenticated, forwards that failed — worded for a report reader (<c>otlp: 2 export payload(s)
     /// dropped …</c>). Empty when the tap is healthy. A host hands the list to
     /// <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/> so lost spans are a line in the
@@ -124,6 +128,9 @@ public sealed class OtlpTap : IAsyncDisposable
     {
         var name = _options.DisplayName;
         var entries = new List<DiagnosticEntry>();
+
+        if (Accepting.DiagnosticLine(name) is { } acceptLine)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded, acceptLine));
 
         var dropped = PayloadsDropped;
         if (dropped > 0)
@@ -179,8 +186,8 @@ public sealed class OtlpTap : IAsyncDisposable
         var token = _cts.Token;
         _acceptLoop = Task.WhenAll(_listeners.Select(l => Task.Run(() => AcceptLoopAsync(l, token), CancellationToken.None)));
         _mapLoop = Task.Run(() => MapLoopAsync(_cts.Token), CancellationToken.None);
-        _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap listening on {TracesEndpoint}"
-                             + (_options.ForwardBaseUri is null ? "" : $" → {_options.ForwardBaseUri}"));
+        TryLog($"[{_options.DisplayName}] otlp-tap listening on {TracesEndpoint}"
+               + (_options.ForwardBaseUri is null ? "" : $" → {_options.ForwardBaseUri}"));
         return Task.CompletedTask;
     }
 
@@ -207,7 +214,7 @@ public sealed class OtlpTap : IAsyncDisposable
             {
                 if (_listeners.Count == 0)
                     throw;
-                _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap could not also bind {address}: {ex.Message}");
+                TryLog($"[{_options.DisplayName}] otlp-tap could not also bind {address}: {ex.Message}");
                 continue;
             }
 
@@ -256,23 +263,8 @@ public sealed class OtlpTap : IAsyncDisposable
 
     // ------------------------------------------------------------------ accept / serve
 
-    private async Task AcceptLoopAsync(TcpListener listener, CancellationToken ct)
-    {
-        while (!ct.IsCancellationRequested)
-        {
-            TcpClient client;
-            try
-            {
-                client = await listener.AcceptTcpClientAsync(ct).ConfigureAwait(false);
-            }
-            catch (Exception ex) when (ex is OperationCanceledException or SocketException or ObjectDisposedException or InvalidOperationException)
-            {
-                return;
-            }
-
-            _ = Task.Run(() => ServeAsync(client, ct), CancellationToken.None);
-        }
-    }
+    private Task AcceptLoopAsync(TcpListener listener, CancellationToken ct) =>
+        Accepting.RunAsync(listener, client => _ = Task.Run(() => ServeAsync(client, ct), CancellationToken.None), ct);
 
     private async Task ServeAsync(TcpClient client, CancellationToken ct)
     {
@@ -608,9 +600,26 @@ public sealed class OtlpTap : IAsyncDisposable
 
         _upstream?.Dispose();
         _cts?.Dispose();
-        _options.Log?.Invoke(
+        TryLog(
             $"[{_options.DisplayName}] otlp-tap stopped ({RequestsReceived} exports, {SpansReceived} spans, {SpansMapped} mapped, "
-            + $"{SpansIgnored} ignored, {PayloadsDropped} dropped, {UnauthenticatedRequests} unauthenticated, {ForwardFailures} forward failures)");
+            + $"{SpansIgnored} ignored, {PayloadsDropped} dropped, {UnauthenticatedRequests} unauthenticated, {ForwardFailures} forward failures, "
+            + $"{Accepting.Failures} failed accepts)");
+    }
+
+    /// <summary>
+    /// Writes a line through <see cref="OtlpTapOptions.Log"/>. The callback is the host's code, and nothing it throws
+    /// changes what the tap does: one that writes to a test's output after the test has ended throws.
+    /// </summary>
+    private void TryLog(string message)
+    {
+        try
+        {
+            _options.Log?.Invoke(message);
+        }
+        catch
+        {
+            // The host's callback failed; the tap carries on.
+        }
     }
 
     private readonly record struct Payload(byte[] Body, string? ContentType, string? ContentEncoding);
