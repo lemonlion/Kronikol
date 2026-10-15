@@ -83,7 +83,9 @@ public static class MergedRunOutputs
                 report.Diagnostics,
                 report.Suite,
                 report.StepPaths,
-                history: history));
+                history: history,
+                // Combined.json, after -o Combined.html: a folder lookup would not find it, so every command names it.
+                dataFileName: RunSummaryConsoleWriter.QueryTargetFor(dataFilePath) is { } named ? Path.GetFileName(named) : null));
 
             Attempt(ReportGenerator.FailuresDigestFileName,
                 () => File.WriteAllText(Path.Combine(directory, ReportGenerator.FailuresDigestFileName), digest.Value.Markdown));

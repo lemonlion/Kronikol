@@ -74,7 +74,7 @@ internal static class RetainedRunResolver
             var found = matches[0];
             // The folder for a kept run - two of them can share an id (F9) - and the id for the run on top.
             resolvedName = found.OnTop ? found.Manifest.Run : found.Name;
-            report = found.OnTop ? topReport! : QueryCommand.ResolveReport(found.Directory, error);
+            report = found.OnTop ? topReport! : KeptReport(found.Directory, topReport, error);
             return report is null ? RetainedRunOutcome.Refused : RetainedRunOutcome.Found;
         }
 
@@ -87,6 +87,19 @@ internal static class RetainedRunResolver
         }
 
         return RetainedRunOutcome.NotRetained;
+    }
+
+    /// <summary>
+    /// The report of a run kept in <paramref name="directory"/>: the file named as the one on top, when that is there. A
+    /// folder lookup finds a <c>TestRunReport.json</c> and nothing else, so a run with its own report name
+    /// (<c>HtmlTestRunReportFileName</c>, or a merge's <c>-o</c>) answered every <c>--run</c> with "No TestRunReport.json
+    /// under …runs/&lt;name&gt;", the previous-run line the run itself prints included.
+    /// </summary>
+    private static string? KeptReport(string directory, string? topReport, TextWriter error)
+    {
+        if (topReport is not null && Path.Combine(directory, Path.GetFileName(topReport)) is var named && File.Exists(named))
+            return named;
+        return QueryCommand.ResolveReport(directory, error);
     }
 
     /// <summary>The refusal every verb but <c>history</c> gives for a run that is not kept: what is, and where its results still are.</summary>

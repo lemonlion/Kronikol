@@ -1,0 +1,57 @@
+Mutations of the audit's release (plans/CI_SUMMARY_AUDIENCE_PLAN.md section 12), 2026-10-15: audit/mutate.pl, each applied
+alone to a copy of the fixed sources, built (src/Kronikol for net10.0, then Kronikol.Tests with BuildProjectReferences=false,
+after A01 was caught that way as it was by a full build), and the classes that pin the CI text, the digest and the query
+tool's list and --run run against it. 26 of 26 killed.
+
+A01 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: stop breaking ##[ and ##vso[ in a name
+  caught by 1: CiSummaryAudienceTests.A_name_holding_a_logging_command_prints_as_text
+A02 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: quote a bash word only for a space or a quote, as before
+  caught by 3: CiSummaryAudienceTests.The_bash_block_quotes_a_folder_as_bash_reads_it(directory: "/work/a$b/Reports", argument: "'/work/a$b/Reports'"); CiSummaryAudienceTests.The_bash_block_quotes_a_folder_as_bash_reads_it(directory: "C:\\Users\\me\\shop\\Reports", argument: "'C:\\Users\\me\\shop\\Reports'"); CiSummaryRunTests.A_custom_data_file_name_is_named_by_the_pointer_the_section_and_the_annotation
+A03 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: stop escaping find's pattern characters
+  caught by 2: CiSummaryAudienceTests.A_data_file_named_with_pattern_characters_is_found_by_its_own_name; CiSummaryRunTests.A_custom_data_file_name_is_found_in_the_download_and_its_kept_run_opens
+A04 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: name a download for agents with nothing in it
+  caught by 1: CiSummaryAudienceTests.The_annotation_names_a_download_only_when_an_agent_has_something_in_it
+A05 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: name the workspace itself as .
+  caught by 1: CiSummaryAudienceTests.A_folder_that_is_the_workspace_is_named_as_its_root
+A06 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: claim the upload for every project of a step
+  caught by 1: CiSummaryAudienceTests.The_upload_is_stated_only_where_Kronikol_made_it
+A07 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: query the agent's folder on Azure DevOps without an upload
+  caught by 1: CiSummaryAudienceTests.On_azure_devops_without_an_upload_the_agent_part_queries_a_download_of_the_published_folder
+A08 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: one download folder for every attempt
+  caught by 1: CiSummaryAudienceTests.A_re_run_downloads_into_a_folder_of_its_own
+A09 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: name a query in the attempt sentence with no JSON data file
+  caught by 1: CiSummaryAudienceTests.A_re_run_says_its_attempt_and_that_a_download_may_hold_another
+A10 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: open the kept run by last-failed
+  caught by 7: CiSummaryAudienceTests.A_green_run_s_section_keeps_the_history_and_the_previous_run; CiSummaryAudienceTests.On_azure_devops_without_an_upload_the_agent_part_queries_a_download_of_the_published_folder; CiSummaryAudienceTests.The_previous_run_is_named_beside_the_report; CiSummaryAudienceTests.The_previous_run_is_opened_by_its_folder_never_by_last_failed; CiSummaryRunTests.A_custom_data_file_name_is_found_in_the_download_and_its_kept_run_opens; RunRotationTests.On_a_failing_run_the_pointer_and_the_digest_open_the_kept_run_by_its_folder; RunRotationTests.The_pointer_says_where_a_failing_previous_run_went_and_says_nothing_about_a_green_one
+A11 applied to src/Kronikol/Query/RetainedRunResolver.cs: look a kept run up by the folder lookup alone
+  caught by 3: CiSummaryRunTests.A_custom_data_file_name_is_found_in_the_download_and_its_kept_run_opens; RetainedRunsTests.Run_opens_a_kept_run_whose_report_has_its_own_name; RunRotationTests.The_digest_of_a_run_with_its_own_report_name_names_its_data_file_in_every_command
+A12 applied to src/Kronikol/Query/QueryCommand.cs: stop saying how many reports the list leaves out
+  caught by 1: RetainedRunsTests.A_list_of_more_than_twenty_reports_says_how_many_it_leaves_out
+A13 applied to src/Kronikol/Reports/FailuresDigestGenerator.cs: open the digest's earlier run by last-failed
+  caught by 3: RunRotationTests.On_a_failing_run_the_pointer_and_the_digest_open_the_kept_run_by_its_folder; RunRotationTests.The_digest_of_a_green_re_run_says_the_run_before_it_failed_and_where_it_went; RunRotationTests.The_digest_of_a_run_with_its_own_report_name_names_its_data_file_in_every_command
+A14 applied to src/Kronikol/Reports/FailuresDigestGenerator.cs: every digest command on the folder
+  caught by 2: Merge.MergeWritesTheRunOutputsTests.Merge_writes_the_failures_digest_beside_the_report; RunRotationTests.The_digest_of_a_run_with_its_own_report_name_names_its_data_file_in_every_command
+A15 applied to src/Kronikol/Reports/ReportGenerator.cs: drop the run's data file name from the digest
+  caught by 1: RunRotationTests.The_digest_of_a_run_with_its_own_report_name_names_its_data_file_in_every_command
+A16 applied to src/Kronikol/Reports/Merge/MergedRunOutputs.cs: drop the merge's data file name from the digest
+  caught by 1: Merge.MergeWritesTheRunOutputsTests.Merge_writes_the_failures_digest_beside_the_report
+A17 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: the public section ignores the process's CI
+  caught by 1: CiSummaryPublicBuilderTests.The_public_builders_read_the_process_s_ci
+A18 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: the public annotation ignores the process's CI
+  caught by 1: CiSummaryPublicBuilderTests.The_public_builders_read_the_process_s_ci
+A19 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: the public Write ignores the process's CI
+  caught by 1: CiSummaryPublicBuilderTests.The_public_builders_read_the_process_s_ci
+A20 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop OneLine on the link target
+  caught by 3: CiSummaryAudienceTests.A_ci_variable_holding_a_line_break_stays_on_its_line(name: "GITHUB_REPOSITORY", value: "acme/shop\n::error::forged"); CiSummaryAudienceTests.A_ci_variable_holding_a_line_break_stays_on_its_line(name: "GITHUB_RUN_ID", value: "123\r\n::error::forged"); CiSummaryAudienceTests.A_ci_variable_holding_a_line_break_stays_on_its_line(name: "GITHUB_SERVER_URL", value: "https://ghe.example.com\n::error::forged")
+A21 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: the annotation's run id unflattened
+  caught by 1: CiSummaryAudienceTests.A_ci_variable_holding_a_line_break_stays_on_its_line(name: "GITHUB_RUN_ID", value: "123\r\n::error::forged")
+A22 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: the guard's run id unflattened
+  caught by 1: CiSummaryAudienceTests.A_ci_variable_holding_a_line_break_stays_on_its_line(name: "GITHUB_RUN_ID", value: "123\r\n::error::forged")
+A23 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: the folder block's words in double quotes
+  caught by 8: CiSummaryAudienceTests.A_folder_with_spaces_quotes_and_line_breaks_is_flattened_and_its_commands_quoted; CiSummaryAudienceTests.The_bash_block_quotes_a_folder_as_bash_reads_it(directory: "/work/a$b/Reports", argument: "'/work/a$b/Reports'"); CiSummaryAudienceTests.The_bash_block_quotes_a_folder_as_bash_reads_it(directory: "/work/it's `here`/Reports", argument: "'/work/it'\\''s `here`/Reports'"); CiSummaryAudienceTests.The_bash_block_quotes_a_folder_as_bash_reads_it(directory: "C:\\Users\\me\\shop\\Reports", argument: "'C:\\Users\\me\\shop\\Reports'"); CiSummaryRunTests.A_custom_data_file_name_is_named_by_the_pointer_the_section_and_the_annotation; Merge.MergeWritesTheRunOutputsTests.A_failing_merge_on_github_writes_the_debug_section_to_the_job_summary_and_the_log; RunEndPointerSafetyTests.Ci_summary_quotes_a_path_containing_a_space; RunEndPointerTests.The_pointer_hands_query_the_file_when_a_directory_lookup_would_not_find_it
+A24 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: the previous run on the agent's folder on Azure DevOps without an upload
+  caught by 1: CiSummaryAudienceTests.On_azure_devops_without_an_upload_the_agent_part_queries_a_download_of_the_published_folder
+A25 applied to src/Kronikol/Reports/RunSummaryConsoleWriter.cs: drop the several-reports sentence on Azure DevOps
+  caught by 1: CiSummaryAudienceTests.On_azure_devops_without_an_upload_the_agent_part_queries_a_download_of_the_published_folder
+A26 applied to src/Kronikol/Reports/FailuresDigestGenerator.cs: move the digest's first comment
+  caught by 1: RunRotationTests.On_a_failing_run_the_pointer_and_the_digest_open_the_kept_run_by_its_folder

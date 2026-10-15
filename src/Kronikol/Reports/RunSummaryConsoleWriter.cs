@@ -174,7 +174,7 @@ public static class RunSummaryConsoleWriter
         // a count, like everything else here — never anything the previous run captured.
         if (summary.PreviousRun is { } previousRun)
             text.Append(queryable
-                ? $"  previous run ({previousRun.Failed} failed) kept: {Quote(previousRun.Directory)} — kronikol query failures {QueryTarget(summary)} --run last-failed\n"
+                ? $"  previous run ({previousRun.Failed} failed) kept: {Quote(previousRun.Directory)} — kronikol query failures {QueryTarget(summary)} --run {KeptRunArgument(previousRun)}\n"
                 : $"  previous run ({previousRun.Failed} failed) kept: {Quote(previousRun.Directory)}\n");
 
         if (summary.Failures.Count > 0)
@@ -242,13 +242,15 @@ public static class RunSummaryConsoleWriter
                 : head;
         }
 
-        var download = $"gh run download {Quote(reader.RunId)} --repo {Quote(RepositoryArgument(reader))} --dir {DownloadFolder(reader)}";
+        var download = $"gh run download {ShellWord(reader.RunId)} --repo {ShellWord(RepositoryArgument(reader))} --dir {DownloadFolder(reader)}";
+        // A download only where an agent has something in it: the data file to query, or the digest to read.
         var agents = queryable ? $"agents: {download}, then kronikol query failures {DownloadTarget(summary, DownloadFolder(reader))}"
             : HasDigest(summary) ? $"agents: {download}, then read {DigestFileName} in it"
-            : $"agents: {download}";
+            : null;
         var forPeople = new[] { HtmlFileName(summary), HasDigest(summary) ? DigestFileName : null }.OfType<string>().Select(OneLine).ToArray();
-        var readers = forPeople.Length > 0 ? $"people: {string.Join(" or ", forPeople)}; {agents}" : agents;
-        return $"{head}. Reports in {OneLine(FolderForPeople(summary.Directory, reader.Workspace))} ({readers})";
+        var readers = string.Join("; ", new[] { forPeople.Length > 0 ? $"people: {string.Join(" or ", forPeople)}" : null, agents }.OfType<string>());
+        var folder = FolderForPeople(summary.Directory, reader.Workspace) is { } relative ? OneLine(relative) : CheckoutRoot;
+        return readers.Length > 0 ? $"{head}. Reports in {folder} ({readers})" : $"{head}. Reports in {folder}";
     }
 
     /// <summary>
@@ -305,7 +307,7 @@ public static class RunSummaryConsoleWriter
     /// The section for <paramref name="reader"/>. People first: a GitHub job summary is read by people only, in a
     /// browser, so it says which report to open, where this job wrote it and where the run's artifacts are. Then,
     /// labelled for AI agents, the rule not to open the report and the commands that query it where an agent is:
-    /// a download of the run's artifacts, or the folder off CI. It names only the files the run wrote, and an
+    /// a download of the run's or the build's artifacts, or the folder off CI. It names only the files the run wrote, and an
     /// upload only where Kronikol made one (plans/CI_SUMMARY_AUDIENCE_PLAN.md R1, R2).
     ///
     /// <para>A green run gets no part for agents, under "The report" (R3): there is nothing to debug, and a
@@ -362,7 +364,7 @@ public static class RunSummaryConsoleWriter
         var html = HtmlFileName(summary);
         // Failures.md says "No failures" on a green run: named for people only when something is in it.
         var digest = summary.Failures.Count > 0 && HasDigest(summary);
-        var folder = OneLine(FolderForPeople(summary.Directory, reader.Workspace));
+        var folder = FolderForPeople(summary.Directory, reader.Workspace) is { } relative ? $"`{OneLine(relative)}`" : CheckoutRoot;
         var writer = reader.Provider == CiEnvironment.None ? "run" : "job";
 
         var text = new StringBuilder("**People:** ");
@@ -373,16 +375,16 @@ public static class RunSummaryConsoleWriter
             if (digest)
                 text.Append($", or `{DigestFileName}` for every failure in context");
             several = digest;
-            text.Append($". This {writer} wrote {(several ? "them" : "it")} to `{folder}`");
+            text.Append($". This {writer} wrote {(several ? "them" : "it")} to {folder}");
         }
         else if (digest)
         {
-            text.Append($"open `{DigestFileName}` for every failure in context. This {writer} wrote it to `{folder}`");
+            text.Append($"open `{DigestFileName}` for every failure in context. This {writer} wrote it to {folder}");
             several = false;
         }
         else
         {
-            text.Append($"this {writer} wrote its reports to `{folder}`");
+            text.Append($"this {writer} wrote its reports to {folder}");
             several = true;
         }
 
@@ -396,14 +398,16 @@ public static class RunSummaryConsoleWriter
     /// </summary>
     private static string UploadClause(CiReader reader, bool several)
     {
-        var (them, theyAre) = several ? ("them", "they are") : ("it", "it is");
+        var theyAre = several ? "they are" : "it is";
         switch (reader.Provider)
         {
             case CiEnvironment.GitHubActions:
             {
                 var artifacts = reader.RunUrl is { } run ? $"[artifacts]({LinkTarget(run)}#artifacts)" : "artifacts";
+                // reports-path holds one folder, the last a step wrote: with several test projects in one step only the
+                // last one's is uploaded (wiki CI-Artifact-Upload, "One reports directory per step"), so none claims it.
                 return reader.HandsFolderToUpload
-                    ? $"; the job's upload step puts {them} in this run's {artifacts}"
+                    ? $"; this run named the folder in `reports-path` for the job's upload step, which uploads the last folder named there to this run's {artifacts}"
                     : $"; {theyAre} in this run's {artifacts} when the job uploads that folder";
             }
             case CiEnvironment.AzureDevOps:
@@ -421,9 +425,10 @@ public static class RunSummaryConsoleWriter
     /// <summary>
     /// The agent part: the rule, then the commands that answer where an agent is. On GitHub with a run id and a
     /// repository, a guarded download of the run's artifacts and queries on it, since a GitHub job summary has no
-    /// agent readers and the runner's folder is gone; on Azure DevOps with an artifact, queries on its download;
-    /// elsewhere today's queries on the folder, for a reader on that machine. A query only for a JSON data file,
-    /// the one format the tool reads (F11).
+    /// agent readers and the runner's folder is gone; on Azure DevOps with an artifact, queries on its download, and
+    /// without one, queries on a download of what the pipeline published; elsewhere today's queries on the folder, for
+    /// a reader on that machine. A query only for a JSON data file, the one format the tool reads (F11). Every word of
+    /// the block is quoted as bash reads it (<see cref="ShellWord"/>).
     /// </summary>
     private static void AppendAgentPart(StringBuilder markdown, RunSummary summary, CiReader reader)
     {
@@ -446,7 +451,7 @@ public static class RunSummaryConsoleWriter
         if (reader.CanDownload)
         {
             var folder = DownloadFolder(reader);
-            var guard = $"test -d {folder} || gh run download {Quote(reader.RunId)} --repo {Quote(RepositoryArgument(reader))} --dir {folder}";
+            var guard = $"test -d {folder} || gh run download {ShellWord(reader.RunId)} --repo {ShellWord(RepositoryArgument(reader))} --dir {folder}";
             if (queryable)
             {
                 var target = DownloadTarget(summary, folder);
@@ -454,9 +459,7 @@ public static class RunSummaryConsoleWriter
                 block.AddRange([guard, "dotnet tool install -g Kronikol.Tool", $"kronikol query summary {target}", $"kronikol query failures {target}"]);
                 if (digest)
                     after.Add($"Read `{DigestFileName}` in the download first.");
-                after.Add(summary.QueryTarget is { } file
-                    ? $"The `find` takes the first `{OneLine(Path.GetFileName(file))}` in the download: if the run uploaded several (a matrix, or shards), `find {folder} -name {Quote(Path.GetFileName(file))}` lists them, and a query takes the path of the one you mean."
-                    : "If the run uploaded several reports (a matrix, or shards beside their merge), the query lists them with their counts: pass the one you mean.");
+                after.Add(SeveralInTheDownload(summary, folder));
             }
             else if (digest)
             {
@@ -464,15 +467,17 @@ public static class RunSummaryConsoleWriter
                 block.Add(guard);
             }
 
+            // The download's folder carries the attempt (DownloadFolder), so a block pasted after a re-run downloads again.
             if (reader.Attempt > 1)
-                after.Add($"This is attempt {reader.Attempt}. After a re-run, `gh run download` keeps one upload of each artifact name, not always this attempt's: `kronikol query summary` names the report's attempt.");
+                after.Add($"This is attempt {reader.Attempt}. After a re-run, `gh run download` keeps one upload of each artifact name, not always this attempt's"
+                          + (queryable ? ": `kronikol query summary` names the report's attempt." : "."));
             if (queryable && summary.QueryScriptWritten)
                 after.Add(QueryScriptOffTheRunner(summary, reader));
             after.Add($"A later step of this job finds the folder at `{OneLine(summary.Directory)}`.");
         }
         else if (artifact is not null)
         {
-            var folder = Quote(artifact);
+            var folder = ShellWord(artifact);
             if (queryable)
             {
                 var target = DownloadTarget(summary, folder);
@@ -490,11 +495,36 @@ public static class RunSummaryConsoleWriter
 
             after.Add($"A later step of this job finds the folder at `{OneLine(summary.Directory)}`.");
         }
+        else if (PublishedFolderDownload(reader) is { } published)
+        {
+            // Azure DevOps with no upload of Kronikol's own. Under dotnet test that upload never arrives (F10), so the
+            // wiki has the pipeline publish the folder, and the summary is read on the build's page, off the agent: the
+            // commands query a download of what the pipeline published, in a folder named by the build.
+            var folder = ShellWord(published);
+            if (queryable)
+            {
+                var target = DownloadTarget(summary, folder);
+                lead = Lead($"When the pipeline publishes that folder, download it from this build's artifacts into `{OneLine(published)}` and query it", ":");
+                block.AddRange(["dotnet tool install -g Kronikol.Tool", $"kronikol query summary {target}", $"kronikol query failures {target}"]);
+                if (digest)
+                    after.Add($"Read `{DigestFileName}` in the download first.");
+                after.Add(SeveralInTheDownload(summary, folder));
+                if (summary.QueryScriptWritten)
+                    after.Add(QueryScriptOffTheRunner(summary, reader));
+            }
+            else if (digest)
+            {
+                lead = Lead($"When the pipeline publishes that folder, download it from this build's artifacts and read `{DigestFileName}` in it", ".");
+            }
+
+            after.Add($"A later step of this job finds the folder at `{OneLine(summary.Directory)}`.");
+        }
         else if (queryable)
         {
             var target = QueryTarget(summary);
+            var word = ShellWord(summary.QueryTarget ?? summary.Directory);
             lead = Lead("Query it", ":");
-            block.AddRange(["dotnet tool install -g Kronikol.Tool", $"kronikol query summary {target}", $"kronikol query failures {target}"]);
+            block.AddRange(["dotnet tool install -g Kronikol.Tool", $"kronikol query summary {word}", $"kronikol query failures {word}"]);
             if (digest)
                 after.Add($"Read `{DigestFileName}` beside the report first.");
             if (summary.QueryScriptWritten)
@@ -534,21 +564,54 @@ public static class RunSummaryConsoleWriter
     private static string PreviousRunLine(RunSummary summary, RunSummaryPreviousRun previousRun, CiReader reader)
     {
         var queryable = QueryableDataFile(summary) is not null;
-        if (reader.CanDownload || (reader.Provider == CiEnvironment.AzureDevOps && reader.ArtifactName is not null))
+        var run = KeptRunArgument(previousRun);
+        if (ReadsADownload(reader))
         {
             var where = Relative(summary.Directory, previousRun.Directory) is { } kept
                 ? $"is kept beside the report in `{OneLine(kept)}`"
                 : $"is kept in `{OneLine(previousRun.Directory)}`";
-            return $"The previous run ({previousRun.Failed} failed) {where}" + (queryable ? ": add `--run last-failed` to a query." : ".");
+            return $"The previous run ({previousRun.Failed} failed) {where}" + (queryable ? $": `--run {run}` opens it in any `kronikol query` of the report." : ".");
         }
 
         return queryable
-            ? $"The previous run ({previousRun.Failed} failed) is kept in `{OneLine(previousRun.Directory)}` — `kronikol query failures {QueryTarget(summary)} --run last-failed`."
+            ? $"The previous run ({previousRun.Failed} failed) is kept in `{OneLine(previousRun.Directory)}` — `kronikol query failures {QueryTarget(summary)} --run {run}`."
             : $"The previous run ({previousRun.Failed} failed) is kept in `{OneLine(previousRun.Directory)}`.";
     }
 
-    /// <summary>The folder <c>gh run download</c> is told to fill: named by the run, so two runs' downloads never meet.</summary>
-    private static string DownloadFolder(CiReader reader) => Quote($"kronikol-{reader.RunId}");
+    /// <summary>
+    /// What <c>--run</c> is handed to open the run kept under <c>runs/</c>: its folder's name. <c>last-failed</c> is the
+    /// newest run with a failure, the one on top included, so on a failing run, which is when anything is debugged, it
+    /// opened this run again; and the folder tells apart two kept runs that share a CI run's id.
+    /// </summary>
+    private static string KeptRunArgument(RunSummaryPreviousRun previousRun) =>
+        Quote(Path.GetFileName(previousRun.Directory.TrimEnd('/', '\\')));
+
+    /// <summary>
+    /// The folder <c>gh run download</c> is told to fill, as a bash word: named by the run, so two runs' downloads never
+    /// meet, and by the attempt after a re-run. The guard skips a download into a folder that exists, so a folder named
+    /// by the run alone kept whatever the first paste fetched: the second attempt's block queried the first's download.
+    /// </summary>
+    private static string DownloadFolder(CiReader reader) =>
+        ShellWord(reader.Attempt > 1 ? $"kronikol-{reader.RunId}-{reader.Attempt.ToString(CultureInfo.InvariantCulture)}" : $"kronikol-{reader.RunId}");
+
+    /// <summary>
+    /// On Azure DevOps with no upload of Kronikol's own, the folder a reader downloads what the pipeline published into,
+    /// named by the build; null anywhere else, and where the build has no id to name it by.
+    /// </summary>
+    private static string? PublishedFolderDownload(CiReader reader) =>
+        reader.Provider == CiEnvironment.AzureDevOps && reader.ArtifactName is null && !string.IsNullOrWhiteSpace(reader.RunId)
+            ? $"kronikol-{reader.RunId}"
+            : null;
+
+    /// <summary>Whether the reader reads the report from a download, beside which the kept runs sit under <c>runs/</c>.</summary>
+    private static bool ReadsADownload(CiReader reader) =>
+        reader.CanDownload || (reader.Provider == CiEnvironment.AzureDevOps && reader.ArtifactName is not null) || PublishedFolderDownload(reader) is not null;
+
+    /// <summary>What a download of several reports means for the query after the block, and for a data file found by name.</summary>
+    private static string SeveralInTheDownload(RunSummary summary, string folder) =>
+        summary.QueryTarget is { } file
+            ? $"The `find` takes the first `{OneLine(Path.GetFileName(file))}` in the download: if the run uploaded several (a matrix, or shards), `find {folder} -name {PatternWord(Path.GetFileName(file))}` lists them, and a query takes the path of the one you mean."
+            : "If the run uploaded several reports (a matrix, or shards beside their merge), the query lists them with their counts: pass the one you mean.";
 
     /// <summary><c>gh</c>'s <c>--repo</c>: <c>owner/name</c> on github.com, <c>HOST/owner/name</c> on GitHub Enterprise.</summary>
     private static string RepositoryArgument(CiReader reader) =>
@@ -561,15 +624,21 @@ public static class RunSummaryConsoleWriter
     /// </summary>
     private static string DownloadTarget(RunSummary summary, string folder) =>
         summary.QueryTarget is { } file
-            ? $"\"$(find {folder} -name {Quote(Path.GetFileName(file))} -not -path '*/runs/*' -not -path '*/baseline/*' -print -quit)\""
+            ? $"\"$(find {folder} -name {PatternWord(Path.GetFileName(file))} -not -path '*/runs/*' -not -path '*/baseline/*' -print -quit)\""
             : folder;
 
     /// <summary>
-    /// The reports folder as a person finds it: relative to the workspace, with <c>/</c>, when it lies inside it;
-    /// otherwise, or with no workspace, as written.
+    /// The reports folder as a person finds it: relative to the workspace, with <c>/</c>, when it lies inside it; null
+    /// when it is the workspace itself, which a person knows as <see cref="CheckoutRoot"/> (a merge run in the
+    /// repository's own folder said it wrote its reports to <c>.</c>); otherwise, or with no workspace, as written.
     /// </summary>
-    private static string FolderForPeople(string directory, string? workspace) =>
-        workspace is null ? directory : Relative(workspace, directory) ?? directory;
+    private static string? FolderForPeople(string directory, string? workspace) =>
+        workspace is null ? directory
+        : Relative(workspace, directory) is { } relative ? (relative == "." ? null : relative)
+        : directory;
+
+    /// <summary>How the people part and the annotation name a reports folder that is the workspace itself.</summary>
+    private const string CheckoutRoot = "the root of the checkout";
 
     /// <summary><paramref name="path"/> relative to <paramref name="root"/> with <c>/</c>, or null when it is not inside it.</summary>
     private static string? Relative(string root, string path)
@@ -626,8 +695,27 @@ public static class RunSummaryConsoleWriter
     /// <para><see cref="string.ReplaceLineEndings(string)"/> rather than a <c>\r\n</c> replace, because it
     /// knows the whole set: CR, LF, CRLF, FF, VT, NEL and the two Unicode separators. Nothing is dropped —
     /// each becomes a space, so the name is still reported in full.</para>
+    ///
+    /// <para>A line start is not the only place a command is read. GitHub's runner still reads its older
+    /// <c>##[command]</c> form anywhere in a line, and the Azure Pipelines agent reads <c>##vso[</c> anywhere in a
+    /// line, in any case (<c>##vso[task.setvariable]</c> sets a pipeline variable). A space after the first
+    /// <c>#</c> of each leaves the name readable and no longer a command.</para>
     /// </summary>
-    private static string OneLine(string? text) => (text ?? "").ReplaceLineEndings(" ");
+    private static string OneLine(string? text) => BreakLoggingCommands((text ?? "").ReplaceLineEndings(" "));
+
+    private static readonly string[] LoggingCommandMarkers = ["##[", "##vso["];
+
+    private static string BreakLoggingCommands(string text)
+    {
+        foreach (var marker in LoggingCommandMarkers)
+        {
+            for (var at = text.IndexOf(marker, StringComparison.OrdinalIgnoreCase); at >= 0;
+                 at = text.IndexOf(marker, at + 2, StringComparison.OrdinalIgnoreCase))
+                text = text.Insert(at + 1, " ");
+        }
+
+        return text;
+    }
 
     /// <summary>
     /// A path as an argument on a command line the reader is meant to copy. Every one of these lines ends
@@ -636,9 +724,10 @@ public static class RunSummaryConsoleWriter
     /// exotic.
     ///
     /// <para>Quoted only when it needs to be: quoting every path would make every pointer harder to read
-    /// for the one in a hundred that has a space. The escape targets POSIX shells, which is what the
-    /// <c>```bash</c> block in the CI summary declares and what every CI runner uses; a Windows path
-    /// cannot contain a quote at all, so the shells that spell that escape differently never see one.</para>
+    /// for the one in a hundred that has a space. Double quotes, because the pointer is pasted into any shell
+    /// and cmd takes no other; a Windows path cannot contain a quote at all, so the shells that spell that
+    /// escape differently never see one. The CI section's <c>```bash</c> block declares bash, which reads a
+    /// backslash or a <c>$</c> inside double quotes, so its words take <see cref="ShellWord"/>.</para>
     /// </summary>
     private static string Quote(string? path)
     {
@@ -646,6 +735,37 @@ public static class RunSummaryConsoleWriter
         return flat.Contains(' ', StringComparison.Ordinal) || flat.Contains('"', StringComparison.Ordinal)
             ? "\"" + flat.Replace("\"", "\\\"", StringComparison.Ordinal) + "\""
             : flat;
+    }
+
+    /// <summary>
+    /// One word of the CI section's <c>```bash</c> block, as bash reads it. <see cref="Quote"/> serves the console,
+    /// where cmd takes double quotes and nothing else; inside them bash still reads a backslash, a <c>$</c> and a
+    /// backtick, so a Windows folder lost its separators there (<c>C:UsersmeReports</c>) and a <c>$</c> expanded.
+    /// Single quotes keep every character but the single quote itself, which is closed, escaped and reopened.
+    /// </summary>
+    internal static string ShellWord(string? text)
+    {
+        var flat = OneLine(text);
+        return flat.Length > 0 && flat.All(c => char.IsAsciiLetterOrDigit(c) || "_./:=@%+,-".Contains(c, StringComparison.Ordinal))
+            ? flat
+            : "'" + flat.Replace("'", "'\\''", StringComparison.Ordinal) + "'";
+    }
+
+    /// <summary>
+    /// A <c>find -name</c> pattern that matches <paramref name="name"/> and nothing else: <c>-name</c> reads <c>*</c>,
+    /// <c>?</c> and <c>[</c> as a pattern, so <c>Report[linux].json</c> matched nothing and the query was handed <c>""</c>.
+    /// </summary>
+    private static string PatternWord(string name)
+    {
+        var escaped = new StringBuilder(name.Length + 4);
+        foreach (var c in OneLine(name))
+        {
+            if (c is '*' or '?' or '[' or ']' or '\\')
+                escaped.Append('\\');
+            escaped.Append(c);
+        }
+
+        return ShellWord(escaped.ToString());
     }
 
     private static bool HasDigest(RunSummary summary) =>

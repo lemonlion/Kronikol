@@ -1,0 +1,63 @@
+Red proof of the audit's facts (plans/CI_SUMMARY_AUDIENCE_PLAN.md section 12), 2026-10-15.
+The new and changed facts run on the published 4.20.2 sources (origin/main 3240c983, the audit worktree before any source edit),
+with nothing stubbed: every helper they call already existed. Command:
+  dotnet test tests/Kronikol.Tests -c Debug --no-build --filter "FullyQualifiedName~CiSummaryAudienceTests|FullyQualifiedName~CiSummaryRunTests|FullyQualifiedName~CiSummaryPublicBuilderTests|FullyQualifiedName~RunRotationTests|FullyQualifiedName~RetainedRunsTests"
+
+Failed!  - Failed:    22, Passed:   115, Skipped:     1, Total:   138, Duration: 14 s
+
+Each failing fact, with the first assertion it failed on:
+  RetainedRunsTests.Run_opens_a_kept_run_whose_report_has_its_own_name
+      gh_7_1: No TestRunReport.json under C:\Users\cex\AppData\Local\Temp\kronikol-retainedej5iqrbf.vr4\proj\Reports\runs\gh_7_1.
+  CiSummaryAudienceTests.The_annotation_names_a_download_only_when_an_agent_has_something_in_it
+      Assert.EndsWith() Failure: String end does not match
+  CiSummaryAudienceTests.The_previous_run_is_named_beside_the_report
+      Assert.Contains() Failure: Sub-string not found
+  CiSummaryAudienceTests.The_bash_block_quotes_a_folder_as_bash_reads_it(directory:
+      Assert.Equal() Failure: Strings differ
+  CiSummaryAudienceTests.The_bash_block_quotes_a_folder_as_bash_reads_it(directory:
+      Assert.Equal() Failure: Strings differ
+  CiSummaryAudienceTests.The_bash_block_quotes_a_folder_as_bash_reads_it(directory:
+      Assert.Equal() Failure: Strings differ
+  CiSummaryAudienceTests.On_azure_devops_without_an_upload_the_agent_part_queries_a_download_of_the_published_folder
+      Assert.Contains() Failure: Sub-string not found
+  CiSummaryAudienceTests.The_previous_run_is_opened_by_its_folder_never_by_last_failed
+      Assert.DoesNotContain() Failure: Sub-string found
+  CiSummaryAudienceTests.A_folder_that_is_the_workspace_is_named_as_its_root
+      Assert.Contains() Failure: Sub-string not found
+  CiSummaryAudienceTests.A_data_file_named_with_pattern_characters_is_found_by_its_own_name
+      Assert.Contains() Failure: Sub-string not found
+  CiSummaryAudienceTests.The_upload_is_stated_only_where_Kronikol_made_it
+      Assert.EndsWith() Failure: String end does not match
+  CiSummaryAudienceTests.A_re_run_downloads_into_a_folder_of_its_own
+      Assert.StartsWith() Failure: String start does not match
+  CiSummaryAudienceTests.A_folder_with_spaces_quotes_and_line_breaks_is_flattened_and_its_commands_quoted
+      Assert.Contains() Failure: Sub-string not found
+  CiSummaryAudienceTests.A_re_run_says_its_attempt_and_that_a_download_may_hold_another
+      Assert.Contains() Failure: Sub-string not found
+  CiSummaryAudienceTests.A_green_run_s_section_keeps_the_history_and_the_previous_run
+      Assert.EndsWith() Failure: String end does not match
+  CiSummaryAudienceTests.A_name_holding_a_logging_command_prints_as_text
+      Assert.DoesNotContain() Failure: Sub-string found
+  RetainedRunsTests.A_list_of_more_than_twenty_reports_says_how_many_it_leaves_out
+      Assert.Equal() Failure: Strings differ
+  CiSummaryRunTests.A_custom_data_file_name_is_found_in_the_download_and_its_kept_run_opens
+      Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+  RunRotationTests.The_pointer_says_where_a_failing_previous_run_went_and_says_nothing_about_a_green_one
+      Assert.Contains() Failure: Item not found in collection
+  RunRotationTests.On_a_failing_run_the_pointer_and_the_digest_open_the_kept_run_by_its_folder
+      Assert.Contains() Failure: Item not found in collection
+  RunRotationTests.The_digest_of_a_run_with_its_own_report_name_names_its_data_file_in_every_command
+      Assert.DoesNotMatch() Failure: Match found
+  RunRotationTests.The_digest_of_a_green_re_run_says_the_run_before_it_failed_and_where_it_went
+      Assert.Contains() Failure: Sub-string not found
+
+Green on 4.20.2 by design:
+  CiSummaryPublicBuilderTests.The_public_builders_read_the_process_s_ci pins Q11 on any machine (the fact it replaces could
+  fail only on a GitHub runner); mutations A17 to A19 prove it.
+  The_bash_block_quotes_a_folder_as_bash_reads_it("/work/plain-path_1.0/Reports") pins that a plain path stays bare.
+
+Added after this run, each proven by a mutation instead (mutations.txt):
+  MergeWritesTheRunOutputsTests.Merge_writes_the_failures_digest_beside_the_report: the digest's commands name
+  Combined.json (A16). RunRotationTests.On_a_failing_run_the_pointer_and_the_digest_open_the_kept_run_by_its_folder: the
+  digest's commands stay byte for byte for a default report name (A26). On_azure_devops_without_an_upload_...: the
+  several-reports sentence (A25).

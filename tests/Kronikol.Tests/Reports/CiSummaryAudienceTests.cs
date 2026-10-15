@@ -197,7 +197,11 @@ public class CiSummaryAudienceTests
     public void The_upload_is_stated_only_where_Kronikol_made_it()
     {
         Assert.EndsWith($"; they are in this run's [artifacts]({RunUrl}#artifacts) when the job uploads that folder.", People(Section(Summary(), GitHub())));
-        Assert.EndsWith($"; the job's upload step puts them in this run's [artifacts]({RunUrl}#artifacts).", People(Section(Summary(), GitHubPublishing())));
+        // reports-path holds one folder per step, the last written: with several test projects in one step only the
+        // last one's is uploaded (wiki CI-Artifact-Upload, "One reports directory per step"), so no project claims it.
+        Assert.EndsWith($"; this run named the folder in `reports-path` for the job's upload step, which uploads the last folder named there to this run's [artifacts]({RunUrl}#artifacts).",
+            People(Section(Summary(), GitHubPublishing())));
+        Assert.DoesNotContain("puts them in", People(Section(Summary(), GitHubPublishing())));
         // With no $GITHUB_OUTPUT, PublishCiArtifacts hands nothing over on GitHub.
         Assert.EndsWith("when the job uploads that folder.", People(Section(Summary(), GitHubPublishing(githubOutput: null))));
         Assert.EndsWith($"; they are in this build's `TestReports` artifact ([build]({BuildUrl})).", People(Section(Summary(), Azure(publish: true))));
@@ -239,7 +243,60 @@ public class CiSummaryAudienceTests
         Assert.Contains("This job wrote them to `My \"Reports\" ::error::forged`;", People(section));
 
         var local = Section(Summary(directory: directory), CiReader.None);
-        Assert.Contains("kronikol query failures \"/home/runner/work/shop/shop/My \\\"Reports\\\" ::error::forged\"", local);
+        Assert.Contains("kronikol query failures '/home/runner/work/shop/shop/My \"Reports\" ::error::forged'", BashBlock(local));
+    }
+
+    /// <summary>
+    /// The block is declared bash, and bash reads a backslash, a dollar, a backtick or a single quote inside double
+    /// quotes or none: a Windows folder lost its separators ("No such file or directory: C:UsersmeshopReports"), and
+    /// a <c>$</c> in a folder expanded. Single quotes keep every character but the single quote itself.
+    /// </summary>
+    [Theory]
+    [InlineData(@"C:\Users\me\shop\Reports", @"'C:\Users\me\shop\Reports'")]
+    [InlineData("/work/a$b/Reports", "'/work/a$b/Reports'")]
+    [InlineData("/work/it's `here`/Reports", @"'/work/it'\''s `here`/Reports'")]
+    [InlineData("/work/plain-path_1.0/Reports", "/work/plain-path_1.0/Reports")]
+    public void The_bash_block_quotes_a_folder_as_bash_reads_it(string directory, string argument)
+    {
+        var block = BashBlock(Section(Summary(directory: directory), CiReader.None));
+
+        Assert.Equal($"dotnet tool install -g Kronikol.Tool\nkronikol query summary {argument}\nkronikol query failures {argument}", block);
+    }
+
+    /// <summary>
+    /// <c>find -name</c> takes a pattern: a data file named <c>Report[linux].json</c> matched nothing, the query was
+    /// handed <c>""</c>, and it answered "No such file or directory".
+    /// </summary>
+    [Fact]
+    public void A_data_file_named_with_pattern_characters_is_found_by_its_own_name()
+    {
+        var summary = Summary(data: "Report[linux] *1?.json") with { QueryTarget = Dir + "/Report[linux] *1?.json" };
+
+        var section = Section(summary, GitHub());
+
+        Assert.Contains(@"-name 'Report\[linux\] \*1\?.json' -not -path", BashBlock(section));
+        Assert.Contains(@"`find kronikol-123456789 -name 'Report\[linux\] \*1\?.json'` lists them", section);
+    }
+
+    /// <summary>
+    /// <see cref="RunSummaryConsoleWriter"/> keeps a name from starting a line, where GitHub reads <c>::</c> as a workflow
+    /// command. GitHub's runner also still reads its older <c>##[command]</c> anywhere in a line, and the Azure Pipelines
+    /// agent <c>##vso[</c> anywhere in a line (<c>##vso[task.setvariable]</c> sets a pipeline variable), so a scenario
+    /// named after a log line it checks was a command in the pointer.
+    /// </summary>
+    [Fact]
+    public void A_name_holding_a_logging_command_prints_as_text()
+    {
+        var summary = Summary() with
+        {
+            Failures = [new RunSummaryFailure("0000000000000001", "Logs ##[group]", "Rejects ##[error]boom and ##VSO[task.setvariable variable=x]1")]
+        };
+
+        var pointer = RunSummaryConsoleWriter.Build(summary);
+
+        Assert.DoesNotContain("##[", pointer, StringComparison.Ordinal);
+        Assert.DoesNotContain("##vso[", pointer, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Logs # #[group] › Rejects # #[error]boom and # #VSO[task.setvariable variable=x]1", pointer);
     }
 
     // ─── R2: commands that work where the reader is ────────────
@@ -347,6 +404,25 @@ public class CiSummaryAudienceTests
 
         foreach (var attempt in new[] { "1", null, "not a number" })
             Assert.DoesNotContain("attempt", Section(Summary(), GitHub(("GITHUB_RUN_ATTEMPT", attempt))));
+
+        // Without a JSON data file there is no query to name the attempt.
+        var xml = Section(Summary(data: "TestRunReport.xml"), GitHub(("GITHUB_RUN_ATTEMPT", "2")));
+        Assert.Contains("This is attempt 2. After a re-run, `gh run download` keeps one upload of each artifact name, not always this attempt's.", xml);
+        Assert.DoesNotContain("kronikol query", xml);
+    }
+
+    /// <summary>
+    /// The guard skips a download into a folder that exists, so a folder named by the run alone held whatever the first
+    /// paste fetched: pasted after a re-run, the second attempt's block queried the first attempt's download.
+    /// </summary>
+    [Fact]
+    public void A_re_run_downloads_into_a_folder_of_its_own()
+    {
+        var reader = GitHub(("GITHUB_RUN_ATTEMPT", "2"));
+
+        Assert.StartsWith("test -d kronikol-123456789-2 || gh run download 123456789 --repo acme/shop --dir kronikol-123456789-2\n", BashBlock(Section(Summary(), reader)));
+        Assert.EndsWith("--dir kronikol-123456789-2, then kronikol query failures kronikol-123456789-2)", RunSummaryConsoleWriter.BuildGitHubNotice(Summary(), reader));
+        Assert.StartsWith("test -d kronikol-123456789 || ", BashBlock(Section(Summary(), GitHub())));
     }
 
     [Fact]
@@ -354,8 +430,25 @@ public class CiSummaryAudienceTests
     {
         var summary = Summary() with { PreviousRun = new RunSummaryPreviousRun(Dir + "/runs/gh_123456789_1", 3) };
 
-        Assert.Contains("The previous run (3 failed) is kept beside the report in `runs/gh_123456789_1`: add `--run last-failed` to a query.\n\n", Section(summary, GitHub()));
-        Assert.Contains($"The previous run (3 failed) is kept in `{Dir}/runs/gh_123456789_1` — `kronikol query failures {Dir} --run last-failed`.", Section(summary, CiReader.None));
+        Assert.Contains("The previous run (3 failed) is kept beside the report in `runs/gh_123456789_1`: `--run gh_123456789_1` opens it in any `kronikol query` of the report.\n\n",
+            Section(summary, GitHub()));
+        Assert.Contains($"The previous run (3 failed) is kept in `{Dir}/runs/gh_123456789_1` — `kronikol query failures {Dir} --run gh_123456789_1`.", Section(summary, CiReader.None));
+        Assert.Contains($"  previous run (3 failed) kept: {Dir}/runs/gh_123456789_1 — kronikol query failures {Dir} --run gh_123456789_1\n", RunSummaryConsoleWriter.Build(summary));
+    }
+
+    /// <summary>
+    /// <c>last-failed</c> is the newest run with a failure, the one on top included: on a failing run, which is when the
+    /// section debugs anything, it opened this run again, never the one kept. The kept run is named by its folder.
+    /// </summary>
+    [Fact]
+    public void The_previous_run_is_opened_by_its_folder_never_by_last_failed()
+    {
+        var summary = Summary() with { PreviousRun = new RunSummaryPreviousRun(Dir + "/runs/gh_123456789_1", 3) };
+
+        foreach (var reader in new[] { GitHub(), Azure(publish: true), Azure(publish: false), CiReader.None })
+            Assert.DoesNotContain("last-failed", Section(summary, reader));
+        Assert.DoesNotContain("last-failed", RunSummaryConsoleWriter.Build(summary));
+        Assert.DoesNotContain("last-failed", Section(summary with { Failures = [] }, GitHub()));
     }
 
     [Fact]
@@ -420,10 +513,30 @@ public class CiSummaryAudienceTests
         Assert.DoesNotContain("az ", section);
     }
 
+    /// <summary>
+    /// Under <c>dotnet test</c> Kronikol's own upload never arrives on Azure DevOps (F10), so the wiki has the pipeline
+    /// publish the folder with <c>PublishCiArtifacts</c> off, and the summary is read on the build's page: off the agent.
+    /// The commands named the agent's folder, and "no network needed" is true on the agent alone.
+    /// </summary>
     [Fact]
-    public void On_azure_devops_without_an_upload_the_agent_part_queries_the_folder()
+    public void On_azure_devops_without_an_upload_the_agent_part_queries_a_download_of_the_published_folder()
     {
-        Assert.Equal($"dotnet tool install -g Kronikol.Tool\nkronikol query summary {Dir}\nkronikol query failures {Dir}", BashBlock(Section(Summary(), Azure(publish: false))));
+        var section = Section(Summary() with { QueryScriptWritten = true, PreviousRun = new RunSummaryPreviousRun(Dir + "/runs/ado_77_1", 2) }, Azure(publish: false));
+
+        Assert.Contains("larger than a context window. When the pipeline publishes that folder, download it from this build's artifacts into `kronikol-77` and query it instead:", section);
+        Assert.Equal("dotnet tool install -g Kronikol.Tool\nkronikol query summary kronikol-77\nkronikol query failures kronikol-77", BashBlock(section));
+        Assert.Contains("Read `Failures.md` in the download first. If the run uploaded several reports (a matrix, or shards beside their merge), the query lists them", section);
+        Assert.Contains("With nothing installed, `dotnet run --file query.cs -- failures .` in the folder that holds the report", section);
+        Assert.DoesNotContain("no network", section);
+        Assert.Contains("The previous run (2 failed) is kept beside the report in `runs/ado_77_1`: `--run ado_77_1` opens it", section);
+        Assert.Contains($"A later step of this job finds the folder at `{Dir}`.", section);
+        Assert.Single(Regex.Matches(section, Regex.Escape(Dir)));
+
+        Assert.Contains("When the pipeline publishes that folder, download it from this build's artifacts and read `Failures.md` in it instead.", Section(Summary(data: null), Azure(publish: false)));
+
+        // No build id, no download to name: the folder, as off CI.
+        var noBuild = CiReader.Detect(Env(("TF_BUILD", "True"), ("BUILD_SOURCESDIRECTORY", Workspace)), new ReportConfigurationOptions());
+        Assert.Equal($"dotnet tool install -g Kronikol.Tool\nkronikol query summary {Dir}\nkronikol query failures {Dir}", BashBlock(Section(Summary(), noBuild)));
     }
 
     /// <summary>
@@ -467,12 +580,22 @@ public class CiSummaryAudienceTests
         Assert.Contains("  agents: never open TestRunReport.html\n", none);
     }
 
+    /// <summary>With nothing for an agent to query or read, the annotation names no download for agents.</summary>
     [Fact]
-    public void The_public_builders_read_the_process_s_ci()
+    public void The_annotation_names_a_download_only_when_an_agent_has_something_in_it()
     {
-        // Whatever the process is, the public builder writes what the internal one writes for the process's CI.
-        Assert.Equal(Section(Summary(), CiReader.FromProcess()), RunSummaryConsoleWriter.BuildCiSummarySection(Summary()));
-        Assert.Equal(RunSummaryConsoleWriter.BuildGitHubNotice(Summary(), CiReader.FromProcess()), RunSummaryConsoleWriter.BuildGitHubNotice(Summary()));
+        Assert.EndsWith($"Reports in {Folder} (people: TestRunReport.html)", RunSummaryConsoleWriter.BuildGitHubNotice(Summary(data: "TestRunReport.xml", digest: false), GitHub()));
+        Assert.Equal($"::notice title=Kronikol::1 failed of 42 scenarios. Reports in {Folder}",
+            RunSummaryConsoleWriter.BuildGitHubNotice(Summary(html: null, data: "TestRunReport.xml", digest: false), GitHub()));
+    }
+
+    /// <summary>A merge in the repository's own folder wrote "This job wrote them to `.`" and "Reports in .".</summary>
+    [Fact]
+    public void A_folder_that_is_the_workspace_is_named_as_its_root()
+    {
+        Assert.Contains("This job wrote them to the root of the checkout;", People(Section(Summary(directory: Workspace), GitHub())));
+        Assert.Contains("Reports in the root of the checkout (people:", RunSummaryConsoleWriter.BuildGitHubNotice(Summary(directory: Workspace), GitHub()));
+        Assert.Contains("This job wrote them to the root of the checkout;", People(Section(Summary(directory: Workspace + "/"), Azure(publish: false))));
     }
 
     [Fact]
@@ -528,7 +651,7 @@ public class CiSummaryAudienceTests
 
         Assert.EndsWith(
             "when the job uploads that folder.\n\nhistory: 1 fixed (against 4 earlier runs on main)\n\n"
-            + "The previous run (3 failed) is kept beside the report in `runs/gh_123456789_1`: add `--run last-failed` to a query.\n\n",
+            + "The previous run (3 failed) is kept beside the report in `runs/gh_123456789_1`: `--run gh_123456789_1` opens it in any `kronikol query` of the report.\n\n",
             section);
         Assert.DoesNotContain("AI agents", section);
     }

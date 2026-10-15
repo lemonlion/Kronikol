@@ -47,6 +47,9 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         Assert.Contains("expected 10 but was 12", digest);
         // The digest links into the report that was actually written, not into TestRunReport.html.
         Assert.Contains("Combined.html#sid-", digest);
+        // ...and its commands name Combined.json: a folder lookup finds a TestRunReport.json and nothing else.
+        Assert.Contains("kronikol query failures Combined.json  # this file, live", digest);
+        Assert.DoesNotMatch(@"kronikol query [a-z]+ \.(?![/\w])", digest);
         Assert.NotEmpty(File.ReadAllText(Out("Failures.jsonl")));
     }
 
@@ -236,7 +239,7 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         Assert.True(exit == 0, error);
         var summary = File.ReadAllText(summaryFile);
         Assert.Contains("## Debug this run", summary);
-        Assert.Contains($"kronikol query failures {Out("Combined.json")}", summary);
+        Assert.Contains($"kronikol query failures {RunSummaryConsoleWriter.ShellWord(Out("Combined.json"))}", summary);
         Assert.Contains("## Debug this run", output);
         Assert.Contains("::notice title=Kronikol::1 failed of 1 scenarios", output);
     }

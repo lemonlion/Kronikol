@@ -114,8 +114,9 @@ public class RunEndPointerSafetyTests
         // downloaded queries the download instead, quoted the same way (CiSummaryAudienceTests).
         var markdown = RunSummaryConsoleWriter.BuildCiSummarySection(Summary("/home/ci/My Reports", "Checkout", "Pay"), CiReader.None);
 
-        Assert.Contains("kronikol query summary \"/home/ci/My Reports\"", markdown, StringComparison.Ordinal);
-        Assert.Contains("kronikol query failures \"/home/ci/My Reports\"", markdown, StringComparison.Ordinal);
+        // In single quotes: the block is bash, which reads a backslash, $ or backtick inside double quotes.
+        Assert.Contains("kronikol query summary '/home/ci/My Reports'", markdown, StringComparison.Ordinal);
+        Assert.Contains("kronikol query failures '/home/ci/My Reports'", markdown, StringComparison.Ordinal);
     }
 }
 

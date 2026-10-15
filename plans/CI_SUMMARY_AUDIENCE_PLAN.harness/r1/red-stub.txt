@@ -97,7 +97,9 @@ failed, each on its own assertion (no exception). The first line of each failure
      Assert.Contains() Failure: Sub-string not found
 
 The new facts that pass on 4.19.0, by design: the line-break theory is a guard on values 4.19.0 never prints (its
-mutations are M29 and M30 in mutations.txt); the Azure DevOps fact without an upload and the annotation without a run
+repository case is proven by M30 in mutations.txt; M29 was credited here too, but only the folder fact catches it.
+Corrected by the audit, 2026-10-15, whose A20 to A22 prove the server URL and run id cases: ../audit/mutations.txt);
+the Azure DevOps fact without an upload and the annotation without a run
 id pin what the release keeps (today's commands on the folder); Detect is the new CiReader's own fact, and the stub
 carries the CiReader; the public builders' fact checks that they print what the internal ones print for the process's
 CI, which the stub does by construction (off CI the two are the same text; on this repository's CI they differ only

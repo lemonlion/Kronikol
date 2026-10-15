@@ -365,7 +365,8 @@ public record ReportConfigurationOptions
     /// workspace, and a link to the run's artifacts, with an upload stated only where Kronikol made one. Then,
     /// labelled for AI agents, the rule not to open the report and the commands that query it: on GitHub Actions
     /// a download of the run's artifacts (<c>gh run download</c>) and queries on the download, since the
-    /// runner's folder is gone once the job ends; off CI, the folder.
+    /// runner's folder is gone once the job ends; on Azure DevOps queries on a download of the build's
+    /// artifact, the one Kronikol uploads or the folder the pipeline publishes; off CI, the folder.
     ///
     /// <para><b>Who reads which channel</b> (plans/CI_SUMMARY_AUDIENCE_PLAN.md, measured 2026-10-13): a GitHub
     /// job summary is read by signed-in people in a browser, and by no API, <c>gh</c> command or MCP tool; the

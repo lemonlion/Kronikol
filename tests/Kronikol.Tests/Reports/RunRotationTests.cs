@@ -1104,7 +1104,7 @@ public class RunRotationTests : IDisposable
 
         var (afterFailing, _) = Run(ExecutionResult.Passed);
         var kept = Path.Combine(Runs, LocalName(1));
-        Assert.Contains($"  previous run (1 failed) kept: {kept} — kronikol query failures {Reports} --run last-failed", afterFailing.Split('\n').Select(l => l.TrimEnd('\r')));
+        Assert.Contains($"  previous run (1 failed) kept: {kept} — kronikol query failures {Reports} --run {LocalName(1)}", afterFailing.Split('\n').Select(l => l.TrimEnd('\r')));
 
         var (afterGreen, _) = Run(ExecutionResult.Passed);
         Assert.DoesNotContain("previous run", afterGreen);
@@ -1142,12 +1142,69 @@ public class RunRotationTests : IDisposable
         Assert.StartsWith("# No failures\n\n> **The run before this one failed**", digest);
         Assert.Contains("1 of its 2 scenarios failed", digest);
         Assert.Contains($"`runs/{LocalName(1)}`", digest);
-        Assert.Contains("`kronikol query failures . --run last-failed`", digest);
+        Assert.Contains($"`kronikol query failures . --run {LocalName(1)}`", digest);
         Assert.DoesNotContain("earlier attempt", digest);
 
         // Said once, by the run that replaced it: the next green run has a green run before it.
         Run(ExecutionResult.Passed);
         Assert.DoesNotContain("The run before this one", File.ReadAllText(Path.Combine(Reports, "Failures.md")));
+    }
+
+    /// <summary>
+    /// <c>last-failed</c> is the newest run with a failure, the one on top included. After a failing run, which is when
+    /// the pointer and the digest send anyone to the run before, the alias opened this run again.
+    /// </summary>
+    [Fact]
+    public void On_a_failing_run_the_pointer_and_the_digest_open_the_kept_run_by_its_folder()
+    {
+        Run(ExecutionResult.Failed);
+        var (console, _) = Run(ExecutionResult.Failed);
+
+        var kept = Path.Combine(Runs, LocalName(1));
+        Assert.Contains($"  previous run (1 failed) kept: {kept} — kronikol query failures {Reports} --run {LocalName(1)}", console.Split('\n').Select(l => l.TrimEnd('\r')));
+        var digest = File.ReadAllText(Path.Combine(Reports, "Failures.md"));
+        Assert.Contains($"`kronikol query failures . --run {LocalName(1)}`", digest);
+        Assert.DoesNotContain("last-failed", console);
+        Assert.DoesNotContain("last-failed", digest);
+        // A default report name leaves the digest's commands as they always were, to the byte.
+        Assert.Contains("```bash\nkronikol query failures .          # this file, live\nkronikol query steps . s3           # one scenario's whole tree\n", digest);
+
+        // The folder's name opens the kept run, where the alias opens the one on top.
+        Assert.Equal(Kronikol.Query.RetainedRunOutcome.Found, Kronikol.Query.RetainedRunResolver.Resolve(Reports, LocalName(1), TextWriter.Null, out var report, out _));
+        Assert.Equal(Path.Combine(kept, "TestRunReport.json"), report);
+        Kronikol.Query.RetainedRunResolver.Resolve(Reports, "last-failed", TextWriter.Null, out var aliased, out _);
+        Assert.Equal(Path.Combine(Reports, "TestRunReport.json"), aliased);
+    }
+
+    /// <summary>
+    /// A folder lookup finds a <c>TestRunReport.json</c> and nothing else, so every <c>kronikol query … .</c> in the
+    /// digest of a run with its own <see cref="ReportConfigurationOptions.HtmlTestRunReportFileName"/> answered "No
+    /// TestRunReport.json under ." (plans/CI_SUMMARY_AUDIENCE_PLAN.md F11, which the CI text already fixed).
+    /// </summary>
+    [Fact]
+    public void The_digest_of_a_run_with_its_own_report_name_names_its_data_file_in_every_command()
+    {
+        Run(ExecutionResult.Failed, o => o.HtmlTestRunReportFileName = "Checkout");
+        Run(ExecutionResult.Failed, o => o.HtmlTestRunReportFileName = "Checkout");
+
+        var digest = File.ReadAllText(Path.Combine(Reports, "Failures.md"));
+        Assert.DoesNotMatch(@"kronikol query [a-z]+ \.(?![/\w])", digest);
+        Assert.Contains("kronikol query failures Checkout.json", digest);
+        Assert.Contains($"`kronikol query failures Checkout.json --run {LocalName(1)}`", digest);
+
+        // Each answers, the kept run's included (run from the folder the digest is in, where Checkout.json is that path).
+        var data = Path.Combine(Reports, "Checkout.json");
+        foreach (var args in new[] { new[] { "failures", data }, ["failures", data, "--run", LocalName(1)] })
+        {
+            var output = new StringWriter();
+            var error = new StringWriter();
+            Assert.True(Kronikol.Query.QueryCommand.Run(args, output, error, _ => null, workingDirectory: Reports) == 0, string.Join(" ", args) + "\n" + error);
+        }
+
+        // An earlier attempt of the same CI run is named by its folder, with the file in it.
+        Run(ExecutionResult.Failed, o => o.HtmlTestRunReportFileName = "Checkout", env: GitHub("7"));
+        Run(ExecutionResult.Passed, o => o.HtmlTestRunReportFileName = "Checkout", env: GitHub("7"));
+        Assert.Contains("`kronikol query failures ./runs/gh_7_1/Checkout.json`", File.ReadAllText(Path.Combine(Reports, "Failures.md")));
     }
 
     [Fact]

@@ -456,7 +456,6 @@ public static partial class QueryCommand
         var found = Directory.GetFiles(path, "*.json", SearchOption.AllDirectories)
             .Where(f => Path.GetFileName(f).EndsWith("TestRunReport.json", StringComparison.OrdinalIgnoreCase)
                         && !ReportFolders.IsReserved(path, f))
-            .Take(20)
             .ToArray();
 
         switch (found.Length)
@@ -468,11 +467,17 @@ public static partial class QueryCommand
                 return found[0];
             default:
                 error.WriteLine($"Several reports under {path} — name the one you mean:");
-                foreach (var file in found)
+                foreach (var file in found.Take(MaxReportsListed))
                     error.WriteLine("  " + DescribeReport(file));
+                // A download of a sharded run's artifacts can hold more than the list shows: say so, or it reads as all.
+                if (found.Length > MaxReportsListed)
+                    error.WriteLine($"  … and {found.Length - MaxReportsListed} more");
                 return null;
         }
     }
+
+    /// <summary>How many of several reports the list names before it says how many more there are.</summary>
+    private const int MaxReportsListed = 20;
 
     /// <summary>
     /// One report in the list of several: its path and size and, from the <c>Run.json</c> its run wrote beside it, its

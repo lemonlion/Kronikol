@@ -50,7 +50,7 @@ public class RunEndPointerTests
         Assert.Contains("never open Combined.json", text);
         Assert.DoesNotContain("TestRunReport.json", text);
         // Off CI, where the reader has the folder: on CI the section queries a download (CiSummaryAudienceTests).
-        Assert.Contains($"kronikol query failures {merged}", RunSummaryConsoleWriter.BuildCiSummarySection(summary, CiReader.None));
+        Assert.Contains($"kronikol query failures {RunSummaryConsoleWriter.ShellWord(merged)}", RunSummaryConsoleWriter.BuildCiSummarySection(summary, CiReader.None));
         Assert.Contains("do not open `Combined.json` or `Combined.html`", RunSummaryConsoleWriter.BuildCiSummarySection(summary, CiReader.None));
         Assert.Contains($"kronikol query failures {merged}", RunSummaryConsoleWriter.BuildGitHubNotice(summary, CiReader.None)!);
     }

@@ -5,7 +5,8 @@ and checked again at `f03452fc`, where no file cited here had changed, and none 
 4.19.0; the wiki's are for `origin/master` at `e5c5a5b`,
 Kronikol4J's for `origin/main` at `4ff5c07`) · **Status:** **green-lit in full by the owner on 2026-10-13** ("implement
 the plan in full"), every §9 question as recommended, with a roadmap row (Q9) and the Azure DevOps issue (Q13) left to
-the owner; **executed as 4.19.7** (R1, R2 and R3 in one patch, §11). Drafted from #169 (filed 2026-10-12 against
+the owner; **executed as 4.19.7** (R1, R2 and R3 in one patch, §11); **audited on 2026-10-15, its fixes released as
+4.20.6** (§12). Drafted from #169 (filed 2026-10-12 against
 4.14.10) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying problem,
 then checked again at the owner's ask the same day (§11). No stage row in `ROADMAP.md` (Q9); its leftovers are a row of
 Appendix C.
@@ -716,6 +717,52 @@ plan's files, and is the first thing a person on a failing CI run reads, so a st
   its line and the corrected out-of-scope line (`0b1f55c`), and #169 has a comment saying what changed and what is left
   (Q13) and is closed. Before the tag, the Release build of `release.slnf` failed twice at restore while nuget.org
   listed EF Core 10.0.13 ahead of its dependencies (harness `r1/checks.txt`); the tag waited until restore passed.
+- **2026-10-15, audited (kronikol-21)** at the owner's ask, in worktree `C:/Code/Kronikol-169-audit` (branch
+  `audit/169`) on 4.20.2: one gap and fourteen defects, fixed as 4.20.6 (§12, harness `audit/`).
+
+## 12. Audit, 2026-10-15
+
+The owner asked on 2026-10-15 to "make sure nothing was missed from the plan and that the implementation was good with
+no bugs". Two independent reviews ran on 4.20.2 (`origin/main` at `3240c983`; no commit after 4.19.7 had touched the
+plan's files). One ticked every deliverable of §4 to §6 and §9 against the release, the wiki and Kronikol4J. The other
+looked for inputs that make the printed text wrong, running the printed lines in Git Bash against folders laid out as
+`gh run download` lays them out. Every finding was read again in the code before anything changed. Fixed in one patch
+(4.20.6), with the facts in harness `audit/`.
+
+Everything the plan listed shipped, with one gap: on Azure DevOps without `PublishCiArtifacts` the agent part still
+named the agent's folder (G1 below). The plan was silent on that case; principle 3 covers it. The defects:
+
+| # | Found by | Defect | Fix | Fact |
+|---|---|---|---|---|
+| G1 | both | On Azure DevOps without `PublishCiArtifacts`, the setup the 4.19.7 wiki recommends under `dotnet test`, the agent part queried the agent's folder (gone after the job), "Nothing to install and no network needed" included | The commands query a download of what the pipeline publishes, into `kronikol-<build>`; `query.cs` as read off the agent; the agent's folder once, for a later step | `On_azure_devops_without_an_upload_the_agent_part_queries_a_download_of_the_published_folder` |
+| G2 | bugs | `--run last-failed` in the previous-run line, the pointer and `Failures.md` opens the newest run with a failure, the one on top included: on a failing run, the run itself. Pre-existing (#80, 3.27.0) in the pointer and the digest | `--run <the kept folder's name>` everywhere; the green section's line names the query it belongs to | `The_previous_run_is_opened_by_its_folder_never_by_last_failed`, `On_a_failing_run_the_pointer_and_the_digest_open_the_kept_run_by_its_folder` |
+| G3 | bugs | `--run` on a report with its own name (`HtmlTestRunReportFileName`) answered "No TestRunReport.json under …runs/<name>" for every kept run: the kept folder was looked up as a folder. Pre-existing (#80) | The kept run's report is the file named as the one on top, when there | `Run_opens_a_kept_run_whose_report_has_its_own_name`, `A_custom_data_file_name_is_found_in_the_download_and_its_kept_run_opens` |
+| G4 | bugs | `Failures.md` printed `kronikol query … .` ten times, which answers "No TestRunReport.json under ." for a custom data file name or a merge's `-o` (F11's class, in a file the plan did not list) | Every command names the data file when the folder lookup would miss it; a default name is byte for byte as before | `The_digest_of_a_run_with_its_own_report_name_names_its_data_file_in_every_command`, `Merge_writes_the_failures_digest_beside_the_report` |
+| G5 | bugs | The ```` ```bash ```` block quoted only for a space or a quote: bash ate a Windows folder's backslashes (`C:UsersmeReports`) and expanded a `$` | Each word in single quotes when it holds anything outside `[A-Za-z0-9_./:=@%+,-]`; the console pointer keeps double quotes, which cmd needs | `The_bash_block_quotes_a_folder_as_bash_reads_it` |
+| G6 | bugs | `find -name` read `[`, `*` and `?` in a custom report name as a pattern: `Report[linux].json` matched nothing and the query was handed `""` | The pattern escapes them | `A_data_file_named_with_pattern_characters_is_found_by_its_own_name` |
+| G7 | bugs | GitHub with `PublishCiArtifacts`: "the job's upload step puts them in this run's artifacts" was false for all but the last of several test projects in one step, since `reports-path` holds one folder (documented on CI-Artifact-Upload) | "this run named the folder in `reports-path` for the job's upload step, which uploads the last folder named there" | `The_upload_is_stated_only_where_Kronikol_made_it` |
+| G8 | bugs | A re-run's block downloaded into the first attempt's folder, which the guard then kept: attempt 2's block queried attempt 1's download | `kronikol-<run>-<attempt>` after a re-run | `A_re_run_downloads_into_a_folder_of_its_own` |
+| G9 | bugs | The several-reports list stopped at twenty without a word | It says how many more | `A_list_of_more_than_twenty_reports_says_how_many_it_leaves_out` |
+| G10 | bugs | A name carried GitHub's older `##[command]` or Azure DevOps' `##vso[` into the pointer, both read anywhere in a line (`##vso[task.setvariable]` sets a variable). Pre-existing (3.1.0) | A space after the first `#` | `A_name_holding_a_logging_command_prints_as_text` |
+| G11 | bugs | Small: the attempt sentence named `kronikol query summary` with an XML or YAML data file; the annotation named a download for agents with nothing in it; a folder that is the workspace was "`.`" | Each fixed | `A_re_run_says_its_attempt…`, `The_annotation_names_a_download_only_when_an_agent_has_something_in_it`, `A_folder_that_is_the_workspace_is_named_as_its_root` |
+| G12 | plan | The Q11 fact could fail only on a GitHub runner, and read the process's variables while `CiDebugSectionTests` set them | `CiSummaryPublicBuilderTests` sets the run's variables in that class's collection | mutations A17 to A19 |
+| G13 | plan | Wiki: `Report-Configuration.md`'s console row kept F13's "unless verbosity is `detailed`"; `CI-Summary-Integration.md` said `PublishCiArtifacts` uploads the CTRF | Corrected | (docs) |
+| G14 | plan | Harness: `r1/red-stub.txt` credited M29 to the line-break theory; only the folder fact catches it | Note corrected; A20 to A22 prove the server URL and run id cases | mutations |
+| G15 | plan | The changelog said `CiSummaryRunTests` ran a custom data file name through a download; that fact had no run id | `A_custom_data_file_name_is_found_in_the_download_and_its_kept_run_opens` does | (fact) |
+
+Left as they are, for the owner:
+
+- **A download made while other jobs of the run were still going holds only their artifacts uploaded by then**, and
+  the guard keeps it: another leg's block, pasted later into the same folder, can answer from the wrong leg's report
+  with exit 0. The environment names no job of a matrix (no leg id), so the folder cannot be named per leg; the wiki
+  says to delete the folder and paste again.
+- **Azure DevOps with `PublishCiArtifacts` left on under `dotnet test`:** the summary uploaded by a pipeline step names
+  a `TestReports` artifact that never arrived (F10). Kronikol cannot see from inside the run whether its stdout reaches
+  the agent; the wiki says to leave the option off with the two steps.
+- **`act`, Gitea and Forgejo set `GITHUB_*`,** so the block names a run `gh` cannot reach there.
+- **`reports-path` holds one folder per step** (G7). Holding every folder of the step (a multi-line output, which
+  `upload-artifact` takes) would change what the output's readers get: new behaviour, the owner's call.
+- **Q13** (the Azure DevOps delivery fix) is still the owner's, as is Q9.
 
 ## Appendix A. Edit sites at `f03452fc`
 

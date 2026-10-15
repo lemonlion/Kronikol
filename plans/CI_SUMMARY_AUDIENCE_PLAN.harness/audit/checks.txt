@@ -1,0 +1,24 @@
+Checks of the audit's release (plans/CI_SUMMARY_AUDIENCE_PLAN.md section 12), 2026-10-15, Windows 11, .NET SDK 10.0.300.
+
+Real Git Bash, beside the facts' bash reading (CiSummaryRunTests): r1's probe (`probe run`, a real ReportGenerator run)
+wrote a failing run's reports, the built Kronikol.Tool stood in for `kronikol`, and each `kronikol query` line of the
+section's block ran in Git Bash 2.x from a reader folder:
+  1. GitHub, run 777, HtmlTestRunReportFileName = "Report[linux]", the reports copied to kronikol-777/test-reports/
+     (the layout `gh run download` gives):
+       kronikol query summary "$(find kronikol-777 -name 'Report\[linux\].json' -not -path '*/runs/*' -not -path '*/baseline/*' -print -quit)"
+       kronikol query failures "$(find ...same...)"
+     both exit 0 and name the failing scenario.
+  2. Off CI, WriteCiSummary on, the reports in a Windows folder "...\ws2\My Reports":
+       kronikol query summary 'C:\Users\...\realbash\ws2\My Reports'
+       kronikol query failures 'C:\Users\...\realbash\ws2\My Reports'
+     both exit 0 and name the failing scenario.
+  Control, on 4.20.2 (the bug review, same inputs): `-name Report[linux].json` matched nothing and the query answered
+  "No such file or directory: "; `kronikol query summary C:\Users\...\Reports` answered "No such file or directory:
+  C:Users...", bash having read each backslash as an escape.
+
+Suites and builds, after the version bump to 4.20.6, rebased onto 4.20.5 (e80eb4b5):
+  dotnet test tests/Kronikol.Tests: Passed! Failed: 0, Passed: 7602, Skipped: 2, Total: 7604 (net10.0).
+  dotnet build release.slnf -c Release: 0 errors, every target; no warning in a file this release touched (a <param> tag
+  added for the digest's internal overload had raised CS1573 for its other ten parameters; moved into the summary).
+  Before the rebase, on 4.20.4: the core suite passed 7,566 with 2 skipped; on 4.20.2's tree before the bump, 7,548 with 2.
+  Playwright not run: nothing a page draws changed.

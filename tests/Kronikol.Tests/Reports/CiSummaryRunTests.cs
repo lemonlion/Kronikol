@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Kronikol.History;
@@ -126,7 +127,7 @@ public class CiSummaryRunTests : IDisposable
     }
 
     private static readonly Regex Find = new(
-        "^\"\\$\\(find (?<dir>\\S+) -name (?<name>\\S+) -not -path '\\*/runs/\\*' -not -path '\\*/baseline/\\*' -print -quit\\)\"$");
+        "^\"\\$\\(find (?<dir>\\S+) -name (?<name>'[^']*'|\\S+) -not -path '\\*/runs/\\*' -not -path '\\*/baseline/\\*' -print -quit\\)\"(?<more>.*)$");
 
     /// <summary>
     /// What bash does with one <c>kronikol query</c> line in <paramref name="cwd"/>: a folder is relative to it, and
@@ -134,23 +135,87 @@ public class CiSummaryRunTests : IDisposable
     /// </summary>
     private static (int Exit, string Output, string Error) Shell(string line, string cwd)
     {
-        var words = line["kronikol query ".Length..].Split(' ', 2);
-        var argument = words[1];
+        var rest = line["kronikol query ".Length..];
+        var verb = rest[..rest.IndexOf(' ', StringComparison.Ordinal)];
+        rest = rest[(verb.Length + 1)..];
         string path;
-        if (Find.Match(argument) is { Success: true } find)
+        string[] more;
+        if (Find.Match(rest) is { Success: true } find)
         {
-            var folder = Path.Combine(cwd, find.Groups["dir"].Value);
-            path = Directory.EnumerateFiles(folder, find.Groups["name"].Value, SearchOption.AllDirectories)
-                .First(file => !ReportFolders.IsReserved(folder, file));
+            var folder = Path.Combine(cwd, Word(find.Groups["dir"].Value));
+            var name = Literal(Word(find.Groups["name"].Value));
+            path = Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories)
+                .First(file => string.Equals(Path.GetFileName(file), name, StringComparison.Ordinal) && !ReportFolders.IsReserved(folder, file));
+            more = Words(find.Groups["more"].Value);
         }
         else
         {
-            // One plain word, as bash reads it: a space here would be two arguments.
-            Assert.DoesNotContain(' ', argument);
-            path = Path.Combine(cwd, argument);
+            var words = Words(rest);
+            path = Path.Combine(cwd, words[0]);
+            more = words[1..];
         }
 
-        return Query(words[0], path);
+        return Query([verb, path, .. more]);
+    }
+
+    /// <summary>
+    /// A line split as bash splits it: single quotes keep every character, a backslash outside them keeps the next one,
+    /// and any other character bash reads as more than itself (an expansion, a glob, a separator) fails the fact.
+    /// </summary>
+    private static string[] Words(string text)
+    {
+        var words = new List<string>();
+        var word = new StringBuilder();
+        var inWord = false;
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c == ' ')
+            {
+                if (inWord)
+                    words.Add(word.ToString());
+                word.Clear();
+                inWord = false;
+                continue;
+            }
+
+            inWord = true;
+            if (c == '\'')
+            {
+                var end = text.IndexOf('\'', i + 1);
+                Assert.True(end > i, $"an unclosed quote in: {text}");
+                word.Append(text, i + 1, end - i - 1);
+                i = end;
+            }
+            else if (c == '\\')
+            {
+                word.Append(text[++i]);
+            }
+            else
+            {
+                Assert.True("\"$`;&|<>()*?[]!#~{}".IndexOf(c) < 0, $"bash reads '{c}' as more than a character in: {text}");
+                word.Append(c);
+            }
+        }
+
+        if (inWord)
+            words.Add(word.ToString());
+        return words.ToArray();
+    }
+
+    private static string Word(string text) => Assert.Single(Words(text));
+
+    /// <summary>A <c>find -name</c> pattern that matches one name: every pattern character escaped.</summary>
+    private static string Literal(string pattern)
+    {
+        var name = new StringBuilder();
+        for (var i = 0; i < pattern.Length; i++)
+        {
+            Assert.True(pattern[i] is not ('*' or '?' or '['), $"an unescaped pattern character in: {pattern}");
+            name.Append(pattern[i] == '\\' ? pattern[++i] : pattern[i]);
+        }
+
+        return name.ToString();
     }
 
     private static void CopyDirectory(string from, string to)
@@ -251,7 +316,9 @@ public class CiSummaryRunTests : IDisposable
         var pointer = console.Split('\n').Single(l => l.Contains("1 failed — kronikol query failures ", StringComparison.Ordinal)).TrimEnd('\r');
         var command = pointer[(pointer.IndexOf("kronikol query failures ", StringComparison.Ordinal) + "kronikol query failures ".Length)..];
         Assert.Equal(data, command.Trim('"'));
-        Assert.Contains($"kronikol query failures {command}\n", File.ReadAllText(StepSummary));
+        // The section's block is bash, which names the same file as bash reads it.
+        var sectionLine = QueryLines(File.ReadAllText(StepSummary)).Single(l => l.StartsWith("kronikol query failures ", StringComparison.Ordinal));
+        Assert.Equal(data, Assert.Single(Words(sectionLine["kronikol query failures ".Length..])));
         Assert.Contains(console.Split('\n'), l => l.StartsWith("::notice title=Kronikol::", StringComparison.Ordinal)
                                                   && l.Contains($"kronikol query failures {command}", StringComparison.Ordinal));
 
@@ -259,6 +326,40 @@ public class CiSummaryRunTests : IDisposable
         var (exit, output, error) = Query("failures", command.Trim('"'));
         Assert.True(exit == 0, error);
         Assert.Contains("Pay with an expired card", output);
+    }
+
+    /// <summary>
+    /// The line that finds a data file by name had run against a download only for a merge. A run with its own report
+    /// name prints it too on CI, with a name bash and <c>find</c> both read characters of, and its previous-run line
+    /// names the kept run, which <c>--run</c> has to open under that name.
+    /// </summary>
+    [Fact]
+    public void A_custom_data_file_name_is_found_in_the_download_and_its_kept_run_opens()
+    {
+        // On CI a run keeps the one before it only when asked to (KRONIKOL_KEEP_RUNS).
+        Func<string, string?> Keeping(string runId) => name => name == "KRONIKOL_KEEP_RUNS" ? "3" : GitHub(runId)(name);
+        var reports = Path.Combine(_root, "custom-ci", "Reports");
+        Run(reports, Keeping("111"), o => o.HtmlTestRunReportFileName = "Checkout [linux]");
+        File.Delete(StepSummary);
+        // A second process, as the next CI run is: one process rotates a folder once.
+        RunRotation.ForgetForTests(reports);
+        Run(reports, Keeping(RunId), o => o.HtmlTestRunReportFileName = "Checkout [linux]");
+        var section = File.ReadAllText(StepSummary);
+        CopyDirectory(reports, Path.Combine(Download, "test-reports"));
+
+        var lines = QueryLines(section);
+        Assert.Equal(2, lines.Length);
+        Assert.All(lines, line => Assert.Contains(@"-name 'Checkout \[linux\].json'", line));
+        var previous = Regex.Match(section, "`--run ([^`]+)` opens it");
+        Assert.True(previous.Success, section);
+        var kept = previous.Groups[1].Value;
+        Assert.Equal("gh_111_1", kept);
+        foreach (var line in lines.Append(lines[^1] + " --run " + kept))
+        {
+            var (exit, output, error) = Shell(line, Reader);
+            Assert.True(exit == 0, $"{line}\n{error}");
+            Assert.Contains("Pay with an expired card", output);
+        }
     }
 
     [Theory]

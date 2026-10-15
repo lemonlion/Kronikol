@@ -46,12 +46,12 @@ public class RetainedRunsTests : IDisposable
         """;
 
     /// <summary>One run's files in <paramref name="directory"/>: the report, its manifest, and - for a run that kept them - its fragment and an attachment.</summary>
-    private static void WriteRun(string directory, string runId, string pay, DateTimeOffset at, bool withFragmentAndAttachment = false, string? body = null)
+    private static void WriteRun(string directory, string runId, string pay, DateTimeOffset at, bool withFragmentAndAttachment = false, string? body = null, string name = "TestRunReport")
     {
         Directory.CreateDirectory(directory);
-        File.WriteAllText(Path.Combine(directory, "TestRunReport.json"), Report(pay, runId, withFragmentAndAttachment, body));
-        File.WriteAllText(Path.Combine(directory, "TestRunReport.html"), "<html></html>");
-        var files = new List<string> { "TestRunReport.json", "TestRunReport.html" };
+        File.WriteAllText(Path.Combine(directory, name + ".json"), Report(pay, runId, withFragmentAndAttachment, body));
+        File.WriteAllText(Path.Combine(directory, name + ".html"), "<html></html>");
+        var files = new List<string> { name + ".json", name + ".html" };
         var attachments = new List<string>();
         if (withFragmentAndAttachment)
         {
@@ -231,6 +231,46 @@ public class RetainedRunsTests : IDisposable
         Assert.Contains(Line("leg-b") + " · suite Suite · 0 of 2 failed", lines);
         Assert.Contains(Line("merged"), lines);
         Assert.Contains(Line("stale"), lines);
+    }
+
+    /// <summary>
+    /// The list stopped at twenty without a word, so a download of a sharded run read as if it held twenty reports; the
+    /// section that sends a reader there says the query lists them.
+    /// </summary>
+    [Fact]
+    public void A_list_of_more_than_twenty_reports_says_how_many_it_leaves_out()
+    {
+        var download = Path.Combine(_dir, "kronikol-7");
+        for (var leg = 0; leg < 24; leg++)
+            WriteRun(Path.Combine(download, $"shard-{leg:00}"), "7", "Passed", Noon);
+
+        var (output, error, exit) = Query("failures", download);
+
+        Assert.Equal(2, exit);
+        Assert.Equal("", output);
+        var lines = error.Split('\n').Select(l => l.TrimEnd('\r')).Where(l => l.Length > 0).ToArray();
+        Assert.Equal(20, lines.Count(l => l.Contains("TestRunReport.json", StringComparison.Ordinal)));
+        Assert.Equal("  … and 4 more", lines[^1]);
+    }
+
+    /// <summary>
+    /// A kept run was looked up as a folder, which finds a <c>TestRunReport.json</c> and nothing else: with its own
+    /// report name every <c>--run</c> answered "No TestRunReport.json under …runs/gh_7_1", the previous-run line the
+    /// CI text prints for such a run included.
+    /// </summary>
+    [Fact]
+    public void Run_opens_a_kept_run_whose_report_has_its_own_name()
+    {
+        WriteRun(Path.Combine(Reports, "runs", "gh_7_1"), "7", "Failed", Noon.AddMinutes(-10), name: "Checkout");
+        WriteRun(Reports, "8", "Passed", Noon, name: "Checkout");
+
+        foreach (var wanted in new[] { "gh_7_1", "gh:7:1", "last-failed", "previous" })
+        {
+            var (output, error, exit) = Query("failures", Path.Combine(Reports, "Checkout.json"), "--run", wanted);
+
+            Assert.True(exit == 0, wanted + ": " + error);
+            Assert.Contains("Expected 200 but got 500", output);
+        }
     }
 
     [Fact]

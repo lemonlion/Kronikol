@@ -569,7 +569,12 @@ public static class ReportGenerator
                         : rotation is { KeptDirectory: { } keptRun, Kept: { Failed: > 0 } keptManifest }
                             ? new FailuresDigestEarlierAttempt(
                                 Path.GetRelativePath(reportsDir, keptRun).Replace('\\', '/'), keptManifest.Failed, keptManifest.Scenarios, SameRun: false)
-                            : null));
+                            : null,
+                    // A data file the folder lookup would not find is named in every command, as the CI text names it.
+                    dataFileName: options.GenerateTestRunReportData && options.TestRunReportDataFormat == DataFormat.Json
+                                  && RunSummaryConsoleWriter.QueryTargetFor(Path.Combine(reportsDir, $"{options.HtmlTestRunReportFileName}.json")) is { } named
+                        ? Path.GetFileName(named)
+                        : null));
 
             Add(FailuresDigestFileName, () => WriteFile(digest.Value.Markdown, FailuresDigestFileName));
             Add(FailuresDigestJsonlFileName, () => WriteFile(digest.Value.Jsonl, FailuresDigestJsonlFileName));

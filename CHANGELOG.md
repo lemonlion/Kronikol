@@ -4,6 +4,83 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.20.6] - 2026-10-15
+
+**Patch - fixes from an audit of the CI job summary's text (#169; `plans/CI_SUMMARY_AUDIENCE_PLAN.md` section 12,
+4.19.7), made at the owner's request to make sure nothing was missed and nothing was broken.** A patch: bug fixes in
+the CI text a run prints, in `Failures.md`'s commands and in the query tool's `--run` and list of several reports, with
+no new option and no new public member. Two independent reviews ticked every deliverable of the plan and looked for
+inputs that make the printed commands fail; everything the plan listed had shipped, with one gap.
+
+### Fixed
+
+- **On Azure DevOps without `PublishCiArtifacts`, the AI-agents part named the agent's folder.** That is the setup the
+  wiki gives under `dotnet test` (the pipeline publishes the reports folder, and a script step uploads `CiSummary.md`),
+  and the summary is read on the build's page, after the agent's folder is gone. The commands now query a download of
+  what the pipeline publishes, into `kronikol-<build>`; the `query.cs` line says what it needs off the agent instead of
+  "no network needed"; the agent's folder is named once, for a later step of the job.
+- **The previous run's line opened the wrong run.** The section, the console pointer and `Failures.md` said `--run
+  last-failed`, which opens the newest run with a failure, the one on top included: on a failing run, which is when the
+  line is read, the run itself. They now name the kept run's folder (`--run gh_123456789_1`), which opens that run
+  and no other. The pointer and the digest had said so since 3.27.0.
+- **`--run` failed on a report with its own name.** With a custom `HtmlTestRunReportFileName`, every `kronikol query
+  … --run` answered "No TestRunReport.json under …runs/<name>", because the kept run was looked up as a folder. The kept
+  run's report is now the file named as the one on top.
+- **`Failures.md`'s commands failed for a custom report name or a merge's `-o`.** It printed `kronikol query … .`,
+  which finds a `TestRunReport.json` and nothing else. Every command now names the data file when a folder lookup would
+  miss it (`kronikol query failures Checkout.json`); with the default name the file is byte for byte as before.
+- **The bash block lost a Windows folder's backslashes.** It quoted a word only for a space or a quote, and bash reads
+  a backslash, `$` and a backtick inside double quotes. Each word of the block is now in single quotes when it holds
+  anything else. The console pointer keeps double quotes, which cmd needs.
+- **`find` read a custom report name as a pattern.** `Report[linux].json` matched nothing and the query was handed an
+  empty path. The `-name` pattern now escapes `[`, `]`, `*`, `?` and the backslash.
+- **GitHub with `PublishCiArtifacts`: "the job's upload step puts them in this run's artifacts" was not always true.**
+  A step's `reports-path` output holds one folder, the last written, so with several test projects in one step only
+  the last one's is uploaded. The section now says the run named its folder in `reports-path`, and that the upload
+  step uploads the last folder named there.
+- **A re-run's block reused the first attempt's download.** The guard skips a download into a folder that exists, so
+  attempt 2's block queried what attempt 1's had fetched. After a re-run the folder is `kronikol-<run>-<attempt>`.
+- **The list of several reports stopped at twenty without saying so.** It now ends with how many more there are.
+- **A name could carry a logging command into the pointer.** GitHub's runner still reads its older `##[command]` form
+  anywhere in a line, and the Azure Pipelines agent `##vso[` anywhere in a line, in any case. A scenario or feature
+  name holding either now prints with a space after the first `#`.
+- With an XML or YAML data file, the re-run sentence no longer names a query that cannot read it; the annotation names
+  a download for agents only when there is a data file to query or a digest to read; and a reports folder that is the
+  workspace itself is named as the root of the checkout, not as `.`.
+
+Behaviour change: the section's bash block single-quotes words it used to leave bare or double-quote, the previous-run
+line and the pointer name a folder in place of `last-failed`, and a re-run's download folder carries the attempt.
+
+### Docs
+
+- Wiki: `CI-Summary-Integration` describes both Azure DevOps forms, the per-attempt folder, the quoting, the
+  previous-run line, and that a download made while other jobs were still going holds only their artifacts uploaded by
+  then; `Generated-Reports` and `Querying-Reports` the pointer's line, the list's count and `--run` on a custom name.
+  `Report-Configuration`'s console row no longer says VSTest shows run-end output at `detailed` verbosity (corrected in
+  the doc comment by 4.19.7), and `CI-Summary-Integration` no longer says `PublishCiArtifacts` uploads the CTRF.
+- Doc comments: `WriteCiDebugSection` names the Azure DevOps download.
+
+### Tests
+
+New: `CiSummaryPublicBuilderTests` (Q11, set in the collection whose classes set CI variables, where the old fact could
+fail only on a GitHub runner); facts in `CiSummaryAudienceTests`, `CiSummaryRunTests` (the printed lines run through a
+stricter bash reading: quotes, escapes, and any character bash reads as more than itself fails the fact), `RunRotationTests`,
+`RetainedRunsTests` and `MergeWritesTheRunOutputsTests`. Pins moved in `RunEndPointerTests`, `RunEndPointerSafetyTests`
+and `MergeWritesTheRunOutputsTests`.
+
+### Proofs
+
+Harness `audit/`: on 4.20.2's sources, 22 of the 138 facts in the touched classes fail, each on its own assertion,
+with nothing stubbed (`red.txt`); 26 of 26 mutations are killed (`mutations.txt`).
+
+### Checks
+
+After the version bump, on 4.20.5, the core suite passes 7,602 with 2 skipped, and release.slnf builds in Release for every
+target. The Playwright suite was not run: nothing a page draws changed. The printed lines of a custom report name with
+`[` and `]` in a download, and of a Windows folder with a space, ran in Git Bash with the built tool, where 4.20.2's failed
+(`checks.txt`). The templates pin 4.20.4 and the history action's `VERSION` installs Kronikol.Tool 4.20.6. The wiki edits
+and the Kronikol4J ledger line follow publication.
+
 ## [4.20.5] - 2026-10-15
 
 **Patch - an audit of #168's four releases (4.19.6 to 4.20.2) against `plans/MONGODB_DETAILED_PAYLOADS_PLAN.md`: a
