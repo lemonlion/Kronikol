@@ -124,7 +124,8 @@ public static partial class QueryCommand
                 {
                     writer.Line($"  {new string(' ', depth * 2)}  {scoped.Length} calls in this step:");
                     foreach (var interaction in scoped.Take(6))
-                        writer.Line($"  {new string(' ', depth * 2)}    {interaction.Address(scenario)}  {interaction.ServiceName}  {QueryWriter.OneLine(interaction.Summary(), 70)}");
+                        writer.Line($"  {new string(' ', depth * 2)}    {interaction.Address(scenario)}  {interaction.ServiceName}  {QueryWriter.OneLine(interaction.Summary(), 70)}"
+                            + Failure(FindResponse(scenario, interaction)));
                 }
             }
 
@@ -189,12 +190,16 @@ public static partial class QueryCommand
                 calls = scenario.Interactions
                     .Where(i => i.StepPath == s.Path && i.Type == "Request")
                     .Take(6)
-                    .Select(i => new
+                    .Select(i => (Request: i, Response: FindResponse(scenario, i)))
+                    .Select(c => new
                     {
-                        address = i.Address(scenario),
-                        service = i.ServiceName,
-                        summary = i.Summary(),
-                        durationMs = i.DurationMs
+                        address = c.Request.Address(scenario),
+                        service = c.Request.ServiceName,
+                        summary = c.Request.Summary(),
+                        durationMs = c.Request.DurationMs,
+                        // Why a call failed, as Failures.md prints it: null for a call that did not.
+                        status = Failed(c.Response) ? c.Response!.StatusCode : null,
+                        error = Failed(c.Response) ? c.Response!.Error : null
                     })
             }),
             attachments = scenario.Attachments.Take(4)
@@ -769,5 +774,19 @@ public static partial class QueryCommand
     {
         var htmlName = Path.GetFileNameWithoutExtension(index.Path) + ".html";
         return File.Exists(Path.Combine(index.Directory, htmlName)) ? $"{htmlName}#sid-" : null;
+    }
+
+    /// <summary>Whether a call's response says it failed: an error status, or a reason its capturer read.</summary>
+    private static bool Failed(InteractionEntry? response) =>
+        response is not null && (IsError(response.StatusCode, response.StatusText) || !string.IsNullOrWhiteSpace(response.Error));
+
+    /// <summary>A failed call's status and reason, after its line in a step's list, as Failures.md prints them.</summary>
+    private static string Failure(InteractionEntry? response)
+    {
+        if (!Failed(response))
+            return "";
+        var (code, text) = StatusOf(response);
+        var status = code?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? text ?? "failed";
+        return string.IsNullOrWhiteSpace(response!.Error) ? $"  → {status}" : $"  → {status} {QueryWriter.OneLine(response.Error, 120)}";
     }
 }

@@ -295,8 +295,56 @@ public class InteractionShapeTests
     {
         // Fingerprints are only comparable when the same rule made them; the version rides on the run line so
         // the analyzer can tell, and it moves when the rule does. 5: a MongoDB request note became the command without
-        // the driver's fields (#168 R2), so every MongoDB call's statement head moved.
-        Assert.Equal(5, InteractionShape.Version);
+        // the driver's fields (#168 R2), so every MongoDB call's statement head moved. 6: a document's booleans, signs
+        // and list lengths are data too (the #168 audit).
+        Assert.Equal(6, InteractionShape.Version);
+    }
+
+    [Fact]
+    public void A_documents_booleans_signs_and_list_lengths_are_data()
+    {
+        // Since 4.20.0 a MongoDB write's documents are its statement head, and a test that generates its data wrote a
+        // new shape whenever a flag flipped, a number went negative or a list grew.
+        Assert.Equal(
+            InteractionShape.TemplateStatement("{ \"documents\" : [{ \"approved\" : true, \"delta\" : -5, \"tags\" : [\"a\", \"b\"], \"rates\" : [1.5, -2.0] }] }"),
+            InteractionShape.TemplateStatement("{ \"documents\" : [{ \"approved\" : false, \"delta\" : 7, \"tags\" : [\"c\"], \"rates\" : [3.25] }] }"));
+        Assert.Equal(
+            InteractionShape.TemplateStatement("{ \"filter\" : { \"_id\" : { \"$in\" : [1, 2, 3] } } }"),
+            InteractionShape.TemplateStatement("{ \"filter\" : { \"_id\" : { \"$in\" : [4] } } }"));
+    }
+
+    [Fact]
+    public void A_documents_keys_nulls_and_flags_still_tell_shapes_apart()
+    {
+        // A null filter matches what a valued one does not, a key is the statement's own, and so is a flag that is there.
+        Assert.NotEqual(
+            InteractionShape.TemplateStatement("{ \"filter\" : { \"deletedAt\" : null } }"),
+            InteractionShape.TemplateStatement("{ \"filter\" : { \"deletedAt\" : \"x\" } }"));
+        Assert.NotEqual(
+            InteractionShape.TemplateStatement("{ \"updates\" : [{ \"q\" : { \"_id\" : 1 }, \"u\" : { \"$set\" : { \"a\" : 1 } }, \"upsert\" : true }] }"),
+            InteractionShape.TemplateStatement("{ \"updates\" : [{ \"q\" : { \"_id\" : 1 }, \"u\" : { \"$set\" : { \"a\" : 1 } } }] }"));
+        Assert.NotEqual(
+            InteractionShape.TemplateStatement("{ \"filter\" : { \"tags\" : [\"a\", 1] } }"),
+            InteractionShape.TemplateStatement("{ \"filter\" : { \"tags\" : [\"a\"] } }"));
+        // A run folds whole elements only: an integer and a fraction are two elements, not one and a half.
+        Assert.NotEqual(
+            InteractionShape.TemplateStatement("{ \"filter\" : { \"rates\" : [1, 2.5] } }"),
+            InteractionShape.TemplateStatement("{ \"filter\" : { \"rates\" : [2.5] } }"));
+    }
+
+    [Fact]
+    public void Two_finds_with_different_filters_have_different_shapes()
+    {
+        Assert.NotEqual(
+            InteractionShape.TemplateStatement("{ \"filter\" : { \"status\" : \"Ready\" } }"),
+            InteractionShape.TemplateStatement("{ \"filter\" : { \"loanNumber\" : \"L-1\" } }"));
+    }
+
+    [Fact]
+    public void A_querys_booleans_and_signs_are_left_as_they_were()
+    {
+        // The rule changed for documents only: a query's `- 1` is arithmetic, and its keywords are its own.
+        Assert.Equal("SELECT * FROM t WHERE a - {n} > {n} AND b = true", InteractionShape.TemplateStatement("SELECT * FROM t WHERE a - 1 > 0 AND b = true"));
     }
 
     [Fact]

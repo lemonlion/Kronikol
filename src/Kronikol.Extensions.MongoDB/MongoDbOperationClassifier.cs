@@ -10,7 +10,8 @@ namespace Kronikol.Extensions.MongoDB;
 #endif
 
 /// <summary>
-/// Classifies MongoDB HTTP requests into specific operations based on URL patterns and HTTP methods.
+/// Classifies a MongoDB command (its name, its database and the command document) into an operation, the collection it
+/// targets, and the label a diagram draws for it at each verbosity.
 /// </summary>
 public static class MongoDbOperationClassifier
 {
@@ -66,7 +67,7 @@ public static class MongoDbOperationClassifier
         return verbosity switch
         {
             MongoDbTrackingVerbosity.Raw =>
-                $"{op.Operation} {op.DatabaseName}.{op.CollectionName}" +
+                $"{op.Operation} {op.DatabaseName}" + (op.CollectionName is null ? "" : $".{op.CollectionName}") +
                 (op.FilterText != null ? $" filter={op.FilterText}" : ""),
             MongoDbTrackingVerbosity.Detailed => GetDetailedLabel(op),
             MongoDbTrackingVerbosity.Summarised =>

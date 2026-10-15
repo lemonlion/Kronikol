@@ -15,7 +15,8 @@ public static partial class QueryCommand
         ["service", "method", "status", "path", "step", "phase", "category", "kind", "capturedBy"];
 
     private static int GroupedInteractions(List<(ScenarioEntry Scenario, InteractionEntry Request, InteractionEntry? Response)> matches,
-        QueryOptions options, QueryWriter writer, TextWriter error, ScenarioEntry? only)
+        QueryOptions options, QueryWriter writer, TextWriter error, ScenarioEntry? only,
+        IReadOnlyList<WhereClause>? clauses = null, int unevaluable = 0, int capped = 0)
     {
         var dims = options.GroupBy!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         foreach (var dim in dims)
@@ -50,6 +51,7 @@ public static partial class QueryCommand
         if (options.Count)
         {
             writer.Count(buckets.Count);
+            NoteWhereExclusions(options, writer, error, clauses, unevaluable, capped);
             return 0;
         }
 
@@ -88,6 +90,7 @@ public static partial class QueryCommand
             maxMs = bucket.Max(),
             bodies = bucket.Bodies.Count
         });
+        NoteWhereExclusions(options, writer, error, clauses, unevaluable, capped);
 
         return 0;
     }

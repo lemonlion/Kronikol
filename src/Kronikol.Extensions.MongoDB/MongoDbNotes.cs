@@ -53,14 +53,16 @@ internal static class MongoDbNotes
     /// <summary>
     /// The note for a command at <c>Detailed</c>: the command without its name and without the driver's own fields
     /// (<see cref="CommandBookkeeping"/>, <c>ordered</c> when it is true, and an aggregate's <c>cursor</c>). The first
-    /// element is dropped when its value is a string or a number (a collection, <c>1</c>, a getMore's cursor id), which
-    /// the label and the URI carry; any other first element stays, as <c>explain</c>'s command does. An insert's
+    /// element is dropped when its value is a string, a number or a boolean (a collection, <c>1</c>, a getMore's cursor
+    /// id) and the command is <paramref name="classified"/>, since the label and the URI then carry it; any other first
+    /// element stays, as <c>explain</c>'s command does, and so does an unclassified command's name, which its label
+    /// (<c>Other</c>) does not carry. An insert's
     /// <c>documents</c>, and an update's, a delete's or a client bulkWrite's statements, keep their first
     /// <paramref name="maxRequestDocuments"/> entries, and a note that dropped some ends with
     /// <c>... (N more documents not shown)</c>, or <c>... (N more)</c> for statements. A binary over 256 bytes is a
     /// placeholder. Null when nothing is left, as for a commitTransaction.
     /// </summary>
-    internal static string? Request(BsonDocument command, int maxRequestDocuments)
+    internal static string? Request(BsonDocument command, int maxRequestDocuments, bool classified = true)
     {
         var kept = new List<BsonElement>();
         var isAggregate = false;
@@ -70,7 +72,7 @@ internal static class MongoDbNotes
             if (i == 0)
             {
                 isAggregate = element.Name == "aggregate";
-                if (element.Value.IsString || element.Value.IsNumeric)
+                if (classified && (element.Value.IsString || element.Value.IsNumeric || element.Value.IsBoolean))
                     continue;
             }
             if (CommandBookkeeping.Contains(element.Name)
@@ -111,9 +113,12 @@ internal static class MongoDbNotes
     /// The note for a reply at <c>Detailed</c>. A cursor's reply is its batch as an array (<c>[]</c> when empty); any
     /// other reply is an object without the server's bookkeeping, a cursor inside it replaced by its batch. A batch
     /// keeps its first <paramref name="maxResponseDocuments"/> documents, and a note that dropped some ends with
-    /// <c>... (N more documents not shown)</c>. Without <paramref name="logResponseContent"/>, the documents (a batch,
-    /// a findAndModify's <c>value</c>, a distinct's <c>values</c>) are left out. Null when nothing is left, and for
-    /// <c>serverStatus</c>, <c>dbStats</c> and <c>collStats</c>, whose replies are server state.
+    /// <c>... (N more documents not shown)</c>. A distinct's <c>values</c>, and a write's <c>writeErrors</c> and
+    /// <c>upserted</c>, keep as many entries, and a note that dropped some of those ends with <c>... (N more)</c>, N
+    /// counting everything left out. Without <paramref name="logResponseContent"/>, the documents (a batch, a
+    /// findAndModify's <c>value</c>, a distinct's <c>values</c>) are left out; a client bulkWrite's batch keeps the
+    /// operations that failed, which are its write errors. Null when nothing is left, and for <c>serverStatus</c>,
+    /// <c>dbStats</c> and <c>collStats</c>, whose replies are server state.
     /// </summary>
     internal static string? Reply(BsonDocument? reply, MongoDbOperation operation, bool logResponseContent, int maxResponseDocuments)
     {
@@ -139,14 +144,20 @@ internal static class MongoDbNotes
     /// in the application.
     /// </summary>
     internal static bool IsWriteFailure(BsonDocument reply) =>
+        IsStatementFailure(reply) || (reply.TryGetValue("writeConcernError", out var concern) && concern is BsonDocument);
+
+    /// <summary>
+    /// Whether a reply says a statement was not applied: a <c>writeErrors</c> entry, or a client-level bulkWrite's
+    /// <c>nErrors</c>. A <c>writeConcernError</c> is not one: the write was applied, and only its replication failed.
+    /// </summary>
+    internal static bool IsStatementFailure(BsonDocument reply) =>
         (reply.TryGetValue("writeErrors", out var writeErrors) && writeErrors is BsonArray { Count: > 0 })
-        || (reply.TryGetValue("writeConcernError", out var concern) && concern is BsonDocument)
         || (reply.TryGetValue("nErrors", out var errors) && Number(errors) > 0d);
 
     /// <summary>
     /// Why a reply failed, in the server's words: its <c>errmsg</c>, the first <c>writeErrors</c> entry's, the
-    /// <c>writeConcernError</c>'s, or the first failed operation's in a client-level bulkWrite's batch. Null when the
-    /// reply names none.
+    /// <c>writeConcernError</c>'s, or the first failed operation's in a client-level bulkWrite's batch; a bulkWrite
+    /// whose failed operations are past its first batch says how many failed. Null when the reply names none.
     /// </summary>
     internal static string? FailureReason(BsonDocument reply)
     {
@@ -167,6 +178,8 @@ internal static class MongoDbNotes
                     return operationError;
             }
         }
+        if (reply.TryGetValue("nErrors", out var errors) && Number(errors) is double count && count > 0d)
+            return string.Create(CultureInfo.InvariantCulture, $"{count:0} operation{(count == 1d ? "" : "s")} failed");
         return null;
     }
 
@@ -178,7 +191,13 @@ internal static class MongoDbNotes
             if (ReplyBookkeeping.Contains(element.Name))
                 continue;
             if (!logResponseContent && IsDocuments(element, operation))
+            {
+                // A client bulkWrite's write errors are entries of its batch: an error is not a document, so it stays.
+                if (operation == MongoDbOperation.BulkWrite && BatchOf(element) is { } results
+                    && FailedOperations(results) is { Count: > 0 } failed)
+                    kept.Add(new BsonElement(element.Name, new BsonDocument("firstBatch", failed)));
                 continue;
+            }
             kept.Add(element);
         }
         if (kept.Count == 0)
@@ -186,7 +205,7 @@ internal static class MongoDbNotes
 
         var max = Math.Max(0, maxResponseDocuments);
         var builder = new StringBuilder();
-        var notShown = 0;
+        int notShown = 0, entriesNotShown = 0;
         if (kept.Count == 1 && BatchOf(kept[0]) is { } only)
         {
             notShown = WriteBatch(builder, only, max);
@@ -201,16 +220,32 @@ internal static class MongoDbNotes
                 builder.Append(" : ");
                 if (BatchOf(kept[i]) is { } batch)
                     notShown += WriteBatch(builder, batch, max);
+                else if (CappedEntries(kept[i], operation) is { } entries)
+                    entriesNotShown += WriteBatch(builder, entries, max);
                 else
                     MongoJson.Write(builder, kept[i].Value, binaryPlaceholders: true);
             }
             builder.Append(" }");
         }
 
-        if (notShown > 0)
+        // One footnote, which the page and the query tool take off whole: documents when only documents were left out.
+        if (entriesNotShown > 0)
+            builder.Append('\n').Append(string.Create(CultureInfo.InvariantCulture, $"... ({notShown + entriesNotShown} more)"));
+        else if (notShown > 0)
             builder.Append('\n').Append(string.Create(CultureInfo.InvariantCulture, $"... ({notShown} more documents not shown)"));
         return builder.ToString();
     }
+
+    /// <summary>The arrays of a reply other than a batch that can run long: a distinct's values, a write's errors and upserted ids.</summary>
+    private static BsonArray? CappedEntries(BsonElement element, MongoDbOperation operation) =>
+        element.Value is BsonArray entries
+        && (element.Name is "writeErrors" or "upserted" || (operation == MongoDbOperation.Distinct && element.Name == "values"))
+            ? entries
+            : null;
+
+    /// <summary>The entries of a client bulkWrite's batch that say an operation failed (<c>ok</c> is 0).</summary>
+    private static BsonArray FailedOperations(BsonArray results) =>
+        new(results.Where(result => result is BsonDocument operation && operation.TryGetValue("ok", out var ok) && Number(ok) == 0d));
 
     /// <summary>Writes the batch's first <paramref name="max"/> documents as an array; returns how many it left out.</summary>
     private static int WriteBatch(StringBuilder builder, BsonArray batch, int max)

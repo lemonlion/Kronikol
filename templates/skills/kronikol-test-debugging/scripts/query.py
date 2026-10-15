@@ -31,6 +31,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 import sys
 
 BUDGET = 6000
@@ -344,10 +345,30 @@ def cmd_grep(_path, report, args):
     emit(lines, f"{len(lines)} hits")
 
 
-def paths_containing(content, needle):
+# The line a capture writes after a complete document it capped: "... (N more documents not shown)", "... (N more rows
+# not shown)" or "... (N more)". The report and the .NET tool read the document before it; so does this script.
+FOOTNOTE = re.compile(r"\r?\n\.\.\. \(\d+ more(?: (?:rows|documents) not shown)?\)\s*$")
+NOT_JSON = object()
+
+
+def body_json(content):
+    """The body as JSON and the capture footnote that ends it (None when none does); NOT_JSON when it is not JSON."""
     try:
-        document = json.loads(content)
+        return json.loads(content), None
     except json.JSONDecodeError:
+        pass
+    match = FOOTNOTE.search(content)
+    if match and content[:match.start()].lstrip()[:1] in ("{", "["):
+        try:
+            return json.loads(content[:match.start()]), match.group(0).strip()
+        except json.JSONDecodeError:
+            pass
+    return NOT_JSON, None
+
+
+def paths_containing(content, needle):
+    document, _ = body_json(content)
+    if document is NOT_JSON:
         return []
 
     found = []
@@ -391,6 +412,9 @@ def cmd_http(_path, report, args):
     for label, key in (("status", "statusCode"), ("in step", "stepPath"), ("trace", "activityTraceId")):
         if interaction.get(key):
             lines.append(f"{label} {interaction[key]}")
+    # Why the call failed, in the service's own words, when its capturer read them (a MongoDB errmsg).
+    if interaction.get("error"):
+        lines.append(f"error {one_line(interaction['error'], 200)}")
 
     content = interaction.get("content")
     if not content:
@@ -422,16 +446,16 @@ def cmd_http(_path, report, args):
 
 
 def pretty(content):
-    try:
-        return json.dumps(json.loads(content), indent=2)
-    except json.JSONDecodeError:
+    document, footnote = body_json(content)
+    if document is NOT_JSON:
         return content
+    text = json.dumps(document, indent=2)
+    return f"{text}\n{footnote}" if footnote else text
 
 
 def keys(content, max_depth=3):
-    try:
-        document = json.loads(content)
-    except json.JSONDecodeError:
+    document, _ = body_json(content)
+    if document is NOT_JSON:
         return [f"(not JSON — {size(content)} of text)"]
 
     found = []
@@ -455,16 +479,21 @@ def keys(content, max_depth=3):
 
 
 def pick(content, path):
-    node = json.loads(content)
-    for part in path.lstrip("$.").split("."):
-        while "[" in part:
-            name, rest = part.split("[", 1)
-            if name:
-                node = node[name]
-            index, part = rest.split("]", 1)
-            node = node[int(index)]
-        if part:
-            node = node[part]
+    node, _ = body_json(content)
+    if node is NOT_JSON:
+        return f"(not JSON — {size(content)} of text)"
+    try:
+        for part in path.lstrip("$.").split("."):
+            while "[" in part:
+                name, rest = part.split("[", 1)
+                if name:
+                    node = node[name]
+                index, part = rest.split("]", 1)
+                node = node[int(index)]
+            if part:
+                node = node[part]
+    except (KeyError, IndexError, TypeError, ValueError):
+        return f"(nothing at {path})"
     return json.dumps(node, indent=2) if isinstance(node, (dict, list)) else node
 
 
@@ -479,6 +508,13 @@ COMMANDS = {
 
 
 def main():
+    # Piped on Windows, Python writes the console's code page, which has no arrows: every `http` line crashed.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
     if len(sys.argv) < 3 or sys.argv[1] not in COMMANDS:
         print(__doc__)
         sys.exit(2)

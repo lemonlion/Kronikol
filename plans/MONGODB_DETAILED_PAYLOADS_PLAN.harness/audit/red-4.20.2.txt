@@ -1,0 +1,253 @@
+# Audit red proofs (2026-10-15): the audit's facts copied onto v4.20.2 in a worktree at the tag, tests only, no
+# product change. 59 fail, each on its own assertion (listed under each project): 28 in Kronikol.Tests, 11 in each
+# MongoDB project (the same linked facts on driver 3.x and 2.x), 7 in Kronikol.Tests.TcpTap, the golden on Bson 3 and
+# 1 in Kronikol.Tests.Otlp. The 16 that pass on v4.20.2 are guards for what must not change: the footnote split for
+# the writers' own footnotes and its parity with the page's pattern, two finds with different filters, keys, nulls
+# and flags still telling shapes apart, a query's booleans left as they were, a categorised SQL call listed by its
+# statement, a summarised failure with response content, the deletes and ops caps, a user's field named like a
+# driver field, and a handshake that starts no authentication.
+# Two failures were read past their first line: the jsonl fact's KeyNotFoundException is the `error` lookup
+# (MongoDbFailuresDigestTests.cs:112), and the fallback script's traceback is UnicodeEncodeError on cp1252 for '→'.
+
+== Kronikol.Tests: 28 failed, 9 passed
+  Passed Kronikol.Tests.Tracking.CaptureFootnoteTests.A_document_is_split_at_each_footnote_a_writer_uses(body: "{ \"updates\" : [] }\n... (2 more)", footnote: "... (2 more)")
+  Passed Kronikol.Tests.Tracking.CaptureFootnoteTests.A_document_is_split_at_each_footnote_a_writer_uses(body: "[{ \"a\" : 1 }]\n... (3 more documents not shown)", footnote: "... (3 more documents not shown)")
+  Passed Kronikol.Tests.Tracking.CaptureFootnoteTests.A_document_is_split_at_each_footnote_a_writer_uses(body: "  [1]\r\n... (12 more rows not shown)\n", footnote: "... (12 more rows not shown)")
+  Failed Kronikol.Tests.Tracking.CaptureFootnoteTests.A_text_body_is_not_split_whatever_its_last_line(body: "3 rows\n... (1 more rows not shown)")
+  Failed Kronikol.Tests.Tracking.CaptureRedactionTests.Content_patterns_scrub_a_calls_error_too
+  Failed Kronikol.Tests.History.InteractionShapeTests.A_documents_booleans_signs_and_list_lengths_are_data
+  Failed Kronikol.Tests.Tracking.CaptureFootnoteTests.A_text_body_is_not_split_whatever_its_last_line(body: "first line\nsecond line\n... (3 more)")
+  Passed Kronikol.Tests.History.InteractionShapeTests.Two_finds_with_different_filters_have_different_shapes
+  Passed Kronikol.Tests.History.InteractionShapeTests.A_documents_keys_nulls_and_flags_still_tell_shapes_apart
+  Passed Kronikol.Tests.History.InteractionShapeTests.A_querys_booleans_and_signs_are_left_as_they_were
+  Failed Kronikol.Tests.Tracking.RequestResponseLoggerTests.Log_MaxContentLength_never_splits_a_surrogate_pair
+  Passed Kronikol.Tests.Tracking.CaptureFootnoteTests.The_pages_script_reads_the_footnote_by_the_same_pattern
+  Failed Kronikol.Tests.Tracking.RequestResponseLoggerTests.MaxContentLength_refuses_a_negative_length
+  Failed Kronikol.Tests.PlantUml.StatementNoteNullTests.A_json_note_holding_a_lone_surrogate_is_drawn_and_does_not_fail_the_diagram(category: null)
+  Failed Kronikol.Tests.PlantUml.StatementNoteNullTests.A_json_note_holding_a_lone_surrogate_is_drawn_and_does_not_fail_the_diagram(category: "MongoDB")
+  Passed Kronikol.Tests.Tracking.CaptureFootnoteTests.A_sql_rows_body_the_formatter_capped_is_split_at_its_footnote
+  Failed Kronikol.Tests.Reports.FailuresDigestGeneratorTests.An_atlas_data_api_call_is_listed_by_its_label_not_its_documents
+  Passed Kronikol.Tests.Reports.FailuresDigestGeneratorTests.A_categorised_sql_call_is_still_listed_by_its_statement
+  Failed Kronikol.Tests.Tool.QueryCommandTests.An_empty_key_is_written_as_a_path_that_parses_back
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Path_recursive_descent_suggests_a_path_that_parses(path: "$.a..b..c", suggestion: "`$.a[*].b[*].c`")
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Path_recursive_descent_suggests_a_path_that_parses(path: "$.items[*]..price", suggestion: "`$.items[*].price`")
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Path_recursive_descent_suggests_a_path_that_parses(path: "$...price", suggestion: "`$[*].price`")
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Where_orders_a_quoted_literal_as_text_as_it_did
+  Failed Kronikol.Tests.Tool.FallbackScriptTests.It_says_why_a_call_failed_as_the_tool_does
+  Failed Kronikol.Tests.Tool.QueryCommandTests.A_text_body_ending_in_a_footnote_like_line_is_not_capped
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Diff_bodies_counts_a_footnote_that_changed
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Where_says_what_it_left_out_under_count_on_stderr_and_under_group_by
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Where_says_what_it_left_out_even_when_the_rows_fill_the_budget
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Failures_says_which_call_in_the_step_failed_and_why
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Diff_bodies_reads_two_capped_batches_as_json_and_names_both_footnotes
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Diff_bodies_compares_numbers_by_their_value_in_every_form
+  Failed Kronikol.Tests.Tool.FallbackScriptTests.It_prints_its_arrows_through_a_pipe_whatever_the_console_code_page
+  Failed Kronikol.Tests.Tool.QueryCommandTests.A_body_printed_indented_uses_one_kind_of_line_ending
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Path_recursive_descent_with_nothing_after_it_suggests_no_path
+  Failed Kronikol.Tests.Tool.QueryCommandTests.Where_on_a_capped_body_says_it_read_only_what_was_recorded
+  Failed Kronikol.Tests.Tool.QueryCommandTests.A_redis_value_cut_on_the_wire_is_counted_as_capped
+  Failed Kronikol.Tests.Tool.FallbackScriptTests.It_reads_a_capped_body_as_the_tool_reads_it
+   Assert.Null() Failure: Value of type 'Nullable<ValueTuple<string, string>>' has a value
+   Expected: null
+   Actual:   Tuple ("3 rows", "... (1 more rows not shown)")
+   Assert.Equal() Failure: Strings differ
+   Expected: ···"ments" : [{ "approved" : true, "delta" : -{n}, "ta"···
+   Actual:   ···"ments" : [{ "approved" : false, "delta" : {n}, "ta"···
+   Assert.Equal() Failure: Strings differ
+   Expected: ···"dex: email_1 dup key: { email: "[email]" }"
+   Actual:   ···"dex: email_1 dup key: { email: "ada@example.com" }"
+   Assert.Null() Failure: Value of type 'Nullable<ValueTuple<string, string>>' has a value
+   Expected: null
+   Actual:   Tuple ("first line\nsecond line", "... (3 more)")
+   Assert.StartsWith() Failure: String start does not match
+   String:         "ab�\n\n…truncated (8 chars total)"
+   Expected start: "ab\n\n…truncated (8 chars total)"
+   Assert.Throws() Failure: No exception was thrown
+   Expected: typeof(System.ArgumentOutOfRangeException)
+   System.AggregateException : One or more errors occurred. (Cannot read incomplete UTF-16 JSON text as string with missing low surrogate.)
+   System.AggregateException : One or more errors occurred. (Cannot read incomplete UTF-16 JSON text as string with missing low surrogate.)
+   Assert.Contains() Failure: Sub-string not found
+   String:    "# Failures — 1 of 3 scenarios\n\nWritten by Kronikol"···
+   Not found: "InsertOne → orders"
+   Assert.Contains() Failure: Sub-string not found
+   String:    "s0/i1  Response  test → api\nGET http://api/odd\nsta"···
+   Not found: "$[''].x"
+   Assert.Contains() Failure: Sub-string not found
+   String:    "Bad path: recursive descent (`..`) is not supporte"···
+   Not found: "`$.a[*].b[*].c`"
+   Assert.Contains() Failure: Sub-string not found
+   String:    "Bad path: recursive descent (`..`) is not supporte"···
+   Not found: "`$.items[*].price`"
+   Assert.Contains() Failure: Sub-string not found
+   String:    "Bad path: recursive descent (`..`) is not supporte"···
+   Not found: "`$[*].price`"
+   Assert.Equal() Failure: Strings differ
+   Expected: "1"
+   Actual:   "0"
+   Assert.Contains() Failure: Sub-string not found
+   String:    "s1/i1  Response  Checkout fails on a wrong total →"···
+   Not found: "error E11000 duplicate key error collection: shop."···
+   Assert.DoesNotContain() Failure: Sub-string found
+   String: ···"bf21a9e8\n! this body was capped at capture time — "···
+   Found:  "capped at capture time"
+   Assert.Equal() Failure: Strings differ
+   Expected: "1"
+   Actual:   "0"
+   Assert.Contains() Failure: Sub-string not found
+   String:    ""
+   Not found: "1 value was not a number"
+   Assert.Contains() Failure: Sub-string not found
+   String:    "s0/i0     mongo            Find ← loans /app/loans"···
+   Not found: "1 value was not a number for --where "$.total > 50"···
+   Assert.Contains() Failure: Sub-string not found
+   String:    "      s2/i0  mongo  Insert → orders /app/orders"
+   Not found: "500"
+   Assert.Contains() Failure: Sub-string not found
+   String:    "- s0/i1  b:871c1900  95 B\n+ s0/i3  b:cd6cc764  95 "···
+   Not found: "(capture footnote): ... (3 more documents not show"···
+   Assert.Contains() Failure: Sub-string not found
+   String:    "- s0/i1  b:2c97afec  56 B\n+ s0/i3  b:7b303600  57 "···
+   Not found: "$.id"
+   UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 49: character maps to <undefined>
+   Assert.DoesNotContain() Failure: Sub-string found
+   String: ···"rest was never recorded\n[\r\n  {\r\n    "total": 5\r\n  "···
+   Found:  "\r"
+   Assert.DoesNotContain() Failure: Sub-string found
+   String: ···"d; `[*]` walks an array: `$[*].`\r\nGrammar: $.name "···
+   Found:  "`$[*].`"
+   Assert.Contains() Failure: Sub-string not found
+   String:    "s0/i0     mongo            Find ← loans /app/loans"···
+   Not found: "2 bodies were capped at capture time — --where rea"···
+   Assert.Contains() Failure: Sub-string not found
+   String:    "s0/i1  Response  test → redis\nGET redis://cache/ba"···
+   Not found: "capped at capture time"
+   Assert.Contains() Failure: Sub-string not found
+   String:    "s1/i1  Response  Checkout fails on a wrong total →"···
+   Not found: "$[0].total"
+
+== Kronikol.Tests.MongoDB: 11 failed, 3 passed
+  Failed Kronikol.Tests.MongoDB.MongoDbFailuresDigestTests.Failures_md_caps_a_raw_label_as_it_caps_a_path
+  Failed Kronikol.Tests.MongoDB.MongoDbFailuresDigestTests.Failures_jsonl_says_why_a_call_failed_as_Failures_md_does
+  Passed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_summarised_failure_with_response_content_is_the_reply_without_its_bookkeeping
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_summarised_failure_without_response_content_keeps_only_the_servers_message
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.Without_response_content_a_client_bulkWrite_keeps_its_failed_operations
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_raw_label_has_no_trailing_dot_without_a_collection
+  Passed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.Request_deletes_and_client_bulkWrite_ops_are_capped_with_the_statements_footnote
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.An_unclassified_command_keeps_its_name_in_the_note
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_distinct_reply_keeps_its_first_values_with_a_footnote
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_write_that_failed_does_not_claim_its_document
+  Passed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_users_field_named_like_a_driver_field_survives_inside_a_document
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_client_bulkWrite_whose_failures_are_past_its_first_batch_says_how_many_failed
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.Upserted_ids_and_write_errors_are_capped_with_one_footnote
+  Failed Kronikol.Tests.MongoDB.MongoDbProcessWideTests.A_content_pattern_redacts_the_servers_message_as_well_as_the_note
+   Assert.DoesNotContain() Failure: Sub-string found
+   String: ···"000298", "loan-000299", "loan-000300"] } } /app/lo"···
+   Found:  "loan-000300"
+   System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+   Assert.Equal() Failure: Strings differ
+   Expected: "E11000 duplicate key error collection: app.loans i"···
+   Actual:   "{ "errmsg" : "E11000 duplicate key error collectio"···
+   Assert.Contains() Failure: Sub-string not found
+   String:    "{ "nErrors" : 1, "nInserted" : 1 }"
+   Not found: ""idx" : 1, "code" : 11000"
+   Assert.Equal() Failure: Strings differ
+   Expected: "CommitTransaction admin"
+   Actual:   "CommitTransaction admin."
+   Assert.Equal() Failure: Strings differ
+   Expected: "{ "collMod" : "loans", "validator" : { "$jsonSchem"···
+   Actual:   "{ "validator" : { "$jsonSchema" : { "required" : ["···
+   Assert.Equal() Failure: Strings differ
+   Expected: "{ "values" : ["a", "b", "c"] }\n... (2 more)"
+   Actual:   "{ "values" : ["a", "b", "c", "d", "e"] }"
+   Assert.Null() Failure: Value of type 'Nullable<ValueTuple<string, string>>' has a value
+   Expected: null
+   Actual:   Tuple ("My Test", "e25a7418-9cc2-4acb-9225-27fbbcfe6414")
+   Assert.Equal() Failure: Strings differ
+   Expected: "1 operation failed"
+   Actual:   null
+   Assert.Equal() Failure: Strings differ
+   Expected: ···" "index" : 1, "_id" : 2 }], "writeErrors" : [{ "in"···
+   Actual:   ···" "index" : 1, "_id" : 2 }, { "index" : 2, "_id" : "···
+   Assert.Equal() Failure: Strings differ
+   Expected: ···"dex: email_1 dup key: { email: "[email]" }"
+   Actual:   ···"dex: email_1 dup key: { email: "ada@example.com" }"
+
+== Kronikol.Tests.MongoDB.V2: 11 failed, 3 passed
+  Passed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_users_field_named_like_a_driver_field_survives_inside_a_document
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_client_bulkWrite_whose_failures_are_past_its_first_batch_says_how_many_failed
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_distinct_reply_keeps_its_first_values_with_a_footnote
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.An_unclassified_command_keeps_its_name_in_the_note
+  Passed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.Request_deletes_and_client_bulkWrite_ops_are_capped_with_the_statements_footnote
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_summarised_failure_without_response_content_keeps_only_the_servers_message
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.Upserted_ids_and_write_errors_are_capped_with_one_footnote
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_raw_label_has_no_trailing_dot_without_a_collection
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_write_that_failed_does_not_claim_its_document
+  Failed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.Without_response_content_a_client_bulkWrite_keeps_its_failed_operations
+  Passed Kronikol.Tests.MongoDB.MongoDbTrackingSubscriberTests.A_summarised_failure_with_response_content_is_the_reply_without_its_bookkeeping
+  Failed Kronikol.Tests.MongoDB.MongoDbFailuresDigestTests.Failures_md_caps_a_raw_label_as_it_caps_a_path
+  Failed Kronikol.Tests.MongoDB.MongoDbFailuresDigestTests.Failures_jsonl_says_why_a_call_failed_as_Failures_md_does
+  Failed Kronikol.Tests.MongoDB.MongoDbProcessWideTests.A_content_pattern_redacts_the_servers_message_as_well_as_the_note
+   Assert.Equal() Failure: Strings differ
+   Expected: "1 operation failed"
+   Actual:   null
+   Assert.Equal() Failure: Strings differ
+   Expected: "{ "values" : ["a", "b", "c"] }\n... (2 more)"
+   Actual:   "{ "values" : ["a", "b", "c", "d", "e"] }"
+   Assert.Equal() Failure: Strings differ
+   Expected: "{ "collMod" : "loans", "validator" : { "$jsonSchem"···
+   Actual:   "{ "validator" : { "$jsonSchema" : { "required" : ["···
+   Assert.Equal() Failure: Strings differ
+   Expected: "E11000 duplicate key error collection: app.loans i"···
+   Actual:   "{ "errmsg" : "E11000 duplicate key error collectio"···
+   Assert.Equal() Failure: Strings differ
+   Expected: ···" "index" : 1, "_id" : 2 }], "writeErrors" : [{ "in"···
+   Actual:   ···" "index" : 1, "_id" : 2 }, { "index" : 2, "_id" : "···
+   Assert.Equal() Failure: Strings differ
+   Expected: "CommitTransaction admin"
+   Actual:   "CommitTransaction admin."
+   Assert.Null() Failure: Value of type 'Nullable<ValueTuple<string, string>>' has a value
+   Expected: null
+   Actual:   Tuple ("My Test", "1128caad-cd48-4b9e-aa82-66e82c98fc3a")
+   Assert.Contains() Failure: Sub-string not found
+   String:    "{ "nErrors" : 1, "nInserted" : 1 }"
+   Not found: ""idx" : 1, "code" : 11000"
+   Assert.DoesNotContain() Failure: Sub-string found
+   String: ···"000298", "loan-000299", "loan-000300"] } } /app/lo"···
+   Found:  "loan-000300"
+   System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+   Assert.Equal() Failure: Strings differ
+   Expected: ···"dex: email_1 dup key: { email: "[email]" }"
+   Actual:   ···"dex: email_1 dup key: { email: "ada@example.com" }"
+
+== Kronikol.Tests.TcpTap: 7 failed, 1 passed
+  Failed Kronikol.Tests.TcpTap.MongoDecoderTests.AHandshakeThatStartsAuthenticationIsNeverRecordedEitherWhenTheExclusionListIsEmptied(command: "ismaster", field: "saslSupportedMechs")
+  Failed Kronikol.Tests.TcpTap.MongoDecoderTests.AHandshakeThatStartsAuthenticationIsNeverRecordedEitherWhenTheExclusionListIsEmptied(command: "hello", field: "speculativeAuthenticate")
+  Failed Kronikol.Tests.TcpTap.MongoDecoderTests.AHandshakeThatStartsAuthenticationIsNeverRecordedEitherWhenTheExclusionListIsEmptied(command: "isMaster", field: "speculativeAuthenticate")
+  Failed Kronikol.Tests.TcpTap.MongoDecoderTests.ASummarisedFailureWithoutResponseContentKeepsOnlyTheServersMessage
+  Failed Kronikol.Tests.TcpTap.MongoDecoderTests.DocumentRedactionRunsOverTheErrorToo
+  Failed Kronikol.Tests.TcpTap.TapNoteGoldenTests.The_tap_writes_the_same_bytes_on_bson_2_and_3
+  Passed Kronikol.Tests.TcpTap.MongoDecoderTests.AHandshakeThatStartsNoAuthenticationIsRecordedWhenTheExclusionListIsEmptied
+  Failed Kronikol.Tests.TcpTap.MongoDecoderTests.WithoutCaptureRepliesTheServersMessageIsNotRecordedEither
+   Assert.Empty() Failure: Collection was not empty
+   Assert.Empty() Failure: Collection was not empty
+   Assert.Empty() Failure: Collection was not empty
+   Assert.Equal() Failure: Strings differ
+   Expected: "E11000 duplicate key error collection: app.users i"···
+   Actual:   "{ "errmsg" : "E11000 duplicate key error collectio"···
+   Assert.Equal() Failure: Strings differ
+   Expected: ···"dex: email_1 dup key: { email: "[EMAIL]" }"
+   Actual:   ···"dex: email_1 dup key: { email: "ada@example.com" }"
+   On MongoDB.Bson 2.30.0.0 line 337 differs from the golden:
+   Assert.Null() Failure: Value is not null
+   Expected: null
+   Actual:   "E11000 duplicate key error collection: app.users i"···
+
+== Kronikol.Tests.TcpTap.Bson3: 1 failed, 0 passed
+  Failed Kronikol.Tests.TcpTap.TapNoteGoldenTests.The_tap_writes_the_same_bytes_on_bson_2_and_3
+   On MongoDB.Bson 3.12.0.0 line 337 differs from the golden:
+
+== Kronikol.Tests.Otlp: 1 failed, 0 passed
+  Failed Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_failure_status_carries_the_services_own_message
+   Assert.Equal() Failure: Strings differ
+   Expected: "E11000 duplicate key error collection: app.loans"
+   Actual:   null

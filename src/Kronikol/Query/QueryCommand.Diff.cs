@@ -364,6 +364,14 @@ public static partial class QueryCommand
         {
             var rows = new List<DiffRow>();
             DiffElements(rows, leftDocument.RootElement, rightDocument.RootElement, "$");
+
+            // Two batches whose recorded documents agree can differ in how many more there were, which a line diff
+            // counted and a path diff cannot see.
+            var before = Tracking.CaptureFootnote.Split(leftBody)?.Footnote;
+            var after = Tracking.CaptureFootnote.Split(rightBody)?.Footnote;
+            if (before != after)
+                rows.Add(new DiffRow("footnote", "(capture footnote)", before, after,
+                    $"(capture footnote): {before ?? "(none)"} → {after ?? "(none)"}"));
             return rows;
         }
     }
@@ -508,20 +516,16 @@ public static partial class QueryCommand
     {
         if (a.ValueKind == JsonValueKind.Number)
         {
-            // Two integers compare by their digits: as doubles, 9007199254740993 and 9007199254740992 were one value
-            // (#168 F25), and MongoDB's relaxed JSON writes every Int64 as a plain number.
-            if (b.ValueKind == JsonValueKind.Number && IsInteger(a) && IsInteger(b))
-                return System.Numerics.BigInteger.Parse(a.GetRawText(), System.Globalization.CultureInfo.InvariantCulture)
-                       == System.Numerics.BigInteger.Parse(b.GetRawText(), System.Globalization.CultureInfo.InvariantCulture);
-            return a.TryGetDouble(out var x) && b.TryGetDouble(out var y) && x == y;
+            // Two numbers compare by their value, exactly, in whatever form they were written: as doubles,
+            // 9007199254740993 and 9007199254740992 were one value (#168 F25), and so were 1e400 and 2e400; 1, 1.0 and
+            // 1E0 are one value, and so are -0 and 0. MongoDB's relaxed JSON writes every Int64 as a plain number.
+            return b.ValueKind == JsonValueKind.Number && JsonElement.DeepEquals(a, b);
         }
         if (a.ValueKind == JsonValueKind.String)
             return a.GetString() == b.GetString();
         return a.GetRawText() == b.GetRawText();
     }
 
-    /// <summary>Whether a JSON number is written as an integer: no fraction and no exponent.</summary>
-    private static bool IsInteger(JsonElement number) => number.GetRawText().AsSpan().IndexOfAny('.', 'e', 'E') < 0;
 
     private static string RenderScalar(JsonElement element) =>
         QueryWriter.OneLine(element.GetRawText(), 60);

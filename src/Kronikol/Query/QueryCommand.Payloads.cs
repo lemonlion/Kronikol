@@ -58,7 +58,7 @@ public static partial class QueryCommand
         }
 
         if (options.GroupBy is not null)
-            return GroupedInteractions(matches, options, writer, error, only);
+            return GroupedInteractions(matches, options, writer, error, only, clauses, unevaluable, cache.CappedReads);
 
         // Nothing reads --sort on the ungrouped path: the list is capture order, always. Accepting the
         // flag and discarding it lets an agent read row one as the slowest call when it is merely the
@@ -74,15 +74,14 @@ public static partial class QueryCommand
         if (options.Count)
         {
             writer.Count(matches.Count);
+            NoteWhereExclusions(options, writer, error, clauses, unevaluable, cache.CappedReads);
             return 0;
         }
 
         if (matches.Count == 0)
         {
             writer.Note("nothing matched");
-            if (unevaluable > 0)
-                writer.Note($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
-            NoteNotNumbers(writer, clauses);
+            NoteWhereExclusions(options, writer, error, clauses, unevaluable, cache.CappedReads);
             writer.Footer($"{inScope} calls in {(only is null ? "the run" : only.Address)} · drop a filter, or try services");
             return 0;
         }
@@ -102,9 +101,7 @@ public static partial class QueryCommand
                     bodyLength = group.BodyLength
                 });
 
-            if (unevaluable > 0)
-                writer.Note($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
-            NoteNotNumbers(writer, clauses);
+            NoteWhereExclusions(options, writer, error, clauses, unevaluable, cache.CappedReads);
 
             return 0;
         }
@@ -166,9 +163,7 @@ public static partial class QueryCommand
                 : item;
         });
 
-        if (unevaluable > 0)
-            writer.Note($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
-        NoteNotNumbers(writer, clauses);
+        NoteWhereExclusions(options, writer, error, clauses, unevaluable, cache.CappedReads);
 
         return 0;
     }

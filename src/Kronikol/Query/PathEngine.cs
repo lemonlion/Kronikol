@@ -36,8 +36,9 @@ internal static class PathEngine
                 {
                     // JSONPath's recursive descent. Read as `.`, `$..x` quietly meant `$.x` and never matched an
                     // array body (#168 F7); `[*]` is the walk this grammar has.
-                    var suggestion = (path.TrimStart().StartsWith('$') ? "$" : "") + text[..i] + "[*]." + text[(i + 2)..];
-                    error = $"recursive descent (`..`) is not supported; `[*]` walks an array: `{suggestion}`";
+                    error = WithoutRecursiveDescent(path.Trim()) is { } suggestion
+                        ? $"recursive descent (`..`) is not supported; `[*]` walks an array: `{suggestion}`"
+                        : "recursive descent (`..`) is not supported; name each level, with `[*]` to walk an array";
                     return false;
                 }
                 i++;
@@ -315,9 +316,42 @@ internal static class PathEngine
     /// so an emitted path always parses back to the same place.
     /// </summary>
     public static string Append(string path, string name) =>
-        name.Contains('.') || name.Contains('[') || name.Contains(']') || name.Contains('\'')
+        // An empty key written `.x` read back as `..x`, recursive descent, which the parser refuses.
+        name.Length == 0 || name.Contains('.') || name.Contains('[') || name.Contains(']') || name.Contains('\'')
             ? $"{path}['{name}']"
             : $"{path}.{name}";
+
+    /// <summary>
+    /// The path with each run of dots read as one level, walking an array with <c>[*]</c> unless it follows a bracket,
+    /// which already names the level; a bracket-quoted key keeps its dots. Null when the result does not parse either.
+    /// </summary>
+    private static string? WithoutRecursiveDescent(string path)
+    {
+        var text = new System.Text.StringBuilder();
+        for (var i = 0; i < path.Length; i++)
+        {
+            if (path[i] == '[' && i + 1 < path.Length && path[i + 1] == '\'')
+            {
+                var end = path.IndexOf("']", i + 2, StringComparison.Ordinal);
+                if (end < 0)
+                    return null;
+                text.Append(path, i, end + 2 - i);
+                i = end + 1;
+                continue;
+            }
+            if (path[i] == '.' && i + 1 < path.Length && path[i + 1] == '.')
+            {
+                while (i + 1 < path.Length && path[i + 1] == '.')
+                    i++;
+                text.Append(text.Length > 0 && text[^1] == ']' ? "." : "[*].");
+                continue;
+            }
+            text.Append(path[i]);
+        }
+
+        var suggestion = text.ToString();
+        return !suggestion.EndsWith('.') && TryParse(suggestion, out _, out _) ? suggestion : null;
+    }
 
     private static string KindName(JsonElement element) => element.ValueKind switch
     {

@@ -113,15 +113,18 @@ public record MongoDbTrackingOptions
     /// <summary>
     /// Whether a reply note holds the documents the reply returned: a cursor's batch (<c>firstBatch</c>, or a
     /// getMore's <c>nextBatch</c>), a findAndModify's <c>value</c> and a distinct's <c>values</c>. Off, the note keeps
-    /// the rest of the reply (a write's counts, upserted ids, write errors). On, the reply note is also shown at
-    /// <see cref="MongoDbTrackingVerbosity.Summarised"/>. At Raw the whole reply is always shown regardless.
-    /// Default: true.
+    /// the rest of the reply (a write's counts, upserted ids, write errors, and a client bulkWrite's failed operations),
+    /// and at <see cref="MongoDbTrackingVerbosity.Summarised"/> a reply has no note and a failed command's note is the
+    /// server's message alone. On, the reply note is also shown at Summarised. At Raw the whole reply is always shown
+    /// regardless. Default: true.
     /// </summary>
     public bool LogResponseContent { get; set; } = true;
 
     /// <summary>
     /// The most documents a reply note keeps from a cursor's batch; a note that left some out ends with
-    /// <c>... (N more documents not shown)</c>, a line the report and the query tool read past.
+    /// <c>... (N more documents not shown)</c>, a line the report and the query tool read past. A distinct's
+    /// <c>values</c>, and a write's <c>writeErrors</c> and <c>upserted</c>, keep as many entries, and a note that left
+    /// some of those out ends with <c>... (N more)</c>.
     /// Default: 10.
     /// </summary>
     public int MaxResponseDocuments { get; set; } = 10;

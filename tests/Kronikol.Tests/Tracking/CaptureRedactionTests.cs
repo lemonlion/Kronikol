@@ -56,6 +56,24 @@ public class CaptureRedactionTests : IDisposable
     }
 
     [Fact]
+    public void Content_patterns_scrub_a_calls_error_too()
+    {
+        // A capturer that reads a service's failure stores the service's own words as the call's Error, and a MongoDB
+        // errmsg quotes the key that collided. The patterns that keep a value out of the content keep it out of Error.
+        RequestResponseLogger.Redaction = CaptureRedaction.Secrets().RedactContent(@"[\w.+-]+@[\w-]+\.[\w.]+", "[email]");
+        var testId = Guid.NewGuid().ToString();
+
+        RequestResponseLogger.Log(Entry(testId, [], "{ \"n\" : 0 }") with
+        {
+            Type = RequestResponseType.Response,
+            Error = "E11000 duplicate key error collection: app.users index: email_1 dup key: { email: \"ada@example.com\" }",
+        });
+
+        var stored = Assert.Single(RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId));
+        Assert.Equal("E11000 duplicate key error collection: app.users index: email_1 dup key: { email: \"[email]\" }", stored.Error);
+    }
+
+    [Fact]
     public void Custom_hook_can_drop_an_entry_entirely()
     {
         RequestResponseLogger.Redaction = new CaptureRedaction([]) { Custom = log => log.Uri.AbsolutePath.Contains("health") ? null : log };

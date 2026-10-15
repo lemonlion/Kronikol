@@ -79,6 +79,21 @@ public class StatementNoteNullTests
         Assert.Contains("\"closedAt\": null", Drawn(request, Response(request, null)));
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData(DependencyCategories.MongoDB)]
+    public void A_json_note_holding_a_lone_surrogate_is_drawn_and_does_not_fail_the_diagram(string? category)
+    {
+        // `"x\ud800y"` is legal JSON (MongoDB's writer and the driver write a lone surrogate that way), and re-indenting
+        // it threw InvalidOperationException, which only a JsonException was caught for: the whole diagram failed.
+        var request = Request(category, "{ \"name\" : \"x\\ud800y\", \"n\" : 1 }", "POST");
+
+        var plantUml = Drawn(request, Response(request, null));
+
+        Assert.Contains("name", plantUml);
+        Assert.Contains("ud800", plantUml);
+    }
+
     [Fact]
     public void An_http_body_still_drops_its_nulls()
     {

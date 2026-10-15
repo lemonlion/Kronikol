@@ -257,16 +257,20 @@ kronikol query interactions <report> --where '$.items[*].price < 0' --where 'req
 Grammar: `[req:]PATH OP LITERAL` · ops `= != < > <= >= ~ !~ exists !exists` (`exists` takes no
 literal) · literals: `null`/`true`/`false`, numbers, quoted or bare strings. Both sides numeric →
 numeric comparison; otherwise case-insensitive string comparison; `~` is substring. `<`, `>`, `<=` and
-`>=` against a number compare numbers only: a value that is not a number (an object such as
-`{ "$numberDecimal": "1000.50" }`, an array, a string) fails the clause, and the footer counts it.
+`>=` against a bare number compare numbers only: a value that is not a number (an object such as
+`{ "$numberDecimal": "1000.50" }`, an array, a string) does not satisfy it, and a note after the answer
+counts every such value (on stderr under `--count`). A quoted literal is a string: `$.code > "500"` orders
+as text.
 
-- Wildcards use **any**-semantics: `$.items[*].price < 0` passes when any element satisfies.
+- Wildcards use **any**-semantics: `$.items[*].price < 0` passes when any element satisfies (an element
+  that is not a number is still counted in the note).
 - Repeated `--where` is AND. OR is deliberately absent — run the command twice.
 - Default target is the **response** body; a `req:` prefix targets the request per-expression;
   `--request` shifts the default.
-- A call whose targeted body is missing or not JSON fails the predicate; the footer reports how many
-  were excluded that way. A body a capture capped (a document, then `... (N more documents not shown)` or
-  `... (N more rows not shown)`) is read as the document, and counted as capped.
+- A call whose targeted body is missing or not JSON fails the predicate; a note reports how many
+  were excluded that way. A body a capture capped (a JSON document, then `... (N more documents not
+  shown)`, `... (N more rows not shown)` or `... (N more)`) is read as the document: `values` counts it as
+  capped, and `interactions --where` says how many capped bodies it could read only in part.
 - Works on `interactions` and `values`. Single-quote the expression — `>`, `?` and `[*]` are shell-active.
 
 #### `--group-by` — generic bucketing

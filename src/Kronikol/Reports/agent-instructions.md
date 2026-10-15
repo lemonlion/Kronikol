@@ -128,7 +128,8 @@ output yourself, it costs about twice the tokens for the same answer.
   payloads, `kronikol query note . s3/d0` is where it is.
 - `traceId` is Kronikol's id for one request/response pair. `activityTraceId` is the W3C one that matches
   OpenTelemetry traces and application logs.
-- A body ending `…truncated (N chars total)` was capped at capture time. The rest was never recorded.
+- A body ending `…truncated (N chars total)`, or a JSON document followed by `... (N more documents not shown)`,
+  `... (N more rows not shown)` or `... (N more)`, was capped at capture time. The rest was never recorded.
 - Attachments are pointers: read a screenshot by its path, individually. They are never inlined.
 - `! report predates step attribution` means an older Kronikol wrote the file: the answers are correct but
   thinner.

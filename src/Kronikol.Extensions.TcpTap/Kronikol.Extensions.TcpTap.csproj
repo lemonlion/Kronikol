@@ -11,9 +11,6 @@
          (Kronikol.Extensions.TcpTap.Protocols) instead of the extension namespaces they own, so a
          host may reference this package and Kronikol.Extensions.Redis / .MongoDB at the same time. -->
     <DefineConstants>$(DefineConstants);KRONIKOL_TCPTAP_SHARED</DefineConstants>
-    <!-- NU1902: SharpCompress (transitive via MongoDB.Bson) has no patched version; the vulnerability is in
-         WriteToDirectory (zip slip), which this package never calls. -->
-    <NoWarn>$(NoWarn);NU1902</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

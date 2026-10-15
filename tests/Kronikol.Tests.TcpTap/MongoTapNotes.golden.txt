@@ -1,276 +1,460 @@
 Detailed | InsertOne (no _id in the caller's document) | insert
+  label Insert → loans
+  request { "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293ccfc" }, "loanNumber" : "L-1001", "loanId" : { "$uuid" : "3f2b8c1e-7d4a-4e5b-9c6d-1a2b3c4d5e6f" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "250000.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Pending", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] }] }
   status OK | error -
   reply { "n" : 1 }
 Raw | InsertOne (no _id in the caller's document) | insert
+  label Insert kronikol168.loans
+  request { "insert" : "loans", "ordered" : true, "txnNumber" : 1, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 2 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293ccfc" }, "loanNumber" : "L-1001", "loanId" : { "$uuid" : "3f2b8c1e-7d4a-4e5b-9c6d-1a2b3c4d5e6f" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "250000.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Pending", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 3 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 3 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 3 } } }
 Detailed | InsertMany of 3 documents | insert
+  label Insert (×3) → loans
+  request { "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293ccfd" }, "loanNumber" : "L-1002", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000002" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "120000.50" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Pending", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] }, { "_id" : { "$oid" : "6ace20a7b22955ac7293ccfe" }, "loanNumber" : "L-1003", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000003" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "98000.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Approved", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] }, { "_id" : { "$oid" : "6ace20a7b22955ac7293ccff" }, "loanNumber" : "L-1004", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000004" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "450000.75" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Pending", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] }] }
   status OK | error -
   reply { "n" : 3 }
 Raw | InsertMany of 3 documents | insert
+  label Insert kronikol168.loans
+  request { "insert" : "loans", "ordered" : true, "txnNumber" : 2, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 3 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293ccfd" }, "loanNumber" : "L-1002", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000002" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "120000.50" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Pending", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] }, { "_id" : { "$oid" : "6ace20a7b22955ac7293ccfe" }, "loanNumber" : "L-1003", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000003" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "98000.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Approved", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] }, { "_id" : { "$oid" : "6ace20a7b22955ac7293ccff" }, "loanNumber" : "L-1004", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000004" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "450000.75" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Pending", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] }] }
   status OK | error -
   reply { "n" : 3, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 4 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 4 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 4 } } }
 Detailed | UpdateOne with $set | update
+  label Update → loans
+  request { "updates" : [{ "q" : { "loanNumber" : "L-1001" }, "u" : { "$set" : { "status" : "Approved", "approvedAt" : { "$date" : "2026-10-13T10:00:00Z" } }, "$inc" : { "version" : 1 } } }] }
   status OK | error -
   reply { "n" : 1, "nModified" : 1 }
 Raw | UpdateOne with $set | update
+  label Update kronikol168.loans
+  request { "update" : "loans", "ordered" : true, "txnNumber" : 3, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 4 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "updates" : [{ "q" : { "loanNumber" : "L-1001" }, "u" : { "$set" : { "status" : "Approved", "approvedAt" : { "$date" : "2026-10-13T10:00:00Z" } }, "$inc" : { "version" : 1 } } }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 5 } }, "t" : 1 }, "nModified" : 1, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 5 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 5 } } }
 Detailed | UpdateMany | update
+  label Update → loans
+  request { "updates" : [{ "q" : { "status" : "Pending" }, "u" : { "$set" : { "reviewer" : "risk-team", "fee" : { "$numberDecimal" : "99.99" } } }, "multi" : true }] }
   status OK | error -
   reply { "n" : 2, "nModified" : 2 }
 Raw | UpdateMany | update
+  label Update kronikol168.loans
+  request { "update" : "loans", "ordered" : true, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 5 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "updates" : [{ "q" : { "status" : "Pending" }, "u" : { "$set" : { "reviewer" : "risk-team", "fee" : { "$numberDecimal" : "99.99" } } }, "multi" : true }] }
   status OK | error -
   reply { "n" : 2, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 7 } }, "t" : 1 }, "nModified" : 2, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 7 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 7 } } }
 Detailed | ReplaceOne | update
+  label Update → loans
+  request { "updates" : [{ "q" : { "loanNumber" : "L-1003" }, "u" : { "loanNumber" : "L-1003", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000003" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "97500.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Approved", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] } }] }
   status OK | error -
   reply { "n" : 1, "nModified" : 1 }
 Raw | ReplaceOne | update
+  label Update kronikol168.loans
+  request { "update" : "loans", "ordered" : true, "txnNumber" : 4, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 7 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "updates" : [{ "q" : { "loanNumber" : "L-1003" }, "u" : { "loanNumber" : "L-1003", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000003" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "97500.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Approved", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] } }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 8 } }, "t" : 1 }, "nModified" : 1, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 8 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 8 } } }
 Detailed | UpdateOne upsert that inserts | update
+  label Update → loans
+  request { "updates" : [{ "q" : { "loanNumber" : "L-2000" }, "u" : { "$set" : { "status" : "Draft" }, "$setOnInsert" : { "principal" : { "$numberDecimal" : "5000.00" } } }, "upsert" : true }] }
   status OK | error -
   reply { "n" : 1, "upserted" : [{ "index" : 0, "_id" : { "$oid" : "6ace20a76ecadd765537b2d1" } }], "nModified" : 0 }
 Raw | UpdateOne upsert that inserts | update
+  label Update kronikol168.loans
+  request { "update" : "loans", "ordered" : true, "txnNumber" : 5, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 8 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "updates" : [{ "q" : { "loanNumber" : "L-2000" }, "u" : { "$set" : { "status" : "Draft" }, "$setOnInsert" : { "principal" : { "$numberDecimal" : "5000.00" } } }, "upsert" : true }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 9 } }, "t" : 1 }, "upserted" : [{ "index" : 0, "_id" : { "$oid" : "6ace20a76ecadd765537b2d1" } }], "nModified" : 0, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 9 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 9 } } }
 Detailed | UpdateOne with an aggregation pipeline (u is an array) | update
+  label Update → loans
+  request { "updates" : [{ "q" : { "loanNumber" : "L-1004" }, "u" : [{ "$set" : { "total" : { "$add" : ["$principal", "$fee"] } } }] }] }
   status OK | error -
   reply { "n" : 1, "nModified" : 1 }
 Raw | UpdateOne with an aggregation pipeline (u is an array) | update
+  label Update kronikol168.loans
+  request { "update" : "loans", "ordered" : true, "txnNumber" : 6, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 9 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "updates" : [{ "q" : { "loanNumber" : "L-1004" }, "u" : [{ "$set" : { "total" : { "$add" : ["$principal", "$fee"] } } }] }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 10 } }, "t" : 1 }, "nModified" : 1, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 10 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 10 } } }
 Detailed | DeleteOne | delete
+  label Delete → loans
+  request { "deletes" : [{ "q" : { "loanNumber" : "L-9001" }, "limit" : 1 }] }
   status OK | error -
   reply { "n" : 1 }
 Raw | DeleteOne | delete
+  label Delete kronikol168.loans
+  request { "delete" : "loans", "ordered" : true, "txnNumber" : 8, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 11 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "deletes" : [{ "q" : { "loanNumber" : "L-9001" }, "limit" : 1 }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 12 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 12 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 12 } } }
 Detailed | DeleteMany | delete
+  label Delete → loans
+  request { "deletes" : [{ "q" : { "status" : "Cancelled" }, "limit" : 0 }] }
   status OK | error -
   reply { "n" : 2 }
 Raw | DeleteMany | delete
+  label Delete kronikol168.loans
+  request { "delete" : "loans", "ordered" : true, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 12 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "deletes" : [{ "q" : { "status" : "Cancelled" }, "limit" : 0 }] }
   status OK | error -
   reply { "n" : 2, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 13 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 13 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 13 } } }
 Detailed | FindOneAndUpdate (ReturnDocument.After) | findAndModify
+  label FindAndModify ↔ loans
+  request { "query" : { "loanNumber" : "L-1002" }, "update" : { "$set" : { "status" : "Funded", "fundedAmount" : { "$numberDecimal" : "120000.50" } } }, "new" : true }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 1, "updatedExisting" : true }, "value" : { "_id" : { "$oid" : "6ace20a7b22955ac7293ccfd" }, "loanNumber" : "L-1002", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000002" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "120000.50" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Funded", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }], "fee" : { "$numberDecimal" : "99.99" }, "reviewer" : "risk-team", "fundedAmount" : { "$numberDecimal" : "120000.50" } } }
 Raw | FindOneAndUpdate (ReturnDocument.After) | findAndModify
+  label FindAndModify kronikol168.loans
+  request { "findAndModify" : "loans", "query" : { "loanNumber" : "L-1002" }, "update" : { "$set" : { "status" : "Funded", "fundedAmount" : { "$numberDecimal" : "120000.50" } } }, "new" : true, "txnNumber" : 9, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 13 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 1, "updatedExisting" : true }, "value" : { "_id" : { "$oid" : "6ace20a7b22955ac7293ccfd" }, "loanNumber" : "L-1002", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000002" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "120000.50" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Funded", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }], "fee" : { "$numberDecimal" : "99.99" }, "reviewer" : "risk-team", "fundedAmount" : { "$numberDecimal" : "120000.50" } }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 15 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 15 } } }
 Detailed | FindOneAndReplace (ReturnDocument.After) | findAndModify
+  label FindAndModify ↔ loans
+  request { "query" : { "loanNumber" : "L-2000" }, "update" : { "loanNumber" : "L-2000", "status" : "Withdrawn", "principal" : { "$numberDecimal" : "5000.00" } }, "new" : true }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 1, "updatedExisting" : true }, "value" : { "_id" : { "$oid" : "6ace20a76ecadd765537b2d1" }, "loanNumber" : "L-2000", "status" : "Withdrawn", "principal" : { "$numberDecimal" : "5000.00" } } }
 Raw | FindOneAndReplace (ReturnDocument.After) | findAndModify
+  label FindAndModify kronikol168.loans
+  request { "findAndModify" : "loans", "query" : { "loanNumber" : "L-2000" }, "update" : { "loanNumber" : "L-2000", "status" : "Withdrawn", "principal" : { "$numberDecimal" : "5000.00" } }, "new" : true, "txnNumber" : 10, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 15 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 1, "updatedExisting" : true }, "value" : { "_id" : { "$oid" : "6ace20a76ecadd765537b2d1" }, "loanNumber" : "L-2000", "status" : "Withdrawn", "principal" : { "$numberDecimal" : "5000.00" } }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 17 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 17 } } }
 Detailed | FindOneAndDelete | findAndModify
+  label FindAndModify ↔ loans
+  request { "query" : { "loanNumber" : "L-2000" }, "remove" : true }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 1 }, "value" : { "_id" : { "$oid" : "6ace20a76ecadd765537b2d1" }, "loanNumber" : "L-2000", "status" : "Withdrawn", "principal" : { "$numberDecimal" : "5000.00" } } }
 Raw | FindOneAndDelete | findAndModify
+  label FindAndModify kronikol168.loans
+  request { "findAndModify" : "loans", "query" : { "loanNumber" : "L-2000" }, "remove" : true, "txnNumber" : 11, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 17 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 1 }, "value" : { "_id" : { "$oid" : "6ace20a76ecadd765537b2d1" }, "loanNumber" : "L-2000", "status" : "Withdrawn", "principal" : { "$numberDecimal" : "5000.00" } }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 19 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 19 } } }
 Detailed | FindOneAndUpdate matching nothing | findAndModify
+  label FindAndModify ↔ loans
+  request { "query" : { "loanNumber" : "L-NOPE" }, "update" : { "$set" : { "status" : "Funded" } } }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 0, "updatedExisting" : false }, "value" : null }
 Raw | FindOneAndUpdate matching nothing | findAndModify
+  label FindAndModify kronikol168.loans
+  request { "findAndModify" : "loans", "query" : { "loanNumber" : "L-NOPE" }, "update" : { "$set" : { "status" : "Funded" } }, "txnNumber" : 12, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 19 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 0, "updatedExisting" : false }, "value" : null, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 19 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 19 } } }
 Detailed | FindOneAndUpdate upsert that inserts (ReturnDocument.Before) | findAndModify
+  label FindAndModify ↔ loans
+  request { "query" : { "loanNumber" : "L-3000" }, "update" : { "$set" : { "status" : "Draft" } }, "upsert" : true }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 1, "updatedExisting" : false, "upserted" : { "$oid" : "6ace20a76ecadd765537b2d2" } }, "value" : null }
 Raw | FindOneAndUpdate upsert that inserts (ReturnDocument.Before) | findAndModify
+  label FindAndModify kronikol168.loans
+  request { "findAndModify" : "loans", "query" : { "loanNumber" : "L-3000" }, "update" : { "$set" : { "status" : "Draft" } }, "upsert" : true, "txnNumber" : 13, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 19 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 1, "updatedExisting" : false, "upserted" : { "$oid" : "6ace20a76ecadd765537b2d2" } }, "value" : null, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 20 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 20 } } }
 Detailed | Find with a filter | find
+  label Find ← loans
+  request { "filter" : { "status" : "Approved" } }
   status OK | error -
   reply [{ "_id" : { "$oid" : "6ace20a7b22955ac7293ccfc" }, "loanNumber" : "L-1001", "loanId" : { "$uuid" : "3f2b8c1e-7d4a-4e5b-9c6d-1a2b3c4d5e6f" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "250000.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Approved", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }], "approvedAt" : { "$date" : "2026-10-13T10:00:00Z" }, "version" : 1 }, { "_id" : { "$oid" : "6ace20a7b22955ac7293ccfe" }, "loanNumber" : "L-1003", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000003" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "97500.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Approved", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] }]
 Raw | Find with a filter | find
+  label Find kronikol168.loans filter={ "status" : "Approved" }
+  request { "find" : "loans", "filter" : { "status" : "Approved" }, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 20 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "cursor" : { "firstBatch" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293ccfc" }, "loanNumber" : "L-1001", "loanId" : { "$uuid" : "3f2b8c1e-7d4a-4e5b-9c6d-1a2b3c4d5e6f" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "250000.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Approved", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }], "approvedAt" : { "$date" : "2026-10-13T10:00:00Z" }, "version" : 1 }, { "_id" : { "$oid" : "6ace20a7b22955ac7293ccfe" }, "loanNumber" : "L-1003", "loanId" : { "$uuid" : "00000000-0000-0000-0000-000000000003" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "97500.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Approved", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }] }], "id" : 0, "ns" : "kronikol168.loans" }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 20 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 20 } } }
 Detailed | Find with Limit(5) and BatchSize 2 (find, then getMore) | find
+  label Find ← loans
+  request { "filter" : { "status" : "Batch" }, "sort" : { "loanNumber" : 1 }, "limit" : 5, "batchSize" : 2 }
   status OK | error -
   reply [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd03" }, "loanNumber" : "L-5000", "status" : "Batch", "principal" : { "$numberDecimal" : "1000.00" } }, { "_id" : { "$oid" : "6ace20a7b22955ac7293cd04" }, "loanNumber" : "L-5001", "status" : "Batch", "principal" : { "$numberDecimal" : "1001.00" } }]
 Raw | Find with Limit(5) and BatchSize 2 (find, then getMore) | find
+  label Find kronikol168.loans filter={ "status" : "Batch" }
+  request { "find" : "loans", "filter" : { "status" : "Batch" }, "sort" : { "loanNumber" : 1 }, "limit" : 5, "batchSize" : 2, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "cursor" : { "firstBatch" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd03" }, "loanNumber" : "L-5000", "status" : "Batch", "principal" : { "$numberDecimal" : "1000.00" } }, { "_id" : { "$oid" : "6ace20a7b22955ac7293cd04" }, "loanNumber" : "L-5001", "status" : "Batch", "principal" : { "$numberDecimal" : "1001.00" } }], "id" : 5215899522513815919, "ns" : "kronikol168.loans" }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } } }
 Detailed | Find with Limit(5) and BatchSize 2 (find, then getMore) | getMore
+  label GetMore ← loans
+  request { "collection" : "loans", "batchSize" : 2 }
   status OK | error -
   reply [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd05" }, "loanNumber" : "L-5002", "status" : "Batch", "principal" : { "$numberDecimal" : "1002.00" } }, { "_id" : { "$oid" : "6ace20a7b22955ac7293cd06" }, "loanNumber" : "L-5003", "status" : "Batch", "principal" : { "$numberDecimal" : "1003.00" } }]
 Raw | Find with Limit(5) and BatchSize 2 (find, then getMore) | getMore
+  label GetMore kronikol168.loans
+  request { "getMore" : 5215899522513815919, "collection" : "loans", "batchSize" : 2, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "cursor" : { "nextBatch" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd05" }, "loanNumber" : "L-5002", "status" : "Batch", "principal" : { "$numberDecimal" : "1002.00" } }, { "_id" : { "$oid" : "6ace20a7b22955ac7293cd06" }, "loanNumber" : "L-5003", "status" : "Batch", "principal" : { "$numberDecimal" : "1003.00" } }], "id" : 5215899522513815919, "ns" : "kronikol168.loans" }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } } }
 Detailed | Find with Limit(5) and BatchSize 2 (find, then getMore) | getMore
+  label GetMore ← loans
+  request { "collection" : "loans", "batchSize" : 1 }
   status OK | error -
   reply [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd07" }, "loanNumber" : "L-5004", "status" : "Batch", "principal" : { "$numberDecimal" : "1004.00" } }]
 Raw | Find with Limit(5) and BatchSize 2 (find, then getMore) | getMore
+  label GetMore kronikol168.loans
+  request { "getMore" : 5215899522513815919, "collection" : "loans", "batchSize" : 1, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "cursor" : { "nextBatch" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd07" }, "loanNumber" : "L-5004", "status" : "Batch", "principal" : { "$numberDecimal" : "1004.00" } }], "id" : 0, "ns" : "kronikol168.loans" }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } } }
 Detailed | Find with BatchSize 2 and no limit, abandoned after the first document (killCursors) | find
+  label Find ← loans
+  request { "filter" : { "status" : "Batch" }, "batchSize" : 2 }
   status OK | error -
   reply [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd03" }, "loanNumber" : "L-5000", "status" : "Batch", "principal" : { "$numberDecimal" : "1000.00" } }, { "_id" : { "$oid" : "6ace20a7b22955ac7293cd04" }, "loanNumber" : "L-5001", "status" : "Batch", "principal" : { "$numberDecimal" : "1001.00" } }]
 Raw | Find with BatchSize 2 and no limit, abandoned after the first document (killCursors) | find
+  label Find kronikol168.loans filter={ "status" : "Batch" }
+  request { "find" : "loans", "filter" : { "status" : "Batch" }, "batchSize" : 2, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "cursor" : { "firstBatch" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd03" }, "loanNumber" : "L-5000", "status" : "Batch", "principal" : { "$numberDecimal" : "1000.00" } }, { "_id" : { "$oid" : "6ace20a7b22955ac7293cd04" }, "loanNumber" : "L-5001", "status" : "Batch", "principal" : { "$numberDecimal" : "1001.00" } }], "id" : 131049398477840185, "ns" : "kronikol168.loans" }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } } }
 Detailed | CountDocuments | aggregate
+  label Aggregate ($match, $group) ← loans
+  request { "pipeline" : [{ "$match" : { "status" : "Batch" } }, { "$group" : { "_id" : 1, "n" : { "$sum" : 1 } } }] }
   status OK | error -
   reply [{ "_id" : 1, "n" : 6 }]
 Raw | CountDocuments | aggregate
+  label Aggregate kronikol168.loans
+  request { "aggregate" : "loans", "pipeline" : [{ "$match" : { "status" : "Batch" } }, { "$group" : { "_id" : 1, "n" : { "$sum" : 1 } } }], "cursor" : { }, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "cursor" : { "firstBatch" : [{ "_id" : 1, "n" : 6 }], "id" : 0, "ns" : "kronikol168.loans" }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } } }
 Detailed | EstimatedDocumentCount | count
+  label Count ← loans
+  request -
   status OK | error -
   reply { "n" : 11 }
 Raw | EstimatedDocumentCount | count
+  label Count kronikol168.loans
+  request { "count" : "loans", "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "n" : 11, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } } }
 Detailed | Distinct | distinct
+  label Distinct ← loans
+  request { "key" : "status", "query" : { "principal" : { "$exists" : true } } }
   status OK | error -
   reply { "values" : ["Approved", "Batch", "Funded", "Pending"] }
 Raw | Distinct | distinct
+  label Distinct kronikol168.loans
+  request { "distinct" : "loans", "key" : "status", "query" : { "principal" : { "$exists" : true } }, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "values" : ["Approved", "Batch", "Funded", "Pending"], "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } } }
 Detailed | Aggregate $match/$group | aggregate
+  label Aggregate ($match, $group, $sort) ← loans
+  request { "pipeline" : [{ "$match" : { "principal" : { "$exists" : true } } }, { "$group" : { "_id" : "$status", "total" : { "$sum" : "$principal" }, "n" : { "$sum" : 1 } } }, { "$sort" : { "_id" : 1 } }] }
   status OK | error -
   reply [{ "_id" : "Approved", "total" : { "$numberDecimal" : "347500.00" }, "n" : 2 }, { "_id" : "Batch", "total" : { "$numberDecimal" : "6015.00" }, "n" : 6 }, { "_id" : "Funded", "total" : { "$numberDecimal" : "120000.50" }, "n" : 1 }, { "_id" : "Pending", "total" : { "$numberDecimal" : "450000.75" }, "n" : 1 }]
 Raw | Aggregate $match/$group | aggregate
+  label Aggregate kronikol168.loans
+  request { "aggregate" : "loans", "pipeline" : [{ "$match" : { "principal" : { "$exists" : true } } }, { "$group" : { "_id" : "$status", "total" : { "$sum" : "$principal" }, "n" : { "$sum" : 1 } } }, { "$sort" : { "_id" : 1 } }], "cursor" : { }, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status OK | error -
   reply { "cursor" : { "firstBatch" : [{ "_id" : "Approved", "total" : { "$numberDecimal" : "347500.00" }, "n" : 2 }, { "_id" : "Batch", "total" : { "$numberDecimal" : "6015.00" }, "n" : 6 }, { "_id" : "Funded", "total" : { "$numberDecimal" : "120000.50" }, "n" : 1 }, { "_id" : "Pending", "total" : { "$numberDecimal" : "450000.75" }, "n" : 1 }], "id" : 0, "ns" : "kronikol168.loans" }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } } }
 Detailed | Collection BulkWrite: insert, update, delete, insert (ordered) | insert
+  label Insert → loans
+  request { "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd09" }, "loanNumber" : "L-6001", "status" : "Pending", "principal" : { "$numberDecimal" : "700.00" } }] }
   status OK | error -
   reply { "n" : 1 }
 Raw | Collection BulkWrite: insert, update, delete, insert (ordered) | insert
+  label Insert kronikol168.loans
+  request { "insert" : "loans", "ordered" : true, "txnNumber" : 20, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 26 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd09" }, "loanNumber" : "L-6001", "status" : "Pending", "principal" : { "$numberDecimal" : "700.00" } }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 27 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 27 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 27 } } }
 Detailed | Collection BulkWrite: insert, update, delete, insert (ordered) | update
+  label Update → loans
+  request { "updates" : [{ "q" : { "loanNumber" : "L-6001" }, "u" : { "$set" : { "status" : "Approved" } } }] }
   status OK | error -
   reply { "n" : 1, "nModified" : 1 }
 Raw | Collection BulkWrite: insert, update, delete, insert (ordered) | update
+  label Update kronikol168.loans
+  request { "update" : "loans", "ordered" : true, "txnNumber" : 21, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 27 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "updates" : [{ "q" : { "loanNumber" : "L-6001" }, "u" : { "$set" : { "status" : "Approved" } } }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 28 } }, "t" : 1 }, "nModified" : 1, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 28 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 28 } } }
 Detailed | Collection BulkWrite: insert, update, delete, insert (ordered) | delete
+  label Delete → loans
+  request { "deletes" : [{ "q" : { "loanNumber" : "L-5000" }, "limit" : 1 }] }
   status OK | error -
   reply { "n" : 1 }
 Raw | Collection BulkWrite: insert, update, delete, insert (ordered) | delete
+  label Delete kronikol168.loans
+  request { "delete" : "loans", "ordered" : true, "txnNumber" : 22, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 28 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "deletes" : [{ "q" : { "loanNumber" : "L-5000" }, "limit" : 1 }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 29 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 29 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 29 } } }
 Detailed | Collection BulkWrite: insert, update, delete, insert (ordered) | insert
+  label Insert → loans
+  request { "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd0a" }, "loanNumber" : "L-6002", "status" : "Pending" }] }
   status OK | error -
   reply { "n" : 1 }
 Raw | Collection BulkWrite: insert, update, delete, insert (ordered) | insert
+  label Insert kronikol168.loans
+  request { "insert" : "loans", "ordered" : true, "txnNumber" : 23, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 29 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd0a" }, "loanNumber" : "L-6002", "status" : "Pending" }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 30 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 30 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 30 } } }
 Detailed | InsertOne violating the unique index (duplicate key) | insert
+  label Insert → loans
+  request { "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd0b" }, "loanNumber" : "L-1001", "status" : "Duplicate" }] }
   status InternalServerError | error E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: "L-1001" }
   reply { "n" : 0, "writeErrors" : [{ "index" : 0, "code" : 11000, "errmsg" : "E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: \"L-1001\" }", "keyPattern" : { "loanNumber" : 1 }, "keyValue" : { "loanNumber" : "L-1001" } }] }
 Raw | InsertOne violating the unique index (duplicate key) | insert
+  label Insert kronikol168.loans
+  request { "insert" : "loans", "ordered" : true, "txnNumber" : 24, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 30 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd0b" }, "loanNumber" : "L-1001", "status" : "Duplicate" }] }
   status InternalServerError | error E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: "L-1001" }
   reply { "n" : 0, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 30 } }, "t" : 1 }, "writeErrors" : [{ "index" : 0, "code" : 11000, "errmsg" : "E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: \"L-1001\" }", "keyPattern" : { "loanNumber" : 1 }, "keyValue" : { "loanNumber" : "L-1001" } }], "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 30 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 30 } } }
 Detailed | InsertMany IsOrdered=false, second of three a duplicate | insert
+  label Insert (×3) → loans
+  request { "ordered" : false, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd0c" }, "loanNumber" : "L-7001", "status" : "Pending" }, { "_id" : { "$oid" : "6ace20a7b22955ac7293cd0d" }, "loanNumber" : "L-1001", "status" : "Duplicate" }, { "_id" : { "$oid" : "6ace20a7b22955ac7293cd0e" }, "loanNumber" : "L-7003", "status" : "Pending" }] }
   status InternalServerError | error E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: "L-1001" }
   reply { "n" : 2, "writeErrors" : [{ "index" : 1, "code" : 11000, "errmsg" : "E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: \"L-1001\" }", "keyPattern" : { "loanNumber" : 1 }, "keyValue" : { "loanNumber" : "L-1001" } }] }
 Raw | InsertMany IsOrdered=false, second of three a duplicate | insert
+  label Insert kronikol168.loans
+  request { "insert" : "loans", "ordered" : false, "txnNumber" : 25, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 30 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd0c" }, "loanNumber" : "L-7001", "status" : "Pending" }, { "_id" : { "$oid" : "6ace20a7b22955ac7293cd0d" }, "loanNumber" : "L-1001", "status" : "Duplicate" }, { "_id" : { "$oid" : "6ace20a7b22955ac7293cd0e" }, "loanNumber" : "L-7003", "status" : "Pending" }] }
   status InternalServerError | error E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: "L-1001" }
   reply { "n" : 2, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "t" : 1 }, "writeErrors" : [{ "index" : 1, "code" : 11000, "errmsg" : "E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: \"L-1001\" }", "keyPattern" : { "loanNumber" : 1 }, "keyValue" : { "loanNumber" : "L-1001" } }], "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } } }
 Detailed | UpdateOne making a duplicate key | update
+  label Update → loans
+  request { "updates" : [{ "q" : { "loanNumber" : "L-7001" }, "u" : { "$set" : { "loanNumber" : "L-1001" } } }] }
   status InternalServerError | error E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: "L-1001" }
   reply { "n" : 0, "writeErrors" : [{ "index" : 0, "code" : 11000, "errmsg" : "E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: \"L-1001\" }", "keyPattern" : { "loanNumber" : 1 }, "keyValue" : { "loanNumber" : "L-1001" } }], "nModified" : 0 }
 Raw | UpdateOne making a duplicate key | update
+  label Update kronikol168.loans
+  request { "update" : "loans", "ordered" : true, "txnNumber" : 26, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "updates" : [{ "q" : { "loanNumber" : "L-7001" }, "u" : { "$set" : { "loanNumber" : "L-1001" } } }] }
   status InternalServerError | error E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: "L-1001" }
   reply { "n" : 0, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "t" : 1 }, "writeErrors" : [{ "index" : 0, "code" : 11000, "errmsg" : "E11000 duplicate key error collection: kronikol168.loans index: loanNumber_1 dup key: { loanNumber: \"L-1001\" }", "keyPattern" : { "loanNumber" : 1 }, "keyValue" : { "loanNumber" : "L-1001" } }], "nModified" : 0, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } } }
 Detailed | Find with an unknown operator (server ok: 0) | find
+  label Find ← loans
+  request { "filter" : { "principal" : { "$bogus" : 1 } } }
   status InternalServerError | error unknown operator: $bogus
   reply { "errmsg" : "unknown operator: $bogus", "code" : 2, "codeName" : "BadValue" }
 Raw | Find with an unknown operator (server ok: 0) | find
+  label Find kronikol168.loans filter={ "principal" : { "$bogus" : 1 } }
+  request { "find" : "loans", "filter" : { "principal" : { "$bogus" : 1 } }, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } } }
   status InternalServerError | error unknown operator: $bogus
   reply { "ok" : 0.0, "errmsg" : "unknown operator: $bogus", "code" : 2, "codeName" : "BadValue", "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } } }
 Detailed | Transaction: InsertOne + UpdateOne + CommitTransaction | insert
+  label Insert → loans
+  request { "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd0f" }, "loanNumber" : "L-8001", "status" : "Pending", "principal" : { "$numberDecimal" : "8001.00" } }] }
   status OK | error -
   reply { "n" : 1 }
 Raw | Transaction: InsertOne + UpdateOne + CommitTransaction | insert
+  label Insert kronikol168.loans
+  request { "insert" : "loans", "ordered" : true, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "txnNumber" : 27, "startTransaction" : true, "autocommit" : false, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd0f" }, "loanNumber" : "L-8001", "status" : "Pending", "principal" : { "$numberDecimal" : "8001.00" } }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } } }
 Detailed | Transaction: InsertOne + UpdateOne + CommitTransaction | update
+  label Update → loans
+  request { "updates" : [{ "q" : { "loanNumber" : "L-8001" }, "u" : { "$set" : { "status" : "Approved" } } }] }
   status OK | error -
   reply { "n" : 1, "nModified" : 1 }
 Raw | Transaction: InsertOne + UpdateOne + CommitTransaction | update
+  label Update kronikol168.loans
+  request { "update" : "loans", "ordered" : true, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "txnNumber" : 27, "autocommit" : false, "updates" : [{ "q" : { "loanNumber" : "L-8001" }, "u" : { "$set" : { "status" : "Approved" } } }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "t" : 1 }, "nModified" : 1, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } } }
 Detailed | Transaction: InsertOne + UpdateOne + CommitTransaction | commitTransaction
+  label CommitTransaction
+  request -
   status OK | error -
   reply -
 Raw | Transaction: InsertOne + UpdateOne + CommitTransaction | commitTransaction
+  label CommitTransaction admin
+  request { "commitTransaction" : 1, "$db" : "admin", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 32 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "txnNumber" : 27, "autocommit" : false }
   status OK | error -
   reply { "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 33 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 33 } } }
 Detailed | Transaction: InsertOne + AbortTransaction | insert
+  label Insert → loans
+  request { "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd10" }, "loanNumber" : "L-8002", "status" : "Pending" }] }
   status OK | error -
   reply { "n" : 1 }
 Raw | Transaction: InsertOne + AbortTransaction | insert
+  label Insert kronikol168.loans
+  request { "insert" : "loans", "ordered" : true, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 33 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "txnNumber" : 28, "startTransaction" : true, "autocommit" : false, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd10" }, "loanNumber" : "L-8002", "status" : "Pending" }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 33 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 33 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 33 } } }
 Detailed | Transaction: InsertOne + AbortTransaction | abortTransaction
+  label AbortTransaction
+  request -
   status OK | error -
   reply -
 Raw | Transaction: InsertOne + AbortTransaction | abortTransaction
+  label AbortTransaction admin
+  request { "abortTransaction" : 1, "$db" : "admin", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 33 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "txnNumber" : 28, "autocommit" : false }
   status OK | error -
   reply { "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 33 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 33 } } }
 Detailed | IMongoClient.BulkWrite (client bulkWrite): insert, update, delete across two collections | bulkWrite
+  label BulkWrite
+  request { "errorsOnly" : false, "ops" : [{ "insert" : 0, "document" : { "_id" : { "$oid" : "6ace20a7b22955ac7293cd11" }, "loanNumber" : "L-9101", "status" : "Pending", "principal" : { "$numberDecimal" : "9101.00" } } }, { "update" : 0, "filter" : { "loanNumber" : "L-9101" }, "updateMods" : { "$set" : { "status" : "Approved" } }, "multi" : false }, { "insert" : 1, "document" : { "_id" : { "$oid" : "6ace20a7b22955ac7293cd12" }, "loanNumber" : "L-9101", "event" : "approved" } }, { "delete" : 0, "filter" : { "loanNumber" : "L-5001" }, "multi" : false }], "nsInfo" : [{ "ns" : "kronikol168.loans" }, { "ns" : "kronikol168.audit" }] }
   status OK | error -
   reply { "cursor" : [{ "ok" : 1.0, "idx" : 0, "n" : 1 }, { "ok" : 1.0, "idx" : 1, "n" : 1, "nModified" : 1 }, { "ok" : 1.0, "idx" : 2, "n" : 1 }, { "ok" : 1.0, "idx" : 3, "n" : 1 }], "nErrors" : 0, "nInserted" : 2, "nMatched" : 1, "nModified" : 1, "nUpserted" : 0, "nDeleted" : 1 }
 Raw | IMongoClient.BulkWrite (client bulkWrite): insert, update, delete across two collections | bulkWrite
+  label BulkWrite admin
+  request { "bulkWrite" : 1, "errorsOnly" : false, "ordered" : true, "txnNumber" : 29, "$db" : "admin", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 33 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "ops" : [{ "insert" : 0, "document" : { "_id" : { "$oid" : "6ace20a7b22955ac7293cd11" }, "loanNumber" : "L-9101", "status" : "Pending", "principal" : { "$numberDecimal" : "9101.00" } } }, { "update" : 0, "filter" : { "loanNumber" : "L-9101" }, "updateMods" : { "$set" : { "status" : "Approved" } }, "multi" : false }, { "insert" : 1, "document" : { "_id" : { "$oid" : "6ace20a7b22955ac7293cd12" }, "loanNumber" : "L-9101", "event" : "approved" } }, { "delete" : 0, "filter" : { "loanNumber" : "L-5001" }, "multi" : false }], "nsInfo" : [{ "ns" : "kronikol168.loans" }, { "ns" : "kronikol168.audit" }] }
   status OK | error -
   reply { "cursor" : { "id" : 0, "firstBatch" : [{ "ok" : 1.0, "idx" : 0, "n" : 1 }, { "ok" : 1.0, "idx" : 1, "n" : 1, "nModified" : 1 }, { "ok" : 1.0, "idx" : 2, "n" : 1 }, { "ok" : 1.0, "idx" : 3, "n" : 1 }], "ns" : "admin.$cmd.bulkWrite" }, "nErrors" : 0, "nInserted" : 2, "nMatched" : 1, "nModified" : 1, "nUpserted" : 0, "nDeleted" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 38 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 38 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 38 } } }
 Detailed | InsertOne of a POCO with [BsonRepresentation(Decimal128)] and [BsonGuidRepresentation(Standard)] | insert
+  label Insert → pocos
+  request { "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd14" }, "LoanNumber" : "P-2", "Principal" : { "$numberDecimal" : "1000.50" }, "LoanId" : { "$uuid" : "3f2b8c1e-7d4a-4e5b-9c6d-1a2b3c4d5e6f" }, "CreatedAt" : { "$date" : "2026-10-13T09:30:00Z" } }] }
   status OK | error -
   reply { "n" : 1 }
 Raw | InsertOne of a POCO with [BsonRepresentation(Decimal128)] and [BsonGuidRepresentation(Standard)] | insert
+  label Insert kronikol168.pocos
+  request { "insert" : "pocos", "ordered" : true, "txnNumber" : 31, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 38 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd14" }, "LoanNumber" : "P-2", "Principal" : { "$numberDecimal" : "1000.50" }, "LoanId" : { "$uuid" : "3f2b8c1e-7d4a-4e5b-9c6d-1a2b3c4d5e6f" }, "CreatedAt" : { "$date" : "2026-10-13T09:30:00Z" } }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 40 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 40 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 40 } } }
 Detailed | InsertOne of a POCO with default serializers and no Guid (decimal, DateTime) | insert
+  label Insert → pocos
+  request { "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd15" }, "LoanNumber" : "P-3", "Principal" : { "$numberDecimal" : "1000.50" }, "CreatedAt" : { "$date" : "2026-10-13T09:30:00Z" } }] }
   status OK | error -
   reply { "n" : 1 }
 Raw | InsertOne of a POCO with default serializers and no Guid (decimal, DateTime) | insert
+  label Insert kronikol168.pocos
+  request { "insert" : "pocos", "ordered" : true, "txnNumber" : 32, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "a470457e-dd98-4ded-8330-77d92324332f" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 40 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd15" }, "LoanNumber" : "P-3", "Principal" : { "$numberDecimal" : "1000.50" }, "CreatedAt" : { "$date" : "2026-10-13T09:30:00Z" } }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 41 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 41 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 41 } } }
 Detailed | directConnection=true: Find | find
+  label Find ← loans
+  request { "filter" : { "loanNumber" : "L-1001" } }
   status OK | error -
   reply [{ "_id" : { "$oid" : "6ace20a7b22955ac7293ccfc" }, "loanNumber" : "L-1001", "loanId" : { "$uuid" : "3f2b8c1e-7d4a-4e5b-9c6d-1a2b3c4d5e6f" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "250000.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Approved", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }], "approvedAt" : { "$date" : "2026-10-13T10:00:00Z" }, "version" : 1 }]
 Raw | directConnection=true: Find | find
+  label Find kronikol168.loans filter={ "loanNumber" : "L-1001" }
+  request { "find" : "loans", "filter" : { "loanNumber" : "L-1001" }, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "6c4ac07d-d6ac-4569-a5b9-70a082163c5b" } } }
   status OK | error -
   reply { "cursor" : { "firstBatch" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293ccfc" }, "loanNumber" : "L-1001", "loanId" : { "$uuid" : "3f2b8c1e-7d4a-4e5b-9c6d-1a2b3c4d5e6f" }, "customer" : { "name" : "Ada Lovelace", "email" : "ada@example.com", "address" : { "line1" : "12 St James's Square", "city" : "London", "postcode" : "SW1Y 4JH" } }, "principal" : { "$numberDecimal" : "250000.00" }, "rate" : { "$numberDecimal" : "4.25" }, "termMonths" : 300, "status" : "Approved", "createdAt" : { "$date" : "2026-10-13T09:30:00Z" }, "tags" : ["mortgage", "first-time-buyer"], "payments" : [{ "due" : { "$date" : "2026-11-01T00:00:00Z" }, "amount" : { "$numberDecimal" : "1354.27" }, "paid" : false }], "approvedAt" : { "$date" : "2026-10-13T10:00:00Z" }, "version" : 1 }], "id" : 0, "ns" : "kronikol168.loans" }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 51 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 51 } } }
 Detailed | directConnection=true: InsertOne | insert
+  label Insert → loans
+  request { "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd1a" }, "loanNumber" : "L-D001", "status" : "Direct" }] }
   status OK | error -
   reply { "n" : 1 }
 Raw | directConnection=true: InsertOne | insert
+  label Insert kronikol168.loans
+  request { "insert" : "loans", "ordered" : true, "txnNumber" : 1, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "6c4ac07d-d6ac-4569-a5b9-70a082163c5b" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 51 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd1a" }, "loanNumber" : "L-D001", "status" : "Direct" }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 52 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 52 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 52 } } }
 Detailed | w=majority, readConcernLevel=majority, readPreference=primaryPreferred, ServerApi V1: InsertOne | insert
+  label Insert → loans
+  request { "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd1b" }, "loanNumber" : "L-T001", "status" : "Tuned" }] }
   status OK | error -
   reply { "n" : 1 }
 Raw | w=majority, readConcernLevel=majority, readPreference=primaryPreferred, ServerApi V1: InsertOne | insert
+  label Insert kronikol168.loans
+  request { "insert" : "loans", "ordered" : true, "writeConcern" : { "w" : "majority" }, "txnNumber" : 1, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "eb0d85c8-4073-4781-af2c-a13471e4b485" } }, "apiVersion" : "1", "documents" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd1b" }, "loanNumber" : "L-T001", "status" : "Tuned" }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 53 } }, "t" : 1 }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 53 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 53 } } }
 Detailed | w=majority, readConcernLevel=majority, readPreference=primaryPreferred, ServerApi V1: Find with MaxTime and Comment | find
+  label Find ← loans
+  request { "filter" : { "loanNumber" : "L-T001" }, "comment" : "loan lookup", "maxTimeMS" : 5000 }
   status OK | error -
   reply [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd1b" }, "loanNumber" : "L-T001", "status" : "Tuned" }]
 Raw | w=majority, readConcernLevel=majority, readPreference=primaryPreferred, ServerApi V1: Find with MaxTime and Comment | find
+  label Find kronikol168.loans filter={ "loanNumber" : "L-T001" }
+  request { "find" : "loans", "filter" : { "loanNumber" : "L-T001" }, "comment" : "loan lookup", "maxTimeMS" : 5000, "readConcern" : { "level" : "majority" }, "$db" : "kronikol168", "$readPreference" : { "mode" : "primaryPreferred" }, "lsid" : { "id" : { "$uuid" : "eb0d85c8-4073-4781-af2c-a13471e4b485" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 53 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "apiVersion" : "1" }
   status OK | error -
   reply { "cursor" : { "firstBatch" : [{ "_id" : { "$oid" : "6ace20a7b22955ac7293cd1b" }, "loanNumber" : "L-T001", "status" : "Tuned" }], "id" : 0, "ns" : "kronikol168.loans" }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 53 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 53 } } }
 Detailed | w=majority, ... ServerApi V1: FindOneAndUpdate | findAndModify
+  label FindAndModify ↔ loans
+  request { "query" : { "loanNumber" : "L-T001" }, "update" : { "$set" : { "status" : "Tuned2" } } }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 1, "updatedExisting" : true }, "value" : { "_id" : { "$oid" : "6ace20a7b22955ac7293cd1b" }, "loanNumber" : "L-T001", "status" : "Tuned" } }
 Raw | w=majority, ... ServerApi V1: FindOneAndUpdate | findAndModify
+  label FindAndModify kronikol168.loans
+  request { "findAndModify" : "loans", "query" : { "loanNumber" : "L-T001" }, "update" : { "$set" : { "status" : "Tuned2" } }, "writeConcern" : { "w" : "majority" }, "txnNumber" : 2, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "eb0d85c8-4073-4781-af2c-a13471e4b485" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 53 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "apiVersion" : "1" }
   status OK | error -
   reply { "lastErrorObject" : { "n" : 1, "updatedExisting" : true }, "value" : { "_id" : { "$oid" : "6ace20a7b22955ac7293cd1b" }, "loanNumber" : "L-T001", "status" : "Tuned" }, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 55 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 55 } } }
 Detailed | w=majority, ... ServerApi V1: transaction with snapshot read concern and majority write concern | update
+  label Update → loans
+  request { "updates" : [{ "q" : { "loanNumber" : "L-T001" }, "u" : { "$set" : { "status" : "InTxn" } } }] }
   status OK | error -
   reply { "n" : 1, "nModified" : 1 }
 Raw | w=majority, ... ServerApi V1: transaction with snapshot read concern and majority write concern | update
+  label Update kronikol168.loans
+  request { "update" : "loans", "ordered" : true, "$db" : "kronikol168", "lsid" : { "id" : { "$uuid" : "eb0d85c8-4073-4781-af2c-a13471e4b485" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 55 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "txnNumber" : 3, "startTransaction" : true, "readConcern" : { "level" : "snapshot" }, "autocommit" : false, "apiVersion" : "1", "updates" : [{ "q" : { "loanNumber" : "L-T001" }, "u" : { "$set" : { "status" : "InTxn" } } }] }
   status OK | error -
   reply { "n" : 1, "electionId" : { "$oid" : "7fffffff0000000000000001" }, "opTime" : { "ts" : { "$timestamp" : { "t" : 1791893671, "i" : 55 } }, "t" : 1 }, "nModified" : 1, "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 55 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 55 } } }
 Detailed | w=majority, ... ServerApi V1: transaction with snapshot read concern and majority write concern | commitTransaction
+  label CommitTransaction
+  request -
   status OK | error -
   reply -
 Raw | w=majority, ... ServerApi V1: transaction with snapshot read concern and majority write concern | commitTransaction
+  label CommitTransaction admin
+  request { "commitTransaction" : 1, "writeConcern" : { "w" : "majority" }, "$db" : "admin", "lsid" : { "id" : { "$uuid" : "eb0d85c8-4073-4781-af2c-a13471e4b485" } }, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 55 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "txnNumber" : 3, "autocommit" : false, "apiVersion" : "1" }
   status OK | error -
   reply { "ok" : 1.0, "$clusterTime" : { "clusterTime" : { "$timestamp" : { "t" : 1791893671, "i" : 56 } }, "signature" : { "hash" : { "$binary" : { "base64" : "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", "subType" : "00" } }, "keyId" : 0 } }, "operationTime" : { "$timestamp" : { "t" : 1791893671, "i" : 56 } } }

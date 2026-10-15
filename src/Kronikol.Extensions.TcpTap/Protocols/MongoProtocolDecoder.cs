@@ -11,10 +11,12 @@ namespace Kronikol.Extensions.TcpTap.Protocols;
 /// </summary>
 /// <remarks>
 /// <para>Labels come from the same <see cref="MongoDbOperationClassifier"/> source file the in-process
-/// <c>Kronikol.Extensions.MongoDB</c> extension uses, and reply notes, statuses and errors from the same rules
-/// (relaxed extended JSON written by Kronikol, whichever MongoDB.Bson the host resolves), so a command tapped on the
-/// wire renders with a byte-identical <c>Method</c>, <c>Uri</c> and reply note. A reply carrying <c>writeErrors</c> or
-/// a <c>writeConcernError</c> is a failure, as a reply with <c>ok: 0</c> is.</para>
+/// <c>Kronikol.Extensions.MongoDB</c> extension uses, and request notes, reply notes, statuses and errors from the same
+/// rules (relaxed extended JSON written by Kronikol, whichever MongoDB.Bson the host resolves), so a command tapped on
+/// the wire renders with a byte-identical <c>Method</c>, <c>Uri</c>, request note and reply note. A reply carrying
+/// <c>writeErrors</c>, a <c>writeConcernError</c> or a client bulkWrite's <c>nErrors</c> is a failure, as a reply with
+/// <c>ok: 0</c> is. The server's message is the call's error, and the user's <c>DocumentRedaction</c> runs over it as
+/// over the notes.</para>
 /// <para>What is deliberately <em>not</em> decoded: the legacy OP_QUERY/OP_REPLY handshake (recognised and
 /// stepped over, recorded never) and OP_COMPRESSED (passed straight through, reported once). Replies with
 /// <c>moreToCome</c> that answer no pending request — the streaming <c>hello</c> on a monitoring connection —
@@ -284,14 +286,14 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         var commandName = command.GetElement(0).Name;
         var databaseName = command.TryGetValue("$db", out var db) && db.IsString ? db.AsString : null;
 
-        if (!ShouldRecord(commandName))
+        if (!ShouldRecord(commandName) || StartsAuthentication(commandName, command))
             return;
 
         var info = MongoDbOperationClassifier.Classify(commandName, databaseName, command);
         if (_verbosity == MongoDbTrackingVerbosity.Summarised && info.Operation == MongoDbOperation.Other)
             return;
 
-        var pending = new PendingCommand(info, BuildUri(info), RequestContent(command), timestamp);
+        var pending = new PendingCommand(info, BuildUri(info), RequestContent(command, info.Operation), timestamp);
 
         if (parsed.MoreToCome)
         {
@@ -352,9 +354,13 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         {
             if (reply is not null && MongoDbNotes.IsCommandFailure(reply))
             {
-                responseContent = _verbosity == MongoDbTrackingVerbosity.Raw
-                    ? MongoDbNotes.Whole(reply)
-                    : MongoDbNotes.Failure(reply) ?? "command failed";
+                responseContent = _verbosity switch
+                {
+                    MongoDbTrackingVerbosity.Raw => MongoDbNotes.Whole(reply),
+                    // Summarised without response content records no reply: the server's words alone, as before 4.19.6.
+                    MongoDbTrackingVerbosity.Summarised when !_options.LogResponseContent => MongoDbNotes.FailureReason(reply) ?? "command failed",
+                    _ => MongoDbNotes.Failure(reply) ?? "command failed",
+                };
                 error = MongoDbNotes.FailureReason(reply) ?? "command failed";
                 status = HttpStatusCode.InternalServerError;
             }
@@ -380,9 +386,20 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
             Redact(pending.RequestContent), Redact(responseContent),
             status, pending.Timestamp, timestamp)
         {
-            Error = error
+            // The server's errmsg can quote what the command carried (a duplicate key names the key), so the user's
+            // redaction runs over it as over the notes.
+            Error = Redact(error)
         });
     }
+
+    /// <summary>
+    /// A handshake that carries an authentication's first message (<c>speculativeAuthenticate</c>) or names the user it
+    /// will authenticate (<c>saslSupportedMechs</c>) belongs to the authentication exchange, whatever
+    /// <see cref="MongoTapOptions.ExcludedCommands"/> holds: the driver withholds the same command from its own events.
+    /// </summary>
+    private static bool StartsAuthentication(string commandName, BsonDocument command) =>
+        (commandName.Equals("hello", StringComparison.OrdinalIgnoreCase) || commandName.Equals("isMaster", StringComparison.OrdinalIgnoreCase))
+        && (command.Contains("speculativeAuthenticate") || command.Contains("saslSupportedMechs"));
 
     private bool ShouldRecord(string commandName)
     {
@@ -395,7 +412,7 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
         return true;
     }
 
-    private string? RequestContent(BsonDocument command)
+    private string? RequestContent(BsonDocument command, MongoDbOperation operation)
     {
         try
         {
@@ -403,7 +420,9 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
             {
                 MongoDbTrackingVerbosity.Summarised => null,
                 MongoDbTrackingVerbosity.Raw => MongoDbNotes.Whole(command),
-                _ => _options.LogFilterText ? MongoDbNotes.Request(command, _options.MaxRequestDocuments) : null,
+                _ => _options.LogFilterText
+                    ? MongoDbNotes.Request(command, _options.MaxRequestDocuments, classified: operation != MongoDbOperation.Other)
+                    : null,
             };
         }
         catch (Exception ex)

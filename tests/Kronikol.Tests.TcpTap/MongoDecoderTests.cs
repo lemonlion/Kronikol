@@ -205,6 +205,56 @@ public class MongoDecoderTests
         Assert.Null(Assert.Single(harness.Sink.Requests).Error);
     }
 
+    private const string DuplicateEmailMessage =
+        "E11000 duplicate key error collection: app.users index: email_1 dup key: { email: \"ada@example.com\" }";
+
+    private static void InsertWithDuplicateEmail(DecoderHarness harness)
+    {
+        harness.ClientToServer(MongoWire.Msg(1, 0, new BsonDocument { { "insert", "users" }, { "$db", "app" } }, 0,
+            ("documents", [new BsonDocument { { "_id", 1 }, { "email", "ada@example.com" } }])));
+        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument
+        {
+            { "n", 0 },
+            {
+                "writeErrors", new BsonArray
+                {
+                    new BsonDocument
+                    {
+                        { "index", 0 }, { "code", 11000 }, { "errmsg", DuplicateEmailMessage },
+                        { "keyValue", new BsonDocument("email", "ada@example.com") },
+                    },
+                }
+            },
+            { "ok", 1.0 },
+        }));
+    }
+
+    [Fact]
+    public void DocumentRedactionRunsOverTheErrorToo()
+    {
+        // The server's errmsg quotes the key that collided, and it is the call's Error as well as part of its note.
+        using var harness = DecoderHarness.Mongo(o => o.DocumentRedaction = text => text.Replace("ada@example.com", "[EMAIL]"));
+        InsertWithDuplicateEmail(harness);
+
+        var response = Assert.Single(harness.Sink.Responses);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode!.Value);
+        Assert.Equal(DuplicateEmailMessage.Replace("ada@example.com", "[EMAIL]"), response.Error);
+        Assert.DoesNotContain("ada@example.com", response.Content);
+    }
+
+    [Fact]
+    public void WithoutCaptureRepliesTheServersMessageIsNotRecordedEither()
+    {
+        // CaptureReplies = false records none of a reply's text. The errmsg is the reply's, so the call keeps its status.
+        using var harness = DecoderHarness.Mongo(o => o.CaptureReplies = false);
+        InsertWithDuplicateEmail(harness);
+
+        var response = Assert.Single(harness.Sink.Responses);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode!.Value);
+        Assert.Null(response.Content);
+        Assert.Null(response.Error);
+    }
+
     [Fact]
     public void AWriteConcernErrorIsA500()
     {
@@ -411,6 +461,69 @@ public class MongoDecoderTests
         harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument { { "ok", 1.0 } }));
 
         Assert.Empty(harness.Sink.Logs);
+    }
+
+    [Theory]
+    [InlineData("hello", "speculativeAuthenticate")]
+    [InlineData("isMaster", "speculativeAuthenticate")]
+    [InlineData("ismaster", "saslSupportedMechs")]
+    public void AHandshakeThatStartsAuthenticationIsNeverRecordedEitherWhenTheExclusionListIsEmptied(string command, string field)
+    {
+        // A handshake can carry the first SCRAM (or OIDC) message, and names the user it will authenticate. The driver
+        // withholds such a command from its own events; the tap never records it, whatever ExcludedCommands holds.
+        using var harness = DecoderHarness.Mongo(o => o.ExcludedCommands.Clear());
+        var handshake = new BsonDocument { { command, 1 }, { "$db", "admin" } };
+        handshake.Add(field, field == "saslSupportedMechs"
+            ? "admin.alice"
+            : new BsonDocument
+            {
+                { "saslStart", 1 }, { "mechanism", "SCRAM-SHA-256" },
+                { "payload", new BsonBinaryData("n,,n=alice,r=hunter2"u8.ToArray()) }, { "db", "admin" },
+            });
+        harness.ClientToServer(MongoWire.Msg(1, 0, handshake));
+        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument
+        {
+            { "isWritablePrimary", true },
+            { "speculativeAuthenticate", new BsonDocument("payload", new BsonBinaryData("r=hunter2server"u8.ToArray())) },
+            { "ok", 1.0 },
+        }));
+
+        Assert.Empty(harness.Sink.Logs);
+    }
+
+    [Fact]
+    public void AHandshakeThatStartsNoAuthenticationIsRecordedWhenTheExclusionListIsEmptied()
+    {
+        using var harness = DecoderHarness.Mongo(o => o.ExcludedCommands.Clear());
+        harness.ClientToServer(MongoWire.Msg(1, 0, new BsonDocument { { "hello", 1 }, { "$db", "admin" } }));
+        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument { { "isWritablePrimary", true }, { "ok", 1.0 } }));
+
+        Assert.Single(harness.Sink.Responses);
+    }
+
+    [Fact]
+    public void ASummarisedFailureWithoutResponseContentKeepsOnlyTheServersMessage()
+    {
+        using var harness = DecoderHarness.Mongo(o =>
+        {
+            o.Verbosity = TapVerbosity.Summarised;
+            o.LogResponseContent = false;
+        });
+        harness.ClientToServer(MongoWire.Msg(1, 0, new BsonDocument
+        {
+            { "findAndModify", "users" }, { "query", new BsonDocument("status", "Ready") },
+            { "update", new BsonDocument("$set", new BsonDocument("email", "ada@example.com")) }, { "$db", "app" },
+        }));
+        harness.ServerToClient(MongoWire.Msg(2, 1, new BsonDocument
+        {
+            { "ok", 0.0 }, { "errmsg", DuplicateEmailMessage }, { "code", 11000 }, { "codeName", "DuplicateKey" },
+            { "keyValue", new BsonDocument("email", "ada@example.com") },
+        }));
+
+        var response = Assert.Single(harness.Sink.Responses);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode!.Value);
+        Assert.Equal(DuplicateEmailMessage, response.Content);
+        Assert.Equal(DuplicateEmailMessage, response.Error);
     }
 
     [Fact]

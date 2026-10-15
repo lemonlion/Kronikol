@@ -1,7 +1,7 @@
 # MongoDB at Detailed: what a command sent and what came back, as JSON (#168)
 
 **Date:** 2026-10-13 · **Repo version:** 4.18.1 (`main` at `34145c44`; line numbers are for that commit, and the
-issue's, at `98c4806d`, point at the same lines) · **Status:** **Green-lit in full by the owner on 2026-10-13**, every §9 question as recommended. **R1 executed as 4.19.6, R2 as 4.20.0, R3 as 4.20.1 and the driver floor (Q18) as 4.20.2, all published** (§11). Drafted from #168 (filed by the
+issue's, at `98c4806d`, point at the same lines) · **Status:** **Green-lit in full by the owner on 2026-10-13**, every §9 question as recommended. **R1 executed as 4.19.6, R2 as 4.20.0, R3 as 4.20.1 and the driver floor (Q18) as 4.20.2, all published; audited as 4.20.5** (§11). Drafted from #168 (filed by the
 owner on 2026-10-11, found in #132's multi-host suite on 4.14.6 with `Kronikol.Extensions.MongoDB.V2` and MongoDB.Driver
 2.30.0) at the owner's ask of 2026-10-13 to analyse the issue critically and plan a fix for the underlying problem.
 
@@ -1266,6 +1266,52 @@ no row is taken here.
   against the driver and publishes no dependency on it), #168 a comment closing out the plan, and #97, the issue for
   every package's floating client reference, a comment naming the MongoDB floors, how they were chosen and the 21
   projects that still float. #168 stays open for Q8. The plan is complete.
+
+- **2026-10-15, audited as 4.20.5**, by kronikol-77 (kronikol-cf until a restart), in a worktree of its own, at the
+  owner's ask to make sure nothing was missed from the plan and that the implementation had no bugs.
+  - **How.** Five read-only reviews: R1's code, R2's code, R3's code with every reader of a query body, every reader of
+    a MongoDB note (the page, the history, Failures.md, ingest, OTLP, the fallback script), and a tick of §5, §6.3,
+    §6.4, §6.5 and §7 against what shipped. Each finding was checked in the code before anything was done about it,
+    and each fix was proved red on v4.20.2 first.
+  - **Defects in what the releases shipped, fixed in 4.20.5:**
+    - R1: the server's message, kept as the call's `Error` since 4.19.6, went round `CaptureRedaction`, the tap's
+      `DocumentRedaction` and `CaptureReplies`, and a duplicate key's message quotes the key. Item 9's "the
+      `Summarised` rules are unchanged" did not hold for a failed command with `LogResponseContent` off. A reply's
+      arrays other than a cursor's batch were whole. A client bulkWrite lost its failed operations with
+      `LogResponseContent` off, and drew a 500 with no error when they were past its first batch.
+    - R2: the history's templater kept a document's booleans, signs and list lengths, so the documents R2 put in the
+      head changed a scenario's shape on data alone, and §10's claim did not hold; the shape version moves to 6. An
+      unclassified command lost its name in its note, a `Raw` label without a collection ended in a dot, Failures.md
+      printed a `Raw` label whole, and a tap whose user took `hello` out of `ExcludedCommands` recorded the start of an
+      authentication.
+    - R3: eleven defects in the query tool (notes lost past the budget, under `--count` and under `--group-by`; a
+      capped body read in part without a word; a changed footnote not counted; a quoted literal read as a number; the
+      `..` suggestion; an empty key's path; the Redis marker; footnotes on text bodies; numbers compared as doubles;
+      mixed line endings), and the fallback script read no capped body.
+  - **Older defects on the same paths, fixed with them:** a write the server refused claimed its document; a lone
+    surrogate failed the whole diagram; a negative `MaxContentLength` failed every call, and a cap could split a
+    surrogate pair; Failures.jsonl and `query failures` did not say why a call failed (F24's readers); OTLP exported
+    no status message for a 500; an Atlas Data API call was quoted in Failures.md (F23's sibling).
+  - **What the records missed, done in 4.20.5:** six wiki pages (TcpTap's request note and failed reply,
+    Search-Syntax's nulls, the footnotes on Content-Formatting and Querying-Reports, Ingesting-External-Captures' R2
+    half, and §8's POCO `decimal` line on the MongoDB page), the doc comments of nine files (§6.4 named
+    `MaxContentLength`), the 4.20.0 entry's Q3 and Q6 notes, two stale `NoWarn NU1902` suppressions (the V2 package's
+    hid SharpCompress 0.30.1, which 4.20.2's entry did not name), the tap's golden (it held no request note, so the
+    Bson 3 project never checked one), this plan's PLANS_STATUS row (R1 only), and the roadmap's rows 1.29 and 1.11,
+    its plans index and Appendix C.
+  - **Left for the owner, each a row in the roadmap's Appendix C:** Kronikol4J's golden (§6.5, Q11) was not
+    recaptured; its ledger line says `MongoInteractionParityTest` turns red when it is, until R1 and R2 are ported, and
+    its `REMAINING_PARITY.md` says both that the find dialects differ (:38-44) and that they match (:665-669). The tap
+    and the subscriber still differ on a reply of `{ ok: 0 }` alone and on `{ ok: 1, errmsg }`. `SequenceCollapser`,
+    which a suite turns on, folds calls whose payloads differ. A `Raw` label holds the filter unredacted, as it did
+    before the plan. DynamoDB, Elasticsearch and Cosmos bodies are still quoted in Failures.md, where MongoDB's are not.
+  - **Proofs** (`audit/`): `red-4.20.2.txt` (the audit's facts on v4.20.2 with no product change: 59 fail, each on
+    its own assertion, and 16 guards pass) and `mutations.txt` (46 of 46 caught, by `mutations/mutate_audit.py`).
+  - **Checks:** After the version bump the core suite passes 7,587 with 2 skipped; the MongoDB suites pass 317 of 317 on
+    driver 3.x and 317 of 317 on 2.x, their real-server facts included (a mongod 7.0 replica set); the TcpTap suite
+    passes 414 with 4 skipped (its Docker-only container facts) and its Bson 3 project 1 of 1; the Otlp suite passes
+    148; the full Playwright suite passes 1,040 with 28 skipped when run alone; release.slnf builds in Release for every
+    target, and restores with --force-evaluate.
 
 ## Appendix A. Edit sites at `34145c44`
 

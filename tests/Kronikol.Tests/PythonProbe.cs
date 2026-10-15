@@ -56,7 +56,17 @@ internal static class PythonProbe
     /// The same run, handing back the exit code instead of throwing on it - which is the only way to
     /// assert that the script REFUSES something, and refusing well is half of what it has to do.
     /// </summary>
-    public static (string Output, string Error, int Exit) RunFull(string scriptPath, params string[] args)
+    public static (string Output, string Error, int Exit) RunFull(string scriptPath, params string[] args) =>
+        RunFull(scriptPath, utf8Override: true, args);
+
+    /// <summary>
+    /// The same run with the interpreter's own choice of stdout encoding, as a user's shell pipe gets it: on Windows the
+    /// console's code page, which the override above hides.
+    /// </summary>
+    public static (string Output, string Error, int Exit) RunFullAsPiped(string scriptPath, params string[] args) =>
+        RunFull(scriptPath, utf8Override: false, args);
+
+    private static (string Output, string Error, int Exit) RunFull(string scriptPath, bool utf8Override, string[] args)
     {
         var psi = new ProcessStartInfo(Interpreter.Value ?? throw new InvalidOperationException("no python"))
         {
@@ -72,7 +82,10 @@ internal static class PythonProbe
 
         // The script prints box-drawing and arrow characters; without this the child encodes them in the
         // console code page and the comparison fails for a reason that has nothing to do with the answer.
-        psi.Environment["PYTHONIOENCODING"] = "utf-8";
+        if (utf8Override)
+            psi.Environment["PYTHONIOENCODING"] = "utf-8";
+        else
+            psi.Environment.Remove("PYTHONIOENCODING");
 
         using var process = Process.Start(psi) ?? throw new InvalidOperationException("python did not start");
         var stdout = process.StandardOutput.ReadToEndAsync();

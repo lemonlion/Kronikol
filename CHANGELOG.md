@@ -4,6 +4,138 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.20.5] - 2026-10-15
+
+**Patch - an audit of #168's four releases (4.19.6 to 4.20.2) against `plans/MONGODB_DETAILED_PAYLOADS_PLAN.md`: a
+MongoDB server's own failure message goes through capture-time redaction, and the notes, the history, Failures.md and
+the query tool are fixed where the audit found them wrong.** Bug fixes with no new option and no new public member, so
+the patch part moves (4.20.4 to 4.20.5). The report's output changes (MongoDB notes, Failures.md and Failures.jsonl, the
+history's shape version), and the Kronikol4J ledger records it.
+
+### Fixed
+
+Capture and redaction:
+
+- **A failed MongoDB call's error was not redacted.** Since 4.19.6 a failed command keeps the server's message
+  (`errmsg`) as the call's error, and a duplicate key's message quotes the key that collided (`dup key: { email:
+  "ada@example.com" }`). `CaptureRedaction`'s content patterns ran over the notes but not over the error, so what a
+  pattern hid in the note reached TestRunReport.json, Failures.md and `kronikol query`. The patterns now run over every
+  call's `Error`, whichever capturer set it. In the TcpTap, `DocumentRedaction` runs over the error as it runs over the
+  notes, and with `CaptureReplies` off the server's message is not kept either.
+- **The tap recorded the start of an authentication once `hello` was taken out of `ExcludedCommands`.** A `hello` or
+  `isMaster` that carries `speculativeAuthenticate` (the first SCRAM message, or an OIDC token) or `saslSupportedMechs`
+  (the user's name) is never recorded now, as the authentication commands are not.
+
+MongoDB notes, in the subscriber and in `MongoTap`:
+
+- **At `Summarised` with `LogResponseContent` off, a failed command's note was the whole reply.** 4.19.6 made it the
+  reply without its bookkeeping at every verbosity, so a failed findAndModify's note held its `keyValue`. There, it is
+  the server's message alone again.
+- **A reply's arrays were whole.** Only a cursor's batch was held to `MaxResponseDocuments`. A distinct's `values`, and a
+  write's `writeErrors` and `upserted`, now keep as many entries, with `... (N more)` after the document, the footnote a
+  request note uses since 4.20.0.
+- **A client bulkWrite lost its failed operations with `LogResponseContent` off**, though the option's documentation
+  says the note keeps the write errors: the note was `{ "nErrors" : 1, "nInserted" : 0 }`. It keeps the operations that
+  failed. A bulkWrite whose failures were past its first batch drew a 500 with no error; it now says how many failed
+  (`1 operation failed`).
+- **A write the server refused claimed its document for the scenario.** A duplicate-key insert took the document from
+  the scenario that owned it. A write with a write error, or a client bulkWrite with `nErrors`, now claims nothing.
+- **A command Kronikol does not classify lost its name in its request note**: a `collMod` was drawn as `{ "validator" :
+  … }`. It keeps the name. A classified command's first element is still dropped when its value is a string, a number
+  or a boolean.
+- **A `Raw` label ended in a dot when the command named no collection** (`CommitTransaction admin.`); it is
+  `CommitTransaction admin`.
+
+What reads the notes:
+
+- **History: a document's booleans, signs and list lengths changed a call's shape.** Since 4.20.0 a write's documents
+  are part of a MongoDB call's statement head, and the templater kept `true` and `false`, a minus sign, and every element
+  of a list of scalars. A test that generates its data wrote a new shape when a flag flipped or a list grew, and its
+  scenario read "behaviour changed". In a document they are data now (`{b}`, `{n}`, and one element for a run of the
+  same placeholder); keys, nulls, a document's structure and a query's text still tell shapes apart.
+  `InteractionShape.Version` moves to 6, so every scenario reads no behaviour verdict for one run, as at each earlier
+  move.
+- **Failures.md printed a `Raw` MongoDB label whole** in the Call column, filter included; it is capped as a path is.
+  Failures.jsonl's calls carry the `error` Failures.md prints, and their summary is capped. An Atlas Data API call is
+  listed by its label and path, not by the documents it sent.
+- **OTLP:** a call that failed with a status code (a MongoDB 500) exported no status message; it exports the service's
+  own message.
+- **The diagram failed on a JSON note holding a lone surrogate escape** (`"\ud800"`, which the JSON grammar allows): the
+  whole diagram was replaced by its placeholder. The note is drawn as captured. `MaxContentLength` no longer cuts a body
+  between the two halves of a surrogate pair, and a negative value is refused when it is set
+  (`ArgumentOutOfRangeException`), where every call failed later.
+
+The query tool (4.20.1):
+
+- A note after the answer (values that were not numbers, calls with no body `--where` could read) was lost when the
+  rows filled the byte budget. It now follows the truncation line.
+- `--count` and `--group-by` said nothing of what `--where` left out. The notes go to stderr under `--count`, and after
+  the table under `--group-by`.
+- `interactions --where` read the first part of a capped body without saying so. It says how many capped bodies it
+  read only in part.
+- `diff --body --count` counted no difference between two capped batches whose footnotes differed, where 4.20.0
+  counted one. A changed footnote is a difference of its own, `(capture footnote)`.
+- A quoted literal was read as a number, so `$.code > "500"` failed the string `"600"` and counted it, where 4.20.0
+  ordered it as text. A quoted literal is a string again.
+- The `..` suggestion rewrote only the first run of dots (`$.a..b..c` suggested `$.a[*].b..c`) and named a path for
+  `$..` that does not parse. Every run is rewritten, and no path is named when none would parse.
+- A path written for an empty key (`$..x`) did not parse back. It is written `$[''].x`.
+- A Redis value cut on the wire (`…[bulk string truncated: …]`) was not counted as capped, and a plain-text body
+  ending in a line like a footnote was read as capped. The page strips a footnote only after a JSON document, and so
+  does the tool now.
+- `diff --body` compared a number with a fraction or an exponent as a double, so `9007199254740992.0` against
+  `9007199254740993`, and `1e400` against `2e400`, read as equal. Every number is compared by its exact value.
+- `http --body` printed an indented body with Windows line endings and its footnote after a `\n`; it uses `\n`
+  throughout.
+- `failures` listed the calls in the failing step without saying which one failed. A failed call ends with its status
+  and the service's reason, and `--json` gives each call's `status` and `error`.
+- The fallback script, `query.py`, read a capped body as not JSON (`--keys`, `--path`, `grep --values`), printed no
+  error for a failed call, and stopped with UnicodeEncodeError when its output went through a pipe on Windows. It reads
+  a capped body as the tool does, prints a failed call's error, and writes UTF-8 through a pipe.
+
+Packaging:
+
+- `Kronikol.Extensions.TcpTap` suppressed NU1902 though it restores with no advisory, and
+  `Kronikol.Extensions.MongoDB.V2` suppressed the advisories of SharpCompress 0.30.1 and Snappier 1.0.0, which it takes
+  through the 2.x driver (4.20.2's entry named only Snappier). Both suppressions are gone, so the V2 build reports them.
+
+Behaviour change: MongoDB notes change as listed; a merged run reads no behaviour verdict until its tool and its
+packages are both on 4.20.5 or later, since `merge --history` fingerprints with the tool's version.
+
+Two notes 4.20.0's entry left out: a find's request note moved from its filter to the command (`{ "filter" : { … } }`),
+so a `--where '$.status = …'` written against a 3.x find note before 4.20.0 needs `$.filter.status`; and a merged run
+whose tool and packages were on opposite sides of 4.20.0 read no behaviour verdict until both had moved, as above.
+
+### Docs
+
+- The wiki's MongoDB, TcpTap, Capture-Time-Redaction, Content-Formatting, Search-Syntax, Querying-Reports,
+  Cross-Run-History and Ingesting-External-Captures pages. The MongoDB page says what `--where` can compare in a
+  note depends on how the application maps a `decimal`.
+- The doc comments of `MaxContentLength`, `TapVerbosity`, `MongoDbTrackingVerbosity`, `MongoDbTrackingOptions`,
+  `MongoTapOptions`, the classifier, the decoder and the subscriber; the skill's command reference and the agent
+  instructions name every capture footnote.
+
+### Tests
+
+- Core: `CaptureRedactionTests` (the error), `CaptureFootnoteTests` (new: every writer's footnote, the page's pattern,
+  text bodies), `InteractionShapeTests` (version 6, with guards that keys, nulls, flags, filters and a query's text
+  still tell shapes apart), `FailuresDigestGeneratorTests` (an Atlas call, a categorised SQL call),
+  `StatementNoteNullTests` (a lone surrogate), `RequestResponseLoggerTests` (a negative length, a surrogate pair),
+  `QueryCommandTests` (16 facts) and `FallbackScriptTests` (a capped body, a failed call's error, and output through a
+  pipe with no `PYTHONIOENCODING`).
+- MongoDB, on both drivers: 12 subscriber facts, `MongoDbFailuresDigestTests` (a `Raw` label's cap, Failures.jsonl's
+  error) and `MongoDbProcessWideTests` (a content pattern over the server's message).
+- TcpTap: `MongoDecoderTests` (`DocumentRedaction` and `CaptureReplies` over the error, the handshake, a `Summarised`
+  failure), and the tap's golden pins request notes as well as replies, on Bson 2 and on Bson 3.
+- OTLP: a failure's status message.
+- Proofs (plan harness `audit/`): the audit's facts copied onto v4.20.2 with no product change, 59 fail, each on its own
+  assertion, and the 16 guards pass; 46 of 46 mutations are killed.
+- Checks: After the version bump the core suite passes 7,587 with 2 skipped; the MongoDB suites pass 317 of 317 on
+  driver 3.x and 317 of 317 on 2.x, their real-server facts included (a mongod 7.0 replica set); the TcpTap suite passes
+  414 with 4 skipped (its Docker-only container facts) and its Bson 3 project 1 of 1; the Otlp suite passes 148; the
+  full Playwright suite passes 1,040 with 28 skipped when run alone; release.slnf builds in Release for every target,
+  and restores with --force-evaluate.
+
 ## [4.20.4] - 2026-10-15
 
 **Patch - assertion tracking reads each statement in a CI build (#165; `plans/WEAVER_SOURCE_PATHS_PLAN.md` R1).**

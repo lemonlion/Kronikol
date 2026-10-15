@@ -24,6 +24,9 @@ internal sealed class WhereClause
     public required string Operator { get; init; }
     public string? Literal { get; init; }
 
+    /// <summary>Whether the literal was quoted, which makes it a string even when it reads as a number.</summary>
+    public bool LiteralQuoted { get; init; }
+
     /// <summary>How many values an ordering against a number met that were not numbers; each failed the clause.</summary>
     public int NotNumbers { get; private set; }
 
@@ -43,6 +46,7 @@ internal sealed class WhereClause
         string? op = null;
         var path = "";
         string? literal = null;
+        var quoted = false;
 
         foreach (var existsForm in new[] { "!exists", "exists" })
         {
@@ -78,7 +82,10 @@ internal sealed class WhereClause
             path = text[..bestAt].Trim();
             literal = text[(bestAt + op.Length + 2)..].Trim();
             if (literal.Length >= 2 && (literal[0] == '"' && literal[^1] == '"' || literal[0] == '\'' && literal[^1] == '\''))
+            {
                 literal = literal[1..^1];
+                quoted = true;
+            }
             if (literal.Length == 0)
             {
                 error = $"{op} needs a literal in \"{expression}\"";
@@ -104,7 +111,8 @@ internal sealed class WhereClause
             TargetsRequest = targetsRequest,
             Segments = segments,
             Operator = op,
-            Literal = literal
+            Literal = literal,
+            LiteralQuoted = quoted
         };
         return true;
     }
@@ -136,7 +144,9 @@ internal sealed class WhereClause
 
         var isNumber = value.TryNumber(out var number);
         var literalIsNumber = double.TryParse(Literal, NumberStyles.Float, CultureInfo.InvariantCulture, out var literalNumber);
-        if (literalIsNumber && !isNumber && Operator is "<" or ">" or "<=" or ">=")
+        // A quoted literal is a string (`> "500"` orders string codes as text, as it did before 4.20.1); a bare one that
+        // reads as a number compares numbers only.
+        if (literalIsNumber && !LiteralQuoted && !isNumber && Operator is "<" or ">" or "<=" or ">=")
         {
             // An ordering against a number compares numbers only (#168 F7). Ordered as text, an array or an object
             // ({ "$numberDecimal" : "1000.50" }) came after every number, so `> 500` held for every one of them.

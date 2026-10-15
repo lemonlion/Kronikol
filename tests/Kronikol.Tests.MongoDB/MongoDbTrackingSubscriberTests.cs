@@ -1604,7 +1604,8 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         var note = RequestNoteOf(new BsonDocument { { "insert", "loans" }, { "documents", documents } }, o => o.MaxRequestDocuments = 2);
 
         Assert.Equal("{ \"documents\" : [{ \"_id\" : 1 }, { \"_id\" : 2 }] }\n... (3 more documents not shown)", note);
-        using (JsonDocument.Parse(note![..note.IndexOf('\n')])) { }
+        Assert.NotNull(note);
+        using (JsonDocument.Parse(note[..note.IndexOf('\n')])) { }
     }
 
     [Fact]
@@ -1618,7 +1619,8 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         var note = RequestNoteOf(new BsonDocument { { "update", "loans" }, { "updates", updates } }, o => o.MaxRequestDocuments = 1);
 
         Assert.Equal("{ \"updates\" : [{ \"q\" : { \"_id\" : 1 }, \"u\" : { \"$set\" : { \"n\" : 1 } } }] }\n... (3 more)", note);
-        using (JsonDocument.Parse(note![..note.IndexOf('\n')])) { }
+        Assert.NotNull(note);
+        using (JsonDocument.Parse(note[..note.IndexOf('\n')])) { }
     }
 
     [Fact]
@@ -1759,5 +1761,204 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         // Kronikol's captures stopped calling it at 4.19.6; R2 marks it, and 5.0 removes it (plan Q14).
         foreach (var name in new[] { "ExtractMetadata", "ExtractDetailed" })
             Assert.Single(typeof(MongoDbResponseSummary).GetMethod(name)!.GetCustomAttributes(typeof(ObsoleteAttribute), false));
+    }
+
+    // ─── The #168 audit (after 4.20.2) ──────────────
+
+    private RequestResponseLog ResponseTo(string commandName, BsonDocument reply, Action<MongoDbTrackingOptions> configure,
+        BsonDocument? command = null)
+    {
+        var options = MakeOptions();
+        configure(options);
+        var subscriber = new MongoDbTrackingSubscriber(options);
+        subscriber.OnCommandStarted(MakeStartedEvent(commandName, command));
+        subscriber.OnCommandSucceeded(MakeSucceededEvent(commandName, reply: reply));
+        return GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Response);
+    }
+
+    private static BsonDocument DuplicateKeyFailure() => new()
+    {
+        { "ok", 0.0 }, { "errmsg", DuplicateKeyMessage }, { "code", 11000 }, { "codeName", "DuplicateKey" },
+        { "keyPattern", new BsonDocument("loanNumber", 1) }, { "keyValue", new BsonDocument("loanNumber", "L-1001") },
+    };
+
+    private RequestResponseLog SummarisedFailureOf(BsonDocument result, bool logResponseContent)
+    {
+        var options = MakeOptions(MongoDbTrackingVerbosity.Summarised);
+        options.LogResponseContent = logResponseContent;
+        var subscriber = new MongoDbTrackingSubscriber(options);
+        subscriber.OnCommandStarted(MakeStartedEvent("findAndModify"));
+        subscriber.OnCommandFailed(MakeFailedEvent("findAndModify", exception: ServerError("findAndModify", result)));
+        return GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Response);
+    }
+
+    [Fact]
+    public void A_summarised_failure_without_response_content_keeps_only_the_servers_message()
+    {
+        // Summarised with LogResponseContent off records no reply; a failure keeps the server's words, as both captures
+        // did before 4.19.6, and not the reply's own fields (a duplicate key's keyValue is the document's).
+        var response = SummarisedFailureOf(DuplicateKeyFailure(), logResponseContent: false);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode?.Value);
+        Assert.Equal(DuplicateKeyMessage, response.Content);
+        Assert.Equal(DuplicateKeyMessage, response.Error);
+    }
+
+    [Fact]
+    public void A_summarised_failure_with_response_content_is_the_reply_without_its_bookkeeping()
+    {
+        var response = SummarisedFailureOf(DuplicateKeyFailure(), logResponseContent: true);
+
+        Assert.Equal(
+            "{ \"errmsg\" : \"E11000 duplicate key error collection: app.loans index: loanNumber_1 dup key: { loanNumber: " +
+            "\\\"L-1001\\\" }\", \"code\" : 11000, \"codeName\" : \"DuplicateKey\", \"keyPattern\" : { \"loanNumber\" : 1 }, " +
+            "\"keyValue\" : { \"loanNumber\" : \"L-1001\" } }",
+            response.Content);
+    }
+
+    [Fact]
+    public void A_distinct_reply_keeps_its_first_values_with_a_footnote()
+    {
+        var response = ResponseTo("distinct",
+            new BsonDocument { { "values", new BsonArray { "a", "b", "c", "d", "e" } }, { "ok", 1.0 } },
+            options => options.MaxResponseDocuments = 3);
+
+        Assert.Equal("{ \"values\" : [\"a\", \"b\", \"c\"] }\n... (2 more)", response.Content);
+    }
+
+    [Fact]
+    public void Upserted_ids_and_write_errors_are_capped_with_one_footnote()
+    {
+        static BsonDocument WriteError(int index) => new() { { "index", index }, { "code", 11000 }, { "errmsg", "dup" } };
+        var response = ResponseTo("update",
+            new BsonDocument
+            {
+                { "n", 2 }, { "nModified", 0 },
+                {
+                    "upserted", new BsonArray
+                    {
+                        new BsonDocument { { "index", 0 }, { "_id", 1 } }, new BsonDocument { { "index", 1 }, { "_id", 2 } },
+                        new BsonDocument { { "index", 2 }, { "_id", 3 } },
+                    }
+                },
+                { "writeErrors", new BsonArray { WriteError(3), WriteError(4), WriteError(5), WriteError(6) } },
+                { "ok", 1.0 },
+            },
+            options => options.MaxResponseDocuments = 2);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode?.Value);
+        Assert.Equal(
+            "{ \"n\" : 2, \"nModified\" : 0, \"upserted\" : [{ \"index\" : 0, \"_id\" : 1 }, { \"index\" : 1, \"_id\" : 2 }], " +
+            "\"writeErrors\" : [{ \"index\" : 3, \"code\" : 11000, \"errmsg\" : \"dup\" }, { \"index\" : 4, \"code\" : 11000, \"errmsg\" : \"dup\" }] }" +
+            "\n... (3 more)",
+            response.Content);
+        Assert.Equal("dup", response.Error);
+    }
+
+    private static BsonDocument BulkWriteReply(long cursorId, int nErrors, params BsonDocument[] results) => new()
+    {
+        { "cursor", new BsonDocument { { "id", cursorId }, { "firstBatch", new BsonArray(results) }, { "ns", "admin.$cmd.bulkWrite" } } },
+        { "nErrors", nErrors }, { "nInserted", 1 },
+        { "ok", 1.0 },
+    };
+
+    [Fact]
+    public void Without_response_content_a_client_bulkWrite_keeps_its_failed_operations()
+    {
+        // Its write errors are entries of its cursor, and an error is not a document: LogResponseContent off keeps them,
+        // as it keeps a write's writeErrors, and leaves out the operations that succeeded.
+        var response = ResponseTo("bulkWrite",
+            BulkWriteReply(0L, 1,
+                new BsonDocument { { "ok", 1.0 }, { "idx", 0 }, { "n", 1 } },
+                new BsonDocument { { "ok", 0.0 }, { "idx", 1 }, { "code", 11000 }, { "errmsg", DuplicateKeyMessage } }),
+            options => options.LogResponseContent = false);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode?.Value);
+        Assert.Contains("\"idx\" : 1, \"code\" : 11000", response.Content);
+        Assert.DoesNotContain("\"idx\" : 0", response.Content);
+    }
+
+    [Fact]
+    public void A_client_bulkWrite_whose_failures_are_past_its_first_batch_says_how_many_failed()
+    {
+        var response = ResponseTo("bulkWrite",
+            BulkWriteReply(42L, 1, new BsonDocument { { "ok", 1.0 }, { "idx", 0 }, { "n", 1 } }),
+            _ => { });
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode?.Value);
+        Assert.Equal("1 operation failed", response.Error);
+    }
+
+    [Fact]
+    public void A_write_that_failed_does_not_claim_its_document()
+    {
+        // A duplicate key wrote nothing: the document is another scenario's, and a later call on it that carries no
+        // scenario of its own must not be attributed to this one.
+        var id = "dup-" + Guid.NewGuid().ToString("N");
+        var options = MakeOptions();
+        var subscriber = new MongoDbTrackingSubscriber(options);
+        var insert = new BsonDocument { { "insert", "loans" }, { "documents", new BsonArray { new BsonDocument("_id", id) } } };
+
+        subscriber.OnCommandStarted(MakeStartedEvent("insert", insert, requestId: 2));
+        subscriber.OnCommandSucceeded(MakeSucceededEvent("insert", requestId: 2, reply: DuplicateKeyReply()));
+        Assert.Null(TestCorrelationStore.Lookup(CorrelationKeys.Mongo(options.ServiceName, id)));
+
+        // The same insert, written, claims it.
+        subscriber.OnCommandStarted(MakeStartedEvent("insert", insert, requestId: 3));
+        subscriber.OnCommandSucceeded(MakeSucceededEvent("insert", requestId: 3, reply: new BsonDocument { { "n", 1 }, { "ok", 1.0 } }));
+        Assert.NotNull(TestCorrelationStore.Lookup(CorrelationKeys.Mongo(options.ServiceName, id)));
+    }
+
+    [Fact]
+    public void An_unclassified_command_keeps_its_name_in_the_note()
+    {
+        // Its label is Other: the label carries the collection, not the command, so the note keeps the command's name.
+        var note = RequestNoteOf(new BsonDocument
+        {
+            { "collMod", "loans" }, { "validator", new BsonDocument("$jsonSchema", new BsonDocument("required", new BsonArray { "status" })) },
+        });
+
+        Assert.Equal("{ \"collMod\" : \"loans\", \"validator\" : { \"$jsonSchema\" : { \"required\" : [\"status\"] } } }", note);
+        Assert.Equal("{ \"filter\" : { \"status\" : \"Ready\" } }",
+            RequestNoteOf(new BsonDocument { { "find", "loans" }, { "filter", new BsonDocument("status", "Ready") } }));
+    }
+
+    [Fact]
+    public void A_raw_label_has_no_trailing_dot_without_a_collection()
+    {
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions(MongoDbTrackingVerbosity.Raw));
+
+        subscriber.OnCommandStarted(MakeStartedEvent("commitTransaction", new BsonDocument { { "commitTransaction", 1 } }, db: "admin"));
+
+        var request = GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Request);
+        Assert.Equal("CommitTransaction admin", request.Method.Value?.ToString());
+    }
+
+    [Fact]
+    public void Request_deletes_and_client_bulkWrite_ops_are_capped_with_the_statements_footnote()
+    {
+        var deletes = new BsonArray(Enumerable.Range(1, 4).Select(i => new BsonDocument { { "q", new BsonDocument("_id", i) }, { "limit", 1 } }));
+        Assert.Equal(
+            "{ \"deletes\" : [{ \"q\" : { \"_id\" : 1 }, \"limit\" : 1 }, { \"q\" : { \"_id\" : 2 }, \"limit\" : 1 }] }\n... (2 more)",
+            RequestNoteOf(new BsonDocument { { "delete", "loans" }, { "deletes", deletes } }, options => options.MaxRequestDocuments = 2));
+
+        var ops = new BsonArray(Enumerable.Range(1, 3).Select(i => new BsonDocument { { "insert", 0 }, { "document", new BsonDocument("_id", i) } }));
+        Assert.Equal(
+            "{ \"ops\" : [{ \"insert\" : 0, \"document\" : { \"_id\" : 1 } }] }\n... (2 more)",
+            RequestNoteOf(new BsonDocument { { "bulkWrite", 1 }, { "ops", ops } }, options => options.MaxRequestDocuments = 1, db: "admin"));
+    }
+
+    [Fact]
+    public void A_users_field_named_like_a_driver_field_survives_inside_a_document()
+    {
+        // The driver's fields are stripped from the command's top level only.
+        var note = RequestNoteOf(new BsonDocument
+        {
+            { "insert", "loans" },
+            { "documents", new BsonArray { new BsonDocument { { "_id", 1 }, { "ordered", true }, { "lsid", "x" }, { "cursor", 2 } } } },
+            { "ordered", true },
+        });
+
+        Assert.Equal("{ \"documents\" : [{ \"_id\" : 1, \"ordered\" : true, \"lsid\" : \"x\", \"cursor\" : 2 }] }", note);
     }
 }

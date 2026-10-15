@@ -21,13 +21,18 @@ public enum MongoDbTrackingVerbosity
     /// Classified labels with relevant context (e.g. operation name, target resource). The request note is the
     /// command without its name and without the driver's own fields (the session, the transaction, the read and write
     /// concerns, <c>$db</c>): a find's filter, sort and limit, an insert's documents, an update's or a delete's
-    /// statements, a findAndModify's query and update, an aggregate's pipeline, each capped by
-    /// <c>MaxRequestDocuments</c>. The response note is what the reply returned: a cursor's documents as a JSON array, or the
-    /// reply without the server's bookkeeping as a JSON object (a write's counts and upserted ids, a findAndModify's
+    /// statements, a findAndModify's query and update, an aggregate's pipeline; an insert's documents and the statements
+    /// of an update, a delete or a client bulkWrite are capped by <c>MaxRequestDocuments</c>. The response note is what
+    /// the reply returned: a cursor's documents as a JSON array, or the reply without the server's bookkeeping as a JSON
+    /// object (a write's counts and upserted ids, a findAndModify's
     /// value, a distinct's values, write errors, a failed command's errmsg, code and codeName), in relaxed extended
     /// JSON on one line.
     /// </summary>
     Detailed,
-    /// <summary>Minimal labels only — content and connection details are omitted.</summary>
+    /// <summary>
+    /// Minimal labels (the operation's name) and no request note. The reply note is kept while <c>LogResponseContent</c>
+    /// is on (the default), as at <see cref="Detailed"/>; off, a reply has no note and a failed command's note is the
+    /// server's message alone. A command no rule classifies is not recorded.
+    /// </summary>
     Summarised
 }

@@ -55,8 +55,10 @@ public sealed class CaptureRedaction
     public bool DropHeaders { get; set; }
 
     /// <summary>
-    /// Regular expressions applied to request/response <see cref="RequestResponseLog.Content"/>; every
-    /// match is replaced with <see cref="Replacement"/> (or the pattern's own replacement when given).
+    /// Regular expressions applied to request/response <see cref="RequestResponseLog.Content"/>, to each phase
+    /// variant's content, and to <see cref="RequestResponseLog.Error"/>, where a capturer stores a service's own
+    /// failure message (a MongoDB duplicate key's message quotes the key); every match is replaced with
+    /// <see cref="Replacement"/> (or the pattern's own replacement when given).
     /// Use this for bearer tokens, connection strings or API keys that appear inside bodies.
     /// </summary>
     public List<(Regex Pattern, string? Replacement)> ContentPatterns { get; } = [];
@@ -87,6 +89,12 @@ public sealed class CaptureRedaction
         var content = RedactContentText(log.Content);
         if (!ReferenceEquals(headers, log.Headers) || !ReferenceEquals(content, log.Content))
             result = result with { Headers = headers, Content = content };
+
+        // A capturer that reads a service's failure stores the service's own words as the call's error, and they can
+        // quote what the call carried: a MongoDB duplicate key's errmsg names the key that collided.
+        var error = RedactContentText(log.Error);
+        if (!ReferenceEquals(error, log.Error))
+            result = result with { Error = error };
 
         if (log.SetupVariant is { } setup)
         {

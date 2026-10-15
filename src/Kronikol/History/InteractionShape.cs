@@ -45,9 +45,11 @@ public static partial class InteractionShape
     /// groups (<c>job_09c68d49_adcf_47be_...</c>), a hex run of eight to fifteen holding a digit and a letter is
     /// an id, and bytes captured as text are <c>{bin}</c> (#75). 5: 4.20.0 - no rule changed, but what MongoDB records
     /// as a request did: the command without the driver's fields in place of the bare filter, so every MongoDB call's
-    /// statement head moved (#168 R2).
+    /// statement head moved (#168 R2). 6: 4.20.5 - a document's booleans (<c>{b}</c>), the sign of its numbers and how
+    /// many scalars a list of them holds are data too, so a test that generates its data does not write a new shape
+    /// whenever a flag flips (#168 audit).
     /// </summary>
-    public const int Version = 5;
+    public const int Version = 6;
 
     /// <summary>How much of a statement's first line is templated, and how much of the templated head is kept.</summary>
     private const int HeadRaw = 2000;
@@ -143,7 +145,8 @@ public static partial class InteractionShape
 
         string valued;
         var trimmed = text.TrimStart();
-        if (trimmed.StartsWith('{') || trimmed.StartsWith('['))
+        var isDocument = trimmed.StartsWith('{') || trimmed.StartsWith('[');
+        if (isDocument)
         {
             // A document: every string that is not a key is a value.
             valued = DoubleQuotedPattern().Replace(text, match => IsKey(text, match) ? match.Value : "\"{v}\"");
@@ -156,8 +159,30 @@ public static partial class InteractionShape
             valued = DoubleQuotedPattern().Replace(statement, match => IsComparedLiteral(statement, match) ? "\"{v}\"" : match.Value);
         }
 
-        return NumberPattern().Replace(TimestampPattern().Replace(IdPattern().Replace(valued, "{id}"), "{ts}"), "{n}");
+        var templated = NumberPattern().Replace(TimestampPattern().Replace(IdPattern().Replace(valued, "{id}"), "{ts}"), "{n}");
+        if (!isDocument)
+            return templated;
+
+        // A document's booleans, the signs of its numbers and the length of a list of scalars are what it carried, as its
+        // strings and numbers are: a test that generates its data wrote a new shape whenever a flag flipped, a number went
+        // negative or a list grew. A null stays, since a null filter matches what a valued one does not, and so does a
+        // key: a flag the statement sets (upsert) is there or not.
+        templated = BooleanPattern().Replace(templated, "{b}");
+        templated = SignPattern().Replace(templated, "");
+        return RepeatedScalarPattern().Replace(templated, "${scalar}");
     }
+
+    /// <summary>A JSON boolean: every string of a document is <c>"{v}"</c> by now, so one left bare is a literal.</summary>
+    [GeneratedRegex(@"(?<![0-9A-Za-z_$])(?:true|false)(?![0-9A-Za-z_])", Options)]
+    private static partial Regex BooleanPattern();
+
+    /// <summary>A number's minus sign, once the number is <c>{n}</c>.</summary>
+    [GeneratedRegex(@"-(?=\{n\})", Options)]
+    private static partial Regex SignPattern();
+
+    /// <summary>A run of one templated scalar in a list (<c>[{n}, {n}, {n}]</c>), each a whole element.</summary>
+    [GeneratedRegex(@"(?<=[\[,]\s*)(?<scalar>""\{v\}""|\{b\}|null|\{id\}|\{ts\}|\{n\}(?:\.\{n\})?)(?:\s*,\s*\k<scalar>(?=\s*[,\]]))+(?=\s*[,\]])", Options)]
+    private static partial Regex RepeatedScalarPattern();
 
     private static bool IsKey(string text, Match match)
     {

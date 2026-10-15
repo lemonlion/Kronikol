@@ -318,20 +318,25 @@ public static class OtlpSpanMapper
             case null:
                 return (OtlpStatusCode.Unset, null, null);
             case HttpStatusCode code:
-                return ((int)code >= 400 ? OtlpStatusCode.Error : OtlpStatusCode.Unset,
-                    ((int)code).ToString(CultureInfo.InvariantCulture), null);
+                return (int)code >= 400
+                    ? (OtlpStatusCode.Error, ((int)code).ToString(CultureInfo.InvariantCulture), ServiceMessage(log))
+                    : (OtlpStatusCode.Unset, ((int)code).ToString(CultureInfo.InvariantCulture), null);
             case var value:
             {
                 var text = value.ToString() ?? "";
                 if (text.StartsWith('!'))
                     return (OtlpStatusCode.Error, null, string.IsNullOrWhiteSpace(log.Error) ? text : log.Error);
                 if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var numeric))
-                    return (numeric >= 400 ? OtlpStatusCode.Error : OtlpStatusCode.Unset,
-                        numeric.ToString(CultureInfo.InvariantCulture), null);
+                    return numeric >= 400
+                        ? (OtlpStatusCode.Error, numeric.ToString(CultureInfo.InvariantCulture), ServiceMessage(log))
+                        : (OtlpStatusCode.Unset, numeric.ToString(CultureInfo.InvariantCulture), null);
                 return IsFailureText(text) ? (OtlpStatusCode.Error, null, text) : (OtlpStatusCode.Unset, null, null);
             }
         }
     }
+
+    /// <summary>Why a call that answered with a failure failed, when its capturer read the service's own words (a MongoDB errmsg).</summary>
+    private static string? ServiceMessage(RequestResponseLog log) => string.IsNullOrWhiteSpace(log.Error) ? null : log.Error;
 
     private static bool IsFailureText(string status) =>
         status.Trim().ToLowerInvariant() is "error" or "failed" or "failure" or "fault" or "timeout" or "exception";

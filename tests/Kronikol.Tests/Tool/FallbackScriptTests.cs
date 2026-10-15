@@ -242,6 +242,77 @@ public class FallbackScriptTests : IDisposable
         return output.ToString();
     }
 
+    // ─── What a capture capped, and why a call failed (the #168 audit) ─────────
+
+    /// <summary>The checkout's Pricing call answered 500 with the service's reason and a capped batch.</summary>
+    private string WriteCappedReport()
+    {
+        var start = new DateTimeOffset(2026, 1, 1, 10, 1, 0, TimeSpan.Zero);
+        var pairId = Guid.NewGuid();
+        RequestResponseLog[] logs =
+        [
+            new("Orders", "t1", "Find ← prices", "{ \"filter\" : { } }", new Uri("mongodb:///shop/prices"), [],
+                "Pricing", "Checkout fails on a wrong total", RequestResponseType.Request, Guid.NewGuid(), pairId, false)
+            { Timestamp = start },
+            new("Orders", "t1", "Find ← prices", "[{ \"total\" : 5 }, { \"total\" : 7 }]\n... (3 more documents not shown)",
+                new Uri("mongodb:///shop/prices"), [], "Pricing", "Checkout fails on a wrong total", RequestResponseType.Response,
+                Guid.NewGuid(), pairId, false, HttpStatusCode.InternalServerError)
+            { Timestamp = start.AddMilliseconds(20), Error = "E11000 duplicate key error collection: shop.prices" },
+        ];
+        var written = ReportGenerator.GenerateTestRunReportData(
+            Features(),
+            new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
+            "Capped_" + Guid.NewGuid().ToString("N")[..8] + ".json", DataFormat.Json, null, logs);
+
+        var path = Path.Combine(_directory, "TestRunReport.json");
+        File.Move(written, path, overwrite: true);
+        return path;
+    }
+
+    [Fact]
+    public void It_reads_a_capped_body_as_the_tool_reads_it()
+    {
+        // A capped batch is a complete document and a footnote; the fallback called it text and died on --path.
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        var report = WriteCappedReport();
+
+        var keys = PythonProbe.Run(ScriptPath, "http", report, "s1/i1", "--keys");
+        Assert.Contains("$[0].total", keys);
+        Assert.DoesNotContain("not JSON", keys);
+
+        Assert.Contains("7", PythonProbe.Run(ScriptPath, "http", report, "s1/i1", "--path", "$[1].total"));
+
+        var body = PythonProbe.Run(ScriptPath, "http", report, "s1/i1").ReplaceLineEndings("\n");
+        Assert.Contains("\"total\": 7", body);
+        Assert.Contains("]\n... (3 more documents not shown)", body);
+    }
+
+    [Fact]
+    public void It_says_why_a_call_failed_as_the_tool_does()
+    {
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        var report = WriteCappedReport();
+
+        var output = PythonProbe.Run(ScriptPath, "http", report, "s1/i1");
+
+        Assert.Contains("error E11000 duplicate key error collection: shop.prices", output);
+        Assert.Contains("E11000 duplicate key error collection: shop.prices", Tool("http", report, "s1/i1"));
+    }
+
+    [Fact]
+    public void It_prints_its_arrows_through_a_pipe_whatever_the_console_code_page()
+    {
+        // A pipe on Windows gets the console's code page, which cannot encode → : `http` died with UnicodeEncodeError.
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        var report = WriteCappedReport();
+
+        var (output, error, exit) = PythonProbe.RunFullAsPiped(ScriptPath, "http", report, "s1/i1");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("→ Pricing", output);
+    }
+
     private string WriteReport()
     {
         var written = ReportGenerator.GenerateTestRunReportData(

@@ -15,9 +15,11 @@ namespace Kronikol.Extensions.MongoDB;
 /// </summary>
 /// <remarks>
 /// The driver runs these handlers inside the application's own call, so none lets an exception through: a command
-/// that cannot be recorded is left out and reported once in the run's diagnostics. A reply with <c>writeErrors</c> or a
-/// <c>writeConcernError</c>, which the driver raises as a success and the application as an exception, is drawn as a
-/// failure (500), and a failed call carries the server's message in <see cref="RequestResponseLog.Error"/>.
+/// that cannot be recorded is left out and reported once in the run's diagnostics. A reply with <c>writeErrors</c>, a
+/// <c>writeConcernError</c> or a client bulkWrite's <c>nErrors</c>, which the driver raises as a success and the
+/// application as an exception, is drawn as a failure (500), and a failed call carries the server's message in
+/// <see cref="RequestResponseLog.Error"/>, which <see cref="CaptureRedaction"/> redacts as it redacts the notes. A
+/// statement the server refused claims no document for the scenario.
 /// </remarks>
 public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
 {
@@ -159,7 +161,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
                 var command = e.Command;
                 var notes = new Dictionary<MongoDbTrackingVerbosity, string?>();
                 foreach (var verbosity in new[] { _options.Verbosity, _options.SetupVerbosity ?? _options.Verbosity, _options.ActionVerbosity ?? _options.Verbosity })
-                    notes.TryAdd(verbosity, RequestNote(command, verbosity));
+                    notes.TryAdd(verbosity, RequestNote(command, opInfo.Operation, verbosity));
                 _pending[e.RequestId] = new PendingOperation(default, opInfo,
                     BuildUri(opInfo, effectiveVerbosity), MongoDbOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity),
                     Guid.NewGuid(), Guid.NewGuid())
@@ -181,7 +183,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             Guid.NewGuid(), Guid.NewGuid());
         _pending[e.RequestId] = pending;
         var startedCommand = e.Command;
-        LogRequest(pending, verbosity => RequestNote(startedCommand, verbosity), effectiveVerbosity, timestamp: null, TestPhaseContext.Current);
+        LogRequest(pending, verbosity => RequestNote(startedCommand, opInfo.Operation, verbosity), effectiveVerbosity, timestamp: null, TestPhaseContext.Current);
     }
 
     private void Succeeded(CommandSucceededEvent e)
@@ -201,23 +203,27 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             LogRequest(pending, verbosity => deferred.Notes[verbosity], effectiveVerbosity, deferred.StartedAt, deferred.Phase);
         }
 
-        AutoCorrelateIfWrite(pending);
-
         // A write error arrives as a success (ok: 1 with writeErrors), and the application's call throws.
         var reply = e.Reply;
-        bool writeFailed;
+        bool writeFailed, statementFailed;
         string? error;
         try
         {
             writeFailed = reply is not null && MongoDbNotes.IsWriteFailure(reply);
+            statementFailed = reply is not null && MongoDbNotes.IsStatementFailure(reply);
             error = writeFailed ? MongoDbNotes.FailureReason(reply!) : null;
         }
         catch (Exception)
         {
             // A reply that cannot be read says nothing of a failure; its note says why it is missing.
-            writeFailed = false;
+            writeFailed = statementFailed = false;
             error = null;
         }
+
+        // A statement the server refused wrote nothing, so its document is not this scenario's (a duplicate key's is
+        // another scenario's).
+        if (!statementFailed)
+            AutoCorrelateIfWrite(pending);
         var operation = pending.OpInfo.Operation;
 
         RequestResponseLogger.Log(new RequestResponseLog(
@@ -272,7 +278,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
         RequestResponseLogger.Log(new RequestResponseLog(
             pending.TestInfo.Name, pending.TestInfo.Id,
             pending.Label,
-            FailureNote(result, message, effectiveVerbosity), pending.Uri,
+            FailureNote(result, message, effectiveVerbosity, _options.LogResponseContent), pending.Uri,
             [], _options.ServiceName, _options.CallerName,
             RequestResponseType.Response, pending.TraceId, pending.RequestResponseId, false,
             HttpStatusCode.InternalServerError,
@@ -285,7 +291,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             v => new PhaseVariant(
                 MongoDbOperationClassifier.GetDiagramLabel(pending.OpInfo, v),
                 BuildUri(pending.OpInfo, v),
-                FailureNote(result, message, v), [],
+                FailureNote(result, message, v, _options.LogResponseContent), [],
                 v == MongoDbTrackingVerbosity.Summarised && pending.OpInfo.Operation == MongoDbOperation.Other)));
     }
 
@@ -313,12 +319,14 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
     }
 
     /// <summary>The request note at <paramref name="verbosity"/>: at Detailed (when <see cref="MongoDbTrackingOptions.LogFilterText"/>) the command without its name and the driver's own fields, as <see cref="MongoDbNotes.Request"/> writes it; at Raw the whole command.</summary>
-    private string? RequestNote(BsonDocument? command, MongoDbTrackingVerbosity verbosity) =>
+    private string? RequestNote(BsonDocument? command, MongoDbOperation operation, MongoDbTrackingVerbosity verbosity) =>
         Rendered("command", () => verbosity switch
         {
             MongoDbTrackingVerbosity.Summarised => null,
             MongoDbTrackingVerbosity.Raw => MongoDbNotes.Whole(command),
-            _ => _options.LogFilterText && command is not null ? MongoDbNotes.Request(command, _options.MaxRequestDocuments) : null
+            _ => _options.LogFilterText && command is not null
+                ? MongoDbNotes.Request(command, _options.MaxRequestDocuments, classified: operation != MongoDbOperation.Other)
+                : null
         });
 
     /// <summary>The reply note at <paramref name="verbosity"/>: the whole reply at Raw, otherwise what <see cref="MongoDbNotes.Reply"/> keeps.</summary>
@@ -330,13 +338,20 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             _ => MongoDbNotes.Reply(reply, operation, _options.LogResponseContent, _options.MaxResponseDocuments)
         });
 
-    /// <summary>A failed command's note: the server's reply (whole at Raw, without its bookkeeping otherwise), or the exception's message when there is none.</summary>
-    private static string? FailureNote(BsonDocument? result, string? message, MongoDbTrackingVerbosity verbosity) =>
+    /// <summary>
+    /// A failed command's note: the server's reply (whole at Raw, without its bookkeeping otherwise), or the exception's
+    /// message when there is none. At Summarised without <see cref="MongoDbTrackingOptions.LogResponseContent"/>, which
+    /// records no reply, it is the server's message alone.
+    /// </summary>
+    private static string? FailureNote(BsonDocument? result, string? message, MongoDbTrackingVerbosity verbosity, bool logResponseContent) =>
         result is null
             ? message
-            : Rendered("reply", () => verbosity == MongoDbTrackingVerbosity.Raw
-                ? MongoDbNotes.Whole(result)
-                : MongoDbNotes.Failure(result) ?? message);
+            : Rendered("reply", () => verbosity switch
+            {
+                MongoDbTrackingVerbosity.Raw => MongoDbNotes.Whole(result),
+                MongoDbTrackingVerbosity.Summarised when !logResponseContent => MongoDbNotes.FailureReason(result) ?? message,
+                _ => MongoDbNotes.Failure(result) ?? message,
+            });
 
     /// <summary>A note, or what stopped it being written, as the wire tap writes its own.</summary>
     private static string? Rendered(string what, Func<string?> render)

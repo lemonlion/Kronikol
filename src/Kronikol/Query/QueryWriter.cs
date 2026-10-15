@@ -97,6 +97,7 @@ internal sealed class QueryWriter
 
     private readonly StringBuilder _buffer = new();
     private readonly List<string> _notes = [];
+    private readonly List<string> _lateNotes = [];
     private readonly List<string> _items = [];
     private readonly List<KeyValuePair<string, string>> _data = [];
 
@@ -198,9 +199,17 @@ internal sealed class QueryWriter
         // next line rather than as the continuation of a quoted value.
         var oneLine = text.ReplaceLineEndings(" ");
         if (Json)
+        {
             _notes.Add(oneLine);
-        else
+            return;
+        }
+
+        // A note says what the answer left out; written after rows that filled the budget it was dropped with the rows
+        // it explains. It is kept for the end of the answer instead, before the footer.
+        if (!_overBudget)
             Line(oneLine);
+        if (_overBudget && _capture is null)
+            _lateNotes.Add(oneLine);
     }
 
     /// <summary>
@@ -436,6 +445,8 @@ internal sealed class QueryWriter
         if (_overBudget)
             text.Append("… output truncated at ").Append(_maxBytes.ToString(CultureInfo.InvariantCulture))
                 .Append(" bytes · raise with --max-bytes, or filter harder\n");
+        foreach (var note in _lateNotes)
+            text.Append(note).Append('\n');
 
         if (_footer is not null)
             text.Append(_footer).Append(HasCut && _cutNotice is not null ? " · " + _cutNotice : "").Append('\n');

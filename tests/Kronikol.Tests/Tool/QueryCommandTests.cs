@@ -94,6 +94,36 @@ public class QueryCommandTests : IDisposable
     // ─── Narrative ─────────────────────────────────────────────
 
     [Fact]
+    public void Failures_says_which_call_in_the_step_failed_and_why()
+    {
+        // Failures.md prints a failed call's status and reason; `query failures` listed the step's calls with neither,
+        // so a duplicate-key insert read as one more call (the #168 audit).
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = new List<RequestResponseLog>
+        {
+            Marker("t2", DiagramMarkerKind.Step, "hnote across <<stepDelimiter>> #black:<color:white>a basket"),
+            Marker("t2", DiagramMarkerKind.Step, "hnote across <<stepDelimiter>> #black:<color:white>the total is right"),
+        };
+        var call = Pair("t2", "mongo", "Insert → orders", "mongodb:///app/orders", "{ \"documents\" : [] }", HttpStatusCode.InternalServerError, start);
+        call[1] = call[1] with { Error = "E11000 duplicate key error collection: app.orders" };
+        logs.AddRange(call);
+        logs.AddRange(Pair("t2", "api", "GET", "http://api/order/9", "{}", HttpStatusCode.OK, start.AddSeconds(1)));
+        var report = Write("FailedCall.json", BuildFeatures(false), logs.ToArray());
+
+        var output = Run("failures", report);
+
+        var failed = Assert.Single(output.Split('\n'), line => line.Contains("Insert → orders", StringComparison.Ordinal));
+        Assert.Contains("500", failed);
+        Assert.Contains("E11000 duplicate key error collection: app.orders", failed);
+        var ok = Assert.Single(output.Split('\n'), line => line.Contains("GET /order/9", StringComparison.Ordinal));
+        Assert.DoesNotContain("→", ok);
+
+        using var json = JsonDocument.Parse(Run("failures", report, "--json"));
+        var calls = json.RootElement.GetProperty("items")[0].GetProperty("failingSteps")[0].GetProperty("calls");
+        Assert.Equal("E11000 duplicate key error collection: app.orders", calls[0].GetProperty("error").GetString());
+    }
+
+    [Fact]
     public void Failures_says_why_without_being_asked_for_a_payload()
     {
         var output = Run("failures", Report());
@@ -991,10 +1021,188 @@ public class QueryCommandTests : IDisposable
         var output = Run("diff", report, "s0/i1", "s0/i3");
 
         Assert.Contains("$[1].total: 7 → 8", output);
-        Assert.Contains("1 paths differ", output);
+        Assert.Contains("(capture footnote): ... (3 more documents not shown) → ... (4 more documents not shown)", output);
+        Assert.Contains("2 paths differ", output);
         Assert.DoesNotContain("\"sku\"", output);
         Assert.Contains("capped at capture time", output);
         Assert.Contains("... (3 more documents not shown) → ... (4 more documents not shown)", output);
+    }
+
+    // ─── The #168 audit (after 4.20.2) ──────────────
+
+    /// <summary>Thirty totals of 600 and one decimal, which an ordering against a number cannot compare.</summary>
+    private string ManyTotalsReport()
+    {
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = new List<RequestResponseLog>();
+        for (var i = 0; i < 30; i++)
+            logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start.AddSeconds(i),
+                responseBody: "{ \"total\" : 600 }"));
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start.AddSeconds(31),
+            responseBody: "{ \"total\" : { \"$numberDecimal\" : \"700\" } }"));
+        return Write("ManyTotals.json", BuildFeatures(false), logs.ToArray());
+    }
+
+    [Fact]
+    public void Where_says_what_it_left_out_even_when_the_rows_fill_the_budget()
+    {
+        // The note came after the rows, and a listing that filled --max-bytes dropped every line after it.
+        var (output, _, exit) = RunFull("interactions", ManyTotalsReport(), "s0", "--where", "$.total > 500", "--max-bytes", "600");
+
+        Assert.Equal(0, exit);
+        Assert.Contains("output truncated", output);
+        Assert.Contains("1 value was not a number for --where \"$.total > 500\", and failed it", output);
+    }
+
+    [Fact]
+    public void Where_says_what_it_left_out_under_count_on_stderr_and_under_group_by()
+    {
+        var report = ManyTotalsReport();
+
+        var (count, countError, _) = RunFull("interactions", report, "s0", "--where", "$.total > 500", "--count");
+        Assert.Equal("30", count.Trim());
+        Assert.Contains("1 value was not a number", countError);
+
+        var grouped = Run("interactions", report, "s0", "--where", "$.total > 500", "--group-by", "service");
+        Assert.Contains("1 value was not a number", grouped);
+
+        var (valuesCount, valuesError, _) = RunFull("values", report, "--path", "$.total", "--where", "$.total > 500", "--count");
+        Assert.Equal("30", valuesCount.Trim());
+        Assert.Contains("1 value was not a number", valuesError);
+    }
+
+    [Fact]
+    public void Where_on_a_capped_body_says_it_read_only_what_was_recorded()
+    {
+        // Before 4.20.1 a capped batch was not JSON and was excluded and counted; now it is read as its document, and a
+        // match among the documents not recorded cannot be found, so the answer says so.
+        var output = Run("interactions", CappedReport(), "s0", "--where", "$[*].total > 6");
+
+        Assert.Contains("s0/i0", output);
+        Assert.Contains("2 bodies were capped at capture time — --where read only what was recorded", output);
+    }
+
+    [Fact]
+    public void Diff_bodies_counts_a_footnote_that_changed()
+    {
+        // Two capped batches whose documents agree differ in how many more there were: 4.20.0's line diff counted it.
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = new List<RequestResponseLog>();
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start,
+            responseBody: "[{ \"total\" : 5 }]\n... (3 more documents not shown)"));
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start.AddSeconds(1),
+            responseBody: "[{ \"total\" : 5 }]\n... (5 more documents not shown)"));
+        var report = Write("Footnotes.json", BuildFeatures(false), logs.ToArray());
+
+        Assert.Equal("1", Run("diff", report, "s0/i1", "s0/i3", "--count").Trim());
+        var output = Run("diff", report, "s0/i1", "s0/i3");
+        Assert.Contains("(capture footnote): ... (3 more documents not shown) → ... (5 more documents not shown)", output);
+        Assert.Contains("1 paths differ", output);
+    }
+
+    [Fact]
+    public void Where_orders_a_quoted_literal_as_text_as_it_did()
+    {
+        // Quotes make a literal a string: `> "500"` ordered string codes before 4.20.1, and still does.
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = new List<RequestResponseLog>();
+        logs.AddRange(Pair("t0", "api", HttpMethod.Get, "http://api/codes", "{}", HttpStatusCode.OK, start,
+            responseBody: "{ \"code\" : \"600\" }"));
+        var report = Write("Codes.json", BuildFeatures(false), logs.ToArray());
+
+        Assert.Equal("1", Run("interactions", report, "s0", "--where", "$.code > \"500\"", "--count").Trim());
+        var (bare, bareError, _) = RunFull("interactions", report, "s0", "--where", "$.code > 500", "--count");
+        Assert.Equal("0", bare.Trim());
+        Assert.Contains("1 value was not a number", bareError);
+    }
+
+    [Theory]
+    [InlineData("$.a..b..c", "`$.a[*].b[*].c`")]
+    [InlineData("$.items[*]..price", "`$.items[*].price`")]
+    [InlineData("$...price", "`$[*].price`")]
+    public void Path_recursive_descent_suggests_a_path_that_parses(string path, string suggestion)
+    {
+        var (_, error, exit) = RunFull("http", Report(), "s3/i11", "--path", path);
+
+        Assert.Equal(2, exit);
+        Assert.Contains(suggestion, error);
+    }
+
+    [Fact]
+    public void Path_recursive_descent_with_nothing_after_it_suggests_no_path()
+    {
+        var (_, error, exit) = RunFull("http", Report(), "s3/i11", "--path", "$..");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("recursive descent (`..`) is not supported", error);
+        Assert.DoesNotContain("`$[*].`", error);
+    }
+
+    [Fact]
+    public void An_empty_key_is_written_as_a_path_that_parses_back()
+    {
+        // An empty key was written `.`, so `$..x` came out, and since 4.20.1 that path is refused.
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = Pair("t0", "api", HttpMethod.Get, "http://api/odd", "{}", HttpStatusCode.OK, start, responseBody: "{\"\":{\"x\":1}}");
+        var report = Write("EmptyKey.json", BuildFeatures(false), logs);
+
+        var keys = Run("http", report, "s0/i1", "--keys");
+        Assert.Contains("$[''].x", keys);
+        Assert.DoesNotContain("$..x", keys);
+        Assert.Contains("1", Run("values", report, "--path", "$[''].x"));
+    }
+
+    [Fact]
+    public void A_redis_value_cut_on_the_wire_is_counted_as_capped()
+    {
+        // The page takes off the RESP decoder's marker as it takes off the others; the tool did not know it.
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = Pair("t0", "redis", "GET", "redis://cache/basket:1", "GET basket:1", HttpStatusCode.OK, start,
+            responseBody: "{\"items\":[1,2 …[bulk string truncated: 90000 bytes on the wire, 65536 kept]");
+        var report = Write("RedisCut.json", BuildFeatures(false), logs);
+
+        Assert.Contains("capped at capture time", Run("http", report, "s0/i1", "--body"));
+    }
+
+    [Fact]
+    public void A_text_body_ending_in_a_footnote_like_line_is_not_capped()
+    {
+        // The page reads a footnote only after a JSON document; a text body that ends that way is text.
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = Pair("t0", "api", HttpMethod.Get, "http://api/log", "{}", HttpStatusCode.OK, start,
+            responseBody: "first line\nsecond line\n... (3 more)");
+        var report = Write("TextFootnote.json", BuildFeatures(false), logs);
+
+        Assert.DoesNotContain("capped at capture time", Run("http", report, "s0/i1", "--body"));
+    }
+
+    [Fact]
+    public void Diff_bodies_compares_numbers_by_their_value_in_every_form()
+    {
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var logs = new List<RequestResponseLog>();
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start,
+            responseBody: "{\"id\":9007199254740993,\"big\":1e400,\"same\":1E2,\"zero\":-0}"));
+        logs.AddRange(Pair("t0", "mongo", "Find ← loans", "mongodb:///app/loans", "{}", HttpStatusCode.OK, start.AddSeconds(1),
+            responseBody: "{\"id\":9007199254740992.0,\"big\":2e400,\"same\":100,\"zero\":0}"));
+        var report = Write("NumberForms.json", BuildFeatures(false), logs.ToArray());
+
+        var output = Run("diff", report, "s0/i1", "s0/i3");
+
+        Assert.Contains("$.id", output);
+        Assert.Contains("$.big", output);
+        Assert.DoesNotContain("$.same", output);
+        Assert.DoesNotContain("$.zero", output);
+    }
+
+    [Fact]
+    public void A_body_printed_indented_uses_one_kind_of_line_ending()
+    {
+        // The serializer wrote the platform's line ending and the footnote was joined with \n.
+        var body = Run("http", CappedReport(), "s0/i1", "--body");
+
+        Assert.DoesNotContain("\r", body);
+        Assert.Contains("]\n... (3 more documents not shown)", body);
     }
 
     [Fact]

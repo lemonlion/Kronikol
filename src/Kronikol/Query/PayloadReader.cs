@@ -179,28 +179,6 @@ internal static partial class PayloadReader
         return -1;
     }
 
-    /// <summary>
-    /// Resolves a path (<c>$.data.customers[2].total</c>) against a JSON body: the first match, or null
-    /// when the path selects nothing — which is itself an answer worth printing. The thin wrapper over
-    /// <see cref="PathEngine"/> for call sites that want one value, not a fan-out.
-    /// </summary>
-    public static string? Path(string body, string path)
-    {
-        try
-        {
-            using var document = JsonDocument.Parse(body);
-            if (!PathEngine.TryParse(path, out var segments, out _))
-                return null;
-            foreach (var (_, value) in PathEngine.SelectAll(document.RootElement, segments))
-                return value.Text();
-            return null;
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-    }
-
     /// <summary>A line range of a payload, one-based and inclusive, the way an editor addresses lines.</summary>
     public static string Lines(string body, int from, int to)
     {
@@ -239,7 +217,8 @@ internal static partial class PayloadReader
         using var document = BodyCache.ParseJson(body);
         if (document is null)
             return body;
-        var pretty = JsonSerializer.Serialize(document.RootElement, PrettyJson);
+        // The serializer writes the platform's line ending; the answer is written with \n, and so is the footnote.
+        var pretty = JsonSerializer.Serialize(document.RootElement, PrettyJson).ReplaceLineEndings("\n");
         return Tracking.CaptureFootnote.Split(body) is { } capped ? pretty + "\n" + capped.Footnote : pretty;
     }
 

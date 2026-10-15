@@ -2,8 +2,10 @@ using global::MongoDB.Bson;
 using global::MongoDB.Bson.IO;
 
 // Shared source: also compiled into Kronikol.Extensions.TcpTap (and Kronikol.Extensions.MongoDB.V2) as a
-// linked file, so the wire tap renders reply notes byte-identically to the in-process subscriber. The tap
-// compiles it into its own namespace so a host can reference both packages.
+// linked file. Neither capture has called it since 4.19.6 (MongoDbNotes writes every reply note); it stays, obsolete
+// since 4.20.0, in all three packages until 5.0 removes it, the tap's public copy
+// (Kronikol.Extensions.TcpTap.Protocols.MongoDbResponseSummary) included. The tap compiles it into its own namespace so
+// a host can reference both packages.
 #if KRONIKOL_TCPTAP_SHARED
 namespace Kronikol.Extensions.TcpTap.Protocols;
 #else

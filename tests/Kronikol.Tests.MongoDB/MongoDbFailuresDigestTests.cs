@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Clusters;
@@ -20,19 +21,22 @@ public class MongoDbFailuresDigestTests
 {
     private readonly string _testId = Guid.NewGuid().ToString();
 
-    private MongoDbTrackingSubscriber Subscriber() => new(new MongoDbTrackingOptions
+    private MongoDbTrackingSubscriber Subscriber(MongoDbTrackingVerbosity verbosity = MongoDbTrackingVerbosity.Detailed) => new(new MongoDbTrackingOptions
     {
         ServiceName = "MongoDB",
         CallerName = "LoanService",
         AttributeByDocumentOwner = false,
         AutoCorrelateWrites = false,
+        Verbosity = verbosity,
         CurrentTestInfoFetcher = () => ("Open a loan", _testId),
     });
 
     private static ConnectionId MakeConnectionId() =>
         new(new ServerId(new ClusterId(), new DnsEndPoint("localhost", 27017)));
 
-    private string Digest()
+    private string Digest() => DigestOf().Markdown;
+
+    private FailuresDigest DigestOf()
     {
         var step = new RequestResponseLog(_testId, _testId, "", "", new Uri("http://override.com"), [], "", "",
             RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
@@ -65,7 +69,47 @@ public class MongoDbFailuresDigestTests
                 ],
             },
         };
-        return FailuresDigestGenerator.Generate(features, [step, .. calls], "TestRunReport", "4.19.0").Markdown;
+        return FailuresDigestGenerator.Generate(features, [step, .. calls], "TestRunReport", "4.19.0");
+    }
+
+    [Fact]
+    public void Failures_md_caps_a_raw_label_as_it_caps_a_path()
+    {
+        // At Raw a MongoDB label carries the whole filter; listed by label since 4.20.0, a find over 300 ids put every
+        // one of them in the Call column and in Failures.jsonl's summary.
+        var subscriber = Subscriber(MongoDbTrackingVerbosity.Raw);
+        var ids = new BsonArray(Enumerable.Range(1, 300).Select(i => $"loan-{i:D6}"));
+        subscriber.OnCommandStarted(new CommandStartedEvent("find",
+            new BsonDocument { { "find", "loans" }, { "filter", new BsonDocument("_id", new BsonDocument("$in", ids)) } },
+            new DatabaseNamespace("app"), 1L, 1, MakeConnectionId()));
+
+        var digest = DigestOf();
+
+        var row = Assert.Single(digest.Markdown.Split('\n'), line => line.Contains("Find app.loans", StringComparison.Ordinal));
+        Assert.DoesNotContain("loan-000300", row);
+        Assert.True(row.Length < 400, $"the row is {row.Length} characters");
+        Assert.DoesNotContain("loan-000300", digest.Jsonl);
+    }
+
+    [Fact]
+    public void Failures_jsonl_says_why_a_call_failed_as_Failures_md_does()
+    {
+        var subscriber = Subscriber();
+        subscriber.OnCommandStarted(new CommandStartedEvent("insert",
+            new BsonDocument { { "insert", "loans" }, { "documents", new BsonArray { new BsonDocument("loanNumber", "L-1001") } } },
+            new DatabaseNamespace("app"), 1L, 1, MakeConnectionId()));
+        subscriber.OnCommandSucceeded(new CommandSucceededEvent("insert", new BsonDocument
+        {
+            { "n", 0 },
+            { "writeErrors", new BsonArray { new BsonDocument { { "index", 0 }, { "code", 11000 }, { "errmsg", "E11000 duplicate key error collection: app.loans" } } } },
+            { "ok", 1.0 },
+        }, new DatabaseNamespace("app"), 1L, 1, MakeConnectionId(), TimeSpan.FromMilliseconds(2)));
+
+        var record = JsonDocument.Parse(DigestOf().Jsonl.Split('\n', StringSplitOptions.RemoveEmptyEntries)[1]).RootElement;
+
+        var call = Assert.Single(record.GetProperty("calls").EnumerateArray());
+        Assert.Equal("InternalServerError", call.GetProperty("status").GetString());
+        Assert.Equal("E11000 duplicate key error collection: app.loans", call.GetProperty("error").GetString());
     }
 
     [Fact]

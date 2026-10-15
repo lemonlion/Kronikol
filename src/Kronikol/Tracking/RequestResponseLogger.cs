@@ -19,11 +19,20 @@ public static class RequestResponseLogger
     private static ConcurrentQueue<RequestResponseLog> Store => IsolatedStore.Value ?? RequestsAndResponses;
 
     /// <summary>
-    /// When set, content longer than this value is truncated at capture time.
-    /// The truncated content includes a marker showing the original size.
-    /// Default is <c>null</c> (no limit).
+    /// When set, content longer than this many characters is truncated at capture time: a call's content and each phase
+    /// variant's (the notes drawn at <c>SetupVerbosity</c> and <c>ActionVerbosity</c>). The truncated content includes a
+    /// marker showing the original size, and a cut never splits a surrogate pair. Default is <c>null</c> (no limit); a
+    /// negative value is refused.
     /// </summary>
-    public static int? MaxContentLength { get; set; }
+    public static int? MaxContentLength
+    {
+        get => _maxContentLength;
+        set => _maxContentLength = value < 0
+            ? throw new ArgumentOutOfRangeException(nameof(value), value, "MaxContentLength cannot be negative; null means no limit.")
+            : value;
+    }
+
+    private static int? _maxContentLength;
 
     /// <summary>
     /// Capture-time redaction applied to every entry before it is stored (see <see cref="CaptureRedaction"/>).
@@ -41,8 +50,12 @@ public static class RequestResponseLogger
     /// </summary>
     public static bool CaptureBackground { get; set; }
 
-    /// <summary>The first <paramref name="max"/> characters and the marker that says how long the content was.</summary>
-    private static string Capped(string content, int max) => $"{content[..max]}\n\n…truncated ({content.Length} chars total)";
+    /// <summary>The first <paramref name="max"/> characters, one fewer where the cut would split a surrogate pair, and the marker that says how long the content was.</summary>
+    private static string Capped(string content, int max)
+    {
+        var cut = max > 0 && char.IsHighSurrogate(content[max - 1]) ? max - 1 : max;
+        return $"{content[..cut]}\n\n…truncated ({content.Length} chars total)";
+    }
 
     public static void Log(RequestResponseLog log)
     {

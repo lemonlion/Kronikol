@@ -25,8 +25,9 @@ public sealed class MongoTapOptions : TcpTapOptions
     /// </summary>
     /// <remarks>
     /// The authentication family (<c>saslStart</c>, <c>saslContinue</c>, <c>authenticate</c>, <c>getnonce</c>,
-    /// <c>copydbsaslstart</c>, <c>createUser</c>, <c>updateUser</c>) is hard-excluded by
-    /// <see cref="MongoProtocolDecoder"/> whatever this set contains.
+    /// <c>copydbsaslstart</c>, <c>createUser</c>, <c>updateUser</c>), and a handshake (<c>hello</c>, <c>isMaster</c>)
+    /// that starts an authentication (<c>speculativeAuthenticate</c>) or names its user (<c>saslSupportedMechs</c>), are
+    /// hard-excluded by <see cref="MongoProtocolDecoder"/> whatever this set contains.
     /// </remarks>
     public HashSet<string> ExcludedCommands { get; } = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -44,13 +45,17 @@ public sealed class MongoTapOptions : TcpTapOptions
     /// <summary>
     /// Whether the response note holds the documents the reply returned: a cursor's batch (<c>firstBatch</c>, or a
     /// getMore's <c>nextBatch</c>), a findAndModify's <c>value</c> and a distinct's <c>values</c>. Off, the note keeps
-    /// the rest of the reply (a write's counts, upserted ids, write errors). Default true.
+    /// the rest of the reply (a write's counts, upserted ids, write errors, and a client bulkWrite's failed operations),
+    /// and at <see cref="TapVerbosity.Summarised"/> a reply has no note and a failed command's note is the server's
+    /// message alone. Default true.
     /// </summary>
     public bool LogResponseContent { get; set; } = true;
 
     /// <summary>
     /// The most documents a response note keeps from a cursor's batch; a note that left some out ends with
-    /// <c>... (N more documents not shown)</c>. Default 10.
+    /// <c>... (N more documents not shown)</c>. A distinct's <c>values</c>, and a write's <c>writeErrors</c> and
+    /// <c>upserted</c>, keep as many entries, and a note that left some of those out ends with <c>... (N more)</c>.
+    /// Default 10.
     /// </summary>
     public int MaxResponseDocuments { get; set; } = 10;
 

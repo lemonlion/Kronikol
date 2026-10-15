@@ -87,6 +87,13 @@ public static partial class QueryCommand
         if (options.Count)
         {
             writer.Count(buckets.Values.Where(b => b.Value != "(absent)").Sum(b => b.Count));
+            // Stdout is one token under --count: what the filter left out or read short goes to stderr.
+            Action<string> note = options.Json ? writer.Note : error.WriteLine;
+            if (unevaluable > 0)
+                note($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
+            NoteNotNumbers(note, clauses);
+            if (truncated > 0)
+                note($"! {truncated} {(truncated == 1 ? "body was" : "bodies were")} capped at capture time — the rest was never recorded");
             return 0;
         }
 
@@ -186,7 +193,7 @@ public static partial class QueryCommand
                 writer.Line($"{nonJson} {(nonJson == 1 ? "body was" : "bodies were")} not JSON — counted, not evaluated");
             if (unevaluable > 0)
                 writer.Line($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
-            NoteNotNumbers(writer, clauses);
+            NoteNotNumbers(writer.Note, clauses);
             if (truncated > 0)
                 writer.Note($"! {truncated} {(truncated == 1 ? "body was" : "bodies were")} capped at capture time — the rest was never recorded");
         }

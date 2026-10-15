@@ -133,6 +133,54 @@ public class MongoDbProcessWideTests
     }
 
     [Fact]
+    public void A_content_pattern_redacts_the_servers_message_as_well_as_the_note()
+    {
+        // A duplicate key's errmsg quotes the key that collided, and since 4.19.6 it is the call's Error as well as part
+        // of its note: a pattern that hides the address in the note hides it in the Error.
+        const string errmsg = "E11000 duplicate key error collection: app.users index: email_1 dup key: { email: \"ada@example.com\" }";
+        var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
+        var previous = RequestResponseLogger.Redaction;
+        RequestResponseLogger.Redaction = new CaptureRedaction().RedactContent(@"[\w.+-]+@[\w-]+\.[\w.]+", "[email]");
+        try
+        {
+            subscriber.OnCommandStarted(new CommandStartedEvent("insert",
+                new BsonDocument
+                {
+                    { "insert", "users" },
+                    { "documents", new BsonArray { new BsonDocument { { "_id", 1 }, { "email", "ada@example.com" } } } },
+                },
+                new DatabaseNamespace("app"), 1L, 1, MakeConnectionId()));
+            subscriber.OnCommandSucceeded(new CommandSucceededEvent("insert",
+                new BsonDocument
+                {
+                    { "n", 0 },
+                    {
+                        "writeErrors", new BsonArray
+                        {
+                            new BsonDocument
+                            {
+                                { "index", 0 }, { "code", 11000 }, { "errmsg", errmsg },
+                                { "keyValue", new BsonDocument("email", "ada@example.com") },
+                            },
+                        }
+                    },
+                    { "ok", 1.0 },
+                },
+                new DatabaseNamespace("app"), 1L, 1, MakeConnectionId(), TimeSpan.FromMilliseconds(1)));
+        }
+        finally
+        {
+            RequestResponseLogger.Redaction = previous;
+        }
+
+        var logs = Logs();
+        Assert.All(logs, log => Assert.DoesNotContain("ada@example.com", log.Content ?? ""));
+        var response = logs.Single(l => l.Type == RequestResponseType.Response);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode?.Value);
+        Assert.Equal("E11000 duplicate key error collection: app.users index: email_1 dup key: { email: \"[email]\" }", response.Error);
+    }
+
+    [Fact]
     public void JsonWriterSettings_Defaults_do_not_change_a_note()
     {
         // A host can set MongoDB.Bson's process-wide JsonWriterSettings.Defaults; a request note never reads it (F18).

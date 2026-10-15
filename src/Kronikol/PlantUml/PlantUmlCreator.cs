@@ -1594,6 +1594,9 @@ public static partial class PlantUmlCreator
             return Encoding.UTF8.GetString(stream.ToArray());
         }
         catch (JsonException) { return null; }
+        // A string holding a lone surrogate (an escape the JSON grammar allows) parses but cannot be read back as text:
+        // the note is drawn as it was captured rather than failing the whole diagram.
+        catch (InvalidOperationException) { return null; }
     }
 
     /// <summary>

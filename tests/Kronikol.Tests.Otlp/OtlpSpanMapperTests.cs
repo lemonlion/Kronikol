@@ -170,6 +170,26 @@ public class OtlpSpanMapperTests
     }
 
     [Fact]
+    public void A_failure_status_carries_the_services_own_message()
+    {
+        // A capturer that read the service's failure (a MongoDB errmsg beside its 500) stored it as the call's Error;
+        // the span says it, as a call that threw does.
+        var (request, response) = Pair(status: HttpStatusCode.InternalServerError, dependencyCategory: "MongoDB");
+        var span = OtlpSpanMapper.Map(request, response with { Error = "E11000 duplicate key error collection: app.loans" }, Options(), ExportTime);
+
+        Assert.Equal(OtlpStatusCode.Error, span.Status);
+        Assert.Equal("E11000 duplicate key error collection: app.loans", span.StatusMessage);
+        Assert.Equal("500", span.Attribute("http.response.status_code"));
+
+        var withoutError = OtlpSpanMapper.Map(request, response, Options(), ExportTime);
+        Assert.Equal(OtlpStatusCode.Error, withoutError.Status);
+        Assert.Null(withoutError.StatusMessage);
+
+        var numeric = OtlpSpanMapper.Map(request, response with { StatusCode = "503", Error = "unavailable" }, Options(), ExportTime);
+        Assert.Equal("unavailable", numeric.StatusMessage);
+    }
+
+    [Fact]
     public void String_failure_statuses_mark_the_span_error()
     {
         var (request, response) = Pair(status: "Failed");

@@ -6,10 +6,16 @@ namespace Kronikol.Extensions.TcpTap;
 /// <summary>How much detail a tap records for each decoded command.</summary>
 public enum TapVerbosity
 {
-    /// <summary>Minimal labels only — keys, filters, values and reply payloads are omitted.</summary>
+    /// <summary>
+    /// Minimal labels only: keys, filters and values are omitted, and reply payloads too, except where a protocol's
+    /// options keep them (a MongoDB reply note stays while <see cref="MongoTapOptions.LogResponseContent"/> is on).
+    /// </summary>
     Summarised,
 
-    /// <summary>Classified label plus the target resource (key / collection) and the filter or value. The default.</summary>
+    /// <summary>
+    /// Classified label plus the target resource (key / collection) and what the command carried: a key's value, or a
+    /// MongoDB command without its name and the driver's fields. The default.
+    /// </summary>
     Detailed,
 
     /// <summary>The raw command name, the full endpoint in the URI, and the complete command and reply text.</summary>
@@ -95,7 +101,7 @@ public class TcpTapOptions
     /// <summary>Recorded content longer than this is truncated (the forwarded bytes are never touched). Null = unlimited. Default 65536.</summary>
     public int? BodyCapBytes { get; set; } = 65536;
 
-    /// <summary>Whether reply payloads are recorded at all. When false the response arrow still renders (with its status and timing) but carries no note. Default true.</summary>
+    /// <summary>Whether reply payloads are recorded at all. When false the response arrow still renders (with its status and timing) but carries no note, and a failed reply's own message (a MongoDB errmsg) is not kept as the call's error either. Default true.</summary>
     public bool CaptureReplies { get; set; } = true;
 
     /// <summary>Backlog passed to the listening socket. Default 128.</summary>

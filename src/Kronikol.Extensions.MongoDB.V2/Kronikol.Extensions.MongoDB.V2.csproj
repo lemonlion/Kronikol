@@ -6,7 +6,6 @@
     <Description>MongoDB tracking for test diagrams, for MongoDB.Driver 2.28.0 and later 2.x. Intercepts and classifies MongoDB operations using the driver's command event system.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <RootNamespace>Kronikol.Extensions.MongoDB</RootNamespace>
-    <NoWarn>$(NoWarn);NU1902</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +17,8 @@
          2.x whose assemblies are strong-named: built on an unsigned 2.27 or older, the extension's MongoClientSettings
          is not the one a consumer on 2.30 holds, and the consumer's call does not compile (CS0012), as the suite, which
          runs on the newest 2.x, shows. The suite passes on 2.28.0, and every 2.x up to 2.18.0 carries a high advisory.
+         Every 2.x driver also brings Snappier 1.0.0 (high, NU1903) and SharpCompress 0.30.1 (moderate, NU1902), which
+         the build reports rather than suppresses; whether the package lifts them is an open question (#97).
          MongoDbPackageTests reads the floor back from the packed nuspec. -->
     <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
   </ItemGroup>

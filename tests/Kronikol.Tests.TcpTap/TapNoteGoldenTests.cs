@@ -10,8 +10,8 @@ namespace Kronikol.Tests.TcpTap;
 /// Kronikol.Tests.TcpTap.Bson3, on Bson 3.x, each against the one golden below.
 /// </summary>
 /// <remarks>
-/// The golden holds the reply side: notes, status and error. A request note is still the driver's <c>ToString()</c> of
-/// the filter or the command, in the host Bson's own dialect, until the request rule moves to Kronikol's writer too.
+/// The golden holds both sides: the label and the request note (Kronikol's writer since 4.20.0, the Raw label's filter
+/// included), and the reply's note, status and error.
 /// </remarks>
 public class TapNoteGoldenTests
 {
@@ -27,8 +27,10 @@ public class TapNoteGoldenTests
         {
             foreach (var verbosity in new[] { TapVerbosity.Detailed, TapVerbosity.Raw })
             {
-                var (_, response) = MongoWireShapes.Tap(shape, verbosity);
+                var (request, response) = MongoWireShapes.Tap(shape, verbosity);
                 lines.Add($"{verbosity} | {shape.Section} | {shape.CommandName}");
+                lines.Add($"  label {OneLine(request.Method.Value?.ToString())}");
+                lines.Add($"  request {OneLine(request.Content)}");
                 lines.Add($"  status {response.StatusCode?.Value} | error {OneLine(response.Error)}");
                 lines.Add($"  reply {OneLine(response.Content)}");
             }

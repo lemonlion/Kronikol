@@ -412,7 +412,10 @@ public static class FailuresDigestGenerator
         if (log.Content is { Length: > 0 } content && ShowsStatement(log, method))
             return Truncate(FirstLine(content), OneLineLimit);
 
-        return string.IsNullOrEmpty(method) ? Truncate(target, OneLineLimit) : $"{method} {Truncate(target, OneLineLimit)}";
+        // A label can carry a statement (a MongoDB label at Raw holds the whole filter), so it is capped as the path is.
+        return string.IsNullOrEmpty(method)
+            ? Truncate(target, OneLineLimit)
+            : $"{Truncate(FirstLine(method), OneLineLimit)} {Truncate(target, OneLineLimit)}";
     }
 
     /// <summary>
@@ -432,10 +435,12 @@ public static class FailuresDigestGenerator
 
     /// <summary>
     /// A MongoDB call's note is what the command sent, an insert's documents included (#168 R2), so it is a payload,
-    /// not an identity: the call is listed by its label (<c>Insert (×3) → loans</c>) and path, as an HTTP call is.
+    /// not an identity: the call is listed by its label (<c>Insert (×3) → loans</c>) and path, as an HTTP call is. So is
+    /// a call to MongoDB's Atlas Data API, whose body is the same documents over HTTP (an insertOne's document).
     /// </summary>
     private static bool IsMongoDb(string category) =>
-        string.Equals(category, DependencyCategories.MongoDB, StringComparison.OrdinalIgnoreCase);
+        string.Equals(category, DependencyCategories.MongoDB, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(category, DependencyCategories.AtlasDataApi, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Whether an uncategorised call's content is its own identity — a statement — rather than a payload.
@@ -926,7 +931,18 @@ public static class FailuresDigestGenerator
                     s.SourceLine
                 }).ToArray(),
                 ["stepsBefore"] = entry.Context.Select(s => new { Path = $"{entry.Address}/{s.Path}", Text = Capped(s.Text), s.Status }).ToArray(),
-                ["calls"] = entry.Calls.Select(c => new { c.Address, c.Service, c.Summary, c.Status, c.DurationMs }).ToArray(),
+                // Why a call failed, as Failures.md prints it under the table; written only for a call that says.
+                ["calls"] = entry.Calls.Select(c =>
+                {
+                    var call = new Dictionary<string, object?>
+                    {
+                        ["address"] = c.Address, ["service"] = c.Service, ["summary"] = Capped(c.Summary),
+                        ["status"] = c.Status, ["durationMs"] = c.DurationMs,
+                    };
+                    if (!string.IsNullOrWhiteSpace(c.Error))
+                        call["error"] = Capped(c.Error);
+                    return call;
+                }).ToArray(),
                 // Which question the list above answers: the failing step's own calls, the scenario's
                 // because the step had none attributed to it, or nothing captured at all. Without it an
                 // empty array meant all three.

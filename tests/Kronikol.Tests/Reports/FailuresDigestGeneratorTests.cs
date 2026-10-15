@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Kronikol.Constants;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 
@@ -237,6 +238,39 @@ public class FailuresDigestGeneratorTests
         Assert.Contains("INSERT INTO Orders", digest.Markdown);
         Assert.DoesNotContain("VALUES", digest.Markdown);
         Assert.All(digest.Markdown.Split('\n'), line => Assert.True(line.Length < 400, "digest line too long: " + line));
+    }
+
+    [Fact]
+    public void A_categorised_sql_call_is_still_listed_by_its_statement()
+    {
+        // Since 4.20.0 a MongoDB call is listed by its label; a database whose statement is its identity keeps it.
+        var logs = SqlLogs().Select(l => l.IsDiagramMarker ? l : l with { DependencyCategory = DependencyCategories.SqlServer }).ToArray();
+
+        var digest = Generate(WithSteps(), logs);
+
+        Assert.Contains("INSERT INTO Orders", digest.Markdown);
+        Assert.DoesNotContain("VALUES", digest.Markdown);
+    }
+
+    [Fact]
+    public void An_atlas_data_api_call_is_listed_by_its_label_not_its_documents()
+    {
+        // The Atlas Data API is MongoDB over HTTP: an insertOne's body is the document it wrote, a payload, as a MongoDB
+        // insert's note is since 4.20.0 (#168 F23).
+        RequestResponseLog[] logs =
+        [
+            Marker("t2", "a basket"),
+            Marker("t2", "the total is right"),
+            .. Pair("t2", "Atlas", "InsertOne → orders", "https://data.mongodb-api.com/app/data-abc/endpoint/data/v1/action/insertOne",
+                    "{\"dataSource\":\"Cluster0\",\"database\":\"shop\",\"collection\":\"orders\",\"document\":{\"cardNumber\":\"4111111111111111\"}}",
+                    HttpStatusCode.InternalServerError)
+                .Select(l => l with { DependencyCategory = DependencyCategories.AtlasDataApi }),
+        ];
+
+        var digest = Generate(WithSteps(), logs);
+
+        Assert.Contains("InsertOne → orders", digest.Markdown);
+        Assert.DoesNotContain("4111111111111111", digest.Markdown);
     }
 
     [Fact]

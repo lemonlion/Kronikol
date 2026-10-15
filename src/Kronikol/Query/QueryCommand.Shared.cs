@@ -175,13 +175,29 @@ public static partial class QueryCommand
     /// Says how many values an ordering clause against a number met that were not numbers, so a call that dropped out
     /// for it is not dropped unseen (#168 F7).
     /// </summary>
-    private static void NoteNotNumbers(QueryWriter writer, IReadOnlyList<WhereClause>? clauses)
+    private static void NoteNotNumbers(Action<string> note, IReadOnlyList<WhereClause>? clauses)
     {
         foreach (var clause in clauses ?? [])
         {
             if (clause.NotNumbers > 0)
-                writer.Note($"{clause.NotNumbers} {(clause.NotNumbers == 1 ? "value was not a number" : "values were not numbers")} for --where \"{clause.Raw}\", and failed it");
+                note($"{clause.NotNumbers} {(clause.NotNumbers == 1 ? "value was not a number" : "values were not numbers")} for --where \"{clause.Raw}\", and failed it");
         }
+    }
+
+    /// <summary>
+    /// What a <c>--where</c> filter left out or read short: calls with no body it could evaluate, values that were not
+    /// numbers, and capped bodies it could read only in part. Into the answer, or to stderr under <c>--count</c>, whose
+    /// stdout is one token, as <c>diff</c> sends its notes.
+    /// </summary>
+    private static void NoteWhereExclusions(QueryOptions options, QueryWriter writer, TextWriter error,
+        IReadOnlyList<WhereClause>? clauses, int unevaluable, int capped)
+    {
+        Action<string> note = options.Count && !options.Json ? error.WriteLine : writer.Note;
+        if (unevaluable > 0)
+            note($"{unevaluable} call{(unevaluable == 1 ? "" : "s")} had no evaluable body — excluded by --where");
+        NoteNotNumbers(note, clauses);
+        if (capped > 0)
+            note($"! {capped} {(capped == 1 ? "body was" : "bodies were")} capped at capture time — --where read only what was recorded");
     }
 
     /// <summary>The orderings <c>services --sort</c> understands.</summary>

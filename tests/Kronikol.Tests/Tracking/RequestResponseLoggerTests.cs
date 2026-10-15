@@ -201,6 +201,31 @@ public class RequestResponseLoggerTests
     }
 
     [Fact]
+    public void MaxContentLength_refuses_a_negative_length()
+    {
+        // A negative cap made every Log call throw (content[..-1]), inside every capturer's handler.
+        Assert.Throws<ArgumentOutOfRangeException>(() => RequestResponseLogger.MaxContentLength = -1);
+        Assert.Null(RequestResponseLogger.MaxContentLength);
+    }
+
+    [Fact]
+    public void Log_MaxContentLength_never_splits_a_surrogate_pair()
+    {
+        RequestResponseLogger.MaxContentLength = 3;
+        try
+        {
+            RequestResponseLogger.Log(MakeLog("ab\U0001F600cdef"));
+
+            var log = GetLogsFromThisTest().Single();
+            Assert.StartsWith("ab\n\n…truncated (8 chars total)", log.Content, StringComparison.Ordinal);
+        }
+        finally
+        {
+            RequestResponseLogger.MaxContentLength = null;
+        }
+    }
+
+    [Fact]
     public void Log_MaxContentLength_TruncatesContent()
     {
         RequestResponseLogger.MaxContentLength = 100;

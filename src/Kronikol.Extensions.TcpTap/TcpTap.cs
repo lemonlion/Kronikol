@@ -638,7 +638,8 @@ public class TcpTap : IAsyncDisposable
             DependencyCategory: _options.DependencyCategory,
             CallerDependencyCategory: _options.CallerDependencyCategory)
         {
-            Error = interaction.Error,
+            // A decoder's error is the reply's own text (a MongoDB errmsg), so it is a reply payload too.
+            Error = _options.CaptureReplies ? interaction.Error : null,
             Timestamp = interaction.ResponseTimestamp,
             ActivityTraceId = activityTraceId,
             ActivitySpanId = activitySpanId,

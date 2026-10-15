@@ -19,10 +19,18 @@ internal static partial class CaptureFootnote
     /// <summary>The document before the footnote that ends <paramref name="content"/>, or null when none ends it.</summary>
     internal static string? DocumentBefore(string content) => Split(content)?.Document;
 
-    /// <summary>The document before the footnote that ends <paramref name="content"/> and the footnote's own line, or null when none ends it.</summary>
+    /// <summary>
+    /// The document before the footnote that ends <paramref name="content"/> and the footnote's own line, or null when
+    /// none ends it. Only a JSON document (an object or an array) is followed by one, as the page reads it: a text body
+    /// whose last line looks like a footnote is text.
+    /// </summary>
     internal static (string Document, string Footnote)? Split(string content)
     {
         var match = AtTheEnd().Match(content);
-        return match.Success ? (content[..match.Index], match.Value.Trim()) : null;
+        if (!match.Success)
+            return null;
+        var document = content[..match.Index];
+        var start = document.AsSpan().TrimStart();
+        return start.Length > 0 && start[0] is '{' or '[' ? (document, match.Value.Trim()) : null;
     }
 }
