@@ -4,6 +4,108 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.22.2] - 2026-10-15
+
+**Patch - what the reading for the taps' caller time limits found broken (#173; `plans/TAP_CALLER_TIME_LIMITS_PLAN.md`
+R0).** Green-lit in full by the owner on 2026-10-15, every question in the plan's section 9 as recommended. Bug fixes,
+with nothing new for a consumer to call, so the patch part moves (4.22.1 to 4.22.2). One of them is a security fix: an
+`OtlpTap` read and allocated an export's whole body before it checked `ExpectedHeaders`, so a caller without the secret
+could make it hold up to `MaxRequestBytes` (32 MiB) per connection; upgrade any OTLP tap that listens where others can
+reach it.
+
+### Fixed
+
+- **`OtlpTap` checked `ExpectedHeaders` only once it had read the body, into an array made at the declared length.** A
+  caller without the secret could declare 32 MiB, send a few bytes and stall, and the tap held the array for as long as
+  the connection stayed open: ten such callers held 321 MiB. The headers are now checked as soon as the head is read,
+  before anything of the body is read or allocated, and a body's buffer grows as its bytes arrive. A request without
+  the secret is answered `401` with `Connection: close` whatever its size (one over `MaxRequestBytes` was a `413`) and
+  counted in `UnauthenticatedRequests`. The connection then closes in stages: a FIN, then whatever the caller still
+  sends is read and thrown away until it ends or the declared body has come, for at most 5 s without a byte or 30 s in
+  all, and only then the close. Closed at once, the unread body turns the close into a reset, which loses the answer:
+  an `HttpClient` export of 8 MiB never heard its `401` that way.
+- **`OtlpTap` read a `Content-Length` that was not a plain number as no body.** `abc`, `-5`, `10, 10` (or the header
+  twice) and digits past what an `int` holds left the export received with an empty body, and its body was then read
+  as the next request's head; `+5` was read as 5. A `Content-Length` is now digits alone: anything else is answered
+  `400 Bad Request`, and digits past an `int` `413 Payload Too Large` (counted in `PayloadsRejected`), each closing the
+  connection in stages. `0` is still an empty body.
+- **`OtlpTap` kept the connection of a request with both `Transfer-Encoding: chunked` and `Content-Length`,** which RFC
+  9112 section 6.1 says a server must close after answering. The body is still read as chunked, and the connection now
+  closes after the answer.
+- **`OtlpTap` answered `413` to an export over `MaxRequestBytes` whose exporter hung up before the drain was over,** and
+  counted it in `PayloadsRejected`. As for any body cut short, nothing is answered or counted now.
+- **`OtlpTap`'s stop line left out `PayloadsRejected` and `PayloadsFailed`.** It names both now.
+- **An infinite `ProxyTapOptions.ForwardTimeout` cut every forward at 10 s and blamed `ConnectTimeout`.** The client's
+  own timeout was `ForwardTimeout` plus 10 s, and -1 ms plus 10 s is 9.999 s. `Timeout.InfiniteTimeSpan`, or a value of
+  `int.MaxValue` milliseconds (24.8 days) or more, now means no deadline, where `TimeSpan.MaxValue` made `StartAsync`
+  throw an `OverflowException` and a value from 24.8 days less 10 s failed there too. Zero and other negative values,
+  which failed every forward or threw from `HttpClient`, are refused at start with an `ArgumentOutOfRangeException`
+  naming the option. `ConnectTimeout` takes the same values.
+- **Stopping a `ProxyTap` on Linux and macOS told a caller still sending its body `200 OK`,** for a request the upstream
+  never saw, one a second: closing the managed `HttpListener` answers every connection it holds with its default
+  status, after waiting a second for each body. The tap also closed its listener before it waited for its handlers, so
+  an answer still being written was cut short, and a request that arrived meanwhile was refused. `DisposeAsync` now
+  settles each exchange before the listener closes: a request still arriving is answered `503 Service Unavailable` at
+  once (on Windows its connection is reset, since http.sys writes nothing on an abort), a forward in flight is cut
+  short and answered the `502` its record names, an answer in hand has up to 2 s to finish, and a request that arrives
+  meanwhile is answered `503` and never forwarded. An answer written while the tap stops closes its connection: closing
+  the listener resets the connections http.sys keeps alive, and a caller that had not yet read its `502` lost it. Four
+  stalled uploads made `DisposeAsync` take 3 s; it now takes milliseconds.
+- **A `ProxyTap` request whose forward had not begun when the tap began to stop was still forwarded, or counted as a
+  forward failure.** Behind an `IdentityResolver` slower than the drain, the handler read the disposed lifetime source,
+  counted a forward failure and tried a `502`; one whose resolver returned during the drain was forwarded with the
+  tap's cancelled token and recorded as a call the stop had cut short, though the real service never saw it. A
+  request the stop reaches before its forward begins is now refused as one that arrives while the tap stops: a caller
+  still being answered hears `503`, and the request is neither forwarded, recorded nor counted. So is a request whose
+  body ends as the tap stops, and the `IdentityResolver` is not asked about it.
+- **No tap guarded every call to its `Log` callback.** One bound to xUnit's test output throws once its test has ended,
+  and the throw changed what the tap did. `ProxyTap.StartAsync` threw with the listener already open, a forward that
+  failed was not answered its `502`, a capture fault was counted twice and `DisposeAsync` threw. `OtlpTap` left a
+  refused or failed export unanswered, and a throw in the map loop stopped all mapping after it and made `DisposeAsync`
+  throw. `TcpTap` kept a pair's sockets open, and counted the pair for ever, when a decoder's `Dispose` threw; counted a
+  reap and closed nothing; stopped forwarding a connection whose decode queue filled; and turned a decoder's own line,
+  a decoder reset or a throwing `IdentityResolver` into a decoder error, counting errors twice. Every call now goes
+  through a guard (4.20.3 and 4.22.0 had guarded the start and stop lines, the accept loops and the failed connects),
+  and each option's doc says so.
+- **`OtlpExportSink` and `OtlpExporter` did not guard their `Log` callback either** (found on the way). A throw from
+  the line about a batch the collector refused ended the sink's export worker, so nothing after it was exported and a
+  `FlushAsync` without a timeout waited for ever, and `OtlpExporter`'s export methods threw where they count and log a
+  failed batch; a throw from the line about a full queue reached the code that captured the call, and one from a flush
+  that timed out, or from the stop line, reached the host. Every call is guarded now.
+- **A negative cap was accepted.** `ProxyTapOptions.BodyCapBytes` turned every exchange with a body into a capture
+  fault, `OtlpTapOptions.ContentCapBytes` failed every payload with a capped attribute, and `TcpTapOptions.BodyCapBytes`
+  closed every Redis connection or disabled MongoDB decoding. Each is refused at start with an
+  `ArgumentOutOfRangeException` naming it.
+- `OtlpTap` set `NoDelay` on an accepted socket before taking ownership of it, so a throw there would have left the
+  socket to its finalizer; it is set inside the `using` now. No failure was seen.
+
+Behaviour changes: an `OtlpTap` request without its secret is answered `401` whatever its size and closes its
+connection; a `Content-Length` that is not digits is a `400`, one past an `int` a `413`, and a request with both
+framings closes its connection; a `ProxyTap` caller cut short by disposal hears `503` (on Windows, a reset), and a
+request that arrives while the tap stops, or that the stop reaches before its forward begins, is answered `503` and is
+not recorded; a `ForwardTimeout` or `ConnectTimeout` of zero or less, other than `Timeout.InfiniteTimeSpan`, and a
+negative cap fail at start.
+
+Tests: `ProxyTapStoppingTests` (what each caller hears as the tap stops, by phase: a body still arriving, a forward in
+flight, an answer in hand, a request that arrives meanwhile; a request the stop reaches before its forward; a body that
+ends as the tap stops; a handler that outlives the disposal), `ProxyTapOptionRangeTests` (an infinite or very long
+timeout never cuts a forward; the ranges checked at start; a negative cap) and `ProxyTapLogTests` (a throwing `Log` at
+each of the tap's seven lines); `OtlpTapRefusalTests` (an export without the secret refused before its body is read,
+heard by a raw caller still sending it and by `HttpClient`; the `Content-Length` cases; an over-cap body cut short; both
+framings), `HttpRequestReaderTests` (a declared length is not allocated before it arrives), `OtlpTapLogTests` (each
+line, the stop line's counters, a negative cap) and `OtlpExportSinkLogTests` (four lines); `TcpTapLogTests` (nine lines,
+a negative cap). 65 cases in all. Proofs (plan harness `r0/`): copied onto 4.22.1 with two seams stubbed (the tap's
+stopping state and the reader's count of body bytes held), 60 of the 65 cases fail on Windows, and 57 of the 61 run on
+Linux, each on its own assertion (the export sink's four were run on Windows before their fix); the ones that pass are
+guards: the two infinite-timeout cases, the zero-length body, the `HttpClient` 401, and on Windows the stalled body,
+which http.sys already resets. Of 44 mutations, 43 are killed. The first run left two alive, and they found the forward
+begun after the stop, fixed above; the one still alive reads the lifetime from the disposed source again, on a line no
+stop the facts can make reaches, since the check before the forward returns first. Checks: after the version bump the
+core suite passes 7,602 with 2 skipped; the ProxyTap suite passes 140 with 4 skipped (its Docker-only facts) on Windows
+and 144 on Linux, the Otlp suite 174 on both, and the TcpTap suite 444 with 4 skipped on Windows and 443 with 5 skipped
+on Linux; release.slnf builds in Release for every target. The templates pin 4.22.1 and the history action's VERSION
+installs Kronikol.Tool 4.22.2. The plan, the wiki edits and the Kronikol4J ledger line follow publication.
+
 ## [4.22.1] - 2026-10-15
 
 **Patch - a tap on `localhost` no longer costs 2 s per connection on Windows (`plans/TCPTAP_FAILED_CONNECT_PLAN.md` R3,

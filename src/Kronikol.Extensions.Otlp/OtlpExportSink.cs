@@ -96,7 +96,7 @@ public sealed class OtlpExportSink : IRequestResponseSink, IAsyncDisposable
         if (!_queue.Writer.TryWrite(new Item(log, null)))
         {
             Interlocked.Increment(ref _dropped);
-            _options.Log?.Invoke($"[{_options.DisplayName}] dropped a captured entry (export queue full)");
+            TryLog($"[{_options.DisplayName}] dropped a captured entry (export queue full)");
         }
     }
 
@@ -151,7 +151,7 @@ public sealed class OtlpExportSink : IRequestResponseSink, IAsyncDisposable
         }
         catch (TimeoutException)
         {
-            _options.Log?.Invoke($"[{_options.DisplayName}] flush timed out after {timeout}");
+            TryLog($"[{_options.DisplayName}] flush timed out after {timeout}");
         }
     }
 
@@ -341,9 +341,26 @@ public sealed class OtlpExportSink : IRequestResponseSink, IAsyncDisposable
 
         _exporter.Dispose();
         _cts.Dispose();
-        _options.Log?.Invoke(
+        TryLog(
             $"[{_options.DisplayName}] export sink stopped ({SpansExported} span(s) exported, {OrphanSpans} orphan(s), "
             + $"{SpansFailed} span(s) undeliverable, {EntriesDropped} dropped, {RecordsSkipped} skipped)");
+    }
+
+
+    /// <summary>
+    /// Writes a line through <see cref="OtlpExportOptions.Log"/>. The callback is the host's code, and nothing it throws
+    /// changes what the sink does: one that writes to a test's output after the test has ended throws.
+    /// </summary>
+    private void TryLog(string message)
+    {
+        try
+        {
+            _options.Log?.Invoke(message);
+        }
+        catch
+        {
+            // The host's callback failed; the sink carries on.
+        }
     }
 
     private readonly record struct Item(RequestResponseLog? Log, TaskCompletionSource? Flush);

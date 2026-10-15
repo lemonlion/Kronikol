@@ -25,6 +25,45 @@ internal sealed record HttpRequestMessageData(
     public string? ContentEncoding => Headers.TryGetValue("Content-Encoding", out var value) ? value : null;
 }
 
+/// <summary>How a request's body is framed, read from its head (RFC 9112 section 6.3).</summary>
+internal enum BodyFraming
+{
+    /// <summary>Neither <c>Transfer-Encoding: chunked</c> nor <c>Content-Length</c>: no body.</summary>
+    None,
+
+    /// <summary>A <c>Content-Length</c> of digits within <see cref="int"/> range.</summary>
+    ContentLength,
+
+    /// <summary><c>Transfer-Encoding: chunked</c>, with or without a <c>Content-Length</c> beside it.</summary>
+    Chunked,
+
+    /// <summary>A <c>Content-Length</c> that is not a run of digits, or a list of values: the framing is lost (400).</summary>
+    InvalidLength,
+
+    /// <summary>A <c>Content-Length</c> of digits past <see cref="int.MaxValue"/>, over any cap (413).</summary>
+    LengthPastInt,
+}
+
+/// <summary>
+/// A request's head, read before its body (<see cref="HttpRequestReader.ReadHeadAsync"/>), so the tap can refuse it before
+/// it allocates or reads anything of the body.
+/// </summary>
+/// <param name="Method">The HTTP method, verbatim.</param>
+/// <param name="Target">The request target (path + query), verbatim.</param>
+/// <param name="Path">The path part of <paramref name="Target"/>.</param>
+/// <param name="Headers">Header names (case-insensitive) to values; repeated headers are joined with <c>", "</c>.</param>
+/// <param name="KeepAlive">Whether the connection may be reused.</param>
+/// <param name="Framing">How the body is framed.</param>
+/// <param name="ContentLength">The declared length, for <see cref="BodyFraming.ContentLength"/>; otherwise zero.</param>
+internal sealed record HttpRequestHead(
+    string Method,
+    string Target,
+    string Path,
+    IReadOnlyDictionary<string, string> Headers,
+    bool KeepAlive,
+    BodyFraming Framing,
+    int ContentLength);
+
 /// <summary>
 /// A minimal HTTP/1.1 request reader over a raw socket stream — enough for one endpoint that receives
 /// <c>POST</c>s with a <c>Content-Length</c> or chunked body, with keep-alive. Deliberately small: the tap
@@ -35,15 +74,31 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
 {
     private const int MaxHeaderBytes = 64 * 1024;
     private const int MaxChunkLineBytes = 1024;
+    // A body's buffer starts at this, or at its declared length when that is less, and doubles as the body arrives.
+    private const int FirstBodyBytes = 64 * 1024;
 
     private readonly byte[] _buffer = new byte[16 * 1024];
     private int _start;
     private int _end;
+    private int _bodyBytesHeld;
 
-    /// <summary>Reads the next request, or null when the peer closed the connection, cut a body short or sent something unparsable.</summary>
+    // The size of the buffer held for the body being read (Kronikol.Tests.Otlp): a fact checks a declared length is not
+    // allocated before its bytes arrive.
+    internal int BodyBytesHeld => Volatile.Read(ref _bodyBytesHeld);
+
+    /// <summary>Reads the next request whole, or null when the peer closed the connection, cut a body short, or sent something unparsable or refused.</summary>
     public async Task<HttpRequestMessageData?> ReadAsync(CancellationToken ct)
     {
         var head = await ReadHeadAsync(ct).ConfigureAwait(false);
+        return head is null or { Framing: BodyFraming.InvalidLength or BodyFraming.LengthPastInt }
+            ? null
+            : await ReadBodyAsync(head, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Reads the next request's head, or null when the peer closed the connection or sent something unparsable.</summary>
+    public async Task<HttpRequestHead?> ReadHeadAsync(CancellationToken ct)
+    {
+        var head = await ReadHeadTextAsync(ct).ConfigureAwait(false);
         if (head is null)
             return null;
 
@@ -79,33 +134,117 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
                 keepAlive = true;
         }
 
-        var tooLarge = false;
-        byte[] body = [];
+        var framing = BodyFraming.None;
+        var length = 0;
+        var hasLength = headers.TryGetValue("Content-Length", out var lengthText);
         if (headers.TryGetValue("Transfer-Encoding", out var transferEncoding)
             && transferEncoding.Contains("chunked", StringComparison.OrdinalIgnoreCase))
         {
-            if (await ReadChunkedAsync(ct).ConfigureAwait(false) is not { } chunked)
-                return null; // cut short or malformed, as a Content-Length body cut short below
-            (body, tooLarge) = (chunked.Body, chunked.TooLarge);
-            keepAlive &= chunked.Reusable;
+            framing = BodyFraming.Chunked;
+            // Both at once: read by the Transfer-Encoding alone, and the connection closed after the answer, which RFC
+            // 9112 section 6.1 says a server MUST do, since a peer in between may have read the body by the other one.
+            if (hasLength)
+                keepAlive = false;
         }
-        else if (headers.TryGetValue("Content-Length", out var lengthText)
-                 && int.TryParse(lengthText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var length)
-                 && length > 0)
+        else if (hasLength)
         {
-            if (length > maxBodyBytes)
+            framing = ParseContentLength(lengthText!, out length);
+        }
+
+        return new HttpRequestHead(method, target, PathOf(target), headers, keepAlive, framing, length);
+    }
+
+    /// <summary>
+    /// Reads the body <paramref name="head"/> frames, or null when it is cut short or malformed. A body over the cap is
+    /// drained rather than buffered and comes back <see cref="HttpRequestMessageData.TooLarge"/>.
+    /// </summary>
+    public async Task<HttpRequestMessageData?> ReadBodyAsync(HttpRequestHead head, CancellationToken ct)
+    {
+        var keepAlive = head.KeepAlive;
+        var tooLarge = false;
+        byte[] body = [];
+        switch (head.Framing)
+        {
+            case BodyFraming.Chunked:
+                if (await ReadChunkedAsync(ct).ConfigureAwait(false) is not { } chunked)
+                    return null; // cut short or malformed, as a Content-Length body cut short below
+                (body, tooLarge) = (chunked.Body, chunked.TooLarge);
+                keepAlive &= chunked.Reusable;
+                break;
+            case BodyFraming.ContentLength when head.ContentLength > maxBodyBytes:
+                // Drain rather than buffer: the connection stays clean, so the 413 actually reaches the caller. A drain cut
+                // short ends as a body cut short does: nothing to answer and nothing to count.
+                if (!await DiscardAsync(head.ContentLength, ct).ConfigureAwait(false))
+                    return null;
+                tooLarge = true;
+                break;
+            case BodyFraming.ContentLength when head.ContentLength > 0:
+                body = await ReadExactAsync(head.ContentLength, ct).ConfigureAwait(false);
+                if (body.Length < head.ContentLength)
+                    return null; // truncated
+                break;
+            case BodyFraming.InvalidLength or BodyFraming.LengthPastInt:
+                throw new InvalidOperationException($"A request framed {head.Framing} has no body to read; it is refused first.");
+        }
+
+        return new HttpRequestMessageData(head.Method, head.Target, head.Path, head.Headers, body, keepAlive, tooLarge);
+    }
+
+    /// <summary>
+    /// A <c>Content-Length</c> as RFC 9110 section 8.6 has it: digits alone, so a sign (<c>+5</c>, <c>-5</c>), a list
+    /// (<c>10, 10</c>, or the header twice) and anything else is invalid framing, and digits past <see cref="int"/> are
+    /// over any cap.
+    /// </summary>
+    private static BodyFraming ParseContentLength(string text, out int length)
+    {
+        length = 0;
+        if (text.Length == 0)
+            return BodyFraming.InvalidLength;
+        foreach (var c in text)
+        {
+            if (c is < '0' or > '9')
+                return BodyFraming.InvalidLength;
+        }
+
+        return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out length)
+            ? BodyFraming.ContentLength
+            : BodyFraming.LengthPastInt;
+    }
+
+    /// <summary>
+    /// Reads and throws away what the peer still sends, so that closing does not turn bytes it left unread into a reset,
+    /// which loses an answer the peer has not read yet: until the end of the stream, or until <paramref name="declared"/>
+    /// more bytes have come (counting what is already buffered), giving up after <paramref name="quiet"/> without a byte
+    /// or <paramref name="total"/> in all (nginx's <c>lingering_timeout</c> and <c>lingering_time</c>). The bounds are on
+    /// the real clock.
+    /// </summary>
+    public async Task LingerAsync(long? declared, TimeSpan quiet, TimeSpan total, CancellationToken ct)
+    {
+        var remaining = declared ?? long.MaxValue;
+        var buffered = Math.Min(_end - _start, remaining);
+        _start += (int)buffered;
+        remaining -= buffered;
+
+        using var all = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        all.CancelAfter(total);
+        while (remaining > 0)
+        {
+            using var idle = CancellationTokenSource.CreateLinkedTokenSource(all.Token);
+            idle.CancelAfter(quiet);
+            int read;
+            try
             {
-                // Drain rather than buffer: the connection stays clean, so the 413 actually reaches the caller.
-                await DiscardAsync(length, ct).ConfigureAwait(false);
-                return new HttpRequestMessageData(method, target, PathOf(target), headers, [], keepAlive, true);
+                read = await stream.ReadAsync(_buffer.AsMemory(), idle.Token).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is OperationCanceledException or IOException or ObjectDisposedException)
+            {
+                return;
             }
 
-            body = await ReadExactAsync(length, ct).ConfigureAwait(false);
-            if (body.Length < length)
-                return null; // truncated
+            if (read == 0)
+                return;
+            remaining -= read;
         }
-
-        return new HttpRequestMessageData(method, target, PathOf(target), headers, body, keepAlive, tooLarge);
     }
 
     private static string PathOf(string target)
@@ -121,7 +260,7 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
         return path.Length == 0 ? "/" : path;
     }
 
-    private async Task<string?> ReadHeadAsync(CancellationToken ct)
+    private async Task<string?> ReadHeadTextAsync(CancellationToken ct)
     {
         var head = new List<byte>(1024);
         var matched = 0;
@@ -151,13 +290,22 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
 
     private async Task<byte[]> ReadExactAsync(int count, CancellationToken ct)
     {
-        var result = new byte[count];
+        // Grown as the bytes arrive, never made at the declared length up front: a head may declare MaxRequestBytes and
+        // then send nothing more.
+        var result = new byte[Math.Min(count, FirstBodyBytes)];
+        Volatile.Write(ref _bodyBytesHeld, result.Length);
         var written = 0;
         while (written < count)
         {
             if (_start == _end && !await FillAsync(ct).ConfigureAwait(false))
                 break;
             var available = Math.Min(_end - _start, count - written);
+            if (written + available > result.Length)
+            {
+                Array.Resize(ref result, (int)Math.Min(count, Math.Max(2L * result.Length, written + available)));
+                Volatile.Write(ref _bodyBytesHeld, result.Length);
+            }
+
             Array.Copy(_buffer, _start, result, written, available);
             _start += available;
             written += available;
@@ -193,7 +341,8 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
             {
                 // Keep draining so the connection stays usable, but stop buffering.
                 tooLarge = true;
-                await DiscardAsync((int)size, ct).ConfigureAwait(false);
+                if (!await DiscardAsync((int)size, ct).ConfigureAwait(false))
+                    return null;
             }
             else
             {
@@ -252,17 +401,20 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
         return true;
     }
 
-    private async Task DiscardAsync(int count, CancellationToken ct)
+    /// <summary>Reads and throws away <paramref name="count"/> bytes; false when the stream ends first.</summary>
+    private async Task<bool> DiscardAsync(int count, CancellationToken ct)
     {
         var remaining = count;
         while (remaining > 0)
         {
             if (_start == _end && !await FillAsync(ct).ConfigureAwait(false))
-                return;
+                return false;
             var available = Math.Min(_end - _start, remaining);
             _start += available;
             remaining -= available;
         }
+
+        return true;
     }
 
     /// <summary>The next line without its line break, or null when it runs past <paramref name="maxBytes"/> or the stream ends before it starts.</summary>

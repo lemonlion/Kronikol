@@ -116,7 +116,10 @@ public sealed class OtlpExportOptions
     /// <summary>Gzip the POSTed payload (<c>Content-Encoding: gzip</c>). Default false.</summary>
     public bool Gzip { get; set; }
 
-    /// <summary>Optional diagnostic log callback (batch failures, drops, sink start/stop).</summary>
+    /// <summary>
+    /// Optional diagnostic log callback (batch failures, drops, sink start/stop). Whatever it throws is ignored, so one
+    /// bound to a test's output that has ended changes nothing the sink does.
+    /// </summary>
     public Action<string>? Log { get; set; }
 
     /// <summary>Optional human-readable name of this exporter for diagnostics. Default <c>otlp-export</c>.</summary>

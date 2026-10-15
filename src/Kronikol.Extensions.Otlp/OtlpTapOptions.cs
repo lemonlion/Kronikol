@@ -55,7 +55,8 @@ public sealed class OtlpTapOptions
     /// <summary>
     /// Headers every request must carry (name → exact value, name case-insensitive). Anything missing or
     /// different is answered <c>401</c> and counted in <see cref="OtlpTap.UnauthenticatedRequests"/>, without
-    /// being forwarded or mapped. Empty (the default) accepts everything — only safe on loopback. The
+    /// being forwarded or mapped, and without anything of its body read or allocated: the headers are checked once
+    /// the head is read. Empty (the default) accepts everything — only safe on loopback. The
     /// intended use is a per-start shared secret, e.g. <c>x-kronikol-tap: &lt;random&gt;</c>, set on the
     /// exporter with <c>OTEL_EXPORTER_OTLP_HEADERS</c>.
     /// </summary>
@@ -121,7 +122,7 @@ public sealed class OtlpTapOptions
     /// <summary>Test name stamped on mapped interactions. Default <c>Unknown</c> (the tests file / ingest normalises it later).</summary>
     public string FallbackTestName { get; set; } = TestIdentityScope.UnknownTestName;
 
-    /// <summary>Captured statements/queries longer than this are truncated. Null = unlimited. Default 65536.</summary>
+    /// <summary>Captured statements/queries longer than this are truncated. Null = unlimited. Default 65536. A negative value is refused at start.</summary>
     public int? ContentCapBytes { get; set; } = 65536;
 
     /// <summary>Participant name used when a span carries no <c>service.name</c>. Default <c>unknown-service</c>.</summary>
@@ -129,7 +130,10 @@ public sealed class OtlpTapOptions
 
     // ------------------------------------------------------------------ diagnostics
 
-    /// <summary>Optional diagnostic log callback (listener start/stop, forward failures, drops).</summary>
+    /// <summary>
+    /// Optional diagnostic log callback (listener start/stop, refused requests, forward failures, drops). Whatever it throws
+    /// is ignored, so one bound to a test's output that has ended changes nothing the tap does.
+    /// </summary>
     public Action<string>? Log { get; set; }
 
     /// <summary>Optional human-readable name of this tap for diagnostics. Default <c>otlp</c>.</summary>
@@ -152,5 +156,8 @@ public sealed class OtlpTapOptions
             throw new ArgumentOutOfRangeException(nameof(QueueCapacity), "QueueCapacity must be positive.");
         if (MaxRequestBytes <= 0)
             throw new ArgumentOutOfRangeException(nameof(MaxRequestBytes), "MaxRequestBytes must be positive.");
+        // A range taken from a negative cap throws, so every payload with a capped attribute would fail.
+        if (ContentCapBytes is < 0)
+            throw new ArgumentOutOfRangeException(nameof(ContentCapBytes), "ContentCapBytes must be zero or more, or null for no cap.");
     }
 }

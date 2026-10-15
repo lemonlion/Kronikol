@@ -293,7 +293,7 @@ public class TcpTap : IAsyncDisposable
         }
         finally
         {
-            try { decoder?.Dispose(); } catch (Exception ex) { _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap decoder dispose failed: {ex.Message}"); }
+            try { decoder?.Dispose(); } catch (Exception ex) { TryLog($"[{_options.DisplayName}] tcp-tap decoder dispose failed: {ex.Message}"); }
             upstream?.Dispose();
             client.Dispose();
             Interlocked.Decrement(ref _live);
@@ -505,7 +505,7 @@ public class TcpTap : IAsyncDisposable
 
             Interlocked.Increment(ref _stuckConnectionsReaped);
             var detail = string.Create(CultureInfo.InvariantCulture, $"a command sent at {oldest:HH:mm:ss}Z is still unanswered after {threshold} — closed so a wedged client can reconnect");
-            _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap connection {state.ConnectionId} reaped: {detail}");
+            TryLog($"[{_options.DisplayName}] tcp-tap connection {state.ConnectionId} reaped: {detail}");
             Degrade(state.ConnectionId, CaptureDegradationKind.StuckConnectionReaped, detail);
             try { client.Dispose(); } catch { /* already closing */ }
             try { upstream.Dispose(); } catch { /* already closing */ }
@@ -523,7 +523,7 @@ public class TcpTap : IAsyncDisposable
             ? Interlocked.Increment(ref _droppedClientToServer)
             : Interlocked.Increment(ref _droppedServerToClient);
         if (total == 1)
-            _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap decode queue full ({direction}) — capture is dropping segments; forwarding is unaffected.");
+            TryLog($"[{_options.DisplayName}] tcp-tap decode queue full ({direction}) — capture is dropping segments; forwarding is unaffected.");
 
         // The hot path: tell the host at most once per connection per minute.
         var now = Environment.TickCount64;
@@ -588,7 +588,7 @@ public class TcpTap : IAsyncDisposable
         {
             Interlocked.Increment(ref _decoderResets);
             var detail = $"{ex.GetType().Name}: {ex.Message}";
-            _options.Log?.Invoke(
+            TryLog(
                 $"[{_options.DisplayName}] tcp-tap decoder reset on connection {context.ConnectionId} ({detail}); " +
                 "resuming at the next command boundary — the first interaction after it is stamped \"pairing uncertain\". Forwarding continues untouched.");
             Degrade(context.ConnectionId, CaptureDegradationKind.DecoderReset, detail);
@@ -607,7 +607,7 @@ public class TcpTap : IAsyncDisposable
         }
         catch (Exception ex)
         {
-            _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap decoder reset threw on connection {context.ConnectionId} ({ex.GetType().Name}: {ex.Message}).");
+            TryLog($"[{_options.DisplayName}] tcp-tap decoder reset threw on connection {context.ConnectionId} ({ex.GetType().Name}: {ex.Message}).");
             return false;
         }
     }
@@ -619,7 +619,7 @@ public class TcpTap : IAsyncDisposable
         var now = DateTimeOffset.UtcNow;
         Interlocked.CompareExchange(ref _firstDisabledAtTicks, now.UtcTicks, 0);
         Volatile.Write(ref _lastDisabledReason, detail);
-        _options.Log?.Invoke(
+        TryLog(
             $"[{_options.DisplayName}] tcp-tap {what} on connection {connectionId} ({detail}); " +
             "nothing on this connection is decoded from now on — forwarding continues untouched.");
         Degrade(connectionId, CaptureDegradationKind.DecodingDisabled, string.Create(CultureInfo.InvariantCulture, $"{detail} — arrows on this connection after {now:HH:mm:ss}Z are missing"));
@@ -658,7 +658,7 @@ public class TcpTap : IAsyncDisposable
     internal void CountClosedMidMessage(long connectionId, string detail)
     {
         Interlocked.Increment(ref _connectionsClosedMidMessage);
-        _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap connection {connectionId} closed mid-message ({detail}); its last interaction(s) were not recorded.");
+        TryLog($"[{_options.DisplayName}] tcp-tap connection {connectionId} closed mid-message ({detail}); its last interaction(s) were not recorded.");
         Degrade(connectionId, CaptureDegradationKind.ConnectionClosedMidMessage, detail);
     }
 
@@ -826,7 +826,7 @@ public class TcpTap : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                _options.Log?.Invoke($"[{_options.DisplayName}] tcp-tap identity resolver threw ({ex.Message}); using the fallback identity.");
+                TryLog($"[{_options.DisplayName}] tcp-tap identity resolver threw ({ex.Message}); using the fallback identity.");
             }
         }
 
@@ -844,7 +844,7 @@ public class TcpTap : IAsyncDisposable
 
     internal void CountDecodeError() => Interlocked.Increment(ref _decodeErrors);
 
-    internal void Diagnostic(string message) => _options.Log?.Invoke($"[{_options.DisplayName}] {message}");
+    internal void Diagnostic(string message) => TryLog($"[{_options.DisplayName}] {message}");
 
     /// <summary>
     /// Writes a line through <see cref="TcpTapOptions.Log"/>. The callback is the host's code, and nothing it throws

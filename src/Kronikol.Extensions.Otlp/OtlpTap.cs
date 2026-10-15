@@ -91,7 +91,11 @@ public sealed class OtlpTap : IAsyncDisposable
     /// <summary>Authenticated export requests accepted so far.</summary>
     public long RequestsReceived => Interlocked.Read(ref _requests);
 
-    /// <summary>Requests rejected with <c>401</c> because <see cref="OtlpTapOptions.ExpectedHeaders"/> was not satisfied.</summary>
+    /// <summary>
+    /// Requests rejected with <c>401</c> because <see cref="OtlpTapOptions.ExpectedHeaders"/> was not satisfied. The headers
+    /// are checked once the head is read, before anything of the body is read or allocated, so a request over
+    /// <see cref="OtlpTapOptions.MaxRequestBytes"/> without them is counted here, not in <see cref="PayloadsRejected"/>.
+    /// </summary>
     public long UnauthenticatedRequests => Interlocked.Read(ref _unauthenticated);
 
     /// <summary>Requests whose forward to <see cref="OtlpTapOptions.ForwardBaseUri"/> failed (answered <c>502</c>).</summary>
@@ -100,7 +104,10 @@ public sealed class OtlpTap : IAsyncDisposable
     /// <summary>Export payloads dropped because the mapping queue was full (D3: capture never blocks).</summary>
     public long PayloadsDropped => Interlocked.Read(ref _dropped);
 
-    /// <summary>Export requests refused with <c>413</c> because the body exceeded <see cref="OtlpTapOptions.MaxRequestBytes"/>; their spans were never read.</summary>
+    /// <summary>
+    /// Export requests refused with <c>413</c> because the body exceeded <see cref="OtlpTapOptions.MaxRequestBytes"/>; their
+    /// spans were never read. One whose exporter hung up before the drain was over is not counted: it was never answered.
+    /// </summary>
     public long PayloadsRejected => Interlocked.Read(ref _rejected);
 
     /// <summary>Accepted payloads whose decode, span mapping or sink write threw (a sink that cannot write, an unexpected span shape); their spans are lost.</summary>
@@ -277,20 +284,35 @@ public sealed class OtlpTap : IAsyncDisposable
     {
         try
         {
-            client.NoDelay = true;
             using (client)
             {
+                // Inside the using: were setting it to throw, the client would be left to its finalizer, and its socket held.
+                client.NoDelay = true;
                 await using var stream = client.GetStream();
                 var reader = new HttpRequestReader(stream, _options.MaxRequestBytes);
                 while (!ct.IsCancellationRequested)
                 {
-                    var request = await reader.ReadAsync(ct).ConfigureAwait(false);
+                    var head = await reader.ReadHeadAsync(ct).ConfigureAwait(false);
+                    if (head is null)
+                        return;
+
+                    // Refused before anything of the body is read or allocated.
+                    if (Refusal(head) is { } refusal)
+                    {
+                        await WriteResponseAsync(stream, refusal.Status, refusal.Reason, "application/json", Utf8(refusal.Body), keepAlive: false, ct).ConfigureAwait(false);
+                        await CloseInStagesAsync(client, reader, head, ct).ConfigureAwait(false);
+                        return;
+                    }
+
+                    var request = await reader.ReadBodyAsync(head, ct).ConfigureAwait(false);
                     if (request is null)
                         return;
 
-                    var keepAlive = await HandleAsync(request, stream, ct).ConfigureAwait(false);
-                    if (!keepAlive)
+                    if (!await HandleAsync(request, stream, ct).ConfigureAwait(false))
+                    {
+                        await CloseInStagesAsync(client, reader, unread: null, ct).ConfigureAwait(false);
                         return;
+                    }
                 }
             }
         }
@@ -300,25 +322,72 @@ public sealed class OtlpTap : IAsyncDisposable
         }
         catch (Exception ex)
         {
-            _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap connection error: {ex.Message}");
+            TryLog($"[{_options.DisplayName}] otlp-tap connection error: {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// Why a request is refused on its head alone, or null: a caller without <see cref="OtlpTapOptions.ExpectedHeaders"/>
+    /// first, whatever its size, so it has nothing of its body read or allocated; then a <c>Content-Length</c> that is not
+    /// digits (its framing is lost, RFC 9112 section 6.3) or is past what an <c>int</c> holds (over any cap). Counted and
+    /// logged here.
+    /// </summary>
+    private (int Status, string Reason, string Body)? Refusal(HttpRequestHead head)
+    {
+        if (!IsAuthenticated(head.Headers))
+        {
+            Interlocked.Increment(ref _unauthenticated);
+            TryLog($"[{_options.DisplayName}] otlp-tap rejected an unauthenticated {head.Method} {head.Path}");
+            return (401, "Unauthorized", "{\"error\":\"unauthorized\"}");
+        }
+
+        switch (head.Framing)
+        {
+            case BodyFraming.InvalidLength:
+                TryLog($"[{_options.DisplayName}] otlp-tap refused a {head.Method} {head.Path} whose Content-Length is not a number");
+                return (400, "Bad Request", "{\"error\":\"otlp-tap: Content-Length must be digits alone\"}");
+            case BodyFraming.LengthPastInt:
+                Interlocked.Increment(ref _rejected);
+                TryLog($"[{_options.DisplayName}] otlp-tap refused an export over MaxRequestBytes ({_options.MaxRequestBytes})");
+                return (413, "Payload Too Large", "{\"error\":\"payload too large\"}");
+            default:
+                return null;
+        }
+    }
+
+    /// <summary>
+    /// Closes a connection whose answer is written, in stages: a FIN, then whatever the peer still sends read and thrown
+    /// away until it ends or the declared body has come, giving up after <see cref="LingerQuiet"/> without a byte or
+    /// <see cref="LingerTotal"/> in all, and only then the close. Closed at once, bytes the peer had sent and the tap had
+    /// not read would turn the close into a reset, and the peer would lose an answer it had not read yet.
+    /// </summary>
+    private static async Task CloseInStagesAsync(TcpClient client, HttpRequestReader reader, HttpRequestHead? unread, CancellationToken ct)
+    {
+        try
+        {
+            client.Client.Shutdown(SocketShutdown.Send);
+        }
+        catch (Exception ex) when (ex is SocketException or ObjectDisposedException)
+        {
+            return; // the peer is gone already
+        }
+
+        var declared = unread is { Framing: BodyFraming.ContentLength } head ? head.ContentLength : (long?)null;
+        await reader.LingerAsync(declared, LingerQuiet, LingerTotal, ct).ConfigureAwait(false);
+    }
+
+    // A connection closed in stages lingers for what its peer still sends: 5 s without a byte, 30 s in all (nginx's
+    // lingering_timeout and lingering_time), on the real clock.
+    private static readonly TimeSpan LingerQuiet = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan LingerTotal = TimeSpan.FromSeconds(30);
 
     private async Task<bool> HandleAsync(HttpRequestMessageData request, Stream stream, CancellationToken ct)
     {
         if (request.TooLarge)
         {
             Interlocked.Increment(ref _rejected);
-            _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap refused an export over MaxRequestBytes ({_options.MaxRequestBytes})");
+            TryLog($"[{_options.DisplayName}] otlp-tap refused an export over MaxRequestBytes ({_options.MaxRequestBytes})");
             await WriteResponseAsync(stream, 413, "Payload Too Large", "application/json", Utf8("{\"error\":\"payload too large\"}"), request.KeepAlive, ct).ConfigureAwait(false);
-            return request.KeepAlive;
-        }
-
-        if (!IsAuthenticated(request))
-        {
-            Interlocked.Increment(ref _unauthenticated);
-            _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap rejected an unauthenticated {request.Method} {request.Path}");
-            await WriteResponseAsync(stream, 401, "Unauthorized", "application/json", Utf8("{\"error\":\"unauthorized\"}"), request.KeepAlive, ct).ConfigureAwait(false);
             return request.KeepAlive;
         }
 
@@ -337,8 +406,8 @@ public sealed class OtlpTap : IAsyncDisposable
         if (isTraces && request.Body.Length > 0 && !_queue.Writer.TryWrite(new Payload(request.Body, request.ContentType, request.ContentEncoding)))
         {
             Interlocked.Increment(ref _dropped);
-            _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap dropped an export payload "
-                                 + (Volatile.Read(ref _disposed) == 1 ? "(the tap is shutting down)" : "(queue full)"));
+            TryLog($"[{_options.DisplayName}] otlp-tap dropped an export payload "
+                   + (Volatile.Read(ref _disposed) == 1 ? "(the tap is shutting down)" : "(queue full)"));
         }
 
         if (_options.ForwardBaseUri is not null)
@@ -371,14 +440,14 @@ public sealed class OtlpTap : IAsyncDisposable
 
     internal Func<Task>? AfterResponseWritten { get; set; }
 
-    private bool IsAuthenticated(HttpRequestMessageData request)
+    private bool IsAuthenticated(IReadOnlyDictionary<string, string> headers)
     {
         if (_options.ExpectedHeaders.Count == 0)
             return true;
 
         foreach (var (name, expected) in _options.ExpectedHeaders)
         {
-            if (!request.Headers.TryGetValue(name, out var actual) || !string.Equals(actual, expected, StringComparison.Ordinal))
+            if (!headers.TryGetValue(name, out var actual) || !string.Equals(actual, expected, StringComparison.Ordinal))
                 return false;
         }
 
@@ -405,7 +474,7 @@ public sealed class OtlpTap : IAsyncDisposable
         // Never resolved against the base: a target starting with "//" would name a host of its own.
         if (OriginForm(request.Target) is not { } origin)
         {
-            _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap refused a request target with no path to forward: {request.Method} {request.Target}");
+            TryLog($"[{_options.DisplayName}] otlp-tap refused a request target with no path to forward: {request.Method} {request.Target}");
             await WriteResponseAsync(stream, 400, "Bad Request", "application/json",
                 Utf8("{\"error\":\"otlp-tap: the request target must be a path or an http URI\"}"), request.KeepAlive, ct).ConfigureAwait(false);
             return;
@@ -444,7 +513,7 @@ public sealed class OtlpTap : IAsyncDisposable
             // The collector was unreachable or did not answer in time. A cancellation of the tap's own token is not that:
             // the tap is stopping, and the exception ends the connection uncounted and unanswered (ServeAsync).
             Interlocked.Increment(ref _forwardFailures);
-            _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap forward failed: {ex.Message}");
+            TryLog($"[{_options.DisplayName}] otlp-tap forward failed: {ex.Message}");
             await WriteResponseAsync(stream, 502, "Bad Gateway", "application/json",
                 Utf8("{\"error\":\"otlp-tap: upstream collector unreachable\"}"), request.KeepAlive, ct).ConfigureAwait(false);
             return;
@@ -522,7 +591,7 @@ public sealed class OtlpTap : IAsyncDisposable
         catch (Exception ex)
         {
             Interlocked.Increment(ref _failed);
-            _options.Log?.Invoke($"[{_options.DisplayName}] otlp-tap could not map an export payload: {ex.Message}");
+            TryLog($"[{_options.DisplayName}] otlp-tap could not map an export payload: {ex.Message}");
         }
     }
 
@@ -609,7 +678,8 @@ public sealed class OtlpTap : IAsyncDisposable
         _cts?.Dispose();
         TryLog(
             $"[{_options.DisplayName}] otlp-tap stopped ({RequestsReceived} exports, {SpansReceived} spans, {SpansMapped} mapped, "
-            + $"{SpansIgnored} ignored, {PayloadsDropped} dropped, {UnauthenticatedRequests} unauthenticated, {ForwardFailures} forward failures, "
+            + $"{SpansIgnored} ignored, {PayloadsDropped} dropped, {PayloadsRejected} rejected, {PayloadsFailed} failed, "
+            + $"{UnauthenticatedRequests} unauthenticated, {ForwardFailures} forward failures, "
             + $"{AcceptFailures} failed accepts)");
     }
 

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Diagnostics;
 using System.IO.Compression;
@@ -44,10 +45,19 @@ public sealed class ProxyTap : IAsyncDisposable
         "Expect", "Upgrade", "TE", "Trailer",
     };
 
+    // How long the client's own timeout runs behind the forward's deadline, as a backstop.
+    private static readonly TimeSpan ClientTimeoutBackstop = TimeSpan.FromSeconds(10);
+
     private readonly ProxyTapOptions _options;
     private readonly HttpListener _listener = new();
+    // Every answer whose handler has not finished, so DisposeAsync can settle each by its phase.
+    private readonly ConcurrentDictionary<CallerAnswer, byte> _answers = new();
+    // Cancelled once the listener is closed, which ends the accept loop's wait for a request.
+    private readonly CancellationTokenSource _listenerClosed = new();
     private HttpClient? _upstream;
     private CancellationTokenSource? _cts;
+    // The tap's lifetime, taken once while the tap runs: a handler that outlives DisposeAsync reads it after _cts is disposed.
+    private CancellationToken _lifetime;
     private Task? _loop;
     private int _inflight;
     private int _disposed;
@@ -93,6 +103,10 @@ public sealed class ProxyTap : IAsyncDisposable
 
     // Exchanges whose handler has not finished (Kronikol.Tests.ProxyTap): a fact hangs up only once the tap holds the request.
     internal int InFlight => Volatile.Read(ref _inflight);
+
+    // Whether the tap is stopping: DisposeAsync has begun, or the token StartAsync was given is cancelled. A request that
+    // arrives then is answered 503 and never forwarded.
+    internal bool Stopping => Volatile.Read(ref _disposed) == 1 || _lifetime.IsCancellationRequested;
 
     // Wraps the caller's request body before it is read (Kronikol.Tests.ProxyTap): a fact throws from the read whatever
     // exception it names, on any platform. Null in production.
@@ -165,7 +179,23 @@ public sealed class ProxyTap : IAsyncDisposable
     {
         if (Interlocked.Increment(ref _captureFaults) == 1)
             Volatile.Write(ref _firstCaptureFault, $"{exception.GetType().Name}, {exception.Message}");
-        _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap: {what} threw {exception.GetType().Name}: {exception.Message}");
+        TryLog($"[{_options.DisplayName}] proxy-tap: {what} threw {exception.GetType().Name}: {exception.Message}");
+    }
+
+    /// <summary>
+    /// Writes a line through <see cref="ProxyTapOptions.Log"/>. The callback is the host's code, and nothing it throws
+    /// changes what the tap does: one that writes to a test's output after the test has ended throws.
+    /// </summary>
+    private void TryLog(string message)
+    {
+        try
+        {
+            _options.Log?.Invoke(message);
+        }
+        catch
+        {
+            // The host's callback failed; the tap carries on.
+        }
     }
 
     /// <summary>Starts listening. Throws if the options are invalid or the port cannot be bound.</summary>
@@ -173,13 +203,14 @@ public sealed class ProxyTap : IAsyncDisposable
     {
         _options.Validate();
 
+        var forwardDeadline = ProxyTapOptions.Deadline(_options.ForwardTimeout);
         _upstream = new HttpClient(new SocketsHttpHandler
         {
             UseProxy = false,
             AllowAutoRedirect = false,
             // None: the wire bytes must reach the caller exactly as the service sent them; capture decodes its own copy.
             AutomaticDecompression = DecompressionMethods.None,
-            ConnectTimeout = _options.ConnectTimeout,
+            ConnectTimeout = ProxyTapOptions.Deadline(_options.ConnectTimeout) ?? Timeout.InfiniteTimeSpan,
             UseCookies = false,
             // None: the traceparent a forward carries is the tap's to choose, and its client span is the forward's span.
             // With a propagator the handler runs whatever HttpClient instrumentation the process has, and OpenTelemetry's
@@ -189,13 +220,18 @@ public sealed class ProxyTap : IAsyncDisposable
         })
         {
             BaseAddress = _options.ForwardBaseUri,
-            Timeout = _options.ForwardTimeout + TimeSpan.FromSeconds(10),
+            // A backstop behind the forward's own deadline (HandleAsync), and none when the forward has none: an infinite
+            // ForwardTimeout (-1 ms) plus 10 s came to 9.999 s, which cut every forward there.
+            Timeout = forwardDeadline is { } forward && forward < ProxyTapOptions.LongestDeadline - ClientTimeoutBackstop
+                ? forward + ClientTimeoutBackstop
+                : Timeout.InfiniteTimeSpan,
         };
 
         _listener.Prefixes.Add(ListenUri.ToString());
         _listener.Start();
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _lifetime = _cts.Token;
         // The accept loop, and every request it hands on, runs in the context it is started in. Started under an activity
         // (a fixture's, a host's), every call that brought no trace would be forwarded in that activity's trace, with its
         // baggage, whatever test made it. Requests start with no current activity.
@@ -203,26 +239,28 @@ public sealed class ProxyTap : IAsyncDisposable
         Activity.Current = null;
         try
         {
-            _loop = Task.Run(() => AcceptLoopAsync(_cts.Token), CancellationToken.None);
+            _loop = Task.Run(AcceptLoopAsync, CancellationToken.None);
         }
         finally
         {
             Activity.Current = current;
         }
-        _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap listening on {ListenUri} → {_options.ForwardBaseUri}");
+        TryLog($"[{_options.DisplayName}] proxy-tap listening on {ListenUri} → {_options.ForwardBaseUri}");
         return Task.CompletedTask;
     }
 
-    private async Task AcceptLoopAsync(CancellationToken ct)
+    // Runs until the listener closes, not until the tap's token is cancelled: while the tap stops, a request that arrives is
+    // answered 503 (GuardedHandleAsync) rather than left to the listener's close, which answers 200 OK on Linux and macOS.
+    private async Task AcceptLoopAsync()
     {
-        while (!ct.IsCancellationRequested && _listener.IsListening)
+        while (_listener.IsListening)
         {
             HttpListenerContext context;
             try
             {
-                context = await _listener.GetContextAsync().WaitAsync(ct).ConfigureAwait(false);
+                context = await _listener.GetContextAsync().WaitAsync(_listenerClosed.Token).ConfigureAwait(false);
             }
-            catch (Exception ex) when (ex is OperationCanceledException or HttpListenerException or ObjectDisposedException)
+            catch (Exception ex) when (ex is OperationCanceledException or HttpListenerException or ObjectDisposedException or InvalidOperationException)
             {
                 return;
             }
@@ -235,24 +273,36 @@ public sealed class ProxyTap : IAsyncDisposable
     {
         Interlocked.Increment(ref _inflight);
         var answer = new CallerAnswer(context.Response);
+        _answers.TryAdd(answer, 0);
         try
         {
-            await HandleAsync(context, answer).ConfigureAwait(false);
+            if (Stopping)
+                RefuseWhileStopping(answer);
+            else
+                await HandleAsync(context, answer).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             // Only a fault the tap did not expect lands here: the caller's request and answer, the forward, the record, the
             // identity resolver and the span listeners all have catches of their own. It is counted by what the caller
-            // got: a 502, when it had no answer yet, is a forward failure; after its answer, a capture fault.
-            _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap error: {ex.Message}");
-            if (answer.Closed)
+            // got: a 502, when it had no answer yet, is a forward failure; after its answer, a capture fault. An answer the
+            // tap's stopping ended is neither: what its I/O throws from then on is the stop's.
+            if (answer.IsEnded)
             {
-                CaptureFault("the tap", ex);
+                TryLog($"[{_options.DisplayName}] proxy-tap stopping: {ex.Message}");
             }
             else
             {
-                Interlocked.Increment(ref _forwardFailures);
-                TryRespondBadGateway(answer, BadGatewayBody(ex.Message));
+                TryLog($"[{_options.DisplayName}] proxy-tap error: {ex.Message}");
+                if (answer.IsClosed)
+                {
+                    CaptureFault("the tap", ex);
+                }
+                else
+                {
+                    Interlocked.Increment(ref _forwardFailures);
+                    TryRespond(answer, 502, BadGatewayBody(ex.Message));
+                }
             }
         }
         finally
@@ -260,9 +310,16 @@ public sealed class ProxyTap : IAsyncDisposable
             // Every exit, whatever it did: a response the tap did not close is aborted, or the managed listener (Linux,
             // macOS) holds its connection until the tap is disposed.
             answer.EndUnclosed();
+            _answers.TryRemove(answer, out _);
             Interlocked.Decrement(ref _inflight);
         }
     }
+
+    /// <summary>
+    /// Answers a request that arrived while the tap stops: <c>503</c> and <c>Connection: close</c>, never forwarded, so
+    /// the caller is told the truth rather than left to the listener's close.
+    /// </summary>
+    private void RefuseWhileStopping(CallerAnswer answer) => TryRespond(answer, 503, ErrorBody(503, "the tap is stopping"));
 
     private async Task HandleAsync(HttpListenerContext context, CallerAnswer answer)
     {
@@ -298,8 +355,21 @@ public sealed class ProxyTap : IAsyncDisposable
             }
         }
 
+        // The request is whole. Unless the tap's stopping ended its answer meanwhile, it is the forward's from here on.
+        if (!answer.TryBeginForward())
+            return;
+
         // ---- identity --------------------------------------------------------------------------
         var identity = ResolveIdentity(requestHeaders, inboundTraceparent);
+
+        // The resolver is the host's code, and it can hold a request until the tap has begun to stop. A forward the stop
+        // came before is never begun: the request is refused as one that arrives while the tap stops, neither forwarded
+        // nor recorded, and a caller still being answered hears the 503.
+        if (Stopping)
+        {
+            RefuseWhileStopping(answer);
+            return;
+        }
         var resolved = identity; // what the request named, before the fallback below: only that may name a trace
         var ignore = requestHeaders.ContainsKey(TestTrackingHttpHeaders.Ignore);
         var capture = identity is not null || _options.CaptureUnattributedRequests;
@@ -394,9 +464,10 @@ public sealed class ProxyTap : IAsyncDisposable
         }
 
         // ---- forward ---------------------------------------------------------------------------
-        var lifetime = _cts?.Token ?? CancellationToken.None;
+        var lifetime = _lifetime;
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(lifetime);
-        deadline.CancelAfter(_options.ForwardTimeout);
+        if (ProxyTapOptions.Deadline(_options.ForwardTimeout) is { } forwardDeadline)
+            deadline.CancelAfter(forwardDeadline);
 
         using var message = new HttpRequestMessage(new HttpMethod(request.HttpMethod), forwardUri);
         if (requestBody.Length > 0 || request.HasEntityBody)
@@ -456,7 +527,7 @@ public sealed class ProxyTap : IAsyncDisposable
 
             if (failure == ForwardFailureKind.Stopping)
             {
-                _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap stopping: {error}");
+                TryLog($"[{_options.DisplayName}] proxy-tap stopping: {error}");
             }
             else
             {
@@ -465,11 +536,12 @@ public sealed class ProxyTap : IAsyncDisposable
                 else if (!capture || identity is null)
                     Interlocked.Increment(ref _failuresWithoutIdentity);
                 Interlocked.Increment(ref _forwardFailures);
-                _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap error: {error}");
+                TryLog($"[{_options.DisplayName}] proxy-tap error: {error}");
             }
 
-            // Tried for a stopping tap too: the listener may still be open, and if it is not, the response is aborted.
-            TryRespondBadGateway(answer, badGateway);
+            // Written for a stopping tap too: DisposeAsync keeps the listener open until the drain is over, and a forward it
+            // cut short is answered the 502 its record names.
+            TryRespond(answer, 502, badGateway);
             return;
         }
         finally
@@ -485,8 +557,10 @@ public sealed class ProxyTap : IAsyncDisposable
         EndSpan(client, restore: server ?? outer);
         EndSpan(server, restore: outer);
 
-        // Respond first, record second.
-        await RespondAsync(answer, status, responseHeaders, responseContentType, responseContentEncoding, responseBody).ConfigureAwait(false);
+        // Respond first, record second. An answer the tap's stopping has ended is not written, and the exchange is still
+        // handled and recorded, as one whose caller hangs up while it is written.
+        if (answer.TryBeginAnswer())
+            await RespondAsync(answer, status, responseHeaders, responseContentType, responseContentEncoding, responseBody).ConfigureAwait(false);
         Interlocked.Increment(ref _handled);
         AfterAnswered?.Invoke();
 
@@ -605,7 +679,7 @@ public sealed class ProxyTap : IAsyncDisposable
     private string? NotApplied()
     {
         if (Interlocked.Increment(ref _traceIdNotApplied) == 1)
-            _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap: TraceIdFromIdentity did not apply, because the test id is not a W3C trace id (32 lower-case hex digits, not all zero); the request was forwarded under a random trace. Diagnostics() counts every such request.");
+            TryLog($"[{_options.DisplayName}] proxy-tap: TraceIdFromIdentity did not apply, because the test id is not a W3C trace id (32 lower-case hex digits, not all zero); the request was forwarded under a random trace. Diagnostics() counts every such request.");
         return null;
     }
 
@@ -822,12 +896,13 @@ public sealed class ProxyTap : IAsyncDisposable
         }
     }
 
-    private static async Task RespondAsync(
+    private async Task RespondAsync(
         CallerAnswer answer, int status, (string Key, string? Value)[] headers, string? contentType, string? contentEncoding, byte[] body)
     {
         var response = answer.Response;
         try
         {
+            CloseAfterIfStopping(response);
             response.StatusCode = status;
             foreach (var (key, value) in headers)
             {
@@ -852,24 +927,38 @@ public sealed class ProxyTap : IAsyncDisposable
             await response.OutputStream.WriteAsync(body).ConfigureAwait(false);
             answer.Close();
         }
-        catch (Exception ex) when (ex is HttpListenerException or ObjectDisposedException or InvalidOperationException)
+        catch (Exception ex) when (ex is HttpListenerException or ObjectDisposedException or InvalidOperationException || answer.IsEnded)
         {
-            // The client hung up; the exchange is still recorded, and GuardedHandleAsync aborts the response.
+            // The client hung up, or the tap's stopping ended the answer (whatever its write threw then); the exchange is
+            // still recorded, and GuardedHandleAsync aborts the response.
         }
+    }
+
+    /// <summary>
+    /// Once the tap is stopping, an answer closes its connection after it (<c>Connection: close</c>): closing the listener
+    /// resets the connections http.sys keeps alive, and a caller that had not yet read its answer lost it to that reset.
+    /// </summary>
+    private void CloseAfterIfStopping(HttpListenerResponse response)
+    {
+        if (Stopping)
+            response.KeepAlive = false;
     }
 
     /// <summary>
     /// The body of the tap's own <c>502</c>: <c>{"error":{"code":502,"message":"proxy-tap: …"}}</c>, valid JSON whatever the
     /// message holds (a quote stays a quote, a line break is escaped, non-ASCII stays readable).
     /// </summary>
-    internal static byte[] BadGatewayBody(string message)
+    internal static byte[] BadGatewayBody(string message) => ErrorBody(502, message);
+
+    /// <summary>The body of an answer of the tap's own: <c>{"error":{"code":…,"message":"proxy-tap: …"}}</c>.</summary>
+    internal static byte[] ErrorBody(int code, string message)
     {
         using var buffer = new MemoryStream();
         using (var json = new Utf8JsonWriter(buffer, new JsonWriterOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }))
         {
             json.WriteStartObject();
             json.WriteStartObject("error");
-            json.WriteNumber("code", 502);
+            json.WriteNumber("code", code);
             json.WriteString("message", "proxy-tap: " + message);
             json.WriteEndObject();
             json.WriteEndObject();
@@ -884,18 +973,23 @@ public sealed class ProxyTap : IAsyncDisposable
 
     internal Action? AfterAnswered { get; set; }
 
-    private static void TryRespondBadGateway(CallerAnswer answer, byte[] payload)
+    /// <summary>Writes an answer of the tap's own, a JSON body with <paramref name="status"/>, unless the answer has already ended.</summary>
+    private void TryRespond(CallerAnswer answer, int status, byte[] payload)
     {
+        if (!answer.IsOpen)
+            return; // closed, or ended by the tap's stopping: nothing left to tell
+
         var response = answer.Response;
         try
         {
-            response.StatusCode = 502;
+            CloseAfterIfStopping(response);
+            response.StatusCode = status;
             response.ContentType = "application/json";
             response.ContentLength64 = payload.Length;
             response.OutputStream.Write(payload);
             answer.Close();
         }
-        catch (Exception ex) when (ex is HttpListenerException or ObjectDisposedException or InvalidOperationException)
+        catch (Exception ex) when (ex is HttpListenerException or ObjectDisposedException or InvalidOperationException || answer.IsEnded)
         {
             // Nothing left to tell; GuardedHandleAsync aborts the response.
         }
@@ -907,41 +1001,105 @@ public sealed class ProxyTap : IAsyncDisposable
     /// <see cref="HttpListener"/> (Linux, macOS) keeps a connection until its response is closed or aborted, so a
     /// response left open is a socket held until the tap is disposed.
     /// </summary>
+    /// <remarks>
+    /// The answer has one state, moved only by <see cref="Interlocked.CompareExchange(ref int, int, int)"/>, since the
+    /// handler and <see cref="DisposeAsync"/> may end it from two threads at once: each acts only when its move wins, so a
+    /// response is closed or ended once, and never aborted after a close that succeeded.
+    /// </remarks>
     internal sealed class CallerAnswer(HttpListenerResponse response)
     {
+        // Open phases first: the request body is being read (or not yet begun), the forward is running, the answer is
+        // being written. Then the ends: closing, closed by the tap, or ended by an abort.
+        private const int Reading = 0, Forwarding = 1, Answering = 2, Closing = 3, Closed = 4, Ended = 5;
+
+        private int _state;
+
         public HttpListenerResponse Response { get; } = response;
 
         /// <summary>The status a response not yet started is ended with: 502, or 400 when the request never arrived whole.</summary>
         public int StatusIfUnclosed { get; set; } = 502;
 
-        /// <summary>Whether the tap closed the response itself, which sets it only once <see cref="HttpListenerResponse.Close()"/> has returned.</summary>
-        public bool Closed { get; private set; }
+        /// <summary>Whether the tap closed the response itself, which it is only once <see cref="HttpListenerResponse.Close()"/> has returned.</summary>
+        public bool IsClosed => Volatile.Read(ref _state) == Closed;
 
+        /// <summary>Whether the response was ended by an abort: whatever its I/O throws from then on is that end's, never a forward failure.</summary>
+        public bool IsEnded => Volatile.Read(ref _state) == Ended;
+
+        /// <summary>Whether neither a close nor an end has begun.</summary>
+        public bool IsOpen => Volatile.Read(ref _state) <= Answering;
+
+        /// <summary>The request is whole and the forward begins; false when the answer was ended meanwhile.</summary>
+        public bool TryBeginForward() => Interlocked.CompareExchange(ref _state, Forwarding, Reading) == Reading;
+
+        /// <summary>The upstream has answered and the answer is written; false when the answer was ended meanwhile.</summary>
+        public bool TryBeginAnswer() => Interlocked.CompareExchange(ref _state, Answering, Forwarding) == Forwarding;
+
+        /// <summary>
+        /// Closes the response, unless it was ended first. A <see cref="HttpListenerResponse.Close()"/> that throws (on Windows,
+        /// 1229 for a caller gone) is passed on and leaves the answer open, so <see cref="EndUnclosed"/> still aborts it.
+        /// </summary>
         public void Close()
         {
-            Response.Close();
-            Closed = true;
+            var phase = Volatile.Read(ref _state);
+            if (phase > Answering || Interlocked.CompareExchange(ref _state, Closing, phase) != phase)
+                return;
+            try
+            {
+                Response.Close();
+                Volatile.Write(ref _state, Closed);
+            }
+            catch
+            {
+                Volatile.Write(ref _state, phase);
+                throw;
+            }
         }
 
         /// <summary>
         /// Aborts the response unless the tap closed it, with <see cref="StatusIfUnclosed"/> set first, and never throws: it
         /// runs in a <c>finally</c> before the in-flight count goes down, and a failed end leaves the response as it was.
         /// </summary>
-        public void EndUnclosed()
+        public void EndUnclosed() => TryEnd(StatusIfUnclosed, readingOnly: false, closeConnection: false);
+
+        /// <summary>Ends the answer of a request whose body is still being read, or not yet begun, with <paramref name="status"/>; false in any other phase.</summary>
+        public bool EndWhileReading(int status) => TryEnd(status, readingOnly: true, closeConnection: true);
+
+        /// <summary>Ends the answer in whatever open phase it is, with <paramref name="status"/> where its head is not yet sent.</summary>
+        public bool EndWith(int status) => TryEnd(status, readingOnly: false, closeConnection: true);
+
+        private bool TryEnd(int status, bool readingOnly, bool closeConnection)
         {
-            if (Closed)
-                return;
+            while (true)
+            {
+                var phase = Volatile.Read(ref _state);
+                if (phase > Answering || (readingOnly && phase != Reading))
+                    return false;
+                if (Interlocked.CompareExchange(ref _state, Ended, phase) == phase)
+                    break;
+            }
 
             // The managed listener's Abort() first writes a head not yet sent, with the status set (200 unless told
             // otherwise), so a failure status makes that head true; once a head is out, the late status is never sent
             // and Abort() only closes. http.sys sends nothing more.
             try
             {
-                Response.StatusCode = StatusIfUnclosed;
+                Response.StatusCode = status;
             }
             catch (Exception)
             {
                 // The response is closed (the setter does not throw once the head has gone).
+            }
+
+            if (closeConnection)
+            {
+                try
+                {
+                    Response.KeepAlive = false;
+                }
+                catch (Exception)
+                {
+                    // The head has gone; the abort closes the connection all the same.
+                }
             }
 
             try
@@ -952,21 +1110,40 @@ public sealed class ProxyTap : IAsyncDisposable
             {
                 // On Windows the listener is closed (the tap is stopping), and its request queue with it.
             }
+
+            return true;
         }
     }
 
     /// <summary>
-    /// Stops listening, drains in-flight exchanges briefly (≤ 2 s) so their captures land, and releases the
-    /// upstream client. Safe to await more than once, and on a tap that never started. It gives the port
-    /// back without asking for it again, so another listener taking that port cannot fail the disposal.
+    /// Stops the tap, settling each exchange by its phase before the listener closes, so no caller is told that a request
+    /// the tap did not answer succeeded: a request whose body is still arriving is answered <c>503 Service
+    /// Unavailable</c> (on Windows the connection is reset), a forward in flight is cut short and answered the
+    /// <c>502</c> its record names, an answer in hand is given up to 2 s to finish so its capture lands, and a request
+    /// that arrives meanwhile is answered <c>503</c> without being forwarded. What is still open after those 2 s is ended.
+    /// Then it releases the upstream client. Safe to await more than once, and on a tap that never started. It gives the
+    /// port back without asking for it again, so another listener taking that port cannot fail the disposal.
     /// </summary>
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) == 1)
             return;
 
+        // Stopping from here on: a forward in flight is cut and answers its own 502 (HandleAsync), and a request that
+        // arrives is answered 503 (GuardedHandleAsync).
         if (_cts is not null)
             await _cts.CancelAsync().ConfigureAwait(false);
+
+        // Closing the managed listener (Linux, macOS) answers 200 OK on every connection it still holds, and waits a
+        // second on each body that is not coming; an answer still reading its request's body is ended first.
+        foreach (var answer in _answers.Keys)
+            answer.EndWhileReading(503);
+
+        for (var waited = 0; Volatile.Read(ref _inflight) > 0 && waited < 2_000; waited += 25)
+            await Task.Delay(25).ConfigureAwait(false);
+
+        foreach (var answer in _answers.Keys)
+            answer.EndWith(503);
 
         try
         {
@@ -976,7 +1153,7 @@ public sealed class ProxyTap : IAsyncDisposable
             // endpoint listener because the map no longer holds one for that host and port — throwing
             // "Address already in use" if anything claimed the port in between. Giving a port up must
             // not depend on being able to get it back. Close() stops listening on its own, and the
-            // accept loop is already unblocked by the cancellation above.
+            // accept loop's wait ends just below.
             _listener.Close();
         }
         catch (Exception ex) when (ex is ObjectDisposedException or HttpListenerException)
@@ -984,6 +1161,7 @@ public sealed class ProxyTap : IAsyncDisposable
             // Already closed, or the port has moved on. Nothing left to release.
         }
 
+        await _listenerClosed.CancelAsync().ConfigureAwait(false);
         if (_loop is not null)
         {
             try
@@ -996,11 +1174,9 @@ public sealed class ProxyTap : IAsyncDisposable
             }
         }
 
-        for (var waited = 0; Volatile.Read(ref _inflight) > 0 && waited < 2_000; waited += 25)
-            await Task.Delay(25).ConfigureAwait(false);
-
         _upstream?.Dispose();
         _cts?.Dispose();
-        _options.Log?.Invoke($"[{_options.DisplayName}] proxy-tap stopped ({RequestsHandled} forwarded, {RequestsCaptured} captured)");
+        _listenerClosed.Dispose();
+        TryLog($"[{_options.DisplayName}] proxy-tap stopped ({RequestsHandled} forwarded, {RequestsCaptured} captured)");
     }
 }

@@ -50,7 +50,7 @@ public sealed class ProxyTapOptions
     /// <summary>Optional <see cref="DependencyCategories"/> value for the caller.</summary>
     public string? CallerDependencyCategory { get; set; }
 
-    /// <summary>Decoded request/response bodies longer than this are truncated in the capture (the forwarded bytes are never touched). Null = unlimited. Default 65536.</summary>
+    /// <summary>Decoded request/response bodies longer than this are truncated in the capture (the forwarded bytes are never touched). Null = unlimited. Default 65536. A negative value is refused at start.</summary>
     public int? BodyCapBytes { get; set; } = 65536;
 
     /// <summary>Whether bodies are captured at all. Default true.</summary>
@@ -135,10 +135,17 @@ public sealed class ProxyTapOptions
     /// <summary>Phase stamped on captured entries. Default <see cref="TestPhase.Unknown"/>.</summary>
     public TestPhase Phase { get; set; } = TestPhase.Unknown;
 
-    /// <summary>Upper bound for one forwarded exchange. Generous by default (200 s) — a tap must never be the tightest deadline on the path.</summary>
+    /// <summary>
+    /// Upper bound for one forwarded exchange. Generous by default (200 s) — a tap must never be the tightest deadline on
+    /// the path. <see cref="Timeout.InfiniteTimeSpan"/>, or a value of <see cref="int.MaxValue"/> milliseconds (24.8 days)
+    /// or more, means no deadline; zero and other negative values are refused at start.
+    /// </summary>
     public TimeSpan ForwardTimeout { get; set; } = TimeSpan.FromSeconds(200);
 
-    /// <summary>Connect timeout to the forward target. Default 5 s.</summary>
+    /// <summary>
+    /// Connect timeout to the forward target. Default 5 s. <see cref="Timeout.InfiniteTimeSpan"/>, or a value of
+    /// <see cref="int.MaxValue"/> milliseconds or more, means none; zero and other negative values are refused at start.
+    /// </summary>
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>
@@ -175,7 +182,10 @@ public sealed class ProxyTapOptions
     /// </summary>
     public bool TraceIdFromIdentity { get; set; }
 
-    /// <summary>Optional diagnostic log callback (listener start/stop, forwarding errors).</summary>
+    /// <summary>
+    /// Optional diagnostic log callback (listener start/stop, forwarding errors). Whatever it throws is ignored, so one bound
+    /// to a test's output that has ended changes nothing the tap does.
+    /// </summary>
     public Action<string>? Log { get; set; }
 
     /// <summary>Optional human-readable name of this tap for diagnostics (defaults to <c>caller→service</c>).</summary>
@@ -196,7 +206,27 @@ public sealed class ProxyTapOptions
             throw new ArgumentException("ServiceName is required.", nameof(ServiceName));
         if (string.IsNullOrWhiteSpace(ListenHost))
             throw new ArgumentException("ListenHost is required.", nameof(ListenHost));
+        // A range taken from a negative cap throws, so every exchange with a body would become a capture fault.
+        if (BodyCapBytes is < 0)
+            throw new ArgumentOutOfRangeException(nameof(BodyCapBytes), "BodyCapBytes must be zero or more, or null for no cap.");
+        if (ForwardTimeout <= TimeSpan.Zero && ForwardTimeout != Timeout.InfiniteTimeSpan)
+            throw new ArgumentOutOfRangeException(nameof(ForwardTimeout), "ForwardTimeout must be positive, or Timeout.InfiniteTimeSpan for no deadline.");
+        if (ConnectTimeout <= TimeSpan.Zero && ConnectTimeout != Timeout.InfiniteTimeSpan)
+            throw new ArgumentOutOfRangeException(nameof(ConnectTimeout), "ConnectTimeout must be positive, or Timeout.InfiniteTimeSpan for none.");
     }
+
+    /// <summary>
+    /// The longest timeout <see cref="HttpClient.Timeout"/> and <see cref="SocketsHttpHandler.ConnectTimeout"/> take:
+    /// <see cref="int.MaxValue"/> milliseconds, about 24.8 days.
+    /// </summary>
+    internal static readonly TimeSpan LongestDeadline = TimeSpan.FromMilliseconds(int.MaxValue);
+
+    /// <summary>
+    /// The deadline a timeout option stands for, or null for none: <see cref="Timeout.InfiniteTimeSpan"/>, or a value of
+    /// <see cref="LongestDeadline"/> or more, which the clients the tap hands it to would refuse.
+    /// </summary>
+    internal static TimeSpan? Deadline(TimeSpan value) =>
+        value == Timeout.InfiniteTimeSpan || value >= LongestDeadline ? null : value;
 }
 
 /// <summary>A parsed W3C <c>traceparent</c> header.</summary>

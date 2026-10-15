@@ -149,13 +149,13 @@ public sealed class OtlpExporter : IDisposable
                 using var response = await _http.SendAsync(message, HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                     return true;
-                _options.Log?.Invoke($"[{_options.DisplayName}] export batch of {page.Count} span(s) answered {(int)response.StatusCode} (attempt {attempt}/2)");
+                TryLog($"[{_options.DisplayName}] export batch of {page.Count} span(s) answered {(int)response.StatusCode} (attempt {attempt}/2)");
             }
             catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
             {
                 if (cancellationToken.IsCancellationRequested)
                     throw new OperationCanceledException(cancellationToken);
-                _options.Log?.Invoke($"[{_options.DisplayName}] export batch of {page.Count} span(s) failed: {ex.Message} (attempt {attempt}/2)");
+                TryLog($"[{_options.DisplayName}] export batch of {page.Count} span(s) failed: {ex.Message} (attempt {attempt}/2)");
             }
         }
 
@@ -164,4 +164,20 @@ public sealed class OtlpExporter : IDisposable
 
     /// <summary>Releases the HTTP client.</summary>
     public void Dispose() => _http.Dispose();
+
+    /// <summary>
+    /// Writes a line through <see cref="OtlpExportOptions.Log"/>. The callback is the host's code, and nothing it throws
+    /// changes what the exporter does: one that writes to a test's output after the test has ended throws.
+    /// </summary>
+    private void TryLog(string message)
+    {
+        try
+        {
+            _options.Log?.Invoke(message);
+        }
+        catch
+        {
+            // The host's callback failed; the exporter carries on.
+        }
+    }
 }

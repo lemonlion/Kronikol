@@ -72,6 +72,7 @@ public class TcpTapOptions
     /// <summary>
     /// Optional diagnostic log callback: the listener starting and stopping, accepts that failed, connects to the real server
     /// that failed or ran past <see cref="ConnectTimeout"/>, connection errors, decoder resets and give-ups, drop counts.
+    /// Whatever it throws is ignored, so one bound to a test's output that has ended changes nothing the tap does.
     /// </summary>
     public Action<string>? Log { get; set; }
 
@@ -109,7 +110,7 @@ public class TcpTapOptions
     /// <summary>How much detail to record. Default <see cref="TapVerbosity.Detailed"/>.</summary>
     public TapVerbosity Verbosity { get; set; } = TapVerbosity.Detailed;
 
-    /// <summary>Recorded content longer than this is truncated (the forwarded bytes are never touched). Null = unlimited. Default 65536.</summary>
+    /// <summary>Recorded content longer than this is truncated (the forwarded bytes are never touched). Null = unlimited. Default 65536. A negative value is refused at start.</summary>
     public int? BodyCapBytes { get; set; } = 65536;
 
     /// <summary>Whether reply payloads are recorded at all. When false the response arrow still renders (with its status and timing) but carries no note, and a failed reply's own message (a MongoDB errmsg) is not kept as the call's error either. Default true.</summary>
@@ -231,6 +232,10 @@ public class TcpTapOptions
             throw new ArgumentOutOfRangeException(nameof(ReadBufferBytes), "ReadBufferBytes must be positive.");
         if (MaxBufferedBytes <= 0)
             throw new ArgumentOutOfRangeException(nameof(MaxBufferedBytes), "MaxBufferedBytes must be positive.");
+        // A range taken from a negative cap throws: Redis's parser at the start of every connection, MongoDB's decoder at
+        // its first record.
+        if (BodyCapBytes is < 0)
+            throw new ArgumentOutOfRangeException(nameof(BodyCapBytes), "BodyCapBytes must be zero or more, or null for no cap.");
         if (DecodingStallBytes is <= 0)
             throw new ArgumentOutOfRangeException(nameof(DecodingStallBytes), "DecodingStallBytes must be positive, or null to disable the detector.");
         if (ReapStuckConnectionsAfter is { } reap && reap <= TimeSpan.Zero)
