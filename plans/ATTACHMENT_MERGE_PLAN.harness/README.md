@@ -52,9 +52,39 @@ pipeline's own staging folder deleted after the report is written. It carries th
 the matrix and the bytes-only second pass, none of which belong in the release (plan section 4). To use it:
 `git apply plans/ATTACHMENT_MERGE_PLAN.harness/prototype.patch`, build `src/Kronikol.Tool -f net10.0`.
 
+## The test fixture (R1)
+
+`tests/Kronikol.Tests/TestData/Cucumber/playwright-bdd-9.2-attachments/` is a run of this probe, all but `@big`, made
+small and cut by `cut_fixture.py`:
+
+```bash
+cd probe && PROBE_SMALL=1 PROBE_OUT=out-fx npx playwright test --grep-invert @big
+python -I ../cut_fixture.py . out-fx ../../../tests/Kronikol.Tests/TestData/Cucumber/playwright-bdd-9.2-attachments
+```
+
+`PROBE_SMALL=1` draws a 48x27 page and records a trace without screenshots, snapshots or sources, so the whole run is
+338 KB where the default page made 1.2 MB; every artefact is still made, under the same name and media type. Cut it at
+once: the next Playwright run empties `test-results/`. The cut copies every file the tests file names under the fixture
+(`test-results/<scenario>[-retry1]/`, `inline/`), names them relative to the fixture folder, and turns this machine's
+paths into `C:\fixture` in the messages, the tests file and inside each `trace.zip`; a trace is zipped again and its
+base64 copy in the messages is re-encoded from the same new bytes, so both copies of every artefact keep one SHA-256.
+
+## R1's proofs (`r1/`)
+
+| File | What it is |
+|---|---|
+| `red-stubs.diff` | The one seam the facts need on the release before R1: `IngestRequest.DecodedAttachmentsRoot`, routing the staging folder and deleting nothing |
+| `red-4.22.2.txt` | The red proof: the new and changed facts on 4.22.2 with that seam, each fact's outcome and, for a red one, its failing line (`trx_summary.py`) |
+| `mutations.py`, `mutations.txt` | The mutation run (section 6.4) and its result: each mutant, and the facts that killed it |
+| `wiki_175.py` | R1's wiki edits (section 7), applied after publication |
+
 ## Results
 
 `results/matrix-4.22.1.txt`: the matrix re-run in the sweep on 4.22.1 (`85f849f7`), with a control and the prototype both built there.
+
+`results/matrix-4.24.0.txt` and `results/measurements-4.24.0.txt`: the matrix and the issue-scale run on R1's release
+build (measured as 4.23.0 and released as 4.24.0), against 4.22.1, and the test suite's own staging folders before and
+after `CucumberFixtures.Decoding`.
 
 `results/measurements-2026-10-14.txt`: the staging folder census, the matrix's key rows, the issue-scale timing,
 memory and placement (with and without the byte check), `query failures` before and after, the test suite's own

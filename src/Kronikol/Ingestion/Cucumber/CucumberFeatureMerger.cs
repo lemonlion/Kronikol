@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 
@@ -17,8 +18,9 @@ namespace Kronikol.Ingestion.Cucumber;
 /// therefore dropped rather than duplicated, all but what a <c>bypassed</c> one says: its status and reason are
 /// carried onto the Gherkin step with its text before the drop (<see cref="IngestPipeline"/>).</item>
 /// <item>The tests file still contributes what only it knows: <c>assertion</c> events (nested under the
-/// Gherkin step whose time window contains them — the ✓/✗ rows), attachments the reporter recorded on the
-/// scenario or its steps, and the failure text when Gherkin carried none.</item>
+/// Gherkin step whose time window contains them — the ✓/✗ rows), the failure text when Gherkin carried none,
+/// and the attachments the reporter recorded. Those are joined with the messages' copies of the same artefacts
+/// wherever the messages put them, so each artefact is listed once (see <see cref="MergeAttachments"/>).</item>
 /// <item>Scenarios the messages do <em>not</em> own — non-BDD tests, the "traffic outside any test" fold
 /// bucket — are carried through from the tests-file model untouched.</item>
 /// </list>
@@ -57,12 +59,13 @@ public static class CucumberFeatureMerger
             replaced[scenario.Id] = scenario;
 
         // What the tests file knew about the same scenario, so nothing it contributed is lost.
+        var keptTwice = 0;
         foreach (var feature in fromTestsFile.Features)
         {
             foreach (var scenario in feature.Scenarios)
             {
                 if (replaced.TryGetValue(scenario.Id, out var target))
-                    CarryOver(scenario, target);
+                    keptTwice += CarryOver(scenario, target, cucumber);
             }
         }
 
@@ -85,7 +88,12 @@ public static class CucumberFeatureMerger
 
         var start = fromTestsFile.Start == default ? cucumber.Start : Min(fromTestsFile.Start, cucumber.Start);
         var end = Max(fromTestsFile.End, cucumber.End);
-        return new FeatureSynthesizer.Result(features, start, end, names);
+        return new FeatureSynthesizer.Result(features, start, end, names)
+        {
+            // The tests file's scenarios the messages do not own keep the verdict they defaulted to, and the count of them.
+            DefaultedResultCount = features.SelectMany(f => f.Scenarios).Count(s => s.ResultDefaulted),
+            AttachmentsKeptTwice = keptTwice,
+        };
     }
 
     /// <summary>
@@ -103,31 +111,187 @@ public static class CucumberFeatureMerger
     }
 
     /// <summary>
-    /// The reporter's attachments win over the messages' copies of the SAME artefact (playwright-bdd inlines
-    /// every attachment as BASE64 into the messages file, so a screenshot the reporter already materialised
-    /// would otherwise appear twice); anything only the messages carry is kept.
+    /// Joins the tests file's attachments of a scenario the messages own with the messages' copies of the same artefacts,
+    /// wherever the messages put them: the scenario's own list (which holds the attachments of the hooks dropped), a
+    /// background step, a Gherkin step, a hook step kept, a sub-step. playwright-bdd embeds every attachment in the messages
+    /// as BASE64, so each artefact a reporter also wrote to a file is described twice (#175).
     /// </summary>
-    internal static FileAttachment[] MergeAttachments(FileAttachment[]? fromMessages, FileAttachment[] fromTests)
+    /// <remarks>
+    /// <para>Each tests attachment, in its order, takes the first copy not yet taken that has its name, the producer's own
+    /// (<c>trace</c>) or the one the synthesis displays (<c>trace.zip</c>), compared ignoring case; and, when the reporter's
+    /// file can be read, the same bytes. Two artefacts may share a name, and screenshots of an unchanged page share their
+    /// bytes whatever they are called, so the bytes check a pair and never make one. A link is never a copy of a file. A
+    /// copy that took its pair is never offered again.</para>
+    /// <para>A pair is one entry under the reporter's name, where the messages put it. It links the reporter's file when that
+    /// exists, and the decoded copy is deleted; else it links the messages' copy. It takes the media type of the file it
+    /// links. The scenario's own list is the tests entries in their order, then the messages' entries no tests entry took.
+    /// The test id and bypass attachments are signals, never listed. What pairs with nothing is kept where it was.</para>
+    /// </remarks>
+    /// <returns>How many tests attachments are kept beside a messages copy of the same name whose bytes differ.</returns>
+    internal static int MergeAttachments(Scenario target, FileAttachment[] fromTests, CucumberSynthesisResult cucumber)
     {
-        if (fromMessages is not { Length: > 0 })
-            return fromTests;
-        var names = new HashSet<string>(fromTests.Select(a => a.Name), StringComparer.OrdinalIgnoreCase);
-        return fromTests.Concat(fromMessages.Where(a => !names.Contains(a.Name))).ToArray();
+        // Every list on the messages' side, in reading order: the scenario's own first.
+        var holders = new List<Holder> { new(a => target.Attachments = a, [.. target.Attachments ?? []], IsScenario: true) };
+        Walk(target.BackgroundSteps);
+        Walk(target.Steps);
+
+        var descriptions = new Dictionary<string, (long Length, byte[] Hash)?>(StringComparer.Ordinal);
+        // A slot that took its pair is never a candidate again: per-step screenshots of an unchanged page share a name and
+        // their bytes, and a merged entry left in its step would take the next one's pair.
+        var taken = new HashSet<(int Holder, int Index)>();
+        var scenarioList = new List<FileAttachment>();
+        var unpaired = new List<FileAttachment>();
+        foreach (var fromTest in fromTests)
+        {
+            if (cucumber.SignalAttachmentNames.Contains(fromTest.Name))
+                continue;
+            if (!TryPair(fromTest, out var holder, out var index, out var merged))
+            {
+                scenarioList.Add(fromTest);
+                unpaired.Add(fromTest);
+                continue;
+            }
+
+            taken.Add((holder, index));
+            if (holders[holder].IsScenario)
+            {
+                holders[holder].Items[index] = null;
+                scenarioList.Add(merged);
+            }
+            else
+            {
+                holders[holder].Items[index] = merged;
+            }
+        }
+
+        var keptTwice = unpaired.Count(KeptBesideItsNamesake);
+
+        foreach (var (set, items, isScenario) in holders)
+        {
+            FileAttachment[] kept = isScenario ? [.. scenarioList, .. items.OfType<FileAttachment>()] : [.. items.OfType<FileAttachment>()];
+            set(kept.Length > 0 ? kept : null);
+        }
+
+        return keptTwice;
+
+        void Walk(ScenarioStep[]? steps)
+        {
+            foreach (var step in steps ?? [])
+            {
+                if (step.Attachments is { Length: > 0 } own)
+                    holders.Add(new Holder(a => step.Attachments = a, [.. own], IsScenario: false));
+                Walk(step.SubSteps);
+            }
+        }
+
+        bool TryPair(FileAttachment fromTest, out int holder, out int index, out FileAttachment merged)
+        {
+            if (!fromTest.IsUrl)
+            {
+                var reportersFileExists = File.Exists(fromTest.RelativePath);
+                for (holder = 0; holder < holders.Count; holder++)
+                {
+                    var items = holders[holder].Items;
+                    for (index = 0; index < items.Count; index++)
+                    {
+                        if (items[index] is not { IsUrl: false } candidate || taken.Contains((holder, index)) || !SameName(fromTest, candidate))
+                            continue;
+                        var origin = cucumber.AttachmentOrigins.GetValueOrDefault(candidate);
+                        if (!reportersFileExists)
+                        {
+                            // The reporter's file is gone (Playwright empties test-results/ on its next run): the name pairs
+                            // them, and the copy that exists is kept, with its own media type.
+                            merged = new FileAttachment(fromTest.Name, candidate.RelativePath, candidate.MediaType ?? fromTest.MediaType);
+                            return true;
+                        }
+
+                        if (!SameBytes(fromTest.RelativePath, candidate, origin))
+                            continue;
+                        if (origin?.WrittenPath is { } written)
+                            TryDelete(written);
+                        merged = new FileAttachment(fromTest.Name, fromTest.RelativePath, fromTest.MediaType ?? candidate.MediaType);
+                        return true;
+                    }
+                }
+            }
+
+            holder = -1;
+            index = -1;
+            merged = fromTest;
+            return false;
+        }
+
+        // A reporter that names a record by its file writes what the synthesis displays (Playwright's trace.zip), and
+        // playwright-bdd passes Playwright's own name through as the attachment's fileName (trace).
+        bool SameName(FileAttachment fromTest, FileAttachment candidate) =>
+            string.Equals(cucumber.AttachmentOrigins.GetValueOrDefault(candidate)?.OriginalName ?? candidate.Name, fromTest.Name, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(candidate.Name, fromTest.Name, StringComparison.OrdinalIgnoreCase);
+
+        bool SameBytes(string reportersFile, FileAttachment candidate, CucumberAttachmentOrigin? origin)
+        {
+            (long Length, byte[] Hash)? theirs = origin is { Length: { } length, Sha256: { } hash } ? (length, hash) : Describe(candidate.RelativePath);
+            return Describe(reportersFile) is { } mine && theirs is { } copy
+                   && mine.Length == copy.Length && mine.Hash.AsSpan().SequenceEqual(copy.Hash);
+        }
+
+        // An unpaired tests attachment whose reporter's file was read, beside a copy no one took that has its name: two
+        // entries with one name, whose bytes differ (bytes that matched would have paired them).
+        bool KeptBesideItsNamesake(FileAttachment fromTest)
+        {
+            if (fromTest.IsUrl || Describe(fromTest.RelativePath) is null)
+                return false;
+            for (var holder = 0; holder < holders.Count; holder++)
+            {
+                var items = holders[holder].Items;
+                for (var index = 0; index < items.Count; index++)
+                {
+                    if (items[index] is { IsUrl: false } candidate && !taken.Contains((holder, index)) && SameName(fromTest, candidate))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        (long Length, byte[] Hash)? Describe(string path)
+        {
+            if (descriptions.TryGetValue(path, out var known))
+                return known;
+            try
+            {
+                using var stream = File.OpenRead(path);
+                return descriptions[path] = (stream.Length, SHA256.HashData(stream));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException)
+            {
+                return descriptions[path] = null;
+            }
+        }
+    }
+
+    /// <summary>One list of attachments on the messages' side of a scenario: its own, or one step's.</summary>
+    private sealed record Holder(Action<FileAttachment[]?> Set, List<FileAttachment?> Items, bool IsScenario);
+
+    private static void TryDelete(string path)
+    {
+        try { File.Delete(path); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* left for the folder's own deletion */ }
     }
 
     /// <summary>
     /// Keeps the scenario-level facts only the reporter has: attachments it recorded, and the failure text
     /// when the messages carried none (a Playwright timeout fails the test without failing a Gherkin step).
     /// </summary>
-    private static void CarryOver(Scenario fromTests, Scenario target)
+    /// <returns>How many of its attachments are kept beside a messages copy of the same name with other bytes.</returns>
+    private static int CarryOver(Scenario fromTests, Scenario target, CucumberSynthesisResult cucumber)
     {
-        if (fromTests.Attachments is { Length: > 0 } attachments)
-            target.Attachments = MergeAttachments(target.Attachments, attachments);
+        var keptTwice = fromTests.Attachments is { Length: > 0 } attachments ? MergeAttachments(target, attachments, cucumber) : 0;
 
         target.ErrorMessage ??= fromTests.ErrorMessage;
         target.ErrorStackTrace ??= fromTests.ErrorStackTrace;
         if (target.Duration is null)
             target.Duration = fromTests.Duration;
+        return keptTwice;
     }
 
     /// <summary>

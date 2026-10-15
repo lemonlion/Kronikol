@@ -28,3 +28,7 @@
 
 # The cross-run history ledger is append-only: two branches that both appended merge without a conflict
 history.jsonl merge=union text eol=lf
+
+# A playwright-bdd run's artefacts, which the tests compare byte for byte with the copies its Cucumber messages embed:
+# never converted, whatever a checkout's line-ending settings are.
+tests/Kronikol.Tests/TestData/Cucumber/playwright-bdd-9.2-attachments/** -text

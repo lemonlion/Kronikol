@@ -208,6 +208,31 @@ public class CucumberIngestPipelineTests : IDisposable
     }
 
     [Fact]
+    public void A_test_the_messages_do_not_own_that_never_ended_is_still_said_to_have_defaulted()
+    {
+        // Found while planning #175 (plans/ATTACHMENT_MERGE_PLAN.md section 10): the merge built its result afresh and left
+        // the tests file's count of scenarios that recorded no result behind, so a combined ingest never said that a test
+        // outside the Gherkin run had died, and reported it Passed.
+        var testsFile = Path_("crashed-tests.ndjson");
+        File.WriteAllLines(testsFile,
+        [
+            new TestRunRecord { Event = "start", TestId = "00000000000000000000000000000043", TestName = "a plain xUnit test", Feature = "Unit tests", Timestamp = DateTimeOffset.UnixEpoch }.ToJson(),
+        ]);
+
+        var result = IngestPipeline.Run(new IngestRequest
+        {
+            TestsFile = testsFile,
+            CucumberMessagesFiles = [CucumberFixtures.MessagesPath],
+            Options = OptionsFor(Path_("Crashed")),
+        });
+
+        var unit = Assert.Single(result.Features.Single(f => f.DisplayName == "Unit tests").Scenarios);
+        Assert.True(unit.ResultDefaulted);
+        var diagnostic = Assert.Single(result.Diagnostics, d => d.Kind == DiagnosticKind.ResultDefaulted);
+        Assert.StartsWith("1 scenario(s) recorded no result", diagnostic.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Include_hooks_surfaces_the_hook_steps_in_the_report()
     {
         var output = Path_("Hooks");

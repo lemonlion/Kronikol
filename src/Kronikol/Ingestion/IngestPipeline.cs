@@ -21,7 +21,8 @@ public sealed class IngestRequest
     /// <c>--format message</c>, Cucumber-JVM <c>--plugin message:…</c>). When given, the Gherkin structure
     /// they carry — feature description, rules, background, keywords, tables, doc strings, example values —
     /// <em>wins</em> for every scenario they own; <see cref="TestsFile"/> still contributes assertions, UI
-    /// actions, attachments, a <c>bypassed</c> step's status and reason (matched to its Gherkin step by text)
+    /// actions, attachments (each joined with the messages' copy of the same artefact, so it is listed once, where
+    /// the messages put it), a <c>bypassed</c> step's status and reason (matched to its Gherkin step by text)
     /// and the identity captured interactions join on. See <see cref="Cucumber.CucumberFeatureMerger"/>.
     /// </summary>
     public IReadOnlyList<string> CucumberMessagesFiles { get; init; } = [];
@@ -261,6 +262,13 @@ public sealed class IngestRequest
     /// <c>kronikol ingest --diagnostic "&lt;kind&gt;:&lt;message&gt;" --diagnostics-section</c> is the CLI form.
     /// </summary>
     public IReadOnlyList<DiagnosticEntry> HostDiagnostics { get; init; } = [];
+
+    /// <summary>
+    /// The folder under which an ingest decodes the Cucumber messages' attachment bodies, one folder of its own per
+    /// ingest. Default: <c>kronikol-cucumber-attachments</c> under the temp directory. A seam, so that a test sees its own
+    /// ingest's folder and no other.
+    /// </summary>
+    internal string? DecodedAttachmentsRoot { get; init; }
 }
 
 /// <summary>The single scenario that collects interactions of unknown tests (<see cref="IngestRequest.FoldUnknownTestsInto"/>).</summary>
@@ -363,17 +371,54 @@ public static class IngestPipeline
         // agree with this run's options for as long as the replay lasts, and be handed back afterwards.
         var previousCapitalisation = StepText.CapitaliseEnabled;
         StepText.CapitaliseEnabled = options.CapitaliseStepText;
+        // The Cucumber messages' attachment bodies are decoded into a folder this ingest owns, and the folder goes once the
+        // report has copied what it links to (#175): left behind, every ingest added the run's artefacts to the temp
+        // directory again.
+        var decodedAttachments = request.CucumberMessagesFiles.Count == 0 ? null
+            : Path.Combine(request.DecodedAttachmentsRoot ?? Path.Combine(Path.GetTempPath(), "kronikol-cucumber-attachments"),
+                Guid.NewGuid().ToString("N"));
+        IngestResult? result = null;
         try
         {
-            return RunCore(request, options);
+            return result = RunCore(request, options, decodedAttachments);
         }
         finally
         {
             StepText.CapitaliseEnabled = previousCapitalisation;
+            DeleteDecodedAttachments(decodedAttachments, result);
         }
     }
 
-    private static IngestResult RunCore(IngestRequest request, ReportConfigurationOptions options)
+    /// <summary>
+    /// Deletes the folder the synthesis decoded attachment bodies into, unless an entry of the result still links into it:
+    /// the generator could not copy that file (an <see cref="DiagnosticKind.AttachmentFailure"/>) and the report links where
+    /// it is, so deleting it would turn a recorded failure into a dead link.
+    /// </summary>
+    private static void DeleteDecodedAttachments(string? directory, IngestResult? result)
+    {
+        if (directory is null || !Directory.Exists(directory))
+            return;
+        var inside = directory + Path.DirectorySeparatorChar;
+        if ((result?.Features ?? []).SelectMany(f => f.Scenarios).SelectMany(AllAttachments)
+            .Any(a => a.RelativePath.StartsWith(inside, StringComparison.OrdinalIgnoreCase)))
+            return;
+        try
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // A file still held open by something else: the temp directory is the system's to clean.
+        }
+
+        static IEnumerable<FileAttachment> AllAttachments(Scenario scenario) =>
+            (scenario.Attachments ?? []).Concat(Steps(scenario.BackgroundSteps)).Concat(Steps(scenario.Steps));
+
+        static IEnumerable<FileAttachment> Steps(ScenarioStep[]? steps) =>
+            (steps ?? []).SelectMany(step => (step.Attachments ?? []).Concat(Steps(step.SubSteps)));
+    }
+
+    private static IngestResult RunCore(IngestRequest request, ReportConfigurationOptions options, string? decodedAttachments)
     {
         var diagnostics = new ReportDiagnosticsCollector();
         // The host's entries go in first, so they reach the report's diagnostics section (the collector is
@@ -399,7 +444,12 @@ public static class IngestPipeline
         // record said about a bypass is read first and applied to the Gherkin step it reports on.
         var cucumber = request.CucumberMessagesFiles.Count == 0 ? null
             : CucumberFeatureSynthesizer.BuildFromFiles(request.CucumberMessagesFiles,
-                new CucumberSynthesisOptions { IncludeHooks = request.IncludeHooks, DefaultFeatureName = request.DefaultFeatureName },
+                new CucumberSynthesisOptions
+                {
+                    IncludeHooks = request.IncludeHooks,
+                    DefaultFeatureName = request.DefaultFeatureName,
+                    AttachmentsDirectory = decodedAttachments,
+                },
                 CucumberTestsFileBypass.Collect(testRecords));
         var earlierAttemptRecords = 0;
         if (cucumber is not null)
@@ -462,6 +512,12 @@ public static class IngestPipeline
             // Messages win for structure (feature/rule/background/outline/tags/tables/doc strings);
             // the tests file still contributes assertions, attachments and the identity join.
             synthesised = CucumberFeatureMerger.Merge(cucumber, synthesised, current);
+            // A name the reporter's file and the messages' copy share while their bytes differ: neither can be known to be
+            // the stale one, so both are listed, and this says why one name is there twice.
+            if (synthesised.AttachmentsKeptTwice > 0)
+                diagnostics.Add(DiagnosticKind.Other,
+                    $"{synthesised.AttachmentsKeptTwice} attachment(s) the tests file and the Cucumber messages both name were kept "
+                    + "twice: the reporter's file and the messages' copy have different bytes, so neither was taken for the other.");
         }
 
         var defaultedResultCount = synthesised.DefaultedResultCount;

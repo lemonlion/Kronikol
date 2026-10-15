@@ -1,0 +1,58 @@
+# R1's mutation run (plan section 6.4), 2026-10-15, on a copy of the release tree at de96bff3 (r1/mutations.py):
+# each mutant applied, built, and run against CucumberAttachmentIngestTests, CucumberFeatureMergerTests,
+# DigestStepAttachmentTests and CucumberIngestPipelineTests. 26 mutants: 24 killed, 2 survived, both equivalent on
+# real inputs as section 6.4 says: M7c (the synthesis gives a Gherkin step no sub-steps, and the merger grafts its
+# assertion rows after it has merged the attachments) and M13 (both producers pass an attachment's name through
+# unchanged, so no pair differs in case only). M1 ran first, the rest after a pause for another session's full
+# Playwright run.
+
+M1  KILLED    compare the displayed name only (today's key)
+      by A_background_steps_attachment_is_listed_once_on_the_background_step, A_copy_from_the_messages_keeps_its_own_media_type, A_name_pair_with_different_bytes_keeps_both_and_says_so, A_reporters_file_keeps_the_reporters_media_type, Playwrights_own_artefacts_are_listed_once_under_the_runs_names, The_ingest_cli_writes_one_file_per_artefact, Two_artefacts_with_one_name_stay_where_each_was_attached, When_the_reporters_file_is_gone_the_messages_copy_is_linked, With_hooks_kept_a_hooks_attachment_is_listed_once_on_its_hook_step, With_hooks_kept_the_digest_still_lists_the_failure_artefacts
+M2  KILLED    no byte check
+      by A_name_pair_with_different_bytes_keeps_both_and_says_so, Two_artefacts_with_one_name_stay_where_each_was_attached
+M3  KILLED    a paired slot offered again
+      by A_background_steps_attachment_is_listed_once_on_the_background_step, A_retried_scenario_pairs_its_last_attempts_attachments, Per_step_screenshots_with_one_name_and_the_same_bytes_land_one_on_each_step, The_ingest_cli_writes_one_file_per_artefact, With_hooks_kept_a_hooks_attachment_is_listed_once_on_its_hook_step
+M4  KILLED    the reporter's copy always survives
+      by A_copy_from_the_messages_keeps_its_own_media_type, When_the_reporters_file_is_gone_the_messages_copy_is_linked
+M5  KILLED    the messages' copy always survives
+      by A_background_steps_attachment_is_listed_once_on_the_background_step, A_reporters_file_keeps_the_reporters_media_type, A_retried_scenario_pairs_its_last_attempts_attachments, A_steps_attachment_is_listed_once_on_its_step, Per_step_screenshots_with_one_name_and_the_same_bytes_land_one_on_each_step, Playwrights_own_artefacts_are_listed_once_under_the_runs_names, The_decoded_copies_a_reporters_file_replaced_are_deleted, The_ingest_cli_writes_one_file_per_artefact, The_reporters_attachments_win_over_the_messages_copies_of_the_same_artefact, With_hooks_kept_a_hooks_attachment_is_listed_once_on_its_hook_step
+M6  KILLED    every pair to the scenario's list
+      by A_background_steps_attachment_is_listed_once_on_the_background_step, A_copy_from_the_messages_keeps_its_own_media_type, A_steps_attachment_is_listed_once_on_its_step, Per_step_screenshots_with_one_name_and_the_same_bytes_land_one_on_each_step, The_ingest_cli_writes_one_file_per_artefact, Two_artefacts_with_one_name_stay_where_each_was_attached, When_the_reporters_file_is_gone_the_messages_copy_is_linked, With_hooks_kept_a_hooks_attachment_is_listed_once_on_its_hook_step, With_hooks_kept_the_digest_still_lists_the_failure_artefacts
+M7a  KILLED    the walk skips the background steps
+      by A_background_steps_attachment_is_listed_once_on_the_background_step, The_ingest_cli_writes_one_file_per_artefact, When_the_reporters_file_is_gone_the_messages_copy_is_linked
+M7b  KILLED    the walk skips the hook steps (no keyword)
+      by With_hooks_kept_a_hooks_attachment_is_listed_once_on_its_hook_step, With_hooks_kept_the_digest_still_lists_the_failure_artefacts
+M7c  SURVIVED  the walk skips sub-steps
+M8a  KILLED    no signal filter
+      by The_ingest_cli_writes_one_file_per_artefact, The_signals_are_not_attachments_of_a_scenario_the_messages_own, When_the_reporters_file_is_gone_the_messages_copy_is_linked
+M8b  KILLED    the signal filter on every scenario
+      by The_signals_stay_attachments_of_a_scenario_the_messages_do_not_own
+M9  KILLED    a link paired
+      by A_link_is_never_paired
+M10  KILLED    the messages' unpaired entries first
+      by A_name_pair_with_different_bytes_keeps_both_and_says_so, The_reporters_attachments_win_over_the_messages_copies_of_the_same_artefact, The_scenario_list_keeps_the_reporters_order_then_the_messages_own
+M11  KILLED    replaced copies not deleted
+      by The_decoded_copies_a_reporters_file_replaced_are_deleted
+M12a  KILLED    the staging folder kept
+      by An_ingest_leaves_no_staging_folder
+M12b  KILLED    the staging folder deleted while the report links into it
+      by An_ingest_leaves_no_staging_folder_unless_the_report_still_links_into_it
+M13  SURVIVED  an ordinal (case-sensitive) name comparison
+M14  KILLED    the digest reads the scenario's own list only (today's)
+      by Failures_jsonl_attachments_carry_their_step, Failures_md_lists_the_attachments_made_inside_steps_with_their_step, The_ingest_cli_writes_one_file_per_artefact, With_hooks_kept_the_digest_still_lists_the_failure_artefacts
+M15  KILLED    the merged entry takes the tests' media type when the messages' copy survives
+      by A_copy_from_the_messages_keeps_its_own_media_type
+M16  KILLED    query failures prints the failing step's attachments in the scenario's capped lines instead
+      by Query_failures_prints_the_failing_steps_attachments_under_it
+M17  KILLED    the kept-twice count is never made
+      by A_name_pair_with_different_bytes_keeps_both_and_says_so
+M18  KILLED    the merge drops the tests file's defaulted count (4.22.2)
+      by A_test_the_messages_do_not_own_that_never_ended_is_still_said_to_have_defaulted
+M19  KILLED    query failures --json leaves out the failing step's attachments
+      by Query_failures_prints_the_failing_steps_attachments_under_it
+M20  KILLED    Failures.jsonl leaves out the step member
+      by Failures_jsonl_attachments_carry_their_step
+M21  KILLED    Failures.md leaves out the step label
+      by Failures_md_lists_the_attachments_made_inside_steps_with_their_step, With_hooks_kept_the_digest_still_lists_the_failure_artefacts
+M22  KILLED    a reporter's file takes the messages' media type
+      by A_reporters_file_keeps_the_reporters_media_type

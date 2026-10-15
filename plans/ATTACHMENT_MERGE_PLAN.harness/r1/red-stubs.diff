@@ -1,0 +1,55 @@
+diff --git a/src/Kronikol/Ingestion/IngestPipeline.cs b/src/Kronikol/Ingestion/IngestPipeline.cs
+index 7bc572fd..39b41705 100644
+--- a/src/Kronikol/Ingestion/IngestPipeline.cs
++++ b/src/Kronikol/Ingestion/IngestPipeline.cs
+@@ -261,6 +261,13 @@ public sealed class IngestRequest
+     /// <c>kronikol ingest --diagnostic "&lt;kind&gt;:&lt;message&gt;" --diagnostics-section</c> is the CLI form.
+     /// </summary>
+     public IReadOnlyList<DiagnosticEntry> HostDiagnostics { get; init; } = [];
++
++    /// <summary>
++    /// The folder under which an ingest decodes the Cucumber messages' attachment bodies, one folder of its own per
++    /// ingest. Default: <c>kronikol-cucumber-attachments</c> under the temp directory. A seam, so that a test sees its own
++    /// ingest's folder and no other.
++    /// </summary>
++    internal string? DecodedAttachmentsRoot { get; init; }
+ }
+ 
+ /// <summary>The single scenario that collects interactions of unknown tests (<see cref="IngestRequest.FoldUnknownTestsInto"/>).</summary>
+@@ -363,9 +370,12 @@ public static IngestResult Run(IngestRequest request)
+         // agree with this run's options for as long as the replay lasts, and be handed back afterwards.
+         var previousCapitalisation = StepText.CapitaliseEnabled;
+         StepText.CapitaliseEnabled = options.CapitaliseStepText;
++        var decodedAttachments = request.CucumberMessagesFiles.Count == 0 ? null
++            : Path.Combine(request.DecodedAttachmentsRoot ?? Path.Combine(Path.GetTempPath(), "kronikol-cucumber-attachments"),
++                Guid.NewGuid().ToString("N"));
+         try
+         {
+-            return RunCore(request, options);
++            return RunCore(request, options, decodedAttachments);
+         }
+         finally
+         {
+@@ -373,7 +383,7 @@ public static IngestResult Run(IngestRequest request)
+         }
+     }
+ 
+-    private static IngestResult RunCore(IngestRequest request, ReportConfigurationOptions options)
++    private static IngestResult RunCore(IngestRequest request, ReportConfigurationOptions options, string? decodedAttachments)
+     {
+         var diagnostics = new ReportDiagnosticsCollector();
+         // The host's entries go in first, so they reach the report's diagnostics section (the collector is
+@@ -399,7 +409,12 @@ private static IngestResult RunCore(IngestRequest request, ReportConfigurationOp
+         // record said about a bypass is read first and applied to the Gherkin step it reports on.
+         var cucumber = request.CucumberMessagesFiles.Count == 0 ? null
+             : CucumberFeatureSynthesizer.BuildFromFiles(request.CucumberMessagesFiles,
+-                new CucumberSynthesisOptions { IncludeHooks = request.IncludeHooks, DefaultFeatureName = request.DefaultFeatureName },
++                new CucumberSynthesisOptions
++                {
++                    IncludeHooks = request.IncludeHooks,
++                    DefaultFeatureName = request.DefaultFeatureName,
++                    AttachmentsDirectory = decodedAttachments,
++                },
+                 CucumberTestsFileBypass.Collect(testRecords));
+         var earlierAttemptRecords = 0;
+         if (cucumber is not null)

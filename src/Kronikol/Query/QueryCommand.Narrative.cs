@@ -118,6 +118,10 @@ public static partial class QueryCommand
                     writer.Line($"  {new string(' ', depth * 2)}  {CutMessage(stepMessage, 200, scenario.Address)}");
                 if (step.SourceFile is { } file)
                     writer.Line($"  {new string(' ', depth * 2)}  at {file}:{step.SourceLine}");
+                // What the step attached, as `steps` prints it: the screenshot of the failure is usually here, and the
+                // scenario's own list below never held it (#175).
+                foreach (var attachment in step.Attachments)
+                    writer.Line($"  {new string(' ', depth * 2)}  attachment: {attachment.Name} → {attachment.Resolve(index.Directory)}");
 
                 var scoped = scenario.Interactions.Where(i => i.StepPath == path && i.Type == "Request").ToArray();
                 if (scoped.Length > 0)
@@ -156,9 +160,10 @@ public static partial class QueryCommand
     /// <c>truncated</c>; this does not. Since 3.7.0 both carry <c>thrownAt</c>, <c>testName</c> and
     /// <c>rerun</c>, read from <c>errorStackTrace</c> by the same reader. This nests <c>calls</c> under
     /// the failing step that made them and caps them at six per step; the digest lists them once per
-    /// failure, with a <c>status</c>, capped at eight. Attachments are capped at four here and uncapped
-    /// there. The divergence is written down rather than left for a consumer to discover by diffing two
-    /// files that claim to describe the same failure.</para>
+    /// failure, with a <c>status</c>, capped at eight. The scenario's own attachments are capped at four here
+    /// and uncapped there; a failing step's are nested under it here, while the digest lists every step's,
+    /// each with a <c>step</c> address. The divergence is written down rather than left for a consumer to
+    /// discover by diffing two files that claim to describe the same failure.</para>
     /// </summary>
     private static object FailureRecord(ReportIndex index, ScenarioEntry scenario, string? deepLink)
     {
@@ -200,7 +205,9 @@ public static partial class QueryCommand
                         // Why a call failed, as Failures.md prints it: null for a call that did not.
                         status = Failed(c.Response) ? c.Response!.StatusCode : null,
                         error = Failed(c.Response) ? c.Response!.Error : null
-                    })
+                    }),
+                // As the text prints them under the step.
+                attachments = s.Step.Attachments.Select(a => new { name = a.Name, path = a.Resolve(index.Directory) })
             }),
             attachments = scenario.Attachments.Take(4)
                 .Select(a => new { name = a.Name, path = a.Resolve(index.Directory) })

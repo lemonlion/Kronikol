@@ -19,6 +19,11 @@ public sealed class CucumberSynthesisOptions
     /// report's own attachment copier (<see cref="ReportGenerator.CopyAttachmentsToReportsFolder"/>) is
     /// what moves them next to the HTML, so nothing here needs to know the reports directory.
     /// </summary>
+    /// <remarks>
+    /// The folder and its files are the caller's. <see cref="IngestPipeline"/> (and so <c>kronikol ingest</c>) gives the
+    /// synthesis a folder of its own and deletes it once the report is written, unless the report still links into it
+    /// because a file could not be copied.
+    /// </remarks>
     public string? AttachmentsDirectory { get; init; }
 
     /// <summary>Feature name for pickles whose Gherkin document could not be found.</summary>
@@ -31,7 +36,8 @@ public sealed class CucumberSynthesisOptions
     /// <remarks>
     /// Its sibling convention has a fixed name: a step that attaches <c>kronikol-bypass</c> (matched ignoring case) is
     /// <see cref="ExecutionResult.Bypassed"/>, its body the reason, whatever status its runner gave it, unless it failed.
-    /// Neither attachment is ever written out as a file.
+    /// Neither attachment is ever written out as a file, and a tests file's record of either is not listed for a scenario
+    /// the messages own (<see cref="CucumberFeatureMerger"/>).
     /// </remarks>
     public string TestIdAttachmentName { get; init; } = "kronikol-test-id";
 
@@ -50,6 +56,16 @@ public sealed class CucumberSynthesisOptions
 /// boundary read, so a step in any Gherkin language gets its phase; <c>null</c> for a hook step.
 /// </param>
 public sealed record CucumberStepWindow(ScenarioStep Step, DateTimeOffset Start, DateTimeOffset End, string? KeywordType = null);
+
+/// <summary>
+/// What an attachment the synthesis materialised was before it became a <see cref="FileAttachment"/> (#175), so the merger
+/// can tell whether the tests file's record of an artefact and this copy are the same artefact.
+/// </summary>
+/// <param name="OriginalName">The producer's own name (the attachment's <c>fileName</c>), before the synthesis gave it an extension to display.</param>
+/// <param name="Length">The decoded body's length; null for an attachment the messages only point at.</param>
+/// <param name="Sha256">The decoded body's SHA-256; null for an attachment the messages only point at.</param>
+/// <param name="WrittenPath">The file the synthesis wrote the body to, which nothing needs once the reporter's copy of the same artefact is kept.</param>
+internal sealed record CucumberAttachmentOrigin(string? OriginalName, long? Length, byte[]? Sha256, string? WrittenPath);
 
 /// <summary>Outcome of <see cref="CucumberFeatureSynthesizer.Build(CucumberMessages, CucumberSynthesisOptions?)"/>.</summary>
 /// <param name="Features">The Gherkin structure as Kronikol's report model.</param>
@@ -90,6 +106,20 @@ public sealed record CucumberSynthesisResult(
     /// their bypass was not applied. The pipeline reports the count as a diagnostic.
     /// </summary>
     internal int UnmatchedTestsFileBypasses { get; init; }
+
+    /// <summary>
+    /// What each attachment the synthesis materialised was before it became a <see cref="FileAttachment"/>: the name its
+    /// producer gave it, its bytes' length and hash, and the file the synthesis wrote. Keyed by reference, so the merger
+    /// can pair a copy with the tests file's record of the same artefact wherever the messages put it (#175).
+    /// </summary>
+    internal IReadOnlyDictionary<FileAttachment, CucumberAttachmentOrigin> AttachmentOrigins { get; init; } =
+        new Dictionary<FileAttachment, CucumberAttachmentOrigin>(ReferenceEqualityComparer.Instance);
+
+    /// <summary>
+    /// The attachment names the synthesis reads as signals and never writes out: the test id's
+    /// (<see cref="CucumberSynthesisOptions.TestIdAttachmentName"/>) and <c>kronikol-bypass</c>, compared ignoring case.
+    /// </summary>
+    internal IReadOnlySet<string> SignalAttachmentNames { get; init; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// What the producing run executed on, as the messages' own <c>meta</c> envelope reports it, or
@@ -329,6 +359,8 @@ public static class CucumberFeatureSynthesizer
             Environment = messages.Meta?.ToRunEnvironment() ?? RunEnvironment.Unrecorded,
             EarlierAttemptTestIds = earlierIds,
             UnmatchedTestsFileBypasses = unmatchedBypasses,
+            AttachmentOrigins = attachmentWriter.Origins,
+            SignalAttachmentNames = new HashSet<string>([options.TestIdAttachmentName, BypassAttachmentName], StringComparer.OrdinalIgnoreCase),
         };
     }
 
@@ -1114,16 +1146,23 @@ public static class CucumberFeatureSynthesizer
         private string? _directory;
         private int _counter;
 
+        /// <summary>What each attachment this writer returned was, for the merger (<see cref="CucumberSynthesisResult.AttachmentOrigins"/>).</summary>
+        public Dictionary<FileAttachment, CucumberAttachmentOrigin> Origins { get; } = new(ReferenceEqualityComparer.Instance);
+
         public FileAttachment? Materialise(CucumberAttachment attachment)
         {
             var name = NullIfBlank(attachment.FileName) ?? "attachment";
             var extension = ExtensionFor(attachment.MediaType);
-            // The report renders an attachment inline as an image when its *name* carries an image
-            // extension; Cucumber file names usually carry none, so the media type supplies it.
+            // A label only: Cucumber file names usually carry no extension, so the media type supplies one for the link
+            // text. How the report renders the attachment is decided by its media type (FileAttachment.IsInlineImage).
             var displayName = Path.HasExtension(name) ? name : name + extension;
 
             if (NullIfBlank(attachment.Url) is { } url)
-                return new FileAttachment(displayName, ToLocalPath(url), NullIfBlank(attachment.MediaType));
+            {
+                var linked = new FileAttachment(displayName, ToLocalPath(url), NullIfBlank(attachment.MediaType));
+                Origins[linked] = new CucumberAttachmentOrigin(NullIfBlank(attachment.FileName), null, null, null);
+                return linked;
+            }
 
             if (attachment.Body is not { Length: > 0 } body)
                 return null;
@@ -1139,11 +1178,13 @@ public static class CucumberFeatureSynthesizer
                 Directory.CreateDirectory(directory);
                 var fileName = $"{_counter++:D4}-{Sanitise(displayName)}";
                 var path = Path.Combine(directory, fileName);
-                if (isBase64)
-                    File.WriteAllBytes(path, Convert.FromBase64String(body));
-                else
-                    File.WriteAllText(path, body);
-                return new FileAttachment(displayName, path, NullIfBlank(attachment.MediaType));
+                // The bytes File.WriteAllText wrote for a text body: UTF-8 with no byte order mark.
+                var bytes = isBase64 ? Convert.FromBase64String(body) : Encoding.UTF8.GetBytes(body);
+                File.WriteAllBytes(path, bytes);
+                var written = new FileAttachment(displayName, path, NullIfBlank(attachment.MediaType));
+                Origins[written] = new CucumberAttachmentOrigin(
+                    NullIfBlank(attachment.FileName), bytes.LongLength, System.Security.Cryptography.SHA256.HashData(bytes), path);
+                return written;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or FormatException)
             {

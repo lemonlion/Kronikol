@@ -42,7 +42,7 @@ public class CucumberMessagesReaderTests
         // Every producer writes them and no report shows them, so they are counted and never warned about: the
         // synthesis's warnings reach the run's diagnostics (#105), where this one would stand on every ingest.
         Assert.Empty(messages.UnreadEnvelopeTypes);
-        Assert.DoesNotContain(CucumberFeatureSynthesizer.Build(messages).Warnings,
+        Assert.DoesNotContain(CucumberFeatureSynthesizer.Build(messages, CucumberFixtures.Decoding()).Warnings,
             w => w.Contains("does not read", StringComparison.OrdinalIgnoreCase));
     }
 

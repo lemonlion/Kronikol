@@ -156,7 +156,7 @@ public class CucumberBypassTests
     private static object Timestamp(long milliseconds) => new { seconds = milliseconds / 1000, nanos = (int)(milliseconds % 1000) * 1_000_000 };
 
     internal static CucumberSynthesisResult Synthesise(string stream, CucumberSynthesisOptions? options = null) =>
-        CucumberFeatureSynthesizer.Build(CucumberMessagesReader.Read(new StringReader(stream)), options);
+        CucumberFeatureSynthesizer.Build(CucumberMessagesReader.Read(new StringReader(stream)), CucumberFixtures.Decoding(options));
 
     private static Scenario Only(CucumberSynthesisResult result) => result.Features.Single().Scenarios.Single();
 
@@ -490,7 +490,7 @@ public class CucumberBypassTests
         // cucumber-js 12.9.0: `return 'skipped'` skipped the rest, reported a later undefined step UNDEFINED and ran the
         // After hook after them; a failure skipped the rest. Neither is a bypass.
         var result = CucumberFeatureSynthesizer.BuildFromFiles([Fixture("cucumber-js-12.9-skip-messages.ndjson")],
-            new CucumberSynthesisOptions { IncludeHooks = includeHooks });
+            CucumberFixtures.Decoding(new CucumberSynthesisOptions { IncludeHooks = includeHooks }));
 
         var scenarios = result.Features.SelectMany(f => f.Scenarios).ToArray();
         Assert.Equal(2, scenarios.Length);
@@ -508,7 +508,7 @@ public class CucumberBypassTests
     {
         // playwright-bdd 9.2.0 on @playwright/test 1.62.1, as published: `$test.skip` skipped the rest of the test and
         // wrote no message; a failure skipped the rest; a step that attached kronikol-bypass and returned was PASSED.
-        var result = CucumberFeatureSynthesizer.BuildFromFiles([Fixture("playwright-bdd-9.2-bypass-messages.ndjson")]);
+        var result = CucumberFeatureSynthesizer.BuildFromFiles([Fixture("playwright-bdd-9.2-bypass-messages.ndjson")], CucumberFixtures.Decoding());
         Scenario Named(string name) => result.Features.SelectMany(f => f.Scenarios).Single(s => s.DisplayName == name);
 
         var testSkip = Named("A step calls test.skip");

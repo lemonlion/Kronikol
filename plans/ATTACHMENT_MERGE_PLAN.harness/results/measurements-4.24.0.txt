@@ -1,0 +1,35 @@
+#175 R1 measured on the release build, 2026-10-15, Windows 11, .NET SDK 10.0.300, node 25.9.0, Playwright 1.62.1,
+playwright-bdd 9.2.0. Control = Kronikol.Tool built at 85f849f7 (4.22.1; Ingestion is unchanged through 4.22.2).
+Release = R1's build. Every line is copied from the run's output.
+R1's build was labelled 4.23.0 when these were measured; it was released as 4.24.0, since #173's R1 took 4.23.0 first. The
+rows carry the release's number.
+
+== 1. The probe, four scenarios: results/matrix-4.24.0.txt (the counts are the prototype's in every variant)
+normal     control    18/10/6/7     41 listed  41 files   283019 B   0 dead
+normal     4.24.0     10/7/4/4      25 listed  25 files   167561 B   0 dead
+gone       control    18/10/6/7     41 listed  15 files   115434 B  26 dead
+gone       4.24.0     10/7/4/4      25 listed  23 files   167538 B   2 dead
+
+== 2. Issue scale (r1/measure_big.ps1, the probe's @big run: a 58 MB "trace" and a 7.5 MB "video" attached by path
+   in a failing Gherkin step, Playwright's own trace and video, two attempts, a 185.8 MB messages file; each ingest
+   with a temp directory of its own)
+4.22.1-r1: exit 0, 1.1 s, peak 1,380 MB, attachments/ 18 files 139.3 MB, staging folders left 1 (69.7 MB)
+4.24.0-r1: exit 0, 1.4 s, peak 1,382 MB, attachments/ 10 files 69.7 MB, staging folders left 0 (0.0 MB)
+4.22.1-r2: exit 0, 1.1 s, peak 1,373 MB, attachments/ 18 files 139.3 MB, staging folders left 1 (69.7 MB)
+4.24.0-r2: exit 0, 1.1 s, peak 1,380 MB, attachments/ 10 files 69.7 MB, staging folders left 0 (0.0 MB)
+
+Where each entry of the release's report landed, with its file's size:
+scenario screenshot-start.png 6 KB
+scenario screenshot 6 KB
+scenario screenshot-end.png 6 KB
+scenario video 4 KB
+scenario error-context 3 KB
+scenario trace 7525 KB
+step the page is open after-step.png 6 KB
+step the big check fails with a big trace 58000 KB
+step the big check fails with a big video 7500 KB
+step the big check fails with a big after-step.png 6 KB
+
+== 3. The test suite's own staging folders (the Cucumber and ingest facts, 436, with a temp directory of their own)
+before R1's test hygiene (the merge's deletion in, CucumberFixtures.Decoding not yet): 13 folders left
+with it: 0 folders left (the per-process root is deleted when the test process exits)

@@ -26,7 +26,38 @@ internal static class CucumberFixtures
 
     /// <summary>Reads and synthesises the golden messages file.</summary>
     public static CucumberSynthesisResult Build(CucumberSynthesisOptions? options = null) =>
-        CucumberFeatureSynthesizer.Build(Read(), options);
+        CucumberFeatureSynthesizer.Build(Read(), Decoding(options));
+
+    /// <summary>
+    /// The folder the facts that synthesise messages themselves decode attachment bodies under: one per test process,
+    /// deleted when it exits. The synthesis's own default is a new folder in the temp directory that nothing deletes, and
+    /// the suite left one there for every such fact (plans/ATTACHMENT_MERGE_PLAN.md, Q10).
+    /// </summary>
+    private static readonly Lazy<string> DecodedRoot = new(() =>
+    {
+        var root = System.IO.Directory.CreateTempSubdirectory("kronikol-tests-cucumber-").FullName;
+        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+        {
+            try { System.IO.Directory.Delete(root, recursive: true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+        };
+        return root;
+    });
+
+    /// <summary><paramref name="options"/>, decoding attachment bodies into a folder of the test process's own unless they name one.</summary>
+    public static CucumberSynthesisOptions Decoding(CucumberSynthesisOptions? options = null)
+    {
+        if (options?.AttachmentsDirectory is not null)
+            return options;
+        var source = options ?? new CucumberSynthesisOptions();
+        return new CucumberSynthesisOptions
+        {
+            IncludeHooks = source.IncludeHooks,
+            DefaultFeatureName = source.DefaultFeatureName,
+            TestIdAttachmentName = source.TestIdAttachmentName,
+            WriteTextAttachments = source.WriteTextAttachments,
+            AttachmentsDirectory = Path.Combine(DecodedRoot.Value, Guid.NewGuid().ToString("N")),
+        };
+    }
 
     // Scenario titles as they appear in the fixture.
     public const string SimpleScenario = "A simple passing scenario";

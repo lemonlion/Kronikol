@@ -193,6 +193,9 @@ public static class FailuresDigestGenerator
 
     private sealed record StepLine(string Path, string Text, string? Status, double? DurationSeconds, string? Message, string? SourceFile, int? SourceLine);
 
+    // Step: the address of the step that holds the attachment (s0/2), or null for one of the scenario's own.
+    private sealed record AttachmentLine(FileAttachment Attachment, string? Step);
+
     private sealed record Entry(
         string Address,
         string StableId,
@@ -208,7 +211,7 @@ public static class FailuresDigestGenerator
         IReadOnlyList<StepLine> Failing,
         IReadOnlyList<CallLine> Calls,
         string CallsScope,
-        IReadOnlyList<FileAttachment> Attachments,
+        IReadOnlyList<AttachmentLine> Attachments,
         string? DeepLink,
         string? SourceFile,
         int? SourceLine,
@@ -282,7 +285,12 @@ public static class FailuresDigestGenerator
             diff?.Expected, diff?.Actual,
             ClusterKey(scenario.ErrorMessage),
             context, failing, calls, callsScope,
-            scenario.Attachments ?? [],
+            // The scenario's own, then each step's in the order the steps are listed, with the step's address. The scenario's
+            // alone missed every screenshot taken inside a step, in every lane (#175).
+            [
+                .. (scenario.Attachments ?? []).Select(a => new AttachmentLine(a, null)),
+                .. ordered.SelectMany(step => (step.Step.Attachments ?? []).Select(a => new AttachmentLine(a, $"{address}/{step.Path}"))),
+            ],
             htmlFileName is null ? null : $"{htmlFileName}.html#sid-{stableId}",
             scenario.SourceFile,
             scenario.SourceLine,
@@ -783,8 +791,9 @@ public static class FailuresDigestGenerator
         if (entry.Attachments.Count > 0)
         {
             markdown.Append("Attachments:\n\n");
-            foreach (var attachment in entry.Attachments)
-                markdown.Append($"- {Escape(attachment.Name)} — {Code(attachment.RelativePath)}\n");
+            foreach (var (attachment, step) in entry.Attachments)
+                markdown.Append($"- {Escape(attachment.Name)} — {Code(attachment.RelativePath)}"
+                                + (step is null ? "" : $" (step {Code(step)})") + "\n");
             markdown.Append('\n');
         }
     }
@@ -968,7 +977,10 @@ public static class FailuresDigestGenerator
                 // because the step had none attributed to it, or nothing captured at all. Without it an
                 // empty array meant all three.
                 ["callsScope"] = entry.CallsScope,
-                ["attachments"] = entry.Attachments.Select(a => new { a.Name, Path = a.RelativePath }).ToArray()
+                // A step's attachment says which step holds it; one of the scenario's own is the object this has always been.
+                ["attachments"] = entry.Attachments.Select(a => a.Step is null
+                    ? (object)new { a.Attachment.Name, Path = a.Attachment.RelativePath }
+                    : new { a.Attachment.Name, Path = a.Attachment.RelativePath, a.Step }).ToArray()
             };
 
             // The cross-run verdict, when a ledger was read: the word, every verdict that applies, the

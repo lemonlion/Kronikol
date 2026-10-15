@@ -4,7 +4,8 @@
 the owner's request. The sweep re-ran every measurement on 4.22.1, measured the background and hook cases that had only
 been read from the code, and found F9: the failures digest reads only a scenario's own attachments, so R1 now carries
 the readers too (section 10 has the sweep's log). Green-lit in full by the owner on 2026-10-15 ("Can you implement the
-plan in full"), every question in section 9 as recommended. R1 in progress.
+plan in full"), every question in section 9 as recommended. **Executed as 4.24.0**, one minor release (Q14); section 10
+has the implementation's log.
 
 **Issue:** [#175](https://github.com/lemonlion/Kronikol/issues/175), "A playwright-bdd failure lists its trace, video,
 screenshot and error context twice, because the merge matches attachments by a name only one side gives an extension".
@@ -431,6 +432,16 @@ lane's shape is covered without an ingest. Both are red on 4.22.1 for any lane, 
     `Failures.md` lists `screenshot`, `trace`, `video` and `error-context` with their hook step. Red on the merge
     without 4.7 (measured: none listed).
 
+Added while implementing (section 10):
+
+23. `A_test_the_messages_do_not_own_that_never_ended_is_still_said_to_have_defaulted` (`CucumberIngestPipelineTests`):
+    the merge built its result afresh and dropped the tests file's `DefaultedResultCount`, so a combined ingest never
+    reported `ResultDefaulted` for a test outside the Gherkin run. Red on 4.22.2.
+24. `A_reporters_file_keeps_the_reporters_media_type` (unit): the other half of 4.1 step 4, held by M22. A guard.
+
+Fact 21 also reads `query failures --json`: each failing step's object carries the step's `attachments` (4.7's open
+decision, taken in section 10).
+
 ### 6.3 Existing facts
 
 On the prototype, 414 of 414 Cucumber and ingest facts pass with fact 18's original excluded (415 pass on 4.20.2). No
@@ -465,6 +476,17 @@ Mutations to kill, each named with the fact that catches it:
 | M14 | the digest reads the scenario's own list only (today's) | 19, 20, 22 |
 | M15 | the merged entry takes the tests' media type when the messages' copy survives | 5's sibling |
 | M16 | `query failures` prints the failing step's attachments in the scenario's capped lines instead | 21 |
+| M17 | the kept-twice count never made | 6 |
+| M18 | the merge drops the tests file's defaulted count (4.22.2's) | 23 |
+| M19 | `query failures --json` leaves out the failing step's attachments | 21 |
+| M20 | `Failures.jsonl` leaves out `step` | 20 |
+| M21 | `Failures.md` leaves out the step's address | 19, 22 |
+| M22 | a reporter's file takes the messages' media type | 24 |
+
+M7 runs as three mutants: the background steps skipped (M7a), the hook steps skipped (M7b) and the sub-steps skipped
+(M7c). M7c is equivalent on real inputs: the synthesis gives a Gherkin step no sub-steps, and the merger grafts its
+assertion rows after it has merged the attachments. The walk keeps the sub-steps for a synthesis that one day writes
+them. `r1/mutations.py` is the run, and `r1/mutations.txt` its result.
 
 ### 6.5 Checks
 
@@ -556,3 +578,39 @@ second pass are not part of R1.
     their rows with the steps section open by default; `DiagnosticKind` has `Other` for Q4, so the plan needs no edit to
     the file #173's release changes; no existing digest fact asserts attachment lines; the skill's `commands.md` has two
     copies.
+- 2026-10-15 and 16, R1 implemented (the owner: "Can you implement the plan in full", so every question in section 9 as
+  recommended), on 4.22.2 (`9b7886d9`, #173's R0, which touches none of R1's files), and rebased before the release
+  onto 4.22.3 (`609ba8f3`, #165's audit), whose edits to the digest (the clusters paragraph) and to the skill's
+  `commands.md` (another section) leave R1's lines as they were. What differs from the plan, and
+  what the implementation found:
+  - **A bug found on the way (fact 23):** `CucumberFeatureMerger.Merge` built its result afresh and dropped the tests
+    file's `DefaultedResultCount`, so a combined ingest never reported `ResultDefaulted` for a test outside the Gherkin
+    run that started and never ended, and reported it `Passed`. Fixed in R1: the merged result counts the scenarios
+    whose result defaulted.
+  - **The fixture** is a fresh run of the probe, all but `@big`, with `PROBE_SMALL=1` (a 48x27 page and a trace
+    without screenshots, snapshots or sources): 338 KB where the default page made 1.2 MB, with every artefact still
+    made under its name and media type. `cut_fixture.py` turns this machine's paths into `C:\fixture` inside each
+    `trace.zip` as well, and re-encodes the messages' copy from the same new bytes. The fixture folder is `-text` in
+    `.gitattributes`: a checkout that converted the line endings of its text artefacts would fail every byte check.
+  - **Where the facts are:** the pipeline and CLI facts on the fixture are a class of their own,
+    `CucumberAttachmentIngestTests`, beside `CucumberBypassIngestTests.cs`, rather than more of
+    `CucumberIngestPipelineTests.cs`; fact 21 is in `DigestStepAttachmentTests` and builds its report through the tests
+    file's `step` index, the lane that needs no Cucumber.
+  - **4.7's open decision, `query failures --json`:** each failing step's object carries `attachments` (`{ name, path }`),
+    as the text prints them under the step; the scenario's `attachments` stay its first four. `Failures.jsonl`'s
+    `formatVersion` stays 1: `step` is a member added, as `calls[].error` was in 4.3.0.
+  - **Fact 16's numbers:** the background scenario fails with the failing scenario's message, so `Failures.md` works
+    through one failure of their cluster and lists its 10 attachments, each once; `attachments/` holds 35 files.
+  - **Q10:** `CucumberFixtures.Decoding` gives each fact that synthesises messages itself a folder under one root per
+    test process, deleted when the process exits, as `BareOrigin`'s git home is. The Cucumber and ingest facts leave
+    no staging folder, where they left 23 a run on 4.22.2 (13 with the merge alone).
+  - **Red proof** (`r1/red-4.22.2.txt`): the new and changed facts copied onto 4.22.2 with the
+    `IngestRequest.DecodedAttachmentsRoot` seam alone (`r1/red-stubs.diff`): 19 fail, each on its own assertion, the
+    Playwright fact among them, and the guards pass (8, 9, 12, 13, 15b, 18, 7b).
+  - **Mutations** (`r1/mutations.txt`): 26 mutants, section 6.4's sixteen with M7 run as three, M8 and M12 as two
+    each, and M17 to M22: 24 killed. M7c and M13 survive, equivalent on real inputs as section 6.4 says. The code the
+    mutants ran on differs from the release's only in a constant's visibility, a doc comment and 4.22.3's clusters
+    paragraph.
+  - **Version:** R1 was built and measured as 4.23.0 and released as 4.24.0, since #173's R1 took 4.23.0 first; the
+    harness's `results/*-4.24.0.txt` say so in their headers.
+  - **Checks:** After the version bump the core suite passes 7,645 with 2 skipped, the full Playwright suite passes 1,041 with 28 skipped when run alone, and `release.slnf` builds in Release for every target.

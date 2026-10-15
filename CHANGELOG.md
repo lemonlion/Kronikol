@@ -4,6 +4,106 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.24.0] - 2026-10-16
+
+**Minor - a playwright-bdd run's artefacts are listed once each, where the run made them, and the failures digest lists
+what a step attached (#175; `plans/ATTACHMENT_MERGE_PLAN.md` R1).** Green-lit in full by the owner on 2026-10-15, every
+question in the plan's section 9 as recommended. `Failures.jsonl` gains a `step` member on a step's attachments, and
+`kronikol query failures --json` an `attachments` member on each failing step: new members a script can read, so the
+minor part moves (4.23.0 to 4.24.0). The rest is bug fixes.
+
+### Added
+
+- **`Failures.md` and `Failures.jsonl` list a failure's attachments wherever they sit:** the scenario's own, then each
+  step's in the order the steps are listed (background steps, steps, hook steps kept by `--include-hooks`, sub-steps).
+  In `Failures.md` a step's line ends with its address, `(step `s0/2`)`; in `Failures.jsonl` its object has a `step`
+  member with that address. The scenario's own lines and objects are as they were. The digest read the scenario's own
+  list alone, so a screenshot taken inside a step never reached the files an agent reads first, in any lane: a tests
+  file's `step` index, the Cucumber messages, LightBDD's step attachments, a report `kronikol merge` read back.
+- **`kronikol query failures` prints what the failing step attached under the step,** after its message and location,
+  as `query steps` prints it; under `--json` each failing step has `attachments`. The scenario's own lines are
+  unchanged: its first four, as before (#161).
+
+### Fixed
+
+- **A playwright-bdd run ingested from its tests file and its Cucumber messages listed and stored its artefacts twice
+  (#175).** playwright-bdd embeds every attachment in the messages as base64, and the reporter writes the same artefacts
+  to files, so each is described twice. The merge decided that two descriptions were one artefact by comparing names in
+  the scenario's own list, and each part of that failed on its own: Playwright's `trace`, `video`, `screenshot` and
+  `error-context` were kept twice, because the synthesis named the messages' copy with an extension (`trace.zip`) and
+  the reporter's name has none; every attachment made inside a step (the wiki's `AfterStep` screenshot, a step's own, a
+  `Background:` step's) was kept twice, the reporter's copy on the scenario and the messages' on the step, and under
+  `--include-hooks` every artefact was; and the reporter's copy was kept when its file was gone (Playwright empties
+  `test-results/` on its next run) while the messages' bytes were thrown away. Measured on a real playwright-bdd 9.2.0
+  run with the wiki's reporter recipe: 41 entries for 25 artefacts, and with the reporter's files gone 26 dead links; at
+  the issue's sizes (a 58 MB trace and a 7.5 MB video attached in a failing step), 139.3 MB in `attachments/` for 69.7 MB
+  of artefacts. Each attachment of the tests file is now paired, one to one and in order, with a copy of the same name
+  anywhere the messages put one: the producer's own name or the one Kronikol displays, and, when the reporter's file
+  can be read, the same bytes, since two artefacts may share a name and screenshots of an unchanged page share their
+  bytes. The pair is one entry under the reporter's name, where the messages put it, linking the reporter's file when
+  it exists and the messages' copy when it does not, with the media type of the file it links. When a name pair's two
+  files have different bytes, both are kept and one diagnostic counts them. The same run now lists 25 entries, with
+  41% fewer bytes in `attachments/`, and 2 dead links with the reporter's files gone (two JSON notes the messages
+  carry as text, which the ingest does not write to files).
+- **The tests file's `kronikol-bypass` was listed as a text file** for a scenario the messages own, where the wiki says
+  the bypass and test id attachments never appear in a report. Neither is listed for such a scenario now; for any other
+  scenario a tests file's attachment is a file whatever its name, as before.
+- **`kronikol ingest` left the messages' decoded attachment bodies in the temp directory on every run**
+  (`kronikol-cucumber-attachments/<id>`: 69.7 MB a run at the issue's sizes, and 2,929 folders on the machine
+  measured). An ingest now decodes into a folder of its own and deletes it once the report is written, unless the
+  report still links into it because a file could not be copied, which the report's diagnostics already say. A decoded
+  copy that a reporter's file replaced is deleted when it is replaced. A caller of `CucumberFeatureSynthesizer.Build`
+  that names an `AttachmentsDirectory` keeps its folder and its files.
+- **A combined ingest never said that a test outside the Gherkin run recorded no result.** The merge built its result
+  afresh and left the tests file's count behind, so a test the messages do not own that started and never ended was
+  reported as `ResultWhenUnknown` (`Passed` by default) with no `ResultDefaulted` diagnostic. Found while implementing.
+- Documentation: the comment that said an attachment's extension makes the report draw a screenshot inline (its media
+  type decides, `FileAttachment.IsInlineImage`), `CucumberFeatureMerger`'s remarks, and
+  `CucumberSynthesisOptions.AttachmentsDirectory` and `TestIdAttachmentName`.
+
+Behaviour change: a combined ingest lists each artefact once; a step's attachment on its step and no longer on the
+scenario too; a Playwright artefact under the run's name (`trace`, no longer also `trace.zip`); the messages' copy where
+the reporter's file is missing; no `kronikol-bypass` or `kronikol-test-id` entry for a scenario the messages own; one
+file per artefact in `attachments/`; and nothing left in the temp directory. In every lane, `Failures.md`,
+`Failures.jsonl` and `query failures` list the attachments made inside steps, so a scenario with a screenshot after
+each step has a line for each.
+
+### Documentation
+
+- The debugging skill's `references/commands.md` (both copies) says `failures` prints the failing step's attachments
+  under it.
+
+### Tests
+
+- `CucumberAttachmentIngestTests` (new, 15 facts) ingests a real playwright-bdd 9.2.0 run checked in as
+  `TestData/Cucumber/playwright-bdd-9.2-attachments/` (338 KB: the plan harness's probe on a 48x27 page, its tests file,
+  its messages and every file the tests file names, never converted on checkout): Playwright's artefacts once under the
+  run's names; a step's screenshot once on its step; three per-step screenshots with one name and the same bytes one on
+  each step; a `Background:` step's on it; under `--include-hooks` ten entries for ten artefacts on their hook steps;
+  with the reporter's files gone, the messages' copies under the reporter's names with their own media types; the
+  signals dropped for a scenario the messages own and kept for one they do not; text bodies only the tests file has,
+  in order; a retried scenario's last attempt, with and without `attempt` on the records; two files with one name and
+  different bytes both kept, with the diagnostic; no staging folder left, unless the report links into it;
+  `kronikol ingest` writing one file per artefact, `Failures.md` listing each once and `query failures` four different
+  ones; and `Failures.md` naming the failure's artefacts with their hook steps under `--include-hooks`.
+- `CucumberFeatureMergerTests`: two artefacts with one name stay where each was attached; a copy from the messages keeps
+  its own media type and a reporter's file the reporter's; a link is never paired; the scenario's list keeps the
+  reporter's order, then the messages' own; replaced decoded copies are deleted. The 3.0.45 fact, which called the old
+  internal overload with paths that did not exist, is rewritten with real files.
+- `DigestStepAttachmentTests` (new): `Failures.md` and `Failures.jsonl` list the attachments of the background step, a
+  step, the failing step and its sub-step after the scenario's own, with their addresses; `query failures` prints the
+  failing step's attachment under it, in text and `--json`. `CucumberIngestPipelineTests`: the defaulted count.
+- Playwright `IngestedAttachmentTests`: the ingested run's page paints each artefact once where the run made it, and
+  every image it draws loads.
+- The Cucumber facts that synthesise messages themselves decode into a folder the test process deletes when it exits:
+  the Cucumber and ingest facts left 23 folders in the temp directory a run, and leave none.
+- Proofs (plan harness `r1/`): copied onto 4.22.2 with only the `IngestRequest.DecodedAttachmentsRoot` seam
+  (`red-stubs.diff`), 19 facts fail, each on its own assertion, the Playwright one among them, and the guards pass.
+  Of 26 mutations, 24 are killed; the two left (the walk skipping sub-steps, and names compared with their case) cannot
+  change a real input, since the synthesis gives a Gherkin step no sub-steps and both producers pass a name through
+  unchanged.
+- Checks: after the version bump the core suite passes 7,645 with 2 skipped, the full Playwright suite passes 1,041 with 28 skipped when run alone, and `release.slnf` builds in Release for every target.
+
 ## [4.23.0] - 2026-10-16
 
 **Minor - a `ProxyTap` cuts a caller that stalls in its request body or in reading its answer (#173;

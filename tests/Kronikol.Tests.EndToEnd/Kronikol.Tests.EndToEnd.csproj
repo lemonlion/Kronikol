@@ -33,6 +33,8 @@
     <Content Include="..\Kronikol.Tests\TestData\Cucumber\issue-105-messages.ndjson" Link="TestData\issue-105-messages.ndjson" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\Kronikol.Tests\TestData\Cucumber\issue-105-tests.ndjson" Link="TestData\issue-105-tests.ndjson" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\Kronikol.Tests\TestData\Cucumber\playwright-bdd-9.2-bypass-messages.ndjson" Link="TestData\playwright-bdd-9.2-bypass-messages.ndjson" CopyToOutputDirectory="PreserveNewest" />
+    <!-- A playwright-bdd run with its artefacts, both descriptions of each (plans/ATTACHMENT_MERGE_PLAN.md fact 17). -->
+    <Content Include="..\Kronikol.Tests\TestData\Cucumber\playwright-bdd-9.2-attachments\**\*" Link="TestData\playwright-bdd-9.2-attachments\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

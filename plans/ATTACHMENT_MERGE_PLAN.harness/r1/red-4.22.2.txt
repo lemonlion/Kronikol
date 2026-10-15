@@ -1,0 +1,61 @@
+Red proof: the new and changed facts copied onto v4.22.2 (9b7886d9) with r1/red-stubs.diff (the IngestRequest.DecodedAttachmentsRoot seam alone), Windows 11, 2026-10-15
+19 failed, 20 passed, 39 in all
+
+RED   A_background_steps_attachment_is_listed_once_on_the_background_step
+      at CucumberAttachmentIngestTests.cs:145: Assert.Equal() Failure: Strings differ
+RED   A_copy_from_the_messages_keeps_its_own_media_type
+      at CucumberFeatureMergerTests.cs:254: Assert.Single() Failure: The collection contained 3 items
+RED   A_name_pair_with_different_bytes_keeps_both_and_says_so
+      at CucumberAttachmentIngestTests.cs:277: Assert.Single() Failure: The collection did not contain any matching items
+RED   A_steps_attachment_is_listed_once_on_its_step
+      at CucumberAttachmentIngestTests.cs:121: Assert.Equal() Failure: Strings differ
+RED   A_test_the_messages_do_not_own_that_never_ended_is_still_said_to_have_defaulted
+      at CucumberIngestPipelineTests.cs:231: Assert.Single() Failure: The collection did not contain any matching items
+RED   An_ingest_leaves_no_staging_folder
+      at CucumberAttachmentIngestTests.cs:293: Assert.Empty() Failure: Collection was not empty
+RED   Each_artefact_is_painted_once_where_the_run_made_it
+      at IngestedAttachmentTests.cs:28: Assert.Equal() Failure: Collections differ at index 1
+RED   Failures_jsonl_attachments_carry_their_step
+      at DigestStepAttachmentTests.cs:109: Assert.Equal() Failure: Collections differ
+RED   Failures_md_lists_the_attachments_made_inside_steps_with_their_step
+      at DigestStepAttachmentTests.cs:91: Assert.StartsWith() Failure: String start does not match
+RED   Per_step_screenshots_with_one_name_and_the_same_bytes_land_one_on_each_step
+      at CucumberAttachmentIngestTests.cs:133: Assert.Equal() Failure: Collections differ at index 0
+RED   Playwrights_own_artefacts_are_listed_once_under_the_runs_names
+      at CucumberAttachmentIngestTests.cs:110: Assert.DoesNotContain() Failure: Filter matched in collection
+RED   Query_failures_prints_the_failing_steps_attachments_under_it
+      at DigestStepAttachmentTests.cs:149: Assert.Matches() Failure: Pattern not found in value
+RED   The_decoded_copies_a_reporters_file_replaced_are_deleted
+      at CucumberFeatureMergerTests.cs:308: Assert.Equal() Failure: Collections differ at index 0
+RED   The_ingest_cli_writes_one_file_per_artefact
+      at CucumberAttachmentIngestTests.cs:329: 0000-after-step.png, 0001-step-shot.png, 0002-after-step.png, 0003-after-step.png, 0004-screenshot.png, 0006-error-context.md, 0007-trace.zip, 0009-video.webm, 
+RED   The_signals_are_not_attachments_of_a_scenario_the_messages_own
+      at CucumberAttachmentIngestTests.cs:197: Assert.DoesNotContain() Failure: Filter matched in collection
+RED   Two_artefacts_with_one_name_stay_where_each_was_attached
+      at CucumberFeatureMergerTests.cs:238: Assert.Single() Failure: The collection contained 3 items
+RED   When_the_reporters_file_is_gone_the_messages_copy_is_linked
+      at CucumberAttachmentIngestTests.cs:175: Assert.Equal() Failure: Collections differ at index 0
+RED   With_hooks_kept_a_hooks_attachment_is_listed_once_on_its_hook_step
+      at CucumberAttachmentIngestTests.cs:155: scenario: screenshot-start.png -> 6-screenshot-start.png; scenario: after-step.png -> 7-after-step.png; scenario: step-shot.png -> 8-step-shot.png; scenario: af
+RED   With_hooks_kept_the_digest_still_lists_the_failure_artefacts
+      at CucumberAttachmentIngestTests.cs:361: Assert.Matches() Failure: Pattern not found in value
+green A_german_features_steps_take_their_phase_from_the_gherkin_keyword_type
+green A_link_is_never_paired
+green A_messages_only_ingest_needs_no_captures_and_no_tests_file
+green A_retried_scenario_pairs_its_last_attempts_attachments
+green An_assertion_before_every_step_becomes_a_top_level_row
+green An_ingest_leaves_no_staging_folder_unless_the_report_still_links_into_it
+green An_unreadable_messages_file_is_a_FileNotFoundException_not_a_silent_skip
+green Assertions_nest_under_the_step_that_was_running
+green Include_hooks_surfaces_the_hook_steps_in_the_report
+green Messages_win_for_structure_while_the_tests_file_contributes_assertions_and_identity
+green Reporter_step_events_of_an_owned_scenario_are_the_ones_the_messages_replace
+green Scenarios_the_messages_do_not_own_keep_their_place
+green Specifications_reads_as_living_documentation_for_a_green_run
+green Text_bodies_only_the_tests_file_has_are_kept_in_order
+green The_reporters_attachments_win_over_the_messages_copies_of_the_same_artefact
+green The_scenario_list_keeps_the_reporters_order_then_the_messages_own
+green The_signals_stay_attachments_of_a_scenario_the_messages_do_not_own
+green The_tests_file_still_contributes_attachments_and_a_failure_the_gherkin_steps_never_saw
+green Unowned_scenarios_are_kept_and_ordered_after_the_gherkin_features
+green With_nothing_to_own_the_tests_file_model_is_returned_unchanged

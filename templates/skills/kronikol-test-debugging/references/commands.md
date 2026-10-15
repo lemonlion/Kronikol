@@ -137,10 +137,12 @@ never called — no payload needed to establish that.
 
 ### `failures <report>`
 For every failing scenario: the error, the failing step in context, its assertions with their messages and
-`file:line`, the calls that happened inside that step, and any attachments. Usually the whole answer.
+`file:line`, the calls that happened inside that step, what that step attached (under it, since 4.24.0: the
+screenshot of a failure is usually there), and the scenario's own attachments. Usually the whole answer.
 Since 3.7.0 each failure also prints `thrown at <method> — <file>:<line>` (the frame that raised, read from
 `errorStackTrace`; not the line the scenario was declared on) and `rerun: dotnet test --filter …`; under
-`--json` the same are `thrownAt`, `testName` and `rerun`.
+`--json` the same are `thrownAt`, `testName` and `rerun`, and a failing step's attachments are its
+`attachments`.
 
 Prints `nothing failed` on a green run rather than an empty response.
 

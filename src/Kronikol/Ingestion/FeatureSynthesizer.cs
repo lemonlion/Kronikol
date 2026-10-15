@@ -27,6 +27,13 @@ public static class FeatureSynthesizer
         /// report and a crashed worker.
         /// </summary>
         public int DefaultedResultCount { get; init; }
+
+        /// <summary>
+        /// How many tests-file attachments of scenarios the Cucumber messages own are listed beside a messages copy of the
+        /// same name, because the reporter's file and the copy have different bytes
+        /// (<see cref="Cucumber.CucumberFeatureMerger.Merge"/>). The pipeline reports the count as a diagnostic.
+        /// </summary>
+        internal int AttachmentsKeptTwice { get; init; }
     }
 
     /// <summary>
