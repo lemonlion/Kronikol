@@ -15,9 +15,11 @@ internal sealed class RawExporter : IDisposable
 
     public TcpClient Client { get; }
 
-    public static async Task<RawExporter> ConnectAsync(OtlpTap tap)
+    public static async Task<RawExporter> ConnectAsync(OtlpTap tap, int? receiveBuffer = null)
     {
         var client = new TcpClient();
+        if (receiveBuffer is { } size)
+            client.ReceiveBufferSize = size; // small, so an answer it stops reading backs up into the tap's writes
         await client.ConnectAsync(IPAddress.Loopback, tap.BoundPort);
         return new RawExporter(client);
     }

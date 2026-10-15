@@ -48,6 +48,8 @@ public static class OtlpTapServiceCollectionExtensions
             to.ExpectedHeaders[key] = value;
         to.TracesPath = from.TracesPath;
         to.MaxRequestBytes = from.MaxRequestBytes;
+        to.CallerStallTimeout = from.CallerStallTimeout;
+        to.KeepAliveTimeout = from.KeepAliveTimeout;
         to.QueueCapacity = from.QueueCapacity;
         to.Sink = from.Sink;
         to.Phase = from.Phase;

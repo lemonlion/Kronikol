@@ -57,6 +57,9 @@ public sealed class OtlpTap : IAsyncDisposable
     private long _spansReceived;
     private long _spansMapped;
     private long _spansIgnored;
+    private StallWatch? _watch;
+    private long _sendTimeouts;
+    private long _answerTimeouts;
 
     /// <summary>Creates a tap for the given options (validated on <see cref="StartAsync"/>).</summary>
     public OtlpTap(OtlpTapOptions options)
@@ -130,6 +133,38 @@ public sealed class OtlpTap : IAsyncDisposable
     public long SpansIgnored => Interlocked.Read(ref _spansIgnored);
 
     /// <summary>
+    /// Exporter connections closed by <see cref="OtlpTapOptions.CallerStallTimeout"/>: ones that stalled while sending an
+    /// export, which was not received, and ones that stalled while reading their answer (the export already received).
+    /// <see cref="Diagnostics"/> says how many of each. A kept-alive connection closed by
+    /// <see cref="OtlpTapOptions.KeepAliveTimeout"/> is not one.
+    /// </summary>
+    public long CallerTimeouts => Interlocked.Read(ref _sendTimeouts) + Interlocked.Read(ref _answerTimeouts);
+
+    // The tap's clock (Kronikol.Tests.Otlp): one for the stall limits and the accept loop's pause. Set before StartAsync.
+    internal TimeProvider Clock
+    {
+        get => Accepting.Clock;
+        set => Accepting.Clock = value;
+    }
+
+    // Whether a debugger is attached (Kronikol.Tests.Otlp): every fact says no, so the suite passes under one too.
+    internal Func<bool> DebuggerAttached { get; set; } = static () => System.Diagnostics.Debugger.IsAttached;
+
+    // The watch over exporters' transfers, or null when there is no limit (Kronikol.Tests.Otlp).
+    internal StallWatch? Watch => _watch;
+
+    // The phases a connection is watched in, as the watch names them.
+    internal const string KeptAlivePhase = "kept-alive connection";
+    internal const string SendingPhase = "export";
+    internal const string AnsweringPhase = "answer";
+
+    // The largest piece of an answer written at once: each piece written is progress against the stall limit.
+    internal const int AnswerPiece = 16 * 1024;
+
+    // How long the 408 to an exporter cut while sending may take to write, on the real clock.
+    private static readonly TimeSpan TimeoutAnswerBound = TimeSpan.FromSeconds(5);
+
+    /// <summary>
     /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per
     /// non-zero problem counter — accepts that failed, payloads dropped, rejected or failed, exports refused as
     /// unauthenticated, forwards that failed — worded for a report reader (<c>otlp: 2 export payload(s)
@@ -171,6 +206,12 @@ public sealed class OtlpTap : IAsyncDisposable
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
                 string.Create(CultureInfo.InvariantCulture, $"{name}: {forwardFailures:N0} export(s) could not be forwarded to {_options.ForwardBaseUri} and were answered 502 Bad Gateway — the spans were still mapped here, but the real collector never saw them")));
 
+        var sendTimeouts = Interlocked.Read(ref _sendTimeouts);
+        var answerTimeouts = Interlocked.Read(ref _answerTimeouts);
+        if (sendTimeouts + answerTimeouts > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {sendTimeouts + answerTimeouts:N0} exporter connection(s) stalled for CallerStallTimeout ({_options.CallerStallTimeout}) and were closed: {sendTimeouts:N0} sending an export (not received), {answerTimeouts:N0} reading an answer (the export already received)")));
+
         return entries;
     }
 
@@ -178,6 +219,8 @@ public sealed class OtlpTap : IAsyncDisposable
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
         _options.Validate();
+        if (_options.StallLimit is not null || _options.KeepAliveLimit is not null)
+            _watch = new StallWatch(Clock, DebuggerAttached, line => TryLog($"[{_options.DisplayName}] otlp-tap {line}"));
 
         if (_options.ForwardBaseUri is not null)
         {
@@ -282,6 +325,10 @@ public sealed class OtlpTap : IAsyncDisposable
 
     private async Task ServeAsync(TcpClient client, CancellationToken ct)
     {
+        // The connection's own token, linked to the tap's: a time limit cancels it, which ends the pending read or write at
+        // once and leaves the socket fit for the 408 that follows (plans/TAP_CALLER_TIME_LIMITS_PLAN.md §4.4).
+        using var connection = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var limits = new ConnectionLimits(_watch, connection, _options);
         try
         {
             using (client)
@@ -289,31 +336,53 @@ public sealed class OtlpTap : IAsyncDisposable
                 // Inside the using: were setting it to throw, the client would be left to its finalizer, and its socket held.
                 client.NoDelay = true;
                 await using var stream = client.GetStream();
-                var reader = new HttpRequestReader(stream, _options.MaxRequestBytes);
-                while (!ct.IsCancellationRequested)
+                var reader = new HttpRequestReader(stream, _options.MaxRequestBytes)
                 {
-                    var head = await reader.ReadHeadAsync(ct).ConfigureAwait(false);
-                    if (head is null)
-                        return;
-
-                    // Refused before anything of the body is read or allocated.
-                    if (Refusal(head) is { } refusal)
+                    Progressed = limits.Progress,
+                    HeadStarted = () => limits.Next(CutPhase.Sending),
+                };
+                try
+                {
+                    while (!ct.IsCancellationRequested && limits.Next(CutPhase.KeptAlive))
                     {
-                        await WriteResponseAsync(stream, refusal.Status, refusal.Reason, "application/json", Utf8(refusal.Body), keepAlive: false, ct).ConfigureAwait(false);
-                        await CloseInStagesAsync(client, reader, head, ct).ConfigureAwait(false);
-                        return;
-                    }
+                        var head = await reader.ReadHeadAsync(connection.Token).ConfigureAwait(false);
+                        if (head is null)
+                            return;
 
-                    var request = await reader.ReadBodyAsync(head, ct).ConfigureAwait(false);
-                    if (request is null)
-                        return;
+                        // Refused before anything of the body is read or allocated.
+                        if (Refusal(head) is { } refusal)
+                        {
+                            if (!limits.End())
+                                break;
+                            await WriteResponseAsync(stream, limits, refusal.Status, refusal.Reason, "application/json", Utf8(refusal.Body), keepAlive: false, connection.Token).ConfigureAwait(false);
+                            await CloseInStagesAsync(client, reader, head, ct).ConfigureAwait(false);
+                            return;
+                        }
 
-                    if (!await HandleAsync(request, stream, ct).ConfigureAwait(false))
-                    {
-                        await CloseInStagesAsync(client, reader, unread: null, ct).ConfigureAwait(false);
-                        return;
+                        var request = await reader.ReadBodyAsync(head, connection.Token).ConfigureAwait(false);
+                        if (request is null)
+                            return;
+
+                        // The export's end and its limit settle by one move on the entry: a lost move is the limit's, and the
+                        // export is not received.
+                        if (!limits.End())
+                            break;
+
+                        if (!await HandleAsync(request, stream, limits, connection.Token).ConfigureAwait(false))
+                        {
+                            await CloseInStagesAsync(client, reader, unread: null, ct).ConfigureAwait(false);
+                            return;
+                        }
                     }
                 }
+                catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException or OperationCanceledException
+                    && limits.Cut is not CutPhase.None && !ct.IsCancellationRequested)
+                {
+                    // A time limit ended the pending read or write; what it threw says nothing more.
+                }
+
+                if (limits.Cut is not CutPhase.None && !ct.IsCancellationRequested)
+                    await CutAsync(client, stream, reader, limits.Cut, ct).ConfigureAwait(false);
             }
         }
         catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException or OperationCanceledException)
@@ -323,6 +392,41 @@ public sealed class OtlpTap : IAsyncDisposable
         catch (Exception ex)
         {
             TryLog($"[{_options.DisplayName}] otlp-tap connection error: {ex.Message}");
+        }
+        finally
+        {
+            limits.End(); // no watch outlives its connection
+        }
+    }
+
+    /// <summary>
+    /// Ends a connection a time limit cut. A kept-alive one is closed, writing and counting nothing, as an HTTP server closes
+    /// an idle connection. An exporter that stalled while sending is answered <c>408</c>, under a bound of its own, and
+    /// closed in stages, its export not received; one that stalled reading its answer is closed. Each stall is counted and
+    /// logged.
+    /// </summary>
+    private async Task CutAsync(TcpClient client, Stream stream, HttpRequestReader reader, CutPhase phase, CancellationToken ct)
+    {
+        switch (phase)
+        {
+            case CutPhase.Sending:
+                Interlocked.Increment(ref _sendTimeouts);
+                TryLog($"[{_options.DisplayName}] otlp-tap exporter stalled {_options.CallerStallTimeout} sending an export; not received, answered 408 and closed");
+                using (var bound = CancellationTokenSource.CreateLinkedTokenSource(ct))
+                {
+                    bound.CancelAfter(TimeoutAnswerBound);
+                    await WriteResponseAsync(stream, limits: null, 408, "Request Timeout", "application/json",
+                        Utf8("{\"error\":\"otlp-tap: the exporter stalled sending its export\"}"), keepAlive: false, bound.Token).ConfigureAwait(false);
+                }
+
+                await CloseInStagesAsync(client, reader, unread: null, ct).ConfigureAwait(false);
+                return;
+            case CutPhase.Answering:
+                Interlocked.Increment(ref _answerTimeouts);
+                TryLog($"[{_options.DisplayName}] otlp-tap exporter stalled {_options.CallerStallTimeout} reading its answer; closed");
+                return;
+            default:
+                return; // kept alive past KeepAliveTimeout: the using closes it
         }
     }
 
@@ -381,13 +485,13 @@ public sealed class OtlpTap : IAsyncDisposable
     private static readonly TimeSpan LingerQuiet = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan LingerTotal = TimeSpan.FromSeconds(30);
 
-    private async Task<bool> HandleAsync(HttpRequestMessageData request, Stream stream, CancellationToken ct)
+    private async Task<bool> HandleAsync(HttpRequestMessageData request, Stream stream, ConnectionLimits limits, CancellationToken ct)
     {
         if (request.TooLarge)
         {
             Interlocked.Increment(ref _rejected);
             TryLog($"[{_options.DisplayName}] otlp-tap refused an export over MaxRequestBytes ({_options.MaxRequestBytes})");
-            await WriteResponseAsync(stream, 413, "Payload Too Large", "application/json", Utf8("{\"error\":\"payload too large\"}"), request.KeepAlive, ct).ConfigureAwait(false);
+            await WriteResponseAsync(stream, limits, 413, "Payload Too Large", "application/json", Utf8("{\"error\":\"payload too large\"}"), request.KeepAlive, ct).ConfigureAwait(false);
             return request.KeepAlive;
         }
 
@@ -412,12 +516,12 @@ public sealed class OtlpTap : IAsyncDisposable
 
         if (_options.ForwardBaseUri is not null)
         {
-            await ForwardAsync(request, stream, ct).ConfigureAwait(false);
+            await ForwardAsync(request, stream, limits, ct).ConfigureAwait(false);
         }
         else if (isTraces)
         {
             var json = request.ContentType?.Contains("json", StringComparison.OrdinalIgnoreCase) == true;
-            await WriteResponseAsync(stream, 200, "OK",
+            await WriteResponseAsync(stream, limits, 200, "OK",
                 json ? OtlpTraceReader.JsonContentType : OtlpTraceReader.ProtobufContentType,
                 // An ExportTraceServiceResponse with no partial_success is the empty message: zero bytes.
                 json ? Utf8("{}") : [],
@@ -425,7 +529,7 @@ public sealed class OtlpTap : IAsyncDisposable
         }
         else
         {
-            await WriteResponseAsync(stream, 404, "Not Found", "application/json", Utf8("{\"error\":\"not found\"}"), request.KeepAlive, ct).ConfigureAwait(false);
+            await WriteResponseAsync(stream, limits, 404, "Not Found", "application/json", Utf8("{\"error\":\"not found\"}"), request.KeepAlive, ct).ConfigureAwait(false);
         }
 
         if (AfterResponseWritten is { } afterResponse)
@@ -469,13 +573,13 @@ public sealed class OtlpTap : IAsyncDisposable
             : null;
     }
 
-    private async Task ForwardAsync(HttpRequestMessageData request, Stream stream, CancellationToken ct)
+    private async Task ForwardAsync(HttpRequestMessageData request, Stream stream, ConnectionLimits limits, CancellationToken ct)
     {
         // Never resolved against the base: a target starting with "//" would name a host of its own.
         if (OriginForm(request.Target) is not { } origin)
         {
             TryLog($"[{_options.DisplayName}] otlp-tap refused a request target with no path to forward: {request.Method} {request.Target}");
-            await WriteResponseAsync(stream, 400, "Bad Request", "application/json",
+            await WriteResponseAsync(stream, limits, 400, "Bad Request", "application/json",
                 Utf8("{\"error\":\"otlp-tap: the request target must be a path or an http URI\"}"), request.KeepAlive, ct).ConfigureAwait(false);
             return;
         }
@@ -514,18 +618,24 @@ public sealed class OtlpTap : IAsyncDisposable
             // the tap is stopping, and the exception ends the connection uncounted and unanswered (ServeAsync).
             Interlocked.Increment(ref _forwardFailures);
             TryLog($"[{_options.DisplayName}] otlp-tap forward failed: {ex.Message}");
-            await WriteResponseAsync(stream, 502, "Bad Gateway", "application/json",
+            await WriteResponseAsync(stream, limits, 502, "Bad Gateway", "application/json",
                 Utf8("{\"error\":\"otlp-tap: upstream collector unreachable\"}"), request.KeepAlive, ct).ConfigureAwait(false);
             return;
         }
 
         // The collector has the export. A failure from here on is the exporter's, which hung up before its answer, and
         // falls to ServeAsync's hang-up catch.
-        await WriteResponseAsync(stream, status, reason, contentType, body, request.KeepAlive, ct, contentEncoding).ConfigureAwait(false);
+        await WriteResponseAsync(stream, limits, status, reason, contentType, body, request.KeepAlive, ct, contentEncoding).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Writes an answer: its head, then its body in pieces of at most <see cref="AnswerPiece"/>, each one progress against
+    /// the connection's stall limit (one write of a large relayed answer would make the limit a total deadline). A write the
+    /// limit cancels throws, and a limit that fired as the answer ended cancels the connection all the same.
+    /// </summary>
     private static async Task WriteResponseAsync(
-        Stream stream, int status, string reason, string? contentType, byte[] body, bool keepAlive, CancellationToken ct, string? contentEncoding = null)
+        Stream stream, ConnectionLimits? limits, int status, string reason, string? contentType, byte[] body, bool keepAlive, CancellationToken ct,
+        string? contentEncoding = null)
     {
         var head = new StringBuilder(160);
         head.Append("HTTP/1.1 ").Append(status.ToString(CultureInfo.InvariantCulture)).Append(' ').Append(reason).Append("\r\n");
@@ -536,10 +646,18 @@ public sealed class OtlpTap : IAsyncDisposable
         head.Append("Content-Length: ").Append(body.Length.ToString(CultureInfo.InvariantCulture)).Append("\r\n");
         head.Append("Connection: ").Append(keepAlive ? "keep-alive" : "close").Append("\r\n\r\n");
 
+        limits?.Next(CutPhase.Answering);
         await stream.WriteAsync(Utf8(head.ToString()), ct).ConfigureAwait(false);
-        if (body.Length > 0)
-            await stream.WriteAsync(body, ct).ConfigureAwait(false);
+        limits?.Progress();
+        for (var offset = 0; offset < body.Length; offset += AnswerPiece)
+        {
+            await stream.WriteAsync(body.AsMemory(offset, Math.Min(AnswerPiece, body.Length - offset)), ct).ConfigureAwait(false);
+            limits?.Progress();
+        }
+
         await stream.FlushAsync(ct).ConfigureAwait(false);
+        if (limits is not null && !limits.End())
+            throw new OperationCanceledException(ct);
     }
 
     private static byte[] Utf8(string text) => Encoding.UTF8.GetBytes(text);
@@ -643,6 +761,8 @@ public sealed class OtlpTap : IAsyncDisposable
         if (Interlocked.Exchange(ref _disposed, 1) == 1)
             return;
 
+        // The time limits' heartbeat stops first: the stop ends every connection itself from here on.
+        _watch?.Dispose();
         _queue.Writer.TryComplete();
 
         if (_cts is not null)
@@ -680,7 +800,71 @@ public sealed class OtlpTap : IAsyncDisposable
             $"[{_options.DisplayName}] otlp-tap stopped ({RequestsReceived} exports, {SpansReceived} spans, {SpansMapped} mapped, "
             + $"{SpansIgnored} ignored, {PayloadsDropped} dropped, {PayloadsRejected} rejected, {PayloadsFailed} failed, "
             + $"{UnauthenticatedRequests} unauthenticated, {ForwardFailures} forward failures, "
-            + $"{AcceptFailures} failed accepts)");
+            + $"{AcceptFailures} failed accepts, {CallerTimeouts} caller timeouts)");
+    }
+
+    private enum CutPhase
+    {
+        None,
+        KeptAlive,
+        Sending,
+        Answering,
+    }
+
+    /// <summary>
+    /// One exporter connection's time limits: the phase it is in, watched against that phase's limit, and the phase a limit
+    /// cut. A phase's end and its limit settle by one move on its entry, and whoever loses reads it as the limit's: a phase
+    /// that ends after its limit fired cuts the connection as the limit's action would.
+    /// </summary>
+    private sealed class ConnectionLimits(StallWatch? watch, CancellationTokenSource connection, OtlpTapOptions options)
+    {
+        private StallWatch.Entry? _entry;
+        private int _phase;
+        private int _cut;
+
+        public CutPhase Cut => (CutPhase)Volatile.Read(ref _cut);
+
+        /// <summary>Watches the next phase, ending the last one's watch first; false when the last one's limit fired first.</summary>
+        public bool Next(CutPhase phase)
+        {
+            if (!End())
+                return false;
+            Volatile.Write(ref _phase, (int)phase);
+            var (name, limit) = phase switch
+            {
+                CutPhase.KeptAlive => (KeptAlivePhase, options.KeepAliveLimit),
+                CutPhase.Sending => (SendingPhase, options.StallLimit),
+                _ => (AnsweringPhase, options.StallLimit),
+            };
+            Volatile.Write(ref _entry, watch?.Watch(name, limit, () => CutBy(phase)));
+            return true;
+        }
+
+        public void Progress() => Volatile.Read(ref _entry)?.Progress();
+
+        /// <summary>Ends the current phase's watch; false when its limit fired first, which cuts the connection.</summary>
+        public bool End()
+        {
+            var entry = Interlocked.Exchange(ref _entry, null);
+            if (entry is null || entry.TryEnd())
+                return true;
+            CutBy((CutPhase)Volatile.Read(ref _phase));
+            return false;
+        }
+
+        private void CutBy(CutPhase phase)
+        {
+            if (Interlocked.CompareExchange(ref _cut, (int)phase, (int)CutPhase.None) != (int)CutPhase.None)
+                return;
+            try
+            {
+                connection.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // The connection has already ended.
+            }
+        }
     }
 
     /// <summary>

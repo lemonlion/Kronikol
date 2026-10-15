@@ -69,6 +69,27 @@ public sealed class OtlpTapOptions
     public int MaxRequestBytes { get; set; } = 32 * 1024 * 1024;
 
     /// <summary>
+    /// How long an exporter may move no bytes while it sends a request's head or body, or reads its answer, before the
+    /// tap ends the connection. Default 100 s; <c>null</c> or <see cref="Timeout.InfiniteTimeSpan"/> means no limit, and zero
+    /// or another negative value is refused at start. It measures a stall, not a duration: every read or write that moves
+    /// bytes starts the wait again. An exporter cut while it sends is answered <c>408 Request Timeout</c> and the connection
+    /// closed, and its export is not received; one cut while it reads its answer is closed (its export was received). Each
+    /// is counted in <see cref="OtlpTap.CallerTimeouts"/> and logged. A forward to <see cref="ForwardBaseUri"/> is not the
+    /// exporter's stall. No limit fires while a debugger is attached to this process; an exporter paused in a debugger in a
+    /// process of its own is cut after the limit, so set it to <c>null</c> for such a session.
+    /// </summary>
+    public TimeSpan? CallerStallTimeout { get; set; } = TimeSpan.FromSeconds(100);
+
+    /// <summary>
+    /// How long a connection may wait for a request's first byte, its first request's or its next one's, before the tap
+    /// closes it, writing nothing and counting nothing. Default 120 s, http.sys's idle-connection limit: above the idle
+    /// limit of every client that would not recover from a close racing its next request (.NET closes an idle connection
+    /// at 60 to 75 s, Go at 90 s). <c>null</c> or <see cref="Timeout.InfiniteTimeSpan"/> means none; zero or another
+    /// negative value is refused at start.
+    /// </summary>
+    public TimeSpan? KeepAliveTimeout { get; set; } = TimeSpan.FromSeconds(120);
+
+    /// <summary>
     /// How many accepted export payloads may wait to be mapped. The queue is bounded and drops the
     /// <em>newest</em> payload when full (D3: capture never blocks the producer); drops are counted in
     /// <see cref="OtlpTap.PayloadsDropped"/>. Default 256.
@@ -159,5 +180,15 @@ public sealed class OtlpTapOptions
         // A range taken from a negative cap throws, so every payload with a capped attribute would fail.
         if (ContentCapBytes is < 0)
             throw new ArgumentOutOfRangeException(nameof(ContentCapBytes), "ContentCapBytes must be zero or more, or null for no cap.");
+        if (CallerStallTimeout is { } stall && stall <= TimeSpan.Zero && stall != Timeout.InfiniteTimeSpan)
+            throw new ArgumentOutOfRangeException(nameof(CallerStallTimeout), "CallerStallTimeout must be positive, or null or Timeout.InfiniteTimeSpan for no limit.");
+        if (KeepAliveTimeout is { } idle && idle <= TimeSpan.Zero && idle != Timeout.InfiniteTimeSpan)
+            throw new ArgumentOutOfRangeException(nameof(KeepAliveTimeout), "KeepAliveTimeout must be positive, or null or Timeout.InfiniteTimeSpan for no limit.");
     }
+
+    /// <summary>The exporter's stall limit, or null for none: <c>null</c> or <see cref="Timeout.InfiniteTimeSpan"/>.</summary>
+    internal TimeSpan? StallLimit => CallerStallTimeout is { } stall && stall != Timeout.InfiniteTimeSpan ? stall : null;
+
+    /// <summary>The kept-alive connection's limit, or null for none.</summary>
+    internal TimeSpan? KeepAliveLimit => KeepAliveTimeout is { } idle && idle != Timeout.InfiniteTimeSpan ? idle : null;
 }

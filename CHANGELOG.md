@@ -4,6 +4,67 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.25.0] - 2026-10-16
+
+**Minor - an `OtlpTap` closes an exporter that stalls in a request or in reading its answer, and a connection left idle
+(#173; `plans/TAP_CALLER_TIME_LIMITS_PLAN.md` R2).** Green-lit in full by the owner on 2026-10-15, every question in the
+plan's section 9 as recommended. Two new options, `OtlpTapOptions.CallerStallTimeout` and
+`OtlpTapOptions.KeepAliveTimeout`, and a new counter, `OtlpTap.CallerTimeouts`, so the minor part moves (4.24.0 to
+4.25.0). Both limits are on by default (Q1); an exporter that moves bytes at least once a limit is never cut.
+
+### Added
+
+- **`OtlpTapOptions.CallerStallTimeout`** (default 100 s), the same name and meaning as `ProxyTap`'s. From a request's
+  first byte, an exporter that moves no bytes for that long while it sends the request, its head or its body, is
+  answered `408 Request Timeout` with `Connection: close`, under a bound of 5 s of its own, and its connection closed in
+  stages; the export is not received. A stall while the tap drains an export over `MaxRequestBytes`, or inside a chunked
+  body's size line, line break or trailers, is the same stall: answered `408`, not counted in `PayloadsRejected`, since
+  its `413` was never sent. An exporter that moves no bytes for that long while it reads its answer has its connection
+  closed; its export was already received.
+- **`OtlpTapOptions.KeepAliveTimeout`** (default 120 s, http.sys's idle limit): a connection waiting for a request's
+  first byte, the first request's or the next one's, is closed after this long, with nothing written and nothing
+  counted, as an HTTP server closes an idle connection. 120 s sits above the idle limits of the exporters that would not
+  survive a close racing their next request (.NET closes an idle connection at 60 to 75 s and does not retry a POST, Go
+  at 90 s).
+- Both take `null` or `Timeout.InfiniteTimeSpan` for none, fail at start for zero or another negative value, and are
+  copied for registered taps. Each limit times silence, not a transfer: every read and every write that moves bytes
+  starts the wait again, and waiting for a real collector's answer is not the exporter's stall. No limit fires while a
+  debugger is attached to the tap's process.
+- **`OtlpTap.CallerTimeouts`**, the exporter connections closed by `CallerStallTimeout`, and a `CaptureDegraded` line in
+  `Diagnostics()` saying how many stalled sending an export and how many reading an answer. Each is logged (`otlp-tap
+  exporter stalled 00:01:40 sending an export; not received, answered 408 and closed`, or `... reading its answer;
+  closed`), and the stop line names the counter.
+
+### Changed
+
+- The tap writes an answer's body in pieces of at most 16 KiB, each counting as progress: a relayed collector answer
+  went out in one write, in which no progress shows.
+
+Before 4.25.0 an exporter that sent part of a request and stopped, stopped reading its answer, or opened a connection
+and sent nothing, was held, with its socket and what it had sent, until the tap was disposed. Behaviour change: such a
+connection is closed after 100 s, or after 120 s idle; set either option to `null` to keep the old behaviour, for
+instance while an exporter in another process is paused in a debugger.
+
+Tests: `OtlpTapStallTests`, 39 cases: a stalled head is answered `408` and closed (on the fake clock and on the real
+one) and a stalled body too, not received (a Content-Length body, a chunked one and a head with no body byte); an idle
+kept-alive connection, and one that never sends, outlive the stall limit and are closed quietly after the keep-alive
+limit; a slow steady export is received whole and an exporter that reuses its connection keeps it; disposing the tap is
+not a time limit; a slow collector is not the exporter's stall; a stall while an over-cap body is drained, or inside a
+chunk-size line, a chunk's line break or the trailers, is a body stall; a relayed 8 MB answer is written in pieces, an
+exporter that stops reading it is counted as an answer stall and a slow steady reader is not cut; a transfer completing
+as the limit fires is received or cut, never both, and one ending after the limit fired is cut (the export and the
+answer); no limit fires while a debugger is attached; the options' defaults, refused values and no-limit values; an
+exchange leaves no entry behind (a `200`, a `400` and a `502`); and `Registering_taps_copies_every_option`, the twin of
+`ProxyTap`'s fact, which the package lacked. Proofs (plan harness `r2/`): copied onto 4.23.0 with R2's seams stubbed
+(the options with no default and no check, a counter that stays 0, the clock and debugger seams, no watch), 38 of the 39
+cases fail on Windows; the one that passes is the slow steady export, a guard. Most fail for want of the watch they
+order their steps by, so the mutations prove them; the real-clock stalled head fails on its behaviour, since 4.23.0
+answers nothing. Of 23 mutations, 23 are killed, the plan's four among them (a keep-alive close counted, the forward
+watched, a stalled drain counted as a `413`, the relayed answer written in one piece). Checks: after the version bump
+the core suite passes 7,645 with 2 skipped; the Otlp suite passes 213 on Windows and 213 on Linux; release.slnf builds
+in Release for every target. The templates pin 4.24.0 and the history action's VERSION installs Kronikol.Tool 4.25.0.
+The wiki edits and the Kronikol4J ledger line follow publication; R3 (`TcpTap`'s limits) is next.
+
 ## [4.24.0] - 2026-10-16
 
 **Minor - a playwright-bdd run's artefacts are listed once each, where the run made them, and the failures digest lists

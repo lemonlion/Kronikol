@@ -86,6 +86,15 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
     // allocated before its bytes arrive.
     internal int BodyBytesHeld => Volatile.Read(ref _bodyBytesHeld);
 
+    /// <summary>Called after each read that moves bytes: the tap's stall limit starts its wait again.</summary>
+    internal Action? Progressed { get; set; }
+
+    /// <summary>
+    /// Called once the next request's first byte is in hand, read or already buffered: the wait before it is a kept-alive
+    /// connection's, the wait after it a stall.
+    /// </summary>
+    internal Action? HeadStarted { get; set; }
+
     /// <summary>Reads the next request whole, or null when the peer closed the connection, cut a body short, or sent something unparsable or refused.</summary>
     public async Task<HttpRequestMessageData?> ReadAsync(CancellationToken ct)
     {
@@ -264,10 +273,16 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
     {
         var head = new List<byte>(1024);
         var matched = 0;
+        var started = false;
         while (true)
         {
             if (_start == _end && !await FillAsync(ct).ConfigureAwait(false))
                 return null;
+            if (!started)
+            {
+                started = true;
+                HeadStarted?.Invoke();
+            }
 
             while (_start < _end)
             {
@@ -438,6 +453,9 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
     {
         _start = 0;
         _end = await stream.ReadAsync(_buffer.AsMemory(), ct).ConfigureAwait(false);
-        return _end > 0;
+        if (_end == 0)
+            return false;
+        Progressed?.Invoke();
+        return true;
     }
 }

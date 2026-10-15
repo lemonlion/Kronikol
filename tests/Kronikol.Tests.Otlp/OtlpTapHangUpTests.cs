@@ -318,7 +318,7 @@ public class OtlpTapHangUpTests
     /// A collector on a raw socket that reads one export, says so, and answers <c>200</c> only when told to: the tap's forward
     /// is held at a known point, before its answer.
     /// </summary>
-    private sealed class HeldCollector : IDisposable
+    internal sealed class HeldCollector : IDisposable
     {
         private readonly TcpListener _listener = LoopbackPort.Listening();
         private readonly TaskCompletionSource _answer = new(TaskCreationOptions.RunContinuationsAsynchronously);

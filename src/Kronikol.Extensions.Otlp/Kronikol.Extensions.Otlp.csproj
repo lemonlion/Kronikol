@@ -19,6 +19,7 @@
   <ItemGroup>
     <!-- The accept loop both socket taps run, so a failed accept is handled the same way in each. -->
     <Compile Include="..\Kronikol.Extensions.TcpTap\TapAcceptLoop.cs" Link="Shared\TapAcceptLoop.cs" />
+    <Compile Include="..\Kronikol.Extensions.TcpTap\StallWatch.cs" Link="Shared\StallWatch.cs" />
   </ItemGroup>
 
   <ItemGroup>
