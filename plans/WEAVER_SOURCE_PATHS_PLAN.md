@@ -6,7 +6,7 @@ by eight lines above its two calls, so every other number holds for both.
 The weaver's three source-reading methods, `ReadSourceText`, `CutColumns` and `IsPragmaDisabled`, are byte for byte
 the same as at 98c4806d, the commit the issue cites, 93 lines lower: the issue's L775, L783 and L979 are L868, L876
 and L1072 here · **Status:** green-lit in full by the owner on 2026-10-15 ("Can you implement the plan in full"),
-every question in §9 as recommended. R1 executed as 4.20.4 and R2, a minor of its own (Q1), as 4.21.0 (§11).
+every question in §9 as recommended. R1 executed as 4.20.4 and R2, a minor of its own (Q1), as 4.21.0, both published (§11); #165 closed.
 
 Evidence labels: **RUN** (measured on 2026-10-13 with the published 4.18.1 packages, SDK 10.0.300, xUnit 2.9.3,
 Shouldly 4.3.0 and FluentAssertions 6.12.1 on net8.0; the project, the scripts and the saved output are in
@@ -735,6 +735,11 @@ no row is taken until the owner green-lights the plan ("taking row 1.N now" to t
   importance for an unread document (R1) is gone: the task lists each such file at normal importance with the warning.
   Found at execution: outside a git repository the SDK maps the NuGet folders first, so the fixture's own root is
   `/_2/` on this machine; fact 24 reads the number from the warning rather than naming `/_/`. The core suite's `TrackingSafeSerializerTests` fact for a pending `ValueTask` timed out once under load, its serialization queued on a busy thread pool; it runs on a thread of its own now (`harness/r2/starve.cs`). Checks: after the version bump the core suite passes 7,551 with 2 skipped, the weaver suite 421 facts on each of net8.0, net9.0 and net10.0 (the cross-SDK facts for SDKs not installed skipped) and on Linux but for the older fact that needs SDK 8.0.420, the full Playwright suite 1,040 with 28 skipped when run alone, and `release.slnf` builds in Release for every target.
+- **2026-10-15** (kronikol-2a): 4.21.0 published, after kronikol-77's 4.20.5 and kronikol-97's 4.20.6 (97 pushed
+  before nuget.org listed 4.20.5, as the sessions had agreed, so R2's templates pin 4.20.6). The Release run
+  38726498309, CI 38726496128, CodeQL 38726496122 and CI Summary Preview 38726496115 passed, and nuget.org listed all 62 ids at
+  11:48 UTC. The wiki has R2's edit (`3c721ad`), Kronikol4J's ledger its line (`ac365ec`, nothing to port), and #165 is
+  closed with a comment naming both releases. Every part of the plan is out; leftovers are §8's, none filed.
 
 ## Appendix A. Edit sites at 34145c44
 
