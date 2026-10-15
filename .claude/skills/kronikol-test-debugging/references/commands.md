@@ -597,7 +597,8 @@ next: history --run <run>`. The scenario view gains `failing episodes N` beside 
 line under the row, the evidence is whole, and every new and gone call is listed (`new:` / `gone:`, one
 per line) where the evidence names three and says `and N more`. No free-text field is complete only
 in `--json`. The one limit left is the ledger's own: it keeps the **first line** of a message (with a Shouldly
-message's check, from its second line), up to 199 characters, and text that ends in its `…` is followed by `… first line only — the whole message is
+message's check, from its second line; for one Shouldly wrote without the test's source, whose first line is the
+actual value, its check and expected value instead), up to 199 characters, and text that ends in its `…` is followed by `… first line only — the whole message is
 in that run's Failures.md: kronikol query failures <reports-dir> --run <id>` when that run is kept under
 `runs/` (3.27.1: the report on top for the run being read; `… and run <id> is not kept under <dir>` when
 it is not; and `… when the run is retained` when no report was given, so there is no directory to look

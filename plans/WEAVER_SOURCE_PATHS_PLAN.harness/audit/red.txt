@@ -1,0 +1,54 @@
+The #165 audit's facts, each run first on the released code (4.22.1, with the facts copied in), on Windows, net10.0.
+Where a fact calls a member the release lacks, a stub stood in for it, named below.
+
+KRONIKOL002 counts what the weave wrapped (WeaveAssertionsTaskTests):
+  The_warning_counts_only_the_statements_the_weave_wrapped                       FAIL  String start does not match:
+    "Kronikol.AssertionTracking: the source of 3 assert"... where "... the source of 1 assert"... was expected.
+
+A name no map entry matches (DeterministicSourcePathsTests):
+  A_document_no_map_entry_matches_is_tried_under_its_own_name_alone             pass  a guard of a branch that held; mutant A2.
+
+Shouldly's text (ErrorDiffParserTests, FailureClusterKeyTests), 10 of the new rows red, each on its values or its key:
+  parser: NUnit's "Shouldly.ShouldAssertException : 4 ..." (actual read with the type), the AggregateException's text
+  without and with the source, a string collection's "but was (not) (case sensitive comparison)" without and with the
+  source, "should be with options: Ignoring case" without and with the source.
+  key: a multi-line actual value ("\"line1\n..." keyed by its first line), the AggregateException's text, a string
+  collection's comparison.
+  The rows that passed there are guards for mutants S1 to S8: NUnit's key, the LF-only texts, the multi-line parse.
+
+The HTML diff (ErrorDiffParserTests):
+  GenerateDiffHtml_bounds_its_work_on_long_values                                FAIL  Sub-string not found (the
+    released diff ran 38 s here, building its 50,009 x 50,007 table twice, and marked the LCS's characters; where the
+    machine has less than about 10 GB, it throws OutOfMemoryException).
+  GenerateDiffHtml_keeps_a_character_outside_the_basic_plane_whole               FAIL  Sub-string not found (each half of
+    the emoji written as U+FFFD).
+  GenerateDiffHtml_compares_each_character_up_to_its_bound                       pass  a guard; mutant S2a. (Stub: the
+    bound's value, 4_000_000, in place of ErrorDiffParser.MaxComparedPairs.)
+
+History import (HistoryMaintenanceTests):
+  Import_keys_a_failure_as_the_run_itself_would                                  FAIL  Expected "result should be",
+    actual "result".
+
+The source reader (DeterministicSourcePathsTests), with a stub Decode(bytes, codePage, onWindows) that ignored the
+platform as the release did: 5 red.
+  A_file_that_is_not_utf8_is_read_with_the_platforms_fallback(onWindows: False)  FAIL  "café Ã©" for "caf� é".
+  A_utf32_file_is_read_as_the_compiler_reads_it_by_its_size                      FAIL  read as UTF-16.
+  The_builds_code_page_is_read_as_the_compiler_reads_it("+1252")                 FAIL  noted "not a code page".
+  A_file_another_process_holds_open_for_writing_is_read                          FAIL  "Assertion at line 11".
+  A_mapped_file_that_changed_since_the_compile_is_named_so_among_the_paths_tried FAIL  no "(changed since the compile)".
+  A_bom_less_windows_1252_file_is_read_as_the_compiler_reads_it and the targets fact
+  A_file_that_is_not_utf8_is_labelled_as_the_compiler_read_it pass on Windows by design; on Linux they fail with the
+  release's rule (linux-c1.txt).
+
+The targets (TargetsBuildTests, real builds):
+  A_second_build_with_nothing_changed_compiles_nothing(enabled: "true")          FAIL  the compiled assembly rewritten
+    (2026-10-15T21:01:13.6584589Z, then 21:01:14.8262266Z).
+  A_second_build_with_nothing_changed_compiles_nothing(enabled: "false")         FAIL  the same.
+  A_visual_basic_project_that_imports_the_targets_builds                         FAIL  BC30035 and others in
+    AssertionTrackingAttributes\*.g.cs.
+
+The step weaver (Kronikol.Tests.StepTracking):
+  Weave_leaves_no_type_document_record_in_the_pdb                                FAIL  Expected 0, actual 3 (the
+    compiler wrote records, the fact's precondition).
+  TargetsFile_writes_each_attribute_only_when_it_changes_and_for_CSharp_only     FAIL  on the targets as released: 7 of
+    7 writes without WriteOnlyWhenDifferent.

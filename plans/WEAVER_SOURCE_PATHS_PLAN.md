@@ -6,7 +6,7 @@ by eight lines above its two calls, so every other number holds for both.
 The weaver's three source-reading methods, `ReadSourceText`, `CutColumns` and `IsPragmaDisabled`, are byte for byte
 the same as at 98c4806d, the commit the issue cites, 93 lines lower: the issue's L775, L783 and L979 are L868, L876
 and L1072 here · **Status:** green-lit in full by the owner on 2026-10-15 ("Can you implement the plan in full"),
-every question in §9 as recommended. R1 executed as 4.20.4 and R2, a minor of its own (Q1), as 4.21.0, both published (§11); #165 closed.
+every question in §9 as recommended. R1 executed as 4.20.4 and R2, a minor of its own (Q1), as 4.21.0, both published (§11); #165 closed. Audited at the owner's ask as 4.22.3 (§11).
 
 Evidence labels: **RUN** (measured on 2026-10-13 with the published 4.18.1 packages, SDK 10.0.300, xUnit 2.9.3,
 Shouldly 4.3.0 and FluentAssertions 6.12.1 on net8.0; the project, the scripts and the saved output are in
@@ -740,6 +740,46 @@ no row is taken until the owner green-lights the plan ("taking row 1.N now" to t
   38726498309, CI 38726496128, CodeQL 38726496122 and CI Summary Preview 38726496115 passed, and nuget.org listed all 62 ids at
   11:48 UTC. The wiki has R2's edit (`3c721ad`), Kronikol4J's ledger its line (`ac365ec`, nothing to port), and #165 is
   closed with a comment naming both releases. Every part of the plan is out; leftovers are §8's, none filed.
+- **2026-10-15** (kronikol-2a): audited at the owner's ask ("Can you make sure nothing was missed from the plan and that
+  the implementation had no bugs"), in a worktree of its own from 4.22.1, and released as 4.22.3. Four read-only
+  reviews: the plan ticked off item by item; the source reader against the compiler's own code (Roslyn's parser,
+  `EncodedStringText`, `SourceText.Lines` and `SourceFileResolver`, on Windows and in the dotnet/sdk:10.0 container);
+  the weave, the task and the targets through real builds; and the report against Shouldly 4.3.0's real texts, written
+  with and without the source in NUnit, xUnit and LightBDD runs. Each finding was re-run before it was acted on.
+  - Missed from the plan's own list: §6.5's Appendix C rows (§8's leftovers, and §5.4's last acceptance, the owner's
+    suite, which nothing tracked once #165 closed); fact 13 as written (a name no map entry matches); three doc
+    comments (`ClusterKey`'s check that ends alike, `PathMap`'s top-level roots, `pdbPath`'s third source); the
+    wiki's Limitations sentence, which said a file rewritten after the compile falls back where a local build reads it
+    under its own name; and two counts in the changelog (4.20.4's "eight of the eleven", seven; 4.21.0's core suite,
+    measured before its rebase onto 4.20.6). §5.4's BreakfastProvider check compared the woven literals, which are the
+    labels, rather than notes from a run.
+  - Defects of 4.20.4 and 4.21.0, fixed: on Linux and macOS a source that is not UTF-8 was decoded with Windows-1252,
+    where the compiler's fallback there is UTF-8 with U+FFFD (Roslyn's `CreateFallbackEncoding` asks for code page 0;
+    the test builder stood in for the compiler with 1252 on every machine, so fact 15 passed on Linux; the weave
+    before 4.20.4 read it as the compiler did, so this came with R1); R1b's attributes, generated with the switch off,
+    rebuilt every project on every build (the files were written each time, as with the switch on since the weaver's
+    first release) and broke a Visual Basic or F# project that imports the targets; `KRONIKOL002` counted statements
+    the weave left unwoven; the report read NUnit's type prefix as the actual value, read across an
+    AggregateException's two copies of a message, and keyed a multi-line actual value by its first line; and the
+    parser's two Shouldly patterns, with the source and without it, missed a comparison with options and a string
+    collection's.
+  - Older defects the review reached, fixed: the HTML diff's table of every pair of characters had no bound (two
+    values of 50,000 characters took 10 GB) and it encoded each UTF-16 unit alone, so an emoji was two U+FFFD; `history
+    import` keyed a failure by its first line where a run keys it by `ClusterKey`; Failures.md, the CLAUDE.md beside a
+    report, the query skill and two doc comments said failures are grouped by the first line alone; the step weaver
+    kept the `TypeDefinitionDocuments` records the assertion weaver drops since R1d (F13's sibling, 6 records became
+    10); a file another process held open for writing was not read; `+1252` was not followed as a `CodePage`; a
+    UTF-32 file past Roslyn's 40 K-character bound was read as UTF-16; and `KRONIKOL002` listed a mapped file that is
+    there, but changed, as one of the paths tried.
+  - The owner's call (2026-10-15): R1b's attributes give `CS0436` where a project with the switch off grants
+    `InternalsVisibleTo` to one that weaves (two weaving projects linked so always had): documented, with the
+    workaround, rather than a new option or a scan of the sources.
+  - Left, in Appendix C: Windows' ANSI code page (§10's decision stands), Windows PDBs (no checksum Cecil reads), two
+    files mapped to one name, exceptions reading a document (not reproduced), `TrackStepsEnabled` (undocumented),
+    LightBDD's failure text, Shouldly 5.0's previews, unstable keys, the HTML cluster heading's length, `… first line
+    only`, Cecil's async stepping record and MSBuild's quoting of `PathMap`.
+  Red (`harness/audit/red.txt`): on 4.22.1, with stubs where it lacked a member, 24 of the audit's facts and theory rows fail, each on its own assertion, and the rest, guards of branches that held, pass there by design, each with a mutant. Mutations (`harness/audit/mutations.txt`): 30 of 30 caught, each by the facts named for it. Linux (`harness/audit/linux.txt`): the weaver suite passes in the dotnet/sdk:10.0 container but for the older fact that needs SDK 8.0.420, which CI installs; with the released rule the three decoding facts fail there, the compiler having read U+FFFD where the weave read é.
+  Checks: after the version bump the core suite passes 7,620 with 2 skipped; the weaver suite passes on net8.0, net9.0 and net10.0 (434 facts each; 84, 56 and 28 skipped, the cross-SDK facts for SDKs not installed here); the step weaver's 46 pass; the full Playwright suite passes 1,040 with 28 skipped when run alone; and `release.slnf` builds in Release for every target.
 
 ## Appendix A. Edit sites at 34145c44
 

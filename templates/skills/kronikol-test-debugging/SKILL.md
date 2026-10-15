@@ -109,7 +109,7 @@ matters.
 | "what did the messages on a topic carry?" | `values --path '$.field' --service Kafka --request`: a message's value is its request half's body |
 | "which calls returned a bad value?" | `interactions --where '$.success = false'` — run-wide; `req:$.x` targets the request |
 | "which example row broke?" | `steps s3` (its parameters) + `annotations s3` |
-| "it failed, I re-ran it, and now the report is green" | The reports directory holds the NEWEST run; the ones before it are kept under `runs/`. `history <reports-dir> --failing` names what failed earlier and in which run → `failures <reports-dir> --run last-failed` opens that run, and every verb takes `--run` from there (`interactions`, `http`, …). Not kept any more: `history --run last-failed` still answers from the ledger, first line of each error included |
+| "it failed, I re-ran it, and now the report is green" | The reports directory holds the NEWEST run; the ones before it are kept under `runs/`. `history <reports-dir> --failing` names what failed earlier and in which run → `failures <reports-dir> --run last-failed` opens that run, and every verb takes `--run` from there (`interactions`, `http`, …). Not kept any more: `history --run last-failed` still answers from the ledger, the stored text of each error included |
 | "what differs between the failing run and the green re-run?" | `diff <reports-dir> --baseline-run last-failed` - the kept failing run is the old side, the newest run the new one, and `--run previous --baseline-run last-failed` diffs two kept runs. The same by path: `diff <reports-dir>/runs/<name> <reports-dir>`, the kept run first (`<name>` is the folder `failures --run last-failed` reported, or `kronikol history doctor <reports-dir>` lists them) |
 | "what broke since yesterday?" | `diff <report> --baseline` — finds last-green itself; or name both: `diff old.json new.json`. Matched on `stableId`, and it also reports services that stopped being tracked |
 | "these two runs/scenarios differ — how?" | `compare s3 s7` (it names the first differing body) → `diff s3/i47 s7/i47` — only the differing paths, never two payloads |
@@ -210,7 +210,7 @@ matters.
     duration verdicts still hold, behaviour verdicts (`behaviour-changed`, `reordered`) are off.
   - `! <report> describes <run> — reading <other run> from the ledger instead` (`history --run`) — the
     report on disk is a different run from the one `--run` named (usually the green re-run that
-    overwrote the failing one). Verdicts, series and the stored first line of each error are the
+    overwrote the failing one). Verdicts, series and the stored text of each error are the
     named run's, read from the ledger; steps, calls and payloads exist only in a report.
   - `! no ledger at … yet — every scenario reads as its first run; the next recorded run starts the history`
     (`history`) — the ledger resolves to a file nobody has written yet. Not an error: record a run.

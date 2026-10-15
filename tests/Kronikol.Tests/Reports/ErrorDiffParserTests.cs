@@ -147,6 +147,48 @@ public class ErrorDiffParserTests
         Assert.Contains("diff-del", html);
     }
 
+    // The audit of #165 (2026-10-15): the diff compared every pair of characters in a table it built twice, with no
+    // bound, so two 50,000-character values, as Shouldly writes a response body whole, threw OutOfMemoryException and
+    // the run had no HTML report. Past the bound it keeps the common start and end and marks the middle.
+    [Fact]
+    public void GenerateDiffHtml_bounds_its_work_on_long_values()
+    {
+        var start = new string('a', 25_000);
+        var end = new string('z', 25_000);
+
+        var html = ErrorDiffParser.GenerateDiffHtml(start + "EXPECTED" + end, start + "ACTUAL" + end);
+
+        Assert.Contains($"<code>{start}<span class=\"diff-del\">EXPECTED</span>{end}</code>", html, StringComparison.Ordinal);
+        Assert.Contains($"<code>{start}<span class=\"diff-ins\">ACTUAL</span>{end}</code>", html, StringComparison.Ordinal);
+    }
+
+    // The bound is the product of the two lengths: just under it the values are still compared character by character,
+    // so a difference in the middle is marked alone and the common characters around it are not.
+    [Fact]
+    public void GenerateDiffHtml_compares_each_character_up_to_its_bound()
+    {
+        var expected = new string('a', 1_000) + "b" + new string('a', 998) + "x";
+        var actual = new string('a', 1_999);
+        Assert.True((long)expected.Length * actual.Length <= ErrorDiffParser.MaxComparedPairs);
+
+        var html = ErrorDiffParser.GenerateDiffHtml(expected, actual);
+
+        Assert.Contains($"<code>{new string('a', 1_000)}<span class=\"diff-del\">b</span>{new string('a', 998)}<span class=\"diff-del\">x</span></code>",
+            html, StringComparison.Ordinal);
+    }
+
+    // The diff wrote each UTF-16 unit on its own, and HTML encoding writes half of a surrogate pair as U+FFFD, so an
+    // emoji in either value read as two replacement characters.
+    [Fact]
+    public void GenerateDiffHtml_keeps_a_character_outside_the_basic_plane_whole()
+    {
+        var html = ErrorDiffParser.GenerateDiffHtml("a\U0001F600b", "a\U0001F601b");
+
+        Assert.Contains("<code>a<span class=\"diff-del\">&#128512;</span>b</code>", html, StringComparison.Ordinal);
+        Assert.Contains("<code>a<span class=\"diff-ins\">&#128513;</span>b</code>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("�", html, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Parses_FluentAssertions_expected_to_be_equivalent()
     {
@@ -210,6 +252,22 @@ public class ErrorDiffParserTests
         { "\"x\"\r\n    should be\r\nnull\r\n    but was not", "null", "x" },
         { "DayOfWeek.Monday\r\n    should be\r\nDayOfWeek.Friday\r\n    but was not", "DayOfWeek.Friday", "DayOfWeek.Monday" },
         { "False\r\n    should be\r\nTrue\r\n    but was not", "True", "False" },
+        // The audit (2026-10-15), each measured with Shouldly 4.3.0: NUnit stores the exception's type before the text,
+        // so the actual value read was "Shouldly.ShouldAssertException : 4".
+        { "Shouldly.ShouldAssertException : 4\r\n    should be\r\n5\r\n    but was not", "5", "4" },
+        // An AggregateException's text, as the xUnit adapters join it: its own message quotes the inner one, which
+        // follows whole. The values were read across both; they are the inner message's.
+        { "One or more errors occurred. (4\r\n    should be\r\n5\r\n    but was not)\r\n4\r\n    should be\r\n5\r\n    but was not", "5", "4" },
+        { "One or more errors occurred. (result\r\n    should be\r\n5\r\n    but was\r\n4)\r\nresult\r\n    should be\r\n5\r\n    but was\r\n4", "5", "4" },
+        // A string collection's "but was" names its comparison, and a string compared with options names them on the
+        // check's line, with the source and without it.
+        { "[\"a\", \"b\"]\r\n    should be\r\n[\"a\", \"z\"]\r\n    but was not (case sensitive comparison)\r\n    difference\r\n[\"a\", *\"b\"*]", "[\"a\", \"z\"]", "[\"a\", \"b\"]" },
+        { "list\r\n    should be\r\n[\"a\", \"z\"]\r\n    but was (case sensitive comparison)\r\n[\"a\", \"b\"]\r\n    difference\r\n[\"a\", *\"b\"*]", "[\"a\", \"z\"]", "[\"a\", \"b\"]" },
+        { "\"abc\"\r\n    should be with options: Ignoring case\r\n\"ABD\"\r\n    but was not\r\n    difference\r\nDifference     |  |   \r\nIndex          | 0    ", "ABD", "abc" },
+        { "text\r\n    should be with options: Ignoring case\r\n\"ABD\"\r\n    but was\r\n\"abc\"\r\n    difference\r\nDifference     |  |   \r\nIndex          | 0    ", "ABD", "abc" },
+        // A value over several lines, and the text with LF alone, as Shouldly writes it where the newline is LF.
+        { "\"line1\nline2\"\r\n    should be\r\n\"line1\nline3\"\r\n    but was not\r\n    difference\r\nDifference     |  |   \r\nIndex          | 0    ", "line1\nline3", "line1\nline2" },
+        { "4\n    should be\n5\n    but was not", "5", "4" },
     };
 
     [Theory]

@@ -636,9 +636,11 @@ public static class FailuresDigestGenerator
             // a different claim and is sometimes false: two unrelated assertions can open the same way.
             // It was catastrophically false while the xUnit v3 adapter prefixed every message with its
             // FailureCause, when one group of fifteen unrelated failures carried that sentence above it.
-            markdown.Append("Failures whose error messages begin with the same line. One of each group is worked ");
+            markdown.Append("Failures whose error messages begin with the same line (with a Shouldly message's check, ");
+            markdown.Append("from its second line; for one Shouldly wrote without the test's source, whose first line is ");
+            markdown.Append("the actual value, its check and expected value instead). One of each group is worked ");
             markdown.Append("through in full below; the rest are listed here with their addresses. The grouping is by ");
-            markdown.Append("that first line and nothing more, so treat a group as a strong hint that one cause is ");
+            markdown.Append("that text and nothing more, so treat a group as a strong hint that one cause is ");
             markdown.Append("behind all of them rather than as a finding that one is.\n\n");
             foreach (var cluster in clusters)
             {

@@ -110,7 +110,7 @@ internal static class RetainedRunResolver
             : QueryCommand.ResolveReport(reportArgument, TextWriter.Null) is { } top ? Path.GetDirectoryName(Path.GetFullPath(top))! : reportArgument;
         var retained = ReportFolders.RetainedRuns(directory);
         error.WriteLine($"run {wanted} is not retained under {directory} (retained: {(retained.Count == 0 ? "none" : string.Join(", ", retained.Select(r => r.Manifest.Run)))}).");
-        error.WriteLine($"The ledger still has its results, the stored first line of each error included: kronikol query history --run {wanted}");
+        error.WriteLine($"The ledger still has its results, the stored text of each error included: kronikol query history --run {wanted}");
     }
 
     private static string Describe(Candidate candidate) =>

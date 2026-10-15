@@ -2,9 +2,12 @@
 
   <!-- Auto-generate the TrackAssertions attribute source into intermediate output. The attributes are generated
        whether the weave runs or not: a project that declares [assembly: TrackAssertions] still compiles with
-       TrackAssertionsEnabled=false, unwoven (#165, WEAVER_SOURCE_PATHS_PLAN R1b). Both types are internal. -->
+       TrackAssertionsEnabled=false, unwoven (#165, WEAVER_SOURCE_PATHS_PLAN R1b). Both types are internal. They are
+       C#, so a Visual Basic or F# project that imports these targets gets none, and each file is written only when
+       its text differs, so a build with nothing changed does not compile the project again (the plan's audit). -->
   <Target Name="_GenerateAssertionTrackingAttributes"
-          BeforeTargets="CoreCompile">
+          BeforeTargets="CoreCompile"
+          Condition="'$(Language)' == 'C#'">
 
     <PropertyGroup>
       <_AssertionTrackingAttrDir>$(IntermediateOutputPath)AssertionTrackingAttributes\</_AssertionTrackingAttrDir>
@@ -15,6 +18,7 @@
     <WriteLinesToFile
       File="$(_AssertionTrackingAttrDir)TrackAssertionsAttribute.g.cs"
       Overwrite="true"
+      WriteOnlyWhenDifferent="true"
       Lines="// &lt;auto-generated /&gt;
 using System%3B
 
@@ -27,6 +31,7 @@ namespace Kronikol.Tracking
     <WriteLinesToFile
       File="$(_AssertionTrackingAttrDir)SuppressAssertionTrackingAttribute.g.cs"
       Overwrite="true"
+      WriteOnlyWhenDifferent="true"
       Lines="// &lt;auto-generated /&gt;
 using System%3B
 

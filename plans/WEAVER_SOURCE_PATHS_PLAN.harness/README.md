@@ -47,8 +47,9 @@ directory no git repository holds; i b in Release; j b plus a linked file from o
 repository with a git submodule holding a test. `a-fail` and `b-fail` add the failing tests and keep `Failures.md` and
 `query failures`; `b-fail-nobuild-*` ran `dotnet test --no-build` and `b-fail-dll-*` ran the built DLL
 (`dotnet test bin/Debug/net8.0/IssueStack.dll`). `determinism.txt` and `determinism-bytesearch.txt` hold the
-two-clone hashes and the byte search. `k-sourcelink-warnings.log` is Source Link's warning for a submodule whose URL is
-a local path, shown only with its NoWarn lifted.
+two-clone hashes and the byte search. `k-sourcelink-warnings.log`, Source Link's warning for a submodule whose URL
+is a local path, shown only with its NoWarn lifted, was never committed: `.gitignore` keeps every `*.log` out (found
+by the audit, 2026-10-15).
 
 The verbose build logs (`*-test.log`, up to 14 MB) were left out; every count and line quoted in the plan is in the
 files above.
@@ -102,3 +103,13 @@ the key `FailureText.ClusterKey` gives it (copied into `Program.cs`, being inter
 - `linux.txt`: the weaver suite on Linux with R2 (`r1/run-linux.sh`).
 - `starve.cs` and `starve.txt`: with the thread pool saturated, a pool task does not start within five seconds and a
   thread of its own does, the cause of the core suite's one timed-out fact in R2's checks.
+
+## audit/ (the plan's audit, 4.22.3, 2026-10-15)
+
+- `red.txt`: each fact the audit added, run first on 4.22.1 (stubs named where the release lacked a member), and the
+  guards that hold there by design with the mutant that proves each.
+- `mutate.py` and `mutations.txt`: 30 mutants of the audit's fixes, one or more per fix, each caught by the facts named
+  for it (the weave's count and candidates; Shouldly's forms, values and key; the diff's bound and characters; the
+  history import's key; the decoding, sharing and `CodePage`; the targets' writes and language; the step weaver).
+- `linux-audit.sh` and `linux.txt`: the weaver suite on Linux in the dotnet/sdk:10.0 container, and the decoding facts
+  with the released rule (Windows-1252 for every file that is not UTF-8), which Linux's compiler reads with U+FFFD.

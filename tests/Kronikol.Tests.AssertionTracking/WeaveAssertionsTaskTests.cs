@@ -477,4 +477,84 @@ public class WeaveAssertionsTaskTests
         Assert.Contains($"  /_/tests/Last.cs: 1 statement(s); tried {last}, /_/tests/Last.cs", engine.Visible());
         Assert.DoesNotContain(engine.Visible(), m => m.Contains("Read.cs", StringComparison.Ordinal));
     }
+
+    // R2 audit: the warning says its statements are labelled by line number, which is true only of the statements the
+    // weave wraps. One the stack analysis leaves unwoven runs as written, without a note, and is listed under
+    // KRONIKOL001's line; 4.21.0 counted it among the unread ones, and a file holding nothing else was named too.
+    [Fact]
+    public void The_warning_counts_only_the_statements_the_weave_wrapped()
+    {
+        var root = TestAssemblyBuilder.NewSourceRoot("TaskUnreadUnwoven");
+        var cases = Path.Combine(root, "tests", "Cases.cs");
+        var other = Path.Combine(root, "tests", "Other.cs");
+        var path = TestAssemblyBuilder.BuildMapped("TaskUnreadUnwoven",
+            [
+                TestAssemblyBuilder.FixtureFile.Utf8(cases, """
+                    using FluentAssertions;
+                    using Kronikol.Tracking;
+
+                    [assembly: TrackAssertions]
+
+                    public static class Cases
+                    {
+                        public static void Woven()
+                        {
+                            var total = 3;
+                            total.Should().Be(3);
+                        }
+
+                        public static void Method()
+                        {
+                            var total = 3;
+                            total.Should().Be(3);
+                        }
+                    }
+                    """) with { OnDisk = false },
+                TestAssemblyBuilder.FixtureFile.Utf8(other, """
+                    using FluentAssertions;
+
+                    public static class Other
+                    {
+                        public static void Method()
+                        {
+                            var total = 3;
+                            total.Should().Be(3);
+                        }
+                    }
+                    """) with { OnDisk = false },
+            ], [new(WithSeparator(root), "/_/")]);
+        using (var assembly = AssemblyDefinition.ReadAssembly(path, new ReaderParameters { ReadWrite = true, ReadSymbols = true }))
+        {
+            // Two values on one path to the Should() call and none on the other, as in the unwoven statement's fact.
+            foreach (var type in new[] { "Cases", "Other" })
+            {
+                var method = assembly.MainModule.GetType(type).Methods.Single(m => m.Name == "Method");
+                var il = method.Body.GetILProcessor();
+                var should = method.Body.Instructions.First(i => i.Operand is MethodReference { Name: "Should" });
+                var start = method.Body.Instructions[0];
+                il.InsertBefore(start, il.Create(OpCodes.Ldc_I4_1));
+                il.InsertBefore(start, il.Create(OpCodes.Ldc_I4_1));
+                il.InsertBefore(start, il.Create(OpCodes.Ldc_I4_0));
+                il.InsertBefore(start, il.Create(OpCodes.Brtrue, should));
+                il.InsertBefore(start, il.Create(OpCodes.Pop));
+                il.InsertBefore(start, il.Create(OpCodes.Pop));
+            }
+            assembly.Write(new WriterParameters { WriteSymbols = true });
+        }
+
+        var (succeeded, engine) = RunTask(path, task => task.SourceRoots =
+            [new TaskItem(WithSeparator(root), new Dictionary<string, string> { ["MappedPath"] = "/_/" })]);
+
+        Assert.True(succeeded, string.Join("\n", engine.Errors.Select(e => e.Message)));
+        var visible = engine.Visible().ToList();
+        Assert.Contains("Kronikol.AssertionTracking: Left 2 assertion statement(s) unwoven; they run as written, without a note:", visible);
+        var warning = Assert.Single(engine.Warnings);
+        Assert.StartsWith("Kronikol.AssertionTracking: the source of 1 assertion statement(s) in 1 file(s) could not be read,",
+            warning.Message);
+        Assert.Contains($"First: /_/tests/Cases.cs; tried {cases}, /_/tests/Cases.cs.", warning.Message);
+        Assert.Contains("Kronikol.AssertionTracking: Could not read the source of 1 file(s); their statements are labelled by line number:",
+            visible);
+        Assert.Contains($"  /_/tests/Cases.cs: 1 statement(s); tried {cases}, /_/tests/Cases.cs", visible);
+        Assert.DoesNotContain(visible, m => m.Contains("Other.cs", StringComparison.Ordinal));
+    }
 }

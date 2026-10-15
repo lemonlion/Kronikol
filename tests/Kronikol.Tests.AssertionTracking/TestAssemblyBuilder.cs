@@ -229,8 +229,9 @@ public static class TestAssemblyBuilder
     }
 
     /// <summary>The text the compiler makes of a file's bytes (Roslyn's <c>EncodedStringText.Create</c>): a byte order
-    /// mark wins; else the build's code page; else strict UTF-8, and on bytes that are not UTF-8 the code page 1252 (the
-    /// ANSI code page of the machines this suite runs on, and the compiler's fallback where there is none).</summary>
+    /// mark wins; else the build's code page; else strict UTF-8, and on bytes that are not UTF-8 the code page Roslyn's
+    /// <c>CreateFallbackEncoding</c> asks for, 0: the machine's ANSI code page on Windows (1252 on the machines this
+    /// suite runs on), and on Linux and macOS, which have none, UTF-8 with U+FFFD for each byte it cannot read.</summary>
     public static SourceText AsCompilerReadsIt(byte[] bytes, Encoding? codePage, SourceHashAlgorithm checksum, bool embedded)
     {
         if (codePage is not null)
@@ -242,7 +243,7 @@ public static class TestAssemblyBuilder
         }
         catch (DecoderFallbackException)
         {
-            return SourceText.From(bytes, bytes.Length, CodePagesEncodingProvider.Instance.GetEncoding(1252)!, checksum,
+            return SourceText.From(bytes, bytes.Length, CodePagesEncodingProvider.Instance.GetEncoding(0) ?? new UTF8Encoding(false), checksum,
                 throwIfBinaryDetected: false, canBeEmbedded: embedded);
         }
     }

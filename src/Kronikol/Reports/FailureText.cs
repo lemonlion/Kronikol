@@ -18,7 +18,7 @@ public static class FailureText
     /// empty or whitespace-only string when there was nothing to report.
     ///
     /// <para>Blank entries are dropped rather than joined. That is not tidiness: the digest and the
-    /// cluster panel both key a failure on its <em>first line</em>, so a leading empty message would make
+    /// cluster panel both key a failure on its <em>first line</em> (<see cref="ClusterKey"/>), so a leading empty message would make
     /// the empty string the thing every such failure is grouped by.</para>
     /// </summary>
     public static string? Join(IEnumerable<string?>? lines)
@@ -67,13 +67,17 @@ public static class FailureText
     /// as Shouldly 4.3.0 does for nine checks (WEAVER_SOURCE_PATHS_PLAN F8). Such a message is keyed by its check and
     /// its expected value (<c>should be 5</c>), so the failures of one assertion share a key whatever their actual
     /// values. A check that ends alike with the source and without it (<c>should not be</c>,
-    /// <c>should contain key</c>, <c>should throw</c>) says nothing of which form it is, and keeps the first line.</para>
+    /// <c>should contain key</c>, <c>should throw</c>) says nothing of which form it is, and keeps the key it has with
+    /// the source: its first line and its check.</para>
     /// </summary>
     internal static string ClusterKey(string? message)
     {
         var first = FirstLine(message);
         if (first.Length == 0 || message is null)
             return first;
+
+        if (ShouldlyWithoutSource.Match(message) is { Success: true } sourceless)
+            return CollapseWhitespace(sourceless.Groups["check"].Value) + " " + CollapseWhitespace(sourceless.Groups["expected"].Value);
 
         var end = message.AsSpan().IndexOfAny('\r', '\n');
         if (end < 0)
@@ -85,22 +89,18 @@ public static class FailureText
         if (!second.StartsWith("    should ", StringComparison.Ordinal))
             return first;
 
-        if (secondEnd >= 0)
-        {
-            var afterCheck = restStart + secondEnd + (rest[secondEnd] == '\r' && secondEnd + 1 < rest.Length && rest[secondEnd + 1] == '\n' ? 2 : 1);
-            if (ShouldlyWithoutSource.Match(message, afterCheck) is { Success: true } sourceless)
-                return CollapseWhitespace(second) + " " + CollapseWhitespace(sourceless.Groups["expected"].Value);
-        }
-
         return first + " " + CollapseWhitespace(second);
     }
 
-    /// <summary>The rest of a Shouldly message written without the caller's source, after its check's line: the
-    /// expected value and <c>    but was not</c>, then nothing but a <c>difference</c> table or the custom message's
-    /// <c>Additional Info</c>.</summary>
+    /// <summary>A Shouldly message written without the caller's source: the actual value, on a line that is not a
+    /// marker's and over several lines too, the check's line, the expected value and <c>    but was not</c> (with a
+    /// string collection's comparison after it), then nothing but a <c>difference</c> table or the custom message's
+    /// <c>Additional Info</c>. It is found wherever it starts: an actual value over several lines puts the check after
+    /// the second line, and a text that quotes the message before giving it whole (an AggregateException's, as the
+    /// xUnit adapters join it) is read from the whole message.</summary>
     private static readonly Regex ShouldlyWithoutSource = new(
-        @"\G(?<expected>.*?)\r?\n {4}but was not(?=\r?\n {4}difference(?:\r?\n|\z)|\r?\n\r?\nAdditional Info:|\s*\z)",
-        RegexOptions.Singleline);
+        @"^(?! {4}(?:should |but was))(?<actual>" + ErrorDiffParser.ShouldlyValue + @")\r?\n(?<check> {4}should [^\r\n]*)\r?\n(?<expected>" + ErrorDiffParser.ShouldlyValue + @")\r?\n {4}but was not(?: \([^)\r\n]*\))?(?=\r?\n {4}difference(?:\r?\n|\z)|\r?\n\r?\nAdditional Info:|\s*\z)",
+        RegexOptions.Multiline | RegexOptions.Singleline);
 
     /// <summary>
     /// Cuts <paramref name="text"/> to at most <paramref name="limit"/> UTF-16 code units, marking the

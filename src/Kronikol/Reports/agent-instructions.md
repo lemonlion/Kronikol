@@ -16,9 +16,10 @@ Two things here answer instead.
 
 Every failure of this run, in context: the error, the parsed expected/actual, the failing step with its
 source location, the calls made inside that step, attachments, and the address of each. Failures whose error
-messages begin with the same line are grouped, and one of each group is worked through in full while
-the rest are listed with their addresses. Grouping is by that first line and nothing more, so a group is
-a strong hint that one cause is behind all of them, not a finding that one is.
+messages begin with the same line are grouped (with a Shouldly message's check, from its second line; for one
+Shouldly wrote without the test's source, by its check and expected value), and one of each group is worked
+through in full while the rest are listed with their addresses. Grouping is by that text and nothing more, so a
+group is a strong hint that one cause is behind all of them, not a finding that one is.
 
 `Failures.jsonl` is the same data, one JSON object per line, for scripts. The first line is a header —
 `kind: "header"`, with `formatVersion`, the scenario count and the failure count — and every line after it

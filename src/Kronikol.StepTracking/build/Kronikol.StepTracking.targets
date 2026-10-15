@@ -1,9 +1,11 @@
 <Project>
 
-  <!-- Auto-generate step tracking attribute source into intermediate output -->
+  <!-- Auto-generate step tracking attribute source into intermediate output: C#, so for C# projects only, and each
+       file written only when its text differs, so a build with nothing changed does not compile the project again
+       (WEAVER_SOURCE_PATHS_PLAN's audit). -->
   <Target Name="_GenerateStepTrackingAttributes"
           BeforeTargets="CoreCompile"
-          Condition="'$(TrackStepsEnabled)' == 'true'">
+          Condition="'$(TrackStepsEnabled)' == 'true' and '$(Language)' == 'C#'">
 
     <PropertyGroup>
       <_StepTrackingAttrDir>$(IntermediateOutputPath)StepTrackingAttributes\</_StepTrackingAttrDir>
@@ -14,6 +16,7 @@
     <WriteLinesToFile
       File="$(_StepTrackingAttrDir)TrackStepsAttribute.g.cs"
       Overwrite="true"
+      WriteOnlyWhenDifferent="true"
       Lines="// &lt;auto-generated /&gt;
 using System%3B
 
@@ -26,6 +29,7 @@ namespace Kronikol.Tracking
     <WriteLinesToFile
       File="$(_StepTrackingAttrDir)GivenStepAttribute.g.cs"
       Overwrite="true"
+      WriteOnlyWhenDifferent="true"
       Lines="// &lt;auto-generated /&gt;
 using System%3B
 
@@ -43,6 +47,7 @@ namespace Kronikol.Tracking
     <WriteLinesToFile
       File="$(_StepTrackingAttrDir)WhenStepAttribute.g.cs"
       Overwrite="true"
+      WriteOnlyWhenDifferent="true"
       Lines="// &lt;auto-generated /&gt;
 using System%3B
 
@@ -60,6 +65,7 @@ namespace Kronikol.Tracking
     <WriteLinesToFile
       File="$(_StepTrackingAttrDir)ThenStepAttribute.g.cs"
       Overwrite="true"
+      WriteOnlyWhenDifferent="true"
       Lines="// &lt;auto-generated /&gt;
 using System%3B
 
@@ -77,6 +83,7 @@ namespace Kronikol.Tracking
     <WriteLinesToFile
       File="$(_StepTrackingAttrDir)ButStepAttribute.g.cs"
       Overwrite="true"
+      WriteOnlyWhenDifferent="true"
       Lines="// &lt;auto-generated /&gt;
 using System%3B
 
@@ -94,6 +101,7 @@ namespace Kronikol.Tracking
     <WriteLinesToFile
       File="$(_StepTrackingAttrDir)ButWhenStepAttribute.g.cs"
       Overwrite="true"
+      WriteOnlyWhenDifferent="true"
       Lines="// &lt;auto-generated /&gt;
 using System%3B
 
@@ -111,6 +119,7 @@ namespace Kronikol.Tracking
     <WriteLinesToFile
       File="$(_StepTrackingAttrDir)StepAttribute.g.cs"
       Overwrite="true"
+      WriteOnlyWhenDifferent="true"
       Lines="// &lt;auto-generated /&gt;
 using System%3B
 

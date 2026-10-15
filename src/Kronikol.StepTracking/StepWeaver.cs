@@ -123,6 +123,7 @@ public class StepWeaver
         if (result.WeavedCount > 0)
         {
             AddWeavedSentinel(assembly);
+            DropTypeDefinitionDocuments(assembly.MainModule);
 
             using var outputAssembly = new MemoryStream();
             using var outputPdb = new MemoryStream();
@@ -721,6 +722,29 @@ public class StepWeaver
     {
         return assembly.MainModule.CustomAttributes.Any(a =>
             a.AttributeType.Name == "__StepTrackingWeaved__");
+    }
+
+    /// <summary>The kind of Roslyn's <c>TypeDefinitionDocuments</c> custom debug information.</summary>
+    private static readonly Guid TypeDefinitionDocumentsKind = new("932e74bc-dba9-4478-8d46-0f32a7bab3d3");
+
+    /// <summary>
+    /// Drops Roslyn's <c>TypeDefinitionDocuments</c> records, as the assertion weaver does (WEAVER_SOURCE_PATHS_PLAN R1d,
+    /// F13, and the plan's audit for this weaver). Each names the documents a type without method bodies lives in, by
+    /// their rows in the PDB's document table; Cecil writes only the documents that hold sequence points, numbered
+    /// afresh, and copied the records' rows as they were, so a record named another document or none. Read while the
+    /// tokens are the compiler's and removed: the woven PDB holds none, as from a compiler that writes none.
+    /// </summary>
+    private static void DropTypeDefinitionDocuments(ModuleDefinition module)
+    {
+        foreach (var type in module.GetTypes())
+        {
+            var informations = type.CustomDebugInformations;
+            for (var i = informations.Count - 1; i >= 0; i--)
+            {
+                if (informations[i].Identifier == TypeDefinitionDocumentsKind)
+                    informations.RemoveAt(i);
+            }
+        }
     }
 
     private static void AddWeavedSentinel(AssemblyDefinition assembly)

@@ -502,6 +502,25 @@ public class DeterministicSourcePathsTests
         Assert.Equal(1, unread.Statements);
     }
 
+    // Fact 13 as the plan states it (audit): no map entry matches the name, here a map handed to the weave for another
+    // value, and no file or embedded text answers, so the name as written is the one path tried.
+    [Fact]
+    public void A_document_no_map_entry_matches_is_tried_under_its_own_name_alone()
+    {
+        var root = TestAssemblyBuilder.NewSourceRoot("Mapped13Unmatched");
+        var path = TestAssemblyBuilder.BuildMapped("Mapped13Unmatched",
+            [TestAssemblyBuilder.FixtureFile.Utf8(Under(root, "tests", "Cases.cs"), OneStatement) with { OnDisk = false }],
+            [Entry(WithSeparator(root), "/_/")]);
+
+        var result = Weave(path, [Entry(WithSeparator(root), "/_1/")]);
+
+        Assert.Equal("Assertion at line 11", Assert.Single(Notes(path, "Cases")).Label);
+        var unread = Assert.Single(result.UnreadSources);
+        Assert.Equal("/_/tests/Cases.cs", unread.Document);
+        Assert.Equal(["/_/tests/Cases.cs"], unread.Tried);
+        Assert.Equal(1, unread.Statements);
+    }
+
     // Fact 14: the compiler ends a line at U+0085, U+2028 and U+2029, so the PDB's line numbers count them.
     [Theory]
     [InlineData('\u2028')]
@@ -563,7 +582,76 @@ public class DeterministicSourcePathsTests
 
         Weave(path, []);
 
-        Assert.Equal("Name should be \"café\"", Assert.Single(Notes(path, "Cases")).Label);
+        // The compiler's fallback is the machine's: Windows-1252 on the Windows machines this suite runs on, UTF-8 with
+        // U+FFFD for the byte it cannot read on Linux and macOS (the audit, 2026-10-15).
+        Assert.Equal(OperatingSystem.IsWindows() ? "Name should be \"café\"" : "Name should be \"caf\uFFFD\"",
+            Assert.Single(Notes(path, "Cases")).Label);
+    }
+
+    // The audit (2026-10-15): with no byte order mark and no CodePage, a file that is not UTF-8 is read by the compiler
+    // with the code page Roslyn's EncodedStringText.CreateFallbackEncoding asks for, 0, which is the ANSI code page on
+    // Windows and UTF-8 with U+FFFD for each byte it cannot read on Linux and macOS (measured with the compiler on
+    // both). The weave read Windows-1252 on every machine; a label showed é where the compiled text had U+FFFD, and a
+    // pair of bytes that is UTF-8 was two characters to the weave and one to the compiler.
+    [Theory]
+    [InlineData(true, "caf\u00E9 \u00C3\u00A9")]
+    [InlineData(false, "caf\uFFFD \u00E9")]
+    public void A_file_that_is_not_utf8_is_read_with_the_platforms_fallback(bool onWindows, string text)
+    {
+        byte[] bytes = [(byte)'c', (byte)'a', (byte)'f', 0xE9, (byte)' ', 0xC3, 0xA9];
+
+        Assert.Equal(text, SourceDocuments.Decode(bytes, null, onWindows));
+    }
+
+    // The audit: Roslyn reads a text of 40 K characters or more through a StreamReader, which knows UTF-32's byte order
+    // marks, and a smaller one from its bytes, where FF FE is UTF-16's (measured with the compiler: a 64,200-byte UTF-32
+    // file was read as UTF-32, and the weave read it as UTF-16).
+    [Fact]
+    public void A_utf32_file_is_read_as_the_compiler_reads_it_by_its_size()
+    {
+        var large = "// " + new string('x', 20_000) + "\nvar name = \"café\";";
+        var little = new UTF32Encoding(bigEndian: false, byteOrderMark: true);
+        var big = new UTF32Encoding(bigEndian: true, byteOrderMark: true);
+        byte[] largeLittle = [.. little.GetPreamble(), .. little.GetBytes(large)];
+        byte[] largeBig = [.. big.GetPreamble(), .. big.GetBytes(large)];
+        byte[] small = [.. little.GetPreamble(), .. little.GetBytes("café")];
+
+        Assert.Equal(large, SourceDocuments.Decode(largeLittle, null));
+        Assert.Equal(large, SourceDocuments.Decode(largeBig, null));
+        Assert.Equal(Encoding.Unicode.GetString(small, 2, small.Length - 2), SourceDocuments.Decode(small, null));
+    }
+
+    // The audit: the compiler opens a source sharing it for reading and writing; the weave asked that nobody be writing
+    // it, so a file another process held open for writing (an editor, a watcher) was not read and fell back.
+    [Fact]
+    public void A_file_another_process_holds_open_for_writing_is_read()
+    {
+        var root = TestAssemblyBuilder.NewSourceRoot("HeldOpen");
+        var file = Under(root, "Cases.cs");
+        var path = TestAssemblyBuilder.BuildMapped("HeldOpen", [TestAssemblyBuilder.FixtureFile.Utf8(file, OneStatement)], []);
+
+        using (new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+            Weave(path, []);
+
+        Assert.Equal("Total should be 3", Assert.Single(Notes(path, "Cases")).Label);
+    }
+
+    // The audit: a mapped file that is there but is not what the compiler read was listed among the paths tried as if it
+    // were not there, so KRONIKOL002 named a path the reader could open and see.
+    [Fact]
+    public void A_mapped_file_that_changed_since_the_compile_is_named_so_among_the_paths_tried()
+    {
+        var root = TestAssemblyBuilder.NewSourceRoot("Changed");
+        var file = Under(root, "tests", "Cases.cs");
+        var map = new[] { Entry(WithSeparator(root), "/_/") };
+        var path = TestAssemblyBuilder.BuildMapped("Changed", [TestAssemblyBuilder.FixtureFile.Utf8(file, OneStatement)], map);
+        File.AppendAllText(file, "// changed after the compile\n");
+
+        var result = Weave(path, map);
+
+        Assert.Equal("Assertion at line 11", Assert.Single(Notes(path, "Cases")).Label);
+        var unread = Assert.Single(result.UnreadSources);
+        Assert.Equal([file + " (changed since the compile)", "/_/tests/Cases.cs"], unread.Tried);
     }
 
     // Fact 15: with CodePage set, the compiler decodes every file without a byte order mark in it, valid UTF-8 included.
@@ -612,6 +700,9 @@ public class DeterministicSourcePathsTests
     [InlineData("", null)]
     [InlineData("0", null)]
     [InlineData("1252", 1252)]
+    // MSBuild hands Csc the property as a number, sign and spaces allowed (the audit, 2026-10-15: csc got /codepage:1252).
+    [InlineData("+1252", 1252)]
+    [InlineData(" 1252 ", 1252)]
     [InlineData("1251", 1251)]
     [InlineData("65001", 65001)]
     public void The_builds_code_page_is_read_as_the_compiler_reads_it(string? value, int? codePage)

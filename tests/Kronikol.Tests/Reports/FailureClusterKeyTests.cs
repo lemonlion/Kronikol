@@ -146,6 +146,14 @@ public class FailureClusterKeyTests
     [InlineData("1d\r\n    should be within\r\n0.1d\r\n    of\r\n2d\r\n    but was not", "3d\r\n    should be within\r\n0.1d\r\n    of\r\n2d\r\n    but was not", "should be within 0.1d of 2d")]
     [InlineData("\"a\"\r\n    should be\r\n\"b\"\r\n    but was not\r\n    difference\r\nDifference     |  |   \r\nIndex          | 0    ", "\"c\"\r\n    should be\r\n\"b\"\r\n    but was not\r\n    difference\r\nDifference     |  |   \r\nIndex          | 0    ", "should be \"b\"")]
     [InlineData("4\r\n    should be\r\n5\r\n    but was not\r\n\r\nAdditional Info:\r\n    custom message", "3\r\n    should be\r\n5\r\n    but was not\r\n\r\nAdditional Info:\r\n    custom message", "should be 5")]
+    // The audit (2026-10-15), measured with Shouldly 4.3.0: an actual value over several lines puts the check after the
+    // second line; an AggregateException's text quotes the message before giving it whole; a string collection's last
+    // line names its comparison; NUnit puts the exception's type first; Shouldly writes LF alone where that is the newline.
+    [InlineData("\"line1\nline2\"\r\n    should be\r\n\"line1\nline3\"\r\n    but was not\r\n    difference\r\nDifference     |  |   ", "\"line0\nline2\"\r\n    should be\r\n\"line1\nline3\"\r\n    but was not\r\n    difference\r\nDifference     |  |   ", "should be \"line1 line3\"")]
+    [InlineData("One or more errors occurred. (4\r\n    should be\r\n5\r\n    but was not)\r\n4\r\n    should be\r\n5\r\n    but was not", "One or more errors occurred. (3\r\n    should be\r\n5\r\n    but was not)\r\n3\r\n    should be\r\n5\r\n    but was not", "should be 5")]
+    [InlineData("[\"a\", \"b\"]\r\n    should be\r\n[\"a\", \"z\"]\r\n    but was not (case sensitive comparison)\r\n    difference\r\n[\"a\", *\"b\"*]", "[\"a\", \"c\"]\r\n    should be\r\n[\"a\", \"z\"]\r\n    but was not (case sensitive comparison)\r\n    difference\r\n[\"a\", *\"c\"*]", "should be [\"a\", \"z\"]")]
+    [InlineData("Shouldly.ShouldAssertException : 4\r\n    should be\r\n5\r\n    but was not", "Shouldly.ShouldAssertException : 3\r\n    should be\r\n5\r\n    but was not", "should be 5")]
+    [InlineData("4\n    should be\n5\n    but was not", "3\n    should be\n5\n    but was not", "should be 5")]
     public void Shouldly_failures_without_the_source_cluster_by_the_check_and_its_expected_value(string first, string second, string key)
     {
         Scenario[] scenarios = [Failed("t0", first), Failed("t1", second)];

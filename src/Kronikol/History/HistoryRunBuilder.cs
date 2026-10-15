@@ -14,8 +14,10 @@ public sealed record HistoryBuildOptions
     public bool Shapes { get; init; } = true;
 
     /// <summary>
-    /// Whether the first line of a failure message is kept as the error key. Off, the key is a hash of
-    /// that line: the clustering survives and no message text reaches the ledger (§9.1).
+    /// Whether a failure's cluster key is kept as the error key: its message's first line, with a Shouldly
+    /// message's check from its second line, or for one Shouldly wrote without the test's source, the check and
+    /// its expected value. Off, the key is a hash of that text: the clustering survives and no message text
+    /// reaches the ledger (§9.1).
     /// </summary>
     public bool ErrorKeys { get; init; } = true;
 

@@ -33,8 +33,9 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
     /// <summary>
     /// The compiler's path map (<c>$(PathMap)</c>, its <c>/pathmap</c>), as the build passed it: <c>key=value</c>
     /// entries separated by <c>,</c>, with a doubled <c>,</c> or <c>=</c> standing for the character. Deterministic
-    /// source paths (<c>ContinuousIntegrationBuild</c>) write each source root here as <c>/_/</c>, <c>/_1/</c> and on,
-    /// and a project can add its own. A document named under a value is read from the key's directory.
+    /// source paths (<c>ContinuousIntegrationBuild</c>) write each top-level source root here as <c>/_/</c>,
+    /// <c>/_1/</c> and on (a nested root's files are named through the root that holds them), and a project can add
+    /// its own. A document named under a value is read from the key's directory.
     /// </summary>
     public string? PathMap { get; set; }
 

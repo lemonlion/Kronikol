@@ -53,7 +53,8 @@ public class AssertionWeaver
     /// (<c>DebugType=embedded</c>) or has none; embedded symbols are read from the assembly and written
     /// back into it. Each statement's source is read from the file the symbols name, taken back through the source
     /// map when the build mapped its paths and checked against the checksum the symbols record, else from the source
-    /// they embed; the woven calls keep the names as the symbols write them.</param>
+    /// they embed, else, under the name as written, from that file though it fails the checksum; the woven calls keep
+    /// the names as the symbols write them.</param>
     public WeaveResult Weave(string assemblyPath, string? pdbPath)
     {
         var result = new WeaveResult();
@@ -722,7 +723,6 @@ public class AssertionWeaver
 
             var capturedVariables = DetectCapturedVariables(method, statementInstructions, sourceText,
                 () => analysis ??= StackAnalysis.Analyze(method.Body));
-            _sources.CountStatement(sp.Document);
             results.Add(new AssertionStatement
             {
                 FirstInstruction = statementInstructions.First(),
@@ -2481,6 +2481,9 @@ public class AssertionWeaver
             WrapSingleAssertion(method, il, assertion, entry, exit, passedRef, failedRef,
                 passedWithValuesRef, failedWithValuesRef, getMessageRef, exceptionTypeRef);
             woven++;
+            // A statement whose source could not be read counts toward KRONIKOL002 once it is wrapped, labelled by its
+            // line; one left unwoven runs as written and is listed under KRONIKOL001's line instead.
+            _sources.CountStatement(assertion.SequencePoint.Document);
         }
 
         // The weave adds locals (spills, value arrays, the caught exception) to a method that may have had none, and a

@@ -548,7 +548,7 @@ internal static partial class HistoryCommand
                 var retries = test.TryGetProperty("retries", out var r) && r.ValueKind == JsonValueKind.Number ? r.GetInt32() : 0;
                 attempts.Add(HistoryFormat.AttemptChar(retries > 0 ? retries + 1 : null));
                 durations.Add(test.TryGetProperty("duration", out var d) && d.ValueKind == JsonValueKind.Number ? (int)Math.Round(d.GetDouble()) : null);
-                var message = status == "failed" && test.TryGetProperty("message", out var m) && m.ValueKind == JsonValueKind.String ? FailureText.Truncate(FailureText.FirstLine(m.GetString()), HistoryFormat.ErrorKeyLimit - 1) : null;
+                var message = status == "failed" && test.TryGetProperty("message", out var m) && m.ValueKind == JsonValueKind.String ? FailureText.Truncate(FailureText.ClusterKey(m.GetString()), HistoryFormat.ErrorKeyLimit - 1) : null;
                 errors.Add(message is null ? null : Key(message, keys, errorText));
             }
 
@@ -615,7 +615,7 @@ internal static partial class HistoryCommand
                 durations.Add(stop > start ? (int)Math.Min(int.MaxValue, stop - start) : null);
                 var message = chars[^1] == HistoryFormat.Failed && result.TryGetProperty("statusDetails", out var details) && details.ValueKind == JsonValueKind.Object
                               && details.TryGetProperty("message", out var m) && m.ValueKind == JsonValueKind.String
-                    ? FailureText.Truncate(FailureText.FirstLine(m.GetString()), HistoryFormat.ErrorKeyLimit - 1) : null;
+                    ? FailureText.Truncate(FailureText.ClusterKey(m.GetString()), HistoryFormat.ErrorKeyLimit - 1) : null;
                 errors.Add(message is null ? null : Key(message, keys, errorText));
             }
 

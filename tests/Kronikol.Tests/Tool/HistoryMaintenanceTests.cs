@@ -354,6 +354,59 @@ public class HistoryMaintenanceTests : IDisposable
         Assert.Equal("main", run.Branch);
     }
 
+    // The audit of #165 (2026-10-15): a run keys a failure by FailureText.ClusterKey, which reads a Shouldly message's
+    // check, and without the caller's source its expected value; the import keyed by the first line alone, so a ledger
+    // holding both an imported run and a recorded one read the same failure as a new cause where they met.
+    [Fact]
+    public void Import_keys_a_failure_as_the_run_itself_would()
+    {
+        const string withSource = "result\n    should be\n5\n    but was\n3";
+        const string withoutSource = "4\n    should be\n5\n    but was not";
+        var ctrf = Path.Combine(_dir, "ctrf-keys");
+        Directory.CreateDirectory(ctrf);
+        File.WriteAllText(Path.Combine(ctrf, "ctrf-report.json"), """
+            {
+              "reportFormat": "CTRF", "specVersion": "0.0.0",
+              "results": {
+                "tool": { "name": "Other" },
+                "summary": { "tests": 2, "passed": 0, "failed": 2, "pending": 0, "skipped": 0, "other": 0, "start": 1756720800000, "stop": 1756721100000 },
+                "tests": [
+                  { "name": "Pay", "suite": "Checkout", "status": "failed", "duration": 15, "message": "result\n    should be\n5\n    but was\n3" },
+                  { "name": "Refund", "suite": "Checkout", "status": "failed", "duration": 15, "message": "4\n    should be\n5\n    but was not" }
+                ]
+              }
+            }
+            """);
+        var allure = Path.Combine(_dir, "allure-keys");
+        Directory.CreateDirectory(allure);
+        File.WriteAllText(Path.Combine(allure, "a-result.json"), """
+            { "uuid": "a", "historyId": "h1", "fullName": "Checkout.Pay", "name": "Pay", "status": "failed", "start": 1756720800000, "stop": 1756720801000,
+              "labels": [ { "name": "suite", "value": "Checkout" } ], "statusDetails": { "message": "result\n    should be\n5\n    but was\n3" } }
+            """);
+        File.WriteAllText(Path.Combine(allure, "b-result.json"), """
+            { "uuid": "b", "historyId": "h2", "fullName": "Checkout.Refund", "name": "Refund", "status": "failed", "start": 1756720800000, "stop": 1756720801000,
+              "labels": [ { "name": "suite", "value": "Checkout" } ], "statusDetails": { "message": "4\n    should be\n5\n    but was not" } }
+            """);
+
+        var (_, ctrfError, ctrfExit) = Run("import", ctrf, "--from-ctrf", "--suite", "Ctrf", "--history", Ledger);
+        var (_, allureError, allureExit) = Run("import", allure, "--from-allure", "--suite", "Allure", "--run-id", "allure:1", "--history", Ledger);
+
+        Assert.True(ctrfExit == 0, ctrfError);
+        Assert.True(allureExit == 0, allureError);
+        var ledger = HistoryLedgerReader.Read(Ledger, 50).Ledger!;
+        foreach (var suite in new[] { "Ctrf", "Allure" })
+        {
+            var run = Assert.Single(ledger.Runs(suite));
+            var roster = ledger.Roster(run.RosterHash)!;
+            var pay = roster.IndexOf(ScenarioStableId.Compute(suite, "Checkout", "Pay"));
+            var refund = roster.IndexOf(ScenarioStableId.Compute(suite, "Checkout", "Refund"));
+            Assert.Equal("result should be", run.ErrorAt(pay));
+            Assert.Equal("should be 5", run.ErrorAt(refund));
+            Assert.Equal(FailureText.ClusterKey(withSource), run.ErrorAt(pay));
+            Assert.Equal(FailureText.ClusterKey(withoutSource), run.ErrorAt(refund));
+        }
+    }
+
     [Fact]
     public void Import_refuses_a_directory_with_nothing_it_understands()
     {

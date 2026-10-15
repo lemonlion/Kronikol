@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using Mono.Cecil.Cil;
@@ -25,6 +26,13 @@ internal sealed class SourceDocuments
     internal static readonly Guid TypeDefinitionDocumentsKind = new("932e74bc-dba9-4478-8d46-0f32a7bab3d3");
 
     private static readonly Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+
+    /// <summary>UTF-8 with U+FFFD for each byte it cannot read: the compiler's fallback on Linux and macOS.</summary>
+    private static readonly Encoding ReplacingUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false);
+
+    /// <summary>Roslyn's <c>LargeObjectHeapLimitInChars</c>: a text it reckons at this many characters or more is read
+    /// through a <c>StreamReader</c>.</summary>
+    private const int LargeTextChars = 40 * 1024;
 
     private readonly IReadOnlyList<KeyValuePair<string, string>> _map;
     private readonly Encoding? _codePage;
@@ -65,8 +73,8 @@ internal sealed class SourceDocuments
         return lines;
     }
 
-    /// <summary>Counts an assertion statement of the document toward its <see cref="UnreadSource"/>, when its source
-    /// could not be read.</summary>
+    /// <summary>Counts an assertion statement the weave wrapped toward its document's <see cref="UnreadSource"/>, when
+    /// its source could not be read.</summary>
     public void CountStatement(Document document)
     {
         foreach (var unread in _unread)
@@ -87,10 +95,14 @@ internal sealed class SourceDocuments
 
         // 1. A file the compiler's map leads back to, or the name itself, with the bytes the compiler hashed.
         byte[]? unverified = null;
+        var tried = new List<string>(candidates.Count);
         foreach (var candidate in candidates)
         {
             if (ReadFile(candidate) is not { } bytes)
+            {
+                tried.Add(candidate);
                 continue;
+            }
             if (checksum is null || checksum.Matches(bytes))
             {
                 if (!string.Equals(candidate, name, StringComparison.Ordinal))
@@ -102,6 +114,7 @@ internal sealed class SourceDocuments
             // weave read before the PDB's checksum was looked at, so it stays the last resort.
             if (string.Equals(candidate, name, StringComparison.Ordinal))
                 unverified = bytes;
+            tried.Add(candidate + " (changed since the compile)");
         }
 
         // 2. The source the PDB embeds: the compiler's own bytes. Read only when no file answered, since Cecil
@@ -119,7 +132,7 @@ internal sealed class SourceDocuments
             return SplitLines(Decode(unverified, _codePage));
         }
 
-        _unread.Add(new UnreadSource(name, candidates));
+        _unread.Add(new UnreadSource(name, tried));
         return null;
     }
 
@@ -165,7 +178,15 @@ internal sealed class SourceDocuments
     {
         try
         {
-            return File.Exists(path) ? File.ReadAllBytes(path) : null;
+            if (!File.Exists(path))
+                return null;
+
+            // Shared for reading and writing, as the compiler opens a source: a file another process holds open for
+            // writing (an editor, a watcher) is read, not refused.
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var bytes = new MemoryStream();
+            stream.CopyTo(bytes);
+            return bytes.ToArray();
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
@@ -190,13 +211,27 @@ internal sealed class SourceDocuments
     /// The text of a source file's bytes, as the compiler decodes them (Roslyn's <c>EncodedStringText.Create</c> and
     /// <c>SourceText.Decode</c>): a byte order mark's encoding (UTF-8, UTF-16 little or big endian) wins; else the
     /// build's <c>CodePage</c>, when it sets one, for every file without a mark, valid UTF-8 or not; else strict UTF-8,
-    /// and on bytes that are not UTF-8, Windows-1252. The compiler tries the build machine's ANSI code page before
-    /// Windows-1252, a machine setting that is not followed here: a build that depends on it reads each file
-    /// differently on each machine. Roslyn reads a file of more than about 40,000 characters through a
-    /// <c>StreamReader</c>, which knows UTF-32's byte order marks too; no source file is UTF-32.
+    /// and on bytes that are not UTF-8, the fallback Roslyn asks for as code page 0: on Linux and macOS, which have no
+    /// ANSI code page, UTF-8 with U+FFFD for each byte it cannot read; on Windows the machine's ANSI code page, read
+    /// here as Windows-1252, the one machine setting not followed: a build that depends on it reads each file
+    /// differently on each machine. Roslyn reads a text of 40 K characters or more through a <c>StreamReader</c>,
+    /// which knows UTF-32's byte order marks too, and a smaller one from its bytes, where FF FE is UTF-16's.
     /// </summary>
-    internal static string Decode(byte[] bytes, Encoding? codePage)
+    internal static string Decode(byte[] bytes, Encoding? codePage) =>
+        Decode(bytes, codePage, RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
+    /// <summary><see cref="Decode(byte[], Encoding?)"/> with the platform given, so both fallbacks can be tested on
+    /// either.</summary>
+    internal static string Decode(byte[] bytes, Encoding? codePage, bool onWindows)
     {
+        if ((codePage ?? StrictUtf8).GetMaxCharCount(bytes.Length) >= LargeTextChars && bytes.Length >= 4)
+        {
+            if (bytes[0] == 0xFF && bytes[1] == 0xFE && bytes[2] == 0 && bytes[3] == 0)
+                return new UTF32Encoding(bigEndian: false, byteOrderMark: true).GetString(bytes, 4, bytes.Length - 4);
+            if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0xFE && bytes[3] == 0xFF)
+                return new UTF32Encoding(bigEndian: true, byteOrderMark: true).GetString(bytes, 4, bytes.Length - 4);
+        }
+
         if (bytes.Length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF)
             return Encoding.BigEndianUnicode.GetString(bytes, 2, bytes.Length - 2);
         if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
@@ -212,7 +247,7 @@ internal sealed class SourceDocuments
         }
         catch (DecoderFallbackException)
         {
-            return Windows1252(bytes);
+            return onWindows ? Windows1252(bytes) : ReplacingUtf8.GetString(bytes);
         }
     }
 
@@ -276,13 +311,14 @@ internal sealed class SourceDocuments
         note = null;
         if (string.IsNullOrWhiteSpace(value))
             return null;
-        if (!int.TryParse(value!.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var codePage))
+        // MSBuild hands Csc the property as a number, a sign and spaces allowed: +1252 reaches it as /codepage:1252.
+        if (!int.TryParse(value!.Trim(), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var codePage))
         {
             note = $"CodePage '{value}' is not a code page; the sources are read as in a build without one";
             return null;
         }
 
-        if (codePage == 0)
+        if (codePage <= 0)
             return null;
 
         try
@@ -463,6 +499,6 @@ public sealed class UnreadSource
     /// <summary>Every path tried, in the order tried.</summary>
     public IReadOnlyList<string> Tried { get; }
 
-    /// <summary>The assertion statements of the document the weave found.</summary>
+    /// <summary>The assertion statements of the document the weave wrapped, each labelled by its line.</summary>
     public int Statements { get; internal set; }
 }

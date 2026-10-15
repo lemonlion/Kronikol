@@ -609,4 +609,42 @@ public class StepWeaverTests
             System.Globalization.CultureInfo.CurrentCulture = previous;
         }
     }
+
+    // WEAVER_SOURCE_PATHS_PLAN's audit (2026-10-15), F13 in the step weaver: Roslyn records which documents a type without
+    // method bodies lives in, by the document's row, and the weave's rewrite of the PDB keeps only the documents that hold
+    // sequence points, numbered afresh, while it copied the records as they were (in the audit's build 6 records became
+    // 10, 9 of them naming rows the PDB no longer had). The weave drops them, as the assertion weaver does since 4.20.4.
+    [Fact]
+    public void Weave_leaves_no_type_document_record_in_the_pdb()
+    {
+        var assemblyPath = TestAssemblyBuilder.Build(
+            "TypeDocuments",
+            """
+            using Kronikol.Tracking;
+
+            [assembly: TrackSteps]
+
+            public class Marker { }
+
+            public interface IContract { }
+
+            public class Tests
+            {
+                [GivenStep]
+                public void A_User_Exists() { }
+            }
+            """);
+        Assert.True(TypeDocumentRecords(assemblyPath) > 0, "the compiler wrote no record for the weave to drop");
+
+        new StepWeaver().Weave(assemblyPath, Path.ChangeExtension(assemblyPath, ".pdb"));
+
+        Assert.Equal(0, TypeDocumentRecords(assemblyPath));
+    }
+
+    private static int TypeDocumentRecords(string assemblyPath)
+    {
+        var kind = new Guid("932e74bc-dba9-4478-8d46-0f32a7bab3d3");
+        using var assembly = AssemblyDefinition.ReadAssembly(assemblyPath, new ReaderParameters { ReadSymbols = true });
+        return assembly.MainModule.GetTypes().Sum(t => t.CustomDebugInformations.Count(i => i.Identifier == kind));
+    }
 }

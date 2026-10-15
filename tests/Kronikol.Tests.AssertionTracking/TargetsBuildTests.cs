@@ -89,14 +89,14 @@ public class TargetsBuildTests
     /// properties given, and <paramref name="extraProject"/> placed before the SDK's targets, and returns its woven
     /// assembly and the build's output.</summary>
     private static FixtureBuild Build(string name, IReadOnlyList<string> properties, string? parent = null, string? assemblyName = null,
-        string source = Statements, string extraProject = "")
+        string source = Statements, string extraProject = "", System.Text.Encoding? sourceEncoding = null)
     {
         var directory = Path.Combine(parent ?? Root, name);
         Directory.CreateDirectory(directory);
         File.WriteAllText(Path.Combine(directory, "Directory.Build.props"), "<Project />");
         File.WriteAllText(Path.Combine(directory, "Directory.Build.targets"), "<Project />");
         // UTF-8 without a byte order mark, as an editor writes a file.
-        File.WriteAllText(Path.Combine(directory, "IssueCases.cs"), source, new System.Text.UTF8Encoding(false));
+        File.WriteAllText(Path.Combine(directory, "IssueCases.cs"), source, sourceEncoding ?? new System.Text.UTF8Encoding(false));
         File.WriteAllText(Path.Combine(directory, "Fixture.csproj"), $"""
             <Project>
               <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
@@ -202,6 +202,78 @@ public class TargetsBuildTests
 
         // The file is UTF-8 without a byte order mark; read as Windows-1252, its é is the two characters Ã and ©.
         Assert.Equal("Name should be \"cafÃ©\"", Assert.Single(Notes(build.Assembly)).Label);
+    }
+
+    // The audit of #165 (2026-10-15): the attributes' files were written again on every build, newer than the assembly,
+    // so every build compiled the project again; since 4.20.4 writes them with the switch off too, so did a build that
+    // weaves nothing.
+    [Theory]
+    [InlineData("true")]
+    [InlineData("false")]
+    public void A_second_build_with_nothing_changed_compiles_nothing(string enabled)
+    {
+        var build = Build("Incremental" + enabled, [$"-p:TrackAssertionsEnabled={enabled}"]);
+        var compiled = Path.Combine(build.Directory, "obj", "Debug", Tfm, "TargetsFixtureIncremental" + enabled + ".dll");
+        var first = File.GetLastWriteTimeUtc(compiled);
+
+        var again = Run(build.Directory, ["build", "Fixture.csproj", "-c", "Debug", "-nodeReuse:false", "-v:n",
+            $"-p:_AssertionTrackingTaskDir={TaskDirectory.Value}", $"-p:TrackAssertionsEnabled={enabled}"]);
+
+        Assert.Equal(first, File.GetLastWriteTimeUtc(compiled));
+        Assert.DoesNotContain("Instrumented", again, StringComparison.Ordinal);
+    }
+
+    // The audit: from 4.20.4 the attributes' C# files were added to every project with the switch off, so a Visual Basic
+    // or F# project that imports the targets (the package carries them in buildTransitive) no longer built.
+    [Fact]
+    public void A_visual_basic_project_that_imports_the_targets_builds()
+    {
+        var directory = Path.Combine(Root, "VisualBasic");
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory, "Directory.Build.props"), "<Project />");
+        File.WriteAllText(Path.Combine(directory, "Directory.Build.targets"), "<Project />");
+        File.WriteAllText(Path.Combine(directory, "Answers.vb"), "Public Module Answers\n    Public Function Answer() As Integer\n        Return 42\n    End Function\nEnd Module\n");
+        File.WriteAllText(Path.Combine(directory, "Fixture.vbproj"), $"""
+            <Project>
+              <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+              <Import Project="{Path.Combine(WeaverBuildDirectory, "Kronikol.AssertionTracking.props")}" />
+              <PropertyGroup>
+                <TargetFramework>{Tfm}</TargetFramework>
+                <IsPackable>false</IsPackable>
+              </PropertyGroup>
+              <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+              <Import Project="{Path.Combine(WeaverBuildDirectory, "Kronikol.AssertionTracking.targets")}" />
+            </Project>
+            """);
+
+        foreach (var enabled in new[] { "false", "true" })
+            Run(directory, ["build", "Fixture.vbproj", "-c", "Debug", "-nodeReuse:false", "-v:n",
+                $"-p:_AssertionTrackingTaskDir={TaskDirectory.Value}", $"-p:TrackAssertionsEnabled={enabled}"]);
+    }
+
+    // The audit (2026-10-15): a Windows-1252 file with no byte order mark and no CodePage, read by the compiler with the
+    // machine's fallback, Windows-1252 on Windows and UTF-8 with U+FFFD for the byte it cannot read on Linux, where CI
+    // runs this class. The weave read Windows-1252 everywhere, so on Linux the label showed é and the compiled text U+FFFD.
+    [Fact]
+    public void A_file_that_is_not_utf8_is_labelled_as_the_compiler_read_it()
+    {
+        var build = Build("Ansi", ["-p:ContinuousIntegrationBuild=true"], source: """
+            using FluentAssertions;
+
+            [assembly: Kronikol.Tracking.TrackAssertions]
+
+            public static class IssueCases
+            {
+                public static void Statements()
+                {
+                    var name = "café";
+                    name.Should().Be("café");
+                }
+            }
+            """, sourceEncoding: System.Text.CodePagesEncodingProvider.Instance.GetEncoding(1252));
+
+        Assert.Equal(OperatingSystem.IsWindows() ? "Name should be \"café\"" : "Name should be \"caf\uFFFD\"",
+            Assert.Single(Notes(build.Assembly)).Label);
     }
 
     // Fact 20.

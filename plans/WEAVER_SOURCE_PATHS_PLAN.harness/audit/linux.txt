@@ -1,0 +1,20 @@
+The audit on Linux: podman WSL distro, mcr.microsoft.com/dotnet/sdk:10.0, the audit's tree at WIP 7e3b085b (linux-audit.sh).
+
+suite: the weaver suite, net10.0
+[xUnit.net 00:00:42.89]     AssertionWeaverTests.Weave_Sdk8_AwesomeAssertions_LinqOrderByDescending_DoesNotThrowBadImageFormat(configuration: "Release") [FAIL]
+Failed!  - Failed:     1, Passed:   349, Skipped:    84, Total:   434, Duration: 1 m 43 s - dll (net10.0)
+exit 1
+  (the one failure needs SDK 8.0.420, which the container lacks and CI installs; it failed so in R1's and R2's Linux runs)
+
+c1: the decoding facts with the release's rule, Windows-1252 for every file that is not UTF-8 (Linux's compiler reads U+FFFD)
+[xUnit.net 00:00:01.82]     DeterministicSourcePathsTests.A_bom_less_windows_1252_file_is_read_as_the_compiler_reads_it [FAIL]
+[xUnit.net 00:00:01.83]     DeterministicSourcePathsTests.A_file_that_is_not_utf8_is_read_with_the_platforms_fallback(onWindows: False, text: "caf� é") [FAIL]
+[xUnit.net 00:00:02.38]     TargetsBuildTests.A_file_that_is_not_utf8_is_labelled_as_the_compiler_read_it [FAIL]
+Expected: "Name should be "caf�""
+Actual:   "Name should be "café""
+Expected: "caf� é"
+Actual:   "café Ã©"
+Expected: "Name should be "caf�""
+Actual:   "Name should be "café""
+Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 1 s - dll (net10.0)
+exit 1

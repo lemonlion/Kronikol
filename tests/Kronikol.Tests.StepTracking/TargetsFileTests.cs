@@ -65,4 +65,19 @@ public class TargetsFileTests
             }
         }
     }
+
+    // WEAVER_SOURCE_PATHS_PLAN's audit (2026-10-15), as for the assertion weaver's targets, whose real builds show both:
+    // a file written on every build is newer than the assembly, so every build compiled the project again; and the
+    // attributes are C#, which a Visual Basic or F# project that imports the targets cannot compile.
+    [Fact]
+    public void TargetsFile_writes_each_attribute_only_when_it_changes_and_for_CSharp_only()
+    {
+        var targets = System.Xml.Linq.XDocument.Load(TargetsFilePath).Root!;
+        var generate = targets.Elements("Target").Single(t => (string?)t.Attribute("Name") == "_GenerateStepTrackingAttributes");
+        var writes = generate.Elements("WriteLinesToFile").ToList();
+
+        Assert.NotEmpty(writes);
+        Assert.All(writes, w => Assert.Equal("true", (string?)w.Attribute("WriteOnlyWhenDifferent")));
+        Assert.Contains("'$(Language)' == 'C#'", (string?)generate.Attribute("Condition"));
+    }
 }

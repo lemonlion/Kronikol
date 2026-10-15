@@ -4,6 +4,102 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.22.3] - 2026-10-15
+
+**Patch - an audit of #165's two releases (4.20.4 and 4.21.0) against `plans/WEAVER_SOURCE_PATHS_PLAN.md`, at the
+owner's ask to make sure nothing was missed from the plan and the implementation had no bugs: the weave reads a source
+on Linux as the compiler does, its targets no longer compile a project again on every build or break a Visual Basic or
+F# project, `KRONIKOL002` counts and names what it should, and the report reads Shouldly's text in every shape the audit
+measured.** Bug fixes with no new option and no new public member, so the patch part moves (4.22.2 to
+4.22.3). The report's output changes (Failures.md's clusters paragraph and the CLAUDE.md and AGENTS.md beside it,
+the HTML diff of long values and of characters outside the Basic Multilingual Plane, and the cluster and history keys of
+the Shouldly shapes below), and the Kronikol4J ledger records it.
+
+### Fixed
+
+Assertion tracking:
+
+- **On Linux and macOS a source that is not UTF-8 was read differently from the compiler.** With no byte order mark and
+  no `CodePage`, the compiler reads such a file with the machine's code page, which there is UTF-8 with U+FFFD for each
+  byte it cannot read. 4.20.4 read Windows-1252 on every machine, so a label showed `é` where the compiled text had
+  U+FFFD, and a pair of bytes that is UTF-8 was two characters to the weave and one to the compiler, moving the rest of
+  its line's columns. The weave before 4.20.4 read UTF-8 the same way, so this came with 4.20.4. On Windows the weave
+  still reads Windows-1252 where the compiler reads the machine's ANSI code page (the plan's section 10).
+- **A build with nothing changed compiled the project again.** The attributes' files were written on every build, newer
+  than the assembly: with the weave on since the weaver's first release, and since 4.20.4, which generates the
+  attributes with the switch off too, with it off. They are written only when their text changes, the step weaver's
+  seven too.
+- **A Visual Basic or F# project that imports the targets did not build with the switch off** (4.20.4 added the
+  attributes' C# files to every project). They are generated for C# projects only, the step weaver's too.
+- **`KRONIKOL002` counted statements the weave left unwoven** among those "labelled by line number", and named a file
+  that held nothing else. It counts the statements it instruments.
+- **`KRONIKOL002` listed a file that is there among the paths tried, as if it were not.** A mapped file that is there
+  but changed since the compile is named `(changed since the compile)`.
+- **A source another process held open for writing was not read**: the weave asked that nobody be writing it, where the
+  compiler shares it for reading and writing. It shares it as the compiler does.
+- **`CodePage` written with a sign (`+1252`) was not followed**: MSBuild hands `Csc` the property as a number, so the
+  compiler read code page 1252 and the weave noted "not a code page".
+- **A UTF-32 file of 40 K characters or more was read as UTF-16**, where the compiler reads it as UTF-32 (a smaller one as
+  UTF-16, as both did).
+- **The step weaver's PDB kept Roslyn's type-to-document records with their old document rows**, as the assertion
+  weaver's did before 4.20.4 (the plan's F13): in the audit's build 6 records became 10, 9 of them naming rows the PDB
+  no longer had. It drops them, as the assertion weaver does.
+
+The report:
+
+- **NUnit's Shouldly failures written without the source showed `Shouldly.ShouldAssertException : 4` as the actual
+  value**: NUnit writes the exception's type before the message.
+- **A Shouldly failure inside an AggregateException** (an assertion in `Task.Run(...).Wait()`, whose text the xUnit
+  adapters join with the inner message's) **was read across both messages**, with the source or without it: an expected
+  value of four lines. Its values are the inner message's, and its cluster key is its check and expected value.
+- **A Shouldly failure written without the source whose actual value runs over several lines** (a multi-line string, a
+  JSON body) kept its first line as its cluster key, so each actual value was a cause of its own and every JSON body
+  shared one; it is keyed by its check and expected value, as 4.20.4 said it would be.
+- **`ShouldBe` on a string collection, and on a string with options** (`should be with options: Ignoring case`), had no
+  Expected/Actual table, with the source or without it.
+- **The HTML diff of two long values built a table of every pair of their characters, twice**: two values of 50,000
+  characters took 10 GB, and where the machine had less, the run had no HTML report. Past 4,000,000 pairs the diff keeps
+  the values' common start and end and marks the middle; below it, the diff is as before.
+- **The HTML diff wrote each half of an emoji as U+FFFD**, encoding one UTF-16 unit at a time. It compares and encodes
+  whole characters.
+- **`kronikol history import --from-ctrf` and `--from-allure` keyed a failure by its first line**, where a recorded run
+  keys it by its cluster key (a Shouldly message's check since 4.14.0, its check and expected value without the source
+  since 4.20.4). They key it as a run does, so a ledger that mixes imported and recorded runs reads such a failure as a
+  new cause once, at the upgrade.
+- Failures.md's clusters paragraph, the CLAUDE.md and AGENTS.md written beside each report, the query skill, the
+  history's `ErrorKeys` doc and `kronikol query`'s line for a run no longer kept said failures are grouped, or errors
+  stored, by their first line alone; they say what the key is.
+
+Doc comments (they ship in the packages): `FailureText.ClusterKey` (a check that ends alike with the source and without
+it keeps its first line and check, not its first line), `WeaveAssertionsTask.PathMap` (the top-level roots), and
+`AssertionWeaver.Weave`'s `pdbPath` (the third source, the name as written though it fails the checksum).
+
+### Recorded, not changed
+
+- **`CS0436` where a project with the switch off gives `InternalsVisibleTo` to one that weaves** (the owner's call,
+  2026-10-15: documented). Since 4.20.4 both have the two internal attribute types; two weaving projects linked so
+  always had. The wiki gives the workaround, `NoWarn` or `WarningsNotAsErrors` for `CS0436` in the weaving project.
+- The rest the audit found and left are in `plans/ROADMAP.md` Appendix C.
+
+### Corrections to earlier entries
+
+- 4.21.0's "the core suite passes 7,551" was measured before its rebase onto 4.20.6; on the tree released, which CI
+  ran, the suite holds 7,602.
+- 4.20.4's "on 4.18.1, eight of the eleven fell back on every note": seven did; the eighth, row j, fell back on 12 of
+  its 13.
+
+### Checks
+
+Proofs (plan harness `audit/`): on 4.22.1, with stubs where it lacked a member, 24 of the new facts and theory rows
+fail, each on its own assertion, and the rest, guards of branches that held, pass there by design; 30 of 30 mutations
+are caught; on Linux, in the dotnet/sdk:10.0 container, the weaver suite passes but for the older fact that needs SDK
+8.0.420, which CI installs, and with the released rule the three decoding facts fail, the compiler having read U+FFFD
+where the weave read é. Checks: after the version bump the core suite passes 7,620 with 2 skipped; the weaver suite
+passes on net8.0, net9.0 and net10.0 (434 facts each; 84, 56 and 28 skipped, the cross-SDK facts for SDKs not installed
+here); the step weaver's 46 pass; the full Playwright suite passes 1,040 with 28 skipped when run alone; and
+release.slnf builds in Release for every target. The templates pin 4.22.2 and the history action's `VERSION` installs
+Kronikol.Tool 4.22.3. The wiki edits, the Kronikol4J ledger line and the issue's comment follow publication.
+
 ## [4.22.2] - 2026-10-15
 
 **Patch - what the reading for the taps' caller time limits found broken (#173; `plans/TAP_CALLER_TIME_LIMITS_PLAN.md`
