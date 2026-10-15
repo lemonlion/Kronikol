@@ -1,0 +1,13 @@
+== preweave-a.dll (17920 bytes): '/_/' u8=1 u16=0; '/_/IssueStack/' u8=1 u16=0
+== woven-a.dll (19456 bytes): '/_/' u8=0 u16=2; '/_/IssueStack/' u8=0 u16=2; 'IssueFeature.cs' u8=0 u16=1; 'assertion at line' u8=0 u16=12
+   utf16 literal: /_/IssueStack/Scenarios/IssueFeature.cs
+   utf16 literal: /_/IssueStack/Scenarios/SampleFeature.cs
+== woven-b.dll (19456 bytes): '/_/' u8=0 u16=2; '/_/IssueStack/' u8=0 u16=2; 'IssueFeature.cs' u8=0 u16=1; 'assertion at line' u8=0 u16=12
+   utf16 literal: /_/IssueStack/Scenarios/IssueFeature.cs
+   utf16 literal: /_/IssueStack/Scenarios/SampleFeature.cs
+== preweave-a.pdb (26172 bytes): 'repro165' u8=1 u16=0; '/_/' u8=1 u16=0; 'IssueFeature.cs' u8=1 u16=0
+== woven-a.pdb (24440 bytes): 'repro165' u8=1 u16=0; '/_/' u8=1 u16=0; 'IssueFeature.cs' u8=1 u16=0
+== default-preweave-a.dll (17920 bytes): 'clone-a' u8=1 u16=0; 'repro165' u8=1 u16=0; 'scratchpad' u8=1 u16=0; 'C:\\Users' u8=1 u16=0
+== default-woven-a.dll (21504 bytes): 'clone-a' u8=0 u16=2; 'repro165' u8=0 u16=2; 'scratchpad' u8=0 u16=2; 'C:\\Users' u8=0 u16=2; 'IssueFeature.cs' u8=0 u16=1
+   utf16 literal: <S>\clone-a\IssueStack\Scenarios\IssueFeature.cs
+   utf16 literal: <S>\clone-a\IssueStack\Scenarios\SampleFeature.cs

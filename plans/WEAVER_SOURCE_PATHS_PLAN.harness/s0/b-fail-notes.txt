@@ -1,0 +1,36 @@
+### notes with a pass mark
+s3/d0/n2    note       ✓ Assertion at line 31
+s3/d0/n3    note       ✓ Assertion at line 32
+s3/d0/n4    note       ✓ Assertion at line 33
+s3/d0/n5    note       ✓ Assertion at line 34
+s3/d0/n6    note       ✓ Assertion at line 35
+s3/d0/n7    note       ✓ Assertion at line 36
+s3/d0/n8    note       ✓ Assertion at line 37
+s3/d0/n9    note       ✓ Assertion at line 38
+s3/d0/n10   note       ✓ Assertion at line 40
+s3/d0/n11   note       ✓ Assertion at line 41
+s3/d0/n12   note       ✓ Assertion at line 43
+s4/d0/n2    note       ✓ Assertion at line 16
+12 hits
+### notes with a fail mark
+s0/d0/n2    note       ✗ Assertion at line 33 Expected…
+s1/d0/n2    note       ✗ Assertion at line 17 result…
+s2/d0/n2    note       ✗ Assertion at line 25 total…
+3 hits
+### notes reading 'Assertion at line'
+s0/d0/n2    note       ✗ Assertion at line 33 Expected string to be "B2"…
+s1/d0/n2    note       ✗ Assertion at line 17 result should be 5…
+s2/d0/n2    note       ✗ Assertion at line 25 total should be 8…
+s3/d0/n2    note       ✓ Assertion at line 31
+s3/d0/n3    note       ✓ Assertion at line 32
+s3/d0/n4    note       ✓ Assertion at line 33
+s3/d0/n5    note       ✓ Assertion at line 34
+s3/d0/n6    note       ✓ Assertion at line 35
+s3/d0/n7    note       ✓ Assertion at line 36
+s3/d0/n8    note       ✓ Assertion at line 37
+s3/d0/n9    note       ✓ Assertion at line 38
+s3/d0/n10   note       ✓ Assertion at line 40
+s3/d0/n11   note       ✓ Assertion at line 41
+s3/d0/n12   note       ✓ Assertion at line 43
+s4/d0/n2    note       ✓ Assertion at line 16
+15 hits

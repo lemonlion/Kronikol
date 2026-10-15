@@ -1,0 +1,37 @@
+== <S>/nogit/IssueStack/obj/Debug/net8.0/preweave/IssueStack.dll
+debugdir: CodeView stamp=0xC90D3B53 ver=256.20557 guid=2e93a1c4-8781-4f1b-af9e-0086baf19e2c age=1 path=<S>\nogit\IssueStack\obj\Debug\net8.0\IssueStack.pdb
+debugdir: PdbChecksum stamp=0x00000000 ver=1.0 SHA256:C4A1932E81871B0F...
+debugdir: Reproducible stamp=0x00000000 ver=0.0
+mvid=1f8bb2d6-0914-4d1d-9810-1b7521a86eba
+(no embedded portable PDB)
+== <S>/nogit/IssueStack/obj/Debug/net8.0/preweave/IssueStack.pdb
+pdb id=C4A1932E81871B4FAF9E0086BAF19E2C533B0DC9
+documents: 12, with embedded source: 0
+  doc: <S>\nogit\IssueStack\DiagrammedTestCollection.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\Infrastructure\BaseFixture.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\Infrastructure\TestRun.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\Program.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\Scenarios\IssueFeature.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\Scenarios\SampleFeature.cs  embeddedSource=no
+  doc: /_/microsoft.net.test.sdk/18.3.0/build/net8.0/Microsoft.NET.Test.Sdk.Program.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\obj\Debug\net8.0\IssueStack.GlobalUsings.g.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\obj\Debug\net8.0\IssueStack.AssemblyInfo.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\obj\Debug\net8.0\AssertionTrackingAttributes\TrackAssertionsAttribute.g.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\obj\Debug\net8.0\AssertionTrackingAttributes\SuppressAssertionTrackingAttribute.g.cs  embeddedSource=no
+sourcelink: (none)
+== <S>/nogit/IssueStack/obj/Debug/net8.0/IssueStack.dll
+debugdir: CodeView stamp=0x71C7CF40 ver=256.20557 guid=ce76a27e-e1df-8b88-2391-3c110b4f0c4a age=1 path=IssueStack.pdb
+debugdir: PdbChecksum stamp=0x00000000 ver=1.0 SHA256:7EA276CEDFE1888B...
+debugdir: Reproducible stamp=0x00000000 ver=0.0
+mvid=1f8bb2d6-0914-4d1d-9810-1b7521a86eba
+(no embedded portable PDB)
+== <S>/nogit/IssueStack/obj/Debug/net8.0/IssueStack.pdb
+pdb id=7EA276CEDFE1888B23913C110B4F0C4A40CFC771
+documents: 5, with embedded source: 0
+  doc: /_/microsoft.net.test.sdk/18.3.0/build/net8.0/Microsoft.NET.Test.Sdk.Program.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\Scenarios\IssueFeature.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\Scenarios\SampleFeature.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\Infrastructure\BaseFixture.cs  embeddedSource=no
+  doc: <S>\nogit\IssueStack\Infrastructure\TestRun.cs  embeddedSource=no
+sourcelink: (none)

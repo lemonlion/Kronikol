@@ -1,0 +1,22 @@
+s0  Failing Feature › Fluent id fails
+  thrown at KronikolComponentTests.Scenarios.FailingFeature.Fluent_id_fails() — /_/IssueStack/Failing/FailingFeature.cs:33
+  rerun: dotnet test --filter "FullyQualifiedName~KronikolComponentTests.Scenarios.FailingFeature.Fluent_id_fails"
+  open: TestRunReport.html#sid-fa3389281733d993
+  history: always-failing — failed in every one of the last 3 runs with a verdict · FFF
+  Expected string to be "B2", but "A1" differs near "A1" (index 0).
+
+s1  Failing Feature › Shouldly result fails
+  thrown at KronikolComponentTests.Scenarios.FailingFeature.Shouldly_result_fails() — /_/IssueStack/Failing/FailingFeature.cs:17
+  rerun: dotnet test --filter "FullyQualifiedName~KronikolComponentTests.Scenarios.FailingFeature.Shouldly_result_fails"
+  open: TestRunReport.html#sid-e6f6cb8d622b4d8d
+  history: always-failing — failed in every one of the last 3 runs with a verdict · FFF
+  4 should be 5 but was not
+
+s2  Failing Feature › Shouldly total fails
+  thrown at KronikolComponentTests.Scenarios.FailingFeature.Shouldly_total_fails() — /_/IssueStack/Failing/FailingFeature.cs:25
+  rerun: dotnet test --filter "FullyQualifiedName~KronikolComponentTests.Scenarios.FailingFeature.Shouldly_total_fails"
+  open: TestRunReport.html#sid-a4227abdea8deb77
+  history: always-failing — failed in every one of the last 3 runs with a verdict · FFF
+  7 should be 8 but was not
+
+3 failed · steps s? for the whole tree · grep "<value>" --values to trace a number

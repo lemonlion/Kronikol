@@ -1,0 +1,47 @@
+row g
+dir <S>/repo/IssueStack
+git: <S>/repo
+command: dotnet test -c Debug -p:PathMap=<S>\repo\IssueStack\=/src/ -v:n
+dotnet test exit 0 (25s)
+--- weave, warnings, errors, PathMap (deduplicated)
+AssertionTracking: 19 types, 67 methods, 12 assertions weaved in 389ms
+Kronikol.AssertionTracking: Instrumented 12 assertion(s) in 2 method(s) (643ms)
+PathMap=[<S>\repo\IssueStack\=/src/] DeterministicSourcePaths=[] SourceRoot=[C:\Users\cex\.nuget\packages\ => C:\Users\cex\.nuget\packages\ nested= containing=;C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\ => C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\ nested= containing=;<S>\repo\ => <S>\repo\ nested= containing=]
+Total tests: 2
+_DumpPathMap:
+_DumpPathMap: ContinuousIntegrationBuild=[] Deterministic=[true] DebugType=[portable] EmbedAllSources=[] TrackAssertionsEnabled=[true] IntermediateAssembly=[<S>\repo\IssueStack\obj\Debug\net8.0\IssueStack.dll]
+_SnapshotPreWeave:
+_SnapshotPreWeave: copied [obj\Debug\net8.0\IssueStack.dll;obj\Debug\net8.0\IssueStack.pdb] before the weave
+_WeaveAssertionTracking:
+reports <S>/repo/IssueStack/bin/Debug/net8.0/Reports
+query exit 0
+notes: 11, fallback 'Assertion at line N': 11, with a quoted value: 0
+  ✓ IssueFeature.cs:31           Assertion at line 31
+  ✓ IssueFeature.cs:32           Assertion at line 32
+  ✓ IssueFeature.cs:33           Assertion at line 33
+  ✓ IssueFeature.cs:34           Assertion at line 34
+  ✓ IssueFeature.cs:35           Assertion at line 35
+  ✓ IssueFeature.cs:36           Assertion at line 36
+  ✓ IssueFeature.cs:37           Assertion at line 37
+  ✓ IssueFeature.cs:38           Assertion at line 38
+  ✓ IssueFeature.cs:40           Assertion at line 40
+  ✓ IssueFeature.cs:41           Assertion at line 41
+  ✓ IssueFeature.cs:43           Assertion at line 43
+diagram notes (✓ hits / ✗ hits / 'Assertion at line' hits): 12/0/12
+  s0/d0/n2    note       ✓ Assertion at line 31
+  s0/d0/n3    note       ✓ Assertion at line 32
+  s0/d0/n4    note       ✓ Assertion at line 33
+  s0/d0/n5    note       ✓ Assertion at line 34
+  s0/d0/n6    note       ✓ Assertion at line 35
+  s0/d0/n7    note       ✓ Assertion at line 36
+  s0/d0/n8    note       ✓ Assertion at line 37
+  s0/d0/n9    note       ✓ Assertion at line 38
+  s0/d0/n10   note       ✓ Assertion at line 40
+  s0/d0/n11   note       ✓ Assertion at line 41
+  s0/d0/n12   note       ✓ Assertion at line 43
+  s1/d0/n2    note       ✓ Assertion at line 16
+8170cb051bb07908  17920 bytes  obj/Debug/net8.0/preweave/IssueStack.dll
+614dcedf5b71df75  26308 bytes  obj/Debug/net8.0/preweave/IssueStack.pdb
+1b22c42e509e123d  19456 bytes  obj/Debug/net8.0/IssueStack.dll
+52a82cde6b19435b  24584 bytes  obj/Debug/net8.0/IssueStack.pdb
+pdb dump exit 0 -> logs/g-pdb.txt

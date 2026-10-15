@@ -1,0 +1,37 @@
+== <S>/repo/IssueStack/obj/Release/net8.0/preweave/IssueStack.dll
+debugdir: CodeView stamp=0xF6CF4A20 ver=256.20557 guid=f1e76299-9c8c-4188-9803-a4cfb7e81366 age=1 path=/_/IssueStack/obj/Release/net8.0/IssueStack.pdb
+debugdir: PdbChecksum stamp=0x00000000 ver=1.0 SHA256:9962E7F18C9C8841...
+debugdir: Reproducible stamp=0x00000000 ver=0.0
+mvid=62014b4c-b23d-49fa-8ee4-9ee72b93653c
+(no embedded portable PDB)
+== <S>/repo/IssueStack/obj/Release/net8.0/preweave/IssueStack.pdb
+pdb id=9962E7F18C9C88419803A4CFB7E81366204ACFF6
+documents: 12, with embedded source: 6
+  doc: /_/IssueStack/DiagrammedTestCollection.cs  embeddedSource=no
+  doc: /_/IssueStack/Infrastructure/BaseFixture.cs  embeddedSource=no
+  doc: /_/IssueStack/Infrastructure/TestRun.cs  embeddedSource=no
+  doc: /_/IssueStack/Program.cs  embeddedSource=no
+  doc: /_/IssueStack/Scenarios/IssueFeature.cs  embeddedSource=no
+  doc: /_/IssueStack/Scenarios/SampleFeature.cs  embeddedSource=no
+  doc: /_1/microsoft.net.test.sdk/18.3.0/build/net8.0/Microsoft.NET.Test.Sdk.Program.cs  embeddedSource=yes
+  doc: /_/IssueStack/obj/Release/net8.0/IssueStack.GlobalUsings.g.cs  embeddedSource=yes
+  doc: /_/IssueStack/obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.cs  embeddedSource=yes
+  doc: /_/IssueStack/obj/Release/net8.0/IssueStack.AssemblyInfo.cs  embeddedSource=yes
+  doc: /_/IssueStack/obj/Release/net8.0/AssertionTrackingAttributes/TrackAssertionsAttribute.g.cs  embeddedSource=yes
+  doc: /_/IssueStack/obj/Release/net8.0/AssertionTrackingAttributes/SuppressAssertionTrackingAttribute.g.cs  embeddedSource=yes
+sourcelink: {"documents":{"/_/*":"https://raw.githubusercontent.com/example/repro165/d4eda202bb67882c4c655c6b2d2c4d21f480e20d/*"}}
+== <S>/repo/IssueStack/obj/Release/net8.0/IssueStack.dll
+debugdir: CodeView stamp=0xCF01197D ver=256.20557 guid=b7342dad-ddb4-2177-5db1-7d3095b66074 age=1 path=IssueStack.pdb
+debugdir: PdbChecksum stamp=0x00000000 ver=1.0 SHA256:AD2D34B7B4DD7721...
+debugdir: Reproducible stamp=0x00000000 ver=0.0
+mvid=62014b4c-b23d-49fa-8ee4-9ee72b93653c
+(no embedded portable PDB)
+== <S>/repo/IssueStack/obj/Release/net8.0/IssueStack.pdb
+pdb id=AD2D34B7B4DD77215DB17D3095B660747D1901CF
+documents: 5, with embedded source: 1
+  doc: /_1/microsoft.net.test.sdk/18.3.0/build/net8.0/Microsoft.NET.Test.Sdk.Program.cs  embeddedSource=yes
+  doc: /_/IssueStack/Scenarios/IssueFeature.cs  embeddedSource=no
+  doc: /_/IssueStack/Scenarios/SampleFeature.cs  embeddedSource=no
+  doc: /_/IssueStack/Infrastructure/BaseFixture.cs  embeddedSource=no
+  doc: /_/IssueStack/Infrastructure/TestRun.cs  embeddedSource=no
+sourcelink: {"documents":{"/_/*":"https://raw.githubusercontent.com/example/repro165/d4eda202bb67882c4c655c6b2d2c4d21f480e20d/*"}}

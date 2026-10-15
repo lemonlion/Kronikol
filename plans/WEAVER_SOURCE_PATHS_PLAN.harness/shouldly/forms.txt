@@ -1,0 +1,269 @@
+# dotnet run in this directory (Shouldly 4.3.0, Kronikol 4.18.1, net8.0, SDK 10.0.300), 2026-10-13. Each message is JSON-escaped.
+# "parser" is ErrorDiffParser.TryParseExpectedActual; "key" is FailureText.ClusterKey (copied in Program.cs, being internal).
+
+== WITH SOURCE (the default)
+-- int ShouldBe
+   message:  "(\u0022int\r\n    should be\r\n5\r\n    but was\r\n4"
+   parser:   expected="5" actual="4"
+   key:      "(\u0022int should be"
+-- string ShouldBe
+   message:  "(\u0022string\r\n    should be\r\n\u0022b\u0022\r\n    but was\r\n\u0022a\u0022\r\n    difference\r\nDifference     |  |   \r\n               | \\|/  \r\nIndex          | 0    \r\nExpected Value | b    \r\nActual Value   | a    \r\nExpected Code  | 98   \r\nActual Code    | 97   "
+   parser:   expected="b" actual="a"
+   key:      "(\u0022string should be"
+-- ShouldBe null expected
+   message:  "(\r\n    should be\r\nnull\r\n    but was\r\n\u0022x\u0022"
+   parser:   expected="null" actual="x"
+   key:      "( should be"
+-- enum ShouldBe
+   message:  "(\u0022enum\r\n    should be\r\nDayOfWeek.Friday\r\n    but was\r\nDayOfWeek.Monday"
+   parser:   expected="DayOfWeek.Friday" actual="DayOfWeek.Monday"
+   key:      "(\u0022enum should be"
+-- ShouldBe with message
+   message:  "(\r\n    should be\r\n5\r\n    but was\r\n4\r\n\r\nAdditional Info:\r\n    custom message"
+   parser:   expected="5" actual="4"
+   key:      "( should be"
+-- double ShouldBe tolerance
+   message:  "(\u0022double\r\n    should be within\r\n0.1d\r\n    of\r\n2d\r\n    but was\r\n1d"
+   parser:   no expected/actual
+   key:      "(\u0022double should be within"
+-- collection ShouldBe
+   message:  "(\u0022collection\r\n    should be\r\n[1, 3]\r\n    but was\r\n[1, 2]\r\n    difference\r\n[1, *2*]"
+   parser:   expected="[1, 3]" actual="[1, 2]"
+   key:      "(\u0022collection should be"
+-- ShouldNotBe
+   message:  "(\r\n    should not be\r\n5\r\n    but was"
+   parser:   no expected/actual
+   key:      "( should not be"
+-- ShouldBeNull
+   message:  "(\r\n    should be null but was\r\n\u0022x\u0022"
+   parser:   no expected/actual
+   key:      "( should be null but was"
+-- ShouldNotBeNull
+   message:  "(\r\n    should not be null but was"
+   parser:   no expected/actual
+   key:      "( should not be null but was"
+-- ShouldBeTrue
+   message:  "(\r\n    should be\r\nTrue\r\n    but was\r\nFalse"
+   parser:   expected="True" actual="False"
+   key:      "( should be"
+-- ShouldBeFalse
+   message:  "(\r\n    should be\r\nFalse\r\n    but was\r\nTrue"
+   parser:   expected="False" actual="True"
+   key:      "( should be"
+-- string ShouldContain
+   message:  "(\u0022string\r\n    should contain (case insensitive comparison)\r\n\u0022z\u0022\r\n    but was actually\r\n\u0022abc\u0022"
+   parser:   no expected/actual
+   key:      "(\u0022string should contain (case insensitive comparison)"
+-- collection ShouldContain
+   message:  "(\u0022collection\r\n    should contain\r\n3\r\n    but was actually\r\n[1, 2]"
+   parser:   no expected/actual
+   key:      "(\u0022collection should contain"
+-- ShouldNotContain
+   message:  "(\r\n    should not contain\r\n2\r\n    but was actually\r\n[1, 2]"
+   parser:   no expected/actual
+   key:      "( should not contain"
+-- ShouldBeEmpty
+   message:  "(\r\n    should be empty but had\r\n1\r\n    item and was\r\n[1]"
+   parser:   no expected/actual
+   key:      "( should be empty but had"
+-- ShouldNotBeEmpty
+   message:  "(\r\n    should not be empty but was"
+   parser:   no expected/actual
+   key:      "( should not be empty but was"
+-- ShouldBeGreaterThan
+   message:  "(\r\n    should be greater than\r\n2\r\n    but was\r\n1"
+   parser:   no expected/actual
+   key:      "( should be greater than"
+-- ShouldBeLessThan
+   message:  "(\r\n    should be less than\r\n2\r\n    but was\r\n3"
+   parser:   no expected/actual
+   key:      "( should be less than"
+-- ShouldBeInRange
+   message:  "(\r\n    should be in range\r\n{ from = 1, to = 5 }\r\n    but was\r\n10"
+   parser:   no expected/actual
+   key:      "( should be in range"
+-- ShouldBeOneOf
+   message:  "(\r\n    should be one of\r\n[2, 3]\r\n    but was\r\n1"
+   parser:   no expected/actual
+   key:      "( should be one of"
+-- ShouldStartWith
+   message:  "(\r\n    should start with\r\n\u0022z\u0022\r\n    but was\r\n\u0022abc\u0022"
+   parser:   no expected/actual
+   key:      "( should start with"
+-- ShouldEndWith
+   message:  "(\r\n    should end with\r\n\u0022z\u0022\r\n    but was\r\n\u0022abc\u0022"
+   parser:   no expected/actual
+   key:      "( should end with"
+-- ShouldMatch
+   message:  "(\r\n    should match\r\n\u0022^z\u0022\r\n    but was\r\n\u0022abc\u0022"
+   parser:   no expected/actual
+   key:      "( should match"
+-- ShouldBeOfType
+   message:  "(\r\n    should be of type\r\nSystem.String\r\n    but was\r\nSystem.Int32"
+   parser:   no expected/actual
+   key:      "( should be of type"
+-- ShouldBeAssignableTo
+   message:  "(\r\n    should be assignable to\r\nSystem.String\r\n    but was\r\nSystem.Int32"
+   parser:   no expected/actual
+   key:      "( should be assignable to"
+-- ShouldBeSameAs
+   message:  "(\r\n    should be same as\r\nSystem.Object (40198173)\r\n    but was\r\nSystem.Object (49205706)"
+   parser:   no expected/actual
+   key:      "( should be same as"
+-- ShouldBeEquivalentTo
+   message:  "Comparing object equivalence, at path:\r\n( [\u003C\u003Ef__AnonymousType0\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]]\r\n    A [System.Int32]\r\n\r\n    Expected value to be\r\n2\r\n    but was\r\n1"
+   parser:   no expected/actual
+   key:      "Comparing object equivalence, at path:"
+-- ShouldContainKey
+   message:  "(\r\n    should contain key\r\n\u0022b\u0022\r\n    but does not"
+   parser:   no expected/actual
+   key:      "( should contain key"
+-- ShouldHaveSingleItem
+   message:  "(\r\n    should have single item but had\r\n2\r\n    items and was\r\n[1, 2]"
+   parser:   no expected/actual
+   key:      "( should have single item but had"
+-- ShouldAllBe
+   message:  "(\r\n    should satisfy the condition\r\n(x \u003E 1)\r\n    but\r\n[1]\r\n    do not"
+   parser:   no expected/actual
+   key:      "( should satisfy the condition"
+-- Should.Throw
+   message:  "\u0060\u0060\r\n    should throw\r\nSystem.InvalidOperationException\r\n    but did not"
+   parser:   no expected/actual
+   key:      "\u0060\u0060 should throw"
+-- ShouldSatisfyAllConditions
+   message:  "(\r\n    should satisfy all the conditions specified, but does not.\r\nThe following errors were found ...\r\n--------------- Error 1 ---------------\r\n    (\u0022ShouldSatisfyAllConditions\u0022, 4.ShouldSatisfyAllConditions(x =\u003E x\r\n        should be\r\n    5\r\n        but was\r\n    4\r\n\r\n--------------- Error 2 ---------------\r\n    (\u0022ShouldSatisfyAllConditions\u0022, 4.ShouldSatisfyAllConditions(x =\u003E x.ShouldBe(5), x =\u003E x\r\n        should be less than\r\n    3\r\n        but was\r\n    4\r\n\r\n-----------------------------------------"
+   parser:   no expected/actual
+   key:      "( should satisfy all the conditions specified, but does not."
+== WITHOUT SOURCE (ShouldlyConfiguration.DisableSourceInErrors())
+-- int ShouldBe
+   message:  "4\r\n    should be\r\n5\r\n    but was not"
+   parser:   no expected/actual
+   key:      "4 should be"
+-- string ShouldBe
+   message:  "\u0022a\u0022\r\n    should be\r\n\u0022b\u0022\r\n    but was not\r\n    difference\r\nDifference     |  |   \r\n               | \\|/  \r\nIndex          | 0    \r\nExpected Value | b    \r\nActual Value   | a    \r\nExpected Code  | 98   \r\nActual Code    | 97   "
+   parser:   no expected/actual
+   key:      "\u0022a\u0022 should be"
+-- ShouldBe null expected
+   message:  "\u0022x\u0022\r\n    should be\r\nnull\r\n    but was not"
+   parser:   no expected/actual
+   key:      "\u0022x\u0022 should be"
+-- enum ShouldBe
+   message:  "DayOfWeek.Monday\r\n    should be\r\nDayOfWeek.Friday\r\n    but was not"
+   parser:   no expected/actual
+   key:      "DayOfWeek.Monday should be"
+-- ShouldBe with message
+   message:  "4\r\n    should be\r\n5\r\n    but was not\r\n\r\nAdditional Info:\r\n    custom message"
+   parser:   no expected/actual
+   key:      "4 should be"
+-- double ShouldBe tolerance
+   message:  "1d\r\n    should be within\r\n0.1d\r\n    of\r\n2d\r\n    but was not"
+   parser:   no expected/actual
+   key:      "1d should be within"
+-- collection ShouldBe
+   message:  "[1, 2]\r\n    should be\r\n[1, 3]\r\n    but was not\r\n    difference\r\n[1, *2*]"
+   parser:   no expected/actual
+   key:      "[1, 2] should be"
+-- ShouldNotBe
+   message:  "5\r\n    should not be\r\n5\r\n    but was"
+   parser:   no expected/actual
+   key:      "5 should not be"
+-- ShouldBeNull
+   message:  "\u0022x\u0022\r\n    should be null but was"
+   parser:   no expected/actual
+   key:      "\u0022x\u0022 should be null but was"
+-- ShouldNotBeNull
+   message:  "null\r\n    should not be null but was"
+   parser:   no expected/actual
+   key:      "null should not be null but was"
+-- ShouldBeTrue
+   message:  "False\r\n    should be\r\nTrue\r\n    but was not"
+   parser:   no expected/actual
+   key:      "False should be"
+-- ShouldBeFalse
+   message:  "True\r\n    should be\r\nFalse\r\n    but was not"
+   parser:   no expected/actual
+   key:      "True should be"
+-- string ShouldContain
+   message:  "\u0022abc\u0022\r\n    should contain (case insensitive comparison)\r\n\u0022z\u0022\r\n    but did not"
+   parser:   no expected/actual
+   key:      "\u0022abc\u0022 should contain (case insensitive comparison)"
+-- collection ShouldContain
+   message:  "[1, 2]\r\n    should contain\r\n3\r\n    but did not"
+   parser:   no expected/actual
+   key:      "[1, 2] should contain"
+-- ShouldNotContain
+   message:  "[1, 2]\r\n    should not contain\r\n2\r\n    but did"
+   parser:   no expected/actual
+   key:      "[1, 2] should not contain"
+-- ShouldBeEmpty
+   message:  "[1]\r\n    should be empty but had\r\n1\r\n    item and was not empty"
+   parser:   no expected/actual
+   key:      "[1] should be empty but had"
+-- ShouldNotBeEmpty
+   message:  "[]\r\n    should not be empty but was"
+   parser:   no expected/actual
+   key:      "[] should not be empty but was"
+-- ShouldBeGreaterThan
+   message:  "1\r\n    should be greater than\r\n2\r\n    but was not"
+   parser:   no expected/actual
+   key:      "1 should be greater than"
+-- ShouldBeLessThan
+   message:  "3\r\n    should be less than\r\n2\r\n    but was not"
+   parser:   no expected/actual
+   key:      "3 should be less than"
+-- ShouldBeInRange
+   message:  "10\r\n    should be in range\r\n{ from = 1, to = 5 }\r\n    but was not"
+   parser:   no expected/actual
+   key:      "10 should be in range"
+-- ShouldBeOneOf
+   message:  "1\r\n    should be one of\r\n[2, 3]\r\n    but was not"
+   parser:   no expected/actual
+   key:      "1 should be one of"
+-- ShouldStartWith
+   message:  "\u0022abc\u0022\r\n    should start with\r\n\u0022z\u0022\r\n    but was not"
+   parser:   no expected/actual
+   key:      "\u0022abc\u0022 should start with"
+-- ShouldEndWith
+   message:  "\u0022abc\u0022\r\n    should end with\r\n\u0022z\u0022\r\n    but did not"
+   parser:   no expected/actual
+   key:      "\u0022abc\u0022 should end with"
+-- ShouldMatch
+   message:  "\u0022abc\u0022\r\n    should match\r\n\u0022^z\u0022\r\n    but was not"
+   parser:   no expected/actual
+   key:      "\u0022abc\u0022 should match"
+-- ShouldBeOfType
+   message:  "1\r\n    should be of type\r\nSystem.String\r\n    but was\r\nSystem.Int32"
+   parser:   no expected/actual
+   key:      "1 should be of type"
+-- ShouldBeAssignableTo
+   message:  "1\r\n    should be assignable to\r\nSystem.String\r\n    but was\r\nSystem.Int32"
+   parser:   no expected/actual
+   key:      "1 should be assignable to"
+-- ShouldBeSameAs
+   message:  "System.Object (21454193)\r\n    should be same as\r\nSystem.Object (58870012)\r\n    but was not"
+   parser:   no expected/actual
+   key:      "System.Object (21454193) should be same as"
+-- ShouldBeEquivalentTo
+   message:  "Comparing object equivalence, at path:\r\n\u003Croot\u003E [\u003C\u003Ef__AnonymousType0\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]]\r\n    A [System.Int32]\r\n\r\n    Expected value to be\r\n2\r\n    but was\r\n1"
+   parser:   no expected/actual
+   key:      "Comparing object equivalence, at path:"
+-- ShouldContainKey
+   message:  "[[\u0022a\u0022 =\u003E 1]]\r\n    should contain key\r\n\u0022b\u0022\r\n    but does not"
+   parser:   no expected/actual
+   key:      "[[\u0022a\u0022 =\u003E 1]] should contain key"
+-- ShouldHaveSingleItem
+   message:  "[1, 2]\r\n    should have single item but had\r\n2\r\n    items"
+   parser:   no expected/actual
+   key:      "[1, 2] should have single item but had"
+-- ShouldAllBe
+   message:  "[1, 2]\r\n    should satisfy the condition\r\n(x \u003E 1)\r\n    but\r\n[1]\r\n    do not"
+   parser:   no expected/actual
+   key:      "[1, 2] should satisfy the condition"
+-- Should.Throw
+   message:  "delegate\r\n    should throw\r\nSystem.InvalidOperationException\r\n    but did not"
+   parser:   no expected/actual
+   key:      "delegate should throw"
+-- ShouldSatisfyAllConditions
+   message:  "4\r\n    should satisfy all the conditions specified, but does not.\r\nThe following errors were found ...\r\n--------------- Error 1 ---------------\r\n    4\r\n        should be\r\n    5\r\n        but was not\r\n\r\n--------------- Error 2 ---------------\r\n    4\r\n        should be less than\r\n    3\r\n        but was not\r\n\r\n-----------------------------------------"
+   parser:   no expected/actual
+   key:      "4 should satisfy all the conditions specified, but does not."

@@ -1,0 +1,21 @@
+commit: a=f98c85dc4721f9a22bec72046f6958f99d6345c8 b=f98c85dc4721f9a22bec72046f6958f99d6345c8
+clone-a: <S>/clone-a
+clone-b: <S>/deeper/path/clone-b
+== (1) woven: dotnet build -c Debug -p:ContinuousIntegrationBuild=true
+build woven-a exit 0 : 0 Error(s)|0 Warning(s)|Kronikol.AssertionTracking: Instrumented 12 assertion(s) in 2 method(s) (235ms)
+build woven-b exit 0 : 0 Error(s)|0 Warning(s)|Kronikol.AssertionTracking: Instrumented 12 assertion(s) in 2 method(s) (154ms)
+  a 3d2888c7e5c57ea762623454aea63290431b7a8abccbccc9cd2bd6b7088a3ceb  17920  obj/Debug/net8.0/preweave/IssueStack.dll
+  a e970bf093238316a8177cd83448cfa75ce8d0f1b9da51234cc1ec1f395583230  26172  obj/Debug/net8.0/preweave/IssueStack.pdb
+  a 697253b89b2a8dd43508afaff0f26639c6877c87b5897ba00cff89afaf7a630a  19456  obj/Debug/net8.0/IssueStack.dll
+  a eba9c27105367c69a7a2a0a55baaff4bf8f82b5908edd7b988b77ba723a558ed  24440  obj/Debug/net8.0/IssueStack.pdb
+  b 3d2888c7e5c57ea762623454aea63290431b7a8abccbccc9cd2bd6b7088a3ceb  17920  obj/Debug/net8.0/preweave/IssueStack.dll
+  b e970bf093238316a8177cd83448cfa75ce8d0f1b9da51234cc1ec1f395583230  26172  obj/Debug/net8.0/preweave/IssueStack.pdb
+  b 697253b89b2a8dd43508afaff0f26639c6877c87b5897ba00cff89afaf7a630a  19456  obj/Debug/net8.0/IssueStack.dll
+  b eba9c27105367c69a7a2a0a55baaff4bf8f82b5908edd7b988b77ba723a558ed  24440  obj/Debug/net8.0/IssueStack.pdb
+== (2) unwoven: dotnet build -c Debug -p:ContinuousIntegrationBuild=true -p:TrackAssertionsEnabled=false
+build unwoven-a exit 1 : 0 Warning(s)|1><S>\clone-a\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertions' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?)|1><S>\clone-a\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertionsAttribute' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?)|2 Error(s)|<S>\clone-a\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertions' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?)|<S>\clone-a\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertionsAttribute' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?)
+build unwoven-b exit 1 : 0 Warning(s)|1><S>\deeper\path\clone-b\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertions' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?)|1><S>\deeper\path\clone-b\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertionsAttribute' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?)|2 Error(s)|<S>\deeper\path\clone-b\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertions' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?)|<S>\deeper\path\clone-b\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertionsAttribute' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?)
+1><S>\clone-a\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertions' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?) [<S>\clone-a\IssueStack\IssueStack.csproj]
+1><S>\clone-a\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertionsAttribute' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?) [<S>\clone-a\IssueStack\IssueStack.csproj]
+<S>\clone-a\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertions' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?) [<S>\clone-a\IssueStack\IssueStack.csproj]
+DONE

@@ -1,0 +1,32 @@
+### notes with a pass mark
+s0/d0/n2    note       ✓ Assertion at line 31
+s0/d0/n3    note       ✓ Assertion at line 32
+s0/d0/n4    note       ✓ Assertion at line 33
+s0/d0/n5    note       ✓ Assertion at line 34
+s0/d0/n6    note       ✓ Assertion at line 35
+s0/d0/n7    note       ✓ Assertion at line 36
+s0/d0/n8    note       ✓ Assertion at line 37
+s0/d0/n9    note       ✓ Assertion at line 38
+s0/d0/n10   note       ✓ Assertion at line 40
+s0/d0/n11   note       ✓ Assertion at line 41
+s0/d0/n12   note       ✓ Assertion at line 43
+s1/d0/n2    note       ✓ Linked value should be 'L1'
+s2/d0/n2    note       ✓ Assertion at line 16
+13 hits
+### notes with a fail mark
+"✗" is not in notes
+--in bodies,uris,steps,assertions,names,errors,headers,notes widens the search · notes are searched last because they are the expensive one
+### notes reading 'Assertion at line'
+s0/d0/n2    note       ✓ Assertion at line 31
+s0/d0/n3    note       ✓ Assertion at line 32
+s0/d0/n4    note       ✓ Assertion at line 33
+s0/d0/n5    note       ✓ Assertion at line 34
+s0/d0/n6    note       ✓ Assertion at line 35
+s0/d0/n7    note       ✓ Assertion at line 36
+s0/d0/n8    note       ✓ Assertion at line 37
+s0/d0/n9    note       ✓ Assertion at line 38
+s0/d0/n10   note       ✓ Assertion at line 40
+s0/d0/n11   note       ✓ Assertion at line 41
+s0/d0/n12   note       ✓ Assertion at line 43
+s2/d0/n2    note       ✓ Assertion at line 16
+12 hits

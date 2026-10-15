@@ -1,0 +1,41 @@
+row a-fail
+dir <S>/repo/IssueStack
+git: <S>/repo
+command: dotnet test -c Debug -p:IncludeFailing=true -v:n
+dotnet test exit 1 (7s)
+--- weave, warnings, errors, PathMap (deduplicated)
+AssertionTracking: 23 types, 80 methods, 12 assertions weaved in 137ms
+Kronikol.AssertionTracking: Instrumented 12 assertion(s) in 5 method(s) (187ms)
+PathMap=[] DeterministicSourcePaths=[] SourceRoot=[C:\Users\cex\.nuget\packages\ => C:\Users\cex\.nuget\packages\ nested= containing=;C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\ => C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\ nested= containing=;<S>\repo\ => <S>\repo\ nested= containing=]
+Total tests: 5
+_DumpPathMap:
+_DumpPathMap: ContinuousIntegrationBuild=[] Deterministic=[true] DebugType=[portable] EmbedAllSources=[] TrackAssertionsEnabled=[true] IntermediateAssembly=[<S>\repo\IssueStack\obj\Debug\net8.0\IssueStack.dll]
+_SnapshotPreWeave:
+_SnapshotPreWeave: copied [obj\Debug\net8.0\IssueStack.dll;obj\Debug\net8.0\IssueStack.pdb] before the weave
+_WeaveAssertionTracking:
+reports <S>/repo/IssueStack/bin/Debug/net8.0/Reports
+query exit 0
+notes: 8, fallback 'Assertion at line N': 0, with a quoted value: 7
+  ✓ IssueFeature.cs:31           Actual id should be 'A1'
+  ✓ IssueFeature.cs:32           Actual colour should be 'Blue'
+  ✓ IssueFeature.cs:33           First value of actual lines should be 'x'
+  ✓ IssueFeature.cs:34           Actual colour to lower invariant() should be 'blue'
+  ✓ IssueFeature.cs:35           Actual colour should be 'Blue'
+  ✓ IssueFeature.cs:36           Result split id should be 'S1'
+  ✓ IssueFeature.cs:37           Actual id should be 'A1'
+  ✓ IssueFeature.cs:43           Last value of actual lines should be "y"
+diagram notes (✓ hits / ✗ hits / 'Assertion at line' hits): 9/3/0
+  s3/d0/n2    note       ✓ Actual id should be 'A1'
+  s3/d0/n3    note       ✓ Actual colour should be 'Blue…
+  s3/d0/n4    note       ✓ First value of actual lines s…
+  s3/d0/n5    note       ✓ Actual colour to lower invari…
+  s3/d0/n6    note       ✓ Actual colour should be 'Blue…
+  s3/d0/n7    note       ✓ Result split id should be 'S1…
+  s3/d0/n8    note       ✓ Actual id should be 'A1'
+  s3/d0/n9    note       ✓ Last value of actual lines sh…
+  s4/d0/n2    note       ✓ Response status code should b…
+2423c1402b6ce3cf  20480 bytes  obj/Debug/net8.0/preweave/IssueStack.dll
+5d229bd93996964e  27092 bytes  obj/Debug/net8.0/preweave/IssueStack.pdb
+8966fcf5d46d8c22  24064 bytes  obj/Debug/net8.0/IssueStack.dll
+d5dc3558d302e2b3  25484 bytes  obj/Debug/net8.0/IssueStack.pdb
+pdb dump exit 0 -> logs/a-fail-pdb.txt

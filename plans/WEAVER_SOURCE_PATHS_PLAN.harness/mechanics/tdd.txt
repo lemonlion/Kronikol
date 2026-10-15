@@ -1,0 +1,49 @@
+# dotnet run --file tdd.cs -- repo/App/bin/Debug/net10.0/App.dll   (Cecil writes the PDB back as the weave does)
+Cecil in-memory types with custom debug infos after read:
+   IOnly (token 0x02000005) kind=932e74bc-dba9-4478-8d46-0f32a7bab3d3 blob=02
+Original PDB CustomDebugInformation rows (parent token):
+   row 1 parent=0x00000001 (ModuleDefinition) kind=cc110556-a091-4d38-9fec-25ab9a351a6a blobLen=220
+   row 2 parent=0x00000001 (ModuleDefinition) kind=b5feec05-8cd0-4a83-96da-466284bb4bd8 blobLen=639
+   row 3 parent=0x00000001 (ModuleDefinition) kind=7e4d4708-096e-4c5c-aeda-cb10ba6a740d blobLen=9296
+   row 4 parent=0x06000003 (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=5
+   row 5 parent=0x02000005 (TypeDefinition) kind=932e74bc-dba9-4478-8d46-0f32a7bab3d3 blobLen=1
+   row 6 parent=0x06000006 (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=2
+   row 7 parent=0x30000006 (Document) kind=0e8a571b-6926-466e-b4ad-8ab04611f5fe blobLen=86
+   row 8 parent=0x06000008 (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=5
+   row 9 parent=0x30000008 (Document) kind=0e8a571b-6926-466e-b4ad-8ab04611f5fe blobLen=111
+   row 10 parent=0x30000009 (Document) kind=0e8a571b-6926-466e-b4ad-8ab04611f5fe blobLen=158
+   row 11 parent=0x3000000A (Document) kind=0e8a571b-6926-466e-b4ad-8ab04611f5fe blobLen=334
+   row 12 parent=0x3000000B (Document) kind=0e8a571b-6926-466e-b4ad-8ab04611f5fe blobLen=1845
+   row 13 parent=0x0600000F (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=3
+   row 14 parent=0x06000010 (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=10
+   row 15 parent=0x06000011 (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=24
+SP Ansi.Name doc=/_/App/Ansi.cs StartLine=5 col=36-42; File.ReadAllLines has 6 lines; lines[StartLine-1]='    public static string Name() => "caf�";'
+   ReadAllLines(Ansi.cs) line 5 last-quote char before: U+FFFD
+SP Lsep.One doc=/_/App/Lsep.cs StartLine=6 col=32-33; File.ReadAllLines has 6 lines; lines[StartLine-1]='}'
+Cecil-written PDB CustomDebugInformation rows (parent token):
+   row 1 parent=0x00000001 (ModuleDefinition) kind=cc110556-a091-4d38-9fec-25ab9a351a6a blobLen=220
+   row 2 parent=0x00000001 (ModuleDefinition) kind=b5feec05-8cd0-4a83-96da-466284bb4bd8 blobLen=639
+   row 3 parent=0x00000001 (ModuleDefinition) kind=7e4d4708-096e-4c5c-aeda-cb10ba6a740d blobLen=9296
+   row 4 parent=0x30000001 (Document) kind=0e8a571b-6926-466e-b4ad-8ab04611f5fe blobLen=1845
+   row 5 parent=0x06000005 (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=3
+   row 6 parent=0x02000005 (TypeDefinition) kind=932e74bc-dba9-4478-8d46-0f32a7bab3d3 blobLen=1
+   row 7 parent=0x06000006 (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=10
+   row 8 parent=0x06000007 (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=24
+   row 9 parent=0x02000007 (TypeDefinition) kind=932e74bc-dba9-4478-8d46-0f32a7bab3d3 blobLen=1
+   row 10 parent=0x30000007 (Document) kind=0e8a571b-6926-466e-b4ad-8ab04611f5fe blobLen=86
+   row 11 parent=0x06000009 (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=5
+   row 12 parent=0x0600000C (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=2
+   row 13 parent=0x0600000E (MethodDefinition) kind=755f52a8-91c5-45be-b4b8-209571e552bd blobLen=5
+Cecil-written TypeDef table:
+   0x02000001 <Module>
+   0x02000002 <RegexGenerator_g>FF178D9CFDD2DDA2E486A634343B8DAB297C445E9D5CCBC2268ABA4BF04A15F72__Digits_0
+   0x02000003 RunnerFactory
+   0x02000004 Runner
+   0x02000005 <RegexGenerator_g>FF178D9CFDD2DDA2E486A634343B8DAB297C445E9D5CCBC2268ABA4BF04A15F72__Utilities
+   0x02000006 Ansi
+   0x02000007 IOnly
+   0x02000008 LineDir
+   0x02000009 Lsep
+   0x0200000A Program
+   0x0200000B Linked
+   0x0200000C Inner

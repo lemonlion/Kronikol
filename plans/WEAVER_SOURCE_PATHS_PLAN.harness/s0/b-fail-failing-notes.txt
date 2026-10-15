@@ -1,0 +1,9 @@
+### note s0/d0/n2
+✗ Assertion at line 33 Expected string to be "B2", but "A1" differs near "A1" (index 0).
+this is the rendered note, not the captured content — they differ under focus fields, phase variants and formatting processors
+### note s1/d0/n2
+✗ Assertion at line 17 result     should be 5     but was 4
+this is the rendered note, not the captured content — they differ under focus fields, phase variants and formatting processors
+### note s2/d0/n2
+✗ Assertion at line 25 total     should be 8     but was 7
+this is the rendered note, not the captured content — they differ under focus fields, phase variants and formatting processors

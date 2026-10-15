@@ -1,0 +1,23 @@
+# repo/App: dotnet build -p:ContinuousIntegrationBuild=true -v:n, after rm -rf bin obj (SDK 10.0.300)
+# Probe.targets prints these after CoreCompile
+
+PROBE DeterministicSourcePaths=true ContinuousIntegrationBuild=true Deterministic=true
+PROBE PathMap=C:\Users\cex\.nuget\packages\=/_1/,C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\=/_2/,<S>\repo\=/_/,
+PROBE SourceRoot=C:\Users\cex\.nuget\packages\ MappedPath=/_1/ SourceControl= NestedRoot= ContainingRoot= SourceLinkUrl=
+PROBE SourceRoot=C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\ MappedPath=/_2/ SourceControl= NestedRoot= ContainingRoot= SourceLinkUrl=
+PROBE SourceRoot=<S>\repo\ MappedPath=/_/ SourceControl=git NestedRoot= ContainingRoot= SourceLinkUrl=https://raw.githubusercontent.com/example/demo/661f2fd76249ced8bd1f41a55e9e811cde86a9b6/*
+PROBE SourceRoot=<S>\repo\inner\ MappedPath=/_/inner/ SourceControl=git NestedRoot=inner\ ContainingRoot=<S>\repo\ SourceLinkUrl=https://raw.githubusercontent.com/example/inner/76430085f10fadb595b80cb4a727a1f17bf1fd03/*
+PROBE EmbeddedFiles=..\..\outside\Linked.cs;obj\Debug\net10.0\App.GlobalUsings.g.cs;obj\Debug\net10.0\.NETCoreApp,Version=v10.0.AssemblyAttributes.cs;obj\Debug\net10.0\App.AssemblyInfo.cs
+PROBE EmbedUntrackedSources=true EmbedAllSources= SourceLink=obj\Debug\net10.0\App.sourcelink.json
+
+# the same command again: CoreCompile is skipped as up to date, and the target after it still sees PathMap
+
+Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+PROBE DeterministicSourcePaths=true ContinuousIntegrationBuild=true Deterministic=true
+PROBE PathMap=C:\Users\cex\.nuget\packages\=/_1/,C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\=/_2/,<S>\repo\=/_/,
+PROBE SourceRoot=C:\Users\cex\.nuget\packages\ MappedPath=/_1/ SourceControl= NestedRoot= ContainingRoot= SourceLinkUrl=
+PROBE SourceRoot=C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\ MappedPath=/_2/ SourceControl= NestedRoot= ContainingRoot= SourceLinkUrl=
+PROBE SourceRoot=<S>\repo\ MappedPath=/_/ SourceControl=git NestedRoot= ContainingRoot= SourceLinkUrl=https://raw.githubusercontent.com/example/demo/661f2fd76249ced8bd1f41a55e9e811cde86a9b6/*
+PROBE SourceRoot=<S>\repo\inner\ MappedPath=/_/inner/ SourceControl=git NestedRoot=inner\ ContainingRoot=<S>\repo\ SourceLinkUrl=https://raw.githubusercontent.com/example/inner/76430085f10fadb595b80cb4a727a1f17bf1fd03/*
+PROBE EmbeddedFiles=..\..\outside\Linked.cs;obj\Debug\net10.0\App.GlobalUsings.g.cs;obj\Debug\net10.0\.NETCoreApp,Version=v10.0.AssemblyAttributes.cs;obj\Debug\net10.0\App.AssemblyInfo.cs
+PROBE EmbedUntrackedSources=true EmbedAllSources= SourceLink=obj\Debug\net10.0\App.sourcelink.json

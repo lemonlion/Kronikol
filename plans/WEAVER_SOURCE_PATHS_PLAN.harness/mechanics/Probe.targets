@@ -1,0 +1,9 @@
+<Project>
+  <Target Name="_ProbeAfterCoreCompile" AfterTargets="CoreCompile">
+    <Message Importance="high" Text="PROBE DeterministicSourcePaths=$(DeterministicSourcePaths) ContinuousIntegrationBuild=$(ContinuousIntegrationBuild) Deterministic=$(Deterministic)" />
+    <Message Importance="high" Text="PROBE PathMap=$(PathMap)" />
+    <Message Importance="high" Condition="'@(SourceRoot)' != ''" Text="PROBE SourceRoot=%(SourceRoot.Identity) MappedPath=%(SourceRoot.MappedPath) SourceControl=%(SourceRoot.SourceControl) NestedRoot=%(SourceRoot.NestedRoot) ContainingRoot=%(SourceRoot.ContainingRoot) SourceLinkUrl=%(SourceRoot.SourceLinkUrl)" />
+    <Message Importance="high" Text="PROBE EmbeddedFiles=@(EmbeddedFiles)" />
+    <Message Importance="high" Text="PROBE EmbedUntrackedSources=$(EmbedUntrackedSources) EmbedAllSources=$(EmbedAllSources) SourceLink=$(SourceLink)" />
+  </Target>
+</Project>

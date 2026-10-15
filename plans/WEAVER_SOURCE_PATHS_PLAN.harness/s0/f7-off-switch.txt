@@ -1,0 +1,5 @@
+# probe (IssueStack, Kronikol.AssertionTracking 4.18.1): dotnet build -p:TrackAssertionsEnabled=false after rm -rf bin obj
+
+Build FAILED.
+<S>\clone-a\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertions' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?) [<S>\clone-a\IssueStack\IssueStack.csproj]
+<S>\clone-a\IssueStack\Scenarios\IssueFeature.cs(6,30): error CS0234: The type or namespace name 'TrackAssertionsAttribute' does not exist in the namespace 'Kronikol.Tracking' (are you missing an assembly reference?) [<S>\clone-a\IssueStack\IssueStack.csproj]

@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>KronikolComponentTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.componenttests.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="8.0.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" Version="6.12.1" />
+    <PackageReference Include="Shouldly" Version="4.3.0" />
+    <PackageReference Include="Kronikol.AssertionTracking" Version="4.18.1" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.26" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="Kronikol.xUnit2" Version="4.18.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- repro165 rows a-fail and b-fail: three assertions that fail on purpose, compiled only on request. -->
+  <ItemGroup>
+    <Compile Remove="Failing\**" />
+    <Compile Include="Failing\**\*.cs" Condition="'$(IncludeFailing)' == 'true'" />
+  </ItemGroup>
+
+  <!-- repro165 row j: a source file linked from a sibling directory outside the git repository. -->
+  <ItemGroup Condition="'$(IncludeLinked)' == 'true'">
+    <Compile Include="..\..\outside\Linked.cs" />
+  </ItemGroup>
+
+  <!-- repro165: what the weave target sees. Declared in the project body, so it runs before the package's
+       _WeaveAssertionTracking (also AfterTargets="CoreCompile", but defined later, in nuget.g.targets). -->
+  <Target Name="_DumpPathMap" AfterTargets="CoreCompile">
+    <Message Importance="high" Text="PathMap=[$(PathMap)] DeterministicSourcePaths=[$(DeterministicSourcePaths)] SourceRoot=[@(SourceRoot->'%(Identity) => %(MappedPath) nested=%(NestedRoot) containing=%(ContainingRoot)')]" />
+    <Message Importance="high" Text="_DumpPathMap: ContinuousIntegrationBuild=[$(ContinuousIntegrationBuild)] Deterministic=[$(Deterministic)] DebugType=[$(DebugType)] EmbedAllSources=[$(EmbedAllSources)] TrackAssertionsEnabled=[$(TrackAssertionsEnabled)] IntermediateAssembly=[@(IntermediateAssembly->'%(FullPath)')]" />
+  </Target>
+
+  <!-- repro165: a copy of the compiler's own output before the weave rewrites it (the determinism baseline). -->
+  <Target Name="_SnapshotPreWeave" AfterTargets="CoreCompile">
+    <ItemGroup>
+      <_PreWeaveFile Include="@(IntermediateAssembly)" />
+      <_PreWeaveFile Include="$(IntermediateOutputPath)$(TargetName).pdb" Condition="Exists('$(IntermediateOutputPath)$(TargetName).pdb')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_PreWeaveFile)" DestinationFolder="$(IntermediateOutputPath)preweave\" />
+    <Message Importance="high" Text="_SnapshotPreWeave: copied [@(_PreWeaveFile)] before the weave" />
+  </Target>
+
+</Project>

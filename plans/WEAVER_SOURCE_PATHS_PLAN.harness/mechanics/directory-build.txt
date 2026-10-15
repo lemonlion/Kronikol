@@ -1,0 +1,5 @@
+# A net8.0 project with ContinuousIntegrationBuild=true in Directory.Build.targets, then in Directory.Build.props,
+# evaluated with: dotnet msbuild P.csproj -getProperty:ContinuousIntegrationBuild -getProperty:DeterministicSourcePaths -getProperty:Deterministic (SDK 10.0.300)
+
+Directory.Build.targets: ContinuousIntegrationBuild=true DeterministicSourcePaths=(empty) Deterministic=true
+Directory.Build.props:   ContinuousIntegrationBuild=true DeterministicSourcePaths=true Deterministic=true

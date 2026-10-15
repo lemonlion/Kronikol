@@ -1,0 +1,23 @@
+✓ s0/0.0   Assertion at line 31
+     at IssueFeature.cs:31
+✓ s0/0.1   Assertion at line 32
+     at IssueFeature.cs:32
+✓ s0/0.2   Assertion at line 33
+     at IssueFeature.cs:33
+✓ s0/0.3   Assertion at line 34
+     at IssueFeature.cs:34
+✓ s0/0.4   Assertion at line 35
+     at IssueFeature.cs:35
+✓ s0/0.5   Assertion at line 36
+     at IssueFeature.cs:36
+✓ s0/0.6   Assertion at line 37
+     at IssueFeature.cs:37
+✓ s0/0.7   Assertion at line 38
+     at IssueFeature.cs:38
+✓ s0/0.8   Assertion at line 40
+     at IssueFeature.cs:40
+✓ s0/0.9   Assertion at line 41
+     at IssueFeature.cs:41
+✓ s0/0.10  Assertion at line 43
+     at IssueFeature.cs:43
+11 assertions
