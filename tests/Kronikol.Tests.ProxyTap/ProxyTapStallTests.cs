@@ -70,7 +70,8 @@ public class ProxyTapStallTests
         if (OperatingSystem.IsWindows())
         {
             // http.sys writes nothing on an abort: the connection is reset.
-            Assert.DoesNotContain("HTTP/1.1 2", heard.FirstLine, StringComparison.Ordinal);
+            Assert.Empty(heard.Bytes);
+            Assert.StartsWith("a reset", heard.Ending);
         }
         else
         {
@@ -83,12 +84,20 @@ public class ProxyTapStallTests
         Assert.Equal(0, tap.ForwardFailures);
         lock (upstream.Seen)
             Assert.Empty(upstream.Seen);
-        lock (log)
-            Assert.Contains(log, line => line.Contains("proxy-tap caller stalled", StringComparison.Ordinal)
-                && line.Contains("sending its request body; not forwarded", StringComparison.Ordinal));
+        // The line is written once the caller is let go, on the cut's thread, which may come after the handler has ended.
+        Assert.True(await WaitUntilAsync(() =>
+        {
+            lock (log)
+                return log.Any(line => line.Contains("proxy-tap caller stalled", StringComparison.Ordinal)
+                    && line.Contains("sending its request body; not forwarded", StringComparison.Ordinal));
+        }), "the cut was not logged");
         var diagnostic = Assert.Single(tap.Diagnostics(), entry => entry.Message.Contains("stalled for CallerStallTimeout", StringComparison.Ordinal));
         Assert.Equal(DiagnosticKind.CaptureDegraded, diagnostic.Kind);
         Assert.Contains("1 caller(s) stalled for CallerStallTimeout (00:00:01) and were cut: 1 sending a request body (not forwarded), 0 reading an answer", diagnostic.Message, StringComparison.Ordinal);
+        await tap.DisposeAsync();
+        lock (log)
+            Assert.Contains(log, line => line.Contains("proxy-tap stopped (", StringComparison.Ordinal)
+                && line.EndsWith(", 0 forward failures, 1 caller timeouts)", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -146,9 +155,12 @@ public class ProxyTapStallTests
         lock (sink.Logs)
             Assert.NotEmpty(sink.Logs); // the exchange is recorded, as one whose caller hangs up mid-answer
         Assert.Null(registry.MostRecentFor("api"));
-        lock (log)
-            Assert.Contains(log, line => line.Contains("proxy-tap caller stalled", StringComparison.Ordinal)
-                && line.Contains("reading its answer; closed", StringComparison.Ordinal));
+        Assert.True(await WaitUntilAsync(() =>
+        {
+            lock (log)
+                return log.Any(line => line.Contains("proxy-tap caller stalled", StringComparison.Ordinal)
+                    && line.Contains("reading its answer; closed", StringComparison.Ordinal));
+        }), "the cut was not logged");
         Assert.Contains(tap.Diagnostics(), entry => entry.Kind == DiagnosticKind.CaptureDegraded
             && entry.Message.Contains("0 sending a request body (not forwarded), 1 reading an answer (recorded when captured)", StringComparison.Ordinal));
         var heard = await caller.HearAsync(Patience);
@@ -314,6 +326,25 @@ public class ProxyTapStallTests
         Assert.True(answer.IsTimedOut);
         var heard = await caller.HearAsync(Patience);
         Assert.True(heard.LetGo, $"the caller was held: {heard}");
+    }
+
+    [Fact]
+    public async Task A_stall_the_tap_cuts_is_counted_before_its_caller_is_let_go()
+    {
+        // Through the tap's own cut: the fact above holds CallerAnswer.TimeOut to its order, and a cut that counted after
+        // the abort, as 4.26.0's did, passed every fact on an idle machine.
+        await using var upstream = new StubUpstream(Ok);
+        var clock = new FakeTimeProvider();
+        var countedAtLetGo = new StrongBox<long>(-1);
+        await using var tap = await StartAsync(upstream.BaseUri, new ListSink(), [], clock,
+            prepare: t => t.BeforeCallerLetGo = () => Interlocked.CompareExchange(ref countedAtLetGo.Value, t.CallerTimeouts, -1));
+
+        using var caller = await RawCaller.SendAsync(tap.Options.ListenPort, StalledRequest(BodyKind.ContentLength));
+        await StalledAsync(tap, Tap.BodyPhase);
+        clock.Advance(PastTheLimit);
+
+        Assert.True((await caller.HearAsync(Patience)).LetGo, "the stalled caller was held");
+        Assert.Equal(1, Interlocked.Read(ref countedAtLetGo.Value));
     }
 
     [Fact]

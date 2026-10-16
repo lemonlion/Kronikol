@@ -30,6 +30,7 @@ public class OtlpTapLogTests
         { "a target with no path", "refused a request target with no path" },
         { "a forward that failed", "forward failed" },
         { "a payload that cannot be mapped", "could not map an export payload" },
+        { "a connection that fails", "connection error" },
     };
 
     [Theory]
@@ -72,6 +73,13 @@ public class OtlpTapLogTests
         }
 
         var tap = new OtlpTap(options);
+        if (line == "a connection that fails")
+        {
+            // The first connection fails once its answer is written, as one whose socket throws what no catch expects.
+            var failures = 0;
+            tap.AfterResponseWritten = () => Interlocked.Increment(ref failures) == 1 ? throw new InvalidOperationException("boom") : Task.CompletedTask;
+        }
+
         await tap.StartAsync();
         try
         {
@@ -102,6 +110,10 @@ public class OtlpTapLogTests
                 case "a forward that failed":
                     Assert.Equal(["HTTP/1.1 502 Bad Gateway"], await ExchangeAsync(tap, Head(Export.Length), Export));
                     Assert.Equal(1, tap.ForwardFailures);
+                    break;
+                case "a connection that fails":
+                    Assert.Equal(["HTTP/1.1 200 OK"], await ExchangeAsync(tap, Head(Export.Length), Export));
+                    Assert.Equal(["HTTP/1.1 200 OK"], await ExchangeAsync(tap, Head(Export.Length), Export)); // the tap goes on
                     break;
                 case "a payload that cannot be mapped":
                 {

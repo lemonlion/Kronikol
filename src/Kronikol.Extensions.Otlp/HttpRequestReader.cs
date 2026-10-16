@@ -42,6 +42,12 @@ internal enum BodyFraming
 
     /// <summary>A <c>Content-Length</c> of digits past <see cref="int.MaxValue"/>, over any cap (413).</summary>
     LengthPastInt,
+
+    /// <summary>A <c>Transfer-Encoding</c> whose last coding is not <c>chunked</c>: the body's length cannot be told (400, RFC 9112 section 6.3).</summary>
+    UnframedCoding,
+
+    /// <summary>A <c>Transfer-Encoding</c> with a coding before <c>chunked</c>, one the tap does not undo (501, RFC 9112 section 6.1).</summary>
+    UnknownCoding,
 }
 
 /// <summary>
@@ -99,7 +105,7 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
     public async Task<HttpRequestMessageData?> ReadAsync(CancellationToken ct)
     {
         var head = await ReadHeadAsync(ct).ConfigureAwait(false);
-        return head is null or { Framing: BodyFraming.InvalidLength or BodyFraming.LengthPastInt }
+        return head is null or { Framing: BodyFraming.InvalidLength or BodyFraming.LengthPastInt or BodyFraming.UnframedCoding or BodyFraming.UnknownCoding }
             ? null
             : await ReadBodyAsync(head, ct).ConfigureAwait(false);
     }
@@ -121,6 +127,7 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
         var version = requestLine.Length > 2 ? requestLine[2] : "HTTP/1.1";
 
         var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, List<string>>? repeated = null;
         for (var i = 1; i < lines.Length; i++)
         {
             var line = lines[i];
@@ -131,7 +138,20 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
                 continue;
             var name = line[..colon].Trim();
             var value = line[(colon + 1)..].Trim();
-            headers[name] = headers.TryGetValue(name, out var existing) ? existing + ", " + value : value;
+            if (headers.TryAdd(name, value))
+                continue;
+            repeated ??= new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+            if (!repeated.TryGetValue(name, out var values))
+                repeated[name] = values = [headers[name]];
+            values.Add(value);
+        }
+
+        // A repeated header's values are joined once: joined as each came, a head of one header repeated cost the square of
+        // its length, before the tap checks its secret.
+        if (repeated is not null)
+        {
+            foreach (var (name, values) in repeated)
+                headers[name] = string.Join(", ", values);
         }
 
         var keepAlive = !version.Equals("HTTP/1.0", StringComparison.OrdinalIgnoreCase);
@@ -146,10 +166,14 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
         var framing = BodyFraming.None;
         var length = 0;
         var hasLength = headers.TryGetValue("Content-Length", out var lengthText);
-        if (headers.TryGetValue("Transfer-Encoding", out var transferEncoding)
-            && transferEncoding.Contains("chunked", StringComparison.OrdinalIgnoreCase))
+        if (headers.TryGetValue("Transfer-Encoding", out var transferEncoding))
         {
-            framing = BodyFraming.Chunked;
+            // Chunked alone is read. With another coding last, or none, the body's length cannot be told; with one before
+            // chunked, the body is one the tap cannot undo (RFC 9112 sections 6.3 and 6.1). Both are refused.
+            var codings = transferEncoding.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            framing = codings is not [.., var last] || !last.Equals("chunked", StringComparison.OrdinalIgnoreCase)
+                ? BodyFraming.UnframedCoding
+                : codings.Length == 1 ? BodyFraming.Chunked : BodyFraming.UnknownCoding;
             // Both at once: read by the Transfer-Encoding alone, and the connection closed after the answer, which RFC
             // 9112 section 6.1 says a server MUST do, since a peer in between may have read the body by the other one.
             if (hasLength)
@@ -192,7 +216,7 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
                 if (body.Length < head.ContentLength)
                     return null; // truncated
                 break;
-            case BodyFraming.InvalidLength or BodyFraming.LengthPastInt:
+            case BodyFraming.InvalidLength or BodyFraming.LengthPastInt or BodyFraming.UnframedCoding or BodyFraming.UnknownCoding:
                 throw new InvalidOperationException($"A request framed {head.Framing} has no body to read; it is refused first.");
         }
 
@@ -274,12 +298,20 @@ internal sealed class HttpRequestReader(Stream stream, int maxBodyBytes)
         var head = new List<byte>(1024);
         var matched = 0;
         var started = false;
+        var skipped = 0;
         while (true)
         {
             if (_start == _end && !await FillAsync(ct).ConfigureAwait(false))
                 return null;
             if (!started)
             {
+                // An empty line before a request line is passed over (RFC 9112 section 2.2): a client may send a CRLF after
+                // a body, and the wait after it is still a kept-alive connection's. One line, so a peer cannot keep a
+                // connection that way.
+                for (; skipped < 2 && _start < _end && _buffer[_start] is (byte)'\r' or (byte)'\n'; skipped++)
+                    _start++;
+                if (_start == _end)
+                    continue;
                 started = true;
                 HeadStarted?.Invoke();
             }

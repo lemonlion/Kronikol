@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Kronikol.Extensions.TcpTap;
+using Kronikol.Extensions.TcpTap.Protocols;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 using Microsoft.Extensions.Time.Testing;
@@ -61,9 +62,10 @@ public class TcpTapStallTests
     }
 
     [Fact]
-    public async Task A_pair_a_limit_closes_raises_no_capture_degradation()
+    public async Task A_limit_raises_no_capture_degradation_of_its_own()
     {
-        // The pair lost none of its capture: the close is counted and logged, not reported as capture lost.
+        // The close is counted and logged, not reported as capture lost: with nothing in flight, the pair lost nothing. A pair
+        // closed mid-message is its decoder's to report (A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it).
         var degradations = new System.Collections.Concurrent.ConcurrentQueue<CaptureDegradation>();
         var clock = new FakeTimeProvider();
         await using var run = await StartAsync([], clock, o => o.OnCaptureDegraded = degradations.Enqueue);
@@ -118,7 +120,7 @@ public class TcpTapStallTests
         await ReceiveExactlyAsync(pair.Upstream, 4);
         await pair.Upstream.SendAsync("pong"u8.ToArray());
         await ReceiveExactlyAsync(pair.Client.Client, 4);
-        Assert.True(await WaitUntilAsync(() => run.Tap.Watch!.Entries.Count == 0), "an entry outlived its write");
+        Assert.True(await WaitUntilAsync(() => !PendingWrites(run.Tap).Any()), "a write was left marked pending");
 
         for (var i = 0; i < 3; i++)
         {
@@ -476,6 +478,166 @@ public class TcpTapStallTests
         Assert.Equal(0, run.Tap.HalfClosedPairsClosed + run.Tap.StalledWritesClosed);
     }
 
+    [Fact]
+    public async Task A_start_that_cannot_bind_leaves_no_heartbeat_running()
+    {
+        // A tap whose start threw is often dropped undisposed, and a heartbeat left running would hold it for good.
+        var clock = new CountingClock();
+        var taken = LoopbackPort.Listening();
+        try
+        {
+            var options = Options(54321);
+            options.ListenPort = ((IPEndPoint)taken.LocalEndpoint).Port;
+            var tap = new TcpTapCore(options) { Clock = clock, DebuggerAttached = static () => false };
+
+            var thrown = await Assert.ThrowsAsync<SocketException>(() => tap.StartAsync());
+            Assert.Equal(SocketError.AddressAlreadyInUse, thrown.SocketErrorCode);
+            Assert.Equal(0, clock.Running);
+        }
+        finally
+        {
+            taken.Stop();
+        }
+
+        // The count sees the heartbeat: a start that binds runs one, and disposing the tap stops it.
+        await using var run = await StartAsync([], clock);
+        Assert.Equal(1, clock.Running);
+        await run.Tap.DisposeAsync();
+        Assert.Equal(0, clock.Running);
+    }
+
+    [Fact]
+    public async Task A_pair_keeps_one_write_entry_however_many_writes_it_makes()
+    {
+        // A pending write is a timestamp the pump sets and clears, not an entry of its own (plans/TAP_CALLER_TIME_LIMITS_PLAN.md
+        // §4.5 item 4): the hot path allocates nothing for the limit.
+        var clock = new FakeTimeProvider();
+        await using var run = await StartAsync([], clock);
+        await using var pair = await run.ConnectAsync();
+
+        var seen = new HashSet<StallWatch.Entry>(ReferenceEqualityComparer.Instance);
+        for (var i = 0; i < 50; i++)
+        {
+            await pair.Client.GetStream().WriteAsync("ping"u8.ToArray());
+            await ReceiveExactlyAsync(pair.Upstream, 4);
+            await pair.Upstream.SendAsync("pong"u8.ToArray());
+            await ReceiveExactlyAsync(pair.Client.Client, 4);
+            foreach (var entry in run.Tap.Watch!.Entries.Where(entry => entry.Phase == TcpTapCore.WritePhase))
+                seen.Add(entry);
+        }
+
+        Assert.Single(seen);
+    }
+
+    [Fact]
+    public async Task A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write()
+    {
+        // Both limits come due in the same beat: the client has finished sending, and the tap's write to it has not
+        // completed. The client stopped reading, which is the stalled write's to report, every time.
+        var log = new List<string>();
+        var clock = new FakeTimeProvider();
+        await using var run = await StartAsync(log, clock);
+        for (var round = 1; round <= 8; round++)
+        {
+            await using var pair = await run.ConnectAsync(clientReceiveBuffer: Piece);
+            pair.Client.Client.Shutdown(SocketShutdown.Send);
+            Assert.Equal(0, await pair.Upstream.ReceiveAsync(new byte[16]));
+            _ = SendQuietlyAsync(pair.Upstream, new byte[EightMegabytes]); // the client reads none of it
+            await StalledAsync(run.Tap, TcpTapCore.WritePhase);
+            await StalledAsync(run.Tap, TcpTapCore.HalfClosedPhase);
+            clock.Advance(PastTheLimit);
+
+            Assert.True(await WaitUntilAsync(() => run.Tap.LiveConnections == 0), $"round {round}: the pair was never released");
+            Assert.Equal(round, run.Tap.StalledWritesClosed);
+            Assert.Equal(0, run.Tap.HalfClosedPairsClosed);
+        }
+
+        lock (log)
+            Assert.DoesNotContain(log, line => line.Contains("finished sending", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once()
+    {
+        // The reaper at the stalled-write limit: a command the upstream never reads is both unanswered and a write that
+        // does not complete, and both come due in the same beat.
+        var log = new List<string>();
+        var degradations = new System.Collections.Concurrent.ConcurrentQueue<CaptureDegradation>();
+        var clock = new FakeTimeProvider();
+        var decoder = new OneCommandDecoder();
+        await using var run = await StartAsync(log, clock, o =>
+        {
+            o.ReapStuckConnectionsAfter = Limit;
+            o.OnCaptureDegraded = degradations.Enqueue;
+        }, _ => decoder);
+        await using var pair = await run.ConnectAsync(upstreamReceiveBuffer: Piece);
+
+        _ = SendQuietlyAsync(pair.Client.Client, new byte[2 * EightMegabytes]); // the upstream reads none of it
+        Assert.True(await WaitUntilAsync(() => decoder.Seen is not null), "the command was never decoded");
+        await StalledAsync(run.Tap, TcpTapCore.WritePhase);
+        clock.Advance(PastTheLimit);
+
+        Assert.True(await WaitUntilAsync(() => run.Tap.LiveConnections == 0), "the pair was never released");
+        await Task.Delay(300); // a second close would have been counted by now
+        Assert.Equal(1, run.Tap.StuckConnectionsReaped + run.Tap.StalledWritesClosed);
+        Assert.Equal(run.Tap.StuckConnectionsReaped, degradations.Count(each => each.Kind == CaptureDegradationKind.StuckConnectionReaped));
+        lock (log)
+            Assert.Single(log, line => line.Contains(" reaped: ", StringComparison.Ordinal) || line.Contains(" closed: a write to", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it()
+    {
+        // The limit's close raises nothing of its own, but a Redis client cut off mid-reply has lost that interaction, and
+        // the decoder reports it as any connection closed mid-message.
+        var log = new List<string>();
+        var degradations = new System.Collections.Concurrent.ConcurrentQueue<CaptureDegradation>();
+        var clock = new FakeTimeProvider();
+        await using var run = await StartAsync(log, clock, o => o.OnCaptureDegraded = degradations.Enqueue,
+            context => new RedisProtocolDecoder(context, new RedisTapOptions()));
+        await using var pair = await run.ConnectAsync(clientReceiveBuffer: Piece);
+
+        await pair.Client.GetStream().WriteAsync("*2\r\n$3\r\nGET\r\n$1\r\nk\r\n"u8.ToArray());
+        await ReceiveExactlyAsync(pair.Upstream, 20);
+        var reply = new byte[EightMegabytes];
+        "$8388598\r\n"u8.CopyTo(reply); // a bulk string that fills the rest, short of its ending
+        _ = SendQuietlyAsync(pair.Upstream, reply); // the client reads none of it
+        await StalledAsync(run.Tap, TcpTapCore.WritePhase);
+        clock.Advance(PastTheLimit);
+
+        Assert.True(await WaitUntilAsync(() => run.Tap.ConnectionsClosedMidMessage == 1), "the decoder never reported the reply cut short");
+        Assert.Equal(1, run.Tap.StalledWritesClosed);
+        Assert.Equal([CaptureDegradationKind.ConnectionClosedMidMessage], degradations.Select(each => each.Kind));
+        await run.Tap.DisposeAsync();
+        lock (log)
+            Assert.Contains(log, line => line.Contains("tcp-tap stopped (", StringComparison.Ordinal)
+                && line.Contains(", 1 connections closed mid-message, ", StringComparison.Ordinal)
+                && line.Contains(", 0 stuck connections reaped, ", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task The_stop_line_names_the_connections_the_reaper_closed()
+    {
+        var log = new List<string>();
+        var clock = new FakeTimeProvider();
+        var decoder = new OneCommandDecoder();
+        await using var run = await StartAsync(log, clock, o => o.ReapStuckConnectionsAfter = TimeSpan.FromSeconds(3), _ => decoder);
+        await using var pair = await run.ConnectAsync();
+
+        await pair.Client.GetStream().WriteAsync("cmd"u8.ToArray());
+        await ReceiveExactlyAsync(pair.Upstream, 3);
+        Assert.True(await WaitUntilAsync(() => decoder.Seen is not null), "the command was never decoded");
+        clock.Advance(TimeSpan.FromSeconds(2));
+        clock.Advance(TimeSpan.FromSeconds(2));
+        Assert.True(await WaitUntilAsync(() => run.Tap.StuckConnectionsReaped == 1), "the command was never reaped");
+
+        await run.Tap.DisposeAsync();
+        lock (log)
+            Assert.Contains(log, line => line.Contains("tcp-tap stopped (", StringComparison.Ordinal)
+                && line.Contains(", 0 connections closed mid-message, ", StringComparison.Ordinal)
+                && line.Contains(", 1 stuck connections reaped, ", StringComparison.Ordinal));
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static TcpTapOptions Options(int forwardPort) => new()
@@ -608,6 +770,40 @@ public class TcpTapStallTests
             inner.CreateTimer(callback, state, dueTime, period);
     }
 
+    /// <summary>The system's clock, counting the timers made on it that have not been disposed.</summary>
+    private sealed class CountingClock : TimeProvider
+    {
+        private int _running;
+
+        public int Running => Volatile.Read(ref _running);
+
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            Interlocked.Increment(ref _running);
+            return new Counted(this, base.CreateTimer(callback, state, dueTime, period));
+        }
+
+        private sealed class Counted(CountingClock owner, ITimer inner) : ITimer
+        {
+            private int _disposed;
+
+            public bool Change(TimeSpan dueTime, TimeSpan period) => inner.Change(dueTime, period);
+
+            public void Dispose()
+            {
+                if (Interlocked.Exchange(ref _disposed, 1) == 0)
+                    Interlocked.Decrement(ref owner._running);
+                inner.Dispose();
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                Dispose();
+                return ValueTask.CompletedTask;
+            }
+        }
+    }
+
     private static async Task SendQuietlyAsync(Socket socket, byte[] bytes)
     {
         try
@@ -671,21 +867,43 @@ public class TcpTapStallTests
         }
     }
 
-    /// <summary>The active entry of <paramref name="phase"/>, once its stamp has stopped moving: the transfer has stalled.</summary>
+    /// <summary>
+    /// The active entry of <paramref name="phase"/>, once its stamp has stopped moving: the transfer has stalled. For the
+    /// pair's write entry the stamp is the mark of a pending write, one per write, so a write still pending is stalled.
+    /// </summary>
     private static async Task<StallWatch.Entry> StalledAsync(TcpTapCore tap, string phase)
     {
         var deadline = DateTime.UtcNow + Patience;
         while (true)
         {
             var entry = await EntryAsync(tap, phase);
-            var stamp = entry.LastProgress;
+            var stamp = Stamp(entry);
             await Task.Delay(200);
-            if (entry.IsActive && entry.LastProgress == stamp)
+            if (entry.IsActive && stamp is not null && Stamp(entry) == stamp)
                 return entry;
             if (DateTime.UtcNow > deadline)
                 throw new TimeoutException($"the {phase} never stalled");
         }
     }
+
+    private static long? Stamp(StallWatch.Entry entry) => entry.Phase == TcpTapCore.WritePhase
+        ? PendingWrites(entry).Select(mark => (long?)mark).FirstOrDefault()
+        : entry.LastProgress;
+
+    /// <summary>The marks of the writes a pair's write entry sees pending: when each began.</summary>
+    private static IEnumerable<long> PendingWrites(StallWatch.Entry entry)
+    {
+        var limits = (TcpTapCore.PairLimits)entry.Subject!;
+        foreach (var direction in new[] { TapDirection.ClientToServer, TapDirection.ServerToClient })
+        {
+            if (limits.WritePendingSince(direction) is { } mark)
+                yield return mark;
+        }
+    }
+
+    /// <summary>The marks of every write pending in the tap's pairs.</summary>
+    private static IEnumerable<long> PendingWrites(TcpTapCore tap) =>
+        (tap.Watch?.Entries ?? []).Where(each => each.Phase == TcpTapCore.WritePhase && each.IsActive).SelectMany(PendingWrites);
 
     /// <summary>Waits until the tap has recorded progress at the clock's current time, or the phase's entry has ended.</summary>
     private static async Task ProgressedAsync(TcpTapCore tap, string phase, FakeTimeProvider clock)
@@ -705,7 +923,7 @@ public class TcpTapStallTests
     {
         var now = clock.GetTimestamp();
         var deadline = DateTime.UtcNow + Patience;
-        while (tap.Watch?.Entries.Any(each => each.Phase == TcpTapCore.WritePhase && each.IsActive && each.LastProgress < now) == true)
+        while (PendingWrites(tap).Any(mark => mark < now))
         {
             if (DateTime.UtcNow > deadline)
                 throw new TimeoutException("a write begun before the clock's last move is still pending");

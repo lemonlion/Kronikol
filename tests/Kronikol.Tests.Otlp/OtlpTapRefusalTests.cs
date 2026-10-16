@@ -150,6 +150,29 @@ public class OtlpTapRefusalTests
         Assert.Equal(1, tap.RequestsReceived);
     }
 
+    [Theory]
+    [InlineData("gzip", "400 Bad Request")]
+    [InlineData("chunked, gzip", "400 Bad Request")]
+    [InlineData("gzip, chunked", "501 Not Implemented")]
+    public async Task A_transfer_coding_other_than_chunked_alone_is_refused(string coding, string status)
+    {
+        // RFC 9112 section 6.3: with a coding after chunked, or none, a body's length cannot be told (400); a coding before
+        // chunked is one the tap cannot undo (501, section 6.1). Read as no body, or as chunked, the request's bytes
+        // were taken for a body or for the next request's head.
+        var sink = new ListSink();
+        await using var tap = await StartAsync(sink);
+
+        using var exporter = await RawExporter.ConnectAsync(tap);
+        await exporter.SendAsync([.. System.Text.Encoding.ASCII.GetBytes(
+            $"POST /v1/traces HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/x-protobuf\r\nTransfer-Encoding: {coding}\r\n\r\n"), .. Export]);
+
+        var heard = await exporter.HearAsync(Patience);
+
+        Assert.Equal([$"HTTP/1.1 {status}"], heard.StatusLines);
+        Assert.True(heard.Closed, $"the tap did not close the connection after refusing its framing: {heard}");
+        Assert.Equal(0, tap.RequestsReceived);
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static async Task<OtlpTap> StartAsync(ListSink sink, Action<OtlpTapOptions>? configure = null)

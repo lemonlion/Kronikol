@@ -56,7 +56,8 @@ internal sealed class StubUpstream : IAsyncDisposable
                 if (encoding is not null) context.Response.Headers["Content-Encoding"] = encoding;
                 if (extra is not null) foreach (var (k, v) in extra) context.Response.Headers[k] = v;
                 context.Response.ContentLength64 = reply.Length;
-                await context.Response.OutputStream.WriteAsync(reply);
+                if (context.Request.HttpMethod != "HEAD") // a HEAD answer declares its length and sends no body
+                    await context.Response.OutputStream.WriteAsync(reply);
                 context.Response.Close();
             }
             catch (Exception)
@@ -718,6 +719,23 @@ public class ProxyTapTests
         }
 
         Assert.True(threw.Count == 0, $"DisposeAsync threw in {threw.Count} of {attempts} attempts:{Environment.NewLine}{string.Join(Environment.NewLine, threw)}");
+    }
+
+    [Fact]
+    public async Task A_head_answer_keeps_the_services_content_length()
+    {
+        // HttpClient reads no body for a HEAD, so the tap answered Content-Length: 0 whatever the service declared, while
+        // its record kept the service's: a client that sizes a download with HEAD was told the resource was empty.
+        await using var upstream = new StubUpstream((_, _) => (200, new byte[5000], "application/octet-stream", null, null));
+        await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(Options(upstream, new ListSink()));
+        await tap.StartAsync();
+
+        using var caller = await RawCaller.SendAsync(tap.Options.ListenPort, "HEAD /big HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
+        var heard = await caller.HearAsync(TimeSpan.FromSeconds(10));
+
+        Assert.StartsWith("HTTP/1.1 200 ", heard.FirstLine);
+        Assert.Contains("Content-Length: 5000", heard.Head, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(heard.Body);
     }
 
     [Fact]

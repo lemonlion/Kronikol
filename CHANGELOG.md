@@ -4,6 +4,127 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.26.3] - 2026-10-16
+
+**Patch - the taps' time limits, audited (#173, `plans/TAP_CALLER_TIME_LIMITS_PLAN.md`).** An audit of 4.22.2 to
+4.26.1 against the plan found faults in what they shipped, an item of the plan done another way, and faults in the
+taps' older code on the same paths. Bug fixes, performance work, doc comments and tests: no new option and no new public
+member, so the patch part moves (4.26.2 to 4.26.3). The behaviour changes are each called out below.
+
+### Fixed
+
+- **`TcpTap`: a write is a timestamp, as the plan specified.** Each pump marked a pending write by registering a watch
+  entry of its own, an allocation and two shared-dictionary operations for every segment forwarded; it now sets the
+  clock's timestamp before the write and clears it after, and one entry per pair reads the marks, so the hot path
+  allocates nothing for the limit. The heartbeat walks its entries without taking the dictionary's locks.
+- **`TcpTap`: a pair is closed once.** The stuck-connection reaper closed a pair outside the close the two limits share,
+  so with `ReapStuckConnectionsAfter` at the stalled-write limit one pair could be counted under both, logged twice and
+  reported as reaped; it now takes the same one close. When a half-closed pair's other side has stopped reading, both
+  limits came due in the same second and which one counted the close was a coin toss (about half of such pairs were
+  counted as half-closed, the log blaming the side that had sent everything); such a pair is now always a stalled write.
+  The reaper's check reads the clock before it takes its lock (plan section 4.2 item 3).
+- **A condition the heartbeat checks that blocks holds up nothing else.** The reaper asks the decoder for its oldest
+  unanswered command on the heartbeat every pair's limits share: a decoder whose `OldestUnansweredSince` blocked (one
+  that breaks `IProtocolDecoder`'s contract) stopped every limit after it and took one more thread-pool thread each
+  second. A check still running is now passed by.
+- **`OtlpTap`: an export that arrives as `KeepAliveTimeout` fires is not received.** If the export came whole in the
+  read the limit raced, it was counted and its spans mapped, and the connection then closed without an answer, so an
+  exporter that sent it again recorded it twice. It is now not received, and the connection closes with nothing
+  written, as for any idle connection the limit closes.
+- **`OtlpTap`: a refusal is counted once its head is the tap's.** A head without the secret, or over `MaxRequestBytes`,
+  that was whole only after `CallerStallTimeout` fired was counted as refused and as a stall, and answered `408`; it is
+  now counted as the stall alone.
+- **`OtlpTap`: an empty line before a request line is passed over** (RFC 9112 section 2.2). A client that sent a CRLF
+  after a body had its idle connection timed as a stalled export (answered `408` at 100 s, counted in `CallerTimeouts`),
+  and a request after the CRLF was dropped with its connection. Only one empty line is passed over, so a peer cannot
+  hold a connection open by sending them.
+- **`OtlpTap`: a `Transfer-Encoding` other than `chunked` alone is refused** (found on the way, older than #173): one
+  that does not end in `chunked` is answered `400` and one with another coding before `chunked` `501`, each closing its
+  connection. One without `chunked` was read as having no body, and its bytes as the next request's head.
+- **`OtlpTap`: a repeated header is joined once** (found on the way, older than #173). Each repeat was joined onto the
+  value so far, so a head of one header repeated cost the square of its length: 64 KiB of `a:` lines built half a
+  gigabyte of strings, before the tap checks its secret.
+- **`ProxyTap` starts once** (found on the way: the fault 4.26.2 fixed in `TcpTap` and `OtlpTap`).
+  A second `StartAsync` now throws `InvalidOperationException` and one after `DisposeAsync` `ObjectDisposedException`, a
+  start and a dispose that race leave nothing running, and the token `StartAsync` takes aborts a start that has not
+  begun and nothing after it. Behaviour change: that token was linked into the tap's lifetime, so cancelling it once the
+  tap had started left the tap listening and answering every request `503`; it now has no effect after the start.
+- **`ProxyTap` keeps taking requests after a failed wait** (found on the way). A wait for a request that failed while
+  the listener listened ended the accept loop: the tap went on listening with nothing to take a request, and nothing
+  said so. It is now logged (the first in a row, then at most once a minute) and tried again with pauses of 10 ms to
+  1 s, as `TcpTap` and `OtlpTap` do since 4.20.3; a listener that closes under a running tap is logged.
+- **`ProxyTap`: a request taken but not yet handled when the tap stops is settled with the rest.** Tracked only once its
+  handler ran, it was in nothing the stop settles, and closing the managed listener (Linux, macOS) answered it `200 OK`,
+  the outcome 4.22.2 set out to remove. A `503` refusal written while the tap stops is no longer cut short by the stop's
+  own `503` for a request still arriving.
+- **`ProxyTap`: a `HEAD` answer keeps the service's `Content-Length`** (found on the way). `HttpClient` reads no body
+  for a `HEAD`, so the tap answered `Content-Length: 0` while its record kept the service's length.
+- The stop lines name what they left out: `TcpTap`'s the stuck connections reaped and the connections closed
+  mid-message (which the plan's R0 item 8 gave to R3), `ProxyTap`'s its forward failures and caller timeouts.
+
+### Corrected
+
+- **4.26.2 also stopped a tap whose start failed from keeping a timer running**, which its changelog leaves out.
+  `TcpTap` (4.26.0 and 4.26.1) and `OtlpTap` (4.25.0 to 4.26.1) made the time limits' one-second heartbeat before
+  they bound their port, so a `StartAsync` that threw (the port taken, a host name that did not resolve) left it
+  running until `DisposeAsync`, and a host that dropped such a tap undisposed kept it for the life of the process.
+  4.26.2's reworked start makes the heartbeat once the port is bound, as this audit and #174's agreed; facts now hold
+  it.
+- **A pair a time limit closes can lose its last interaction.** 4.26.0's changelog, 4.26.1's and the TcpTap page said a
+  pair a limit closes has lost none of its capture and raises no `OnCaptureDegraded` event. The limit raises none of
+  its own, but a pair closed with a command unanswered or a reply partly received has lost that interaction, and the
+  Redis and MongoDB decoders report it as `ConnectionClosedMidMessage`, as for any connection closed then;
+  `CaptureDegradationKind.StuckConnectionReaped`'s doc and the wiki say so now.
+- 4.23.0's and 4.25.0's headers said a caller that moves bytes at least once a limit is never cut, and 4.26.0's that a
+  pair whose sides keep moving bytes is never closed. Their bullets had it right: a caller moves one 16 KiB piece per
+  limit (an answer's last piece up to 32 KiB), and a `TcpTap` reader takes one write of up to `ReadBufferBytes`.
+  4.23.0 also left out that a caller stalling in its request head is beyond the tap (the wiki's Limitations say so).
+  Each of 4.23.0, 4.25.0 and 4.26.0 turned on by default a limit that changes what code left untouched does, and
+  shipped as a minor, not a major, because the plan read the cut as the fix of a defect (its Q1).
+- 4.26.1's changelog named `DiagnosticEntry.CaptureDegraded`; the member is `DiagnosticKind.CaptureDegraded`.
+- On Windows `ProxyTap`'s cut line ends `not forwarded, connection reset`, not `answered 408 and closed`; the wiki gives
+  both.
+- Doc comments: `ProxyTap.ForwardFailures` (a caller the limit cut is not one), `OtlpTap.Diagnostics()` (its time-limit
+  line), `TcpTapOptions.HalfClosedTimeout` and `StalledWriteTimeout` (zero or less is refused at start; a peer paused in
+  a debugger in another process is closed, so set them to `null` for such a session), `OtlpTapOptions.KeepAliveTimeout`
+  (the same), and `TcpTap`'s remarks, which described the pump order before 3.32.1.
+
+### Tests
+
+- `StallWatchTests`: a condition check that blocks holds up no other entry (on the real clock, since the fake one runs
+  no beat while another runs), and a watch made while the flow is suppressed beats.
+- `TcpTapStallTests`: a start that cannot bind leaves no heartbeat running, a pair keeps one write entry however many
+  writes it makes, a half-closed pair whose client stops reading is closed as a stalled write (eight rounds), a pair the
+  reaper and a limit both find is closed and counted once, a limit that cuts a Redis reply short leaves the decoder to
+  report it, and the stop line names the connections the reaper closed. 4.26.1's fact is renamed
+  `A_limit_raises_no_capture_degradation_of_its_own`, for what it checks.
+- `OtlpTapStallTests`: a start that cannot bind leaves no heartbeat running, a request arriving as the keep-alive limit
+  fires is not received, a refused head whole only after the limit fired is cut and not refused, and an empty line after
+  an export leaves the connection kept alive. `HttpRequestReaderTests`: a head of one header repeated is read in
+  proportion to its size, and an empty line before a request line is passed over, one alone starting no request.
+  `OtlpTapRefusalTests`: `gzip` and `chunked, gzip` are answered `400`, `gzip, chunked` `501`. `OtlpTapLogTests` gains
+  the line for a connection that fails.
+- `ProxyTapLifecycleTests` (new): a second start, a start after the dispose, the start's token cancelled after the
+  start or before it, a start racing the dispose over 200 rounds, and a failed wait for a request.
+  `ProxyTapStoppingTests`: a request taken but not yet handled when the tap stops is never told it succeeded.
+  `ProxyTapStallTests`: a stall the tap cuts is counted before its caller is let go, through a real stall (4.26.1's fact
+  called the answer's `TimeOut` alone); R1-1 and R1-3 wait for the cut's log line, and R1-1 checks the reset on Windows.
+  `ProxyTapTests`: a `HEAD` answer keeps the service's `Content-Length`.
+
+- Proofs (plan harness `audit/`): with the patch's tests copied onto 4.26.1, and the seams they reach (`ProxyTap`'s
+  `GetContext`, `Pause`, `Received` and `BeforeCallerLetGo`) stubbed there, every fix's fact fails, each on its own
+  assertion: on Windows, and on Linux for the request taken as the tap stops, whose caller hears `HTTP/1.1 200 OK`
+  (http.sys resets it either way). The stopping refusal's fix has no fact, since none can force the order it closes. The
+  facts that pass there are guards: a suppressed flow, a start after the dispose and one racing it, the log waits, the
+  count order 4.26.1 already had right, the Otlp log lines and two empty lines. Of 33 mutations, among them the three of
+  R1's that its run left out, 31 are killed, one of them on Linux alone; the two that survive are one that removes only
+  the close's disposes, which the close's cancel makes a second path (removing the cancel too is killed), and the order
+  the stopping refusal's fix closes, which no fact can force.
+- Checks: after the version bump the core suite passes 7,645 with 2 skipped; the TcpTap suite passes 504 with 5 skipped
+  on Windows and on Linux, the ProxyTap suite 200 with 4 skipped on Windows and 204 on Linux, and the Otlp suite 236 on
+  both; release.slnf builds in Release for every target. The templates pin 4.26.2 and the history action's VERSION
+  installs Kronikol.Tool 4.26.3.
+
 ## [4.26.2] - 2026-10-16
 
 **Patch - an audit of #174's three releases (4.20.3, 4.22.0 and 4.22.1) against `plans/TCPTAP_FAILED_CONNECT_PLAN.md`,

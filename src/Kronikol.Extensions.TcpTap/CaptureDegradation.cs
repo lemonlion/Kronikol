@@ -26,7 +26,9 @@ public enum CaptureDegradationKind
     /// The tap closed a connection on which a decoded command had sat unanswered for
     /// <see cref="TcpTapOptions.ReapStuckConnectionsAfter"/>, one of three limits that close a pair: the other two,
     /// <see cref="TcpTapOptions.HalfClosedTimeout"/> and <see cref="TcpTapOptions.StalledWriteTimeout"/>, are counted but
-    /// not reported here, since a pair they close has lost none of its capture. It exists because a database client whose internal pipeline has wedged (commands
+    /// raise no event of their own. A pair any of the three closes with a command unanswered or a message partly received
+    /// has lost that interaction, and its decoder reports it as <see cref="ConnectionClosedMidMessage"/>, as for any
+    /// connection that closes then. It exists because a database client whose internal pipeline has wedged (commands
     /// queued forever, never timing out) recovers from a closed socket where it never recovers on its
     /// own; no healthy connection ever trips the threshold, because the servers answer in milliseconds
     /// and an idle connection has nothing unanswered.

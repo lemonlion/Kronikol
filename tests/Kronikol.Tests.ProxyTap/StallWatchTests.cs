@@ -211,6 +211,54 @@ public class StallWatchTests
             Assert.Equal(["stopped watching the unanswered command: its check threw InvalidOperationException: bad check"], log);
     }
 
+    [Fact]
+    public async Task A_watch_made_while_the_flow_is_suppressed_beats()
+    {
+        // A host may start a tap with the context's flow already suppressed, to keep a test's identity out of it.
+        var clock = new FakeTimeProvider();
+        var acted = new StrongBox<int>();
+        StallWatch watch;
+        using (ExecutionContext.SuppressFlow())
+            watch = new StallWatch(clock, static () => false, _ => { });
+
+        using (watch)
+        {
+            watch.Watch("body", Limit, () => Interlocked.Increment(ref acted.Value));
+            clock.Advance(TimeSpan.FromSeconds(2));
+            Assert.True(await WaitUntilAsync(() => Volatile.Read(ref acted.Value) == 1), "the entry never acted");
+        }
+    }
+
+    [Fact]
+    public async Task A_check_that_blocks_holds_up_no_other_entry()
+    {
+        // A tap's reaper asks the decoder, which is the host's code: one that blocks costs one thread, not every limit. On
+        // the real clock, since a fake one runs no beat while another is still running.
+        using var watch = new StallWatch(TimeProvider.System, static () => false, _ => { });
+        using var release = new ManualResetEventSlim();
+        var asked = new StrongBox<int>();
+        watch.WatchWhen("unanswered command", Limit, () =>
+        {
+            Interlocked.Increment(ref asked.Value);
+            release.Wait(Patience);
+            return false;
+        }, () => { }, evenUnderDebugger: false);
+        var acted = new StrongBox<int>();
+        for (var i = 0; i < 20; i++) // entries are walked in hash order: some come after the blocked one
+            watch.Watch("body", Limit, () => Interlocked.Increment(ref acted.Value));
+
+        try
+        {
+            Assert.True(await WaitUntilAsync(() => Volatile.Read(ref acted.Value) == 20), "an entry past its limit waited on another entry's check");
+            await Task.Delay(StallWatch.Beat * 2); // two more beats
+            Assert.Equal(1, Volatile.Read(ref asked.Value)); // a check still running is not asked again
+        }
+        finally
+        {
+            release.Set();
+        }
+    }
+
     private static async Task<bool> WaitUntilAsync(Func<bool> condition)
     {
         var deadline = DateTime.UtcNow + Patience;

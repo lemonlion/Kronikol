@@ -219,8 +219,9 @@ public class TcpTapOptions
     /// that keeps streaming a reply to a client that has half-closed is never cut, and a pair where neither side has
     /// finished is never touched however long it sits idle. Redis and MongoDB clients do not half-close, so the default
     /// cuts nothing they do. Closes are counted (<see cref="TcpTap.HalfClosedPairsClosed"/>) and logged. No limit fires
-    /// while a debugger is attached to the tap's process. Default 100 s; null or <see cref="Timeout.InfiniteTimeSpan"/> for
-    /// none.
+    /// while a debugger is attached to the tap's process; a client or server paused in a debugger in a process of its own
+    /// is closed after the limit, so set it to null for such a session. Default 100 s; null or
+    /// <see cref="Timeout.InfiniteTimeSpan"/> for none, and zero or another negative value is refused at start.
     /// </summary>
     public TimeSpan? HalfClosedTimeout { get; set; } = TimeSpan.FromSeconds(100);
 
@@ -229,7 +230,9 @@ public class TcpTapOptions
     /// client that stops reading a large reply, or a server that stops reading its client's commands). A write carries up
     /// to <see cref="ReadBufferBytes"/>, so a reader has to take that much per limit; a pair with nothing to write is never
     /// touched. Closes are counted (<see cref="TcpTap.StalledWritesClosed"/>) and logged. No limit fires while a debugger is
-    /// attached to the tap's process. Default 100 s; null or <see cref="Timeout.InfiniteTimeSpan"/> for none.
+    /// attached to the tap's process; a client or server paused in a debugger in a process of its own is closed after the
+    /// limit, so set it to null for such a session. Default 100 s; null or <see cref="Timeout.InfiniteTimeSpan"/> for none,
+    /// and zero or another negative value is refused at start.
     /// </summary>
     public TimeSpan? StalledWriteTimeout { get; set; } = TimeSpan.FromSeconds(100);
 

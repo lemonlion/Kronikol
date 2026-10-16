@@ -87,7 +87,8 @@ public sealed class OtlpTapOptions
     /// closes it, writing nothing and counting nothing. Default 120 s, http.sys's idle-connection limit: above the idle
     /// limit of every client that would not recover from a close racing its next request (.NET closes an idle connection
     /// at 60 to 75 s, Go at 90 s). <c>null</c> or <see cref="Timeout.InfiniteTimeSpan"/> means none; zero or another
-    /// negative value is refused at start.
+    /// negative value is refused at start. It does not fire while a debugger is attached to this process; an exporter
+    /// paused in a debugger in a process of its own is closed after it, so set it to <c>null</c> for such a session.
     /// </summary>
     public TimeSpan? KeepAliveTimeout { get; set; } = TimeSpan.FromSeconds(120);
 

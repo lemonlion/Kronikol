@@ -26,7 +26,8 @@ namespace Kronikol.Extensions.TcpTap;
 /// limit. A transfer that ends moves its entry from active to ended before it looks at anything else, and whoever moves
 /// first decides: the transfer reads a lost move as the limit's, whatever its own I/O returned.</para>
 /// <para>The heartbeat keeps no test's context: a timer keeps the context it is made in, and a tap starts inside a test,
-/// so it is made with the context's flow suppressed. Beats may overlap, and a beat holds no lock.</para>
+/// so it is made with the context's flow suppressed. Beats may overlap, and a beat holds no lock; a condition whose check
+/// is still running from an earlier beat is passed by.</para>
 /// </remarks>
 internal sealed class StallWatch : IDisposable
 {
@@ -80,12 +81,13 @@ internal sealed class StallWatch : IDisposable
     /// Starts watching a condition rather than a stall: the heartbeat asks <paramref name="due"/> at each beat, on its own
     /// thread, and fires the entry once it says so; <paramref name="limit"/> only names the wait in messages. A check that
     /// throws ends the entry. With <paramref name="evenUnderDebugger"/> the entry acts while a debugger is attached too.
+    /// <paramref name="subject"/> is what the entry watches, for facts that look at it.
     /// </summary>
-    public Entry? WatchWhen(string phase, TimeSpan limit, Func<bool> due, Action fired, bool evenUnderDebugger)
+    public Entry? WatchWhen(string phase, TimeSpan limit, Func<bool> due, Action fired, bool evenUnderDebugger, object? subject = null)
     {
         if (Volatile.Read(ref _disposed) == 1)
             return null;
-        var entry = new Entry(this, phase, limit, fired, due, evenUnderDebugger);
+        var entry = new Entry(this, phase, limit, fired, due, evenUnderDebugger) { Subject = subject };
         _entries.TryAdd(entry, 0);
         return entry;
     }
@@ -104,7 +106,8 @@ internal sealed class StallWatch : IDisposable
             debugger = false; // a debugger check that throws is no debugger
         }
 
-        foreach (var entry in _entries.Keys)
+        // The dictionary's own enumerator, which takes no lock: its Keys would take every lock the adds and removes take.
+        foreach (var (entry, _) in _entries)
         {
             if (!entry.IsActive || (debugger && !entry.EvenUnderDebugger) || !IsDue(entry))
                 continue;
@@ -120,6 +123,11 @@ internal sealed class StallWatch : IDisposable
     {
         if (entry.Due is not { } due)
             return _clock.GetElapsedTime(entry.LastProgress) >= entry.Limit;
+
+        // A check is the host's code (a decoder, for the reaper). One still running from an earlier beat holds that beat's
+        // thread; this beat passes it by, so it costs one thread and every other entry is still looked at.
+        if (!entry.TryBeginCheck())
+            return false;
         try
         {
             return due();
@@ -129,6 +137,10 @@ internal sealed class StallWatch : IDisposable
             if (entry.TryEnd())
                 _log($"stopped watching the {entry.Phase}: its check threw {ex.GetType().Name}: {ex.Message}");
             return false;
+        }
+        finally
+        {
+            entry.EndCheck();
         }
     }
 
@@ -162,6 +174,7 @@ internal sealed class StallWatch : IDisposable
 
         private int _state;
         private long _lastProgress;
+        private int _checking;
 
         internal Entry(StallWatch owner, string phase, TimeSpan limit, Action fired, Func<bool>? due = null, bool evenUnderDebugger = false)
         {
@@ -189,6 +202,9 @@ internal sealed class StallWatch : IDisposable
         /// <summary>Whether the entry acts while a debugger is attached: the reaper's does, as it did before the limits.</summary>
         public bool EvenUnderDebugger { get; }
 
+        /// <summary>What a condition entry watches (Kronikol.Tests.*): a fact reaches a pair's limits through it.</summary>
+        internal object? Subject { get; init; }
+
         /// <summary>The clock's timestamp at the transfer's last progress.</summary>
         public long LastProgress => Volatile.Read(ref _lastProgress);
 
@@ -209,5 +225,10 @@ internal sealed class StallWatch : IDisposable
         }
 
         internal bool TryFire() => Interlocked.CompareExchange(ref _state, FiredState, Active) == Active;
+
+        /// <summary>Marks the condition's check as running; false when a check from an earlier beat still is.</summary>
+        internal bool TryBeginCheck() => Interlocked.Exchange(ref _checking, 1) == 0;
+
+        internal void EndCheck() => Volatile.Write(ref _checking, 0);
     }
 }

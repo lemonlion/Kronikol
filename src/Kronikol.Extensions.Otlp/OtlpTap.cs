@@ -169,8 +169,9 @@ public sealed class OtlpTap : IAsyncDisposable
 
     /// <summary>
     /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per
-    /// non-zero problem counter — accepts that failed, payloads dropped, rejected or failed, exports refused as
-    /// unauthenticated, forwards that failed — worded for a report reader (<c>otlp: 2 export payload(s)
+    /// non-zero problem counter — accepts that failed, a loopback port that something else holds, payloads dropped,
+    /// rejected or failed, exports refused as unauthenticated, forwards that failed, exporters closed for
+    /// <see cref="OtlpTapOptions.CallerStallTimeout"/> — worded for a report reader (<c>otlp: 2 export payload(s)
     /// dropped …</c>). Empty when the tap is healthy. A host hands the list to
     /// <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/> so lost spans are a line in the
     /// report, not only in a log. <see cref="SpansIgnored"/> is by design (server spans, excluded kinds)
@@ -244,6 +245,7 @@ public sealed class OtlpTap : IAsyncDisposable
             // Only the first listener's bind can throw, before anything is bound, so a start that throws can be tried again.
             Bind();
 
+            // Once the port is bound: a start that throws leaves no heartbeat behind to hold the tap.
             if (_options.StallLimit is not null || _options.KeepAliveLimit is not null)
                 _watch = new StallWatch(Clock, DebuggerAttached, line => TryLog($"[{_options.DisplayName}] otlp-tap {line}"));
 
@@ -399,11 +401,13 @@ public sealed class OtlpTap : IAsyncDisposable
                         if (head is null)
                             return;
 
-                        // Refused before anything of the body is read or allocated.
+                        // Refused before anything of the body is read or allocated, and counted once the head is the tap's: one
+                        // whole only after the limit fired is the limit's.
                         if (Refusal(head) is { } refusal)
                         {
                             if (!limits.End())
                                 break;
+                            CountRefusal(refusal);
                             await WriteResponseAsync(stream, limits, refusal.Status, refusal.Reason, "application/json", Utf8(refusal.Body), keepAlive: false, connection.Token).ConfigureAwait(false);
                             await CloseInStagesAsync(client, reader, head, ct).ConfigureAwait(false);
                             return;
@@ -483,30 +487,36 @@ public sealed class OtlpTap : IAsyncDisposable
     /// <summary>
     /// Why a request is refused on its head alone, or null: a caller without <see cref="OtlpTapOptions.ExpectedHeaders"/>
     /// first, whatever its size, so it has nothing of its body read or allocated; then a <c>Content-Length</c> that is not
-    /// digits (its framing is lost, RFC 9112 section 6.3) or is past what an <c>int</c> holds (over any cap). Counted and
-    /// logged here.
+    /// digits (its framing is lost, RFC 9112 section 6.3) or is past what an <c>int</c> holds (over any cap), and a
+    /// <c>Transfer-Encoding</c> other than <c>chunked</c> alone (sections 6.1 and 6.3). Counted and logged by
+    /// <see cref="CountRefusal"/> once the head is the tap's, not the time limit's.
     /// </summary>
-    private (int Status, string Reason, string Body)? Refusal(HttpRequestHead head)
+    private (int Status, string Reason, string Body, string Line)? Refusal(HttpRequestHead head)
     {
         if (!IsAuthenticated(head.Headers))
-        {
-            Interlocked.Increment(ref _unauthenticated);
-            TryLog($"[{_options.DisplayName}] otlp-tap rejected an unauthenticated {head.Method} {head.Path}");
-            return (401, "Unauthorized", "{\"error\":\"unauthorized\"}");
-        }
+            return (401, "Unauthorized", "{\"error\":\"unauthorized\"}", $"[{_options.DisplayName}] otlp-tap rejected an unauthenticated {head.Method} {head.Path}");
 
-        switch (head.Framing)
+        return head.Framing switch
         {
-            case BodyFraming.InvalidLength:
-                TryLog($"[{_options.DisplayName}] otlp-tap refused a {head.Method} {head.Path} whose Content-Length is not a number");
-                return (400, "Bad Request", "{\"error\":\"otlp-tap: Content-Length must be digits alone\"}");
-            case BodyFraming.LengthPastInt:
-                Interlocked.Increment(ref _rejected);
-                TryLog($"[{_options.DisplayName}] otlp-tap refused an export over MaxRequestBytes ({_options.MaxRequestBytes})");
-                return (413, "Payload Too Large", "{\"error\":\"payload too large\"}");
-            default:
-                return null;
-        }
+            BodyFraming.InvalidLength => (400, "Bad Request", "{\"error\":\"otlp-tap: Content-Length must be digits alone\"}",
+                $"[{_options.DisplayName}] otlp-tap refused a {head.Method} {head.Path} whose Content-Length is not a number"),
+            BodyFraming.LengthPastInt => (413, "Payload Too Large", "{\"error\":\"payload too large\"}",
+                $"[{_options.DisplayName}] otlp-tap refused an export over MaxRequestBytes ({_options.MaxRequestBytes})"),
+            BodyFraming.UnframedCoding => (400, "Bad Request", "{\"error\":\"otlp-tap: Transfer-Encoding must end in chunked\"}",
+                $"[{_options.DisplayName}] otlp-tap refused a {head.Method} {head.Path} whose Transfer-Encoding does not end in chunked"),
+            BodyFraming.UnknownCoding => (501, "Not Implemented", "{\"error\":\"otlp-tap: a Transfer-Encoding other than chunked alone is not supported\"}",
+                $"[{_options.DisplayName}] otlp-tap refused a {head.Method} {head.Path} whose Transfer-Encoding has a coding before chunked"),
+            _ => null,
+        };
+    }
+
+    private void CountRefusal((int Status, string Reason, string Body, string Line) refusal)
+    {
+        if (refusal.Status == 401)
+            Interlocked.Increment(ref _unauthenticated);
+        else if (refusal.Status == 413)
+            Interlocked.Increment(ref _rejected);
+        TryLog(refusal.Line);
     }
 
     /// <summary>
@@ -900,7 +910,9 @@ public sealed class OtlpTap : IAsyncDisposable
         public bool End()
         {
             var entry = Interlocked.Exchange(ref _entry, null);
-            if (entry is null || entry.TryEnd())
+            if (entry is null)
+                return Volatile.Read(ref _cut) == (int)CutPhase.None; // a phase the limit cut started no watch of its own
+            if (entry.TryEnd())
                 return true;
             CutBy((CutPhase)Volatile.Read(ref _phase));
             return false;

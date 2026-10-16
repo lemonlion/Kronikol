@@ -257,6 +257,34 @@ public class ProxyTapStoppingTests
         Assert.Equal(0, tap.ForwardFailures);
     }
 
+    [Fact]
+    public async Task A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded()
+    {
+        // The accept loop has the request and has not handed it on when the stop begins. Tracked only once its handler
+        // ran, it was in nothing the stop settles, and closing the managed listener (Linux, macOS) answered it 200 OK.
+        await using var upstream = new StubUpstream(Ok);
+        using var received = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        await using var tap = await StartAsync(upstream.BaseUri, new ListSink(), [], prepare: t => t.Received = _ =>
+        {
+            received.Set();
+            release.Wait(Patience);
+        });
+
+        using var caller = await RawCaller.SendAsync(tap.Options.ListenPort, "GET /late HTTP/1.1\r\nHost: localhost\r\n\r\n");
+        Assert.True(received.Wait(Patience), "the request never reached the accept loop");
+        var stopping = tap.DisposeAsync().AsTask();
+        Assert.True(await WaitUntilAsync(() => !tap.IsListening), "the tap never closed its listener");
+        var heard = await caller.HearAsync(Patience);
+        release.Set();
+        await stopping.WaitAsync(Patience);
+
+        Assert.True(heard.LetGo, $"the caller was held: {heard}");
+        Assert.DoesNotContain("HTTP/1.1 2", heard.FirstLine, StringComparison.Ordinal);
+        lock (upstream.Seen)
+            Assert.Empty(upstream.Seen);
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static async Task<Tap> StartAsync(

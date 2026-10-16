@@ -578,6 +578,109 @@ public class OtlpTapStallTests
         Assert.Equal(0, tap.CallerTimeouts);
     }
 
+    [Fact]
+    public async Task A_request_arriving_as_the_keep_alive_limit_fires_is_not_received()
+    {
+        // The keep-alive limit fires, and the export arrives, whole, before its action has run. The wait was the kept-alive
+        // connection's, so it is closed with nothing written, and the export is neither received nor mapped: its exporter
+        // hears no answer and may send it again.
+        var sink = new ListSink();
+        var clock = new FakeTimeProvider();
+        using var hold = new ManualResetEventSlim();
+        await using var tap = await StartAsync(sink, [], clock);
+        tap.Watch!.BeforeAct = _ => hold.Wait(Patience);
+
+        using var exporter = await RawExporter.ConnectAsync(tap);
+        var entry = await StalledAsync(tap, OtlpTap.KeptAlivePhase);
+        clock.Advance(KeepAlive + StallWatch.Beat);
+        Assert.True(await WaitUntilAsync(() => entry.HasFired), "the keep-alive limit never fired");
+        try
+        {
+            await exporter.SendAsync(WholeExport());
+            var heard = await exporter.HearAsync(Patience);
+
+            Assert.True(heard.Closed, $"the connection was not closed: {heard}");
+            Assert.Empty(heard.Bytes);
+            Assert.Equal(0, tap.RequestsReceived);
+            await Task.Delay(300); // a payload queued for mapping would be mapped by now
+            Assert.Equal(0, sink.Count);
+            Assert.Equal(0, tap.CallerTimeouts);
+        }
+        finally
+        {
+            hold.Set();
+        }
+    }
+
+    [Fact]
+    public async Task A_refused_head_whole_only_after_the_limit_fired_is_cut_not_refused()
+    {
+        // A head without the secret is refused and counted once it is whole; one that is whole only after the limit fired is
+        // the limit's, answered 408 and counted as a stall alone.
+        var clock = new FakeTimeProvider();
+        using var hold = new ManualResetEventSlim();
+        await using var tap = await StartAsync(new ListSink(), [], clock, o => o.ExpectedHeaders["Authorization"] = "Bearer secret");
+        tap.Watch!.BeforeAct = _ => hold.Wait(Patience);
+
+        using var exporter = await RawExporter.ConnectAsync(tap);
+        await exporter.SendAsync("POST /v1/traces HTTP/1.1\r\nHost: localhost\r\n"); // no secret, and not yet whole
+        var entry = await StalledAsync(tap, OtlpTap.SendingPhase);
+        clock.Advance(PastTheLimit);
+        Assert.True(await WaitUntilAsync(() => entry.HasFired), "the limit never fired");
+        await exporter.SendAsync("Content-Length: 0\r\n\r\n");
+        Assert.True(await WaitUntilAsync(() => tap.CallerTimeouts == 1), "a head whole only after the limit fired was not cut");
+        hold.Set();
+
+        AssertTimedOut(await exporter.HearAsync(Patience));
+        Assert.Equal(0, tap.UnauthenticatedRequests);
+    }
+
+    [Fact]
+    public async Task An_empty_line_after_an_export_leaves_the_connection_kept_alive()
+    {
+        // A client may send a CRLF after a body (RFC 9112 section 2.2): the wait after it is still the kept-alive
+        // connection's, and a request that follows it is answered.
+        var log = new List<string>();
+        var clock = new FakeTimeProvider();
+        await using var tap = await StartAsync(new ListSink(), log, clock);
+
+        using var exporter = await RawExporter.ConnectAsync(tap);
+        await exporter.SendAsync([.. WholeExport(), .. "\r\n"u8.ToArray()]);
+        Assert.StartsWith("HTTP/1.1 200 ", await ReadOneAnswerAsync(exporter.Client.GetStream()));
+        await exporter.SendAsync(WholeExport());
+        Assert.StartsWith("HTTP/1.1 200 ", await ReadOneAnswerAsync(exporter.Client.GetStream()));
+        await exporter.SendAsync("\r\n");
+
+        await AssertIdleThenClosedAsync(tap, exporter, clock, log);
+    }
+
+    [Fact]
+    public async Task A_start_that_cannot_bind_leaves_no_heartbeat_running()
+    {
+        // A tap whose start threw is often dropped undisposed, and a heartbeat left running would hold it for good.
+        var clock = new CountingClock();
+        var taken = LoopbackPort.Listening();
+        try
+        {
+            var options = new OtlpTapOptions { ListenPort = ((System.Net.IPEndPoint)taken.LocalEndpoint).Port, ListenHost = "127.0.0.1", Sink = new ListSink() };
+            var tap = new OtlpTap(options) { Clock = clock, DebuggerAttached = static () => false };
+
+            var thrown = await Assert.ThrowsAsync<SocketException>(() => tap.StartAsync());
+            Assert.Equal(SocketError.AddressAlreadyInUse, thrown.SocketErrorCode);
+            Assert.Equal(0, clock.Running);
+        }
+        finally
+        {
+            taken.Stop();
+        }
+
+        // The count sees the heartbeat: a start that binds runs one, and disposing the tap stops it.
+        await using var started = await StartAsync(new ListSink(), [], clock);
+        Assert.Equal(1, clock.Running);
+        await started.DisposeAsync();
+        Assert.Equal(0, clock.Running);
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static void AssertTimedOut(Answer heard)
@@ -704,5 +807,39 @@ public class OtlpTapStallTests
         var body = new byte[int.Parse(lengthLine["Content-Length:".Length..].Trim(), System.Globalization.CultureInfo.InvariantCulture)];
         await stream.ReadExactlyAsync(body);
         return text.Split("\r\n")[0];
+    }
+
+    /// <summary>The system's clock, counting the timers made on it that have not been disposed.</summary>
+    private sealed class CountingClock : TimeProvider
+    {
+        private int _running;
+
+        public int Running => Volatile.Read(ref _running);
+
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            Interlocked.Increment(ref _running);
+            return new Counted(this, base.CreateTimer(callback, state, dueTime, period));
+        }
+
+        private sealed class Counted(CountingClock owner, ITimer inner) : ITimer
+        {
+            private int _disposed;
+
+            public bool Change(TimeSpan dueTime, TimeSpan period) => inner.Change(dueTime, period);
+
+            public void Dispose()
+            {
+                if (Interlocked.Exchange(ref _disposed, 1) == 0)
+                    Interlocked.Decrement(ref owner._running);
+                inner.Dispose();
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                Dispose();
+                return ValueTask.CompletedTask;
+            }
+        }
     }
 }
