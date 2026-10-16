@@ -1,15 +1,16 @@
 # Caller-side time limits for the taps (#173)
 
 **Date:** 2026-10-14 · **Repo version:** 4.20.2 (`origin/main` at `3240c983`; every line number below is for it unless
-it says otherwise) · **Status:** 🚧 green-lit in full by the owner on 2026-10-15, every question in §9 as recommended; R0
-published as 4.22.2 on 2026-10-15, R1 as 4.23.0 and R2 as 4.25.0 on 2026-10-16, R3 being implemented (§11). Drafted from
-#173 (filed 2026-10-13 from `PROXY_TAP_HANG_UP_PLAN.md` §3 finding 9, §8 and Q2) at the owner's ask of 2026-10-14 to
-analyse the issue critically and plan a fix for the underlying problem. Written alongside the plan for #174
-(`TCPTAP_FAILED_CONNECT_PLAN.md`, session kronikol-71), which owns both taps' accept loops and `TcpTap`'s connect path;
-§7 is the split. #174 was green-lit on 2026-10-15 and released the same day as 4.20.3, 4.22.0 and 4.22.1, which moved
-the lines this plan cites in `TcpTap.cs`, `OtlpTap.cs`, `TcpTapOptions.cs`, `CaptureDegradation.cs` and
-`DiagnosticEntry.cs`; they stay at `3240c983`, where the code was read, and Appendix A gives each edit site at 4.22.1
-too (§7). Swept for completeness and accuracy on 2026-10-15 (§11).
+it says otherwise) · **Status:** ✅ executed in full, every question in §9 as the owner green-lit it on 2026-10-15: R0
+published as 4.22.2 on 2026-10-15, R1 as 4.23.0, R2 as 4.25.0 and R3 as 4.26.0 on 2026-10-16, with 4.26.1, a fix to R1
+that 4.26.0's CI run found, the same day; #173 closed (§11). Drafted from #173 (filed 2026-10-13 from
+`PROXY_TAP_HANG_UP_PLAN.md` §3 finding 9, §8 and Q2) at the owner's ask of 2026-10-14 to analyse the issue critically
+and plan a fix for the underlying problem. Written alongside the plan for #174 (`TCPTAP_FAILED_CONNECT_PLAN.md`, session
+kronikol-71), which owns both taps' accept loops and `TcpTap`'s connect path; §7 is the split. #174 was green-lit on
+2026-10-15 and released the same day as 4.20.3, 4.22.0 and 4.22.1, which moved the lines this plan cites in `TcpTap.cs`,
+`OtlpTap.cs`, `TcpTapOptions.cs`, `CaptureDegradation.cs` and `DiagnosticEntry.cs`; they stay at `3240c983`, where the
+code was read, and Appendix A gives each edit site at 4.22.1 too (§7). Swept for completeness and accuracy on 2026-10-15
+(§11).
 
 Evidence labels: **RUN** (measured on 2026-10-14 with the published 4.20.2 packages from nuget.org or a bare
 `HttpListener`, and on 2026-10-15 with the sweep's socket, `HttpListener` and BCL probes, one of them on .NET 8 too:
@@ -998,6 +999,30 @@ kronikol-71 (#174, `TCPTAP_FAILED_CONNECT_PLAN.md`):
     and a steady reader; and R2 has the twins of R1-2 and R1-11 (a transfer completing as the limit fires, and one ending
     after it fired, each for the export and the answer) and of R1's option, debugger and no-entry facts.
   - R3 started the same night, in worktree `C:/Code/Kronikol-173-r3` from `769c55cd`, rebased onto 4.25.0.
+- 2026-10-16: R3 released as 4.26.0 (`a3b20f99`, worktree `C:/Code/Kronikol-173-r3`). Release 38831708935, CodeQL
+  38831706673 and CI Summary Preview 38831706682 passed, CI 38831706828 failing in two of R1's cases that 4.26.1 fixes
+  (below), and nuget.org listed all 62 ids at 01:13 UTC; wiki `17d42b6`, Kronikol4J ledger `ca35e6c`. The proofs are in
+  the harness's `r3/` (its README): 24 of R3's 26 cases fail on 4.25.0 with R3's seams stubbed, the two that pass
+  guards, and of 20 mutations, 20 are killed.
+  - Found while implementing. W-1, the watch's own facts, were never written in R1: `StallWatchTests` adds them (11
+    facts in `Kronikol.Tests.ProxyTap`) with R3's additions to the watch, `WatchWhen` (an entry checked by a condition,
+    the reaper's) and entries that act under a debugger. On Linux a half-closed pair whose remaining side read the tail
+    of a reply from its socket buffers, sending nothing, was closed at the limit: the rule as §4.5 item 1 states it, and
+    harmless, since the client got every byte; the steady-reader guard now keeps its upstream open, and the changelog
+    says what counts as progress.
+  - Departures from §5. R3-5's steady reader runs with the upstream's side open (above). R3 has twins of R1's option,
+    debugger and no-entry facts, a fact that the reaper still acts under a debugger, and stop-line checks with non-zero
+    counts.
+- 2026-10-16: 4.26.1 (`be6384a9`), a patch to R1. 4.26.0's CI run failed two cases of R1-1 on a loaded runner at
+  `Assert.Equal(1, tap.CallerTimeouts)`: `CutStalled` ended the caller's response, which lets the caller go, and only
+  then counted the cut, so whoever read the counter as soon as the caller was gone could read 0. `CallerAnswer.TimeOut`
+  now takes an action run once the cut has won and before the abort, and `CutStalled` counts in it;
+  `A_cut_is_counted_before_the_caller_is_let_go` fails on the old order. The audit of 4.26.0 added
+  `A_pair_a_limit_closes_raises_no_capture_degradation`, for a sentence of its changelog no fact checked (a mutant that
+  raises the event fails it), and `DiagnosticEntry.CaptureDegraded`'s summary, which named only a caller. Release
+  38834755455, CI 38834753160, CodeQL 38834753037 and CI Summary Preview 38834753158 passed, and nuget.org listed all 62
+  ids at 01:48 UTC; Kronikol4J ledger `6f5ec06`; no wiki edit, R3's having named a pair cut by a time limit on the
+  diagnostics page. #173 closed with a comment naming the five releases. The plan is complete.
 
 ## Appendix A. Edit sites at `3240c983`
 

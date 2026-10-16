@@ -1,0 +1,1 @@
+Passed!  - Failed:     0, Passed:   189, Skipped:     4, Total:   193, Duration: 36 s - Kronikol.Tests.ProxyTa

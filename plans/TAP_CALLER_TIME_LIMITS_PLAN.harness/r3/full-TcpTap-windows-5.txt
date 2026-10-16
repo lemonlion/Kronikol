@@ -1,0 +1,1 @@
+Passed!  - Failed:     0, Passed:   470, Skipped:     4, Total:   474, Duration: 12 s - Kr

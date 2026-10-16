@@ -1,0 +1,215 @@
+Test run for C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\bin\Debug\net10.0\Kronikol.Tests.TcpTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(value: "null") [648 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(String value) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 422
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(String value) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 428
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(String value) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 428
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(value: "infinite") [344 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(String value) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 422
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(String value) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 428
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(String value) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 428
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheStopLineNamesFailedConnectsAndFailedAccepts [2 s]
+  Error Message:
+   Assert.EndsWith() Failure: String end does not match
+String:       ···"ing disabled, 0 failed accepts, 1 failed connects)"
+Expected end: ", 0 failed accepts, 1 failed connects, 0 half-clos"···
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheStopLineNamesFailedConnectsAndFailedAccepts() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapConnectFailureTests.cs:line 335
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(value: "max") [15 s]
+  Error Message:
+   System.TimeoutException : no half-closed pair entry appeared
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.EntryAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 642
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.StalledAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 653
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(String value) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 417
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(String value) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 428
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_limit_of_none_never_closes(String value) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 428
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "HalfClosedTimeout", milliseconds: -1000) [1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 393
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "StalledWriteTimeout", milliseconds: 0) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 393
+   at InvokeStub_TcpTapStallTests.A_limit_of_zero_or_less_is_refused(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "StalledWriteTimeout", milliseconds: -2) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 393
+   at InvokeStub_TcpTapStallTests.A_limit_of_zero_or_less_is_refused(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "HalfClosedTimeout", milliseconds: 0) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 393
+   at InvokeStub_TcpTapStallTests.A_limit_of_zero_or_less_is_refused(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "HalfClosedTimeout", milliseconds: -2) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 393
+   at InvokeStub_TcpTapStallTests.A_limit_of_zero_or_less_is_refused(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "StalledWriteTimeout", milliseconds: -1000) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 393
+   at InvokeStub_TcpTapStallTests.A_limit_of_zero_or_less_is_refused(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_client_that_stops_reading_a_large_reply_releases_the_pair [15 s]
+  Error Message:
+   System.TimeoutException : no write entry appeared
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.EntryAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 642
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.StalledAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 653
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_client_that_stops_reading_a_large_reply_releases_the_pair() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 121
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_client_that_stops_reading_a_large_reply_releases_the_pair() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 133
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_client_that_stops_reading_a_large_reply_releases_the_pair() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 133
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.Disposing_with_the_reaper_on_does_not_wait_for_its_tick [5 s]
+  Error Message:
+   Assert.InRange() Failure: Value not in range
+Range:  (00:00:00 - 00:00:00.2500000)
+Actual: 00:00:01.0455634
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.Disposing_with_the_reaper_on_does_not_wait_for_its_tick() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 332
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_that_keeps_moving_is_kept [15 s]
+  Error Message:
+   System.TimeoutException : no half-closed pair entry appeared
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.EntryAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 642
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_that_keeps_moving_is_kept() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 224
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_that_keeps_moving_is_kept() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 238
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_that_keeps_moving_is_kept() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 238
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.CopyTo_copies_every_option [6 ms]
+  Error Message:
+   HalfClosedTimeout was not copied by CopyTo
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.CopyTo_copies_every_option() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 307
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_that_ends_leaves_no_entry_behind [2 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_that_ends_leaves_no_entry_behind() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 446
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_that_ends_leaves_no_entry_behind() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 449
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_that_ends_leaves_no_entry_behind() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 449
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_client_stays_silent_after_the_upstream_half_closes_is_released [15 s]
+  Error Message:
+   System.TimeoutException : no half-closed pair entry appeared
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.EntryAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 642
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.StalledAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 653
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_client_stays_silent_after_the_upstream_half_closes_is_released() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 75
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_client_stays_silent_after_the_upstream_half_closes_is_released() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 81
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_client_stays_silent_after_the_upstream_half_closes_is_released() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 81
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.The_limits_are_100_seconds_by_default [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 00:01:40
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.The_limits_are_100_seconds_by_default() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 377
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.No_limit_applies_while_a_debugger_is_attached [15 s]
+  Error Message:
+   System.TimeoutException : no half-closed pair entry appeared
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.EntryAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 642
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.StalledAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 653
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.No_limit_applies_while_a_debugger_is_attached() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 345
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.No_limit_applies_while_a_debugger_is_attached() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 353
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.No_limit_applies_while_a_debugger_is_attached() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 353
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(realClock: False) [15 s]
+  Error Message:
+   System.TimeoutException : no half-closed pair entry appeared
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.EntryAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 642
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.StalledAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 653
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(Boolean realClock) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 44
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(Boolean realClock) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 59
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(Boolean realClock) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 59
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(realClock: True) [15 s]
+  Error Message:
+   the pair was never released
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(Boolean realClock) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 48
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(Boolean realClock) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 59
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(Boolean realClock) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 59
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.An_upstream_that_stops_reading_its_clients_commands_releases_the_pair [15 s]
+  Error Message:
+   System.TimeoutException : no write entry appeared
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.EntryAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 642
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.StalledAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 653
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.An_upstream_that_stops_reading_its_clients_commands_releases_the_pair() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 146
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.An_upstream_that_stops_reading_its_clients_commands_releases_the_pair() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 152
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.An_upstream_that_stops_reading_its_clients_commands_releases_the_pair() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 152
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.The_reaper_ignores_a_wall_clock_jump [1 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.The_reaper_ignores_a_wall_clock_jump() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 260
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.The_reaper_ignores_a_wall_clock_jump() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 264
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.The_reaper_ignores_a_wall_clock_jump() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 264
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.An_idle_pair_is_never_closed [41 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.<>c__DisplayClass7_0.<An_idle_pair_is_never_closed>b__0() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 96
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.WaitUntilAsync(Func`1 condition) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 692
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.An_idle_pair_is_never_closed() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 96
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.An_idle_pair_is_never_closed() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 109
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.An_idle_pair_is_never_closed() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 109
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_answered_in_time_ends_normally [15 s]
+  Error Message:
+   System.TimeoutException : no half-closed pair entry appeared
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.EntryAsync(TcpTap tap, String phase) in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 642
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_answered_in_time_ends_normally() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 202
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_answered_in_time_ends_normally() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 211
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_close_answered_in_time_ends_normally() in C:\Code\Kronikol-173-red3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 211
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:    24, Passed:     2, Skipped:     0, Total:    26, Duration: 2 m 24 s - Kronikol.Tests.TcpTap.dll (net10.0)

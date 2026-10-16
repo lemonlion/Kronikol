@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.Otlp\Kronikol.Extensions.Otlp.csproj (in 253 ms).
+  Restored C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.Otlp\Kronikol.Tests.Otlp.csproj (in 253 ms).
+  1 of 3 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-173-r3\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.Otlp -> C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.Otlp\bin\Debug\net10.0\Kronikol.Extensions.Otlp.dll
+  Kronikol.Tests.Otlp -> C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.Otlp\bin\Debug\net10.0\Kronikol.Tests.Otlp.dll
+Test run for C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.Otlp\bin\Debug\net10.0\Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   174, Skipped:     0, Total:   174, Duration: 12 s - Kronikol.Tests.Otlp.dll (net10.0)

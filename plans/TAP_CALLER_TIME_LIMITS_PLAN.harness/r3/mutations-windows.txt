@@ -1,0 +1,43 @@
+M1 the half-close limit armed on an idle pair (R3-3): KILLED
+    tcptap: [('Failed!', '11', '458')] failed facts: ['A_client_that_stops_reading_a_large_reply_releases_the_pair', 'A_half_close_answered_in_time_ends_normally', 'A_half_close_limit_of_none_never_closes(value:', 'A_half_closed_pair_that_keeps_moving_is_kept', 'A_pair_whose_client_stays_silent_after_the_upstream_half_closes_is_released', 'A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(realClock:', 'An_idle_pair_is_never_closed', 'An_upstream_that_stops_reading_its_clients_commands_releases_the_pair', 'No_limit_applies_while_a_debugger_is_attached', 'The_reaper_ignores_a_wall_clock_jump']
+M2 the reaper reads the wall clock again (R3-6): KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['The_reaper_ignores_a_wall_clock_jump']
+M3 the half-close timed from the FIN, not the last byte (R3-5): KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['A_half_closed_pair_that_keeps_moving_is_kept']
+M4 the reaper's tick a delay of its own again (R3-8): KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['Disposing_with_the_reaper_on_does_not_wait_for_its_tick']
+M5 the write-pending mark never cleared (R3-3): KILLED
+    tcptap: [('Failed!', '6', '463')] failed facts: ['A_half_close_answered_in_time_ends_normally', 'A_half_closed_pair_that_keeps_moving_is_kept', 'A_pair_that_ends_leaves_no_entry_behind', 'A_slow_steady_reader_keeps_its_pair', 'An_idle_pair_is_never_closed', 'The_reaper_ignores_a_wall_clock_jump']
+M6 a write not watched (R3-4): KILLED
+    tcptap: [('Failed!', '2', '467')] failed facts: ['A_client_that_stops_reading_a_large_reply_releases_the_pair', 'An_upstream_that_stops_reading_its_clients_commands_releases_the_pair']
+M7 a close counted under the other limit (R3-1, R3-4): KILLED
+    tcptap: [('Failed!', '6', '463')] failed facts: ['A_client_that_stops_reading_a_large_reply_releases_the_pair', 'A_pair_whose_client_stays_silent_after_the_upstream_half_closes_is_released', 'A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(realClock:', 'An_upstream_that_stops_reading_its_clients_commands_releases_the_pair', 'No_limit_applies_while_a_debugger_is_attached']
+M8 a limit that closes nothing (R3-1, R3-4): KILLED
+    tcptap: [('Failed!', '5', '464')] failed facts: ['A_client_that_stops_reading_a_large_reply_releases_the_pair', 'A_pair_whose_client_stays_silent_after_the_upstream_half_closes_is_released', 'A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(realClock:', 'An_upstream_that_stops_reading_its_clients_commands_releases_the_pair']
+M9 the reaper stands down under a debugger (the reaper's debugger fact): KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['The_reaper_acts_while_a_debugger_is_attached']
+M10 a segment stamped by the machine's clock, not the tap's (R3-6): KILLED
+    tcptap: [('Failed!', '2', '467')] failed facts: ['The_reaper_acts_while_a_debugger_is_attached', 'The_reaper_ignores_a_wall_clock_jump']
+M11 every entry acts under a debugger (debugger facts, W-1): KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['No_limit_applies_while_a_debugger_is_attached']
+    proxy: [('Failed!', '1', '10')] failed facts: ['While_a_debugger_is_attached_only_an_entry_that_acts_under_one_does']
+M12 a condition entry is always due (R3-6, W-1): KILLED
+    tcptap: [('Failed!', '2', '467')] failed facts: ['The_reaper_ignores_a_wall_clock_jump', 'AnIdleConnectionWithNothingUnansweredIsNeverReaped']
+    proxy: [('Failed!', '1', '10')] failed facts: ['A_condition_entry_acts_once_its_check_says_so']
+M13 a throwing check leaves its entry watched (W-1): KILLED
+    proxy: [('Failed!', '1', '10')] failed facts: ['A_condition_whose_check_throws_ends_its_entry_and_is_logged']
+M14 no entry acts under a debugger, the reaper's included (W-1, the reaper's debugger fact): KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['The_reaper_acts_while_a_debugger_is_attached']
+    proxy: [('Failed!', '1', '10')] failed facts: ['While_a_debugger_is_attached_only_an_entry_that_acts_under_one_does']
+O1 a half-close limit of zero accepted: KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['A_limit_of_zero_or_less_is_refused(option:']
+O2 a stalled-write limit of zero accepted: KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['A_limit_of_zero_or_less_is_refused(option:']
+O3 another half-close default: KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['The_limits_are_100_seconds_by_default']
+O4 another stalled-write default: KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['The_limits_are_100_seconds_by_default']
+O5 the half-close limit not copied (R3-7): KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['CopyTo_copies_every_option']
+O6 the stalled-write limit not copied (R3-7): KILLED
+    tcptap: [('Failed!', '1', '468')] failed facts: ['CopyTo_copies_every_option']

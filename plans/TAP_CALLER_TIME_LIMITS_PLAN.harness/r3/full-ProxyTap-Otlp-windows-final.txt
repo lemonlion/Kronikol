@@ -1,0 +1,2 @@
+ProxyTap: Passed!  - Failed:     0, Passed:   188, Skipped:     4, Total:   192, Duration: 36 s - Kr
+Otlp: Passed!  - Failed:     0, Passed:   213, Skipped:     0, Total:   213, Duration: 17 s - Kr

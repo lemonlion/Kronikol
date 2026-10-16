@@ -1,0 +1,11 @@
+C:\Code\Kronikol-173-mut3\tests\Kronikol.Tests.TcpTap\RespStreamParserTests.cs(271,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [C:\Code\Kronikol-173-mut3\tests\Kronikol.Tests.TcpTap\Kronikol.Tests.TcpTap.csproj]
+C:\Code\Kronikol-173-mut3\tests\Kronikol.Tests.TcpTap\TcpTapTests.cs(451,13): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [C:\Code\Kronikol-173-mut3\tests\Kronikol.Tests.TcpTap\Kronikol.Tests.TcpTap.csproj]
+[xUnit.net 00:00:02.03]     Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_a_limit_closes_raises_no_capture_degradation [FAIL]
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_a_limit_closes_raises_no_capture_degradation [551 ms]
+   Assert.Empty() Failure: Collection was not empty
+Collection: [[app→store] connection 1: ConnectionClosedMidMessage — closed by a time limit, [app→store] connection 2: ConnectionClosedMidMessage — closed by a time limit]
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_a_limit_closes_raises_no_capture_degradation() in C:\Code\Kronikol-173-mut3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 85
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_a_limit_closes_raises_no_capture_degradation() in C:\Code\Kronikol-173-mut3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 85
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_a_limit_closes_raises_no_capture_degradation() in C:\Code\Kronikol-173-mut3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 85
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_a_limit_closes_raises_no_capture_degradation() in C:\Code\Kronikol-173-mut3\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 85
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 567 ms - Kronikol.Tests.TcpTap.dll (net10.0)

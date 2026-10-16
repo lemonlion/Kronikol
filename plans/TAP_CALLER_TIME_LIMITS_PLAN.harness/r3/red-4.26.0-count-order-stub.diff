@@ -1,0 +1,20 @@
+diff --git a/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs b/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+index ecf3914c..333931da 100644
+--- a/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
++++ b/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+@@ -1219,7 +1219,14 @@ public bool Close()
+         /// where the head is not yet sent (408 while the body is read) and the connection closed; false when the answer was
+         /// closed or ended first.
+         /// </summary>
+-        public bool TimeOut(int? status) => TryEnd(status, readingOnly: false, closeConnection: true, TimedOut);
++        // The seam stubbed onto 4.26.0 for the red run: what the cut records runs where 4.26.0 counted, after the abort.
++        public bool TimeOut(int? status, Action? claimed = null)
++        {
++            var won = TryEnd(status, readingOnly: false, closeConnection: true, TimedOut);
++            if (won)
++                claimed?.Invoke();
++            return won;
++        }
+ 
+         private bool TryEnd(int? status, bool readingOnly, bool closeConnection, int end)
+         {

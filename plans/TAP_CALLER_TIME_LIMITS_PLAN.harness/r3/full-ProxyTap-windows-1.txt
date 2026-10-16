@@ -1,0 +1,19 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.ProxyTap\Kronikol.Tests.ProxyTap.csproj (in 289 ms).
+  Restored C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.ProxyTap\Kronikol.Extensions.ProxyTap.csproj (in 289 ms).
+  1 of 3 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-173-r3\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.ProxyTap -> C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.ProxyTap\bin\Debug\net10.0\Kronikol.Extensions.ProxyTap.dll
+  Kronikol.Tests.ProxyTap -> C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.ProxyTap\bin\Debug\net10.0\Kronikol.Tests.ProxyTap.dll
+Test run for C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.ProxyTap\bin\Debug\net10.0\Kronikol.Tests.ProxyTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:03.85]     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_caller_that_resets_mid_body_leaves_no_connection_held_and_is_no_forward_failure(hangUp: "an RST alone") [SKIP]
+[xUnit.net 00:00:03.85]     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_caller_that_resets_mid_body_leaves_no_connection_held_and_is_no_forward_failure(hangUp: "a FIN, then an RST") [SKIP]
+[xUnit.net 00:00:03.85]     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.An_upstream_that_fails_after_its_caller_hung_up_is_a_forward_failure_and_leaves_no_connection_held [SKIP]
+[xUnit.net 00:00:03.85]     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_caller_that_resets_while_the_answer_is_written_leaves_no_connection_held [SKIP]
+  Skipped Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_caller_that_resets_mid_body_leaves_no_connection_held_and_is_no_forward_failure(hangUp: "an RST alone") [1 ms]
+  Skipped Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_caller_that_resets_mid_body_leaves_no_connection_held_and_is_no_forward_failure(hangUp: "a FIN, then an RST") [1 ms]
+  Skipped Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.An_upstream_that_fails_after_its_caller_hung_up_is_a_forward_failure_and_leaves_no_connection_held [1 ms]
+  Skipped Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_caller_that_resets_while_the_answer_is_written_leaves_no_connection_held [1 ms]
+
+Passed!  - Failed:     0, Passed:   188, Skipped:     4, Total:   192, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)

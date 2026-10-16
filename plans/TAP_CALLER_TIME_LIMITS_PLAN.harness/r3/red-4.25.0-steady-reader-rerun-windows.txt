@@ -1,0 +1,1 @@
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 78 ms - Kronikol.Tests.TcpTap.dll (net10.0)

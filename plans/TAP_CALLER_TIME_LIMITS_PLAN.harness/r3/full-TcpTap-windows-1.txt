@@ -1,0 +1,29 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.MongoDB.V2\Kronikol.Extensions.MongoDB.V2.csproj : warning NU1902: Package 'SharpCompress' 0.30.1 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-6c8g-7p36-r338 [TargetFramework=net10.0]
+C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.MongoDB.V2\Kronikol.Extensions.MongoDB.V2.csproj : warning NU1903: Package 'Snappier' 1.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-pggp-6c3x-2xmx [TargetFramework=net10.0]
+  Kronikol -> C:\Code\Kronikol-173-r3\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.Redis -> C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.Redis\bin\Debug\net10.0\Kronikol.Extensions.Redis.dll
+  Kronikol.Extensions.TcpTap -> C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.TcpTap\bin\Debug\net10.0\Kronikol.Extensions.TcpTap.dll
+  Kronikol.Extensions.MongoDB.V2 -> C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.MongoDB.V2\bin\Debug\net10.0\Kronikol.Extensions.MongoDB.V2.dll
+  Kronikol.Tests.TcpTap -> C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.TcpTap\bin\Debug\net10.0\Kronikol.Tests.TcpTap.dll
+Test run for C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.TcpTap\bin\Debug\net10.0\Kronikol.Tests.TcpTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.47]     Kronikol.Tests.TcpTap.ContainerEndToEndTests.WhatStackExchangeRedis26PutsOnTheWireOnConnect [SKIP]
+[xUnit.net 00:00:01.61]     Kronikol.Tests.TcpTap.ContainerEndToEndTests.StackExchangeRedisThroughTheTapRendersLikeTheInProcessExtension [SKIP]
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.WhatStackExchangeRedis26PutsOnTheWireOnConnect [1 ms]
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.StackExchangeRedisThroughTheTapRendersLikeTheInProcessExtension [1 ms]
+[xUnit.net 00:00:01.82]     Kronikol.Tests.TcpTap.ContainerEndToEndTests.WhatMongoDbDriver230PutsOnTheWireOnConnect [SKIP]
+[xUnit.net 00:00:01.95]     Kronikol.Tests.TcpTap.ContainerEndToEndTests.MongoDbDriverThroughTheTapRendersLikeTheInProcessExtension [SKIP]
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.WhatMongoDbDriver230PutsOnTheWireOnConnect [1 ms]
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.MongoDbDriverThroughTheTapRendersLikeTheInProcessExtension [1 ms]
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheStopLineNamesFailedConnectsAndFailedAccepts [2 s]
+  Error Message:
+   Assert.EndsWith() Failure: String end does not match
+String:       ···"half-closed pairs closed, 0 stalled writes closed)"
+Expected end: ", 0 failed accepts, 1 failed connects)"
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheStopLineNamesFailedConnectsAndFailedAccepts() in C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.TcpTap\TcpTapConnectFailureTests.cs:line 335
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:   468, Skipped:     4, Total:   473, Duration: 12 s - Kronikol.Tests.TcpTap.dll (net10.0)

@@ -1,0 +1,23 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.MongoDB.V2\Kronikol.Extensions.MongoDB.V2.csproj : warning NU1902: Package 'SharpCompress' 0.30.1 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-6c8g-7p36-r338 [TargetFramework=net10.0]
+C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.MongoDB.V2\Kronikol.Extensions.MongoDB.V2.csproj : warning NU1903: Package 'Snappier' 1.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-pggp-6c3x-2xmx [TargetFramework=net10.0]
+  Kronikol -> C:\Code\Kronikol-173-r3\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.Extensions.MongoDB.V2 -> C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.MongoDB.V2\bin\Debug\net10.0\Kronikol.Extensions.MongoDB.V2.dll
+  Kronikol.Extensions.Redis -> C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.Redis\bin\Debug\net10.0\Kronikol.Extensions.Redis.dll
+  Kronikol.Extensions.TcpTap -> C:\Code\Kronikol-173-r3\src\Kronikol.Extensions.TcpTap\bin\Debug\net10.0\Kronikol.Extensions.TcpTap.dll
+C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.TcpTap\RespStreamParserTests.cs(271,9): warning CS8631: The type 'string?' cannot be used as type parameter 'T' in the generic type or method 'Assert.Equal<T>(ReadOnlySpan<T>, T[])'. Nullability of type argument 'string?' doesn't match constraint type 'System.IEquatable<string?>'. [C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.TcpTap\Kronikol.Tests.TcpTap.csproj]
+C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.TcpTap\TcpTapTests.cs(451,13): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.TcpTap\Kronikol.Tests.TcpTap.csproj]
+  Kronikol.Tests.TcpTap -> C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.TcpTap\bin\Debug\net10.0\Kronikol.Tests.TcpTap.dll
+Test run for C:\Code\Kronikol-173-r3\tests\Kronikol.Tests.TcpTap\bin\Debug\net10.0\Kronikol.Tests.TcpTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.94]     Kronikol.Tests.TcpTap.ContainerEndToEndTests.WhatStackExchangeRedis26PutsOnTheWireOnConnect [SKIP]
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.WhatStackExchangeRedis26PutsOnTheWireOnConnect [1 ms]
+[xUnit.net 00:00:01.10]     Kronikol.Tests.TcpTap.ContainerEndToEndTests.StackExchangeRedisThroughTheTapRendersLikeTheInProcessExtension [SKIP]
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.StackExchangeRedisThroughTheTapRendersLikeTheInProcessExtension [1 ms]
+[xUnit.net 00:00:01.24]     Kronikol.Tests.TcpTap.ContainerEndToEndTests.WhatMongoDbDriver230PutsOnTheWireOnConnect [SKIP]
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.WhatMongoDbDriver230PutsOnTheWireOnConnect [1 ms]
+[xUnit.net 00:00:01.38]     Kronikol.Tests.TcpTap.ContainerEndToEndTests.MongoDbDriverThroughTheTapRendersLikeTheInProcessExtension [SKIP]
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.MongoDbDriverThroughTheTapRendersLikeTheInProcessExtension [1 ms]
+
+Passed!  - Failed:     0, Passed:   469, Skipped:     4, Total:   473, Duration: 12 s - Kronikol.Tests.TcpTap.dll (net10.0)

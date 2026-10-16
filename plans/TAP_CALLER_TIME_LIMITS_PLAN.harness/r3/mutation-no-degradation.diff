@@ -1,0 +1,13 @@
+diff --git a/src/Kronikol.Extensions.TcpTap/TcpTap.cs b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+index 3cb1646b..91941521 100644
+--- a/src/Kronikol.Extensions.TcpTap/TcpTap.cs
++++ b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+@@ -1048,6 +1048,8 @@ private void Close(int limit, TapDirection direction)
+                 tap.TryLog($"[{tap._options.DisplayName}] tcp-tap connection {connectionId} closed: a write to {reader} did not complete for {tap._options.StalledWriteTimeout} (it stopped reading)");
+             }
+ 
++            tap.Degrade(connectionId, CaptureDegradationKind.ConnectionClosedMidMessage, "closed by a time limit");
++
+             try
+             {
+                 pair.Cancel();

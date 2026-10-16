@@ -1,0 +1,4 @@
+  Error Message:
+   the caller was let go before the cut was recorded
+--
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 63 ms - Kronikol.Tests.ProxyTap.dll (net10.0)

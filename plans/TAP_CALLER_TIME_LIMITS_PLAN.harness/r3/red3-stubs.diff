@@ -1,0 +1,89 @@
+diff --git a/src/Kronikol.Extensions.TcpTap/TcpTap.cs b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+index 1537c76f..ea68c583 100644
+--- a/src/Kronikol.Extensions.TcpTap/TcpTap.cs
++++ b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+@@ -148,6 +148,25 @@ public TcpTap(TcpTapOptions options)
+     /// <summary>Connections the tap closed because a decoded command sat unanswered for <see cref="TcpTapOptions.ReapStuckConnectionsAfter"/> — see that option for why.</summary>
+     public long StuckConnectionsReaped => Interlocked.Read(ref _stuckConnectionsReaped);
+ 
++    // R3's seams, stubbed (plans/TAP_CALLER_TIME_LIMITS_PLAN.harness/r3/).
++    public long HalfClosedPairsClosed => 0;
++
++    public long StalledWritesClosed => 0;
++
++    internal TimeProvider Clock
++    {
++        get => Accepting.Clock;
++        set => Accepting.Clock = value;
++    }
++
++    internal Func<bool> DebuggerAttached { get; set; } = static () => false;
++
++    internal StallWatch? Watch => null;
++
++    internal const string HalfClosedPhase = "half-closed pair";
++    internal const string WritePhase = "write";
++    internal const string ReaperPhase = "unanswered command";
++
+     /// <summary>
+     /// Connections the tap closed without forwarding anything, because it could not connect to
+     /// <see cref="TcpTapOptions.ForwardHost"/>:<see cref="TcpTapOptions.ForwardPort"/> within
+@@ -434,7 +453,7 @@ internal async Task PumpAsync(
+                     break;
+ 
+                 var copy = buffer.AsSpan(0, read).ToArray();
+-                if (!writer.TryWrite(new TapSegment(direction, copy, DateTimeOffset.UtcNow)))
++                if (!writer.TryWrite(new TapSegment(direction, copy, Clock.GetUtcNow())))
+                     CountDrop(direction, state);
+ 
+                 try
+@@ -500,7 +519,7 @@ private async Task ReapWhenStuckAsync(
+                 return; // a decoder that throws here is a decoder the reaper must not act on
+             }
+ 
+-            if (since is not { } oldest || DateTimeOffset.UtcNow - oldest < threshold)
++            if (since is not { } oldest || Clock.GetUtcNow() - oldest < threshold)
+                 continue;
+ 
+             Interlocked.Increment(ref _stuckConnectionsReaped);
+diff --git a/src/Kronikol.Extensions.TcpTap/TcpTapOptions.cs b/src/Kronikol.Extensions.TcpTap/TcpTapOptions.cs
+index 7856e673..1a5943f8 100644
+--- a/src/Kronikol.Extensions.TcpTap/TcpTapOptions.cs
++++ b/src/Kronikol.Extensions.TcpTap/TcpTapOptions.cs
+@@ -199,6 +199,11 @@ public class TcpTapOptions
+     /// </summary>
+     public TimeSpan? ReapStuckConnectionsAfter { get; set; }
+ 
++    // R3's options, stubbed: no default, no check and no copy.
++    public TimeSpan? HalfClosedTimeout { get; set; }
++
++    public TimeSpan? StalledWriteTimeout { get; set; }
++
+     /// <summary>Optional hook applied to every key / identifier before it is recorded (Redis keys, channel names).</summary>
+     public Func<string, string>? KeyRedaction { get; set; }
+ 
+diff --git a/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj b/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj
+index aedfc2c7..ac551015 100644
+--- a/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj
++++ b/tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj
+@@ -18,6 +18,7 @@
+       <PrivateAssets>all</PrivateAssets>
+     </PackageReference>
+     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
++    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.0" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+diff --git a/tests/Kronikol.Tests.TcpTap/TcpTapConnectFailureTests.cs b/tests/Kronikol.Tests.TcpTap/TcpTapConnectFailureTests.cs
+index b1e6ad60..8e37cf9a 100644
+--- a/tests/Kronikol.Tests.TcpTap/TcpTapConnectFailureTests.cs
++++ b/tests/Kronikol.Tests.TcpTap/TcpTapConnectFailureTests.cs
+@@ -332,7 +332,7 @@ public async Task TheStopLineNamesFailedConnectsAndFailedAccepts()
+ 
+         await tap.DisposeAsync();
+ 
+-        Assert.EndsWith(", 0 failed accepts, 1 failed connects)", Assert.Single(run.Lines("tcp-tap stopped (")));
++        Assert.EndsWith(", 0 failed accepts, 1 failed connects, 0 half-closed pairs closed, 0 stalled writes closed)", Assert.Single(run.Lines("tcp-tap stopped (")));
+     }
+ 
+     [Fact]
