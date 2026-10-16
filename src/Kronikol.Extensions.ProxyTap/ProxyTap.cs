@@ -388,18 +388,18 @@ public sealed class ProxyTap : IAsyncDisposable
     /// </summary>
     private void CutStalled(CallerAnswer answer, string phase)
     {
+        // Counted once the cut has won and before the caller is let go: a host that reads CallerTimeouts or Diagnostics() as
+        // soon as the caller is gone sees it.
         var body = phase == BodyPhase;
-        if (!answer.TimeOut(body ? 408 : null))
+        if (!answer.TimeOut(body ? 408 : null, () => Interlocked.Increment(ref body ? ref _bodyTimeouts : ref _answerTimeouts)))
             return;
 
         if (body)
         {
-            Interlocked.Increment(ref _bodyTimeouts);
             TryLog($"[{_options.DisplayName}] proxy-tap caller stalled {_options.CallerStallTimeout} sending its request body; not forwarded, {(OperatingSystem.IsWindows() ? "connection reset" : "answered 408 and closed")}");
         }
         else
         {
-            Interlocked.Increment(ref _answerTimeouts);
             TryLog($"[{_options.DisplayName}] proxy-tap caller stalled {_options.CallerStallTimeout} reading its answer; closed");
         }
     }
@@ -1217,11 +1217,12 @@ public sealed class ProxyTap : IAsyncDisposable
         /// <summary>
         /// Cuts a caller that stalled past the limit, in whatever open phase its answer is, with <paramref name="status"/>
         /// where the head is not yet sent (408 while the body is read) and the connection closed; false when the answer was
-        /// closed or ended first.
+        /// closed or ended first. <paramref name="claimed"/> runs once the cut has won and before the caller is let go, so
+        /// what it records is there by the time the caller hears the end.
         /// </summary>
-        public bool TimeOut(int? status) => TryEnd(status, readingOnly: false, closeConnection: true, TimedOut);
+        public bool TimeOut(int? status, Action? claimed = null) => TryEnd(status, readingOnly: false, closeConnection: true, TimedOut, claimed);
 
-        private bool TryEnd(int? status, bool readingOnly, bool closeConnection, int end)
+        private bool TryEnd(int? status, bool readingOnly, bool closeConnection, int end, Action? claimed = null)
         {
             while (true)
             {
@@ -1231,6 +1232,8 @@ public sealed class ProxyTap : IAsyncDisposable
                 if (Interlocked.CompareExchange(ref _state, end, phase) == phase)
                     break;
             }
+
+            claimed?.Invoke();
 
             // The managed listener's Abort() first writes a head not yet sent, with the status set (200 unless told
             // otherwise), so a failure status makes that head true; once a head is out, the late status is never sent

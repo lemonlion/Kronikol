@@ -294,6 +294,29 @@ public class ProxyTapStallTests
     }
 
     [Fact]
+    public async Task A_cut_is_counted_before_the_caller_is_let_go()
+    {
+        // A host reads CallerTimeouts, or Diagnostics(), as soon as the caller is gone: the count must already be there.
+        // What the cut records runs before the response is aborted, while the caller has heard nothing; once it heard the
+        // 408 (or, on Windows, the reset), the poll would see it.
+        var port = StubUpstream.FreePort();
+        using var listener = new HttpListener();
+        listener.Prefixes.Add($"http://localhost:{port}/");
+        listener.Start();
+        using var caller = await RawCaller.SendAsync(port, StalledRequest(BodyKind.ContentLength));
+        var context = await listener.GetContextAsync().WaitAsync(Patience);
+        var answer = new Tap.CallerAnswer(context.Response) { StatusIfUnclosed = 503 };
+
+        bool? heardBeforeTheCount = null;
+        Assert.True(answer.TimeOut(408, () => heardBeforeTheCount = caller.Client.Client.Poll(300_000, System.Net.Sockets.SelectMode.SelectRead)));
+
+        Assert.False(heardBeforeTheCount, "the caller was let go before the cut was recorded");
+        Assert.True(answer.IsTimedOut);
+        var heard = await caller.HearAsync(Patience);
+        Assert.True(heard.LetGo, $"the caller was held: {heard}");
+    }
+
+    [Fact]
     public async Task No_limit_applies_while_a_debugger_is_attached()
     {
         await using var upstream = new StubUpstream(Ok);

@@ -61,6 +61,31 @@ public class TcpTapStallTests
     }
 
     [Fact]
+    public async Task A_pair_a_limit_closes_raises_no_capture_degradation()
+    {
+        // The pair lost none of its capture: the close is counted and logged, not reported as capture lost.
+        var degradations = new System.Collections.Concurrent.ConcurrentQueue<CaptureDegradation>();
+        var clock = new FakeTimeProvider();
+        await using var run = await StartAsync([], clock, o => o.OnCaptureDegraded = degradations.Enqueue);
+        await using var pair = await run.ConnectAsync(clientReceiveBuffer: Piece);
+
+        pair.Client.Client.Shutdown(SocketShutdown.Send);
+        Assert.Equal(0, await pair.Upstream.ReceiveAsync(new byte[16]));
+        await StalledAsync(run.Tap, TcpTapCore.HalfClosedPhase);
+        clock.Advance(PastTheLimit);
+        Assert.True(await WaitUntilAsync(() => run.Tap.HalfClosedPairsClosed == 1), "the half-closed pair was not closed");
+
+        await using var second = await run.ConnectAsync(clientReceiveBuffer: Piece);
+        _ = SendQuietlyAsync(second.Upstream, new byte[EightMegabytes]);
+        await StalledAsync(run.Tap, TcpTapCore.WritePhase);
+        clock.Advance(PastTheLimit);
+        Assert.True(await WaitUntilAsync(() => run.Tap.StalledWritesClosed == 1), "the stalled write was not closed");
+        Assert.True(await WaitUntilAsync(() => run.Tap.LiveConnections == 0), "a pair was never released");
+
+        Assert.Empty(degradations);
+    }
+
+    [Fact]
     public async Task A_pair_whose_client_stays_silent_after_the_upstream_half_closes_is_released()
     {
         var log = new List<string>();

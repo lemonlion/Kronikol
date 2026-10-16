@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.26.1] - 2026-10-16
+
+**Patch - a `ProxyTap` counts a caller it cuts before it lets the caller go (#173, a fix to R1 of
+`plans/TAP_CALLER_TIME_LIMITS_PLAN.md`).** A bug fix, with a doc comment and tests: nothing new for a consumer to call,
+so the patch part moves (4.26.0 to 4.26.1).
+
+### Fixed
+
+- **`ProxyTap.CallerTimeouts` could read 0 just after a stalled caller had been let go.** Since 4.23.0 the tap ended the
+  caller's response (the `408`, or a reset on Windows) and only then counted the cut, so a host that read
+  `CallerTimeouts` or `Diagnostics()` as soon as the caller was gone could miss it; 4.26.0's CI run caught it on a
+  loaded runner, in `ProxyTapStallTests`. The tap now counts the cut once it has won and before the response ends; the
+  log line still follows.
+- `DiagnosticEntry.CaptureDegraded`'s summary says a tap also closes a connection whose caller or peer stalled past a
+  time limit, as `TcpTap` does since 4.26.0; it named only a caller.
+
+Tests: `ProxyTapStallTests.A_cut_is_counted_before_the_caller_is_let_go` checks, inside the cut, that the caller has
+heard nothing yet; with the count after the abort, as 4.26.0 had it, it fails, the caller having heard the end.
+`TcpTapStallTests.A_pair_a_limit_closes_raises_no_capture_degradation` covers a sentence of 4.26.0's changelog that no
+fact checked, that a pair a limit closes raises no `OnCaptureDegraded` event; a mutant that raises one fails it. Checks:
+after the version bump the core suite passes 7,645 with 2 skipped; the ProxyTap suite passes 189 with 4 skipped on
+Windows and 193 on Linux, and the TcpTap suite 470 with 4 skipped on Windows and 469 with 5 skipped on Linux;
+release.slnf builds in Release for every target. The templates pin 4.26.0 and the history action's VERSION installs
+Kronikol.Tool 4.26.1.
+
 ## [4.26.0] - 2026-10-16
 
 **Minor - a `TcpTap` releases a pair that cannot finish: one side has half-closed and the other stays silent, or one

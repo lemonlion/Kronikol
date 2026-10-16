@@ -41,8 +41,9 @@ public enum DiagnosticKind
     /// <summary>
     /// A capture component — a tap, a sink — lost or skipped data (an oversize payload streamed past, a decoder reset or
     /// give-up, dropped segments), or a tap could not carry what it was given (a forward or a connect to the real server
-    /// that failed, an accept that failed), or cut a caller that stalled past its time limit. Hosts hand these in through
-    /// <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/> so a dead tap is a line in the report, not only in a log.
+    /// that failed, an accept that failed), or closed a connection whose caller or peer stalled past a time limit.
+    /// Hosts hand these in through <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/> so a dead tap is a
+    /// line in the report, not only in a log.
     /// </summary>
     CaptureDegraded,
 
