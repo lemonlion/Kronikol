@@ -4,8 +4,8 @@
 the owner's request. The sweep re-ran every measurement on 4.22.1, measured the background and hook cases that had only
 been read from the code, and found F9: the failures digest reads only a scenario's own attachments, so R1 now carries
 the readers too (section 10 has the sweep's log). Green-lit in full by the owner on 2026-10-15 ("Can you implement the
-plan in full"), every question in section 9 as recommended. **Executed as 4.24.0**, one minor release (Q14); section 10
-has the implementation's log.
+plan in full"), every question in section 9 as recommended. **Executed and published as 4.24.0** on 2026-10-16, one
+minor release (Q14); #175 is closed and the reader's memory (Q9) is #178. Section 10 has the implementation's log.
 
 **Issue:** [#175](https://github.com/lemonlion/Kronikol/issues/175), "A playwright-bdd failure lists its trace, video,
 screenshot and error context twice, because the merge matches attachments by a name only one side gives an extension".
@@ -613,4 +613,12 @@ second pass are not part of R1.
     paragraph.
   - **Version:** R1 was built and measured as 4.23.0 and released as 4.24.0, since #173's R1 took 4.23.0 first; the
     harness's `results/*-4.24.0.txt` say so in their headers.
-  - **Checks:** After the version bump the core suite passes 7,645 with 2 skipped, the full Playwright suite passes 1,041 with 28 skipped when run alone, and `release.slnf` builds in Release for every target.
+  - **Checks:** after the version bump the core suite passes 7,645 with 2 skipped, the full Playwright suite passes
+    1,041 with 28 skipped when run alone, and `release.slnf` builds in Release for every target.
+- 2026-10-16, published: `5607b776` and tag `v4.24.0` were pushed at 23:41 UTC on 2026-10-15, once nuget.org had
+  listed 4.23.0's 62 ids (23:29). Release 38824954447 and CodeQL 38824951820 passed. CI 38824951793 failed in its
+  auto-discovered remainder job, where `MongoDbRealServerTests`' container exited before Testcontainers initiated its
+  replica set (Docker 409, "container ... is not running"), and passed when the failed job was run again. nuget.org
+  listed all 62 ids at 4.24.0 by 00:04 UTC. The wiki has R1's edits (`7176197`) and the Kronikol4J ledger its line
+  (`0049a40`); #175 is closed with a comment naming 4.24.0; the reader's memory (3.10, Q9) is #178. The plan is
+  complete.
