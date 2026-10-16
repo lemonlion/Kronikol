@@ -7,7 +7,8 @@ the readers too (section 10 has the sweep's log). Green-lit in full by the owner
 plan in full"), every question in section 9 as recommended. **Executed and published as 4.24.0** on 2026-10-16, one
 minor release (Q14); #175 is closed and the reader's memory (Q9) is #178. Section 10 has the implementation's log.
 **Audited** on 2026-10-16 at the owner's ask ("make sure nothing was missed from the plan and there are no bugs in the
-implementation"): every item was delivered, and twelve defects were found and fixed in 4.26.4, a patch (section 10).
+implementation"): every item was delivered, and twelve defects were found and fixed in 4.26.4, a patch, published the
+same day (section 10).
 
 **Issue:** [#175](https://github.com/lemonlion/Kronikol/issues/175), "A playwright-bdd failure lists its trace, video,
 screenshot and error context twice, because the merge matches attachments by a name only one side gives an extension".
@@ -689,3 +690,11 @@ second pass are not part of R1.
     skipped run alone; release.slnf builds in Release for every target. The core suite's first run failed one fact: the
     skill's reference named `--include-hooks`, an ingest flag, where the reference is held to the query parser; reworded
     before the release.
+- 2026-10-16, the audit published: `0a3d095f` and tag `v4.26.4` were pushed at 16:00 UTC, on main after kronikol-51's
+  plan log for #173 (`ecfba30d`). Release 38928454497, CI Summary Preview 38928450061 and CodeQL 38928449867 passed;
+  CI 38928449738 failed in the auto-discovered remainder job, where `MongoDbRealServerTests`' container exited before
+  Testcontainers initiated its replica set (Docker 409, "container ... is not running"), as on 4.24.0, and passed when
+  the failed job was run again. nuget.org listed all 62 ids at 4.26.4 by 16:25 UTC. The wiki has the audit's edits
+  (`7a46c65`) and the Kronikol4J ledger its line (`b7348dd`): the merge's fix is worth porting, since the port's
+  `MergeCommand` carries attachment entries but not their files. #175 has a comment saying what its closing comment
+  claimed that 4.24.0 did not do, and naming 4.26.4.
