@@ -1,0 +1,64 @@
+  Determining projects to restore...
+  Restored /repo/src/Kronikol/Kronikol.csproj (in 5.4 sec).
+  Restored /repo/src/Kronikol.Extensions.ProxyTap/Kronikol.Extensions.ProxyTap.csproj (in 5.4 sec).
+  Restored /repo/tests/Kronikol.Tests.ProxyTap/Kronikol.Tests.ProxyTap.csproj (in 5.4 sec).
+/repo/src/Kronikol/PlantUml/NodeJsPlantUmlRenderer.cs(56,118): warning CS8604: Possible null reference argument for parameter 'expectedIntegrity' in 'EngineCache.EngineCache(string directory, Func<string, byte[]> download, string cdnBase, IReadOnlyDictionary<string, string> expectedIntegrity)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/PlantUml/PlantUmlCreator.cs(1514,48): warning CS8604: Possible null reference argument for parameter 'content' in 'string PlantUmlCreator.FormFieldLines(string content)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Reports/Merge/MergeableReportReader.cs(99,38): warning CS8604: Possible null reference argument for parameter 'testName' in 'void MergeableReportReader.ReadInteractions(JsonElement se, string testName, string testId, List<RequestResponseLog> into, Dictionary<string, List<string?>>? stepPaths, ParseNotes notes, Dictionary<Guid, WarmUpMark>? warmUpCalls = null)'. [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,55): warning CS1573: Parameter 'Verdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,95): warning CS1573: Parameter 'Subjects' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,112): warning CS1573: Parameter 'LedgerPath' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1090,146): warning CS1573: Parameter 'LedgerSource' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,10): warning CS1573: Parameter 'BehaviourVerdicts' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,67): warning CS1573: Parameter 'Analysis' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1091,108): warning CS1573: Parameter 'Shapes' has no matching param tag in the XML comment for 'HistoryReading.HistoryReading(HistoryVerdicts, IReadOnlyList<HistorySubject>, string, HistoryLocationSource, bool, string, HistoryAnalysisOptions, HistoryRun, HistoryShapes?, string?)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,48): warning CS1573: Parameter 'Subject' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,73): warning CS1573: Parameter 'Entry' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,117): warning CS1573: Parameter 'RunId' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+/repo/src/Kronikol/Query/QueryCommand.History.cs(1107,128): warning CS1573: Parameter 'RunsAgo' has no matching param tag in the XML comment for 'NearMiss.NearMiss(HistorySubject, ScenarioHistory, string, string?, string?, int)' (but other parameters do) [/repo/src/Kronikol/Kronikol.csproj::TargetFramework=net10.0]
+  Kronikol -> /repo/src/Kronikol/bin/Debug/net10.0/Kronikol.dll
+  Kronikol.Extensions.ProxyTap -> /repo/src/Kronikol.Extensions.ProxyTap/bin/Debug/net10.0/Kronikol.Extensions.ProxyTap.dll
+  Kronikol.Tests.ProxyTap -> /repo/tests/Kronikol.Tests.ProxyTap/bin/Debug/net10.0/Kronikol.Tests.ProxyTap.dll
+Test run for /repo/tests/Kronikol.Tests.ProxyTap/bin/Debug/net10.0/Kronikol.Tests.ProxyTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.19]   Discovering: Kronikol.Tests.ProxyTap
+[xUnit.net 00:00:00.46]   Discovered:  Kronikol.Tests.ProxyTap
+[xUnit.net 00:00:00.66]   Starting:    Kronikol.Tests.ProxyTap
+[xUnit.net 00:00:00.83]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded [FAIL]
+[xUnit.net 00:00:00.83]       Assert.DoesNotContain() Failure: Sub-string found
+[xUnit.net 00:00:00.83]                ↓ (pos 0)
+[xUnit.net 00:00:00.83]       String: "HTTP/1.1 200 OK"
+[xUnit.net 00:00:00.83]       Found:  "HTTP/1.1 2"
+[xUnit.net 00:00:00.83]       Stack Trace:
+[xUnit.net 00:00:00.83]         /repo/tests/Kronikol.Tests.ProxyTap/ProxyTapStoppingTests.cs(283,0): at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded()
+[xUnit.net 00:00:00.83]         /repo/tests/Kronikol.Tests.ProxyTap/ProxyTapStoppingTests.cs(285,0): at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded()
+[xUnit.net 00:00:00.83]         /repo/tests/Kronikol.Tests.ProxyTap/ProxyTapStoppingTests.cs(285,0): at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded()
+[xUnit.net 00:00:00.83]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded [65 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Sub-string found
+         ↓ (pos 0)
+String: "HTTP/1.1 200 OK"
+Found:  "HTTP/1.1 2"
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded() in /repo/tests/Kronikol.Tests.ProxyTap/ProxyTapStoppingTests.cs:line 283
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded() in /repo/tests/Kronikol.Tests.ProxyTap/ProxyTapStoppingTests.cs:line 285
+   at Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded() in /repo/tests/Kronikol.Tests.ProxyTap/ProxyTapStoppingTests.cs:line 285
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_body_that_ends_as_the_tap_stops_is_neither_forwarded_nor_recorded [534 ms]
+  Passed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_request_that_arrives_meanwhile_503_without_forwarding_it [2 s]
+  Passed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_lets_an_answer_in_hand_finish [865 ms]
+  Passed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_never_tells_a_caller_still_sending_its_body_that_it_succeeded [34 ms]
+  Passed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Disposing_a_tap_straight_after_starting_it_never_throws [174 ms]
+  Passed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_answers_a_forward_it_cuts_short_with_the_502_its_record_names [32 ms]
+  Passed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_the_stop_reaches_before_its_forward_is_refused_and_not_recorded [30 ms]
+[xUnit.net 00:00:07.05]   Finished:    Kronikol.Tests.ProxyTap (ID = '1e7b8e8f509ef49ec6fc518f07d9375de09ee525055a3850865dd1034d42774d')
+Data collector 'Blame' message: All tests finished running, Sequence file will not be generated.
+  Passed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_handler_that_outlives_disposal_is_not_a_forward_failure [2 s]
+
+Total tests: 9
+     Passed: 8
+Test Run Failed.
+     Failed: 1
+ Total time: 7.7724 Seconds

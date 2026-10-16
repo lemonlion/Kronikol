@@ -1,0 +1,6 @@
+== TcpTap exit 0
+Passed!  - Failed:     0, Passed:   475, Skipped:     5, Total:   480, Duration: 14 s - Kronikol.Tests.TcpTap.dll (net10.0)
+== ProxyTap exit 0
+Passed!  - Failed:     0, Passed:   204, Skipped:     0, Total:   204, Duration: 20 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+== Otlp exit 0
+Passed!  - Failed:     0, Passed:   225, Skipped:     0, Total:   225, Duration: 15 s - Kronikol.Tests.Otlp.dll (net10.0)

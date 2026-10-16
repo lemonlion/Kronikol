@@ -1,0 +1,782 @@
+diff --git a/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs b/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+index d220048b..c8495f39 100644
+--- a/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
++++ b/src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+@@ -139,6 +139,14 @@ public ProxyTap(ProxyTapOptions options)
+     // The watch over callers' transfers, or null when there is no limit (Kronikol.Tests.ProxyTap).
+     internal StallWatch? Watch => _watch;
+ 
++    internal Func<HttpListener, Task<HttpListenerContext>> GetContext { get; set; } = static listener => listener.GetContextAsync();
++
++    internal Func<TimeSpan, CancellationToken, Task> Pause { get; set; } = static (pause, ct) => Task.Delay(pause, ct);
++
++    internal Action<HttpListenerContext>? Received { get; set; }
++
++    internal Action? BeforeCallerLetGo { get; set; }
++
+     /// <summary>
+     /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per
+     /// non-zero problem counter, worded for a report reader (<c>web→graphql: 3 request(s) could not be
+@@ -294,7 +302,7 @@ private async Task AcceptLoopAsync()
+             HttpListenerContext context;
+             try
+             {
+-                context = await _listener.GetContextAsync().WaitAsync(_listenerClosed.Token).ConfigureAwait(false);
++                context = await GetContext(_listener).WaitAsync(_listenerClosed.Token).ConfigureAwait(false);
+             }
+             catch (Exception ex) when (ex is OperationCanceledException or HttpListenerException or ObjectDisposedException or InvalidOperationException
+                 || Volatile.Read(ref _disposed) == 1)
+@@ -305,6 +313,7 @@ private async Task AcceptLoopAsync()
+                 return;
+             }
+ 
++            Received?.Invoke(context);
+             _ = Task.Run(() => GuardedHandleAsync(context), CancellationToken.None);
+         }
+     }
+@@ -312,7 +321,7 @@ private async Task AcceptLoopAsync()
+     private async Task GuardedHandleAsync(HttpListenerContext context)
+     {
+         Interlocked.Increment(ref _inflight);
+-        var answer = new CallerAnswer(context.Response);
++        var answer = new CallerAnswer(context.Response) { BeforeLetGo = BeforeCallerLetGo };
+         _answers.TryAdd(answer, 0);
+         try
+         {
+@@ -1160,6 +1169,8 @@ internal sealed class CallerAnswer(HttpListenerResponse response)
+         /// <summary>The status a response not yet started is ended with: 502, or 400 when the request never arrived whole.</summary>
+         public int StatusIfUnclosed { get; set; } = 502;
+ 
++        public Action? BeforeLetGo { get; init; }
++
+         /// <summary>Whether the tap closed the response itself, which it is only once <see cref="HttpListenerResponse.Close()"/> has returned.</summary>
+         public bool IsClosed => Volatile.Read(ref _state) == Closed;
+ 
+@@ -1264,6 +1275,7 @@ private bool TryEnd(int? status, bool readingOnly, bool closeConnection, int end
+ 
+             try
+             {
++                BeforeLetGo?.Invoke();
+                 Response.Abort();
+             }
+             catch (Exception)
+diff --git a/tests/Kronikol.Tests.Otlp/HttpRequestReaderTests.cs b/tests/Kronikol.Tests.Otlp/HttpRequestReaderTests.cs
+index 98a29cc5..19d19469 100644
+--- a/tests/Kronikol.Tests.Otlp/HttpRequestReaderTests.cs
++++ b/tests/Kronikol.Tests.Otlp/HttpRequestReaderTests.cs
+@@ -46,4 +46,55 @@ await exporter.Client.SendAsync(Encoding.ASCII.GetBytes(
+         Assert.Equal("0123456789"u8.ToArray(), request.Body[..10]);
+         Assert.True(request.Body.AsSpan(10).IndexOfAnyExcept((byte)'r') < 0, "the body that arrived is not the one sent");
+     }
++
++    [Fact]
++    public async Task A_head_of_one_header_repeated_is_read_in_proportion_to_its_size()
++    {
++        // Each repeat was joined onto the whole value so far: 16,000 of them in a 64 KiB head built half a gigabyte of
++        // strings, before the tap checks its secret.
++        var head = new StringBuilder("POST /v1/traces HTTP/1.1\r\nHost: localhost\r\n");
++        var repeats = 0;
++        for (; head.Length < (64 * 1024) - 16; repeats++)
++            head.Append("a:\r\n");
++        head.Append("\r\n");
++        using var stream = new MemoryStream(Encoding.ASCII.GetBytes(head.ToString()));
++        var reader = new HttpRequestReader(stream, 1024);
++
++        var before = GC.GetAllocatedBytesForCurrentThread();
++        var parsed = await reader.ReadHeadAsync(CancellationToken.None); // a memory stream completes every read at once
++        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
++
++        Assert.NotNull(parsed);
++        Assert.Equal(string.Join(", ", Enumerable.Repeat("", repeats)), parsed.Headers["a"]);
++        Assert.InRange(allocated, 0, 16L * 1024 * 1024);
++    }
++
++    [Fact]
++    public async Task An_empty_line_before_a_request_line_is_passed_over()
++    {
++        // RFC 9112 section 2.2: a server reading a request line ignores at least one empty line before it, as a client may
++        // send a CRLF after a body. The request starts at its request line.
++        using var stream = new MemoryStream(Encoding.ASCII.GetBytes("\r\nPOST /v1/traces HTTP/1.1\r\nHost: localhost\r\nContent-Length: 0\r\n\r\n"));
++        var started = 0;
++        var reader = new HttpRequestReader(stream, 1024) { HeadStarted = () => started++ };
++
++        var parsed = await reader.ReadHeadAsync(CancellationToken.None);
++
++        Assert.NotNull(parsed);
++        Assert.Equal("POST", parsed.Method);
++        Assert.Equal(1, started);
++    }
++
++    [Theory]
++    [InlineData("\r\n", 0)] // the wait stays the kept-alive connection's
++    [InlineData("\r\n\r\n", 1)] // one empty line is passed over, not more: a second starts a request, timed as one
++    public async Task An_empty_line_alone_starts_no_request(string sent, int starts)
++    {
++        using var stream = new MemoryStream(Encoding.ASCII.GetBytes(sent));
++        var started = 0;
++        var reader = new HttpRequestReader(stream, 1024) { HeadStarted = () => started++ };
++
++        Assert.Null(await reader.ReadHeadAsync(CancellationToken.None));
++        Assert.Equal(starts, started);
++    }
+ }
+diff --git a/tests/Kronikol.Tests.Otlp/OtlpTapLogTests.cs b/tests/Kronikol.Tests.Otlp/OtlpTapLogTests.cs
+index 7700aa48..1755acb8 100644
+--- a/tests/Kronikol.Tests.Otlp/OtlpTapLogTests.cs
++++ b/tests/Kronikol.Tests.Otlp/OtlpTapLogTests.cs
+@@ -30,6 +30,7 @@ private static string Head(int contentLength, string target = "/v1/traces") =>
+         { "a target with no path", "refused a request target with no path" },
+         { "a forward that failed", "forward failed" },
+         { "a payload that cannot be mapped", "could not map an export payload" },
++        { "a connection that fails", "connection error" },
+     };
+ 
+     [Theory]
+@@ -72,6 +73,13 @@ public async Task A_throwing_log_callback_changes_nothing(string line, string th
+         }
+ 
+         var tap = new OtlpTap(options);
++        if (line == "a connection that fails")
++        {
++            // The first connection fails once its answer is written, as one whose socket throws what no catch expects.
++            var failures = 0;
++            tap.AfterResponseWritten = () => Interlocked.Increment(ref failures) == 1 ? throw new InvalidOperationException("boom") : Task.CompletedTask;
++        }
++
+         await tap.StartAsync();
+         try
+         {
+@@ -103,6 +111,10 @@ public async Task A_throwing_log_callback_changes_nothing(string line, string th
+                     Assert.Equal(["HTTP/1.1 502 Bad Gateway"], await ExchangeAsync(tap, Head(Export.Length), Export));
+                     Assert.Equal(1, tap.ForwardFailures);
+                     break;
++                case "a connection that fails":
++                    Assert.Equal(["HTTP/1.1 200 OK"], await ExchangeAsync(tap, Head(Export.Length), Export));
++                    Assert.Equal(["HTTP/1.1 200 OK"], await ExchangeAsync(tap, Head(Export.Length), Export)); // the tap goes on
++                    break;
+                 case "a payload that cannot be mapped":
+                 {
+                     // The sink throws at the first payload, as one that cannot write does.
+diff --git a/tests/Kronikol.Tests.Otlp/OtlpTapRefusalTests.cs b/tests/Kronikol.Tests.Otlp/OtlpTapRefusalTests.cs
+index 7c204bf1..7fb2af74 100644
+--- a/tests/Kronikol.Tests.Otlp/OtlpTapRefusalTests.cs
++++ b/tests/Kronikol.Tests.Otlp/OtlpTapRefusalTests.cs
+@@ -150,6 +150,29 @@ public async Task A_request_with_both_framings_closes_its_connection()
+         Assert.Equal(1, tap.RequestsReceived);
+     }
+ 
++    [Theory]
++    [InlineData("gzip", "400 Bad Request")]
++    [InlineData("chunked, gzip", "400 Bad Request")]
++    [InlineData("gzip, chunked", "501 Not Implemented")]
++    public async Task A_transfer_coding_other_than_chunked_alone_is_refused(string coding, string status)
++    {
++        // RFC 9112 section 6.3: with a coding after chunked, or none, a body's length cannot be told (400); a coding before
++        // chunked is one the tap cannot undo (501, section 6.1). Read as no body, or as chunked, the request's bytes
++        // were taken for a body or for the next request's head.
++        var sink = new ListSink();
++        await using var tap = await StartAsync(sink);
++
++        using var exporter = await RawExporter.ConnectAsync(tap);
++        await exporter.SendAsync([.. System.Text.Encoding.ASCII.GetBytes(
++            $"POST /v1/traces HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/x-protobuf\r\nTransfer-Encoding: {coding}\r\n\r\n"), .. Export]);
++
++        var heard = await exporter.HearAsync(Patience);
++
++        Assert.Equal([$"HTTP/1.1 {status}"], heard.StatusLines);
++        Assert.True(heard.Closed, $"the tap did not close the connection after refusing its framing: {heard}");
++        Assert.Equal(0, tap.RequestsReceived);
++    }
++
+     // ------------------------------------------------------------------ helpers
+ 
+     private static async Task<OtlpTap> StartAsync(ListSink sink, Action<OtlpTapOptions>? configure = null)
+diff --git a/tests/Kronikol.Tests.Otlp/OtlpTapStallTests.cs b/tests/Kronikol.Tests.Otlp/OtlpTapStallTests.cs
+index e4166a6b..0ca899f9 100644
+--- a/tests/Kronikol.Tests.Otlp/OtlpTapStallTests.cs
++++ b/tests/Kronikol.Tests.Otlp/OtlpTapStallTests.cs
+@@ -578,6 +578,109 @@ public async Task An_exchange_leaves_no_entry_behind(int status)
+         Assert.Equal(0, tap.CallerTimeouts);
+     }
+ 
++    [Fact]
++    public async Task A_request_arriving_as_the_keep_alive_limit_fires_is_not_received()
++    {
++        // The keep-alive limit fires, and the export arrives, whole, before its action has run. The wait was the kept-alive
++        // connection's, so it is closed with nothing written, and the export is neither received nor mapped: its exporter
++        // hears no answer and may send it again.
++        var sink = new ListSink();
++        var clock = new FakeTimeProvider();
++        using var hold = new ManualResetEventSlim();
++        await using var tap = await StartAsync(sink, [], clock);
++        tap.Watch!.BeforeAct = _ => hold.Wait(Patience);
++
++        using var exporter = await RawExporter.ConnectAsync(tap);
++        var entry = await StalledAsync(tap, OtlpTap.KeptAlivePhase);
++        clock.Advance(KeepAlive + StallWatch.Beat);
++        Assert.True(await WaitUntilAsync(() => entry.HasFired), "the keep-alive limit never fired");
++        try
++        {
++            await exporter.SendAsync(WholeExport());
++            var heard = await exporter.HearAsync(Patience);
++
++            Assert.True(heard.Closed, $"the connection was not closed: {heard}");
++            Assert.Empty(heard.Bytes);
++            Assert.Equal(0, tap.RequestsReceived);
++            await Task.Delay(300); // a payload queued for mapping would be mapped by now
++            Assert.Equal(0, sink.Count);
++            Assert.Equal(0, tap.CallerTimeouts);
++        }
++        finally
++        {
++            hold.Set();
++        }
++    }
++
++    [Fact]
++    public async Task A_refused_head_whole_only_after_the_limit_fired_is_cut_not_refused()
++    {
++        // A head without the secret is refused and counted once it is whole; one that is whole only after the limit fired is
++        // the limit's, answered 408 and counted as a stall alone.
++        var clock = new FakeTimeProvider();
++        using var hold = new ManualResetEventSlim();
++        await using var tap = await StartAsync(new ListSink(), [], clock, o => o.ExpectedHeaders["Authorization"] = "Bearer secret");
++        tap.Watch!.BeforeAct = _ => hold.Wait(Patience);
++
++        using var exporter = await RawExporter.ConnectAsync(tap);
++        await exporter.SendAsync("POST /v1/traces HTTP/1.1\r\nHost: localhost\r\n"); // no secret, and not yet whole
++        var entry = await StalledAsync(tap, OtlpTap.SendingPhase);
++        clock.Advance(PastTheLimit);
++        Assert.True(await WaitUntilAsync(() => entry.HasFired), "the limit never fired");
++        await exporter.SendAsync("Content-Length: 0\r\n\r\n");
++        Assert.True(await WaitUntilAsync(() => tap.CallerTimeouts == 1), "a head whole only after the limit fired was not cut");
++        hold.Set();
++
++        AssertTimedOut(await exporter.HearAsync(Patience));
++        Assert.Equal(0, tap.UnauthenticatedRequests);
++    }
++
++    [Fact]
++    public async Task An_empty_line_after_an_export_leaves_the_connection_kept_alive()
++    {
++        // A client may send a CRLF after a body (RFC 9112 section 2.2): the wait after it is still the kept-alive
++        // connection's, and a request that follows it is answered.
++        var log = new List<string>();
++        var clock = new FakeTimeProvider();
++        await using var tap = await StartAsync(new ListSink(), log, clock);
++
++        using var exporter = await RawExporter.ConnectAsync(tap);
++        await exporter.SendAsync([.. WholeExport(), .. "\r\n"u8.ToArray()]);
++        Assert.StartsWith("HTTP/1.1 200 ", await ReadOneAnswerAsync(exporter.Client.GetStream()));
++        await exporter.SendAsync(WholeExport());
++        Assert.StartsWith("HTTP/1.1 200 ", await ReadOneAnswerAsync(exporter.Client.GetStream()));
++        await exporter.SendAsync("\r\n");
++
++        await AssertIdleThenClosedAsync(tap, exporter, clock, log);
++    }
++
++    [Fact]
++    public async Task A_start_that_cannot_bind_leaves_no_heartbeat_running()
++    {
++        // A tap whose start threw is often dropped undisposed, and a heartbeat left running would hold it for good.
++        var clock = new CountingClock();
++        var taken = LoopbackPort.Listening();
++        try
++        {
++            var options = new OtlpTapOptions { ListenPort = ((System.Net.IPEndPoint)taken.LocalEndpoint).Port, ListenHost = "127.0.0.1", Sink = new ListSink() };
++            var tap = new OtlpTap(options) { Clock = clock, DebuggerAttached = static () => false };
++
++            var thrown = await Assert.ThrowsAsync<SocketException>(() => tap.StartAsync());
++            Assert.Equal(SocketError.AddressAlreadyInUse, thrown.SocketErrorCode);
++            Assert.Equal(0, clock.Running);
++        }
++        finally
++        {
++            taken.Stop();
++        }
++
++        // The count sees the heartbeat: a start that binds runs one, and disposing the tap stops it.
++        await using var started = await StartAsync(new ListSink(), [], clock);
++        Assert.Equal(1, clock.Running);
++        await started.DisposeAsync();
++        Assert.Equal(0, clock.Running);
++    }
++
+     // ------------------------------------------------------------------ helpers
+ 
+     private static void AssertTimedOut(Answer heard)
+@@ -705,4 +808,38 @@ private static async Task<string> ReadOneAnswerAsync(Stream stream)
+         await stream.ReadExactlyAsync(body);
+         return text.Split("\r\n")[0];
+     }
++
++    /// <summary>The system's clock, counting the timers made on it that have not been disposed.</summary>
++    private sealed class CountingClock : TimeProvider
++    {
++        private int _running;
++
++        public int Running => Volatile.Read(ref _running);
++
++        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
++        {
++            Interlocked.Increment(ref _running);
++            return new Counted(this, base.CreateTimer(callback, state, dueTime, period));
++        }
++
++        private sealed class Counted(CountingClock owner, ITimer inner) : ITimer
++        {
++            private int _disposed;
++
++            public bool Change(TimeSpan dueTime, TimeSpan period) => inner.Change(dueTime, period);
++
++            public void Dispose()
++            {
++                if (Interlocked.Exchange(ref _disposed, 1) == 0)
++                    Interlocked.Decrement(ref owner._running);
++                inner.Dispose();
++            }
++
++            public ValueTask DisposeAsync()
++            {
++                Dispose();
++                return ValueTask.CompletedTask;
++            }
++        }
++    }
+ }
+diff --git a/tests/Kronikol.Tests.ProxyTap/ProxyTapStallTests.cs b/tests/Kronikol.Tests.ProxyTap/ProxyTapStallTests.cs
+index 878f3343..c47c4e5c 100644
+--- a/tests/Kronikol.Tests.ProxyTap/ProxyTapStallTests.cs
++++ b/tests/Kronikol.Tests.ProxyTap/ProxyTapStallTests.cs
+@@ -70,7 +70,8 @@ public async Task A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(Body
+         if (OperatingSystem.IsWindows())
+         {
+             // http.sys writes nothing on an abort: the connection is reset.
+-            Assert.DoesNotContain("HTTP/1.1 2", heard.FirstLine, StringComparison.Ordinal);
++            Assert.Empty(heard.Bytes);
++            Assert.StartsWith("a reset", heard.Ending);
+         }
+         else
+         {
+@@ -83,12 +84,20 @@ public async Task A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(Body
+         Assert.Equal(0, tap.ForwardFailures);
+         lock (upstream.Seen)
+             Assert.Empty(upstream.Seen);
+-        lock (log)
+-            Assert.Contains(log, line => line.Contains("proxy-tap caller stalled", StringComparison.Ordinal)
+-                && line.Contains("sending its request body; not forwarded", StringComparison.Ordinal));
++        // The line is written once the caller is let go, on the cut's thread, which may come after the handler has ended.
++        Assert.True(await WaitUntilAsync(() =>
++        {
++            lock (log)
++                return log.Any(line => line.Contains("proxy-tap caller stalled", StringComparison.Ordinal)
++                    && line.Contains("sending its request body; not forwarded", StringComparison.Ordinal));
++        }), "the cut was not logged");
+         var diagnostic = Assert.Single(tap.Diagnostics(), entry => entry.Message.Contains("stalled for CallerStallTimeout", StringComparison.Ordinal));
+         Assert.Equal(DiagnosticKind.CaptureDegraded, diagnostic.Kind);
+         Assert.Contains("1 caller(s) stalled for CallerStallTimeout (00:00:01) and were cut: 1 sending a request body (not forwarded), 0 reading an answer", diagnostic.Message, StringComparison.Ordinal);
++        await tap.DisposeAsync();
++        lock (log)
++            Assert.Contains(log, line => line.Contains("proxy-tap stopped (", StringComparison.Ordinal)
++                && line.EndsWith(", 0 forward failures, 1 caller timeouts)", StringComparison.Ordinal));
+     }
+ 
+     [Fact]
+@@ -146,9 +155,12 @@ public async Task A_caller_that_stops_reading_its_answer_is_cut_and_recorded()
+         lock (sink.Logs)
+             Assert.NotEmpty(sink.Logs); // the exchange is recorded, as one whose caller hangs up mid-answer
+         Assert.Null(registry.MostRecentFor("api"));
+-        lock (log)
+-            Assert.Contains(log, line => line.Contains("proxy-tap caller stalled", StringComparison.Ordinal)
+-                && line.Contains("reading its answer; closed", StringComparison.Ordinal));
++        Assert.True(await WaitUntilAsync(() =>
++        {
++            lock (log)
++                return log.Any(line => line.Contains("proxy-tap caller stalled", StringComparison.Ordinal)
++                    && line.Contains("reading its answer; closed", StringComparison.Ordinal));
++        }), "the cut was not logged");
+         Assert.Contains(tap.Diagnostics(), entry => entry.Kind == DiagnosticKind.CaptureDegraded
+             && entry.Message.Contains("0 sending a request body (not forwarded), 1 reading an answer (recorded when captured)", StringComparison.Ordinal));
+         var heard = await caller.HearAsync(Patience);
+@@ -316,6 +328,25 @@ public async Task A_cut_is_counted_before_the_caller_is_let_go()
+         Assert.True(heard.LetGo, $"the caller was held: {heard}");
+     }
+ 
++    [Fact]
++    public async Task A_stall_the_tap_cuts_is_counted_before_its_caller_is_let_go()
++    {
++        // Through the tap's own cut: the fact above holds CallerAnswer.TimeOut to its order, and a cut that counted after
++        // the abort, as 4.26.0's did, passed every fact on an idle machine.
++        await using var upstream = new StubUpstream(Ok);
++        var clock = new FakeTimeProvider();
++        var countedAtLetGo = new StrongBox<long>(-1);
++        await using var tap = await StartAsync(upstream.BaseUri, new ListSink(), [], clock,
++            prepare: t => t.BeforeCallerLetGo = () => Interlocked.CompareExchange(ref countedAtLetGo.Value, t.CallerTimeouts, -1));
++
++        using var caller = await RawCaller.SendAsync(tap.Options.ListenPort, StalledRequest(BodyKind.ContentLength));
++        await StalledAsync(tap, Tap.BodyPhase);
++        clock.Advance(PastTheLimit);
++
++        Assert.True((await caller.HearAsync(Patience)).LetGo, "the stalled caller was held");
++        Assert.Equal(1, Interlocked.Read(ref countedAtLetGo.Value));
++    }
++
+     [Fact]
+     public async Task No_limit_applies_while_a_debugger_is_attached()
+     {
+diff --git a/tests/Kronikol.Tests.ProxyTap/ProxyTapStoppingTests.cs b/tests/Kronikol.Tests.ProxyTap/ProxyTapStoppingTests.cs
+index de89c6fb..f9ee0a4d 100644
+--- a/tests/Kronikol.Tests.ProxyTap/ProxyTapStoppingTests.cs
++++ b/tests/Kronikol.Tests.ProxyTap/ProxyTapStoppingTests.cs
+@@ -257,6 +257,34 @@ public async Task A_request_the_stop_reaches_before_its_forward_is_refused_and_n
+         Assert.Equal(0, tap.ForwardFailures);
+     }
+ 
++    [Fact]
++    public async Task A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded()
++    {
++        // The accept loop has the request and has not handed it on when the stop begins. Tracked only once its handler
++        // ran, it was in nothing the stop settles, and closing the managed listener (Linux, macOS) answered it 200 OK.
++        await using var upstream = new StubUpstream(Ok);
++        using var received = new ManualResetEventSlim();
++        using var release = new ManualResetEventSlim();
++        await using var tap = await StartAsync(upstream.BaseUri, new ListSink(), [], prepare: t => t.Received = _ =>
++        {
++            received.Set();
++            release.Wait(Patience);
++        });
++
++        using var caller = await RawCaller.SendAsync(tap.Options.ListenPort, "GET /late HTTP/1.1\r\nHost: localhost\r\n\r\n");
++        Assert.True(received.Wait(Patience), "the request never reached the accept loop");
++        var stopping = tap.DisposeAsync().AsTask();
++        Assert.True(await WaitUntilAsync(() => !tap.IsListening), "the tap never closed its listener");
++        var heard = await caller.HearAsync(Patience);
++        release.Set();
++        await stopping.WaitAsync(Patience);
++
++        Assert.True(heard.LetGo, $"the caller was held: {heard}");
++        Assert.DoesNotContain("HTTP/1.1 2", heard.FirstLine, StringComparison.Ordinal);
++        lock (upstream.Seen)
++            Assert.Empty(upstream.Seen);
++    }
++
+     // ------------------------------------------------------------------ helpers
+ 
+     private static async Task<Tap> StartAsync(
+diff --git a/tests/Kronikol.Tests.ProxyTap/ProxyTapTests.cs b/tests/Kronikol.Tests.ProxyTap/ProxyTapTests.cs
+index 445a621d..9137ed78 100644
+--- a/tests/Kronikol.Tests.ProxyTap/ProxyTapTests.cs
++++ b/tests/Kronikol.Tests.ProxyTap/ProxyTapTests.cs
+@@ -56,7 +56,8 @@ private async Task LoopAsync()
+                 if (encoding is not null) context.Response.Headers["Content-Encoding"] = encoding;
+                 if (extra is not null) foreach (var (k, v) in extra) context.Response.Headers[k] = v;
+                 context.Response.ContentLength64 = reply.Length;
+-                await context.Response.OutputStream.WriteAsync(reply);
++                if (context.Request.HttpMethod != "HEAD") // a HEAD answer declares its length and sends no body
++                    await context.Response.OutputStream.WriteAsync(reply);
+                 context.Response.Close();
+             }
+             catch (Exception)
+@@ -720,6 +721,23 @@ public async Task Disposing_does_not_throw_when_something_claims_the_port_the_mo
+         Assert.True(threw.Count == 0, $"DisposeAsync threw in {threw.Count} of {attempts} attempts:{Environment.NewLine}{string.Join(Environment.NewLine, threw)}");
+     }
+ 
++    [Fact]
++    public async Task A_head_answer_keeps_the_services_content_length()
++    {
++        // HttpClient reads no body for a HEAD, so the tap answered Content-Length: 0 whatever the service declared, while
++        // its record kept the service's: a client that sizes a download with HEAD was told the resource was empty.
++        await using var upstream = new StubUpstream((_, _) => (200, new byte[5000], "application/octet-stream", null, null));
++        await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(Options(upstream, new ListSink()));
++        await tap.StartAsync();
++
++        using var caller = await RawCaller.SendAsync(tap.Options.ListenPort, "HEAD /big HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
++        var heard = await caller.HearAsync(TimeSpan.FromSeconds(10));
++
++        Assert.StartsWith("HTTP/1.1 200 ", heard.FirstLine);
++        Assert.Contains("Content-Length: 5000", heard.Head, StringComparison.OrdinalIgnoreCase);
++        Assert.Empty(heard.Body);
++    }
++
+     [Fact]
+     public async Task A_tap_whose_port_was_already_taken_can_still_be_disposed()
+     {
+diff --git a/tests/Kronikol.Tests.ProxyTap/StallWatchTests.cs b/tests/Kronikol.Tests.ProxyTap/StallWatchTests.cs
+index 1fdee3fc..a1d1e7fd 100644
+--- a/tests/Kronikol.Tests.ProxyTap/StallWatchTests.cs
++++ b/tests/Kronikol.Tests.ProxyTap/StallWatchTests.cs
+@@ -211,6 +211,54 @@ public async Task A_condition_whose_check_throws_ends_its_entry_and_is_logged()
+             Assert.Equal(["stopped watching the unanswered command: its check threw InvalidOperationException: bad check"], log);
+     }
+ 
++    [Fact]
++    public async Task A_watch_made_while_the_flow_is_suppressed_beats()
++    {
++        // A host may start a tap with the context's flow already suppressed, to keep a test's identity out of it.
++        var clock = new FakeTimeProvider();
++        var acted = new StrongBox<int>();
++        StallWatch watch;
++        using (ExecutionContext.SuppressFlow())
++            watch = new StallWatch(clock, static () => false, _ => { });
++
++        using (watch)
++        {
++            watch.Watch("body", Limit, () => Interlocked.Increment(ref acted.Value));
++            clock.Advance(TimeSpan.FromSeconds(2));
++            Assert.True(await WaitUntilAsync(() => Volatile.Read(ref acted.Value) == 1), "the entry never acted");
++        }
++    }
++
++    [Fact]
++    public async Task A_check_that_blocks_holds_up_no_other_entry()
++    {
++        // A tap's reaper asks the decoder, which is the host's code: one that blocks costs one thread, not every limit. On
++        // the real clock, since a fake one runs no beat while another is still running.
++        using var watch = new StallWatch(TimeProvider.System, static () => false, _ => { });
++        using var release = new ManualResetEventSlim();
++        var asked = new StrongBox<int>();
++        watch.WatchWhen("unanswered command", Limit, () =>
++        {
++            Interlocked.Increment(ref asked.Value);
++            release.Wait(Patience);
++            return false;
++        }, () => { }, evenUnderDebugger: false);
++        var acted = new StrongBox<int>();
++        for (var i = 0; i < 20; i++) // entries are walked in hash order: some come after the blocked one
++            watch.Watch("body", Limit, () => Interlocked.Increment(ref acted.Value));
++
++        try
++        {
++            Assert.True(await WaitUntilAsync(() => Volatile.Read(ref acted.Value) == 20), "an entry past its limit waited on another entry's check");
++            await Task.Delay(StallWatch.Beat * 2); // two more beats
++            Assert.Equal(1, Volatile.Read(ref asked.Value)); // a check still running is not asked again
++        }
++        finally
++        {
++            release.Set();
++        }
++    }
++
+     private static async Task<bool> WaitUntilAsync(Func<bool> condition)
+     {
+         var deadline = DateTime.UtcNow + Patience;
+diff --git a/tests/Kronikol.Tests.TcpTap/TcpTapStallTests.cs b/tests/Kronikol.Tests.TcpTap/TcpTapStallTests.cs
+index 074b36ff..5786fa24 100644
+--- a/tests/Kronikol.Tests.TcpTap/TcpTapStallTests.cs
++++ b/tests/Kronikol.Tests.TcpTap/TcpTapStallTests.cs
+@@ -4,6 +4,7 @@
+ using System.Reflection;
+ using System.Runtime.CompilerServices;
+ using Kronikol.Extensions.TcpTap;
++using Kronikol.Extensions.TcpTap.Protocols;
+ using Kronikol.Reports;
+ using Kronikol.Tracking;
+ using Microsoft.Extensions.Time.Testing;
+@@ -476,6 +477,166 @@ public async Task A_pair_that_ends_leaves_no_entry_behind()
+         Assert.Equal(0, run.Tap.HalfClosedPairsClosed + run.Tap.StalledWritesClosed);
+     }
+ 
++    [Fact]
++    public async Task A_start_that_cannot_bind_leaves_no_heartbeat_running()
++    {
++        // A tap whose start threw is often dropped undisposed, and a heartbeat left running would hold it for good.
++        var clock = new CountingClock();
++        var taken = LoopbackPort.Listening();
++        try
++        {
++            var options = Options(54321);
++            options.ListenPort = ((IPEndPoint)taken.LocalEndpoint).Port;
++            var tap = new TcpTapCore(options) { Clock = clock, DebuggerAttached = static () => false };
++
++            var thrown = await Assert.ThrowsAsync<SocketException>(() => tap.StartAsync());
++            Assert.Equal(SocketError.AddressAlreadyInUse, thrown.SocketErrorCode);
++            Assert.Equal(0, clock.Running);
++        }
++        finally
++        {
++            taken.Stop();
++        }
++
++        // The count sees the heartbeat: a start that binds runs one, and disposing the tap stops it.
++        await using var run = await StartAsync([], clock);
++        Assert.Equal(1, clock.Running);
++        await run.Tap.DisposeAsync();
++        Assert.Equal(0, clock.Running);
++    }
++
++    [Fact]
++    public async Task A_pair_keeps_one_write_entry_however_many_writes_it_makes()
++    {
++        // A pending write is a timestamp the pump sets and clears, not an entry of its own (plans/TAP_CALLER_TIME_LIMITS_PLAN.md
++        // §4.5 item 4): the hot path allocates nothing for the limit.
++        var clock = new FakeTimeProvider();
++        await using var run = await StartAsync([], clock);
++        await using var pair = await run.ConnectAsync();
++
++        var seen = new HashSet<StallWatch.Entry>(ReferenceEqualityComparer.Instance);
++        for (var i = 0; i < 50; i++)
++        {
++            await pair.Client.GetStream().WriteAsync("ping"u8.ToArray());
++            await ReceiveExactlyAsync(pair.Upstream, 4);
++            await pair.Upstream.SendAsync("pong"u8.ToArray());
++            await ReceiveExactlyAsync(pair.Client.Client, 4);
++            foreach (var entry in run.Tap.Watch!.Entries.Where(entry => entry.Phase == TcpTapCore.WritePhase))
++                seen.Add(entry);
++        }
++
++        Assert.Single(seen);
++    }
++
++    [Fact]
++    public async Task A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write()
++    {
++        // Both limits come due in the same beat: the client has finished sending, and the tap's write to it has not
++        // completed. The client stopped reading, which is the stalled write's to report, every time.
++        var log = new List<string>();
++        var clock = new FakeTimeProvider();
++        await using var run = await StartAsync(log, clock);
++        for (var round = 1; round <= 8; round++)
++        {
++            await using var pair = await run.ConnectAsync(clientReceiveBuffer: Piece);
++            pair.Client.Client.Shutdown(SocketShutdown.Send);
++            Assert.Equal(0, await pair.Upstream.ReceiveAsync(new byte[16]));
++            _ = SendQuietlyAsync(pair.Upstream, new byte[EightMegabytes]); // the client reads none of it
++            await StalledAsync(run.Tap, TcpTapCore.WritePhase);
++            await StalledAsync(run.Tap, TcpTapCore.HalfClosedPhase);
++            clock.Advance(PastTheLimit);
++
++            Assert.True(await WaitUntilAsync(() => run.Tap.LiveConnections == 0), $"round {round}: the pair was never released");
++            Assert.Equal(round, run.Tap.StalledWritesClosed);
++            Assert.Equal(0, run.Tap.HalfClosedPairsClosed);
++        }
++
++        lock (log)
++            Assert.DoesNotContain(log, line => line.Contains("finished sending", StringComparison.Ordinal));
++    }
++
++    [Fact]
++    public async Task A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once()
++    {
++        // The reaper at the stalled-write limit: a command the upstream never reads is both unanswered and a write that
++        // does not complete, and both come due in the same beat.
++        var log = new List<string>();
++        var degradations = new System.Collections.Concurrent.ConcurrentQueue<CaptureDegradation>();
++        var clock = new FakeTimeProvider();
++        var decoder = new OneCommandDecoder();
++        await using var run = await StartAsync(log, clock, o =>
++        {
++            o.ReapStuckConnectionsAfter = Limit;
++            o.OnCaptureDegraded = degradations.Enqueue;
++        }, _ => decoder);
++        await using var pair = await run.ConnectAsync(upstreamReceiveBuffer: Piece);
++
++        _ = SendQuietlyAsync(pair.Client.Client, new byte[2 * EightMegabytes]); // the upstream reads none of it
++        Assert.True(await WaitUntilAsync(() => decoder.Seen is not null), "the command was never decoded");
++        await StalledAsync(run.Tap, TcpTapCore.WritePhase);
++        clock.Advance(PastTheLimit);
++
++        Assert.True(await WaitUntilAsync(() => run.Tap.LiveConnections == 0), "the pair was never released");
++        await Task.Delay(300); // a second close would have been counted by now
++        Assert.Equal(1, run.Tap.StuckConnectionsReaped + run.Tap.StalledWritesClosed);
++        Assert.Equal(run.Tap.StuckConnectionsReaped, degradations.Count(each => each.Kind == CaptureDegradationKind.StuckConnectionReaped));
++        lock (log)
++            Assert.Single(log, line => line.Contains(" reaped: ", StringComparison.Ordinal) || line.Contains(" closed: a write to", StringComparison.Ordinal));
++    }
++
++    [Fact]
++    public async Task A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it()
++    {
++        // The limit's close raises nothing of its own, but a Redis client cut off mid-reply has lost that interaction, and
++        // the decoder reports it as any connection closed mid-message.
++        var log = new List<string>();
++        var degradations = new System.Collections.Concurrent.ConcurrentQueue<CaptureDegradation>();
++        var clock = new FakeTimeProvider();
++        await using var run = await StartAsync(log, clock, o => o.OnCaptureDegraded = degradations.Enqueue,
++            context => new RedisProtocolDecoder(context, new RedisTapOptions()));
++        await using var pair = await run.ConnectAsync(clientReceiveBuffer: Piece);
++
++        await pair.Client.GetStream().WriteAsync("*2\r\n$3\r\nGET\r\n$1\r\nk\r\n"u8.ToArray());
++        await ReceiveExactlyAsync(pair.Upstream, 20);
++        var reply = new byte[EightMegabytes];
++        "$8388598\r\n"u8.CopyTo(reply); // a bulk string that fills the rest, short of its ending
++        _ = SendQuietlyAsync(pair.Upstream, reply); // the client reads none of it
++        await StalledAsync(run.Tap, TcpTapCore.WritePhase);
++        clock.Advance(PastTheLimit);
++
++        Assert.True(await WaitUntilAsync(() => run.Tap.ConnectionsClosedMidMessage == 1), "the decoder never reported the reply cut short");
++        Assert.Equal(1, run.Tap.StalledWritesClosed);
++        Assert.Equal([CaptureDegradationKind.ConnectionClosedMidMessage], degradations.Select(each => each.Kind));
++        await run.Tap.DisposeAsync();
++        lock (log)
++            Assert.Contains(log, line => line.Contains("tcp-tap stopped (", StringComparison.Ordinal)
++                && line.Contains(", 1 connections closed mid-message, ", StringComparison.Ordinal)
++                && line.Contains(", 0 stuck connections reaped, ", StringComparison.Ordinal));
++    }
++
++    [Fact]
++    public async Task The_stop_line_names_the_connections_the_reaper_closed()
++    {
++        var log = new List<string>();
++        var clock = new FakeTimeProvider();
++        var decoder = new OneCommandDecoder();
++        await using var run = await StartAsync(log, clock, o => o.ReapStuckConnectionsAfter = TimeSpan.FromSeconds(3), _ => decoder);
++        await using var pair = await run.ConnectAsync();
++
++        await pair.Client.GetStream().WriteAsync("cmd"u8.ToArray());
++        await ReceiveExactlyAsync(pair.Upstream, 3);
++        Assert.True(await WaitUntilAsync(() => decoder.Seen is not null), "the command was never decoded");
++        clock.Advance(TimeSpan.FromSeconds(2));
++        clock.Advance(TimeSpan.FromSeconds(2));
++        Assert.True(await WaitUntilAsync(() => run.Tap.StuckConnectionsReaped == 1), "the command was never reaped");
++
++        await run.Tap.DisposeAsync();
++        lock (log)
++            Assert.Contains(log, line => line.Contains("tcp-tap stopped (", StringComparison.Ordinal)
++                && line.Contains(", 0 connections closed mid-message, ", StringComparison.Ordinal)
++                && line.Contains(", 1 stuck connections reaped, ", StringComparison.Ordinal));
++    }
++
+     // ------------------------------------------------------------------ helpers
+ 
+     private static TcpTapOptions Options(int forwardPort) => new()
+@@ -608,6 +769,40 @@ public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSp
+             inner.CreateTimer(callback, state, dueTime, period);
+     }
+ 
++    /// <summary>The system's clock, counting the timers made on it that have not been disposed.</summary>
++    private sealed class CountingClock : TimeProvider
++    {
++        private int _running;
++
++        public int Running => Volatile.Read(ref _running);
++
++        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
++        {
++            Interlocked.Increment(ref _running);
++            return new Counted(this, base.CreateTimer(callback, state, dueTime, period));
++        }
++
++        private sealed class Counted(CountingClock owner, ITimer inner) : ITimer
++        {
++            private int _disposed;
++
++            public bool Change(TimeSpan dueTime, TimeSpan period) => inner.Change(dueTime, period);
++
++            public void Dispose()
++            {
++                if (Interlocked.Exchange(ref _disposed, 1) == 0)
++                    Interlocked.Decrement(ref owner._running);
++                inner.Dispose();
++            }
++
++            public ValueTask DisposeAsync()
++            {
++                Dispose();
++                return ValueTask.CompletedTask;
++            }
++        }
++    }
++
+     private static async Task SendQuietlyAsync(Socket socket, byte[] bytes)
+     {
+         try

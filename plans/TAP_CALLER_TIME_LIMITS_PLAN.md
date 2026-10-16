@@ -3,7 +3,8 @@
 **Date:** 2026-10-14 · **Repo version:** 4.20.2 (`origin/main` at `3240c983`; every line number below is for it unless
 it says otherwise) · **Status:** ✅ executed in full, every question in §9 as the owner green-lit it on 2026-10-15: R0
 published as 4.22.2 on 2026-10-15, R1 as 4.23.0, R2 as 4.25.0 and R3 as 4.26.0 on 2026-10-16, with 4.26.1, a fix to R1
-that 4.26.0's CI run found, the same day; #173 closed (§11). Drafted from #173 (filed 2026-10-13 from
+that 4.26.0's CI run found, the same day; #173 closed (§11). Audited on 2026-10-16 at the owner's ask: what
+the audit found is fixed in 4.26.3 (§11). Drafted from #173 (filed 2026-10-13 from
 `PROXY_TAP_HANG_UP_PLAN.md` §3 finding 9, §8 and Q2) at the owner's ask of 2026-10-14 to analyse the issue critically
 and plan a fix for the underlying problem. Written alongside the plan for #174 (`TCPTAP_FAILED_CONNECT_PLAN.md`, session
 kronikol-71), which owns both taps' accept loops and `TcpTap`'s connect path; §7 is the split. #174 was green-lit on
@@ -1023,6 +1024,52 @@ kronikol-71 (#174, `TCPTAP_FAILED_CONNECT_PLAN.md`):
   38834755455, CI 38834753160, CodeQL 38834753037 and CI Summary Preview 38834753158 passed, and nuget.org listed all 62
   ids at 01:48 UTC; Kronikol4J ledger `6f5ec06`; no wiki edit, R3's having named a pair cut by a time limit on the
   diagnostics page. #173 closed with a comment naming the five releases. The plan is complete.
+- 2026-10-16: the plan's releases audited, and the fixes released as 4.26.3 (`46f21de0`, worktree
+  `C:/Code/Kronikol-173-audit`, rebased onto 4.26.2, the audit of #174). At the owner's ask that nothing be missed from
+  the plan and that its releases carry no bugs, five read-only reviews ran over `09369515`: the plan item by item, a bug
+  hunt in each tap and the watch, and every changelog, wiki and doc-comment claim against the code; the session auditing
+  #174 reported three more. Each finding was checked by reading the code or by a probe before anything was changed. The
+  proofs are in the harness's `audit/` (its README), with the reviews as written.
+  - Missed from the plan. §4.5 item 4 and §4.2 item 1: `TcpTap` registered a watch entry for every write, an allocation
+    and two shared-dictionary operations per segment forwarded, where the plan has the pump set a timestamp before the
+    write and clear it after; it now does, with one entry per pair. §4.2 item 3: the reaper read the clock under its
+    lock. R0 item 8 gave the `TcpTap` stop line's reaped and closed-mid-message counts to R3, which left them out. §4.1
+    item 4's advice for a peer paused in a debugger in another process was in no doc comment. §5's mutations for R1 left
+    out two of the plan's (the body's entry armed at the first completed read, the watch moved into the forward) and
+    proved R1-7 by another mutant; the audit runs all three, and all three are killed.
+  - Faults in what the plan shipped. `TcpTap` (R3) and `OtlpTap` (R2) made the heartbeat before binding, so a start that
+    threw left it running; 4.26.2's reworked start, agreed between the two audits, makes it after the bind, and 4.26.3
+    adds the facts. The reaper closed a pair outside the pair's one close; a half-closed pair whose other side had
+    stopped reading was counted by whichever limit came first in the beat, about half the time as the half-close; a
+    condition check that blocked held up the whole heartbeat; `OtlpTap` received an export that arrived whole as
+    `KeepAliveTimeout` fired, and counted a refusal whose head the stall limit had already cut; an empty line before a
+    request line started the stall phase. In the tests, R1-1 and R1-3 asserted a log line the cut writes after letting
+    the caller go without waiting for it, R1-1's Windows branch asserted only that the answer was not a success, and
+    4.26.1's fact for the count order called `TimeOut` and not `CutStalled`.
+  - Older faults on the same paths, fixed with them: `ProxyTap` could be started twice and after its dispose, linked the
+    start token into its lifetime, stopped taking requests after one failed wait with nothing said, missed a request
+    taken but not yet handled when it stopped (on Linux the caller heard `200 OK`), answered a `HEAD` with
+    `Content-Length: 0` and named no failure count at stop; `OtlpTap`'s reader read a `Transfer-Encoding` other than
+    `chunked` as no body and joined a repeated header in time that grew with the square of its count.
+  - Did not hold: `StallWatch`'s `ExecutionContext.SuppressFlow()` throwing when the flow is already suppressed (two
+    reviews): the throw is .NET Framework's; on .NET 8, 9 and 10 a nested suppression is allowed
+    (`audit/probe-suppress/`).
+  - Docs. 4.26.0's changelog, 4.26.1's, the TcpTap page and `CaptureDegradation.StuckConnectionReaped`'s doc said a pair
+    a limit closes has lost none of its capture; one closed mid-message has, and the Redis and MongoDB decoders report
+    it as `ConnectionClosedMidMessage`, which a fact now checks. The other corrections are in 4.26.3's changelog.
+  - Left to #174's audit, which shipped them in 4.26.2: `ConnectTimeout` never validated, an `OtlpTap` on `::` whose
+    `TracesEndpoint` threw after binding, the TcpTap page's sentence on when a tap closes a connection and
+    `TcpTap.Diagnostics()`'s summary.
+  - Found while releasing. The core suite's `CultureInvariantSourceTests` failed on the patch's own new log line, a
+    count of failed waits in `ProxyTap`'s accept loop formatted with the machine's culture; it names the invariant
+    culture before the release.
+  - Proofs. With the patch's tests copied onto 4.26.1 and `ProxyTap`'s seams stubbed, every fix's fact fails, each on
+    its own assertion, on Windows and, for the request taken as the tap stops, on Linux; the facts that pass there are
+    guards. Of 33 mutations, 31 are killed, one on Linux alone; the survivors remove only the close's disposes, which
+    its cancel makes a second path (removing the cancel too is killed), and undo the stopping refusal's order, which no
+    fact can force. Release 38921191836, CI 38921187779, CodeQL 38921187278 and CI Summary Preview 38921187484 passed,
+    and nuget.org listed all 62 ids at 15:22 UTC.
+  - The wiki has the audit's edits (`eb04e6a`) and Kronikol4J's ledger its line (`e71b622`).
 
 ## Appendix A. Edit sites at `3240c983`
 

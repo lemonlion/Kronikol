@@ -1,0 +1,60 @@
+A1 the body's entry armed at the first completed read (R1-1): KILLED
+    proxy: [('Failed!', '11', '56')] failed facts: ['A_body_read_that_ends_after_the_limit_fired_is_not_forwarded', 'A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind:', 'A_read_completing_as_the_limit_fires_is_forwarded_or_cut_never_both(phase:', 'A_stall_the_tap_cuts_is_counted_before_its_caller_is_let_go', 'A_stall_timeout_of_none_never_cuts(value:', 'No_limit_applies_while_a_debugger_is_attached']
+A2 the watch moved into the forward (R1-6): KILLED
+    proxy: [('Failed!', '4', '63')] failed facts: ['A_slow_steady_reader_is_never_cut', 'A_slow_upstream_is_not_the_callers_stall', 'An_exchange_answered_by_the_tap_leaves_no_entry_behind(status:', 'Keep_alive_requests_leave_no_entry_behind']
+A3 the Interlocked move in TimeOut dropped (R1-7): KILLED
+    proxy: [('Failed!', '1', '66')] failed facts: ['The_limit_and_the_answer_racing_end_it_once']
+W1 a check still running is asked again (D6): KILLED
+    proxy: [('Failed!', '1', '66')] failed facts: ['A_check_that_blocks_holds_up_no_other_entry']
+T1 the heartbeat made before the bind (P-1): KILLED
+    tcptap: [('Failed!', '1', '31')] failed facts: ['A_start_that_cannot_bind_leaves_no_heartbeat_running']
+T2 an entry made for each write (A3): KILLED
+    tcptap: [('Failed!', '10', '22')] failed facts: ['A_client_that_stops_reading_a_large_reply_releases_the_pair', 'A_half_close_answered_in_time_ends_normally', 'A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write', 'A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it', 'A_pair_a_limit_closes_raises_no_capture_degradation', 'A_pair_keeps_one_write_entry_however_many_writes_it_makes', 'A_pair_that_ends_leaves_no_entry_behind', 'A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once', 'A_slow_steady_reader_keeps_its_pair', 'An_idle_pair_is_never_closed']
+T3 a half-close and a stalled write that tie left to the race (D4): KILLED
+    tcptap: [('Failed!', '1', '31')] failed facts: ['A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write']
+T4 the reaper closes outside the pair's one close (D3): KILLED
+    tcptap: [('Failed!', '1', '31')] failed facts: ['A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once']
+T5 the stop line without the reaped (A1): KILLED
+    tcptap: [('Failed!', '2', '30')] failed facts: ['A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it', 'The_stop_line_names_the_connections_the_reaper_closed']
+T6 the stop line without the closed mid-message (A1): KILLED
+    tcptap: [('Failed!', '2', '30')] failed facts: ['A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it', 'The_stop_line_names_the_connections_the_reaper_closed']
+T7 a write's mark never cleared (R3-3's M5, the new form): KILLED
+    tcptap: [('Failed!', '4', '28')] failed facts: ['A_pair_whose_client_stays_silent_after_the_upstream_half_closes_is_released', 'An_idle_pair_is_never_closed', 'The_reaper_ignores_a_wall_clock_jump', 'The_stop_line_names_the_connections_the_reaper_closed']
+T8 a write never due (R3-4's M6, the new form): KILLED
+    tcptap: [('Failed!', '4', '28')] failed facts: ['A_client_that_stops_reading_a_large_reply_releases_the_pair', 'A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it', 'A_pair_a_limit_closes_raises_no_capture_degradation', 'An_upstream_that_stops_reading_its_clients_commands_releases_the_pair']
+T9 a limit that closes nothing (R3's M8, the new form): SURVIVED
+    tcptap: [('Passed!', '0', '32')] failed facts: []
+O1 the heartbeat made before the bind (P-1): KILLED
+    otlp: [('Failed!', '1', '72')] failed facts: ['A_start_that_cannot_bind_leaves_no_heartbeat_running']
+O2 a phase the limit cut read as not cut (C1): KILLED
+    otlp: [('Failed!', '1', '72')] failed facts: ['A_request_arriving_as_the_keep_alive_limit_fires_is_not_received']
+O3 a refusal counted before the head is the tap's (C2): KILLED
+    otlp: [('Failed!', '1', '72')] failed facts: ['A_refused_head_whole_only_after_the_limit_fired_is_cut_not_refused']
+O4 an empty line before a request line not passed over (C6): KILLED
+    otlp: [('Failed!', '3', '70')] failed facts: ['An_empty_line_alone_starts_no_request(sent:', 'An_empty_line_before_a_request_line_is_passed_over', 'An_empty_line_after_an_export_leaves_the_connection_kept_alive']
+O5 empty lines passed over without end (C6): KILLED
+    otlp: [('Failed!', '1', '72')] failed facts: ['An_empty_line_alone_starts_no_request(sent:']
+O6 a coding after chunked read as no body (X2): KILLED
+    otlp: [('Failed!', '2', '71')] failed facts: ['A_transfer_coding_other_than_chunked_alone_is_refused(coding:']
+O7 a coding before chunked read as chunked (X2): KILLED
+    otlp: [('Failed!', '1', '72')] failed facts: ['A_transfer_coding_other_than_chunked_alone_is_refused(coding:']
+O8 a repeated header joined as each comes (C5): KILLED
+    otlp: [('Failed!', '1', '72')] failed facts: ['A_head_of_one_header_repeated_is_read_in_proportion_to_its_size']
+P1 a second start not refused (lifecycle): KILLED
+    proxy: [('Failed!', '1', '66')] failed facts: ['A_second_start_is_refused_and_the_first_keeps_serving']
+P2 the start token linked into the tap's lifetime (lifecycle): KILLED
+    proxy: [('Failed!', '1', '66')] failed facts: ['Cancelling_the_start_token_after_the_start_leaves_the_tap_serving']
+P3 a cancelled start token not checked (lifecycle): KILLED
+    proxy: [('Failed!', '1', '66')] failed facts: ['A_start_whose_token_is_cancelled_binds_nothing']
+P4 a failed wait for a request ends the loop (K71-1): KILLED
+    proxy: [('Failed!', '1', '66')] failed facts: ['A_failed_wait_for_a_request_is_logged_and_tried_again']
+P5 a request tracked only once its handler runs (B2; Linux): SURVIVED
+    proxy: [('Passed!', '0', '67')] failed facts: []
+P6 the stop line without the failure counts (B4): KILLED
+    proxy: [('Failed!', '6', '61')] failed facts: ['A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind:']
+P7 a cut counted after its caller is let go (B6, 4.26.0's order): KILLED
+    proxy: [('Failed!', '1', '66')] failed facts: ['A_stall_the_tap_cuts_is_counted_before_its_caller_is_let_go']
+P8 a HEAD answer's length taken from its empty body (B7): KILLED
+    proxy: [('Failed!', '1', '66')] failed facts: ['A_head_answer_keeps_the_services_content_length']
+P9 the stopping refusal written while the answer still reads (B3; no fact can order it): SURVIVED
+    proxy: [('Passed!', '0', '67')] failed facts: []

@@ -1,0 +1,2 @@
+== ProxyTap exit 0
+Passed!  - Failed:     0, Passed:   204, Skipped:     0, Total:   204, Duration: 20 s - Kronikol.Tests.ProxyTap.dll (net10.0)

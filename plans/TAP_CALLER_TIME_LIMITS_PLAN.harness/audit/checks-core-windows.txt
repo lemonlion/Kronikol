@@ -1,0 +1,29 @@
+  Determining projects to restore...
+C:\Code\Kronikol-173-audit\tests\Kronikol.Tests\Kronikol.Tests.csproj : warning NU1902: Package 'AngleSharp' 1.4.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-pgww-w46g-26qg
+  All projects are up-to-date for restore.
+C:\Code\Kronikol-173-audit\tests\Kronikol.Tests\Kronikol.Tests.csproj : warning NU1902: Package 'AngleSharp' 1.4.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-pgww-w46g-26qg
+  Kronikol -> C:\Code\Kronikol-173-audit\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.ReqNRoll.Core -> C:\Code\Kronikol-173-audit\src\Kronikol.ReqNRoll.Core\bin\Debug\net10.0\Kronikol.ReqNRoll.Core.dll
+  Kronikol.Extensions.AtlasDataApi -> C:\Code\Kronikol-173-audit\src\Kronikol.Extensions.AtlasDataApi\bin\Debug\net10.0\Kronikol.Extensions.AtlasDataApi.dll
+  Kronikol.xUnit3 -> C:\Code\Kronikol-173-audit\src\Kronikol.xUnit3\bin\Debug\net10.0\Kronikol.xUnit3.dll
+  Kronikol.Extensions.DispatchProxy -> C:\Code\Kronikol-173-audit\src\Kronikol.Extensions.DispatchProxy\bin\Debug\net10.0\Kronikol.Extensions.DispatchProxy.dll
+  Kronikol.Extensions.OpenTelemetry -> C:\Code\Kronikol-173-audit\src\Kronikol.Extensions.OpenTelemetry\bin\Debug\net10.0\Kronikol.Extensions.OpenTelemetry.dll
+  Kronikol.Extensions.BigQuery -> C:\Code\Kronikol-173-audit\src\Kronikol.Extensions.BigQuery\bin\Debug\net10.0\Kronikol.Extensions.BigQuery.dll
+  Kronikol.Extensions.Otlp -> C:\Code\Kronikol-173-audit\src\Kronikol.Extensions.Otlp\bin\Debug\net10.0\Kronikol.Extensions.Otlp.dll
+  Kronikol.LightBDD.Core -> C:\Code\Kronikol-173-audit\src\Kronikol.LightBDD.Core\bin\Debug\net10.0\Kronikol.LightBDD.Core.dll
+  Kronikol.ReqNRoll.xUnit2 -> C:\Code\Kronikol-173-audit\src\Kronikol.ReqNRoll.xUnit2\bin\Debug\net10.0\Kronikol.ReqNRoll.xUnit2.dll
+  Kronikol.ReqNRoll.TUnit -> C:\Code\Kronikol-173-audit\src\Kronikol.ReqNRoll.TUnit\bin\Debug\net10.0\Kronikol.ReqNRoll.TUnit.dll
+  Kronikol.BDDfy.xUnit3 -> C:\Code\Kronikol-173-audit\src\Kronikol.BDDfy.xUnit3\bin\Debug\net10.0\Kronikol.BDDfy.xUnit3.dll
+  Kronikol.ReqNRoll.xUnit3 -> C:\Code\Kronikol-173-audit\src\Kronikol.ReqNRoll.xUnit3\bin\Debug\net10.0\Kronikol.ReqNRoll.xUnit3.dll
+  Kronikol.LightBDD.xUnit3 -> C:\Code\Kronikol-173-audit\src\Kronikol.LightBDD.xUnit3\bin\Debug\net10.0\Kronikol.LightBDD.xUnit3.dll
+  Kronikol.Tool -> C:\Code\Kronikol-173-audit\src\Kronikol.Tool\bin\Debug\net10.0\Kronikol.Tool.dll
+  Kronikol.Tests -> C:\Code\Kronikol-173-audit\tests\Kronikol.Tests\bin\Debug\net10.0\Kronikol.Tests.dll
+Test run for C:\Code\Kronikol-173-audit\tests\Kronikol.Tests\bin\Debug\net10.0\Kronikol.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:14.85]     Kronikol.Tests.Tool.QueryStreamingTests.A_hundred_megabyte_report_answers_from_the_index_without_being_read_into_memory [SKIP]
+  Skipped Kronikol.Tests.Tool.QueryStreamingTests.A_hundred_megabyte_report_answers_from_the_index_without_being_read_into_memory [1 ms]
+[xUnit.net 00:02:48.77]     Kronikol.Tests.Reports.RunRotationTests.A_read_only_previous_report_this_process_can_write_is_kept_like_any_other [SKIP]
+  Skipped Kronikol.Tests.Reports.RunRotationTests.A_read_only_previous_report_this_process_can_write_is_kept_like_any_other [1 ms]
+Data collector 'Blame' message: All tests finished running, Sequence file will not be generated.
+
+Passed!  - Failed:     0, Passed:  7645, Skipped:     2, Total:  7647, Duration: 4 m 28 s - Kronikol.Tests.dll (net10.0)

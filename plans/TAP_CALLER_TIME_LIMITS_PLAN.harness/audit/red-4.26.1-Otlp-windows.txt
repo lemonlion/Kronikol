@@ -1,0 +1,185 @@
+Test run for C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\bin\Debug\net10.0\Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:01.91]   Discovering: Kronikol.Tests.Otlp
+[xUnit.net 00:00:02.17]   Discovered:  Kronikol.Tests.Otlp
+[xUnit.net 00:00:02.33]   Starting:    Kronikol.Tests.Otlp
+[xUnit.net 00:00:02.72]     Kronikol.Tests.Otlp.HttpRequestReaderTests.An_empty_line_before_a_request_line_is_passed_over [FAIL]
+[xUnit.net 00:00:02.72]       Assert.NotNull() Failure: Value is null
+[xUnit.net 00:00:02.72]       Stack Trace:
+[xUnit.net 00:00:02.72]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\HttpRequestReaderTests.cs(83,0): at Kronikol.Tests.Otlp.HttpRequestReaderTests.An_empty_line_before_a_request_line_is_passed_over()
+[xUnit.net 00:00:02.72]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.75]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(coding: "gzip, chunked", status: "501 Not Implemented") [FAIL]
+[xUnit.net 00:00:02.75]       Assert.Equal() Failure: Collections differ
+[xUnit.net 00:00:02.75]                  ↓ (pos 0)
+[xUnit.net 00:00:02.75]       Expected: ["HTTP/1.1 501 Not Implemented"]
+[xUnit.net 00:00:02.75]       Actual:   []
+[xUnit.net 00:00:02.75]       Stack Trace:
+[xUnit.net 00:00:02.75]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs(171,0): at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status)
+[xUnit.net 00:00:02.75]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs(173,0): at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status)
+[xUnit.net 00:00:02.75]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.76]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(coding: "chunked, gzip", status: "400 Bad Request") [FAIL]
+[xUnit.net 00:00:02.76]       Assert.Equal() Failure: Collections differ
+[xUnit.net 00:00:02.76]                  ↓ (pos 0)
+[xUnit.net 00:00:02.76]       Expected: ["HTTP/1.1 400 Bad Request"]
+[xUnit.net 00:00:02.76]       Actual:   []
+[xUnit.net 00:00:02.76]       Stack Trace:
+[xUnit.net 00:00:02.76]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs(171,0): at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status)
+[xUnit.net 00:00:02.76]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs(173,0): at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status)
+[xUnit.net 00:00:02.76]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.79]     Kronikol.Tests.Otlp.HttpRequestReaderTests.A_head_of_one_header_repeated_is_read_in_proportion_to_its_size [FAIL]
+[xUnit.net 00:00:02.79]       Assert.InRange() Failure: Value not in range
+[xUnit.net 00:00:02.79]       Range:  (0 - 16777216)
+[xUnit.net 00:00:02.79]       Actual: 537853288
+[xUnit.net 00:00:02.79]       Stack Trace:
+[xUnit.net 00:00:02.79]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\HttpRequestReaderTests.cs(69,0): at Kronikol.Tests.Otlp.HttpRequestReaderTests.A_head_of_one_header_repeated_is_read_in_proportion_to_its_size()
+[xUnit.net 00:00:02.79]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.HttpRequestReaderTests.An_empty_line_before_a_request_line_is_passed_over [314 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+  Stack Trace:
+     at Kronikol.Tests.Otlp.HttpRequestReaderTests.An_empty_line_before_a_request_line_is_passed_over() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\HttpRequestReaderTests.cs:line 83
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(coding: "gzip, chunked", status: "501 Not Implemented") [361 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: ["HTTP/1.1 501 Not Implemented"]
+Actual:   []
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 171
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 173
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a payload that cannot be mapped", throwsOn: "could not map an export payload") [371 ms]
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(coding: "chunked, gzip", status: "400 Bad Request") [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: ["HTTP/1.1 400 Bad Request"]
+Actual:   []
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 171
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 173
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a connection that fails", throwsOn: "connection error") [3 ms]
+  Passed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "an unauthenticated export", throwsOn: "rejected an unauthenticated") [4 ms]
+  Failed Kronikol.Tests.Otlp.HttpRequestReaderTests.A_head_of_one_header_repeated_is_read_in_proportion_to_its_size [73 ms]
+  Error Message:
+   Assert.InRange() Failure: Value not in range
+Range:  (0 - 16777216)
+Actual: 537853288
+  Stack Trace:
+     at Kronikol.Tests.Otlp.HttpRequestReaderTests.A_head_of_one_header_repeated_is_read_in_proportion_to_its_size() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\HttpRequestReaderTests.cs:line 69
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:02.80]     Kronikol.Tests.Otlp.HttpRequestReaderTests.An_empty_line_alone_starts_no_request(sent: "\r\n", starts: 0) [FAIL]
+[xUnit.net 00:00:02.80]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:02.80]       Expected: 0
+[xUnit.net 00:00:02.80]       Actual:   1
+[xUnit.net 00:00:02.80]       Stack Trace:
+[xUnit.net 00:00:02.80]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\HttpRequestReaderTests.cs(98,0): at Kronikol.Tests.Otlp.HttpRequestReaderTests.An_empty_line_alone_starts_no_request(String sent, Int32 starts)
+[xUnit.net 00:00:02.80]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.96]     Kronikol.Tests.Otlp.OtlpTapStallTests.A_request_arriving_as_the_keep_alive_limit_fires_is_not_received [FAIL]
+[xUnit.net 00:00:02.96]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:02.96]       Expected: 0
+[xUnit.net 00:00:02.96]       Actual:   1
+[xUnit.net 00:00:02.96]       Stack Trace:
+[xUnit.net 00:00:02.96]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs(604,0): at Kronikol.Tests.Otlp.OtlpTapStallTests.A_request_arriving_as_the_keep_alive_limit_fires_is_not_received()
+[xUnit.net 00:00:02.96]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs(612,0): at Kronikol.Tests.Otlp.OtlpTapStallTests.A_request_arriving_as_the_keep_alive_limit_fires_is_not_received()
+[xUnit.net 00:00:02.96]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.20]     Kronikol.Tests.Otlp.OtlpTapStallTests.A_refused_head_whole_only_after_the_limit_fired_is_cut_not_refused [FAIL]
+[xUnit.net 00:00:03.20]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:03.20]       Expected: 0
+[xUnit.net 00:00:03.20]       Actual:   1
+[xUnit.net 00:00:03.20]       Stack Trace:
+[xUnit.net 00:00:03.20]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs(635,0): at Kronikol.Tests.Otlp.OtlpTapStallTests.A_refused_head_whole_only_after_the_limit_fired_is_cut_not_refused()
+[xUnit.net 00:00:03.20]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs(635,0): at Kronikol.Tests.Otlp.OtlpTapStallTests.A_refused_head_whole_only_after_the_limit_fired_is_cut_not_refused()
+[xUnit.net 00:00:03.20]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.20]     Kronikol.Tests.Otlp.OtlpTapStallTests.An_empty_line_after_an_export_leaves_the_connection_kept_alive [FAIL]
+[xUnit.net 00:00:03.20]       System.IO.EndOfStreamException : the connection ended after: 
+[xUnit.net 00:00:03.20]       Stack Trace:
+[xUnit.net 00:00:03.20]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs(801,0): at Kronikol.Tests.Otlp.OtlpTapStallTests.ReadOneAnswerAsync(Stream stream)
+[xUnit.net 00:00:03.20]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs(651,0): at Kronikol.Tests.Otlp.OtlpTapStallTests.An_empty_line_after_an_export_leaves_the_connection_kept_alive()
+[xUnit.net 00:00:03.20]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs(654,0): at Kronikol.Tests.Otlp.OtlpTapStallTests.An_empty_line_after_an_export_leaves_the_connection_kept_alive()
+[xUnit.net 00:00:03.20]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.21]     Kronikol.Tests.Otlp.OtlpTapStallTests.A_start_that_cannot_bind_leaves_no_heartbeat_running [FAIL]
+[xUnit.net 00:00:03.21]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:03.21]       Expected: 0
+[xUnit.net 00:00:03.21]       Actual:   1
+[xUnit.net 00:00:03.21]       Stack Trace:
+[xUnit.net 00:00:03.21]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs(670,0): at Kronikol.Tests.Otlp.OtlpTapStallTests.A_start_that_cannot_bind_leaves_no_heartbeat_running()
+[xUnit.net 00:00:03.21]         --- End of stack trace from previous location ---
+  Passed Kronikol.Tests.Otlp.HttpRequestReaderTests.An_empty_line_alone_starts_no_request(sent: "\r\n\r\n", starts: 1) [1 ms]
+  Failed Kronikol.Tests.Otlp.HttpRequestReaderTests.An_empty_line_alone_starts_no_request(sent: "\r\n", starts: 0) [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.Otlp.HttpRequestReaderTests.An_empty_line_alone_starts_no_request(String sent, Int32 starts) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\HttpRequestReaderTests.cs:line 98
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_request_arriving_as_the_keep_alive_limit_fires_is_not_received [570 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_request_arriving_as_the_keep_alive_limit_fires_is_not_received() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_request_arriving_as_the_keep_alive_limit_fires_is_not_received() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 612
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_refused_head_whole_only_after_the_limit_fired_is_cut_not_refused [242 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_refused_head_whole_only_after_the_limit_fired_is_cut_not_refused() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 635
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_refused_head_whole_only_after_the_limit_fired_is_cut_not_refused() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 635
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.An_empty_line_after_an_export_leaves_the_connection_kept_alive [3 ms]
+  Error Message:
+   System.IO.EndOfStreamException : the connection ended after: 
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.ReadOneAnswerAsync(Stream stream) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 801
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_empty_line_after_an_export_leaves_the_connection_kept_alive() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 651
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_empty_line_after_an_export_leaves_the_connection_kept_alive() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 654
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_start_that_cannot_bind_leaves_no_heartbeat_running [4 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_start_that_cannot_bind_leaves_no_heartbeat_running() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 670
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a forward that failed", throwsOn: "forward failed") [2 s]
+  Passed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "an export over MaxRequestBytes", throwsOn: "refused an export over MaxRequestBytes") [1 ms]
+  Passed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a target with no path", throwsOn: "refused a request target with no path") [1 ms]
+  Passed Kronikol.Tests.Otlp.OtlpTapLogTests.A_throwing_log_callback_changes_nothing(line: "a full queue", throwsOn: "dropped an export payload") [24 ms]
+[xUnit.net 00:00:12.77]     Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(coding: "gzip", status: "400 Bad Request") [FAIL]
+[xUnit.net 00:00:12.77]       Assert.Equal() Failure: Collections differ at index 0
+[xUnit.net 00:00:12.77]                           ↓ (pos 9)
+[xUnit.net 00:00:12.77]       Expected: "HTTP/1.1 400 Bad Request"
+[xUnit.net 00:00:12.77]       Actual:   "HTTP/1.1 200 OK"
+[xUnit.net 00:00:12.77]                           ↑ (pos 9)
+[xUnit.net 00:00:12.77]       Stack Trace:
+[xUnit.net 00:00:12.77]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs(171,0): at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status)
+[xUnit.net 00:00:12.77]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs(173,0): at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status)
+[xUnit.net 00:00:12.77]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:12.78]   Finished:    Kronikol.Tests.Otlp (ID = 'cebceb59411fcef8c64b6f85bbff460219cff68f24620d0ad96ecae98eead4c7')
+  Failed Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(coding: "gzip", status: "400 Bad Request") [10 s]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+                    ↓ (pos 9)
+Expected: "HTTP/1.1 400 Bad Request"
+Actual:   "HTTP/1.1 200 OK"
+                    ↑ (pos 9)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 171
+   at Kronikol.Tests.Otlp.OtlpTapRefusalTests.A_transfer_coding_other_than_chunked_alone_is_refused(String coding, String status) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.Otlp\OtlpTapRefusalTests.cs:line 173
+--- End of stack trace from previous location ---
+
+Test Run Failed.
+Total tests: 18
+     Passed: 8
+     Failed: 10
+ Total time: 13.5686 Seconds

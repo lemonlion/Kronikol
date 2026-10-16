@@ -1,0 +1,6 @@
+T9b a limit that closes nothing, its cancel removed too (R3's M8 as R3 ran it): KILLED
+    tcptap: [('Failed!', '9', '23')] failed facts: ['A_client_that_stops_reading_a_large_reply_releases_the_pair', 'A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write', 'A_limit_raises_no_capture_degradation_of_its_own', 'A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it', 'A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once', 'A_pair_whose_client_stays_silent_after_the_upstream_half_closes_is_released', 'A_pair_whose_upstream_stays_silent_after_the_client_half_closes_is_released(realClock:', 'An_upstream_that_stops_reading_its_clients_commands_releases_the_pair']
+T1r the heartbeat made before the bind, on 4.26.2's start (P-1): KILLED
+    tcptap: [('Failed!', '1', '31')] failed facts: ['A_start_that_cannot_bind_leaves_no_heartbeat_running']
+O1r the heartbeat made before the bind, on 4.26.2's start (P-1): KILLED
+    otlp: [('Failed!', '1', '72')] failed facts: ['A_start_that_cannot_bind_leaves_no_heartbeat_running']

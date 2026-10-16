@@ -1,0 +1,114 @@
+Test run for C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\bin\Debug\net10.0\Kronikol.Tests.TcpTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:03.63]   Discovering: Kronikol.Tests.TcpTap
+[xUnit.net 00:00:04.35]   Discovered:  Kronikol.Tests.TcpTap
+[xUnit.net 00:00:04.51]   Starting:    Kronikol.Tests.TcpTap
+[xUnit.net 00:00:04.95]     Kronikol.Tests.TcpTap.TcpTapStallTests.A_start_that_cannot_bind_leaves_no_heartbeat_running [FAIL]
+[xUnit.net 00:00:04.95]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.95]       Expected: 0
+[xUnit.net 00:00:04.95]       Actual:   1
+[xUnit.net 00:00:04.95]       Stack Trace:
+[xUnit.net 00:00:04.95]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(494,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_start_that_cannot_bind_leaves_no_heartbeat_running()
+[xUnit.net 00:00:04.95]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:04.99]     Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_keeps_one_write_entry_however_many_writes_it_makes [FAIL]
+[xUnit.net 00:00:04.99]       Assert.Single() Failure: The collection was empty
+[xUnit.net 00:00:04.99]       Stack Trace:
+[xUnit.net 00:00:04.99]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(528,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_keeps_one_write_entry_however_many_writes_it_makes()
+[xUnit.net 00:00:04.99]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(528,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_keeps_one_write_entry_however_many_writes_it_makes()
+[xUnit.net 00:00:04.99]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(528,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_keeps_one_write_entry_however_many_writes_it_makes()
+[xUnit.net 00:00:04.99]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:05.55]     Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once [FAIL]
+[xUnit.net 00:00:05.55]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:05.55]       Expected: 1
+[xUnit.net 00:00:05.55]       Actual:   2
+[xUnit.net 00:00:05.55]       Stack Trace:
+[xUnit.net 00:00:05.55]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(581,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once()
+[xUnit.net 00:00:05.55]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(584,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once()
+[xUnit.net 00:00:05.55]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(584,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once()
+[xUnit.net 00:00:05.55]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_start_that_cannot_bind_leaves_no_heartbeat_running [371 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_start_that_cannot_bind_leaves_no_heartbeat_running() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 494
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_keeps_one_write_entry_however_many_writes_it_makes [33 ms]
+  Error Message:
+   Assert.Single() Failure: The collection was empty
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_keeps_one_write_entry_however_many_writes_it_makes() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 528
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_keeps_one_write_entry_however_many_writes_it_makes() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 528
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_keeps_one_write_entry_however_many_writes_it_makes() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 528
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once [561 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   2
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 581
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 584
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_pair_the_reaper_and_a_limit_both_find_is_closed_and_counted_once() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 584
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:06.50]     Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write [FAIL]
+[xUnit.net 00:00:06.50]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:06.50]       Expected: 2
+[xUnit.net 00:00:06.50]       Actual:   1
+[xUnit.net 00:00:06.50]       Stack Trace:
+[xUnit.net 00:00:06.50]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(550,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write()
+[xUnit.net 00:00:06.50]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(551,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write()
+[xUnit.net 00:00:06.50]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(555,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write()
+[xUnit.net 00:00:06.50]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:06.77]     Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it [FAIL]
+[xUnit.net 00:00:06.77]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:06.77]       Collection: ["[app→store] tcp-tap listening on 127.0.0.1:59314 →"···, "[app→store] tcp-tap connection 1 closed: a write t"···, "[app→store] tcp-tap connection 1 closed mid-messag"···, "[app→store] tcp-tap stopped (1 connections, 0 inte"···]
+[xUnit.net 00:00:06.77]       Stack Trace:
+[xUnit.net 00:00:06.77]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(612,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it()
+[xUnit.net 00:00:06.77]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(612,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it()
+[xUnit.net 00:00:06.77]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(612,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it()
+[xUnit.net 00:00:06.77]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:06.81]     Kronikol.Tests.TcpTap.TcpTapStallTests.The_stop_line_names_the_connections_the_reaper_closed [FAIL]
+[xUnit.net 00:00:06.81]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:06.81]       Collection: ["[app→store] tcp-tap listening on 127.0.0.1:59357 →"···, "[app→store] tcp-tap connection 1 reaped: a command"···, "[app→store] tcp-tap stopped (1 connections, 0 inte"···]
+[xUnit.net 00:00:06.81]       Stack Trace:
+[xUnit.net 00:00:06.81]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(635,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.The_stop_line_names_the_connections_the_reaper_closed()
+[xUnit.net 00:00:06.81]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(635,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.The_stop_line_names_the_connections_the_reaper_closed()
+[xUnit.net 00:00:06.81]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs(635,0): at Kronikol.Tests.TcpTap.TcpTapStallTests.The_stop_line_names_the_connections_the_reaper_closed()
+[xUnit.net 00:00:06.81]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:06.82]   Finished:    Kronikol.Tests.TcpTap (ID = 'e89f4f96e5b0b240b4cb1e3610bc4834f8c2f93448873f1df2ec6b50e0bc3771')
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write [948 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 2
+Actual:   1
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 550
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 551
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_half_closed_pair_whose_client_stops_reading_is_closed_as_a_stalled_write() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 555
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it [267 ms]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: ["[app→store] tcp-tap listening on 127.0.0.1:59314 →"···, "[app→store] tcp-tap connection 1 closed: a write t"···, "[app→store] tcp-tap connection 1 closed mid-messag"···, "[app→store] tcp-tap stopped (1 connections, 0 inte"···]
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 612
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 612
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.A_limit_that_cuts_a_reply_short_leaves_the_decoder_to_report_it() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 612
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.TcpTap.TcpTapStallTests.The_stop_line_names_the_connections_the_reaper_closed [35 ms]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: ["[app→store] tcp-tap listening on 127.0.0.1:59357 →"···, "[app→store] tcp-tap connection 1 reaped: a command"···, "[app→store] tcp-tap stopped (1 connections, 0 inte"···]
+  Stack Trace:
+     at Kronikol.Tests.TcpTap.TcpTapStallTests.The_stop_line_names_the_connections_the_reaper_closed() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 635
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.The_stop_line_names_the_connections_the_reaper_closed() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 635
+   at Kronikol.Tests.TcpTap.TcpTapStallTests.The_stop_line_names_the_connections_the_reaper_closed() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.TcpTap\TcpTapStallTests.cs:line 635
+--- End of stack trace from previous location ---
+
+Test Run Failed.
+Total tests: 6
+     Failed: 6
+ Total time: 7.9214 Seconds

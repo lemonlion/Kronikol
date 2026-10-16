@@ -1,0 +1,3 @@
+== ProxyTap exit 1
+[xUnit.net 00:00:00.83]     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded [FAIL]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded [65 ms]

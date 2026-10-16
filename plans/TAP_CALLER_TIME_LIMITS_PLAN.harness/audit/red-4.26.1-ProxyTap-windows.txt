@@ -1,0 +1,235 @@
+Test run for C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\bin\Debug\net10.0\Kronikol.Tests.ProxyTap.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:03.53]   Discovering: Kronikol.Tests.ProxyTap
+[xUnit.net 00:00:03.77]   Discovered:  Kronikol.Tests.ProxyTap
+[xUnit.net 00:00:03.93]   Starting:    Kronikol.Tests.ProxyTap
+[xUnit.net 00:00:04.42]     Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_second_start_is_refused_and_the_first_keeps_serving [FAIL]
+[xUnit.net 00:00:04.42]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:04.42]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:04.42]       Actual:   typeof(System.Net.HttpListenerException)
+[xUnit.net 00:00:04.42]       ---- System.Net.HttpListenerException : Failed to listen on prefix 'http://localhost:57653/' because it conflicts with an existing registration on the machine.
+[xUnit.net 00:00:04.42]       Stack Trace:
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(28,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_second_start_is_refused_and_the_first_keeps_serving()
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(32,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_second_start_is_refused_and_the_first_keeps_serving()
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(32,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_second_start_is_refused_and_the_first_keeps_serving()
+[xUnit.net 00:00:04.42]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:04.42]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:04.42]            at System.Net.HttpListener.AddPrefixCore(String registeredPrefix)
+[xUnit.net 00:00:04.42]            at System.Net.HttpListener.AddPrefix(String uriPrefix)
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-173-red\src\Kronikol.Extensions.ProxyTap\ProxyTap.cs(271,0): at Kronikol.Extensions.ProxyTap.ProxyTap.StartAsync(CancellationToken cancellationToken)
+[xUnit.net 00:00:04.42]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(28,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.<>c__DisplayClass2_0.<A_second_start_is_refused_and_the_first_keeps_serving>b__0()
+[xUnit.net 00:00:04.43]     Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.Cancelling_the_start_token_after_the_start_leaves_the_tap_serving [FAIL]
+[xUnit.net 00:00:04.43]       Assert.StartsWith() Failure: String start does not match
+[xUnit.net 00:00:04.43]       String:         "HTTP/1.1 503 Service Unavailable"
+[xUnit.net 00:00:04.43]       Expected start: "HTTP/1.1 200 "
+[xUnit.net 00:00:04.43]       Stack Trace:
+[xUnit.net 00:00:04.43]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(55,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.Cancelling_the_start_token_after_the_start_leaves_the_tap_serving()
+[xUnit.net 00:00:04.43]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(55,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.Cancelling_the_start_token_after_the_start_leaves_the_tap_serving()
+[xUnit.net 00:00:04.43]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(55,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.Cancelling_the_start_token_after_the_start_leaves_the_tap_serving()
+[xUnit.net 00:00:04.43]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:04.43]     Kronikol.Tests.ProxyTap.ProxyTapTests.A_head_answer_keeps_the_services_content_length [FAIL]
+[xUnit.net 00:00:04.43]       Assert.Contains() Failure: Sub-string not found
+[xUnit.net 00:00:04.43]       String:    "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nContent-Type: "···
+[xUnit.net 00:00:04.43]       Not found: "Content-Length: 5000"
+[xUnit.net 00:00:04.43]       Stack Trace:
+[xUnit.net 00:00:04.43]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapTests.cs(737,0): at Kronikol.Tests.ProxyTap.ProxyTapTests.A_head_answer_keeps_the_services_content_length()
+[xUnit.net 00:00:04.43]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapTests.cs(738,0): at Kronikol.Tests.ProxyTap.ProxyTapTests.A_head_answer_keeps_the_services_content_length()
+[xUnit.net 00:00:04.43]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapTests.cs(738,0): at Kronikol.Tests.ProxyTap.ProxyTapTests.A_head_answer_keeps_the_services_content_length()
+[xUnit.net 00:00:04.43]         --- End of stack trace from previous location ---
+  Passed Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.A_request_taken_but_not_yet_handled_when_the_tap_stops_is_never_told_it_succeeded [406 ms]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_second_start_is_refused_and_the_first_keeps_serving [390 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.InvalidOperationException)
+Actual:   typeof(System.Net.HttpListenerException)
+---- System.Net.HttpListenerException : Failed to listen on prefix 'http://localhost:57653/' because it conflicts with an existing registration on the machine.
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_second_start_is_refused_and_the_first_keeps_serving() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 28
+   at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_second_start_is_refused_and_the_first_keeps_serving() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 32
+   at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_second_start_is_refused_and_the_first_keeps_serving() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 32
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at System.Net.HttpListener.AddPrefixCore(String registeredPrefix)
+   at System.Net.HttpListener.AddPrefix(String uriPrefix)
+   at Kronikol.Extensions.ProxyTap.ProxyTap.StartAsync(CancellationToken cancellationToken) in C:\Code\Kronikol-173-red\src\Kronikol.Extensions.ProxyTap\ProxyTap.cs:line 271
+   at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.<>c__DisplayClass2_0.<A_second_start_is_refused_and_the_first_keeps_serving>b__0() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 28
+  Passed Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_start_after_the_dispose_is_refused_and_binds_nothing [1 ms]
+  Failed Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.Cancelling_the_start_token_after_the_start_leaves_the_tap_serving [6 ms]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+String:         "HTTP/1.1 503 Service Unavailable"
+Expected start: "HTTP/1.1 200 "
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.Cancelling_the_start_token_after_the_start_leaves_the_tap_serving() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 55
+   at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.Cancelling_the_start_token_after_the_start_leaves_the_tap_serving() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 55
+   at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.Cancelling_the_start_token_after_the_start_leaves_the_tap_serving() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 55
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapTests.A_head_answer_keeps_the_services_content_length [431 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nContent-Type: "···
+Not found: "Content-Length: 5000"
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapTests.A_head_answer_keeps_the_services_content_length() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapTests.cs:line 737
+   at Kronikol.Tests.ProxyTap.ProxyTapTests.A_head_answer_keeps_the_services_content_length() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapTests.cs:line 738
+   at Kronikol.Tests.ProxyTap.ProxyTapTests.A_head_answer_keeps_the_services_content_length() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapTests.cs:line 738
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_start_racing_the_dispose_leaves_nothing_running [23 ms]
+[xUnit.net 00:00:06.41]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: Chunked, realClock: True) [FAIL]
+[xUnit.net 00:00:06.41]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:06.41]       Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+[xUnit.net 00:00:06.41]       Stack Trace:
+[xUnit.net 00:00:06.41]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:06.41]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:06.41]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:06.41]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:06.62]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: NoByte, realClock: False) [FAIL]
+[xUnit.net 00:00:06.62]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:06.62]       Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+[xUnit.net 00:00:06.62]       Stack Trace:
+[xUnit.net 00:00:06.62]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:06.62]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:06.62]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:06.62]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: Chunked, realClock: True) [2 s]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: NoByte, realClock: False) [214 ms]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:08.63]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: ContentLength, realClock: True) [FAIL]
+[xUnit.net 00:00:08.63]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:08.63]       Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+[xUnit.net 00:00:08.63]       Stack Trace:
+[xUnit.net 00:00:08.63]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:08.63]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:08.63]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:08.63]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: ContentLength, realClock: True) [2 s]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:09.64]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: NoByte, realClock: True) [FAIL]
+[xUnit.net 00:00:09.64]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:09.64]       Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+[xUnit.net 00:00:09.64]       Stack Trace:
+[xUnit.net 00:00:09.64]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:09.64]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:09.64]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:09.64]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:09.91]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: ContentLength, realClock: False) [FAIL]
+[xUnit.net 00:00:09.91]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:09.91]       Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+[xUnit.net 00:00:09.91]       Stack Trace:
+[xUnit.net 00:00:09.91]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:09.91]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:09.91]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:09.91]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: NoByte, realClock: True) [1 s]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: ContentLength, realClock: False) [269 ms]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:10.18]     Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: Chunked, realClock: False) [FAIL]
+[xUnit.net 00:00:10.18]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:10.18]       Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+[xUnit.net 00:00:10.18]       Stack Trace:
+[xUnit.net 00:00:10.18]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:10.18]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:10.18]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs(99,0): at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock)
+[xUnit.net 00:00:10.18]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(kind: Chunked, realClock: False) [271 ms]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: ["[web→api] proxy-tap listening on http://localhost:"···, "[web→api] proxy-tap caller stalled 00:00:01 sendin"···, "[web→api] proxy-tap stopped (0 forwarded, 0 captur"···]
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+   at Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stalls_in_its_body_is_cut_and_not_forwarded(BodyKind kind, Boolean realClock) in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapStallTests.cs:line 99
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_caller_that_stops_reading_its_answer_is_cut_and_recorded [297 ms]
+  Passed Kronikol.Tests.ProxyTap.ProxyTapStallTests.A_stall_the_tap_cuts_is_counted_before_its_caller_is_let_go [222 ms]
+[xUnit.net 00:00:14.46]     Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_failed_wait_for_a_request_is_logged_and_tried_again [FAIL]
+[xUnit.net 00:00:14.46]       Assert.StartsWith() Failure: String start does not match
+[xUnit.net 00:00:14.46]       String:         "nothing more within 10 s"
+[xUnit.net 00:00:14.46]       Expected start: "HTTP/1.1 200 "
+[xUnit.net 00:00:14.46]       Stack Trace:
+[xUnit.net 00:00:14.46]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(122,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_failed_wait_for_a_request_is_logged_and_tried_again()
+[xUnit.net 00:00:14.46]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(127,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_failed_wait_for_a_request_is_logged_and_tried_again()
+[xUnit.net 00:00:14.46]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(127,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_failed_wait_for_a_request_is_logged_and_tried_again()
+[xUnit.net 00:00:14.46]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_failed_wait_for_a_request_is_logged_and_tried_again [10 s]
+  Error Message:
+   Assert.StartsWith() Failure: String start does not match
+String:         "nothing more within 10 s"
+Expected start: "HTTP/1.1 200 "
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_failed_wait_for_a_request_is_logged_and_tried_again() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 122
+   at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_failed_wait_for_a_request_is_logged_and_tried_again() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 127
+   at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_failed_wait_for_a_request_is_logged_and_tried_again() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 127
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:14.46]     Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_start_whose_token_is_cancelled_binds_nothing [FAIL]
+[xUnit.net 00:00:14.46]       Assert.ThrowsAny() Failure: No exception was thrown
+[xUnit.net 00:00:14.46]       Expected: typeof(System.OperationCanceledException)
+[xUnit.net 00:00:14.46]       Stack Trace:
+[xUnit.net 00:00:14.46]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(66,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_start_whose_token_is_cancelled_binds_nothing()
+[xUnit.net 00:00:14.47]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs(69,0): at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_start_whose_token_is_cancelled_binds_nothing()
+[xUnit.net 00:00:14.47]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_start_whose_token_is_cancelled_binds_nothing [4 ms]
+  Error Message:
+   Assert.ThrowsAny() Failure: No exception was thrown
+Expected: typeof(System.OperationCanceledException)
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_start_whose_token_is_cancelled_binds_nothing() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 66
+   at Kronikol.Tests.ProxyTap.ProxyTapLifecycleTests.A_start_whose_token_is_cancelled_binds_nothing() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\ProxyTapLifecycleTests.cs:line 69
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:19.36]     Kronikol.Tests.ProxyTap.StallWatchTests.A_check_that_blocks_holds_up_no_other_entry [FAIL]
+[xUnit.net 00:00:19.36]       an entry past its limit waited on another entry's check
+[xUnit.net 00:00:19.36]       Stack Trace:
+[xUnit.net 00:00:19.36]         C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\StallWatchTests.cs(252,0): at Kronikol.Tests.ProxyTap.StallWatchTests.A_check_that_blocks_holds_up_no_other_entry()
+[xUnit.net 00:00:19.36]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.ProxyTap.StallWatchTests.A_check_that_blocks_holds_up_no_other_entry [15 s]
+  Error Message:
+   an entry past its limit waited on another entry's check
+  Stack Trace:
+     at Kronikol.Tests.ProxyTap.StallWatchTests.A_check_that_blocks_holds_up_no_other_entry() in C:\Code\Kronikol-173-red\tests\Kronikol.Tests.ProxyTap\StallWatchTests.cs:line 252
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:19.39]   Finished:    Kronikol.Tests.ProxyTap (ID = '0ab7de7dcde4e5f2f90a0bdc1f18af1afc3f9a7c39bbfbe667be4accb8daccc1')
+  Passed Kronikol.Tests.ProxyTap.StallWatchTests.A_watch_made_while_the_flow_is_suppressed_beats [20 ms]
+
+Test Run Failed.
+Total tests: 18
+     Passed: 6
+     Failed: 12
+ Total time: 20.5504 Seconds
