@@ -1,0 +1,46 @@
+K1 a keep-alive close counted (R2-3, R2-4): KILLED
+    otlp: [('Failed!', '2', '111')] failed facts: ['A_connection_that_never_sends_is_closed_after_the_keep_alive_limit', 'An_idle_keep_alive_connection_is_closed_quietly']
+K2 the keep-alive wait timed by the stall limit (R2-3, R2-5): KILLED
+    otlp: [('Failed!', '6', '107')] failed facts: ['A_connection_that_never_sends_is_closed_after_the_keep_alive_limit', 'A_limit_of_none_never_cuts(option:', 'An_exporter_that_reuses_its_connection_keeps_it', 'An_idle_keep_alive_connection_is_closed_quietly']
+K3 no keep-alive limit (R2-3, R2-4): KILLED
+    otlp: [('Failed!', '4', '109')] failed facts: ['A_connection_that_never_sends_is_closed_after_the_keep_alive_limit', 'A_limit_of_none_never_cuts(option:', 'An_exporter_that_reuses_its_connection_keeps_it', 'An_idle_keep_alive_connection_is_closed_quietly']
+H1 a head's first byte not marked: the head is the keep-alive wait's (R2-1): KILLED
+    otlp: [('Failed!', '17', '96')] failed facts: ['A_limit_of_none_never_cuts(option:', 'A_relayed_answer_is_written_in_pieces(steady:', 'A_stall_inside_a_body_is_a_body_stall(where:', 'A_stalled_body_is_answered_408_and_not_received(kind:', 'A_stalled_head_is_answered_408_and_closed(realClock:', 'A_transfer_completing_as_the_limit_fires_is_received_or_cut_never_both(phase:', 'A_transfer_ending_after_the_limit_fired_is_cut(phase:', 'Disposing_the_tap_is_not_a_time_limit', 'No_limit_applies_while_a_debugger_is_attached']
+H2 reads record no progress: a total deadline (R2-5): KILLED
+    otlp: [('Failed!', '1', '112')] failed facts: ['A_slow_steady_export_is_received']
+B1 a body that ends after its limit fired is received (the after-the-limit theory): KILLED
+    otlp: [('Failed!', '1', '112')] failed facts: ['A_transfer_ending_after_the_limit_fired_is_cut(phase:']
+B2 no 408 for an exporter cut while sending (R2-1, R2-2): KILLED
+    otlp: [('Failed!', '10', '103')] failed facts: ['A_stall_inside_a_body_is_a_body_stall(where:', 'A_stalled_body_is_answered_408_and_not_received(kind:', 'A_stalled_head_is_answered_408_and_closed(realClock:', 'A_transfer_ending_after_the_limit_fired_is_cut(phase:']
+B3 the 408 keeps the connection alive (R2-1): KILLED
+    otlp: [('Failed!', '10', '103')] failed facts: ['A_stall_inside_a_body_is_a_body_stall(where:', 'A_stalled_body_is_answered_408_and_not_received(kind:', 'A_stalled_head_is_answered_408_and_closed(realClock:', 'A_transfer_ending_after_the_limit_fired_is_cut(phase:']
+B4 a stall while sending counted as a rejected payload (R2-9): KILLED
+    otlp: [('Failed!', '4', '109')] failed facts: ['A_stall_inside_a_body_is_a_body_stall(where:']
+C1 the limit records its cut but ends no read (R2-1, R2-2): KILLED
+    otlp: [('Failed!', '13', '100')] failed facts: ['A_connection_that_never_sends_is_closed_after_the_keep_alive_limit', 'A_relayed_answer_is_written_in_pieces(steady:', 'A_stall_inside_a_body_is_a_body_stall(where:', 'A_stalled_body_is_answered_408_and_not_received(kind:', 'A_stalled_head_is_answered_408_and_closed(realClock:', 'An_idle_keep_alive_connection_is_closed_quietly', 'No_limit_applies_while_a_debugger_is_attached']
+F1 the forward watched as the export (R2-8): KILLED
+    otlp: [('Failed!', '2', '111')] failed facts: ['A_slow_collector_is_not_the_exporters_stall', 'A_transfer_ending_after_the_limit_fired_is_cut(phase:']
+A1 the relayed answer in one write (R2-10): KILLED
+    otlp: [('Failed!', '4', '109')] failed facts: ['A_relayed_answer_is_written_in_pieces(steady:', 'A_transfer_completing_as_the_limit_fires_is_received_or_cut_never_both(phase:', 'A_transfer_ending_after_the_limit_fired_is_cut(phase:']
+A2 the answer not watched (R2-10): KILLED
+    otlp: [('Failed!', '4', '109')] failed facts: ['A_relayed_answer_is_written_in_pieces(steady:', 'A_transfer_completing_as_the_limit_fires_is_received_or_cut_never_both(phase:', 'A_transfer_ending_after_the_limit_fired_is_cut(phase:']
+A3 an answer stall counted as a sending one (R2-10): KILLED
+    otlp: [('Failed!', '2', '111')] failed facts: ['A_relayed_answer_is_written_in_pieces(steady:', 'A_transfer_ending_after_the_limit_fired_is_cut(phase:']
+A4 an answer that ends after its limit fired is not cut (the after-the-limit theory): KILLED
+    otlp: [('Failed!', '1', '112')] failed facts: ['A_transfer_ending_after_the_limit_fired_is_cut(phase:']
+E1 an entry left behind when its connection ends (leave-no-entry theory): KILLED
+    otlp: [('Failed!', '2', '111')] failed facts: ['An_exchange_leaves_no_entry_behind(status:']
+D1 limits fire under a debugger (debugger fact): KILLED
+    otlp: [('Failed!', '1', '112')] failed facts: ['No_limit_applies_while_a_debugger_is_attached']
+O1 a stall limit of zero accepted: KILLED
+    otlp: [('Failed!', '1', '112')] failed facts: ['A_limit_of_zero_or_less_is_refused(option:']
+O2 a keep-alive limit of zero accepted: KILLED
+    otlp: [('Failed!', '1', '112')] failed facts: ['A_limit_of_zero_or_less_is_refused(option:']
+O3 another stall default: KILLED
+    otlp: [('Failed!', '1', '112')] failed facts: ['The_limits_are_100_and_120_seconds_by_default']
+O4 another keep-alive default: KILLED
+    otlp: [('Failed!', '1', '112')] failed facts: ['The_limits_are_100_and_120_seconds_by_default']
+O5 the stall limit not copied for registered taps (R2-7): KILLED
+    otlp: [('Failed!', '1', '112')] failed facts: ['Registering_taps_copies_every_option']
+O6 the keep-alive limit not copied for registered taps (R2-7): KILLED
+    otlp: [('Failed!', '1', '112')] failed facts: ['Registering_taps_copies_every_option']

@@ -1,0 +1,8 @@
+== core suite after the bump (Windows)
+Passed!  - Failed:     0, Passed:  7645, Skipped:     2, Total:  7647, Duration: 4 m 2 s - Kronikol.Tests.dll (net10.0)
+
+== release.slnf, Release
+    81 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:01.73

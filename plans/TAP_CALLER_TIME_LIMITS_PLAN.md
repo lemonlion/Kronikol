@@ -2,9 +2,9 @@
 
 **Date:** 2026-10-14 · **Repo version:** 4.20.2 (`origin/main` at `3240c983`; every line number below is for it unless
 it says otherwise) · **Status:** 🚧 green-lit in full by the owner on 2026-10-15, every question in §9 as recommended; R0
-published as 4.22.2 on 2026-10-15 and R1 as 4.23.0 on 2026-10-16, R2 being implemented (§11). Drafted from #173 (filed
-2026-10-13 from `PROXY_TAP_HANG_UP_PLAN.md` §3 finding 9, §8 and Q2) at the owner's ask of 2026-10-14 to analyse the
-issue critically and plan a fix for the underlying problem. Written alongside the plan for #174
+published as 4.22.2 on 2026-10-15, R1 as 4.23.0 and R2 as 4.25.0 on 2026-10-16, R3 being implemented (§11). Drafted from
+#173 (filed 2026-10-13 from `PROXY_TAP_HANG_UP_PLAN.md` §3 finding 9, §8 and Q2) at the owner's ask of 2026-10-14 to
+analyse the issue critically and plan a fix for the underlying problem. Written alongside the plan for #174
 (`TCPTAP_FAILED_CONNECT_PLAN.md`, session kronikol-71), which owns both taps' accept loops and `TcpTap`'s connect path;
 §7 is the split. #174 was green-lit on 2026-10-15 and released the same day as 4.20.3, 4.22.0 and 4.22.1, which moved
 the lines this plan cites in `TcpTap.cs`, `OtlpTap.cs`, `TcpTapOptions.cs`, `CaptureDegradation.cs` and
@@ -986,6 +986,18 @@ kronikol-71 (#174, `TCPTAP_FAILED_CONNECT_PLAN.md`):
   - Departures from §5. `-1` ms is `Timeout.InfiniteTimeSpan`, so the refused-values theory uses `-2` and `-1000` ms; the
     `400` path of R1-10 is a reset on Windows, where http.sys writes nothing on an abort.
   - R2 started the same night, in worktree `C:/Code/Kronikol-173-r2` from `c7eef4b3`.
+- 2026-10-16: R2 released as 4.25.0 (`946e36e8`, worktree `C:/Code/Kronikol-173-r2`, rebased onto 4.24.0 before its
+  release). Release 38827898674, CI 38827896211, CodeQL 38827896251 and CI Summary Preview 38827896247 passed, and
+  nuget.org listed all 62 ids at 00:35 UTC; wiki `9ca835f`, Kronikol4J ledger `910a6bb`. The proofs are in the harness's
+  `r2/` (its README): 38 of R2's 39 cases fail on 4.23.0 with R2's seams stubbed, the one that passes a guard, and of 23
+  mutations, 23 are killed.
+  - Found while implementing. Plan §5's W-1, the watch's own facts, were never written in R1; R3 adds them. The
+    registration twin (R2-7) validates the options as registration does, so its value for `TracesPath` starts with a
+    slash.
+  - Departures from §5. R2-2 is a theory over three bodies, as R1-1 is; R2-10 is a theory, an exporter that stops reading
+    and a steady reader; and R2 has the twins of R1-2 and R1-11 (a transfer completing as the limit fires, and one ending
+    after it fired, each for the export and the answer) and of R1's option, debugger and no-entry facts.
+  - R3 started the same night, in worktree `C:/Code/Kronikol-173-r3` from `769c55cd`, rebased onto 4.25.0.
 
 ## Appendix A. Edit sites at `3240c983`
 

@@ -1,0 +1,98 @@
+diff --git a/src/Kronikol.Extensions.Otlp/Kronikol.Extensions.Otlp.csproj b/src/Kronikol.Extensions.Otlp/Kronikol.Extensions.Otlp.csproj
+index 7480ee6a..25c03700 100644
+--- a/src/Kronikol.Extensions.Otlp/Kronikol.Extensions.Otlp.csproj
++++ b/src/Kronikol.Extensions.Otlp/Kronikol.Extensions.Otlp.csproj
+@@ -19,6 +19,7 @@
+   <ItemGroup>
+     <!-- The accept loop both socket taps run, so a failed accept is handled the same way in each. -->
+     <Compile Include="..\Kronikol.Extensions.TcpTap\TapAcceptLoop.cs" Link="Shared\TapAcceptLoop.cs" />
++    <Compile Include="..\Kronikol.Extensions.TcpTap\StallWatch.cs" Link="Shared\StallWatch.cs" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+diff --git a/src/Kronikol.Extensions.Otlp/OtlpTap.cs b/src/Kronikol.Extensions.Otlp/OtlpTap.cs
+index a886d4b7..3b2f66a9 100644
+--- a/src/Kronikol.Extensions.Otlp/OtlpTap.cs
++++ b/src/Kronikol.Extensions.Otlp/OtlpTap.cs
+@@ -129,6 +129,23 @@ public OtlpTap(OtlpTapOptions options)
+     /// <summary>Spans decoded but not captured (server/internal spans, excluded kinds, unrecognised shapes).</summary>
+     public long SpansIgnored => Interlocked.Read(ref _spansIgnored);
+ 
++    // R2's seams, stubbed (plans/TAP_CALLER_TIME_LIMITS_PLAN.harness/r2/).
++    public long CallerTimeouts => 0;
++
++    internal TimeProvider Clock
++    {
++        get => Accepting.Clock;
++        set => Accepting.Clock = value;
++    }
++
++    internal Func<bool> DebuggerAttached { get; set; } = static () => false;
++
++    internal StallWatch? Watch => null;
++
++    internal const string KeptAlivePhase = "kept-alive connection";
++    internal const string SendingPhase = "export";
++    internal const string AnsweringPhase = "answer";
++
+     /// <summary>
+     /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per
+     /// non-zero problem counter — accepts that failed, payloads dropped, rejected or failed, exports refused as
+diff --git a/src/Kronikol.Extensions.Otlp/OtlpTapOptions.cs b/src/Kronikol.Extensions.Otlp/OtlpTapOptions.cs
+index d4f4915d..31958a6a 100644
+--- a/src/Kronikol.Extensions.Otlp/OtlpTapOptions.cs
++++ b/src/Kronikol.Extensions.Otlp/OtlpTapOptions.cs
+@@ -68,6 +68,11 @@ public sealed class OtlpTapOptions
+     /// <summary>Largest export payload accepted, in bytes (bigger ones are answered <c>413</c>). Default 32 MiB.</summary>
+     public int MaxRequestBytes { get; set; } = 32 * 1024 * 1024;
+ 
++    // R2's options, stubbed: no default and no check.
++    public TimeSpan? CallerStallTimeout { get; set; }
++
++    public TimeSpan? KeepAliveTimeout { get; set; }
++
+     /// <summary>
+     /// How many accepted export payloads may wait to be mapped. The queue is bounded and drops the
+     /// <em>newest</em> payload when full (D3: capture never blocks the producer); drops are counted in
+diff --git a/tests/Kronikol.Tests.Otlp/Kronikol.Tests.Otlp.csproj b/tests/Kronikol.Tests.Otlp/Kronikol.Tests.Otlp.csproj
+index 45884dcf..3f980369 100644
+--- a/tests/Kronikol.Tests.Otlp/Kronikol.Tests.Otlp.csproj
++++ b/tests/Kronikol.Tests.Otlp/Kronikol.Tests.Otlp.csproj
+@@ -11,6 +11,7 @@
+       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+       <PrivateAssets>all</PrivateAssets>
+     </PackageReference>
++    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.0" />
+     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+     <PackageReference Include="xunit.v3" Version="3.2.2" />
+     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+diff --git a/tests/Kronikol.Tests.Otlp/OtlpTapHangUpTests.cs b/tests/Kronikol.Tests.Otlp/OtlpTapHangUpTests.cs
+index 4896fc5e..12d8424a 100644
+--- a/tests/Kronikol.Tests.Otlp/OtlpTapHangUpTests.cs
++++ b/tests/Kronikol.Tests.Otlp/OtlpTapHangUpTests.cs
+@@ -318,7 +318,7 @@ private static async Task<int[]> ReadAnswersAsync(TcpClient exporter, int count)
+     /// A collector on a raw socket that reads one export, says so, and answers <c>200</c> only when told to: the tap's forward
+     /// is held at a known point, before its answer.
+     /// </summary>
+-    private sealed class HeldCollector : IDisposable
++    internal sealed class HeldCollector : IDisposable
+     {
+         private readonly TcpListener _listener = LoopbackPort.Listening();
+         private readonly TaskCompletionSource _answer = new(TaskCreationOptions.RunContinuationsAsynchronously);
+diff --git a/tests/Kronikol.Tests.Otlp/RawExporter.cs b/tests/Kronikol.Tests.Otlp/RawExporter.cs
+index defd5473..81c3d1ac 100644
+--- a/tests/Kronikol.Tests.Otlp/RawExporter.cs
++++ b/tests/Kronikol.Tests.Otlp/RawExporter.cs
+@@ -15,9 +15,11 @@ internal sealed class RawExporter : IDisposable
+ 
+     public TcpClient Client { get; }
+ 
+-    public static async Task<RawExporter> ConnectAsync(OtlpTap tap)
++    public static async Task<RawExporter> ConnectAsync(OtlpTap tap, int? receiveBuffer = null)
+     {
+         var client = new TcpClient();
++        if (receiveBuffer is { } size)
++            client.ReceiveBufferSize = size; // small, so an answer it stops reading backs up into the tap's writes
+         await client.ConnectAsync(IPAddress.Loopback, tap.BoundPort);
+         return new RawExporter(client);
+     }

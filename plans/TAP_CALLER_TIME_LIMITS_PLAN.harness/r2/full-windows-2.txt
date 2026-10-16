@@ -1,0 +1,1 @@
+Passed!  - Failed:     0, Passed:   213, Skipped:     0, Total:   213, Duration: 16 s - Kronikol.Tests.Otlp.dll (net10.0)

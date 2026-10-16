@@ -1,0 +1,4 @@
+Test run for C:\Code\Kronikol-173-r2\tests\Kronikol.Tests.Otlp\bin\Debug\net10.0\Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   211, Skipped:     0, Total:   211, Duration: 16 s - Kronikol.Tests.Otlp.dll (net10.0)

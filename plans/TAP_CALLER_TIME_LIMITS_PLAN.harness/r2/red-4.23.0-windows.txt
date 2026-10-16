@@ -1,0 +1,315 @@
+Test run for C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\bin\Debug\net10.0\Kronikol.Tests.Otlp.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "KeepAliveTimeout", milliseconds: -2) [320 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 466
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 467
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "CallerStallTimeout", milliseconds: 0) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 466
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 467
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "CallerStallTimeout", milliseconds: -2) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 466
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 467
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "KeepAliveTimeout", milliseconds: -1000) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 466
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 467
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "CallerStallTimeout", milliseconds: -1000) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 466
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 467
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(option: "KeepAliveTimeout", milliseconds: 0) [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.ArgumentOutOfRangeException)
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 466
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_zero_or_less_is_refused(String option, Int32 milliseconds) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 467
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.An_exchange_leaves_no_entry_behind(status: 502) [2 s]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.<>c__DisplayClass29_0.<An_exchange_leaves_no_entry_behind>b__1() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 525
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.WaitUntilAsync(Func`1 condition) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 630
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_exchange_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 525
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_exchange_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 528
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.An_exchange_leaves_no_entry_behind(status: 200) [1 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.<>c__DisplayClass29_0.<An_exchange_leaves_no_entry_behind>b__1() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 525
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.WaitUntilAsync(Func`1 condition) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 630
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_exchange_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 525
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_exchange_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 528
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.An_exchange_leaves_no_entry_behind(status: 400) [2 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.<>c__DisplayClass29_0.<An_exchange_leaves_no_entry_behind>b__1() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 525
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.WaitUntilAsync(Func`1 condition) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 630
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_exchange_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 525
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_exchange_leaves_no_entry_behind(Int32 status) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 528
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_relayed_answer_is_written_in_pieces(steady: True) [15 s]
+  Error Message:
+   System.TimeoutException : no answer entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_relayed_answer_is_written_in_pieces(Boolean steady) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 347
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_relayed_answer_is_written_in_pieces(Boolean steady) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 366
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_relayed_answer_is_written_in_pieces(Boolean steady) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 366
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_relayed_answer_is_written_in_pieces(steady: False) [15 s]
+  Error Message:
+   System.TimeoutException : no answer entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_relayed_answer_is_written_in_pieces(Boolean steady) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 330
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_relayed_answer_is_written_in_pieces(Boolean steady) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 366
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_relayed_answer_is_written_in_pieces(Boolean steady) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 366
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_body_is_answered_408_and_not_received(kind: NoByte) [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_body_is_answered_408_and_not_received(BodyKind kind) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 101
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_body_is_answered_408_and_not_received(BodyKind kind) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 108
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_body_is_answered_408_and_not_received(kind: Chunked) [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_body_is_answered_408_and_not_received(BodyKind kind) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 101
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_body_is_answered_408_and_not_received(BodyKind kind) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 108
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_body_is_answered_408_and_not_received(kind: ContentLength) [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_body_is_answered_408_and_not_received(BodyKind kind) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 101
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_body_is_answered_408_and_not_received(BodyKind kind) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 108
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_transfer_completing_as_the_limit_fires_is_received_or_cut_never_both(phase: "export") [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_transfer_completing_as_the_limit_fires_is_received_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 386
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_transfer_completing_as_the_limit_fires_is_received_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 422
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_transfer_completing_as_the_limit_fires_is_received_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 422
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_transfer_completing_as_the_limit_fires_is_received_or_cut_never_both(phase: "answer") [15 s]
+  Error Message:
+   System.TimeoutException : no answer entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_transfer_completing_as_the_limit_fires_is_received_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 386
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_transfer_completing_as_the_limit_fires_is_received_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 422
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_transfer_completing_as_the_limit_fires_is_received_or_cut_never_both(String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 422
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(option: "CallerStallTimeout", value: "infinite") [306 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 499
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 506
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(option: "CallerStallTimeout", value: "null") [302 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 499
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 506
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(option: "CallerStallTimeout", value: "max") [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 494
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 506
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(option: "KeepAliveTimeout", value: "null") [302 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 499
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 506
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(option: "KeepAliveTimeout", value: "infinite") [306 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 499
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 506
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(option: "KeepAliveTimeout", value: "max") [15 s]
+  Error Message:
+   System.TimeoutException : no kept-alive connection entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 494
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_limit_of_none_never_cuts(String option, String value) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 506
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.The_limits_are_100_and_120_seconds_by_default [3 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 00:01:40
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.The_limits_are_100_and_120_seconds_by_default() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 449
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_connection_that_never_sends_is_closed_after_the_keep_alive_limit [15 s]
+  Error Message:
+   System.TimeoutException : no kept-alive connection entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.AssertIdleThenClosedAsync(OtlpTap tap, RawExporter exporter, FakeTimeProvider clock, List`1 log) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 546
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_connection_that_never_sends_is_closed_after_the_keep_alive_limit() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 134
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_connection_that_never_sends_is_closed_after_the_keep_alive_limit() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 134
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.Disposing_the_tap_is_not_a_time_limit [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.Disposing_the_tap_is_not_a_time_limit() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 193
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_slow_collector_is_not_the_exporters_stall [4 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.A_slow_collector_is_not_the_exporters_stall() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 278
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_slow_collector_is_not_the_exporters_stall() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 284
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.An_idle_keep_alive_connection_is_closed_quietly [15 s]
+  Error Message:
+   System.TimeoutException : no kept-alive connection entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.AssertIdleThenClosedAsync(OtlpTap tap, RawExporter exporter, FakeTimeProvider clock, List`1 log) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 546
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_idle_keep_alive_connection_is_closed_quietly() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 122
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_idle_keep_alive_connection_is_closed_quietly() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 122
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(where: ChunkSizeLine) [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(InsideBody where) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 305
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(InsideBody where) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 311
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(where: Trailers) [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(InsideBody where) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 305
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(InsideBody where) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 311
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(where: OverCapDiscard) [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(InsideBody where) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 305
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(InsideBody where) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 311
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(where: ChunkLineBreak) [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(InsideBody where) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 305
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stall_inside_a_body_is_a_body_stall(InsideBody where) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 311
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.No_limit_applies_while_a_debugger_is_attached [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.No_limit_applies_while_a_debugger_is_attached() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 434
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.No_limit_applies_while_a_debugger_is_attached() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 442
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.An_exporter_that_reuses_its_connection_keeps_it [15 s]
+  Error Message:
+   System.TimeoutException : no kept-alive connection entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_exporter_that_reuses_its_connection_keeps_it() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 174
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.An_exporter_that_reuses_its_connection_keeps_it() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 181
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_head_is_answered_408_and_closed(realClock: False) [15 s]
+  Error Message:
+   System.TimeoutException : no export entry appeared
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.EntryAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 593
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.StalledAsync(OtlpTap tap, String phase) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 604
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_head_is_answered_408_and_closed(Boolean realClock) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 73
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_head_is_answered_408_and_closed(Boolean realClock) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 84
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_head_is_answered_408_and_closed(realClock: True) [15 s]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: ["HTTP/1.1 408 Request Timeout"]
+Actual:   []
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.AssertTimedOut(Answer heard) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 535
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_head_is_answered_408_and_closed(Boolean realClock) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 77
+   at Kronikol.Tests.Otlp.OtlpTapStallTests.A_stalled_head_is_answered_408_and_closed(Boolean realClock) in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 84
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.Otlp.OtlpTapStallTests.Registering_taps_copies_every_option [11 ms]
+  Error Message:
+   CallerStallTimeout was not copied: expected 00:00:01, got 
+  Stack Trace:
+     at Kronikol.Tests.Otlp.OtlpTapStallTests.Registering_taps_copies_every_option() in C:\Code\Kronikol-173-red2\tests\Kronikol.Tests.Otlp\OtlpTapStallTests.cs:line 264
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:    36, Passed:     1, Skipped:     0, Total:    37, Duration: 5 m 4 s - Kronikol.Tests.Otlp.dll (net10.0)
