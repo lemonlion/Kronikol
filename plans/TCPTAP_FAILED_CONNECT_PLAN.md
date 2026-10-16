@@ -802,6 +802,10 @@ R3 follows the same shape: **Patch**, with "a tap on localhost no longer costs 2
   `ConnectAlgorithm.Parallel` is not public in .NET 10. (2) R3's departure above: the name `localhost` alone takes both
   loopbacks, where §4.3 and `OtlpTap` also do for `127.0.0.1`. (3) A ::1 port that something else holds is logged and
   reported, and the tap starts; Kestrel fails the start instead. Each is a patch.
+- **2026-10-16, 4.26.2 published.** Release 38916282133, CI 38916277263, CodeQL 38916277731 and CI Summary Preview
+  38916277763 passed for 8dfa1939 on their first attempt. nuget.org listed all 62 ids at 14:49 UTC. The wiki has the
+  audit's edits (`de16ed0`), Kronikol4J's ledger its line (`7f01430`, nothing to port), and #174 a comment naming the
+  release and what it fixed. The three questions above are the owner's.
 
 ## Appendix A. Edit sites at `3240c983`
 
