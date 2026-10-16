@@ -67,6 +67,9 @@ public class TcpTap : IAsyncDisposable
     private long _decodingDisabledConnections;
     private long _connectionsClosedMidMessage;
     private long _stuckConnectionsReaped;
+    private long _halfClosedPairsClosed;
+    private long _stalledWritesClosed;
+    private StallWatch? _watch;
     private long _connectsFailed;
     private long _connectsTimedOut;
     private long _firstConnectFailureAtTicks;
@@ -149,6 +152,37 @@ public class TcpTap : IAsyncDisposable
     public long StuckConnectionsReaped => Interlocked.Read(ref _stuckConnectionsReaped);
 
     /// <summary>
+    /// Pairs the tap closed because one side had finished sending and the other then moved no bytes for
+    /// <see cref="TcpTapOptions.HalfClosedTimeout"/>.
+    /// </summary>
+    public long HalfClosedPairsClosed => Interlocked.Read(ref _halfClosedPairsClosed);
+
+    /// <summary>
+    /// Pairs the tap closed because its write to one side did not complete for <see cref="TcpTapOptions.StalledWriteTimeout"/>:
+    /// that side had stopped reading.
+    /// </summary>
+    public long StalledWritesClosed => Interlocked.Read(ref _stalledWritesClosed);
+
+    // The tap's clock (Kronikol.Tests.TcpTap): one for the time limits, the reaper, a segment's time and the accept loop's
+    // pause. Set before StartAsync.
+    internal TimeProvider Clock
+    {
+        get => Accepting.Clock;
+        set => Accepting.Clock = value;
+    }
+
+    // Whether a debugger is attached (Kronikol.Tests.TcpTap): every fact says no, so the suite passes under one too.
+    internal Func<bool> DebuggerAttached { get; set; } = static () => System.Diagnostics.Debugger.IsAttached;
+
+    // The watch over the pairs' limits and the reaper, or null when none is on (Kronikol.Tests.TcpTap).
+    internal StallWatch? Watch => _watch;
+
+    // What the watch's entries wait on, as it names them.
+    internal const string HalfClosedPhase = "half-closed pair";
+    internal const string WritePhase = "write";
+    internal const string ReaperPhase = "unanswered command";
+
+    /// <summary>
     /// Connections the tap closed without forwarding anything, because it could not connect to
     /// <see cref="TcpTapOptions.ForwardHost"/>:<see cref="TcpTapOptions.ForwardPort"/> within
     /// <see cref="TcpTapOptions.ConnectTimeout"/>, or at all. A connect cut short by the tap's own disposal is not counted.
@@ -182,6 +216,8 @@ public class TcpTap : IAsyncDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed == 1, this);
         _options.Validate();
+        if (_options.HalfClosedLimit is not null || _options.StalledWriteLimit is not null || _options.ReapStuckConnectionsAfter is not null)
+            _watch = new StallWatch(Clock, DebuggerAttached, line => TryLog($"[{_options.DisplayName}] tcp-tap {line}"));
 
         var address = ResolveBindAddress(_options.ListenHost);
         var listener = new TcpListener(address, _options.ListenPort);
@@ -269,21 +305,26 @@ public class TcpTap : IAsyncDisposable
                 Volatile.Write(ref pumpState.DecodingBroken, 1);
             var decodeTask = Task.Run(() => DecodeLoopAsync(channel.Reader, decoder, context, pumpState), CancellationToken.None);
 
+            // The pair's own token, linked to the tap's: a time limit cancels it and disposes both sockets, and each pump
+            // takes the cancelled read or write for its end (plans/TAP_CALLER_TIME_LIMITS_PLAN.md §4.5 item 4).
+            using var pair = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            var limits = new PairLimits(this, id, pair, client, upstream);
             var clientStream = client.GetStream();
             var upstreamStream = upstream.GetStream();
-            var toServer = PumpAsync(clientStream, upstreamStream, upstream.Client, TapDirection.ClientToServer, channel.Writer, pumpState, ct);
-            var toClient = PumpAsync(upstreamStream, clientStream, client.Client, TapDirection.ServerToClient, channel.Writer, pumpState, ct);
+            var toServer = PumpAsync(clientStream, upstreamStream, upstream.Client, TapDirection.ClientToServer, channel.Writer, pumpState, pair.Token, limits);
+            var toClient = PumpAsync(upstreamStream, clientStream, client.Client, TapDirection.ServerToClient, channel.Writer, pumpState, pair.Token, limits);
 
             // The reaper reads the decoder; a connection without one has nothing for it to read.
             var reaper = _options.ReapStuckConnectionsAfter is { } threshold && decoder is not null
-                ? Task.Run(() => ReapWhenStuckAsync(client, upstream, decoder, pumpState, threshold), CancellationToken.None)
-                : Task.CompletedTask;
+                ? WatchForStuck(client, upstream, decoder, pumpState, threshold)
+                : null;
 
             await Task.WhenAll(toServer, toClient).ConfigureAwait(false);
             Volatile.Write(ref pumpState.Closed, 1);
+            reaper?.TryEnd();
+            limits.End();
             channel.Writer.TryComplete();
             await decodeTask.ConfigureAwait(false);
-            await reaper.ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -413,7 +454,7 @@ public class TcpTap : IAsyncDisposable
     /// </summary>
     internal async Task PumpAsync(
         Stream source, Stream destination, Socket destinationSocket, TapDirection direction,
-        ChannelWriter<TapSegment> writer, ConnectionPumpState state, CancellationToken ct)
+        ChannelWriter<TapSegment> writer, ConnectionPumpState state, CancellationToken ct, PairLimits? limits = null)
     {
         var buffer = ArrayPool<byte>.Shared.Rent(_options.ReadBufferBytes);
         try
@@ -433,10 +474,14 @@ public class TcpTap : IAsyncDisposable
                 if (read == 0)
                     break;
 
+                limits?.Progress();
                 var copy = buffer.AsSpan(0, read).ToArray();
-                if (!writer.TryWrite(new TapSegment(direction, copy, DateTimeOffset.UtcNow)))
+                if (!writer.TryWrite(new TapSegment(direction, copy, Clock.GetUtcNow())))
                     CountDrop(direction, state);
 
+                // A write watched while it is pending: one that does not complete within StalledWriteTimeout means the
+                // destination has stopped reading. Its end and its limit settle by one move on the entry.
+                var writing = limits?.Writing(direction);
                 try
                 {
                     await destination.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
@@ -445,21 +490,30 @@ public class TcpTap : IAsyncDisposable
                 {
                     break;
                 }
+                finally
+                {
+                    writing?.TryEnd();
+                }
+
+                if (writing?.HasFired == true)
+                    break; // the limit fired first: the pair is being closed
+                limits?.Progress();
 
                 if (direction == TapDirection.ClientToServer)
                     Interlocked.Add(ref _bytesClientToServer, read);
                 else
                     Interlocked.Add(ref _bytesServerToClient, read);
                 Interlocked.Add(ref _bytesSinceLastInteraction, read);
-                Volatile.Write(ref state.LastActivityTicks, Environment.TickCount64);
             }
         }
         finally
         {
             ArrayPool<byte>.Shared.Return(buffer);
-            // Half-close: tell the far side this direction is done, but keep the other one pumping.
+            // Half-close: tell the far side this direction is done, but keep the other one pumping, for as long as it moves
+            // bytes within HalfClosedTimeout.
             try { destinationSocket.Shutdown(SocketShutdown.Send); }
             catch (Exception ex) when (ex is SocketException or ObjectDisposedException) { /* already gone */ }
+            limits?.PumpEnded(direction);
         }
     }
 
@@ -474,43 +528,73 @@ public class TcpTap : IAsyncDisposable
     /// Observed live 2026-08-24: a machine-wide stall wedged StackExchange.Redis 2.6.x inside
     /// data-insights — 18 sent commands unanswered forever, no timeout, no reconnect, every request in
     /// the service hung — and a closed socket is the one signal such a client reliably recovers from.
+    /// <para>The heartbeat checks it on the tap's monotonic clock: a command's wall-clock age is taken once, when the
+    /// reaper first sees it as the oldest unanswered, and monotonic time is added from then on, so a jump of the wall
+    /// clock cannot age it. It acts under a debugger too, as it did before any time limit existed.</para>
     /// </summary>
-    private async Task ReapWhenStuckAsync(
+    private StallWatch.Entry? WatchForStuck(
         TcpClient client, TcpClient upstream, IProtocolDecoder decoder, ConnectionPumpState state, TimeSpan threshold)
     {
-        while (Volatile.Read(ref state.Closed) == 0)
+        var gate = new object();
+        DateTimeOffset? sighted = null;
+        long sightedAt = 0;
+        var ageAtSighting = TimeSpan.Zero;
+        StallWatch.Entry? entry = null;
+        entry = _watch?.WatchWhen(ReaperPhase, threshold, due: () =>
         {
-            await Task.Delay(1_000).ConfigureAwait(false);
-            // Two ways the decoder's pending state stops meaning what the reaper reads it to mean:
-            // decoding was disabled outright, or a segment was dropped. After a drop the decoder is
-            // missing bytes it will never be given - and if the dropped segment was a REPLY, the
-            // command it answered stays unanswered for ever and a working connection looks wedged.
-            if (Volatile.Read(ref state.Closed) != 0
-                || Volatile.Read(ref state.DecodingBroken) != 0
-                || Volatile.Read(ref state.DecodeViewIncomplete) != 0)
-                return;
-
-            DateTimeOffset? since;
-            try
+            lock (gate)
             {
-                since = decoder.OldestUnansweredSince;
-            }
-            catch (Exception)
-            {
-                return; // a decoder that throws here is a decoder the reaper must not act on
-            }
+                // Two ways the decoder's pending state stops meaning what the reaper reads it to mean:
+                // decoding was disabled outright, or a segment was dropped. After a drop the decoder is
+                // missing bytes it will never be given - and if the dropped segment was a REPLY, the
+                // command it answered stays unanswered for ever and a working connection looks wedged.
+                if (Volatile.Read(ref state.Closed) != 0
+                    || Volatile.Read(ref state.DecodingBroken) != 0
+                    || Volatile.Read(ref state.DecodeViewIncomplete) != 0)
+                {
+                    entry?.TryEnd();
+                    return false;
+                }
 
-            if (since is not { } oldest || DateTimeOffset.UtcNow - oldest < threshold)
-                continue;
+                DateTimeOffset? since;
+                try
+                {
+                    since = decoder.OldestUnansweredSince;
+                }
+                catch (Exception)
+                {
+                    entry?.TryEnd(); // a decoder that throws here is a decoder the reaper must not act on
+                    return false;
+                }
 
+                if (since is not { } oldest)
+                {
+                    sighted = null;
+                    return false;
+                }
+
+                if (sighted != oldest)
+                {
+                    sighted = oldest;
+                    sightedAt = Clock.GetTimestamp();
+                    ageAtSighting = Clock.GetUtcNow() - oldest;
+                }
+
+                return ageAtSighting + Clock.GetElapsedTime(sightedAt) >= threshold;
+            }
+        }, fired: () =>
+        {
+            DateTimeOffset oldest;
+            lock (gate)
+                oldest = sighted ?? Clock.GetUtcNow();
             Interlocked.Increment(ref _stuckConnectionsReaped);
             var detail = string.Create(CultureInfo.InvariantCulture, $"a command sent at {oldest:HH:mm:ss}Z is still unanswered after {threshold} — closed so a wedged client can reconnect");
             TryLog($"[{_options.DisplayName}] tcp-tap connection {state.ConnectionId} reaped: {detail}");
             Degrade(state.ConnectionId, CaptureDegradationKind.StuckConnectionReaped, detail);
             try { client.Dispose(); } catch { /* already closing */ }
             try { upstream.Dispose(); } catch { /* already closing */ }
-            return;
-        }
+        }, evenUnderDebugger: true);
+        return entry;
     }
 
     private void CountDrop(TapDirection direction, ConnectionPumpState state)
@@ -723,6 +807,16 @@ public class TcpTap : IAsyncDisposable
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
                 string.Create(CultureInfo.InvariantCulture, $"{name}: {reaped:N0} stuck connection(s) reaped (a command unanswered for {_options.ReapStuckConnectionsAfter}) so a wedged client could reconnect")));
 
+        var halfClosed = HalfClosedPairsClosed;
+        if (halfClosed > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {halfClosed:N0} connection(s) closed after one side finished sending and the other moved nothing for HalfClosedTimeout ({_options.HalfClosedTimeout})")));
+
+        var stalledWrites = StalledWritesClosed;
+        if (stalledWrites > 0)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                string.Create(CultureInfo.InvariantCulture, $"{name}: {stalledWrites:N0} connection(s) closed because a write to one side did not complete for StalledWriteTimeout ({_options.StalledWriteTimeout}): that side had stopped reading")));
+
         if (_options.DecodingStallBytes is { } stallBytes && BytesSinceLastInteraction >= stallBytes)
         {
             var last = LastInteractionAt;
@@ -868,6 +962,8 @@ public class TcpTap : IAsyncDisposable
         if (Interlocked.Exchange(ref _disposed, 1) == 1)
             return;
 
+        // The time limits' heartbeat stops first: the stop ends every pair itself from here on.
+        _watch?.Dispose();
         if (_cts is not null)
             await _cts.CancelAsync().ConfigureAwait(false);
 
@@ -892,20 +988,85 @@ public class TcpTap : IAsyncDisposable
             $"[{_options.DisplayName}] tcp-tap stopped ({ConnectionsAccepted} connections, {InteractionsCaptured} interactions, " +
             $"{SegmentsDropped} segments dropped, {DecodeErrors} decode errors, {OversizePayloadsSkipped} oversize payloads skipped, " +
             $"{DecoderResets} decoder resets, {DecodingDisabledConnections} connections with decoding disabled, {AcceptFailures} failed accepts, " +
-            $"{UpstreamConnectFailures} failed connects)");
+            $"{UpstreamConnectFailures} failed connects, {HalfClosedPairsClosed} half-closed pairs closed, {StalledWritesClosed} stalled writes closed)");
         GC.SuppressFinalize(this);
     }
 
     internal readonly record struct TapSegment(TapDirection Direction, byte[] Data, DateTimeOffset Timestamp);
+
+    /// <summary>
+    /// One pair's time limits (plans/TAP_CALLER_TIME_LIMITS_PLAN.md §4.5): a write watched while it is pending, and once one
+    /// pump has ended, the other watched for silence. A limit that fires closes the pair once: it cancels the pair's token
+    /// and disposes both sockets, so both pumps end and the connection is released as any other.
+    /// </summary>
+    internal sealed class PairLimits(TcpTap tap, long connectionId, CancellationTokenSource pair, TcpClient client, TcpClient upstream)
+    {
+        private const int Open = 0, ByHalfClose = 1, ByStalledWrite = 2, Ended = 3;
+
+        private StallWatch.Entry? _halfClosed;
+        private int _pumpsEnded;
+        private int _closedBy;
+
+        /// <summary>A pump moved bytes: the half-closed pair's wait, if one has begun, starts again.</summary>
+        public void Progress() => Volatile.Read(ref _halfClosed)?.Progress();
+
+        /// <summary>Watches a write to the side <paramref name="direction"/> carries bytes to, while it is pending.</summary>
+        public StallWatch.Entry? Writing(TapDirection direction) =>
+            tap._watch?.Watch(WritePhase, tap._options.StalledWriteLimit, () => Close(ByStalledWrite, direction));
+
+        /// <summary>A pump ended: the first to end starts the other's half-closed wait, the second ends it.</summary>
+        public void PumpEnded(TapDirection direction)
+        {
+            if (Interlocked.Increment(ref _pumpsEnded) == 1)
+                Volatile.Write(ref _halfClosed, tap._watch?.Watch(HalfClosedPhase, tap._options.HalfClosedLimit, () => Close(ByHalfClose, direction)));
+            else
+                Interlocked.Exchange(ref _halfClosed, null)?.TryEnd();
+        }
+
+        /// <summary>Ends whatever is still watched, once the pumps have ended.</summary>
+        public void End()
+        {
+            Interlocked.Exchange(ref _halfClosed, null)?.TryEnd();
+            Interlocked.CompareExchange(ref _closedBy, Ended, Open);
+        }
+
+        private void Close(int limit, TapDirection direction)
+        {
+            if (Interlocked.CompareExchange(ref _closedBy, limit, Open) != Open)
+                return;
+            if (limit == ByHalfClose)
+            {
+                Interlocked.Increment(ref tap._halfClosedPairsClosed);
+                var finished = direction == TapDirection.ClientToServer ? "the client" : "the server";
+                var other = direction == TapDirection.ClientToServer ? "the server" : "the client";
+                tap.TryLog($"[{tap._options.DisplayName}] tcp-tap connection {connectionId} closed: {finished} finished sending and {other} moved nothing for {tap._options.HalfClosedTimeout}");
+            }
+            else
+            {
+                Interlocked.Increment(ref tap._stalledWritesClosed);
+                var reader = direction == TapDirection.ClientToServer ? "the server" : "the client";
+                tap.TryLog($"[{tap._options.DisplayName}] tcp-tap connection {connectionId} closed: a write to {reader} did not complete for {tap._options.StalledWriteTimeout} (it stopped reading)");
+            }
+
+            try
+            {
+                pair.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // The pair has already ended.
+            }
+
+            try { client.Dispose(); } catch { /* already closing */ }
+            try { upstream.Dispose(); } catch { /* already closing */ }
+        }
+    }
 
     internal sealed class ConnectionPumpState(long connectionId)
     {
         public long ConnectionId { get; } = connectionId;
 
         public long LastDropReportTicks;
-
-        /// <summary>When either pump last moved bytes (<see cref="Environment.TickCount64"/>).</summary>
-        public long LastActivityTicks = Environment.TickCount64;
 
         /// <summary>1 once both pumps have ended — stops the stuck-connection reaper.</summary>
         public int Closed;

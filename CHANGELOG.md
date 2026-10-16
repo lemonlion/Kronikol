@@ -4,6 +4,80 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.26.0] - 2026-10-16
+
+**Minor - a `TcpTap` releases a pair that cannot finish: one side has half-closed and the other stays silent, or one
+side has stopped reading (#173; `plans/TAP_CALLER_TIME_LIMITS_PLAN.md` R3, the plan's last release).** Green-lit in full
+by the owner on 2026-10-15, every question in the plan's section 9 as recommended. Two new options,
+`TcpTapOptions.HalfClosedTimeout` and `TcpTapOptions.StalledWriteTimeout`, and two new counters,
+`TcpTap.HalfClosedPairsClosed` and `TcpTap.StalledWritesClosed`, so the minor part moves (4.25.0 to 4.26.0). Both limits
+are on by default (Q1); a pair whose sides keep moving bytes, or that sits idle, is never closed.
+
+### Added
+
+- **`TcpTapOptions.HalfClosedTimeout`** (default 100 s): once one side has finished sending (its FIN, which the tap
+  passes on), the pair is closed when the other moves no bytes for this long, counted from the FIN or from its last
+  byte, whichever is later. It times silence, not the rest of the exchange: a server that keeps streaming a reply to a
+  client that has half-closed is never cut. Only what the other side sends counts as its progress; what the tap has
+  already passed on to it still reaches it when the pair is closed. Redis and MongoDB clients do not half-close, so it
+  cuts nothing they do.
+- **`TcpTapOptions.StalledWriteTimeout`** (default 100 s): the pair is closed when the tap's write to one side has not
+  completed for this long, that side having stopped reading: a client that stops reading a large reply, or a server that
+  stops reading its client's commands. A write carries up to `ReadBufferBytes` (32 KiB by default).
+- Both take `null` or `Timeout.InfiniteTimeSpan` for none, fail at start for zero or another negative value, and are
+  copied by `CopyTo`, so by the Redis and MongoDB list registrations. Neither touches a pair where neither side has
+  finished and no write is pending, however long it sits idle, nor a command followed by silence, which is the
+  stuck-connection reaper's to judge. No limit fires while a debugger is attached to the tap's process.
+- **`TcpTap.HalfClosedPairsClosed`** and **`TcpTap.StalledWritesClosed`**, each with a `CaptureDegraded` line in
+  `Diagnostics()` beside the reaper's, a log line for each close (`tcp-tap connection 7 closed: the client finished
+  sending and the server moved nothing for 00:01:40`, or `... closed: a write to the client did not complete for
+  00:01:40 (it stopped reading)`), and a place in the stop line. A pair a limit closes has lost none of its capture, so
+  no `OnCaptureDegraded` event is raised for it.
+
+### Changed
+
+- **The stuck-connection reaper (`ReapStuckConnectionsAfter`) runs on the tap's heartbeat and its monotonic clock.** It
+  was a loop per pair on the wall clock: a jump of the machine's clock could age a command and reap a healthy
+  connection, and each pair's one-second delay, which nothing could cancel, held `DisposeAsync` for up to a second. A
+  command's wall-clock age is now taken once, when the reaper first sees it unanswered, and monotonic time is added from
+  then on. Its rule and its default (off) are unchanged, it still acts while a debugger is attached, and
+  `OnCaptureDegraded` is raised for a reap on a thread-pool thread rather than on the reaper's own task.
+
+Before 4.26.0 a pair that one side had half-closed was held until the other side closed too, and a pair whose reader had
+stopped held its pump in a write, each until the tap was disposed. Behaviour change: such a pair is closed after 100 s;
+set either option to `null` to keep the old behaviour, for instance while a service in another process is paused in a
+debugger.
+
+Tests: `TcpTapStallTests`, 25 cases: a pair whose upstream stays silent after the client half-closes is released (on the
+fake clock and on the real one), and the other way round; an idle pair, after traffic, outlives three times both limits
+and still carries traffic; a client that stops reading an 8 MB reply, and an upstream that stops reading 16 MB of
+commands, release their pairs; a slow steady reader keeps its pair; a half-close answered in time ends normally, and a
+half-closed pair that keeps moving is kept until its own FIN; the reaper ignores a jump of the wall clock and still
+reaps on monotonic time, and a segment keeps the wall-clock time it arrived at; `CopyTo` copies every option, found by
+reflection; disposing a tap with three reaper-on pairs takes under 250 ms in each of five rounds; no limit fires while a
+debugger is attached, and the reaper still does; the defaults, refused values and no-limit values; a pair that ends
+leaves no entry behind; and the stop line names both counters. `StallWatchTests`, 11 facts on the watch alone (the
+plan's W-1, which R1 left out): an entry acts once, progress restarts its wait, an ended entry never acts, a throwing
+action is logged and the heartbeat lives on, a debugger holds every limit but the reaper's, nothing acts after disposal
+or once disposal has begun, an entry added during a beat is seen at the next, `TimeSpan.MaxValue` never acts, and a
+condition entry acts when due and ends when its check throws. `TcpTapConnectFailureTests`' stop-line fact names the new
+counters. Proofs (plan harness `r3/`): copied onto 4.25.0 with R3's seams stubbed (the options with no default, no check
+and no copy, counters that stay 0, the clock and debugger seams, no watch, and the pump's stamp and the old reaper's
+wall clock read through the clock seam), 24 of the 26 cases fail on Windows; the two that pass are guards, a slow steady
+reader and the reaper under a debugger. The real-clock half-close, the wall-clock jump (the old reaper reaped the
+command at the jump), the disposal (the old reaper's one-second tick), the options and the stop line fail on their
+behaviour, the rest for want of the watch they order their steps by, which the mutations prove. Of 20 mutations, 20 are
+killed, the plan's five among them (the half-close armed on an idle pair, the reaper reading the wall clock again, the
+half-close timed from the FIN rather than the last byte, the reaper's tick given a delay of its own again, a write's
+pending mark never cleared). On Linux the first run of the steady-reader fact, whose upstream sent its FIN after the
+reply, closed the pair as half-closed while the client read the last 2 MB from its socket buffers; the client still got
+every byte, and the fact now keeps the upstream's side open, as the plan's guard meant. Checks: after the version bump
+the core suite passes 7,645 with 2 skipped; the TcpTap suite passes 469 with 4 skipped (its Docker-only facts), the
+ProxyTap suite, which carries the watch's own facts, 188 with 4 skipped, and the Otlp suite 213 on Windows, and 468 with
+5 skipped, 192 and 213 on Linux; release.slnf builds in Release for every target. The templates pin 4.25.0 and the
+history action's VERSION installs Kronikol.Tool 4.26.0. The wiki edits and the Kronikol4J ledger line follow
+publication, and #173 closes with this release.
+
 ## [4.25.0] - 2026-10-16
 
 **Minor - an `OtlpTap` closes an exporter that stalls in a request or in reading its answer, and a connection left idle

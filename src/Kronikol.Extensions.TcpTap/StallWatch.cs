@@ -16,7 +16,9 @@ namespace Kronikol.Extensions.TcpTap;
 /// once a second, fires an entry whose last progress is older than its limit, once. A limit is compared as an elapsed
 /// time, never added to a timestamp, so <see cref="TimeSpan.MaxValue"/> never fires. While a debugger is attached to the
 /// process no limit fires: a stall that ends meanwhile is forgotten, and one that outlives the detach is cut at the next
-/// beat.
+/// beat. An entry can be watched for a condition the heartbeat checks instead (a command left unanswered, for
+/// <c>TcpTap</c>'s stuck-connection reaper), and can act under a debugger too (the reaper's, which did before any limit
+/// existed, §4.5 item 5).
 /// </summary>
 /// <remarks>
 /// <para>The heartbeat only decides. It moves a due entry from active to fired and queues the entry's action to the
@@ -74,29 +76,59 @@ internal sealed class StallWatch : IDisposable
         return entry;
     }
 
+    /// <summary>
+    /// Starts watching a condition rather than a stall: the heartbeat asks <paramref name="due"/> at each beat, on its own
+    /// thread, and fires the entry once it says so; <paramref name="limit"/> only names the wait in messages. A check that
+    /// throws ends the entry. With <paramref name="evenUnderDebugger"/> the entry acts while a debugger is attached too.
+    /// </summary>
+    public Entry? WatchWhen(string phase, TimeSpan limit, Func<bool> due, Action fired, bool evenUnderDebugger)
+    {
+        if (Volatile.Read(ref _disposed) == 1)
+            return null;
+        var entry = new Entry(this, phase, limit, fired, due, evenUnderDebugger);
+        _entries.TryAdd(entry, 0);
+        return entry;
+    }
+
     private void Look()
     {
         if (Volatile.Read(ref _disposed) == 1)
             return;
+        bool debugger;
         try
         {
-            if (_debuggerAttached())
-                return;
+            debugger = _debuggerAttached();
         }
         catch (Exception)
         {
-            // A debugger check that throws is no debugger.
+            debugger = false; // a debugger check that throws is no debugger
         }
 
         foreach (var entry in _entries.Keys)
         {
-            if (!entry.IsActive || _clock.GetElapsedTime(entry.LastProgress) < entry.Limit)
+            if (!entry.IsActive || (debugger && !entry.EvenUnderDebugger) || !IsDue(entry))
                 continue;
             BeforeFire?.Invoke(entry);
             if (!entry.TryFire())
                 continue; // the transfer ended first: it is not the limit's
             _entries.TryRemove(entry, out _);
             ThreadPool.UnsafeQueueUserWorkItem(static fired => fired.Owner.Act(fired), entry, preferLocal: false);
+        }
+    }
+
+    private bool IsDue(Entry entry)
+    {
+        if (entry.Due is not { } due)
+            return _clock.GetElapsedTime(entry.LastProgress) >= entry.Limit;
+        try
+        {
+            return due();
+        }
+        catch (Exception ex)
+        {
+            if (entry.TryEnd())
+                _log($"stopped watching the {entry.Phase}: its check threw {ex.GetType().Name}: {ex.Message}");
+            return false;
         }
     }
 
@@ -131,12 +163,14 @@ internal sealed class StallWatch : IDisposable
         private int _state;
         private long _lastProgress;
 
-        internal Entry(StallWatch owner, string phase, TimeSpan limit, Action fired)
+        internal Entry(StallWatch owner, string phase, TimeSpan limit, Action fired, Func<bool>? due = null, bool evenUnderDebugger = false)
         {
             Owner = owner;
             Phase = phase;
             Limit = limit;
             Fired = fired;
+            Due = due;
+            EvenUnderDebugger = evenUnderDebugger;
             _lastProgress = owner._clock.GetTimestamp();
         }
 
@@ -148,6 +182,12 @@ internal sealed class StallWatch : IDisposable
         public TimeSpan Limit { get; }
 
         internal Action Fired { get; }
+
+        /// <summary>The condition the heartbeat checks in place of the stall, or null for a stall.</summary>
+        internal Func<bool>? Due { get; }
+
+        /// <summary>Whether the entry acts while a debugger is attached: the reaper's does, as it did before the limits.</summary>
+        public bool EvenUnderDebugger { get; }
 
         /// <summary>The clock's timestamp at the transfer's last progress.</summary>
         public long LastProgress => Volatile.Read(ref _lastProgress);

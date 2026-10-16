@@ -332,7 +332,7 @@ public class TcpTapConnectFailureTests
 
         await tap.DisposeAsync();
 
-        Assert.EndsWith(", 0 failed accepts, 1 failed connects)", Assert.Single(run.Lines("tcp-tap stopped (")));
+        Assert.EndsWith(", 0 failed accepts, 1 failed connects, 0 half-closed pairs closed, 0 stalled writes closed)", Assert.Single(run.Lines("tcp-tap stopped (")));
     }
 
     [Fact]

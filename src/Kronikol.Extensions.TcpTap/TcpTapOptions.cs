@@ -163,9 +163,9 @@ public class TcpTapOptions
     /// segments, a connection closed mid-message or reaped, a connection the tap could not forward, an accept that
     /// failed — so a host can flag the tap before the report is generated. The same facts are available afterwards as
     /// counters and through <see cref="TcpTap.Diagnostics"/>. Invoked on the task where the event happens: the decoder's
-    /// for decoding events, a byte pump's for dropped segments (reported at most once per connection per minute), the
-    /// reaper's for a reaped connection, the connection's own for a failed connect and the accept loop's for a failed
-    /// accept, so keep it quick. An exception it throws is caught and logged. Default null.
+    /// for decoding events, a byte pump's for dropped segments (reported at most once per connection per minute), a
+    /// thread-pool thread for a reaped connection, the connection's own for a failed connect and the accept loop's for a
+    /// failed accept, so keep it quick. An exception it throws is caught and logged. Default null.
     /// </summary>
     public Action<CaptureDegradation>? OnCaptureDegraded { get; set; }
 
@@ -181,8 +181,9 @@ public class TcpTapOptions
     public int ReadBufferBytes { get; set; } = 32 * 1024;
 
     /// <summary>
-    /// Close a connection on which a decoded command has sat <em>unanswered</em> for this long — the one
-    /// intervention that ever touches forwarding, and it exists for one observed failure mode: a database
+    /// Close a connection on which a decoded command has sat <em>unanswered</em> for this long. With
+    /// <see cref="HalfClosedTimeout"/> and <see cref="StalledWriteTimeout"/> it is one of three limits that close a pair,
+    /// and it exists for one observed failure mode: a database
     /// client whose internal pipeline wedges (StackExchange.Redis 2.6.x seen live 2026-08-24: a
     /// machine-wide stall jammed its pipe writer, and from then on every command sat queued forever — no
     /// completion, no timeout, no reconnect — taking every request in the service down with it). Such a
@@ -198,6 +199,31 @@ public class TcpTapOptions
     /// <see cref="OnCaptureDegraded"/>. Null = off (the default).
     /// </summary>
     public TimeSpan? ReapStuckConnectionsAfter { get; set; }
+
+    /// <summary>
+    /// Close a pair once one side has finished sending (its FIN, which the tap passes on) and the other has moved no bytes
+    /// for this long, counted from the FIN or from its last byte, whichever is later. A stall limit, not a total: a server
+    /// that keeps streaming a reply to a client that has half-closed is never cut, and a pair where neither side has
+    /// finished is never touched however long it sits idle. Redis and MongoDB clients do not half-close, so the default
+    /// cuts nothing they do. Closes are counted (<see cref="TcpTap.HalfClosedPairsClosed"/>) and logged. No limit fires
+    /// while a debugger is attached to the tap's process. Default 100 s; null or <see cref="Timeout.InfiniteTimeSpan"/> for
+    /// none.
+    /// </summary>
+    public TimeSpan? HalfClosedTimeout { get; set; } = TimeSpan.FromSeconds(100);
+
+    /// <summary>
+    /// Close a pair when the tap's write to one side has not completed for this long: that side has stopped reading (a
+    /// client that stops reading a large reply, or a server that stops reading its client's commands). A write carries up
+    /// to <see cref="ReadBufferBytes"/>, so a reader has to take that much per limit; a pair with nothing to write is never
+    /// touched. Closes are counted (<see cref="TcpTap.StalledWritesClosed"/>) and logged. No limit fires while a debugger is
+    /// attached to the tap's process. Default 100 s; null or <see cref="Timeout.InfiniteTimeSpan"/> for none.
+    /// </summary>
+    public TimeSpan? StalledWriteTimeout { get; set; } = TimeSpan.FromSeconds(100);
+
+    // The limits as the watch takes them: none for null or infinite.
+    internal TimeSpan? HalfClosedLimit => HalfClosedTimeout == Timeout.InfiniteTimeSpan ? null : HalfClosedTimeout;
+
+    internal TimeSpan? StalledWriteLimit => StalledWriteTimeout == Timeout.InfiniteTimeSpan ? null : StalledWriteTimeout;
 
     /// <summary>Optional hook applied to every key / identifier before it is recorded (Redis keys, channel names).</summary>
     public Func<string, string>? KeyRedaction { get; set; }
@@ -240,6 +266,10 @@ public class TcpTapOptions
             throw new ArgumentOutOfRangeException(nameof(DecodingStallBytes), "DecodingStallBytes must be positive, or null to disable the detector.");
         if (ReapStuckConnectionsAfter is { } reap && reap <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(ReapStuckConnectionsAfter), "ReapStuckConnectionsAfter must be positive, or null to disable the reaper.");
+        if (HalfClosedTimeout is { } halfClosed && halfClosed <= TimeSpan.Zero && halfClosed != Timeout.InfiniteTimeSpan)
+            throw new ArgumentOutOfRangeException(nameof(HalfClosedTimeout), "HalfClosedTimeout must be positive, or null or Timeout.InfiniteTimeSpan for no limit.");
+        if (StalledWriteTimeout is { } stalledWrite && stalledWrite <= TimeSpan.Zero && stalledWrite != Timeout.InfiniteTimeSpan)
+            throw new ArgumentOutOfRangeException(nameof(StalledWriteTimeout), "StalledWriteTimeout must be positive, or null or Timeout.InfiniteTimeSpan for no limit.");
         if (DecoderFactory is null)
             throw new ArgumentException("DecoderFactory is required (use RedisTap/MongoTap, or set it to tee another protocol).", nameof(DecoderFactory));
     }
@@ -277,6 +307,8 @@ public class TcpTapOptions
         target.DecodingStallBytes = DecodingStallBytes;
         target.ReadBufferBytes = ReadBufferBytes;
         target.ReapStuckConnectionsAfter = ReapStuckConnectionsAfter;
+        target.HalfClosedTimeout = HalfClosedTimeout;
+        target.StalledWriteTimeout = StalledWriteTimeout;
         target.KeyRedaction = KeyRedaction;
         target.ValueRedaction = ValueRedaction;
         target.DecoderFactory = DecoderFactory;
