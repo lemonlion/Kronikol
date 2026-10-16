@@ -1,0 +1,43 @@
+## The audit's facts on 4.26.1 (09369515), run 1: the merge, synthesis, attempts, ingest and digest classes
+
+red-all.trx: 120 facts, 10 failed, 110 passed
+  RED  A_retried_scenario_pairs_its_last_attempts_attachments  (CucumberAttachmentIngestTests.cs:254)  Assert.Equal() Failure: Collections differ at index 0 ↓ (pos 0) Expected: "23-screenshot-start.png" Actual: "0015-after-step.png" ↑ (pos 0)
+  RED  A_decoded_copy_another_entry_still_links_is_not_deleted  (CucumberFeatureMergerTests.cs:464)  Assert.True() Failure Expected: True Actual: False
+  RED  A_reporters_file_that_cannot_be_read_is_taken_for_gone  (CucumberFeatureMergerTests.cs:410)  Assert.Single() Failure: The collection contained 2 items Collection: [FileAttachment { Name = trace, RelativePath = %TEMP%\k
+  RED  An_attachment_of_a_test_step_that_names_no_pickle_step_is_kept_on_the_scenario  (CucumberFeatureSynthesizerTests.cs:415)  System.ArgumentNullException : Value cannot be null. (Parameter 'collection')
+  RED  A_messages_link_to_a_missing_file_pairs_with_the_reporters_file  (CucumberFeatureMergerTests.cs:432)  Assert.Equal() Failure: Strings differ ↓ (pos 81) Expected: ···"-4b228c0d1fa44302bbd944d84186e323\\reporter\\0-trace" Actual: ···"-4b228c0d1fa44302bbd
+  RED  A_reporters_file_that_is_gone_never_takes_the_copy_a_file_that_is_there_matches  (CucumberFeatureMergerTests.cs:389)  Assert.Single() Failure: The collection contained 2 items Collection: [FileAttachment { Name = shot, RelativePath = %TEMP%\kr
+  RED  Query_failures_prints_a_link_as_it_is_and_the_first_six_of_a_steps_attachments  (DigestStepAttachmentTests.cs:202)  System.ArgumentException : Null character in path. (Parameter 'path')
+  RED  A_step_index_on_the_reporters_records_changes_nothing  (CucumberAttachmentIngestTests.cs:301)  Assert.Equal() Failure: Collections differ at index 0 ↓ (pos 49) Expected: ···"named image: after-step.png -> 9-after-step.png" Actual: ···"named imag
+  RED  A_reporters_attachment_on_a_step_is_paired_or_kept_never_lost  (CucumberFeatureMergerTests.cs:369)  Assert.StartsWith() Failure: String start does not match String: "%TEMP%\\kronikol-merger-68"··· Expected start: "C:\\Us
+  RED  IncludeHooks_keeps_each_hook_where_it_ran  (CucumberFeatureSynthesizerTests.cs:393)  Assert.Equal() Failure: Strings differ ↓ (pos 0) Expected: "BeforeEach hook" Actual: "a customer named "Ada"" ↑ (pos 0)
+
+## Run 2: the query facts split one defect per fact
+
+digest-red.trx: 6 facts, 3 failed, 3 passed
+  RED  Query_failures_prints_a_link_on_the_failing_step_as_it_is  (DigestStepAttachmentTests.cs:220)  Assert.Contains() Failure: Item not found in collection Collection: ["s0 Checkout › Pay", " open: TestRunReport.html#sid-310dddf68aa81ec8", " declined
+  RED  A_path_no_file_system_takes_is_printed_as_written  (DigestStepAttachmentTests.cs:200)  System.ArgumentException : Null character in path. (Parameter 'path')
+  RED  Query_failures_prints_the_first_six_of_a_failing_steps_attachments_and_every_failure  (DigestStepAttachmentTests.cs:239)  Assert.Equal() Failure: Values differ Expected: 6 Actual: 23
+
+## Run 3: kronikol merge's attachment files
+
+merge-red.trx: 2 facts, 1 failed, 1 passed
+  RED  A_merged_report_links_each_shards_files_in_its_own_attachments_folder  (MergeCarriesAttachmentsTests.cs:97)  Assert.All() Failure: 4 out of 4 items in the collection did not pass. [0]: Item: FileAttachment { Name = trace, RelativePath = attachments/trace.zip,
+
+## Run 4: facts added after run 1 (the merge class again, the readable-copy fact, the merge facts with their own messages)
+
+red-late.trx: 27 facts, 7 failed, 20 passed
+  RED  A_reporters_file_that_cannot_be_read_is_taken_for_gone  (CucumberFeatureMergerTests.cs:410)  Assert.Single() Failure: The collection contained 2 items Collection: [FileAttachment { Name = trace, RelativePath = %TEMP%\k
+  RED  A_messages_link_to_a_missing_file_pairs_with_the_reporters_file  (CucumberFeatureMergerTests.cs:432)  Assert.Equal() Failure: Strings differ ↓ (pos 81) Expected: ···"-4fcb638c3ba74ee0bcdb5add4a4f505d\\reporter\\0-trace" Actual: ···"-4fcb638c3ba74ee0bcd
+  RED  A_decoded_copy_another_entry_still_links_is_not_deleted  (CucumberFeatureMergerTests.cs:483)  Assert.True() Failure Expected: True Actual: False
+  RED  A_reporters_file_that_is_gone_never_takes_the_copy_a_file_that_is_there_matches  (CucumberFeatureMergerTests.cs:389)  Assert.Single() Failure: The collection contained 2 items Collection: [FileAttachment { Name = shot, RelativePath = %TEMP%\kr
+  RED  A_reporters_file_that_is_gone_pairs_with_a_copy_that_can_be_read  (CucumberFeatureMergerTests.cs:452)  Assert.Equal() Failure: Strings differ Expected: "trace" Actual: "trace.zip" ↑ (pos 5)
+  RED  A_reporters_attachment_on_a_step_is_paired_or_kept_never_lost  (CucumberFeatureMergerTests.cs:369)  Assert.StartsWith() Failure: String start does not match String: "%TEMP%\\kronikol-merger-58"··· Expected start: "C:\\Us
+  RED  A_merged_report_links_each_shards_files_in_its_own_attachments_folder  (MergeCarriesAttachmentsTests.cs:98)  Assert.All() Failure: 4 out of 4 items in the collection did not pass. [0]: Item: FileAttachment { Name = trace, RelativePath = attachments/trace.zip,
+
+## Run 5: the facts changed or added after run 4, on 09369515 (fresh worktree)
+
+red-final.trx: 4 facts, 2 failed, 2 passed
+  RED  With_hooks_kept_the_step_markers_match_the_steps  (CucumberAttachmentIngestTests.cs:474)  Assert.All() Failure: 14 out of 18 items in the collection did not pass. [0]: Item: StepAttributionMismatch [40f746a6c97f8e84231fb73062549310]: Step m
+  RED  A_merged_report_links_each_shards_files_in_its_own_attachments_folder  (MergeCarriesAttachmentsTests.cs:98)  Assert.All() Failure: 4 out of 4 items in the collection did not pass. [0]: Item: FileAttachment { Name = trace, RelativePath = attachments/trace.zip,
+

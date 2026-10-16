@@ -78,6 +78,19 @@ base64 copy in the messages is re-encoded from the same new bytes, so both copie
 | `mutations.py`, `mutations.txt` | The mutation run (section 6.4) and its result: each mutant, and the facts that killed it |
 | `wiki_175.py` | R1's wiki edits (section 7), applied after publication |
 
+## The audit's proofs (`audit/`)
+
+The owner asked on 2026-10-16, the day 4.24.0 was published, to make sure nothing was missed from the plan and there
+are no bugs in the implementation. Section 10 of the plan has the findings and what was done about each (4.26.4).
+
+| File | What it is |
+|---|---|
+| `red.txt` | The red proof: the new and changed facts on 4.26.1 (`09369515`, which carries 4.24.0's code unchanged), the test files copied in and nothing else changed; each failed fact with its failing line. Run 1's query fact stopped on the null character's exception before its other assertions, so run 2 splits it into three facts, one per defect; runs 3 to 5 cover the facts added later |
+| `trx_summary.py` | Writes a run's results into `red.txt`'s form |
+| `mutations.py`, `mutations.txt` | Each fix, and each rule R1's own mutants held, mutated one at a time against the Cucumber, ingest, digest and merge facts: each mutant, and the facts that killed it. The file is restored from its bytes after each mutant, and one that does not compile is never counted as killed |
+| `linux.txt` | The same facts on Linux, in `mcr.microsoft.com/dotnet/sdk:10.0` (the fact for a file another process holds depends on how .NET shares files there) |
+| `wiki_175_audit.py` | The audit's wiki edits, each an exact replacement, applied after publication |
+
 ## Results
 
 `results/matrix-4.22.1.txt`: the matrix re-run in the sweep on 4.22.1 (`85f849f7`), with a control and the prototype both built there.

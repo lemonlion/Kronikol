@@ -332,10 +332,22 @@ internal sealed class AttachmentEntry
 
     /// <summary>
     /// Absolute path, resolved against the report's own directory. The HTML uses the relative form as an
-    /// href; an agent needs the absolute one so it can open a screenshot without reconstructing anything.
+    /// href; an agent needs the absolute one so it can open a screenshot without reconstructing anything. A link (a
+    /// Grafana trace, a Playwright report) is the address itself, and a path no file system takes is printed as written.
     /// </summary>
-    public string Resolve(string reportDirectory) =>
-        System.IO.Path.GetFullPath(System.IO.Path.Combine(reportDirectory, RelativePath));
+    public string Resolve(string reportDirectory)
+    {
+        if (FileAttachment.IsUrlPath(RelativePath))
+            return RelativePath;
+        try
+        {
+            return System.IO.Path.GetFullPath(System.IO.Path.Combine(reportDirectory, RelativePath));
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or System.IO.PathTooLongException)
+        {
+            return RelativePath;
+        }
+    }
 }
 
 /// <summary>

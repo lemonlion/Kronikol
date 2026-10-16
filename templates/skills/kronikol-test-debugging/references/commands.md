@@ -137,8 +137,10 @@ never called — no payload needed to establish that.
 
 ### `failures <report>`
 For every failing scenario: the error, the failing step in context, its assertions with their messages and
-`file:line`, the calls that happened inside that step, what that step attached (under it, since 4.24.0: the
-screenshot of a failure is usually there), and the scenario's own attachments. Usually the whole answer.
+`file:line`, the calls that happened inside that step, what that step attached (under it, since 4.24.0: the first
+six, then a line naming `steps` for the rest; a link is printed as it is), and the scenario's own first four
+attachments. A screenshot a hook took (Playwright's own on failure, a fixture's) is one of the scenario's, or, in a
+report ingested with its hooks kept, its hook step's, where `Failures.md` and `steps` list it. Usually the whole answer.
 Since 3.7.0 each failure also prints `thrown at <method> — <file>:<line>` (the frame that raised, read from
 `errorStackTrace`; not the line the scenario was declared on) and `rerun: dotnet test --filter …`; under
 `--json` the same are `thrownAt`, `testName` and `rerun`, and a failing step's attachments are its

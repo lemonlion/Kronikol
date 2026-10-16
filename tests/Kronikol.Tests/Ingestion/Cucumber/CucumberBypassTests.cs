@@ -19,8 +19,8 @@ public class CucumberBypassTests
 
     private static readonly JsonSerializerOptions JsonOptions = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
-    /// <summary>An attachment one attempt made inside a test step.</summary>
-    internal sealed record Attachment(string Name, string Body, string? Encoding = null, string MediaType = "text/plain");
+    /// <summary>An attachment one attempt made inside a test step: a body, or a <paramref name="Url"/> naming where it is.</summary>
+    internal sealed record Attachment(string Name, string Body, string? Encoding = null, string MediaType = "text/plain", string? Url = null);
 
     /// <summary>
     /// One test step of the stream and what one attempt reported for it: a Gherkin step, or a hook when
@@ -127,6 +127,7 @@ public class CucumberBypassTests
                             fileName = attachment.Name,
                             body = attachment.Body,
                             contentEncoding = attachment.Encoding ?? "IDENTITY",
+                            url = attachment.Url,
                         },
                     }));
                 }

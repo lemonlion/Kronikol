@@ -6,6 +6,8 @@ been read from the code, and found F9: the failures digest reads only a scenario
 the readers too (section 10 has the sweep's log). Green-lit in full by the owner on 2026-10-15 ("Can you implement the
 plan in full"), every question in section 9 as recommended. **Executed and published as 4.24.0** on 2026-10-16, one
 minor release (Q14); #175 is closed and the reader's memory (Q9) is #178. Section 10 has the implementation's log.
+**Audited** on 2026-10-16 at the owner's ask ("make sure nothing was missed from the plan and there are no bugs in the
+implementation"): every item was delivered, and twelve defects were found and fixed in 4.26.4, a patch (section 10).
 
 **Issue:** [#175](https://github.com/lemonlion/Kronikol/issues/175), "A playwright-bdd failure lists its trace, video,
 screenshot and error context twice, because the merge matches attachments by a name only one side gives an extension".
@@ -105,7 +107,9 @@ attachment on the Gherkin step whose `testStepId` it carries (L414-419, L484-489
 scenario when hooks are dropped (L501-503). On the tests side, every attachment of a scenario the messages own lands
 on the scenario, because the pipeline removes that scenario's `step` records before the tests model is built (L416), so
 a `step` index has nothing to resolve to (`FeatureSynthesizer.cs` L324-334). A copy on a step therefore never meets its
-twin.
+twin. (Wrong, found by the audit, section 10: the pipeline adds the messages' step markers back before the tests model is
+built, so the index resolves to a step there, and the merge, reading the scenario's own list, dropped such an attachment.
+Since 4.26.4 every attachment of the tests file's scenario, its steps' included, is paired.)
 
 Measured, with the wiki's `AfterStep` per-step screenshot (`Integration-Playwright.md` L129 recommends it) and a step that
 attaches `step-shot.png`: the failing scenario lists 18 entries for 10 artefacts, and every one made inside a step is
@@ -252,7 +256,8 @@ The pair goes where the messages put it. On a step (Gherkin, background or kept 
 position there and leaves the scenario's list. In the scenario's list it takes the tests entry's position. The
 scenario's list is then the tests entries in their order, paired or not, followed by the messages' unpaired entries in
 theirs, which is today's order. The tests side cannot do better: its `step` index is never resolved for a scenario the
-messages own (3.2). So a per-step screenshot appears on its step once, instead of on the scenario and the step (Q2).
+messages own (3.2; wrong, see the correction there). So a per-step screenshot appears on its step once, instead of on
+the scenario and the step (Q2).
 
 ### 4.3 What the synthesis records
 
@@ -316,9 +321,10 @@ Without this, 4.2 takes step evidence out of the digest (F9). With it, the diges
 duplicates, in every lane:
 
 - **`Failures.md` and `Failures.jsonl`:** a failure's attachments are the scenario's own, then each step's in tree order
-  (background steps, steps, kept hooks, sub-steps), each step's labelled with the step's `sN/k` address, as the digest
-  already labels the failing step. In `Failures.jsonl` each attachment object gains a `step` member with that address,
-  absent for the scenario's own; the JSON shape is otherwise unchanged (Q14). No cap is added. The digest's rule is that
+  (the background steps, then the steps, each followed by its sub-steps), each step's labelled with the step's `sN/k`
+  address, as the digest already labels the failing step. In `Failures.jsonl` each attachment object gains a `step`
+  member with that address, absent for the scenario's own; the JSON shape is otherwise unchanged (Q14). No cap is
+  added. The digest's rule is that
   attachments are paths, one line each (L40-44), and its budget limits how many failures are detailed
   (`MaxDetailedFailures`), not an entry's length. So a scenario with a screenshot after each of 30 steps gains 30
   lines. Listing only the failing step's and its context steps' would miss the hooks' artefacts under
@@ -437,7 +443,8 @@ Added while implementing (section 10):
 23. `A_test_the_messages_do_not_own_that_never_ended_is_still_said_to_have_defaulted` (`CucumberIngestPipelineTests`):
     the merge built its result afresh and dropped the tests file's `DefaultedResultCount`, so a combined ingest never
     reported `ResultDefaulted` for a test outside the Gherkin run. Red on 4.22.2.
-24. `A_reporters_file_keeps_the_reporters_media_type` (unit): the other half of 4.1 step 4, held by M22. A guard.
+24. `A_reporters_file_keeps_the_reporters_media_type` (unit): the other half of 4.1 step 4, held by M22. Called a guard
+    here, but the rule before R1 kept both entries, so it was red on 4.22.2 (read by the audit, never run red).
 
 Fact 21 also reads `query failures --json`: each failing step's object carries the step's `attachments` (4.7's open
 decision, taken in section 10).
@@ -460,7 +467,7 @@ Mutations to kill, each named with the fact that catches it:
 
 | | Mutation | Caught by |
 |---|---|---|
-| M1 | compare the displayed name only (today's key) | 1, 3 |
+| M1 | compare the displayed name only (today's key) | 1 (not 3, whose names are the producer's own; `r1/mutations.txt`) |
 | M2 | no byte check | 4 |
 | M3 | a paired slot offered again | 3 |
 | M4 | the reporter's copy always survives | 5 |
@@ -622,3 +629,63 @@ second pass are not part of R1.
   listed all 62 ids at 4.24.0 by 00:04 UTC. The wiki has R1's edits (`7176197`) and the Kronikol4J ledger its line
   (`0049a40`); #175 is closed with a comment naming 4.24.0; the reader's memory (3.10, Q9) is #178. The plan is
   complete.
+- 2026-10-16, the audit (the owner: "Can you make sure nothing was missed from the plan and there are no bugs in the
+  implementation"), in worktree `C:/Code/Kronikol-175-audit` on 4.26.1 (`09369515`). Four read-only reviews ran side by
+  side: the plan ticked off against the release (every fact, mutant, document and question), the pairing and cleanup
+  code run on inputs built for each branch through the built tool, every reader of attachments, and the tests' power.
+  Each finding was re-read in the code and run before it was fixed. Section 6.2's 24 facts, 6.4's mutants, section 7's
+  documents and section 9's answers were all delivered; what follows is what the plan did not see. Released as 4.26.4, a
+  patch.
+  - **Defects fixed** (each but the hashing order with a fact that fails on 4.26.1, `audit/red.txt`):
+    - A tests-file attachment with a `step` index was dropped for a scenario the messages own: the pipeline adds the
+      messages' step markers back before the tests model is built, so the index resolves to a step there, and the merge
+      read the scenario's own list (since 3.0.45; 3.2's premise was wrong). `CarryOver` now passes the scenario's own
+      and every step's, and one that pairs with nothing stays on the scenario.
+    - Pairing went in the tests file's order, so a reporter's file that was gone took, by name, the copy a later file's
+      bytes matched. The files that can be read now pair first, the others after among the copies left.
+    - A reporter's file held by another process paired with nothing (the merge asked whether it existed, then could not
+      read it): it is taken for gone. A messages `url` copy whose file is gone never paired and was counted as two files
+      with different bytes: the reporter's file pairs with it, and only bytes that were read count. A gone reporter's
+      file pairs with a copy that can be read before one that cannot.
+    - A replaced decoded copy was deleted at once, though a messages file that repeats a test step id puts one copy in
+      two lists: it is deleted once no entry links it. A reporter's file was hashed though no copy had its name (4.3
+      said otherwise): it is read only when one has (no fact, as nothing outside can see what is read).
+    - A retried scenario's reporter records with neither `attempt` nor `timestamp` were placed by the messages' starts,
+      which come after every record, so they were read as the first attempt's and dropped (since 4.2.0): they are placed
+      by the reporter's own starts before them.
+    - The synthesis dropped what a test step that names no pickle step attached (since 3.0.45): it is kept on the
+      scenario. With `--include-hooks` every hook came after the steps, so the step markers missed their steps from the
+      first one on (18 `StepAttributionMismatch` diagnostics on the fixture) and calls lost their step: a hook now sits
+      where it ran. Left: under a `Background:` the before hook still follows the background steps (2 misses on the
+      fixture).
+    - `query failures` printed a link under the failing step as a path in the reports folder, threw on a path no file
+      system takes (as `steps` did), and printed every attachment of the failing step, so one long list hid every other
+      failure past the byte budget: links print as they are, such a path as written, and the list stops at six with a
+      line naming `steps`.
+    - `kronikol merge` never carried attachment files, so every screenshot of a sharded run was a dead link beside the
+      merged report (found by the readers' review; not this plan's code, fixed under CLAUDE.md's rule on bugs found on
+      the way). The merge points each shard's attachments at its folder and copies them beside the merged report.
+  - **The plan's own errors**, corrected where they stand: 3.2 and 4.2 (the step index), 4.7's order (step-tree order),
+    fact 24 ("a guard", red on 4.22.2) and M1's row (fact 3 cannot catch it). The 4.24.0 changelog said the same order,
+    that `query failures` lists the attachments made inside steps (it lists the failing step's) and that a caller naming
+    an `AttachmentsDirectory` keeps every file in it: corrected, and #175 has a comment saying so.
+  - **Tests**: `CucumberFeatureMergerTests` gains 12 facts and two change (bodies of one length; nothing kept twice in
+    the order fact); `CucumberFeatureSynthesizerTests` 2; the fixture's `CucumberAttachmentIngestTests` 4, the retried
+    fact a variant with neither `attempt` nor `timestamp` and an exact list, and three tightened;
+    `DigestStepAttachmentTests` 3, and fact 21 pins the location line and the full path; `MergeCarriesAttachmentsTests`
+    2 (new); Playwright `IngestedAttachmentTests` checks that each scenario paints exactly the entries the ingest made.
+    On 4.26.1, 15 fail, each on its own assertion, and the rest pass as guards (`audit/red.txt`, runs 1 to 5); the
+    hashing order has no fact, as nothing outside can see it. On Linux the classes pass 400 of 400 (`audit/linux.txt`).
+  - **Mutations** (`audit/mutations.txt`): 32 mutants (`audit/mutations.py`): the audit's fixes (A1 to A7, T1, T2, S1 to
+    S3, Q1 to Q5, M1 to M4) and R1's mutants checked again on the rewritten pairing (R1 to R22, as listed). 30 are
+    killed. A7 and M4 survive as equivalents: a reporter's file that was read never sits unpaired beside a copy whose
+    bytes were not read, since it pairs with such a copy, so the count's filter cannot change it; and without the
+    shortcut for a file already in the merged report's folder, the copier finds the same name with the same bytes and
+    links it.
+  - **Left** (ROADMAP Appendix C): the before hook under a background; the skill's `scripts/query.py` lists no
+    attachments (documented); `Failures.md` writes attachment names as text, so a name with markdown in it renders as
+    markdown in a viewer (the raw text agents read is right); #161, #148, Q11 and #178 as before.
+  - **Checks**: after the bump the core suite passes 7,668 with 2 skipped and the full Playwright suite 1,041 with 28
+    skipped run alone; release.slnf builds in Release for every target. The core suite's first run failed one fact: the
+    skill's reference named `--include-hooks`, an ingest flag, where the reference is held to the query parser; reworded
+    before the release.

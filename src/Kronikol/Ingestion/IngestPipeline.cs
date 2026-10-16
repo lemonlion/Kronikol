@@ -27,7 +27,9 @@ public sealed class IngestRequest
     /// </summary>
     public IReadOnlyList<string> CucumberMessagesFiles { get; init; } = [];
 
-    /// <summary>Keep Cucumber hook steps (<c>BeforeEach hook</c>, …) in the step list. Default <c>false</c>.</summary>
+    /// <summary>
+    /// Keep Cucumber hook steps (<c>BeforeEach hook</c>, …) in the step list, in the order they ran. Default <c>false</c>.
+    /// </summary>
     public bool IncludeHooks { get; init; }
 
     /// <summary>In-memory test-run records (in addition to <see cref="TestsFile"/>).</summary>
@@ -399,7 +401,7 @@ public static class IngestPipeline
         if (directory is null || !Directory.Exists(directory))
             return;
         var inside = directory + Path.DirectorySeparatorChar;
-        if ((result?.Features ?? []).SelectMany(f => f.Scenarios).SelectMany(AllAttachments)
+        if ((result?.Features ?? []).SelectMany(f => f.Scenarios).SelectMany(Cucumber.CucumberFeatureMerger.AllAttachments)
             .Any(a => a.RelativePath.StartsWith(inside, StringComparison.OrdinalIgnoreCase)))
             return;
         try
@@ -410,12 +412,6 @@ public static class IngestPipeline
         {
             // A file still held open by something else: the temp directory is the system's to clean.
         }
-
-        static IEnumerable<FileAttachment> AllAttachments(Scenario scenario) =>
-            (scenario.Attachments ?? []).Concat(Steps(scenario.BackgroundSteps)).Concat(Steps(scenario.Steps));
-
-        static IEnumerable<FileAttachment> Steps(ScenarioStep[]? steps) =>
-            (steps ?? []).SelectMany(step => (step.Attachments ?? []).Concat(Steps(step.SubSteps)));
     }
 
     private static IngestResult RunCore(IngestRequest request, ReportConfigurationOptions options, string? decodedAttachments)

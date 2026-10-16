@@ -7,9 +7,10 @@ namespace Kronikol.Ingestion.Cucumber;
 public sealed class CucumberSynthesisOptions
 {
     /// <summary>
-    /// Keep hook steps (<c>BeforeEach hook</c>, <c>AfterEach hook</c>, …) as sub-steps of the scenario.
-    /// Default <c>false</c>: hooks are plumbing, and a living document reads better without them. Their
-    /// attachments are kept either way — they are attributed to the scenario instead of to a hook step.
+    /// Keep hook steps (<c>BeforeEach hook</c>, <c>AfterEach hook</c>, …) as steps of the scenario, in the order they ran:
+    /// a hook before the first step comes before the steps, the others after them. Default <c>false</c>: hooks are
+    /// plumbing, and a living document reads better without them. Their attachments are kept either way — they are
+    /// attributed to the scenario instead of to a hook step.
     /// </summary>
     public bool IncludeHooks { get; init; }
 
@@ -20,9 +21,10 @@ public sealed class CucumberSynthesisOptions
     /// what moves them next to the HTML, so nothing here needs to know the reports directory.
     /// </summary>
     /// <remarks>
-    /// The folder and its files are the caller's. <see cref="IngestPipeline"/> (and so <c>kronikol ingest</c>) gives the
-    /// synthesis a folder of its own and deletes it once the report is written, unless the report still links into it
-    /// because a file could not be copied.
+    /// The folder and its files are the caller's, but for one: <see cref="CucumberFeatureMerger.Merge"/> deletes a copy the
+    /// reporter's own file of the same artefact replaced, which no entry links any more. <see cref="IngestPipeline"/> (and
+    /// so <c>kronikol ingest</c>) gives the synthesis a folder of its own and deletes it once the report is written, unless
+    /// the report still links into it because a file could not be copied.
     /// </remarks>
     public string? AttachmentsDirectory { get; init; }
 
@@ -458,7 +460,8 @@ public static class CucumberFeatureSynthesizer
         var consumedAttachments = new HashSet<string>(StringComparer.Ordinal);
         var backgroundSteps = new List<ScenarioStep>();
         var steps = new List<ScenarioStep>();
-        var hookSteps = new List<ScenarioStep>();
+        var hookStepsBefore = new List<ScenarioStep>();
+        var hookStepsAfter = new List<ScenarioStep>();
         var windows = new List<CucumberStepWindow>();
         var markers = new List<TestRunRecord>();
 
@@ -553,7 +556,8 @@ public static class CucumberFeatureSynthesizer
                     Comments = message is null ? null : [message],
                     FailureMessage = status == ExecutionResult.Failed ? message : null,
                 };
-                hookSteps.Add(hookStep);
+                // In the order it ran: a hook before the scenario's first step comes before the steps, the others after them.
+                (sawStep ? hookStepsAfter : hookStepsBefore).Add(hookStep);
                 if (started != default)
                 {
                     windows.Add(new CucumberStepWindow(hookStep, started, finishedAt ?? started));
@@ -572,7 +576,13 @@ public static class CucumberFeatureSynthesizer
 
             if (testStep.PickleStepId is not { Length: > 0 } pickleStepId
                 || !pickleSteps.TryGetValue(pickleStepId, out var pickleStep))
+            {
+                // A test step that names no pickle step of this scenario has no row to go on, but what it attached is not
+                // lost: it belongs to the scenario, as a dropped hook's does.
+                if (stepAttachments is not null)
+                    scenarioAttachments.AddRange(stepAttachments);
                 continue;
+            }
 
             sawStep = true;
             var gherkinStep = gherkin.FindStep(pickleStep);
@@ -713,7 +723,7 @@ public static class CucumberFeatureSynthesizer
             ErrorStackTrace = errorStack,
             Duration = scenarioStart is { } ss && scenarioEnd is { } se && se >= ss ? se - ss : null,
             EndedAt = scenarioEnd,
-            Steps = steps.Count > 0 || hookSteps.Count > 0 ? steps.Concat(hookSteps).ToArray() : null,
+            Steps = steps.Count > 0 || hookStepsBefore.Count > 0 || hookStepsAfter.Count > 0 ? [.. hookStepsBefore, .. steps, .. hookStepsAfter] : null,
             BackgroundSteps = backgroundSteps.Count > 0 ? backgroundSteps.ToArray() : null,
             Attachments = scenarioAttachments.Count > 0 ? scenarioAttachments.ToArray() : null,
             Labels = labels.Count > 0 ? labels.ToArray() : null,

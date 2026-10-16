@@ -96,7 +96,8 @@ public class CucumberAttachmentIngestTests : IDisposable
     [Fact]
     public void Playwrights_own_artefacts_are_listed_once_under_the_runs_names()
     {
-        var scenario = Named(Ingest(), AttachmentFixture.FailingScenario);
+        var result = Ingest();
+        var scenario = Named(result, AttachmentFixture.FailingScenario);
         var entries = Entries(scenario).ToArray();
 
         foreach (var builtIn in new[] { "screenshot", "video", "error-context", "trace" })
@@ -108,6 +109,8 @@ public class CucumberAttachmentIngestTests : IDisposable
 
         Assert.DoesNotContain(entries, e => e.Attachment.Name is "screenshot.png" or "video.webm" or "error-context.md" or "trace.zip");
         Assert.Equal(10, entries.Length);
+        // Every artefact paired: an entry only one side has (the passing scenario's notes) is not one kept twice.
+        Assert.DoesNotContain(result.Diagnostics, d => d.Message.Contains("kept twice", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -231,23 +234,101 @@ public class CucumberAttachmentIngestTests : IDisposable
     [Fact]
     public void A_retried_scenario_pairs_its_last_attempts_attachments()
     {
-        // The reporter writes both attempts; the scenario is the retry's. With or without attempt on the records: the
-        // wiki's recipe writes none.
-        var withoutAttempts = PathOf("no-attempts.ndjson");
-        File.WriteAllLines(withoutAttempts, File.ReadAllLines(AttachmentFixture.TestsPath).Select(line =>
+        // The reporter writes both attempts; the scenario is the retry's. With or without attempt on the records (the wiki's
+        // recipe writes none), and with neither attempt nor timestamp on the attachment records: such a record was placed
+        // by the messages' starts, which come after every record of the file, so it was read as the first attempt's and
+        // dropped, and the retry linked the decoded copies.
+        var withoutAttempts = Rewritten("no-attempts.ndjson", node => node.Remove("attempt"));
+        var untimed = Rewritten("untimed.ndjson", node =>
         {
-            var node = JsonNode.Parse(line)!.AsObject();
+            if ((string?)node["event"] != "attachment")
+                return;
             node.Remove("attempt");
-            return node.ToJsonString();
-        }));
+            node.Remove("timestamp");
+        });
 
-        foreach (var (tests, output) in new[] { (AttachmentFixture.TestsPath, "with"), (withoutAttempts, "without") })
+        foreach (var (tests, output) in new[] { (AttachmentFixture.TestsPath, "with"), (withoutAttempts, "without"), (untimed, "untimed") })
         {
             var scenario = Named(Ingest(output: output, testsFile: tests), AttachmentFixture.FlakyScenario);
-            var linked = Entries(scenario).Where(e => !IsDecodedCopy(e.Attachment)).Select(e => FileName(e.Attachment)).ToArray();
 
-            Assert.Equal(["23-screenshot-start.png", "24-after-step.png", "25-after-step.png", "26-screenshot-end.png"], linked.Order());
+            Assert.Equal(["23-screenshot-start.png", "24-after-step.png", "25-after-step.png", "26-screenshot-end.png"],
+                Entries(scenario).Select(e => FileName(e.Attachment)).Order());
         }
+    }
+
+    /// <summary>The fixture's tests file with each record passed through <paramref name="change"/>, written to this fact's folder.</summary>
+    private string Rewritten(string name, Action<JsonObject> change)
+    {
+        var path = PathOf(name);
+        File.WriteAllLines(path, File.ReadAllLines(AttachmentFixture.TestsPath).Select(line =>
+        {
+            var node = JsonNode.Parse(line)!.AsObject();
+            change(node);
+            return node.ToJsonString();
+        }));
+        return path;
+    }
+
+    [Fact]
+    public void A_step_index_on_the_reporters_records_changes_nothing()
+    {
+        // The messages' step markers give a scenario they own its steps in the tests file's model too, so a record's step
+        // index put its attachment on a step there, and the merge, reading the scenario's own list, dropped it: the step
+        // screenshots linked the decoded copies and the passing scenario's two notes, which only the tests file has, were
+        // gone. The index is the step each artefact was made in.
+        var made = new Dictionary<(string, string), int>();
+        var indexed = Rewritten("indexed.ndjson", node =>
+        {
+            if ((string?)node["event"] != "attachment")
+                return;
+            var key = ((string)node["testId"]!, node["attempt"]?.ToJsonString() ?? "");
+            switch ((string?)node["name"])
+            {
+                case "after-step.png":
+                    node["step"] = made[key] = made.GetValueOrDefault(key, -1) + 1;
+                    break;
+                case "step-shot.png" or "note":
+                    node["step"] = 1;
+                    break;
+            }
+        });
+
+        var plain = Ingest(output: "plain");
+        var withIndexes = Ingest(output: "indexed", testsFile: indexed);
+
+        // As a set: a step index may move an entry within the scenario's own list, which keeps the tests file's order.
+        foreach (var name in new[] { AttachmentFixture.FailingScenario, AttachmentFixture.PassingScenario, AttachmentFixture.FlakyScenario })
+            Assert.Equal(Lines(Named(plain, name)), Lines(Named(withIndexes, name)));
+        Assert.Equal(["14-note", "15-note"],
+            (Named(withIndexes, AttachmentFixture.PassingScenario).Attachments ?? []).Where(a => a.Name == "note").Select(FileName));
+
+        static IEnumerable<string> Lines(Scenario scenario) =>
+            Entries(scenario).Select(e => $"{e.Holder}: {e.Attachment.Name} -> {FileName(e.Attachment)}").Order(StringComparer.Ordinal);
+    }
+
+    [Fact]
+    public void Two_scenarios_each_keeping_a_name_twice_are_counted_together()
+    {
+        // The count is the run's, not the last scenario's: the failing and the background scenario each keep their trace
+        // twice when the reporter's file has other bytes than the messages' copy (here one byte changed).
+        var changed = new List<string>();
+        var tests = Rewritten("changed.ndjson", node =>
+        {
+            if ((string?)node["path"] is not { } path || !path.EndsWith("-retry1/trace.zip", StringComparison.Ordinal))
+                return;
+            var bytes = File.ReadAllBytes(Path.Combine(AttachmentFixture.Directory, path));
+            bytes[^1] ^= 0xFF;
+            var copy = PathOf($"{changed.Count}-trace.zip");
+            File.WriteAllBytes(copy, bytes);
+            changed.Add(copy);
+            node["path"] = copy;
+        });
+        Assert.Equal(2, changed.Count);
+
+        var result = Ingest(testsFile: tests);
+
+        var diagnostic = Assert.Single(result.Diagnostics, d => d.Message.Contains("kept twice", StringComparison.Ordinal));
+        Assert.StartsWith("2 attachment(s)", diagnostic.Message, StringComparison.Ordinal);
     }
 
     // ---- two copies with one name and different bytes (Q4) -----------------------------------------
@@ -260,8 +341,9 @@ public class CucumberAttachmentIngestTests : IDisposable
         var messages = PathOf("messages.ndjson");
         File.WriteAllText(messages, Stream(
             new Step("the page is open", "PASSED"),
-            new Step("After Hooks", "PASSED", Hook: true, Attachments: [Zip("trace", [1, 2, 3])])));
+            new Step("After Hooks", "PASSED", Hook: true, Attachments: [Zip("trace", [1, 2, 3, 4])])));
         var trace = PathOf("trace.zip");
+        // As long as the copy: the bytes, not the length, tell them apart.
         File.WriteAllBytes(trace, [9, 9, 9, 9]);
         var tests = PathOf("tests.ndjson");
         File.WriteAllLines(tests,
@@ -289,7 +371,9 @@ public class CucumberAttachmentIngestTests : IDisposable
         var result = Ingest();
 
         Assert.True(result.Generated);
-        Assert.Empty(Directory.Exists(DecodedRoot) ? Directory.EnumerateFileSystemEntries(DecodedRoot) : []);
+        // The ingest decoded under this root (it made the root), and took its own folder away.
+        Assert.True(Directory.Exists(DecodedRoot), DecodedRoot);
+        Assert.Empty(Directory.EnumerateFileSystemEntries(DecodedRoot));
     }
 
     [Fact]
@@ -307,6 +391,23 @@ public class CucumberAttachmentIngestTests : IDisposable
         Assert.StartsWith(DecodedRoot, shot.RelativePath, StringComparison.Ordinal);
         Assert.True(File.Exists(shot.RelativePath), shot.RelativePath);
         Assert.Contains(result.Diagnostics, d => d.Kind == DiagnosticKind.AttachmentFailure);
+    }
+
+    [Fact]
+    public void A_background_steps_copy_the_report_still_links_keeps_the_staging_folder()
+    {
+        // The same rule for a copy on a background step, which the folder's check has to walk as well as the steps. The
+        // first ingest names the copy; a folder of that name in the second's attachments/ makes its copy fail.
+        static FileAttachment OnTheBackground(IngestResult result) =>
+            Named(result, AttachmentFixture.BackgroundScenario).BackgroundSteps!.SelectMany(s => s.Attachments ?? []).First();
+        var copied = OnTheBackground(Ingest(output: "first", withTestsFile: false));
+        Assert.StartsWith("attachments/", copied.RelativePath, StringComparison.Ordinal);
+        Directory.CreateDirectory(Path.Combine(PathOf("second"), copied.RelativePath));
+
+        var stuck = OnTheBackground(Ingest(output: "second", withTestsFile: false));
+
+        Assert.StartsWith(DecodedRoot, stuck.RelativePath, StringComparison.Ordinal);
+        Assert.True(File.Exists(stuck.RelativePath), stuck.RelativePath);
     }
 
     // ---- what the agent reads (F9), and the CLI ------------------------------------------------------
@@ -358,5 +459,19 @@ public class CucumberAttachmentIngestTests : IDisposable
 
         foreach (var (name, step) in new[] { ("screenshot", afterHooks), ("trace", afterHooks), ("error-context", afterHooks), ("video", context) })
             Assert.Matches(new Regex($@"^- {Regex.Escape(name)} — `attachments/[^`]+` \(step `s0/{step}`\)$", RegexOptions.Multiline), section);
+    }
+
+    [Fact]
+    public void With_hooks_kept_the_step_markers_match_the_steps()
+    {
+        // Every kept hook was listed after the Gherkin steps, while the step markers follow the order the steps ran: each
+        // marker missed its step, and the calls made in a step lost their step. A scenario under a background still lists
+        // its before hook after the background steps, the one place the order cannot follow the run: its first two
+        // markers (the hook's and the background step's) miss, and the rest find their steps.
+        var result = Ingest(includeHooks: true);
+
+        var missed = result.Diagnostics.Where(d => d.Kind == DiagnosticKind.StepAttributionMismatch).ToArray();
+        Assert.All(missed, d => Assert.Equal(Named(result, AttachmentFixture.BackgroundScenario).Id, d.ScenarioId));
+        Assert.Equal(2, missed.Length);
     }
 }

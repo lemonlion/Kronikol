@@ -1,0 +1,35 @@
+baseline: build ok, 399 facts, failed: none
+A1: KILLED by 1: A_reporters_file_that_is_gone_never_takes_the_copy_a_file_that_is_there_matches - one pass: a gone file pairs in the reporter's order (X2)
+A2: KILLED by 1: A_reporters_file_that_cannot_be_read_is_taken_for_gone - a reporter's file that exists but cannot be read pairs with nothing (X3)
+A3: KILLED by 1: A_messages_link_to_a_missing_file_pairs_with_the_reporters_file - no pair with a copy whose bytes cannot be read (X4) [run again alone: its first replacement lost the statement's semicolon and did not compile]
+A4: KILLED by 1: A_decoded_copy_another_entry_still_links_is_not_deleted - the replaced copy deleted when paired, linked or not (X5)
+A5: KILLED by 2: A_step_index_on_the_reporters_records_changes_nothing, A_reporters_attachment_on_a_step_is_paired_or_kept_never_lost - the tests scenario's own list only (X1)
+A6: KILLED by 1: A_reporters_file_that_is_gone_pairs_with_a_copy_that_can_be_read - a gone file pairs with any namesake, readable or not
+A7: SURVIVED - kept twice beside a namesake whose bytes were not read (expected equivalent)
+T1: KILLED by 1: A_retried_scenario_pairs_its_last_attempts_attachments - an untimed record placed by the counted starts alone (X7)
+T2: KILLED by 1: A_retried_scenario_pairs_its_last_attempts_attachments - an untimed record one attempt late (X7)
+S1: KILLED by 1: An_attachment_of_a_test_step_that_names_no_pickle_step_is_kept_on_the_scenario - an unresolved test step's attachments dropped (X8)
+S2: KILLED by 1: IncludeHooks_keeps_each_hook_where_it_ran - every kept hook after the steps (X9)
+S3: KILLED by 3: A_hook_that_ran_after_a_skipped_step_is_not_a_step_that_ran(includeHooks: True), IncludeHooks_keeps_each_hook_where_it_ran, Nothing_cucumber_js_wrote_reads_as_a_bypass(includeHooks: True) - before and after hooks swapped (X9)
+Q1: KILLED by 1: Query_failures_prints_a_link_on_the_failing_step_as_it_is - a link resolved as a path (C1)
+Q2: KILLED by 1: A_path_no_file_system_takes_is_printed_as_written - a path no file system takes throws (C2)
+Q3: KILLED by 1: Query_failures_prints_the_first_six_of_a_failing_steps_attachments_and_every_failure - text: every attachment of the failing step (C3)
+Q4: KILLED by 1: Query_failures_prints_the_first_six_of_a_failing_steps_attachments_and_every_failure - json: every attachment of the failing step (C3)
+Q5: KILLED by 1: Query_failures_prints_the_first_six_of_a_failing_steps_attachments_and_every_failure - no line naming the rest (C3)
+M1: KILLED by 1: A_merged_report_links_each_shards_files_in_its_own_attachments_folder - a shard's attachments left relative to its folder (P1)
+M2: KILLED by 2: A_merged_report_links_each_shards_files_in_its_own_attachments_folder, A_merge_written_into_a_shards_own_folder_keeps_its_files_where_they_are - nothing copied beside the merged report (P1)
+M3: KILLED by 1: A_merged_report_links_each_shards_files_in_its_own_attachments_folder - a name another shard's file holds is written over (P1)
+M4: SURVIVED - no fast path for a file already in the folder (expected equivalent: same bytes reused)
+R1: KILLED by 17: A_reporters_file_that_is_gone_pairs_with_a_copy_that_can_be_read, When_the_reporters_file_is_gone_the_messages_copy_is_linked, With_hooks_kept_a_hooks_attachment_is_listed_once_on_its_hook_step, Two_artefacts_with_one_name_stay_where_each_was_attached ... - M1: the displayed name only
+R2: KILLED by 3: Two_scenarios_each_keeping_a_name_twice_are_counted_together, A_name_pair_with_different_bytes_keeps_both_and_says_so, Two_artefacts_with_one_name_stay_where_each_was_attached - M2: no byte check
+R2b: KILLED by 3: Two_scenarios_each_keeping_a_name_twice_are_counted_together, Two_artefacts_with_one_name_stay_where_each_was_attached, A_name_pair_with_different_bytes_keeps_both_and_says_so - the length alone
+R3: KILLED by 7: A_copy_from_the_messages_keeps_its_own_media_type, With_hooks_kept_a_hooks_attachment_is_listed_once_on_its_hook_step, A_retried_scenario_pairs_its_last_attempts_attachments, A_reporters_file_that_is_gone_never_takes_the_copy_a_file_that_is_there_matches ... - M3: a paired slot offered again
+R4: KILLED by 5: A_copy_from_the_messages_keeps_its_own_media_type, A_reporters_file_that_is_gone_pairs_with_a_copy_that_can_be_read, When_the_reporters_file_is_gone_the_messages_copy_is_linked, A_reporters_file_that_cannot_be_read_is_taken_for_gone ... - M4: the reporter's path survives when its file is gone
+R9: KILLED by 1: A_link_in_the_messages_is_never_paired - M9: a link offered as a copy
+R10: KILLED by 3: A_name_pair_with_different_bytes_keeps_both_and_says_so, The_reporters_attachments_win_over_the_messages_copies_of_the_same_artefact, The_scenario_list_keeps_the_reporters_order_then_the_messages_own - M10: the messages' unpaired entries first
+R11: KILLED by 1: The_decoded_copies_a_reporters_file_replaced_are_deleted - M11: replaced copies never deleted
+R15: KILLED by 1: A_copy_from_the_messages_keeps_its_own_media_type - M15: a gone pair takes the tests' media type
+R17: KILLED by 2: Two_scenarios_each_keeping_a_name_twice_are_counted_together, A_name_pair_with_different_bytes_keeps_both_and_says_so - M17: the kept-twice count never made
+R22: KILLED by 1: A_reporters_file_keeps_the_reporters_media_type - M22: a reporter's file takes the copy's media type
+
+32 mutants: 30 killed, 2 survived (A7 and M4, equivalents; plan section 10).

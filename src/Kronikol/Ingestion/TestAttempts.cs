@@ -9,7 +9,9 @@ namespace Kronikol.Ingestion;
 /// <remarks>
 /// A record goes to the attempt its own <see cref="TestRunRecord.Attempt"/> names, when a <c>start</c> carries that
 /// number; else to the last attempt that started at or before its timestamp (the first, when it is earlier than every
-/// start); else, with no timestamp, to the last attempt whose <c>start</c> came before it in the file.
+/// start); else, with no timestamp, to the last attempt whose <c>start</c> came before it in the file. Where the attempts
+/// are counted from starts that do not come from the file's own records (a scenario the Cucumber messages own, whose
+/// starts are appended after them), the file's own starts before the record say which attempt it is.
 /// </remarks>
 internal sealed class TestAttempts
 {
@@ -60,10 +62,14 @@ internal sealed class TestAttempts
             if (starts.Skip(1).Any(s => s.Record.Attempt is null))
                 attempts.InferredRetries++;
 
+            // The starts that do not count (the reporter's own, where the Cucumber messages count the attempts and their
+            // starts come after every record of the file) still say where in the file each attempt's records begin.
+            var uncounted = countsAsStart is null ? []
+                : list.Where(x => x.Record.Is(TestRunRecord.Events.Start) && !countsAsStart(x.Record)).Select(x => x.Index).ToArray();
             var last = starts.Count - 1;
             foreach (var (record, index) in list)
             {
-                if (AttemptOf(record, index, starts, numbers) != last)
+                if (AttemptOf(record, index, starts, numbers, uncounted) != last)
                     attempts._earlier.Add(record);
             }
         }
@@ -71,7 +77,7 @@ internal sealed class TestAttempts
         return attempts;
     }
 
-    private static int AttemptOf(TestRunRecord record, int index, List<(TestRunRecord Record, int Index)> starts, int[] numbers)
+    private static int AttemptOf(TestRunRecord record, int index, List<(TestRunRecord Record, int Index)> starts, int[] numbers, int[] uncounted)
     {
         // A start that opened an attempt is that attempt; one that did not is placed like any other record.
         var opened = starts.FindIndex(s => ReferenceEquals(s.Record, record));
@@ -92,6 +98,11 @@ internal sealed class TestAttempts
 
             return found;
         }
+
+        // Placed by the file alone: the counted starts came after every record of the file, so the uncounted ones before the
+        // record say which attempt it is (the first such start opens the first attempt).
+        if (uncounted.Length > 0)
+            return Math.Clamp(uncounted.Count(start => start < index) - 1, 0, starts.Count - 1);
 
         for (var i = 0; i < starts.Count; i++)
         {

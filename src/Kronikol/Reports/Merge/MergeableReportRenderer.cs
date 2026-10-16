@@ -29,7 +29,8 @@ public static class MergeableReportRenderer
     /// it out of both).</param>
     /// <remarks>The labs page is written when the merge read history or its shards recorded diagnostics
     /// (<see cref="MergeableReport.Diagnostics"/>), which since 4.6.0 also reach the report's diagnostics section when it is
-    /// asked for.</remarks>
+    /// asked for. Each attachment with an absolute path to a file is copied into <c>attachments/</c> beside the report and
+    /// linked there, as a run's are; <see cref="MergeFiles"/> gives a shard's attachments that path.</remarks>
     public static string Render(MergeableReport report, string outputPath, string? title = null, ReportConfigurationOptions? options = null, History.HistoryVerdicts? history = null)
     {
         options ??= new ReportConfigurationOptions();
@@ -62,6 +63,10 @@ public static class MergeableReportRenderer
         // as long as a failed write silently salvaged to `<name>2.html`; it surfaced the moment an
         // unwritable output started being reported, which is the point of reporting it.
         var destinationDirectory = Path.GetDirectoryName(Path.GetFullPath(outputPath));
+        // The shards' files go beside the merged report, as a run's go beside its own: MergeFiles pointed each at its
+        // shard's folder, and a shard's own relative names would be dead links here.
+        if (!string.IsNullOrEmpty(destinationDirectory))
+            CarryAttachments(report, destinationDirectory);
         using var scope = string.IsNullOrEmpty(destinationDirectory)
             ? null
             : ReportGenerator.ScopeReportsDirectory(destinationDirectory);
@@ -209,7 +214,8 @@ public static class MergeableReportRenderer
 
     /// <summary>
     /// Reads several mergeable report JSON files and merges them into one in-memory report, ready to
-    /// <see cref="Render"/> and to <see cref="Serialize"/>.
+    /// <see cref="Render"/> and to <see cref="Serialize"/>. A shard names its attachment files relative to its own folder;
+    /// each that is there is read as the absolute path of that file, which <see cref="Render"/> copies beside the report.
     /// </summary>
     public static MergeableReport MergeFiles(IEnumerable<string> inputJsonPaths)
     {
@@ -221,7 +227,9 @@ public static class MergeableReportRenderer
             // the HTTP method is invalid.` out of fifteen artifacts is not a diagnosis, it is a hunt.
             try
             {
-                reports.Add(MergeableReportReader.ReadFile(path));
+                var report = MergeableReportReader.ReadFile(path);
+                PointAttachmentsAtTheirShard(report, Path.GetDirectoryName(Path.GetFullPath(path)) ?? "");
+                reports.Add(report);
             }
             catch (Exception exception) when (exception is FormatException or System.Text.Json.JsonException or ArgumentException)
             {
@@ -240,4 +248,107 @@ public static class MergeableReportRenderer
     /// </summary>
     public static string MergeFilesToHtml(IEnumerable<string> inputJsonPaths, string outputPath, string? title = null, ReportConfigurationOptions? options = null) =>
         Render(MergeFiles(inputJsonPaths), outputPath, title, options);
+
+    /// <summary>
+    /// Points a shard's attachments at its own folder. A shard names its files relative to the folder it was written to
+    /// (<c>attachments/shot.png</c>), and the merged report is written elsewhere, where <see cref="Render"/> copies them. A
+    /// link, an absolute path, or a file that is not there is left as it is.
+    /// </summary>
+    private static void PointAttachmentsAtTheirShard(MergeableReport report, string shardDirectory) =>
+        ForEachAttachmentList(report, attachments => attachments.Select(attachment =>
+        {
+            if (attachment.IsUrl || Path.IsPathRooted(attachment.RelativePath))
+                return attachment;
+            try
+            {
+                var file = Path.GetFullPath(Path.Combine(shardDirectory, attachment.RelativePath));
+                return File.Exists(file) ? attachment with { RelativePath = file } : attachment;
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                return attachment;
+            }
+        }).ToArray());
+
+    /// <summary>
+    /// Copies each file the merged report links into <c>attachments/</c> beside it and links the copy, as a run's generator
+    /// does for its own (<see cref="ReportGenerator.CopyAttachmentsToReportsFolder"/>). A file already in that folder (a
+    /// merge written beside one of its shards) is linked where it is. A name another file holds there takes a number, so
+    /// two shards' <c>shot.png</c> are both kept and nothing is written over; a file with the same bytes is reused. A file
+    /// that cannot be copied keeps its absolute path.
+    /// </summary>
+    private static void CarryAttachments(MergeableReport report, string destinationDirectory)
+    {
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        var folder = Path.Combine(destinationDirectory, "attachments");
+        var links = new Dictionary<string, string?>(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+        ForEachAttachmentList(report, attachments => attachments.Select(attachment =>
+        {
+            if (attachment.IsUrl || !Path.IsPathRooted(attachment.RelativePath) || !File.Exists(attachment.RelativePath))
+                return attachment;
+            var source = Path.GetFullPath(attachment.RelativePath);
+            if (!links.TryGetValue(source, out var link))
+                links[source] = link = Place(source);
+            return link is null ? attachment : attachment with { RelativePath = link };
+        }).ToArray());
+
+        string? Place(string source)
+        {
+            if (string.Equals(Path.GetDirectoryName(source), folder, comparison))
+                return "attachments/" + Path.GetFileName(source);
+            try
+            {
+                Directory.CreateDirectory(folder);
+                var stem = Path.GetFileNameWithoutExtension(source);
+                var extension = Path.GetExtension(source);
+                for (var n = 0; ; n++)
+                {
+                    var name = n == 0 ? stem + extension : $"{stem}-{n}{extension}";
+                    var destination = Path.Combine(folder, name);
+                    if (!File.Exists(destination))
+                    {
+                        File.Copy(source, destination);
+                        return "attachments/" + name;
+                    }
+
+                    if (SameBytes(source, destination))
+                        return "attachments/" + name;
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return null;
+            }
+        }
+
+        static bool SameBytes(string a, string b)
+        {
+            using var first = File.OpenRead(a);
+            using var second = File.OpenRead(b);
+            return first.Length == second.Length
+                   && System.Security.Cryptography.SHA256.HashData(first).AsSpan().SequenceEqual(System.Security.Cryptography.SHA256.HashData(second));
+        }
+    }
+
+    /// <summary>Replaces each attachment list of <paramref name="report"/>: the scenarios', the background steps' and the steps', sub-steps included.</summary>
+    private static void ForEachAttachmentList(MergeableReport report, Func<FileAttachment[], FileAttachment[]> replace)
+    {
+        foreach (var scenario in report.Features.SelectMany(f => f.Scenarios))
+        {
+            if (scenario.Attachments is { Length: > 0 } own)
+                scenario.Attachments = replace(own);
+            Steps(scenario.BackgroundSteps);
+            Steps(scenario.Steps);
+        }
+
+        void Steps(ScenarioStep[]? steps)
+        {
+            foreach (var step in steps ?? [])
+            {
+                if (step.Attachments is { Length: > 0 } attachments)
+                    step.Attachments = replace(attachments);
+                Steps(step.SubSteps);
+            }
+        }
+    }
 }

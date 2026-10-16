@@ -1,0 +1,4 @@
+## Linux (mcr.microsoft.com/dotnet/sdk:10.0, as root): the audit's facts with the fixes, Kronikol.Tests.Ingestion, DigestStepAttachmentTests, MergeCarriesAttachmentsTests
+
+linux.trx: 400 facts, 0 failed, 400 passed
+

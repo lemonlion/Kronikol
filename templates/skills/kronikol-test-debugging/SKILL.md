@@ -161,7 +161,8 @@ matters.
 - **A body ending `…truncated (N chars total)` was capped at capture time.** The rest was never recorded —
   it is not somewhere else in the file. `query` says so when it prints one.
 - **Attachments are pointers.** `failures` and `steps` print absolute paths for screenshots; `Read` them
-  individually. They are never inlined.
+  individually. They are never inlined. `scripts/query.py` lists none: read `Failures.md`, which lists every one
+  with the step that holds it.
 - **`traceId` is not the W3C trace id.** `traceId` is Kronikol's own identifier for the request/response
   pair; `activityTraceId` (printed by `http`) is the W3C one that matches your OTel traces and app logs.
 - **Aggregate counts are per occurrence, not per distinct body.** `values` counts a body every time it

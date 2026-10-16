@@ -158,8 +158,11 @@ public class CucumberFeatureMergerTests : IDisposable
 
     // ---- attachments (#175, plans/ATTACHMENT_MERGE_PLAN.md section 4) -------------------------------
 
-    /// <summary>What the reporter recorded for one attachment: a file with these bytes, a file that is gone (no bytes), or a link.</summary>
-    private sealed record Reported(string Name, byte[]? Bytes, string? MediaType = null, string? Url = null);
+    /// <summary>
+    /// What the reporter recorded for one attachment: a file with these bytes, a file that is gone (no bytes), or a link; on
+    /// the step its <paramref name="Step"/> index names, or the scenario.
+    /// </summary>
+    private sealed record Reported(string Name, byte[]? Bytes, string? MediaType = null, string? Url = null, int? Step = null);
 
     private string Decoded => Path.Combine(_dir, "decoded");
 
@@ -168,13 +171,22 @@ public class CucumberFeatureMergerTests : IDisposable
         CucumberBypassTests.Synthesise(CucumberBypassTests.Stream(steps), new CucumberSynthesisOptions { AttachmentsDirectory = Decoded });
 
     /// <summary>The tests file's side: the reporter's records of the same test, each file written here.</summary>
-    private FeatureSynthesizer.Result Reporter(params Reported[] attachments)
+    private FeatureSynthesizer.Result Reporter(params Reported[] attachments) => Reporter([], attachments);
+
+    /// <summary>
+    /// As <see cref="Reporter(Reported[])"/>, with a <c>step</c> record for each of <paramref name="steps"/> first, so a
+    /// record's step index puts its attachment on a step of the tests file's model. The pipeline does the same for a
+    /// scenario the messages own: their step markers give it its steps there.
+    /// </summary>
+    private FeatureSynthesizer.Result Reporter(string[] steps, params Reported[] attachments)
     {
         var at = DateTimeOffset.Parse("2026-09-28T14:23:30Z");
         var records = new List<TestRunRecord> { new() { Event = "start", TestId = "bypass-test-1", Timestamp = at } };
+        foreach (var step in steps)
+            records.Add(new TestRunRecord { Event = "step", TestId = "bypass-test-1", Text = step, Timestamp = at });
         for (var i = 0; i < attachments.Length; i++)
         {
-            var (name, bytes, mediaType, url) = attachments[i];
+            var (name, bytes, mediaType, url, step) = attachments[i];
             var path = url ?? Path.Combine(_dir, "reporter", $"{i}-{name}");
             if (url is null && bytes is not null)
             {
@@ -182,12 +194,19 @@ public class CucumberFeatureMergerTests : IDisposable
                 File.WriteAllBytes(path, bytes);
             }
 
-            records.Add(new TestRunRecord { Event = "attachment", TestId = "bypass-test-1", Name = name, Path = path, MediaType = mediaType, Timestamp = at.AddSeconds(i + 1) });
+            records.Add(new TestRunRecord
+            {
+                Event = "attachment", TestId = "bypass-test-1", Name = name, Path = path, MediaType = mediaType, Step = step,
+                Timestamp = at.AddSeconds(i + 1),
+            });
         }
 
         records.Add(new TestRunRecord { Event = "end", TestId = "bypass-test-1", Status = "failed", Timestamp = at.AddSeconds(attachments.Length + 1) });
         return FeatureSynthesizer.Build(records, null);
     }
+
+    /// <summary>The messages' own scenario, before the merge.</summary>
+    private static Scenario Gherkin(CucumberSynthesisResult messages) => messages.Features.Single().Scenarios.Single();
 
     private static Scenario Only(FeatureSynthesizer.Result result) => result.Features.SelectMany(f => f.Scenarios).Single();
 
@@ -225,8 +244,9 @@ public class CucumberFeatureMergerTests : IDisposable
     {
         // The issue's scale: the failing step attaches its own trace, and Playwright adds its trace on failure. A pair
         // made by the name alone gave each the other's file once the steps' lists were compared (measured: the 58 MB
-        // trace moved to the scenario and Playwright's 7.5 MB one to the step).
-        byte[] own = [1, 1, 1], playwrights = [2, 2, 2, 2];
+        // trace moved to the scenario and Playwright's 7.5 MB one to the step). The two have one length, so the bytes, not
+        // the length alone, keep them apart.
+        byte[] own = [1, 1, 1, 1], playwrights = [2, 2, 2, 2];
         var messages = Messages(
             new CucumberBypassTests.Step("the big check fails with a big trace", "FAILED", "boom", Attachments: [Base64("trace", own)]),
             new CucumberBypassTests.Step("After Hooks", "PASSED", Hook: true, Attachments: [Base64("trace", playwrights)]));
@@ -297,10 +317,12 @@ public class CucumberFeatureMergerTests : IDisposable
             new CucumberBypassTests.Step("the page is open", "PASSED"),
             new CucumberBypassTests.Step("After Hooks", "PASSED", Hook: true, Attachments: [Base64("only-in-messages.zip", theirs), Base64("shared.zip", shared)]));
 
-        var scenario = Only(CucumberFeatureMerger.Merge(messages,
-            Reporter(new Reported("only-in-tests.zip", own, "application/zip"), new Reported("shared.zip", shared, "application/zip"))));
+        var merged = CucumberFeatureMerger.Merge(messages,
+            Reporter(new Reported("only-in-tests.zip", own, "application/zip"), new Reported("shared.zip", shared, "application/zip")));
 
-        Assert.Equal(["only-in-tests.zip", "shared.zip", "only-in-messages.zip"], scenario.Attachments!.Select(a => a.Name));
+        Assert.Equal(["only-in-tests.zip", "shared.zip", "only-in-messages.zip"], Only(merged).Attachments!.Select(a => a.Name));
+        // An attachment only one side has is not one "kept twice": nothing of its name is beside it.
+        Assert.Equal(0, merged.AttachmentsKeptTwice);
     }
 
     [Fact]
@@ -322,5 +344,209 @@ public class CucumberFeatureMergerTests : IDisposable
         var linked = scenario.Attachments!.Select(a => a.RelativePath).Where(p => p.StartsWith(Decoded, StringComparison.Ordinal));
         Assert.Equal(linked.Order(), Directory.GetFiles(Decoded).Order());
         Assert.Equal("only-in-messages.png", Path.GetFileName(Assert.Single(Directory.GetFiles(Decoded)))[5..]);
+    }
+
+    // ---- found by the #175 audit ----------------------------------------------------------------------------------
+
+    [Fact]
+    public void A_reporters_attachment_on_a_step_is_paired_or_kept_never_lost()
+    {
+        // In the pipeline the messages' step markers give a scenario they own its steps in the tests file's model too, so a
+        // record's step index puts its attachment on a step there. The merge read the scenario's own list alone: such an
+        // attachment was dropped with the scenario the messages replace, the reporter's file and an artefact only the tests
+        // file has alike.
+        byte[] shot = [137, 80, 78, 71];
+        var messages = Messages(new CucumberBypassTests.Step("the page is open", "PASSED", Attachments: [Base64("shot.png", shot, "image/png")]));
+        var reporter = Reporter(["the page is open"],
+            new Reported("shot.png", shot, "image/png", Step: 0),
+            new Reported("note", "only the reporter has this"u8.ToArray(), "text/plain", Step: 0));
+        Assert.Equal(2, Only(reporter).Steps![0].Attachments!.Length);
+
+        var scenario = Only(CucumberFeatureMerger.Merge(messages, reporter));
+
+        var onTheStep = Assert.Single(scenario.Steps![0].Attachments!);
+        Assert.Equal("shot.png", onTheStep.Name);
+        Assert.StartsWith(Path.Combine(_dir, "reporter"), onTheStep.RelativePath, StringComparison.Ordinal);
+        Assert.Equal("note", Assert.Single(scenario.Attachments!).Name);
+    }
+
+    [Fact]
+    public void A_reporters_file_that_is_gone_never_takes_the_copy_a_file_that_is_there_matches()
+    {
+        // Two artefacts with one name, the first one's file gone. Paired in the reporter's order, the gone one took the first
+        // copy of its name, which was the other's: the same bytes were listed twice, the copy the gone file needed stayed
+        // under the name the synthesis displays, and the merge said two files with one name had different bytes.
+        byte[] stepShot = [1, 1, 1, 1], hookShot = [2, 2, 2, 2];
+        var messages = Messages(
+            new CucumberBypassTests.Step("the page is open", "FAILED", "boom", Attachments: [Base64("shot", stepShot, "image/png")]),
+            new CucumberBypassTests.Step("After Hooks", "PASSED", Hook: true, Attachments: [Base64("shot", hookShot, "image/png")]));
+        var reporter = Reporter(new Reported("shot", null, "image/png"), new Reported("shot", hookShot, "image/png"));
+        var hooksFile = Only(reporter).Attachments![1].RelativePath;
+
+        var merged = CucumberFeatureMerger.Merge(messages, reporter);
+        var scenario = Only(merged);
+
+        Assert.Equal(hooksFile, Assert.Single(scenario.Attachments!).RelativePath);
+        var onTheStep = Assert.Single(scenario.Steps![0].Attachments!);
+        Assert.Equal("shot", onTheStep.Name);
+        Assert.Equal(stepShot, File.ReadAllBytes(onTheStep.RelativePath));
+        Assert.Equal(0, merged.AttachmentsKeptTwice);
+    }
+
+    [Fact]
+    public void A_reporters_file_that_cannot_be_read_is_taken_for_gone()
+    {
+        // A file that is there but held by another process (a capturer still writing it) can be neither compared nor copied:
+        // taken for gone, the messages' copy is linked once, where the merge listed both under two names (#175's symptom).
+        byte[] trace = [80, 75, 3, 4];
+        var messages = Messages(new CucumberBypassTests.Step("After Hooks", "PASSED", Hook: true, Attachments: [Base64("trace", trace)]));
+        var reporter = Reporter(new Reported("trace", trace, "application/zip"));
+        var reportersFile = Only(reporter).Attachments![0].RelativePath;
+
+        Scenario scenario;
+        using (new FileStream(reportersFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            scenario = Only(CucumberFeatureMerger.Merge(messages, reporter));
+
+        var entry = Assert.Single(scenario.Attachments!);
+        Assert.Equal("trace", entry.Name);
+        Assert.StartsWith(Decoded, entry.RelativePath, StringComparison.Ordinal);
+        Assert.Equal(trace, File.ReadAllBytes(entry.RelativePath));
+    }
+
+    [Fact]
+    public void A_messages_link_to_a_missing_file_pairs_with_the_reporters_file()
+    {
+        // A producer that writes its files beside the messages names each by a url. When that file is gone and the reporter's
+        // is there, no bytes can be compared, and the reporter's file is the one that exists: it is kept, once, where the
+        // messages put the artefact, and nothing says two files had different bytes, since none were compared.
+        byte[] trace = [80, 75, 3, 4];
+        var missing = new Uri(Path.Combine(_dir, "gone", "trace.zip")).AbsoluteUri;
+        var messages = Messages(new CucumberBypassTests.Step("the page is open", "FAILED", "boom",
+            Attachments: [new CucumberBypassTests.Attachment("trace", "", MediaType: "application/zip", Url: missing)]));
+        var reporter = Reporter(new Reported("trace", trace, "application/zip"));
+        var reportersFile = Only(reporter).Attachments![0].RelativePath;
+
+        var merged = CucumberFeatureMerger.Merge(messages, reporter);
+        var scenario = Only(merged);
+
+        Assert.Equal(reportersFile, Assert.Single(scenario.Steps![0].Attachments!).RelativePath);
+        Assert.Null(scenario.Attachments);
+        Assert.Equal(0, merged.AttachmentsKeptTwice);
+    }
+
+    [Fact]
+    public void A_reporters_file_that_is_gone_pairs_with_a_copy_that_can_be_read()
+    {
+        // The messages name two copies: a file beside them that is gone too, first, and a body they carry. Pairing the gone
+        // reporter's file with the first would link nothing at all and leave the bytes in hand under another name.
+        byte[] trace = [80, 75, 3, 4];
+        var missing = new Uri(Path.Combine(_dir, "gone", "trace.zip")).AbsoluteUri;
+        var messages = Messages(
+            new CucumberBypassTests.Step("the page is open", "FAILED", "boom", Attachments: [Base64("trace", trace)]),
+            new CucumberBypassTests.Step("After Hooks", "PASSED", Hook: true,
+                Attachments: [new CucumberBypassTests.Attachment("trace", "", MediaType: "application/zip", Url: missing)]));
+
+        var scenario = Only(CucumberFeatureMerger.Merge(messages, Reporter(new Reported("trace", null, "application/zip"))));
+
+        var onTheStep = Assert.Single(scenario.Steps![0].Attachments!);
+        Assert.Equal("trace", onTheStep.Name);
+        Assert.Equal(trace, File.ReadAllBytes(onTheStep.RelativePath));
+    }
+
+    [Fact]
+    public void A_link_in_the_messages_is_never_paired()
+    {
+        // The other side of A_link_is_never_paired: a link the messages carry names something elsewhere. Its bytes cannot be
+        // read, so a reporter's file of that name with no copy of its bytes would take it for a copy of a file that is gone.
+        var messages = Messages(new CucumberBypassTests.Step("the page is open", "PASSED",
+            Attachments: [new CucumberBypassTests.Attachment("trace", "", MediaType: "application/zip", Url: "https://example.test/trace.zip")]));
+
+        var scenario = Only(CucumberFeatureMerger.Merge(messages, Reporter(new Reported("trace", [80, 75, 3, 4], "application/zip"))));
+
+        Assert.Equal("https://example.test/trace.zip", Assert.Single(scenario.Steps![0].Attachments!).RelativePath);
+        Assert.Equal("trace", Assert.Single(scenario.Attachments!).Name);
+    }
+
+    [Fact]
+    public void A_decoded_copy_another_entry_still_links_is_not_deleted()
+    {
+        // A plan that repeats a test step id puts one copy in two lists. The pair takes one of them; the file is deleted only
+        // when no entry links it, or the other entry would be a dead link.
+        byte[] shot = [137, 80, 78, 71];
+        var messages = Messages(new CucumberBypassTests.Step("the page is open", "PASSED", Attachments: [Base64("shot.png", shot, "image/png")]));
+        var gherkin = Gherkin(messages);
+        gherkin.Attachments = [Assert.Single(gherkin.Steps![0].Attachments!)];
+
+        var scenario = Only(CucumberFeatureMerger.Merge(messages, Reporter(new Reported("shot.png", shot, "image/png"))));
+
+        Assert.StartsWith(Path.Combine(_dir, "reporter"), Assert.Single(scenario.Attachments!).RelativePath, StringComparison.Ordinal);
+        Assert.True(File.Exists(Assert.Single(scenario.Steps![0].Attachments!).RelativePath));
+    }
+
+    [Fact]
+    public void A_reporter_that_names_a_record_by_its_file_pairs_with_the_copy_the_synthesis_named()
+    {
+        // The second form of the name: the synthesis displays playwright-bdd's "trace" as "trace.zip", which is what a
+        // reporter that names a record by its file writes.
+        byte[] trace = [80, 75, 3, 4];
+        var messages = Messages(new CucumberBypassTests.Step("After Hooks", "PASSED", Hook: true, Attachments: [Base64("trace", trace)]));
+
+        var scenario = Only(CucumberFeatureMerger.Merge(messages, Reporter(new Reported("trace.zip", trace, "application/zip"))));
+
+        Assert.Equal("trace.zip", Assert.Single(scenario.Attachments!).Name);
+    }
+
+    [Fact]
+    public void Names_pair_ignoring_case()
+    {
+        byte[] trace = [80, 75, 3, 4];
+        var messages = Messages(new CucumberBypassTests.Step("After Hooks", "PASSED", Hook: true, Attachments: [Base64("trace", trace)]));
+
+        var scenario = Only(CucumberFeatureMerger.Merge(messages, Reporter(new Reported("Trace", trace, "application/zip"))));
+
+        Assert.Equal("Trace", Assert.Single(scenario.Attachments!).Name);
+    }
+
+    [Fact]
+    public void A_reporters_record_with_no_media_type_takes_the_copys()
+    {
+        byte[] shot = [137, 80, 78, 71];
+        var messages = Messages(new CucumberBypassTests.Step("After Hooks", "PASSED", Hook: true, Attachments: [Base64("shot.png", shot, "image/png")]));
+
+        var entry = Assert.Single(Only(CucumberFeatureMerger.Merge(messages, Reporter(new Reported("shot.png", shot)))).Attachments!);
+
+        Assert.StartsWith(Path.Combine(_dir, "reporter"), entry.RelativePath, StringComparison.Ordinal);
+        Assert.Equal("image/png", entry.MediaType);
+    }
+
+    [Fact]
+    public void Neither_signal_is_listed_for_a_scenario_the_messages_own_whatever_its_case()
+    {
+        // The test id's attachment as well as kronikol-bypass, compared as the synthesis compares them.
+        var messages = Messages(new CucumberBypassTests.Step("the page is open", "PASSED"));
+
+        var scenario = Only(CucumberFeatureMerger.Merge(messages, Reporter(
+            new Reported("kronikol-test-id", "bypass-test-1"u8.ToArray(), "text/plain"),
+            new Reported("KRONIKOL-BYPASS", "flaky in CI"u8.ToArray(), "text/plain"))));
+
+        Assert.Null(scenario.Attachments);
+    }
+
+    [Fact]
+    public void A_text_body_is_written_as_utf8_and_pairs_with_the_reporters_file()
+    {
+        // With WriteTextAttachments on, a text body is written as the bytes File.WriteAllText wrote before (UTF-8, no byte
+        // order mark), so a reporter's file of the same text pairs with it.
+        const string body = "naïve ✓ note";
+        var messages = CucumberBypassTests.Synthesise(
+            CucumberBypassTests.Stream(new CucumberBypassTests.Step("the page is open", "PASSED", Attachments: [new CucumberBypassTests.Attachment("note", body)])),
+            new CucumberSynthesisOptions { AttachmentsDirectory = Decoded, WriteTextAttachments = true });
+        var copy = Assert.Single(Gherkin(messages).Steps![0].Attachments!);
+        Assert.Equal(System.Text.Encoding.UTF8.GetBytes(body), File.ReadAllBytes(copy.RelativePath));
+
+        var scenario = Only(CucumberFeatureMerger.Merge(messages, Reporter(new Reported("note", System.Text.Encoding.UTF8.GetBytes(body), "text/plain"))));
+
+        Assert.Equal("note", Assert.Single(scenario.Steps![0].Attachments!).Name);
+        Assert.Null(scenario.Attachments);
     }
 }

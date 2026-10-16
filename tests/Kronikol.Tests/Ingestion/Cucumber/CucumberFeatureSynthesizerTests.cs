@@ -382,6 +382,40 @@ public class CucumberFeatureSynthesizerTests
         Assert.All(scenario.Steps!.Where(s => s.Text.Contains("hook")), s => Assert.Null(s.Keyword));
     }
 
+    [Fact]
+    public void IncludeHooks_keeps_each_hook_where_it_ran()
+    {
+        // Every kept hook was listed after the Gherkin steps, a before hook too, while the step markers follow the order the
+        // steps ran: matched one for one, every marker after the first missed its step and the calls in it lost their step.
+        var result = CucumberFixtures.Build(new CucumberSynthesisOptions { IncludeHooks = true });
+        var scenario = result.Features.SelectMany(f => f.Scenarios).First(s => s.DisplayName == CucumberFixtures.SimpleScenario);
+
+        Assert.Equal("BeforeEach hook", scenario.Steps![0].Text);
+        Assert.Equal("AfterEach hook", scenario.Steps[^1].Text);
+        Assert.DoesNotContain(scenario.Steps[1..^1], s => s.Text.Contains("hook", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void An_attachment_of_a_test_step_that_names_no_pickle_step_is_kept_on_the_scenario()
+    {
+        // Such a step has no row to go on; what it attached was dropped with it.
+        var stream = CucumberBypassTests.Stream(
+            new CucumberBypassTests.Step("the page is open", "PASSED",
+                Attachments: [new CucumberBypassTests.Attachment("shot.png", Convert.ToBase64String([137, 80, 78, 71]), "BASE64", "image/png")]),
+            new CucumberBypassTests.Step("the check passes", "PASSED"));
+        var unresolved = stream.Replace("""
+            "pickleStepId":"ps-0"
+            """, """
+            "pickleStepId":"ps-elsewhere"
+            """, StringComparison.Ordinal);
+        Assert.NotEqual(stream, unresolved);
+
+        var scenario = CucumberBypassTests.Synthesise(unresolved).Features.Single().Scenarios.Single();
+
+        Assert.Equal("shot.png", Assert.Single(scenario.Attachments!).Name);
+        Assert.Equal("the check passes", Assert.Single(scenario.Steps!).Text);
+    }
+
     // ---- run window and markers -------------------------------------------------------------------
 
     [Fact]

@@ -4,6 +4,117 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.26.4] - 2026-10-16
+
+**Patch - an audit of 4.24.0, #175's release, against `plans/ATTACHMENT_MERGE_PLAN.md`, at the owner's ask on 2026-10-16
+to make sure nothing was missed from the plan and there are no bugs in the implementation.** Bug fixes, doc comments and
+tests: nothing new for a consumer to call, so the patch part moves (4.26.3 to 4.26.4). Four read-only reviews (the plan
+ticked off against the release, the pairing code, every reader of attachments, the tests) found what follows. Each
+finding was run before it was fixed, and the proofs at the end say which facts fail on 4.26.1.
+
+### Fixed
+
+- **A tests-file attachment with a `step` index was dropped for a scenario the Cucumber messages own.** The messages'
+  step markers give such a scenario its steps in the tests file's model too, so the index put the attachment on one of
+  them, and the merge read the scenario's own list alone. The reporter's file was lost, the step linked the decoded copy
+  under the name the synthesis displays, and an artefact only the tests file had (a reporter's text note) was gone with
+  no diagnostic. This was so since 3.0.45, and the plan had read the code the other way. Every attachment of the tests
+  file's scenario, its steps' included, is now paired, and one that pairs with nothing is kept on the scenario.
+- **A reporter's file that was gone could take the copy another file's bytes matched.** Pairing went in the tests file's
+  order and a gone file pairs by its name alone, so with two artefacts of one name, the first one's file gone, the same
+  bytes were listed twice, the gone one's copy stayed under its displayed name, and a diagnostic said two files had
+  different bytes. The files that can be read now pair first, by their bytes, and the others after, by their names,
+  among the copies left.
+- **A reporter's file that exists but cannot be read (another process holds it) paired with nothing**, so `trace` and
+  `trace.zip` were both listed, #175's own symptom. It is now taken for gone, and the messages' copy is linked.
+- **A copy the messages name by a `url` whose file is gone never paired**, and the merge said two files with one name
+  had different bytes, though none were compared. The reporter's file now pairs with it by name, and only bytes that
+  were read count toward the attachments kept twice. A reporter's file that is gone pairs with a copy whose bytes can be
+  read before one whose bytes cannot.
+- **A decoded copy that another entry still linked could be deleted** (a messages file that repeats a test step id puts
+  one copy in two lists). A replaced copy is now deleted once no entry links it.
+- **A reporter's file was hashed when no copy had its name.** It is now read only to tell the copies of its name apart,
+  as the plan said.
+- **A retried scenario lost the reporter's records that carry neither `attempt` nor `timestamp`.** For a scenario the
+  messages own, the attempts are the messages' starts, which come after every record of the tests file, so such a record
+  was read as the first attempt's and dropped: the retry linked the decoded copies, and a note only the reporter had was
+  gone. It is now placed by the reporter's own starts before it in the file. This was so since 4.2.0.
+- **An attachment on a test step that names no pickle step was dropped** with the step. It is now kept on the scenario,
+  as a dropped hook's is. This was so since 3.0.45.
+- **With `--include-hooks` every kept hook came after the Gherkin steps**, a before hook too. The step markers follow
+  the order the steps ran, so they no longer matched the steps one for one: from the first marker on, the calls made in
+  a step carried no step, and each marker raised a `StepAttributionMismatch` diagnostic (18 on the plan's fixture). A
+  hook now sits where it ran: before the steps when it ran before the first step, after them otherwise. A scenario with
+  a `Background:` and a kept before hook still lists that hook after its background steps, since the report has no place
+  before them, so its first two markers still miss their steps. Kept hooks have come after the steps since 3.0.45.
+- **`kronikol query failures` printed a link on the failing step as a path inside the reports folder**, and stopped with
+  an exception on a path no file system takes, as `steps` already did. A link is now printed as it is and such a path as
+  written, by both.
+- **`kronikol query failures` printed every attachment of the failing step**, so one step that attached many files took
+  its row past the byte budget and hid every other failure: the text said nothing fits and `--json` had no items. It now
+  prints the first six, as it does the step's calls, then a line naming `steps` for the rest, and `--json` carries the
+  first six.
+- **`kronikol merge` never carried the shards' attachment files.** A shard names its files relative to its own folder
+  (`attachments/shot.png`), and the merged report, its data file, `Failures.md` and `kronikol query` kept those names
+  beside a report whose folder held none of them, so every screenshot of a sharded run was a dead link. The merge now
+  copies each shard's files into `attachments/` beside the merged report and links them there. A name two shards use is
+  numbered, a file with the same bytes is copied once, and no file is written over.
+
+### Documentation
+
+- `CucumberSynthesisOptions.AttachmentsDirectory` and `CucumberFeatureMerger.Merge` say that the merge deletes a decoded
+  copy a reporter's file replaced, in a folder the caller named as well. The hook options say kept hooks are steps in
+  the order they ran, not sub-steps. `MergeableReportRenderer` says it carries attachment files.
+- The 4.24.0 entry above said the digest lists step attachments with kept hooks after the steps (it is step-tree order),
+  that `query failures` lists the attachments made inside steps (it lists the failing step's), and that a caller naming
+  an `AttachmentsDirectory` keeps every file in it. Those sentences are corrected.
+- The debugging skill (both copies) says what `failures` prints under the failing step, that a screenshot a hook took is
+  one of the scenario's or, with `--include-hooks`, on its hook step, and that `scripts/query.py` lists no attachments.
+- The wiki's Integration-Cucumber-Messages, Generated-Reports, Querying-Reports and Merging-Parallel-Reports pages
+  follow publication.
+
+### Tests
+
+- `CucumberFeatureMergerTests`: a reporter's attachment on a step paired or kept (never lost); a gone file never takes
+  the copy a present file matches; a file another process holds is taken for gone; a messages link to a missing file
+  pairs with the reporter's file; a gone file pairs with a copy that can be read; a link in the messages is never
+  paired; a decoded copy another entry links is not deleted; the displayed name pairs (`trace.zip` with `trace`); names
+  pair ignoring case; a record with no media type takes the copy's; neither signal is listed, whatever its case; a text
+  body is written as UTF-8 and pairs. The two-artefacts fact now uses bodies of one length, so the bytes and not the
+  length keep them apart, and the order fact says nothing was kept twice.
+- `CucumberFeatureSynthesizerTests`: kept hooks sit where they ran; an attachment of a test step that names no pickle
+  step stays on the scenario.
+- `CucumberAttachmentIngestTests` (the fixture): a `step` index on the reporter's records changes nothing; a retried
+  scenario pairs its last attempt's attachments with neither `attempt` nor `timestamp` on them, and lists exactly its
+  four files; two scenarios each keeping a name twice are counted together; a background step's copy the report still
+  links keeps the staging folder; with hooks kept the step markers match the steps (only the background scenario's first
+  two miss); the built-ins fact says nothing was kept twice; the staging fact first checks the ingest decoded under its
+  root; the kept-twice fact uses bodies of one length.
+- `DigestStepAttachmentTests`: `query failures` prints a link as it is, the first six of a failing step's attachments
+  and every failure, and a path no file system takes as written; the failing step's attachments follow its location
+  line, its path is the copy's full path in text and `--json`, and a passing step's attachment is not printed under it.
+- `MergeCarriesAttachmentsTests` (new): a merged report links each shard's files in its own `attachments/` (two shards'
+  `shot.png` both kept); a merge written into a shard's own folder keeps its files where they are.
+- Playwright `IngestedAttachmentTests`: an image is drawn as an image and the rest as links, the scenario's own list is
+  one block, and every scenario paints exactly the entries the ingest made.
+
+- Proofs (plan harness `audit/`): with the patch's tests copied onto 4.26.1, which carries 4.24.0's code unchanged, 15
+  core facts fail, each on its own assertion, one or more for every fix but one. The query fact first written stopped on
+  the null character's exception before its other assertions, so it was split into three, one per defect. The reporter's
+  file read only when a copy has its name has no fact, since it changes what is read and not what is written. The facts
+  that pass there are guards on rules 4.24.0 already kept: the byte check with bodies of one length, the displayed name,
+  names in any case, a record with no media type, the signals in any case, a text body, a link in the messages, the
+  count across scenarios, the staging folder's root and a background step's copy, the failing step's attachments in
+  `query failures`, and a merge written into a shard's own folder. Of 32 mutations, the audit's own and R1's checked
+  again on the rewritten pairing, 30 are killed. The two that survive change nothing a caller can see: one counts a name
+  kept twice beside a copy whose bytes were not read, which a reporter's file that was read never sits beside, since it
+  pairs with such a copy; the other drops the merge's shortcut for a file already in the merged report's folder, whose
+  copy then finds the same name with the same bytes and links it. The Cucumber, ingest, digest and merge facts pass on
+  Linux too (400 of 400, in `mcr.microsoft.com/dotnet/sdk:10.0`), the fact for a file another process holds among them.
+- Checks: after the version bump the core suite passes 7,668 with 2 skipped and the full Playwright suite passes 1,041
+  with 28 skipped when run alone; release.slnf builds in Release for every target. The templates pin 4.26.3 and the
+  history action's VERSION installs Kronikol.Tool 4.26.4.
+
 ## [4.26.3] - 2026-10-16
 
 **Patch - the taps' time limits, audited (#173, `plans/TAP_CALLER_TIME_LIMITS_PLAN.md`).** An audit of 4.22.2 to
@@ -417,7 +528,7 @@ minor part moves (4.23.0 to 4.24.0). The rest is bug fixes.
 ### Added
 
 - **`Failures.md` and `Failures.jsonl` list a failure's attachments wherever they sit:** the scenario's own, then each
-  step's in the order the steps are listed (background steps, steps, hook steps kept by `--include-hooks`, sub-steps).
+  step's in step-tree order (the background steps, then the steps, each followed by its sub-steps).
   In `Failures.md` a step's line ends with its address, `(step `s0/2`)`; in `Failures.jsonl` its object has a `step`
   member with that address. The scenario's own lines and objects are as they were. The digest read the scenario's own
   list alone, so a screenshot taken inside a step never reached the files an agent reads first, in any lane: a tests
@@ -454,8 +565,9 @@ minor part moves (4.23.0 to 4.24.0). The rest is bug fixes.
   (`kronikol-cucumber-attachments/<id>`: 69.7 MB a run at the issue's sizes, and 2,929 folders on the machine
   measured). An ingest now decodes into a folder of its own and deletes it once the report is written, unless the
   report still links into it because a file could not be copied, which the report's diagnostics already say. A decoded
-  copy that a reporter's file replaced is deleted when it is replaced. A caller of `CucumberFeatureSynthesizer.Build`
-  that names an `AttachmentsDirectory` keeps its folder and its files.
+  copy that a reporter's file replaced is deleted when it is replaced, in a folder a caller of
+  `CucumberFeatureSynthesizer.Build` named (`AttachmentsDirectory`) as well; that caller keeps the folder and its other
+  files.
 - **A combined ingest never said that a test outside the Gherkin run recorded no result.** The merge built its result
   afresh and left the tests file's count behind, so a test the messages do not own that started and never ended was
   reported as `ResultWhenUnknown` (`Passed` by default) with no `ResultDefaulted` diagnostic. Found while implementing.
@@ -466,9 +578,9 @@ minor part moves (4.23.0 to 4.24.0). The rest is bug fixes.
 Behaviour change: a combined ingest lists each artefact once; a step's attachment on its step and no longer on the
 scenario too; a Playwright artefact under the run's name (`trace`, no longer also `trace.zip`); the messages' copy where
 the reporter's file is missing; no `kronikol-bypass` or `kronikol-test-id` entry for a scenario the messages own; one
-file per artefact in `attachments/`; and nothing left in the temp directory. In every lane, `Failures.md`,
-`Failures.jsonl` and `query failures` list the attachments made inside steps, so a scenario with a screenshot after
-each step has a line for each.
+file per artefact in `attachments/`; and nothing left in the temp directory. In every lane, `Failures.md` and
+`Failures.jsonl` list the attachments made inside steps, so a scenario with a screenshot after each step has a line
+for each, and `query failures` lists the failing step's under it.
 
 ### Documentation
 
