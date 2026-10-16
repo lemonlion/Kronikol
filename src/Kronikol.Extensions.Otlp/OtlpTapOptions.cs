@@ -34,7 +34,9 @@ public sealed class OtlpTapOptions
     public int ListenPort { get; set; }
 
     /// <summary>
-    /// Interface to bind. Default <c>localhost</c>. Use <c>+</c>, <c>*</c>, <c>0.0.0.0</c> or <c>any</c> for
+    /// Interface to bind. Default <c>localhost</c>, which, like <c>127.0.0.1</c>, listens on both loopbacks, 127.0.0.1 and
+    /// ::1, on the same port; if something else holds the port on ::1, the tap listens on 127.0.0.1 alone and says so in its
+    /// log and in <see cref="OtlpTap.Diagnostics"/>. Use <c>+</c>, <c>*</c>, <c>0.0.0.0</c> or <c>any</c> for
     /// every interface — needed when the exporter runs in a container and reaches the host through
     /// <c>host.docker.internal</c>. The listener is a plain socket (not <c>HttpListener</c>/http.sys), so a
     /// non-loopback bind needs no <c>netsh http add urlacl</c> and no elevation; the first bind may still
@@ -152,8 +154,9 @@ public sealed class OtlpTapOptions
     // ------------------------------------------------------------------ diagnostics
 
     /// <summary>
-    /// Optional diagnostic log callback (listener start/stop, refused requests, forward failures, drops). Whatever it throws
-    /// is ignored, so one bound to a test's output that has ended changes nothing the tap does.
+    /// Optional diagnostic log callback (listener start/stop, a second listener it could not open, accepts that failed,
+    /// refused requests, forward failures, drops). Whatever it throws is ignored, so one bound to a test's output that has
+    /// ended changes nothing the tap does.
     /// </summary>
     public Action<string>? Log { get; set; }
 

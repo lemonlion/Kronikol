@@ -1,0 +1,93 @@
+diff --git a/src/Kronikol.Extensions.Otlp/OtlpTap.cs b/src/Kronikol.Extensions.Otlp/OtlpTap.cs
+index 0a78b6ba..56bd7cb0 100644
+--- a/src/Kronikol.Extensions.Otlp/OtlpTap.cs
++++ b/src/Kronikol.Extensions.Otlp/OtlpTap.cs
+@@ -260,7 +260,7 @@ private void Bind()
+         foreach (var (address, dualMode) in addresses)
+         {
+             var port = BoundPort == 0 ? _options.ListenPort : BoundPort;
+-            var listener = new TcpListener(address, port);
++            var listener = CreateListener(address, port);
+             try
+             {
+                 if (dualMode)
+@@ -280,6 +280,8 @@ private void Bind()
+         }
+     }
+ 
++    internal Func<IPAddress, int, TcpListener> CreateListener { get; set; } = static (address, port) => new TcpListener(address, port);
++
+     private static (IPAddress Address, bool DualMode)[] BindAddresses(string host)
+     {
+         var address = ResolveBindAddress(host);
+diff --git a/src/Kronikol.Extensions.TcpTap/TapAcceptLoop.cs b/src/Kronikol.Extensions.TcpTap/TapAcceptLoop.cs
+index 39fa8019..6426b504 100644
+--- a/src/Kronikol.Extensions.TcpTap/TapAcceptLoop.cs
++++ b/src/Kronikol.Extensions.TcpTap/TapAcceptLoop.cs
+@@ -50,10 +50,10 @@ internal TapAcceptLoop(Action<string> log, Action<string>? failed = null)
+     internal TimeProvider Clock { get; set; } = TimeProvider.System;
+ 
+     /// <summary>The pause after the first failed accept in a row; each failure after it doubles the pause.</summary>
+-    internal static TimeSpan FirstPause { get; } = TimeSpan.FromMilliseconds(10);
++    internal TimeSpan FirstPause { get; set; } = TimeSpan.FromMilliseconds(10);
+ 
+     /// <summary>The longest pause, which bounds how long a caller queued during an outage waits once its cause clears.</summary>
+-    internal static TimeSpan LongestPause { get; } = TimeSpan.FromSeconds(1);
++    internal TimeSpan LongestPause { get; set; } = TimeSpan.FromSeconds(1);
+ 
+     /// <summary>Accepts that failed while the tap was running.</summary>
+     internal long Failures => Interlocked.Read(ref _failures);
+diff --git a/src/Kronikol.Extensions.TcpTap/TcpTap.cs b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+index 3cb1646b..3542a879 100644
+--- a/src/Kronikol.Extensions.TcpTap/TcpTap.cs
++++ b/src/Kronikol.Extensions.TcpTap/TcpTap.cs
+@@ -220,7 +220,7 @@ public Task StartAsync(CancellationToken cancellationToken = default)
+             _watch = new StallWatch(Clock, DebuggerAttached, line => TryLog($"[{_options.DisplayName}] tcp-tap {line}"));
+ 
+         var address = ResolveBindAddress(_options.ListenHost);
+-        var listener = new TcpListener(address, _options.ListenPort);
++        var listener = CreateListener(address, _options.ListenPort);
+         listener.Start(_options.AcceptBacklog);
+         _listeners.Add(listener);
+         BoundPort = ((IPEndPoint)listener.LocalEndpoint).Port;
+@@ -240,7 +240,7 @@ public Task StartAsync(CancellationToken cancellationToken = default)
+     /// <summary>Listens on <paramref name="address"/> too, on the same port; a failure is logged and skipped, never fatal.</summary>
+     private void AlsoListen(IPAddress address)
+     {
+-        var listener = new TcpListener(address, BoundPort);
++        var listener = CreateListener(address, BoundPort);
+         try
+         {
+             listener.Start(_options.AcceptBacklog);
+@@ -253,6 +253,13 @@ private void AlsoListen(IPAddress address)
+         }
+     }
+ 
++    internal Func<TcpClient> CreateUpstream { get; set; } = static () => new TcpClient { NoDelay = true };
++
++    internal Func<string, CancellationToken, Task<IPAddress[]>> ResolveForward { get; set; } =
++        static (host, ct) => Dns.GetHostAddressesAsync(host, ct);
++
++    internal Func<IPAddress, int, TcpListener> CreateListener { get; set; } = static (address, port) => new TcpListener(address, port);
++
+     private static IPAddress ResolveBindAddress(string host)
+     {
+         if (IPAddress.TryParse(host, out var parsed))
+@@ -283,7 +290,7 @@ private async Task HandleConnectionAsync(TcpClient client, CancellationToken ct)
+         try
+         {
+             client.NoDelay = true;
+-            upstream = new TcpClient { NoDelay = true };
++            upstream = CreateUpstream();
+             var caller = client.Client.RemoteEndPoint as IPEndPoint;
+ 
+             if (!await ConnectUpstreamAsync(upstream, id, caller, ct).ConfigureAwait(false))
+@@ -356,7 +363,7 @@ private async Task<bool> ConnectUpstreamAsync(TcpClient upstream, long id, IPEnd
+         {
+             // IPv4 first: "localhost" is ::1 first on Windows, which takes about 2 s to give up on an address that refuses,
+             // so a server on 127.0.0.1 alone cost every connection 2 s. A server on ::1 alone pays that instead.
+-            var addresses = await Dns.GetHostAddressesAsync(_options.ForwardHost, connectCts.Token).ConfigureAwait(false);
++            var addresses = await ResolveForward(_options.ForwardHost, connectCts.Token).ConfigureAwait(false);
+             await upstream.ConnectAsync(IPv4First(addresses), _options.ForwardPort, connectCts.Token).ConfigureAwait(false);
+             return true;
+         }

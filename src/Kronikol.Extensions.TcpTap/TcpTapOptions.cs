@@ -40,14 +40,17 @@ public class TcpTapOptions
     /// <summary>
     /// Host name or address the listener binds to. Default <c>localhost</c>, which listens on both loopbacks, 127.0.0.1 and
     /// ::1, on the same port: a client that dials <c>localhost</c> may try either first, and on Windows a refused address
-    /// costs about 2 s. An address listens on that address alone.
+    /// costs about 2 s. If something else holds the port on ::1, the tap listens on 127.0.0.1 alone and says so in its log
+    /// and in <see cref="TcpTap.Diagnostics"/>. <c>*</c> or <c>+</c> listens on every interface, IPv4 and IPv6, with one
+    /// dual-mode socket (every IPv4 interface where there is no IPv6). An address listens on that address alone.
     /// </summary>
     public string ListenHost { get; set; } = "localhost";
 
     /// <summary>
     /// Host name or address of the real server the tap forwards to. Default <c>localhost</c>. A name's addresses are tried
     /// IPv4 first, so a server listening on 127.0.0.1 alone is reached at once; one listening on ::1 alone is reached after
-    /// the IPv4 address refuses, which on Windows takes about 2 s.
+    /// the IPv4 address refuses, which on Windows takes about 2 s, so under a <see cref="ConnectTimeout"/> shorter than that
+    /// it is not reached at all. An address is connected to as it is, with no lookup.
     /// </summary>
     public string ForwardHost { get; set; } = "localhost";
 
@@ -70,8 +73,9 @@ public class TcpTapOptions
     public string? Name { get; set; }
 
     /// <summary>
-    /// Optional diagnostic log callback: the listener starting and stopping, accepts that failed, connects to the real server
-    /// that failed or ran past <see cref="ConnectTimeout"/>, connection errors, decoder resets and give-ups, drop counts.
+    /// Optional diagnostic log callback: the listener starting and stopping, a second listener it could not open, accepts
+    /// that failed, connects to the real server that failed or ran past <see cref="ConnectTimeout"/>, connection errors,
+    /// decoder resets and give-ups, drop counts.
     /// Whatever it throws is ignored, so one bound to a test's output that has ended changes nothing the tap does.
     /// </summary>
     public Action<string>? Log { get; set; }
@@ -125,9 +129,18 @@ public class TcpTapOptions
     /// forwarding anything, and is counted (<see cref="TcpTap.UpstreamConnectFailures"/>), logged, raised
     /// (<see cref="CaptureDegradationKind.UpstreamConnectFailed"/>) and reported by <see cref="TcpTap.Diagnostics"/>. On
     /// Windows a refused connect takes about 2 s per address, because Windows sends the SYN again after a reset, so under a
-    /// shorter timeout a refusal arrives as a timeout. Default 5 s.
+    /// shorter timeout a refusal arrives as a timeout. Default 5 s. <see cref="Timeout.InfiniteTimeSpan"/>, or about 24.8 days
+    /// (<see cref="int.MaxValue"/> milliseconds) or more, means no deadline; zero or less is refused at start.
     /// </summary>
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
+
+    /// <summary>The longest deadline a connect takes, as <c>ProxyTap</c>'s: <see cref="int.MaxValue"/> milliseconds.</summary>
+    internal static readonly TimeSpan LongestConnectDeadline = TimeSpan.FromMilliseconds(int.MaxValue);
+
+    // The connect's deadline, or none: InfiniteTimeSpan, or a value the deadline's timer could not be set to, which used to
+    // throw before every connect.
+    internal TimeSpan? ConnectLimit =>
+        ConnectTimeout == Timeout.InfiniteTimeSpan || ConnectTimeout >= LongestConnectDeadline ? null : ConnectTimeout;
 
     /// <summary>How long <see cref="TcpTap.DisposeAsync"/> waits for live connections to finish so their captures land. Default 2 s.</summary>
     public TimeSpan DrainTimeout { get; set; } = TimeSpan.FromSeconds(2);
@@ -163,7 +176,7 @@ public class TcpTapOptions
     /// segments, a connection closed mid-message or reaped, a connection the tap could not forward, an accept that
     /// failed — so a host can flag the tap before the report is generated. The same facts are available afterwards as
     /// counters and through <see cref="TcpTap.Diagnostics"/>. Invoked on the task where the event happens: the decoder's
-    /// for decoding events, a byte pump's for dropped segments (reported at most once per connection per minute), a
+    /// for decoding events (the connection's own when <see cref="DecoderFactory"/> fails), a byte pump's for dropped segments (reported at most once per connection per minute), a
     /// thread-pool thread for a reaped connection, the connection's own for a failed connect and the accept loop's for a
     /// failed accept, so keep it quick. An exception it throws is caught and logged. Default null.
     /// </summary>
@@ -248,6 +261,9 @@ public class TcpTapOptions
             throw new ArgumentException("ListenHost is required.", nameof(ListenHost));
         if (string.IsNullOrWhiteSpace(ForwardHost))
             throw new ArgumentException("ForwardHost is required.", nameof(ForwardHost));
+        // A negative deadline throws where it is set, before every connect, so no connection would ever be forwarded.
+        if (ConnectTimeout <= TimeSpan.Zero && ConnectTimeout != Timeout.InfiniteTimeSpan)
+            throw new ArgumentOutOfRangeException(nameof(ConnectTimeout), "ConnectTimeout must be positive, or Timeout.InfiniteTimeSpan for none.");
         if (string.IsNullOrWhiteSpace(CallerName))
             throw new ArgumentException("CallerName is required.", nameof(CallerName));
         if (string.IsNullOrWhiteSpace(ServiceName))

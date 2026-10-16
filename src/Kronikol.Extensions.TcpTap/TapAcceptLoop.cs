@@ -49,11 +49,11 @@ internal sealed class TapAcceptLoop
     /// <summary>The clock the log's once-a-minute rule and the times in its lines read.</summary>
     internal TimeProvider Clock { get; set; } = TimeProvider.System;
 
-    /// <summary>The pause after the first failed accept in a row; each failure after it doubles the pause.</summary>
-    internal static TimeSpan FirstPause { get; } = TimeSpan.FromMilliseconds(10);
+    /// <summary>The pause after the first failed accept in a row; each failure after it doubles the pause. A fact lengthens it.</summary>
+    internal TimeSpan FirstPause { get; set; } = TimeSpan.FromMilliseconds(10);
 
-    /// <summary>The longest pause, which bounds how long a caller queued during an outage waits once its cause clears.</summary>
-    internal static TimeSpan LongestPause { get; } = TimeSpan.FromSeconds(1);
+    /// <summary>The longest pause, which bounds how long a caller queued during an outage waits once its cause clears. A fact lengthens it.</summary>
+    internal TimeSpan LongestPause { get; set; } = TimeSpan.FromSeconds(1);
 
     /// <summary>Accepts that failed while the tap was running.</summary>
     internal long Failures => Interlocked.Read(ref _failures);
@@ -64,21 +64,25 @@ internal sealed class TapAcceptLoop
         var failures = Failures;
         if (failures == 0)
             return null;
+        // The first failure's time and cause are written before it is counted, so a count is never read without them.
         var first = new DateTimeOffset(Interlocked.Read(ref _firstFailureAtTicks), TimeSpan.Zero);
+        var cause = Volatile.Read(ref _firstFailure) is { } described ? $" ({described})" : "";
         return string.Create(CultureInfo.InvariantCulture,
-            $"{tapName}: {failures:N0} accept(s) failed, the first at {first:HH:mm:ss}Z ({Volatile.Read(ref _firstFailure)}); the tap kept listening and tried again, so callers that arrived meanwhile waited in the listen queue, or found it full");
+            $"{tapName}: {failures:N0} accept(s) failed, the first at {first:HH:mm:ss}Z{cause}; the tap kept listening and tried again, so callers that arrived meanwhile waited in the listen queue, or found it full");
     }
 
     /// <summary>
     /// Accepts callers on <paramref name="listener"/> and hands each to <paramref name="accepted"/> until
-    /// <paramref name="ct"/> is cancelled. Nothing it logs can throw: <c>log</c> is the tap's guarded writer.
+    /// <paramref name="ct"/> is cancelled. Nothing it logs can throw: <c>log</c> is the tap's guarded writer, and the
+    /// listener's address is read once, while it is open.
     /// </summary>
     internal async Task RunAsync(TcpListener listener, Action<TcpClient> accepted, CancellationToken ct)
     {
+        var endpoint = Endpoint(listener);
         var pause = FirstPause;
         long failuresInARow = 0;
         var firstInARow = default(DateTimeOffset);
-        var lastReported = default(DateTimeOffset);
+        long lastReportedAt = 0;
 
         while (!ct.IsCancellationRequested)
         {
@@ -91,33 +95,35 @@ internal sealed class TapAcceptLoop
             {
                 return; // the tap is stopping
             }
-            catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException)
+            catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException || IsClosed(listener))
             {
-                // Nothing in Kronikol closes a listener while its tap runs, so this is never passed over in silence.
-                _log($"stopped accepting on {Endpoint(listener)}: its listening socket was closed ({Describe(ex)}); callers that dial it are no longer served");
+                // Nothing in Kronikol closes a listener while its tap runs, so this is never passed over in silence. A
+                // listener closed under a pending accept fails that accept first (OperationAborted), which is not a failed
+                // accept to count.
+                _log($"stopped accepting on {endpoint}: its listening socket was closed ({Describe(ex)}); callers that dial it are no longer served");
                 return;
             }
             catch (Exception ex)
             {
                 var now = Clock.GetUtcNow();
-                if (Interlocked.Increment(ref _failures) == 1)
-                {
+                var nowStamp = Clock.GetTimestamp();
+                if (Interlocked.CompareExchange(ref _firstFailureAtTicks, now.UtcTicks, 0) == 0)
                     Volatile.Write(ref _firstFailure, Describe(ex));
-                    Interlocked.Exchange(ref _firstFailureAtTicks, now.UtcTicks);
-                }
+                Interlocked.Increment(ref _failures);
 
                 if (++failuresInARow == 1)
                 {
                     firstInARow = now;
-                    lastReported = now;
+                    lastReportedAt = nowStamp;
                     ReportFailure(string.Create(CultureInfo.InvariantCulture,
-                        $"accept on {Endpoint(listener)} failed ({Describe(ex)}); still listening, and trying again with pauses of up to {LongestPause.TotalSeconds:0} s"));
+                        $"accept on {endpoint} failed ({Describe(ex)}); still listening, and trying again with pauses of up to {LongestPause.TotalSeconds:0} s"));
                 }
-                else if (now - lastReported >= ReportInterval)
+                else if (Clock.GetElapsedTime(lastReportedAt, nowStamp) >= ReportInterval)
                 {
-                    lastReported = now;
+                    // Timed on the monotonic clock: a wall clock set back would otherwise mute the line for as long.
+                    lastReportedAt = nowStamp;
                     ReportFailure(string.Create(CultureInfo.InvariantCulture,
-                        $"accept on {Endpoint(listener)} still failing: {failuresInARow:N0} failed accept(s) since {firstInARow:HH:mm:ss}Z, the last {Describe(ex)}"));
+                        $"accept on {endpoint} still failing: {failuresInARow:N0} failed accept(s) since {firstInARow:HH:mm:ss}Z, the last {Describe(ex)}"));
                 }
 
                 try
@@ -136,7 +142,7 @@ internal sealed class TapAcceptLoop
             if (failuresInARow > 0)
             {
                 _log(string.Create(CultureInfo.InvariantCulture,
-                    $"accepting again on {Endpoint(listener)} after {failuresInARow:N0} failed accept(s) since {firstInARow:HH:mm:ss}Z"));
+                    $"accepting again on {endpoint} after {failuresInARow:N0} failed accept(s) since {firstInARow:HH:mm:ss}Z"));
                 failuresInARow = 0;
                 pause = FirstPause;
             }
@@ -151,7 +157,35 @@ internal sealed class TapAcceptLoop
         _failed?.Invoke(line);
     }
 
-    private static string Endpoint(TcpListener listener) => listener.LocalEndpoint.ToString() ?? "its listener";
+    private static string Endpoint(TcpListener listener)
+    {
+        try
+        {
+            return listener.LocalEndpoint.ToString() ?? "its listener";
+        }
+        catch (ObjectDisposedException)
+        {
+            return "its listener";
+        }
+    }
+
+    // Whether the listener has been stopped: a stopped TcpListener refuses Pending().
+    private static bool IsClosed(TcpListener listener)
+    {
+        try
+        {
+            listener.Pending();
+            return false;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ObjectDisposedException)
+        {
+            return true;
+        }
+        catch (SocketException)
+        {
+            return false;
+        }
+    }
 
     /// <summary>An exception as the taps' lines name it: its type, a socket error's code, and its message.</summary>
     internal static string Describe(Exception ex) => ex is SocketException socket

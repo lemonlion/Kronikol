@@ -13,7 +13,7 @@ public enum CaptureDegradationKind
     /// <summary>The decoder lost its place (undecoded-bytes cap, pending-queue overflow, a protocol error after a healthy start) and was reset; it re-arms at the next command boundary. The first interaction after it is stamped <c>[resynchronised — pairing uncertain]</c>.</summary>
     DecoderReset,
 
-    /// <summary>The decoder gave up on a connection for good (the bytes are not the protocol, or resync is off / failed repeatedly); nothing on that connection is recorded from then on.</summary>
+    /// <summary>The decoder gave up on a connection for good (the bytes are not the protocol, or resync is off / failed repeatedly), or the connection never had one (<see cref="TcpTapOptions.DecoderFactory"/> threw or returned null); nothing on that connection is recorded from then on, and it keeps forwarding.</summary>
     DecodingDisabled,
 
     /// <summary>The decode queue of a connection was full and a segment was dropped (reported at most once per connection per minute); interactions on it may be missing or mis-paired.</summary>
@@ -44,7 +44,7 @@ public enum CaptureDegradationKind
     /// Accepting a caller failed; on Linux, a process out of file descriptors is one cause. The tap keeps listening and
     /// tries again, pausing up to a second between tries, so callers that arrive meanwhile wait in the listen queue, or find
     /// it full. Tap-wide (<see cref="CaptureDegradation.ConnectionId"/> 0), raised with the first failure in a row and then
-    /// at most once a minute while they go on.
+    /// at most once a minute while they go on, for each listening socket: a tap on <c>localhost</c> has two.
     /// </summary>
     AcceptFailed,
 }
@@ -61,5 +61,6 @@ public enum CaptureDegradationKind
 public sealed record CaptureDegradation(string Tap, long ConnectionId, CaptureDegradationKind Kind, string Detail)
 {
     /// <inheritdoc />
-    public override string ToString() => $"[{Tap}] connection {ConnectionId}: {Kind} — {Detail}";
+    public override string ToString() =>
+        $"[{Tap}] {(ConnectionId == 0 ? "tap-wide" : $"connection {ConnectionId}")}: {Kind} — {Detail}";
 }

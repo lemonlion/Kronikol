@@ -47,9 +47,12 @@ public class TcpTap : IAsyncDisposable
 
     private readonly TcpTapOptions _options;
     private readonly List<TcpListener> _listeners = [];
+    private readonly object _lifecycle = new();
     private CancellationTokenSource? _cts;
     private Task? _loop;
     private int _disposed;
+    private bool _started;
+    private string? _alsoListenTaken;
     private int _live;
     private long _connections;
     private long _interactions;
@@ -211,53 +214,120 @@ public class TcpTap : IAsyncDisposable
     /// <summary>Bytes forwarded (both directions) since the last recorded interaction — the stall detector's input.</summary>
     public long BytesSinceLastInteraction => Interlocked.Read(ref _bytesSinceLastInteraction);
 
-    /// <summary>Starts listening. Throws if the options are invalid or the port cannot be bound.</summary>
+    /// <summary>
+    /// Starts listening. Throws if the options are invalid or the port cannot be bound, and a start that throws can be tried
+    /// again. A tap starts once: a second start throws <see cref="InvalidOperationException"/>, and a start after
+    /// <see cref="DisposeAsync"/> throws <see cref="ObjectDisposedException"/>.
+    /// </summary>
+    /// <param name="cancellationToken">
+    /// Aborts a start that has not begun. Once the tap has started it has no effect: <see cref="DisposeAsync"/> stops the tap.
+    /// </param>
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed == 1, this);
-        _options.Validate();
-        if (_options.HalfClosedLimit is not null || _options.StalledWriteLimit is not null || _options.ReapStuckConnectionsAfter is not null)
-            _watch = new StallWatch(Clock, DebuggerAttached, line => TryLog($"[{_options.DisplayName}] tcp-tap {line}"));
+        // One lock over the start and the stop's first step, so a stop that arrives mid-start waits for it and then stops
+        // what it bound, and a start after the stop binds nothing.
+        lock (_lifecycle)
+        {
+            ObjectDisposedException.ThrowIf(_disposed == 1, this);
+            if (_started)
+                throw new InvalidOperationException("This tap has already been started; a tap starts once and stops when it is disposed.");
+            cancellationToken.ThrowIfCancellationRequested();
+            _options.Validate();
+            // Only the first listener's bind can throw, before anything is bound, so a start that throws can be tried again.
+            Listen();
 
-        var address = ResolveBindAddress(_options.ListenHost);
-        var listener = new TcpListener(address, _options.ListenPort);
+            if (_options.HalfClosedLimit is not null || _options.StalledWriteLimit is not null || _options.ReapStuckConnectionsAfter is not null)
+                _watch = new StallWatch(Clock, DebuggerAttached, line => TryLog($"[{_options.DisplayName}] tcp-tap {line}"));
+
+            // The tap's own lifetime. The token given to StartAsync governs the start alone, as IHostedService's does: linked
+            // to it, a token cancelled after the start ended the accept loops and left the listeners open, so callers
+            // connected and were never served.
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
+            _loop = Task.WhenAll(_listeners.Select(l => Task.Run(() => AcceptLoopAsync(l, token), CancellationToken.None)));
+            _started = true;
+        }
+
+        TryLog($"[{_options.DisplayName}] tcp-tap listening on {HostAndPort(_options.ListenHost, BoundPort)} → {ForwardTarget}");
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Binds the listening sockets for <see cref="TcpTapOptions.ListenHost"/>.</summary>
+    private void Listen()
+    {
+        var host = _options.ListenHost;
+
+        // Every interface: one dual-mode IPv6 socket serves IPv4 callers too, as OtlpTap's does. On IPv4 alone, a client
+        // that dialled "localhost" on Windows tried ::1 first and waited about 2 s for its refusal on every connect.
+        if (host is "*" or "+" && Socket.OSSupportsIPv6)
+        {
+            TcpListener? dual = null;
+            try
+            {
+                dual = CreateListener(IPAddress.IPv6Any, _options.ListenPort);
+                dual.Server.DualMode = true;
+                dual.Start(_options.AcceptBacklog);
+                Listening(dual);
+                return;
+            }
+            catch (Exception ex) when (ex is SocketException { SocketErrorCode: not SocketError.AddressAlreadyInUse } or NotSupportedException)
+            {
+                dual?.Stop(); // no IPv6 here after all: every IPv4 interface, as before
+            }
+        }
+
+        var listener = CreateListener(ResolveBindAddress(host), _options.ListenPort);
         listener.Start(_options.AcceptBacklog);
-        _listeners.Add(listener);
-        BoundPort = ((IPEndPoint)listener.LocalEndpoint).Port;
+        Listening(listener);
 
         // "localhost" is two addresses, and Windows tries ::1 first and takes about 2 s to give up on one that refuses: a
         // client that dialled the tap by name paid that on every connect while the tap listened on 127.0.0.1 alone.
-        if (_options.ListenHost.Equals("localhost", StringComparison.OrdinalIgnoreCase) && Socket.OSSupportsIPv6)
+        if (IsLocalhost(host) && Socket.OSSupportsIPv6)
             AlsoListen(IPAddress.IPv6Loopback);
+    }
 
-        _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var token = _cts.Token;
-        _loop = Task.WhenAll(_listeners.Select(l => Task.Run(() => AcceptLoopAsync(l, token), CancellationToken.None)));
-        TryLog($"[{_options.DisplayName}] tcp-tap listening on {_options.ListenHost}:{BoundPort} → {_options.ForwardHost}:{_options.ForwardPort}");
-        return Task.CompletedTask;
+    private void Listening(TcpListener listener)
+    {
+        _listeners.Add(listener);
+        if (BoundPort == 0)
+            BoundPort = ((IPEndPoint)listener.LocalEndpoint).Port;
     }
 
     /// <summary>Listens on <paramref name="address"/> too, on the same port; a failure is logged and skipped, never fatal.</summary>
     private void AlsoListen(IPAddress address)
     {
-        var listener = new TcpListener(address, BoundPort);
+        var endpoint = new IPEndPoint(address, BoundPort);
+        TcpListener? listener = null;
         try
         {
+            listener = CreateListener(address, BoundPort);
             listener.Start(_options.AcceptBacklog);
-            _listeners.Add(listener);
+            Listening(listener);
         }
         catch (Exception ex) when (ex is SocketException or NotSupportedException)
         {
-            listener.Stop();
-            TryLog($"[{_options.DisplayName}] tcp-tap could not also listen on {new IPEndPoint(address, BoundPort)} ({ex.Message}); a client that dials {_options.ListenHost} may try it first and wait for the refusal");
+            listener?.Stop();
+            if (ex is SocketException { SocketErrorCode: SocketError.AddressAlreadyInUse })
+            {
+                // Something else holds the port there, and a client that tries that address first reaches it, not the tap.
+                Volatile.Write(ref _alsoListenTaken, endpoint.ToString());
+                TryLog($"[{_options.DisplayName}] tcp-tap could not also listen on {endpoint}, which something else holds ({ex.Message}); a client that dials {_options.ListenHost} and tries {address} first may reach it instead of the tap, and its calls are then missing");
+            }
+            else
+            {
+                TryLog($"[{_options.DisplayName}] tcp-tap could not also listen on {endpoint} ({ex.Message}); a client that dials {_options.ListenHost} reaches the tap over {IPAddress.Loopback} alone");
+            }
         }
     }
+
+    private static bool IsLocalhost(string host) =>
+        host.Equals("localhost", StringComparison.OrdinalIgnoreCase) || host.Equals("localhost.", StringComparison.OrdinalIgnoreCase);
 
     private static IPAddress ResolveBindAddress(string host)
     {
         if (IPAddress.TryParse(host, out var parsed))
             return parsed;
-        if (host.Equals("localhost", StringComparison.OrdinalIgnoreCase))
+        if (IsLocalhost(host))
             return IPAddress.Loopback;
         if (host is "*" or "+")
             return IPAddress.Any;
@@ -266,6 +336,9 @@ public class TcpTap : IAsyncDisposable
                ?? addresses.FirstOrDefault()
                ?? IPAddress.Loopback;
     }
+
+    // Makes a listening socket (Kronikol.Tests.TcpTap): a fact makes the second one fail as a process out of descriptors does.
+    internal Func<IPAddress, int, TcpListener> CreateListener { get; set; } = static (address, port) => new TcpListener(address, port);
 
     private Task AcceptLoopAsync(TcpListener listener, CancellationToken ct) =>
         Accepting.RunAsync(listener, client =>
@@ -283,10 +356,10 @@ public class TcpTap : IAsyncDisposable
         try
         {
             client.NoDelay = true;
-            upstream = new TcpClient { NoDelay = true };
             var caller = client.Client.RemoteEndPoint as IPEndPoint;
 
-            if (!await ConnectUpstreamAsync(upstream, id, caller, ct).ConfigureAwait(false))
+            upstream = await ConnectUpstreamAsync(id, caller, ct).ConfigureAwait(false);
+            if (upstream is null)
                 return;
 
             var context = new TcpTapConnectionContext(this, id, caller);
@@ -346,41 +419,59 @@ public class TcpTap : IAsyncDisposable
     /// type: a connect that ran past <see cref="TcpTapOptions.ConnectTimeout"/> and one cut short because the tap is
     /// stopping throw the same <see cref="OperationCanceledException"/> (plans/TCPTAP_FAILED_CONNECT_PLAN.md §2.3). The
     /// tap stopping is nobody's failure; a timeout and any other failure are counted, logged, raised and reported.
-    /// Returns whether the connect succeeded.
+    /// Returns the connected upstream, or null when the connect did not succeed.
     /// </summary>
-    private async Task<bool> ConnectUpstreamAsync(TcpClient upstream, long id, IPEndPoint? caller, CancellationToken ct)
+    private async Task<TcpClient?> ConnectUpstreamAsync(long id, IPEndPoint? caller, CancellationToken ct)
     {
         using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        connectCts.CancelAfter(_options.ConnectTimeout);
+        if (_options.ConnectLimit is { } deadline)
+            connectCts.CancelAfter(deadline);
+        TcpClient? upstream = null;
         try
         {
+            // Inside the counted path: with the process out of file descriptors the accept can take the last one, and
+            // the upstream's socket then cannot be made.
+            upstream = CreateUpstream();
             // IPv4 first: "localhost" is ::1 first on Windows, which takes about 2 s to give up on an address that refuses,
-            // so a server on 127.0.0.1 alone cost every connection 2 s. A server on ::1 alone pays that instead.
-            var addresses = await Dns.GetHostAddressesAsync(_options.ForwardHost, connectCts.Token).ConfigureAwait(false);
+            // so a server on 127.0.0.1 alone cost every connection 2 s. A server on ::1 alone pays that instead. An address
+            // is connected to as it is, with no lookup, which would refuse 0.0.0.0 and ::.
+            var addresses = IPAddress.TryParse(_options.ForwardHost, out var literal)
+                ? [literal]
+                : await ResolveForward(_options.ForwardHost, connectCts.Token).ConfigureAwait(false);
             await upstream.ConnectAsync(IPv4First(addresses), _options.ForwardPort, connectCts.Token).ConfigureAwait(false);
-            return true;
+            return upstream;
         }
         catch (Exception) when (ct.IsCancellationRequested)
         {
-            return false; // the tap is stopping: not the upstream's doing
+            upstream?.Dispose();
+            return null; // the tap is stopping: not the upstream's doing
         }
         catch (OperationCanceledException) when (connectCts.IsCancellationRequested)
         {
+            upstream?.Dispose();
             CountConnectFailure(id, caller, exception: null);
-            return false;
+            return null;
         }
         catch (Exception ex)
         {
+            upstream?.Dispose();
             CountConnectFailure(id, caller, ex);
-            return false;
+            return null;
         }
     }
+
+    // Makes the upstream's client (Kronikol.Tests.TcpTap): a fact makes it fail as a process out of descriptors does.
+    internal Func<TcpClient> CreateUpstream { get; set; } = static () => new TcpClient { NoDelay = true };
+
+    // Resolves ForwardHost's name (Kronikol.Tests.TcpTap): a fact puts ::1 first on every platform, as Windows does.
+    internal Func<string, CancellationToken, Task<IPAddress[]>> ResolveForward { get; set; } =
+        static (host, ct) => Dns.GetHostAddressesAsync(host, ct);
 
     /// <summary>A connect to the real server that failed (<paramref name="exception"/>) or ran out of time (null).</summary>
     private void CountConnectFailure(long id, IPEndPoint? caller, Exception? exception)
     {
         // Counted before anything is logged or raised: a callback that throws can lose neither the count nor the pair.
-        Interlocked.CompareExchange(ref _firstConnectFailureAtTicks, DateTimeOffset.UtcNow.UtcTicks, 0);
+        Interlocked.CompareExchange(ref _firstConnectFailureAtTicks, Clock.GetUtcNow().UtcTicks, 0);
         if (exception is null)
         {
             Interlocked.Increment(ref _connectsTimedOut);
@@ -405,9 +496,13 @@ public class TcpTap : IAsyncDisposable
         .. addresses.Where(a => a.AddressFamily != AddressFamily.InterNetwork),
     ];
 
-    private string ForwardTarget => _options.ForwardHost.Contains(':', StringComparison.Ordinal)
-        ? $"[{_options.ForwardHost}]:{_options.ForwardPort}"
-        : $"{_options.ForwardHost}:{_options.ForwardPort}";
+    private string ForwardTarget => HostAndPort(_options.ForwardHost, _options.ForwardPort);
+
+    /// <summary>A host and port as the tap's lines name them: an address as its endpoint prints (IPv6 in brackets, once).</summary>
+    internal static string HostAndPort(string host, int port) =>
+        IPAddress.TryParse(host, out var address)
+            ? new IPEndPoint(address, port).ToString()
+            : string.Create(CultureInfo.InvariantCulture, $"{host}:{port}");
 
     /// <summary>
     /// The <see cref="Diagnostics"/> line for connections the tap could not forward. A cause whose count is zero is left
@@ -428,21 +523,31 @@ public class TcpTap : IAsyncDisposable
     }
 
     /// <summary>
-    /// Builds the connection's decoder. A factory that throws is user code whenever a host tees its own protocol, and it
-    /// costs the connection its decoding, never its forwarding: counted and reported as decoding disabled, and null.
+    /// Builds the connection's decoder. A factory is user code whenever a host tees its own protocol, and one that throws
+    /// or returns no decoder costs the connection its decoding, never its forwarding: counted and reported as decoding
+    /// disabled, and null.
     /// </summary>
     private IProtocolDecoder? CreateDecoder(TcpTapConnectionContext context)
     {
+        IProtocolDecoder? decoder;
         try
         {
-            return _options.DecoderFactory!(context);
+            decoder = _options.DecoderFactory!(context);
         }
         catch (Exception ex)
         {
             Interlocked.Increment(ref _decodeErrors);
-            DisableDecoding(context.ConnectionId, ex, "the decoder factory threw");
+            DisableDecoding(context.ConnectionId, $"{ex.GetType().Name}: {ex.Message}", "the decoder factory threw");
             return null;
         }
+
+        if (decoder is null)
+        {
+            Interlocked.Increment(ref _decodeErrors);
+            DisableDecoding(context.ConnectionId, "DecoderFactory returned null", "the decoder factory returned no decoder");
+        }
+
+        return decoder;
     }
 
     /// <summary>
@@ -696,10 +801,12 @@ public class TcpTap : IAsyncDisposable
         }
     }
 
-    private void DisableDecoding(long connectionId, Exception ex, string what)
+    private void DisableDecoding(long connectionId, Exception ex, string what) =>
+        DisableDecoding(connectionId, $"{ex.GetType().Name}: {ex.Message}", what);
+
+    private void DisableDecoding(long connectionId, string detail, string what)
     {
         Interlocked.Increment(ref _decodingDisabledConnections);
-        var detail = $"{ex.GetType().Name}: {ex.Message}";
         var now = DateTimeOffset.UtcNow;
         Interlocked.CompareExchange(ref _firstDisabledAtTicks, now.UtcTicks, 0);
         Volatile.Write(ref _lastDisabledReason, detail);
@@ -748,10 +855,12 @@ public class TcpTap : IAsyncDisposable
 
     /// <summary>
     /// Capture health as report diagnostics: one <see cref="DiagnosticKind.CaptureDegraded"/> entry per non-zero
-    /// counter — accepts that failed, connections that could not be forwarded because the connect to the real server failed or
-    /// ran past <see cref="TcpTapOptions.ConnectTimeout"/>, connections whose decoding was disabled (and since when), oversize payloads streamed past, decoder
-    /// resets, dropped segments, connections closed mid-message — plus a heuristic "decoding may have stalled" entry
-    /// when bytes keep flowing without an interaction being recorded (<see cref="TcpTapOptions.DecodingStallBytes"/>).
+    /// counter — accepts that failed, a <c>localhost</c> port that something else holds on ::1, connections that could not
+    /// be forwarded because the connect to the real server failed or ran past <see cref="TcpTapOptions.ConnectTimeout"/>,
+    /// connections whose decoding was disabled (and since when), oversize payloads streamed past, decoder resets, dropped
+    /// segments, connections closed mid-message, stuck connections reaped, pairs closed after a half-close went silent or a
+    /// write stalled — plus a heuristic "decoding may have stalled" entry when bytes keep flowing without an interaction
+    /// being recorded (<see cref="TcpTapOptions.DecodingStallBytes"/>).
     /// Empty when capture was complete. A host hands the list to <c>IngestRequest.HostDiagnostics</c> so it appears
     /// in <c>IngestResult.Diagnostics</c> and the report.
     /// </summary>
@@ -762,6 +871,10 @@ public class TcpTap : IAsyncDisposable
 
         if (Accepting.DiagnosticLine(name) is { } acceptLine)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded, acceptLine));
+
+        if (Volatile.Read(ref _alsoListenTaken) is { } taken)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: could not also listen on {taken}, which something else holds; a client that dials {_options.ListenHost} and tries that address first may reach it instead of the tap, and its calls are then missing"));
 
         var failedConnects = Interlocked.Read(ref _connectsFailed);
         var timedOutConnects = Interlocked.Read(ref _connectsTimedOut);
@@ -959,8 +1072,12 @@ public class TcpTap : IAsyncDisposable
     /// <summary>Stops listening, briefly drains live connections so their captures land, and releases the socket.</summary>
     public async ValueTask DisposeAsync()
     {
-        if (Interlocked.Exchange(ref _disposed, 1) == 1)
-            return;
+        lock (_lifecycle)
+        {
+            if (_disposed == 1)
+                return;
+            _disposed = 1;
+        }
 
         // The time limits' heartbeat stops first: the stop ends every pair itself from here on.
         _watch?.Dispose();

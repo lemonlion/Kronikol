@@ -4,6 +4,127 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.26.2] - 2026-10-16
+
+**Patch - an audit of #174's three releases (4.20.3, 4.22.0 and 4.22.1) against `plans/TCPTAP_FAILED_CONNECT_PLAN.md`,
+at the owner's ask to make sure nothing was missed from the plan and the implementation had no bugs: a `TcpTap` counts
+every connection it could not forward, a `DecoderFactory` that returns nothing is reported, both taps start once and
+stop once, and the start's token no longer leaves a tap listening without serving anyone.** Bug fixes with no new option
+and no new public member, so the patch part moves (4.26.1 to 4.26.2). Four of them change behaviour, each marked below.
+
+### Fixed
+
+`TcpTap`, the connect to the real server (R2 and R3, 4.22.0 and 4.22.1):
+
+- **A `ConnectTimeout` the deadline's timer could not take closed every connection uncounted.** A negative value other
+  than `Timeout.InfiniteTimeSpan`, or one of about 49.7 days or more, such as `TimeSpan.MaxValue` written for "no
+  limit", made each connection throw where its deadline was set, before the connect, so it left only a "connection N
+  error" line: no count, no event and no `Diagnostics()` line. Zero cut every connect at once. Zero or less, other than
+  `InfiniteTimeSpan`, is now refused at start, and `InfiniteTimeSpan`, or about 24.8 days or more, means no deadline, as
+  `ProxyTap`'s has since 4.22.2. **Behaviour change:** `StartAsync` throws `ArgumentOutOfRangeException` for such a
+  value.
+- **A `DecoderFactory` that returned null lost the connection's capture and said nothing.** Since 4.22.0 the tap took a
+  null decoder for a factory that had thrown and been counted. It is counted as decoding disabled, with its event, log
+  line and `Diagnostics()` line, as a factory that throws is.
+- **A failure to make the upstream's socket was not counted.** With the process out of file descriptors, the case
+  4.20.3 was built for, the accept can take the last one, and the connection was then closed with only a "connection N
+  error" line. It is counted as a failed connect.
+- **An address in `ForwardHost` went through the name lookup** since 4.22.1, which refuses the unspecified addresses
+  (`0.0.0.0`, `::`) that Linux routes to the loopback, so a tap that forwarded to one stopped forwarding there. An
+  address is connected to as it is.
+- **An IPv6 address in `ForwardHost` was named `[[::1]]:6379`** in a failed connect's lines when written in brackets,
+  and bare in the start line; both name it `[::1]:6379`.
+- The first failed connect's time is read from the tap's clock, as its other times are.
+
+`TcpTap` and `OtlpTap`, listening and starting (R1 and R3, 4.20.3 and 4.22.1):
+
+- **`OtlpTap.StartAsync` threw for an IPv6 `ListenHost` (`::1`, `::`) after the tap had started serving.** Its start
+  line read `TracesEndpoint`, whose host was not bracketed, and since 4.20.3 the line was built with no `Log` callback
+  too. `TracesEndpoint` brackets an IPv6 address and shows `::` as `localhost`, as it shows `0.0.0.0`.
+- **A tap on `localhost` whose ::1 port something else held said that a client "may try it first and wait for the
+  refusal".** No refusal comes: a client that tries ::1 first reaches the other socket, and its calls never reach the
+  tap. The log line says so, and `Diagnostics()` now reports it, on both taps.
+- **A ::1 listener that could not be made** (the process out of descriptors) escaped `StartAsync` with the IPv4
+  listener already open and no accept loop on it. It is logged and skipped as one that cannot bind is, on both taps.
+- **A `TcpTap` on `*` or `+` listened on IPv4 alone**, so a client that dialled `localhost` on Windows waited about 2 s
+  for ::1's refusal on every connect. It listens on one dual-mode socket, IPv4 and IPv6, as `OtlpTap` does, or on every
+  IPv4 interface where there is no IPv6. `localhost.` is taken as `localhost`. **Behaviour change:** a tap on `*` or `+`
+  also accepts IPv6 callers.
+- **Neither tap guarded its start or its stop.** A second `StartAsync` bound a second set of listeners (`TcpTap`) or ran
+  a second set of accept loops over the first (`OtlpTap`), an `OtlpTap` started after `DisposeAsync` served with no way
+  left to stop it, and a start that raced a stop could leave a disposed tap answering, or fail one of the two with
+  `InvalidOperationException`. A tap now starts once: a second start throws `InvalidOperationException`, a start after
+  the stop throws `ObjectDisposedException`, and a stop waits for a start under way. **Behaviour change** for code that
+  started a tap twice.
+- **The token given to `StartAsync` was the tap's lifetime.** Cancelling it after the start ended the accept loops and
+  left the listeners open, so callers connected and were never served, the state 4.20.3 set out to remove. It governs
+  the start alone, as `IHostedService.StartAsync`'s does: a start whose token is already cancelled throws
+  `OperationCanceledException` and binds nothing, and once the tap has started only `DisposeAsync` stops it. **Behaviour
+  change** for code that cancelled the token to stop a tap. The hosted services pass the host's start token, so they
+  behave as before.
+
+The accept loop both taps share (R1, 4.20.3):
+
+- **A listener stopped under a pending accept was counted as a failed accept**, raised as `AcceptFailed` and named with
+  port 0, before the next accept said the listener had stopped. Reading a disposed listener's address in the failure
+  path could also end the loop with no line at all. The loop reads its listener's address once and takes such a failure
+  for the listener closing.
+- **The once-a-minute "still failing" line, and its `AcceptFailed` event, were timed on the wall clock**, so a clock set
+  back muted them for as long. They are timed on the monotonic clock.
+- `Diagnostics()` could read a failed accept's count before its first time and cause were written, and print "the first
+  at 00:00:00Z ()". They are written first.
+- A tap-wide `CaptureDegradation` (`AcceptFailed`) printed as "connection 0"; it prints as "tap-wide".
+
+Doc comments (they ship in the packages): `CaptureDegradationKind.DecodingDisabled` (a factory that throws or returns
+null) and `AcceptFailed` (once a minute for each listening socket), `TcpTapOptions.OnCaptureDegraded` (the factory's
+event comes from the connection's task), `ForwardHost` (a server on ::1 alone is not reached under a `ConnectTimeout`
+shorter than Windows' 2 s), `ConnectTimeout`, `ListenHost` and `Log`, `TcpTap.Diagnostics()` (every line it can give),
+`OtlpTapOptions.ListenHost` (`localhost` and `127.0.0.1` take both loopbacks) and `Log`, and both taps' `StartAsync`.
+
+### Tests
+
+- `TcpTapConnectFailureTests`: the `ConnectTimeout` range (refused at start, and no deadline past the timer's reach), a
+  factory's null decoder, an upstream socket that cannot be made, an address connected to with no lookup, a lookup that
+  never answers running out of `ConnectTimeout`, `0.0.0.0` forwarded to the loopback where the system routes it there
+  (Linux), and a tap-wide event's text. The stopping fact now proves its connect was still pending, and the fact for the
+  first failure's time reads the tap's clock.
+- `TcpTapLocalhostTests`: `localhost.`, a taken ::1 port's line and `Diagnostics()` entry, a ::1 listener that cannot be
+  made, `*` and `+` on both loopbacks, a name's IPv4 addresses tried first on every platform, and an IPv6 forward
+  address named in brackets once. The order fact goes through a resolver seam: §5's L2, which needs Windows' ::1-first
+  resolver, was the only fact that caught the forward connecting by name, and only on Windows. The ::1 forward fact
+  holds 127.0.0.1 closed on its port.
+- `TcpTapLifecycleTests` and `OtlpTapLifecycleTests` (new): a second start, a start after the stop, the start's token
+  cancelled after the start or before it, a start that fails and is tried again, and a start racing the stop, over 200
+  rounds.
+- `TcpTapAcceptTests`: the once-a-minute pace after the wall clock is set back, the event's pace, the first failure's
+  cause, and a listener stopped under a pending accept. The stopping fact uses a pause of a minute, so a stop that
+  waited for it is told apart from one that did not on any runner (the pause lengths are settable on the loop).
+- `OtlpTapAcceptTests`: an IPv6 `ListenHost`, a taken ::1 port, and a ::1 listener that cannot be made. Both facts that
+  hold a port on ::1 try another when 127.0.0.1 has it.
+- Five facts that left their tap running when they failed dispose it.
+- Proofs (plan harness `audit/`): copied onto 4.26.1 with the seams the facts reach (the upstream socket, the forward's
+  lookup, the listener) wired the old way and the accept loop's pauses settable (`red-stub.py`, `red-stub.diff`), 33
+  cases fail on Windows, each on its own assertion, and every other fact in their classes passes; on Linux the same 33
+  fail, and so does the `0.0.0.0` fact, which skips on Windows, where the system does not route that address to the
+  loopback. 37 of 37 mutations are killed, each by the fact written for it.
+- Checks: after the version bump the core suite passes 7,645 with 2 skipped; the TcpTap suite passes 498 with 5 skipped
+  on Windows (its four Docker-only container facts and the `0.0.0.0` fact) and 498 with 5 skipped on Linux (the
+  container facts and the ::1 forward fact), and the Otlp suite 224 on both; release.slnf builds in Release for every
+  target. The Playwright suite was not run, since nothing a page draws changed. The templates pin 4.26.1 and the history
+  action's VERSION installs Kronikol.Tool 4.26.2.
+
+### Recorded, not changed (the owner's)
+
+- **A server on ::1 alone behind `ForwardHost` `localhost`**, after 4.22.1's IPv4-first forward: on Windows it is
+  reached after about 2 s, and not at all under a `ConnectTimeout` shorter than that, where 4.22.0 reached it in 20 ms;
+  a dead IPv4 address ahead of a live IPv6 one takes the whole deadline. A staggered race (RFC 8305), the IPv6 attempt
+  started about 250 ms after the IPv4 one, would remove both. The docs say so now.
+- **4.22.1's departure from the plan**: the name `localhost` alone takes both loopbacks in `TcpTap`, where `OtlpTap`
+  also does for `127.0.0.1`.
+- **A ::1 port that another socket holds** is logged and reported, and the tap starts; Kestrel fails the start instead.
+- CI's "Remaining Unit Tests" step stops at the first project that fails, so a red project earlier in the list hides
+  these projects' results until a re-run.
+
 ## [4.26.1] - 2026-10-16
 
 **Patch - a `ProxyTap` counts a caller it cuts before it lets the caller go (#173, a fix to R1 of

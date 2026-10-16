@@ -18,6 +18,9 @@ file-based app that names its packages with `#:package`: `dotnet run <file>.cs`,
 | `r2/mutations.py`, `r2/mutations-windows.txt` | R2's mutations and their verdicts |
 | `r3/red-stub.diff`, `r3/red-4.22.0-{windows,linux}.txt` | R3's red proof: R3's facts on 4.22.0 with `IPv4First` stubbed to keep the resolver's order, and their runs. On Windows every fact is red on its own assertion but the two guards (a tap on an address listens there alone; a tap forwarding to `localhost` still reaches a server on ::1 alone); on Linux the timing fact passes, since Linux answers a refused address at once, and the ::1 forward fact skips, since the container's `localhost` names 127.0.0.1 alone |
 | `r3/mutations.py`, `r3/mutations-windows.txt` | R3's mutations and their verdicts |
+| `audit/red-stub.py`, `audit/red-stub.diff`, `audit/red-4.26.1-{windows,linux}.txt` | The audit's red proof (4.26.2): its facts on 4.26.1 with only the seams they name (`CreateUpstream`, `ResolveForward`, `CreateListener`), each doing the work where 4.26.1 does it, and the accept loop's pauses settable, and their runs. Every fact the audit's fixes need is red on its own assertion (33 cases on Windows; on Linux those and the `0.0.0.0` fact, which skips on Windows), and the other facts in their classes pass |
+| `audit/mutations.py`, `audit/mutations-windows.txt` | The audit's mutations and their verdicts (37 of 37 killed, each by the fact written for it) |
+| `audit/suites-linux.txt` | The TcpTap and Otlp suites on the audit's tree, on Linux |
 
 ## Notes on the runs
 

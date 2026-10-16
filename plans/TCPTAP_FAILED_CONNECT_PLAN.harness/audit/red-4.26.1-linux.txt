@@ -1,0 +1,115 @@
+# The audit's facts on 4.26.1 (09369515) + red-stub.py, Ubuntu 24.04 in mcr.microsoft.com/dotnet/sdk:10.0 (podman), .NET 10.0.401, 2026-10-16
+## red-tcp
+  Failed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo 
+   Assert.Contains() Failure: Sub-string not found
+  Failed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost: "localhost.") 
+   Assert.Equal() Failure: Strings differ
+  Passed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost: "LocalHost") 
+  Passed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost: "localhost") 
+  Failed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnEveryInterfaceAnswersOnBothLoopbacks(listenHost: "*") 
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnEveryInterfaceAnswersOnBothLoopbacks(listenHost: "+") 
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnLocalhostWhoseIPv6ListenerCannotBeMadeListensOnIPv4AndSaysSo 
+   System.Net.Sockets.SocketException : Too many open files in system
+  Passed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnAnAddressListensThereAlone 
+  Skipped Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapForwardingToLocalhostStillReachesAnIPv6OnlyServer 
+  Failed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.AnIPv6ForwardAddressIsNamedInBracketsOnce(forwardHost: "[::1]") 
+   Assert.StartsWith() Failure: String start does not match
+  Failed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.AnIPv6ForwardAddressIsNamedInBracketsOnce(forwardHost: "::1") 
+   Assert.Contains() Failure: Sub-string not found
+  Passed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ANamesIPv4AddressesAreTriedFirstWhereverTheTapRuns 
+  Passed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.TheForwardAddressesAreTriedIPv4First 
+  Passed Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapForwardingToLocalhostReachesAnIPv4OnlyServerAtOnce 
+  Passed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AListenerClosedUnderARunningTapIsLoggedAndEndsItsLoop 
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AListenerStoppedUnderAPendingAcceptIsReportedAsClosedNotFailed 
+   Assert.Contains() Failure: Sub-string not found
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ANameWhoseLookupNeverAnswersRunsOutOfConnectTimeout 
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AnAddressIsConnectedToWithNoLookup 
+   Assert.Equal() Failure: Strings differ
+  Passed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AnAcceptThatKeepsFailingIsTriedAtAPace 
+  Passed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AFailingAcceptIsLoggedOnceAMinute 
+  Passed Kronikol.Tests.TcpTap.TcpTapAcceptTests.ALogCallbackThatThrowsDoesNotStopTheAcceptLoop 
+  Passed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AFailedAcceptDoesNotStopTheTap 
+  Failed Kronikol.Tests.TcpTap.TcpTapAcceptTests.AFailingAcceptIsStillLoggedOnceAMinuteAfterTheWallClockIsSetBack 
+   Assert.Single() Failure: The collection was empty
+  Passed Kronikol.Tests.TcpTap.TcpTapAcceptTests.ALogCallbackThatThrowsDoesNotFailStartingOrStopping 
+  Passed Kronikol.Tests.TcpTap.TcpTapAcceptTests.ThePauseDoublesUpToASecondAndStartsAgainAfterAnAccept 
+  Passed Kronikol.Tests.TcpTap.TcpTapAcceptTests.StoppingTheTapWhileItWaitsForACallerCountsNothing 
+  Passed Kronikol.Tests.TcpTap.TcpTapAcceptTests.TheDiagnosticLineNamesTheFirstFailedAcceptsCause 
+  Passed Kronikol.Tests.TcpTap.TcpTapAcceptTests.StoppingTheTapEndsTheAcceptLoopQuietly 
+  Failed Kronikol.Tests.TcpTap.TcpTapLifecycleTests.CancellingTheStartsTokenAfterTheStartLeavesTheTapServing 
+   Assert.Equal() Failure: Strings differ
+  Failed Kronikol.Tests.TcpTap.TcpTapLifecycleTests.AStartRacingTheStopLeavesNothingListening 
+   Assert.All() Failure: 1 out of 1 items in the collection did not pass.
+  Passed Kronikol.Tests.TcpTap.TcpTapLifecycleTests.AStartThatFailsCanBeTriedAgain 
+  Passed Kronikol.Tests.TcpTap.TcpTapLifecycleTests.AStartAfterTheStopIsRefusedAndBindsNothing 
+  Failed Kronikol.Tests.TcpTap.TcpTapLifecycleTests.AStartWhoseTokenIsAlreadyCancelledBindsNothing 
+   Assert.ThrowsAny() Failure: No exception was thrown
+  Failed Kronikol.Tests.TcpTap.TcpTapLifecycleTests.ASecondStartIsRefusedAndTheFirstKeepsServing 
+   Assert.Throws() Failure: No exception was thrown
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AnUpstreamSocketThatCannotBeMadeIsCountedAsAFailedConnect 
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineNamesTheLastFailureAndWhenTheFirstHappened 
+   Assert.Contains() Failure: Sub-string not found
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 9, timedOut: 0, causes: "(9 failed, the last with SocketException Connectio"···) 
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 9, timedOut: 3, causes: "(9 failed, the last with SocketException Connectio"···) 
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheDiagnosticLineLeavesOutAPartWithNothingInIt(failed: 0, timedOut: 3, causes: "(3 got no connection within ConnectTimeout 00:00:0"···) 
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ACaptureDegradedCallbackThatThrowsDoesNotStopTheAcceptLoop 
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AHostNameThatDoesNotResolveIsCountedAsFailed 
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ADecoderFactoryThatReturnsNoDecoderIsCountedAsDecodingDisabled 
+   Assert.Equal() Failure: Values differ
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectTimeoutOfNoneOrPastTheTimersReachMeansNoDeadline(milliseconds: 9223372036854775807) 
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectTimeoutOfNoneOrPastTheTimersReachMeansNoDeadline(milliseconds: 2147483647) 
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectTimeoutOfNoneOrPastTheTimersReachMeansNoDeadline(milliseconds: -1) 
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectTimeoutOfNoneOrPastTheTimersReachMeansNoDeadline(milliseconds: 4294967295) 
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AFailedAcceptIsRaisedAsATapWideEventAndCountedInPublic 
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AnUnspecifiedForwardAddressReachesTheLoopbackWhereTheSystemRoutesIt 
+   Assert.Equal() Failure: Strings differ
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ARefusedConnectIsCountedLoggedRaisedAndReported 
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.TheStopLineNamesFailedConnectsAndFailedAccepts 
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectCutShortByStoppingTheTapIsNotAFailure 
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectTimeoutOfZeroOrLessIsRefusedAtStart(milliseconds: -2) 
+   Assert.Throws() Failure: No exception was thrown
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectTimeoutOfZeroOrLessIsRefusedAtStart(milliseconds: -5000) 
+   Assert.Throws() Failure: No exception was thrown
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectTimeoutOfZeroOrLessIsRefusedAtStart(milliseconds: 0) 
+   Assert.Throws() Failure: No exception was thrown
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ADecoderFactoryThatThrowsForwardsTheConnectionUndecoded 
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.CallbacksThatThrowLoseNeitherTheCountNorTheConnection 
+  Passed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.AConnectThatRunsPastConnectTimeoutIsCountedAsTimedOut 
+  Failed Kronikol.Tests.TcpTap.TcpTapConnectFailureTests.ATapWideEventPrintsAsTapWide 
+   Assert.Equal() Failure: Strings differ
+Total tests: 58
+     Passed: 33
+     Failed: 24
+    Skipped: 1
+## red-otlp
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_tap_on_an_IPv6_address_starts_and_names_an_endpoint_an_exporter_can_dial(listenHost: "::", shownHost: "localhost") 
+   System.UriFormatException : Invalid URI: The hostname could not be parsed.
+  Failed Kronikol.Tests.Otlp.OtlpTapLifecycleTests.A_start_after_the_stop_is_refused_and_binds_nothing 
+   Assert.Throws() Failure: No exception was thrown
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_tap_on_an_IPv6_address_starts_and_names_an_endpoint_an_exporter_can_dial(listenHost: "::1", shownHost: "[::1]") 
+   System.UriFormatException : Invalid URI: The hostname could not be parsed.
+  Passed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_tap_on_an_IPv6_address_starts_and_names_an_endpoint_an_exporter_can_dial(listenHost: "[::1]", shownHost: "[::1]") 
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_tap_on_an_IPv6_address_starts_and_names_an_endpoint_an_exporter_can_dial(listenHost: "::0", shownHost: "localhost") 
+   System.UriFormatException : Invalid URI: The hostname could not be parsed.
+  Passed Kronikol.Tests.Otlp.OtlpTapAcceptTests.Stopping_the_tap_while_it_waits_for_a_caller_counts_nothing 
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_taken_IPv6_port_is_logged_and_reported 
+   Assert.Contains() Failure: Sub-string not found
+  Passed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_fail_starting_or_stopping 
+  Passed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_failed_accept_does_not_stop_the_tap 
+  Passed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_fail_a_start_whose_second_bind_fails 
+  Passed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_log_callback_that_throws_does_not_stop_the_accept_loop 
+  Failed Kronikol.Tests.Otlp.OtlpTapAcceptTests.A_second_listener_that_cannot_be_made_is_logged_and_skipped 
+   System.Net.Sockets.SocketException : Too many open files in system
+  Failed Kronikol.Tests.Otlp.OtlpTapLifecycleTests.Cancelling_the_starts_token_after_the_start_leaves_the_tap_serving 
+   Assert.StartsWith() Failure: String start does not match
+  Failed Kronikol.Tests.Otlp.OtlpTapLifecycleTests.A_start_whose_token_is_already_cancelled_binds_nothing 
+   Assert.ThrowsAny() Failure: No exception was thrown
+  Failed Kronikol.Tests.Otlp.OtlpTapLifecycleTests.A_second_start_is_refused_and_the_first_keeps_serving 
+   Assert.Throws() Failure: No exception was thrown
+  Failed Kronikol.Tests.Otlp.OtlpTapLifecycleTests.A_start_racing_the_stop_leaves_nothing_listening 
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+Total tests: 16
+     Passed: 6
+     Failed: 10

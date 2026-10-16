@@ -1,0 +1,8 @@
+# The audit's tree, the whole TcpTap and Otlp suites, Ubuntu 24.04 in mcr.microsoft.com/dotnet/sdk:10.0 (podman), 2026-10-16
+## audit-tcp: Total tests: 503  Passed: 498  Skipped: 5 
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.MongoDbDriverThroughTheTapRendersLikeTheInProcessExtension 
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.StackExchangeRedisThroughTheTapRendersLikeTheInProcessExtension 
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.WhatMongoDbDriver230PutsOnTheWireOnConnect 
+  Skipped Kronikol.Tests.TcpTap.ContainerEndToEndTests.WhatStackExchangeRedis26PutsOnTheWireOnConnect 
+  Skipped Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapForwardingToLocalhostStillReachesAnIPv6OnlyServer 
+## audit-otlp: Total tests: 224  Passed: 224 

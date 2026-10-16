@@ -260,7 +260,7 @@ public class TcpTapConnectFailureTests
     {
         using var server = await FullBacklog.OpenAsync();
         var run = new Run();
-        var tap = Tap(run, "127.0.0.1", server.Port, o => o.ConnectTimeout = TimeSpan.FromSeconds(30));
+        await using var tap = Tap(run, "127.0.0.1", server.Port, o => o.ConnectTimeout = TimeSpan.FromSeconds(30));
         await tap.StartAsync();
 
         using var caller = await Caller.DialAsync(tap);
@@ -276,7 +276,9 @@ public class TcpTapConnectFailureTests
         Assert.Empty(run.Lines("could not connect"));
         Assert.Empty(run.Lines(" error: "));
         Assert.Empty(tap.Diagnostics());
-        Assert.Equal(0, tap.LiveConnections);
+        // The caller's PING never went anywhere, so the connect was still waiting when the tap stopped.
+        Assert.Equal(0, tap.BytesClientToServer);
+        Assert.True(await Wait.UntilAsync(() => tap.LiveConnections == 0, 5_000), "the connection was not released");
     }
 
     [Theory]
@@ -319,12 +321,40 @@ public class TcpTapConnectFailureTests
         Assert.Contains("(InvalidOperationException: factory failed)", entry.Message);
     }
 
+    /// <summary>
+    /// A factory that returns no decoder costs the connection its decoding as a throwing one does, and says so. Since
+    /// 4.22.0 the tap took a null decoder for a factory that had thrown and been counted, so the connection was forwarded
+    /// undecoded with nothing counted, raised or reported; before that, the null failed in the decode loop and was counted.
+    /// </summary>
+    [Fact]
+    public async Task ADecoderFactoryThatReturnsNoDecoderIsCountedAsDecodingDisabled()
+    {
+        await using var server = new StubServer(_ => Encoding.ASCII.GetBytes(Resp.Simple("PONG")));
+        var run = new Run();
+        await using var tap = Tap(run, "127.0.0.1", server.Port, o => o.DecoderFactory = _ => null!);
+        await tap.StartAsync();
+
+        using var caller = await Caller.DialAsync(tap, pingAtOnce: false);
+        Assert.Equal("+PONG\r\n", await caller.PingAsync());
+        Assert.Equal("+PONG\r\n", await caller.PingAsync());
+
+        Assert.Equal(1, tap.DecodingDisabledConnections);
+        Assert.Equal(1, tap.DecodeErrors);
+        var raised = Assert.Single(run.Raised(CaptureDegradationKind.DecodingDisabled));
+        Assert.Equal(1, raised.ConnectionId);
+        Assert.StartsWith("DecoderFactory returned null", raised.Detail);
+        Assert.Single(run.Lines("tcp-tap the decoder factory returned no decoder on connection 1 (DecoderFactory returned null)"));
+        var entry = Assert.Single(tap.Diagnostics());
+        Assert.Contains("decoding disabled on 1 connection(s)", entry.Message);
+        Assert.Contains("(DecoderFactory returned null)", entry.Message);
+    }
+
     [Fact]
     public async Task TheStopLineNamesFailedConnectsAndFailedAccepts()
     {
         using var refusing = LoopbackPort.Closed();
         var run = new Run();
-        var tap = Tap(run, "127.0.0.1", ((IPEndPoint)refusing.LocalEndPoint!).Port, o => o.ConnectTimeout = TimeSpan.FromSeconds(10));
+        await using var tap = Tap(run, "127.0.0.1", ((IPEndPoint)refusing.LocalEndPoint!).Port, o => o.ConnectTimeout = TimeSpan.FromSeconds(10));
         await tap.StartAsync();
         using (var caller = await Caller.DialAsync(tap))
             await caller.HearAsync();
@@ -374,12 +404,13 @@ public class TcpTapConnectFailureTests
         using var refusing = LoopbackPort.Closed();
         var run = new Run();
         await using var tap = Tap(run, "127.0.0.1", ((IPEndPoint)refusing.LocalEndPoint!).Port, o => o.ConnectTimeout = TimeSpan.FromSeconds(10));
+        var clock = new ManualClock(new DateTimeOffset(2026, 10, 15, 9, 0, 0, TimeSpan.Zero));
+        tap.Clock = clock;
         await tap.StartAsync();
-        var before = DateTimeOffset.UtcNow;
         using (var first = await Caller.DialAsync(tap))
             await first.HearAsync();
         Assert.True(await Wait.UntilAsync(() => tap.UpstreamConnectFailures == 1, 15_000), "the first failed connect was not counted");
-        var after = DateTimeOffset.UtcNow;
+        clock.Advance(TimeSpan.FromMinutes(5));
 
         // The options are read per connection: the next one fails another way.
         tap.Options.ForwardHost = "no-such-host.invalid";
@@ -389,9 +420,7 @@ public class TcpTapConnectFailureTests
 
         var line = Assert.Single(tap.Diagnostics()).Message;
         Assert.Contains("(2 failed, the last with SocketException HostNotFound: ", line);
-        var seconds = Enumerable.Range(0, (int)(after - before).TotalSeconds + 2)
-            .Select(i => before.AddSeconds(i).ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture));
-        Assert.Contains(seconds, s => line.Contains($", the first at {s}Z;", StringComparison.Ordinal));
+        Assert.Contains(", the first at 09:00:00Z;", line, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -415,6 +444,16 @@ public class TcpTapConnectFailureTests
         Assert.StartsWith($"accept on 127.0.0.1:{tap.BoundPort} failed (SocketException TooManyOpenSockets: ", raised.Detail);
     }
 
+    /// <summary>A tap-wide event (<see cref="CaptureDegradationKind.AcceptFailed"/>) does not print as "connection 0".</summary>
+    [Fact]
+    public void ATapWideEventPrintsAsTapWide()
+    {
+        Assert.Equal("[svc→redis] tap-wide: AcceptFailed — accept on 127.0.0.1:6379 failed",
+            new CaptureDegradation("svc→redis", 0, CaptureDegradationKind.AcceptFailed, "accept on 127.0.0.1:6379 failed").ToString());
+        Assert.Equal("[svc→redis] connection 3: UpstreamConnectFailed — could not connect",
+            new CaptureDegradation("svc→redis", 3, CaptureDegradationKind.UpstreamConnectFailed, "could not connect").ToString());
+    }
+
     [Fact]
     public async Task ACaptureDegradedCallbackThatThrowsDoesNotStopTheAcceptLoop()
     {
@@ -434,5 +473,154 @@ public class TcpTapConnectFailureTests
         using var caller = await Caller.DialAsync(tap, pingAtOnce: false);
         Assert.Equal("+PONG\r\n", await caller.PingAsync());
         Assert.Equal(3, tap.AcceptFailures);
+    }
+
+    /// <summary>
+    /// A <see cref="TcpTapOptions.ConnectTimeout"/> of zero or less, other than <see cref="Timeout.InfiniteTimeSpan"/>, is
+    /// refused at start, as <c>ProxyTap</c>'s is. A negative one used to start, and every connection then died where the
+    /// deadline is set, before the connect: none was counted, raised or reported, only a "connection N error" log line
+    /// each. Zero cut every connect at once.
+    /// </summary>
+    [Theory]
+    [InlineData(0L)]
+    [InlineData(-2L)]
+    [InlineData(-5_000L)]
+    public async Task AConnectTimeoutOfZeroOrLessIsRefusedAtStart(long milliseconds)
+    {
+        var run = new Run();
+        await using var tap = Tap(run, "127.0.0.1", 6379, o => o.ConnectTimeout = TimeSpan.FromMilliseconds(milliseconds));
+
+        var refused = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => tap.StartAsync());
+
+        Assert.Equal(nameof(TcpTapOptions.ConnectTimeout), refused.ParamName);
+        Assert.False(tap.IsListening);
+    }
+
+    /// <summary>
+    /// <see cref="Timeout.InfiniteTimeSpan"/>, and any value of about 24.8 days (<see cref="int.MaxValue"/> ms) or more, mean
+    /// no deadline, as for <c>ProxyTap</c>. <see cref="TimeSpan.MaxValue"/> (<c>long.MaxValue</c> here) is what a host writes
+    /// for "no limit", and it and anything past the timer's longest (about 49.7 days) used to kill every connection before
+    /// its connect, uncounted. A refused connect under each is counted as failed, so the connect really ran.
+    /// </summary>
+    [Theory]
+    [InlineData(-1L)]
+    [InlineData(2_147_483_647L)]
+    [InlineData(4_294_967_295L)]
+    [InlineData(long.MaxValue)]
+    public async Task AConnectTimeoutOfNoneOrPastTheTimersReachMeansNoDeadline(long milliseconds)
+    {
+        using var refusing = LoopbackPort.Closed();
+        var port = ((IPEndPoint)refusing.LocalEndPoint!).Port;
+        var timeout = milliseconds == long.MaxValue ? TimeSpan.MaxValue : TimeSpan.FromMilliseconds(milliseconds);
+        var run = new Run();
+        await using var tap = Tap(run, "127.0.0.1", port, o => o.ConnectTimeout = timeout);
+        await tap.StartAsync();
+
+        using var caller = await Caller.DialAsync(tap);
+        await caller.HearAsync();
+
+        Assert.True(await Wait.UntilAsync(() => tap.UpstreamConnectFailures == 1, 15_000), "the refused connect was not counted");
+        Assert.Single(run.Raised(CaptureDegradationKind.UpstreamConnectFailed));
+        Assert.Empty(run.Lines(" error: "));
+    }
+
+    /// <summary>
+    /// The upstream's socket is made inside the counted path. With the process out of file descriptors (the case
+    /// <see cref="TcpTapCore.AcceptFailures"/> was built for) the accept can take the last one, and making the upstream's socket
+    /// then fails; that connection was closed with only a "connection N error" line, counted nowhere.
+    /// </summary>
+    [Fact]
+    public async Task AnUpstreamSocketThatCannotBeMadeIsCountedAsAFailedConnect()
+    {
+        var run = new Run();
+        await using var tap = Tap(run, "127.0.0.1", 6379);
+        tap.CreateUpstream = () => throw new SocketException((int)SocketError.TooManyOpenSockets);
+        await tap.StartAsync();
+
+        using var caller = await Caller.DialAsync(tap);
+        await caller.HearAsync();
+
+        Assert.True(await Wait.UntilAsync(() => tap.UpstreamConnectFailures == 1, 15_000), "the failed connect was not counted");
+        var raised = Assert.Single(run.Raised(CaptureDegradationKind.UpstreamConnectFailed));
+        Assert.StartsWith("could not connect to 127.0.0.1:6379 (SocketException TooManyOpenSockets: ", raised.Detail);
+        Assert.Empty(run.Lines(" error: "));
+        var entry = Assert.Single(tap.Diagnostics());
+        Assert.Contains("the last with SocketException TooManyOpenSockets: ", entry.Message);
+        Assert.True(await Wait.UntilAsync(() => tap.LiveConnections == 0, 5_000), "the connection was not released");
+    }
+
+    /// <summary>
+    /// An address in <see cref="TcpTapOptions.ForwardHost"/> is connected to as it is. Since 4.22.1 every host went through
+    /// the name lookup, which refuses the unspecified addresses (0.0.0.0, ::) that Linux routes to the loopback.
+    /// </summary>
+    [Fact]
+    public async Task AnAddressIsConnectedToWithNoLookup()
+    {
+        await using var server = new StubServer(_ => Encoding.ASCII.GetBytes(Resp.Simple("PONG")));
+        var run = new Run();
+        await using var tap = Tap(run, "127.0.0.1", server.Port);
+        tap.ResolveForward = (_, _) => throw new InvalidOperationException("an address was looked up");
+        await tap.StartAsync();
+
+        using var caller = await Caller.DialAsync(tap, pingAtOnce: false);
+        Assert.Equal("+PONG\r\n", await caller.PingAsync());
+        Assert.Equal(0, tap.UpstreamConnectFailures);
+    }
+
+    /// <summary>
+    /// Where the system routes the unspecified address to the loopback, as Linux does, a tap forwarding to 0.0.0.0 reaches a
+    /// server on 127.0.0.1. Since 4.22.1 the name lookup took the address, refused it as unspecified, and every connection
+    /// was counted as a failed connect. Windows refuses to connect to 0.0.0.0, so there the fact cannot apply.
+    /// </summary>
+    [Fact]
+    public async Task AnUnspecifiedForwardAddressReachesTheLoopbackWhereTheSystemRoutesIt()
+    {
+        await using var server = new StubServer(_ => Encoding.ASCII.GetBytes(Resp.Simple("PONG")));
+        using (var probe = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+        {
+            var routed = true;
+            try
+            {
+                await probe.ConnectAsync(new IPEndPoint(IPAddress.Any, server.Port));
+            }
+            catch (SocketException)
+            {
+                routed = false;
+            }
+
+            Assert.SkipUnless(routed, "this system does not route 0.0.0.0 to the loopback");
+        }
+
+        var run = new Run();
+        await using var tap = Tap(run, "0.0.0.0", server.Port);
+        await tap.StartAsync();
+
+        using var caller = await Caller.DialAsync(tap, pingAtOnce: false);
+        Assert.Equal("+PONG\r\n", await caller.PingAsync());
+        Assert.Equal(0, tap.UpstreamConnectFailures);
+    }
+
+    /// <summary>
+    /// The name's lookup is inside <see cref="TcpTapOptions.ConnectTimeout"/>: a resolver that never answers costs the
+    /// connection its deadline, counted as a timeout, never the tap's lifetime.
+    /// </summary>
+    [Fact]
+    public async Task ANameWhoseLookupNeverAnswersRunsOutOfConnectTimeout()
+    {
+        var run = new Run();
+        await using var tap = Tap(run, "kronikol-tap.invalid", 6379, o => o.ConnectTimeout = TimeSpan.FromMilliseconds(500));
+        tap.ResolveForward = async (_, ct) =>
+        {
+            await Task.Delay(Timeout.Infinite, ct);
+            return [];
+        };
+        await tap.StartAsync();
+
+        using var caller = await Caller.DialAsync(tap);
+        await caller.HearAsync();
+
+        Assert.True(await Wait.UntilAsync(() => tap.UpstreamConnectFailures == 1, 15_000), "the lookup's timeout was not counted");
+        var raised = Assert.Single(run.Raised(CaptureDegradationKind.UpstreamConnectFailed));
+        Assert.StartsWith("could not connect to kronikol-tap.invalid:6379 within ConnectTimeout (00:00:00.5000000)", raised.Detail);
     }
 }

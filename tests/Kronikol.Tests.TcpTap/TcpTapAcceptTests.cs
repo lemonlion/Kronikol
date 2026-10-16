@@ -109,7 +109,7 @@ public class TcpTapAcceptTests
     {
         await using var server = Pong();
         var log = new List<string>();
-        var tap = new RedisTap(Options(server, log));
+        await using var tap = new RedisTap(Options(server, log));
         await tap.StartAsync();
         Assert.Equal("+PONG\r\n", await PingAsync(tap));
 
@@ -201,7 +201,8 @@ public class TcpTapAcceptTests
     {
         await using var server = Pong();
         var log = new List<string>();
-        await using var tap = new RedisTap(Options(server, log));
+        var raised = new List<CaptureDegradation>();
+        await using var tap = new RedisTap(Options(server, log, o => o.OnCaptureDegraded = e => { lock (raised) raised.Add(e); }));
         var clock = new ManualClock(new DateTimeOffset(2026, 10, 15, 9, 0, 0, TimeSpan.Zero));
         tap.Accepting.Clock = clock;
         tap.Accepting.Pause = (_, _) => Task.CompletedTask;
@@ -230,6 +231,102 @@ public class TcpTapAcceptTests
         Assert.Contains(" after 50 failed accept(s) since 09:00:00Z", again);
         Assert.Equal(50, tap.Accepting.Failures);
         Assert.Contains(tap.Diagnostics(), e => e.Message.StartsWith("svc→redis: 50 accept(s) failed, the first at 09:00:00Z (", StringComparison.Ordinal));
+
+        // The AcceptFailed event keeps the log's pace: the first failure, then the one a minute later.
+        lock (raised)
+        {
+            Assert.Equal(2, raised.Count(e => e.Kind == CaptureDegradationKind.AcceptFailed));
+            Assert.Contains(raised, e => e.Kind == CaptureDegradationKind.AcceptFailed && e.Detail.Contains("still failing: 30 failed accept(s)", StringComparison.Ordinal));
+        }
+    }
+
+    /// <summary>
+    /// The once-a-minute rule is timed on the monotonic clock. Timed on the wall clock, a clock set back an hour muted the
+    /// "still failing" line, and the event with it, for that hour.
+    /// </summary>
+    [Fact]
+    public async Task AFailingAcceptIsStillLoggedOnceAMinuteAfterTheWallClockIsSetBack()
+    {
+        await using var server = Pong();
+        var log = new List<string>();
+        await using var tap = new RedisTap(Options(server, log));
+        var clock = new ManualClock(new DateTimeOffset(2026, 10, 15, 9, 0, 0, TimeSpan.Zero));
+        tap.Accepting.Clock = clock;
+        tap.Accepting.Pause = (_, _) => Task.CompletedTask;
+        var tries = 0;
+        tap.Accepting.Accept = (listener, ct) =>
+        {
+            var n = Interlocked.Increment(ref tries);
+            if (n > 50)
+                return listener.AcceptTcpClientAsync(ct);
+            if (n == 10)
+                clock.SetWallClock(TimeSpan.FromHours(-1));
+            if (n == 30)
+                clock.Advance(TimeSpan.FromSeconds(61));
+            return ValueTask.FromException<TcpClient>(OutOfDescriptors());
+        };
+        await tap.StartAsync();
+
+        Assert.True(await Wait.UntilAsync(() => Volatile.Read(ref tries) > 50, 15_000),
+            $"the loop stopped trying after {Volatile.Read(ref tries)} accept(s)");
+        Assert.Equal("+PONG\r\n", await PingAsync(tap));
+        Assert.Contains("still failing: 30 failed accept(s) since 09:00:00Z", Assert.Single(Lines(log, "still failing")));
+    }
+
+    /// <summary>
+    /// The <c>Diagnostics()</c> line names the first failed accept's cause, not the last one's.
+    /// </summary>
+    [Fact]
+    public async Task TheDiagnosticLineNamesTheFirstFailedAcceptsCause()
+    {
+        await using var server = Pong();
+        var log = new List<string>();
+        await using var tap = new RedisTap(Options(server, log));
+        tap.Accepting.Pause = (_, _) => Task.CompletedTask;
+        var tries = 0;
+        tap.Accepting.Accept = (listener, ct) =>
+        {
+            var n = Interlocked.Increment(ref tries);
+            return n switch
+            {
+                1 => ValueTask.FromException<TcpClient>(new SocketException((int)SocketError.NoBufferSpaceAvailable)),
+                <= 3 => ValueTask.FromException<TcpClient>(OutOfDescriptors()),
+                _ => listener.AcceptTcpClientAsync(ct),
+            };
+        };
+        await tap.StartAsync();
+
+        Assert.Equal("+PONG\r\n", await PingAsync(tap));
+        var line = Assert.Single(tap.Diagnostics()).Message;
+        Assert.Contains("3 accept(s) failed, the first at ", line, StringComparison.Ordinal);
+        Assert.Contains("(SocketException NoBufferSpaceAvailable: ", line, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A listener stopped under a pending accept fails that accept (OperationAborted on Windows) before the next one says it
+    /// is not listening. The loop takes the first for what it is, the listener closing: nothing is counted as a failed
+    /// accept, and the line names the address the listener had, not the port 0 a stopped listener reports.
+    /// </summary>
+    [Fact]
+    public async Task AListenerStoppedUnderAPendingAcceptIsReportedAsClosedNotFailed()
+    {
+        await using var server = Pong();
+        var log = new List<string>();
+        var raised = new List<CaptureDegradation>();
+        await using var tap = new RedisTap(Options(server, log, o => o.OnCaptureDegraded = e => { lock (raised) raised.Add(e); }));
+        tap.Accepting.Accept = async (listener, ct) =>
+        {
+            var pending = listener.AcceptTcpClientAsync(ct);
+            listener.Stop();
+            return await pending;
+        };
+        await tap.StartAsync();
+
+        Assert.True(await Wait.UntilAsync(() => Lines(log, "stopped accepting").Length > 0, 15_000), "nothing said the tap stopped accepting");
+        Assert.Contains($"tcp-tap stopped accepting on 127.0.0.1:{tap.BoundPort}: its listening socket was closed (", Assert.Single(Lines(log, "stopped accepting")));
+        Assert.Equal(0, tap.AcceptFailures);
+        lock (raised)
+            Assert.Empty(raised);
     }
 
     [Fact]
@@ -237,7 +334,7 @@ public class TcpTapAcceptTests
     {
         await using var server = Pong();
         var log = new List<string>();
-        var tap = new RedisTap(Options(server, log));
+        await using var tap = new RedisTap(Options(server, log));
         var stopped = 0;
         var failures = 0;
         tap.Accepting.Accept = (_, _) =>
@@ -247,12 +344,14 @@ public class TcpTapAcceptTests
             Interlocked.Increment(ref failures);
             return ValueTask.FromException<TcpClient>(OutOfDescriptors());
         };
+        // A pause of a minute, so a stop that waited for it is told apart from one that did not on any runner, however
+        // loaded.
+        tap.Accepting.FirstPause = TimeSpan.FromMinutes(1);
+        tap.Accepting.LongestPause = TimeSpan.FromMinutes(1);
         await tap.StartAsync();
 
-        // After the eighth failure the loop pauses for a second.
-        Assert.True(await Wait.UntilAsync(() => Volatile.Read(ref failures) >= 8, 15_000),
-            $"the loop stopped trying after {Volatile.Read(ref failures)} accept(s)");
-        await Task.Delay(100);
+        Assert.True(await Wait.UntilAsync(() => Volatile.Read(ref failures) >= 1, 15_000), "the accept never failed");
+        await Task.Delay(100); // the loop is in its pause
 
         Volatile.Write(ref stopped, 1);
         var stopping = Stopwatch.StartNew();
@@ -260,7 +359,7 @@ public class TcpTapAcceptTests
         stopping.Stop();
         await Task.Delay(100);
 
-        Assert.True(stopping.ElapsedMilliseconds < 500, $"DisposeAsync waited {stopping.ElapsedMilliseconds} ms for the loop's pause");
+        Assert.True(stopping.Elapsed < TimeSpan.FromSeconds(10), $"DisposeAsync waited {stopping.ElapsedMilliseconds} ms for the loop's pause");
         Assert.Equal(Volatile.Read(ref failures), tap.Accepting.Failures);
         Assert.Single(Lines(log, "failed ("));
         Assert.Empty(Lines(log, "stopped accepting"));
@@ -359,12 +458,25 @@ public class TcpTapAcceptTests
     }
 }
 
-/// <summary>A clock a fact moves by hand.</summary>
+/// <summary>A clock a fact moves by hand: a wall clock and a monotonic one.</summary>
 internal sealed class ManualClock(DateTimeOffset start) : TimeProvider
 {
     private long _ticks = start.UtcTicks;
+    private long _stamp;
 
     public override DateTimeOffset GetUtcNow() => new(Interlocked.Read(ref _ticks), TimeSpan.Zero);
 
-    public void Advance(TimeSpan by) => Interlocked.Add(ref _ticks, by.Ticks);
+    public override long GetTimestamp() => Interlocked.Read(ref _stamp);
+
+    public override long TimestampFrequency => TimeSpan.TicksPerSecond;
+
+    /// <summary>Time passes: both clocks move.</summary>
+    public void Advance(TimeSpan by)
+    {
+        Interlocked.Add(ref _ticks, by.Ticks);
+        Interlocked.Add(ref _stamp, by.Ticks);
+    }
+
+    /// <summary>The wall clock is set, as a time sync sets it; no time passes.</summary>
+    public void SetWallClock(TimeSpan by) => Interlocked.Add(ref _ticks, by.Ticks);
 }

@@ -2,8 +2,8 @@
 
 Written on 2026-10-14 at 4.20.2 (`origin/main` at `3240c983`) by kronikol-71, in the worktree `C:/Code/Kronikol-174`
 (branch `plan/174-tcptap-failed-connect`). **Green-lit in full by the owner on 2026-10-15** ("implement the plan in
-full"), with every question in §9 answered as recommended. §11 records the execution. Line numbers are at `3240c983`,
-and Appendix A lists every edit site.
+full"), with every question in §9 answered as recommended. §11 records the execution and the audit that
+followed (4.26.2). Line numbers are at `3240c983`, and Appendix A lists every edit site.
 
 Every RUN fact was measured against the published 4.20.2 packages, on Windows 11 26200 with .NET 10.0.11 and on Ubuntu
 24.04.5 in the `mcr.microsoft.com/dotnet/sdk:10.0` container with .NET 10.0.12. The probes and their outputs are in
@@ -740,6 +740,68 @@ R3 follows the same shape: **Patch**, with "a tap on localhost no longer costs 2
   4.22.1 at 12:44 UTC. The wiki has R3's edit (`32dc356`), Kronikol4J's ledger its line (`cc2e2a8`, nothing to
   port), and #174, closed with 4.22.0, a comment naming the release. Left to the owner: R3's departure from §4.3
   above (the name `localhost` alone takes both loopbacks; `OtlpTap` also does for `127.0.0.1`).
+- **2026-10-16, the audit, released as 4.26.2.** The owner asked to make sure nothing was missed from the plan and the
+  implementation had no bugs. Four read-only reviews ran on 4.26.1 (`09369515`), which also carries #173's releases to
+  the same files: a tick-off of every item above, the accept and listening path, the connect path, and the tests with
+  CI's evidence. Each finding was checked in the code or by a probe before anything was changed. Every item of §4 to §6
+  was delivered, and #173 delivered its half of §4.4's split: every `Log` call in the three taps goes through a guarded
+  writer. Found, and fixed in 4.26.2, each with a fact red on 4.26.1:
+  - **The connect (R2, R3).** `ConnectTimeout` was never validated, and its deadline is set before the connect's counted
+    path, so a negative value or one past the timer's reach (`TimeSpan.MaxValue` for "no limit") closed every connection
+    uncounted, as before R2. It follows `ProxyTap`'s rule since 4.22.2: zero or less is refused at start, and
+    `InfiniteTimeSpan` or about 24.8 days or more means no deadline. A `DecoderFactory` that returned null was taken for
+    one that had thrown and been counted, so it was counted nowhere (R2's regression). Making the upstream's socket,
+    which fails in the EMFILE case R1 was built for, sat before the counted path. Since R3 an address in `ForwardHost`
+    went through the name lookup, which refuses `0.0.0.0` and `::`, addresses Linux routes to the loopback. R2's
+    `ForwardTarget` wrote `[[::1]]` for a bracketed address. The first failed connect's time read the wall clock, not
+    the tap's.
+  - **Listening and starting (R1, R3).** `OtlpTap.StartAsync` threw for an IPv6 `ListenHost` after it had started
+    serving: R1 made its start line read `TracesEndpoint` with no `Log` callback too, and the host was not bracketed.
+    R3's line for a ::1 port another socket holds promised a refusal; a client that tries ::1 first reaches that socket
+    instead, so the line says so and `Diagnostics()` reports it, on both taps. R3 made the ::1 listener outside the
+    guarded step. Found on the way and fixed with them, since they leave a tap listening without serving, the state R1
+    set out to remove: neither tap guarded its start or stop (a second start, a start after the stop, a start racing the
+    stop, which could also throw `InvalidOperationException`), and the token given to `StartAsync` was the tap's
+    lifetime, so cancelling it after the start ended the accept loops and left the listeners open. A `TcpTap` on `*` or
+    `+` listened on IPv4 alone, so on Windows a client that dials `localhost` waited 2 s on every connect, the cost R3
+    removed for `localhost`; it takes one dual-mode socket, as `OtlpTap` does.
+  - **The accept loop (R1).** A listener stopped under a pending accept was counted as a failed accept with port 0
+    (`OperationAborted` on Windows), and its address read in the failure path could throw and end the loop silently. The
+    once-a-minute rule ran on the wall clock. `Diagnostics()` could read a failed accept's count before its cause. A
+    tap-wide event printed as "connection 0". None of these is reachable through the public API once the start and stop
+    are guarded; each has a fact through the loop's seams.
+  - **Documents.** The kinds' docs, `OnCaptureDegraded`'s "invoked on", `ForwardHost` (a server on ::1 alone is not
+    reached at all under a `ConnectTimeout` shorter than Windows' 2 s), `Diagnostics()`'s list, `OtlpTapOptions`'
+    `ListenHost` and `Log`; on the wiki, two sentences that R2 and #173 made false (`Ingesting-External-Captures.md`'s
+    `CaptureDegraded` row, "a tap closes a connection only for a time limit"), and the rows for each fix.
+  - **Tests.** §5's L2 was the only fact that caught the forward connecting by name (R3's P8), and it did so on Windows
+    alone; a fact through a resolver seam now catches it on every platform. Five facts left their tap undisposed on
+    failure, two relied on ports they did not hold, and the stopping fact did not prove its connect was still pending.
+    §5's bounds differ from what shipped, as R1's and R3's entries did not say: A5 allowed 500 ms (§5: 250) against a
+    pause of up to a second, so a stop that waited out the pause could pass it; the loop's pauses are now settable, and
+    A5 sets a minute's and allows 10 s. L2 allows 1,000 ms twice (§5: 500), and L1 skips where ::1 cannot be bound,
+    wider than `Socket.OSSupportsIPv6`. CI ran every #174 fact on GitHub's Ubuntu runner, where `localhost` names ::1,
+    so the ::1 forward fact that skips in the `dotnet/sdk` container runs there (4.22.1's run 38733689473: 438 of 438).
+  - **§8's `ProxyTap` request loop**, "worth one fact if #173 touches that loop": #173 touched it in 4.22.2 and 4.23.0,
+    and it still returns on any `HttpListenerException`. The audit of #173 (`TAP_CALLER_TIME_LIMITS_PLAN.md`) takes it,
+    with the start and stop guard above, so the three taps behave alike.
+  - **PLANS_STATUS's "Shipped in" cell** for this plan was empty.
+  - **CI.** The "Remaining Unit Tests" step stops at the first project that fails, so a red project earlier in its list
+    hides the TcpTap and Otlp results until a re-run. Recorded, not changed.
+  - **Proofs** (harness `audit/`): copied onto 4.26.1 with the seams the facts reach wired the old way, 33 cases fail
+    on Windows, each on its own assertion, and on Linux those and the `0.0.0.0` fact, which skips on Windows; 37 of 37
+    mutations are killed, each by the fact written for it.
+  - **Checks.** After the version bump the core suite passes 7,645 with 2 skipped; the TcpTap suite passes 498 with 5
+    skipped on Windows (its four Docker-only container facts and the `0.0.0.0` fact) and 498 with 5 skipped on Linux
+    (the container facts and the ::1 forward fact), and the Otlp suite 224 on both; release.slnf builds in Release for
+    every target. The Playwright suite was not run, since nothing a page draws changed.
+  Left to the owner, with what was measured: (1) R3's forward tries IPv4 first, so on Windows a server on ::1 alone
+  behind `localhost` is reached after about 2 s, and not at all under a `ConnectTimeout` shorter than that (4.22.0
+  reached it in 20 ms); a dead IPv4 address ahead of a live IPv6 one takes the whole deadline. A staggered race (RFC
+  8305), the IPv6 attempt started about 250 ms after the IPv4 one, would remove both; the runtime's
+  `ConnectAlgorithm.Parallel` is not public in .NET 10. (2) R3's departure above: the name `localhost` alone takes both
+  loopbacks, where §4.3 and `OtlpTap` also do for `127.0.0.1`. (3) A ::1 port that something else holds is logged and
+  reported, and the tap starts; Kestrel fails the start instead. Each is a patch.
 
 ## Appendix A. Edit sites at `3240c983`
 

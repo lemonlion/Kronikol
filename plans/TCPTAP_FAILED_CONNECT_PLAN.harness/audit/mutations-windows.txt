@@ -1,0 +1,83 @@
+# The audit's mutations (audit/mutations.py), Windows 11 26200, .NET 10.0.300, 2026-10-16. Q1-Q35 ran on b8c0d3f2 in two worktrees
+# (Q1-Q18 and Q19-Q35); Q36 and Q37 on 454f0937, which rewrote the stopping fact Q36 is for and added Q37's fact.
+# A verdict lists, per project, xUnit's summary and the facts that failed.
+Q1 ConnectTimeout of zero or less taken: KILLED
+    tcp: [('Failed!', '3', '53')] failed facts: ['AConnectTimeoutOfZeroOrLessIsRefusedAtStart(milliseconds:']
+Q2 a ConnectTimeout past the timer's reach kept as a deadline: KILLED
+    tcp: [('Failed!', '2', '54')] failed facts: ['AConnectTimeoutOfNoneOrPastTheTimersReachMeansNoDeadline(milliseconds:']
+Q3 the deadline set from ConnectTimeout as it is: KILLED
+    tcp: [('Failed!', '2', '54')] failed facts: ['AConnectTimeoutOfNoneOrPastTheTimersReachMeansNoDeadline(milliseconds:']
+Q4 a factory's null decoder not counted: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['ADecoderFactoryThatReturnsNoDecoderIsCountedAsDecodingDisabled']
+Q5 the upstream's client made outside the counted path: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['AnUpstreamSocketThatCannotBeMadeIsCountedAsAFailedConnect']
+Q6 an address looked up as a name: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['AnAddressIsConnectedToWithNoLookup']
+Q7 the lookup on the tap's token, outside ConnectTimeout: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['ANameWhoseLookupNeverAnswersRunsOutOfConnectTimeout']
+Q8 the forward addresses in the resolver's order: KILLED
+    tcp: [('Failed!', '2', '54')] failed facts: ['ANamesIPv4AddressesAreTriedFirstWhereverTheTapRuns', 'ATapForwardingToLocalhostReachesAnIPv4OnlyServerAtOnce']
+Q9 the forward target bracketed by the old rule: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['AnIPv6ForwardAddressIsNamedInBracketsOnce(forwardHost:']
+Q10 OtlpTap shows an IPv6 address unbracketed: KILLED
+    otlp: [('Failed!', '1', '15')] failed facts: ['A_tap_on_an_IPv6_address_starts_and_names_an_endpoint_an_exporter_can_dial(listenHost:']
+Q11 OtlpTap shows :: as itself: KILLED
+    otlp: [('Failed!', '2', '14')] failed facts: ['A_tap_on_an_IPv6_address_starts_and_names_an_endpoint_an_exporter_can_dial(listenHost:']
+Q12 the ::1 listener made outside the guarded step: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['ATapOnLocalhostWhoseIPv6ListenerCannotBeMadeListensOnIPv4AndSaysSo']
+Q13 a taken ::1 port not reported: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo']
+Q14 a taken ::1 port worded as before: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo']
+Q15 a second start taken: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['ASecondStartIsRefusedAndTheFirstKeepsServing']
+Q16 the start's token linked into the tap's lifetime: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['CancellingTheStartsTokenAfterTheStartLeavesTheTapServing']
+Q17 a start whose token is cancelled goes ahead: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['AStartWhoseTokenIsAlreadyCancelledBindsNothing']
+Q18 the stop's first step outside the lock: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['AStartRacingTheStopLeavesNothingListening']
+Q19 every interface on IPv4 alone: KILLED
+    tcp: [('Failed!', '2', '54')] failed facts: ['ATapOnEveryInterfaceAnswersOnBothLoopbacks(listenHost:']
+Q20 localhost. not localhost: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['ATapOnLocalhostAlsoListensOnTheIPv6Loopback(listenHost:']
+Q21 the stopped line reads the listener's address after it closed: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['AListenerStoppedUnderAPendingAcceptIsReportedAsClosedNotFailed']
+    otlp: [('Passed!', '0', '16')] failed facts: []
+Q22 a listener closed under a pending accept counted as a failure: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['AListenerStoppedUnderAPendingAcceptIsReportedAsClosedNotFailed']
+    otlp: [('Passed!', '0', '16')] failed facts: []
+Q23 the first failed accept's time and cause overwritten: KILLED
+    tcp: [('Failed!', '2', '54')] failed facts: ['AFailingAcceptIsLoggedOnceAMinute', 'TheDiagnosticLineNamesTheFirstFailedAcceptsCause']
+    otlp: [('Passed!', '0', '16')] failed facts: []
+Q24 the once-a-minute pace on the wall clock: KILLED
+    tcp: [('Failed!', '2', '54')] failed facts: ['AFailingAcceptIsLoggedOnceAMinute', 'AFailingAcceptIsStillLoggedOnceAMinuteAfterTheWallClockIsSetBack']
+    otlp: [('Passed!', '0', '16')] failed facts: []
+Q25 the still-failing line raises no event: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['AFailingAcceptIsLoggedOnceAMinute']
+    otlp: [('Passed!', '0', '16')] failed facts: []
+Q26 the first failed connect's time on the wall clock: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['TheDiagnosticLineNamesTheLastFailureAndWhenTheFirstHappened']
+Q27 the first failed connect's time overwritten: KILLED
+    tcp: [('Failed!', '1', '55')] failed facts: ['TheDiagnosticLineNamesTheLastFailureAndWhenTheFirstHappened']
+Q28 OtlpTap starts after its stop: KILLED
+    otlp: [('Failed!', '2', '14')] failed facts: ['A_start_after_the_stop_is_refused_and_binds_nothing', 'A_start_racing_the_stop_leaves_nothing_listening']
+Q29 OtlpTap's start token linked into its lifetime: KILLED
+    otlp: [('Failed!', '1', '15')] failed facts: ['Cancelling_the_starts_token_after_the_start_leaves_the_tap_serving']
+Q30 OtlpTap's taken ::1 port not reported: KILLED
+    otlp: [('Failed!', '1', '15')] failed facts: ['A_taken_IPv6_port_is_logged_and_reported']
+Q31 OtlpTap's listener made outside the guarded step: KILLED
+    otlp: [('Failed!', '1', '15')] failed facts: ['A_second_listener_that_cannot_be_made_is_logged_and_skipped']
+Q32 OtlpTap starts with a cancelled token: KILLED
+    otlp: [('Failed!', '1', '15')] failed facts: ['A_start_whose_token_is_already_cancelled_binds_nothing']
+Q33 OtlpTap takes a second start: KILLED
+    otlp: [('Failed!', '1', '15')] failed facts: ['A_second_start_is_refused_and_the_first_keeps_serving']
+Q34 OtlpTap's stop outside the lock: KILLED
+    otlp: [('Failed!', '1', '15')] failed facts: ['A_start_racing_the_stop_leaves_nothing_listening']
+Q35 the forward connects by name, as before 4.22.1: KILLED
+    tcp: [('Failed!', '3', '53')] failed facts: ['ANameWhoseLookupNeverAnswersRunsOutOfConnectTimeout', 'ANamesIPv4AddressesAreTriedFirstWhereverTheTapRuns', 'ATapForwardingToLocalhostReachesAnIPv4OnlyServerAtOnce']
+Q36 the pause not waiting on the tap's token (R1's M8, against the rewritten A5): KILLED
+    tcp: [('Failed!', '1', '56')] failed facts: ['StoppingTheTapEndsTheAcceptLoopQuietly']
+    otlp: [('Passed!', '0', '16')] failed facts: []
+Q37 a tap-wide event printed as connection 0: KILLED
+    tcp: [('Failed!', '1', '56')] failed facts: ['ATapWideEventPrintsAsTapWide']

@@ -43,11 +43,14 @@ public sealed class OtlpTap : IAsyncDisposable
     private readonly OtlpTapOptions _options;
     private readonly Channel<Payload> _queue;
     private readonly List<TcpListener> _listeners = [];
+    private readonly object _lifecycle = new();
     private HttpClient? _upstream;
     private CancellationTokenSource? _cts;
     private Task? _acceptLoop;
     private Task? _mapLoop;
     private int _disposed;
+    private bool _started;
+    private string? _alsoBindTaken;
     private long _requests;
     private long _unauthenticated;
     private long _forwardFailures;
@@ -181,6 +184,10 @@ public sealed class OtlpTap : IAsyncDisposable
         if (Accepting.DiagnosticLine(name) is { } acceptLine)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded, acceptLine));
 
+        if (Volatile.Read(ref _alsoBindTaken) is { } taken)
+            entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
+                $"{name}: could not also listen on {taken}, which something else holds; an exporter that dials {DisplayHost()} and tries that address first may reach it instead of the tap, and its spans are then missing"));
+
         var dropped = PayloadsDropped;
         if (dropped > 0)
             entries.Add(new DiagnosticEntry(DiagnosticKind.CaptureDegraded,
@@ -215,34 +222,56 @@ public sealed class OtlpTap : IAsyncDisposable
         return entries;
     }
 
-    /// <summary>Starts listening. Throws if the options are invalid or the port cannot be bound.</summary>
+    /// <summary>
+    /// Starts listening. Throws if the options are invalid or the port cannot be bound, and a start that throws can be tried
+    /// again. A tap starts once: a second start throws <see cref="InvalidOperationException"/>, and a start after
+    /// <see cref="DisposeAsync"/> throws <see cref="ObjectDisposedException"/>.
+    /// </summary>
+    /// <param name="cancellationToken">
+    /// Aborts a start that has not begun. Once the tap has started it has no effect: <see cref="DisposeAsync"/> stops the tap.
+    /// </param>
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
-        _options.Validate();
-        if (_options.StallLimit is not null || _options.KeepAliveLimit is not null)
-            _watch = new StallWatch(Clock, DebuggerAttached, line => TryLog($"[{_options.DisplayName}] otlp-tap {line}"));
-
-        if (_options.ForwardBaseUri is not null)
+        // One lock over the start and the stop's first step, so a stop that arrives mid-start waits for it and then stops
+        // what it bound, and a start after the stop binds nothing.
+        lock (_lifecycle)
         {
-            _upstream = new HttpClient(new SocketsHttpHandler
+            ObjectDisposedException.ThrowIf(_disposed == 1, this);
+            if (_started)
+                throw new InvalidOperationException("This tap has already been started; a tap starts once and stops when it is disposed.");
+            cancellationToken.ThrowIfCancellationRequested();
+            _options.Validate();
+            // Only the first listener's bind can throw, before anything is bound, so a start that throws can be tried again.
+            Bind();
+
+            if (_options.StallLimit is not null || _options.KeepAliveLimit is not null)
+                _watch = new StallWatch(Clock, DebuggerAttached, line => TryLog($"[{_options.DisplayName}] otlp-tap {line}"));
+
+            if (_options.ForwardBaseUri is not null)
             {
-                UseProxy = false,
-                AllowAutoRedirect = false,
-                AutomaticDecompression = DecompressionMethods.None,
-                UseCookies = false,
-            })
-            {
-                BaseAddress = _options.ForwardBaseUri,
-                Timeout = TimeSpan.FromSeconds(30),
-            };
+                _upstream = new HttpClient(new SocketsHttpHandler
+                {
+                    UseProxy = false,
+                    AllowAutoRedirect = false,
+                    AutomaticDecompression = DecompressionMethods.None,
+                    UseCookies = false,
+                })
+                {
+                    BaseAddress = _options.ForwardBaseUri,
+                    Timeout = TimeSpan.FromSeconds(30),
+                };
+            }
+
+            // The tap's own lifetime. The token given to StartAsync governs the start alone, as IHostedService's does: linked
+            // to it, a token cancelled after the start ended the accept loops and left the listeners open, so exporters
+            // connected and were never served.
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
+            _acceptLoop = Task.WhenAll(_listeners.Select(l => Task.Run(() => AcceptLoopAsync(l, token), CancellationToken.None)));
+            _mapLoop = Task.Run(() => MapLoopAsync(token), CancellationToken.None);
+            _started = true;
         }
 
-        Bind();
-
-        _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var token = _cts.Token;
-        _acceptLoop = Task.WhenAll(_listeners.Select(l => Task.Run(() => AcceptLoopAsync(l, token), CancellationToken.None)));
-        _mapLoop = Task.Run(() => MapLoopAsync(_cts.Token), CancellationToken.None);
         TryLog($"[{_options.DisplayName}] otlp-tap listening on {TracesEndpoint}"
                + (_options.ForwardBaseUri is null ? "" : $" → {_options.ForwardBaseUri}"));
         return Task.CompletedTask;
@@ -260,18 +289,30 @@ public sealed class OtlpTap : IAsyncDisposable
         foreach (var (address, dualMode) in addresses)
         {
             var port = BoundPort == 0 ? _options.ListenPort : BoundPort;
-            var listener = new TcpListener(address, port);
+            TcpListener? listener = null;
             try
             {
+                listener = CreateListener(address, port);
                 if (dualMode)
                     listener.Server.DualMode = true;
                 listener.Start();
             }
             catch (Exception ex) when (ex is SocketException or NotSupportedException)
             {
+                listener?.Stop();
                 if (_listeners.Count == 0)
                     throw;
-                TryLog($"[{_options.DisplayName}] otlp-tap could not also bind {address}: {ex.Message}");
+                if (ex is SocketException { SocketErrorCode: SocketError.AddressAlreadyInUse })
+                {
+                    // Something else holds the port there, and an exporter that tries that address first reaches it.
+                    Volatile.Write(ref _alsoBindTaken, new IPEndPoint(address, port).ToString());
+                    TryLog($"[{_options.DisplayName}] otlp-tap could not also bind {address}, whose port {port} something else holds ({ex.Message}); an exporter that dials {DisplayHost()} and tries {address} first may reach it instead of the tap, and its spans are then missing");
+                }
+                else
+                {
+                    TryLog($"[{_options.DisplayName}] otlp-tap could not also bind {address}: {ex.Message}");
+                }
+
                 continue;
             }
 
@@ -279,6 +320,9 @@ public sealed class OtlpTap : IAsyncDisposable
             _listeners.Add(listener);
         }
     }
+
+    // Makes a listening socket (Kronikol.Tests.Otlp): a fact records each one, or makes the second fail.
+    internal Func<IPAddress, int, TcpListener> CreateListener { get; set; } = static (address, port) => new TcpListener(address, port);
 
     private static (IPAddress Address, bool DualMode)[] BindAddresses(string host)
     {
@@ -312,11 +356,17 @@ public sealed class OtlpTap : IAsyncDisposable
                ?? IPAddress.Loopback;
     }
 
-    private string DisplayHost() => _options.ListenHost.Trim() switch
+    // The host an exporter dials: every interface shows as localhost, and an IPv6 address is bracketed, as a URI needs; an
+    // unbracketed one made TracesEndpoint throw, and with it StartAsync, after the tap had started serving.
+    private string DisplayHost()
     {
-        "+" or "*" or "any" or "0.0.0.0" => "localhost",
-        var other => other,
-    };
+        var host = _options.ListenHost.Trim();
+        if (host.ToLowerInvariant() is "+" or "*" or "any" or "0.0.0.0" or "::" or "[::]" or "::0")
+            return "localhost";
+        return IPAddress.TryParse(host, out var address) && address.AddressFamily == AddressFamily.InterNetworkV6
+            ? $"[{address}]"
+            : host;
+    }
 
     // ------------------------------------------------------------------ accept / serve
 
@@ -758,8 +808,12 @@ public sealed class OtlpTap : IAsyncDisposable
     /// <summary>Stops listening, drains what is queued and releases the upstream client.</summary>
     public async ValueTask DisposeAsync()
     {
-        if (Interlocked.Exchange(ref _disposed, 1) == 1)
-            return;
+        lock (_lifecycle)
+        {
+            if (_disposed == 1)
+                return;
+            Volatile.Write(ref _disposed, 1);
+        }
 
         // The time limits' heartbeat stops first: the stop ends every connection itself from here on.
         _watch?.Dispose();
