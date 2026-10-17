@@ -286,9 +286,52 @@
 
     // Text read out of the PAINTED svg rather than the source: the engine resolves the join marker to
     // a real zero-width space, so it is in the DOM and must not reach the clipboard.
-    function paintedNoteText(grp) {
-        var text = grp.texts.map(function(t) { return t.textContent; }).join('\n');
+    function withoutZeroWidth(text) {
         return window._stripZeroWidth ? window._stripZeroWidth(text) : text;
+    }
+
+    function paintedNoteText(grp) {
+        return withoutZeroWidth(grp.texts.map(function(t) { return t.textContent; }).join('\n'));
+    }
+
+    // The selected diagram text as it is painted. Under `skinparam wrapWidth`, which every generated sequence diagram
+    // carries, the engine paints each word, and each space, as its own <text>, and Chromium's Selection.toString() ends
+    // every <text> with a line break: a label "GET /api/items" was copied as "GET\n \n/api/items". So the selection is
+    // read from its text nodes: the pieces of one row join as they are, and a row starts at a new baseline, in another
+    // svg, or where the text steps back to the left. A row painting only spaces is a note's blank line. Null when the
+    // selection holds no diagram text, or holds other text too, which the browser's own reading serves.
+    function selectedSvgText(selection) {
+        if (!selection || !selection.rangeCount) return null;
+        var rows = [], row = null, last = null;
+        for (var r = 0; r < selection.rangeCount; r++) {
+            var range = selection.getRangeAt(r);
+            var root = range.commonAncestorContainer;
+            var walker = document.createTreeWalker(root.nodeType === 3 ? root.parentNode : root, NodeFilter.SHOW_TEXT);
+            for (var node = walker.nextNode(); node; node = walker.nextNode()) {
+                if (!range.intersectsNode(node)) continue;
+                var piece = node.data.substring(
+                    node === range.startContainer ? range.startOffset : 0,
+                    node === range.endContainer ? range.endOffset : node.data.length);
+                var el = node.parentNode && node.parentNode.closest ? node.parentNode.closest('text') : null;
+                if (!el || el.namespaceURI !== 'http://www.w3.org/2000/svg') {
+                    if (/\S/.test(piece)) return null;
+                    continue;
+                }
+                if (!piece) continue;
+                var at = { svg: el.ownerSVGElement, text: el,
+                    x: parseFloat(el.getAttribute('x')), y: parseFloat(el.getAttribute('y')) };
+                var sameRow = last && (at.text === last.text || (at.svg === last.svg
+                    && Math.abs(at.y - last.y) < 0.5 && !(at.x < last.x)));
+                if (!sameRow) { row = []; rows.push(row); }
+                row.push(piece);
+                last = at;
+            }
+        }
+        if (!rows.length) return null;
+        return rows.map(function(pieces) {
+            var line = pieces.join('');
+            return /\S/.test(line) ? line : '';
+        }).join('\n');
     }
 
     function extractCallerPayloads(source) {
@@ -525,15 +568,17 @@
             }
         }
 
-        var selectedText = (window.getSelection() || '').toString().trim();
-        // Normalize SVG text selection against original note source to remove
-        // artificial newlines inserted by the browser at <text> element boundaries.
+        var selection = window.getSelection();
+        var selectedText = (selectedSvgText(selection) || (selection || '').toString()).trim();
+        // A selection inside a note is mapped back onto the note's text, which undoes the width budget's breaks
+        // as well. The painted marker is a zero-width space the note's text does not hold, so it is left out of
+        // the comparison: a selection across a marked break never matched, and was copied as painted.
         if (selectedText && svg && clickedNoteIdx >= 0) {
             var noteSource = _noteIsNotExpanded
                 ? (_currentNoteText || _fullNoteText)
                 : _fullNoteText;
             if (noteSource) {
-                var selChars = selectedText.replace(/\s+/g, '');
+                var selChars = withoutZeroWidth(selectedText).replace(/\s+/g, '');
                 var noteChars = noteSource.replace(/\s+/g, '');
                 var charIdx = noteChars.indexOf(selChars);
                 if (charIdx >= 0) {
@@ -553,8 +598,7 @@
         }
         if (selectedText) {
             menu.appendChild(createMenuItem('Copy Highlighted Text', function() {
-                copyTextToClipboard(
-                    window._stripZeroWidth ? window._stripZeroWidth(selectedText) : selectedText);
+                copyTextToClipboard(withoutZeroWidth(selectedText));
             }));
             menu.appendChild(createSeparator());
         }

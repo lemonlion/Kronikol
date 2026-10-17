@@ -117,10 +117,20 @@ public class DiagramContextMenuTests
     public void CopyHighlightedText_normalizes_selection_against_note_source()
     {
         // The context menu script should normalize selectedText against
-        // the original note source to remove artificial newlines from word-wrap
-        Assert.Contains("selChars = selectedText.replace(/\\s+/g, '')", _script);
+        // the original note source to remove artificial newlines from word-wrap.
+        // The painted join marker is a zero-width space the note's text does not hold, so it is left out.
+        Assert.Contains("selChars = withoutZeroWidth(selectedText).replace(/\\s+/g, '')", _script);
         Assert.Contains("noteChars = noteSource.replace(/\\s+/g, '')", _script);
         Assert.Contains("noteChars.indexOf(selChars)", _script);
+    }
+
+    [Fact]
+    public void CopyHighlightedText_reads_diagram_text_by_painted_row_not_by_text_element()
+    {
+        // Selection.toString() ends every SVG <text> with a line break, and under skinparam wrapWidth each word and
+        // each space is its own <text>; the selection is read from its text nodes, a row per baseline.
+        Assert.Contains("function selectedSvgText(selection)", _script);
+        Assert.Contains("(selectedSvgText(selection) || (selection || '').toString()).trim()", _script);
     }
 
     [Fact]

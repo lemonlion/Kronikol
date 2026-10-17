@@ -1468,6 +1468,49 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// A note whose line the width budget broke, marked the way the generator marks a break that took a space
+    /// (<c>&lt;U+200B&gt;&lt;U+200B&gt;</c>), under the <c>skinparam wrapWidth</c> every generated sequence diagram
+    /// carries. That skinparam makes the engine paint each word, and each space, as its own <c>&lt;text&gt;</c>,
+    /// and it paints the marker as real zero-width spaces.
+    /// </summary>
+    private const string WrappedLineNotePlantUmlSource = """
+        @startuml
+        skinparam wrapWidth 800
+        actor "Caller" as caller
+        participant "NoteService" as svc
+
+        caller -> svc : POST /api/notes
+        note left
+        <color:#686868>[Content-Type=text/plain]
+
+        the first half of a line the width budget broke<U+200B><U+200B>
+        and the second half of it
+        end note
+        svc --> caller : 201 Created
+        @enduml
+        """;
+
+    public static string GenerateReportWithWrappedLineNote(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", WrappedLineNotePlantUmlSource)
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ClassicStart);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// PlantUML source with entity, queue, and database participant types that generate
     /// SVG path+text groups similar to notes. Tests that findNoteGroups correctly
     /// distinguishes notes from participant shapes using fold-triangle detection.

@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.26.6] - 2026-10-17
+
+**Patch - "Copy Highlighted Text" copies diagram text the way it is drawn (user-reported).** A bug fix with nothing new
+for a consumer to call, so the patch part moves (4.26.5 to 4.26.6).
+
+### Fixed
+
+- **"Copy Highlighted Text" put a line break at every space.** Every generated sequence diagram sets
+  `skinparam wrapWidth`, under which the engine draws each word, and each space, as its own SVG `<text>`, and
+  Chromium's `Selection.toString()` ends every `<text>` with a line break: the message label `GET /api/items` was
+  copied as `GET`, a line holding one space, and `/api/items`. Only a selection inside a note, right-clicked on that
+  note, was mapped back onto the note's text, so message labels, participant names, component and activity diagrams,
+  a selection taking in a label and a note, and a note right-clicked anywhere else were all copied that way. The menu
+  now reads the selection from its text nodes: what is drawn on one baseline joins as it is, each new baseline starts
+  a new line, a line drawing only spaces (a note's blank line) is empty, and a selection that starts or ends inside a
+  word keeps just the selected part. A selection of the page's own text, outside any diagram, is copied as the browser
+  reads it, as before.
+- **A selection across a line Kronikol's width budget broke was copied with all its breaks.** The engine draws the
+  break's marker as zero-width spaces, which the note's text does not hold, so the selection never matched the note
+  and fell back to the browser's reading. The comparison now leaves them out, and the selection is copied as the one
+  line it was captured as.
+
+### Tests
+
+- Playwright `CopyHighlightedTextTests` covered only a diagram without `wrapWidth`, where each line is one `<text>`,
+  so it could not show the fault. It now also covers, under `wrapWidth`: a message label, a selection ending inside
+  words, a note right-clicked off the note, a label and its note together, a selection across a marked width-budget
+  break (`ReportTestHelper.GenerateReportWithWrappedLineNote`), and a selection of page text. The first five failed
+  before the fix, with the line breaks the report described. `DiagramContextMenuTests` pins the new reader and the
+  zero-width comparison.
+- Checks, on this release's tree (on top of 4.26.5) after the version bump: the core suite passes 7,681 with 2 skipped
+  and the full Playwright suite 1,050 with 28 skipped. The templates keep their 4.26.4 pin, and the history action's
+  `VERSION` installs `Kronikol.Tool` 4.26.6.
+
 ## [4.26.5] - 2026-10-17
 
 **Patch - the arrows of a sequence diagram could all open one internal-flow popup, the flow of the whole request or
