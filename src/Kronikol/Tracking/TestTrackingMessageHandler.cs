@@ -271,6 +271,9 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             AttributionSource = currentTestInfo.Source
         });
 
+        // The span the transport starts for the call begins after the request is logged, under the span current here; the
+        // response names it (TransportSpan), so the calls a host makes under one request each keep a span of their own.
+        var carriedTraceParent = request.Headers.Contains("traceparent");
         HttpResponseMessage response;
         string? responseContentString;
         try
@@ -300,7 +303,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
                 Error = FailedSend.Describe(ex),
                 FocusFields = responseFocusFields,
                 Timestamp = DateTimeOffset.UtcNow,
-                ActivitySpanId = activitySpanId,
+                ActivitySpanId = TransportSpan(request, carriedTraceParent, activityTraceId) ?? activitySpanId,
                 ActivityTraceId = activityTraceId,
                 Phase = currentPhase,
                 AttributionSource = currentTestInfo.Source
@@ -327,13 +330,27 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         {
             FocusFields = responseFocusFields,
             Timestamp = DateTimeOffset.UtcNow,
-            ActivitySpanId = activitySpanId,
+            ActivitySpanId = TransportSpan(request, carriedTraceParent, activityTraceId) ?? activitySpanId,
             ActivityTraceId = activityTraceId,
             Phase = currentPhase,
             AttributionSource = currentTestInfo.Source
         });
 
         return response;
+    }
+
+    /// <summary>
+    /// The span the transport started for the call: the one in the <c>traceparent</c> it put on the request while
+    /// sending it (SocketsHttpHandler's and HttpClientHandler's DiagnosticsHandler do), when the request carried none
+    /// before the send and the trace is the call's. Null otherwise: a caller's own header, or a transport that starts no
+    /// span and sends the one this handler wrote.
+    /// </summary>
+    private static string? TransportSpan(HttpRequestMessage request, bool carriedTraceParent, string? traceId)
+    {
+        if (carriedTraceParent || !request.Headers.TryGetValues("traceparent", out var values)
+            || values.FirstOrDefault() is not { } sent || !ActivityContext.TryParse(sent, null, out var context))
+            return null;
+        return string.Equals(context.TraceId.ToString(), traceId, StringComparison.Ordinal) ? context.SpanId.ToString() : null;
     }
 
     /// <summary>

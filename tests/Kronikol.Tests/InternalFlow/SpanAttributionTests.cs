@@ -165,7 +165,8 @@ public class SpanAttributionTests : IDisposable
         // Each test's HTTP call records the shared trace and the test's own span; each test's database call, like
         // every database tracker's, records no trace at all. The database call may take only what the span tree says
         // is its test's: the whole shared trace in its time would contest the other test's spans, and lose them from
-        // the popup the tree had given them to.
+        // the popup the tree had given them to. Each server span began in its test's HTTP call's time, before the
+        // database call: the HTTP call's work, which the database call took as beginning in the 50 ms before it.
         var trace = ActivityTraceId.CreateRandom().ToString();
         var aTest = ActivitySpanId.CreateRandom().ToString();
         var bTest = ActivitySpanId.CreateRandom().ToString();
@@ -183,8 +184,8 @@ public class SpanAttributionTests : IDisposable
 
         Assert.Equal(["a-server", "a-query", "a-query"], segments[Key(aHttp)].Spans.Select(s => s.OperationName));
         Assert.Equal(["b-server", "b-query", "b-query", "b-query"], segments[Key(bHttp)].Spans.Select(s => s.OperationName));
-        Assert.Equal(["a-server", "a-query", "a-query"], segments[Key(aDatabase)].Spans.Select(s => s.OperationName));
-        Assert.Equal(["b-server", "b-query", "b-query", "b-query"], segments[Key(bDatabase)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["a-query", "a-query"], segments[Key(aDatabase)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["b-query", "b-query", "b-query"], segments[Key(bDatabase)].Spans.Select(s => s.OperationName));
         Assert.Equal(0, new[] { aHttp, bHttp, aDatabase, bDatabase }.Sum(call => segments[Key(call)].SpansLeftOut));
     }
 
@@ -346,11 +347,13 @@ public class SpanAttributionTests : IDisposable
         // The shape of the Jest and OpenTelemetry capture IngestSpanTests replays: the test's call is recorded under the
         // span of the service's request hook, and the calls the service makes while handling it under its resolver's
         // span, a sibling of the hook's. Those calls ran inside the test's call (made by the service handling it, while
-        // it waited), so their spans are its work too; each inner call keeps out the hook's.
+        // it waited), so their spans are its work too; each inner call keeps out the hook's. The service's span and its
+        // resolver's, which both inner calls were made inside, are the test's call's: before, each inner call took them
+        // too, since they began in the 50 ms before it.
         var trace = ActivityTraceId.CreateRandom().ToString();
-        var server = Span("server", 5, trace, null);
+        var server = Span("server", 5, trace, null, durationMs: 90);
         var hook = Children("hook", server, 6).Single();
-        var resolver = Children("resolver", server, 10).Single();
+        var resolver = Span("resolver", 10, trace, server.SpanId.ToString(), durationMs: 80);
         var outer = Request("test-a", 0, 100, trace, hook.SpanId.ToString(), service: "Payments", caller: "Test");
         var psp = Request("test-a", 20, 50, trace, resolver.SpanId.ToString(), service: "PSP", caller: "Payments");
         var risk = Request("test-a", 55, 80, trace, resolver.SpanId.ToString(), service: "Risk", caller: "Payments");
@@ -359,9 +362,8 @@ public class SpanAttributionTests : IDisposable
             [server, hook, resolver, .. Children("psp-post", resolver, 25), .. Children("risk-get", resolver, 60)]);
 
         Assert.Equal(["server", "hook", "resolver", "psp-post", "risk-get"], segments[Key(outer)].Spans.Select(s => s.OperationName));
-        Assert.Equal(["server", "resolver", "psp-post"], segments[Key(psp)].Spans.Select(s => s.OperationName));
-        Assert.DoesNotContain("hook", segments[Key(risk)].Spans.Select(s => s.OperationName));
-        Assert.Contains("risk-get", segments[Key(risk)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["psp-post"], segments[Key(psp)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["risk-get"], segments[Key(risk)].Spans.Select(s => s.OperationName));
     }
 
     [Fact]
@@ -490,7 +492,9 @@ public class SpanAttributionTests : IDisposable
     {
         // A page's two requests record the page's one span, and the second is made while the first is open. The span
         // tree says nothing about which ran inside which, since the span is neither's alone, and one party's calls
-        // never nest, so the work of the call the second request's service made stays with the second request.
+        // never nest, so the work of the call the second request's service made stays with the second request. The page
+        // span began with the first request, in its time: the first's, not the second's, which took it as beginning in
+        // the 50 ms before it.
         var trace = ActivityTraceId.CreateRandom().ToString();
         var pageSpan = Span("page", 0, trace, null);
         var page = pageSpan.SpanId.ToString();
@@ -503,7 +507,7 @@ public class SpanAttributionTests : IDisposable
         var segments = InternalFlowSegmentBuilder.BuildSegments([.. first, .. second, .. lookup], [pageSpan, work]);
 
         Assert.Equal(["page"], segments[Key(first)].Spans.Select(s => s.OperationName));
-        Assert.Equal(["page", "stock-query"], segments[Key(second)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["stock-query"], segments[Key(second)].Spans.Select(s => s.OperationName));
     }
 
     [Fact]
@@ -542,11 +546,170 @@ public class SpanAttributionTests : IDisposable
             elapsed = Math.Min(elapsed, sw.ElapsedMilliseconds);
         }
 
-        // Each downstream call keeps its own server span and work, and none of its neighbours'.
+        // Each downstream call keeps the work done under the span it was made under while it ran, and none of its
+        // neighbours'. That span, the API's server span, is the handling of the test's call it was made in (its parent is
+        // the span that call records), so it is that call's: before, the downstream call took it as beginning in the
+        // 50 ms before it.
         Assert.All(downstream, call =>
-            Assert.Equal(["api-server", .. Enumerable.Repeat("work", 10)], segments[Key(call)].Spans.Select(s => s.OperationName)));
+            Assert.Equal(Enumerable.Repeat("work", 10), segments[Key(call)].Spans.Select(s => s.OperationName)));
         var budget = 1000 * stretch;
         Assert.True(elapsed < budget, $"the fastest of three runs took {elapsed} ms against {budget:F0} (1,000 stretched {stretch:F2} times by this machine's load)");
+    }
+
+    [Fact]
+    public void Calls_a_host_makes_at_once_under_its_request_keep_the_spans_of_their_own_client_span()
+    {
+        // BreakfastProvider's health check: the test calls the API, and the API calls three services at once. The handler
+        // logs each of those calls under the API's request span, the span current when it sees the call; the span the
+        // transport then starts for the call is named by the call's response. The three calls claimed one span and began
+        // together, so each popup showed the API's whole request: every call's spans and the request's own.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 30, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api GET /health", 1, trace, outerSpan, durationMs: 28);
+        var calls = new List<RequestResponseLog[]>();
+        for (var i = 0; i < 3; i++)
+        {
+            var client = Span("GET", 11, trace, server.SpanId.ToString());
+            Children("wait_for_connection", client, 12);
+            Children($"service-{i} GET /health", client, 15);
+            calls.Add(Request("t1", 10, 20, trace, server.SpanId.ToString(), service: $"Service{i}", caller: "Api",
+                responseSpanId: client.SpanId.ToString()));
+        }
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. calls.SelectMany(c => c)], _activities.ToArray());
+
+        for (var i = 0; i < 3; i++)
+            Assert.Equal(["GET", "wait_for_connection", $"service-{i} GET /health"],
+                segments[Key(calls[i])].Spans.Select(s => s.OperationName));
+        Assert.Equal(10, segments[Key(outer)].Spans.Length);
+    }
+
+    [Fact]
+    public void A_call_with_no_trace_id_made_inside_a_request_does_not_take_the_spans_running_when_it_began()
+    {
+        // BreakfastProvider's inventory endpoint writes to its database and publishes an event, two calls whose trackers
+        // record no trace id, a millisecond into the request. The 50 ms before a call's request, in which a call's own root
+        // span may start, gave each the request's span and the service method's around it, so each popup showed the
+        // request's flow. A span that began before such a call says nothing of being its own.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 30, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api POST /inventory", 1, trace, outerSpan, durationMs: 28);
+        Span("InventoryService.Create", 2, trace, server.SpanId.ToString(), durationMs: 18);
+        var insert = Request("t1", 5, 6, service: "Database", caller: "Api");
+        var publish = Request("t1", 7, 8, service: "PubSub", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. insert, .. publish], _activities.ToArray());
+
+        Assert.Empty(segments[Key(insert)].Spans);
+        Assert.Empty(segments[Key(publish)].Spans);
+        Assert.Equal(["api POST /inventory", "InventoryService.Create"], segments[Key(outer)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_call_with_no_trace_id_made_alone_inside_a_request_takes_none_of_the_spans_the_request_began_before_it()
+    {
+        // BreakfastProvider's commonest shape: an endpoint makes one database call, and the call's tracker records no
+        // trace id. The request's span and the service method's began in the request's time, before the call: the
+        // request's work, which its popup shows. Before, the call's popup showed them too, the request's whole flow.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 30, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api POST /chef-notes", 1, trace, outerSpan, durationMs: 28);
+        Span("ChefNoteService.Create", 2, trace, server.SpanId.ToString(), durationMs: 10);
+        var insert = Request("t1", 5, 6, service: "MongoDB", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. insert], _activities.ToArray());
+
+        Assert.Empty(segments[Key(insert)].Spans);
+        Assert.Equal(["api POST /chef-notes", "ChefNoteService.Create"], segments[Key(outer)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_call_logged_under_the_request_span_of_the_call_it_was_made_in_does_not_show_that_span()
+    {
+        // BreakfastProvider's reservation cancel: the API publishes an event while it serves the test's PATCH, and the
+        // Pub/Sub tracker records the span current then, the API's request span, whose parent is the PATCH's own span.
+        // That span is the PATCH's handling, not the publish's, and both popups showed it alone.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var patchSpan = NewSpanId();
+        var patch = Request("t1", 0, 30, trace, patchSpan, service: "Api", caller: "Test");
+        var server = Span("PATCH reservations/{id}/cancel", 1, trace, patchSpan, durationMs: 28);
+        var publish = Request("t1", 20, 21, trace, server.SpanId.ToString(), service: "PubSub", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. patch, .. publish], _activities.ToArray());
+
+        Assert.Empty(segments[Key(publish)].Spans);
+        Assert.Equal(["PATCH reservations/{id}/cancel"], segments[Key(patch)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_call_logged_under_a_method_span_that_made_other_calls_beside_it_does_not_show_that_span()
+    {
+        // BreakfastProvider's order: OrderService.CreateOrder publishes an Event Grid event and then calls the kitchen, and
+        // the Event Grid tracker records the span current at the publish, the method's. No other call claims that span, so
+        // it read as the publish's own, and the publish's popup showed the method that made it, which made the kitchen call
+        // too: the order's work, not the publish's.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 100, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("POST Orders", 1, trace, outerSpan, durationMs: 98);
+        var createOrder = Span("OrderService.CreateOrder", 10, trace, server.SpanId.ToString(), durationMs: 80);
+        var publish = Request("t1", 20, 21, trace, createOrder.SpanId.ToString(), service: "EventGrid", caller: "Api");
+        var client = Span("POST", 31, trace, createOrder.SpanId.ToString(), durationMs: 9);
+        Children("POST /prepare", client, 35);
+        var prepare = Request("t1", 30, 41, trace, createOrder.SpanId.ToString(), service: "Kitchen", caller: "Api",
+            responseSpanId: client.SpanId.ToString());
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. publish, .. prepare], _activities.ToArray());
+
+        Assert.Empty(segments[Key(publish)].Spans);
+        Assert.Equal(["POST", "POST /prepare"], segments[Key(prepare)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["POST Orders", "OrderService.CreateOrder", "POST", "POST /prepare"],
+            segments[Key(outer)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_call_with_no_trace_id_keeps_the_span_its_client_began_just_before_the_tracker_saw_it()
+    {
+        // A database client starts its operation's span, then the tracker inside it logs the call, so the span begins a
+        // moment before the call's request. The test made the calls itself, so that span began in no call's time, and the
+        // call keeps it. The test's own span runs across both calls, and the first call's client span across the first.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var test = Span("test", 0, trace, null, durationMs: 40);
+        Span("read orders", 4, trace, test.SpanId.ToString(), durationMs: 6);
+        var read = Request("t1", 5, 9, service: "Database", caller: "Test");
+        Span("read stock", 14, trace, test.SpanId.ToString(), durationMs: 6);
+        var stock = Request("t1", 15, 19, service: "Database", caller: "Test");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. read, .. stock], _activities.ToArray());
+
+        Assert.Equal(["read orders"], segments[Key(read)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["read stock"], segments[Key(stock)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void Calls_made_one_after_another_under_one_span_do_not_take_the_spans_of_the_call_before()
+    {
+        // Calls whose capturer records the span current when they were made, and whose transport starts none of its own:
+        // two made one after the other under the API's request span claim that span alike, so only their times tell them
+        // apart. The second began 6 ms after the first's work, and the 50 ms lead gave it that work, and the request span
+        // both were made under.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 30, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api request", 1, trace, outerSpan, durationMs: 28);
+        var serverSpan = server.SpanId.ToString();
+        var first = Request("t1", 5, 10, trace, serverSpan, service: "Queue", caller: "Api");
+        Children("first-work", server, 6);
+        var second = Request("t1", 12, 20, trace, serverSpan, service: "Queue", caller: "Api");
+        Children("second-work", server, 13);
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. first, .. second], _activities.ToArray());
+
+        Assert.Equal(["first-work"], segments[Key(first)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["second-work"], segments[Key(second)].Spans.Select(s => s.OperationName));
     }
 
     // ─── What the reader sees ──────────────────────────────────
@@ -590,16 +753,19 @@ public class SpanAttributionTests : IDisposable
 
     private static string NewSpanId() => ActivitySpanId.CreateRandom().ToString();
 
-    /// <summary>A request and its response, <paramref name="fromMs"/> to <paramref name="toMs"/> after T0.</summary>
+    /// <summary>
+    /// A request and its response, <paramref name="fromMs"/> to <paramref name="toMs"/> after T0. The response names
+    /// <paramref name="responseSpanId"/>, when given, as the HTTP handler names the span its transport started for the call.
+    /// </summary>
     private static RequestResponseLog[] Request(string testId, int fromMs, int toMs, string? traceId = null, string? spanId = null,
-        string service = "Orders", string caller = "Caller", Guid? kronikolTrace = null)
+        string service = "Orders", string caller = "Caller", Guid? kronikolTrace = null, string? responseSpanId = null)
     {
         var id = Guid.NewGuid();
-        RequestResponseLog Log(RequestResponseType type, int ms) =>
+        RequestResponseLog Log(RequestResponseType type, int ms, string? span) =>
             new("Test", testId, HttpMethod.Get, null, new Uri("http://sut/api/orders"), [], service, caller, type,
                 kronikolTrace ?? Guid.NewGuid(), id, false)
-            { Timestamp = T0.AddMilliseconds(ms), ActivityTraceId = traceId, ActivitySpanId = spanId };
-        return [Log(RequestResponseType.Request, fromMs), Log(RequestResponseType.Response, toMs)];
+            { Timestamp = T0.AddMilliseconds(ms), ActivityTraceId = traceId, ActivitySpanId = span };
+        return [Log(RequestResponseType.Request, fromMs, spanId), Log(RequestResponseType.Response, toMs, responseSpanId ?? spanId)];
     }
 
     private Activity[] Spans(string name, params int[] startsMs) => Spans(name, startsMs, traceId: null);
@@ -615,14 +781,14 @@ public class SpanAttributionTests : IDisposable
 
     private Activity[] Spans(string name, int a, int b, int c, int d, int e, string? traceId) => Spans(name, [a, b, c, d, e], traceId);
 
-    private Activity Span(string name, int startMs, string traceId, string? parentSpanId)
+    private Activity Span(string name, int startMs, string traceId, string? parentSpanId, int durationMs = 5)
     {
         Activity.Current = null;
         var parent = new ActivityContext(ActivityTraceId.CreateFromString(traceId),
             parentSpanId is null ? default : ActivitySpanId.CreateFromString(parentSpanId), ActivityTraceFlags.Recorded);
         var span = _source.StartActivity(name, ActivityKind.Internal, parent)!;
         span.SetStartTime(T0.UtcDateTime.AddMilliseconds(startMs));
-        span.SetEndTime(T0.UtcDateTime.AddMilliseconds(startMs + 5));
+        span.SetEndTime(T0.UtcDateTime.AddMilliseconds(startMs + durationMs));
         _activities.Add(span);
         return span;
     }

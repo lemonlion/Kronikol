@@ -80,6 +80,24 @@ public class IngestSpanTests : IDisposable
     }
 
     [Fact]
+    public void A_span_that_runs_across_two_calls_made_beside_each_other_is_counted_with_why_no_call_holds_it()
+    {
+        // The test's own span began just before its first call and ran across both: no call's, since it is the span of
+        // what made both (from 4.26.5; before, the first call took it as beginning in the 50 ms before it).
+        var (first, second) = (Guid.NewGuid(), Guid.NewGuid());
+        var lines = Call(first, "GET", "http://shop.local/basket", "Shop", "Jest", 310, 320, Trace, OnRequestSpan)
+            .Concat(Call(second, "GET", "http://shop.local/stock", "Shop", "Jest", 330, 340, Trace, OnRequestSpan))
+            .ToArray();
+        var testSpan = new FlowSpan(Trace, "1111111111111111", null, "charges a card", "jest",
+            Second.AddMilliseconds(309).UtcDateTime, TimeSpan.FromMilliseconds(40));
+
+        var result = Ingest(lines, Options(), [testSpan]);
+
+        Assert.Contains(result.Diagnostics, d => d.Message.StartsWith("1 supplied span(s) are in no call's internal flow: 1 of a trace a call carries", StringComparison.Ordinal)
+                                                 && d.Message.Contains("ran across calls made beside each other (charges a card)", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void A_call_whose_trace_no_supplied_span_has_is_counted()
     {
         var lines = Spike().Concat(Call(Guid.NewGuid(), "GET", "http://ledger.local/entries", "Ledger", "Payments GraphQL", 450, 460,

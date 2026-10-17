@@ -4393,10 +4393,14 @@ public static class ReportTestHelper
     /// <c>/with-flow-N</c> have spans of their own trace, so they get a segment, and whose calls to <c>/without-flow-N</c>
     /// have none, so they do not. Logged under an id no other test uses; the spans go to the process's span store.
     /// <paramref name="name"/> names the feature and the scenario; <paramref name="mergeableData"/> also writes the mergeable
-    /// data file, <c>TestRunReport.json</c>, beside the report.
+    /// data file, <c>TestRunReport.json</c>, beside the report. <paramref name="paths"/>, when given, are the paths the calls
+    /// with spans make in place of <c>/with-flow-N</c>, so that arrows can share a label; each call's query span is still
+    /// <c>SELECT orders N</c>. <paramref name="browserFragmentMaxHeight"/>, when given, is the height past which the page
+    /// draws the diagram in fragments.
     /// </summary>
     public static (string Uri, string ReportsDir) GenerateRunReportWithFlowArrows(string tempDir, string outputDir, string fileName,
-        int withFlow, int withoutFlow, string name = "Flow arrows", bool mergeableData = false)
+        int withFlow, int withoutFlow, string name = "Flow arrows", bool mergeableData = false, string[]? paths = null,
+        int? browserFragmentMaxHeight = null)
     {
         var reportsDir = Path.Combine(tempDir, "flow-arrows-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(reportsDir);
@@ -4429,7 +4433,7 @@ public static class ReportTestHelper
             for (var i = 0; i < withFlow + withoutFlow; i++)
             {
                 var flow = i < withFlow;
-                var path = flow ? $"/with-flow-{i}" : $"/without-flow-{i - withFlow}";
+                var path = flow ? paths?[i] ?? $"/with-flow-{i}" : $"/without-flow-{i - withFlow}";
                 var id = Guid.NewGuid();
                 var trace = System.Diagnostics.ActivityTraceId.CreateRandom();
                 var start = at.AddMilliseconds(i * 200);
@@ -4460,6 +4464,7 @@ public static class ReportTestHelper
                     GenerateSpecificationsReport = false,
                     GenerateSpecificationsData = false,
                     GenerateMergeableData = mergeableData,
+                    BrowserFragmentMaxHeight = browserFragmentMaxHeight ?? new ReportConfigurationOptions().BrowserFragmentMaxHeight,
                 });
             DefaultDiagramsFetcher.Reset();
         }
@@ -4468,6 +4473,92 @@ public static class ReportTestHelper
         var html = Path.Combine(reportsDir, "TestRunReport.html");
         File.Copy(html, Path.Combine(outputDir, fileName), true);
         return (new Uri(html).AbsoluteUri, reportsDir);
+    }
+
+    /// <summary>
+    /// A run report written by the whole pipeline with internal-flow tracking on and its defaults, in the shape of
+    /// BreakfastProvider's health check: the test calls <c>GET /health</c> on the API, and the API calls
+    /// <c>GET /health</c> on three services at once under its request span, every arrow reading "GET: /health". Each of
+    /// the API's calls is logged under the API's request span and its response names the span its transport started for
+    /// it, as TestTrackingMessageHandler logs a call over a socket; under that span are the service's own
+    /// spans, <c>service-N GET /health</c>.
+    /// </summary>
+    public static string GenerateRunReportWithHealthCheck(string tempDir, string outputDir, string fileName)
+    {
+        var reportsDir = Path.Combine(tempDir, "health-check-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(reportsDir);
+        var testId = "health-check-" + Guid.NewGuid().ToString("N");
+        var sourceName = "Kronikol.Tests.HealthCheck.E2E." + Guid.NewGuid().ToString("N");
+        using var source = new System.Diagnostics.ActivitySource(sourceName);
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = s => s.Name == sourceName,
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+        var spans = new List<System.Diagnostics.Activity>();
+        var at = DateTimeOffset.UtcNow.AddSeconds(-30);
+        var trace = System.Diagnostics.ActivityTraceId.CreateRandom();
+
+        System.Diagnostics.Activity Span(string name, System.Diagnostics.ActivitySpanId parent, int startMs, int ms)
+        {
+            System.Diagnostics.Activity.Current = null;
+            var span = source.StartActivity(name, System.Diagnostics.ActivityKind.Internal,
+                new System.Diagnostics.ActivityContext(trace, parent, System.Diagnostics.ActivityTraceFlags.Recorded))!;
+            span.SetStartTime(at.UtcDateTime.AddMilliseconds(startMs));
+            span.SetEndTime(at.UtcDateTime.AddMilliseconds(startMs + ms));
+            spans.Add(span);
+            return span;
+        }
+
+        void Call(string service, string caller, int fromMs, int toMs, string requestSpan, string responseSpan)
+        {
+            var id = Guid.NewGuid();
+            var uri = new Uri($"http://{service.ToLowerInvariant()}/health");
+            RequestResponseLogger.Log(new RequestResponseLog("Health check", testId, HttpMethod.Get, null, uri, [],
+                service, caller, RequestResponseType.Request, Guid.NewGuid(), id, false)
+                { Timestamp = at.AddMilliseconds(fromMs), ActivityTraceId = trace.ToString(), ActivitySpanId = requestSpan });
+            RequestResponseLogger.Log(new RequestResponseLog("Health check", testId, HttpMethod.Get, "{}", uri, [],
+                service, caller, RequestResponseType.Response, Guid.NewGuid(), id, false, System.Net.HttpStatusCode.OK)
+                { Timestamp = at.AddMilliseconds(toMs), ActivityTraceId = trace.ToString(), ActivitySpanId = responseSpan });
+        }
+
+        lock (WholePipeline)
+        {
+            DefaultDiagramsFetcher.Reset();
+            var testSpan = System.Diagnostics.ActivitySpanId.CreateRandom();
+            var server = Span("api GET /health", testSpan, 1, 38);
+            Call("Api", "Caller", 0, 40, testSpan.ToString(), testSpan.ToString());
+            for (var i = 0; i < 3; i++)
+            {
+                var client = Span("GET", server.SpanId, 11, 8);
+                Span($"service-{i} GET /health", client.SpanId, 14, 3);
+                Call($"Service{i}", "Api", 10, 20, server.SpanId.ToString(), client.SpanId.ToString());
+            }
+            foreach (var span in spans)
+                Kronikol.InternalFlow.InternalFlowSpanStore.Add(span);
+
+            ReportGenerator.CreateStandardReportsWithDiagrams(
+                [new Feature { DisplayName = "Health check", Scenarios = [new Scenario { Id = testId, DisplayName = "Health check", Result = ExecutionResult.Passed }] }],
+                at.UtcDateTime.AddSeconds(-1), DateTime.UtcNow,
+                new ReportConfigurationOptions
+                {
+                    ReportsFolderPath = reportsDir,
+                    PlantUmlRendering = PlantUmlRendering.BrowserJs,
+                    InternalFlowTracking = true,
+                    InternalFlowSpanGranularity = InternalFlowSpanGranularity.Full,
+                    GenerateComponentDiagram = false,
+                    GenerateSpecificationsReport = false,
+                    GenerateSpecificationsData = false,
+                });
+            DefaultDiagramsFetcher.Reset();
+        }
+        foreach (var span in spans) span.Dispose();
+
+        var html = Path.Combine(reportsDir, "TestRunReport.html");
+        File.Copy(html, Path.Combine(outputDir, fileName), true);
+        return new Uri(html).AbsoluteUri;
     }
 
     /// <summary>

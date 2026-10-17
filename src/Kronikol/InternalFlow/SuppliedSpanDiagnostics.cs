@@ -54,7 +54,8 @@ internal static class SuppliedSpanDiagnostics
             parts.Add($"{ofNoCall.Length} of a trace no call carries ({Names(ofNoCall)})");
         if (ofACall.Length > 0)
             parts.Add($"{ofACall.Length} of a trace a call carries, which started outside the time of every call carrying it "
-                      + $"(from 50 ms before its request to its response) or which calls of two tests would both take ({Names(ofACall)})");
+                      + "(from 50 ms before its request to its response), which calls of two tests would both take, or which, begun "
+                      + $"before them, ran across calls made beside each other ({Names(ofACall)})");
         ReportDiagnosticsScope.Record(DiagnosticKind.Other,
             $"{notHeld.Length} supplied span(s) are in no call's internal flow: {string.Join("; ", parts)}.");
     }

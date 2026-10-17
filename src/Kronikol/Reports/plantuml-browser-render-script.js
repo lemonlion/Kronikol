@@ -581,13 +581,16 @@
             return _pumlData[el.id] || el.getAttribute('data-plantuml-z') || null;
         }
         window._getPumlZ = getPumlZ;
+        // Each label's link ids, in the order the source writes them. A diagram draws its arrows in that order, so the n-th
+        // drawn link with a label is the n-th in the source. One id per label made every arrow with a label open the
+        // last one's popup: a health check whose calls all read "GET: /health" opened one call's flow from every arrow.
         function extractIflowMap(source) {
             var map = {};
             var re = /\[\[#(iflow-[^\s\]]+)\s+([^\]]+)\]\]/g;
             var m;
             while ((m = re.exec(source)) !== null) {
                 var key = decodeLabelCodePoints(m[2]).split('\\n').join('').replace(/\s+/g, '');
-                map[key] = m[1];
+                (map[key] = map[key] || []).push(m[1]);
             }
             return map;
         }
@@ -1439,6 +1442,10 @@
                 anchorIds.forEach(function(segId) { if (anchorTexts[segId].length > 0) bindLink(anchorTexts[segId], segId); });
                 return;
             }
+            // A fragment is bound from its own source, whatever source it is handed (its diagram's whole one, by the render
+            // queue and the note toggles): the count below needs the arrows it draws, in its own order.
+            var ownSource = container.classList && container.classList.contains('puml-fragment') ? container.getAttribute('data-plantuml') : null;
+            if (ownSource && ownSource.indexOf('[[#iflow-') >= 0) source = ownSource;
             if (!source) return;
             var iflowMap = extractIflowMap(source);
             if (Object.keys(iflowMap).length === 0) return;
@@ -1458,12 +1465,15 @@
                 }
             });
             if (curGrp.length > 0) groups.push(curGrp);
+            var drawnWithLabel = {};
             groups.forEach(function(group) {
                 var combined = group.map(function(idx) { return allTexts[idx].textContent; }).join('');
                 var key = combined.replace(/\s+/g, '');
-                var segId = iflowMap[key] || null;
-                if (!segId) return; // not Kronikol's markup: left exactly as painted
-                bindLink(group.map(function(idx) { return allTexts[idx]; }), segId);
+                var ids = iflowMap[key];
+                if (!ids) return; // not Kronikol's markup: left exactly as painted
+                var n = drawnWithLabel[key] || 0;
+                drawnWithLabel[key] = n + 1;
+                bindLink(group.map(function(idx) { return allTexts[idx]; }), ids[Math.min(n, ids.length - 1)]);
             });
         }
         function enqueueElement(el) {

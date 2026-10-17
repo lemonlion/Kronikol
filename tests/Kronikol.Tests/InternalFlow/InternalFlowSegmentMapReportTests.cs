@@ -279,12 +279,14 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         Log(Call(callsId, HttpMethod.Get, first, firstTrace, RequestResponseType.Response, at.AddMilliseconds(-300)));
         Log(Call(callsId, HttpMethod.Post, second, secondTrace, RequestResponseType.Request, at.AddMilliseconds(300)));
         Log(Call(callsId, HttpMethod.Post, second, secondTrace, RequestResponseType.Response, at.AddMilliseconds(400)));
-        // A call the first one's service made inside it, on the first call's trace: its popup shows first.root too.
+        // A call the first one's service made inside it, on the first call's trace: its popup shows first.root too, the
+        // span it was made inside. Logged as Orders' call, as that service's handler logs it: logged as the caller's, it
+        // would be a second call of the caller's beside the first, and first.root, holding both, neither's.
         var nested = Guid.NewGuid();
         if (nestedCall)
         {
-            Log(Call(callsId, HttpMethod.Get, nested, firstTrace, RequestResponseType.Request, at.AddMilliseconds(-390)));
-            Log(Call(callsId, HttpMethod.Get, nested, firstTrace, RequestResponseType.Response, at.AddMilliseconds(-340)));
+            Log(Call(callsId, HttpMethod.Get, nested, firstTrace, RequestResponseType.Request, at.AddMilliseconds(-390), service: "Stock", caller: "Orders"));
+            Log(Call(callsId, HttpMethod.Get, nested, firstTrace, RequestResponseType.Response, at.AddMilliseconds(-340), service: "Stock", caller: "Orders"));
         }
 
         Span("first.root", firstTrace, at.AddMilliseconds(-401), 98);
@@ -339,8 +341,9 @@ public class InternalFlowSegmentMapReportTests : IDisposable
     private static void Log(RequestResponseLog log) => RequestResponseLogger.Log(log);
 
     private static RequestResponseLog Call(
-        string testId, HttpMethod method, Guid id, ActivityTraceId trace, RequestResponseType type, DateTimeOffset at) =>
-        new("Two calls", testId, method, null, new Uri($"http://orders/iflow-map/{id}"), [], "Orders", "Caller",
+        string testId, HttpMethod method, Guid id, ActivityTraceId trace, RequestResponseType type, DateTimeOffset at,
+        string service = "Orders", string caller = "Caller") =>
+        new("Two calls", testId, method, null, new Uri($"http://orders/iflow-map/{id}"), [], service, caller,
             type, Guid.NewGuid(), id, false, type == RequestResponseType.Response ? HttpStatusCode.OK : null)
         {
             Timestamp = at,

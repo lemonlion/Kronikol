@@ -105,6 +105,97 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task Arrows_with_one_label_each_open_their_own_popup()
+    {
+        // BreakfastProvider's health check calls /health on the API and on each service the API checks, so every arrow of
+        // its diagram reads "GET: /health". The render script found an arrow's segment by its label, and each arrow with
+        // that label opened the last one's popup.
+        var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, "ArrowLink_OneLabel.html",
+            withFlow: 3, withoutFlow: 0, paths: ["/health", "/health", "/health"]);
+        await OpenAndDraw(uri);
+
+        for (var i = 0; i < 3; i++)
+        {
+            // SVG rule: a dispatched click, on the i-th arrow's own text.
+            await Page.EvaluateAsync("""
+                i => Array.from(document.querySelectorAll('.plantuml-browser:not(.iflow-diagram) svg text'))
+                    .filter(t => t.textContent.includes('/health'))[i]
+                    .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+                """, i);
+
+            var popup = Page.Locator(".iflow-popup");
+            await popup.Locator(".iflow-diagram svg").First.WaitForAsync(new() { Timeout = PopupFirstDrawTimeout });
+            var drawn = await popup.Locator(".iflow-diagram svg").First.TextContentAsync();
+            Assert.Contains($"SELECT orders {i}", drawn);
+            await Page.Locator(".iflow-popup-close").ClickAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Each_call_a_host_makes_at_once_opens_its_own_flow_and_not_the_scenarios()
+    {
+        // The owner's report, BreakfastProvider's health check, drawn and clicked as a reader does: every arrow reads
+        // "GET: /health". The test's call opens the API's whole request; each call the API made opens that call's spans.
+        // Every arrow opened the one flow: the arrows shared a label, and the API's calls one request span.
+        var uri = ReportTestHelper.GenerateRunReportWithHealthCheck(TempDir, OutputDir, "ArrowLink_HealthCheck.html");
+        await OpenAndDraw(uri);
+
+        static string[] Services(string drawn) =>
+            Enumerable.Range(0, 3).Select(i => $"service-{i} GET /health").Where(drawn.Contains).ToArray();
+        for (var arrow = 0; arrow < 4; arrow++)
+        {
+            // SVG rule: a dispatched click, on the arrow's own text, in the order the diagram draws them.
+            await Page.EvaluateAsync("""
+                i => Array.from(document.querySelectorAll('.plantuml-browser:not(.iflow-diagram) svg text'))
+                    .filter(t => t.textContent.includes('/health'))[i]
+                    .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+                """, arrow);
+
+            var popup = Page.Locator(".iflow-popup");
+            await popup.Locator(".iflow-diagram svg").First.WaitForAsync(new() { Timeout = PopupFirstDrawTimeout });
+            var drawn = await popup.Locator(".iflow-diagram svg").First.TextContentAsync() ?? "";
+            if (arrow == 0)
+            {
+                await Expect(popup.Locator("h3")).ToHaveTextAsync("Internal Flow (7 spans)");
+                Assert.Equal(3, Services(drawn).Length);
+            }
+            else
+            {
+                await Expect(popup.Locator("h3")).ToHaveTextAsync("Internal Flow (2 spans)");
+                Assert.Equal([$"service-{arrow - 1} GET /health"], Services(drawn));
+                Assert.DoesNotContain("api GET /health", drawn);
+            }
+            await Page.Locator(".iflow-popup-close").ClickAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Arrows_with_one_label_in_a_diagram_drawn_in_fragments_each_open_their_own_popup()
+    {
+        // A diagram past the fragment height is drawn in parts, and each part's links were bound from the whole
+        // diagram's source: counted from there, a later part's arrows would open an earlier part's popups.
+        var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, "ArrowLink_OneLabelFragments.html",
+            withFlow: 6, withoutFlow: 0, paths: Enumerable.Repeat("/health", 6).ToArray(), browserFragmentMaxHeight: 250);
+        await OpenAndDraw(uri);
+        Assert.True(await Page.Locator(".plantuml-browser:not(.iflow-diagram) .puml-fragment").CountAsync() > 1, "the diagram is drawn in fragments");
+
+        for (var i = 0; i < 6; i++)
+        {
+            // SVG rule: a dispatched click, on the i-th arrow's own text, in the order the page shows them.
+            await Page.EvaluateAsync("""
+                i => Array.from(document.querySelectorAll('.plantuml-browser:not(.iflow-diagram) svg text'))
+                    .filter(t => t.textContent.includes('/health'))[i]
+                    .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+                """, i);
+
+            var popup = Page.Locator(".iflow-popup");
+            await popup.Locator(".iflow-diagram svg").First.WaitForAsync(new() { Timeout = PopupFirstDrawTimeout });
+            Assert.Contains($"SELECT orders {i}", await popup.Locator(".iflow-diagram svg").First.TextContentAsync());
+            await Page.Locator(".iflow-popup-close").ClickAsync();
+        }
+    }
+
+    [Fact]
     public async Task A_merged_report_binds_and_opens_the_arrows_of_every_shard()
     {
         // §4: the merge renderer builds the element from the merged map, its id list from the merged diagrams.

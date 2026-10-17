@@ -4,6 +4,92 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.26.5] - 2026-10-17
+
+**Patch - the arrows of a sequence diagram could all open one internal-flow popup, the flow of the whole request or
+test they were made in (reported by the owner on BreakfastProvider's .NET lanes).** Bug fixes: nothing new for a
+consumer to call, so the patch part moves (4.26.4 to 4.26.5). On BreakfastProvider's in-memory component lanes (xUnit,
+ReqNRoll, LightBDD, BDDfy), which pin 4.9.1, 30 of the xUnit lane's 118 diagrams with two or more arrows that open a
+popup opened one flow from every arrow (29, 27 and 24 on the other three), and 665 of those diagrams' 1,212 such arrows
+opened the same flow as another arrow of theirs. A database call's popup held up to 29 spans, from the test's first
+request on, and the five arrows of the health check, which all read `GET: /health`, opened one call's flow. Four
+causes, each fixed:
+
+### Fixed
+
+- **The calls a host made under one request all claimed that request's span.** `TestTrackingMessageHandler` logs a
+  call under the span current when it sees the call, which inside a host is the host's request span, and the span the
+  transport (`SocketsHttpHandler`, `HttpClientHandler`) starts for the call, the one it sends in the call's
+  `traceparent`, begins later. Calls made at once claimed one span and began together, so neither the span tree nor
+  their times told them apart, and each popup showed every call's spans and the request's. The call's response now
+  names the transport's span, when the request carried no `traceparent` before it was sent and the trace is the
+  call's, and the segment builder takes a span a response names as the call's own when the spans hold it under the span
+  the request names.
+- **A call took every span that began in the 50 ms before its request.** The tolerance is for a span that starts before
+  the call is logged, such as one the caller starts for the call, and it also gave each call the request span it was
+  made in, the service method that made it and the work of the call before it. A span from those 50 ms that began in
+  the time of another call of the scenario, the call this one was made in or one before it, is now that call's work,
+  and one that runs across another call made beside this one is the span of what made both; neither is this call's.
+  The call's own span and the spans under it are the call's whatever their times, unless the span's parent is another
+  call's own span: that is the first span of the other call's handling, which a tracker that records the current span
+  (Pub/Sub's, a message tracker's) records for a call made while serving it.
+- **A call recorded under the method that made it showed that method as its own flow.** A tracker with no transport
+  span records the span current at the call, and when no other call claimed it, the builder took it for the call's own:
+  an Event Grid publish made in `OrderService.CreateOrder` showed the method, which then called the kitchen service. A
+  span another call made beside this one was made under is now the method that made both, and not this call's own.
+- **Arrows with one label opened the last one's popup.** The render script found an arrow's segment by its label and
+  kept one id per label, so the five `GET: /health` arrows opened one popup whatever their spans. It keeps each label's
+  ids in the order the source writes them, the n-th arrow drawn with a label opens the n-th, and a diagram drawn in
+  fragments binds each fragment from its own source.
+
+### Changed
+
+- A popup of a call made inside another shows fewer spans: the request span it was made in, the service method's and
+  the spans of the calls beside it are in the outer call's popup, which still shows them all. A call left with no span
+  of its own, such as a database call, a message on an in-memory broker or a publish with no client span, has no popup
+  under the default `HideLink`, so fewer arrows are links: BreakfastProvider's xUnit lane links 685 arrows where 4.9.1
+  linked 1,305, and every HTTP and gRPC call keeps its link.
+- A client library span that starts a moment before Kronikol's tracker logs a call with no trace id made inside a
+  request, as a database driver's operation span can, is shown in the request's popup and not in the call's.
+- In the JSON, XML and YAML outputs the response record of a call sent over a socket carries the transport's span id,
+  where it carried the request's. The request record, `kronikol query trace` and the OTLP export, which exports a call
+  from its request, are unchanged.
+- The ingest diagnostic for a supplied span no call holds names the new reason too: one that, begun before them, ran
+  across calls made beside each other.
+
+### Tests
+
+- `SpanAttributionTests`: a host's calls made at once keep their own client spans; calls with no trace id made inside a
+  request take none of the spans around it, and keep their client library's span begun just before them; calls made
+  one after another under one span take neither that span nor the previous call's work; a call logged under the request
+  span of the call it was made in, or under the method that made other calls beside it, does not show that span. Four
+  facts changed their expectations, each to a call's own work: a page's span, which began with its first request, is
+  no longer also the second's; in the Jest shape the service's span and its resolver's, inside which both inner calls
+  were made, are the test's call's and not the inner calls' too; a database call with no trace id made in a request
+  shows only its queries; and the 300-call timing fact's calls show their own work, not the request span all were made
+  under. The span lengths of three fixtures are now the calls'
+  (a server span runs until its call is answered), and the nested call of the segment map's #86 fact is logged as the
+  first call's service logs it.
+- `CallOwnSpanThroughTheHandlerTests` (new): over a socket, through the real handler and `SocketsHttpHandler`, a call's
+  response names the span the transport sent in its `traceparent`; a caller's own `traceparent`, and a transport that
+  starts no span, keep the request's span; three calls a host makes at once each open their own client and server
+  spans.
+- `IngestSpanTests`: a supplied span that runs across two calls made beside each other is counted, with the reason.
+- Playwright `ArrowLinkOpensPopupTests`: three arrows reading `GET: /health` each open their own popup, as do six in a
+  diagram drawn in fragments; the health check's shape drawn and clicked as a reader does, each arrow its own flow.
+
+- Proofs: with the release's tests on 4.26.4's builder, handler, render script and diagnostics, 14 facts fail,
+  each on its own assertion: every new fact but the two handler facts that hold 4.26.4's behaviour (a caller's own
+  `traceparent`, an in-memory transport), and the four changed expectations. The Playwright facts for one label and for
+  fragments fail without the render script's change, and the health check's fails on 4.26.4's builder and render
+  script. BreakfastProvider's four lanes pass on the release's packages, packed locally, and no diagram
+  opens one flow from every arrow; 7 of the xUnit lane's 577 arrows in diagrams of two or more open the same flow as
+  another (2 of 557, 27 of 608 and 4 of 576 on the others), repeated calls of one route whose popups read alike, such
+  as six `POST: /pancakes` a validation scenario makes, one span each, whose times round to the same millisecond.
+- Checks: after the version bump the core suite passes 7,680 with 2 skipped and the full Playwright suite passes 1,044 with 28 skipped when run alone;
+  release.slnf builds in Release for every target. The templates pin 4.26.4 and the history action's VERSION installs
+  Kronikol.Tool 4.26.5.
+
 ## [4.26.4] - 2026-10-16
 
 **Patch - an audit of 4.24.0, #175's release, against `plans/ATTACHMENT_MERGE_PLAN.md`, at the owner's ask on 2026-10-16
