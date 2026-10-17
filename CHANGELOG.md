@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.26.7] - 2026-10-17
+
+**Patch - a database or SDK call made inside a request lost its client library's span from its internal-flow popup
+(since 4.26.5, found reviewing that release).** A bug fix with nothing new for a consumer to call, so the patch part
+moves (4.26.6 to 4.26.7).
+
+### Fixed
+
+- **A call with no trace id lost the span its client library began just before Kronikol logged it.** Most of
+  Kronikol's database and SDK trackers (MongoDB, Cosmos DB, SqlClient, Blob Storage and others) record no trace id, and
+  a client library can start its operation's span before the tracker inside it logs the call: Cosmos DB's SDK opens its
+  operation, then sends its request through Kronikol's handler. Since 4.26.5 a span that began in the time of the
+  request a call was made in was the request's work, so that span showed in the request's popup only, though the call
+  kept what began after it was logged, such as the HTTP span inside the operation. A client or producer span that no
+  call claims, begun a moment before such a call was logged and still running then, is now that call's, with the spans
+  under it. Each goes to the first such call logged after it began, in the order the spans began, so two reads a service
+  makes at once each keep their own, and a client span under another goes with it. One that began in the time of
+  another call, which this call was not made in, stays that call's, and so does one a server or consumer we see
+  answered: a gRPC call's client span, which a call the answering service made inside it does not take. The request's
+  span and the service's method spans, server and internal spans, are still not the call's. The kind is read from an
+  in-process span; an ingested call carries its trace and is told apart by it, as before.
+
+### Tests
+
+- `SpanAttributionTests`: a Cosmos DB shaped call made inside a request keeps its operation span and the HTTP span under
+  it, while the request's span and the method's stay in the request's popup; two such calls made one after another,
+  and two made at once, each keep their own; a client span under another goes with it and not to the next call; a
+  producer span counts; a span goes to the call logged while it ran, and not to one logged before it began or after it
+  ended; a span another call claims, one begun in another call's time, and a client span a server answered are not
+  taken, the last by a call made inside that server.
+- `InternalFlowSegmentBuilderTests`: the tolerance fact models an ingested capture's request span, begun before its call
+  was logged inside a request hook. The root span it was written for in 2.0.173-beta, one `TestTrackingMessageHandler`
+  started before logging a call, has not existed since 2.21.2; the builder's comment on the tolerance says so, and the
+  tolerance is a named constant.
+
+- Proofs: with the release's tests on 4.26.6's builder, 6 of the 9 new facts fail, each on its own assertion. The three
+  that pass there are guards on the new rule: a span another call claims, one begun in another call's time, and one a
+  server answered are not taken. Of 11 mutations, one for each condition of the rule and one that turns it off, all are
+  killed, each by the fact written for it.
+- Checks: after the version bump the core suite passes 7,690 with 2 skipped and the full Playwright suite passes 1,050 with 28 skipped when run alone;
+  release.slnf builds in Release for every target. The templates pin 4.26.6 (4.26.6 left them at 4.26.4) and the
+  history action's VERSION installs Kronikol.Tool 4.26.7.
+
 ## [4.26.6] - 2026-10-17
 
 **Patch - "Copy Highlighted Text" copies diagram text the way it is drawn (user-reported).** A bug fix with nothing new

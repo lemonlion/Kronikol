@@ -690,6 +690,193 @@ public class SpanAttributionTests : IDisposable
     }
 
     [Fact]
+    public void A_call_with_no_trace_id_made_inside_a_request_keeps_the_client_span_its_library_began_before_the_tracker_saw_it()
+    {
+        // Cosmos DB's shape: the SDK starts its operation's span, a client span, and the request reaches Kronikol's
+        // handler inside the SDK's pipeline a moment later, so the span begins before the call is logged and ends after
+        // its response. The tracker records no trace id. The span began in the time of the request the call was made in,
+        // and only the request's popup showed it; the request's own span and the service method's are still not the call's.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 40, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api GET /orders/{id}", 1, trace, outerSpan, durationMs: 38, kind: ActivityKind.Server);
+        var method = Span("OrderService.Get", 2, trace, server.SpanId.ToString(), durationMs: 30);
+        var operation = Span("ReadItemAsync orders", 8, trace, method.SpanId.ToString(), durationMs: 9, kind: ActivityKind.Client);
+        Span("GET", 11, trace, operation.SpanId.ToString(), durationMs: 4, kind: ActivityKind.Client);
+        var read = Request("t1", 10, 16, service: "CosmosDB", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. read], _activities.ToArray());
+
+        Assert.Equal(["ReadItemAsync orders", "GET"], segments[Key(read)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["api GET /orders/{id}", "OrderService.Get", "ReadItemAsync orders", "GET"],
+            segments[Key(outer)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void Calls_with_no_trace_id_made_one_after_another_in_a_request_keep_their_own_client_spans()
+    {
+        // Two database calls of one request, each client span begun a moment before its call is logged: the first one's
+        // span is the first call's, though it is still in the 50 ms before the second.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 40, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api POST /orders", 1, trace, outerSpan, durationMs: 38, kind: ActivityKind.Server);
+        Span("CreateItemAsync orders", 4, trace, server.SpanId.ToString(), durationMs: 5, kind: ActivityKind.Client);
+        var insert = Request("t1", 5, 9, service: "CosmosDB", caller: "Api");
+        Span("ReadItemAsync stock", 11, trace, server.SpanId.ToString(), durationMs: 5, kind: ActivityKind.Client);
+        var read = Request("t1", 12, 16, service: "CosmosDB", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. insert, .. read], _activities.ToArray());
+
+        Assert.Equal(["CreateItemAsync orders"], segments[Key(insert)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["ReadItemAsync stock"], segments[Key(read)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void Calls_with_no_trace_id_made_at_once_in_a_request_each_keep_the_client_span_begun_just_before_them()
+    {
+        // Two reads a service starts together: both client spans begin before either call is logged and run across both.
+        // Each call takes the one begun just before it, in the order they began.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 40, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api GET /basket", 1, trace, outerSpan, durationMs: 38, kind: ActivityKind.Server);
+        Span("ReadItemAsync orders", 8, trace, server.SpanId.ToString(), durationMs: 10, kind: ActivityKind.Client);
+        Span("ReadItemAsync stock", 9, trace, server.SpanId.ToString(), durationMs: 10, kind: ActivityKind.Client);
+        var orders = Request("t1", 10, 17, service: "CosmosDB", caller: "Api");
+        var stock = Request("t1", 11, 18, service: "CosmosDB", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. orders, .. stock], _activities.ToArray());
+
+        Assert.Equal(["ReadItemAsync orders"], segments[Key(orders)].Spans.Select(s => s.OperationName));
+        Assert.Equal(["ReadItemAsync stock"], segments[Key(stock)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_client_span_under_another_goes_with_it_and_not_to_the_next_call_with_no_trace_id()
+    {
+        // Cosmos DB's SDK starts its operation's span and then its request's, both client spans and both begun before the
+        // call is logged. The request's span is the operation's, so the call's, and not the next call's, logged while it ran.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 40, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api GET /orders/{id}", 1, trace, outerSpan, durationMs: 38, kind: ActivityKind.Server);
+        var operation = Span("ReadItemAsync orders", 8, trace, server.SpanId.ToString(), durationMs: 10, kind: ActivityKind.Client);
+        Span("Request orders", 9, trace, operation.SpanId.ToString(), durationMs: 6, kind: ActivityKind.Client);
+        var read = Request("t1", 10, 16, service: "CosmosDB", caller: "Api");
+        var lookup = Request("t1", 11, 17, service: "Redis", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. read, .. lookup], _activities.ToArray());
+
+        Assert.Equal(["ReadItemAsync orders", "Request orders"], segments[Key(read)].Spans.Select(s => s.OperationName));
+        Assert.Empty(segments[Key(lookup)].Spans);
+    }
+
+    [Fact]
+    public void A_client_span_another_call_claims_is_not_taken_by_a_call_with_no_trace_id_logged_while_it_ran()
+    {
+        // An ingested capture stamps a call with its client's span, begun a moment before the call was logged, and the
+        // service reads its database while that call is out. The client span is the call's own, which it claims, though
+        // it began before the database call was logged and was still running then.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 40, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api GET /basket", 1, trace, outerSpan, durationMs: 38, kind: ActivityKind.Server);
+        var client = Span("GET", 9, trace, server.SpanId.ToString(), durationMs: 10, kind: ActivityKind.Client);
+        var stock = Request("t1", 10, 20, trace, client.SpanId.ToString(), service: "Stock", caller: "Api");
+        var read = Request("t1", 11, 14, service: "CosmosDB", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. stock, .. read], _activities.ToArray());
+
+        Assert.Empty(segments[Key(read)].Spans);
+        Assert.Equal(["GET"], segments[Key(stock)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_client_span_begun_in_the_time_of_another_call_is_not_taken_by_a_call_with_no_trace_id()
+    {
+        // A gRPC call whose tracker records the span current when it is made, the method's, and whose client starts its
+        // own span inside the call: that span is the gRPC call's work, though a database call was logged while it ran.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 40, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api POST /orders", 1, trace, outerSpan, durationMs: 38, kind: ActivityKind.Server);
+        var method = Span("NotificationClient.Send", 6, trace, server.SpanId.ToString(), durationMs: 20);
+        var notify = Request("t1", 7, 25, trace, method.SpanId.ToString(), service: "Notifications", caller: "Api");
+        Span("/notifications.Notification/Send", 8, trace, method.SpanId.ToString(), durationMs: 15, kind: ActivityKind.Client);
+        var read = Request("t1", 10, 14, service: "CosmosDB", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. notify, .. read], _activities.ToArray());
+
+        Assert.Empty(segments[Key(read)].Spans);
+        Assert.Equal(["NotificationClient.Send", "/notifications.Notification/Send"],
+            segments[Key(notify)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_client_span_goes_to_the_call_logged_while_it_ran_not_to_one_logged_before_it_began_or_after_it_ended()
+    {
+        // A cache call with no client span of its own comes first, then a database read whose client span begins just
+        // before it, then an untracked library's client span, and a write logged after that span ended.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 40, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api POST /orders", 1, trace, outerSpan, durationMs: 38, kind: ActivityKind.Server);
+        var cache = Request("t1", 5, 7, service: "Cache", caller: "Api");
+        Span("ReadItemAsync orders", 11, trace, server.SpanId.ToString(), durationMs: 5, kind: ActivityKind.Client);
+        var read = Request("t1", 12, 16, service: "CosmosDB", caller: "Api");
+        Span("QueryAsync audit", 18, trace, server.SpanId.ToString(), durationMs: 3, kind: ActivityKind.Client);
+        var write = Request("t1", 25, 28, service: "CosmosDB", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. cache, .. read, .. write], _activities.ToArray());
+
+        Assert.Empty(segments[Key(cache)].Spans);
+        Assert.Equal(["ReadItemAsync orders"], segments[Key(read)].Spans.Select(s => s.OperationName));
+        Assert.Empty(segments[Key(write)].Spans);
+    }
+
+    [Fact]
+    public void A_call_with_no_trace_id_keeps_the_producer_span_its_library_began_before_the_tracker_saw_it()
+    {
+        // A message SDK starts its send's span, a producer span, before the tracker inside it logs the send.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 40, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api POST /orders", 1, trace, outerSpan, durationMs: 38, kind: ActivityKind.Server);
+        Span("ServiceBusSender.Send", 8, trace, server.SpanId.ToString(), durationMs: 4, kind: ActivityKind.Producer);
+        var send = Request("t1", 10, 11, service: "ServiceBus", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. send], _activities.ToArray());
+
+        Assert.Equal(["ServiceBusSender.Send"], segments[Key(send)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void A_client_span_a_server_answered_is_not_taken_by_a_call_with_no_trace_id_made_inside_that_server()
+    {
+        // The API calls the notification service over gRPC, whose tracker records the method's span, and the service
+        // stores the notification while it handles the call. The gRPC client's span holds the service's server span: it
+        // is the gRPC call's, and so is the server span, though both began a moment before the store was logged.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 40, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api POST /orders", 1, trace, outerSpan, durationMs: 38, kind: ActivityKind.Server);
+        var method = Span("NotificationClient.Send", 6, trace, server.SpanId.ToString(), durationMs: 20);
+        var notify = Request("t1", 7, 25, trace, method.SpanId.ToString(), service: "Notifications", caller: "Api");
+        var client = Span("/notifications.Notification/Send", 8, trace, method.SpanId.ToString(), durationMs: 15,
+            kind: ActivityKind.Client);
+        Span("POST /notifications.Notification/Send", 12, trace, client.SpanId.ToString(), durationMs: 8,
+            kind: ActivityKind.Server);
+        var store = Request("t1", 14, 16, service: "MongoDB", caller: "Notifications");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. notify, .. store], _activities.ToArray());
+
+        Assert.Empty(segments[Key(store)].Spans);
+        Assert.Equal(["NotificationClient.Send", "/notifications.Notification/Send", "POST /notifications.Notification/Send"],
+            segments[Key(notify)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
     public void Calls_made_one_after_another_under_one_span_do_not_take_the_spans_of_the_call_before()
     {
         // Calls whose capturer records the span current when they were made, and whose transport starts none of its own:
@@ -781,12 +968,13 @@ public class SpanAttributionTests : IDisposable
 
     private Activity[] Spans(string name, int a, int b, int c, int d, int e, string? traceId) => Spans(name, [a, b, c, d, e], traceId);
 
-    private Activity Span(string name, int startMs, string traceId, string? parentSpanId, int durationMs = 5)
+    private Activity Span(string name, int startMs, string traceId, string? parentSpanId, int durationMs = 5,
+        ActivityKind kind = ActivityKind.Internal)
     {
         Activity.Current = null;
         var parent = new ActivityContext(ActivityTraceId.CreateFromString(traceId),
             parentSpanId is null ? default : ActivitySpanId.CreateFromString(parentSpanId), ActivityTraceFlags.Recorded);
-        var span = _source.StartActivity(name, ActivityKind.Internal, parent)!;
+        var span = _source.StartActivity(name, kind, parent)!;
         span.SetStartTime(T0.UtcDateTime.AddMilliseconds(startMs));
         span.SetEndTime(T0.UtcDateTime.AddMilliseconds(startMs + durationMs));
         _activities.Add(span);

@@ -832,16 +832,17 @@ public class InternalFlowSegmentBuilderTests : IDisposable
     [Fact]
     public void BuildSegments_span_starting_slightly_before_segment_start_is_included_with_tolerance()
     {
-        // Root span (Kronikol.Request) starts BEFORE the log timestamp
-        // because Activity.Start() happens before Timestamp = DateTimeOffset.UtcNow
+        // A span may begin a moment before its call is logged: an ingested capture logs a call to the millisecond
+        // inside a request hook, after the request's root span began. (The tolerance was added in 2.0.173-beta for a
+        // root span TestTrackingMessageHandler started before logging a call, which it stopped creating in 2.21.2.)
         var baseTime = new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
         var traceId = "0af7651916cd43dd8448eb211c80319c";
         var reqId = Guid.NewGuid();
 
-        // Root span starts 5ms before the request log timestamp
-        var rootSpan = CreateSpan("Kronikol.Request",
+        // The request's root span starts 5 ms before the call is logged
+        var rootSpan = CreateSpan("POST /orders",
             baseTime.UtcDateTime.AddMilliseconds(-5), TimeSpan.FromMilliseconds(20), traceId: traceId);
-        var childSpan = CreateSpan("HttpRequestIn",
+        var childSpan = CreateSpan("OrderService.Create",
             baseTime.UtcDateTime.AddMilliseconds(1), TimeSpan.FromMilliseconds(15), traceId: traceId);
 
         var logs = new[]
@@ -852,7 +853,7 @@ public class InternalFlowSegmentBuilderTests : IDisposable
 
         var result = InternalFlowSegmentBuilder.BuildSegments(logs, [rootSpan, childSpan]);
 
-        // Both spans should be included — root span is the parent of this call's trace
+        // Both spans are the call's: the root span is the request it opened
         Assert.Equal(2, result[$"iflow-{reqId}"].Spans.Length);
     }
 }

@@ -31,10 +31,12 @@ public static class InternalFlowSegmentBuilder
     /// the call. A span that began in the 50 ms before a call's request is the call's, but for one that ran across
     /// another call of its test made beside it, and one that began in the time of another call of its test, the call it
     /// was made in or one before it; the call's own span, when no other call of its test claims it or was made under it
-    /// beside this one, and the spans under it are the call's whatever their times, unless the span's parent is another call's own span: that is the first span of
-    /// the other call's handling, which a tracker records for a call made while serving it. Before, every call a host made
-    /// under one request, at once or one after another, and every call with no trace id made inside a request, showed that
-    /// request's whole flow.</para>
+    /// beside this one, and the spans under it are the call's whatever their times, unless the span's parent is another
+    /// call's own span: that is the first span of the other call's handling, which a tracker records for a call made while
+    /// serving it. A client library's span that no call claims, begun a moment before a call with no trace id is logged
+    /// and still running then, is that call's, with the spans under it: each goes to the first such call logged after it
+    /// began, in the order the spans began. Before, every call a host made under one request, at once or one after
+    /// another, and every call with no trace id made inside a request, showed that request's whole flow.</para>
     /// </remarks>
     public static Dictionary<string, InternalFlowSegment> BuildSegments(
         RequestResponseLog[] logs,
@@ -132,6 +134,9 @@ public static class InternalFlowSegmentBuilder
 
     /// <summary>A call's time, as its segment is cut: from its request to its response, or to the next record.</summary>
     private readonly record struct CallWindow(RequestResponseLog Log, DateTimeOffset Start, DateTimeOffset End);
+
+    /// <summary>How long before a call's request a span may begin and still be the call's (LeadOf says which are).</summary>
+    private const int LeadToleranceMs = 50;
 
     /// <summary>
     /// Whether <paramref name="span"/> ran across the whole of another call of the test made beside <paramref name="call"/>,
@@ -403,6 +408,92 @@ public static class InternalFlowSegmentBuilder
             return candidates.Where(s => ClaimedAbove(trace, s, claimed) is var above && (above.Count == 0 || own.Overlaps(above)));
         }
 
+        // A client library's span begun a moment before the call it makes is logged, by a tracker inside the library that
+        // logs the call once the library has started its span: Cosmos DB's SDK starts its operation, then sends its request
+        // through Kronikol's handler. A call whose tracker records no trace id has no span of its own to vouch for that span,
+        // which began in the time of the request the call was made in, so only the request's popup showed it (4.26.5 and
+        // 4.26.6). Each such span, a client's or a producer's that no call claims, goes to the first call with no trace id
+        // logged after it began and while it ran, in the order the spans began, unless it began in the time of a call that
+        // one was not made in; the spans under it go with it. One a server or consumer we see answered is not a library's
+        // but a call's to that service, whose work the server's is: a gRPC call whose tracker records the span it was made
+        // under, and the calls the service made while handling it, which ran inside it.
+        Dictionary<FlowSpan, RequestResponseLog> ClientSpanOwners(List<CallWindow> testWindows, IReadOnlyCollection<FlowSpan> candidates,
+            string testId)
+        {
+            var owners = new Dictionary<FlowSpan, RequestResponseLog>(ReferenceEqualityComparer.Instance);
+            var untraced = testWindows.Where(w => w.Log.ActivityTraceId is null).ToList();
+            if (untraced.Count == 0)
+                return owners;
+
+            // The spans a server or consumer span runs under.
+            var answered = new HashSet<(string Trace, string Span)>();
+            foreach (var s in candidates)
+            {
+                if (s.Activity is not { Kind: ActivityKind.Server or ActivityKind.Consumer })
+                    continue;
+                var byId = SpansById(s.TraceId);
+                var visited = new HashSet<string>(StringComparer.Ordinal);
+                for (var id = s.ParentSpanId; id is not null && visited.Add(id) && answered.Add((s.TraceId, id));
+                     id = byId.TryGetValue(id, out var up) ? up.ParentSpanId : null)
+                {
+                }
+            }
+
+            var clientSpans = candidates
+                .Where(s => s.Activity is { Kind: ActivityKind.Client or ActivityKind.Producer }
+                            && !(claimedByTest.TryGetValue((s.TraceId, testId), out var claimed) && claimed.Contains(s.SpanId))
+                            && !answered.Contains((s.TraceId, s.SpanId)))
+                .ToList();
+            if (clientSpans.Count == 0)
+                return owners;
+
+            // A client span under another, as a library's request under its operation, goes with the one above it.
+            var clientIds = clientSpans.Select(s => (s.TraceId, s.SpanId)).ToHashSet();
+            bool UnderAnotherClientSpan(FlowSpan s)
+            {
+                var byId = SpansById(s.TraceId);
+                var visited = new HashSet<string>(StringComparer.Ordinal);
+                for (var id = s.ParentSpanId; id is not null && visited.Add(id); id = byId.TryGetValue(id, out var up) ? up.ParentSpanId : null)
+                    if (clientIds.Contains((s.TraceId, id)))
+                        return true;
+                return false;
+            }
+
+            bool MadeIn(RequestResponseLog inner, RequestResponseLog outer)
+            {
+                var visited = new HashSet<RequestResponseLog>(ReferenceEqualityComparer.Instance);
+                for (var at = outerOf.GetValueOrDefault(inner); at is not null && visited.Add(at); at = outerOf.GetValueOrDefault(at))
+                    if (at.RequestResponseId == outer.RequestResponseId)
+                        return true;
+                return false;
+            }
+
+            bool BeganInACallBeside(FlowSpan s, CallWindow call) =>
+                testWindows.Any(other => other.Log.RequestResponseId != call.Log.RequestResponseId
+                                         && other.Start.UtcDateTime <= s.StartTimeUtc && s.StartTimeUtc < other.End.UtcDateTime
+                                         && !MadeIn(call.Log, other.Log));
+
+            var taken = new HashSet<Guid>();
+            foreach (var span in clientSpans.Where(s => !UnderAnotherClientSpan(s)).OrderBy(s => s.StartTimeUtc))
+            {
+                var spanEnd = span.StartTimeUtc + span.Duration;
+                foreach (var window in untraced)
+                {
+                    var at = window.Start.UtcDateTime;
+                    if (at <= span.StartTimeUtc || taken.Contains(window.Log.RequestResponseId))
+                        continue;
+                    if (at > span.StartTimeUtc.AddMilliseconds(LeadToleranceMs))
+                        break;
+                    if (spanEnd <= at || BeganInACallBeside(span, window))
+                        continue;
+                    owners[span] = window.Log;
+                    taken.Add(window.Log.RequestResponseId);
+                    break;
+                }
+            }
+            return owners;
+        }
+
         // Of the spans that began in the 50 ms before a call's request, the ones that are the call's: all but a span that ran
         // across another call of its test made beside it, which is the span of what made both, and a span that began in the
         // time of another call of its test, the call it was made in or one before it, which is that call's work. The tree
@@ -411,9 +502,10 @@ public static class InternalFlowSegmentBuilder
         // call's own span: a tracker logs a call under the span current when it is made, which may be the request span of
         // the call it was made in, or the method that made it and other calls. Before, a call took every one of them, so
         // each call a host made at once, or one after another, showed the host's request span and the calls' before it,
-        // and a call with no trace id the request it was made in: every popup the request's whole flow.
+        // and a call with no trace id the request it was made in: every popup the request's whole flow. A client span
+        // ClientSpanOwners gave to a call, and the spans under it, are that call's alone.
         List<FlowSpan> LeadOf(CallWindow call, List<CallWindow> testWindows, List<FlowSpan> lead,
-            Dictionary<(string Trace, string Span), List<RequestResponseLog>> callsUnder)
+            Dictionary<(string Trace, string Span), List<RequestResponseLog>> callsUnder, Dictionary<FlowSpan, RequestResponseLog> clientOwner)
         {
             if (lead.Count == 0)
                 return lead;
@@ -436,9 +528,24 @@ public static class InternalFlowSegmentBuilder
                 s.ParentSpanId is { } parent && !string.Equals(parent, callSpan, StringComparison.Ordinal)
                 && claimedByTest.TryGetValue((s.TraceId, log.TestId), out var claimed) && claimed.Contains(parent);
 
-            return lead.Where(s => !HandlesAnotherCall(s)
-                    && ((own is not null && (string.Equals(s.SpanId, own, StringComparison.Ordinal) || DescendsFrom(SpansById(ownTrace!), s.SpanId, own)))
-                        || !(HoldsACallBeside(s, call, testWindows, inside) || BeganInAnotherCall(s, call, testWindows))))
+            RequestResponseLog? ClientOwnerOf(FlowSpan s)
+            {
+                if (clientOwner.Count == 0)
+                    return null;
+                var byId = SpansById(s.TraceId);
+                var visited = new HashSet<string>(StringComparer.Ordinal);
+                for (FlowSpan? at = s; at is not null && visited.Add(at.SpanId);
+                     at = at.ParentSpanId is { } parent && byId.TryGetValue(parent, out var up) ? up : null)
+                    if (clientOwner.TryGetValue(at, out var owner))
+                        return owner;
+                return null;
+            }
+
+            return lead.Where(s => ClientOwnerOf(s) is { } owner
+                    ? owner.RequestResponseId == log.RequestResponseId
+                    : !HandlesAnotherCall(s)
+                      && ((own is not null && (string.Equals(s.SpanId, own, StringComparison.Ordinal) || DescendsFrom(SpansById(ownTrace!), s.SpanId, own)))
+                          || !(HoldsACallBeside(s, call, testWindows, inside) || BeganInAnotherCall(s, call, testWindows))))
                 .ToList();
         }
 
@@ -520,6 +627,8 @@ public static class InternalFlowSegmentBuilder
                 }
             }
 
+            var clientOwner = ClientSpanOwners(windows, testCalls.Length > 0 ? testSpans : unclaimed, testGroup.Key);
+
             foreach (var window in windows)
             {
                 var (log, segmentStart, segmentEnd) = window;
@@ -531,10 +640,14 @@ public static class InternalFlowSegmentBuilder
                     ? ByTraceAndTree(callTrace, OwnSpan(log))
                     : testCalls.Length > 0 ? testSpans : unclaimed;
 
-                // A small tolerance before segmentStart captures a root span the caller started for the call, whose
-                // Activity starts before the log timestamp is recorded (LeadOf says which of those are the call's).
+                // A span may begin a moment before its call is logged: a client library starts its operation's span and
+                // then the tracker inside it logs the call (Cosmos DB's SDK, a database driver's command), and an ingested
+                // capture logs a call to the millisecond inside a request hook its request's root span began before. So the
+                // window opens LeadToleranceMs early, and LeadOf says which of the spans begun then are the call's. It was
+                // added in 2.0.173-beta for a root span TestTrackingMessageHandler started before logging a call, which it
+                // stopped creating in 2.21.2.
                 var start = segmentStart.UtcDateTime;
-                var toleranceStart = start.AddMilliseconds(-50);
+                var toleranceStart = start.AddMilliseconds(-LeadToleranceMs);
                 var lead = new List<FlowSpan>();
                 var inWindow = new List<FlowSpan>();
                 foreach (var span in candidateSpans)
@@ -544,7 +657,7 @@ public static class InternalFlowSegmentBuilder
                     (span.StartTimeUtc >= start ? inWindow : lead).Add(span);
                 }
 
-                IEnumerable<FlowSpan> inTime = inWindow.Concat(LeadOf(window, windows, lead, callsUnder));
+                IEnumerable<FlowSpan> inTime = inWindow.Concat(LeadOf(window, windows, lead, callsUnder, clientOwner));
                 // Of the spans in its time, the tree's, when calls of its test share its trace (#170). After the time
                 // filter, so a call pays for the spans of its own time, not for every span of a trace a whole test shares.
                 if (log.ActivityTraceId is { } ownTrace)
