@@ -13,8 +13,11 @@ namespace Kronikol.Tests.EndToEnd;
 public class IngestedBypassTests(PlaywrightFixture fixture) : PlaywrightTestBase(fixture)
 {
     private const string Reason = "Bypassed on dev: mock Gemini is not in the deployed path";
-    private const string BypassBlue = "rgb(46, 123, 255)";
-    private const string SkippedGrey = "rgb(148, 148, 148)";
+    // 5.0.0 (plans/OPTION_C_PLAN.md S1): a bypassed step's circle is the status's soft tint with its ink
+    // (--kron-bypass-soft, --kron-bypass), and a skipped scenario's header takes --kron-skip.
+    private const string BypassSoft = "rgb(232, 240, 252)";
+    private const string BypassInk = "rgb(40, 95, 186)";
+    private const string SkippedGrey = "rgb(91, 97, 112)";
 
     [Theory]
     [InlineData("both", "issue-105-tests.ndjson", "issue-105-messages.ndjson")]
@@ -29,7 +32,8 @@ public class IngestedBypassTests(PlaywrightFixture fixture) : PlaywrightTestBase
         var status = step.Locator(".step-status").First;
         await status.WaitForAsync(new() { State = WaitForSelectorState.Visible });
         Assert.Equal("↷", (await status.InnerTextAsync()).Trim());
-        Assert.Equal(BypassBlue, await status.EvaluateAsync<string>("el => getComputedStyle(el).backgroundColor"));
+        Assert.Equal(BypassSoft, await status.EvaluateAsync<string>("el => getComputedStyle(el).backgroundColor"));
+        Assert.Equal(BypassInk, await status.EvaluateAsync<string>("el => getComputedStyle(el).color"));
 
         // The reason is drawn where a comment is, and can be read on the page.
         var reason = Page.GetByText($"Bypassed: {Reason}", new() { Exact = true }).First;
@@ -54,7 +58,8 @@ public class IngestedBypassTests(PlaywrightFixture fixture) : PlaywrightTestBase
         var status = step.Locator(".step-status").First;
         await status.WaitForAsync(new() { State = WaitForSelectorState.Visible });
         Assert.Equal("↷", (await status.InnerTextAsync()).Trim());
-        Assert.Equal(BypassBlue, await status.EvaluateAsync<string>("el => getComputedStyle(el).backgroundColor"));
+        Assert.Equal(BypassSoft, await status.EvaluateAsync<string>("el => getComputedStyle(el).backgroundColor"));
+        Assert.Equal(BypassInk, await status.EvaluateAsync<string>("el => getComputedStyle(el).color"));
 
         var reason = Page.GetByText($"Bypassed: {Reason}", new() { Exact = true }).First;
         await reason.WaitForAsync(new() { State = WaitForSelectorState.Visible });

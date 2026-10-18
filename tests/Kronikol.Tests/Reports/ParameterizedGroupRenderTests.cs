@@ -581,8 +581,9 @@ public class ParameterizedGroupRenderTests
         var content = GenerateReport(MakeFeature(scenarios));
 
         // The row-search-match style should use box-shadow, not outline
-        Assert.DoesNotContain("row-search-match { outline:", content);
-        Assert.Contains("row-search-match { box-shadow:", content);
+        Assert.Contains("row-search-match", content);
+        Assert.Equal("inset 2px 0 0 var(--kron-accent)", CssRules.Value(Stylesheets.HtmlReportStyleSheet, ".param-test-table tbody tr.row-search-match", "box-shadow"));
+        Assert.Null(CssRules.Value(Stylesheets.HtmlReportStyleSheet, ".param-test-table tbody tr.row-search-match", "outline"));
     }
 
     // ── Parameter name titleization ──

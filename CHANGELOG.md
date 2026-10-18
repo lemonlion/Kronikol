@@ -20,6 +20,13 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 
 ### Changed (breaking)
 
+- **The report's look (Option C, in progress on the branch).** Features are cards on a tinted ground, with their
+  scenarios as rows inside them and a cross before a failed one; steps line up on one column with their status
+  circles, the triangles of collapsible steps in the gutter beside it; a failure shows its diff with the expected
+  text green and the actual text red, under the labels Expected and Actual (no longer followed by a colon); the
+  parameter table has one even border in a rounded frame and no longer tints its rows by status (the Status column
+  says it). Every colour of these comes from the tokens, so the dark theme reaches them. A `CustomCss` sheet or a
+  theme written against the 4.x rules or colours of these parts may no longer apply; set the tokens instead.
 - **The dependency filter shows a scenario with any of the chosen dependencies by default, as the category (tag) filter
   does.** `ReportToggleDefaults.DependencyFilterMode` defaults to `FilterCombinationMode.Or` (4.x: `And`, a scenario
   with all of them), and the mode button starts on OR. A report that wants the 4.x behaviour sets

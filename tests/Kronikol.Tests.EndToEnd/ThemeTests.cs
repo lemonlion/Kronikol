@@ -88,7 +88,7 @@ public class ThemeTests : PlaywrightTestBase
         // a stored pick is not overruled by the system's setting changing
         await Page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Dark });
         await Page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Light });
-        await Page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))");
+        await TwoAnimationFramesAsync(Page);
         Assert.Equal("dark", await ThemeAsync());
 
         await Switch.ClickAsync();

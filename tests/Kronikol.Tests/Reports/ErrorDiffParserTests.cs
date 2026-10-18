@@ -132,6 +132,15 @@ public class ErrorDiffParserTests
         Assert.Contains("diff-ins", html);
     }
 
+    /// <summary>5.0.0 (plans/OPTION_C_PLAN.md S1): the labels are drawn as small capitals, which carry no colon.</summary>
+    [Fact]
+    public void GenerateDiffHtml_labels_the_rows_without_a_colon()
+    {
+        var html = ErrorDiffParser.GenerateDiffHtml("abc", "axc");
+        Assert.Contains("<div class=\"diff-expected\"><span class=\"diff-label\">Expected</span><code>", html);
+        Assert.Contains("<div class=\"diff-actual\"><span class=\"diff-label\">Actual</span><code>", html);
+    }
+
     [Fact]
     public void GenerateDiffHtml_marks_identical_text_without_diff_markers()
     {

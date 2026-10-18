@@ -2,16 +2,23 @@
            font-family: var(--kron-font);
            background: var(--kron-ground);
            color: var(--kron-ink);
+           font-size: 14px;
+           line-height: 1.55;
+           margin: 0;
+           padding: 14px 18px 60px;
            /* A long token (a type name, an identifier, a URL) breaks where it has to instead of running
               past what holds it: a feature or scenario, whose content-visibility clips what overflows it
               out of sight, or any other section, where it scrolled the whole page sideways. */
            overflow-wrap: anywhere;
        }
+       button, input, select, textarea { font-family: inherit; }
 
        /* The title line (5.0.0): the report's title, and at its right the light/dark switch, a moon while the page is
           light and a sun while it is dark. */
        .title-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 14px; }
-       .title-line > h1 { margin: 0; min-width: 0; font-size: var(--kron-fs-title); font-weight: 600; }
+       .title-line > h1 {
+           margin: 0; min-width: 0; font-size: var(--kron-fs-title); font-weight: 600; letter-spacing: -0.01em;
+       }
        .theme-toggle {
            flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0;
            border: 1px solid var(--kron-hairline); border-radius: 8px; background: var(--kron-card); color: var(--kron-ink-soft);
@@ -41,29 +48,53 @@
        }
 
        details {
-           margin-top: 1em;
-           margin-bottom: 1em;
+           margin: 0;
        }
        
        .feature {
-            margin-top: 1em;
-            margin-bottom: 1em;
-            background-color: rgb(224, 224, 224);
-            padding: 1em;
-            border-radius: 10px;
-            content-visibility: auto;
-            contain-intrinsic-size: auto 500px;
-        }
+           margin: 14px 0;
+           padding: 0;
+           background: var(--kron-card);
+           border: 1px solid var(--kron-hairline);
+           border-radius: 12px;
+           box-shadow: var(--kron-card-shadow);
+           /* clip, not hidden: rounds the same corners without making the card the scroller a sticky row sticks to */
+           overflow: clip;
+           content-visibility: auto;
+           contain-intrinsic-size: auto 500px;
+           scroll-margin-top: calc(var(--kron-nav-h, 0px) + 12px);
+       }
+       .feature > summary {
+           padding: 11px 16px;
+           background: var(--kron-strip);
+           border-bottom: 1px solid var(--kron-hairline-soft);
+           scroll-margin-top: calc(var(--kron-nav-h, 0px) + 12px);
+       }
+       .feature:not([open]) > summary { border-bottom: none; }
+       .feature > summary.h2 { font-size: var(--kron-fs-feature); font-weight: 600; color: var(--kron-ink); }
+       .feature > summary.h2.failed { color: var(--kron-fail); }
+       .feature > summary.h2.failed::before, .scenario > summary.h3.failed::before {
+           content: '\2717'; display: inline-block; margin-right: 6px; font-weight: 700; color: var(--kron-fail);
+       }
+       .feature > summary:hover, .rule > summary:hover, .scenario > summary:hover { background-color: var(--kron-hover); }
         
         .scenario {
-            margin-top: 1em;
-            margin-bottom: 1em;
-            background-color: white;
-            padding: 1em;
-            border-radius: 10px;
+            margin: 0;
+            padding: 12px 16px;
+            background: none;
+            border-bottom: 1px solid var(--kron-hairline-soft);
+            border-radius: 0;
             content-visibility: auto;
             contain-intrinsic-size: auto 150px;
+            scroll-margin-top: calc(var(--kron-nav-h, 0px) + 12px);
         }
+        .scenario:last-child { border-bottom: none; }
+        .scenario > summary { scroll-margin-top: calc(var(--kron-nav-h, 0px) + 12px); }
+        .scenario > summary.h3 { font-size: var(--kron-fs-body); font-weight: 600; line-height: 1.5; color: var(--kron-ink); }
+        .scenario > summary.h3.failed { color: var(--kron-fail); }
+        /* the header rules name the ink, so a skipped feature or scenario says so again here (4.x greyed both; the preview did not) */
+        .feature > summary.h2.skipped, .scenario > summary.h3.skipped { color: var(--kron-skip); }
+        .scenario[open] > summary.h3 { margin-bottom: 8px; }
 
         /* Tables and the error diff keep their words whole and scroll instead: a column squeezed below its
            longest word would split words that fit. */
@@ -99,13 +130,13 @@
         }
         
         .h2 {
-            font-size: 1.5em;
-            font-weight: bold;
+            font-size: 15px;
+            font-weight: 650;
         }
         
         .h3 {
-            font-size: 1.1em;
-            font-weight: bold;
+            font-size: 13.5px;
+            font-weight: 600;
         }
 
         .h4 {
@@ -329,12 +360,23 @@
         }
 
         .failure-result {
-            padding: 1em;
-            border: 1px solid;
-            border-color: rgb(224, 224, 224);
-            border-radius: 1em;
-            color: rgb(191,0,0);
-            background-color: rgb(255,236,242);
+            margin-top: 8px;
+            padding: 12px 14px;
+            background: var(--kron-fail-soft);
+            color: var(--kron-fail-ink);
+            border: 1px solid var(--kron-fail-edge);
+            border-radius: 8px;
+        }
+        details.failure-result { margin: 4px 0 10px; padding: 0; overflow: hidden; }
+        details.failure-result > summary { padding: 8px 12px 8px 27px; font-size: 13px; font-weight: 600; color: var(--kron-fail); }
+        details.failure-result > pre {
+            margin: 0 12px 10px;
+            padding: 10px 12px;
+            background: var(--kron-card);
+            color: var(--kron-ink);
+            border: 1px solid var(--kron-fail-edge);
+            border-radius: 6px;
+            white-space: pre-wrap;
         }
 
         .example-diagrams[open] > pre {
@@ -343,35 +385,46 @@
         }
 
         .failure-result pre {
-            overflow-x: scroll;
+            margin: 0;
             padding: 1em;
+            overflow-x: auto;
+            font-family: var(--kron-mono);
+            font-size: 12px;
+            line-height: 1.5;
         }
 
         .failed {
-            color: rgb(191,0,0);
+            color: var(--kron-fail);
         }
 
         .skipped {
-            color: #949494;
+            color: var(--kron-skip);
         }
         
         span.label {
-            background-color: rgb(200, 200, 200);
-            color: white;
-            padding: 0.3em;
-            border-radius: 0.3em;
-            font-size: 0.7em;
-            font-weight: normal;
             display: inline-block;
+            margin-left: 8px;
+            padding: 1px 7px;
+            background: var(--kron-field);
+            color: var(--kron-muted);
+            border: 1px solid var(--kron-hairline);
+            border-radius: 4px;
+            font-size: var(--kron-fs-label);
+            font-weight: normal;
+            line-height: 16px;
+            vertical-align: 1px;
         }
         
         .endpoint {
-            font-size: 0.8em;
-            font-weight: normal;
-            font-style: italic;
-            margin-top: 0.2em;
-            color: rgb(110, 110, 110);
+            /* a float cannot baseline-align, so the margin is measured, not styled: 4px puts the 11px mono
+               baseline on the scenario title's */
             float: right;
+            margin-top: 4px;
+            font-family: var(--kron-mono);
+            font-size: 11px;
+            font-weight: normal;
+            font-style: normal;
+            color: var(--kron-muted);
         }
         
         .search-hidden {
@@ -460,28 +513,27 @@
         }
 
         .duration-badge {
-            font-size: 0.75em;
-            font-weight: normal;
-            padding: 0.15em 0.5em;
-            border-radius: 0.3em;
-            margin-left: 0.5em;
             display: inline-block;
+            margin-left: 10px;
+            padding: 0;
+            background: none;
+            border-radius: 0.3em;
+            font-size: var(--kron-fs-meta);
+            font-weight: normal;
+            font-variant-numeric: tabular-nums;
             white-space: nowrap;
         }
 
         .duration-fast {
-            background: rgb(220, 245, 220);
-            color: rgb(30, 100, 30);
+            color: var(--kron-pass);
         }
 
         .duration-moderate {
-            background: rgb(255, 243, 205);
-            color: rgb(140, 100, 0);
+            color: var(--kron-warn);
         }
 
         .duration-slow {
-            background: rgb(255, 220, 220);
-            color: rgb(191, 0, 0);
+            color: var(--kron-fail);
         }
 
         .duration-filters {
@@ -551,64 +603,72 @@
 
         .jump-to-failure {
             position: fixed;
-            bottom: 1.5em;
-            right: 1.5em;
-            padding: 0.5em 1em;
-            background: rgb(191, 0, 0);
-            color: white;
-            border: none;
-            border-radius: 0.5em;
-            cursor: pointer;
-            font-size: 0.9em;
+            bottom: 18px;
+            right: 18px;
             z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            padding: 8px 16px;
+            background: var(--kron-fail-solid);
+            color: var(--kron-on-solid);
+            border: none;
+            border-radius: 999px;
+            font-size: var(--kron-fs-control);
+            line-height: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px var(--kron-fail-shadow);
         }
 
         .jump-to-failure:hover {
-            background: rgb(160, 0, 0);
+            background: color-mix(in srgb, var(--kron-fail-solid) 86%, #000);
         }
 
         .failure-counter {
-            font-size: 0.85em;
             margin-left: 0.3em;
-            opacity: 0.9;
+            font-size: var(--kron-fs-meta);
+            font-variant-numeric: tabular-nums;
+            color: var(--kron-on-solid);
         }
 
         .copy-scenario-name {
-            font-size: 0.7em;
-            padding: 0.1em 0.4em;
-            margin-left: 0.4em;
-            border: 1px solid rgb(200, 200, 200);
-            border-radius: 0.3em;
-            background: rgb(245, 245, 245);
+            margin-left: 6px;
+            padding: 1px 3px;
+            background: none;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
             cursor: pointer;
-            opacity: 0.5;
+            opacity: 0;
+            filter: grayscale(1);
+            transition: opacity .12s;
             vertical-align: middle;
         }
 
         .copy-scenario-name:hover {
             opacity: 1;
-            background: rgb(230, 240, 255);
+            background: var(--kron-hover);
         }
 
         .scenario-link {
-            font-size: 0.7em;
-            padding: 0.1em 0.4em;
-            margin-left: 0.3em;
-            border: 1px solid rgb(200, 200, 200);
-            border-radius: 0.3em;
-            background: rgb(245, 245, 245);
-            cursor: pointer;
-            opacity: 0.5;
-            text-decoration: none;
+            margin-left: 6px;
+            padding: 1px 3px;
+            background: none;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
             color: inherit;
+            text-decoration: none;
+            cursor: pointer;
+            opacity: 0;
+            filter: grayscale(1);
+            transition: opacity .12s;
             vertical-align: middle;
         }
 
         .scenario-link:hover {
             opacity: 1;
-            background: rgb(230, 240, 255);
+            background: var(--kron-hover);
         }
+        .scenario > summary:hover .copy-scenario-name, .scenario > summary:hover .scenario-link,
+        .copy-scenario-name:focus-visible, .scenario-link:focus-visible { opacity: 0.7; }
 
         .export-filtered {
             display: flex;
@@ -666,125 +726,174 @@
         }
 
         .scenario-focused {
-            outline: 2px solid rgb(66, 133, 244);
+            outline: 2px solid var(--kron-accent);
             outline-offset: 2px;
+            border-radius: 6px;
         }
 
         .scenario-steps,
         .scenario-background {
-            margin: 0.5em 0 1em 0;
-            border-radius: 1em;
-            border: 1px solid;
-            border-color: rgb(224, 224, 224);
+            margin: 7px 0 14px 0;
+            border: 1px solid var(--kron-hairline);
+            border-radius: 14px;
         }
+        .scenario-steps { margin: 4px 0 0; }
 
         .scenario-steps > summary,
         .scenario-background > summary {
             cursor: pointer;
-            padding: 1em;
-            background-color: white;
-            border-radius: 1em;
+            padding: 14px 14px 14px 27px;
+            background: transparent;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--kron-ink-soft);
         }
+        .scenario-steps > summary { padding: 4px 0 4px 27px; }
+        details.scenario-steps[open] > summary { border-radius: 13px 13px 0 0; }
+
+        /* The disclosures inside a scenario draw their own triangle, in a fixed box at the same place in each, so the
+           triangles line up and the browsers draw them alike (native markers differ in size between Chrome and Firefox). */
+        .scenario-steps > summary, .scenario-background > summary, .example-diagrams > summary, details.failure-result > summary {
+            position: relative;
+            padding-left: 27px;
+            list-style: none;
+        }
+        .scenario-steps > summary::-webkit-details-marker, .scenario-background > summary::-webkit-details-marker,
+        .example-diagrams > summary::-webkit-details-marker, details.failure-result > summary::-webkit-details-marker { display: none; }
+        .scenario-steps > summary::before, .scenario-background > summary::before, .example-diagrams > summary::before, details.failure-result > summary::before {
+            content: '\25B6\FE0E'; position: absolute; left: 14px; top: 50%; margin-top: -4px; width: 8px;
+            font-size: 8px; line-height: 1; text-align: center; transition: transform 0.15s ease;
+        }
+        .scenario-steps[open] > summary::before, .scenario-background[open] > summary::before,
+        .example-diagrams[open] > summary::before, details.failure-result[open] > summary::before { transform: rotate(90deg); }
+        .step-collapsible > summary:hover, details.scenario-steps > summary:hover, details.example-diagrams > summary:hover { background-color: var(--kron-hover); }
 
         .scenario-steps > .step,
         .scenario-steps > .step-collapsible,
         .scenario-background > .step,
         .scenario-background > .step-collapsible {
-            margin-left: 1em;
-            margin-right: 1em;
+            margin: 0 14px 0 25px;
+            padding: 3px 0;
+            border: none;
         }
 
         .scenario-steps > .step:last-child,
         .scenario-steps > .step-collapsible:last-child,
         .scenario-background > .step:last-child,
         .scenario-background > .step-collapsible:last-child {
-            margin-bottom: 1em;
+            margin-bottom: 10px;
         }
 
         .step {
-            margin: 0.3em 0;
-            line-height: 1.6;
+            margin: 5px 0;
             padding-left: 0;
+            font-size: 13.5px;
+            line-height: 1.55;
         }
 
-        .step:not(.step-collapsible)::before {
-            content: '';
-            display: inline-block;
-            width: 0.3em;
-        }
 
         /* A step that came from the feature's Background, sitting inline in the one Steps list.
            The muted left accent matches the border the separate Background Steps section uses. */
         .step-background {
-            border-left: 3px solid rgb(224, 224, 224);
-            padding-left: 0.5em;
             margin-left: -0.5em;
+            padding-left: 0.5em;
+            border-left: 3px solid var(--kron-hairline);
+            color: var(--kron-muted);
         }
+        .step-background .step-text { color: var(--kron-muted); }
 
         .scenario-steps > .step-background,
         .scenario-steps > .step-collapsible.step-background {
-            margin-left: 0.5em;
+            margin-left: 25px;
         }
 
         .step-number {
-            font-family: monospace;
-            color: #888;
-            font-size: 0.8em;
             margin-right: 0.3em;
+            font-family: var(--kron-mono);
+            font-size: 0.8em;
+            color: var(--kron-faint);
         }
 
         .step-status {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 1.2em;
-            height: 1.2em;
+            width: 16px;
+            height: 16px;
+            /* the tick shares the keyword's baseline */
+            margin: 0 7px 0 2px;
+            vertical-align: baseline;
             border-radius: 50%;
-            color: white;
-            font-size: 0.9em;
+            font-size: 10px;
             font-weight: bold;
-            margin-right: 0.3em;
-            margin-left: 0.5em;
-            margin-top: -0.1em;
-            vertical-align: middle;
-            user-select: none;
+            color: var(--kron-ink-soft);
         }
 
-        .step-status.passed { background: #1daf26; }
-        .step-status.failed { background: #cc0000; }
-        .step-status.skipped { background: #949494; }
-        .step-status.bypassed { background: #2e7bff; }
-        .step-status.skipped-after-failure { background: #fbc800; color: black; }
-        .step-status.passed-bypassed { background: #2e7bff; }
-        .step-status.passed-skipped { background: #949494; }
+        .step-status.passed {
+            background: var(--kron-pass-soft);
+            color: var(--kron-pass);
+        }
+        .step-status.failed {
+            background: var(--kron-fail-soft);
+            color: var(--kron-fail);
+        }
+        .step-status.skipped {
+            background: var(--kron-skip-soft);
+            color: var(--kron-skip);
+        }
+        .step-status.bypassed {
+            background: var(--kron-bypass-soft);
+            color: var(--kron-bypass);
+        }
+        .step-status.skipped-after-failure {
+            background: var(--kron-warn-soft);
+            color: var(--kron-warn);
+        }
+        .step-status.passed-bypassed {
+            background: var(--kron-bypass-soft);
+            color: var(--kron-bypass);
+        }
+        .step-status.passed-skipped {
+            background: var(--kron-skip-soft);
+            color: var(--kron-skip);
+        }
 
         .step-keyword {
-            font-weight: bold;
-            color: rgb(100, 100, 100);
+            font-size: var(--kron-fs-label);
+            font-weight: 600;
+            line-height: 16px;
+            letter-spacing: var(--kron-label-track);
+            text-transform: uppercase;
+            color: var(--kron-muted);
         }
 
         .step-text {
-            color: rgb(50, 50, 50);
+            font-size: var(--kron-fs-body);
+            line-height: 21px;
+            color: var(--kron-ink);
         }
 
         .step-duration {
-            font-size: 0.8em;
-            color: rgb(130, 130, 130);
+            font-size: var(--kron-fs-meta);
+            font-variant-numeric: tabular-nums;
+            color: var(--kron-faint);
         }
 
         .step-comment {
-            font-style: italic;
-            color: rgb(100, 100, 100);
             margin-left: 1.5em;
             font-size: 0.9em;
+            font-style: italic;
+            color: var(--kron-muted);
         }
 
         .step-attachment {
             display: inline-block;
             margin-left: 1.5em;
-            font-size: 0.85em;
-            color: rgb(66, 133, 244);
+            font-size: var(--kron-fs-meta);
+            color: var(--kron-accent);
         }
+        .step-attachment a { color: var(--kron-accent); }
 
         .attachment-image-container {
             display: block;
@@ -804,20 +913,20 @@
             max-width: 100%;
             max-height: 242px;
             box-sizing: border-box;
-            border: 1px solid #ddd;
+            border: 1px solid var(--kron-hairline);
             border-radius: 4px;
             transition: box-shadow 0.2s;
         }
 
         .attachment-image:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px var(--kron-shadow);
         }
 
         .attachment-image-name {
             display: block;
-            font-size: 0.8em;
-            color: #666;
             margin-top: 0.2em;
+            font-size: 0.8em;
+            color: var(--kron-muted);
         }
 
         .lightbox-overlay {
@@ -841,19 +950,22 @@
         }
 
         .step-docstring {
-            background: #f5f5f5;
-            border: 1px solid #ddd;
+            margin: 0.3em 0 0.3em 25px;
             padding: 0.5em;
-            margin: 0.3em 0 0.3em 2em;
+            background: var(--kron-code-bg);
+            border: 1px solid var(--kron-hairline);
             font-size: 0.85em;
             overflow-x: auto;
         }
 
         .sub-steps {
-            margin-left: 1.5em;
-            border-left: 2px solid rgb(220, 220, 220);
-            padding-left: 0.8em;
+            margin: 2px 0 2px 25px;
+            padding-left: 12px;
+            border-left: 1px solid var(--kron-hairline);
         }
+        .sub-steps .step { font-size: 12.5px; }
+        .sub-steps .step-text { font-size: var(--kron-fs-control); line-height: 19px; }
+        .sub-steps > .step-background { margin-left: 0; padding-left: 0; border-left: 0; }
 
         .step-collapsible {
             margin: 0.15em 0;
@@ -861,9 +973,10 @@
         }
 
         .step-collapsible > summary {
-            cursor: pointer;
-            list-style: none;
+            position: relative;
             padding-left: 0;
+            list-style: none;
+            cursor: pointer;
         }
 
         .step-collapsible > summary::-webkit-details-marker {
@@ -871,23 +984,31 @@
         }
 
         .step-collapsible > summary::before {
-            content: '\25B6';
+            content: '\25B6\FE0E';
             display: inline-block;
-            width: 0.5em;
-            font-size: 0.6em;
+            position: absolute;
+            left: -14px;
+            top: 7px;
+            width: 8px;
+            font-size: 8px;
+            line-height: 1;
             text-align: center;
-            transition: transform 0.15s ease;
             vertical-align: middle;
+            color: var(--kron-ink);
+            transition: transform 0.15s ease;
         }
+        .scenario-steps > .step-collapsible > summary::before, .scenario-background > .step-collapsible > summary::before { left: -11px; }
 
         details.step-collapsible[open] > summary::before {
             transform: rotate(90deg);
         }
 
         .feature-description {
+            margin: 0;
+            padding: 10px 16px 2px;
+            font-size: 13px;
             font-style: italic;
-            color: rgb(100, 100, 100);
-            margin: 0.3em 0 0.8em 0;
+            color: var(--kron-muted);
             white-space: pre-line;
         }
 
@@ -900,16 +1021,24 @@
         }
 
         .rule {
-            margin-left: 1em;
-            border-left: 3px solid #2e7bff;
-            padding-left: 0.5em;
-            margin-bottom: 0.5em;
+            margin: 0;
+            padding: 0;
+            border-top: 1px solid var(--kron-hairline-soft);
+            scroll-margin-top: calc(var(--kron-nav-h, 0px) + 12px);
         }
+        .rule > summary { scroll-margin-top: calc(var(--kron-nav-h, 0px) + 12px); }
+        .rule > summary.h2-5 { padding: 9px 16px; background: var(--kron-card); }
+        .rule > summary.h2-5::before {
+            content: "Rule"; margin: 0 8px 0 4px; font-size: var(--kron-fs-label); font-weight: 600;
+            letter-spacing: var(--kron-label-track); text-transform: uppercase; color: var(--kron-label);
+        }
+        .rule[open] > summary.h2-5 { border-bottom: 1px solid var(--kron-hairline-soft); }
+        .rule > .scenario { padding-left: 34px; }
 
         .h2-5 {
-            font-size: 1.15em;
+            font-size: var(--kron-fs-body);
             font-weight: 600;
-            color: #333;
+            color: var(--kron-ink);
         }
 
         .examples-table {
@@ -1017,29 +1146,40 @@
         .step-param-inline {
             padding: 1px 4px;
             border-radius: 3px;
-            font-family: monospace;
+            font-family: var(--kron-mono);
             font-size: 0.9em;
+            color: var(--kron-ink);
         }
-        .param-success { background: #d4edda; }
-        .param-failure { background: #f8d7da; }
-        .param-exception { background: #f5c6cb; }
-        .param-not-provided { background: #fff3cd; }
-        .param-na { background: #e9ecef; }
+        .param-success {
+            background: var(--kron-pass-soft);
+        }
+        .param-failure {
+            background: var(--kron-fail-soft);
+        }
+        .param-exception {
+            background: var(--kron-exception-soft);
+        }
+        .param-not-provided {
+            background: var(--kron-warn-soft);
+        }
+        .param-na {
+            background: var(--kron-code-bg);
+        }
 
         .step-param-inline pre, .step-param-table td pre, .step-param-combined-table td pre, .tree-node pre {
             display: inline;
             margin: 0;
             padding: 0.1em 0.3em;
-            background: rgba(0,0,0,0.07);
+            background: color-mix(in srgb, var(--kron-ink) 7%, transparent);
             border-radius: 3px;
-            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-family: var(--kron-mono);
             font-size: 0.92em;
             font-style: italic;
-            color: #888;
+            color: var(--kron-faint);
         }
 
         .step-param-table {
-            margin: 4px 0 4px 2.3em;
+            margin: 4px 0 4px 25px;
             overflow-x: auto;
         }
         .step-param-table table {
@@ -1047,62 +1187,67 @@
             font-size: 0.85em;
         }
         .step-param-table th, .step-param-table td {
-            border: 1px solid #ccc;
             padding: 3px 8px;
+            border: 1px solid var(--kron-hairline);
+            font-size: var(--kron-fs-meta);
+            font-variant-numeric: tabular-nums;
         }
         .step-param-table th {
-            background: #f5f5f5;
+            background: var(--kron-strip);
+            color: var(--kron-ink-soft);
+            font-weight: 600;
         }
         .step-param-table th.key {
             font-weight: bold;
             text-decoration: underline;
         }
         .step-param-combined-table th.col-highlight, .step-param-combined-table td.col-highlight {
-            background-color: #e8f4fd;
-            border-color: #90caf9;
+            background-color: var(--kron-selected);
+            border-color: var(--kron-selected-edge);
         }
         .step-param-highlight {
-            background-color: #fff3cd !important;
+            background-color: var(--kron-warn-soft) !important;
             transition: background-color 1.5s ease;
         }
         .step-table-ref {
             display: inline-block;
             margin-left: 6px;
             padding: 1px 7px;
-            border: 1px solid #b0bec5;
+            background: var(--kron-field);
+            color: var(--kron-ink-soft);
+            border: 1px solid var(--kron-control-border);
             border-radius: 3px;
-            background: #eceff1;
-            font-size: 0.82em;
             font-family: inherit;
-            cursor: pointer;
+            font-size: 0.82em;
             vertical-align: middle;
-            color: #37474f;
+            cursor: pointer;
         }
         .step-table-ref:hover {
-            background: #cfd8dc;
+            background: var(--kron-hover);
         }
         .step-table-ref-active {
-            background: #cfd8dc;
-            border-color: #90a4ae;
+            background: var(--kron-selected);
+            color: var(--kron-selected-ink);
+            border-color: var(--kron-selected-edge);
         }
         .step-param-expand {
             display: block;
             margin: 4px 0 4px 6px;
             padding: 6px 10px;
-            background: #f5f5f5;
-            border: 1px solid #e0e0e0;
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--kron-strip);
+            color: var(--kron-ink);
+            border: 1px solid var(--kron-hairline);
             border-radius: 3px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-family: var(--kron-mono);
             font-size: 0.82em;
             white-space: pre-wrap;
             word-break: break-word;
-            max-height: 300px;
-            overflow-y: auto;
-            color: #37474f;
         }
 
         .step-param-combined-table {
-            margin: 8px 0 4px 24px;
+            margin: 8px 0 4px 25px;
             overflow-x: auto;
         }
         .step-param-combined-table table {
@@ -1110,11 +1255,15 @@
             font-size: 0.85em;
         }
         .step-param-combined-table th, .step-param-combined-table td {
-            border: 1px solid #ccc;
             padding: 3px 8px;
+            border: 1px solid var(--kron-hairline);
+            font-size: var(--kron-fs-meta);
+            font-variant-numeric: tabular-nums;
         }
         .step-param-combined-table th {
-            background: #f5f5f5;
+            background: var(--kron-strip);
+            color: var(--kron-ink-soft);
+            font-weight: 600;
         }
         .step-param-combined-table th.key {
             font-weight: bold;
@@ -1122,20 +1271,20 @@
         }
         .step-param-combined-table th.combined-separator,
         .step-param-combined-table td.combined-separator {
-            border-left: 2px solid #888;
-            border-right: 2px solid #888;
-            background: #f0f0f0;
+            width: 1em;
+            padding: 3px 4px;
+            background: var(--kron-field);
+            border-left: 2px solid var(--kron-dot);
+            border-right: 2px solid var(--kron-dot);
             text-align: center;
             font-weight: bold;
-            padding: 3px 4px;
-            width: 1em;
         }
         .row-surplus td:first-child { color: green; }
         .row-missing td:first-child { color: red; }
 
         .step-param-tree {
             margin: 4px 0 4px 24px;
-            font-family: monospace;
+            font-family: var(--kron-mono);
             font-size: 0.85em;
         }
         .tree-node {
@@ -1150,43 +1299,58 @@
 
         /* Error Diff */
         .error-diff {
-            display: flex;
-            flex-direction: column;
-            gap: 0.3em;
-            margin: 0.8em 0;
-            font-family: monospace;
-            font-size: 0.9em;
+            display: grid;
+            row-gap: 4px;
+            margin: 0 12px 12px;
+            padding: 6px;
+            background: var(--kron-card);
+            border: 1px solid var(--kron-fail-edge);
+            border-radius: 6px;
+            font-family: var(--kron-mono);
+            font-size: 12px;
         }
+        .error-diff code { font-family: var(--kron-mono); font-size: 12px; color: var(--kron-ink); background: none; }
         .diff-expected, .diff-actual {
             display: flex;
-            gap: 0.6em;
+            gap: 10px;
             align-items: baseline;
-            padding: 0.4em 0.6em;
-            border-radius: 0.4em;
+            padding: 5px 8px;
+            border-radius: 4px;
             overflow-x: auto;
         }
         .diff-expected {
-            background: rgb(255, 235, 235);
+            background: var(--kron-pass-soft);
         }
         .diff-actual {
-            background: rgb(235, 255, 235);
+            background: var(--kron-fail-soft);
         }
         .diff-label {
-            font-weight: bold;
+            flex: 0 0 64px;
+            min-width: 0;
+            font-family: var(--kron-font);
+            font-size: var(--kron-fs-label);
+            font-weight: 600;
+            letter-spacing: var(--kron-label-track);
+            text-transform: uppercase;
             white-space: nowrap;
-            min-width: 5.5em;
+            color: var(--kron-label);
         }
         .diff-del {
-            background: rgb(255, 180, 180);
+            padding: 0 1px;
+            background: var(--kron-fail-soft);
+            color: var(--kron-fail);
             text-decoration: line-through;
             border-radius: 2px;
-            padding: 0 1px;
         }
         .diff-ins {
-            background: rgb(180, 255, 180);
-            border-radius: 2px;
             padding: 0 1px;
+            background: var(--kron-pass-soft);
+            color: var(--kron-pass);
+            border-radius: 2px;
         }
+        /* what was expected and not found reads green in its row, what was found instead red in its */
+        .diff-expected .diff-del { color: var(--kron-pass); background: color-mix(in srgb, var(--kron-pass) 16%, transparent); text-decoration: none; font-weight: 600; }
+        .diff-actual .diff-ins { color: var(--kron-fail); background: color-mix(in srgb, var(--kron-fail) 14%, transparent); font-weight: 600; }
 
         /* Failure Clusters */
         .failure-clusters {
@@ -1369,66 +1533,77 @@
 
         /* Parameterized test grouping table */
         .param-test-table {
-            border-collapse: collapse;
             margin: 0.5em 0 0.5em 1em;
-            font-size: 0.9em;
-            width: calc(100% - 2em);
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
         }
         .param-test-table th, .param-test-table td {
-            border: 1px solid #ddd;
-            padding: 0.3em 0.6em;
+            border: 1px solid var(--kron-hairline);
             text-align: left;
         }
+        .param-test-table th {
+            padding: 6px 10px;
+            background: var(--kron-strip);
+            color: var(--kron-label-soft);
+            font-size: var(--kron-fs-label);
+            font-weight: 600;
+            letter-spacing: var(--kron-label-track);
+            text-transform: uppercase;
+        }
+        .param-test-table td {
+            padding: 5px 10px;
+            color: var(--kron-ink);
+            vertical-align: baseline;
+            font-size: var(--kron-fs-meta);
+            font-variant-numeric: tabular-nums;
+        }
+        .param-test-table tr:last-child td { border-bottom: none; }
         .param-test-table thead {
-            background: #f0f0f0;
+            background: var(--kron-strip);
         }
         .param-test-table .master-header {
             text-align: center;
-            background: #e8e8e8;
+            background: var(--kron-strip);
+            color: var(--kron-label);
             font-weight: 600;
         }
         .param-test-table .sub-header {
-            font-weight: 500;
-            font-size: 0.95em;
+            font-size: var(--kron-fs-label);
+            font-weight: 600;
+            line-height: 16px;
+            letter-spacing: var(--kron-label-track);
         }
         .param-test-table tbody tr {
             cursor: pointer;
             transition: background 0.15s;
         }
         .param-test-table tbody tr:hover {
-            background: #e8f0fe;
+            background: var(--kron-hover);
         }
         .param-test-table tbody tr.row-active {
-            background: #d2e3fc;
-            font-weight: 500;
+            background: var(--kron-selected);
+            font-weight: 400;
         }
-        .param-test-table tbody tr.row-passed { background: #f0fff0; }
-        .param-test-table tbody tr.row-failed { background: #fff0f0; }
-        .param-test-table tbody tr.row-skipped { background: #fff8e1; }
-        .param-test-table tbody tr.row-bypassed { background: #f0f0ff; }
-        /* Every row carries one of these status classes, which the plain row hover and row-active tints
-           above cannot beat. Each status darkens its own tint under the pointer and further when selected;
-           the selected rules come last, so a hovered selected row keeps its selected tint. */
-        .param-test-table tbody tr.row-passed:hover { background: #e3fae9; }
-        .param-test-table tbody tr.row-failed:hover { background: #fde5e4; }
-        .param-test-table tbody tr.row-skipped:hover { background: #fef1cc; }
-        .param-test-table tbody tr.row-bypassed:hover { background: #e8e8fd; }
-        .param-test-table tbody tr.row-active.row-passed { background: #d5f5e3; }
-        .param-test-table tbody tr.row-active.row-failed { background: #fadbd8; }
-        .param-test-table tbody tr.row-active.row-skipped { background: #fce9b8; }
-        .param-test-table tbody tr.row-active.row-bypassed { background: #dfe0fb; }
-        .param-test-table tbody tr.row-search-match { box-shadow: inset 4px 0 0 #4285f4; }
-        .param-test-table .mono { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 0.9em; }
+        .param-test-table tbody tr.row-active:hover { background: var(--kron-selected); }
+        .param-test-table tbody tr.row-active td:first-child { box-shadow: inset 2px 0 0 var(--kron-accent); }
+        .param-test-table tbody tr.row-search-match {
+            box-shadow: inset 2px 0 0 var(--kron-accent);
+        }
+        .param-test-table .mono {
+            font-family: var(--kron-mono);
+            font-size: var(--kron-fs-meta);
+        }
         /* Examples: block separator bands — a divider, not a header; inert to row selection */
         .param-test-table tbody tr.examples-block-row,
         .param-test-table tbody tr.examples-block-row:hover {
             cursor: default;
-            background: #f5f5f5;
+            background: var(--kron-strip);
         }
         .param-test-table tbody tr.examples-block-row td {
-            border-top: 2px solid #ccc;
             padding: 0.25em 0.6em;
-            color: #555;
+            border-top: 1px solid var(--kron-hairline);
+            color: var(--kron-muted);
         }
         .examples-block-row .examples-block-name {
             font-weight: 600;
@@ -1436,20 +1611,37 @@
         }
         .examples-block-row .examples-block-counts {
             margin-left: 0.8em;
-            font-size: 0.8em;
-            color: #777;
-            background: #ececec;
-            border-radius: 3px;
             padding: 0.1em 0.5em;
+            background: var(--kron-field);
+            color: var(--kron-muted);
+            border-radius: 3px;
+            font-size: 0.8em;
         }
         .examples-block-row .examples-block-desc {
             display: block;
+            margin-top: 0.15em;
             font-size: 0.85em;
             font-style: italic;
-            color: #777;
-            margin-top: 0.15em;
+            color: var(--kron-muted);
         }
-        .param-table-wrapper { overflow-x: auto; }
+        .param-table-wrapper {
+            margin: 2px 0 10px;
+            overflow-x: auto;
+            background: var(--kron-card);
+            border: 1px solid var(--kron-hairline);
+            border-radius: 8px;
+        }
+        /* One even border with rounded corners: the frame draws the outer border and clips the corners, the cells only the
+           lines between them (a cell's right and bottom edges, except where they meet the frame). */
+        .param-table-wrapper > .param-test-table { margin: 0; border-collapse: separate; border-spacing: 0; }
+        .param-table-wrapper > .param-test-table th,
+        .param-table-wrapper > .param-test-table td { border-style: solid; border-color: var(--kron-hairline); border-width: 0 1px 1px 0; }
+        .param-table-wrapper > .param-test-table tbody tr > :last-child,
+        .param-table-wrapper > .param-test-table thead tr:first-child > :last-child { border-right-width: 0; }
+        /* the header's second row reaches the right edge only when the first row's last cell does not span down to it */
+        .param-table-wrapper > .param-test-table thead:not(:has(tr:first-child > :last-child[rowspan])) tr + tr > :last-child { border-right-width: 0; }
+        .param-table-wrapper > .param-test-table tbody tr:last-child > td { border-bottom-width: 0; }
+        .param-table-wrapper > .param-test-table tbody tr.examples-block-row td { border-top-width: 0; }
         .flatten-toggle {
             background: none;
             border: 1px solid #bbb;
@@ -1470,16 +1662,31 @@
         /* Status badges */
         .status-badge {
             display: inline-block;
-            padding: 0.1em 0.4em;
-            border-radius: 3px;
-            font-size: 0.75em;
+            padding: 1px 8px;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            font-size: var(--kron-fs-label);
             font-weight: 600;
+            line-height: 16px;
             white-space: nowrap;
         }
-        .status-badge.badge-pass { background: #d5f5e3; color: #1e8449; }
-        .status-badge.badge-fail { background: #fadbd8; color: #c0392b; }
-        .status-badge.badge-skip { background: #fef9e7; color: #b7950b; }
-        .status-badge.badge-bypass { background: #e8eaf6; color: #3949ab; }
+        .status-badge.badge-pass {
+            background: var(--kron-pass-soft);
+            color: var(--kron-pass);
+        }
+        .status-badge.badge-fail {
+            background: var(--kron-fail-soft);
+            color: var(--kron-fail);
+            border-color: var(--kron-fail-edge);
+        }
+        .status-badge.badge-skip {
+            background: var(--kron-skip-soft);
+            color: var(--kron-skip);
+        }
+        .status-badge.badge-bypass {
+            background: var(--kron-bypass-soft);
+            color: var(--kron-bypass);
+        }
 
         /* Detail panels and diagram area for parameterized groups */
         .param-detail-panels { margin: 0.5em 0 0.5em 0; }
@@ -1487,29 +1694,66 @@
         .param-diagram-area { margin: 0.5em 0 0.5em 1em; }
         .param-diagram-identical-badge {
             display: inline-block;
+            margin-bottom: 0.5em;
             padding: 0.2em 0.6em;
-            background: #e8f5e9;
-            color: #2e7d32;
+            background: var(--kron-pass-soft);
+            color: var(--kron-pass);
             border-radius: 4px;
             font-size: 0.85em;
             font-weight: 500;
-            margin-bottom: 0.5em;
         }
 
         /* Sub-table inside a cell (R3) */
         .cell-subtable { border-collapse: collapse; margin: 0; font-size: 0.9em; width: 100%; }
-        .cell-subtable th { background: #f5f5f5; font-weight: 600; font-size: 0.85em; padding: 0.2em 0.4em; border: 1px solid #e0e0e0; color: #666; }
-        .cell-subtable td { padding: 0.2em 0.4em; border: 1px solid #e0e0e0; font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 0.92em; }
+        .cell-subtable th {
+            padding: 0.2em 0.4em;
+            background: var(--kron-strip);
+            color: var(--kron-label);
+            border: 1px solid var(--kron-hairline-soft);
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .cell-subtable td {
+            padding: 0.2em 0.4em;
+            border: 1px solid var(--kron-hairline-soft);
+            font-family: var(--kron-mono);
+            font-size: 0.92em;
+        }
 
         /* Expandable complex param (R4) */
         details.param-expand { margin: 0; }
-        details.param-expand > summary { cursor: pointer; list-style: none; font-size: 0.9em; color: #555; padding: 0.15em 0; }
+        details.param-expand > summary {
+            padding: 0.15em 0;
+            list-style: none;
+            font-size: 0.9em;
+            color: var(--kron-ink-soft);
+            cursor: pointer;
+        }
         details.param-expand > summary::-webkit-details-marker { display: none; }
-        details.param-expand > summary::before { content: "▸ "; font-size: 0.8em; color: #999; }
+        details.param-expand > summary::before {
+            content: "▸ ";
+            font-size: 0.8em;
+            color: var(--kron-faint);
+        }
         details.param-expand[open] > summary::before { content: "▾ "; }
-        details.param-expand .expand-body { margin: 0.3em 0 0.2em 0.5em; padding: 0.5em 0.7em; background: #f8f9fa; border: 1px solid #e8e8e8; border-radius: 4px; font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 0.88em; white-space: pre-wrap; line-height: 1.4; }
-        details.param-expand .expand-body .prop-key { color: #7d3c98; }
-        details.param-expand .expand-body .prop-val { color: #1a5276; }
+        details.param-expand .expand-body {
+            margin: 0.3em 0 0.2em 0.5em;
+            padding: 0.5em 0.7em;
+            background: var(--kron-strip);
+            color: var(--kron-ink);
+            border: 1px solid var(--kron-hairline);
+            border-radius: 4px;
+            font-family: var(--kron-mono);
+            font-size: 0.88em;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+        details.param-expand .expand-body .prop-key {
+            color: var(--kron-prop-key);
+        }
+        details.param-expand .expand-body .prop-val {
+            color: var(--kron-prop-val);
+        }
 
         /* #2 Collapsible filter section — hidden on desktop */
         .mobile-filter-toggle {
@@ -1551,21 +1795,23 @@
         .back-to-top {
             display: none;
             position: fixed;
-            bottom: 1.5em;
-            left: 1.5em;
-            padding: 0.5em 0.8em;
-            background: rgb(100, 100, 100);
-            color: white;
-            border: none;
-            border-radius: 0.5em;
-            cursor: pointer;
-            font-size: 1em;
+            bottom: 18px;
+            left: 18px;
             z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            background: var(--kron-card);
+            color: var(--kron-ink-soft);
+            border: 1px solid var(--kron-hairline);
+            border-radius: 999px;
+            font-size: 16px;
             line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 4px 12px var(--kron-shadow);
         }
         .back-to-top:hover {
-            background: rgb(70, 70, 70);
+            background: var(--kron-hover);
         }
 
         /* Between the phone layout and a wide window the filtering box takes a row of its own: beside
@@ -1579,10 +1825,6 @@
 
         /* ── Mobile / Responsive ── */
         @media (max-width: 768px) {
-            body {
-                padding: 0.5em;
-                font-size: 0.95em;
-            }
 
             .header-row {
                 flex-direction: column;
@@ -1663,15 +1905,7 @@
                 display: none;
             }
 
-            .feature {
-                padding: 0.5em;
-                border-radius: 6px;
-            }
 
-            .scenario {
-                padding: 0.5em;
-                border-radius: 6px;
-            }
 
             .timeline-label {
                 min-width: 100px;
@@ -1702,7 +1936,6 @@
             }
 
             .failure-result pre {
-                font-size: 0.8em;
                 word-break: break-word;
             }
 
@@ -1712,20 +1945,7 @@
                 margin-top: 0.3em;
             }
 
-            .jump-to-failure {
-                bottom: 0.8em;
-                right: 0.8em;
-                font-size: 0.8em;
-                padding: 0.4em 0.8em;
-            }
 
-            /* #10 Back-to-top FAB */
-            .back-to-top {
-                bottom: 0.8em;
-                left: 0.8em;
-                font-size: 0.8em;
-                padding: 0.4em 0.8em;
-            }
 
             .search-help-panel {
                 font-size: 0.8em;
@@ -1768,7 +1988,7 @@
 
         @media (max-width: 480px) {
             body {
-                font-size: 1em;
+                padding-inline: 16px;
             }
 
             .header-row {
@@ -1780,13 +2000,7 @@
                 height: 80px;
             }
 
-            .h2 {
-                font-size: 1.2em;
-            }
 
-            .h3 {
-                font-size: 1em;
-            }
 
             .toolbar-left, .toolbar-right {
                 flex-wrap: wrap;
@@ -1814,17 +2028,8 @@
                 overflow: hidden;
             }
 
-            .duration-badge {
-                font-size: 0.65em;
-            }
 
-            .copy-scenario-name, .scenario-link {
-                font-size: 0.6em;
-            }
 
-            span.label {
-                font-size: 0.6em;
-            }
 
             /* #3 "lines" label wrapping fix */
             .truncate-lines-label {
@@ -1842,7 +2047,7 @@
            so a report without internal-flow tracking got an unstyled block). It wraps whole controls
            onto a new row: squeezed, their labels wrapped, and inside a scenario, whose
            content-visibility clips what overflows it, the last controls were cut off out of sight. */
-        .diagram-toggle { margin-top: 8px; margin-bottom: 8px; padding-left: 1em; padding-right: 1em; display: flex; flex-wrap: wrap; align-items: center; width: 100%; box-sizing: border-box; }
+        .diagram-toggle { margin-top: 8px; margin-bottom: 8px; padding-left: 16px; padding-right: 16px; display: flex; flex-wrap: wrap; align-items: center; width: 100%; box-sizing: border-box; }
         .diagram-toggle-btn {
             padding: 4px 14px;
             border: 1px solid #ccc;

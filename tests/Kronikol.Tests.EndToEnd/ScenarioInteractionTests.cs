@@ -235,7 +235,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         var borderWidth = await stepsDetails.EvaluateAsync<string>("el => getComputedStyle(el).borderWidth");
         Assert.Equal("1px", borderWidth);
         var borderRadius = await stepsDetails.EvaluateAsync<string>("el => getComputedStyle(el).borderRadius");
-        Assert.Contains("16px", borderRadius);
+        Assert.Contains("14px", borderRadius); // 5.0.0: the Option C steps card (plans/OPTION_C_PLAN.md S1)
     }
 
     // ── Diagram container renders ──

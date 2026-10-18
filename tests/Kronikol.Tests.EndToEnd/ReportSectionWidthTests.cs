@@ -7,10 +7,12 @@ namespace Kronikol.Tests.EndToEnd;
 /// the audit). No feature clips these sections, so a long token that does not break scrolls the whole page
 /// sideways: a failure cluster's message, a test method's full name in the cluster's list and in the
 /// History section, the History section's branch, a dependency chip named after a typed client. Each
-/// breaks inside its box. Under WCAG text spacing, just above the breakpoint, the filtering box of a report
-/// with a long branch is narrower than the search help's table, which scrolls inside its panel, and than
-/// one export button, which wraps its label inside the box. <see cref="ViewportSweepTests"/> proves the
-/// page never scrolls sideways at any width; these facts pin which way each kind of content fits.
+/// breaks inside its box. Under WCAG text spacing, just above the breakpoint, the 4.x filtering box of a
+/// report with a long branch was narrower than the search help's table, which scrolls inside its panel, and
+/// than one export button, which wraps its label inside the box. 5.0.0's smaller type (plans/OPTION_C_PLAN.md
+/// S1) leaves the box wider than all three at every width, so those facts hold the box narrow, as a CustomCss
+/// or a narrow frame can. <see cref="ViewportSweepTests"/> proves the page never scrolls sideways at any width;
+/// these facts pin which way each kind of content fits.
 /// </summary>
 [Collection(PlaywrightCollections.Reports)]
 public class ReportSectionWidthTests : PlaywrightTestBase
@@ -32,18 +34,25 @@ public class ReportSectionWidthTests : PlaywrightTestBase
             await Page.AddStyleTagAsync(new() { Content = TextSpacing });
     }
 
+    /// <summary>Holds the filtering box at <paramref name="maxWidth"/> px, narrower than the content a fact needs
+    /// it narrower than.</summary>
+    private Task HoldFilteringBox(int maxWidth) =>
+        Page.EvaluateAsync("w => { document.querySelector('.filtering-box').style.maxWidth = w + 'px'; }", maxWidth);
+
     private Task<int> PageOverflow() =>
         Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth - document.documentElement.clientWidth");
 
     [Theory]
-    [InlineData(320, ".failure-cluster > summary", "System.InvalidOperationException")]
-    [InlineData(320, "a.failure-cluster-scenario-link", "OrderReconciliationTests")]
-    [InlineData(320, "a.history-link", "OrderReconciliationTests")]
-    [InlineData(320, ".history-meta code", "dependabot/nuget")]
-    [InlineData(1200, "button.dependency-toggle", "NightlySettlementLedgerHttpClient")]
-    public async Task A_long_token_outside_the_features_breaks_inside_its_box(int width, string selector, string text)
+    [InlineData(320, ".failure-cluster > summary", "System.InvalidOperationException", 0)]
+    [InlineData(320, "a.failure-cluster-scenario-link", "OrderReconciliationTests", 0)]
+    [InlineData(320, "a.history-link", "OrderReconciliationTests", 0)]
+    [InlineData(320, ".history-meta code", "dependabot/nuget", 0)]
+    [InlineData(1200, "button.dependency-toggle", "NightlySettlementLedgerHttpClient", 220)]
+    public async Task A_long_token_outside_the_features_breaks_inside_its_box(int width, string selector, string text, int filteringBox)
     {
         await Open(width);
+        if (filteringBox > 0)
+            await HoldFilteringBox(filteringBox);
         var el = Page.Locator(selector, new() { HasTextString = text }).First;
         await el.ScrollIntoViewIfNeededAsync();
 
@@ -69,6 +78,7 @@ public class ReportSectionWidthTests : PlaywrightTestBase
     public async Task The_search_help_table_scrolls_inside_its_panel_when_the_filtering_box_is_narrower()
     {
         await Open(1180, textSpacing: true);
+        await HoldFilteringBox(220);
         await Page.Locator(".search-help-toggle").First.ClickAsync();
         var panel = Page.Locator(".search-help-panel").First;
         await Expect(panel).ToBeVisibleAsync();
@@ -85,6 +95,7 @@ public class ReportSectionWidthTests : PlaywrightTestBase
     public async Task An_export_button_wider_than_the_filtering_box_wraps_its_label_inside_it()
     {
         await Open(1161, textSpacing: true);
+        await HoldFilteringBox(140);
         var button = Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" });
 
         // The export buttons' right edge, the filtering box's content edge, and the button's lines.

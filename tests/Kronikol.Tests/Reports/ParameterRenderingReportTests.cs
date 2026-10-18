@@ -1147,9 +1147,11 @@ public class ParameterRenderingReportTests
     public void Step_param_table_left_margin_aligns_with_step_text()
     {
         // The step-param-table should be indented to align with the start of the step text,
-        // not with the tick/status indicator. The text starts after: ::before (0.3em) +
-        // status margin-left (0.5em) + status width (1.2em) + status margin-right (0.3em) = ~2.3em
-        Assert.Equal("4px 0 4px 2.3em", CssRules.Value(Stylesheets.HtmlReportStyleSheet, ".step-param-table", "margin"));
+        // not with the tick/status indicator. Since 5.0.0 the text starts after the status circle's
+        // left margin (2px), its width (16px) and its right margin (7px) = 25px.
+        Assert.Equal("4px 0 4px 25px", CssRules.Value(Stylesheets.HtmlReportStyleSheet, ".step-param-table", "margin"));
+        Assert.Equal("0 7px 0 2px", CssRules.Value(Stylesheets.HtmlReportStyleSheet, ".step-status", "margin"));
+        Assert.Equal("16px", CssRules.Value(Stylesheets.HtmlReportStyleSheet, ".step-status", "width"));
     }
 
     [Fact]

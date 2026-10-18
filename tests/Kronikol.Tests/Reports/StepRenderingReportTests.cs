@@ -560,8 +560,11 @@ public class StepRenderingReportTests
             Steps = [new ScenarioStep { Keyword = "Given", Text = "something" }]
         };
         var content = GenerateReport(MakeFeatures(scenario), "PassedSkippedCss.html");
+        // the skipped colours, as a skipped step's (5.0.0: the tokens, where 4.x wrote #949494 for both)
+        Assert.Equal("var(--kron-skip-soft)", CssRules.Value(Stylesheets.HtmlReportStyleSheet, ".step-status.passed-skipped", "background"));
+        Assert.Equal(CssRules.Value(Stylesheets.HtmlReportStyleSheet, ".step-status.skipped", "background"),
+            CssRules.Value(Stylesheets.HtmlReportStyleSheet, ".step-status.passed-skipped", "background"));
         Assert.Contains(".step-status.passed-skipped", content);
-        Assert.Contains("#949494", content); // grey — same as skipped
     }
 
     [Fact]
@@ -624,9 +627,8 @@ public class StepRenderingReportTests
         Assert.True(cssStart >= 0, ".scenario-steps CSS class should exist");
         var cssEnd = content.IndexOf("}", cssStart);
         var cssBlock = content[cssStart..cssEnd];
-        Assert.Contains("border-radius: 1em", cssBlock);
-        Assert.Contains("border: 1px solid", cssBlock);
-        Assert.Contains("border-color: rgb(224, 224, 224)", cssBlock);
+        Assert.Contains("border-radius: 14px", cssBlock); // 5.0.0: the 4.x 1em, at the page's 14px
+        Assert.Contains("border: 1px solid var(--kron-hairline)", cssBlock); // 5.0.0: the hairline token, in both themes
     }
 
     [Fact]

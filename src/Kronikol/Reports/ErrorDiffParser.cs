@@ -94,13 +94,13 @@ public static class ErrorDiffParser
         var sb = new StringBuilder();
         sb.Append("<div class=\"error-diff\">");
 
-        // Expected line
-        sb.Append("<div class=\"diff-expected\"><span class=\"diff-label\">Expected:</span><code>");
+        // Expected line (5.0.0: the labels are small capitals, which carry no colon)
+        sb.Append("<div class=\"diff-expected\"><span class=\"diff-label\">Expected</span><code>");
         AppendDiff(sb, expectedTokens, expectedCommon, "diff-del");
         sb.Append("</code></div>");
 
         // Actual line
-        sb.Append("<div class=\"diff-actual\"><span class=\"diff-label\">Actual:</span><code>");
+        sb.Append("<div class=\"diff-actual\"><span class=\"diff-label\">Actual</span><code>");
         AppendDiff(sb, actualTokens, actualCommon, "diff-ins");
         sb.Append("</code></div>");
 

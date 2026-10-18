@@ -102,8 +102,9 @@ public partial class StylesheetRulesTests
     {
         Assert.Equal("flex", CssRules.Value(Base, ".diagram-toggle", "display"));
         Assert.Equal("wrap", CssRules.Value(Base, ".diagram-toggle", "flex-wrap"));
-        Assert.Equal("1em", CssRules.Value(Base, ".diagram-toggle", "padding-left"));
-        Assert.Equal("1em", CssRules.Value(Base, ".diagram-toggle", "padding-right"));
+        // 5.0.0 (plans/OPTION_C_PLAN.md S1): a length, since 1em became 14px with the page's type
+        Assert.Equal("16px", CssRules.Value(Base, ".diagram-toggle", "padding-left"));
+        Assert.Equal("16px", CssRules.Value(Base, ".diagram-toggle", "padding-right"));
     }
 
     [Fact]
@@ -198,36 +199,23 @@ public partial class StylesheetRulesTests
         Assert.Equal("inset 4px 0 0 #8b5cf6", CssRules.Value(Violet, ".param-test-table tbody tr.row-search-match", "box-shadow")?.ToLowerInvariant());
     }
 
-    // ── The parameterized row's states (roadmap 1.10) ──
+    // ── The parameterized row's states (roadmap 1.10; 5.0.0) ──
 
-    /// <summary>Every row carries a status class, whose rule is as specific as the base row's
-    /// <c>:hover</c> and <c>row-active</c> rules and follows them, so neither ever painted a real row: a
-    /// hovered row gave no feedback, and a selected skipped row (a paler tint than its resting one) or
-    /// bypassed row (no tint of its own) looked like the rest. Each status now darkens its own tint under
-    /// the pointer and further when selected, and states its hover between the two, so a hovered selected
-    /// row keeps its selected tint.</summary>
-    [Theory]
-    [InlineData("passed")]
-    [InlineData("failed")]
-    [InlineData("skipped")]
-    [InlineData("bypassed")]
-    public void A_parameterized_row_darkens_its_status_tint_when_hovered_and_further_when_selected(string status)
+    /// <summary>Roadmap 1.10 found every row's status tint as specific as the row's <c>:hover</c> and <c>row-active</c>
+    /// rules and after them, so a hovered or selected row looked like the rest, and gave each status a darker tint for
+    /// both. Since 5.0.0 (plans/OPTION_C_PLAN.md S1) a row has no status tint, as in the Option C preview: the Status
+    /// column's badge says it, and every row shows the same hover and selected state, a hovered selected row keeping
+    /// its selection.</summary>
+    [Fact]
+    public void Every_parameterized_row_shows_the_same_hover_and_selection()
     {
-        string[] states = [$".param-test-table tbody tr.row-{status}", $".param-test-table tbody tr.row-{status}:hover", $".param-test-table tbody tr.row-active.row-{status}"];
-        var lightness = states.Select(s => Lightness(CssRules.Value(Base, s, "background") ?? throw new Xunit.Sdk.XunitException($"no background for {s}"))).ToArray();
-        Assert.True(lightness[0] - lightness[1] >= 2 && lightness[1] - lightness[2] >= 2,
-            $"{status}: L* resting {lightness[0]:F1}, hovered {lightness[1]:F1}, selected {lightness[2]:F1}; each step should darken by 2 or more");
-        var order = states.Select(s => CssRules.IndexOf(Base, s)).ToArray();
-        Assert.True(order[0] < order[1] && order[1] < order[2], $"{status}: rules at {string.Join(", ", order)}; the hover belongs between the resting and the selected tint");
-    }
-
-    /// <summary>CIE L* of a <c>#rrggbb</c> colour: the lightness a reader sees.</summary>
-    private static double Lightness(string hex)
-    {
-        static double Linear(int c) => c / 255.0 <= 0.04045 ? c / 255.0 / 12.92 : Math.Pow((c / 255.0 + 0.055) / 1.055, 2.4);
-        var rgb = Enumerable.Range(0, 3).Select(i => int.Parse(hex.AsSpan(1 + 2 * i, 2), NumberStyles.HexNumber)).ToArray();
-        var y = 0.2126729 * Linear(rgb[0]) + 0.7151522 * Linear(rgb[1]) + 0.0721750 * Linear(rgb[2]);
-        return y > 216.0 / 24389 ? 116 * Math.Cbrt(y) - 16 : 24389.0 / 27 * y;
+        foreach (var status in new[] { "passed", "failed", "skipped", "bypassed" })
+            Assert.Equal(-1, CssRules.IndexOf(Base, $".param-test-table tbody tr.row-{status}"));
+        Assert.Equal("var(--kron-hover)", CssRules.Value(Base, ".param-test-table tbody tr:hover", "background"));
+        Assert.Equal("var(--kron-selected)", CssRules.Value(Base, ".param-test-table tbody tr.row-active", "background"));
+        Assert.Equal("var(--kron-selected)", CssRules.Value(Base, ".param-test-table tbody tr.row-active:hover", "background"));
+        Assert.True(CssRules.IndexOf(Base, ".param-test-table tbody tr:hover") < CssRules.IndexOf(Base, ".param-test-table tbody tr.row-active"),
+            "the selected state follows the hover");
     }
 
     // ── What a feature or scenario holds stays inside it (roadmap 1.10, the plan's Q7) ──

@@ -25,6 +25,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
     private const string BlueTint = "rgb(230, 240, 255)";
     private const string BlueTintBorder = "rgb(100, 150, 255)";
     private const string Grey = "rgb(245, 245, 245)";         // an idle diagram tab
+    private const string Hover = "rgb(237, 241, 248)";        // --kron-hover: 5.0.0's hover (plans/OPTION_C_PLAN.md S1)
 
     private async Task Open(string fileName, bool violet, bool internalFlowTracking = true, string? stylesheet = null)
     {
@@ -175,7 +176,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
 
     [Theory]
     [InlineData(true, Tint)]
-    [InlineData(false, BlueTint)]
+    [InlineData(false, Hover)]
     public async Task The_scenario_link_and_copy_button_take_the_themes_tint_when_hovered(bool violet, string tint)
     {
         await Open($"ScenarioLinks{violet}.html", violet);
@@ -194,7 +195,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
     /// emitted markup paints.</summary>
     [Theory]
     [InlineData(true, Tint, Violet, VioletDark, Tint, Violet, "rgb(139, 92, 246) 4px 0px 0px 0px inset")]
-    [InlineData(false, "rgb(232, 240, 254)", Blue, "rgb(51, 103, 214)", "rgb(240, 244, 255)", Blue, "rgb(66, 133, 244) 4px 0px 0px 0px inset")]
+    [InlineData(false, "rgb(232, 240, 254)", Blue, "rgb(51, 103, 214)", "rgb(240, 244, 255)", Blue, "rgb(37, 89, 199) 2px 0px 0px 0px inset")] // 5.0.0: the accent's 2px edge (S1)
     public async Task Popup_controls_and_search_matches_take_the_themes_colours(bool violet, string idleHovered, string active,
         string activeHovered, string listHovered, string listHoveredBorder, string searchMatchShadow)
     {

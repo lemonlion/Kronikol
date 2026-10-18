@@ -758,15 +758,18 @@ public class ParameterizedGroupTests : PlaywrightTestBase
 
     /// <summary>Every row carries a status class, whose rule used to beat the row's hover and selected
     /// tints: a hovered row gave no feedback in any report, a selected skipped row turned paler and a
-    /// selected bypassed row did not change. Each status darkens its own tint under the pointer and further
-    /// when selected; the selected tint holds while the pointer is still over the row, and after it leaves.</summary>
+    /// selected bypassed row did not change. Since 5.0.0 (plans/OPTION_C_PLAN.md S1) a row has no status
+    /// tint, as in the Option C preview, since the Status column's badge says it: every row rests on the
+    /// card, takes --kron-hover under the pointer and --kron-selected when selected, and the selection
+    /// holds while the pointer is still over the row, and after it leaves.</summary>
     [Theory]
-    [InlineData("uk", "passed", "rgb(240, 255, 240)", "rgb(227, 250, 233)", "rgb(213, 245, 227)")]
-    [InlineData("de", "failed", "rgb(255, 240, 240)", "rgb(253, 229, 228)", "rgb(250, 219, 216)")]
-    [InlineData("fr", "skipped", "rgb(255, 248, 225)", "rgb(254, 241, 204)", "rgb(252, 233, 184)")]
-    [InlineData("es", "bypassed", "rgb(240, 240, 255)", "rgb(232, 232, 253)", "rgb(223, 224, 251)")]
-    public async Task A_row_darkens_its_status_tint_under_the_pointer_and_further_when_selected(string region, string status, string resting, string hovered, string selected)
+    [InlineData("uk", "passed")]
+    [InlineData("de", "failed")]
+    [InlineData("fr", "skipped")]
+    [InlineData("es", "bypassed")]
+    public async Task A_row_of_any_status_shows_the_same_hover_and_selection(string region, string status)
     {
+        const string resting = "rgba(0, 0, 0, 0)", hovered = "rgb(237, 241, 248)", selected = "rgb(220, 232, 251)";
         await Page.GotoAsync(GenerateStatusRowsReport($"RowStates_{status}.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();

@@ -87,8 +87,9 @@ public class ScenarioContentWidthTests : PlaywrightTestBase
         var docString = Page.Locator("pre.step-docstring").First;
         await docString.ScrollIntoViewIfNeededAsync();
 
-        await Expect(docString).ToHaveCSSAsync("background-color", "rgb(245, 245, 245)");
-        await Expect(docString).ToHaveCSSAsync("border-top-color", "rgb(221, 221, 221)");
+        // 5.0.0 (plans/OPTION_C_PLAN.md S1): the code ground and the hairline, --kron-code-bg and --kron-hairline
+        await Expect(docString).ToHaveCSSAsync("background-color", "rgb(233, 237, 243)");
+        await Expect(docString).ToHaveCSSAsync("border-top-color", "rgb(208, 215, 226)");
         await Expect(docString).ToHaveCSSAsync("overflow-x", "auto");
         Assert.True(await docString.EvaluateAsync<bool>("p => p.scrollWidth > p.clientWidth"), "the long line should scroll inside the block");
     }

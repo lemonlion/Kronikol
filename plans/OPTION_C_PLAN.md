@@ -192,3 +192,29 @@ decision of the owner's, not part of this plan.
   stores (`PersistentFilterStateReportTests.Report_stores_nothing_but_the_theme`). Tests: core `ReportThemeTests`
   (6 failed before the change, on the missing markup, scripts and rules), Playwright `ThemeTests` (dark system,
   following the system, the switch kept over a reload and the system, a stored pick from the start).
+- 2026-10-18, S1 commit 2: the base surfaces (stylesheet inventory 2, rows 0 and 9 to 13) rewritten in place in
+  `stylesheets.css`: each 4.x rule takes the preview's values where the preview overrode it and keeps the rest, with
+  every colour on a token; the 4.x phone rules the preview's desktop rules beat are removed. The diff's labels lose
+  their colons (`ErrorDiffParser`). Measured with `checks/style-parity.js` (computed styles of 50 elements, the
+  preview over the parity run against the branch's `kronikol merge` of it) and `checks/pseudo-parity.js` (the drawn
+  marks): 524 differences before, 3 after, in Chrome light and dark, Firefox light, and Chrome at 700 and 400 px.
+  The 3 are deliberate: the error diff's container takes the monospace token, where the preview kept the bare
+  `monospace` keyword (no visible text is set in it). Also deliberate: the Rule label's 11 px from the type scale
+  (the preview's round 7 missed it, 10.5 px); the 4.x phone rule that puts a scenario's endpoint on its own line is
+  kept (the preview's desktop float beat it by accident; the parity run has no endpoint). Not in this stage: the
+  diagrams section's summary (S8), the Summary table (S4), failure clusters and background calls (S3). Tests:
+  Playwright `BaseSurfaceStyleTests` (cards in both themes, the failed cross, the diff's colours and labels in both
+  themes, the steps' one column, the parameter table's border; all 7 failed on the S1 commit 1 stylesheet) and
+  `ErrorDiffParserTests.GenerateDiffHtml_labels_the_rows_without_a_colon`. A preview defect found by
+  `IngestedBypassTests` and not ported: the feature and scenario header rules name the ink and out-rank `.skipped`,
+  so the preview drew a skipped feature or scenario like one that ran (4.x greyed both); the branch gives them
+  `--kron-skip` again (`BaseSurfaceStyleTests.A_skipped_feature_and_scenario_keep_the_skipped_colour`, red before
+  the rule). The Playwright tests that pinned 4.x colours or sizes this commit changes on purpose now say so and
+  read the 5.0.0 values (row tints, the steps' radius, the doc string, the bypassed step's circle, the toolbar's
+  hover and search mark); the scenario's diagram toolbar keeps its 16 px sides as a length, since 1 em is 14 px on
+  the new type. 5.0.0's smaller type leaves the filtering box wider than its chips, help table and export buttons
+  at every width, so `ReportSectionWidthTests` holds the box narrow to keep pinning how each fits.
+- Found on the way, not fixed here (owner's call): `kronikol merge` draws a complex parameter value as the flattened
+  string the mergeable JSON stores ("Ingredients: Flour: Plain Flour, ...; Toppings: 2 items"), where the run's own
+  report draws it as an expandable value (`details.param-expand`, 3 cells in the parity run). The data is not in the
+  file, so the fix is a format change: it belongs with REPORT_FORMAT_PLAN (the size reduction work) or a 4.x patch.
