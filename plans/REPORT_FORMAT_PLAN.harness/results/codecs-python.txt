@@ -1,0 +1,13 @@
+raw 4,551,457 bytes
+gzip 6       490,955 (10.8%)  write      22 ms ( 202.8 MB/s)  read   4.1 ms
+gzip 9       506,376 (11.1%)  write      40 ms ( 113.4 MB/s)  read   4.3 ms
+zstd 1       353,020 ( 7.8%)  write       4 ms (1162.1 MB/s)  read   3.4 ms
+zstd 3       346,012 ( 7.6%)  write       5 ms ( 928.5 MB/s)  read   3.7 ms
+zstd 9       279,968 ( 6.2%)  write      24 ms ( 190.0 MB/s)  read   3.7 ms
+zstd 12      272,906 ( 6.0%)  write      50 ms (  91.1 MB/s)  read   3.7 ms
+zstd 15      269,942 ( 5.9%)  write     185 ms (  24.6 MB/s)  read   4.2 ms
+zstd 19      242,599 ( 5.3%)  write    1443 ms (   3.2 MB/s)  read   3.8 ms
+brotli 5     271,994 ( 6.0%)  write      29 ms ( 157.8 MB/s)  read   5.1 ms
+brotli 9     259,219 ( 5.7%)  write      82 ms (  55.3 MB/s)  read   5.0 ms
+brotli 11    232,096 ( 5.1%)  write    4725 ms (   1.0 MB/s)  read   5.1 ms
+xz 6         251,328 ( 5.5%)  write     514 ms (   8.9 MB/s)  read  16.3 ms

@@ -1,0 +1,8 @@
+depth  bytes-this-step(indented CRLF)  compact  compact-no-nulls
+    0       1,564       741       278
+    1       1,740       741       292
+    5       2,444       741       292
+   10       3,326       743       294
+   15       4,206       743       294
+   20       5,086       743       294
+210 steps in 10 chains 20 deep: indented 698,342  compact-no-nulls 61,490  (8.8%)  gz6(indented) 22,723  gz6(compact-no-nulls) 913  zstd19 357

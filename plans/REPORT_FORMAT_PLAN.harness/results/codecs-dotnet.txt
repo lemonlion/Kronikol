@@ -1,0 +1,9 @@
+raw 4,551,457  .NET 10.0.11
+gzip opt        494,624  write      21 ms  read   4.3 ms
+gzip smallest    506,376  write      43 ms  read   5.0 ms
+zstd 3          346,012  write      19 ms  read   5.8 ms
+zstd 9          279,968  write      42 ms  read   5.0 ms
+zstd 12         272,906  write      81 ms  read   4.8 ms
+zstd 19         242,599  write    1285 ms  read   3.8 ms
+brotli 5        271,994  write      35 ms  read   6.7 ms
+brotli 9        259,219  write     100 ms  read   6.7 ms

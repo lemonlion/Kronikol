@@ -1,0 +1,6 @@
+marker bytes 24 frame 279972 first bytes 50 2a 4d 18
+python one-shot decompress equals: True
+python ZstdDecompressor equals: False eof True
+frame info of data frame: content size 4551457
+corrupted: detected ZstdError
+truncated: detected ZstdError

@@ -1,0 +1,2 @@
+bp-site/lightbdd/TestRunReport.json: scenarios 187, raw 4,551,457, one stream 490,955, member per scenario ~693,447 (+41.2%)
+bp-site/reqnroll/TestRunReport.json: scenarios 214, raw 4,439,035, one stream 480,182, member per scenario ~719,682 (+49.9%)

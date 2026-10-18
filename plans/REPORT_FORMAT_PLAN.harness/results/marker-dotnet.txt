@@ -1,0 +1,6 @@
+Unwrap(marker+frame) equals: True
+DecompressionStream(marker+frame) equals: True
+DecompressionStream(frame after marker) equals: True
+corrupted: ZstdSharp.ZstdException
+truncated: System.IO.EndOfStreamException
+streamed frame 280,416 bytes, header byte FHD=0x04 (content-size flag bits 0)
