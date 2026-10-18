@@ -3253,6 +3253,61 @@ public static class ReportTestHelper
         @enduml
         """;
 
+    /// <summary>
+    /// A diagram long enough for the page to split it into fragments, where every step reads the database before it
+    /// answers: hiding Databases removes a note per step, so a response note's index in the drawn source is about half
+    /// its index in the original one. Each response ends with a field ("End of item N") past a collapsed note's
+    /// 60-character preview.
+    /// </summary>
+    public static string GenerateReportWithDatabaseNotesAcrossFragments(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+        var steps = new System.Text.StringBuilder();
+        for (var i = 1; i <= 100; i++)
+            steps.Append($$"""
+
+                caller -[#438DD5]> svc : GET /api/item/{{i}}
+                svc -[#E74C3C]> db : Select item {{i}}
+                db -[#E74C3C]-> svc : OK
+                note right
+                n={{i}}
+                end note
+                svc -[#438DD5]-> caller : OK
+                note right
+                {
+                  "id": {{i}},
+                  "name": "Item {{i}}",
+                  "colour": "Colour {{i}}",
+                  "size": "Size {{i}}",
+                  "tail": "End of item {{i}}"
+                }
+                end note
+
+                """);
+        var source = """
+            @startuml
+            !pragma teoz true
+            skinparam wrapWidth 800
+            autonumber 1
+
+            actor "Caller" as caller
+            entity "Service" as svc
+            database "Database" as db
+
+            """ + steps + "\n@enduml\n";
+        var diagrams = new[] { new DiagramAsCode("t1", "", source) };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
     public static string GenerateReportWithDatabaseStepNoteCollapse(string tempDir, string outputDir, string fileName)
     {
         var (features, _) = CreateTestData();

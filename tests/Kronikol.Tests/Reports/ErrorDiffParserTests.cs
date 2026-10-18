@@ -147,34 +147,93 @@ public class ErrorDiffParserTests
         Assert.Contains("diff-del", html);
     }
 
-    // The audit of #165 (2026-10-15): the diff compared every pair of characters in a table it built twice, with no
-    // bound, so two 50,000-character values, as Shouldly writes a response body whole, threw OutOfMemoryException and
-    // the run had no HTML report. Past the bound it keeps the common start and end and marks the middle.
+    // The owner's report (2026-10-18): the diff compared characters, so "Gone" against "NotFound" kept the o and the n
+    // the two words share and struck G and e, and "410" against "404" struck the 1 alone. A changed word or number is
+    // marked whole.
+    [Fact]
+    public void GenerateDiffHtml_marks_a_changed_word_or_number_whole()
+    {
+        var html = ErrorDiffParser.GenerateDiffHtml("HttpStatusCode.Gone {value: 410}", "HttpStatusCode.NotFound {value: 404}");
+
+        Assert.Contains("<code>HttpStatusCode.<span class=\"diff-del\">Gone</span> {value: <span class=\"diff-del\">410</span>}</code>",
+            html, StringComparison.Ordinal);
+        Assert.Contains("<code>HttpStatusCode.<span class=\"diff-ins\">NotFound</span> {value: <span class=\"diff-ins\">404</span>}</code>",
+            html, StringComparison.Ordinal);
+    }
+
+    // Two changed words read as one change, not as two with a common space between them.
+    [Fact]
+    public void GenerateDiffHtml_marks_the_space_between_two_changed_words_with_them()
+    {
+        var html = ErrorDiffParser.GenerateDiffHtml("the quick fox", "a slow fox");
+
+        Assert.Contains("<code><span class=\"diff-del\">the quick</span> fox</code>", html, StringComparison.Ordinal);
+        Assert.Contains("<code><span class=\"diff-ins\">a slow</span> fox</code>", html, StringComparison.Ordinal);
+    }
+
+    // Punctuation is compared a character at a time, so a changed separator is marked alone.
+    [Fact]
+    public void GenerateDiffHtml_marks_a_changed_punctuation_mark_alone()
+    {
+        var html = ErrorDiffParser.GenerateDiffHtml("a,b", "a;b");
+
+        Assert.Contains("<code>a<span class=\"diff-del\">,</span>b</code>", html, StringComparison.Ordinal);
+        Assert.Contains("<code>a<span class=\"diff-ins\">;</span>b</code>", html, StringComparison.Ordinal);
+    }
+
+    // A word is its letters whatever the script, an accented letter written with a combining mark included, and a
+    // digit run or an underscore belongs to the word it is in.
+    [Theory]
+    [InlineData("naïve plan", "naive plan", "<span class=\"diff-del\">na&#239;ve</span> plan")]
+    [InlineData("nai\u0308ve plan", "naive plan", "<span class=\"diff-del\">nai\u0308ve</span> plan")]
+    [InlineData("Some_Fresh_Milk now", "Some_Old_Milk now", "<span class=\"diff-del\">Some_Fresh_Milk</span> now")]
+    [InlineData("Order42 placed", "Order43 placed", "<span class=\"diff-del\">Order42</span> placed")]
+    public void GenerateDiffHtml_keeps_a_word_whole(string expected, string actual, string expectedLine)
+    {
+        var html = ErrorDiffParser.GenerateDiffHtml(expected, actual);
+
+        Assert.Contains($"<code>{expectedLine}</code>", html, StringComparison.Ordinal);
+    }
+
+    // The audit of #165 (2026-10-15): the diff compared every pair in a table it built twice, with no bound, so two
+    // 50,000-character values, as Shouldly writes a response body whole, threw OutOfMemoryException and the run had no
+    // HTML report. Past the bound it keeps the common start and end and marks the middle.
     [Fact]
     public void GenerateDiffHtml_bounds_its_work_on_long_values()
     {
-        var start = new string('a', 25_000);
-        var end = new string('z', 25_000);
+        var start = string.Join(" ", Enumerable.Repeat("a", 12_500));
+        var end = string.Join(" ", Enumerable.Repeat("z", 12_500));
+        Assert.True((long)ErrorDiffParser.Tokens(start).Length * ErrorDiffParser.Tokens(end).Length > ErrorDiffParser.MaxComparedPairs);
 
-        var html = ErrorDiffParser.GenerateDiffHtml(start + "EXPECTED" + end, start + "ACTUAL" + end);
+        var html = ErrorDiffParser.GenerateDiffHtml(start + " EXPECTED " + end, start + " ACTUAL " + end);
 
-        Assert.Contains($"<code>{start}<span class=\"diff-del\">EXPECTED</span>{end}</code>", html, StringComparison.Ordinal);
-        Assert.Contains($"<code>{start}<span class=\"diff-ins\">ACTUAL</span>{end}</code>", html, StringComparison.Ordinal);
+        Assert.Contains($"<code>{start} <span class=\"diff-del\">EXPECTED</span> {end}</code>", html, StringComparison.Ordinal);
+        Assert.Contains($"<code>{start} <span class=\"diff-ins\">ACTUAL</span> {end}</code>", html, StringComparison.Ordinal);
     }
 
-    // The bound is the product of the two lengths: just under it the values are still compared character by character,
-    // so a difference in the middle is marked alone and the common characters around it are not.
+    // The bound is the product of the two values' token counts: just under it the values are still compared token by
+    // token, so a word changed in the middle is marked alone and the common words around it are not.
     [Fact]
-    public void GenerateDiffHtml_compares_each_character_up_to_its_bound()
+    public void GenerateDiffHtml_compares_each_token_up_to_its_bound()
     {
-        var expected = new string('a', 1_000) + "b" + new string('a', 998) + "x";
-        var actual = new string('a', 1_999);
-        Assert.True((long)expected.Length * actual.Length <= ErrorDiffParser.MaxComparedPairs);
+        var words = string.Join(" ", Enumerable.Repeat("a", 490));
+        var expected = words + " b " + words + " x";
+        var actual = words + " c " + words + " a";
+        Assert.True((long)ErrorDiffParser.Tokens(expected).Length * ErrorDiffParser.Tokens(actual).Length <= ErrorDiffParser.MaxComparedPairs);
 
         var html = ErrorDiffParser.GenerateDiffHtml(expected, actual);
 
-        Assert.Contains($"<code>{new string('a', 1_000)}<span class=\"diff-del\">b</span>{new string('a', 998)}<span class=\"diff-del\">x</span></code>",
-            html, StringComparison.Ordinal);
+        Assert.Contains($"<code>{words} <span class=\"diff-del\">b</span> {words} <span class=\"diff-del\">x</span></code>", html, StringComparison.Ordinal);
+    }
+
+    // A value read as one word has no tokens to compare past its bound: the two are marked whole, and the work stays
+    // one pair, however long they are.
+    [Fact]
+    public void GenerateDiffHtml_marks_two_long_single_words_whole()
+    {
+        var html = ErrorDiffParser.GenerateDiffHtml(new string('a', 50_000) + "b", new string('a', 50_000) + "c");
+
+        Assert.Contains("<code><span class=\"diff-del\">" + new string('a', 50_000) + "b</span></code>", html, StringComparison.Ordinal);
     }
 
     // The diff wrote each UTF-16 unit on its own, and HTML encoding writes half of a surrogate pair as U+FFFD, so an

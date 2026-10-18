@@ -4,7 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [4.26.8] - 2026-10-18
+
+**Patch - a failed assertion's expected and actual values were marked letter by letter, and a note's right-click menu
+copied or read another note while a filter hid notes.** Bug fixes with nothing new for a consumer to call, so the patch
+part moves (4.26.7 to 4.26.8). The report's HTML changes where a diff is drawn, which the Kronikol4J divergence ledger
+records.
+
+### Fixed
+
+- **A failed assertion's expected and actual values are compared word by word.** The diff under a failure compared the
+  two values character by character, so `HttpStatusCode.Gone {value: 410}` against
+  `HttpStatusCode.NotFound {value: 404}` struck through the G, the e and the 1 that the longest common run of letters
+  left over, and showed the rest of each changed word as shared. It now compares words and numbers (runs of letters,
+  combining marks, digits and connectors such as the underscore, in any script), runs of whitespace and single
+  punctuation marks, and marks a changed word or number whole: `Gone` and `410` against `NotFound` and `404`. A space
+  between two changed words is part of the change. The bound on the work, 4,000,000 pairs, now counts pairs of tokens,
+  not characters; past it the diff keeps the values' common start and end and marks the rest, as before.
+- **A note's right-click menu copies and reads the note that was clicked when a filter hides notes.** With Databases
+  hidden, a database's response note is not drawn, so each note after it is drawn one place earlier than it stands in
+  the diagram's source. The menu took the drawn place for the source's: Copy box text and Copy full box text copied the
+  note before it (a database's `n=1`, for one), and the menu read that note's state and format, so it offered the wrong
+  copy items and ignored a note shown in the other format. Assertions or Steps hidden, and a note drawn empty, did the
+  same. The menu now reads the indices the note's own buttons use, which the note script records on each drawn note.
+- **Copy full box text on a note in a later fragment copies the whole note.** In a diagram tall enough to be drawn in
+  fragments, the menu read a note's text from its fragment's source, which holds what is drawn, so Copy full box text
+  on a collapsed or truncated note copied its drawn lines only, and it read the note's state and format under its place
+  among the drawn notes, another note's once a filter hid one. A note split across fragments copies whole.
+- **A collapsed note's emptiness check read the wrong note's state when a filter hid notes.** When a diagram draws fewer
+  notes than its source holds (a collapsed note with nothing to preview, or a note of headers alone with Headers
+  hidden), the note script matches each drawn note to its source block by asking which notes are drawn empty, and it
+  read each note's state under its filtered place. It now maps that place back to the original first.
+- **A diagram drawn without filter state of its own keeps the report's.** The note script read a missing Databases flag
+  as shown in the Databases toggle and as hidden everywhere else, and a missing Steps or Assertions flag as hidden:
+  collapsing such a diagram's notes hid its databases and steps, and the report's Steps toggle skipped it when hiding
+  steps. Every reader now takes a missing flag as the report's, and the report's toggles draw such a diagram again with
+  the new state. A diagram the page draws for a scenario always has its own flags, so this reaches only one drawn by
+  another path.
 
 ### Documentation
 
@@ -17,6 +53,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
   3.35.1) and set both ids from `Activity.Current` without saying which span that should be; Generated Reports,
   Exporting to OpenTelemetry, Ingesting From Jest, Ingesting External Captures and Internal Flow Tracking say what
   4.26.5 and 4.26.7 changed.
+
+### Tests
+
+- `ErrorDiffParserTests`: a changed word or number is marked whole (`Gone` and `NotFound`, `410` and `404`); the space
+  between two changed words is marked with them; a changed punctuation mark is marked alone; a word with a precomposed
+  or a combining accent, one with underscores and one ending in digits stay whole; the bound counts tokens (12,500
+  words a side go past it and keep their common start and end, and two values just under it are compared token by
+  token); two long single words are marked whole. They replace the two facts on the character bound.
+- Playwright `NoteContextMenuIndexTests`: with Databases hidden, Copy box text on the API's response copies it, not the
+  database's `n=1`; once the response is collapsed with its own gesture the menu offers Copy full box text, which
+  copies the whole response; once its J/Y button flips its format, the copy is in the format it is drawn in. In a
+  diagram drawn in fragments with Databases hidden, Copy full box text on a collapsed note in a later fragment copies
+  the whole note, and once that one note is opened the menu offers the single Copy box text.
+- Playwright `FilterStateDefaultTests`: a diagram with no Databases, Steps or Assertions flag of its own keeps the
+  report's state when its notes are collapsed, and follows the report's toggle for that filter.
+- `ReportTestHelper.GenerateReportWithDatabaseNotesAcrossFragments`: a 100-step diagram that reads the database in
+  every step, drawn in four fragments, two with Databases hidden.
+
+- Proofs: with the release's tests on 4.26.7's code (its diff given only the new tokenizer, which two facts size their
+  inputs with), 7 of the 68 diff facts fail, the 5 menu facts fail, and 3 of the 6 flag facts fail (Databases and Steps
+  when the notes are collapsed, Steps on the toggle). The other 3 guard what 4.26.7 already did: Assertions start
+  hidden, and the Databases toggle read a missing flag as shown.
+- Checks: after the version bump the core suite passes 7,698 with 2 skipped; the full Playwright suite passes 1,061
+  with 28 skipped when run alone, on the release's code before the bump; release.slnf builds in Release for every
+  target. The templates pin 4.26.7 and the history action's VERSION installs Kronikol.Tool 4.26.8.
 
 ## [4.26.7] - 2026-10-17
 

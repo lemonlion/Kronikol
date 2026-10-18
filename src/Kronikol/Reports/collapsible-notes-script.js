@@ -776,9 +776,9 @@
         var filteredToOrigMap = null;
         if (owner._noteOriginalSource && ownerNoteBlocks.length > 0) {
             var cleanFilt = owner._noteOriginalSource;
-            if (!owner._assertionsVisible) cleanFilt = stripAssertionNotes(cleanFilt);
-            if (!owner._stepsVisible) cleanFilt = stripStepDelimiters(cleanFilt);
-            if (!owner._databasesVisible) cleanFilt = stripDatabaseCalls(cleanFilt);
+            if (!filterShown(owner, '_assertionsVisible')) cleanFilt = stripAssertionNotes(cleanFilt);
+            if (!filterShown(owner, '_stepsVisible')) cleanFilt = stripStepDelimiters(cleanFilt);
+            if (!filterShown(owner, '_databasesVisible')) cleanFilt = stripDatabaseCalls(cleanFilt);
             var cleanFiltNotes = parseNoteBlocks(cleanFilt);
             if (cleanFiltNotes.length < ownerNoteBlocks.length && cleanFiltNotes.length > 0) {
                 var _map = [];
@@ -799,6 +799,8 @@
         }
 
         var noteGroups = findNoteGroups(svg);
+        // A note drawn before keeps no indices from an earlier pass over these elements.
+        noteGroups.forEach(function(g) { if (g.paths[0]) g.paths[0]._noteIndices = null; });
 
         // Safety net: if more SVG groups were detected than note blocks exist,
         // filter to only groups whose fill matches the expected note count.
@@ -864,6 +866,8 @@
             sourceIndexMap = [];
             for (var si = 0; si < noteBlocks.length; si++) {
                 var sGlobalIdx = fragContinuationMap ? (si < fragContinuationMap.length ? fragContinuationMap[si] : si + noteIndexOffset) : si + noteIndexOffset;
+                // A note's state is kept under its index in the original source, which a filter moves it away from.
+                if (filteredToOrigMap && sGlobalIdx < filteredToOrigMap.length) sGlobalIdx = filteredToOrigMap[sGlobalIdx];
                 var sStep = owner._noteSteps[sGlobalIdx] || 0;
                 var sState = noteStepState(sStep);
                 var noteEmpty = false;
@@ -898,6 +902,10 @@
                     : localIdx + noteIndexOffset;
                 var globalIdx = filteredToOrigMap ? (globalFilteredIdx < filteredToOrigMap.length ? filteredToOrigMap[globalFilteredIdx] : globalFilteredIdx) : globalFilteredIdx;
                 var grp = noteGroups[svgIdx];
+                // The context menu reads the note it was opened on by these, so the menu and the note's buttons
+                // read one note: its index in the original source, which keys its state, and its block in the
+                // source it was drawn from.
+                grp.paths[0]._noteIndices = { original: globalIdx, drawn: localIdx };
                 var bbox = getNoteBBox(grp);
                 var step = owner._noteSteps[globalIdx] || 0;
                 var rawContentLines = ownerNoteBlocks[globalIdx]
@@ -1697,6 +1705,13 @@
     // The whole source-rebuild chain, in one place. Every caller — a per-note toggle, the zero-click
     // pre-process, and the bulk render queue — has to apply exactly the same passes in exactly the
     // same order, or the note indices they each compute stop agreeing with each other.
+    // A container's own filter state, or the report's for one drawn without any (the pre-processor never saw it).
+    // Every reader resolves a missing flag this one way: the Databases toggle read it as shown and every other
+    // reader as hidden, so changing such a diagram's notes hid its databases and steps (4.26.8).
+    function filterShown(container, flag) {
+        return container[flag] === undefined ? !!window[flag] : !!container[flag];
+    }
+
     function composeNoteSource(container, origSource, noteBlocks) {
         var withFormats = applyNoteFormats(origSource, container._noteFormats, container._noteYamlLines);
         var withAppearance = applyNoteAppearance(withFormats, container);
@@ -1704,9 +1719,9 @@
             !!container._headersHidden, container._truncateLines);
         return applyDatabasesFilter(
             applyStepsFilter(
-                applyAssertionFilter(built, !!container._assertionsVisible),
-                !!container._stepsVisible),
-            !!container._databasesVisible);
+                applyAssertionFilter(built, filterShown(container, '_assertionsVisible')),
+                filterShown(container, '_stepsVisible')),
+            filterShown(container, '_databasesVisible'));
     }
 
     // ── Choosing the width ───────────────────────────────────────────────────
@@ -2122,6 +2137,11 @@
 
     window._makeNotesCollapsible = makeNotesCollapsible;
     window._findNoteGroups = findNoteGroups;
+    // The indices makeNotesCollapsible gave a drawn note ({ original, drawn }), or null for a note it did not reach.
+    window._noteIndicesOf = function(grp) {
+        var p = grp && grp.paths && grp.paths[0];
+        return (p && p._noteIndices) || null;
+    };
     window._getNoteBBox = getNoteBBox;
     window._paintedNoteRowCount = paintedRowCount;
     window._applyNoteAppearance = applyNoteAppearance;
@@ -2858,13 +2878,13 @@
             if (container.classList.contains('puml-fragment')) return;
             if (isComponentDiagramContainer(container)) return;
             if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
-            var wasVisible = !!container._assertionsVisible;
-            if (wasVisible === showing) return;
+            // A container with no state of its own is drawn again with the new one.
+            if (container._assertionsVisible !== undefined && !!container._assertionsVisible === showing) return;
             container._assertionsVisible = showing;
             var origSource = container._noteOriginalSource;
             var renderSource = applyAssertionFilter(origSource, showing);
-            renderSource = applyStepsFilter(renderSource, !!container._stepsVisible);
-            renderSource = applyDatabasesFilter(renderSource, !!container._databasesVisible);
+            renderSource = applyStepsFilter(renderSource, filterShown(container, '_stepsVisible'));
+            renderSource = applyDatabasesFilter(renderSource, filterShown(container, '_databasesVisible'));
             var noteBlocks = parseNoteBlocks(renderSource);
             if (container._truncateLines === undefined) container._truncateLines = window._truncateLines;
             if (!container._noteSteps) container._noteSteps = {};
@@ -2901,13 +2921,13 @@
             if (container.classList.contains('puml-fragment')) return;
             if (isComponentDiagramContainer(container)) return;
             if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
-            var wasVisible = !!container._stepsVisible;
-            if (wasVisible === showing) return;
+            // A container with no state of its own is drawn again with the new one.
+            if (container._stepsVisible !== undefined && !!container._stepsVisible === showing) return;
             container._stepsVisible = showing;
             var origSource = container._noteOriginalSource;
-            var renderSource = applyAssertionFilter(origSource, !!container._assertionsVisible);
+            var renderSource = applyAssertionFilter(origSource, filterShown(container, '_assertionsVisible'));
             renderSource = applyStepsFilter(renderSource, showing);
-            renderSource = applyDatabasesFilter(renderSource, !!container._databasesVisible);
+            renderSource = applyDatabasesFilter(renderSource, filterShown(container, '_databasesVisible'));
             var noteBlocks = parseNoteBlocks(renderSource);
             if (container._truncateLines === undefined) container._truncateLines = window._truncateLines;
             if (!container._noteSteps) container._noteSteps = {};
@@ -2944,12 +2964,12 @@
             if (container.classList.contains('puml-fragment')) return;
             if (isComponentDiagramContainer(container)) return;
             if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
-            var wasVisible = container._databasesVisible !== false;
-            if (wasVisible === showing) return;
+            // A container with no state of its own is drawn again with the new one.
+            if (container._databasesVisible !== undefined && !!container._databasesVisible === showing) return;
             container._databasesVisible = showing;
             var origSource = container._noteOriginalSource;
-            var renderSource = applyAssertionFilter(origSource, !!container._assertionsVisible);
-            renderSource = applyStepsFilter(renderSource, !!container._stepsVisible);
+            var renderSource = applyAssertionFilter(origSource, filterShown(container, '_assertionsVisible'));
+            renderSource = applyStepsFilter(renderSource, filterShown(container, '_stepsVisible'));
             renderSource = applyDatabasesFilter(renderSource, showing);
             var noteBlocks = parseNoteBlocks(renderSource);
             if (container._truncateLines === undefined) container._truncateLines = window._truncateLines;

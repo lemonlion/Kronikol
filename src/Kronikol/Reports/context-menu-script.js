@@ -489,6 +489,18 @@
                 if (fragEl && fragEl !== container && window._computeGlobalNoteIndex) {
                     globalNoteIdx = window._computeGlobalNoteIndex(container, fragEl, globalNoteIdx);
                 }
+                // A note the note script reached carries the indices its buttons use: its index in the original
+                // source and its block in the source it was drawn from. A filter that hides notes (Databases,
+                // Assertions, Steps), a note drawn empty and a fragment each move a drawn note away from its
+                // place in the original source, and the menu read a neighbour's text and state (4.26.8).
+                var drawnBlockIdx = resolvedBlockIdx >= 0 ? resolvedBlockIdx : clickedNoteIdx;
+                var noteIndices = window._noteIndicesOf ? window._noteIndicesOf(noteGroups[clickedNoteIdx]) : null;
+                if (noteIndices) {
+                    globalNoteIdx = noteIndices.original;
+                    drawnBlockIdx = noteIndices.drawn;
+                    noteBlocks = window._parseNoteBlocks(origSrc);
+                    resolvedBlockIdx = noteBlocks[globalNoteIdx] ? globalNoteIdx : -1;
+                }
 
                 // Copy targets are the DISPLAYED lines; unescapeSourceNoteLine and the rejoin that
                 // has to run before it are module-scope now, shared with extractCallerPayloads.
@@ -530,7 +542,7 @@
                 if (isNotExpanded) {
                     var currentSrc = fragEl ? (fragEl.getAttribute('data-plantuml') || '') : getSource(container);
                     var currentNoteBlocks = window._parseNoteBlocks(currentSrc);
-                    var curBlockIdx = resolvedBlockIdx >= 0 ? resolvedBlockIdx : clickedNoteIdx;
+                    var curBlockIdx = drawnBlockIdx;
                     var currentText;
                     if (currentNoteBlocks[curBlockIdx]) {
                         // Recover the displayed text: YAML payload lines carry the client splice
