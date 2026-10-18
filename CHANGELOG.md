@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Documentation
+
+- `RequestResponseLog.ActivitySpanId` and `ActivityTraceId` have doc comments: the span a record was logged under is the
+  one internal flow takes as the call's own, so a tracker records the span of the call itself or none; a socket call's
+  response carries its transport's span (4.26.5); and most database and SDK trackers record neither id.
+- The 4.26.7 entry said an ingested call carries its trace; an ingested span's kind is not kept, so the rule does not
+  reach an ingested call with no trace id. The 4.26.5 entry points to 4.26.7, which undid one of its behaviour changes.
+- The wiki's Tracking Custom Dependencies page said a trace id is required for a popup to show anything (wrong since
+  3.35.1) and set both ids from `Activity.Current` without saying which span that should be; Generated Reports,
+  Exporting to OpenTelemetry, Ingesting From Jest, Ingesting External Captures and Internal Flow Tracking say what
+  4.26.5 and 4.26.7 changed.
+
 ## [4.26.7] - 2026-10-17
 
 **Patch - a database or SDK call made inside a request lost its client library's span from its internal-flow popup
@@ -23,8 +37,9 @@ moves (4.26.6 to 4.26.7).
   makes at once each keep their own, and a client span under another goes with it. One that began in the time of
   another call, which this call was not made in, stays that call's, and so does one a server or consumer we see
   answered: a gRPC call's client span, which a call the answering service made inside it does not take. The request's
-  span and the service's method spans, server and internal spans, are still not the call's. The kind is read from an
-  in-process span; an ingested call carries its trace and is told apart by it, as before.
+  span and the service's method spans, server and internal spans, are still not the call's. The kind is read from
+  spans recorded in the test process: an ingested span's kind is not kept, so an ingested call with no trace id takes
+  no such span.
 
 ### Tests
 
@@ -127,7 +142,8 @@ causes, each fixed:
   under the default `HideLink`, so fewer arrows are links: BreakfastProvider's xUnit lane links 685 arrows where 4.9.1
   linked 1,305, and every HTTP and gRPC call keeps its link.
 - A client library span that starts a moment before Kronikol's tracker logs a call with no trace id made inside a
-  request, as a database driver's operation span can, is shown in the request's popup and not in the call's.
+  request, as a database driver's operation span can, is shown in the request's popup and not in the call's. 4.26.7
+  gives a client or producer span begun this way back to the call.
 - In the JSON, XML and YAML outputs the response record of a call sent over a socket carries the transport's span id,
   where it carried the request's. The request record, `kronikol query trace` and the OTLP export, which exports a call
   from its request, are unchanged.

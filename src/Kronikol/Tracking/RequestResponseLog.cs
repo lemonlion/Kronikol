@@ -68,7 +68,21 @@ public record RequestResponseLog(
     /// status. Null on a request and on a call that succeeded.
     /// </summary>
     public string? Error { get; set; }
+
+    /// <summary>
+    /// The W3C span id this record was logged under, lowercase hex: the span current when the tracker saw the call, which
+    /// internal flow takes as the call's own span, so a tracker records the span of the call itself or none. On the
+    /// response of a call <see cref="TestTrackingMessageHandler"/> sends over a socket, the span its transport started
+    /// for the call, the one it sent in the call's <c>traceparent</c> (from 4.26.5). Null when the tracker records none,
+    /// as most database and SDK trackers do.
+    /// </summary>
     public string? ActivitySpanId { get; set; }
+
+    /// <summary>
+    /// The W3C trace id this record was logged under, lowercase hex, which internal flow and <c>kronikol query trace</c>
+    /// join on. Null when the tracker records none: the call then takes the spans its scenario's traced calls could take
+    /// that began in its time, and a client library's span begun a moment before it (from 4.26.7).
+    /// </summary>
     public string? ActivityTraceId { get; set; }
     public TestPhase Phase { get; set; }
 
