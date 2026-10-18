@@ -95,7 +95,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
         { false, "rgb(220, 230, 245)", BlueTintBorder, ".cat-mode-toggle" },
         { false, BlueTint, BlueTintBorder, ".percentile-btn" },
         { false, BlueTint, BlueTintBorder, ".collapse-expand-all" },
-        { false, BlueTint, BlueTintBorder, ".export-btn" },
+        { false, Hover, "rgba(0, 0, 0, 0)", ".export-btn" }, // 5.0.0: a text button in the filter card (OPTION_C_PLAN S2)
         { false, BlueTint, BlueTintBorder, ".timeline-toggle" },
         { false, BlueTint, BlueTintBorder, ".toolbar-right .details-radio-btn:not(.details-active)" },
     };

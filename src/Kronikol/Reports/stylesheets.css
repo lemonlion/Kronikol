@@ -144,80 +144,77 @@
             font-weight: bold;
         }
         
-        .column-header {
-            font-weight: bold;
-        }
         
-        .test-execution-summary {
-            background-color: rgb(224, 224, 224);
-            border-radius: 1em;
-            padding: 1em;
-            flex-shrink: 0;
-            overflow-x: auto;
-        }
         
-        .test-execution-summary h2 {
-            margin-top: 0;
-        }
         
-        .test-execution-summary table td {
-            padding: 0.25em;
-        }
 
-        .header-row {
-            display: flex;
-            gap: 1em;
-            align-items: stretch;
+        /* The run band (5.0.0): the ring, the test execution summary and the CI zone on one row while all three fit
+           whole; otherwise report-run-band-script.js sets .ci-below and the CI zone takes a second row under the summary.
+           The row never wraps: without a CI zone the summary shrinks beside the ring, its stats wrapping inside it. */
+        .run-band {
+            display: flex; align-items: center; gap: 12px 24px; margin: 0 0 14px; padding: 12px 20px;
+            background: var(--kron-card); border: 1px solid var(--kron-hairline); border-radius: 12px; box-shadow: var(--kron-card-shadow);
         }
-
-        .summary-chart {
-            width: 120px;
-            height: 120px;
-            flex-shrink: 0;
-            align-self: center;
+        .run-ring { flex: 0 0 64px; width: 64px; height: 64px; }
+        .run-ring svg { display: block; width: 64px; height: 64px; }
+        .run-ring .ring-pass { stroke: var(--kron-pass-ring); }
+        .run-ring .ring-fail { stroke: var(--kron-fail); }
+        .run-ring .ring-skip { stroke: var(--kron-dot); }
+        .run-ring .ring-bypass { stroke: var(--kron-bypass); }
+        .run-ring .ring-rate { fill: var(--kron-ink); font-family: var(--kron-font); font-size: 22px; font-weight: 650; }
+        .run-zone { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+        .run-band:not(.ci-below) .run-ci { padding-left: 24px; border-left: 1px solid var(--kron-hairline-soft); }
+        .run-band.ci-below { display: grid; grid-template-columns: 64px minmax(0, 1fr); column-gap: 24px; row-gap: 10px; align-items: start; }
+        .run-band.ci-below .run-ring { grid-row: 1 / span 2; align-self: center; }
+        .run-band.ci-below .run-ci { grid-column: 2; padding-top: 10px; border-top: 1px solid var(--kron-hairline-soft); }
+        .run-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+        .run-title { margin: 0; font-size: 14px; font-weight: 600; color: var(--kron-ink); }
+        .run-status {
+            padding: 1px 8px; border-radius: 999px; background: var(--kron-pass-soft); color: var(--kron-pass);
+            font-size: var(--kron-fs-label); font-weight: 600; line-height: 16px; letter-spacing: var(--kron-label-track); text-transform: uppercase;
         }
-
-        .ci-chart-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            align-self: flex-start;
-            flex-shrink: 0;
-            gap: 0.5em;
+        .run-status-failed { background: var(--kron-fail-soft); color: var(--kron-fail); }
+        .run-when { font-size: 12px; color: var(--kron-muted); font-variant-numeric: tabular-nums; }
+        .run-stats { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 0; }
+        .run-stat { display: flex; flex-direction: column; min-width: 0; }
+        .run-stat dt {
+            font-size: var(--kron-fs-label); font-weight: 600; line-height: 16px; letter-spacing: var(--kron-label-track);
+            text-transform: uppercase; color: var(--kron-label);
         }
-
-        .ci-metadata {
-            background-color: rgb(224, 224, 224);
-            border-radius: 1em;
-            padding: 1em;
-            flex-shrink: 0;
+        .run-stat dd {
+            margin: 0; font-family: var(--kron-font); font-size: 13px; line-height: 1.45; color: var(--kron-ink);
+            font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
         }
+        .run-stat-fail dd { color: var(--kron-fail); font-weight: 600; }
+        .run-stat dd code { padding: 0; background: none; font-family: var(--kron-mono); font-size: 13px; }
+        .run-link { color: var(--kron-accent); font-family: var(--kron-font); text-decoration: none; }
+        .run-link:hover { text-decoration: underline; }
 
-        .ci-metadata table {
-            font-size: 0.85em;
-            max-width: 100%;
-        }
 
-        /* The CI box does not shrink (flex-shrink: 0), so its widest value set the header row's
-           width: a long branch or repository name pushed the page sideways. Value cells may break
-           anywhere, label cells stay whole, and above the phone layout the box is capped. */
-        .ci-metadata td:first-child { white-space: nowrap; }
-        .ci-metadata td:last-child { overflow-wrap: anywhere; }
+
+
+
         @media (min-width: 768.02px) {
-            .ci-metadata { max-width: 20em; }
         }
 
         .filtering-box {
-            flex: 1;
             min-width: 0;
-            background-color: rgb(224, 224, 224);
-            border-radius: 1em;
-            padding: 1em;
+            margin: 0 0 14px;
+            padding: 14px 16px;
+            background: var(--kron-card);
+            border: 1px solid var(--kron-hairline);
+            border-radius: 12px;
+            box-shadow: var(--kron-card-shadow);
         }
 
         .filtering-box h2 {
-            margin-top: 0;
-            margin-bottom: 0;
+            margin: 0;
+            font-size: var(--kron-fs-label);
+            font-weight: 600;
+            line-height: 16px;
+            letter-spacing: var(--kron-label-track);
+            text-transform: uppercase;
+            color: var(--kron-muted);
         }
 
         .filtering-box-header {
@@ -225,13 +222,18 @@
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.5em;
+            min-height: 28px;
+            margin: -6px 0 8px;
         }
 
         .filtering-box-export {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.3em;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 2px;
+            /* a text button's label ends on the box's content edge, its padding past it */
+            margin-right: -9px;
         }
 
         .filters {
@@ -683,22 +685,24 @@
         }
 
         .export-btn {
-            padding: 0.25em 0.6em;
-            border: 1px solid rgb(180, 180, 180);
-            border-radius: 0.4em;
-            background: white;
+            padding: 4px 9px;
+            border: 1px solid transparent;
+            border-radius: 5px;
+            background: none;
+            color: var(--kron-ink-soft);
             cursor: pointer;
-            font-size: 0.85em;
+            font-size: var(--kron-fs-control);
+            line-height: 20px;
             /* Never squeezed, so its label stays on one line wherever the row has room for it; a button
-               wider than the whole row (letter-spaced, in the narrow in-row box just above the
-               breakpoint) is capped at the row and wraps its label instead of leaving the box. */
+               wider than the whole row (letter-spaced, in a narrow box) is capped at the row and wraps its
+               label instead of leaving the box. */
             flex-shrink: 0;
             max-width: 100%;
         }
 
         .export-btn:hover {
-            background: rgb(230, 240, 255);
-            border-color: rgb(100, 150, 255);
+            background: var(--kron-hover);
+            border-color: transparent;
         }
 
         .toolbar-row {
@@ -1814,43 +1818,13 @@
             background: var(--kron-hover);
         }
 
-        /* Between the phone layout and a wide window the filtering box takes a row of its own: beside
-           the summary and the CI box it was squeezed to a sliver and pushed its export buttons off
-           the page. 768.02px, not 769px: a fractional viewport (768.8 CSS px at 125 % zoom) must not
-           fall between this block and the phone block. */
-        @media (min-width: 768.02px) and (max-width: 1160px) {
-            .header-row { flex-wrap: wrap; }
-            .filtering-box { flex-basis: 100%; }
-        }
-
         /* ── Mobile / Responsive ── */
         @media (max-width: 768px) {
 
-            .header-row {
-                flex-direction: column;
-                gap: 0.5em;
-            }
 
-            .test-execution-summary {
-                width: 100%;
-                box-sizing: border-box;
-            }
 
-            .summary-chart {
-                align-self: center;
-            }
 
-            .ci-chart-group {
-                width: 100%;
-                box-sizing: border-box;
-                align-self: stretch;
-            }
 
-            .ci-metadata {
-                align-self: center;
-                width: 100%;
-                box-sizing: border-box;
-            }
 
             .filtering-box {
                 width: 100%;
@@ -1984,21 +1958,18 @@
             .step-duration {
                 white-space: nowrap;
             }
-        }
+        
+            .run-band { gap: 10px 16px; padding: 12px 16px; }
+            .run-band.ci-below { grid-template-columns: 52px minmax(0, 1fr); column-gap: 14px; }
+            .run-ring, .run-ring svg { width: 52px; height: 52px; flex-basis: 52px; }
+}
 
         @media (max-width: 480px) {
             body {
                 padding-inline: 16px;
             }
 
-            .header-row {
-                gap: 0.3em;
-            }
 
-            .summary-chart {
-                width: 80px;
-                height: 80px;
-            }
 
 
 
@@ -2009,11 +1980,13 @@
 
             /* #6 Touch target size bump */
             .happy-path-toggle, .dependency-toggle, .status-toggle,
-            .category-toggle, .percentile-btn, .collapse-expand-all, .export-btn {
+            .category-toggle, .percentile-btn, .collapse-expand-all {
                 font-size: 0.75em;
                 padding: 0.3em 0.6em;
                 min-height: 36px;
             }
+            /* an export button keeps the card's type and padding (5.0.0) and only grows to the touch height */
+            .export-btn { min-height: 36px; }
 
             /* #5 Dependency/category buttons overflow — truncate long labels */
             .dependency-toggle, .category-toggle {

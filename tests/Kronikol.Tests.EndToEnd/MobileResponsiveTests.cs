@@ -32,16 +32,17 @@ public class MobileResponsiveTests : PlaywrightTestBase
         Assert.Equal("utf-8", await charset.GetAttributeAsync("charset"));
     }
 
-    // ── Header row stacks vertically ──
+    // ── The run band fits a phone (5.0.0: the band in place of the 4.x header row, which stacked) ──
 
     [Fact]
-    public async Task Header_row_stacks_vertically_on_mobile()
+    public async Task Run_band_fits_a_phone_with_a_smaller_ring()
     {
         await Page.GotoAsync(GenerateReport("MobileHeaderStack.html"));
-        var headerRow = Page.Locator(".header-row");
-        await headerRow.WaitForAsync(new() { Timeout = 5000 });
-        var flexDirection = await GetComputedStyle(headerRow, "flex-direction");
-        Assert.Equal("column", flexDirection);
+        var band = Page.Locator(".run-band");
+        await band.WaitForAsync(new() { Timeout = 5000 });
+        var right = await band.EvaluateAsync<double>("e => e.getBoundingClientRect().right");
+        Assert.True(right <= 375, $"the band ends at {right}, past the 375 px viewport");
+        Assert.Equal(52, await Page.Locator(".run-ring").EvaluateAsync<double>("e => e.getBoundingClientRect().width"), 1);
     }
 
     // ── Toolbar stacks vertically ──
@@ -149,33 +150,33 @@ public class MobileResponsiveTests : PlaywrightTestBase
     public async Task Desktop_layout_unaffected_at_1920_width()
     {
         await Page.GotoAsync(GenerateReport("MobileDesktopCheck.html"));
-        await Page.Locator(".header-row").WaitForAsync(new() { Timeout = 5000 });
+        await Page.Locator(".run-band").WaitForAsync(new() { Timeout = 5000 });
 
-        // At 375px, header-row should be column
-        var headerRow = Page.Locator(".header-row");
-        Assert.Equal("column", await GetComputedStyle(headerRow, "flex-direction"));
+        // At 375px the ring is the phone's 52px (5.0.0: the run band in place of the 4.x header row)
+        var ring = Page.Locator(".run-ring");
+        Assert.Equal(52, await ring.EvaluateAsync<double>("e => e.getBoundingClientRect().width"), 1);
 
         // Resize viewport to desktop
         await Page.SetViewportSizeAsync(1920, 1080);
         await Page.ReloadAsync();
-        await Page.Locator(".header-row").WaitForAsync(new() { Timeout = 5000 });
-        headerRow = Page.Locator(".header-row");
-        Assert.Equal("row", await GetComputedStyle(headerRow, "flex-direction"));
+        await Page.Locator(".run-band").WaitForAsync(new() { Timeout = 5000 });
+        Assert.Equal(64, await Page.Locator(".run-ring").EvaluateAsync<double>("e => e.getBoundingClientRect().width"), 1);
 
         // Restore mobile size
         await Page.SetViewportSizeAsync(375, 812);
     }
 
-    // ── Summary chart centred on mobile ──
+    // ── The ring is centred on the summary beside it (5.0.0) ──
 
     [Fact]
-    public async Task Summary_chart_is_centred_on_mobile()
+    public async Task Run_ring_is_centred_on_the_summary_on_mobile()
     {
         await Page.GotoAsync(GenerateReport("MobileChartCenter.html"));
-        var chart = Page.Locator(".summary-chart");
-        await chart.WaitForAsync(new() { Timeout = 5000 });
-        var alignSelf = await GetComputedStyle(chart, "align-self");
-        Assert.Equal("center", alignSelf);
+        var ring = Page.Locator(".run-ring");
+        await ring.WaitForAsync(new() { Timeout = 5000 });
+        var middles = await Page.EvaluateAsync<double[]>(
+            "() => ['.run-ring', '.run-summary'].map(s => { const r = document.querySelector(s).getBoundingClientRect(); return r.top + r.height / 2; })");
+        Assert.True(Math.Abs(middles[0] - middles[1]) < 1, $"ring middle {middles[0]}, summary middle {middles[1]}");
     }
 
     // ── Details/Headers wraps on mobile ──
@@ -610,22 +611,6 @@ public class MobileResponsiveTests : PlaywrightTestBase
         Assert.Equal("block", display);
     }
 
-    // ── CI box full width on mobile ──
-
-    [Fact]
-    public async Task Ci_chart_group_full_width_on_mobile()
-    {
-        await Page.GotoAsync(GenerateReport("MobileCiFullWidth.html"));
-        var headerRow = Page.Locator(".header-row");
-        await headerRow.WaitForAsync(new() { Timeout = 5000 });
-
-        var ciGroup = Page.Locator(".ci-chart-group");
-        if (await ciGroup.CountAsync() > 0)
-        {
-            var headerWidth = await headerRow.EvaluateAsync<double>("e => e.offsetWidth");
-            var groupWidth = await ciGroup.EvaluateAsync<double>("e => e.offsetWidth");
-            Assert.True(groupWidth >= headerWidth - 2,
-                $"CI chart group width ({groupWidth}) should match header row ({headerWidth})");
-        }
-    }
+    // ── The CI zone under the summary on a phone (5.0.0: the run band; the 4.x test's report had no CI, so it measured nothing) ──
+    // covered by RunBandLayoutTests.On_a_narrow_page_the_ci_zone_moves_under_the_summary_and_back
 }

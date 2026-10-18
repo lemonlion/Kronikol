@@ -1522,6 +1522,7 @@ public static class ReportGenerator
         var diagramToggleLayoutScript = DiagramContextMenu.GetDiagramToggleLayoutScript();
         var themeBootScript = LoadResource("report-theme-boot-script.js");
         var themeSwitchScript = LoadResource("report-theme-switch-script.js");
+        var runBandScript = LoadResource("report-run-band-script.js");
 
         var customCssBlock = customCss is not null ? $"<style>{customCss}</style>" : "";
         var faviconLink = $"<link rel=\"icon\" href=\"{customFaviconBase64 ?? Constants.DefaultFavicon.DataUri}\">";
@@ -1587,6 +1588,7 @@ public static class ReportGenerator
                             {{toggleScript}}
                             {{diagramToggleLayoutScript}}
                             <script id="kronikol-theme-switch">{{themeSwitchScript}}</script>
+                            <script id="kronikol-run-band">{{runBandScript}}</script>
                         </head>
                         <body>
                     """;
@@ -1601,7 +1603,9 @@ public static class ReportGenerator
             var numberOfFeatures = features.Length;
             var scenarios = features.SelectMany(x => x.Scenarios).ToArray();
             var passedScenarios = scenarios.Where(x => x.Result == ExecutionResult.Passed).ToArray();
-            var skippedScenarios = scenarios.Where(x => x.Result == ExecutionResult.Skipped).ToArray();
+            // A scenario skipped after a failure is skipped (5.0.0): 4.x left it out of the summary and the ring, so
+            // their counts did not add up to the scenarios, while the features table already counted it.
+            var skippedScenarios = scenarios.Where(x => x.Result is ExecutionResult.Skipped or ExecutionResult.SkippedAfterFailure).ToArray();
             var failedScenarios = scenarios.Where(x => x.Result == ExecutionResult.Failed).ToArray();
             var overallStatus = failedScenarios.Any() ? "Failed" : "Passed";
 
@@ -1680,48 +1684,11 @@ public static class ReportGenerator
             body.Append("</div>");
             body.Append("</details>");
 
-            body.Append($"""
-                    <div class="header-row">
-                    <div class="test-execution-summary">
-                        <h2>Test Execution Summary</h2>
-                        <table>
-                            <tr><td colspan="2" class="column-header">Execution</td><td colspan="2" class="column-header">Content</td></tr>
-                            <tr><td>Overall status:</td><td>{overallStatus}</td><td>Features: </td><td>{numberOfFeatures}</td></tr>
-                            <tr><td>Start Date:</td><td>{startRunTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)} (UTC)</td><td>Scenarios: </td><td>{scenarios.Length}</td></tr>
-                            <tr><td>Start Time:</td><td>{startRunTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} (UTC)</td><td>Passed Scenarios: </td><td>{passedScenarios.Length}</td></tr>
-                            <tr><td>End Time:</td><td>{endRunTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} (UTC)</td><td>Failed Scenarios: </td><td>{failedScenarios.Length}</td></tr>
-                            <tr><td>Duration:</td><td>{FormatDuration(endRunTime - startRunTime)}</td><td>Skipped Scenarios: </td><td>{skippedScenarios.Length}</td></tr>
-                            <tr style="display:none"><td>Kronikol Version:</td><td>{KronikolVersion}</td><td></td><td></td></tr>
-                        </table>
-                    </div>
-                    """);
-
-            if (ciMetadata is not null)
-            {
-                body.Append("<div class=\"ci-chart-group\">");
-                body.Append("<div class=\"ci-metadata\"><table>");
-                body.Append($"<tr><td colspan=\"2\" class=\"column-header\">CI ({ciMetadata.Provider})</td></tr>");
-                if (ciMetadata.BuildNumber is not null)
-                    body.Append($"<tr><td>Build #:</td><td>{System.Net.WebUtility.HtmlEncode(ciMetadata.BuildNumber)}</td></tr>");
-                if (ciMetadata.Branch is not null)
-                    body.Append($"<tr><td>Branch:</td><td>{System.Net.WebUtility.HtmlEncode(ciMetadata.Branch)}</td></tr>");
-                if (ciMetadata.CommitSha is not null)
-                {
-                    var shortSha = ciMetadata.CommitSha.Length > 7 ? ciMetadata.CommitSha[..7] : ciMetadata.CommitSha;
-                    body.Append($"<tr><td>Commit:</td><td><code title=\"{System.Net.WebUtility.HtmlEncode(ciMetadata.CommitSha)}\">{System.Net.WebUtility.HtmlEncode(shortSha)}</code></td></tr>");
-                }
-                if (ciMetadata.PipelineUrl is not null)
-                    body.Append($"<tr><td>Pipeline:</td><td><a href=\"{System.Net.WebUtility.HtmlEncode(ciMetadata.PipelineUrl)}\" target=\"_blank\" rel=\"noopener noreferrer\">View Run</a></td></tr>");
-                if (ciMetadata.Repository is not null)
-                    body.Append($"<tr><td>Repository:</td><td>{System.Net.WebUtility.HtmlEncode(ciMetadata.Repository)}</td></tr>");
-                body.Append("</table></div>");
-            }
-
+            // The run band (5.0.0, plans/OPTION_C_PLAN.md S2): the ring, the test execution summary and the CI zone on one
+            // row, in place of the 4.x header row and its two tables; the filter box follows it on a row of its own.
             var bypassedScenarios = scenarios.Where(x => x.Result == ExecutionResult.Bypassed).ToArray();
-            body.Append(GeneratePieChartSvg(passedScenarios.Length, failedScenarios.Length, skippedScenarios.Length, bypassedScenarios.Length));
-
-            if (ciMetadata is not null)
-                body.Append("</div>"); // close ci-chart-group
+            AppendRunBand(body, overallStatus, startRunTime, endRunTime, numberOfFeatures, scenarios.Length,
+                passedScenarios.Length, failedScenarios.Length, skippedScenarios.Length, bypassedScenarios.Length, ciMetadata);
         }
 
         var diagramsByTestId = diagrams.ToLookup(x => x.TestRuntimeId);
@@ -1748,11 +1715,11 @@ public static class ReportGenerator
         }
 
         body.Append($"""
-                 <div class="filtering-box">
+                 <div class="filtering-box" id="filtering-box">
                     <div class="filtering-box-header"><h2>Filtering</h2><div class="filtering-box-export"><button class="export-btn" onclick="clear_all_filters()">Clear All</button><button class="export-btn" onclick="export_html()">Export Filtered HTML</button><button class="export-btn" onclick="export_csv()">Export Filtered CSV</button></div></div>
                     <div class="filter-search"><input id="searchbar" autocomplete="off" placeholder="Search... (@tag, $status, &&, ||, !!, parentheses)" onkeyup="search_scenarios()" /><button type="button" class="search-help-toggle" onclick="toggle_search_help()" title="Search syntax help">?</button></div>
                     <div class="mobile-filter-toggle">Filters</div>
-                    <div class="filters">
+                    <div class="filters" id="filter-rows">
                     <div class="search-help-panel" style="display:none">
                     <table class="search-help-table">
                     <tr><th>Syntax</th><th>Meaning</th><th>Example</th></tr>
@@ -1840,8 +1807,6 @@ public static class ReportGenerator
 
         body.Append("</div>"); // close filters
         body.Append("</div>"); // close filtering-box
-        if (includeTestRunData)
-            body.Append("</div>"); // close header-row
 
         // Toolbar row: expand buttons left, Details/Headers right
         body.Append("""<div class="toolbar-row">""");
@@ -2725,39 +2690,101 @@ public static class ReportGenerator
         return (passed, failed, skipped);
     }
 
+    /// <summary>
+    /// The run band (5.0.0, plans/OPTION_C_PLAN.md S2, D3): the ring, then the test execution summary (status, when,
+    /// and the counts), then the CI zone when the run had one, as one row the page's CSS stacks when it does not fit.
+    /// </summary>
+    private static void AppendRunBand(StringBuilder body, string overallStatus, DateTime startRunTime, DateTime endRunTime,
+        int features, int scenarios, int passed, int failed, int skipped, int bypassed, CiMetadata? ci)
+    {
+        static string Encode(string value) => System.Net.WebUtility.HtmlEncode(value);
+        static string Stat(string label, string value, string? cls = null) =>
+            $"<div class=\"run-stat{(cls is null ? "" : " " + cls)}\"><dt>{label}</dt><dd>{value}</dd></div>";
+
+        body.Append("<section class=\"run-band\" aria-label=\"Test execution summary\">");
+        var ring = GeneratePieChartSvg(passed, failed, skipped, bypassed);
+        if (ring.Length > 0)
+            body.Append("<div class=\"run-ring\">").Append(ring).Append("</div>");
+
+        var when = startRunTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + " · "
+                   + startRunTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture) + "–"
+                   + endRunTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture) + " UTC";
+        body.Append("<div class=\"run-zone run-summary\"><div class=\"run-head\"><h2 class=\"run-title\">Test Execution Summary</h2>");
+        body.Append($"<span class=\"run-status run-status-{overallStatus.ToLowerInvariant()}\">{overallStatus}</span>");
+        body.Append($"<span class=\"run-when\">{when}</span></div>");
+        body.Append("<dl class=\"run-stats\">");
+        body.Append(Stat("Scenarios", scenarios.ToString(CultureInfo.InvariantCulture)));
+        body.Append(Stat("Passed", passed.ToString(CultureInfo.InvariantCulture), "run-stat-pass"));
+        body.Append(Stat("Failed", failed.ToString(CultureInfo.InvariantCulture), failed > 0 ? "run-stat-fail" : null));
+        body.Append(Stat("Skipped", skipped.ToString(CultureInfo.InvariantCulture)));
+        if (bypassed > 0)
+            body.Append(Stat("Bypassed", bypassed.ToString(CultureInfo.InvariantCulture)));
+        body.Append(Stat("Features", features.ToString(CultureInfo.InvariantCulture)));
+        body.Append(Stat("Duration", FormatDuration(endRunTime - startRunTime)));
+        body.Append("</dl></div>");
+
+        if (ci is not null)
+        {
+            var provider = ci.Provider switch
+            {
+                CiEnvironment.GitHubActions => "GitHub Actions",
+                CiEnvironment.AzureDevOps => "Azure DevOps",
+                _ => ci.Provider.ToString()
+            };
+            body.Append($"<div class=\"run-zone run-ci\"><div class=\"run-head\"><h2 class=\"run-title\">CI</h2><span class=\"run-when\">{provider}</span></div>");
+            body.Append("<dl class=\"run-stats\">");
+            if (ci.BuildNumber is not null)
+                body.Append(Stat("Build", "#" + Encode(ci.BuildNumber)));
+            if (ci.Branch is not null)
+                body.Append(Stat("Branch", Encode(ci.Branch)));
+            if (ci.CommitSha is not null)
+            {
+                var shortSha = ci.CommitSha.Length > 7 ? ci.CommitSha[..7] : ci.CommitSha;
+                body.Append(Stat("Commit", $"<code title=\"{Encode(ci.CommitSha)}\">{Encode(shortSha)}</code>"));
+            }
+            if (ci.Repository is not null)
+                body.Append(Stat("Repository", Encode(ci.Repository)));
+            if (ci.PipelineUrl is not null)
+                body.Append(Stat("Run", $"<a class=\"run-link\" href=\"{Encode(ci.PipelineUrl)}\" target=\"_blank\" rel=\"noopener noreferrer\">View run</a>"));
+            body.Append("</dl></div>");
+        }
+        body.Append("</section>");
+    }
+
     internal static string GeneratePieChartSvg(int passed, int failed, int skipped, int bypassed)
     {
         var total = passed + failed + skipped + bypassed;
         if (total == 0) return "";
 
-        var passRate = (int)Math.Round(100.0 * passed / total);
-        var segments = new List<(double pct, string color, string label, int count)>();
-        if (passed > 0) segments.Add((100.0 * passed / total, "#1daf26", "Passed", passed));
-        if (failed > 0) segments.Add((100.0 * failed / total, "#cc0000", "Failed", failed));
-        if (skipped > 0) segments.Add((100.0 * skipped / total, "#949494", "Skipped", skipped));
-        if (bypassed > 0) segments.Add((100.0 * bypassed / total, "#2e7bff", "Bypassed", bypassed));
+        // A run with any scenario that did not pass never reads 100%: rounding put 213 of 214 at 100 until 5.0.0.
+        var passRate = passed == total ? 100 : (int)Math.Min(99, Math.Floor(100.0 * passed / total));
+        var segments = new List<(double pct, string kind, string label, int count)>();
+        if (passed > 0) segments.Add((100.0 * passed / total, "pass", "Passed", passed));
+        if (failed > 0) segments.Add((100.0 * failed / total, "fail", "Failed", failed));
+        if (skipped > 0) segments.Add((100.0 * skipped / total, "skip", "Skipped", skipped));
+        if (bypassed > 0) segments.Add((100.0 * bypassed / total, "bypass", "Bypassed", bypassed));
 
         const double radius = 40;
         const double circumference = 2 * Math.PI * radius;
         var sb = new StringBuilder();
-        sb.Append("<div class=\"summary-chart\">");
-        sb.Append("<svg viewBox=\"0 0 100 100\">");
+        // The arcs and the rate take their colours from the page's tokens through these classes (5.0.0).
+        sb.Append($"<svg viewBox=\"0 0 100 100\" role=\"img\" aria-label=\"{passRate}% passed\">");
 
         var offset = 0.0;
-        foreach (var (pct, color, label, count) in segments)
+        foreach (var (pct, kind, label, count) in segments)
         {
             var dash = circumference * pct / 100.0;
             var gap = circumference - dash;
             var dashOffset = -offset * circumference / 100.0;
             sb.Append(CultureInfo.InvariantCulture,
-                $"<circle cx=\"50\" cy=\"50\" r=\"{radius:F1}\" fill=\"none\" stroke=\"{color}\" stroke-width=\"12\" " +
+                $"<circle class=\"ring-{kind}\" cx=\"50\" cy=\"50\" r=\"{radius:F1}\" fill=\"none\" stroke-width=\"12\" " +
                 $"stroke-dasharray=\"{dash:F2} {gap:F2}\" stroke-dashoffset=\"{dashOffset:F2}\" transform=\"rotate(-90 50 50)\">" +
                 $"<title>{label}: {count} ({pct:F0}%)</title></circle>");
             offset += pct;
         }
 
-        sb.Append($"<text x=\"50\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"central\" font-size=\"16\" font-weight=\"bold\" fill=\"#333\">{passRate}%</text>");
-        sb.Append("</svg></div>");
+        sb.Append($"<text class=\"ring-rate\" x=\"50\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"central\">{passRate}%</text>");
+        sb.Append("</svg>");
         return sb.ToString();
     }
 

@@ -98,18 +98,20 @@ public class ReportSectionWidthTests : PlaywrightTestBase
         await HoldFilteringBox(140);
         var button = Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" });
 
-        // The export buttons' right edge, the filtering box's content edge, and the button's lines.
+        // The right edge of the export labels, the filtering box's content edge, and the button's lines. Since 5.0.0 an
+        // export button is a text button whose padding runs past the content edge on purpose (OPTION_C_PLAN S2), so
+        // its label, not its box, is what must stay inside.
         var geometry = await button.EvaluateAsync<double[]>("""
             b => {
                 const box = b.closest('.filtering-box'), bs = getComputedStyle(box);
                 const edge = box.getBoundingClientRect().right - parseFloat(bs.borderRightWidth) - parseFloat(bs.paddingRight);
-                const range = document.createRange();
-                range.selectNodeContents(b);
-                const lines = new Set([...range.getClientRects()].filter(r => r.width > 0).map(r => Math.round(r.top))).size;
-                return [b.closest('.filtering-box-export').getBoundingClientRect().right, edge, lines];
+                const rects = el => { const range = document.createRange(); range.selectNodeContents(el); return [...range.getClientRects()].filter(r => r.width > 0); };
+                const lines = new Set(rects(b).map(r => Math.round(r.top))).size;
+                const right = Math.max(...[...b.closest('.filtering-box-export').querySelectorAll('.export-btn')].flatMap(e => rects(e).map(r => r.right)));
+                return [right, edge, lines];
             }
             """);
-        Assert.True(geometry[0] <= geometry[1] + 1, $"the export buttons end {geometry[0] - geometry[1]:F0} px past the filtering box's content");
+        Assert.True(geometry[0] <= geometry[1] + 1, $"the export labels end {geometry[0] - geometry[1]:F0} px past the filtering box's content");
         Assert.Equal(2, (int)geometry[2]);
         Assert.Equal(0, await PageOverflow());
     }

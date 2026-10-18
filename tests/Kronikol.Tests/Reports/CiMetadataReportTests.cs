@@ -29,10 +29,9 @@ public class CiMetadataReportTests
     {
         var ci = new CiMetadata(CiEnvironment.GitHubActions, "42", "main", "abc123def456789", null, "owner/repo", "12345");
         var content = GenerateReport(SimpleFeatures(), ci);
-        Assert.Contains("Build #:", content);
-        Assert.Contains("42", content);
-        Assert.Contains("Branch:", content);
-        Assert.Contains("main", content);
+        // 5.0.0: the run band's CI zone (plans/OPTION_C_PLAN.md S2) in place of the 4.x table
+        Assert.Contains("<div class=\"run-stat\"><dt>Build</dt><dd>#42</dd></div>", content);
+        Assert.Contains("<div class=\"run-stat\"><dt>Branch</dt><dd>main</dd></div>", content);
     }
 
     [Fact]
@@ -40,8 +39,8 @@ public class CiMetadataReportTests
     {
         var ci = new CiMetadata(CiEnvironment.GitHubActions, "42", "main", "abc123", "https://github.com/owner/repo/actions/runs/12345", "owner/repo", "12345");
         var content = GenerateReport(SimpleFeatures(), ci);
-        Assert.Contains("<a href=\"https://github.com/owner/repo/actions/runs/12345\"", content);
-        Assert.Contains("Pipeline", content);
+        Assert.Contains("<a class=\"run-link\" href=\"https://github.com/owner/repo/actions/runs/12345\"", content);
+        Assert.Contains("<dt>Run</dt>", content);
     }
 
     [Fact]
@@ -57,7 +56,7 @@ public class CiMetadataReportTests
     public void Report_omits_ci_section_when_null()
     {
         var content = GenerateReport(SimpleFeatures(), ciMetadata: null);
-        Assert.DoesNotContain("Build #:", content);
-        Assert.DoesNotContain("Pipeline", content);
+        Assert.DoesNotContain("<div class=\"run-zone run-ci\">", content);
+        Assert.DoesNotContain("<dt>Build</dt>", content);
     }
 }

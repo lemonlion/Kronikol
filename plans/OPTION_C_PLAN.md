@@ -218,3 +218,29 @@ decision of the owner's, not part of this plan.
   string the mergeable JSON stores ("Ingredients: Flour: Plain Flour, ...; Toppings: 2 items"), where the run's own
   report draws it as an expandable value (`details.param-expand`, 3 cells in the parity run). The data is not in the
   file, so the fix is a format change: it belongs with REPORT_FORMAT_PLAN (the size reduction work) or a 4.x patch.
+- 2026-10-18, S2: the run band (D3, D4) and the filter box on its own row (D5). The generator writes
+  `section.run-band` (the ring, the summary zone, the CI zone) in place of the 4.x header row, its two tables and the
+  pie's wrapper; the filter box follows with ids the bar will point at (`#filtering-box`, `#filter-rows`). The ring is
+  drawn with classes the tokens colour, and its rate rounds down and stops at 99% unless every scenario passed (4.x
+  read 213 of 214 as 100%); scenarios skipped after a failure are counted as skipped (4.x left them out of the
+  summary and the ring). Both are bugs in 4.x too, recorded for the owner. `report-run-band-script.js` decides
+  `.ci-below` on the zones' measured natural widths. Two preview defects found by the tests and not ported: the
+  preview measured once at load, so text spacing applied afterwards (as a reader's extension applies it) left the CI
+  zone wrapped under the summary without `.ci-below` (`ViewportSweepTests` at 1,280 to 1,400 px); the branch measures
+  again when a zone's size changes, a frame later, outside the ResizeObserver callback. And the band's row wrapped,
+  so on a phone a band with no CI zone put the summary under the ring (the parity run always has CI); the row no
+  longer wraps. The filter box is a card like the band, with its title a label and its exports text buttons
+  (stylesheet inventory 4, the container, title, header and export buttons only); not ported, the preview's
+  `white-space: nowrap` on an export button, which 4.x removed because it pushed the buttons past a narrow box, and
+  the 4.x blue border its hover kept. Left to their stages: the phone grid of the filter header and the shortened
+  export labels (D13, S6, S12) and the readout (D14, S5). Measured with `checks/style-parity.js` (surface 2 added: the
+  band, ring, titles, stats, CI zone, link and the filter box's chrome): the band matched the preview on its first
+  measure, and the filter box's chrome went from 43 differences to 1 (the deliberate `nowrap`) at 1,400 px light and
+  dark and at 700 px; at 400 px the rest are the phone grid left to S6 and S12. Surfaces 0 and 9 to 13 are unchanged.
+  Tests: core
+  `RunBandTests` (12 of 15 failed before), Playwright `RunBandLayoutTests` (one row while it fits, the CI zone under
+  the summary and back, text spacing after load, the ring's and the filter card's tokens in both themes; each failed
+  on the S1 stylesheet or the measure-once script), and the 4.x tests of the header row, its tables and its pie,
+  rewritten for the band. The export row's -9 px margin lines the last label up with the card's content edge, so
+  `ViewportSweepTests` and `ReportSectionWidthTests` check the labels against the content edge and the buttons
+  against the box, where 4.x checked the bordered buttons against the content edge.

@@ -285,15 +285,22 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
             for (const b of document.querySelectorAll('.filtering-box-export button, .toolbar-row button, .diagram-toggle button'))
                 if (vis(b) && lines(b) > 1 && !fills(b)) problems.push(`"${label(b)}" wraps its label inside its button (${lines(b)} lines)`);
 
-            // 3. The export cluster inside the filtering box's content, not in its padding or past it.
+            // 3. The export labels inside the filtering box's content, and the buttons inside the box. Since 5.0.0 an
+            //    export button is a text button whose padding runs into the box's padding on purpose, so the last
+            //    label lines up with the content edge (plans/OPTION_C_PLAN.md S2): its box may sit in the padding,
+            //    never past it.
             const box = document.querySelector('.filtering-box');
             const cluster = document.querySelector('.filtering-box-export');
             if (!vis(box) || !vis(cluster)) problems.push('the filtering box or its export buttons are not visible');
             else {
-                const bs = getComputedStyle(box);
-                const edge = box.getBoundingClientRect().right - parseFloat(bs.borderRightWidth) - parseFloat(bs.paddingRight);
-                const over = cluster.getBoundingClientRect().right - edge;
-                if (over > 1) problems.push(`the export buttons run ${Math.round(over)} px past the filtering box's content`);
+                const bs = getComputedStyle(box), outer = box.getBoundingClientRect().right - parseFloat(bs.borderRightWidth);
+                const edge = outer - parseFloat(bs.paddingRight);
+                const textRects = el => { const range = document.createRange(); range.selectNodeContents(el); return [...range.getClientRects()].filter(r => r.width > 0); };
+                const buttons = [...cluster.querySelectorAll('.export-btn')].filter(vis);
+                const labels = Math.max(...buttons.flatMap(b => textRects(b).map(r => r.right))) - edge;
+                const boxes = Math.max(...buttons.map(b => b.getBoundingClientRect().right)) - outer;
+                if (labels > 1) problems.push(`the export labels run ${Math.round(labels)} px past the filtering box's content`);
+                if (boxes > 1) problems.push(`the export buttons run ${Math.round(boxes)} px past the filtering box`);
             }
 
             // 4. Every scenario-toolbar control inside its toolbar: past the edge it is clipped out of sight.
@@ -308,28 +315,23 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
                 }
             }
 
-            // 5 and 6. The header's composition, and the CI box's cap, on a run report.
+            // 5 and 6. The run band on a run report (5.0.0, plans/OPTION_C_PLAN.md S2; 4.x checked the header row):
+            //    the filtering box on a row of its own under the band and as wide; no CI label wraps; and the CI zone
+            //    beside the summary unless the band marks it below, then under it.
             if (runReport) {
-                const row = document.querySelector('.header-row');
-                const summary = document.querySelector('.header-row > .test-execution-summary');
-                if (width <= 768) {
-                    if (getComputedStyle(row).flexDirection !== 'column') problems.push('the header row is not a column');
-                } else {
-                    const b = box.getBoundingClientRect(), s = summary.getBoundingClientRect();
-                    if (width <= breakpoint) {
-                        if (b.top < s.bottom - 1) problems.push('the filtering box is not on a row of its own');
-                        if (Math.abs(b.width - row.clientWidth) > 1)
-                            problems.push(`the filtering box is ${Math.round(b.width)} px wide, not the header row's ${row.clientWidth}`);
-                    } else if (Math.abs(b.top - s.top) > 1) problems.push('the filtering box is not beside the summary');
-
-                    const ci = document.querySelector('.ci-metadata');
-                    const cs = getComputedStyle(ci);
-                    const cap = 20 * parseFloat(cs.fontSize) + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)
-                        + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
-                    const ciWidth = ci.getBoundingClientRect().width;
-                    if (ciWidth > cap + 1) problems.push(`the CI box is ${Math.round(ciWidth)} px wide, past its ${Math.round(cap)} px cap`);
-                    for (const td of ci.querySelectorAll('td:first-child'))
-                        if (lines(td) > 1) problems.push(`the CI label "${label(td)}" wraps`);
+                const band = document.querySelector('.run-band');
+                const b = box.getBoundingClientRect(), r = band.getBoundingClientRect();
+                if (b.top < r.bottom - 1) problems.push('the filtering box is not on a row of its own under the run band');
+                if (Math.abs(b.width - r.width) > 1)
+                    problems.push(`the filtering box is ${Math.round(b.width)} px wide, not the run band's ${Math.round(r.width)}`);
+                const ci = band.querySelector('.run-ci');
+                if (ci) {
+                    for (const dt of ci.querySelectorAll('dt'))
+                        if (lines(dt) > 1) problems.push(`the CI label "${label(dt)}" wraps`);
+                    const s = band.querySelector('.run-summary').getBoundingClientRect(), c = ci.getBoundingClientRect();
+                    if (band.classList.contains('ci-below')) {
+                        if (c.top < s.bottom - 1) problems.push('the CI zone is marked below the summary but sits beside it');
+                    } else if (Math.abs(c.top - s.top) > 1) problems.push('the CI zone is neither beside the summary nor marked below it');
                 }
             }
 

@@ -203,9 +203,10 @@ public class FeatureSummaryTableReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.DoesNotContain(">Duration<", content);
-        Assert.DoesNotContain(">Avg<", content);
-        Assert.DoesNotContain(">Longest<", content);
+        // the table's own headers: since 5.0.0 the run band names the run's duration too (plans/OPTION_C_PLAN.md S2)
+        Assert.DoesNotContain(")\">Duration</th>", content);
+        Assert.DoesNotContain(")\">Avg</th>", content);
+        Assert.DoesNotContain(")\">Longest</th>", content);
     }
 
     [Fact]

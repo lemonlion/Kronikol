@@ -538,7 +538,7 @@ public class ShowcaseReportTests : PlaywrightTestBase
         await CaptureFrames("02_expanded", 36, 33);
 
         // ── Scene 3: Test execution summary ──
-        await ScrollTo(".test-execution-summary");
+        await ScrollTo(".run-band");
         await CaptureFrames("03_summary", 48, 33);
 
         // ── Scene 4: First scenario's BDD steps ──

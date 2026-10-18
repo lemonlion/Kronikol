@@ -155,11 +155,11 @@ public class RunIdentityDataTests
             ciMetadata: null);
 
         // Anchored on the emitted markup, not on the class name: the stylesheet declares
-        // `.ci-metadata` in every report whether or not the table is drawn.
+        // `.run-ci` in every report whether or not the zone is drawn (5.0.0: the run band's CI zone).
         var html = File.ReadAllText(path);
-        Assert.DoesNotContain("<div class=\"ci-metadata\">", html);
-        Assert.DoesNotContain("<div class=\"ci-chart-group\">", html);
-        Assert.DoesNotContain("CI (None)", html);
+        Assert.DoesNotContain("<div class=\"run-zone run-ci\">", html);
+        Assert.DoesNotContain("<h2 class=\"run-title\">CI</h2>", html);
+        Assert.DoesNotContain(">None</span>", html);
     }
 
     [Fact]

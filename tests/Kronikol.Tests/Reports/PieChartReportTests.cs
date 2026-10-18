@@ -32,7 +32,7 @@ public class PieChartReportTests
 
         var content = GenerateReport(features);
         Assert.Contains("<svg", content);
-        Assert.Contains("summary-chart", content);
+        Assert.Contains("<div class=\"run-ring\">", content);
     }
 
     [Fact]
@@ -73,11 +73,11 @@ public class PieChartReportTests
 
         var content = GenerateReport(features);
         // The SVG pie chart should have only a green segment
-        var svgStart = content.IndexOf("<div class=\"summary-chart\"");
+        var svgStart = content.IndexOf("<div class=\"run-ring\"");
         var svgEnd = content.IndexOf("</div>", svgStart);
         var svgContent = content[svgStart..svgEnd];
-        Assert.Contains("#1daf26", svgContent); // green for passed
-        Assert.DoesNotContain("#cc0000", svgContent); // no red for failed
+        Assert.Contains("class=\"ring-pass\"", svgContent); // passed, coloured by the token (5.0.0)
+        Assert.DoesNotContain("class=\"ring-fail\"", svgContent); // no failed arc
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class PieChartReportTests
         };
 
         var content = GenerateReport(features, includeTestRunData: false);
-        Assert.DoesNotContain("<div class=\"summary-chart\"", content);
+        Assert.DoesNotContain("<div class=\"run-ring\"", content);
     }
 
     [Fact]
@@ -115,9 +115,10 @@ public class PieChartReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.Contains("#1daf26", content); // green
-        Assert.Contains("#cc0000", content); // red
-        Assert.Contains("#949494", content); // gray
-        Assert.Contains("#2e7bff", content); // blue
+        // 5.0.0 (plans/OPTION_C_PLAN.md S2): an arc per status, coloured through its class by the theme's tokens
+        Assert.Contains("<circle class=\"ring-pass\"", content);
+        Assert.Contains("<circle class=\"ring-fail\"", content);
+        Assert.Contains("<circle class=\"ring-skip\"", content);
+        Assert.Contains("<circle class=\"ring-bypass\"", content);
     }
 }

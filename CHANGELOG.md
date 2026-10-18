@@ -33,6 +33,22 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   `DependencyFilterMode = FilterCombinationMode.And`. A link made on a 4.x report that chose dependencies with no
   `depmode` meant AND; opened on a 5.0.0 report it means OR. One that says `depmode=OR` still means OR, and a 5.0.0
   report writes `depmode=AND` when AND is chosen.
+- **The run band replaces the header row.** The ring, the test execution summary and the CI details share one row in a
+  card, and the CI details move under the summary when the three do not fit side by side, decided on their measured
+  widths and measured again when the window or the text changes (a reader's text spacing included). The filter box
+  follows on a row of its own, also a card, with text buttons for its exports. The summary's start and end are one
+  line (`2026-10-16 · 17:27:11–17:27:16 UTC`), its counts are labelled figures, the CI labels lose their colons
+  (`Build #:` and `42` are now `Build` and `#42`), and the hidden Kronikol Version row is gone: the version stays in
+  the page's `generator` meta. The ring's arcs and rate are coloured by the theme through classes. A `CustomCss` sheet
+  or a script that reads `.header-row`, `.test-execution-summary`, `.summary-chart`, `.ci-chart-group` or
+  `.ci-metadata` finds none of them.
+
+### Fixed
+
+- **The summary ring reads 100% only when every scenario passed.** It rounded the pass rate, so 213 passed of 214 read
+  100%; a rate under 100 now rounds down and stops at 99%.
+- **A scenario skipped after an earlier failure is counted.** The summary and the ring left out the scenarios a
+  framework skipped after a failure; they count as skipped.
 
 ## [4.26.9] - 2026-10-18
 

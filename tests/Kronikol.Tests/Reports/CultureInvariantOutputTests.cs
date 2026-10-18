@@ -165,9 +165,8 @@ public class CultureInvariantOutputTests
     {
         var html = Html(culture);
 
-        Assert.Contains("<tr><td>Start Date:</td><td>2026-01-01 (UTC)</td>", html, StringComparison.Ordinal);
-        Assert.Contains("<tr><td>Start Time:</td><td>10:05:07 (UTC)</td>", html, StringComparison.Ordinal);
-        Assert.Contains("<tr><td>End Time:</td><td>10:07:07 (UTC)</td>", html, StringComparison.Ordinal);
+        // 5.0.0: one line in the run band (plans/OPTION_C_PLAN.md S2) in place of the 4.x table's three rows
+        Assert.Contains("<span class=\"run-when\">2026-01-01 \u00b7 10:05:07\u201310:07:07 UTC</span>", html, StringComparison.Ordinal);
     }
 
     [Theory]

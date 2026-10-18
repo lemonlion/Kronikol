@@ -79,10 +79,10 @@ public class DurationPaintTests : PlaywrightTestBase
     public async Task The_pie_chart_paints_its_rings(string culture)
     {
         await Page.GotoAsync(Generate($"PieChart_{culture}.html", TimelineFeatures(), culture));
-        await Page.Locator(".summary-chart svg").WaitForAsync();
+        await Page.Locator(".run-ring svg").WaitForAsync();
 
         var rings = await Page.EvaluateAsync<double[][]>("""
-            () => Array.from(document.querySelectorAll('.summary-chart circle')).map(c =>
+            () => Array.from(document.querySelectorAll('.run-ring circle')).map(c =>
                 [c.r.baseVal.value, c.getTotalLength(), c.getBoundingClientRect().width])
             """);
 
@@ -94,7 +94,7 @@ public class DurationPaintTests : PlaywrightTestBase
             Assert.True(ring[2] > 0, "a ring with no painted width");
         });
         var dashes = await Page.EvaluateAsync<string[]>(
-            "() => Array.from(document.querySelectorAll('.summary-chart circle')).map(c => getComputedStyle(c).strokeDasharray)");
+            "() => Array.from(document.querySelectorAll('.run-ring circle')).map(c => getComputedStyle(c).strokeDasharray)");
         // Half the circle passed (1 of 4 is skipped and has no duration, but counts): two numbers per ring, not four.
         Assert.All(dashes, dash => Assert.Equal(2, dash.Split(',', StringSplitOptions.TrimEntries).Length));
     }

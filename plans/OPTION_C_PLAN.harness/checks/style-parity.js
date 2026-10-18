@@ -13,6 +13,10 @@ const PROPS = ['color', 'background-color', 'font-family', 'font-size', 'font-we
   'opacity', 'list-style-type', 'vertical-align', 'white-space', 'text-decoration-line', 'cursor', 'overflow-x'];
 // what to compare, by surface: a name and a selector run inside the first scenario that has the thing (or the page)
 const PICKS = {
+  2: [['band', '.run-band'], ['ring', '.run-ring'], ['run title', '.run-summary .run-title'], ['run status', '.run-status'], ['run when', '.run-summary .run-when'],
+      ['stat dt', '.run-summary .run-stat dt'], ['stat dd', '.run-summary .run-stat dd'], ['stat fail dd', '.run-stat-fail dd'], ['ci zone', '.run-ci'],
+      ['ci title', '.run-ci .run-title'], ['ci dt', '.run-ci .run-stat dt'], ['ci dd', '.run-ci .run-stat dd'], ['commit', '.run-stat dd code'], ['run link', '.run-link'], ['filter box', '.filtering-box'],
+      ['filter header', '.filtering-box-header'], ['filter title', '.filtering-box-header h2'], ['export row', '.filtering-box-export'], ['export button', '.filtering-box-export .export-btn']],
   0: [['body', 'body'], ['h1', 'h1'], ['jump', '.jump-to-failure'], ['top', '.back-to-top']],
   9: [['feature', 'details.feature'], ['feature summary', 'details.feature > summary'], ['feature failed summary', 'details.feature > summary.failed'],
       ['scenario', 'details.scenario'], ['scenario summary', 'details.scenario > summary'], ['scenario failed summary', 'details.scenario > summary.failed'],

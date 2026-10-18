@@ -54,21 +54,24 @@ public partial class StylesheetRulesTests
     public void Rows_that_would_squeeze_their_buttons_wrap_them_whole_instead(string selector) =>
         Assert.Equal("wrap", CssRules.Value(Base, selector, "flex-wrap"));
 
+    /// <summary>5.0.0 (plans/OPTION_C_PLAN.md S2): the filter box has a row of its own at every width, after the run
+    /// band, so the 4.x header row and its band rules are gone.</summary>
     [Fact]
-    public void Between_the_phone_layout_and_the_breakpoint_the_filtering_box_takes_its_own_row()
+    public void The_header_row_is_gone_with_its_rules()
     {
-        Assert.Equal("wrap", CssRules.Value(Base, ".header-row", "flex-wrap", Band));
-        Assert.Equal("100%", CssRules.Value(Base, ".filtering-box", "flex-basis", Band));
+        Assert.Equal(-1, CssRules.IndexOf(Base, ".header-row"));
+        Assert.Null(CssRules.Value(Base, ".filtering-box", "flex-basis", Band));
     }
 
+    /// <summary>The run band's values break where they must and its zones shrink, so a long branch or repository never
+    /// widens the page (what the 4.x CI box's cap did); its labels are single words.</summary>
     [Fact]
-    public void The_ci_box_is_capped_in_the_row_layout_and_breaks_its_values_not_its_labels()
+    public void The_run_band_breaks_its_values_and_lets_its_zones_shrink()
     {
-        Assert.Equal("100%", CssRules.Value(Base, ".ci-metadata table", "max-width"));
-        Assert.Equal("nowrap", CssRules.Value(Base, ".ci-metadata td:first-child", "white-space"));
-        Assert.Equal("anywhere", CssRules.Value(Base, ".ci-metadata td:last-child", "overflow-wrap"));
-        Assert.Equal("20em", CssRules.Value(Base, ".ci-metadata", "max-width", RowLayout));
-        Assert.Null(CssRules.Value(Base, ".ci-metadata", "max-width"));
+        Assert.Equal("anywhere", CssRules.Value(Base, ".run-stat dd", "overflow-wrap"));
+        Assert.Equal("0", CssRules.Value(Base, ".run-zone", "min-width"));
+        Assert.Equal("wrap", CssRules.Value(Base, ".run-stats", "flex-wrap"));
+        Assert.Equal(-1, CssRules.IndexOf(Base, ".ci-metadata"));
     }
 
     /// <summary>A viewport can be 768.8 CSS px wide (Firefox at 125 %): a lower bound anywhere from
@@ -241,7 +244,6 @@ public partial class StylesheetRulesTests
     [InlineData(".step-param-combined-table")]
     [InlineData(".step-docstring")]
     [InlineData(".features-summary-table-wrapper")]
-    [InlineData(".test-execution-summary")]
     [InlineData(".example-image")]
     [InlineData(".raw-plantuml pre")]
     [InlineData(".search-help-panel")]
