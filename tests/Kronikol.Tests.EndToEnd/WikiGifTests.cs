@@ -1662,7 +1662,7 @@ public class WikiGifTests : PlaywrightTestBase
     {
         await NavigateToReport();
 
-        await JsClick(".timeline-toggle");
+        await JsClick("#tab-timeline"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)
         await Task.Delay(500);
 
         try

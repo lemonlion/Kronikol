@@ -331,7 +331,7 @@ public class ReportToolbarTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ToolbarTimelineInfo.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator(".timeline-toggle").ClickAsync();
+        await OpenReportTabAsync("timeline"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)
 
         var timeline = Page.Locator("#scenario-timeline");
         await Expect(timeline).ToBeVisibleAsync();

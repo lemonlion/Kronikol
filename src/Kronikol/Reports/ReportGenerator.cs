@@ -1129,8 +1129,8 @@ public static class ReportGenerator
     /// </summary>
     /// <remarks>
     /// It draws what it is handed: verdicts in <paramref name="history"/> draw the per-scenario sparkline, verdict pill
-    /// and <c>data-history-verdicts</c> attribute, as they did before 4.6.0, and the History section with
-    /// <paramref name="showHistorySection"/>; <paramref name="diagnostics"/> draw the Report diagnostics section with
+    /// and <c>data-history-verdicts</c> attribute, as they did before 4.6.0, and the History tab with
+    /// <paramref name="showHistorySection"/>; <paramref name="diagnostics"/> draw the Diagnostics tab with
     /// <paramref name="showReportDiagnostics"/>. Each brings its stylesheet rules and search code with it. A run
     /// hands it history only when <see cref="ReportConfigurationOptions.ShowScenarioHistory"/> or
     /// <see cref="ReportConfigurationOptions.ShowHistorySection"/> asks.
@@ -1357,51 +1357,6 @@ public static class ReportGenerator
         // R4: param-expand toggle auto-selects row + cell-subtable click isolation
         var paramExpandJs = LoadResource("report-param-expand-js.js");
 
-        // Toggle timeline
-        var deactivateComponentDiagramJs = !string.IsNullOrEmpty(componentDiagramPlantUml)
-            ? """
-                                             if (hidden) {
-                                                 var cd = document.getElementById('component-diagram');
-                                                 if (cd && cd.style.display !== 'none') {
-                                                     cd.style.display = 'none';
-                                                     var cdBtn = document.querySelector('button.timeline-toggle-active[onclick*="toggle_component_diagram"]');
-                                                     if (cdBtn) cdBtn.classList.remove('timeline-toggle-active');
-                                                 }
-                                             }
-              """
-            : "";
-        var toggleTimelineFunction = $$"""
-                                     function toggle_timeline(btn) {
-                                         var tl = document.getElementById('scenario-timeline');
-                                         if (!tl) return;
-                                         var hidden = tl.style.display === 'none';
-                                         tl.style.display = hidden ? '' : 'none';
-                                         btn.classList.toggle('timeline-toggle-active', hidden);{{deactivateComponentDiagramJs}}
-                                     }
-                                     """;
-
-        // Toggle component diagram
-        var toggleComponentDiagramFunction = !string.IsNullOrEmpty(componentDiagramPlantUml)
-            ? """
-              function toggle_component_diagram(btn) {
-                  var cd = document.getElementById('component-diagram');
-                  if (!cd) return;
-                  var hidden = cd.style.display === 'none';
-                  cd.style.display = hidden ? '' : 'none';
-                  btn.classList.toggle('timeline-toggle-active', hidden);
-                  if (hidden) {
-                      if (window._renderDiagramsInContainer) window._renderDiagramsInContainer(cd);
-                      var tl = document.getElementById('scenario-timeline');
-                      if (tl && tl.style.display !== 'none') {
-                          tl.style.display = 'none';
-                          var tlBtn = document.querySelector('button.timeline-toggle-active[onclick*="toggle_timeline"]');
-                          if (tlBtn) tlBtn.classList.remove('timeline-toggle-active');
-                      }
-                  }
-              }
-              """
-            : "";
-
         // Jump to failure
         var hasFailures = features.SelectMany(f => f.Scenarios).Any(s => s.Result == ExecutionResult.Failed);
         var failureCount = features.SelectMany(f => f.Scenarios).Count(s => s.Result == ExecutionResult.Failed);
@@ -1523,6 +1478,7 @@ public static class ReportGenerator
         var themeBootScript = LoadResource("report-theme-boot-script.js");
         var themeSwitchScript = LoadResource("report-theme-switch-script.js");
         var runBandScript = LoadResource("report-run-band-script.js");
+        var reportTabsScript = LoadResource("report-tabs-script.js");
 
         var customCssBlock = customCss is not null ? $"<style>{customCss}</style>" : "";
         var faviconLink = $"<link rel=\"icon\" href=\"{customFaviconBase64 ?? Constants.DefaultFavicon.DataUri}\">";
@@ -1568,8 +1524,6 @@ public static class ReportGenerator
                                 {{selectRowFunction}}
                                 {{toggleFlattenParamsJs}}
                                 {{paramExpandJs}}
-                                {{toggleTimelineFunction}}
-                                {{toggleComponentDiagramFunction}}
                                 {{jumpToFailureFunction}}
                                 {{durationFilterFunction}}
                                 {{exportFunction}}
@@ -1589,6 +1543,7 @@ public static class ReportGenerator
                             {{diagramToggleLayoutScript}}
                             <script id="kronikol-theme-switch">{{themeSwitchScript}}</script>
                             <script id="kronikol-run-band">{{runBandScript}}</script>
+                            <script id="kronikol-report-tabs">{{reportTabsScript}}</script>
                         </head>
                         <body>
                     """;
@@ -1808,23 +1763,38 @@ public static class ReportGenerator
         body.Append("</div>"); // close filters
         body.Append("</div>"); // close filtering-box
 
-        // Toolbar row: expand buttons left, Details/Headers right
-        body.Append("""<div class="toolbar-row">""");
+        // The report's tabs (5.0.0, plans/OPTION_C_PLAN.md S3, D20): each section that sat above the features as a
+        // panel of its own (the Scenario Timeline, the Component Diagram, History, Report diagnostics) is a tab of the
+        // bar, and the features, with the failure clusters and the background calls at their top (Q4), are the Features
+        // tab. A page with nothing beside its features has no tabs. A panel configured visible is the tab the page opens
+        // on; when both are, the timeline, which exists in both reports (Q2).
+        var hasComponentTab = !string.IsNullOrEmpty(componentDiagramPlantUml);
+        var hasHistoryTab = history is not null && showHistorySection;
+        var hasDiagnosticsTab = includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 };
+        var useTabs = hasDurations || hasComponentTab || hasHistoryTab || hasDiagnosticsTab;
+        var showTimelinePanel = toggles.ScenarioTimelineVisible && hasDurations;
+        var showComponentPanel = toggles.ComponentDiagramVisible && hasComponentTab && !showTimelinePanel;
+        var startTab = showTimelinePanel ? "timeline" : showComponentPanel ? "components" : "features";
+
+        // Toolbar row: the tabs, then expand buttons left, Details/Headers right
+        body.Append(useTabs ? $"""<div class="toolbar-row report-nav{(startTab == "features" ? " on-features" : "")}">""" : """<div class="toolbar-row">""");
+        if (useTabs)
+        {
+            body.Append("""<div class="report-tabs" role="tablist" aria-label="Report sections">""");
+            body.Append(ReportTab("features", "Features", startTab, features.Length));
+            if (hasDurations) body.Append(ReportTab("timeline", "Timeline", startTab));
+            if (hasComponentTab) body.Append(ReportTab("components", "Components", startTab));
+            if (hasHistoryTab) body.Append(ReportTab("history", "History", startTab));
+            if (hasDiagnosticsTab) body.Append(ReportTab("diagnostics", "Diagnostics", startTab, diagnostics!.Count));
+            body.Append("</div>");
+        }
         // The expand-all buttons flip by label, so a seeded-expanded start must seed the
         // matching flip label ("Collapse All …") or the first click would be a no-op.
         var featuresBtnLabel = toggles.FeaturesExpanded ? "Collapse All Features" : "Expand All Features";
         var scenariosBtnLabel = toggles.ScenariosExpanded ? "Collapse All Scenarios" : "Expand All Scenarios";
-        body.Append($"""<div class="toolbar-left"><button class="collapse-expand-all" onclick="toggle_expand_collapse(this, 'details.feature', 'Expand All Features', 'Collapse All Features')">{featuresBtnLabel}</button><button class="collapse-expand-all" onclick="toggle_expand_collapse(this, 'details.scenario', 'Expand All Scenarios', 'Collapse All Scenarios')">{scenariosBtnLabel}</button>""");
-        // Seeded panel visibility: the two panels are mutually exclusive; when both are
-        // configured visible the timeline wins (it exists in both reports), with the
-        // component diagram one click away. A panel that is not emitted leaves its setting
-        // inert — so a timeline-less report can still seed the component diagram visible.
-        var showTimelinePanel = toggles.ScenarioTimelineVisible && hasDurations;
-        var showComponentPanel = toggles.ComponentDiagramVisible && !string.IsNullOrEmpty(componentDiagramPlantUml) && !showTimelinePanel;
-        if (hasDurations)
-            body.Append($"""<button class="timeline-toggle{(showTimelinePanel ? " timeline-toggle-active" : "")}" onclick="toggle_timeline(this)">Scenario Timeline</button>""");
-        if (!string.IsNullOrEmpty(componentDiagramPlantUml))
-            body.Append($"""<button class="timeline-toggle{(showComponentPanel ? " timeline-toggle-active" : "")}" onclick="toggle_component_diagram(this)">Component Diagram</button>""");
+        // On a page with tabs the tools are the Features tab's, in a strip under the tabs that the other tabs hide.
+        if (useTabs) body.Append("""<div class="features-tools">""");
+        body.Append($"""<div class="toolbar-left{(useTabs ? " features-tools-line" : "")}"><button class="collapse-expand-all" onclick="toggle_expand_collapse(this, 'details.feature', 'Expand All Features', 'Collapse All Features')">{featuresBtnLabel}</button><button class="collapse-expand-all" onclick="toggle_expand_collapse(this, 'details.scenario', 'Expand All Scenarios', 'Collapse All Scenarios')">{scenariosBtnLabel}</button>""");
         body.Append("</div>");
         body.Append("""<div class="toolbar-right">""");
         if (isPlantUmlBrowser)
@@ -1841,7 +1811,13 @@ public static class ReportGenerator
             body.Append(reportNoteWidthSelect);
         }
         body.Append("</div>");
+        if (useTabs) body.Append("</div>"); // the features tools
         body.Append("</div>");
+
+        // The panels: the Features tab's first; the others are written after the features (below) from HTML built where
+        // the sections were, so the diagrams keep their ids. Without tabs the features' panel has no tab to name it.
+        body.Append("<div class=\"report-panels\">");
+        body.Append(useTabs ? ReportPanel("features", startTab) : """<div class="report-panel" id="panel-features" data-panel="features">""");
 
         var plantUmlBrowserCounter = 0;
         var diagramDataMap = new Dictionary<string, string>();
@@ -1924,7 +1900,7 @@ public static class ReportGenerator
                     // The link jumps rather than scrolls smoothly: a smooth scroll across features the browser
                     // has never drawn is aimed at their content-visibility placeholders, and ends past the
                     // scenario (jump_into_view, in report-url-hash-function.js, says why).
-                    var prefix = featureName.Length > 0 ? $"<span style=\"color:rgb(100,100,100);font-size:0.85em\">{System.Net.WebUtility.HtmlEncode(featureName)} &rsaquo;</span> " : "";
+                    var prefix = featureName.Length > 0 ? $"<span class=\"failure-cluster-feature\">{System.Net.WebUtility.HtmlEncode(featureName)} &rsaquo;</span> " : "";
                     return $"<li>{prefix}<a class=\"failure-cluster-scenario-link\" href=\"#{anchorId}\" onclick=\"event.preventDefault();var el=document.getElementById('{anchorId}');if(el){{var p=el;while(p){{if(p.tagName==='DETAILS')p.setAttribute('open','');p=p.parentElement;}}if(el.tagName==='TR')el.click();else el.setAttribute('open','');jump_into_view(el,'start');history.replaceState(null,'',location.pathname+location.search+'#{anchorId}');}}\">{System.Net.WebUtility.HtmlEncode(s.DisplayName)}</a></li>";
                 }));
                 body.Append($"<details class=\"failure-cluster\"><summary>{System.Net.WebUtility.HtmlEncode(cluster.ClusterKey)}<span class=\"failure-cluster-count\">{cluster.Scenarios.Length} scenarios</span></summary>");
@@ -1933,12 +1909,11 @@ public static class ReportGenerator
             body.Append("</details>");
         }
 
-        // Off unless asked for (ReportConfigurationOptions.ShowReportDiagnosticsSection): on a healthy run
-        // the section is a line of noise above the features, and nothing is lost by leaving it out — every
-        // diagnostic is on the labs page beside the report, in TestRunReport.json's diagnostics array and in the
-        // run's own result either way.
-        if (includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 })
-            body.Append(RenderReportDiagnostics(diagnostics, toggles.DiagnosticsOpen));
+        // The Diagnostics tab (ReportConfigurationOptions.ShowReportDiagnosticsSection, on by default since 5.0.0): a
+        // healthy run has nothing to list and no tab, and every diagnostic is also on the labs page beside the report,
+        // in TestRunReport.json's diagnostics array and in the run's own result. In its tab the section is always
+        // open: the tab is its disclosure, so DiagnosticsOpen has nothing left to open.
+        var diagnosticsHtml = hasDiagnosticsTab ? RenderReportDiagnostics(diagnostics!, open: true, inTab: true) : "";
 
         if (includeTestRunData && background is { Calls: > 0 })
             body.Append(RenderBackgroundCalls(background));
@@ -1946,14 +1921,14 @@ public static class ReportGenerator
         // Cross-run history (plans/CROSS_RUN_HISTORY_PLAN.md §8.1): the section sits beside the timeline,
         // and the per-scenario entries are looked up by stable id as the scenarios render below. Null
         // when the run had no ledger, and then nothing about history reaches the file.
-        // Each part is off unless asked for (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md): the section by
-        // ReportConfigurationOptions.ShowHistorySection, the sparklines, pills and verdict attributes by
-        // ShowScenarioHistory. A default report carries neither; the labs page beside it carries both.
+        // The section is the History tab (ReportConfigurationOptions.ShowHistorySection, on by default since 5.0.0);
+        // the sparklines, pills and verdict attributes in the features stay off unless ShowScenarioHistory asks
+        // (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md). The labs page beside the report carries both.
         var historySlots = scenarioHistory is null ? null : new Dictionary<string, int>(StringComparer.Ordinal);
-        if (history is not null && showHistorySection)
-            body.Append(HistoryHtml.Section(history));
+        var historyHtml = hasHistoryTab ? HistoryHtml.InTab(history!) : "";
 
-        // Scenario timeline / Gantt (hidden by default)
+        // Scenario timeline / Gantt, the Timeline tab's panel
+        var timelineHtml = new StringBuilder();
         if (hasDurations)
         {
             var timelineScenarios = features
@@ -1965,8 +1940,8 @@ public static class ReportGenerator
             if (timelineScenarios.Length > 0)
             {
                 var maxDuration = timelineScenarios.Max(x => x.Scenario.Duration!.Value.TotalMilliseconds);
-                body.Append($"<div id=\"scenario-timeline\" class=\"scenario-timeline\"{(showTimelinePanel ? "" : " style=\"display:none\"")}>");
-                body.Append("<div class=\"timeline-header\">Scenario Timeline <span class=\"timeline-info\" title=\"The Scenario Timeline shows every test scenario ordered by duration (longest first). Each bar is proportional to the scenario's elapsed time, colour-coded by result: green = passed, red = failed, grey = skipped, orange = bypassed. Use it to quickly spot slow tests, compare relative durations, and identify performance outliers across the entire test run."
+                timelineHtml.Append("<div id=\"scenario-timeline\" class=\"scenario-timeline\">");
+                timelineHtml.Append("<div class=\"timeline-header\">Scenario Timeline <span class=\"timeline-info\" title=\"The Scenario Timeline shows every test scenario ordered by duration (longest first). Each bar is proportional to the scenario's elapsed time, colour-coded by result: green = passed, red = failed, grey = skipped, orange = bypassed. Use it to quickly spot slow tests, compare relative durations, and identify performance outliers across the entire test run."
                     // A page that draws a warm-up stripe says what it is (until 4.16.3 the legend named every colour but it).
                     + (warmUp.ScenarioMs.Count > 0 ? " A striped start is the first-call warm-up the scenario paid; hover over the bar for its calls." : "")
                     + "\">&#x1F6C8;</span></div>");
@@ -1981,27 +1956,28 @@ public static class ReportGenerator
                         ExecutionResult.Bypassed => "timeline-bar-bypassed",
                         _ => "timeline-bar-passed"
                     };
-                    body.Append($"<div class=\"timeline-row\">");
-                    body.Append($"<div class=\"timeline-label\" title=\"{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}\">{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}</div>");
+                    timelineHtml.Append($"<div class=\"timeline-row\">");
+                    timelineHtml.Append($"<div class=\"timeline-label\" title=\"{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}\">{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}</div>");
                     var timelineWarmUpMs = WarmUpMsOf(warmUp, scenario.Id);
                     if (timelineWarmUpMs > 0)
                     {
                         // The warm-up's share of the bar, shaded from its start: the bar is elapsed time, the share is what
                         // the run's first calls took of it.
                         var tooltip = System.Net.WebUtility.HtmlEncode(WarmUpTooltip(scenario.Duration.Value, timelineWarmUpMs, warmUpByScenario[scenario.Id]));
-                        body.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-track\"><div class=\"timeline-bar {statusClass}\" style=\"width:{widthPercent:F1}%\" title=\"{tooltip}\">"
+                        timelineHtml.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-track\"><div class=\"timeline-bar {statusClass}\" style=\"width:{widthPercent:F1}%\" title=\"{tooltip}\">"
                             + $"<div class=\"timeline-warm-up\" style=\"width:{timelineWarmUpMs / durationMs * 100:F1}%\"></div></div></div>");
                     }
                     else
-                        body.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-track\"><div class=\"timeline-bar {statusClass}\" style=\"width:{widthPercent:F1}%\" title=\"{FormatDurationBadge(scenario.Duration.Value)}\"></div></div>");
-                    body.Append($"<div class=\"timeline-duration\">{FormatDurationBadge(scenario.Duration.Value)}</div>");
-                    body.Append("</div>");
+                        timelineHtml.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-track\"><div class=\"timeline-bar {statusClass}\" style=\"width:{widthPercent:F1}%\" title=\"{FormatDurationBadge(scenario.Duration.Value)}\"></div></div>");
+                    timelineHtml.Append($"<div class=\"timeline-duration\">{FormatDurationBadge(scenario.Duration.Value)}</div>");
+                    timelineHtml.Append("</div>");
                 }
-                body.Append("</div>");
+                timelineHtml.Append("</div>");
             }
         }
 
-        // Embedded component diagram
+        // Embedded component diagram, the Components tab's panel
+        var componentHtml = "";
         if (!string.IsNullOrEmpty(componentDiagramPlantUml))
         {
             var compDiagramId = $"puml-{plantUmlBrowserCounter++}";
@@ -2015,7 +1991,7 @@ public static class ReportGenerator
                 { Failure: { } why } => $"<div class=\"component-diagram-failure\">{System.Net.WebUtility.HtmlEncode(why)}</div>",
                 _ => $"<div class=\"plantuml-browser\" id=\"{compDiagramId}\" data-diagram-type=\"plantuml\"></div>"
             };
-            body.Append($"""<div id="component-diagram" class="component-diagram-section"{(showComponentPanel ? "" : " style=\"display:none\"")}>{componentDiagramHtml}</div>""");
+            componentHtml = $"""<div id="component-diagram" class="component-diagram-section">{componentDiagramHtml}</div>""";
         }
 
         body.Append("<div id=\"report-content\">");
@@ -2428,6 +2404,12 @@ public static class ReportGenerator
             body.Append("</details>");
         }
         body.Append("</div>");
+        body.Append("</div>"); // the Features tab's panel
+        if (timelineHtml.Length > 0) body.Append(ReportPanel("timeline", startTab)).Append(timelineHtml).Append("</div>");
+        if (componentHtml.Length > 0) body.Append(ReportPanel("components", startTab)).Append(componentHtml).Append("</div>");
+        if (historyHtml.Length > 0) body.Append(ReportPanel("history", startTab)).Append(historyHtml).Append("</div>");
+        if (diagnosticsHtml.Length > 0) body.Append(ReportPanel("diagnostics", startTab)).Append(diagnosticsHtml).Append("</div>");
+        body.Append("</div>"); // the panels
 
         // Jump-to-failure button (only when there are failures)
         if (hasFailures)
@@ -2689,6 +2671,16 @@ public static class ReportGenerator
         }
         return (passed, failed, skipped);
     }
+
+    /// <summary>A tab of the report bar (5.0.0, S3): the selected one is in the tab order, the others reached by the arrow
+    /// keys (report-tabs-script.js).</summary>
+    private static string ReportTab(string key, string label, string selected, int? count = null) =>
+        $"<button class=\"report-tab\" id=\"tab-{key}\" role=\"tab\" aria-controls=\"panel-{key}\" aria-selected=\"{(key == selected ? "true" : "false")}\" tabindex=\"{(key == selected ? "0" : "-1")}\" data-tab=\"{key}\">{label}"
+        + (count is { } n ? $"<span class=\"tab-n\">{n.ToString(CultureInfo.InvariantCulture)}</span>" : "") + "</button>";
+
+    /// <summary>A tab's panel: hidden unless its tab is the one selected.</summary>
+    private static string ReportPanel(string key, string selected) =>
+        $"<div class=\"report-panel\" id=\"panel-{key}\" role=\"tabpanel\" aria-labelledby=\"tab-{key}\" data-panel=\"{key}\"{(key == selected ? "" : " hidden")}>";
 
     /// <summary>
     /// The run band (5.0.0, plans/OPTION_C_PLAN.md S2, D3): the ring, then the test execution summary (status, when,
@@ -4381,11 +4373,12 @@ public static class ReportGenerator
     /// The "Report diagnostics" block: a <c>&lt;details&gt;</c> listing every <see cref="DiagnosticEntry"/> the
     /// generation (and the host, via <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/>) recorded, by
     /// kind, message and scenario, so a dead tap or a skipped capture line is a line on a page, not only in a log.
-    /// Drawn open on the labs page (<see cref="LabsReportGenerator"/>), and in <c>TestRunReport.html</c> when
-    /// <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> asks for it, collapsed unless
-    /// <see cref="ReportToggleDefaults.DiagnosticsOpen"/> says otherwise. Empty input renders nothing.
+    /// Drawn open on the labs page (<see cref="LabsReportGenerator"/>), and in <c>TestRunReport.html</c> as its
+    /// Diagnostics tab when <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> asks for it (the
+    /// default since 5.0.0), open with its summary out of the tab order (<paramref name="inTab"/>). Empty input
+    /// renders nothing.
     /// </summary>
-    internal static string RenderReportDiagnostics(IReadOnlyList<DiagnosticEntry> diagnostics, bool open = false)
+    internal static string RenderReportDiagnostics(IReadOnlyList<DiagnosticEntry> diagnostics, bool open = false, bool inTab = false)
     {
         if (diagnostics.Count == 0)
             return string.Empty;
@@ -4397,8 +4390,9 @@ public static class ReportGenerator
         var summary = $"Report diagnostics ({diagnostics.Count}: {string.Join(", ", byKind)})";
 
         var html = new StringBuilder();
-        html.Append($"<details class=\"report-diagnostics\"{(open ? " open" : "")}>");
-        html.Append($"<summary>{summary}</summary>"); // enum names and counts only — nothing to encode, and the × must stay a glyph
+        html.Append($"<details class=\"report-diagnostics\"{(open || inTab ? " open" : "")}>");
+        // In its tab the summary is the section's heading and nothing to click: the tabs script keeps it open.
+        html.Append($"<summary{(inTab ? " tabindex=\"-1\"" : "")}>{summary}</summary>"); // enum names and counts only — nothing to encode, and the × must stay a glyph
         html.Append("<ul class=\"report-diagnostics-list\">");
         foreach (var entry in diagnostics)
         {

@@ -17,6 +17,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **Colour and type tokens.** The page's colours and type are CSS custom properties, `--kron-*` for the page and
   `--dg-*` for its diagrams, each with a light and a dark value, defined first in the page's styles, so a theme or a
   `CustomCss` sheet can set them again.
+- **`kronikol ingest --no-diagnostics-section`** leaves the Diagnostics tab out of the HTML report. Every diagnostic
+  is still on the labs page, in `TestRunReport.json` and printed by the command. `--diagnostics-section`, now the
+  default, is still taken, so a command line written for 4.x runs unchanged.
 
 ### Changed (breaking)
 
@@ -42,6 +45,19 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   the page's `generator` meta. The ring's arcs and rate are coloured by the theme through classes. A `CustomCss` sheet
   or a script that reads `.header-row`, `.test-execution-summary`, `.summary-chart`, `.ci-chart-group` or
   `.ci-metadata` finds none of them.
+- **The report's sections are tabs.** Features, Timeline, Components, History and Diagnostics are tabs of a bar that
+  stays at the top of the window on a desktop, each showing a panel of its own, and the arrow keys, Home and End move
+  between them. The failure clusters and the background calls open the Features tab, and Next Failure, a history link
+  or a scenario's address goes to the Features tab first. The Scenario Timeline and Component Diagram toggles are gone,
+  with `toggle_timeline` and `toggle_component_diagram`. `ReportToggleDefaults.ScenarioTimelineVisible` and
+  `ComponentDiagramVisible` choose the tab the page opens on (the timeline when both are set), and `DiagnosticsOpen`
+  has nothing left to open. A page with nothing beside its features, such as the Specifications report, has no tabs.
+- **History and diagnostics are back in the report, as its History and Diagnostics tabs.**
+  `ReportConfigurationOptions.ShowHistorySection` and `ShowReportDiagnosticsSection` default to `true` (4.6.0 to 4.x:
+  `false`): a run that read history has a History tab, and one that recorded a diagnostic has a Diagnostics tab with
+  their count on it. Nothing of history is in the features unless `ShowScenarioHistory` asks, and a run that read no
+  history and recorded no diagnostic still carries neither anywhere in the file. The labs page beside the report
+  carries both, as before. `kronikol ingest` shows the Diagnostics tab by default too.
 
 ### Fixed
 

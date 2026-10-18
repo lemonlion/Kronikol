@@ -655,11 +655,12 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("Other: free text without a kind", printed);
         Assert.Contains("Other: NoSuchKind: still free text", printed);
 
-        // The HTML section is off unless the run asks for it; the data file carries the diagnostic either way, and the
-        // labs page beside the report lists it, named by the pointer after the report.
+        // Since 5.0.0 the HTML report lists it in its Diagnostics tab (plans/OPTION_C_PLAN.md S3); the data file carries
+        // the diagnostic either way, and the labs page beside the report lists it, named by the pointer after the report.
         var html = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
-        Assert.DoesNotContain("<summary>Report diagnostics (", html);
-        Assert.DoesNotContain("tap-di-redis: decoding disabled on 1 connection(s)", html);
+        Assert.Contains("id=\"tab-diagnostics\"", html);
+        Assert.Contains(">Report diagnostics (", html);
+        Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", html);
         var page = File.ReadAllText(Path.Combine(output, "TestRunReport.labs.html"));
         Assert.Contains("<details class=\"report-diagnostics\" open>", page);
         Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", page);
@@ -669,6 +670,18 @@ public class IngestCommandTests : IDisposable
         Assert.Contains(json.RootElement.GetProperty("diagnostics").EnumerateArray(),
             d => d.GetProperty("kind").GetString() == "CaptureDegraded");
 
+        // --no-diagnostics-section leaves the tab out, and nothing of it is in the file
+        var hidden = Path.Combine(_dir, "hidden");
+        Assert.Equal(0, IngestCommand.Run(
+        [
+            captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", hidden, "--no-diagnostics-section",
+            "--diagnostic", "CaptureDegraded:tap-di-redis: decoding disabled on 1 connection(s)",
+        ], new StringWriter(), new StringWriter()));
+        var hiddenHtml = File.ReadAllText(Path.Combine(hidden, "TestRunReport.html"));
+        Assert.DoesNotContain("report-diagnostic", hiddenHtml);
+        Assert.DoesNotContain("tap-di-redis: decoding disabled on 1 connection(s)", hiddenHtml);
+
+        // a 4.x command line that asked for the section runs unchanged and has it
         var shown = Path.Combine(_dir, "shown");
         Assert.Equal(0, IngestCommand.Run(
         [
@@ -676,13 +689,13 @@ public class IngestCommandTests : IDisposable
             "--diagnostic", "CaptureDegraded:tap-di-redis: decoding disabled on 1 connection(s)",
         ], new StringWriter(), new StringWriter()));
         var shownHtml = File.ReadAllText(Path.Combine(shown, "TestRunReport.html"));
-        Assert.Contains("<summary>Report diagnostics (", shownHtml);
+        Assert.Contains(">Report diagnostics (", shownHtml);
         Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", shownHtml);
 
         var usage = new StringWriter();
         IngestCommand.PrintUsage(usage);
         Assert.Contains("--diagnostic <kind>:<msg>", usage.ToString());
-        Assert.Contains("--diagnostics-section", usage.ToString());
+        Assert.Contains("--no-diagnostics-section", usage.ToString());
     }
 
     [Fact]

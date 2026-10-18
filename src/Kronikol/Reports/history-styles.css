@@ -141,3 +141,6 @@
                 width: 3em;
             }
         }
+
+        /* in its tab (5.0.0, plans/OPTION_C_PLAN.md S3) */
+        .report-panel > .history-section { margin: 0 0 14px; }

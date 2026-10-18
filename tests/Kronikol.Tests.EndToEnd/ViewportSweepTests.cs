@@ -242,10 +242,11 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
                 await page.Locator(".mobile-filter-toggle").ClickAsync();
                 await page.Locator(".scenario-diagram-controls-toggle").First.ClickAsync();
             }
-            // The search help and the timeline start closed on every load; a reader opens them.
+            // The search help starts closed on every load; a reader opens it.
             await page.Locator(".search-help-toggle").First.ClickAsync();
-            var timeline = page.Locator("button.timeline-toggle", new() { HasTextString = "Scenario Timeline" });
-            if (await timeline.CountAsync() > 0) await timeline.First.ClickAsync();
+            // Since 5.0.0 the sections are tabs, one panel shown at a time (plans/OPTION_C_PLAN.md S3); the sweep shows
+            // them all at once, as 4.x drew them, so every panel's content is measured at every width.
+            await page.EvaluateAsync("() => document.querySelectorAll('.report-panel[hidden]').forEach(p => { p.hidden = false; })");
             await PlaywrightTestBase.TwoAnimationFramesAsync(page);
 
             var json = await page.EvaluateAsync<string>(Measure, new { breakpoint = Breakpoint, runReport });
@@ -266,7 +267,15 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
         ({ breakpoint, runReport }) => {
             const problems = [];
             const vis = el => !!el && el.getBoundingClientRect().width > 0;
-            const lines = el => { const r = document.createRange(); r.selectNodeContents(el); return r.getClientRects().length; };
+            // a line is a run of boxes that overlap vertically: a child in its own font (a tab's count) is a box of its own
+            // on the same line, so counting boxes counted it as a line
+            const lines = el => {
+                const r = document.createRange(); r.selectNodeContents(el);
+                const boxes = [...r.getClientRects()].filter(b => b.width > 0 && b.height > 0).sort((a, b) => a.top - b.top);
+                let n = 0, bottom = -Infinity;
+                for (const b of boxes) { if (b.top >= bottom - 1) { n++; bottom = b.bottom; } else bottom = Math.max(bottom, b.bottom); }
+                return n;
+            };
             const label = el => (el.textContent || el.getAttribute('aria-label') || el.className || el.tagName).trim().slice(0, 40);
             const de = document.documentElement;
             const width = window.innerWidth;

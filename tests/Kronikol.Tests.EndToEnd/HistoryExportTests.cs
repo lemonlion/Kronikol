@@ -17,7 +17,10 @@ public class HistoryExportTests : PlaywrightTestBase
     {
         await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, "HistoryExport.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
+        // the section is the History tab's panel since 5.0.0; the export copies what the Features tab shows
+        await OpenReportTabAsync("history");
         await Expect(Page.Locator("#history-section")).ToBeVisibleAsync();
+        await OpenReportTabAsync("features");
 
         var download = await Page.RunAndWaitForDownloadAsync(async () =>
         {

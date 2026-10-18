@@ -433,7 +433,7 @@ public class ComponentDiagramReportTests : IDisposable
         // as a CSS selector (the filter-pipeline guard), so a bare substring search would
         // pass even for a report that emitted no component diagram at all.
         Assert.Contains("class=\"component-diagram-section\"", content);
-        Assert.Contains("Component Diagram", content);
+        Assert.Contains(">Components</button>", content); // 5.0.0: its tab (plans/OPTION_C_PLAN.md S3)
         Assert.Contains("id=\"puml-data\"", content);
         Assert.Contains("plantuml-browser", content);
     }
@@ -451,19 +451,19 @@ public class ComponentDiagramReportTests : IDisposable
             componentDiagramPlantUml: plantUml);
 
         var content = File.ReadAllText(html);
-        Assert.Contains("""id="component-diagram""", content);
-        Assert.Contains("""style="display:none""", content);
+        // 5.0.0 (plans/OPTION_C_PLAN.md S3): hidden as its tab's panel until the tab is chosen
+        Assert.Contains("""data-panel="components" hidden><div id="component-diagram" class="component-diagram-section">""", content);
         // Slice from the section's MARKUP (not the CSS selector the shared script carries,
         // which sits far earlier in the file and would span the whole scenario list).
         var sectionIdx = content.IndexOf("class=\"component-diagram-section\"", StringComparison.Ordinal);
         Assert.True(sectionIdx > 0, "component diagram section markup should be present");
-        var reportContentIdx = content.IndexOf("id=\"report-content\"", sectionIdx, StringComparison.Ordinal);
-        Assert.True(reportContentIdx > sectionIdx, "report-content div should follow the component diagram section");
-        Assert.DoesNotContain("<details", content[sectionIdx..reportContentIdx]);
+        var end = content.IndexOf("class=\"back-to-top\"", sectionIdx, StringComparison.Ordinal);
+        Assert.True(end > sectionIdx, "the page's last button follows the component diagram's panel");
+        Assert.DoesNotContain("<details", content[sectionIdx..end]);
     }
 
     [Fact]
-    public void EmbeddedComponentDiagram_Has_Toggle_Button_In_Toolbar()
+    public void EmbeddedComponentDiagram_Has_A_Tab_In_The_Bar()
     {
         var plantUml = "@startuml\nleft to right direction\nrectangle A\n@enduml";
 
@@ -475,12 +475,13 @@ public class ComponentDiagramReportTests : IDisposable
             componentDiagramPlantUml: plantUml);
 
         var content = File.ReadAllText(html);
-        Assert.Contains("toggle_component_diagram(this)", content);
-        Assert.Contains(">Component Diagram</button>", content);
+        // 5.0.0 (plans/OPTION_C_PLAN.md S3): a tab of the report bar in place of the toolbar's toggle
+        Assert.Contains("<button class=\"report-tab\" id=\"tab-components\" role=\"tab\" aria-controls=\"panel-components\"", content);
+        Assert.Contains(">Components</button>", content);
     }
 
     [Fact]
-    public void EmbeddedComponentDiagram_No_Toggle_Button_When_Null()
+    public void EmbeddedComponentDiagram_No_Tab_When_Null()
     {
         var html = ReportGenerator.GenerateHtmlReport(
             MakeDiagrams(), MakeFeatures(),
@@ -491,10 +492,11 @@ public class ComponentDiagramReportTests : IDisposable
 
         var content = File.ReadAllText(html);
         Assert.DoesNotContain("toggle_component_diagram", content);
+        Assert.DoesNotContain("id=\"tab-components\"", content);
     }
 
     [Fact]
-    public void EmbeddedComponentDiagram_Toggle_Function_Exists_In_Script()
+    public void EmbeddedComponentDiagram_Tab_Draws_Its_Diagram_When_It_Shows()
     {
         var plantUml = "@startuml\nleft to right direction\nrectangle A\n@enduml";
 
@@ -506,8 +508,9 @@ public class ComponentDiagramReportTests : IDisposable
             componentDiagramPlantUml: plantUml);
 
         var content = File.ReadAllText(html);
-        Assert.Contains("function toggle_component_diagram(btn)", content);
-        Assert.Contains("_renderDiagramsInContainer", content);
+        // 5.0.0 (S3): the tabs script draws a panel's diagrams when the panel shows, as the toggle did
+        Assert.Contains("<script id=\"kronikol-report-tabs\">", content);
+        Assert.Contains("window._renderDiagramsInContainer(target)", content);
     }
 
     [Fact]
@@ -529,7 +532,7 @@ public class ComponentDiagramReportTests : IDisposable
     }
 
     [Fact]
-    public void EmbeddedComponentDiagram_Section_Appears_Before_ReportContent()
+    public void EmbeddedComponentDiagram_Section_Is_Its_Tab_Panel_After_The_Features()
     {
         var plantUml = "@startuml\nA -> B\n@enduml";
 
@@ -541,12 +544,13 @@ public class ComponentDiagramReportTests : IDisposable
             componentDiagramPlantUml: plantUml);
 
         var content = File.ReadAllText(html);
-        // The section's MARKUP, not the script's CSS selector for it — the selector sits in the
-        // <head> script and would make this ordering check pass without any section emitted.
+        // The section's MARKUP, not the script's CSS selector for it, which sits in the <head> script.
+        // Since 5.0.0 the section is the Components tab's panel, after the features (plans/OPTION_C_PLAN.md S3).
         var componentIdx = content.IndexOf("class=\"component-diagram-section\"", StringComparison.Ordinal);
         var reportContentIdx = content.IndexOf("id=\"report-content\"", StringComparison.Ordinal);
-        Assert.True(componentIdx > 0 && componentIdx < reportContentIdx,
-            "Component diagram section must appear before report-content div");
+        var panelIdx = content.IndexOf("id=\"panel-components\"", StringComparison.Ordinal);
+        Assert.True(reportContentIdx > 0 && panelIdx > reportContentIdx && componentIdx > panelIdx,
+            "the component diagram section is in its panel, after the features");
     }
 
     [Fact]
@@ -594,46 +598,27 @@ public class ComponentDiagramReportTests : IDisposable
         Assert.DoesNotContain("Loading component diagram", content);
     }
 
+    /// <summary>The timeline and the component diagram were panels that each toggle had to hide when the other
+    /// showed; since 5.0.0 they are tabs, one panel at a time, and the page opens with only the Features panel
+    /// shown (plans/OPTION_C_PLAN.md S3; ReportTabsTests covers the configured start).</summary>
     [Fact]
-    public void Toggle_Component_Diagram_Function_Deactivates_Timeline()
+    public void Only_the_features_panel_shows_when_the_page_opens()
     {
         var plantUml = "@startuml\nleft to right direction\nrectangle A\n@enduml";
+        var features = MakeFeatures();
+        foreach (var scenario in features.SelectMany(f => f.Scenarios)) scenario.Duration = TimeSpan.FromMilliseconds(50);
 
         var html = ReportGenerator.GenerateHtmlReport(
-            MakeDiagrams(), MakeFeatures(),
+            MakeDiagrams(), features,
             DateTime.UtcNow, DateTime.UtcNow,
-            null, "RadioToggleCD.html", "Test", true,
+            null, "OnePanelAtATime.html", "Test", true,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             componentDiagramPlantUml: plantUml);
 
         var content = File.ReadAllText(html);
-        Assert.Contains("toggle_component_diagram", content);
-        Assert.Contains("scenario-timeline", content);
-        // The component diagram toggle function should reference the timeline to hide it
-        var fnStart = content.IndexOf("function toggle_component_diagram");
-        var fnEnd = content.IndexOf("}", content.IndexOf("}", fnStart) + 1) + 1;
-        var fnBody = content[fnStart..fnEnd];
-        Assert.Contains("scenario-timeline", fnBody);
-    }
-
-    [Fact]
-    public void Toggle_Timeline_Function_Deactivates_Component_Diagram()
-    {
-        var plantUml = "@startuml\nleft to right direction\nrectangle A\n@enduml";
-
-        var html = ReportGenerator.GenerateHtmlReport(
-            MakeDiagrams(), MakeFeatures(),
-            DateTime.UtcNow, DateTime.UtcNow,
-            null, "RadioToggleTL.html", "Test", true,
-            plantUmlRendering: PlantUmlRendering.BrowserJs,
-            componentDiagramPlantUml: plantUml);
-
-        var content = File.ReadAllText(html);
-        // The timeline toggle function should reference the component diagram to hide it
-        var fnStart = content.IndexOf("function toggle_timeline");
-        var fnEnd = content.IndexOf("}", content.IndexOf("}", fnStart) + 1) + 1;
-        var fnBody = content[fnStart..fnEnd];
-        Assert.Contains("component-diagram", fnBody);
+        Assert.Contains("data-panel=\"timeline\" hidden>", content);
+        Assert.Contains("data-panel=\"components\" hidden>", content);
+        Assert.Contains("data-panel=\"features\">", content);
     }
 
     [Fact]

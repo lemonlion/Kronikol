@@ -58,7 +58,7 @@ public class DurationPaintTests : PlaywrightTestBase
     public async Task The_timeline_paints_each_bar_at_its_share_of_the_longest(string culture)
     {
         await Page.GotoAsync(Generate($"TimelineWidths_{culture}.html", TimelineFeatures(), culture));
-        await Page.Locator(".timeline-toggle").ClickAsync();
+        await OpenReportTabAsync("timeline"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)
         await Expect(Page.Locator("#scenario-timeline")).ToBeVisibleAsync();
 
         var shares = await Page.EvaluateAsync<double[]>("""

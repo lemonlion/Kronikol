@@ -34,145 +34,90 @@ public class DependencyColoringTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentHiddenDefault.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        var section = Page.Locator("#component-diagram");
-        var display = await section.EvaluateAsync<string>("e => window.getComputedStyle(e).display");
-        Assert.Equal("none", display);
+        // since 5.0.0 hidden as its tab's panel until the tab is chosen (plans/OPTION_C_PLAN.md S3)
+        await Expect(Page.Locator("#component-diagram")).ToBeHiddenAsync();
+        await Expect(Page.Locator("#panel-components")).ToHaveAttributeAsync("hidden", "");
     }
 
+    // ── The Components tab (5.0.0, plans/OPTION_C_PLAN.md S3): the Component Diagram toggle became a tab of the
+    // report bar, one panel at a time, so the toggle's own facts are the tab's ──
+
     [Fact]
-    public async Task Component_diagram_toggle_button_exists()
+    public async Task Component_diagram_tab_exists()
     {
         await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentToggleBtn.html"));
 
-        var button = Page.Locator("button.timeline-toggle", new() { HasTextString = "Component Diagram" });
-        await button.WaitForAsync(new() { Timeout = 5000 });
-        await Expect(button).ToBeVisibleAsync();
+        var tab = Page.Locator("#tab-components");
+        await Expect(tab).ToBeVisibleAsync();
+        await Expect(tab).ToHaveTextAsync("Components");
     }
 
     [Fact]
-    public async Task Component_diagram_toggle_button_not_present_without_diagram()
+    public async Task Component_diagram_tab_not_present_without_diagram()
     {
         await Page.GotoAsync(GenerateReport("NoComponentToggle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        var count = await Page.Locator("button[onclick*='toggle_component_diagram']").CountAsync();
-        Assert.Equal(0, count);
+        Assert.Equal(0, await Page.Locator("#tab-components").CountAsync());
+        Assert.Equal(0, await Page.Locator("button[onclick*='toggle_component_diagram']").CountAsync());
     }
 
     [Fact]
-    public async Task Component_diagram_toggle_shows_and_hides()
+    public async Task Component_diagram_tab_shows_its_panel_and_another_tab_hides_it()
     {
         await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentToggleShowHide.html"));
+        var panel = Page.Locator("#panel-components");
+        await Expect(panel).ToBeHiddenAsync();
 
-        var button = Page.Locator("button[onclick*='toggle_component_diagram']");
-        await button.WaitForAsync(new() { Timeout = 5000 });
-        var section = Page.Locator("#component-diagram");
+        await OpenReportTabAsync("components");
+        await Expect(panel).ToBeVisibleAsync();
 
-        // Initially hidden
-        Assert.Equal("none", await section.EvaluateAsync<string>("e => window.getComputedStyle(e).display"));
-
-        // Click to show
-        await button.ClickAsync();
-        await Page.WaitForFunctionAsync(
-            "() => window.getComputedStyle(document.getElementById('component-diagram')).display !== 'none'",
-            null, new() { Timeout = 3000, PollingInterval = 200 });
-
-        // Click to hide
-        await button.ClickAsync();
-        await Page.WaitForFunctionAsync(
-            "() => window.getComputedStyle(document.getElementById('component-diagram')).display === 'none'",
-            null, new() { Timeout = 3000, PollingInterval = 200 });
+        await OpenReportTabAsync("features");
+        await Expect(panel).ToBeHiddenAsync();
     }
 
     [Fact]
-    public async Task Toggling_component_diagram_deactivates_timeline()
+    public async Task Choosing_the_components_tab_hides_the_timeline()
     {
         await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentRadioTimeline.html"));
 
-        var tlButton = Page.Locator("button[onclick*='toggle_timeline']");
-        var cdButton = Page.Locator("button[onclick*='toggle_component_diagram']");
-        await tlButton.WaitForAsync(new() { Timeout = 5000 });
-        await cdButton.WaitForAsync(new() { Timeout = 5000 });
+        await OpenReportTabAsync("timeline");
+        await Expect(Page.Locator("#scenario-timeline")).ToBeVisibleAsync();
 
-        // Show timeline first
-        await tlButton.ClickAsync();
-        await Page.WaitForFunctionAsync(
-            "() => window.getComputedStyle(document.getElementById('scenario-timeline')).display !== 'none'",
-            null, new() { Timeout = 3000, PollingInterval = 200 });
-
-        // Show component diagram — timeline should hide
-        await cdButton.ClickAsync();
-        await Page.WaitForFunctionAsync("""
-            () => {
-                var cd = document.getElementById('component-diagram');
-                var tl = document.getElementById('scenario-timeline');
-                return window.getComputedStyle(cd).display !== 'none' &&
-                       window.getComputedStyle(tl).display === 'none';
-            }
-        """, null, new() { Timeout = 3000, PollingInterval = 200 });
-
-        var tlClass = await tlButton.GetAttributeAsync("class") ?? "";
-        Assert.DoesNotContain("timeline-toggle-active", tlClass);
-        var cdClass = await cdButton.GetAttributeAsync("class") ?? "";
-        Assert.Contains("timeline-toggle-active", cdClass);
+        await OpenReportTabAsync("components");
+        await Expect(Page.Locator("#component-diagram")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#scenario-timeline")).ToBeHiddenAsync();
+        await Expect(Page.Locator("#tab-timeline")).ToHaveAttributeAsync("aria-selected", "false");
+        await Expect(Page.Locator("#tab-components")).ToHaveAttributeAsync("aria-selected", "true");
     }
 
     [Fact]
-    public async Task Toggling_timeline_deactivates_component_diagram()
+    public async Task Choosing_the_timeline_tab_hides_the_component_diagram()
     {
         await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("TimelineRadioComponent.html"));
 
-        var tlButton = Page.Locator("button[onclick*='toggle_timeline']");
-        var cdButton = Page.Locator("button[onclick*='toggle_component_diagram']");
-        await tlButton.WaitForAsync(new() { Timeout = 5000 });
+        await OpenReportTabAsync("components");
+        await Expect(Page.Locator("#component-diagram")).ToBeVisibleAsync();
 
-        // Show component diagram first
-        await cdButton.ClickAsync();
-        await Page.WaitForFunctionAsync(
-            "() => window.getComputedStyle(document.getElementById('component-diagram')).display !== 'none'",
-            null, new() { Timeout = 3000, PollingInterval = 200 });
-
-        // Show timeline — component should hide
-        await tlButton.ClickAsync();
-        await Page.WaitForFunctionAsync("""
-            () => {
-                var cd = document.getElementById('component-diagram');
-                var tl = document.getElementById('scenario-timeline');
-                return window.getComputedStyle(tl).display !== 'none' &&
-                       window.getComputedStyle(cd).display === 'none';
-            }
-        """, null, new() { Timeout = 3000, PollingInterval = 200 });
-
-        var cdClass = await cdButton.GetAttributeAsync("class") ?? "";
-        Assert.DoesNotContain("timeline-toggle-active", cdClass);
-        var tlClass = await tlButton.GetAttributeAsync("class") ?? "";
-        Assert.Contains("timeline-toggle-active", tlClass);
+        await OpenReportTabAsync("timeline");
+        await Expect(Page.Locator("#scenario-timeline")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#component-diagram")).ToBeHiddenAsync();
+        await Expect(Page.Locator("#tab-components")).ToHaveAttributeAsync("aria-selected", "false");
+        await Expect(Page.Locator("#tab-timeline")).ToHaveAttributeAsync("aria-selected", "true");
     }
 
     [Fact]
-    public async Task Component_diagram_toggle_button_has_active_class_when_shown()
+    public async Task The_components_tab_is_selected_while_its_panel_shows()
     {
         await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentToggleActive.html"));
+        var tab = Page.Locator("#tab-components");
+        await Expect(tab).ToHaveAttributeAsync("aria-selected", "false");
 
-        var button = Page.Locator("button[onclick*='toggle_component_diagram']");
-        await button.WaitForAsync(new() { Timeout = 5000 });
+        await OpenReportTabAsync("components");
+        await Expect(tab).ToHaveAttributeAsync("aria-selected", "true");
 
-        var cls = await button.GetAttributeAsync("class") ?? "";
-        Assert.DoesNotContain("timeline-toggle-active", cls);
-
-        // Click to show
-        await button.ClickAsync();
-        await Page.WaitForFunctionAsync("""
-            () => document.querySelector("button[onclick*='toggle_component_diagram']")
-                .classList.contains('timeline-toggle-active')
-        """, null, new() { Timeout = 3000, PollingInterval = 200 });
-
-        // Click to hide
-        await button.ClickAsync();
-        await Page.WaitForFunctionAsync("""
-            () => !document.querySelector("button[onclick*='toggle_component_diagram']")
-                .classList.contains('timeline-toggle-active')
-        """, null, new() { Timeout = 3000, PollingInterval = 200 });
+        await OpenReportTabAsync("features");
+        await Expect(tab).ToHaveAttributeAsync("aria-selected", "false");
     }
 
     [Fact]
@@ -180,9 +125,7 @@ public class DependencyColoringTests : PlaywrightTestBase
     {
         await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentSvgToggle.html"));
 
-        var button = Page.Locator("button[onclick*='toggle_component_diagram']");
-        await button.WaitForAsync(new() { Timeout = 5000 });
-        await button.ClickAsync();
+        await OpenReportTabAsync("components");
 
         var svg = Page.Locator("#component-diagram [data-diagram-type='plantuml'] svg");
         await svg.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 30000 });

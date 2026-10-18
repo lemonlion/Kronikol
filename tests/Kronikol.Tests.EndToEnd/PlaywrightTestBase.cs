@@ -85,6 +85,21 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
             timeoutMs, $"The page painted no animation frame within {timeoutMs} ms.");
 
     /// <summary>
+    /// Opens a tab of the report bar (<c>features</c>, <c>timeline</c>, <c>components</c>, <c>history</c>,
+    /// <c>diagnostics</c>) and waits for its panel to show. Since 5.0.0 those sections are tabs in place of the
+    /// toolbar's Scenario Timeline and Component Diagram toggles and the sections above the features
+    /// (plans/OPTION_C_PLAN.md S3).
+    /// </summary>
+    internal static async Task OpenReportTabAsync(IPage page, string key)
+    {
+        await page.Locator($"#tab-{key}").ClickAsync();
+        await page.Locator($"#panel-{key}").WaitForAsync(new() { State = WaitForSelectorState.Visible });
+    }
+
+    /// <summary>Opens a tab of the report bar on the test's page (<see cref="OpenReportTabAsync(IPage, string)"/>).</summary>
+    protected Task OpenReportTabAsync(string key) => OpenReportTabAsync(Page, key);
+
+    /// <summary>
     /// A new page, failing when the browser has not opened it within <paramref name="timeoutMs"/>: Playwright's
     /// NewPageAsync has no timeout of its own, and a browser that stopped answering held a test, and every test
     /// queued behind it, for ever (<see cref="BrowserStallTests"/>).

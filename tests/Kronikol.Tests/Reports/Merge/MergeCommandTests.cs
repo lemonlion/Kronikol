@@ -216,9 +216,12 @@ public class MergeCommandTests
             var exit = MergeCommand.Run([Path.Combine(dir, "shards"), "-o", output, "--history", ledger], outWriter, errWriter, _ => null);
 
             Assert.True(exit == 0, errWriter.ToString());
-            // The merged report is a default report: no history in it (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md).
-            // What --history read is on the labs page beside it, named after it.
-            Assert.DoesNotContain("history-", File.ReadAllText(output));
+            // The merged report is a default report: since 5.0.0 what --history read is its History tab, and nothing of
+            // it is in the features (plans/OPTION_C_PLAN.md S3). It is on the labs page beside it too, named after it.
+            var combined = File.ReadAllText(output);
+            Assert.Contains("<details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\">", combined);
+            Assert.DoesNotContain("data-history-verdicts=\"", combined);
+            Assert.DoesNotContain("<span class=\"history-sparkline\"", combined);
             var page = File.ReadAllText(Path.Combine(dir, "Combined.labs.html"));
             Assert.Contains("<details id=\"history-section\" class=\"history-section\" open>", page);
             Assert.Contains("<span class=\"history-verdict history-verdict-broke\"", page);

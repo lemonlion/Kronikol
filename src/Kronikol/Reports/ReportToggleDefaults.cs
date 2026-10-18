@@ -58,11 +58,13 @@ public record ReportToggleDefaults
     /// </summary>
     public DiagramTabKind? DiagramTab { get; set; }
 
-    /// <summary>The Scenario Timeline panel starts visible. Default: <c>false</c>. When both this and
-    /// <see cref="ComponentDiagramVisible"/> are set, the timeline wins (the panels are mutually exclusive).</summary>
+    /// <summary>The page opens on the Timeline tab, where the run has durations (since 5.0.0 the Scenario Timeline is a
+    /// tab of the report bar; before, a panel that started visible). Default: <c>false</c>, the Features tab. When
+    /// both this and <see cref="ComponentDiagramVisible"/> are set, the timeline wins.</summary>
     public bool? ScenarioTimelineVisible { get; set; }
 
-    /// <summary>The embedded Component Diagram panel starts visible (test run report only). Default: <c>false</c>.</summary>
+    /// <summary>The page opens on the Components tab, where the report embeds a component diagram (test run report only;
+    /// since 5.0.0 a tab of the report bar, before a panel that started visible). Default: <c>false</c>.</summary>
     public bool? ComponentDiagramVisible { get; set; }
 
     /// <summary>The dependency filter's AND/OR combination mode. Default: <see cref="FilterCombinationMode.Or"/>, a scenario
@@ -85,8 +87,8 @@ public record ReportToggleDefaults
     public bool? DiagramsSectionOpen { get; set; }
 
     /// <summary>The report diagnostics disclosure starts open (test run report only). Default: <c>false</c>.
-    /// Inert unless <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> renders the section,
-    /// which it does not by default. The labs page's list is always open.</summary>
+    /// Since 5.0.0 the section is the report's Diagnostics tab, always open in it, so this has nothing to open there
+    /// (plans/OPTION_C_PLAN.md S3). The labs page's list is always open.</summary>
     public bool? DiagnosticsOpen { get; set; }
 
     /// <summary>Rule sections start open. Default: <c>true</c>.</summary>

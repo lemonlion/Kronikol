@@ -128,7 +128,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
     public async Task The_timeline_shades_the_warm_ups_share_of_the_bar()
     {
         await Page.GotoAsync(Generate("WarmUpTimeline.html"));
-        await Page.Locator(".timeline-toggle").ClickAsync();
+        await OpenReportTabAsync("timeline"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)
         await Expect(Page.Locator("#scenario-timeline")).ToBeVisibleAsync();
 
         var widths = await Page.EvaluateAsync<double[]>("""

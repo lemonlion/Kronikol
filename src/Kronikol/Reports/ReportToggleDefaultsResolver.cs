@@ -35,7 +35,7 @@ public record ResolvedToggleDefaults
     public bool StepsSectionOpen { get; init; } = true;
     public bool DiagramsSectionOpen { get; init; } = true;
     /// <summary>Whether the report's Report diagnostics section starts open (<see cref="ReportToggleDefaults.DiagnosticsOpen"/>);
-    /// the section is drawn only when <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> asks for it.</summary>
+    /// since 5.0.0 the section is its Diagnostics tab, open in it, so the report has nothing to open with it.</summary>
     public bool DiagnosticsOpen { get; init; }
     public bool RulesOpen { get; init; } = true;
     public bool BackgroundStepsOpen { get; init; }

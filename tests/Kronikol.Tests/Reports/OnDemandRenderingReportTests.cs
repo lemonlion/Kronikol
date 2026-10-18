@@ -66,12 +66,15 @@ public class OnDemandRenderingReportTests : IDisposable
         return File.ReadAllText(Path.Combine(_dir, "TestRunReport.html"));
     }
 
-    /// <summary>The component panel's markup, up to the report's content.</summary>
+    /// <summary>The component panel's markup, up to the next tab's panel or, when it is the last, the page's last button
+    /// (since 5.0.0 the Components tab's panel follows the features, plans/OPTION_C_PLAN.md S3).</summary>
     private static string Panel(string html)
     {
         var start = html.IndexOf("<div id=\"component-diagram\"", StringComparison.Ordinal);
         Assert.True(start >= 0, "the report has no component panel");
-        var end = html.IndexOf("<div id=\"report-content\">", start, StringComparison.Ordinal);
+        var next = html.IndexOf("<div class=\"report-panel\"", start, StringComparison.Ordinal);
+        var end = next >= 0 ? next : html.IndexOf("class=\"back-to-top\"", start, StringComparison.Ordinal);
+        Assert.True(end > start, "nothing follows the component panel");
         return html[start..end];
     }
 

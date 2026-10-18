@@ -102,6 +102,7 @@ Rounds 1 to 16 are recorded in the inventories against the code that carries the
 | R17.29 | History pass rate as rings | one ring per run, drawn like the summary's (pass, fail, skipped, bypassed arcs), the rate inside; a run with a failure never reads 100% |
 | R17.30 | History duration with its time | each bar carries its time ("44s", "2m 26s", "1h 5m", "850ms"), drawn as HTML so the label is not stretched |
 | R17.31 | report bar controls out of line (Firefox) | the payloads group centres like the format group, and item 25's bold-width wrapper keeps the label's baseline (`inline-flex`), so buttons are 28.25 px like the dropdowns; text centres within 0.5 px in both browsers |
+| R18.1 | "in this version, history and diagnostics is to be brought back, in those tabs (not as part of the rest of the report though)" (2026-10-18, during S3) | `ShowHistorySection` and `ShowReportDiagnosticsSection` default to `true`: the History and Diagnostics tabs appear whenever the run read history or recorded a diagnostic; `ShowScenarioHistory` (the scenarios' sparklines, pills and verdict attributes) stays off; `kronikol ingest` follows, with `--no-diagnostics-section` (S3) |
 
 ## 4. Stages
 
@@ -161,7 +162,12 @@ decision of the owner's, not part of this plan.
    for filters or toggles, and narrow the test to say so.
 2. **Options that name sections now tabs** (`ScenarioTimelineVisible`, `ComponentDiagramVisible`,
    `FeaturesSummaryOpen`, `DiagnosticsOpen`). Recommendation: keep the names; `...Visible` decides whether the tab
-   exists and `...Open` which tab or view is showing when the page opens; documented for 5.0.0.
+   exists and `...Open` which tab or view is showing when the page opens; documented for 5.0.0. As built in S3: the
+   names are kept, and each keeps its 4.x meaning of "shown when the page opens": `ScenarioTimelineVisible` and
+   `ComponentDiagramVisible` choose the tab the page opens on (the timeline when both are set, as before), and every
+   tab exists whenever its section does. Read as written, the recommendation would have hidden the Timeline tab by
+   default, since `ScenarioTimelineVisible` defaults to `false`. `DiagnosticsOpen` has nothing to open in a tab;
+   `FeaturesSummaryOpen` is S4's (the Summary view).
 3. **Specifications and labs pages.** Recommendation: the token sheet, the theme and the violet theme as token
    overrides, no layout redesign.
 4. **Failure clusters and background calls.** Recommendation: at the top of the Features tab, as cards.
@@ -244,3 +250,44 @@ decision of the owner's, not part of this plan.
   rewritten for the band. The export row's -9 px margin lines the last label up with the card's content edge, so
   `ViewportSweepTests` and `ReportSectionWidthTests` check the labels against the content edge and the buttons
   against the box, where 4.x checked the bordered buttons against the content edge.
+- 2026-10-18, S3: the report bar, its tabs and panels (D20), written by the generator. Each section that sat above
+  the features as a panel of its own (the Scenario Timeline, the Component Diagram, History, Report diagnostics) is a
+  tab of the bar (`div.report-tabs[role=tablist]`, `button.report-tab[role=tab]` with `aria-controls`, roving
+  `tabindex`, a count on Features and Diagnostics), and `div.report-panels` holds one `div.report-panel[role=tabpanel]`
+  per tab, all but the start tab's `hidden`. The sections' HTML is built where it was, so the diagrams keep their ids,
+  and written after the features. The Features tab's tools are in `div.features-tools` under the tabs, hidden on the
+  other tabs (S4 changes what is inside it). A page with nothing beside its features has no tabs, its features in a
+  panel no tab names (the Specifications report keeps its one view, Q3). The Scenario Timeline and Component Diagram
+  toggles go, with `toggle_timeline`, `toggle_component_diagram`, the timeline and component sections' inline
+  `display:none` and the base sheet's `.timeline-toggle` rules (the violet theme's stay until S13).
+  `report-tabs-script.js` switches the panels (`hidden`, `aria-selected`, `tabindex`, `.on-features`), draws a panel's
+  diagrams when it shows (`_renderDiagramsInContainer`), moves between tabs with the arrow keys, Home and End, takes
+  Next Failure, a link to `#scenario-` or `#sid-` and a scenario's address (on load and on `hashchange`) to the Features
+  tab first, keeps the History and Diagnostics summaries from closing their sections, and sets `--kron-nav-h` to the
+  bar's height while it sticks (0 on a phone, where the bar is static). It names no section, so a page without history
+  or diagnostics names neither (the 4.6.0 guard); the two sections' in-panel margins are in their own sheets for the
+  same reason. Q2 as built (section 7). Q4: the failure clusters and the background calls open the Features tab as
+  cards drawn like a feature's, every colour on a token (they were fixed light colours), and a clustered scenario's
+  feature is named through `.failure-cluster-feature` in place of an inline grey. The owner's R18.1 (section 3), given
+  during the stage: `ShowHistorySection` and `ShowReportDiagnosticsSection` default to `true`, so a run that read
+  history or recorded a diagnostic shows its tab, the scenarios' own history stays behind `ShowScenarioHistory`, and
+  `kronikol ingest` follows, with `--no-diagnostics-section` and `--diagnostics-section` still taken. The bar's look is
+  the preview's (stylesheet inventory 5): sticky, the tabs' accent underline, and on a desktop the bar running on into
+  its panels on `--kron-panel`.
+  The bar measured against the preview with `checks/style-parity.js` (surface 5: the bar, tabs, the selected tab's
+  count, the tools strip, the panels): the same at 1,400, 700 and 400 px in Chrome and at 1,400 px in Firefox dark,
+  but for the line under the tabs, which the preview draws on its `.nav-row` (S7) and the branch on the tabs until
+  then; the counts take the sans with tabular figures, as the preview's type pass set them; on a phone the static bar
+  keeps the card shadow the preview's contrast pass gave every card. Surfaces 0, 2 and 9 to 13 unchanged. Found by the
+  tests and fixed on the way: the viewport sweep counted a button's text boxes as its lines, so a tab with a count read
+  as wrapping; it now counts lines as runs of boxes that overlap, and shows every panel at once to measure them all.
+  Tests: core `ReportTabsTests` (the bar's tabs and their order, the panels and which shows, no toggles or their
+  functions, the clusters and background calls opening the Features panel with the feature named by class, the start
+  tab from the options, no tabs on a page with nothing beside its features or on the Specifications report, the
+  script; 9 of 10 failed before), the in-tab History section (`HistoryHtmlTests`) and the 5.0.0 defaults
+  (`DefaultReportCleanTests`, `HistoryOutputsTests`, `ReportConfigurationOptionsDefaultsTests` and the ingest, merge and
+  diagnostics tests); Playwright `ReportTabsTests` (one panel at a time and the tab order, the keys, the component
+  diagram drawn when its tab shows, Next Failure, a history link and a scenario's address going to Features, the
+  sections staying open, the sticky bar and its height, the phone's static bar, the tabs' and the cards' tokens in
+  both themes). The 4.x tests that clicked the toggles open the tabs (`PlaywrightTestBase.OpenReportTabAsync`).
+

@@ -19,10 +19,10 @@ public static class MergeableReportRenderer
     /// <param name="outputPath">Absolute or relative path of the HTML file to write.</param>
     /// <param name="title">Report title. Defaults to "Test Run Report".</param>
     /// <param name="options">Optional configuration influencing component-diagram styling and internal-flow popup behaviour,
-    /// and what the report and the labs page carry, as a run's options do: the history and diagnostics views are in the
-    /// report only where <see cref="ReportConfigurationOptions.ShowScenarioHistory"/>,
+    /// and what the report and the labs page carry, as a run's options do: the History and Diagnostics tabs where
     /// <see cref="ReportConfigurationOptions.ShowHistorySection"/> and
-    /// <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> ask, and on the labs page,
+    /// <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> ask (both on by default since 5.0.0), the
+    /// scenarios' own history where <see cref="ReportConfigurationOptions.ShowScenarioHistory"/> asks, and on the labs page,
     /// <c>{name}.labs.html</c> beside the report, unless <see cref="ReportConfigurationOptions.GenerateLabsReport"/> is off.</param>
     /// <param name="history">The merged run read against a cross-run ledger, when <c>merge --history</c> named one: drawn on the
     /// labs page, and in the report where its options ask (<see cref="ReportConfigurationOptions.EmbedHistoryInReport"/> keeps

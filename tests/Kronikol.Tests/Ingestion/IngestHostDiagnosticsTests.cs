@@ -81,7 +81,7 @@ public class IngestHostDiagnosticsTests : IDisposable
         Assert.Contains("class=\"report-diagnostics\"", html);
         // Anchored on the elements: the section's stylesheet, which comes with it, holds the kind's class in a
         // selector, so a bare substring would pass on the stylesheet alone.
-        Assert.Contains("<summary>Report diagnostics (", html);
+        Assert.Contains(">Report diagnostics (", html); // the summary in its tab (5.0.0) has tabindex="-1"
         Assert.Contains("<span class=\"report-diagnostic-kind report-diagnostic-kind-capturedegraded\">CaptureDegraded</span>", html);
         Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", html);
         // Messages are encoded, never injected.
@@ -145,7 +145,7 @@ public class IngestHostDiagnosticsTests : IDisposable
         // The whole file: since 4.6.0 a report without the section carries none of its stylesheet either.
         var html = File.ReadAllText(quiet.TestRunReportHtml);
         Assert.DoesNotContain("report-diagnostic", html);
-        Assert.DoesNotContain("<summary>Report diagnostics (", html);
+        Assert.DoesNotContain(">Report diagnostics (", html);
 
         // Only the report's section goes: the labs page beside it lists them, and the result and TestRunReport.json
         // say everything they said before.

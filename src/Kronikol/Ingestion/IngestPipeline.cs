@@ -257,11 +257,10 @@ public sealed class IngestRequest
     /// are carried verbatim into <see cref="IngestResult.Diagnostics"/> (first, ahead of what the ingest
     /// itself records), into the top-level <c>diagnostics</c> array of <c>TestRunReport.json</c>, onto the labs
     /// page beside the report (<c>TestRunReport.labs.html</c>, unless
-    /// <see cref="ReportConfigurationOptions.GenerateLabsReport"/> is off), and into the "Report diagnostics" section
-    /// of <c>TestRunReport.html</c> when <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> asks
-    /// for that section.
-    /// Default empty — nothing changes when a host hands in nothing.
-    /// <c>kronikol ingest --diagnostic "&lt;kind&gt;:&lt;message&gt;" --diagnostics-section</c> is the CLI form.
+    /// <see cref="ReportConfigurationOptions.GenerateLabsReport"/> is off), and into the Diagnostics tab of
+    /// <c>TestRunReport.html</c> unless <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> is off.
+    /// Default empty: nothing changes when a host hands in nothing.
+    /// <c>kronikol ingest --diagnostic "&lt;kind&gt;:&lt;message&gt;"</c> is the CLI form.
     /// </summary>
     public IReadOnlyList<DiagnosticEntry> HostDiagnostics { get; init; } = [];
 

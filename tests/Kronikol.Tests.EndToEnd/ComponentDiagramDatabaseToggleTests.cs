@@ -20,7 +20,7 @@ public class ComponentDiagramDatabaseToggleTests : PlaywrightTestBase
 
     private async Task OpenComponentDiagramPanel()
     {
-        await Page.Locator("button[onclick*='toggle_component_diagram']").ClickAsync();
+        await OpenReportTabAsync("components"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)
         await Page.WaitForFunctionAsync("""
             () => {
                 var section = document.getElementById('component-diagram');
@@ -99,6 +99,8 @@ public class ComponentDiagramDatabaseToggleTests : PlaywrightTestBase
         await Page.EvaluateAsync(
             "() => document.querySelector('#component-diagram .plantuml-browser svg').dataset.pinned = '1'");
 
+        // the toolbar is the Features tab's since 5.0.0 (plans/OPTION_C_PLAN.md S3); the drawn overview stays in its panel
+        await OpenReportTabAsync("features");
         await Page.Locator("button[data-toggle='databases']").First.ClickAsync();
         await WaitForScenarioSourceWithout("spanner");
 
@@ -154,7 +156,8 @@ public class ComponentDiagramDatabaseToggleTests : PlaywrightTestBase
             o.TestRunReportToggleDefaults.DatabasesShown = false;
             o.TestRunReportToggleDefaults.ComponentDiagramVisible = true;
         }));
-        await Page.Locator("details.feature").First.WaitForAsync();
+        // the page opens on the Components tab (5.0.0), its features hidden
+        await Page.Locator(".report-tabs").WaitForAsync();
 
         // The panel is seeded visible, so the component diagram renders on load —
         // under a databases-hidden DEFAULT it must still draw every dependency.
@@ -175,6 +178,7 @@ public class ComponentDiagramDatabaseToggleTests : PlaywrightTestBase
         Assert.Contains("Redis", svgText);
 
         // The scenario sequence diagrams DO honour the hidden default.
+        await OpenReportTabAsync("features");
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
         await WaitForScenarioSourceWithout("spanner");
@@ -193,6 +197,8 @@ public class ComponentDiagramDatabaseToggleTests : PlaywrightTestBase
 
         // Hide databases, then toggle steps and assertions — their queue builders re-apply
         // the databases filter to every container they process and must skip the overview.
+        // the toolbar is the Features tab's since 5.0.0 (plans/OPTION_C_PLAN.md S3); the drawn overview stays in its panel
+        await OpenReportTabAsync("features");
         await Page.Locator("button[data-toggle='databases']").First.ClickAsync();
         await WaitForScenarioSourceWithout("spanner");
 

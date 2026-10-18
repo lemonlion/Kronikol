@@ -359,35 +359,37 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     // Controls 11–12 — Timeline / Component Diagram panels
     // ═══════════════════════════════════════════════════════════
 
+    // Since 5.0.0 the two panels are tabs of the report bar, and each option chooses the tab the page opens on
+    // (plans/OPTION_C_PLAN.md S3, Q2 as built).
+
     [Fact]
-    public async Task Timeline_visible_default_shows_the_panel_and_seeds_the_button()
+    public async Task Timeline_visible_default_opens_the_page_on_the_timeline_tab()
     {
         await Page.GotoAsync(ReportTestHelper.GenerateComponentTimelineToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_TimelineVisible.html",
             o => o.TestRunReportToggleDefaults.ScenarioTimelineVisible = true));
-        await Page.Locator("details.feature").First.WaitForAsync();
+        await Page.Locator(".report-tabs").WaitForAsync();
 
         Assert.True(await Page.Locator("#scenario-timeline").IsVisibleAsync());
-        Assert.True(await Page.EvaluateAsync<bool>(
-            "() => document.querySelector('button[onclick=\"toggle_timeline(this)\"]').classList.contains('timeline-toggle-active')"));
+        await Expect(Page.Locator("#tab-timeline")).ToHaveAttributeAsync("aria-selected", "true");
+        Assert.False(await Page.Locator("#panel-features").IsVisibleAsync());
 
-        // The seeded-visible panel still toggles off
-        await Page.Locator("button[onclick='toggle_timeline(this)']").ClickAsync();
+        // the page that opened on the timeline still goes to the features
+        await OpenReportTabAsync("features");
         Assert.False(await Page.Locator("#scenario-timeline").IsVisibleAsync());
     }
 
     [Fact]
-    public async Task Component_diagram_visible_default_shows_the_panel()
+    public async Task Component_diagram_visible_default_opens_the_page_on_the_components_tab()
     {
         await Page.GotoAsync(ReportTestHelper.GenerateComponentTimelineToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_ComponentVisible.html",
             o => o.TestRunReportToggleDefaults.ComponentDiagramVisible = true));
-        await Page.Locator("details.feature").First.WaitForAsync();
+        await Page.Locator(".report-tabs").WaitForAsync();
 
         Assert.True(await Page.Locator("#component-diagram").IsVisibleAsync());
         Assert.False(await Page.Locator("#scenario-timeline").IsVisibleAsync());
-        Assert.True(await Page.EvaluateAsync<bool>(
-            "() => document.querySelector('button[onclick=\"toggle_component_diagram(this)\"]').classList.contains('timeline-toggle-active')"));
+        await Expect(Page.Locator("#tab-components")).ToHaveAttributeAsync("aria-selected", "true");
     }
 
     [Fact]
@@ -399,12 +401,12 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
                 o.TestRunReportToggleDefaults.ScenarioTimelineVisible = true;
                 o.TestRunReportToggleDefaults.ComponentDiagramVisible = true;
             }));
-        await Page.Locator("details.feature").First.WaitForAsync();
+        await Page.Locator(".report-tabs").WaitForAsync();
 
         Assert.True(await Page.Locator("#scenario-timeline").IsVisibleAsync());
         Assert.False(await Page.Locator("#component-diagram").IsVisibleAsync());
         // The component diagram stays one click away
-        await Page.Locator("button[onclick='toggle_component_diagram(this)']").ClickAsync();
+        await OpenReportTabAsync("components");
         Assert.True(await Page.Locator("#component-diagram").IsVisibleAsync());
         Assert.False(await Page.Locator("#scenario-timeline").IsVisibleAsync());
     }

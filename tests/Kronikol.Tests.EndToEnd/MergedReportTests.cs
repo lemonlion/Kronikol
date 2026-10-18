@@ -41,9 +41,7 @@ public class MergedReportTests : PlaywrightTestBase
     {
         await Page.GotoAsync(GenerateMergedReport("MergedComponent.html"));
 
-        var button = Page.Locator("button[onclick*='toggle_component_diagram']");
-        await button.WaitForAsync(new() { Timeout = 5000 });
-        await button.ClickAsync();
+        await OpenReportTabAsync("components"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)
 
         var svg = Page.Locator("#component-diagram [data-diagram-type='plantuml'] svg");
         await svg.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 30000 });

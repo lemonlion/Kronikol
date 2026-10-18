@@ -3,9 +3,10 @@ using Microsoft.Playwright;
 namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
-/// A default report from a run that read a ledger (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md): nothing about history
-/// is painted, a verdict query typed in the search box matches nothing without an error, and Export Filtered HTML
-/// carries no history. The history is on the labs page beside it (<see cref="LabsPageTests"/>).
+/// A default report from a run that read a ledger (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md, as 5.0.0 moves it:
+/// plans/OPTION_C_PLAN.md S3, R18.1): its history is the History tab and nothing of it is painted in the features,
+/// a verdict query typed in the search box matches nothing without an error, and Export Filtered HTML carries no
+/// history. The history is on the labs page beside it too (<see cref="LabsPageTests"/>).
 /// </summary>
 // The fixture runs the report pipeline (HistoryReportHelper.GenerateWithLabsPage), whose diagram fetcher and log store are
 // process-wide: in the collection of the other classes that run it, so no two pipelines overlap.
@@ -28,10 +29,11 @@ public class DefaultReportWithoutHistoryTests : PlaywrightTestBase
         await Open("DefaultNoHistory_Headers.html");
 
         await Expect(Page.Locator("details.scenario")).ToHaveCountAsync(4);
-        await Expect(Page.Locator(".history-sparkline")).ToHaveCountAsync(0);
-        await Expect(Page.Locator(".history-verdict")).ToHaveCountAsync(0);
+        // the features: the History tab's own lists carry verdict pills, the scenarios none
+        await Expect(Page.Locator("#report-content .history-sparkline")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("#report-content .history-verdict")).ToHaveCountAsync(0);
         await Expect(Page.Locator("[data-history-verdicts]")).ToHaveCountAsync(0);
-        await Expect(Page.Locator("#history-section")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("#panel-history > #history-section")).ToHaveCountAsync(1);
     }
 
     [Fact]
@@ -70,7 +72,11 @@ public class DefaultReportWithoutHistoryTests : PlaywrightTestBase
         var exported = await File.ReadAllTextAsync(path);
 
         Assert.Contains("data-stable-id=\"", exported);
-        Assert.DoesNotContain("history-", exported);
+        // the features alone: no History section, no sparkline, no verdict. The head it copies is the report's, whose
+        // stylesheet names the History tab's classes since 5.0.0, so the markup is what is checked.
+        Assert.DoesNotContain("<details id=\"history-section\"", exported);
+        Assert.DoesNotContain("<span class=\"history-sparkline\"", exported);
+        Assert.DoesNotContain("<span class=\"history-verdict", exported);
         Assert.DoesNotContain("data-history-verdicts", exported);
     }
 }

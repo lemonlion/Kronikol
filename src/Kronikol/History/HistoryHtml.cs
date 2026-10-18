@@ -7,11 +7,11 @@ namespace Kronikol.History;
 /// <summary>
 /// Renders cross-run history as HTML (plans/CROSS_RUN_HISTORY_PLAN.md §8.1): per scenario a verdict attribute
 /// the search box filters on (<c>$flaky</c>, <c>$broke</c>), a sparkline of the last runs, and a verdict pill;
-/// and the History section, with the run trend and the lists of what changed. Since 4.6.0 the labs page beside
-/// the report (<see cref="Reports.LabsReportGenerator"/>) draws them by default, and a report draws them only
-/// where its opt-ins ask (<see cref="ReportConfigurationOptions.ShowScenarioHistory"/>,
-/// <see cref="ReportConfigurationOptions.ShowHistorySection"/>), through these same renderers, so the two
-/// cannot drift (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md).
+/// and the History section, with the run trend and the lists of what changed. The labs page beside the report
+/// (<see cref="Reports.LabsReportGenerator"/>) draws them all; the report draws the section as its History tab
+/// (<see cref="ReportConfigurationOptions.ShowHistorySection"/>, on by default since 5.0.0) and the scenarios'
+/// own history only where <see cref="ReportConfigurationOptions.ShowScenarioHistory"/> asks, through these same
+/// renderers, so the two cannot drift (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md).
 ///
 /// <para>Everything is rendered here, on the generation side, and the sparkline is ONE element whose
 /// background gradient carries a hard colour stop per run: two hundred scenarios cost two hundred nodes,
@@ -107,6 +107,16 @@ internal static class HistoryHtml
     }
 
     /// <summary>
+    /// The report's History section in its tab (5.0.0, plans/OPTION_C_PLAN.md S3): always open, since the tab is its
+    /// disclosure, with its summary the section's heading, out of the tab order.
+    /// </summary>
+    internal static string InTab(HistoryVerdicts history)
+    {
+        ArgumentNullException.ThrowIfNull(history);
+        return Section(history, InPageLink, open: true, inTab: true);
+    }
+
+    /// <summary>
     /// The labs page's History section: always open, since the page is where history is read, and each scenario
     /// linked into the report by <c><paramref name="reportHref"/>#sid-&lt;id&gt;</c>, or named as text when no
     /// report is written beside the page (<paramref name="reportHref"/> null).
@@ -133,11 +143,11 @@ internal static class HistoryHtml
         return $"<a class=\"history-link\" href=\"#sid-{id}\" onclick=\"event.preventDefault();if(window.reveal_url_anchor){{reveal_url_anchor('sid-{id}');}}history.replaceState(null,'',location.pathname+location.search+'#sid-{id}');\">{HtmlEncode(entry.Feature)} &rsaquo; {HtmlEncode(entry.Name)}</a>";
     }
 
-    private static string Section(HistoryVerdicts history, Func<ScenarioHistory, string> link, bool open)
+    private static string Section(HistoryVerdicts history, Func<ScenarioHistory, string> link, bool open, bool inTab = false)
     {
         var sb = new StringBuilder();
         sb.Append($"<details id=\"history-section\" class=\"history-section\"{(open ? " open" : "")}>");
-        sb.Append($"<summary class=\"h2\">History <span class=\"history-summary-line\">{HtmlEncode(HistorySummary.Line(history))}</span></summary>");
+        sb.Append($"<summary class=\"h2\"{(inTab ? " tabindex=\"-1\"" : "")}>History <span class=\"history-summary-line\">{HtmlEncode(HistorySummary.Line(history))}</span></summary>");
         sb.Append("<div class=\"history-body\">");
         sb.Append($"<p class=\"history-meta\">stream <code>{HtmlEncode(history.Stream)}</code> · run <code>{HtmlEncode(history.RunId)}</code> · {history.RunsRecorded.ToString(CultureInfo.InvariantCulture)} earlier run{(history.RunsRecorded == 1 ? "" : "s")} in the window");
         if (history.Partial)

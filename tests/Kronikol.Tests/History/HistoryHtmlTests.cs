@@ -113,6 +113,19 @@ public class HistoryHtmlTests : IDisposable
         Assert.DoesNotContain("history-verdict-", refund);
     }
 
+    /// <summary>5.0.0 (plans/OPTION_C_PLAN.md S3): the section is the History tab's panel, open whatever it has to say,
+    /// since the tab is its disclosure, with its summary the panel's heading, out of the tab order.</summary>
+    [Fact]
+    public void The_section_is_the_history_tabs_panel_open_with_its_summary_out_of_the_tab_order()
+    {
+        var features = Features(pay: ExecutionResult.Passed);
+        var html = Html(features, Verdicts(features, "PPP", "PPP", "PPP"));
+
+        Assert.Contains("<button class=\"report-tab\" id=\"tab-history\" role=\"tab\" aria-controls=\"panel-history\" aria-selected=\"false\" tabindex=\"-1\" data-tab=\"history\">History</button>", html);
+        Assert.Contains("<div class=\"report-panel\" id=\"panel-history\" role=\"tabpanel\" aria-labelledby=\"tab-history\" data-panel=\"history\" hidden>"
+                        + "<details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\">History ", html);
+    }
+
     [Fact]
     public void A_position_that_was_not_a_test_is_named_in_the_sparkline_tooltip()
     {
@@ -170,13 +183,15 @@ public class HistoryHtmlTests : IDisposable
         Assert.Contains("class=\"history-chart\"", section.Value);
         Assert.Contains("Pass rate", section.Value);
         Assert.Equal(4, Regex.Matches(section.Value, "<rect class=\"history-bar history-bar-(pass|fail)").Count); // three prior runs and this one
-        // The section sits at the top level, beside the timeline, not inside a feature: the export copies
-        // features only and leaves the aggregate behind on purpose.
-        Assert.True(html.IndexOf("<details id=\"history-section\"", StringComparison.Ordinal) < html.IndexOf("<div id=\"report-content\">", StringComparison.Ordinal));
+        // The section is not inside a feature: the export copies features only and leaves the aggregate behind on
+        // purpose. Since 5.0.0 it is the History tab's panel, after the features (plans/OPTION_C_PLAN.md S3).
+        var panel = html.IndexOf("<div class=\"report-panel\" id=\"panel-history\"", StringComparison.Ordinal);
+        Assert.True(panel > html.IndexOf("<div id=\"report-content\">", StringComparison.Ordinal));
+        Assert.True(html.IndexOf("<details id=\"history-section\"", StringComparison.Ordinal) > panel);
     }
 
     [Fact]
-    public void A_fixed_scenario_is_listed_as_newly_fixed_and_a_stable_run_leaves_the_section_closed()
+    public void A_fixed_scenario_is_listed_as_newly_fixed_and_a_stable_run_says_nothing_changed()
     {
         var fixedRun = Features(pay: ExecutionResult.Passed);
         var fixedHtml = Html(fixedRun, Verdicts(fixedRun, "FPP", "FPP", "FPP"));
@@ -187,7 +202,8 @@ public class HistoryHtmlTests : IDisposable
         var quietHtml = Html(quiet, VerdictsInto(Path.Combine(_dir, "quiet", "history.jsonl"), quiet, "PPP", "PPP", "PPP"), "Quiet.html");
         var section = Regex.Match(quietHtml, "<details id=\"history-section\"[^>]*>", RegexOptions.Singleline);
         Assert.True(section.Success);
-        Assert.DoesNotContain(" open", section.Value);
+        // 4.x left a quiet run's section closed; since 5.0.0 its tab is its disclosure and it is open (S3)
+        Assert.Contains(" open", section.Value);
         Assert.Contains("nothing changed (against 3 earlier runs on local)", quietHtml);
     }
 

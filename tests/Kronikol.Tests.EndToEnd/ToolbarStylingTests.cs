@@ -88,7 +88,6 @@ public class ToolbarStylingTests : PlaywrightTestBase
         { true, Tint, TintBorder, ".percentile-btn" },
         { true, Tint, TintBorder, ".collapse-expand-all" },
         { true, Tint, TintBorder, ".export-btn" },
-        { true, Tint, TintBorder, ".timeline-toggle" },
         { true, Tint, TintBorder, ".toolbar-right .details-radio-btn:not(.details-active)" },
         { false, BlueTint, BlueTintBorder, ".dependency-toggle" },
         { false, "rgb(220, 230, 245)", BlueTintBorder, ".dep-mode-toggle" },
@@ -96,7 +95,9 @@ public class ToolbarStylingTests : PlaywrightTestBase
         { false, BlueTint, BlueTintBorder, ".percentile-btn" },
         { false, BlueTint, BlueTintBorder, ".collapse-expand-all" },
         { false, Hover, "rgba(0, 0, 0, 0)", ".export-btn" }, // 5.0.0: a text button in the filter card (OPTION_C_PLAN S2)
-        { false, BlueTint, BlueTintBorder, ".timeline-toggle" },
+        // 5.0.0: the Scenario Timeline toggle is a tab (plans/OPTION_C_PLAN.md S3); a tab not selected takes the hover
+        // tint and has no border. The violet theme's tabs are S13's.
+        { false, Hover, null, ".report-tab[aria-selected=\"false\"]" },
         { false, BlueTint, BlueTintBorder, ".toolbar-right .details-radio-btn:not(.details-active)" },
     };
 
@@ -111,10 +112,12 @@ public class ToolbarStylingTests : PlaywrightTestBase
         await Paints(control, background, border);
     }
 
+    /// <summary>The percentile buttons' active state. The timeline toggle this covered too is a tab since 5.0.0, whose
+    /// selected look ReportTabsTests covers (plans/OPTION_C_PLAN.md S3).</summary>
     [Theory]
-    [InlineData(true, Violet, Violet, VioletDark)]
-    [InlineData(false, Blue, Blue, "rgb(50, 110, 220)")]
-    public async Task Active_percentile_and_timeline_buttons_take_the_themes_colours(bool violet, string active, string activeHovered, string timelineActiveHovered)
+    [InlineData(true, Violet, Violet)]
+    [InlineData(false, Blue, Blue)]
+    public async Task Active_percentile_buttons_take_the_themes_colours(bool violet, string active, string activeHovered)
     {
         await Open($"ActiveHeader{violet}.html", violet);
 
@@ -124,13 +127,6 @@ public class ToolbarStylingTests : PlaywrightTestBase
         await Paints(percentile, activeHovered, active);
         await Page.Mouse.MoveAsync(0, 0);
         await Paints(percentile, active, active);
-
-        var timeline = Page.Locator(".timeline-toggle", new() { HasTextString = "Scenario Timeline" });
-        await timeline.ClickAsync();
-        await Expect(timeline).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("timeline-toggle-active"));
-        await Paints(timeline, timelineActiveHovered);
-        await Page.Mouse.MoveAsync(0, 0);
-        await Paints(timeline, active, active);
     }
 
     [Theory]

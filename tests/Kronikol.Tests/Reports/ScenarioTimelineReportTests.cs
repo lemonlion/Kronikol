@@ -31,13 +31,14 @@ public class ScenarioTimelineReportTests
     }
 
     [Fact]
-    public void Report_with_durations_contains_timeline_toggle_button()
+    public void Report_with_durations_has_a_timeline_tab()
     {
         var features = MakeFeatures(
             ("t1", "Test 1", ExecutionResult.Passed, TimeSpan.FromSeconds(2)),
             ("t2", "Test 2", ExecutionResult.Passed, TimeSpan.FromSeconds(3)));
         var content = GenerateReport(features, "TimelineToggle.html");
-        Assert.Contains("timeline-toggle", content);
+        // 5.0.0 (plans/OPTION_C_PLAN.md S3): a tab of the report bar in place of the toolbar's toggle
+        Assert.Contains("<button class=\"report-tab\" id=\"tab-timeline\"", content);
     }
 
     [Fact]
@@ -47,6 +48,7 @@ public class ScenarioTimelineReportTests
             ("t1", "Test 1", ExecutionResult.Passed, null));
         var content = GenerateReport(features, "NoTimeline.html");
         Assert.DoesNotContain("onclick=\"toggle_timeline", content);
+        Assert.DoesNotContain("id=\"tab-timeline\"", content);
         Assert.DoesNotContain("id=\"scenario-timeline\"", content);
     }
 
@@ -83,12 +85,13 @@ public class ScenarioTimelineReportTests
     }
 
     [Fact]
-    public void Report_timeline_toggle_function_exists()
+    public void Report_timeline_is_its_tabs_panel_shown_by_the_tabs_script()
     {
         var features = MakeFeatures(
             ("t1", "Test 1", ExecutionResult.Passed, TimeSpan.FromSeconds(2)));
         var content = GenerateReport(features, "TimelineToggleJs.html");
-        Assert.Contains("toggle_timeline", content);
+        Assert.Contains("data-panel=\"timeline\" hidden><div id=\"scenario-timeline\"", content);
+        Assert.Contains("<script id=\"kronikol-report-tabs\">", content);
     }
 
     [Fact]

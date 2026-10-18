@@ -36,7 +36,7 @@ internal static class IngestCommand
         // The library's default until the flag says otherwise (shown in 3.x, hidden from 4.0.0).
         bool? headersShown = null;
         var componentDiagram = true;
-        var diagnosticsSection = false;
+        var diagnosticsSection = true;
         var redact = true;
         var redactHeaders = new List<string>();
         var featureName = "Ingested";
@@ -165,7 +165,11 @@ internal static class IngestCommand
                     componentDiagram = false;
                     break;
                 case "--diagnostics-section":
+                    // the default since 5.0.0, still taken so a command line written for 4.x runs unchanged
                     diagnosticsSection = true;
+                    break;
+                case "--no-diagnostics-section":
+                    diagnosticsSection = false;
                     break;
                 case "--no-redact":
                     redact = false;
@@ -708,10 +712,10 @@ internal static class IngestCommand
         w.WriteLine("                           health: \"CaptureDegraded:tap-di-redis: decoding disabled on 1 connection\".");
         w.WriteLine("                           kind = a DiagnosticKind name (unknown → Other); it lands in IngestResult.Diagnostics");
         w.WriteLine("                           and TestRunReport.json's diagnostics array, on the labs page beside the report");
-        w.WriteLine("                           (TestRunReport.labs.html), and in the HTML report's \"Report diagnostics\"");
-        w.WriteLine("                           section when --diagnostics-section asks for it.");
-        w.WriteLine("  --diagnostics-section    Also render the \"Report diagnostics\" section in the HTML report. Off by default:");
-        w.WriteLine("                           every diagnostic is on the labs page, in TestRunReport.json and printed here.");
+        w.WriteLine("                           (TestRunReport.labs.html), and in the HTML report's Diagnostics tab.");
+        w.WriteLine("  --no-diagnostics-section Leave the Diagnostics tab out of the HTML report: every diagnostic is still on the");
+        w.WriteLine("                           labs page, in TestRunReport.json and printed here. --diagnostics-section, the");
+        w.WriteLine("                           default since 5.0.0, is still taken.");
         w.WriteLine("  -h, --help               Show this help.");
         w.WriteLine();
         w.WriteLine("Example:");

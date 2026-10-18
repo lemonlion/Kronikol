@@ -17,6 +17,8 @@ const PICKS = {
       ['stat dt', '.run-summary .run-stat dt'], ['stat dd', '.run-summary .run-stat dd'], ['stat fail dd', '.run-stat-fail dd'], ['ci zone', '.run-ci'],
       ['ci title', '.run-ci .run-title'], ['ci dt', '.run-ci .run-stat dt'], ['ci dd', '.run-ci .run-stat dd'], ['commit', '.run-stat dd code'], ['run link', '.run-link'], ['filter box', '.filtering-box'],
       ['filter header', '.filtering-box-header'], ['filter title', '.filtering-box-header h2'], ['export row', '.filtering-box-export'], ['export button', '.filtering-box-export .export-btn']],
+  5: [['bar', '.toolbar-row.report-nav'], ['tabs', '.report-tabs'], ['tab on', '.report-tab[aria-selected="true"]'], ['tab off', '.report-tab[aria-selected="false"]'],
+      ['tab count', '.report-tab[aria-selected="true"] .tab-n'], ['tools', '.features-tools'], ['panels', '.report-panels']],
   0: [['body', 'body'], ['h1', 'h1'], ['jump', '.jump-to-failure'], ['top', '.back-to-top']],
   9: [['feature', 'details.feature'], ['feature summary', 'details.feature > summary'], ['feature failed summary', 'details.feature > summary.failed'],
       ['scenario', 'details.scenario'], ['scenario summary', 'details.scenario > summary'], ['scenario failed summary', 'details.scenario > summary.failed'],

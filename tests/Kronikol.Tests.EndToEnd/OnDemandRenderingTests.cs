@@ -348,7 +348,7 @@ public class OnDemandRenderingTests : PlaywrightTestBase
 
         WatchEngineRequests();
         await Page.GotoAsync(new Uri(html).AbsoluteUri);
-        await Page.Locator("button[onclick*='toggle_component_diagram']").First.ClickAsync();
+        await OpenReportTabAsync("components"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)
 
         var svg = Page.Locator("#component-diagram svg").First;
         await svg.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10_000 });

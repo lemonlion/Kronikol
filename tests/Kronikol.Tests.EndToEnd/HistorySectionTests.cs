@@ -16,6 +16,8 @@ public class HistorySectionTests : PlaywrightTestBase
     {
         await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
+        // since 5.0.0 the section is the History tab's panel (plans/OPTION_C_PLAN.md S3)
+        await OpenReportTabAsync("history");
     }
 
     [Fact]
@@ -64,6 +66,7 @@ public class HistorySectionTests : PlaywrightTestBase
         // chart names it; the run being reported is healthy, so nothing is said above the charts.
         await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, "HistorySection_Degraded.html",
             (i, run) => i == 3 ? run with { Durations = [.. run.Durations!.Select(d => d * 3)] } : run, wide: true));
+        await OpenReportTabAsync("history");
         var section = Page.Locator("#history-section");
         await section.WaitForAsync();
 

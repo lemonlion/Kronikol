@@ -44,13 +44,24 @@ public class MergedLabsPageTests : IDisposable
         MergeableReportRenderer.Render(report, Path.Combine(_dir, "Combined.html"), options: options, history: history);
 
     [Fact]
-    public void The_shards_diagnostics_are_listed_on_the_page_beside_the_merged_report()
+    public void The_shards_diagnostics_are_listed_on_the_page_beside_the_merged_report_and_in_its_diagnostics_tab()
     {
         Render(Report(Dropped));
 
         var page = File.ReadAllText(Path.Combine(_dir, "Combined.labs.html"));
         Assert.Contains("<details class=\"report-diagnostics\" open>", page);
         Assert.Contains("shard 2: a tap dropped 3 segments", page);
+        // since 5.0.0 the merged report has its Diagnostics tab by default (plans/OPTION_C_PLAN.md S3)
+        var merged = File.ReadAllText(Path.Combine(_dir, "Combined.html"));
+        Assert.Contains("id=\"tab-diagnostics\"", merged);
+        Assert.Contains("shard 2: a tap dropped 3 segments", merged);
+    }
+
+    [Fact]
+    public void A_merged_report_told_to_leave_the_diagnostics_out_carries_nothing_of_them()
+    {
+        Render(Report(Dropped), new ReportConfigurationOptions { ShowReportDiagnosticsSection = false });
+
         Assert.DoesNotContain("report-diagnostic", File.ReadAllText(Path.Combine(_dir, "Combined.html")));
     }
 
