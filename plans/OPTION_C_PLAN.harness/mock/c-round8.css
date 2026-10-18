@@ -1,0 +1,49 @@
+
+/* Round 8 (owner's notes, 2026-10-17, fifth batch, reworked on the next note): the report bar carries the filters
+   (c-round8.js). Everything here reads tokens, so both themes follow. */
+
+/* the tabs and the filters share the bar's top row; the hairline under it moves from the tabs to the row */
+.nav-row { display: flex; align-items: center; gap: 12px; padding-right: 12px; }
+.nav-row > .report-tabs { flex: 1 1 auto; min-width: 0; }
+.report-nav.on-features .nav-row { border-bottom: 1px solid var(--kron-hairline-soft); }
+.report-nav.on-features .nav-row > .report-tabs { border-bottom: none; }
+.nav-filters { flex: none; display: flex; align-items: center; gap: 10px; }
+/* the readout copy reads as the box's own does, the Filtered pill included */
+.nav-readout { font-size: var(--kron-fs-meta); line-height: 20px; color: var(--kron-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.nav-readout.is-filtered { color: var(--kron-selected-ink); }
+.nav-readout.is-filtered b { display: inline-block; font-weight: 600; line-height: 18px; background: var(--kron-selected); border: 1px solid var(--kron-selected-edge); border-radius: 999px; padding: 0 7px; margin-right: 6px; }
+.nav-readout-short { display: none; }
+.nav-row.nav-compact .nav-readout-long { display: none; }
+.nav-row.nav-compact .nav-readout-short { display: inline; }
+.nav-row.nav-minimal .nav-readout { display: none; }
+/* Clear All: a text action, as in the box; the Filters button: a control, selected while the panel is open */
+.nav-clear { border: 0; background: none; padding: 4px 6px; font: 400 var(--kron-fs-control)/20px var(--kron-font); color: var(--kron-ink-soft); border-radius: 6px; cursor: pointer; }
+.nav-clear:hover { background: var(--kron-hover); }
+.nav-clear[hidden] { display: none; }
+.nav-filters-toggle { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: 1px solid var(--kron-control-border); border-radius: 6px; background: var(--kron-field); color: var(--kron-ink-soft); font: 400 var(--kron-fs-control)/16px var(--kron-font); cursor: pointer; }
+.nav-filters-toggle:hover { background: var(--kron-hover); }
+.nav-filters-toggle.is-active { border-color: var(--kron-selected-edge); color: var(--kron-selected-ink); }
+.nav-filters-toggle[aria-expanded="true"] { background: var(--kron-selected); border-color: var(--kron-selected-edge); color: var(--kron-selected-ink); font-weight: 600; }
+.nav-clear:focus-visible, .nav-filters-toggle:focus-visible, .filters-close:focus-visible, .filters-empty-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+/* while the box is in the bar, its own header carries the readout and Clear All */
+.nav-filters.riding .nav-readout, .nav-filters.riding .nav-clear { display: none; }
+
+/* the box in the bar: the bar's last section, under its rows, scrolling inside past its cap (c-round8.js) */
+.report-nav > .filtering-box { margin: 0; border: 0; border-top: 1px solid var(--kron-hairline-soft); border-radius: 0 0 12px 12px; box-shadow: none; background: transparent; overflow-y: auto; }
+.filters-close { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; margin-left: 4px; border: 0; border-radius: 6px; background: none; color: var(--kron-muted); cursor: pointer; }
+.filters-close:hover { background: var(--kron-hover); color: var(--kron-ink); }
+/* Next Failure, history links and #sid- addresses scroll a scenario's summary line to the top: it keeps clear of
+   the pinned bar, as the scenario and feature already did */
+.feature > summary, .scenario > summary, .rule > summary { scroll-margin-top: calc(var(--kron-nav-h, 0px) + 12px); }
+/* the list keeps a window's height under the bar, so a short result cannot pull the pinned bar back down */
+.report-nav.has-filters ~ .report-panels { min-height: 100vh; }
+
+/* no scenario left: said where the list was */
+.filters-empty { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 0 14px; padding: 28px 16px; background: var(--kron-card); border: 1px solid var(--kron-hairline); border-radius: 12px; color: var(--kron-muted); font-size: var(--kron-fs-body); }
+.filters-empty[hidden] { display: none; }
+.filters-empty-clear { border: 1px solid var(--kron-control-border); border-radius: 6px; background: var(--kron-field); color: var(--kron-ink-soft); padding: 4px 10px; font: 400 var(--kron-fs-control)/18px var(--kron-font); cursor: pointer; }
+.filters-empty-clear:hover { background: var(--kron-hover); }
+/* on a phone the bar scrolls away and the box has its own Filters toggle */
+@media (max-width: 768px) {
+  .nav-filters { display: none !important; }
+}

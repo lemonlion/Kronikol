@@ -1,0 +1,63 @@
+/* Layout: quiet tinted ground, white hairline cards, one accent for every selected state.
+   The --kron-* custom properties are the theming contract Option C introduces: a theme
+   (the violet Specifications default included) overrides tokens, never selectors. */
+:root {
+  --kron-accent: #2559c7;
+  --kron-selected: #dce8fb;
+  --kron-selected-ink: #1d4fb0;
+  --kron-selected-edge: #6a8fd9;
+  --kron-accent-rail: rgba(37, 89, 199, .18);
+  --kron-focus: rgba(37, 89, 199, .12);
+  --kron-hover: #edf1f8;
+
+  --kron-ground: #ebeef4;
+  --kron-card: #ffffff;
+  --kron-strip: #f8fafd;
+  --kron-strip-edge: #d3d9e3;
+  --kron-field: #f2f5f9;
+  --kron-quiet: #f7f9fc;
+  --kron-quiet-edge: #d3d9e3;
+  --kron-hairline: #d0d7e2;
+  --kron-hairline-soft: #e2e7ee;
+  --kron-divider: #cdd4df;
+  --kron-divider-soft: #dde2ea;
+  --kron-control-border: #aeb7c6;
+  --kron-select-border: #858fa0;
+  --kron-dot: #8a94a5;
+  --kron-shadow: rgba(20, 30, 60, .06);
+  --kron-card-shadow: 0 1px 2px rgba(20, 30, 60, .07), 0 2px 6px rgba(20, 30, 60, .05);
+
+  --kron-ink: #242b36;
+  --kron-ink-soft: #4a5361;
+  --kron-ink-quiet: #545c6a;
+  --kron-muted: #5b6474;
+  --kron-label: #5f6878;
+  --kron-label-soft: #616a7a;
+  --kron-faint: #626b7a;
+  --kron-on-solid: #ffffff;
+
+  --kron-pass: #276c44;
+  --kron-pass-soft: #e6f3ec;
+  --kron-pass-ring: #3f9a62;
+  --kron-fail: #b3372e;
+  --kron-fail-soft: #fbecea;
+  --kron-fail-edge: #efc7c2;
+  --kron-fail-ink: #7c2a24;
+  --kron-fail-shadow: rgba(120, 30, 25, .25);
+  --kron-exclude-soft: #fbf1f0;
+  --kron-exclude-edge: #e6c9c5;
+  --kron-exclude-ink: #8a4a43;
+  --kron-warn: #8a5a17;
+  --kron-warn-soft: #fbf3e7;
+  --kron-warn-edge: #ecd3ae;
+  --kron-skip: #5b6170;
+  --kron-skip-soft: #eef0f3;
+  --kron-bypass: #285fba;
+  --kron-bypass-soft: #e8f0fc;
+
+  --kron-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --kron-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --kron-count-slot: 3ch;
+  --gear-shift: -2.5px;
+  color-scheme: light;
+}

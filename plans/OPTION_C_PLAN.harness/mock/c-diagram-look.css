@@ -1,0 +1,49 @@
+
+/* Diagram look (a separate preview, 2026-10-17): the colours of the ROLES c-diagram-look.js finds by structure in a
+   drawn sequence diagram (k-lifeline, k-participant, k-step, k-card, k-fold, k-badge, k-number). Nothing here keys on
+   a colour the engine painted, so a PlantUML theme or a recoloured source changes nothing; a report theme is these
+   tokens' values. Doubled classes: the round-5 mapping of PlantUML's default colours has the same specificity. */
+:root {
+  --dg-participant-edge: #b6c2d5;
+  --dg-lifeline: #cdd5e0;
+  --dg-card-edge: #e0cf9f;
+  --dg-event-card-edge: #9cc7e2;
+  --dg-step: #e9eef6;
+  --dg-step-edge: #c4cfdf;
+  --dg-step-ink: #2f3b4f;
+  --dg-step-rule: #a3adbe;
+  --dg-step-table: #ffffff;
+  --dg-badge: #2f3b4e;
+  --dg-badge-ink: #ffffff;
+}
+:root[data-theme="dark"] {
+  --dg-participant-edge: #4d5d76;
+  --dg-lifeline: #334052;
+  --dg-card-edge: #5e5236;
+  --dg-event-card-edge: #2f5b7d;
+  --dg-step: #222c3a;
+  --dg-step-edge: #3b4a60;
+  --dg-step-ink: #dbe3ee;
+  --dg-step-rule: #4f5d72;
+  --dg-step-table: #131a24;
+  --dg-badge: #c5cdd8;
+  --dg-badge-ink: #171d26;
+}
+/* geometry */
+.plantuml-browser svg .k-lifeline.k-lifeline { stroke: var(--dg-lifeline) !important; }
+.plantuml-browser svg .k-participant.k-participant { stroke: var(--dg-participant-edge) !important; }
+.plantuml-browser svg .k-participant-fill.k-participant-fill { fill: var(--dg-participant) !important; }
+/* cards: every note in the note colour, event notes in the event colour; the fold stays for the note controls */
+.plantuml-browser svg .k-card.k-card { fill: var(--dg-note) !important; stroke: var(--dg-card-edge) !important; }
+.plantuml-browser svg .k-card.k-card-event { fill: var(--dg-event) !important; stroke: var(--dg-event-card-edge) !important; }
+.plantuml-browser svg .k-fold.k-fold { visibility: hidden; }
+/* bands */
+.plantuml-browser svg .k-step.k-step { fill: var(--dg-step) !important; stroke: var(--dg-step-edge) !important; }
+.plantuml-browser svg .k-step-text.k-step-text { fill: var(--dg-step-ink) !important; }
+/* a data table drawn in a step bar: its rules were white, for the dark bar (round 14); about 2:1 on the band */
+.plantuml-browser svg .k-step-rule.k-step-rule { stroke: var(--dg-step-rule) !important; }
+/* the table itself sits on white (round 16, owner), on a deep surface in the dark theme, so it stands off the band */
+.plantuml-browser svg .k-step-table.k-step-table { fill: var(--dg-step-table) !important; stroke: none !important; }
+/* badges: a dark pill with light digits, a light pill with dark digits in the dark theme */
+.plantuml-browser svg .k-badge.k-badge { fill: var(--dg-badge); }
+.plantuml-browser svg .k-number.k-number { fill: var(--dg-badge-ink) !important; }

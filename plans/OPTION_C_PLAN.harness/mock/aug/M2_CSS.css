@@ -1,0 +1,423 @@
+:root { --ka: #2559c7; --kb: #d7dde8; --ki: #4a5361; --km: #6a7280; --kh: #edf1f8; --ksel: #dce8fb; --ksel-i: #1d4fb0; --kfont: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; --gear-shift: -2.5px; }
+/* baseline: the 13px tabs/controls and the 11px span-count pill are one text row (matched-box
+   controls land identically under baseline or center; the pill only aligns under baseline) */
+.diagram-toggle { margin: 0 0 10px; padding: 5px 16px; display: flex; align-items: baseline; flex-wrap: wrap; row-gap: 6px; width: 100%; box-sizing: border-box; background: #f8fafd; border-top: 1px solid #e6eaf2; border-bottom: 1px solid #e6eaf2; font-family: var(--kfont); }
+.diagram-toggle button, .diagram-toggle select { user-select: none; }
+/* text tabs */
+.diagram-toggle-btn { margin: 0; padding: 6px 11px; border: none; background: none; font-size: 13px; line-height: 1.25; font-weight: 500; font-family: var(--kfont); color: #5a6472; cursor: pointer; border-radius: 5px; transition: background .12s, color .12s; }
+.diagram-toggle-btn:hover { background: var(--kh); color: #242b35; }
+.diagram-toggle-active, .diagram-toggle-active:hover { background: none; color: var(--ka); box-shadow: inset 0 -2px 0 var(--ka); border-radius: 5px 5px 0 0; font-weight: 600; }
+.diagram-toggle-active:hover { background: var(--kh); }
+.diagram-toggle-spacer { flex: 1; }
+/* divided details zone */
+/* align-items: BASELINE, not center. The 11px label and the 13px controls have different line
+   boxes, so centring them puts their baselines ~0.8px apart — and a sub-pixel `top` nudge cannot
+   repair that, because Chrome snaps a painted baseline to a whole device pixel: the label rendered
+   a full pixel high at 100% zoom while the nudge measured as "fixed". Baseline alignment makes the
+   browser do the arithmetic, at any font size, zoom or platform. */
+.details-radio { display: inline-flex; align-items: baseline; gap: 4px; margin-left: 16px; padding-left: 16px; border-left: 1px solid #dde3ee; }
+/* zone labels are deliberately a step LIGHTER and more letterspaced than any clickable ink:
+   in C, small caps + pale grey + default cursor = label; sentence case + darker ink = clickable */
+/* 11px small caps box-centred beside 13px buttons lands its baseline ~0.4px above theirs; a row
+   of text reads by its shared baseline, so the label is nudged down to sit on the buttons' one.
+   (B does NOT do this: there the label is a bordered cell whose BOX must align with the button
+   boxes, so its box stays put.) */
+/* NO nudge: the container aligns baselines exactly (see .details-radio) and that is the whole fix.
+   An optical 1px shift was tried here on the theory that all-caps 11px reads high against 13px mixed
+   case — it read a clear 2px low instead, because a baseline offset is far more legible than a
+   mass-centre one. Two things learned the hard way: Chrome snaps a painted text baseline to a whole
+   device pixel, so a sub-pixel `top` on this element moves NOTHING (0, 0.4 and 0.5px all paint the
+   same row — which is how the earlier 0.4px "correction" measured as fixed while looking untouched);
+   and sub-pixel PADDING is different, because it changes layout and can push a baseline across a snap
+   boundary (B’s label cell relies on exactly that). Verify at the real device scale, never from
+   computed styles alone. */
+/* decided 2026-08-31: C drops the DETAIL label at desktop — the segmented control reads without
+   it. The span stays in the DOM (markup shared with B, which keeps its label cell) and the mobile
+   sheets re-show it as their zone heading. */
+.details-radio-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #7b8494; margin-right: 6px; display: none; }
+.details-radio-btn { margin: 0; border: 1px solid transparent; background: none; padding: 5px 10px; border-radius: 5px; font-size: 13px; line-height: 1.25; font-family: var(--kfont); color: var(--ki); cursor: pointer; transition: background .12s, color .12s; }
+.details-radio-btn:hover { background: var(--kh); }
+.details-radio-btn.details-active, .details-radio-btn.details-active:hover { background: var(--ksel); color: var(--ksel-i); font-weight: 600; }
+.toggle-btn { margin-left: 8px; position: relative; padding-left: 24px; }
+/* optically centred on the cap band, not the box — see the same note in the B skin */
+.details-radio-btn.toggle-btn::before { content: ""; position: absolute; left: 8px; top: 50%; width: 9px; height: 9px; margin-top: -4.12px; border-radius: 50%; border: 1.5px solid #a7aeb9; box-sizing: border-box; transition: background .12s, border-color .12s; }
+.details-radio-btn.toggle-btn.details-active { background: var(--ksel); color: var(--ksel-i); }
+.details-radio-btn.toggle-btn.details-active::before { background: var(--ka); border-color: var(--ka); }
+/* Format and Toggle zones — the divider is DYNAMIC: drawn only where the groups sit adjacent
+   (inline cluster, report top bar, squeezed options bar), never across empty right-aligned space */
+.diagram-format { display: inline-flex; align-items: center; margin-left: 10px; }
+.diagram-format .note-format-select { margin-left: 0; }
+.diagram-flags { display: inline-flex; align-items: center; flex-wrap: wrap; row-gap: 6px; margin-left: 14px; }
+.diagram-flags > .toggle-btn:first-child { margin-left: 0; }
+.diagram-toggle[data-layout="inline"] .diagram-flags, .toolbar-right .diagram-flags { margin-left: 14px; padding-left: 14px; border-left: 1px solid #dde3ee; }
+@media (min-width: 769px) and (max-width: 940px) { .diagram-options-bar .diagram-flags { padding-left: 14px; border-left: 1px solid #dde3ee; } }
+/* pending (diagram re-render in flight): today’s setPending mechanism restyled to the C grammar.
+   Shape never changes — same sweep-underline + throb grammar as B (the chip dot stays a dot);
+   selects throb and pulse their border to the accent. */
+@keyframes kc-throb { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@keyframes kc-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@keyframes kc-borderpulse { 0%, 100% { border-color: var(--kb); } 50% { border-color: var(--ka); } }
+.details-pending { cursor: progress; }
+/* inset rail + sweeping highlight: no layout cost, so the ghost control keeps its exact box */
+.details-radio-btn.details-pending { position: relative; overflow: hidden; box-shadow: inset 0 -3px 0 rgba(37,89,199,.18); animation: kc-throb 1.1s ease-in-out 0.2s infinite; }
+.details-radio-btn.details-pending::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--ka) 30%, var(--ka) 70%, transparent); transform: translateX(-100%); animation: kc-sweep 1.1s linear 0.2s infinite; }
+.truncate-lines-select.details-pending, .note-format-select.details-pending { animation: kc-throb 1.1s ease-in-out 0.2s infinite, kc-borderpulse 1.1s ease-in-out 0.2s infinite; }
+/* the lines dropdown only exists while Truncate is the active mode */
+.details-radio:not(:has(> .details-radio-btn[data-state="truncated"].details-active)) .truncate-lines-select,
+.details-radio:not(:has(> .details-radio-btn[data-state="truncated"].details-active)) .truncate-lines-label { display: none; }
+/* selects — the box must match the buttons EXACTLY (same line-height, same vertical padding, same
+   border), not merely look similar. At 4px padding and line-height:normal the select was 27px against
+   the buttons’ 28.25px, so align-items:center offset it by 0.625px and its text rasterized one device
+   pixel lower than the button labels at 1x. Identical boxes rasterize identically at every zoom. */
+.truncate-lines-select, .note-format-select { appearance: none; -webkit-appearance: none; font-size: 13px; line-height: 1.25; font-family: var(--kfont); color: var(--ki); padding: 5px 20px 5px 8px; border: 1px solid var(--kb); border-radius: 5px; margin: 0 0 0 6px; cursor: pointer;
+  background: #fff url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%236a7280'/%3E%3C/svg%3E") no-repeat right 6px center; }
+.note-format-select { margin-left: 10px; }
+.truncate-lines-label { font-size: 12px; color: var(--km); margin-left: 5px; }
+.span-count-warning { font-size: 11px; font-style: normal; color: #8a5417; background: #fbf3e7; border: 1px solid #ecd3ae; border-radius: 999px; padding: 2px 9px; margin-left: 10px; }
+/* report toolbar */
+.collapse-expand-all, .timeline-toggle, .scenario-diagram-controls-toggle { font-size: 13px; line-height: 1.25; font-family: var(--kfont); color: var(--ki); padding: 5px 11px; border: 1px solid var(--kb); border-radius: 5px; background: #fff; cursor: pointer; transition: background .12s; }
+.collapse-expand-all:hover, .timeline-toggle:hover, .scenario-diagram-controls-toggle:hover { background: var(--kh); }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--ka); outline-offset: 1px; }
+/* inline mode drops the strip chrome — and its horizontal padding, so its right edge lines up with the options strip content below */
+.diagram-toggle[data-layout="inline"] { float: right; width: auto; margin-right: 1em; margin-bottom: 0; position: relative; z-index: 1; background: none; border: none; padding: 0; }
+.diagram-toggle[data-layout="inline"] .diagram-toggle-spacer { display: none; }
+.diagram-toggle[data-layout="inline"] + * { clear: right; }
+.scenario-diagram-controls-toggle { display: none; font-size: 12px; color: var(--km); }
+@media (max-width: 768px) {
+  .details-radio { flex-wrap: wrap; margin-left: 0; padding-left: 0; border-left: none; }
+  .toggle-btn { margin-left: 0; }
+  .diagram-format { margin-left: 0; }
+  /* every divider context must be named here — see the note in the B skin */
+  .diagram-flags, .diagram-options-bar .diagram-flags, .diagram-toggle[data-layout="inline"] .diagram-flags, .toolbar-right .diagram-flags { margin-left: 0; padding-left: 0; border-left: none; }
+  .diagram-toggle { flex-wrap: wrap; gap: 4px; }
+  /* equal-width mobile tabs can wrap their label to two lines; a one-line neighbour then centres
+     against the stack (baseline would hang it off the first line — worse). Baseline alignment is
+     for single-line rows; baselineaudit.js exempts multi-line members for the same reason. */
+  .diagram-toggle-tabs { align-items: center; }
+  .diagram-toggle-tabs .diagram-toggle-btn { flex: 1 1 0; min-width: 0; text-align: center; }
+  .diagram-toggle-spacer { display: none; }
+  .scenario-diagram-controls { display: none; }
+  .scenario-diagram-controls-toggle { display: block; margin: 0 1em; }
+}
+@media (max-width: 480px) {
+  .truncate-lines-label { display: none; }
+  .diagram-toggle-btn, .details-radio-btn, .truncate-lines-select, .note-format-select { min-height: 34px; }
+}
+:root { --pg: #f5f7fb; --cardc: #fff; --hair: #e3e8f0; --hair2: #eef1f7; --inkc: #242b36; --mut: #68727f; --ok2: #2e7d4f; --ok2s: #e6f3ec; --bad2: #b3372e; --bad2s: #fbecea; --warn2: #8a5a17; --mono: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+body { background: var(--pg); color: var(--inkc); font-family: var(--kfont); font-size: 14px; line-height: 1.55; margin: 0; padding: 14px 18px 60px; }
+.h2 { font-size: 15px; font-weight: 650; }
+.h3 { font-size: 13.5px; font-weight: 600; }
+/* header band */
+.header-row { display: flex; gap: 26px; align-items: center; background: var(--cardc); border: 1px solid var(--hair); border-radius: 12px; padding: 16px 20px; }
+.test-execution-summary { background: none; border-radius: 0; padding: 0; flex-shrink: 0; }
+.test-execution-summary h2 { margin: 0 0 6px; font-size: 19px; font-weight: 650; }
+.test-execution-summary table { border-collapse: collapse; font-size: 12.5px; color: var(--mut); }
+.test-execution-summary table td { padding: 1px 14px 1px 0; }
+/* HTML cells MIDDLE-align by default (the UA sheet puts vertical-align:middle on tbody), so the
+   mono value cells — whose strut ascent differs from the UI font's — painted 1px below their
+   labels in the CI table. Baseline alignment is what a label/value row means. */
+.test-execution-summary td, .ci-metadata td { vertical-align: baseline; }
+/* the real summary is a four-column table (Execution pair | Content pair): the two VALUE columns
+   take the mono treatment, the two label columns stay quiet */
+.test-execution-summary td:nth-child(2):not(.column-header), .test-execution-summary td:nth-child(4):not(.column-header) { font-family: var(--mono); color: var(--inkc); }
+.column-header { font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8a93a2; padding-bottom: 5px; }
+.summary-chart { width: 92px; height: 92px; flex-shrink: 0; }
+/* the donut and the CI table share one DOM wrapper in the real report (.ci-chart-group) and stack;
+   C keeps that stack — laying them out side by side reads better but costs the filtering box ~130px,
+   and measured against the real header content that is exactly the width the box cannot spare */
+.ci-chart-group { display: flex; flex-direction: column; align-items: center; align-self: center; gap: 14px; flex-shrink: 0; padding-left: 26px; border-left: 1px solid var(--hair2); }
+.ci-metadata { background: none; border-radius: 0; padding: 0; flex-shrink: 0; }
+.ci-metadata table { border-collapse: collapse; font-size: 12px; color: var(--mut); }
+.ci-metadata td { padding: 1px 10px 1px 0; }
+.ci-metadata td:last-child { font-family: var(--mono); color: var(--inkc); }
+.ci-metadata td.column-header { font-family: var(--kfont); color: #8a93a2; }
+.ci-metadata code { font-family: var(--mono); }
+.ci-metadata a { color: var(--ka); text-decoration: none; }
+.ci-metadata a:hover { text-decoration: underline; }
+/* filtering */
+/* container-type: the filtering box reflows on ITS OWN width, not the window's. It can be a 380px
+   side column at 1300px or a 1180px full-width row at 1000px, so every rule below that reacts to
+   crowding is a @container query — viewport breakpoints were the reason the same box read fine in
+   one frame and broke in another at a wider window. */
+.filtering-box { flex: 1; min-width: 0; background: var(--cardc); border: 1px solid var(--hair); border-radius: 12px; padding: 14px 16px; container-type: inline-size; }
+.filtering-box h2 { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--mut); }
+/* baseline, not center: the 11px FILTERING and the 12.5px ghost buttons read as one text row */
+.filtering-box-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+/* ghost buttons have no border at rest, so their TEXT is the visible edge: the -9px pulls the
+   padding back out of the flow so the last label ends on the box content edge, level with the ?
+   button and the search field below it (the button box was already flush — the ink was 10px short) */
+.filtering-box-export { display: flex; gap: 2px; flex-wrap: wrap; justify-content: flex-end; margin-right: -9px; }
+.export-btn { border: 1px solid transparent; background: none; color: var(--ki); font-size: 12.5px; font-family: var(--kfont); padding: 4px 9px; border-radius: 5px; cursor: pointer; white-space: nowrap; }
+.export-btn:hover { background: var(--kh); }
+.filter-search { width: 100%; display: flex; gap: 6px; align-items: center; }
+.filter-search input { flex: 1; background: #f2f5f9; border: 1px solid transparent; border-radius: 8px; padding: 8px 12px; font-size: 13.5px; font-family: var(--kfont); color: var(--inkc); }
+.filter-search input:focus { background: #fff; border-color: var(--ka); outline: none; box-shadow: 0 0 0 3px rgba(37,89,199,.12); }
+.search-help-toggle { border: 1px solid var(--hair); background: #fff; color: var(--mut); width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 13px; }
+.search-help-toggle:hover { background: var(--kh); }
+.filter-row { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; margin-top: 10px; }
+.happy-path-filters { display: flex; align-items: center; flex-wrap: wrap; }
+/* Every filter row is label + controls sharing one TEXT BASELINE — the .details-radio lesson
+   applied to the box. The first draft lifted the labels out of flow (absolute, top:7px) so that
+   wrapped chip lines would not slide under them — and the hand-tuned top painted DEPENDENCIES
+   2.5px below the chip text (user-caught; baselineaudit.js now guards every row). A magic top
+   can never track a baseline. So the label is a flex item again, and the CONTROLS live in their
+   own nested wrapping flex (.fltr-controls): continuation lines stay in the control column for
+   free, and a nested flex container exports its first chip's text baseline, so
+   align-items:baseline lines the label up exactly at any font, zoom or platform. */
+.status-filters, .duration-filters, .category-filters, .dependency-filters { display: flex; align-items: baseline; margin-top: 10px; }
+/* the shared label column: 92px = the old 84px min + 8px gap as ONE basis, so every row's
+   controls start on the same line (DEPENDENCIES measures 85.8px — inside 92) */
+.status-filters-label, .duration-filters-label, .category-filters-label, .dependency-filters-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #7b8494; flex: 0 0 92px; }
+.happy-path-filters-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #7b8494; margin-right: 8px; min-width: 84px; }
+.fltr-controls { display: flex; flex-wrap: wrap; align-items: baseline; flex: 1 1 0; min-width: 0; row-gap: 6px; }
+.category-filters .fltr-controls, .dependency-filters .fltr-controls { column-gap: 6px; }
+/* DURATION lives inside the filter row (markup) and pairs with STATUS whenever both runs fit
+   WHOLE — all-or-nothing: flex-wrap collects items by their full single-line width, so the run
+   either sits beside STATUS or drops whole to its own line, never mid-wraps. When paired, its
+   label reads inline; when unpaired it must rejoin the shared 92px label column, and "did it
+   wrap" is not a CSS primitive — but both runs are fixed content, so the switch is a measured
+   container threshold (see the @container rule below the segments). */
+.filter-row > .status-filters, .filter-row > .duration-filters { margin-top: 0; }
+/* status + percentile: segmented radio groups */
+.status-toggle, .percentile-btn { margin: 0 0 0 -1px; border: 1px solid #c9d1de; background: #fff; padding: 5px 11px; font-size: 12.5px; font-family: var(--kfont); color: #3c4553; cursor: pointer; border-radius: 0; }
+.status-toggle:first-of-type, .percentile-btn:first-of-type { margin-left: 0; border-radius: 6px 0 0 6px; }
+.status-toggle:last-of-type, .percentile-btn:last-of-type { border-radius: 0 6px 6px 0; }
+.status-toggle:hover, .percentile-btn:hover { background: var(--kh); }
+.status-toggle.status-active, .percentile-btn.percentile-active, .status-toggle.status-active:hover, .percentile-btn.percentile-active:hover { background: var(--ksel); color: var(--ksel-i); font-weight: 600; }
+/* the pairing threshold: STATUS column (92 + run, 351.5px) + 28px gap + inline-label DURATION
+   (490.8px) = 871px measured; pinned at 876 (headroom, and chosen so the recomposed 1400px band,
+   whose box measures 877px, pairs). Above it DURATION drops its column padding and reads its
+   label inline. Below it the complementary rule FORCES the full-width drop: without it there is
+   a ~90px band where flex still fits both runs on one line but with the column-style label — a
+   half-paired state that is exactly the "partial overflow" this design forbids (found by probing,
+   not by eye: pairprobe.js). */
+@container (min-width: 876px) {
+  .filter-row { column-gap: 28px; }
+  .filter-row .duration-filters-label { flex-basis: auto; margin-right: 8px; }
+}
+@container (max-width: 875.98px) {
+  .filter-row .duration-filters { flex-basis: 100%; }
+}
+/* ≥1351: the box keeps its seat beside the band, but the band STACKS — summary over CI/donut in
+   one left column — so the box gets a real column (877px at 1400 instead of the ~600 the old
+   three-across row left it) and the left zones fill their height instead of floating centred
+   beside a tall box. The tags row made the box tall enough that three-across read as a void
+   (user: "it looks terrible"). Same seat as today, recomposed. CSS-only: the row becomes a grid,
+   no markup change. */
+@media (min-width: 1351px) {
+  .header-row { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: start; column-gap: 26px; row-gap: 14px; }
+  .test-execution-summary { grid-column: 1; grid-row: 1; }
+  .ci-chart-group { grid-column: 1; grid-row: 2; flex-direction: row; align-items: center; justify-content: flex-start; gap: 24px; align-self: start; border-left: none; padding-left: 0; border-top: 1px solid var(--hair2); padding-top: 14px; }
+  .filtering-box { grid-column: 2; grid-row: 1 / 3; }
+}
+/* the filtering box leaves the header row before it gets squeezed. The number is measured against
+   the REAL header content, not a guess: the summary table and the CI/donut group take a fixed
+   ~666px, so below ~1350px the box drops under 520px of content and can no longer hold a whole
+   segmented run with its label column. Below that it takes the full page width on its own row and
+   the summary / CI / donut keep the row above. (The first draft of this said 1180 — measured
+   against a hand-written summary box 100px narrower than the real one, which is how a 1300px
+   laptop ended up with a 385px filtering column and a 728px-tall header band.) */
+@media (max-width: 1350px) {
+  .header-row { flex-wrap: wrap; }
+  .filtering-box { flex-basis: 100%; }
+  /* once the box takes its own row the other two zones must not huddle at the left with 550px of
+     void beside them — that reads as the box having fallen out of the row rather than as a layout.
+     The CI zone unstacks (the donut has room beside its numbers now) so the row above is summary
+     at one end, run status at the other. */
+  .ci-chart-group { flex-direction: row; align-items: center; gap: 24px; }
+}
+/* the right anchor only holds while the two zones actually share a row: they need 376 + 26 + 412
+   plus the band chrome, so ~892px. Below that the anchor would leave the same void one row down. */
+@media (min-width: 900px) and (max-width: 1350px) {
+  .ci-chart-group { margin-left: auto; }
+}
+/* 769-899: the CI zone takes its own full-width row under the summary — details at one end, donut
+   at the other — and its zone hairline turns from a left edge into a top one, since it is no longer
+   beside anything */
+@media (min-width: 769px) and (max-width: 899px) {
+  .ci-chart-group { flex-basis: 100%; justify-content: space-between; border-left: none; padding-left: 0; border-top: 1px solid var(--hair2); padding-top: 12px; }
+}
+/* when a run can no longer fit the control column WHOLE, the segments degrade into individual
+   pills — a mid-wrap segment reads as broken; wrapped pills read as intended. Keyed to the box,
+   not the window: the box is narrow on a phone AND in a 1300px-wide side column. One threshold
+   for both runs, set by the wider one (percentiles, ~520): the status run alone would survive to
+   ~430, but two filter runs in two different grammars inside one box reads worse than one run
+   degrading a little early. */
+@container (max-width: 520px) {
+  /* equal-width pill GRIDS, not wrapped pills: free-wrapped pills of five different widths land
+     as a ragged 3+2 with a void beside the last row, which reads as debris. A 2-column grid makes
+     every pill the same width and every edge land on a column line; Custom spans the last row so
+     no cell is left empty. The groups stretch to the full box width so the grid owns its edges. */
+  .status-filters > .fltr-controls, .duration-filters > .fltr-controls { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px; }
+  .status-filters, .duration-filters { flex-basis: 100%; }
+  .status-toggle, .percentile-btn { margin: 0; border-radius: 6px; text-align: center; }
+  .percentile-btn:last-of-type { grid-column: 1 / -1; }
+}
+/* happy-path + category: dot chips */
+/* chip spacing comes from the row gap, NOT a trailing margin-right on each chip: a trailing
+   margin leaves the LAST chip 6px short of the column edge, which shows wherever a group is
+   right-aligned — that is why "Happy Paths Only" never lined up with the ? button above it. */
+.happy-path-filters { column-gap: 6px; }
+/* ONE control height through the box (user-caught: chips were 26px, mode pills 25px, beside 28px
+   segmented radios): every boxed filter control is 28px = 1px border + 5px padding + 16px content.
+   Chips reach it naturally (12.5px text, 16px line); the 11px mode pills pin line-height:16px and
+   split their 10px of padding 6 top / 4 bottom, because on the SHARED BASELINE a smaller font has
+   less ascent — equal padding would hang the box ~1px low. Split measured, not styled: heightprobe.js
+   asserts every control at 28px AND flush (top+bottom ≤0.35px) with its row-mates. */
+.happy-path-toggle, .category-toggle, .dependency-toggle { border: 1px solid #c9d1de; border-radius: 999px; padding: 5px 8px 5px 23px; position: relative; background: #fff; color: #5a6270; font-size: 12.5px; font-family: var(--kfont); cursor: pointer; }
+.happy-path-toggle::before, .category-toggle::before, .dependency-toggle::before { content: ""; position: absolute; left: 8px; top: 50%; width: 8px; height: 8px; margin-top: -3.65px; border-radius: 50%; border: 1.5px solid #a7aeb9; box-sizing: border-box; }
+.happy-path-toggle:hover, .category-toggle:hover, .dependency-toggle:hover { background: var(--kh); }
+.happy-path-toggle.happy-path-active, .category-toggle.category-active, .dependency-toggle.dependency-active { background: var(--ksel); border-color: #b3c8ef; color: var(--ksel-i); }
+.happy-path-toggle.happy-path-active::before, .category-toggle.category-active::before, .dependency-toggle.dependency-active::before { background: var(--ka); border-color: var(--ka); }
+/* the AND/OR mode toggle is a mode switch, not a filter — a compact bordered button, visually distinct from the dot chips */
+.dep-mode-toggle { border: 1px solid #c9d1de; border-radius: 6px; background: #f2f5f9; padding: 6px 9px 4px; line-height: 16px; margin-right: 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: #5a6270; font-family: var(--kfont); cursor: pointer; }
+.dep-mode-toggle:hover { background: var(--kh); }
+/* header tri-state rows (Tags AND Dependencies — one component, per the decision): counts, the
+   additive exclude state, the italic pseudo-chips, and the ANY switch sitting quiet while fewer
+   than two names are required. .fcnt/.tagf-* are deliberately chip-class-agnostic so the same
+   rules serve .category-toggle and .dependency-toggle alike. */
+/* counts hover-revealed (opacity, not display:none — space reserved, no width jump). Fixed
+   3-digit slot + mirrored insets: dot zone 8+7 left, count zone 7+8 right — every chip reserves
+   the same space and reads balanced with the number hidden. */
+.fcnt { display: inline-block; vertical-align: baseline; font-family: var(--mono); font-size: 11px; color: #98a1ad; margin-left: 7px; width: 3ch; text-align: left; opacity: 0; transition: opacity .12s; }
+.category-toggle:hover .fcnt, .dependency-toggle:hover .fcnt { opacity: 1; }
+.category-toggle.tagf-out, .dependency-toggle.tagf-out, .category-toggle.tagf-out:hover, .dependency-toggle.tagf-out:hover { background: #fbf1f0; border-color: #e6c9c5; color: #8a4a43; text-decoration: line-through; text-decoration-thickness: 1px; }
+.category-toggle.tagf-out::before, .dependency-toggle.tagf-out::before { background: var(--bad2); border-color: var(--bad2); }
+.category-toggle.tagf-out::after, .dependency-toggle.tagf-out::after { content: ""; position: absolute; left: 9.75px; top: 50%; width: 4.5px; height: 1.5px; margin-top: -0.75px; background: #fff; border-radius: 1px; }
+.tagf-none { font-style: italic; }
+.tag-mode-hdr { color: #a7aeb9; background: #f7f9fc; border-color: #e0e5ee; }
+/* sticky toolbar strip (T2): ghost actions left, a divider before the Details zone */
+.toolbar-row { position: sticky; top: 0; z-index: 40; background: #f8fafd; border: 1px solid #e6eaf2; border-radius: 8px; padding: 6px 14px; margin: 14px 0; box-shadow: 0 2px 8px rgba(20,30,60,.06); }
+.toolbar-right { border-left: 1px solid #dde3ee; padding-left: 14px; }
+/* one divider per boundary: the zone divider above makes the details-radio leading divider redundant here */
+.toolbar-row .details-radio { margin-left: 0; padding-left: 0; border-left: none; }
+.toolbar-row .collapse-expand-all, .toolbar-row .timeline-toggle { border-color: transparent; background: none; }
+.toolbar-row .collapse-expand-all:hover, .toolbar-row .timeline-toggle:hover { background: var(--kh); }
+.toolbar-row .timeline-toggle.timeline-toggle-active, .toolbar-row .timeline-toggle.timeline-toggle-active:hover { background: var(--ksel); color: var(--ksel-i); font-weight: 600; }
+/* feature + scenario cards */
+.feature { background: var(--cardc); border: 1px solid var(--hair); border-radius: 12px; padding: 0; margin: 14px 0; overflow: hidden; }
+.feature > summary { background: #f8fafd; padding: 11px 16px; border-bottom: 1px solid var(--hair2); }
+.feature:not([open]) > summary { border-bottom: none; }
+.scenario { background: none; border-radius: 0; padding: 12px 16px; margin: 0; border-bottom: 1px solid var(--hair2); }
+.scenario:last-child { border-bottom: none; }
+.duration-badge { font-family: var(--mono); font-size: 11.5px; background: none; padding: 0; margin-left: 10px; }
+.duration-fast { background: none; color: var(--ok2); }
+.duration-moderate { background: none; color: var(--warn2); }
+.duration-slow { background: none; color: var(--bad2); }
+span.label { background: #f2f5f9; color: var(--mut); border: 1px solid var(--hair); padding: 1px 7px; border-radius: 4px; font-size: 10.5px; margin-left: 8px; }
+/* a float cannot baseline-align, so the margin is measured, not styled: 4px puts the 11px mono
+   baseline exactly on the 13.5px title's (baselineaudit.js reported the old 3px as 1.00px high
+   and guards this number — re-measure there if the title font ever changes) */
+.endpoint { font-size: 11px; font-style: normal; font-family: var(--mono); color: var(--mut); float: right; margin-top: 4px; }
+/* steps */
+.step { margin: 5px 0; line-height: 1.55; font-size: 13.5px; }
+/* the tick shares the keywords baseline (user-measured: -2px painted the ✓ 2px below GIVEN) */
+.step-status { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; font-weight: bold; margin: 0 7px 0 2px; vertical-align: baseline; }
+.step-status.passed { background: var(--ok2s); color: var(--ok2); }
+.step-status.failed { background: var(--bad2s); color: var(--bad2); }
+.step-keyword { display: inline-block; min-width: 44px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--mut); }
+.step-text { color: var(--inkc); }
+.step-duration { font-family: var(--mono); font-size: 11px; color: #98a1ad; }
+.failed { color: var(--bad2); }
+.failure-result { padding: 12px 14px; border: 1px solid #efc7c2; border-radius: 8px; color: #7c2a24; background: var(--bad2s); margin-top: 8px; }
+.failure-result pre { overflow-x: auto; margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.5; }
+/* diagrams box */
+.example-diagrams { border-radius: 10px; border: 1px solid var(--hair); margin-top: 12px; }
+.example-diagrams > summary { background: #fff; padding: 10px 14px; border-radius: 10px; }
+/* W3 split rows (decided): chromeless tabs bar, the options bar keeps the strip */
+.diagram-toggle-tabs { background: none; border: none; padding-top: 0; padding-bottom: 0; margin-bottom: 0; }
+.diagram-options-bar { margin-top: 4px; }
+.diagram-options-bar .details-radio { margin-left: 0; padding-left: 0; border-left: none; }
+/* Toggle group anchors right in the options bar; Detail + Format anchor left (desktop only — the M panels stack) */
+@media (min-width: 769px) { .diagram-options-bar .diagram-flags { margin-left: auto; } }
+/* FABs */
+.jump-to-failure { position: fixed; bottom: 18px; right: 18px; padding: 8px 16px; background: var(--bad2); color: white; border: none; border-radius: 999px; cursor: pointer; font-size: 13px; font-family: var(--kfont); box-shadow: 0 4px 12px rgba(120,30,25,.25); z-index: 1000; }
+@media (max-width: 768px) { .header-row { flex-direction: column; gap: 12px; align-items: stretch; } .ci-chart-group { flex-direction: column; align-self: stretch; align-items: stretch; border-left: none; padding-left: 0; border-top: 1px solid var(--hair2); padding-top: 12px; } .ci-metadata { border-left: none; padding-left: 0; } .ci-metadata td:last-child { overflow-wrap: anywhere; } .summary-chart { align-self: center; } .toolbar-right { border-left: none; padding-left: 0; } }
+/* the real summary is four columns wide (two label/value pairs side by side) and simply does not fit
+   a phone: every second label wraps to two lines. Below 600px the table becomes a two-column grid
+   (`tr { display: contents }` flattens the cells into it), so each pair stays intact on one line and
+   the list just runs longer. `order` then regroups the flattened cells — every Execution pair, then
+   every Content pair, each still under its own heading — so the two groups do not interleave. No
+   markup touched. Today's page just wraps the labels instead: see the Current tab at 400px. */
+@media (max-width: 600px) {
+  .test-execution-summary table { display: grid; grid-template-columns: max-content 1fr; column-gap: 12px; row-gap: 1px; }
+  .test-execution-summary tbody, .test-execution-summary tr { display: contents; }
+  .test-execution-summary td:nth-child(3), .test-execution-summary td:nth-child(4), .test-execution-summary tr:first-child td:nth-child(2) { order: 1; }
+  .test-execution-summary td.column-header { grid-column: 1 / -1; margin-top: 10px; }
+  .test-execution-summary tr:first-child td:first-child { margin-top: 0; }
+}
+/* the fixed label column is worth 92px of the control column; below ~430px of box that is too much
+   to spend, so each label takes its own line above its controls. Container-keyed for the same
+   reason as the rest: a 380px side column at 1300px needs this exactly as a phone does. */
+@container (max-width: 430px) {
+  .status-filters, .duration-filters, .category-filters, .dependency-filters { flex-wrap: wrap; }
+  .status-filters-label, .duration-filters-label, .category-filters-label, .dependency-filters-label { flex-basis: 100%; margin: 0 0 2px; }
+  /* the controls must claim their own full line too: with basis 0 they LINE-BREAK onto the
+     label's line (flex places items by hypothetical size, and 100% + 0 fits), collapse to zero
+     width, and every chip spills out of the box — sweep-caught at 400px */
+  .fltr-controls { flex-basis: 100%; }
+}
+/* The three ghost actions cannot share the header line once the box is under ~430px: right-aligned
+   wrapping leaves a ragged block with the last button orphaned on its own line, aligned to nothing.
+   The header then takes the same two-column action grid the toolbar uses — Clear All rides the
+   FILTERING line (it resets the box that label names), the two exports form an equal pair beneath,
+   and every label lands on a column edge so the cluster reads as one block, not three fragments.
+   430px = the label (56) + the cluster (340) + gaps; measured, not chosen. */
+@container (max-width: 430px) {
+  /* minmax(0,1fr) rather than 1fr: grid items keep min-width:auto, so plain 1fr columns refuse
+     to shrink under their content and push the box sideways on a narrow phone */
+  .filtering-box-header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: baseline; column-gap: 8px; row-gap: 4px; }
+  .filtering-box-export { display: contents; }
+  .filtering-box-export .export-btn:nth-child(1) { justify-self: end; margin-right: -9px; }
+  .filtering-box-export .export-btn:nth-child(2) { justify-self: start; margin-left: -9px; }
+  .filtering-box-export .export-btn:nth-child(3) { justify-self: end; margin-right: -9px; }
+  /* the full label cannot fit a half-width cell at 360px without wrapping inside the button
+     (F11 again) — and the FILTERING box it sits in already supplies the word */
+  .wide-only { display: none; }
+}
+/* On a phone the report top bar is the SAME kind of surface as the scenario one, so it takes the
+   same M2 settings-sheet grammar instead of a wrapped desktop row: labelled zones separated by
+   hairlines, every control full width. Without this the four actions squeeze until their labels
+   wrap inside the buttons (F11 all over again) and the option cluster breaks into ragged pieces. */
+@media (max-width: 768px) {
+  .toolbar-row { flex-direction: column; align-items: stretch; gap: 0; padding: 0; }
+  /* actions keep two per row — they are actions, not options, and stacking all four is needlessly tall */
+  .toolbar-left { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 10px 14px; border-bottom: 1px solid #e8ecf4; }
+  .toolbar-left > button { width: 100%; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toolbar-right { display: flex; flex-direction: column; align-items: stretch; gap: 0; row-gap: 0; padding: 0 14px 10px; width: auto; }
+  /* border-left:none matters — the dynamic Format|Toggle divider is drawn by `.toolbar-right
+     .diagram-flags` (0,2,0), which the plain `.diagram-flags` reset in the skin cannot outrank */
+  .toolbar-right .details-radio, .toolbar-right .diagram-flags { display: flex; flex-wrap: wrap; align-items: center; padding: 10px 0; border-left: none; border-bottom: 1px solid #e8ecf4; margin: 0; row-gap: 6px; }
+  .toolbar-right .details-radio { padding-left: 0; border-left: none; }
+  .toolbar-right .details-radio-label { display: block; flex-basis: 100%; margin: 0 0 4px; }
+  .toolbar-right .details-radio > .details-radio-btn { flex: 1; text-align: center; }
+  .toolbar-right .details-radio .truncate-lines-select { flex-basis: 100%; margin: 4px 0 0; }
+  .toolbar-right .diagram-format { display: flex; flex-direction: column; align-items: stretch; padding: 10px 0; margin: 0; border-bottom: 1px solid #e8ecf4; }
+  .toolbar-right .diagram-format::before { content: "Format"; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #7b8494; margin-bottom: 8px; }
+  .toolbar-right .diagram-format .note-format-select { margin: 0; }
+  .toolbar-right .diagram-flags::before { content: "Toggle"; flex-basis: 100%; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #7b8494; margin-bottom: 4px; }
+  .toolbar-right .diagram-flags { border-bottom: none; }
+  .toolbar-right .diagram-flags .details-radio-btn.toggle-btn { margin: 0 0 6px; width: 100%; text-align: left; flex: none; position: relative; padding-left: 26px; }
+  .toolbar-right .diagram-flags .toggle-btn:last-child { margin-bottom: 0; }
+  .toolbar-right .diagram-flags .toggle-btn::before { content: ""; position: absolute; left: 9px; top: 50%; width: 9px; height: 9px; margin-top: -4.12px; border-radius: 50%; border: 1.5px solid #a7aeb9; box-sizing: border-box; }
+  .toolbar-right .diagram-flags .toggle-btn.details-active::before { background: var(--ka); border-color: var(--ka); }
+}
+.feature > .h3 { display: block; background: #f8fafd; padding: 11px 16px; border-bottom: 1px solid var(--hair2); font-size: 15px; font-weight: 650; }
+.scenario > .h3 { display: block; margin: 0 0 6px; }
+body { padding-bottom: 18px; } /* no FAB in the scenario demos */
+@media (max-width: 768px) {
+  .diagram-options-bar { flex-direction: column; align-items: stretch; gap: 0; row-gap: 0; margin: 6px 0 12px; padding: 0 14px 12px; background: #f8fafd; border-top: 1px solid #e6eaf2; border-bottom: 1px solid #e6eaf2; }
+  .details-radio, .diagram-flags { display: flex; flex-wrap: wrap; align-items: center; padding: 10px 0; border-bottom: 1px solid #e8ecf4; margin: 0; row-gap: 6px; }
+  .diagram-flags::before { content: "Toggle"; flex-basis: 100%; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #6a7280; margin-bottom: 4px; }
+  .details-radio { padding-left: 0; border-left: none; }
+  .details-radio-label { display: block; flex-basis: 100%; margin: 0 0 4px; }
+  .details-radio > .details-radio-btn { flex: 1; text-align: center; }
+  .details-radio .truncate-lines-select { flex-basis: 100%; margin: 4px 0 0; }
+  .diagram-flags .details-radio-btn.toggle-btn { margin: 0; width: 100%; text-align: left; flex: none; position: relative; padding-left: 26px; }
+  .diagram-flags .toggle-btn::before { content: ""; position: absolute; left: 9px; top: 50%; width: 9px; height: 9px; margin-top: -4.12px; border-radius: 50%; border: 1.5px solid #a7aeb9; box-sizing: border-box; }
+  .diagram-flags .toggle-btn.details-active::before { background: #2559c7; border-color: #2559c7; }
+  .diagram-format { display: flex; flex-direction: column; align-items: stretch; padding: 10px 0; margin: 0; border-bottom: 1px solid #e8ecf4; }
+  .diagram-format::before { content: "Format"; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #6a7280; margin-bottom: 8px; }
+  .diagram-format .note-format-select { margin: 0; }
+  .diagram-flags { border-bottom: none; }
+}

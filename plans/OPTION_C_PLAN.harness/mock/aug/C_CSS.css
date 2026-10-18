@@ -1,0 +1,105 @@
+:root { --ka: #2559c7; --kb: #d7dde8; --ki: #4a5361; --km: #6a7280; --kh: #edf1f8; --ksel: #dce8fb; --ksel-i: #1d4fb0; --kfont: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; --gear-shift: -2.5px; }
+/* baseline: the 13px tabs/controls and the 11px span-count pill are one text row (matched-box
+   controls land identically under baseline or center; the pill only aligns under baseline) */
+.diagram-toggle { margin: 0 0 10px; padding: 5px 16px; display: flex; align-items: baseline; flex-wrap: wrap; row-gap: 6px; width: 100%; box-sizing: border-box; background: #f8fafd; border-top: 1px solid #e6eaf2; border-bottom: 1px solid #e6eaf2; font-family: var(--kfont); }
+.diagram-toggle button, .diagram-toggle select { user-select: none; }
+/* text tabs */
+.diagram-toggle-btn { margin: 0; padding: 6px 11px; border: none; background: none; font-size: 13px; line-height: 1.25; font-weight: 500; font-family: var(--kfont); color: #5a6472; cursor: pointer; border-radius: 5px; transition: background .12s, color .12s; }
+.diagram-toggle-btn:hover { background: var(--kh); color: #242b35; }
+.diagram-toggle-active, .diagram-toggle-active:hover { background: none; color: var(--ka); box-shadow: inset 0 -2px 0 var(--ka); border-radius: 5px 5px 0 0; font-weight: 600; }
+.diagram-toggle-active:hover { background: var(--kh); }
+.diagram-toggle-spacer { flex: 1; }
+/* divided details zone */
+/* align-items: BASELINE, not center. The 11px label and the 13px controls have different line
+   boxes, so centring them puts their baselines ~0.8px apart — and a sub-pixel `top` nudge cannot
+   repair that, because Chrome snaps a painted baseline to a whole device pixel: the label rendered
+   a full pixel high at 100% zoom while the nudge measured as "fixed". Baseline alignment makes the
+   browser do the arithmetic, at any font size, zoom or platform. */
+.details-radio { display: inline-flex; align-items: baseline; gap: 4px; margin-left: 16px; padding-left: 16px; border-left: 1px solid #dde3ee; }
+/* zone labels are deliberately a step LIGHTER and more letterspaced than any clickable ink:
+   in C, small caps + pale grey + default cursor = label; sentence case + darker ink = clickable */
+/* 11px small caps box-centred beside 13px buttons lands its baseline ~0.4px above theirs; a row
+   of text reads by its shared baseline, so the label is nudged down to sit on the buttons' one.
+   (B does NOT do this: there the label is a bordered cell whose BOX must align with the button
+   boxes, so its box stays put.) */
+/* NO nudge: the container aligns baselines exactly (see .details-radio) and that is the whole fix.
+   An optical 1px shift was tried here on the theory that all-caps 11px reads high against 13px mixed
+   case — it read a clear 2px low instead, because a baseline offset is far more legible than a
+   mass-centre one. Two things learned the hard way: Chrome snaps a painted text baseline to a whole
+   device pixel, so a sub-pixel `top` on this element moves NOTHING (0, 0.4 and 0.5px all paint the
+   same row — which is how the earlier 0.4px "correction" measured as fixed while looking untouched);
+   and sub-pixel PADDING is different, because it changes layout and can push a baseline across a snap
+   boundary (B’s label cell relies on exactly that). Verify at the real device scale, never from
+   computed styles alone. */
+/* decided 2026-08-31: C drops the DETAIL label at desktop — the segmented control reads without
+   it. The span stays in the DOM (markup shared with B, which keeps its label cell) and the mobile
+   sheets re-show it as their zone heading. */
+.details-radio-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #7b8494; margin-right: 6px; display: none; }
+.details-radio-btn { margin: 0; border: 1px solid transparent; background: none; padding: 5px 10px; border-radius: 5px; font-size: 13px; line-height: 1.25; font-family: var(--kfont); color: var(--ki); cursor: pointer; transition: background .12s, color .12s; }
+.details-radio-btn:hover { background: var(--kh); }
+.details-radio-btn.details-active, .details-radio-btn.details-active:hover { background: var(--ksel); color: var(--ksel-i); font-weight: 600; }
+.toggle-btn { margin-left: 8px; position: relative; padding-left: 24px; }
+/* optically centred on the cap band, not the box — see the same note in the B skin */
+.details-radio-btn.toggle-btn::before { content: ""; position: absolute; left: 8px; top: 50%; width: 9px; height: 9px; margin-top: -4.12px; border-radius: 50%; border: 1.5px solid #a7aeb9; box-sizing: border-box; transition: background .12s, border-color .12s; }
+.details-radio-btn.toggle-btn.details-active { background: var(--ksel); color: var(--ksel-i); }
+.details-radio-btn.toggle-btn.details-active::before { background: var(--ka); border-color: var(--ka); }
+/* Format and Toggle zones — the divider is DYNAMIC: drawn only where the groups sit adjacent
+   (inline cluster, report top bar, squeezed options bar), never across empty right-aligned space */
+.diagram-format { display: inline-flex; align-items: center; margin-left: 10px; }
+.diagram-format .note-format-select { margin-left: 0; }
+.diagram-flags { display: inline-flex; align-items: center; flex-wrap: wrap; row-gap: 6px; margin-left: 14px; }
+.diagram-flags > .toggle-btn:first-child { margin-left: 0; }
+.diagram-toggle[data-layout="inline"] .diagram-flags, .toolbar-right .diagram-flags { margin-left: 14px; padding-left: 14px; border-left: 1px solid #dde3ee; }
+@media (min-width: 769px) and (max-width: 940px) { .diagram-options-bar .diagram-flags { padding-left: 14px; border-left: 1px solid #dde3ee; } }
+/* pending (diagram re-render in flight): today’s setPending mechanism restyled to the C grammar.
+   Shape never changes — same sweep-underline + throb grammar as B (the chip dot stays a dot);
+   selects throb and pulse their border to the accent. */
+@keyframes kc-throb { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@keyframes kc-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@keyframes kc-borderpulse { 0%, 100% { border-color: var(--kb); } 50% { border-color: var(--ka); } }
+.details-pending { cursor: progress; }
+/* inset rail + sweeping highlight: no layout cost, so the ghost control keeps its exact box */
+.details-radio-btn.details-pending { position: relative; overflow: hidden; box-shadow: inset 0 -3px 0 rgba(37,89,199,.18); animation: kc-throb 1.1s ease-in-out 0.2s infinite; }
+.details-radio-btn.details-pending::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--ka) 30%, var(--ka) 70%, transparent); transform: translateX(-100%); animation: kc-sweep 1.1s linear 0.2s infinite; }
+.truncate-lines-select.details-pending, .note-format-select.details-pending { animation: kc-throb 1.1s ease-in-out 0.2s infinite, kc-borderpulse 1.1s ease-in-out 0.2s infinite; }
+/* the lines dropdown only exists while Truncate is the active mode */
+.details-radio:not(:has(> .details-radio-btn[data-state="truncated"].details-active)) .truncate-lines-select,
+.details-radio:not(:has(> .details-radio-btn[data-state="truncated"].details-active)) .truncate-lines-label { display: none; }
+/* selects — the box must match the buttons EXACTLY (same line-height, same vertical padding, same
+   border), not merely look similar. At 4px padding and line-height:normal the select was 27px against
+   the buttons’ 28.25px, so align-items:center offset it by 0.625px and its text rasterized one device
+   pixel lower than the button labels at 1x. Identical boxes rasterize identically at every zoom. */
+.truncate-lines-select, .note-format-select { appearance: none; -webkit-appearance: none; font-size: 13px; line-height: 1.25; font-family: var(--kfont); color: var(--ki); padding: 5px 20px 5px 8px; border: 1px solid var(--kb); border-radius: 5px; margin: 0 0 0 6px; cursor: pointer;
+  background: #fff url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%236a7280'/%3E%3C/svg%3E") no-repeat right 6px center; }
+.note-format-select { margin-left: 10px; }
+.truncate-lines-label { font-size: 12px; color: var(--km); margin-left: 5px; }
+.span-count-warning { font-size: 11px; font-style: normal; color: #8a5417; background: #fbf3e7; border: 1px solid #ecd3ae; border-radius: 999px; padding: 2px 9px; margin-left: 10px; }
+/* report toolbar */
+.collapse-expand-all, .timeline-toggle, .scenario-diagram-controls-toggle { font-size: 13px; line-height: 1.25; font-family: var(--kfont); color: var(--ki); padding: 5px 11px; border: 1px solid var(--kb); border-radius: 5px; background: #fff; cursor: pointer; transition: background .12s; }
+.collapse-expand-all:hover, .timeline-toggle:hover, .scenario-diagram-controls-toggle:hover { background: var(--kh); }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--ka); outline-offset: 1px; }
+/* inline mode drops the strip chrome — and its horizontal padding, so its right edge lines up with the options strip content below */
+.diagram-toggle[data-layout="inline"] { float: right; width: auto; margin-right: 1em; margin-bottom: 0; position: relative; z-index: 1; background: none; border: none; padding: 0; }
+.diagram-toggle[data-layout="inline"] .diagram-toggle-spacer { display: none; }
+.diagram-toggle[data-layout="inline"] + * { clear: right; }
+.scenario-diagram-controls-toggle { display: none; font-size: 12px; color: var(--km); }
+@media (max-width: 768px) {
+  .details-radio { flex-wrap: wrap; margin-left: 0; padding-left: 0; border-left: none; }
+  .toggle-btn { margin-left: 0; }
+  .diagram-format { margin-left: 0; }
+  /* every divider context must be named here — see the note in the B skin */
+  .diagram-flags, .diagram-options-bar .diagram-flags, .diagram-toggle[data-layout="inline"] .diagram-flags, .toolbar-right .diagram-flags { margin-left: 0; padding-left: 0; border-left: none; }
+  .diagram-toggle { flex-wrap: wrap; gap: 4px; }
+  /* equal-width mobile tabs can wrap their label to two lines; a one-line neighbour then centres
+     against the stack (baseline would hang it off the first line — worse). Baseline alignment is
+     for single-line rows; baselineaudit.js exempts multi-line members for the same reason. */
+  .diagram-toggle-tabs { align-items: center; }
+  .diagram-toggle-tabs .diagram-toggle-btn { flex: 1 1 0; min-width: 0; text-align: center; }
+  .diagram-toggle-spacer { display: none; }
+  .scenario-diagram-controls { display: none; }
+  .scenario-diagram-controls-toggle { display: block; margin: 0 1em; }
+}
+@media (max-width: 480px) {
+  .truncate-lines-label { display: none; }
+  .diagram-toggle-btn, .details-radio-btn, .truncate-lines-select, .note-format-select { min-height: 34px; }
+}

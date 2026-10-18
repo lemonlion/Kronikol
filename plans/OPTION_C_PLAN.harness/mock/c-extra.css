@@ -1,0 +1,209 @@
+/* Rules the August mock never needed: it reproduced the report's markup but not today's stylesheet,
+   and the report has grown surfaces since (features summary, timeline, parameterized tables,
+   failure diff, warm-up note, note-width select). Everything here reads tokens. */
+[hidden] { display: none !important; }
+html { background: var(--kron-ground); }
+body { overflow-wrap: anywhere; padding-inline: 18px; }
+@media (max-width: 480px) { body { padding-inline: 16px; } }
+
+/* preview label (not part of the design) */
+.kron-preview-note { font: 12px/1.5 var(--kron-font); color: var(--kron-muted); background: var(--kron-card); border: 1px dashed var(--kron-control-border); border-radius: 8px; padding: 7px 12px; margin: 0 0 14px; }
+.kron-preview-note b { color: var(--kron-ink-soft); font-weight: 600; }
+
+/* page title */
+h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; color: var(--kron-ink); margin: 4px 0 14px; }
+
+/* every nested section sets its own rhythm; today's blanket details margin is cancelled */
+details { margin: 0; }
+
+/* features summary: a hairline card above the band */
+.features-summary-details { background: var(--kron-card); border: 1px solid var(--kron-hairline); border-radius: 12px; margin: 0 0 14px; padding: 0; }
+.features-summary-table-wrapper { background: none; border-radius: 0; }
+.features-summary-details > summary { padding: 10px 16px; font-size: 13.5px; font-weight: 600; color: var(--kron-ink); }
+.features-summary-details[open] > summary { border-bottom: 1px solid var(--kron-hairline-soft); }
+.features-summary-table-wrapper { overflow-x: auto; padding: 4px 8px 10px; }
+.feature-summary-table { border-collapse: collapse; font-size: 12.5px; color: var(--kron-ink-soft); }
+.feature-summary-table th { font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-label-soft); text-align: left; padding: 6px 12px; border-bottom: 1px solid var(--kron-hairline); cursor: pointer; background: none; }
+.feature-summary-table td { padding: 5px 12px; border-bottom: 1px solid var(--kron-hairline-soft); vertical-align: baseline; font-variant-numeric: tabular-nums; }
+.feature-summary-table tr:last-child td { border-bottom: none; }
+.feature-summary-table td:not(:first-child) { font-family: var(--kron-mono); font-size: 12px; }
+.feature-summary-table a { color: var(--kron-ink); text-decoration: none; }
+.feature-summary-table a:hover { color: var(--kron-accent); text-decoration: underline; }
+
+/* header band: the zones lose today's grey boxes */
+.test-execution-summary, .ci-metadata { background: none; border-radius: 0; padding: 0; overflow: visible; }
+.test-execution-summary table td { padding: 1px 14px 1px 0; }
+.ci-metadata { max-width: none; }
+/* the left column hugs its content; the tall filtering box beside it takes the slack */
+@media (min-width: 1351px) { .header-row { grid-template-rows: auto 1fr; } }
+.filter-search { background: none; padding: 0; border-radius: 0; }
+
+/* filtering: the rows set their rhythm with margins, so the column gap goes */
+.filters { gap: 0; }
+.filter-row { margin-top: 12px; }
+.search-help-panel { margin-top: 10px; background: var(--kron-strip); border: 1px solid var(--kron-strip-edge); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; color: var(--kron-ink-soft); }
+.search-help-table { border-collapse: collapse; }
+.search-help-table td { padding: 3px 12px 3px 0; vertical-align: baseline; }
+.search-help-table code, .search-help-note code { font-family: var(--kron-mono); font-size: 11.5px; background: var(--kron-card); border: 1px solid var(--kron-hairline); border-radius: 4px; padding: 0 4px; }
+.mobile-filter-toggle { font: 600 11px var(--kron-font); letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-label); }
+.duration-filters-unit { font-size: 12px; color: var(--kron-muted); margin-left: 6px; }
+#custom-duration-wrap { display: inline-flex; align-items: baseline; margin-left: 8px; }
+#duration-threshold { width: 72px; font: 12.5px var(--kron-font); padding: 5px 8px; border: 1px solid var(--kron-control-border); border-radius: 6px; background: var(--kron-card); color: var(--kron-ink); }
+.truncate-lines-label { display: none; }
+
+/* the Tags row is the category row's component */
+.tag-filters { display: flex; align-items: baseline; margin-top: 10px; }
+.tag-filters-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-label); flex: 0 0 92px; }
+.tag-filters .fltr-controls { column-gap: 6px; }
+.tag-toggle { border: 1px solid var(--kron-control-border); border-radius: 999px; padding: 5px 8px 5px 23px; position: relative; background: var(--kron-card); color: var(--kron-ink-quiet); font-size: 12.5px; line-height: 16px; font-family: var(--kron-font); cursor: pointer; }
+.category-toggle, .dependency-toggle { line-height: 16px; }
+.tag-toggle::before { content: ""; position: absolute; left: 8px; top: 50%; width: 8px; height: 8px; margin-top: -3.65px; border-radius: 50%; border: 1.5px solid var(--kron-dot); box-sizing: border-box; }
+.tag-toggle:hover { background: var(--kron-hover); }
+.tag-toggle.tag-active { background: var(--kron-selected); border-color: var(--kron-selected-edge); color: var(--kron-selected-ink); }
+.tag-toggle.tag-active::before { background: var(--kron-accent); border-color: var(--kron-accent); }
+.tag-toggle:hover .fcnt { opacity: 1; }
+.tag-toggle.tagf-out, .tag-toggle.tagf-out:hover { background: var(--kron-exclude-soft); border-color: var(--kron-exclude-edge); color: var(--kron-exclude-ink); text-decoration: line-through; text-decoration-thickness: 1px; }
+.tag-toggle.tagf-out::before { background: var(--kron-fail); border-color: var(--kron-fail); }
+.tag-toggle.tagf-out::after { content: ""; position: absolute; left: 9.75px; top: 50%; width: 4.5px; height: 1.5px; margin-top: -0.75px; background: var(--kron-on-solid); border-radius: 1px; }
+.tag-mode-toggle { border: 1px solid var(--kron-control-border); border-radius: 6px; background: var(--kron-field); padding: 6px 9px 4px; line-height: 16px; margin-right: 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: var(--kron-ink-quiet); font-family: var(--kron-font); cursor: pointer; }
+.tag-mode-toggle:hover { background: var(--kron-hover); }
+.tag-mode-toggle.tag-mode-hdr { color: var(--kron-dot); background: var(--kron-quiet); border-color: var(--kron-quiet-edge); }
+.fcnt { width: var(--kron-count-slot); }
+.dependency-toggle:focus-visible, .tag-toggle:focus-visible, .status-toggle:focus-visible, .percentile-btn:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+@container (max-width: 430px) {
+  .tag-filters { flex-wrap: wrap; }
+  .tag-filters-label { flex-basis: 100%; margin: 0 0 2px; }
+}
+
+/* report bar: the section tabs, then the Features tab's tools (see the round-2 block at the end) */
+.kron-c .toolbar-right { border-left: none; position: relative; }
+
+/* zone dividers inside a bar are drawn only where two zones sit side by side (c-dom.js measures it
+   and sets .zone-adjacent), as a pseudo-element in the gap so drawing one never moves anything */
+.kron-c .diagram-flags { border-left: none; padding-left: 0; position: relative; }
+.diagram-toggle > .details-radio:first-child { margin-left: 0; padding-left: 0; border-left: none; }
+@media (min-width: 769px) {
+  .diagram-options-bar { column-gap: 14px; }
+  .diagram-options-bar .diagram-format, .toolbar-right .diagram-format, .toolbar-right .diagram-flags { margin-left: 0; }
+  .kron-c .diagram-flags.zone-adjacent::after { content: ""; position: absolute; left: -8px; top: 4px; bottom: 4px; border-left: 1px solid var(--kron-divider); }
+}
+
+/* DURATION pairs with STATUS only when both runs fit whole; c-dom.js measures the runs on the real
+   labels and sets .pair-fits (the August container thresholds were measured on other labels) */
+.filter-row:not(.pair-fits) .duration-filters { flex-basis: 100%; }
+.filter-row:not(.pair-fits) .duration-filters-label { flex-basis: 92px; margin-right: 0; }
+.filter-row.pair-fits { column-gap: 28px; }
+.filter-row.pair-fits .duration-filters { flex-basis: auto; }
+.filter-row.pair-fits .duration-filters-label { flex-basis: auto; margin-right: 8px; }
+@container (max-width: 430px) {
+  .filter-row:not(.pair-fits) .duration-filters-label { flex-basis: 100%; }
+}
+
+/* scenario timeline and component diagram: panels in the page's card grammar */
+.scenario-timeline, .component-diagram-section { background: var(--kron-card); border: 1px solid var(--kron-hairline); border-radius: 12px; padding: 12px 16px; margin: 0 0 14px; }
+.timeline-header { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-label); margin-bottom: 8px; }
+.timeline-label { font-size: 12.5px; color: var(--kron-ink-soft); }
+.timeline-duration { font-family: var(--kron-mono); font-size: 11px; color: var(--kron-faint); }
+
+/* features and scenarios */
+.feature { content-visibility: auto; }
+.feature > summary.h2 { font-size: 15px; font-weight: 650; color: var(--kron-ink); }
+/* a Gherkin Rule is a quiet sub-header inside its feature card; its scenarios sit indented under it */
+.rule { margin: 0; padding: 0; border-left: none; border-top: 1px solid var(--kron-hairline-soft); }
+.rule > summary.h2-5 { padding: 9px 16px; font-size: 13.5px; font-weight: 600; color: var(--kron-ink); background: var(--kron-card); }
+.rule > summary.h2-5::before { content: "Rule"; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-label); margin: 0 8px 0 4px; }
+.rule[open] > summary.h2-5 { border-bottom: 1px solid var(--kron-hairline-soft); }
+.rule > .scenario { padding-left: 34px; }
+.feature-description { white-space: pre-line; font-size: 13px; color: var(--kron-muted); padding: 10px 16px 2px; margin: 0; }
+.scenario { content-visibility: auto; }
+.scenario > summary.h3 { color: var(--kron-ink); line-height: 1.5; }
+.scenario > summary.h3.failed { color: var(--kron-fail); }
+.scenario[open] > summary.h3 { margin-bottom: 8px; }
+.copy-scenario-name, .scenario-link { opacity: 0; font-size: 12px; margin-left: 6px; border: none; background: none; padding: 1px 3px; border-radius: 4px; cursor: pointer; text-decoration: none; filter: grayscale(1); transition: opacity .12s; }
+.scenario > summary:hover .copy-scenario-name, .scenario > summary:hover .scenario-link, .copy-scenario-name:focus-visible, .scenario-link:focus-visible { opacity: 0.7; }
+.copy-scenario-name:hover, .scenario-link:hover { background: var(--kron-hover); opacity: 1; }
+.warm-up-note { color: var(--kron-faint); margin-left: 4px; }
+.scenario.happy-path > summary .label, span.label { vertical-align: 1px; }
+
+/* steps */
+.scenario-steps { margin: 4px 0 0; }
+.scenario-steps > summary, .example-diagrams > summary, .failure-result > summary, .scenario-background > summary { font-size: 13px; font-weight: 600; color: var(--kron-ink-soft); }
+.scenario-steps > summary { padding: 4px 0; }
+/* every step's status sits on one edge; a step that opens carries its triangle in the gutter */
+.scenario-steps > .step, .scenario-steps > .step-collapsible, .scenario-background > .step, .scenario-background > .step-collapsible { margin: 0 14px 0 26px; padding: 3px 0; border: none; }
+.scenario-steps > .step:last-child, .scenario-steps > .step-collapsible:last-child, .scenario-background > .step:last-child, .scenario-background > .step-collapsible:last-child { margin-bottom: 10px; }
+.step:not(.step-collapsible)::before { content: none; }
+.step-collapsible > summary { position: relative; }
+.step-collapsible > summary::before { position: absolute; left: -14px; top: 7px; width: 8px; font-size: 8px; line-height: 1; color: var(--kron-faint); }
+.step-background { color: var(--kron-muted); }
+.step-background .step-text { color: var(--kron-muted); }
+.step-status { color: var(--kron-ink-soft); }
+.step-status.skipped { background: var(--kron-skip-soft); color: var(--kron-skip); }
+.step-status.bypassed, .step-status.passed-bypassed { background: var(--kron-bypass-soft); color: var(--kron-bypass); }
+.step-status.skipped-after-failure, .step-status.passed-skipped { background: var(--kron-warn-soft); color: var(--kron-warn); }
+.step-collapsible > summary { list-style: none; }
+.sub-steps { margin: 2px 0 2px 25px; padding-left: 12px; border-left: 1px solid var(--kron-hairline); }
+.sub-steps .step { font-size: 12.5px; }
+.step-attachment a { color: var(--kron-accent); }
+
+/* failure: a soft band with a hairline, calm ink, mono trace */
+details.failure-result { padding: 0; margin: 4px 0 10px; border: 1px solid var(--kron-fail-edge); border-radius: 8px; background: var(--kron-fail-soft); color: var(--kron-fail-ink); overflow: hidden; }
+details.failure-result > summary { padding: 8px 12px; color: var(--kron-fail); }
+/* the message and its trace sit on the card colour inside the band, so a long trace reads as text
+   in a red frame rather than as a red wall */
+details.failure-result > pre { margin: 0 12px 10px; padding: 10px 12px; white-space: pre-wrap; font-family: var(--kron-mono); font-size: 12px; line-height: 1.5; color: var(--kron-ink); background: var(--kron-card); border: 1px solid var(--kron-fail-edge); border-radius: 6px; overflow-x: auto; }
+.error-diff { margin: 0 12px 12px; padding: 6px; background: var(--kron-card); border: 1px solid var(--kron-fail-edge); border-radius: 6px; font-size: 12px; display: grid; row-gap: 4px; }
+.diff-expected, .diff-actual { display: flex; gap: 10px; align-items: baseline; border-radius: 4px; padding: 5px 8px; }
+.diff-expected { background: var(--kron-fail-soft); }
+.diff-actual { background: var(--kron-pass-soft); }
+.diff-label { flex: 0 0 64px; min-width: 0; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-label); }
+.error-diff code { font-family: var(--kron-mono); font-size: 12px; color: var(--kron-ink); background: none; }
+.scenario-focused { outline: 2px solid var(--kron-accent); outline-offset: 2px; border-radius: 6px; }
+.diff-del { background: var(--kron-fail-soft); color: var(--kron-fail); text-decoration: line-through; border-radius: 2px; }
+.diff-ins { background: var(--kron-pass-soft); color: var(--kron-pass); border-radius: 2px; }
+
+/* parameterized scenarios: a hairline table, status as soft pills */
+.param-table-wrapper { overflow-x: auto; margin: 2px 0 10px; border: 1px solid var(--kron-hairline); border-radius: 8px; background: var(--kron-card); }
+.param-test-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.param-test-table th { background: var(--kron-strip); color: var(--kron-label-soft); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--kron-hairline); }
+.param-test-table th.master-header { text-align: center; border-bottom: 1px solid var(--kron-hairline-soft); }
+.param-test-table td { padding: 5px 10px; border-bottom: 1px solid var(--kron-hairline-soft); color: var(--kron-ink); vertical-align: baseline; }
+.param-test-table tr:last-child td { border-bottom: none; }
+.param-test-table td.mono { font-family: var(--kron-mono); font-size: 12px; }
+/* rows stay white: the status pill carries pass and fail, the tint marks only hover and the selected row */
+.kron-c .param-test-table tbody tr { cursor: pointer; background: none; }
+.kron-c .param-test-table tbody tr:hover { background: var(--kron-hover); }
+.kron-c .param-test-table tbody tr.row-active, .kron-c .param-test-table tbody tr.row-active:hover { background: var(--kron-selected); font-weight: 400; }
+.param-test-table tbody tr.row-active td:first-child { box-shadow: inset 2px 0 0 var(--kron-accent); }
+.kron-c .param-test-table tbody tr.examples-block-row, .kron-c .param-test-table tbody tr.examples-block-row:hover { background: var(--kron-strip); cursor: default; }
+.param-test-table tbody tr.examples-block-row td { border-top: 1px solid var(--kron-hairline); color: var(--kron-muted); }
+.kron-c .param-test-table tbody tr.row-search-match { box-shadow: inset 2px 0 0 var(--kron-accent); }
+.status-badge { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid transparent; }
+.badge-pass { background: var(--kron-pass-soft); color: var(--kron-pass); }
+.badge-fail { background: var(--kron-fail-soft); color: var(--kron-fail); border-color: var(--kron-fail-edge); }
+.badge-skip { background: var(--kron-skip-soft); color: var(--kron-skip); }
+
+/* diagrams */
+.example-diagrams { margin-top: 10px; background: var(--kron-card); }
+.example-diagrams > summary { padding: 9px 14px; }
+.diagram-view { padding: 4px 14px 12px; }
+.plantuml-browser { background: var(--kron-card); }
+.note-width-select, .note-font-select { appearance: none; -webkit-appearance: none; font-size: 13px; line-height: 1.25; font-family: var(--kron-font); color: var(--kron-ink-soft); padding: 5px 20px 5px 8px; border: 1px solid var(--kron-select-border); border-radius: 5px; margin: 0 0 0 6px; cursor: pointer;
+  background: var(--kron-card) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%236a7280'/%3E%3C/svg%3E") no-repeat right 6px center; }
+.diagram-format .note-format-select { margin-left: 0; }
+.note-width-select.details-pending, .note-font-select.details-pending { animation: kc-throb 1.1s ease-in-out 0.2s infinite, kc-borderpulse 1.1s ease-in-out 0.2s infinite; }
+.iflow-flame-label { font-family: var(--kron-mono); font-size: 11px; }
+
+/* floating actions */
+.back-to-top { bottom: 18px; left: 18px; width: 38px; height: 38px; padding: 0; border-radius: 999px; border: 1px solid var(--kron-hairline); background: var(--kron-card); color: var(--kron-ink-soft); font-size: 16px; box-shadow: 0 4px 12px var(--kron-shadow); cursor: pointer; }
+.jump-to-failure .failure-counter { font-family: var(--kron-mono); font-size: 11px; opacity: .85; }
+.back-to-top:hover { background: var(--kron-hover); }
+
+/* phones */
+@media (max-width: 768px) {
+  .scenario-diagram-controls-toggle.gear-in-summary { display: inline-block; float: right; margin: var(--gear-shift) 0 0; font-size: 15px; line-height: 1; padding: 6px 8px; color: var(--kron-ink-soft); background: var(--kron-card); border: 1px solid var(--kron-select-border); border-radius: 6px; }
+  .scenario-diagram-controls-toggle.gear-in-summary.gear-open { background: var(--kron-selected); color: var(--kron-selected-ink); border-color: var(--kron-selected-edge); }
+  .diagram-format .note-width-select { margin: 6px 0 0; }
+}
+
+/* on a phone the top bar is a whole settings sheet; pinned, it would cover most of the screen */

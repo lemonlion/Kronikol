@@ -1,0 +1,76 @@
+
+/* Round 13 (owner, 2026-10-18): contrast to WCAG 2.2 AA and the usual practice beyond it, measured in every state a
+   reader reaches, in both themes (contrast-audit.js, audit-report.js). Tokens only, so each rule holds in both themes.
+   Each rule says what fell short and by how much. */
+
+/* a select's or a field's border is what shows it is one (WCAG 1.4.11, 3:1). #858fa0 held 3:1 on white and the strip
+   but not on the page ground (2.8:1), a hovered row (2.9:1) or a picked fill (2.6:1). #7a8496 holds 3:1 on every light
+   surface (3.05:1 at the least, 3.8:1 on white); the dark theme's #6f7b8e fell to 3.0:1 on a picked fill, #748093 is
+   3.2:1 there and 4.2:1 on a card */
+:root { --kron-select-border: #7a8496; }
+:root[data-theme="dark"] { --kron-select-border: #748093; }
+
+/* the warm-up figure beside a duration: today's report dims it to 75% (.duration-badge .warm-up-note), which took the
+   faint ink to 3.1:1; the faint ink at full strength is 5.2:1 */
+.duration-badge .warm-up-note { opacity: 1; }
+
+/* the search field's hint was the browser's own grey, 4.2:1 on the field (Firefox also dims it to 54%) */
+.filter-search input::placeholder { color: var(--kron-faint); opacity: 1; }
+
+/* the search field's focus was a 12% halo (1.2:1) and its 1 px border turning blue (2:1 from grey): the same 2 px
+   accent ring as every other control */
+.filter-search input:focus, .filter-search #searchbar:focus { outline: 2px solid var(--kron-accent); outline-offset: 1px; box-shadow: none; }
+
+/* the internal-flow popup's Activity and Flame Chart switch kept today's literal colours: white on #4285f4 when picked
+   (3.6:1), and in the dark theme the light text on its #f5f5f5 buttons (1.1:1). It is the popup's own pair of views,
+   so it is drawn as the scenario's diagram tabs are: quiet ink, the picked one in the accent with its underline. */
+.iflow-toggle-btn { margin: 0 4px 0 0; padding: 6px 11px; border: 0; border-radius: 5px 5px 0 0; background: none; color: var(--kron-ink-quiet); font: 400 13px/1.25 var(--kron-font); box-shadow: inset 0 -2px 0 transparent; }
+.iflow-toggle-btn:hover { background: var(--kron-hover); color: var(--kron-ink); }
+.iflow-toggle-btn.iflow-toggle-active, .iflow-toggle-btn.iflow-toggle-active:hover { background: none; color: var(--kron-accent); font-weight: 600; box-shadow: inset 0 -2px 0 var(--kron-accent); }
+.iflow-toggle-btn:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+
+/* the information marks beside "Scenario Timeline" and "Component Diagram": today's report dims them to 55%, which
+   left the mark at 2.3:1; a mark that opens an explanation is a control's glyph and needs 3:1. Label ink, full
+   strength: 5.5:1 light, 6.8:1 dark */
+.timeline-info { opacity: 1; color: var(--kron-label); }
+.timeline-info:hover { color: var(--kron-ink); }
+
+/* the count on Next Failure: dimmed to 85%, 4.3:1 on the dark theme's red. White at full strength: 5.9:1 light,
+   5.5:1 dark */
+.jump-to-failure .failure-counter { opacity: 1; color: var(--kron-on-solid); }
+
+/* a failure is told by more than its colour (WCAG 1.4.1, Use of Color). A failed scenario's heading was only red, and
+   a feature holding one had lost the red it has in today's report; under protanopia or deuteranopia the red reads as
+   another dark ink. Each now opens with the cross a failed step shows (U+2717, a text glyph, not an emoji), and the
+   feature's name takes the fail colour again (5.9:1 light, 6.7:1 dark on the heading strip). */
+.feature > summary.h2.failed { color: var(--kron-fail); }
+.feature > summary.h2.failed::before, .scenario > summary.h3.failed::before { content: '\2717'; display: inline-block; margin-right: 6px; font-weight: 700; color: var(--kron-fail); }
+/* the timeline: a failed scenario's bar was today's literal red (#bf0000) and only its colour said so; the fail token,
+   and the same cross before its name */
+.timeline-bar-failed { background-color: var(--kron-fail); }
+.timeline-row:has(.timeline-bar-failed) .timeline-label::before { content: '\2717'; margin-right: 5px; font-weight: 700; color: var(--kron-fail); }
+
+/* the timeline's passed bars kept today's literal #228b22: History's pass green, as the failed bars take its fail red
+   (3.5:1 light, 5.5:1 dark against the card) */
+.timeline-bar-passed { background-color: var(--kron-pass-ring); }
+
+/* the deep search's status chip ("+N more found…", "no additional matches") kept today's light grey pill in the dark
+   theme, light text on #eef0f5 under the buttons it covered (1.4:1); tokens, 5.3:1 light and 5.9:1 dark. Its place,
+   inside the field, is set by c-round13.js. */
+.kron-deep-chip { background: var(--kron-hover); color: var(--kron-muted); border: 1px solid var(--kron-hairline); line-height: 1.4; }
+
+/* hover: a control answers the pointer (the usual practice, not a WCAG rule). The selects, the feature, rule, scenario,
+   step and section headings and the links in a scenario showed no change at all. */
+.sort-select:hover, .truncate-lines-select:hover, .note-format-select:hover, .note-width-select:hover { border-color: var(--kron-ink-quiet); }
+.feature > summary:hover, .rule > summary:hover, .scenario > summary:hover, .step-collapsible > summary:hover,
+details.scenario-steps > summary:hover, details.example-diagrams > summary:hover { background-color: var(--kron-hover); }
+#report-content details > summary:not([class]):hover { color: var(--kron-ink); text-decoration: underline; text-underline-offset: 3px; }
+#report-content a[href]:hover { text-decoration: underline; text-underline-offset: 2px; }
+.tools-gear:hover { background: var(--kron-hover); }
+
+/* focus never lands under the pinned bar (WCAG 2.2 2.4.11, Focus Not Obscured): everything in the panels under the bar
+   keeps the bar's height clear when the browser brings it into view (Tab, Shift+Tab, a jump, a link to a scenario), as
+   the headings already did (rounds 2 and 8). Not a scroll padding on the page: the browser keeps a field being typed
+   in clear of that too, and with the field in the pinned bar the only way to do so is to scroll the page to its top.
+   c-round13.js covers what a browser leaves in place (Firefox, for a control already partly in view). */
+.report-panels, .report-panels * { scroll-margin-top: calc(var(--kron-nav-h, 0px) + 12px); }

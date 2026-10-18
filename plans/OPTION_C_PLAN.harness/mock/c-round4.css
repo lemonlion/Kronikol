@@ -1,0 +1,40 @@
+/* Round 4: contrast (owner's note, 2026-10-17: "difficult to make out distinct sections").
+   Measured with contrast.js against WCAG 2.2 and two design systems. The token layer now has a ground a step darker
+   than the cards (1.16:1, was 1.07), card edges at 1.45:1 on white (Primer's border.default), every text grey at
+   4.5:1 or more on the surface it sits on (1.4.3), and 3:1 for the boundary of a field you type in or pick from
+   (1.4.11). Here: the cards lift off the ground, the search box gets a visible boundary, and a selected segment
+   is outlined as well as filled, so the state does not rest on a pale tint alone. */
+
+/* every section card: the hairline plus a soft two-layer shadow */
+.header-row, .filtering-box, .feature, .features-summary-details, .scenario-timeline, .component-diagram-section,
+.run-band, .toolbar-row.report-nav, .features-table-view, .kron-c .history-section, .kron-c .report-diagnostics {
+  box-shadow: var(--kron-card-shadow);
+}
+
+/* the search box is a field: a 3:1 boundary at rest, the accent ring when focused (unchanged) */
+.filter-search input { border-color: var(--kron-select-border); }
+
+/* a selected segment or chip: outlined in the accent family (3.2:1 on white) and drawn over its neighbours' shared edge */
+.status-toggle.status-active, .percentile-btn.percentile-active, .details-radio-btn.details-active,
+.toolbar-row .timeline-toggle.timeline-toggle-active, .view-btn[aria-pressed="true"], .happy-seg[aria-pressed="true"],
+.tl-seg-btn[aria-pressed="true"], .happy-path-toggle.happy-path-active, .category-toggle.category-active,
+.dependency-toggle.dependency-active, .tag-toggle.tag-active {
+  border-color: var(--kron-selected-edge); position: relative; z-index: 1;
+}
+
+/* every filter row's values start at the same x. The report's own stylesheet gives the Status and Dependencies rows a
+   0.3em gap and their labels a 0.3em margin, which the Tags row does not have, so tags started 7.5px further left.
+   One rule for all of them: the 92px label column, then 8px. */
+.status-filters, .duration-filters, .category-filters, .dependency-filters, .tag-filters, .happy-filters { column-gap: 0; }
+.status-filters-label, .duration-filters-label, .category-filters-label, .dependency-filters-label, .tag-filters-label,
+.happy-filters-label { margin-right: 8px; }
+
+/* STEPS sits under the scenario title the way DIAGRAMS does: its triangle starts where the title's text starts, and each
+   step's triangle where the word Steps starts. */
+.scenario-steps > summary, .scenario-background > summary { padding-left: 14px; }
+.scenario-steps > .step, .scenario-steps > .step-collapsible,
+.scenario-background > .step, .scenario-background > .step-collapsible { margin-left: 42px; }
+
+/* on a phone the Timeline and Components controls stack, one group to a line: their buttons start in one column
+   (wide enough for CALL SUMMARIES, the longest label) */
+@media (max-width: 600px) { .timeline-controls .tl-seg-label { min-width: 9.5em; } }

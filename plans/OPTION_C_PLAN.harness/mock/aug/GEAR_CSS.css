@@ -1,0 +1,3 @@
+summary > .scenario-diagram-controls-toggle.gear-in-summary {
+  float: right; display: inline-block; margin: var(--gear-shift, -6px) 0 0;
+}

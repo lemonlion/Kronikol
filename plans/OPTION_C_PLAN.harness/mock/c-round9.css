@@ -1,0 +1,63 @@
+
+/* Round 9 (owner's note, 2026-10-18): the rows under the search field fold away until More filters opens them
+   (c-round9.js). Desktop only: on a phone the report's own Filters toggle folds them. Tokens only. */
+@media (min-width: 769px) {
+  .filtering-box.rows-folded:not(.help-open) > .filters { display: none; }
+  .filtering-box.rows-folded.help-open > .filters > :not(.search-help-panel) { display: none; }
+}
+/* a control the height of the search field, at the end of its line; selected while the rows are open */
+.more-filters { flex: none; align-self: stretch; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border: 1px solid var(--kron-select-border); border-radius: 8px; background: var(--kron-card); color: var(--kron-ink-soft); font: 400 var(--kron-fs-control)/16px var(--kron-font); white-space: nowrap; cursor: pointer; }
+.more-filters:hover { background: var(--kron-hover); }
+.more-filters[aria-expanded="true"] { background: var(--kron-selected); border-color: var(--kron-selected-edge); color: var(--kron-selected-ink); }
+.more-filters.has-on { border-color: var(--kron-selected-edge); color: var(--kron-selected-ink); }
+.more-filters:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+.more-filters svg { transition: transform .15s ease; }
+.more-filters[aria-expanded="true"] svg { transform: rotate(180deg); }
+/* how many filters in the folded rows are on */
+.more-filters-count { display: inline-block; min-width: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px; background: var(--kron-accent); color: var(--kron-on-solid); font-size: var(--kron-fs-label); font-weight: 600; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+.more-filters-count[hidden] { display: none; }
+@media (max-width: 768px) { .more-filters { display: none; } }
+@media (prefers-reduced-motion: reduce) { .more-filters svg { transition: none; } }
+
+/* the tab bar and what its tab shows read as one container: the bar its top, the panel under it its body, on a tint
+   between the page and the cards. The bar's shadow only while it is pinned (c-round9.js). Desktop: a phone keeps the
+   layout it was given. */
+:root { --kron-panel: #f4f6fa; }
+:root[data-theme="dark"] { --kron-panel: #12181f; }
+@media (min-width: 769px) {
+  .toolbar-row.report-nav { margin-bottom: 0; border-radius: 12px 12px 0 0; box-shadow: none; }
+  .toolbar-row.report-nav.is-pinned { border-radius: 0; box-shadow: 0 2px 8px var(--kron-shadow); }
+  .toolbar-row.report-nav ~ .report-panels { background: var(--kron-panel); border: 1px solid var(--kron-hairline); border-top: 0; border-radius: 0 0 12px 12px; padding: 14px 14px 0; margin-bottom: 14px; }
+  .toolbar-row.report-nav > .filtering-box { border-radius: 0; }
+}
+/* the component header as the timeline's: its title on the left, the controls at the right of the same line */
+.component-header { justify-content: flex-start; }
+
+/* Full and Summary: the Features tab's own tabs, drawn as tabs one step below the report's (13 px to its 14, the same
+   accent underline), not as a two-button switch. On a desktop the underline sits on the line under the tools, as the
+   report's tabs sit on theirs. */
+.view-switch { position: relative; display: inline-flex; gap: 18px; margin-right: 8px; padding-right: 18px; }
+/* a short rule after the tabs keeps them apart from the Expand and Collapse actions beside them */
+.view-switch::after { content: ''; position: absolute; right: 0; top: 50%; width: 1px; height: 18px; margin-top: -9px; background: var(--kron-divider); }
+.view-btn, .view-btn:first-child, .view-btn:last-child { margin: 0; border: 0; border-radius: 0; background: none; padding: 4px 1px; font: 600 var(--kron-fs-control)/20px var(--kron-font); color: var(--kron-ink-quiet); box-shadow: inset 0 -2px 0 transparent; }
+.view-btn:hover { background: none; color: var(--kron-ink); }
+.view-btn[aria-selected="true"], .view-btn[aria-selected="true"]:hover { background: none; color: var(--kron-accent); box-shadow: inset 0 -2px 0 var(--kron-accent); }
+@media (min-width: 769px) {
+  .features-tools-line > .view-switch { align-self: stretch; margin-top: -8px; margin-bottom: -8px; }
+  .features-tools-line > .view-switch > .view-btn { padding: 0 1px; }
+  /* the tools' tinted strip has square corners now the bar runs on into its panel */
+  .toolbar-row.report-nav .features-tools { border-radius: 0; }
+}
+
+/* Round 10 (owner, 2026-10-18): a label in front of Expanded / Collapsed / Truncated, in the bar and in each scenario's
+   own row, as SORT stands in front of the sort: the report's own label, worded Payloads (c-dom.r5.js; round 11, as
+   "notes" is PlantUML's word for the boxes, not the reader's, and round 16), shown on a desktop too. A phone already
+   shows it on a line of its own. */
+@media (min-width: 769px) {
+  .details-radio > .details-radio-label { display: inline; align-self: center; margin-right: 8px; }
+}
+
+/* Round 11 (owner, 2026-10-18): a step that opens shows a black triangle, as it does in today's report. The text
+   presentation selector keeps U+25B6 a text glyph wherever a stack still names an emoji font, and the triangle takes
+   the text's colour in place of the faint grey. */
+.step-collapsible > summary::before { content: '\25B6\FE0E'; color: var(--kron-ink); }

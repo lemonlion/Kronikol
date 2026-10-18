@@ -1,0 +1,35 @@
+
+/* Round 16 (owner, 2026-10-18) */
+
+/* An open section's heading keeps square bottom corners, so its hover fill meets the content below it in a straight
+   line: the Diagrams and Steps headings kept the closed state's rounded bottom corners, and the fill showed them. Its
+   top corners follow the frame's inner curve (the frame's radius less its 1px border). */
+details.example-diagrams > summary { border-radius: 9px; }
+details.example-diagrams[open] > summary { border-radius: 9px 9px 0 0; }
+details.scenario-steps[open] > summary { border-radius: 13px 13px 0 0; }
+
+/* The parameters table has one even border with rounded corners. It sat 0.5em inside its frame (the report's own
+   margin), leaving a strip above and below it, and its outer cells drew a second border just inside the frame's. The
+   table now fills the frame; the frame draws the outer border and clips the corners; the cells draw only the lines
+   between them (a cell's right and bottom edges, except where they meet the frame). */
+.param-table-wrapper > .param-test-table { margin: 0; border-collapse: separate; border-spacing: 0; }
+.param-table-wrapper > .param-test-table th,
+.param-table-wrapper > .param-test-table td { border-style: solid; border-color: var(--kron-hairline); border-width: 0 1px 1px 0; }
+.param-table-wrapper > .param-test-table tbody tr > :last-child,
+.param-table-wrapper > .param-test-table thead tr:first-child > :last-child { border-right-width: 0; }
+/* the header's second row reaches the right edge only when the first row's last cell does not span down to it */
+.param-table-wrapper > .param-test-table thead:not(:has(tr:first-child > :last-child[rowspan])) tr + tr > :last-child { border-right-width: 0; }
+.param-table-wrapper > .param-test-table tbody tr:last-child > td { border-bottom-width: 0; }
+/* a block row's top line is the row above's bottom line */
+.param-table-wrapper > .param-test-table tbody tr.examples-block-row td { border-top-width: 0; }
+
+/* a dep:, duration: or is: qualifier the search could not read (duration:>soon) stays in the search as text, and
+   the field says so with its border */
+.filter-search #searchbar.kron-q-bad { border-color: var(--kron-warn); }
+
+/* The report's Payloads bar keeps its toggles at its right end, as a scenario's bar does; the divider that marked
+   them off is not needed once they stand apart */
+@media (min-width: 769px) {
+  .kron-c .toolbar-right .diagram-flags { margin-left: auto; }
+  .kron-c .toolbar-right .diagram-flags.zone-adjacent::after { content: none; }
+}

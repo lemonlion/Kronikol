@@ -1,0 +1,93 @@
+/* The dark theme: every --kron-* and --dg-* token again, set on <html data-theme="dark"> (the boot script picks
+   the reader's stored choice, else the system's). Surfaces step up in lightness from the ground to the card to the
+   controls; text greys keep 4.5:1 on the surface they sit on; the accent and status colours lighten so they read on
+   dark. Rules below the token block repaint what the report's own stylesheet still draws in light colours. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --kron-accent: #7ea6f2;
+  --kron-selected: #1f3254;
+  --kron-selected-ink: #b0c9fb;
+  --kron-selected-edge: #5b82cf;
+  --kron-accent-rail: rgba(126, 166, 242, .30);
+  --kron-focus: rgba(126, 166, 242, .28);
+  --kron-hover: #222b38;
+
+  --kron-ground: #0e131a;
+  --kron-card: #171d26;
+  --kron-strip: #1b222c;
+  --kron-strip-edge: #323c4b;
+  --kron-field: #1f2732;
+  --kron-quiet: #1b222c;
+  --kron-quiet-edge: #323c4b;
+  --kron-hairline: #343e4d;
+  --kron-hairline-soft: #262f3b;
+  --kron-divider: #384354;
+  --kron-divider-soft: #2b3440;
+  --kron-control-border: #4a5568;
+  --kron-select-border: #6f7b8e;
+  --kron-dot: #7d899b;
+  --kron-shadow: rgba(0, 0, 0, .45);
+  --kron-card-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 2px 8px rgba(0, 0, 0, .3);
+
+  --kron-ink: #e4e9f0;
+  --kron-ink-soft: #c5cdd8;
+  --kron-ink-quiet: #b3bcc8;
+  --kron-muted: #a0aab7;
+  --kron-label: #9ba5b3;
+  --kron-label-soft: #98a2b0;
+  --kron-faint: #949eac;
+  --kron-on-solid: #ffffff;
+
+  --kron-pass: #62cd8f;
+  --kron-pass-soft: #15301f;
+  --kron-pass-ring: #3fa66a;
+  --kron-fail: #f28b81;
+  --kron-fail-soft: #3b1d1b;
+  --kron-fail-edge: #6e302b;
+  --kron-fail-ink: #f6b3ab;
+  --kron-fail-shadow: rgba(0, 0, 0, .45);
+  --kron-exclude-soft: #351f1d;
+  --kron-exclude-edge: #6a3934;
+  --kron-exclude-ink: #eea69d;
+  --kron-warn: #e5b066;
+  --kron-warn-soft: #2d2415;
+  --kron-warn-edge: #66502a;
+  --kron-skip: #a9b1be;
+  --kron-skip-soft: #262e39;
+  --kron-bypass: #8ab1f6;
+  --kron-bypass-soft: #1c2a45;
+
+  --dg-bg: #171d26;
+  --dg-ink: #e4e9f0;
+  --dg-ink-soft: #aab3c0;
+  --dg-line: #8792a3;
+  --dg-participant: #253041;
+  --dg-note: #2b2618;
+  --dg-note-edge: #75653f;
+  --dg-event: #16283b;
+  --dg-event-edge: #44709c;
+  --dg-pass: #15301f;
+  --dg-pass-edge: #33724d;
+  --dg-fail: #3b1d1b;
+  --dg-fail-edge: #7c3b34;
+  --dg-bar: #3d4d69;
+  --dg-activity: #1d2638;
+  --dg-activity-edge: #7d899b;
+  --dg-lane: #3a4656;
+  --dg-http: #6aa5e4;
+  --dg-db: #f07a6c;
+  --dg-msg: #c18fdc;
+  --dg-person: #2f6db0;
+  --dg-icon: #222b38;
+  --dg-icon-edge: #7d899b;
+  --dg-icon-ink: #c5cdd8;
+}
+:root[data-theme="dark"] body { background: var(--kron-ground); color: var(--kron-ink); }
+:root[data-theme="dark"] {
+  --kron-fail-solid: #b8433a;
+  --kron-code-bg: #262f3c;
+  --kron-track: #232b37;
+  --kron-exception-soft: #4a2220;
+}
+:root[data-theme="dark"] { --kron-prop-key: #c99be3; --kron-prop-val: #8fc3ec; }
+:root[data-theme="dark"] .iflow-overlay { background: rgba(0, 0, 0, .6); }

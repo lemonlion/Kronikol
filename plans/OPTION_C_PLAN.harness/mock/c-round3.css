@@ -1,0 +1,75 @@
+/* Round 3 (owner's notes, 2026-10-17). Everything here reads tokens. */
+
+/* STATUS keeps its four states on one line wherever the box is wider than a phone */
+.filter-row > .status-filters > .fltr-controls { flex: none; flex-wrap: nowrap; }
+
+/* HAPPY PATHS: a labelled three-way control (All, Only, Exclude) on the Status/Duration line, built like
+   DURATION. It joins the line only when all three runs fit whole (c-dom.js measures .trio-fits), and
+   otherwise takes its own line in the shared label column. */
+.happy-filters { display: flex; align-items: baseline; }
+.happy-filters-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-label); flex: 0 0 92px; }
+.happy-filters > .fltr-controls { flex: none; flex-wrap: nowrap; }
+.filter-row:not(.trio-fits) .happy-filters { flex-basis: 100%; }
+.filter-row.trio-fits .happy-filters-label { flex-basis: auto; margin-right: 8px; }
+.happy-seg { margin: 0 0 0 -1px; border: 1px solid var(--kron-control-border); background: var(--kron-card); padding: 5px 11px; font-size: 12.5px; font-family: var(--kron-font); color: var(--kron-ink-soft); cursor: pointer; border-radius: 0; }
+.happy-seg:first-child { margin-left: 0; border-radius: 6px 0 0 6px; }
+.happy-seg:last-child { border-radius: 0 6px 6px 0; }
+.happy-seg:hover { background: var(--kron-hover); }
+.happy-seg[aria-pressed="true"], .happy-seg[aria-pressed="true"]:hover { background: var(--kron-selected); color: var(--kron-selected-ink); font-weight: 600; }
+.happy-seg:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+@container (max-width: 520px) {
+  .happy-filters > .fltr-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; flex: 1 1 0; }
+  .happy-seg { margin: 0; border-radius: 6px; text-align: center; }
+}
+@container (max-width: 430px) {
+  .filter-row:not(.trio-fits) .happy-filters { flex-wrap: wrap; }
+  .filter-row:not(.trio-fits) .happy-filters-label { flex-basis: 100%; margin: 0 0 2px; }
+  /* a 0 basis would keep the buttons on the label's line at no width at all: they take a line of their own */
+  .filter-row:not(.trio-fits) .happy-filters > .fltr-controls { flex-basis: 100%; }
+}
+/* last on the line or in the stack: on a phone DURATION takes order 2, so HAPPY PATHS follows it explicitly */
+.filter-row > .happy-filters { order: 3; }
+
+/* Tags, Dependencies, Categories: word chips. No dot, no count (the tooltip keeps it), and a left-out
+   chip is the red tint alone, with no strike through its name. */
+.tag-toggle, .dependency-toggle, .category-toggle { padding: 5px 10px; }
+.tag-toggle::before, .tag-toggle::after, .dependency-toggle::before, .dependency-toggle::after,
+.category-toggle::before, .category-toggle::after { content: none; }
+.tag-toggle.tagf-out, .tag-toggle.tagf-out:hover, .dependency-toggle.tagf-out, .dependency-toggle.tagf-out:hover,
+.category-toggle.tagf-out, .category-toggle.tagf-out:hover { text-decoration: none; }
+.fcnt { display: none; }
+
+/* GIVEN / WHEN / THEN read as the first word of the step, with an ordinary space after it */
+.step-keyword { display: inline; min-width: 0; }
+
+/* a scenario's note options show only on its Sequence Diagrams tab */
+.diagram-options-bar.not-seq { display: none !important; }
+.diagrams-not-seq > summary .gear-in-summary { display: none !important; }
+
+/* what the filters leave showing, on the FILTERING line just left of Clear All */
+.filter-readout { align-self: baseline; margin-right: 10px; font-size: 12px; color: var(--kron-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.filter-readout.is-filtered { color: var(--kron-selected-ink); }
+.filter-readout.is-filtered b { font-weight: 600; background: var(--kron-selected); border: 1px solid var(--kron-selected-edge); border-radius: 999px; padding: 0 7px; margin-right: 6px; }
+@container (max-width: 430px) {
+  .filtering-box-export .filter-readout { order: 10; grid-column: 1 / -1; margin: 2px 0 0; white-space: normal; }
+  .filtering-box-export .export-btn:nth-of-type(1) { justify-self: end; margin-left: 0; margin-right: -9px; }
+  .filtering-box-export .export-btn:nth-of-type(2) { justify-self: start; margin-left: -9px; margin-right: 0; }
+  .filtering-box-export .export-btn:nth-of-type(3) { justify-self: end; margin-left: 0; margin-right: -9px; }
+}
+
+/* the timeline: Warm-up (Shown, Hidden) and Order (with or without warm-up) on its header line */
+.timeline-header { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+.timeline-controls { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px 18px; text-transform: none; letter-spacing: normal; font-weight: 400; }
+.tl-seg { display: inline-flex; align-items: baseline; }
+.tl-seg-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-label); margin-right: 8px; }
+.tl-seg-btn { margin: 0 0 0 -1px; border: 1px solid var(--kron-control-border); background: var(--kron-card); padding: 4px 10px; font-size: 12px; font-family: var(--kron-font); color: var(--kron-ink-soft); cursor: pointer; border-radius: 0; }
+.tl-seg-btn:first-of-type { margin-left: 0; border-radius: 6px 0 0 6px; }
+.tl-seg-btn:last-of-type { border-radius: 0 6px 6px 0; }
+.tl-seg-btn:hover { background: var(--kron-hover); }
+.tl-seg-btn[aria-pressed="true"], .tl-seg-btn[aria-pressed="true"]:hover { background: var(--kron-selected); color: var(--kron-selected-ink); font-weight: 600; }
+.tl-seg-btn:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+.timeline-warm-up[hidden] { display: none !important; }
+
+/* a tab that follows the filters and shows less than the whole run says so, in bold, under its header line */
+.filtered-note { margin: 0 0 10px; padding: 7px 10px; border: 1px solid var(--kron-warn-edge); border-radius: 6px; background: var(--kron-warn-soft); color: var(--kron-warn); font-size: 12.5px; font-weight: 700; line-height: 1.4; }
+.component-header { justify-content: flex-end; }

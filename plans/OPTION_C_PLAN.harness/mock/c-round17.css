@@ -1,0 +1,142 @@
+/* Round 17 (2026-10-18), the owner's list. */
+
+/* Item 5: a request's link in a sequence diagram, drawn on hover (or always, when links are always shown), in the
+   report's accent and not the engine's #0000FF, which read as purple beside the rest of the palette. */
+.plantuml-browser svg text[data-iflow-fill][text-decoration="underline"] { fill: var(--kron-accent) !important; }
+
+/* Item 12 (Firefox, both bars): "Payloads" sat 1px above "Expanded". Flex baseline alignment of two type sizes (11px
+   label, 13px buttons) is rounded per item, and Firefox rounds them apart; in one line box they share one baseline.
+   Measured in Chrome and Firefox at eight sub-pixel offsets of the bar: aligned at every one (cmock/r17-variants.js,
+   r17-align.py). Below 769px the bar keeps its stacked layout. */
+@media (min-width: 769px) {
+  /* font-size 0: no strut, so the row is as tall as its buttons */
+  .details-radio { display: inline-block; white-space: nowrap; font-size: 0; }
+  .details-radio > .details-radio-label { display: inline; }
+  .details-radio > * { vertical-align: baseline; }
+  .details-radio > .details-radio-btn { margin-left: 4px; }
+  .details-radio > .truncate-lines-select { margin-left: 10px; }
+}
+
+/* Item 8 (Firefox, the scenario bar): a toggle's label sat 1px below its circle. The circle snaps with its button and
+   the text with its own baseline; at this top padding the two round together at every sub-pixel offset (the height is
+   unchanged), which leaves Firefox 1px apart at every offset and Chrome at none, so Firefox's circle moves down 1px. */
+.details-radio-btn.toggle-btn { padding-top: 5.375px; padding-bottom: 4.625px; }
+@supports (-moz-appearance: none) { .details-radio-btn.toggle-btn::before { margin-top: -3.12px; } }
+
+/* Item 16: a background step that opens (it has sub-steps) sat at the product's 0.5em instead of the steps' 42px, as
+   `.scenario-steps > .step-collapsible.step-background` outranks the indent rules; Chrome too. */
+.scenario-steps > .step-collapsible.step-background, .scenario-background > .step-collapsible.step-background { margin-left: 25px; }
+
+/* Item 17: the expected value is the right one and the actual value the wrong one, so expected reads green and
+   actual red, as test runners show them (Jest: Expected green, Received red). The parts that differ are marked in
+   their row's colour, a shade stronger, and nothing is struck through: the expected value was not removed. */
+.diff-expected { background: var(--kron-pass-soft); }
+.diff-actual { background: var(--kron-fail-soft); }
+.diff-expected .diff-del { color: var(--kron-pass); background: color-mix(in srgb, var(--kron-pass) 16%, transparent); text-decoration: none; font-weight: 600; }
+.diff-actual .diff-ins { color: var(--kron-fail); background: color-mix(in srgb, var(--kron-fail) 14%, transparent); font-weight: 600; }
+/* Found with item 16: a background step's sub-steps kept the product's background marker (a 3px left rule, 0.5em in),
+   which the steps no longer show at the top level, so they drew a second rule beside the sub-steps' own and sat 6px
+   further in than any other step's sub-steps. */
+.sub-steps > .step-background { border-left: 0; padding-left: 0; margin-left: 0; }
+
+/* Items 13-15: the note buttons' triangles are drawn shapes now, inked like the other glyphs. */
+:is(.plantuml-browser, .iflow-diagram) svg .note-toggle-icon polygon { fill: var(--dg-icon-ink); }
+
+/* Item 6: a step bar's table has its header row shaded as the step parameter table's header is (--kron-strip, on the
+   table's own white or dark body). */
+.plantuml-browser svg .k-step-table-head.k-step-table-head { fill: var(--kron-strip) !important; stroke: none !important; }
+/* and its rules and header text as that table's: hairline borders, the header in the soft ink (the bar draws rules only
+   in its tables) */
+.plantuml-browser svg .k-step-rule.k-step-rule { stroke: var(--kron-hairline) !important; }
+.plantuml-browser svg .k-step-table-head-text.k-step-table-head-text { fill: var(--kron-ink-soft) !important; }
+
+/* Item 18 (owner): the Steps heading's triangle stands in the steps' triangle column, and each step's status circle
+   starts where the heading's first letter starts, in Chrome and Firefox alike. The browser's own marker is 8px wide in
+   Chrome and 6px in Firefox and put the heading's text 2px apart between them, so a scenario's section headings draw
+   the steps' glyph in its place: an 8px box 14px in, the text 27px in. A top-level step's box sits 11px left of its
+   row and its row 25px in, so box, circle and letter share columns (box at 15, circle and text at 28). */
+.scenario-steps > summary, .scenario-background > summary, .example-diagrams > summary, details.failure-result.failure-result > summary { list-style: none; position: relative; padding-left: 27px; }
+.scenario-steps > summary::-webkit-details-marker, .scenario-background > summary::-webkit-details-marker, .example-diagrams > summary::-webkit-details-marker, .failure-result > summary::-webkit-details-marker { display: none; }
+.scenario-steps > summary::before, .scenario-background > summary::before, .example-diagrams > summary::before, .failure-result > summary::before {
+  content: '\25B6\FE0E'; position: absolute; left: 14px; top: 50%; margin-top: -4px; width: 8px; font-size: 8px; line-height: 1; text-align: center; transition: transform 0.15s ease;
+}
+.scenario-steps[open] > summary::before, .scenario-background[open] > summary::before, .example-diagrams[open] > summary::before, .failure-result[open] > summary::before { transform: rotate(90deg); }
+.scenario-steps.scenario-steps > .step, .scenario-steps.scenario-steps > .step-collapsible,
+.scenario-background.scenario-background > .step, .scenario-background.scenario-background > .step-collapsible { margin-left: 25px; }
+.scenario-steps > .step-collapsible > summary::before, .scenario-background > .step-collapsible > summary::before { left: -11px; }
+
+/* Item 19 (owner): a diagram narrower than its box stands in the middle of it (a scenario's sequence and activity
+   diagrams and the report's component diagram). One wider than its box still starts at its left edge and scrolls: the
+   auto margins come to 0. */
+.plantuml-browser > svg, .plantuml-inline-svg > svg { display: block; margin-inline: auto; }
+/* the box held its drawing 1em in from the left and 0 from the right, so a centred drawing sat 14px right of the
+   card's middle; 1em on both sides puts it in the middle (a drawing scaled to fit is 1% smaller for it) */
+.plantuml-inline-svg, .plantuml-browser { padding-right: 1em; }
+
+/* Item 4 (owner): an event card's pale blue was the step strips' and the participants' colour (a difference of 2.9 in
+   the light theme and 4.7 in the dark, where about 5 starts to read as another colour); only its edge told it apart.
+   Events take the violet of the message arrows they hang from (--dg-msg). */
+:root { --dg-event: #eee1f7; --dg-event-edge: #b48cc8; --dg-event-card-edge: #cfb6e6; }
+:root[data-theme="dark"] { --dg-event: #2a2140; --dg-event-edge: #7d5c9c; --dg-event-card-edge: #5d4780; }
+
+/* Item 2 (owner): expand and collapse, per level, as a label and two icon buttons (c-round17.js). The label is the
+   toolbar's own (SORT, PAYLOADS); the buttons are its text buttons' height. */
+.k-fold-group { display: inline-flex; align-items: center; gap: 2px; margin-left: 12px; }
+.k-fold-group + .k-fold-group { margin-left: 14px; }
+.k-fold-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-label); margin-right: 4px; }
+.k-fold-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--kron-ink-soft); cursor: pointer; }
+.k-fold-btn:hover { background: var(--kron-hover); color: var(--kron-ink); }
+.k-fold-btn:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+.k-fold-btn[aria-disabled="true"] { opacity: 0.38; cursor: default; background: transparent; color: var(--kron-ink-soft); }
+.k-fold-btn svg { width: 16px; height: 16px; display: block; }
+
+/* Item 11 (owner): the bar's Filters button only while the bar floats (c-round8.js sets k-floating); the sentinel that
+   tells is an empty line just above the bar */
+.nav-float-sentinel { display: block; height: 0; margin: 0; padding: 0; }
+@media (min-width: 769px) { .toolbar-row.report-nav:not(.k-floating) .nav-filters-toggle { display: none; } }
+
+/* Item 10 (owner): the flame chart in the diagrams' manner. One calm hue per source from a palette of eight (blue,
+   violet, teal, rose, green, amber, purple, coral; build.js sets --fh), in place of any hue at 60% saturation fading
+   with depth: a pale fill, a 3px edge in the hue's stronger shade, ink text, 2px between rows and 4px corners. */
+.iflow-flame { padding: 6px 0; }
+.iflow-flame-bar { height: 20px; margin: 2px 0; border: 0; border-left: 3px solid hsl(var(--fh, 215) 42% 54%); border-radius: 4px;
+  background: hsl(var(--fh, 215) 58% 93%); color: var(--kron-ink); line-height: 20px; box-sizing: border-box; }
+.iflow-flame-bar:hover { filter: none; background: hsl(var(--fh, 215) 62% 87%); }
+:root[data-theme="dark"] .iflow-flame-bar { background: hsl(var(--fh, 215) 26% 21%); border-left-color: hsl(var(--fh, 215) 48% 60%); }
+:root[data-theme="dark"] .iflow-flame-bar:hover { background: hsl(var(--fh, 215) 30% 27%); }
+.iflow-flame-bar > .iflow-flame-label { padding: 0 6px; }
+/* the step boundaries across it: a quieter dash, darker when pointed at */
+.iflow-boundary-marker { border-left-color: color-mix(in srgb, var(--kron-ink) 16%, transparent); }
+.iflow-boundary-marker:hover { border-left-color: color-mix(in srgb, var(--kron-ink) 45%, transparent); }
+
+/* Item 22 (owner): a database was drawn red, the colour the report gives a failure. It takes a deep cyan, at least
+   27 (CIE76) from every other dependency colour (the AI teal and the unknown grey are the nearest) and from pass,
+   fail and warning, 4.95:1 on white and 6.82:1 on the dark ground; a component box's fill is deeper still, for its
+   white name (6.15:1). */
+:root { --dg-db: #0e7c86; --dg-db-fill: #0b6c75; }
+:root[data-theme="dark"] { --dg-db: #45b3bf; --dg-db-fill: #0b6c75; }
+/* the component diagram's database shapes are edged in a deeper red (#C0392B, skinparam database BorderColor) */
+:root { --dg-db-edge: #09616a; }
+:root[data-theme="dark"] { --dg-db-edge: #2f8f99; }
+.component-diagram-section svg :is([stroke="#c0392b" i], [style*="stroke:#c0392b" i]) { stroke: var(--dg-db-edge) !important; }
+
+/* Item 23 (owner): each scenario's settings bar starts hidden; "Scenario settings" (c-round17.js) shows them all. The
+   switch takes the report flags' look: a dot that fills, a pale fill and edge when on. */
+body:not(.k-scenario-settings) details.example-diagrams > .diagram-options-bar { display: none; }
+.k-flag { position: relative; display: inline-block; margin-right: 14px; padding: 5.375px 10px 4.625px 24px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--kron-ink-soft); font: 400 13px/1.25 var(--kron-font); cursor: pointer; white-space: nowrap; }
+.k-flag::before { content: ""; position: absolute; left: 10px; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; border: 1px solid var(--kron-dot); box-sizing: border-box; }
+.k-flag:hover { background: var(--kron-hover); color: var(--kron-ink); }
+.k-flag[aria-pressed="true"] { background: var(--kron-selected); color: var(--kron-selected-ink); border-color: var(--kron-selected-edge); font-weight: 600; }
+.k-flag[aria-pressed="true"]::before { background: var(--kron-accent); border-color: var(--kron-accent); }
+.k-flag:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+
+/* Item 25 (owner): a control kept the product's spinner room while its diagrams redrew (padding-right 1.5em), so it
+   widened by 11px and narrowed again; and the August sweep meant to show instead never did, because the product's
+   spinner rule left its ::after transparent, 0.65em wide and round. The box keeps its padding, the sweep runs along
+   the bottom edge over an inset rail, and the label throbs. A label also reserves its bold width (c-round17.js wraps
+   it in .k-lbl), so switching a control on does not move the ones beside it. */
+.details-radio-btn.details-pending, .details-radio-btn.toggle-btn.details-pending { padding-right: 10px; }
+.details-radio-btn.details-pending::after { top: auto; right: 0; bottom: 0; left: 0; width: auto; height: 3px; margin-top: 0; border: 0; border-radius: 0; box-sizing: border-box; opacity: 1;
+  background: linear-gradient(90deg, transparent, var(--kron-accent) 30%, var(--kron-accent) 70%, transparent); transform: translateX(-100%); animation: kc-sweep 1.1s linear 0.2s infinite; }
+.k-lbl { display: inline-block; }
+.k-lbl::after { content: attr(data-label); display: block; height: 0; overflow: hidden; visibility: hidden; font-weight: 600; }

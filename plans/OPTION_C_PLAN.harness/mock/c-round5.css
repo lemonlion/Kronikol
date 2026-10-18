@@ -1,0 +1,183 @@
+/* Round 5 (owner's notes, 2026-10-17, second batch). Everything here reads tokens; c-dark.css redefines them. */
+
+/* STATUS never breaks between its label and its four states. Firefox sized the wrapping row 50px short of its
+   content and put the buttons under the label; a row that cannot wrap is sized by its content in every engine. */
+.filter-row > .status-filters { flex: none; flex-wrap: nowrap; }
+@container (max-width: 520px) {
+  .filter-row > .status-filters { flex-wrap: wrap; }
+  /* on a phone the four states share one row too, as on the desktop */
+  .status-filters > .fltr-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .status-toggle { padding-left: 4px; padding-right: 4px; }
+}
+@container (max-width: 300px) {
+  .status-filters > .fltr-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Tag, dependency and category chips draw nothing beside their name in any state. The August layer gave a
+   left-out chip an ::after (a 4.5px white bar) that crossed the first letter. */
+.filtering-box .tag-toggle::before, .filtering-box .tag-toggle::after,
+.filtering-box .dependency-toggle::before, .filtering-box .dependency-toggle::after,
+.filtering-box .category-toggle::before, .filtering-box .category-toggle::after { content: none !important; display: none !important; }
+
+/* TAGS' OR/AND switch looks like DEPENDENCIES' AND/OR in every state */
+.tag-mode-toggle.tag-mode-hdr { color: var(--kron-ink-quiet); background: var(--kron-field); border-color: var(--kron-control-border); }
+
+/* The parameters table fills its frame exactly: the report's 1em left margin pushed a 100%-wide table 12.5px out
+   of it, and the frame scrolled sideways. */
+.param-table-wrapper > .param-test-table { margin-left: 0; margin-right: 0; }
+
+/* A step's table or doc string starts where the step's text starts: past the status mark (2px + 16px + 7px). */
+.step-param-table, .step-param-combined-table, .step-docstring { margin-left: 25px; }
+
+/* FILTERING's top line: the label, the readout and the three actions centred on one 28px line, the readout set
+   apart from the actions by a divider. */
+.filtering-box-header { align-items: center; min-height: 28px; margin: -6px 0 8px; }
+.filtering-box-header h2 { line-height: 28px; }
+.filtering-box-export { align-items: center; }
+.filtering-box-export .export-btn { line-height: 20px; padding-top: 4px; padding-bottom: 4px; }
+.filtering-box-export .filter-readout { align-self: center; line-height: 20px; margin-right: 8px; padding-right: 12px; border-right: 1px solid var(--kron-divider); }
+.filter-readout.is-filtered b { display: inline-block; line-height: 18px; }
+@container (max-width: 430px) { .filtering-box-header { align-items: center; } }
+
+/* On a phone the readout rides the Filters toggle's line. */
+.mobile-filter-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mobile-filter-line > .mobile-filter-toggle { flex: none; }
+.mobile-filter-line > .filter-readout { min-width: 0; margin: 0; padding: 0; border: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The title line carries the light/dark switch at its right. */
+.title-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 14px; }
+.title-line > h1 { margin: 0; min-width: 0; }
+.theme-toggle { flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--kron-hairline);
+  border-radius: 8px; background: var(--kron-card); color: var(--kron-ink-soft); cursor: pointer; box-shadow: var(--kron-card-shadow); }
+.theme-toggle:hover { background: var(--kron-hover); color: var(--kron-ink); }
+.theme-toggle:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 2px; }
+.theme-icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.theme-sun { display: none; }
+:root[data-theme="dark"] .theme-moon { display: none; }
+:root[data-theme="dark"] .theme-sun { display: block; }
+
+/* ---------- the diagrams in the report's palette ----------
+   PlantUML paints Kronikol's diagrams in its own defaults (black step bars, yellow notes, grey participants, #181818
+   lines). These rules repaint those exact colours from the --dg-* tokens, in the light theme and the dark one, without
+   touching the source: the report's scripts read the colours as attributes, which CSS leaves as they are, and a
+   diagram drawn before a theme switch follows the switch at once. */
+:root {
+  --dg-bg: #ffffff;
+  --dg-ink: #242b36;
+  --dg-ink-soft: #5b6474;
+  --dg-line: #4a5361;
+  --dg-participant: #e9eef6;
+  --dg-note: #fdf6e4;
+  --dg-note-edge: #b9a57a;
+  --dg-event: #e2eff9;
+  --dg-event-edge: #7fa6d0;
+  --dg-pass: #e3f1e8;
+  --dg-pass-edge: #8cbf9f;
+  --dg-fail: #fbe8e6;
+  --dg-fail-edge: #dc9f97;
+  --dg-bar: #2f3b4f;
+  --dg-activity: #eef3fc;
+  --dg-activity-edge: #5f6878;
+  --dg-lane: #c9d1de;
+  --dg-http: #438dd5;
+  --dg-db: #e74c3c;
+  --dg-msg: #9b59b6;
+  --dg-person: #08427b;
+  --dg-icon: #ffffff;
+  --dg-icon-edge: #8a94a5;
+  --dg-icon-ink: #5b6474;
+}
+:is(.plantuml-browser, .iflow-diagram) svg { background: var(--dg-bg) !important; }
+:is(.plantuml-browser, .iflow-diagram) svg text[fill="#000000" i] { fill: var(--dg-ink); }
+:is(.plantuml-browser, .iflow-diagram) svg text:is([fill="#666666" i], [fill="#686868" i]) { fill: var(--dg-ink-soft); }
+:is(.plantuml-browser, .iflow-diagram) svg :is([style*="stroke:#181818" i], [stroke="#181818" i]) { stroke: var(--dg-line) !important; }
+:is(.plantuml-browser, .iflow-diagram) svg polygon[fill="#181818" i] { fill: var(--dg-line); }
+:is(.plantuml-browser, .iflow-diagram) svg :is(path, rect, circle, ellipse, polygon)[fill="#e2e2f0" i] { fill: var(--dg-participant); }
+:is(.plantuml-browser, .iflow-diagram) svg :is(path, polygon)[fill="#feffdd" i] { fill: var(--dg-note); stroke: var(--dg-note-edge) !important; }
+:is(.plantuml-browser, .iflow-diagram) svg :is(path, polygon)[fill="#cfecf7" i] { fill: var(--dg-event); stroke: var(--dg-event-edge) !important; }
+:is(.plantuml-browser, .iflow-diagram) svg :is(path, polygon)[fill="#d4edda" i] { fill: var(--dg-pass); stroke: var(--dg-pass-edge) !important; }
+:is(.plantuml-browser, .iflow-diagram) svg :is(path, polygon)[fill="#f8d7da" i] { fill: var(--dg-fail); stroke: var(--dg-fail-edge) !important; }
+:is(.plantuml-browser, .iflow-diagram) svg polygon[fill="#000000" i] { fill: var(--dg-bar); }
+:is(.plantuml-browser, .iflow-diagram) svg rect[fill="#f0f4ff" i] { fill: var(--dg-activity); }
+:is(.plantuml-browser, .iflow-diagram) svg :is([style*="stroke:#666666" i], [stroke="#666666" i]) { stroke: var(--dg-activity-edge) !important; }
+:is(.plantuml-browser, .iflow-diagram) svg :is([style*="stroke:#cccccc" i], [stroke="#cccccc" i]) { stroke: var(--dg-lane) !important; }
+:is(.plantuml-browser, .iflow-diagram) svg [fill="#438dd5" i] { fill: var(--dg-http); }
+:is(.plantuml-browser, .iflow-diagram) svg :is([style*="stroke:#438dd5" i], [stroke="#438dd5" i]) { stroke: var(--dg-http) !important; }
+:is(.plantuml-browser, .iflow-diagram) svg [fill="#e74c3c" i] { fill: var(--dg-db); }
+:is(.plantuml-browser, .iflow-diagram) svg :is([style*="stroke:#e74c3c" i], [stroke="#e74c3c" i]) { stroke: var(--dg-db) !important; }
+:is(.plantuml-browser, .iflow-diagram) svg [fill="#9b59b6" i] { fill: var(--dg-msg); }
+:is(.plantuml-browser, .iflow-diagram) svg :is([style*="stroke:#9b59b6" i], [stroke="#9b59b6" i]) { stroke: var(--dg-msg) !important; }
+:is(.plantuml-browser, .iflow-diagram) svg [fill="#08427b" i] { fill: var(--dg-person); }
+/* the report's own note buttons drawn into the diagram */
+:is(.plantuml-browser, .iflow-diagram) svg .note-toggle-icon rect { fill: var(--dg-icon); stroke: var(--dg-icon-edge); }
+:is(.plantuml-browser, .iflow-diagram) svg .note-toggle-icon line { stroke: var(--dg-icon-ink); }
+:is(.plantuml-browser, .iflow-diagram) svg .note-toggle-icon text { fill: var(--dg-icon-ink); }
+
+/* ---------- surfaces the report's own stylesheet still painted in fixed light colours (found by dark-scan.js) ---------- */
+:root {
+  --kron-fail-solid: #b3372e;
+  --kron-code-bg: #e9edf3;
+  --kron-track: #edf0f5;
+  --kron-exception-soft: #f8dcd9;
+}
+/* the Steps header sat on a white pill of its own: on the card it needs no fill */
+.scenario-steps > summary, .scenario-background > summary { background-color: transparent; }
+/* status badges: the report's two-class rules beat the skin's, and its pass badge was 4.04:1 */
+.status-badge.badge-pass { background: var(--kron-pass-soft); color: var(--kron-pass); }
+.status-badge.badge-fail { background: var(--kron-fail-soft); color: var(--kron-fail); border-color: var(--kron-fail-edge); }
+.status-badge.badge-skip { background: var(--kron-skip-soft); color: var(--kron-skip); }
+.status-badge.badge-bypass { background: var(--kron-bypass-soft); color: var(--kron-bypass); }
+/* a step's inline values, tinted by what became of them */
+.step-param-inline { color: var(--kron-ink); }
+.param-success { background: var(--kron-pass-soft); }
+.param-failure { background: var(--kron-fail-soft); }
+.param-exception { background: var(--kron-exception-soft); }
+.param-not-provided { background: var(--kron-warn-soft); }
+.param-na { background: var(--kron-code-bg); }
+/* the parameters table's header rows */
+.param-test-table thead, .param-test-table th, .param-test-table .master-header, .param-test-table .sub-header { background: var(--kron-strip); }
+.param-test-table .master-header { color: var(--kron-label); }
+/* the timeline's empty track and the history sparklines' ground */
+.timeline-track { background: var(--kron-track); }
+.history-chart-svg { background: var(--kron-strip); }
+/* Next Failure is a solid button with white text: a solid red in both themes, never the dark theme's light text red */
+.jump-to-failure { background: var(--kron-fail-solid); }
+
+/* ---------- the rest of the report's fixed colours: rules leak-scan.js found still winning, and the pieces it cannot
+   see because they are made on demand (the diagram menu, the internal-flow popup) ---------- */
+:root { --kron-prop-key: #7d3c98; --kron-prop-val: #1a5276; }
+.param-test-table th, .param-test-table td { border-color: var(--kron-hairline); }
+.scenario-steps, .scenario-background { border-color: var(--kron-hairline); }
+.plantuml-browser:not([data-rendered]), .puml-fragment:not([data-rendered]) { color: var(--kron-faint); }
+.iflow-boundary-marker { border-left-color: var(--kron-dot); }
+.step-param-table th, .step-param-table td { border-color: var(--kron-hairline); }
+.step-param-table th { background: var(--kron-strip); color: var(--kron-ink-soft); }
+.step-background { border-left-color: var(--kron-hairline); }
+.step-attachment { color: var(--kron-accent); }
+.cell-subtable th, .cell-subtable td { border-color: var(--kron-hairline-soft); }
+.cell-subtable th { background: var(--kron-strip); color: var(--kron-label); }
+details.param-expand > summary { color: var(--kron-ink-soft); }
+details.param-expand .expand-body { background: var(--kron-strip); border-color: var(--kron-hairline); color: var(--kron-ink); }
+details.param-expand .expand-body .prop-key { color: var(--kron-prop-key); }
+details.param-expand .expand-body .prop-val { color: var(--kron-prop-val); }
+.flatten-toggle { color: var(--kron-ink-soft); border-color: var(--kron-control-border); }
+.flatten-toggle:hover { background: var(--kron-hover); color: var(--kron-ink); }
+.feature-summary-table tr.failed td { background: var(--kron-fail-soft); }
+.search-help-table th { border-bottom-color: var(--kron-hairline); }
+.search-help-table td { border-bottom-color: var(--kron-hairline-soft); }
+.search-help-note { color: var(--kron-muted); }
+.search-help-note kbd { background: var(--kron-code-bg); border-color: var(--kron-control-border); color: var(--kron-ink); }
+/* the report's #searchbar rule out-ranked round 4's 3:1 boundary */
+.filter-search #searchbar { border-color: var(--kron-select-border); }
+.filter-search #searchbar:focus { border-color: var(--kron-accent); }
+.diagram-ctx-menu, .diagram-ctx-menu .submenu { background: var(--kron-card); border-color: var(--kron-hairline); color: var(--kron-ink); box-shadow: var(--kron-card-shadow); }
+.diagram-ctx-menu > div:hover, .diagram-ctx-menu .submenu > div:hover { background: var(--kron-hover); }
+.diagram-ctx-menu hr { border-top-color: var(--kron-hairline-soft); }
+.diagram-ctx-menu .submenu-parent::after { color: var(--kron-muted); }
+.diagram-zoom-slider { accent-color: var(--kron-accent); }
+.iflow-popup { background: var(--kron-card); color: var(--kron-ink); }
+.iflow-popup h3 { color: var(--kron-ink); }
+.iflow-popup-close { color: var(--kron-muted); }
+.iflow-popup-close:hover { color: var(--kron-ink); }
+.iflow-popup .iflow-no-data, .iflow-popup .iflow-loading { color: var(--kron-muted); }
+.iflow-popup .iflow-load-failed { color: var(--kron-fail); }

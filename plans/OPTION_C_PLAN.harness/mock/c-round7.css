@@ -1,0 +1,101 @@
+
+/* Round 7 (owner's notes, 2026-10-17, fourth batch): type. One UI family and one mono family, one six-step scale,
+   two weights, one tracking for uppercase labels, tabular digits wherever a number sits. Measured with
+   font-audit.js: before this, 16 sizes (fractions from em rules compounding), weights 500 and 650 that Segoe UI has
+   no face for (Windows drew 500 as 400 and 650 as 700, macOS drew both as asked), 175 controls in the browser's
+   default Arial, 55 in a bare monospace (Consolas), and every duration and count in monospace. */
+:root {
+  /* GitHub's stack, for its reason: system-ui on a Chinese, Japanese or Korean Windows resolves to that locale's UI
+     font, whose Latin is not Segoe UI. The emoji fonts come last, for the copy and link buttons. */
+  /* no emoji fonts named (round 11): with "Segoe UI Emoji" in the list, U+25B6, the steps' expand triangle, drew as the
+     play-button emoji; an emoji still finds its font through the system's own fallback */
+  --kron-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --kron-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  --kron-fs-label: 11px;    /* uppercase labels, badges, counts */
+  --kron-fs-meta: 12px;     /* durations, table cells, readouts */
+  --kron-fs-control: 13px;  /* buttons, chips, selects, sub-steps */
+  --kron-fs-body: 14px;     /* steps, scenario and rule titles, tabs */
+  --kron-fs-feature: 16px;  /* feature titles */
+  --kron-fs-title: 22px;    /* the report title */
+  --kron-label-track: .06em;  /* uppercase labels */
+}
+
+/* form controls take the page's font (browsers give them their own: Arial in Chrome on Windows) */
+.kron-c button, .kron-c input, .kron-c select, .kron-c textarea { font-family: inherit; }
+
+/* numbers are text: the UI font with tabular digits, so columns of durations and counts line up without a
+   second typeface. Monospace stays for literal values and code: parameter values, endpoints, errors, ids. */
+.kron-c .duration-badge, .kron-c .step-duration, .kron-c .timeline-duration, .kron-c .timeline-dur,
+.kron-c .jump-to-failure .failure-counter, .kron-c .run-stat dd, .kron-c .tab-n, .kron-c .history-count, .kron-c .fcnt,
+.kron-c .feature-summary-table td:not(:first-child),
+.kron-c .test-execution-summary td:nth-child(2):not(.column-header), .kron-c .test-execution-summary td:nth-child(4):not(.column-header) {
+  font-family: var(--kron-font); font-variant-numeric: tabular-nums;
+}
+.kron-c .param-test-table td, .kron-c .percentile-btn, .kron-c .filter-readout, .kron-c .run-when { font-variant-numeric: tabular-nums; }
+/* the report's own sheet set these in a bare monospace (Consolas): inline parameter values are literals, so the mono
+   stack at the inline-code size; Expected / Actual are labels */
+.kron-c .step-param-inline { font-family: var(--kron-mono); font-size: .9em; }
+.kron-c .error-diff .diff-label { font-family: var(--kron-font); font-size: var(--kron-fs-label); font-weight: 600; letter-spacing: var(--kron-label-track); text-transform: uppercase; }
+
+/* 11: uppercase labels, badges and counts */
+.kron-c .step-keyword, .kron-c .run-stat dt, .kron-c .run-status, .kron-c .param-test-table th.sub-header,
+.kron-c .filtering-box-header h2, .kron-c .status-filters-label, .kron-c .duration-filters-label, .kron-c .happy-filters-label,
+.kron-c .category-filters-label, .kron-c .dependency-filters-label, .kron-c .tag-filters-label, .kron-c .sort-label {
+  font-size: var(--kron-fs-label); font-weight: 600; letter-spacing: var(--kron-label-track); line-height: 16px;
+}
+.kron-c details.scenario > summary > .label, .kron-c .status-badge { font-size: var(--kron-fs-label); line-height: 16px; }
+.kron-c .tab-n { font-size: var(--kron-fs-label); font-weight: 400; }
+
+/* 12: durations, table cells, readouts, code in running text */
+.kron-c .duration-badge, .kron-c .step-duration, .kron-c .timeline-duration, .kron-c .timeline-dur, .kron-c .jump-to-failure .failure-counter,
+.kron-c .param-test-table td, .kron-c .history-series, .kron-c .history-meta code,
+.kron-c .flatten-toggle, .kron-c .filter-readout { font-size: var(--kron-fs-meta); }
+.kron-c .history-series { letter-spacing: .12em; }
+
+/* 13: controls and sub-steps. Segmented buttons keep 28px: 16px of line plus 5px of padding each side plus borders. */
+.kron-c .status-toggle, .kron-c .percentile-btn, .kron-c .happy-seg, .kron-c .tl-seg-btn, .kron-c .tag-toggle, .kron-c .dependency-toggle,
+.kron-c .category-toggle, .kron-c .export-btn, .kron-c .group-clear, .kron-c .jump-to-failure, .kron-c .search-help-toggle {
+  font-size: var(--kron-fs-control); line-height: 16px;
+}
+.kron-c .export-btn { line-height: 20px; }
+.kron-c .diagram-toggle-btn { font-weight: 400; }
+.kron-c .diagram-toggle-btn.active, .kron-c .diagram-toggle-btn[aria-pressed="true"], .kron-c .diagram-toggle-btn.diagram-toggle-active { font-weight: 600; }
+.kron-c .search-help-toggle { font-weight: 600; }
+.kron-c .sub-steps .step-text { font-size: var(--kron-fs-control); }
+
+/* 14: steps, scenario and rule titles, the search box */
+.kron-c .step-text { font-size: var(--kron-fs-body); line-height: 21px; }
+.kron-c .sub-steps .step-text { line-height: 19px; }
+.kron-c details.scenario > summary.h3, .kron-c details.rule > summary.h2-5 { font-size: var(--kron-fs-body); font-weight: 600; }
+.kron-c .filter-search input, .kron-c .filter-search #searchbar { font-size: var(--kron-fs-body); }
+/* iOS zooms the page into any field under 16px when it takes focus */
+@media (max-width: 768px) { .kron-c .filter-search input, .kron-c .filter-search #searchbar { font-size: 16px; } }
+
+/* 16 and 22: feature titles and the report title; 650 was drawn as Bold on Windows and as 650 on macOS */
+.kron-c details.feature > summary.h2 { font-size: var(--kron-fs-feature); font-weight: 600; }
+.kron-c .title-line h1 { font-size: var(--kron-fs-title); font-weight: 600; }
+.kron-c .run-title { font-weight: 600; }
+.kron-c .run-stat-fail dd { font-weight: 600; }
+
+/* the rest of the scale: the parameter table's headers are uppercase labels like its column names; the step data
+   table and the timeline's row labels joined their neighbours; history chart titles are labels; the last two 650s */
+.kron-c .param-test-table th { font-size: var(--kron-fs-label); font-weight: 600; letter-spacing: var(--kron-label-track); }
+.kron-c .step-param-table td, .kron-c .step-param-table th { font-size: var(--kron-fs-meta); font-variant-numeric: tabular-nums; }
+.kron-c .step-param-table th { font-weight: 600; }
+.kron-c .timeline-label { font-size: var(--kron-fs-control); }
+.kron-c .history-chart-title { font-size: var(--kron-fs-label); letter-spacing: var(--kron-label-track); }
+.kron-c details.history-section > summary.h2, .kron-c details.report-diagnostics > summary.h2 { font-weight: 600; }
+.kron-c .flatten-toggle { font-weight: 600; }
+.kron-c .history-list > h4 { font-size: var(--kron-fs-label); letter-spacing: var(--kron-label-track); }
+.kron-c .step-attachment { font-size: var(--kron-fs-meta); }
+.kron-c .history-summary-line { font-size: var(--kron-fs-control); }
+.kron-c details.report-diagnostics > summary { font-weight: 600; }
+
+/* Component boxes carry white names, and the arrow colours they shared were too light behind white text: 3.49:1
+   and 3.82:1 in the light theme, 2.55:1 to 2.73:1 in the dark one, against the 4.5:1 text needs (svg-contrast.js).
+   Boxes take deeper fills of the same hues, 5.4:1 or better in both themes; arrows and their heads (polygons) keep
+   the lighter colours, which read better as lines on the dark ground. */
+:root { --dg-http-fill: #2b6cb0; --dg-db-fill: #c0392b; --dg-msg-fill: #8e44ad; }
+:is(.plantuml-browser, .iflow-diagram) svg :is(rect, path, ellipse)[fill="#438dd5" i] { fill: var(--dg-http-fill); }
+:is(.plantuml-browser, .iflow-diagram) svg :is(rect, path, ellipse)[fill="#e74c3c" i] { fill: var(--dg-db-fill); }
+:is(.plantuml-browser, .iflow-diagram) svg :is(rect, path, ellipse)[fill="#9b59b6" i] { fill: var(--dg-msg-fill); }

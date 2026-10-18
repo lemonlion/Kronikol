@@ -1,0 +1,36 @@
+
+/* Round 6 (owner's notes, 2026-10-17, third batch). Everything here reads tokens; c-dark.css redefines them. */
+
+/* The label column is 92px as a width, not only as a flex basis. Firefox takes a flex item's max-content
+   contribution from its width: the STATUS group, sized to its content, was sized from its label's text (about
+   42px) while the label was laid out at 92px, so the buttons ran 50px past the group's edge and under DURATION,
+   and c-dom.js's fit test read the same short width. A label that sits inline, or on its own line, is as wide as
+   its text. */
+.status-filters-label, .duration-filters-label, .category-filters-label, .dependency-filters-label,
+.tag-filters-label, .happy-filters-label { width: 92px; }
+.filter-row.pair-fits .duration-filters-label, .filter-row.trio-fits .happy-filters-label { width: auto; }
+@container (max-width: 430px) {
+  .status-filters-label, .duration-filters-label, .category-filters-label, .dependency-filters-label,
+  .tag-filters-label, .filter-row:not(.trio-fits) .happy-filters-label { width: auto; }
+}
+/* DURATION on a line of its own kept the August layer's margin-right: 0 and started its values 8px left of every
+   other row's. Above the phone layout, where each label takes a line of its own. */
+@container (width > 430px) {
+  .filter-row:not(.pair-fits) .duration-filters-label { margin-right: 8px; }
+}
+
+/* Clear for Dependencies and Tags: a text action in the accent, after the last chip, there only when it has work */
+.group-clear { border: 0; background: none; padding: 4px 6px; margin-left: 2px; font: 600 12px/18px var(--kron-font); color: var(--kron-accent); cursor: pointer; border-radius: 4px; align-self: center; }
+.group-clear:hover { text-decoration: underline; }
+.group-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+.group-clear[hidden] { display: none; }
+
+/* SORT: the filter labels' style, at the right end of the Features tools line */
+.sort-group { display: inline-flex; align-items: center; gap: 8px; }
+.sort-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-label); }
+.sort-group .sort-select { margin: 0; }
+@media (max-width: 768px) {
+  .sort-group { order: 1; margin-left: auto; }
+  .features-tools-line.toolbar-left > button.collapse-expand-all { order: 4; }
+  .tools-gear { order: 5; }
+}
