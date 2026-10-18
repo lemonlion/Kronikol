@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.26.9] - 2026-10-18
+
+**Patch - the orphaned-calls diagnostic named two of its three causes (found on BreakfastProvider's report).** A
+wording fix with nothing new for a consumer to call, so the patch part moves (4.26.8 to 4.26.9).
+
+### Fixed
+
+- **The `UnattributedInteractions` entry for calls under a test id no scenario has named only two causes.** It said
+  such calls come from a test that is not tracked, or from a test-info fetcher that answers with an id the adapter does
+  not report. BreakfastProvider, Kronikol's reference consumer, had a third: its event steps opened
+  `TestIdentityScope.Begin(name, requestId)` with the request id its fakes file captured requests under. The in-memory
+  consumer handled each event inside that scope. Its MongoDB, BigQuery, ClickHouse and gRPC trackers asked the test
+  framework first and drew their calls in the scenario. Its call to a fake service went through a
+  `TestTrackingMessageHandler` with no `CurrentTestInfoFetcher`, took the scope's id for the test's, and was drawn in no
+  diagram (three scenarios, one call each). The message now ends "Calls like these come from a test that is not
+  tracked, a test-info fetcher that answers with an id the adapter does not report, or a TestIdentityScope or test-id
+  header set to some other id, such as a request or correlation id." `OrphanedCalls`' doc comment says the same. The
+  message starts as before, so a `kronikol query` header that cuts it short reads the same. The entry is in the data
+  files and the labs page only when a run has such calls; Kronikol4J prints the console warning only, not this entry,
+  so its output does not change. BreakfastProvider's own fix is its commit 6fed77c: the scope names the scenario, the
+  fakes' request id has a scope of its own, and its Supplier fake answers the feedback call it had answered with 404.
+
+### Documentation
+
+- The wiki's Diagnostics and Debugging page names the third cause, and a new entry under Common Issues, "A call an
+  event consumer makes is missing, and the run reports orphaned test ids", gives the symptom, the cause (a tracker with
+  no fetcher reads the scope) and the fix (scope the test's own name and id from `CurrentTestInfo.Fetcher`, and keep
+  any other id in a scope of its own).
+
+### Tests
+
+- `OrphanedCallsTests`: the whole message, and a fact that the message names a scope or header given some other id,
+  with BreakfastProvider's case.
+
+- Proofs: on 4.26.8's code both facts fail, on the wording; the other 7 orphaned-calls facts pass on both.
+- Checks: after the version bump the core suite passes 7,699 with 2 skipped and the full Playwright suite passes
+  1,061 with 28 skipped when run alone; release.slnf builds in Release for every target. The templates pin 4.26.8
+  and the history action's VERSION installs Kronikol.Tool 4.26.9.
+
 ## [4.26.8] - 2026-10-18
 
 **Patch - a failed assertion's expected and actual values were marked letter by letter, and a note's right-click menu

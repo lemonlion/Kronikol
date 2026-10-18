@@ -112,9 +112,21 @@ public class OrphanedCallsTests : IDisposable
 
         Assert.Equal(
             "3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: " +
-            "2 test ids, the most calls (2) under 'orphan-a'. A test that is not tracked, or a test-info fetcher that answers " +
-            "with an id the adapter does not report, logs calls like these.",
+            "2 test ids, the most calls (2) under 'orphan-a'. Calls like these come from a test that is not tracked, a test-info " +
+            "fetcher that answers with an id the adapter does not report, or a TestIdentityScope or test-id header set to some " +
+            "other id, such as a request or correlation id.",
             description);
+    }
+
+    [Fact]
+    public void The_description_names_a_scope_or_header_given_some_other_id_as_a_cause()
+    {
+        // BreakfastProvider's event steps opened TestIdentityScope.Begin(name, requestId): the in-memory consumer's call to
+        // a fake service took the request id for the test's, and the message named only the two other causes.
+        var description = OrphanedCalls.Describe(OrphanedCalls.Find(Features("scenario-1"), Pair("8c7b62a9-4169-408d-9465-77e1aeed2d57")));
+
+        Assert.Contains("a TestIdentityScope or test-id header set to some other id, such as a request or correlation id.",
+            description, StringComparison.Ordinal);
     }
 
     [Fact]

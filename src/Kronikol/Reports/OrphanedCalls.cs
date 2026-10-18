@@ -12,8 +12,9 @@ internal sealed record OrphanedCallSummary(int Calls, IReadOnlyList<(string Test
 /// whose id it carries, and a call that carries none (<see cref="TestIdentityScope.UnknownTestId"/>) is listed
 /// as a background call; a call whose id names no scenario is in neither. A test that is not tracked makes such
 /// calls through a tracked client, and so does a test-info fetcher that answers with an id the adapter does not
-/// report. The run records them as a <see cref="DiagnosticKind.UnattributedInteractions"/> entry; a console line, which
-/// <c>dotnet test</c> does not show at its default verbosity, was once the only trace.
+/// report, or a <see cref="TestIdentityScope"/> or test-id header (on a request or a message) given some other id,
+/// such as a request or correlation id. The run records them as a <see cref="DiagnosticKind.UnattributedInteractions"/>
+/// entry; a console line, which <c>dotnet test</c> does not show at its default verbosity, was once the only trace.
 /// </summary>
 /// <remarks>
 /// A call the tracking ignores is drawn under no id, so it is not one of these. Nor is a record with no test id at
@@ -44,8 +45,8 @@ internal static class OrphanedCalls
         var (topId, topCalls) = found.TestIds[0];
         return $"{Count(found.Calls, "call")} carried a test id that no scenario of this run has, so no scenario and no " +
             $"background section shows them: {Count(found.TestIds.Count, "test id")}, the most calls ({topCalls}) under '{topId}'. " +
-            "A test that is not tracked, or a test-info fetcher that answers with an id the adapter does not report, logs " +
-            "calls like these.";
+            "Calls like these come from a test that is not tracked, a test-info fetcher that answers with an id the adapter " +
+            "does not report, or a TestIdentityScope or test-id header set to some other id, such as a request or correlation id.";
     }
 
     private static string Count(int n, string noun) => $"{n} {noun}{(n == 1 ? "" : "s")}";
