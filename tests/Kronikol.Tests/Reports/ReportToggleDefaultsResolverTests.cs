@@ -40,7 +40,8 @@ public class ReportToggleDefaultsResolverTests
         Assert.Equal(DiagramTabKind.Sequence, b.DiagramTab);
         Assert.False(b.ScenarioTimelineVisible);
         Assert.False(b.ComponentDiagramVisible);
-        Assert.Equal(FilterCombinationMode.And, b.DependencyFilterMode);
+        // 5.0.0: a scenario with any of the chosen dependencies shows, as tags do (the owner, 2026-10-18).
+        Assert.Equal(FilterCombinationMode.Or, b.DependencyFilterMode);
         Assert.Equal(FilterCombinationMode.Or, b.CategoryFilterMode);
         Assert.False(b.FeaturesSummaryOpen);
         Assert.True(b.FailureClustersOpen);

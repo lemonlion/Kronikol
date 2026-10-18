@@ -342,9 +342,9 @@ public class ToggleDefaultsMarkupTests
     [Fact]
     public void Dependency_filter_mode_default_seeds_button_text_and_script()
     {
-        var content = Generate(t => t.DependencyFilterMode = FilterCombinationMode.Or);
-        Assert.Contains("onclick=\"toggle_dep_mode(this)\">OR</button>", content);
-        Assert.Contains("var _depModeDefault = 'OR'", content);
+        var content = Generate(t => t.DependencyFilterMode = FilterCombinationMode.And);
+        Assert.Contains("onclick=\"toggle_dep_mode(this)\">AND</button>", content);
+        Assert.Contains("var _depModeDefault = 'AND'", content);
     }
 
     [Fact]
@@ -371,12 +371,13 @@ public class ToggleDefaultsMarkupTests
     }
 
     [Fact]
-    public void Filter_mode_builtins_seed_the_historical_texts()
+    public void Filter_mode_builtins_seed_any_for_both_filters()
     {
+        // 5.0.0: dependencies combine with OR by default, as categories always have (4.x: AND).
         var content = Generate();
-        Assert.Contains("var _depModeDefault = 'AND'", content);
+        Assert.Contains("var _depModeDefault = 'OR'", content);
         Assert.Contains("var _catModeDefault = 'OR'", content);
-        Assert.Contains("onclick=\"toggle_dep_mode(this)\">AND</button>", content);
+        Assert.Contains("onclick=\"toggle_dep_mode(this)\">OR</button>", content);
     }
 
     // ═══════════════════════════════════════════════════════════

@@ -23,6 +23,19 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
         return url;
     }
 
+    /// <summary>5.0.0: with nothing configured, a scenario with any of the chosen dependencies shows, as with tags
+    /// (4.x showed only those with all of them).</summary>
+    [Fact]
+    public async Task Dependency_mode_is_or_when_nothing_is_configured()
+    {
+        var url = ReportTestHelper.GenerateToggleDefaultsReport(TempDir, OutputDir, "FilterMode_BuiltIn.html", _ => { });
+        await Page.GotoAsync(url);
+        await Page.Locator("details.feature").First.WaitForAsync();
+
+        Assert.Equal("OR", (await Page.Locator(".dep-mode-toggle").TextContentAsync())!.Trim());
+        Assert.Equal("OR", await Page.EvaluateAsync<string>("() => _depMode"));
+    }
+
     [Fact]
     public async Task Or_dependency_mode_default_seeds_button_and_hash_grammar()
     {

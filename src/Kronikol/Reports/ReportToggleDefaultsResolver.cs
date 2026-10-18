@@ -28,7 +28,7 @@ public record ResolvedToggleDefaults
     public DiagramTabKind DiagramTab { get; init; } = DiagramTabKind.Sequence;
     public bool ScenarioTimelineVisible { get; init; }
     public bool ComponentDiagramVisible { get; init; }
-    public FilterCombinationMode DependencyFilterMode { get; init; } = FilterCombinationMode.And;
+    public FilterCombinationMode DependencyFilterMode { get; init; } = FilterCombinationMode.Or;
     public FilterCombinationMode CategoryFilterMode { get; init; } = FilterCombinationMode.Or;
     public bool FeaturesSummaryOpen { get; init; }
     public bool FailureClustersOpen { get; init; } = true;

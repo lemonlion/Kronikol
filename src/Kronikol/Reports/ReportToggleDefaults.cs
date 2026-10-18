@@ -65,7 +65,8 @@ public record ReportToggleDefaults
     /// <summary>The embedded Component Diagram panel starts visible (test run report only). Default: <c>false</c>.</summary>
     public bool? ComponentDiagramVisible { get; set; }
 
-    /// <summary>The dependency filter's AND/OR combination mode. Default: <see cref="FilterCombinationMode.And"/>.</summary>
+    /// <summary>The dependency filter's AND/OR combination mode. Default: <see cref="FilterCombinationMode.Or"/>, a scenario
+    /// with any of the chosen dependencies (since 5.0.0; <see cref="FilterCombinationMode.And"/> before it).</summary>
     public FilterCombinationMode? DependencyFilterMode { get; set; }
 
     /// <summary>The category filter's AND/OR combination mode. Default: <see cref="FilterCombinationMode.Or"/>.</summary>

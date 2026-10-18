@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work and is released as 5.0.0, not before.
+
+### Changed (breaking)
+
+- **The dependency filter shows a scenario with any of the chosen dependencies by default, as the category (tag) filter
+  does.** `ReportToggleDefaults.DependencyFilterMode` defaults to `FilterCombinationMode.Or` (4.x: `And`, a scenario
+  with all of them), and the mode button starts on OR. A report that wants the 4.x behaviour sets
+  `DependencyFilterMode = FilterCombinationMode.And`. A link made on a 4.x report that chose dependencies with no
+  `depmode` meant AND; opened on a 5.0.0 report it means OR. One that says `depmode=OR` still means OR, and a 5.0.0
+  report writes `depmode=AND` when AND is chosen.
+
 ## [4.26.9] - 2026-10-18
 
 **Patch - the orphaned-calls diagnostic named two of its three causes (found on BreakfastProvider's report).** A
