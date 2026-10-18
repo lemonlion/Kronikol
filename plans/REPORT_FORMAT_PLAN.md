@@ -1106,9 +1106,9 @@ the xUnit2 lane's `ReportFile`.
   are updated together, as `SkillDriftTests` requires.
 - **R4:** BreakfastProvider opts in on one lane first, from a scratch clone, never from `C:/Code/BreakfastProvider`. It
   is the end-to-end check: the gate, the history action, Pages and the CI summary.
-- **v5:** `CLAUDE.md`'s **MAJOR** line points at this v5. Its "Debugging a test run" section and
-  `templates/agents/CLAUDE.md` name the new file. Its commits go on the `v5` branch, with changelog entries under
-  `[Unreleased]` (§7). `PLANS_STATUS.md` records the plan as executed.
+- **v5:** `CLAUDE.md`'s **MAJOR** line has pointed at this v5 since D39; once 5.0.0 ships it names v6. Its "Debugging a
+  test run" section and `templates/agents/CLAUDE.md` name the new file. Its commits go on the `v5` branch, with
+  changelog entries under `[Unreleased]` (§7). `PLANS_STATUS.md` records the plan as executed.
 - **Doc comments made false** ship in the package, so fixing them is part of each release. They are in
   `ReportConfigurationOptions.cs`:
   - `:232` and `:239`, the data file and mergeable data;
@@ -1126,24 +1126,26 @@ the xUnit2 lane's `ReportFile`.
 ## 7. Where it sits in the roadmap
 
 The owner decided on 2026-10-18 that this plan ships in v5 together with the report UI work of the parallel session,
-and that everything `ROADMAP.md` lists for v5 today moves to v6. That list is in `V5_PLAN.md` and
-`ROADMAP.md` stages 11 and 12, and `V4_PLAN.md:26-30` sums it up:
+and that everything `ROADMAP.md` listed for v5 moves to v6, except toolbar Option C, which is that UI work. The list
+was in `V5_PLAN.md` (now `V6_PLAN.md`) and `ROADMAP.md` stages 11 and 12, and `V4_PLAN.md:26-30` sums it up:
 - Mermaid CI summaries;
 - the Server, Local, IKVM and C4 removal;
-- the five component diagram options nothing reads (`V5_PLAN.md:234`);
-- toolbar Option C with `--kron-*`;
+- the five component diagram options nothing reads (`V6_PLAN.md` open question 8);
 - the toggle-default unification;
 - the maybes: numeric HTTP status in the data file, the dead `.examples-*` CSS rules, and dropping the JSON's
   indentation. The last is moot for the `.krkl`, which is compact, and stays open only for a run that keeps `.json`.
 
-This plan does not make that move, because the parallel session may be editing the same files. When it is green-lit,
-the move is:
-1. Rename `V5_PLAN.md` to `V6_PLAN.md`, as `V4_PLAN.md` became `V5_PLAN.md` on 2026-09-29.
-2. Add a note at its top that "v5" in it means v6.
-3. Rewrite D30 and the stage rows of `ROADMAP.md` that say v5.
-4. Add this plan's stage.
-5. Update the `PLANS_STATUS.md` rows that name v5.
-6. Update the line in `CLAUDE.md` that reserves the major for "the planned v5".
+The move was made on 2026-10-18, at the owner's ask, as `ROADMAP.md` D39:
+1. `V5_PLAN.md` is now `V6_PLAN.md`, as `V4_PLAN.md` became `V5_PLAN.md` on 2026-09-29, with a note at its top, and
+   "v5" in it reads v6. A new `V5_PLAN.md` is the index of 5.0.0.
+2. `ROADMAP.md` gains D39 and stage 1e, this plan's stage. Stages 11 and 12 are 6.0.0, D12 and D30 point to D39, and
+   toolbar Option C (11.2, and its half of 12.1) moved to 1e.7.
+3. The `PLANS_STATUS.md` rows that named v5 and `CLAUDE.md`'s **MAJOR** line say the same.
+4. The doc comments of `CurrentStepTypeFetcher` on 24 options types, which put its removal in v5, now say v6 (under
+   the changelog's `[Unreleased]`), and so do the wiki pages for those options.
+
+D39 leaves one question open: whether 6.0.0 still comes before the launch, now that the "how it looks" half of the
+old 5.0.0 is 5.0.0's.
 
 **The `v5` branch.** The UI session's plan, `OPTION_C_PLAN.md` (committed on the local branch `v5` as `5594a857`,
 green-lit on 2026-10-18), sets 5.0.0 as three pieces of work on one branch: all of Option C, the dependency filter's
@@ -1333,6 +1335,9 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
   - Found while checking: the wiki's redaction recipe already passes vacuously in 4.x (F13), and the same page calls
     the mergeable JSON payload-free (§8). Both are wiki edits that need no release.
   - Then, at the owner's ask, both wiki errors were fixed (wiki `c6e85b9`), and this plan was committed.
+- **2026-10-18, the roadmap move** (§7), at the owner's ask: `ROADMAP.md` D39 and stage 1e, `V5_PLAN.md` renamed
+  `V6_PLAN.md` with a new `V5_PLAN.md` as the index of 5.0.0, the `PLANS_STATUS.md` rows, `CLAUDE.md`'s **MAJOR**
+  line, 24 doc comments and the wiki pages that put a removal in v5 (wiki `450844e`).
   - Read against the UI session's `OPTION_C_PLAN.md` on the `v5` branch (`5594a857`), which names this plan as one
     of 5.0.0's three pieces: §7 gains the branch and the five places the two plans meet, and merge's `--no-json`
     keeps its meaning (§4.3). The line references hold at 4.26.9, whose releases changed none of the files cited.

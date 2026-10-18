@@ -39,7 +39,7 @@ public record MessageTrackerOptions
     /// <summary>
     /// Has no effect: <see cref="MessageTracker"/> does not read it. The HTTP handler's option of the same name drives its
     /// implicit start of the action phase, a step the message tracker does not have. Its removal is an open question
-    /// for v5 (plans/V5_PLAN.md).
+    /// for v6 (plans/V6_PLAN.md).
     /// </summary>
     public Func<string?>? CurrentStepTypeFetcher { get; set; }
 

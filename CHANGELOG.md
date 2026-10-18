@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Documentation
+
+- The doc comments of `CurrentStepTypeFetcher`, which nothing reads, on 23 extensions' options types and on
+  `MessageTrackerOptions` put its removal in v6 (`plans/V6_PLAN.md`), where they said v5: on 2026-10-18 the owner
+  made 5.0.0 the report data file and Option C, and moved the rest of the old v5 to v6 (`plans/ROADMAP.md` D39).
+  The wiki's pages for those options say the same.
+
 ## [4.26.9] - 2026-10-18
 
 **Patch - the orphaned-calls diagnostic named two of its three causes (found on BreakfastProvider's report).** A

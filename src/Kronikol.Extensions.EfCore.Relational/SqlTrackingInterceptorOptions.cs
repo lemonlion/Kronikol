@@ -21,7 +21,7 @@ public record SqlTrackingInterceptorOptions
     /// Has no effect: the SQL interceptor does not read it (<see cref="SqlTrackingInterceptorOptionsExtensions.WithTestInfoFrom"/>
     /// copies it from the HTTP handler's options, and nothing reads the copy). The HTTP handler's option of the same
     /// name drives its implicit start of the action phase, a step the interceptor does not have. Its removal is an open
-    /// question for v5 (plans/V5_PLAN.md).
+    /// question for v6 (plans/V6_PLAN.md).
     /// </summary>
     public Func<string?>? CurrentStepTypeFetcher { get; set; }
     public SqlTrackingVerbosity? SetupVerbosity { get; set; }
