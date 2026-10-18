@@ -95,29 +95,62 @@
   else setTimeout(run, 0);
 })();
 
-/* Round 17 (owner, item 23): with the report's own settings always in view at the top, each scenario's settings bar
-   only invited a mismatch (a diagram drawn one way under a bar at the top that says another), so the scenarios' bars
-   start hidden. "Scenario settings" on the Features tools line shows them, for the rare scenario set apart from the
-   rest; the choice is remembered in this browser. */
+/* Round 17 (owner, item 26, in place of item 23's report-wide switch): each scenario's settings bar is its own. A
+   gear at the top right of the scenario's diagram, grey until pointed at, opens that scenario's bar, where the gear is
+   the right-most control, in the same place, so a second click closes it. While open, the bar stays under the report's
+   bar as the reader scrolls through the scenario, and it starts "This scenario:" so it reads apart from the report's. */
 (function () {
-  var KEY = 'kronikol.scenarioSettings';
-  function read() { try { return localStorage.getItem(KEY) === 'shown'; } catch (e) { return false; } }
-  function write(on) { try { localStorage.setItem(KEY, on ? 'shown' : 'hidden'); } catch (e) {} }
-  function run() {
-    var line = document.querySelector('.features-tools-line');
-    if (!line || line.querySelector('.k-scenario-settings-toggle')) return;
-    var b = document.createElement('button');
-    b.type = 'button'; b.className = 'k-flag k-scenario-settings-toggle'; b.textContent = 'Scenario settings';
-    function set(on) {
-      document.body.classList.toggle('k-scenario-settings', on);
-      b.setAttribute('aria-pressed', on ? 'true' : 'false');
-      b.title = on ? "Hide each scenario's payload and diagram settings (the bar at the top sets them for every scenario)"
-                   : "Show payload and diagram settings on each scenario, to set one apart from the bar at the top";
+  var NS = 'http://www.w3.org/2000/svg';
+  // a cog: eight teeth around a ring, the hole cut by the even-odd rule
+  function cogPath() {
+    var n = 8, ro = 9.6, ri = 7.2, tw = 0.2, tb = 0.13, d = '';
+    for (var i = 0; i < n; i++) {
+      var a = i * 2 * Math.PI / n;
+      [[ri, a - tw - tb], [ro, a - tw], [ro, a + tw], [ri, a + tw + tb]].forEach(function (pt, k) {
+        d += (i === 0 && k === 0 ? 'M' : 'L') + (pt[0] * Math.cos(pt[1])).toFixed(2) + ' ' + (pt[0] * Math.sin(pt[1])).toFixed(2);
+      });
     }
-    set(read());
-    b.addEventListener('click', function () { var on = !document.body.classList.contains('k-scenario-settings'); set(on); write(on); });
-    line.insertBefore(b, line.querySelector('.sort-group'));
+    return d + 'Z M3.4 0A3.4 3.4 0 1 0 -3.4 0A3.4 3.4 0 1 0 3.4 0Z';
   }
+  var COG = cogPath();
+  function setup(sec) {
+    var bar = sec.querySelector(':scope > .diagram-options-bar') || sec.querySelector(':scope > .diagram-toggle:not(.diagram-toggle-tabs)');
+    if (!bar || bar.parentNode.classList.contains('k-scn-settings')) return;
+    // A scenario with only a sequence diagram has no tab bar, so the report's layout script floated this bar onto the
+    // title line; the gear stands in for it there, so it goes back to a row of its own (and, wrapped, the script's
+    // 'summary + .diagram-toggle' no longer finds it).
+    bar.removeAttribute('data-layout');
+    bar.style.marginTop = '';
+    // and it takes the options bar's look, so the row reads the same in both kinds of scenario
+    bar.classList.add('diagram-options-bar');
+    var wrap = document.createElement('div');
+    wrap.className = 'k-scn-settings';
+    bar.parentNode.insertBefore(wrap, bar);
+    wrap.appendChild(bar);
+    var lab = document.createElement('span');
+    lab.className = 'k-this-scenario';
+    lab.textContent = 'This scenario:';
+    bar.insertBefore(lab, bar.firstChild);
+    var g = document.createElement('button');
+    g.type = 'button';
+    g.className = 'k-scn-gear';
+    g.setAttribute('aria-label', "This scenario's settings");
+    var svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '-12 -12 24 24'); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
+    var path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', COG); path.setAttribute('fill-rule', 'evenodd');
+    svg.appendChild(path);
+    g.appendChild(svg);
+    function set(on) {
+      wrap.classList.toggle('k-on', on);
+      g.setAttribute('aria-expanded', on ? 'true' : 'false');
+      g.title = on ? "Hide this scenario's payload and diagram settings" : "This scenario's payload and diagram settings, to set it apart from the report's";
+    }
+    set(false);
+    g.addEventListener('click', function () { set(!wrap.classList.contains('k-on')); });
+    wrap.appendChild(g);
+  }
+  function run() { Array.prototype.forEach.call(document.querySelectorAll('details.example-diagrams'), setup); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(run, 0); });
   else setTimeout(run, 0);
 })();
@@ -156,4 +189,105 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(run, 0); });
   else setTimeout(run, 0);
+})();
+
+/* Round 17 (owner, items 29 and 30): the History tab's two run charts. Pass rate becomes a row of rings drawn like
+   the summary's (pass, fail, skipped and bypassed arcs, the rate in the middle), one per run; total duration keeps
+   its bars, now drawn as HTML so each can carry its time ("44s", "2m 26s") undistorted. Each keeps its run's tooltip. */
+(function () {
+  var NS = 'http://www.w3.org/2000/svg';
+  function svgEl(n, a) { var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); return e; }
+  function count(t, word) { var m = new RegExp('(\\d+) ' + word).exec(t); return m ? +m[1] : 0; }
+  function ring(title) {
+    var p = count(title, 'passed'), f = count(title, 'failed'), s = count(title, 'skipped'), b = count(title, 'bypassed');
+    var m = /of (\d+)/.exec(title), total = m ? +m[1] : p + f + s + b;
+    var svg = svgEl('svg', { viewBox: '0 0 100 100', role: 'img' });
+    var C = 2 * Math.PI * 40, at = 0;
+    svg.appendChild(svgEl('circle', { cx: 50, cy: 50, r: 40, fill: 'none', 'class': 'k-ring-track', 'stroke-width': 12 }));
+    [['pass', p], ['fail', f], ['skip', s], ['bypass', b]].forEach(function (seg) {
+      if (!seg[1] || !total) return;
+      var len = C * seg[1] / total;
+      svg.appendChild(svgEl('circle', { cx: 50, cy: 50, r: 40, fill: 'none', 'class': 'k-ring-' + seg[0], 'stroke-width': 12,
+        'stroke-dasharray': len.toFixed(2) + ' ' + (C - len).toFixed(2), 'stroke-dashoffset': (-at).toFixed(2), transform: 'rotate(-90 50 50)' }));
+      at += len;
+    });
+    // a run with a failure never reads 100%
+    var pct = total ? (f || s || b ? Math.min(99, Math.floor(100 * p / total)) : 100) : 0;
+    var t = svgEl('text', { x: 50, y: 50, 'text-anchor': 'middle', 'dominant-baseline': 'central' });
+    t.textContent = pct + '%';
+    svg.appendChild(t);
+    svg.setAttribute('aria-label', pct + '% passed');
+    return { svg: svg, failed: f > 0 };
+  }
+  function seconds(t) {
+    var m = /([\d.]+)\s*(ms|s|min|m|h)\b/.exec(t.split('·').pop());
+    if (!m) return null;
+    var v = +m[1];
+    return m[2] === 'ms' ? v / 1000 : m[2] === 'h' ? v * 3600 : m[2] === 's' ? v : v * 60;
+  }
+  function short(sec) {
+    if (sec < 1) return Math.round(sec * 1000) + 'ms';
+    var r = Math.round(sec);
+    if (r < 60) return r + 's';
+    if (r < 3600) return Math.floor(r / 60) + 'm ' + (r % 60) + 's';
+    return Math.floor(r / 3600) + 'h ' + Math.round((r % 3600) / 60) + 'm';
+  }
+  function convert(svg) {
+    if (svg.hasAttribute('data-k-done')) return;
+    svg.setAttribute('data-k-done', '1');
+    var label = svg.getAttribute('aria-label') || '';
+    var bars = Array.prototype.slice.call(svg.querySelectorAll('rect.history-bar'))
+      .sort(function (a, b) { return +a.getAttribute('x') - +b.getAttribute('x'); });
+    if (!bars.length) return;
+    var row = document.createElement('div');
+    row.setAttribute('role', 'list');
+    row.setAttribute('aria-label', label);
+    if (/^Pass rate/i.test(label)) {
+      row.className = 'k-hist-rings';
+      bars.forEach(function (r) {
+        var title = (r.querySelector('title') || {}).textContent || '';
+        var item = document.createElement('div');
+        item.className = 'k-hist-ring';
+        item.setAttribute('role', 'listitem');
+        item.title = title;
+        var made = ring(title);
+        if (made.failed) item.classList.add('k-hist-ring-failed');
+        item.appendChild(made.svg);
+        row.appendChild(item);
+      });
+    } else if (/duration/i.test(label)) {
+      row.className = 'k-hist-bars';
+      var secs = bars.map(function (r) { return seconds((r.querySelector('title') || {}).textContent || ''); });
+      var max = Math.max.apply(null, secs.filter(function (v) { return v != null; }).concat([0]));
+      bars.forEach(function (r, i) {
+        var title = (r.querySelector('title') || {}).textContent || '';
+        var col = document.createElement('div');
+        col.className = 'k-hist-col';
+        col.setAttribute('role', 'listitem');
+        col.title = title;
+        var bar = document.createElement('div');
+        bar.className = 'k-hist-bar';
+        bar.style.height = (max && secs[i] != null ? Math.max(8, 100 * secs[i] / max) : 0) + '%';
+        var t = document.createElement('span');
+        t.className = 'k-hist-time';
+        t.textContent = secs[i] != null ? short(secs[i]) : '';
+        bar.appendChild(t);
+        col.appendChild(bar);
+        row.appendChild(col);
+      });
+    } else return;
+    svg.parentNode.insertBefore(row, svg);
+    // an svg element has no hidden property, only the attribute
+    svg.setAttribute('hidden', '');
+    svg.style.display = 'none';
+  }
+  function run(root) { Array.prototype.forEach.call((root || document).querySelectorAll('svg.history-chart-svg'), convert); }
+  var queued = false;
+  new MutationObserver(function () {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () { queued = false; run(); });
+  }).observe(document.documentElement, { childList: true, subtree: true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { run(); });
+  else run();
 })();

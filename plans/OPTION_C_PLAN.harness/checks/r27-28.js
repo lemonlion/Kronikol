@@ -1,0 +1,31 @@
+// Items 27 + 28: every truncate dropdown has a "Payload length" heading and still works; Summary hides the fold controls.
+const pw = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const path = require('path');
+(async () => {
+  const [page, browserName, shot] = process.argv.slice(2);
+  const b = await pw[browserName].launch(browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe' });
+  const ctx = await b.newContext(browserName === 'firefox' ? { viewport: null } : { viewport: { width: 1400, height: 900 } });
+  await ctx.addInitScript(() => { try { localStorage.setItem('kronikol.theme', 'light'); localStorage.removeItem('kronikol.reportSettings'); } catch (e) {} });
+  const p = await ctx.newPage(); const errors = []; p.on('pageerror', e => errors.push(String(e)));
+  await p.goto('file:///' + path.resolve(page).split(path.sep).join('/')); await p.waitForTimeout(2500);
+  const fails = []; const ok = (c, m) => { if (!c) fails.push(m); };
+  const sel = await p.evaluate(() => { const all = Array.from(document.querySelectorAll('select.truncate-lines-select')); return { n: all.length, headed: all.filter(s => s.firstElementChild && s.firstElementChild.tagName === 'OPTGROUP' && s.firstElementChild.label === 'Payload length').length, values: [...new Set(all.map(s => s.value))], text: all[0].options[all[0].selectedIndex].textContent }; });
+  console.log(browserName, 'selects', JSON.stringify(sel));
+  ok(sel.n > 0 && sel.headed === sel.n && sel.values.length === 1 && sel.values[0] === '40', 'every truncate dropdown headed, 40 kept');
+  await p.locator('.report-nav select.truncate-lines-select').first().selectOption('10');
+  await p.waitForTimeout(1500);
+  const after = await p.evaluate(() => [...new Set(Array.from(document.querySelectorAll('select.truncate-lines-select')).map(s => s.value))]);
+  ok(after.length === 1 && after[0] === '10', 'report-level pick reaches every scenario (' + after + ')');
+  const fold = () => p.evaluate(() => Array.from(document.querySelectorAll('.k-fold-group')).map(g => Math.round(g.getBoundingClientRect().width)));
+  const f0 = await fold();
+  await p.locator('.view-btn', { hasText: 'Summary' }).first().click(); await p.waitForTimeout(500);
+  const f1 = await fold();
+  if (shot) await p.screenshot({ path: shot, clip: { x: 0, y: 0, width: 1366, height: 160 } });
+  await p.locator('.view-btn', { hasText: 'Full' }).first().click(); await p.waitForTimeout(500);
+  const f2 = await fold();
+  console.log('  fold widths full', f0, 'summary', f1, 'full again', f2);
+  ok(f0.every(w => w > 0) && f1.every(w => w === 0) && f2.every(w => w > 0), 'fold controls only in Full');
+  ok(errors.length === 0, 'errors ' + errors.join(' | '));
+  console.log(browserName, fails.length ? 'FAIL ' + fails.join('; ') : 'PASS');
+  await b.close();
+})();

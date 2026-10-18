@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work and is released as 5.0.0, not before.
 
+### Added
+
+- **Light and dark themes.** A report follows the system's light or dark setting until the reader picks one with the
+  switch at the right of its title, and then keeps that pick, over a reload and over the system's setting. The theme
+  is chosen in the page's head, before anything is drawn. The pick is the one thing a report stores in the browser
+  (`kronikol.theme` in local storage); filters and toggles still live only in the page's link.
+- **Colour and type tokens.** The page's colours and type are CSS custom properties, `--kron-*` for the page and
+  `--dg-*` for its diagrams, each with a light and a dark value, defined first in the page's styles, so a theme or a
+  `CustomCss` sheet can set them again.
+
 ### Changed (breaking)
 
 - **The dependency filter shows a scenario with any of the chosen dependencies by default, as the category (tag) filter

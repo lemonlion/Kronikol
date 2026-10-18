@@ -59,6 +59,7 @@
 	<ItemGroup>
 		<EmbeddedResource Include="PlantUml\plantuml-render.js" />
 		<EmbeddedResource Include="Reports\advanced-search.js" />
+		<EmbeddedResource Include="Reports\report-tokens.css" />
 		<EmbeddedResource Include="Reports\stylesheets.css" />
 		<EmbeddedResource Include="Reports\history-styles.css" />
 		<EmbeddedResource Include="Reports\warm-up-styles.css" />

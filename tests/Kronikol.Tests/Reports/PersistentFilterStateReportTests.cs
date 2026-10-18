@@ -1,10 +1,11 @@
+using System.Text.RegularExpressions;
 using Kronikol.Reports;
 
 namespace Kronikol.Tests.Reports;
 
 /// <summary>
-/// Tests that localStorage persistence has been removed from the report.
-/// Filters are only restored via URL hash, not localStorage.
+/// Tests that the report keeps no filter state in the browser: filters are only restored via the URL hash. Since 5.0.0
+/// the one thing it stores is the reader's light or dark choice (plans/OPTION_C_PLAN.md Q1).
 /// </summary>
 public class PersistentFilterStateReportTests
 {
@@ -34,11 +35,16 @@ public class PersistentFilterStateReportTests
     }
 
     [Fact]
-    public void Report_does_not_use_localstorage()
+    public void Report_stores_nothing_but_the_theme()
     {
         var features = MakeFeatures(("t1", "Create order", ExecutionResult.Passed));
         var content = GenerateReport(features, "NoLocalStorage.html");
-        Assert.DoesNotContain("localStorage", content);
+
+        // every mention is a call naming the theme's key, so no filter or toggle is ever remembered
+        var calls = Regex.Matches(content, @"localStorage\.(\w+)\(([^)]*)\)");
+        Assert.NotEmpty(calls);
+        Assert.All(calls, c => Assert.StartsWith("'kronikol.theme'", c.Groups[2].Value));
+        Assert.Equal(calls.Count, Regex.Matches(content, "localStorage").Count);
         Assert.DoesNotContain("kronikol-filter-state", content);
     }
 

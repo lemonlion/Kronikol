@@ -7,6 +7,7 @@ namespace Kronikol;
 /// </summary>
 public class Stylesheets
 {
+    private static readonly Lazy<string> ReportTokensStyleSheetLazy = new(() => Load("report-tokens.css"));
     private static readonly Lazy<string> HtmlReportStyleSheetLazy = new(() => Load("stylesheets.css"));
     private static readonly Lazy<string> HistoryStyleSheetLazy = new(() => Load("history-styles.css"));
     private static readonly Lazy<string> ReportDiagnosticsStyleSheetLazy = new(() => Load("report-diagnostics-styles.css"));
@@ -29,6 +30,11 @@ public class Stylesheets
     /// rules for the history views or the report diagnostics section, which have sheets of their own that a page
     /// carries only when it draws them.</summary>
     public static string HtmlReportStyleSheet => HtmlReportStyleSheetLazy.Value;
+
+    /// <summary>The report's colours and type as custom properties, light and dark (5.0.0, plans/OPTION_C_PLAN.md S1). It
+    /// opens a report's styles, so every sheet after it, a theme's and a <see cref="ReportConfigurationOptions.CustomCss"/>
+    /// sheet included, can use the tokens or set them again.</summary>
+    internal static string ReportTokensStyleSheet => ReportTokensStyleSheetLazy.Value;
 
     /// <summary>The rules of the cross-run history views: the per-scenario sparkline and verdict pill, and the History
     /// section. Carried by a report that draws them and by the labs page.</summary>

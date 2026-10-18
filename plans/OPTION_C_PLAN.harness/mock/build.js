@@ -88,6 +88,16 @@ for (const [from, to] of WORDING) {
   console.log('format dropdowns headed', n);
 }
 
+// Round 17 (owner, item 27): the truncate dropdown's list gets a heading as well, so all three read alike.
+{
+  let n = 0;
+  const rx = /(<select class="truncate-lines-select"[^>]*>)([\s\S]*?)(<\/select>)/g;
+  const f = part => part.replace(rx, (m, open, options, close) => { n++; return open + '<optgroup label="Payload length">' + options + '</optgroup>' + close; });
+  headPart = f(headPart); bodyPart = f(bodyPart);
+  if (!n) throw new Error('truncate dropdown not found');
+  console.log('truncate dropdowns headed', n);
+}
+
 // Round 16: the Events and Setup toggles, patched into the report's note script where the product would add them
 // (c-round16-notes.js, c-round16-strips.js), and their buttons, in the report's bar when any diagram has events or
 // setup and in a scenario's bar when one of its diagrams does. The events filter is the report's own databases

@@ -88,6 +88,16 @@ public static class ReportGenerator
     internal static string LoadScript(string name, bool verdicts) =>
         ResourceCache.GetOrAdd($"{name}|{(verdicts ? "verdicts" : "plain")}", _ => VerdictFences.Variant(LoadResource(name), verdicts));
 
+    // The light/dark switch at the right of the title line (5.0.0, plans/OPTION_C_PLAN.md S1): a moon while the page is
+    // light, the theme it switches to, and a sun while it is dark. report-theme-switch-script.js keeps aria-pressed and
+    // the title in step with the theme the boot script chose.
+    private const string ThemeSwitchButton =
+        "<button type=\"button\" class=\"theme-toggle\" aria-label=\"Dark theme\" aria-pressed=\"false\" title=\"Switch to the dark theme\">"
+        + "<svg class=\"theme-icon theme-moon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z\"/></svg>"
+        + "<svg class=\"theme-icon theme-sun\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z\"/>"
+        + "<path d=\"M12 1.8v2.4M12 19.8v2.4M4.8 4.8l1.7 1.7M17.5 17.5l1.7 1.7M1.8 12h2.4M19.8 12h2.4M4.8 19.2l1.7-1.7M17.5 6.5l1.7-1.7\"/></svg>"
+        + "</button>";
+
     // The output directory for the report generation currently in flight. Flows (via ExecutionContext)
     // into the Parallel.Invoke workers that call WriteFile, so every file of one run lands in the
     // directory resolved from that run's ReportConfigurationOptions.ReportsFolderPath.
@@ -1422,7 +1432,10 @@ public static class ReportGenerator
         // newline is the line the custom sheet used to occupy here: kept, so a report without one keeps
         // its bytes.
         // The rules of the history views and of the diagnostics section ship only with the markup they style.
-        var combinedStylesheet = Stylesheets.HtmlReportStyleSheet
+        // The token sheet opens them all (5.0.0): every sheet after it, a theme's or CustomCss included, can use or
+        // set the tokens.
+        var combinedStylesheet = Stylesheets.ReportTokensStyleSheet
+                                 + Stylesheets.HtmlReportStyleSheet
                                  + (history is not null && (showHistorySection || drawsVerdicts) ? Stylesheets.HistoryStyleSheet : "")
                                  + (includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 } ? Stylesheets.ReportDiagnosticsStyleSheet : "")
                                  + (warmUp.ScenarioMs.Count > 0 ? Stylesheets.WarmUpStyleSheet : "")
@@ -1507,6 +1520,8 @@ public static class ReportGenerator
         var flameChartRenderScript = internalFlowTracking ? DiagramContextMenu.GetFlameChartRenderScript() : "";
         var toggleScript = internalFlowTracking ? DiagramContextMenu.GetToggleScript() : "";
         var diagramToggleLayoutScript = DiagramContextMenu.GetDiagramToggleLayoutScript();
+        var themeBootScript = LoadResource("report-theme-boot-script.js");
+        var themeSwitchScript = LoadResource("report-theme-switch-script.js");
 
         var customCssBlock = customCss is not null ? $"<style>{customCss}</style>" : "";
         var faviconLink = $"<link rel=\"icon\" href=\"{customFaviconBase64 ?? Constants.DefaultFavicon.DataUri}\">";
@@ -1523,6 +1538,7 @@ public static class ReportGenerator
                             <meta name="viewport" content="width=device-width, initial-scale=1" />
                             <meta name="generator" content="Kronikol v{{KronikolVersion}}" />
                             <title>{{System.Net.WebUtility.HtmlEncode(title)}}</title>
+                            <script id="kronikol-theme-boot">{{themeBootScript}}</script>
                             <style>
                                 {{combinedStylesheet}}
                                 {{contextMenuStyles}}
@@ -1570,6 +1586,7 @@ public static class ReportGenerator
                             {{internalFlowPopupScript}}
                             {{toggleScript}}
                             {{diagramToggleLayoutScript}}
+                            <script id="kronikol-theme-switch">{{themeSwitchScript}}</script>
                         </head>
                         <body>
                     """;
@@ -1577,7 +1594,7 @@ public static class ReportGenerator
         var body = new StringBuilder();
         if (customLogoHtml is not null)
             body.Append($"<div class=\"custom-logo\">{customLogoHtml}</div>");
-        body.Append($"<h1>{System.Net.WebUtility.HtmlEncode(title)}</h1>");
+        body.Append($"<div class=\"title-line\"><h1>{System.Net.WebUtility.HtmlEncode(title)}</h1>{ThemeSwitchButton}</div>");
 
         if (includeTestRunData)
         {

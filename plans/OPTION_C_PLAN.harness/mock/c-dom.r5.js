@@ -451,7 +451,9 @@
   function syncOptionsBar(tabsBar) {
     // on a phone the report's settings button sits between the two bars
     var bar = tabsBar.nextElementSibling;
-    while (bar && !bar.classList.contains('diagram-options-bar') && !bar.classList.contains('diagram-view')) bar = bar.nextElementSibling;
+    while (bar && !bar.classList.contains('diagram-options-bar') && !bar.classList.contains('k-scn-settings') && !bar.classList.contains('diagram-view')) bar = bar.nextElementSibling;
+    // round 17 item 26: the bar sits in its scenario's settings row, behind the gear
+    if (bar && bar.classList.contains('k-scn-settings')) bar = bar.querySelector(':scope > .diagram-options-bar');
     if (!bar || !bar.classList.contains('diagram-options-bar')) return;
     var active = $('.diagram-toggle-btn.diagram-toggle-active', tabsBar);
     var seq = !active || active.getAttribute('data-dtype') === 'seq';

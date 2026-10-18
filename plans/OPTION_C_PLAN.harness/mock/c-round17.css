@@ -120,15 +120,31 @@
 :root[data-theme="dark"] { --dg-db-edge: #2f8f99; }
 .component-diagram-section svg :is([stroke="#c0392b" i], [style*="stroke:#c0392b" i]) { stroke: var(--dg-db-edge) !important; }
 
-/* Item 23 (owner): each scenario's settings bar starts hidden; "Scenario settings" (c-round17.js) shows them all. The
-   switch takes the report flags' look: a dot that fills, a pale fill and edge when on. */
-body:not(.k-scenario-settings) details.example-diagrams > .diagram-options-bar { display: none; }
-.k-flag { position: relative; display: inline-block; margin-right: 14px; padding: 5.375px 10px 4.625px 24px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--kron-ink-soft); font: 400 13px/1.25 var(--kron-font); cursor: pointer; white-space: nowrap; }
-.k-flag::before { content: ""; position: absolute; left: 10px; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; border: 1px solid var(--kron-dot); box-sizing: border-box; }
-.k-flag:hover { background: var(--kron-hover); color: var(--kron-ink); }
-.k-flag[aria-pressed="true"] { background: var(--kron-selected); color: var(--kron-selected-ink); border-color: var(--kron-selected-edge); font-weight: 600; }
-.k-flag[aria-pressed="true"]::before { background: var(--kron-accent); border-color: var(--kron-accent); }
-.k-flag:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+/* Item 26 (owner, in place of item 23): a scenario's settings bar opens from the gear at the top right of its diagram
+   (c-round17.js). Closed, the row takes no room and the gear sits over the diagram's corner; open, the bar fills the
+   row with the gear at its right end, in the same place, and the row stays under the report's bar while the scenario
+   is in view. */
+/* A feature card clipped its corners with overflow: hidden, which made it the scroller a sticky row sticks to; clip
+   rounds the same corners and leaves the page the scroller. */
+.feature { overflow: clip; }
+@media (min-width: 769px) {
+  .k-scn-settings { position: relative; z-index: 4; display: flex; align-items: flex-start; justify-content: flex-end; }
+  .k-scn-settings:not(.k-on) { height: 0; }
+  .k-scn-settings:not(.k-on) > .diagram-toggle { display: none !important; }
+  .k-scn-settings.k-on { position: sticky; top: var(--kron-nav-h, 0px); background: var(--kron-strip); box-shadow: inset 0 1px 0 var(--kron-strip-edge), 0 1px 0 var(--kron-strip-edge); }
+  .k-scn-settings.k-on > .diagram-toggle { display: flex !important; flex: 1 1 auto; min-width: 0; margin: 0; border-top-color: transparent; border-bottom: 0; background: transparent; }
+}
+.k-this-scenario { flex: none; align-self: center; margin-right: 12px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--kron-ink-soft); white-space: nowrap; }
+/* the settings act on sequence diagrams only, so the row steps aside, gear and all, for Activity Diagrams and Flame Chart */
+.diagrams-not-seq > .k-scn-settings { display: none !important; }
+/* a phone keeps its own settings button on the diagram's title line */
+@media (max-width: 768px) { .k-scn-settings { display: contents; } .k-scn-gear { display: none !important; } .k-scn-settings .k-this-scenario { align-self: flex-start; margin: 2px 0 2px; } }
+.k-scn-gear { flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; margin: 6px 10px 0 4px; padding: 0; border: 1px solid transparent; border-radius: 6px;
+  background: transparent; color: var(--kron-faint); opacity: .5; cursor: pointer; transition: opacity .12s ease, color .12s ease, background-color .12s ease; }
+.k-scn-gear > svg { width: 16px; height: 16px; fill: currentColor; }
+.k-scn-gear:hover, .k-scn-gear:focus-visible { opacity: 1; color: var(--kron-ink); background: var(--kron-hover); }
+.k-scn-gear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+.k-scn-settings.k-on .k-scn-gear { opacity: 1; color: var(--kron-selected-ink); background: var(--kron-selected); border-color: var(--kron-selected-edge); }
 
 /* Item 25 (owner): a control kept the product's spinner room while its diagrams redrew (padding-right 1.5em), so it
    widened by 11px and narrowed again; and the August sweep meant to show instead never did, because the product's
@@ -138,5 +154,34 @@ body:not(.k-scenario-settings) details.example-diagrams > .diagram-options-bar {
 .details-radio-btn.details-pending, .details-radio-btn.toggle-btn.details-pending { padding-right: 10px; }
 .details-radio-btn.details-pending::after { top: auto; right: 0; bottom: 0; left: 0; width: auto; height: 3px; margin-top: 0; border: 0; border-radius: 0; box-sizing: border-box; opacity: 1;
   background: linear-gradient(90deg, transparent, var(--kron-accent) 30%, var(--kron-accent) 70%, transparent); transform: translateX(-100%); animation: kc-sweep 1.1s linear 0.2s infinite; }
-.k-lbl { display: inline-block; }
+/* inline-flex: its baseline is the label's own, so the hidden bold copy below it neither lifts the text nor adds height */
+.k-lbl { display: inline-flex; flex-direction: column; }
 .k-lbl::after { content: attr(data-label); display: block; height: 0; overflow: hidden; visibility: hidden; font-weight: 600; }
+
+/* Item 28 (owner): Features and Scenarios open and close the cards, which the Summary table does not show */
+.features-table-mode .k-fold-group { display: none; }
+.features-table-mode .view-switch::after { content: none; }
+
+/* Items 29 and 30 (owner): the History tab's run charts (c-round17.js). Rings drawn like the summary's, with the
+   rate inside; duration bars carrying their time, centred, and a short bar's time sitting on top of it. */
+.k-hist-rings { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 10px; align-items: center; min-height: 56px; }
+.k-hist-ring { flex: 0 0 56px; width: 56px; height: 56px; }
+.k-hist-ring svg { display: block; width: 56px; height: 56px; }
+.k-hist-ring .k-ring-track { stroke: var(--kron-track); }
+.k-hist-ring .k-ring-pass { stroke: var(--kron-pass-ring); }
+.k-hist-ring .k-ring-fail { stroke: var(--kron-fail); }
+.k-hist-ring .k-ring-skip { stroke: var(--kron-dot); }
+.k-hist-ring .k-ring-bypass { stroke: var(--kron-bypass); }
+.k-hist-ring text { fill: var(--kron-ink); font-family: var(--kron-font); font-weight: 650; font-size: 21px; letter-spacing: -.02em; }
+.k-hist-ring-failed text { fill: var(--kron-fail-ink, var(--kron-ink)); }
+.k-hist-bars { display: flex; align-items: flex-end; gap: 6px; height: 56px; background: var(--kron-strip); }
+.k-hist-col { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: flex-end; }
+.k-hist-bar { position: relative; width: 100%; min-height: 8px; border-radius: 3px 3px 0 0; background: color-mix(in srgb, var(--kron-accent) 26%, var(--kron-card)); box-shadow: inset 0 2px 0 var(--kron-accent); }
+.k-hist-time { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-size: 11.5px; font-weight: 600; line-height: 1; color: var(--kron-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.k-hist-bar[style*="height: 8%"] .k-hist-time, .k-hist-bar.k-short .k-hist-time { top: auto; bottom: 100%; transform: none; margin-bottom: 2px; color: var(--kron-ink-soft); }
+
+/* Item 31 (owner): the payloads group laid its label, buttons and lines dropdown on the text baseline, so the 11px
+   label sat 2px low and the dropdown 1.5px below its neighbours in the format group, which centres; it centres too */
+@media (min-width: 769px) {
+  .toolbar-right .details-radio, .diagram-options-bar .details-radio { display: inline-flex; align-items: center; column-gap: 0; }
+}

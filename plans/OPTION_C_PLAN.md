@@ -95,8 +95,13 @@ Rounds 1 to 16 are recorded in the inventories against the code that carries the
 | R17.20 | clicking in and out of a diagram scrolls the page | the focus helper ignores pointer focus |
 | R17.21 | Firefox: open the diagram image in a new tab | the tab opened during the click, the picture written into it |
 | R17.22 | database red reads as an error | deep cyan `#0E7C86` in `DependencyPalette` and the component skin |
-| R17.23 | per-scenario settings hidden by default | `Scenario settings` switch on the tools line (D23) |
-| 25 | toggles change width while loading | fixed padding, the sweep shown, labels reserve their bold width |
+| R17.23, 26 | per-scenario settings hidden by default, opened per scenario | a gear at the top right of each scenario's diagram, grey until pointed at; it opens that scenario's bar, starting "This scenario:", with the gear at its right end in the same place; the open bar sticks under the report's bar while its diagrams are in view and steps aside on the Activity and Flame tabs; a phone keeps its title-line button; nothing report-wide (item 23's switch withdrawn); feature cards clip with `overflow: clip` so the sticky row works (D23) |
+| R17.25 | toggles change width while loading | fixed padding, the sweep shown, labels reserve their bold width |
+| R17.27 | a heading in the truncate dropdown | `optgroup` "Payload length" (the owner's pick over "Truncate at"), matching "Payload format" and "Payload width" |
+| R17.28 | no fold controls on the Summary tab | the `FEATURES` and `SCENARIOS` groups and the divider before them hide in the Summary view |
+| R17.29 | History pass rate as rings | one ring per run, drawn like the summary's (pass, fail, skipped, bypassed arcs), the rate inside; a run with a failure never reads 100% |
+| R17.30 | History duration with its time | each bar carries its time ("44s", "2m 26s", "1h 5m", "850ms"), drawn as HTML so the label is not stretched |
+| R17.31 | report bar controls out of line (Firefox) | the payloads group centres like the format group, and item 25's bold-width wrapper keeps the label's baseline (`inline-flex`), so buttons are 28.25 px like the dropdowns; text centres within 0.5 px in both browsers |
 
 ## 4. Stages
 
@@ -106,7 +111,7 @@ rendering of the parity run at the end of the stage. The order follows the struc
 | Stage | Content | Needs |
 |---|---|---|
 | S0 | Parity harness: the parity run, its rendering by the branch, the preview rebuilt over the same run (section 6) | done 2026-10-18 |
-| S1 | Stylesheet foundation: token sheet (light, dark under `[data-theme]` and `prefers-color-scheme`), `[hidden]` rule, sticky bar; theme boot script, title line and theme switch (D1) | Q1 |
+| S1 | Stylesheet foundation, as several commits: token sheet (light, dark under `[data-theme]` and `prefers-color-scheme`), `[hidden]` rule, theme boot script, title line and theme switch (D1); then the surfaces no later stage restructures, rewritten to tokens and the C rules: page chrome, the features and scenarios list, the scenario header, the failure result and error diff, steps and parameter tables (stylesheet inventory 2, rows 0 and 9 to 13), so a dark page reads before the later stages land. The sticky bar moves to S3 with the nav it pins | Q1 |
 | S2 | Run band and the filter box on its own row (D3, D4, D5) | S1 |
 | S3 | The bar, its tabs and panels (D20); failure clusters and background calls placed (Q4); the tab options (Q2) | S2 |
 | S4 | Features tools line (D21, D22, D35) and the report bar's zones (D30); the `ExpandFirstScenarioWithDiagram` helper (213 calls) moved to the new controls | S3 |
@@ -150,8 +155,9 @@ decision of the owner's, not part of this plan.
 ## 7. Questions for the owner (asked 2026-10-18; work proceeds on the recommendation unless answered otherwise)
 
 1. **Remembered display preferences.** Persistence in the browser was removed on 2026-04-08
-   (`PersistentFilterStateReportTests` pins that the page never mentions `localStorage`). The theme and Scenario
-   settings switches want to be remembered. Recommendation: allow it for those two display preferences only, never
+   (`PersistentFilterStateReportTests` pins that the page never mentions `localStorage`). The theme switch wants to
+   be remembered (the report-wide Scenario settings switch it was asked for alongside was withdrawn by R17.26: each
+   scenario's gear opens its own bar and nothing is remembered). Recommendation: allow it for the theme only, never
    for filters or toggles, and narrow the test to say so.
 2. **Options that name sections now tabs** (`ScenarioTimelineVisible`, `ComponentDiagramVisible`,
    `FeaturesSummaryOpen`, `DiagnosticsOpen`). Recommendation: keep the names; `...Visible` decides whether the tab
@@ -176,3 +182,13 @@ decision of the owner's, not part of this plan.
   made (five runs, the last with two failures), the branch's `kronikol merge` of it written, and the preview rebuilt
   over it. Items 24 (the top-right triangle smaller) and 25 (no width change while loading) added to the preview
   after round 17.
+- 2026-10-18: items 26 to 31 added to the preview and to section 3 (per-scenario gear, the lines dropdown heading,
+  no fold controls on Summary, History rings and timed bars, the report bar's vertical alignment), each with a check
+  in `checks/` and the whole regression set passing in Chrome and Firefox. Q1 narrowed to the theme. S1 widened to
+  the base surfaces, which no stage covered (section 4).
+- 2026-10-18, S1 commit 1: `report-tokens.css` embedded and opening the page's first `<style>`; the boot script
+  (`report-theme-boot-script.js`) before it; the title line with the switch, and `report-theme-switch-script.js`
+  after the page's other scripts; the page's ground, ink and type from tokens. The theme is the only thing a report
+  stores (`PersistentFilterStateReportTests.Report_stores_nothing_but_the_theme`). Tests: core `ReportThemeTests`
+  (6 failed before the change, on the missing markup, scripts and rules), Playwright `ThemeTests` (dark system,
+  following the system, the switch kept over a reload and the system, a stored pick from the start).

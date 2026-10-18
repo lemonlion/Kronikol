@@ -1,10 +1,28 @@
        body {
-           font-family: sans-serif;
+           font-family: var(--kron-font);
+           background: var(--kron-ground);
+           color: var(--kron-ink);
            /* A long token (a type name, an identifier, a URL) breaks where it has to instead of running
               past what holds it: a feature or scenario, whose content-visibility clips what overflows it
               out of sight, or any other section, where it scrolled the whole page sideways. */
            overflow-wrap: anywhere;
        }
+
+       /* The title line (5.0.0): the report's title, and at its right the light/dark switch, a moon while the page is
+          light and a sun while it is dark. */
+       .title-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 14px; }
+       .title-line > h1 { margin: 0; min-width: 0; font-size: var(--kron-fs-title); font-weight: 600; }
+       .theme-toggle {
+           flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0;
+           border: 1px solid var(--kron-hairline); border-radius: 8px; background: var(--kron-card); color: var(--kron-ink-soft);
+           cursor: pointer; box-shadow: var(--kron-card-shadow);
+       }
+       .theme-toggle:hover { background: var(--kron-hover); color: var(--kron-ink); }
+       .theme-toggle:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 2px; }
+       .theme-icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+       .theme-sun { display: none; }
+       :root[data-theme="dark"] .theme-moon { display: none; }
+       :root[data-theme="dark"] .theme-sun { display: block; }
 
        .raw-plantuml {
            border: solid 1px;
