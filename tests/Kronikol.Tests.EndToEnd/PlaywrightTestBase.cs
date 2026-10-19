@@ -112,6 +112,20 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
         await button.ClickAsync();
     }
 
+    /// <summary>
+    /// Opens the filter box's rows, which More filters folds away on a desktop since 5.0.0 (plans/OPTION_C_PLAN.md S7,
+    /// D15), so a test can use a row's control there. Nothing to do where they already show: on a phone, whose box has
+    /// its own Filters toggle, or once they are open.
+    /// </summary>
+    internal static async Task OpenFilterRowsAsync(IPage page)
+    {
+        var more = page.Locator(".filtering-box.rows-folded .more-filters");
+        if (await more.CountAsync() > 0 && await more.IsVisibleAsync())
+            await more.ClickAsync();
+    }
+
+    protected Task OpenFilterRowsAsync() => OpenFilterRowsAsync(Page);
+
     protected Task ExpandAllFeaturesAsync() => FoldAllAsync(Page, "features", expand: true);
     protected Task ExpandAllScenariosAsync() => FoldAllAsync(Page, "scenarios", expand: true);
     protected Task CollapseAllFeaturesAsync() => FoldAllAsync(Page, "features", expand: false);

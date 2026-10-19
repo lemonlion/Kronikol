@@ -325,6 +325,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ScenarioStatusFilter.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
+        await OpenFilterRowsAsync();
         await Page.Locator(".status-toggle[data-status='Passed']").ClickAsync();
 
         await Page.WaitForFunctionAsync("""
@@ -347,6 +348,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ScenarioStatusToggle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
+        await OpenFilterRowsAsync();
         var passedBtn = Page.Locator(".status-toggle[data-status='Passed']");
         await passedBtn.ClickAsync();
         await Expect(passedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
@@ -370,6 +372,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ScenarioHappyFilter.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
+        await OpenFilterRowsAsync();
         // 5.0.0: Happy paths is Show, Only or Hide (plans/OPTION_C_PLAN.md S6)
         var hpBtn = Page.Locator(".filtering-box .happy-seg[data-hp='in']");
         await hpBtn.ClickAsync();

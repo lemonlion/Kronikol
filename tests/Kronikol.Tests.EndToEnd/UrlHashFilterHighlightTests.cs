@@ -60,6 +60,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     {
         var url = GenerateAndServeReport("UrlHashStatusHighlight.html");
         await Page.GotoAsync(url + "#status=Passed");
+        await OpenFilterRowsAsync();
 
         var passedBtn = Page.Locator(".status-toggle[data-status='Passed']");
         await Expect(passedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
@@ -74,6 +75,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     {
         var url = GenerateAndServeReport("UrlHashStatusHideHighlight.html");
         await Page.GotoAsync(url + "#status=Failed");
+        await OpenFilterRowsAsync();
 
         var failedBtn = Page.Locator(".status-toggle[data-status='Failed']");
         await Expect(failedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
@@ -93,6 +95,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     {
         var url = GenerateAndServeReport("UrlHashHappyPathHighlight.html");
         await Page.GotoAsync(url + "#hp=1");
+        await OpenFilterRowsAsync();
 
         // 5.0.0: hp=1 is Happy paths Only (plans/OPTION_C_PLAN.md S6)
         var hpBtn = Page.Locator(".filtering-box .happy-seg[data-hp='in']");
@@ -106,6 +109,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     {
         var url = GenerateAndServeReport("UrlHashSearchRestore.html");
         await Page.GotoAsync(url + "#q=" + Uri.EscapeDataString("Create order"));
+        await OpenFilterRowsAsync();
 
         var searchBar = Page.Locator("#searchbar");
         await searchBar.WaitForAsync();
@@ -117,6 +121,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     {
         var url = GenerateAndServeReport("UrlHashClickRefresh.html");
         await Page.GotoAsync(url);
+        await OpenFilterRowsAsync();
 
         var passedBtn = Page.Locator(".status-toggle[data-status='Passed']");
         await passedBtn.WaitForAsync();
@@ -126,6 +131,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         Assert.Contains("#", Page.Url);
 
         await Page.ReloadAsync();
+        await OpenFilterRowsAsync();
 
         await Expect(passedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
         Assert.True(await IsHighlighted(await GetComputedBgColor(".status-toggle[data-status='Passed']")));
@@ -136,6 +142,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     {
         var url = GenerateAndServeReport("UrlHashHPClickRefresh.html");
         await Page.GotoAsync(url);
+        await OpenFilterRowsAsync();
 
         // 5.0.0: Happy paths Only (plans/OPTION_C_PLAN.md S6)
         const string only = ".filtering-box .happy-seg[data-hp='in']";
@@ -146,6 +153,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         Assert.True(await IsHighlighted(await GetComputedBgColor(only)));
 
         await Page.ReloadAsync();
+        await OpenFilterRowsAsync();
 
         await hpBtn.WaitForAsync(new() { Timeout = 10000 });
         await Expect(hpBtn).ToHaveAttributeAsync("aria-pressed", "true");
@@ -157,11 +165,13 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     {
         var url = GenerateAndServeReport("UrlHashMultiStatusRefresh.html");
         await Page.GotoAsync(url);
+        await OpenFilterRowsAsync();
 
         await Page.Locator(".status-toggle[data-status='Passed']").ClickAsync();
         await Page.Locator(".status-toggle[data-status='Failed']").ClickAsync();
 
         await Page.ReloadAsync();
+        await OpenFilterRowsAsync();
 
         var passedBtn = Page.Locator(".status-toggle[data-status='Passed']");
         await Expect(passedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
@@ -178,11 +188,13 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     {
         var url = GenerateAndServeReport("UrlHashComboRefresh.html");
         await Page.GotoAsync(url);
+        await OpenFilterRowsAsync();
 
         await Page.Locator(".status-toggle[data-status='Failed']").ClickAsync();
         await Page.Locator(".filtering-box .happy-seg[data-hp='in']").ClickAsync();
 
         await Page.ReloadAsync();
+        await OpenFilterRowsAsync();
 
         var failedBtn = Page.Locator(".status-toggle[data-status='Failed']");
         await Expect(failedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
@@ -196,6 +208,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     {
         var url = GenerateAndServeReport("UrlHashP99Refresh.html");
         await Page.GotoAsync(url);
+        await OpenFilterRowsAsync();
 
         var p99Btn = Page.Locator("button.percentile-btn", new() { HasTextString = "P99" });
         await p99Btn.WaitForAsync();
@@ -205,6 +218,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         Assert.Contains("pctl=", Page.Url);
 
         await Page.ReloadAsync();
+        await OpenFilterRowsAsync();
 
         await p99Btn.WaitForAsync(new() { Timeout = 10000 });
         await Expect(p99Btn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("percentile-active"));
@@ -216,6 +230,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     {
         var url = GenerateAndServeReport("UrlHashUserReport.html");
         await Page.GotoAsync(url + "#status=Passed");
+        await OpenFilterRowsAsync();
 
         var passedBtn = Page.Locator(".status-toggle[data-status='Passed']");
         await Expect(passedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));

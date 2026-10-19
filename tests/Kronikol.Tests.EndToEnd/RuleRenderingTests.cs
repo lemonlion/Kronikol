@@ -199,6 +199,7 @@ public class RuleRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithRules("RuleStatusFilter.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
+        await OpenFilterRowsAsync();
         // Click the "Failed" status toggle to only show failed scenarios
         await Page.Locator(".status-toggle[data-status='Failed']").ClickAsync();
 

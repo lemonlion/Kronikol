@@ -425,7 +425,8 @@ function kronSearchWorkerMain(self) {
 
     function chipEl() {
         if (state.chip) return state.chip;
-        var box = document.querySelector('.filter-search');
+        // inside the search field, from its own edge, past the buttons after it (5.0.0, plans/OPTION_C_PLAN.md S7, D17)
+        var box = document.querySelector('.filter-search .search-field') || document.querySelector('.filter-search');
         if (!box) return null;
         var chip = document.createElement('span');
         chip.className = 'kron-deep-chip';

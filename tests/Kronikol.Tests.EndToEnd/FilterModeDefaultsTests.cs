@@ -20,6 +20,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
             o => o.TestRunReportToggleDefaults.DependencyFilterMode = Kronikol.Reports.FilterCombinationMode.Or);
         await Page.GotoAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
+        await OpenFilterRowsAsync();
         return url;
     }
 
@@ -31,6 +32,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
         var url = ReportTestHelper.GenerateToggleDefaultsReport(TempDir, OutputDir, "FilterMode_BuiltIn.html", _ => { });
         await Page.GotoAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
+        await OpenFilterRowsAsync();
 
         Assert.Equal("ANY", (await Page.Locator(".dep-mode-toggle").TextContentAsync())!.Trim());
         Assert.Equal("OR", await Page.EvaluateAsync<string>("() => _depMode"));
@@ -67,6 +69,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
             o => o.TestRunReportToggleDefaults.DependencyFilterMode = Kronikol.Reports.FilterCombinationMode.Or);
         await Page.GotoAsync(url + "#depmode=AND");
         await Page.Locator("details.feature").First.WaitForAsync();
+        await OpenFilterRowsAsync();
 
         await Page.WaitForFunctionAsync("() => _depMode === 'AND'",
             null, new() { Timeout = 10000, PollingInterval = 200 });
@@ -95,6 +98,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
             o => o.TestRunReportToggleDefaults.CategoryFilterMode = Kronikol.Reports.FilterCombinationMode.And);
         await Page.GotoAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
+        await OpenFilterRowsAsync();
 
         var catBtn = Page.Locator(".cat-mode-toggle");
         Assert.Equal("ALL", (await catBtn.TextContentAsync())!.Trim());

@@ -154,6 +154,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
 
         // Narrowing the list rewrites the hash. Before M2.1 that rewrite threw the anchor away, so
         // the URL somebody copied back out no longer pointed at anything.
+        await OpenFilterRowsAsync();
         await Page.Locator(".status-toggle[data-status='Passed']").First.ClickAsync();
         await Page.WaitForFunctionAsync("() => window.location.hash.indexOf('status=') > 0",
             null, new() { PollingInterval = 200 });

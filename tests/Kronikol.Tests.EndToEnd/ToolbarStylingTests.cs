@@ -77,6 +77,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
     {
         await Open($"FilterHover{violet}.html", violet);
 
+        await OpenFilterRowsAsync();
         var happyPath = Page.Locator(".filtering-box .happy-seg[data-hp='in']").First;
         await happyPath.ClickAsync();
         await Expect(happyPath).ToHaveAttributeAsync("aria-pressed", "true");
@@ -113,6 +114,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
     {
         await Open($"HeaderHover{violet}{System.Text.RegularExpressions.Regex.Replace(selector, "[^a-z]", "")}.html", violet);
 
+        await OpenFilterRowsAsync();
         var control = Page.Locator(selector).First;
         await control.HoverAsync();
         await Paints(control, background, border);
@@ -127,6 +129,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
     {
         await Open($"ActiveHeader{violet}.html", violet);
 
+        await OpenFilterRowsAsync();
         var percentile = Page.Locator(".percentile-btn").First;
         await percentile.ClickAsync();
         await Expect(percentile).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("percentile-active"));

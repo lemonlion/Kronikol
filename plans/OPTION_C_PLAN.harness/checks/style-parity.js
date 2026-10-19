@@ -26,6 +26,9 @@ const PICKS = {
       ['tag mode', '.tag-mode-toggle'], ['tag chip', '.tag-toggle'], ['deps row', '.dependency-filters'], ['deps label', '.dependency-filters-label'],
       ['deps controls', '.dependency-filters .fltr-controls'], ['dep mode', '.dep-mode-toggle'], ['dep chip', '.dependency-toggle'],
       ['readout', '.filter-readout'], ['search', '#searchbar']],
+  // More filters and the bar's filters (S7), as loaded: the button, the bar's top row, its group and readout
+  nb: [['more filters', '.more-filters'], ['more label', '.more-filters-label'], ['search line', '.filter-search'], ['nav row', '.nav-row'],
+      ['nav tabs', '.nav-row > .report-tabs'], ['nav filters', '.nav-filters'], ['nav readout', '.nav-readout'], ['nav readout long', '.nav-readout-long']],
   5: [['bar', '.toolbar-row.report-nav'], ['tabs', '.report-tabs'], ['tab on', '.report-tab[aria-selected="true"]'], ['tab off', '.report-tab[aria-selected="false"]'],
       ['tab count', '.report-tab[aria-selected="true"] .tab-n'], ['tools', '.features-tools'], ['panels', '.report-panels']],
   // a third element is the branch's selector where its markup names the thing differently

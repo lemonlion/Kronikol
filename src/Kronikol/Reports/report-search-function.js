@@ -3,6 +3,9 @@ var searchTimeoutId;
 function toggle_search_help() {
     var panel = document.querySelector('.search-help-panel');
     if (panel) panel.style.display = panel.style.display === 'none' ? '' : 'none';
+    // the help opens on its own while More filters folds the rows around it (5.0.0, plans/OPTION_C_PLAN.md S7, D15)
+    var box = document.querySelector('.filtering-box');
+    if (box && panel) box.classList.toggle('help-open', panel.style.display !== 'none');
 }
 
 // A single search match is revealed fully: the scenario opens along with every section

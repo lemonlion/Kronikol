@@ -47,6 +47,13 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   link copied from a 4.x report opens the same view.
 - **The duration buttons say what they show.** Each percentile's tooltip names its threshold and its share of the run
   (the slowest half for P50), and that the first-call warm-up is left out when the run had one.
+- **The report bar carries the filters.** Right of the tabs it shows what the filters leave showing (shortened, then
+  left out, where the bar is narrow) and Clear All while anything is filtered; once the bar floats over the list, a
+  Filters button brings the filter box into the bar, where it pins with the bar and covers nothing. Esc, the box's
+  close button, a phone's width or scrolling back up puts it back, and opening and closing keep what was being read
+  just below the bar. On a phone the bar scrolls away as before and the box keeps its own Filters toggle.
+- **The Features tab says when no scenario is left,** with a Clear All that puts focus back in the search.
+- **The report bar shows when it is pinned:** its corners square and it casts a shadow while the list scrolls under it.
 
 ### Changed (breaking)
 
@@ -112,6 +119,14 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   Export CSV where the box is narrow. A `CustomCss` sheet written against the 4.x rules of `.status-toggle`,
   `.percentile-btn`, `.dependency-toggle`, `.category-toggle`, `.dep-mode-toggle` or `.cat-mode-toggle` may no longer
   apply; set the tokens instead.
+- **On a desktop the filter rows fold under More filters.** A More filters button ends the search line, and the rows
+  under it (Status, Duration, Happy paths, Tags, Dependencies, Categories) stay folded until it is pressed; while they
+  are folded it counts the filters on in them. The readout and Clear All stay in view either way, and the search help
+  opens on its own. The box carries `rows-folded` while they are folded, so a script or test that uses a row's control
+  on a desktop opens them first. On a phone (768 px wide or less) the box's own Filters toggle folds them, as before.
+  The search field sits in a `span.search-field`, which holds the deep search's chip at its right end.
+- **Duration and Happy paths join the Status line only where they fit whole,** decided on their measured widths (a
+  reader's text spacing and late fonts included), and otherwise each takes a line of its own.
 
 ### Fixed
 

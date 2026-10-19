@@ -11,8 +11,9 @@ namespace Kronikol.Tests.Reports;
 /// <c>git show v3.10.0:</c> and <c>git show v4.5.0:</c> (<c>report-search-index.js</c>'s default is 4.5.0's with
 /// c9c3b068 taken back out, since 512bc85a changed it later for another reason). 5.0.0 changed
 /// <c>report-scenario-feature-map-helper.js</c> and <c>report-search-function.js</c> for the filter pipeline
-/// (plans/OPTION_C_PLAN.md S5 and S6: the filters' flags and readout, the search's qualifiers), so their pins are 5.0.0's
-/// text, and the Kronikol4J divergence ledger records it; the verdict lines in them are 4.5.0's.
+/// (plans/OPTION_C_PLAN.md S5 and S6: the filters' flags and readout, the search's qualifiers), and S7 the search
+/// function's help toggle and <c>report-search-index.js</c>'s chip, placed inside the search field, so their pins are
+/// 5.0.0's text, and the Kronikol4J divergence ledger records it; the verdict lines in them are 4.5.0's.
 /// </summary>
 public class VerdictFencesTests
 {
@@ -21,8 +22,8 @@ public class VerdictFencesTests
         // script, default variant (no verdicts), verdict variant
         { "advanced-search.js", "afd1116b5f7503078e8a63e50722369e3172005c172ffbbc6291d24accc40e0f", "8d36e435e27dda669ee677f7076753a2740e56c1beef21ff8b3fe1b367e4f4c5" },
         { "report-scenario-feature-map-helper.js", "0f83fb801466bf3fad52c3788819899517c3d7f0c44e556fb4762dbcd31391aa", "ac3541490699dcdee5e03e21d4d03167180d7ab720cc95617cd3bc5aa5f94f92" },
-        { "report-search-function.js", "940c1de2ce8d98b95327285281434e72f480a56e262a3e827b92ae4a12951d18", "e6504e60aeac0999d376de0d1bde7af7d6877f9bfebb379ded0e6bb391bbec7f" },
-        { "report-search-index.js", "a0f8962e2a2522ac420c3fd34581b3b18715042c9da4be98e5f527016f112a3c", "89576c647084ef6438a3af4706fcdeca53bf0b9f685d935030e9847a2a9c964f" },
+        { "report-search-function.js", "1e17c7045faebd30ccd8cc1ec545b66194e59b5c310faf9c4ab2ba3852a90129", "e89ac8d423e642e456415b93892a00c4a528ad9d43216a90c4e56ca2bd6d9650" },
+        { "report-search-index.js", "60ffc15a794774d06805a2a9fdd3d7c3adfa2052133a6da8600ba842f22244fe", "8b1ae7ed86c1b1dfc8ed7ceada0b3d29266903f9958add7b9e318b343703e58b" },
     };
 
     private static string Sha256(string text) =>

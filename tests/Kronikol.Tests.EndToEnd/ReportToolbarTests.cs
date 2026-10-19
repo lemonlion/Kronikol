@@ -306,8 +306,10 @@ public class ReportToolbarTests : PlaywrightTestBase
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("Delete");
+        await OpenFilterRowsAsync();
         await Page.Locator(".status-toggle[data-status='Failed']").ClickAsync();
-        await Page.GetByText("Clear All").ClickAsync();
+        // the box's Clear All; since 5.0.0 the bar and the empty state have one too (plans/OPTION_C_PLAN.md S7)
+        await Page.Locator(".filtering-box-export .export-btn", new() { HasTextString = "Clear All" }).ClickAsync();
 
         var searchValue = await Page.Locator("#searchbar").InputValueAsync();
         Assert.Equal("", searchValue);

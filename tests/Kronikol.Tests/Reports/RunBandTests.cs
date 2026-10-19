@@ -116,7 +116,7 @@ public class RunBandTests
         var html = GenerateReport("RunBand_FilterRow.html", Features(ExecutionResult.Passed), GitHub);
 
         var end = html.IndexOf("</section>", html.IndexOf("<section class=\"run-band\"", StringComparison.Ordinal), StringComparison.Ordinal);
-        Assert.StartsWith("<div class=\"filtering-box\" id=\"filtering-box\">", html[(end + "</section>".Length)..].TrimStart());
+        Assert.StartsWith("<div class=\"filtering-box rows-folded\" id=\"filtering-box\">", html[(end + "</section>".Length)..].TrimStart()); // folded under More filters (S7)
         Assert.Contains("<div class=\"filters\" id=\"filter-rows\">", html);
     }
 

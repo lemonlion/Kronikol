@@ -52,7 +52,10 @@ public class ReportSectionWidthTests : PlaywrightTestBase
     {
         await Open(width);
         if (filteringBox > 0)
+        {
             await HoldFilteringBox(filteringBox);
+            await OpenFilterRowsAsync();
+        }
         var el = Page.Locator(selector, new() { HasTextString = text }).First;
         // since 5.0.0 a section beside the features is a tab: open the one that holds it (plans/OPTION_C_PLAN.md S3)
         var tab = await el.EvaluateAsync<string?>("e => { const p = e.closest('.report-panel'); return p && p.hidden ? p.dataset.panel : null; }");

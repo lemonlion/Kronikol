@@ -408,3 +408,43 @@ decision of the owner's, not part of this plan.
   rather than 4.x's solid blue, and `ReportSectionWidthTests` holds the filter box at 100 px, under the width of
   Export HTML, now that 140 px fits it whole.
   Checks: the core suite passes 7,753 with 2 skipped; the full Playwright suite passes 1,128 with 28 skipped.
+- 2026-10-19, S7: More filters (D15), the report bar carrying the filters (D24, item R17.11) and pinned (D25), the
+  measured layout (D18), and the deep search chip in the field (D17, moved here from S6). The generator writes the box
+  folded (`rows-folded`) with More filters at the end of the search line, its title naming the rows the box has; the
+  search field in `span.search-field`; the bar's mark, one `div.nav-mark` for both pinned and floating (the preview put
+  a mark and a sentinel at the same place); the bar's top row, `div.nav-row`, holding the tabs and `div.nav-filters`
+  (the readout's long and short copies, `nav-clear` and `nav-filters-toggle`); the box's close for the bar, hidden; and
+  the empty state, first in the Features panel. A page without tabs keeps More filters and the empty state and has no
+  bar group. `report-filter-bar-script.js` (new) counts the filters on in the folded rows (each status, each chip set
+  either way, one for the duration) and keeps More filters' title and label; copies the readout into the bar on
+  `kron-filter-change`, shortens it, then leaves it out, before the tabs would scroll (`nav-compact`, `nav-minimal`);
+  wires the bar's Clear All and the empty state's, which puts focus in the search; keeps the scroll as the preview did
+  (`settle`, `reading` and `keep`, scroll anchoring off while the box moves); takes the box into the bar and back, caps
+  it at 60% of the window, and closes it on Esc, its close, a phone's width or the bar coming to rest; marks the bar
+  floating (`k-floating`, the pin line included) and pinned (`is-pinned`); and sets `pair-fits` and `trio-fits` from
+  widths measured on hidden clones, again when the Status row or the box changes size or fonts land. `toggle_search_help`
+  marks the box `help-open` itself (no observer), and `report-search-index.js` puts the chip in the field. Left out: the
+  preview's `window.__kronikolNavFilters`, which only its harness read; `.zone-adjacent` goes with S8's zones.
+  Preview defects not ported: `keep` corrected the scroll once, and when the bar pinned or unpinned in between, closing
+  the box left the bar at rest with the box in view instead of what was being read; it corrects until it holds
+  (`FilterBarTests` compares what is just below the bar before opening and after closing, and fails with one pass). The
+  box in the bar draws its rule on its bottom edge, between it and the tabs, since round 17 put it at the top of the bar
+  (round 8's rule stayed on its top edge). More filters answers a click from the moment the script loads, through one
+  delegated handler, where a click before the preview's delayed start did nothing.
+  Measured with `checks/style-parity.js`, surface nb (new: More filters, the search line, the bar's row, group and
+  readout) and fr: 0 differences at 1,400 px in Chrome and Firefox, light and dark. At 400 px the search line keeps
+  4.x's grey sticky background and padding, which the preview took out, and the readout stays in the box rather than on
+  the Filters line: both are S12's. Surfaces 0 to 13: the known differences of S4 and none new.
+  Tests: core `FilterBarTests` (new, 6 facts: the folded rows and More filters with its title, the title for a box
+  with only Status, the bar's mark, row and group, the box's close, the empty state, and a page without tabs; all 6
+  failed before), and the pins of the bar's and the box's opening markup in `ReportTabsTests`, `RunBandTests` and
+  `FilterRowsTests`; `VerdictFencesTests` holds the search function's and the search index's 5.0.0 text. Playwright
+  `FilterBarTests` (new, 12: folding and opening, the count from a link and from the rows, the help while folded, a
+  phone, the bar's copy and Clear All, Filters only while the bar floats and the box in and out with Esc and the
+  close, the box going back as the bar comes to rest, the empty state and its focus, the pinned bar, the measured pair
+  and trio and their undoing in a narrow box, the bar's two narrow forms, the chip in the field; the ride test reads
+  what is below the bar once the page has stopped moving, since opening the features brings a scrollbar that the
+  measured layouts follow a frame or two later). The 31 tests in 10 files that used a row's control on a desktop open
+  the rows first with `PlaywrightTestBase.OpenFilterRowsAsync` (new), and `ReportToolbarTests` finds the box's Clear
+  All by its class, now that the bar and the empty state have one too.
+  Checks: the core suite passes 7,759 with 2 skipped; the full Playwright suite passes 1,140 with 28 skipped.

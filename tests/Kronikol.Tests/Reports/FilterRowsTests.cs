@@ -56,7 +56,7 @@ public class FilterRowsTests
 
     private static string Box(string html)
     {
-        var start = html.IndexOf("<div class=\"filtering-box\" id=\"filtering-box\">", StringComparison.Ordinal);
+        var start = html.IndexOf("<div class=\"filtering-box rows-folded\" id=\"filtering-box\">", StringComparison.Ordinal);
         Assert.True(start >= 0, "the filter box is missing");
         return html[start..html.IndexOf("<div class=\"toolbar-row", start, StringComparison.Ordinal)];
     }

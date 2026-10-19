@@ -153,6 +153,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
 
         // Own time: Browse 300, Search 400, Place 500, Place again 1,200 ms, so P90 is 1,200 ms, and the filter shows
         // what is at or above it. Place ran 2,000 ms of wall time, above P90, and is hidden: 500 ms of it was its own.
+        await OpenFilterRowsAsync();
         var p90 = Page.Locator(".percentile-btn", new() { HasTextString = "P90" });
         await Expect(p90).ToHaveTextAsync("P90 (1.2s)");
         await p90.ClickAsync();
@@ -168,6 +169,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateOwnTimes("WarmUpPercentileUnder.html",
             ("Place", 1600, 1570), ("Again", 40, 0), ("Browse", 10, 0), ("Search", 20, 0), ("Pay", 2000, 0)));
         await Page.Locator("details.feature").First.WaitForAsync();
+        await OpenFilterRowsAsync();
         var p50 = Page.Locator(".percentile-btn", new() { HasTextString = "P50" });
         await Expect(p50).ToHaveTextAsync("P50 (30ms)");
         await p50.ClickAsync();
@@ -179,6 +181,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateOwnTimes("WarmUpPercentileOver.html",
             ("Place", 1910.4, 650.6), ("Again", 100, 0), ("Browse", 200, 0), ("Search", 300, 0), ("Pay", 400, 0)));
         await Page.Locator("details.feature").First.WaitForAsync();
+        await OpenFilterRowsAsync();
         var p90 = Page.Locator(".percentile-btn", new() { HasTextString = "P90" });
         await Expect(p90).ToHaveTextAsync("P90 (1.3s)");
         await p90.ClickAsync();

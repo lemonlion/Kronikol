@@ -64,6 +64,7 @@ public class FilterPipelineTests : PlaywrightTestBase
     {
         await Page.GotoAsync(Generate(fileName) + hash);
         await Page.Locator("details.feature").First.WaitForAsync();
+        await OpenFilterRowsAsync();
     }
 
     // the scenarios the filters leave showing, by anchor, in page order
