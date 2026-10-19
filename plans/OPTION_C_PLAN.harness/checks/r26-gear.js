@@ -2,10 +2,11 @@
 // bar opens, the open bar sticks under the report's bar while its diagram is in view, and nothing is report-wide.
 // usage: node r26-gear.js <page> <chromium|firefox> [shots prefix]
 const pw = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 (async () => {
   const [page, browserName, shots] = process.argv.slice(2);
-  const b = await pw[browserName].launch(browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe', args: ['-width', '1416', '-height', '1000'] });
+  const b = await launchInstalled(pw[browserName], browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe', args: ['-width', '1416', '-height', '1000'] });
   const ctx = await b.newContext(browserName === 'firefox' ? { viewport: null } : { viewport: { width: 1400, height: 900 } });
   await ctx.addInitScript(() => { try { localStorage.setItem('kronikol.theme', 'light'); localStorage.removeItem('kronikol.reportSettings'); } catch (e) {} });
   const p = await ctx.newPage();

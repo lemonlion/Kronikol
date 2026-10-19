@@ -3,10 +3,11 @@
 // whether hovering the first note shows its buttons. Run on today's page and on the look page: the counts must match.
 // usage: node note-hover-check.js <page.local.html> [feature index=1]
 const { chromium } = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 (async () => {
   const [page, fi] = process.argv.slice(2);
-  const b = await chromium.launch({ channel: 'chrome' });
+  const b = await launchInstalled(chromium, { channel: 'chrome' });
   const ctx = await b.newContext({ viewport: { width: 1400, height: 1000 } });
   await ctx.addInitScript(() => { try { localStorage.setItem('kronikol.theme', 'light'); localStorage.removeItem('kronikol.reportSettings'); } catch (e) {} });
   const p = await ctx.newPage();

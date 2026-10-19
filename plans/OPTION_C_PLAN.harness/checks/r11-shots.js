@@ -1,9 +1,10 @@
 // Item 11: the page top (bar at rest), the bar floating, and the bar floating with Filters open.
 const pw = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 (async () => {
   const [page, browserName, out] = process.argv.slice(2);
-  const b = await pw[browserName].launch(browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe' });
+  const b = await launchInstalled(pw[browserName], browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe' });
   const p = await (await b.newContext(browserName === 'firefox' ? { viewport: null } : { viewport: { width: 1400, height: 900 } })).newPage();
   await p.addInitScript(() => { try { localStorage.setItem('kronikol.theme', 'light'); localStorage.removeItem('kronikol.reportSettings'); } catch (e) {} });
   await p.goto('file:///' + path.resolve(page).split(path.sep).join('/')); await p.waitForTimeout(2500);

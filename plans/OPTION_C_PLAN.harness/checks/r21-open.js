@@ -3,10 +3,11 @@
 // (its URL kind, what it shows) and every error and console message in the opener.
 // usage: node r21-open.js <page> <chromium|firefox> <component|scenario text>
 const pw = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 (async () => {
   const [page, browserName, which] = process.argv.slice(2);
-  const b = await pw[browserName].launch(browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe', firefoxUserPrefs: process.env.BLOCK ? { 'dom.disable_open_during_load': true, 'dom.popup_maximum': 20, 'privacy.popups.disable_from_plugins': 2 } : {} });
+  const b = await launchInstalled(pw[browserName], browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe', firefoxUserPrefs: process.env.BLOCK ? { 'dom.disable_open_during_load': true, 'dom.popup_maximum': 20, 'privacy.popups.disable_from_plugins': 2 } : {} });
   const ctx = await b.newContext(browserName === 'firefox' ? { viewport: null } : { viewport: { width: 1400, height: 900 } });
   await ctx.addInitScript(() => { try { localStorage.setItem('kronikol.theme', 'light'); localStorage.removeItem('kronikol.reportSettings'); } catch (e) {} });
   const p = await ctx.newPage();

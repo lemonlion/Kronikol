@@ -3,12 +3,13 @@
 // redraw it. Screenshots of each state.
 // usage: node tabs-check.js <page.local.html> <out dir> [width=1400]
 const { chromium } = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path'), fs = require('fs');
 (async () => {
   const [page, outDir, w] = process.argv.slice(2);
   const width = Number(w || 1400);
   fs.mkdirSync(outDir, { recursive: true });
-  const b = await chromium.launch({ channel: 'chrome' });
+  const b = await launchInstalled(chromium, { channel: 'chrome' });
   const p = await b.newPage({ viewport: { width, height: 1000 } });
   const errors = [];
   p.on('pageerror', e => errors.push(e.message));

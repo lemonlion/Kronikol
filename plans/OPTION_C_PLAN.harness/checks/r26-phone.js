@@ -1,10 +1,11 @@
 // Item 26 at phone width: the gear on the diagram's corner is hidden, the phone's own settings button on the title
 // line still opens the bar, which starts "This scenario:".
 const pw = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 (async () => {
   const [page, shot] = process.argv.slice(2);
-  const b = await pw.chromium.launch({ channel: 'chrome' });
+  const b = await launchInstalled(pw.chromium, { channel: 'chrome' });
   const p = await (await b.newContext({ viewport: { width: 400, height: 800 }, isMobile: true, hasTouch: true })).newPage();
   const errors = []; p.on('pageerror', e => errors.push(String(e)));
   await p.goto('file:///' + path.resolve(page).split(path.sep).join('/')); await p.waitForTimeout(2500);

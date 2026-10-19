@@ -1,10 +1,11 @@
 // The rules that set one property on the first element matching a selector (Chrome DevTools protocol).
 // usage: node matched.js <page> <selector> <property>
 const pw = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 (async () => {
   const [file, selector, prop] = process.argv.slice(2);
-  const b = await pw.chromium.launch({ channel: 'chrome' });
+  const b = await launchInstalled(pw.chromium, { channel: 'chrome' });
   const ctx = await b.newContext({ viewport: { width: 1400, height: 900 } });
   const p = await ctx.newPage();
   await p.goto('file:///' + path.resolve(file).split(path.sep).join('/')); await p.waitForTimeout(2000);

@@ -4,10 +4,11 @@
 // opened), the Components tab, and an internal-flow popup when one opens.
 // usage: node svg-contrast.js <page.local.html> [out.json]
 const { chromium } = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path'), fs = require('fs');
 (async () => {
   const [page, outFile] = process.argv.slice(2);
-  const b = await chromium.launch({ channel: 'chrome' });
+  const b = await launchInstalled(chromium, { channel: 'chrome' });
   const all = {};
   for (const theme of ['light', 'dark']) {
     const ctx = await b.newContext({ viewport: { width: 1400, height: 1000 } });

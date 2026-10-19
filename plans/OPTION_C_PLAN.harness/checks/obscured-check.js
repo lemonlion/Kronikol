@@ -4,6 +4,7 @@
 // counting where each focused control lands: clear of the bar, partly under it, or wholly under it.
 // usage: node obscured-check.js <page.local.html> [chrome|firefox]
 const PW = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 (async () => {
   const [page, which = 'chrome'] = process.argv.slice(2);
@@ -13,7 +14,7 @@ const path = require('path');
     const fb = await require('../mw/browsers').launch('firefox');
     p = (await fb.newPage()).raw; await p.setViewport({ width: 1400, height: 900 }); close = () => fb.close();
   } else {
-    const b = await PW.chromium.launch({ channel: 'chrome' });
+    const b = await launchInstalled(PW.chromium, { channel: 'chrome' });
     p = await (await b.newContext({ viewport: { width: 1400, height: 900 } })).newPage(); close = () => b.close();
   }
   const wait = ms => new Promise(r => setTimeout(r, ms));

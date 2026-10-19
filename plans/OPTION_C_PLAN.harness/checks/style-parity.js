@@ -3,6 +3,7 @@
 // computed styles compared property by property.
 // usage: node style-parity.js <preview.html> <branch.html> <light|dark> <surfaces, e.g. 0,9,10,11,12,13> [browser]
 const pw = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 const [previewFile, branchFile, theme, surfaceList, browserName = 'chromium', widthArg] = process.argv.slice(2);
 const WIDTH = +widthArg || 1400;
@@ -90,7 +91,7 @@ PICKS['14o'] = PICKS['14'];
   const surfaces = surfaceList.split(',');
   // 14o: the first scenario's settings opened, by its gear (on a phone, the one on the section's title)
   const open = !surfaces.includes('14o') ? null : WIDTH <= 768 ? ['.gear-in-summary', '.gear-in-summary'] : ['.k-scn-gear', '.scenario-settings-gear'];
-  const b = await pw[browserName].launch(browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe' });
+  const b = await launchInstalled(pw[browserName], browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe' });
   async function read(file, branch) {
     // This Firefox build takes no viewport from the driver, so it reads at its window's width; given a width, the page is
     // read inside a frame of that width, beside it (media queries follow the frame's width)

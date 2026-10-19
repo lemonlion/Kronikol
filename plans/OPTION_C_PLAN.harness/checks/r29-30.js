@@ -1,10 +1,11 @@
 // Items 29 + 30: the History tab's pass-rate rings (rate inside, arcs per outcome) and labelled duration bars.
 // usage: node r29-30.js <page> <chromium|firefox> [shot.png] [dark]
 const pw = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 (async () => {
   const [page, browserName, shot, theme] = process.argv.slice(2);
-  const b = await pw[browserName].launch(browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe' });
+  const b = await launchInstalled(pw[browserName], browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe' });
   const ctx = await b.newContext(browserName === 'firefox' ? { viewport: null } : { viewport: { width: 1400, height: 900 } });
   await ctx.addInitScript(t => { try { localStorage.setItem('kronikol.theme', t || 'light'); } catch (e) {} }, theme || 'light');
   const p = await ctx.newPage(); const errors = []; p.on('pageerror', e => errors.push(String(e)));

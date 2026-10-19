@@ -7,11 +7,12 @@
 // 5. Collapsed: a one-line payload ("1 row") offers no + and no expand; a longer one still does.
 // usage: node toggles-test.js <page.local.html> [out dir]
 const { chromium } = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 (async () => {
   const [page, out = 'shots/r16'] = process.argv.slice(2);
   const url = 'file:///' + path.resolve(page).split(path.sep).join('/');
-  const b = await chromium.launch({ channel: 'chrome' });
+  const b = await launchInstalled(chromium, { channel: 'chrome' });
   const ctx = await b.newContext({ viewport: { width: 1400, height: 900 } });
   await ctx.addInitScript(() => { try { localStorage.setItem('kronikol.theme', 'light'); localStorage.removeItem('kronikol.reportSettings'); } catch (e) {} });
   const p = await ctx.newPage();

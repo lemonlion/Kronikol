@@ -6,12 +6,13 @@
 // bar and the whole box in view. Then: a short window, the Timeline tab, and widths. Prints JSON.
 // usage: node nav-check.js <page.local.html> <out dir> [chrome|firefox]
 const PW = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path'), fs = require('fs');
 (async () => {
   const [page, outDir, which = 'chrome'] = process.argv.slice(2);
   fs.mkdirSync(outDir, { recursive: true });
   const url = 'file:///' + path.resolve(page).split(path.sep).join('/');
-  const b = which === 'firefox' ? null : await PW.chromium.launch({ channel: 'chrome' });
+  const b = which === 'firefox' ? null : await launchInstalled(PW.chromium, { channel: 'chrome' });
   const out = { browser: which };
   // Firefox through the Puppeteer launcher (the Playwright Firefox build here takes no viewport): a browser per page
   async function fresh(w, h, theme) {

@@ -4,6 +4,7 @@
 // paints that carry the look's markers. Fails loudly on render errors.
 // usage: node diagram-check.js <page.local.html>
 const { chromium } = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 const MEASURE = () => {
   const res = [];
@@ -35,7 +36,7 @@ const MEASURE = () => {
 };
 (async () => {
   const [page] = process.argv.slice(2);
-  const b = await chromium.launch({ channel: 'chrome' });
+  const b = await launchInstalled(chromium, { channel: 'chrome' });
   const ctx = await b.newContext({ viewport: { width: 1400, height: 1000 } });
   await ctx.addInitScript(() => { try { localStorage.setItem('kronikol.theme', 'light'); localStorage.removeItem('kronikol.reportSettings'); } catch (e) {} });
   const p = await ctx.newPage();

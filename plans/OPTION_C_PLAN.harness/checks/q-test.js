@@ -4,11 +4,12 @@
 // and against the report's own result for the word alone. Then a link carrying a qualifier search is opened again.
 // usage: node q-test.js <page.local.html>
 const { chromium } = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path');
 (async () => {
   const [page] = process.argv.slice(2);
   const url = 'file:///' + path.resolve(page).split(path.sep).join('/');
-  const b = await chromium.launch({ channel: 'chrome' });
+  const b = await launchInstalled(chromium, { channel: 'chrome' });
   const ctx = await b.newContext({ viewport: { width: 1400, height: 900 } });
   await ctx.addInitScript(() => { try { localStorage.setItem('kronikol.theme', 'light'); localStorage.removeItem('kronikol.reportSettings'); } catch (e) {} });
   const p = await ctx.newPage();

@@ -2,13 +2,14 @@
 // settings' memory across a reload, collapsed notes without braces, the filter line's alignment, and screenshots.
 // usage: node r5-check.js <page.local.html> <out dir> [width=1400]
 const { chromium } = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 const path = require('path'), fs = require('fs');
 (async () => {
   const [page, outDir, w] = process.argv.slice(2);
   const width = Number(w || 1400);
   fs.mkdirSync(outDir, { recursive: true });
   const url = 'file:///' + path.resolve(page).split(path.sep).join('/');
-  const b = await chromium.launch({ channel: 'chrome' });
+  const b = await launchInstalled(chromium, { channel: 'chrome' });
   const ctx = await b.newContext({ viewport: { width, height: 1000 }, colorScheme: 'light' });
   const p = await ctx.newPage();
   const errors = [];
