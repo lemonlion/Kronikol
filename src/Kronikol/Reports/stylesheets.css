@@ -187,13 +187,6 @@
         .run-link { color: var(--kron-accent); font-family: var(--kron-font); text-decoration: none; }
         .run-link:hover { text-decoration: underline; }
 
-
-
-
-
-        @media (min-width: 768.02px) {
-        }
-
         .filtering-box {
             min-width: 0;
             margin: 0 0 14px;
@@ -290,10 +283,9 @@
             line-height: 18px; text-align: center; font-variant-numeric: tabular-nums;
         }
         .more-filters-count[hidden] { display: none; }
-        @media (min-width: 768.02px) {
-            .filtering-box.rows-folded:not(.help-open) > .filters { display: none; }
-            .filtering-box.rows-folded.help-open > .filters > :not(.search-help-panel) { display: none; }
-        }
+        /* the rows fold with one class at every width: More filters sets it on a desktop, the Filters button on a phone */
+        .filtering-box.rows-folded:not(.help-open) > .filters { display: none; }
+        .filtering-box.rows-folded.help-open > .filters > :not(.search-help-panel) { display: none; }
         @media (max-width: 768px) { .more-filters { display: none; } }
         @media (prefers-reduced-motion: reduce) { .more-filters svg { transition: none; } }
         /* the deep search's chip sits inside the field, from its own right edge (D17) */
@@ -1972,24 +1964,36 @@
             color: var(--kron-prop-val);
         }
 
-        /* #2 Collapsible filter section — hidden on desktop */
+        /* #2 The phone's Filters button, on a line of its own that the readout rides there (no line on a desktop) */
+        .mobile-filter-line { display: none; }
         .mobile-filter-toggle {
-            display: none;
+            display: inline-flex;
+            flex: none;
             align-items: center;
             gap: 0.5em;
-            cursor: pointer;
             padding: 0.4em 0;
-            font-size: 0.9em;
-            color: rgb(100, 100, 100);
+            border: 0;
+            background: none;
+            color: var(--kron-label);
+            font: inherit;
+            font-size: var(--kron-fs-label);
+            font-weight: 600;
+            letter-spacing: var(--kron-label-track);
+            text-transform: uppercase;
+            cursor: pointer;
             user-select: none;
         }
+        .mobile-filter-toggle:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
         .mobile-filter-toggle::before {
             content: '▸';
             font-size: 0.8em;
             transition: transform 0.15s ease;
         }
-        .mobile-filter-toggle.filter-open::before {
+        .mobile-filter-toggle[aria-expanded="true"]::before {
             transform: rotate(90deg);
+        }
+        .mobile-filter-line > .filter-readout {
+            min-width: 0; margin: 0; padding: 0; border: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
 
         /* #10 Back-to-top FAB */
@@ -2033,7 +2037,7 @@
                 position: sticky;
                 top: 0;
                 z-index: 100;
-                background: rgb(224, 224, 224);
+                background: var(--kron-card);
                 padding: 0.4em 0;
             }
 
@@ -2041,9 +2045,12 @@
                 flex-direction: column;
             }
 
-            /* #2 Collapsible filter section — toggle styling */
-            .mobile-filter-toggle {
+            /* #2 the Filters button's line, with the readout at its right */
+            .mobile-filter-line {
                 display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
             }
 
             .toolbar-row {

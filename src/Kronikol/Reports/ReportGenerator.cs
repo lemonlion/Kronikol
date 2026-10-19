@@ -1882,7 +1882,7 @@ public static class ReportGenerator
                  <div class="filtering-box rows-folded" id="filtering-box">
                     <div class="filtering-box-header"><h2>Filtering</h2><div class="filtering-box-export"><span class="filter-readout" role="status" title="{FiltersLeaveShowing}">{readoutText}</span><button class="export-btn" onclick="clear_all_filters()" title="{clearTitle}">Clear All</button><button class="export-btn" onclick="export_html()" title="Download a copy of this report holding only the features the filters show">Export <span class="wide-only">Filtered </span>HTML</button><button class="export-btn" onclick="export_csv()" title="Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds">Export <span class="wide-only">Filtered </span>CSV</button>{FiltersClose}</div></div>
                     <div class="filter-search"><span class="search-field"><input id="searchbar" autocomplete="off" placeholder="Search... (@tag, $status, dep:, duration:, &&, ||, !!)" onkeyup="search_scenarios()" title="{SearchTitle}" /></span><button type="button" class="search-help-toggle" onclick="toggle_search_help()" title="{SearchHelpTitle}">?</button>{MoreFilters(rowsTitle)}</div>
-                    <div class="mobile-filter-toggle" title="Show or hide the filters">Filters</div>
+                    <div class="mobile-filter-line"><button type="button" class="mobile-filter-toggle" aria-expanded="false" aria-controls="filter-rows" title="Show or hide the filters">Filters</button></div>
                     <div class="filters" id="filter-rows">
                     <div class="search-help-panel" style="display:none">
                     <table class="search-help-table">

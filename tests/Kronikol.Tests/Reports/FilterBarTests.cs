@@ -52,6 +52,21 @@ public class FilterBarTests
     }
 
     [Fact]
+    public void On_a_phone_the_rows_fold_under_a_Filters_button_on_its_own_line()
+    {
+        var html = Generate("FilterBar_Phone.html");
+
+        // a button, which the keyboard reaches and which says whether the rows are open, on a line of its own between the
+        // search line and the rows: on a phone the readout moves onto it (report-filter-bar-script.js)
+        InOrder(html,
+            "<div class=\"filter-search\">",
+            "<div class=\"mobile-filter-line\"><button type=\"button\" class=\"mobile-filter-toggle\" aria-expanded=\"false\" aria-controls=\"filter-rows\"",
+            ">Filters</button></div>",
+            "<div class=\"filters\" id=\"filter-rows\">");
+        Assert.DoesNotContain("<div class=\"mobile-filter-toggle\"", html);
+    }
+
+    [Fact]
     public void The_rows_start_folded_under_More_filters_at_the_end_of_the_search_line()
     {
         var html = Generate("FilterBar_More.html");

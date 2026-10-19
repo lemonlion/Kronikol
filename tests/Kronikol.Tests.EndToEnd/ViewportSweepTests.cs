@@ -49,12 +49,13 @@ public sealed class ClassicScrollbarBrowser : IAsyncLifetime
 [Collection(PlaywrightCollections.Mobile)]
 public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDisposable
 {
-    /// <summary>The breakpoint below which the filtering box takes a row of its own; stylesheets.css
-    /// states it once, in the band block.</summary>
+    /// <summary>The 4.x breakpoint below which the filtering box took a row of its own. No sheet has had it
+    /// since 5.0.0's header (plans/OPTION_C_PLAN.md S2), but the 4.x header row broke at the width after it,
+    /// so the sweep keeps that width.</summary>
     private const int Breakpoint = 1160;
 
-    /// <summary>20 px steps (the narrowest band ever measured is 770 to 780 px wide) plus the first width
-    /// of the band and the first of the row layout, where the filtering box is narrowest.</summary>
+    /// <summary>20 px steps (the narrowest band ever measured is 770 to 780 px wide) plus 769, the first
+    /// width past the phone breakpoint, and the width after the 4.x breakpoint.</summary>
     private static readonly int[] Widths =
         [.. Enumerable.Range(0, 55).Select(i => 320 + i * 20).Append(769).Append(Breakpoint + 1).Order()];
 

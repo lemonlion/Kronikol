@@ -138,16 +138,8 @@ public partial class StylesheetRulesTests
     [InlineData(":root", null)]
     public void The_more_filters_count_reads_at_AA_in_every_theme(string block, string? media)
     {
-        var tokens = Stylesheets.ReportTokensStyleSheet;
-        string Resolve(string? value)
-        {
-            var m = TokenReference().Match(value ?? "");
-            Assert.True(m.Success, $"'{value}' is not one token");
-            return CssRules.Value(tokens, block, m.Groups[1].Value, media) ?? CssRules.Value(tokens, ":root", m.Groups[1].Value)
-                ?? throw new InvalidOperationException(m.Groups[1].Value + " is not in the token sheet");
-        }
-        var ink = Resolve(CssRules.Value(Base, ".more-filters-count", "color"));
-        var ground = Resolve(CssRules.Value(Base, ".more-filters-count", "background"));
+        var ink = TokenValue(block, media, CssRules.Value(Base, ".more-filters-count", "color"));
+        var ground = TokenValue(block, media, CssRules.Value(Base, ".more-filters-count", "background"));
 
         var ratio = Contrast(ink, ground);
         Assert.True(ratio >= 4.5, $"{block}: the count is {ink} on {ground}, {ratio.ToString("0.00", CultureInfo.InvariantCulture)}:1");
@@ -171,6 +163,60 @@ public partial class StylesheetRulesTests
 
     [GeneratedRegex(@"^var\((--[\w-]+)\)$")]
     private static partial Regex TokenReference();
+
+    // what a declaration that is one token reference gives in a block of the token sheet, as the cascade resolves it
+    private static string TokenValue(string block, string? media, string? value)
+    {
+        var tokens = Stylesheets.ReportTokensStyleSheet;
+        var m = TokenReference().Match(value ?? "");
+        Assert.True(m.Success, $"'{value}' is not one token");
+        return CssRules.Value(tokens, block, m.Groups[1].Value, media) ?? CssRules.Value(tokens, ":root", m.Groups[1].Value)
+            ?? throw new InvalidOperationException(m.Groups[1].Value + " is not in the token sheet");
+    }
+
+    /// <summary>The filter rows fold with one class at every width: More filters sets it on a desktop and the Filters
+    /// button on a phone, so the rows stay as they were when the window crosses the phone breakpoint, and the search help
+    /// opens while they are folded at either width (on a phone the rows were hidden by an inline style, the help with
+    /// them).</summary>
+    [Fact]
+    public void The_filter_rows_fold_with_one_class_at_every_width()
+    {
+        Assert.Equal("none", CssRules.Value(Base, ".filtering-box.rows-folded:not(.help-open) > .filters", "display"));
+        Assert.Equal("none", CssRules.Value(Base, ".filtering-box.rows-folded.help-open > .filters > :not(.search-help-panel)", "display"));
+        Assert.Null(CssRules.Value(Base, ".filtering-box.rows-folded:not(.help-open) > .filters", "display", "(min-width: 768.02px)"));
+    }
+
+    /// <summary>The phone's Filters button and its sticky search line take their colours from the tokens (they were
+    /// rgb(100, 100, 100) and rgb(224, 224, 224) in every theme): the search line the filter box's own ground, and the
+    /// button the rows' label ink, which reads at AA on that ground in every block of the token sheet.</summary>
+    [Theory]
+    [InlineData(":root[data-theme=\"dark\"]", null)]
+    [InlineData(":root:not([data-theme])", "(prefers-color-scheme: dark)")]
+    [InlineData(":root", null)]
+    public void The_phone_Filters_button_and_search_line_read_in_every_theme(string block, string? media)
+    {
+        var box = CssRules.Value(Base, ".filtering-box", "background");
+        Assert.Equal(box, CssRules.Value(Base, ".filter-search", "background", "(max-width: 768px)"));
+
+        var ink = TokenValue(block, media, CssRules.Value(Base, ".mobile-filter-toggle", "color"));
+        var ground = TokenValue(block, media, box);
+        var ratio = Contrast(ink, ground);
+        Assert.True(ratio >= 4.5, $"{block}: the Filters button is {ink} on {ground}, {ratio.ToString("0.00", CultureInfo.InvariantCulture)}:1");
+    }
+
+    /// <summary>No sheet keeps an empty media block (stylesheets.css held one at min-width 768.02px).</summary>
+    [Fact]
+    public void No_sheet_has_an_empty_media_block()
+    {
+        foreach (var (name, css) in AllSheets.Append(("report-tokens.css", Stylesheets.ReportTokensStyleSheet)))
+            Assert.False(EmptyMedia().IsMatch(CssComment().Replace(css, "")), $"{name} has an empty @media block");
+    }
+
+    [GeneratedRegex(@"@media[^{]*\{\s*\}")]
+    private static partial Regex EmptyMedia();
+
+    [GeneratedRegex(@"/\*.*?\*/", RegexOptions.Singleline)]
+    private static partial Regex CssComment();
 
     [GeneratedRegex(@"matchMedia\(\s*'([^']*)'")]
     private static partial Regex MatchMedia();

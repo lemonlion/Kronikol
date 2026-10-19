@@ -338,7 +338,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
 
         // The .filters div should be hidden
         var filtersVisible = await Page.EvaluateAsync<bool>(
-            "() => { var f = document.querySelector('.filters'); return f && f.style.display !== 'none'; }");
+            "() => { var f = document.querySelector('.filters'); return f && getComputedStyle(f).display !== 'none'; }");
         Assert.False(filtersVisible, "Filters should be collapsed by default on mobile");
     }
 
@@ -353,13 +353,13 @@ public class MobileResponsiveTests : PlaywrightTestBase
         // Click to expand
         await toggle.ClickAsync();
         var expanded = await Page.EvaluateAsync<bool>(
-            "() => { var f = document.querySelector('.filters'); return f && f.style.display !== 'none'; }");
+            "() => { var f = document.querySelector('.filters'); return f && getComputedStyle(f).display !== 'none'; }");
         Assert.True(expanded, "Filters should be visible after toggling open");
 
         // Click to collapse
         await toggle.ClickAsync();
         var collapsed = await Page.EvaluateAsync<bool>(
-            "() => { var f = document.querySelector('.filters'); return f && f.style.display === 'none'; }");
+            "() => { var f = document.querySelector('.filters'); return f && getComputedStyle(f).display === 'none'; }");
         Assert.True(collapsed, "Filters should be hidden after toggling closed");
     }
 

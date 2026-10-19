@@ -313,6 +313,13 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **Three controls have names.** The back-to-top button (an arrow), the payload line count dropdown and the
   internal-flow popup's close (a cross) had no name a screen reader could read; they are "Back to top", "Payload
   length" and "Close".
+- **On a phone the filter rows fold under a real button, and the fold holds at every width.** The Filters toggle is a
+  button the keyboard reaches and a screen reader hears as open or folded, on a line of its own that also says what
+  the filters leave showing. The search help opens while the rows are folded (it could not). Rows opened or folded
+  stay so when the window crosses the phone's width, either way (rows opened on a phone stayed hidden on a wider
+  window, and a page opened wide then narrowed showed its rows under a toggle that did nothing), and they start folded
+  from the first paint. The button and the sticky search line take the theme's colours (both were grey in every
+  theme).
 
 ## [4.32.0] - 2026-10-19
 

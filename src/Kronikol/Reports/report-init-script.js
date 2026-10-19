@@ -16,24 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { passive: true });
     }
 
-    // #2 Collapsible filter section on mobile
-    var isMobile = window.matchMedia('(max-width: 768px)').matches;
-    if (isMobile) {
-        var filtersDiv = document.querySelector('.filters');
-        var filterToggle = document.querySelector('.mobile-filter-toggle');
-        if (filtersDiv && filterToggle) {
-            filtersDiv.style.display = 'none';
-            filterToggle.addEventListener('click', function() {
-                var isOpen = filterToggle.classList.toggle('filter-open');
-                filtersDiv.style.display = isOpen ? 'flex' : 'none';
-            });
-        }
-    }
-
     // Restore filters from URL hash if present. Last, for the reason parse_url_hash reveals its anchor
     // last: the scroll to a `#sid-` scenario is aimed when it starts, so it has to start on the finished
-    // layout. Run first, it was aimed before the mobile blocks above folded the filter panel away, and
-    // ended the panel's height too far down, with the scenario off the top of a phone's screen.
+    // layout (a phone's filter rows are folded by the stylesheet, from the first paint).
     if (window.location.hash && window.location.hash.length > 1) {
         parse_url_hash();
     }

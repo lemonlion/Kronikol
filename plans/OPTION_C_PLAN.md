@@ -1085,3 +1085,33 @@ decision of the owner's, not part of this plan.
   with no title in the Summary view, back to top with neither name nor title).
   Checks: The core classes above, 569 of 569, and the Playwright classes above, 164 of 164, on `0bdfe8b6` (the count
   fix and D48 over T2); the full suites run when S12 closes.
+- 2026-10-20, S12 phone layout, part 2 (`edits/s12p2/`: `scripts-s12p2.py`, `tests-s12p2-core.py`,
+  `tests-s12p2-e2e.py`, `MobileFilterLineTests.cs`, `changelog-s12p2.py`, and `design.md` with the decisions): on a
+  phone the filter rows fold under a Filters button on a line of its own, which the readout rides (the preview's
+  `c-dom.r5.js` 390-404 and `c-round5.css` 42-45; the product emits the line, the filter bar script moves the readout,
+  the same element, while the phone breakpoint holds). The button folds the rows with More filters' class,
+  `rows-folded`, whose rules now hold at every width, in place of the inline-style fold the init script added on a
+  phone at load. That fixes four bugs: the search help, inside the rows, could not open on a phone while they were
+  folded; rows opened on a phone stayed hidden behind the inline style on a wider window; a page opened wide then
+  narrowed showed its rows under a toggle with no listener; and a phone painted the rows open until its script ran.
+  The button takes the rows' label look in `--kron-label` (it was `rgb(100, 100, 100)`), the phone's sticky search
+  line the box's `--kron-card` (it was `rgb(224, 224, 224)`), and an empty media block goes. `ViewportSweepTests`'
+  1160 px constant says what it is now.
+  Tests: core, `FilterBarTests.On_a_phone_the_rows_fold_under_a_Filters_button_on_its_own_line` and three
+  `StylesheetRulesTests` facts (one fold class at every width; the phone's button and search line in every theme, 3
+  cases, through a token lookup now shared with the count theory; no empty media block in any sheet): red 6 of 45
+  before the change (the 6 new cases, every one; the classes' other 39 pass), and with the product 92 of 92 with
+  FilterRowsTests, ControlTitlesTests, ReportThemeTests and FocusScriptTests. Playwright `MobileFilterLineTests` (new,
+  8 facts): red 8 of 8 before the change, each on its assertion (the dark search line on rgb(224, 224, 224), the
+  readout before Clear All on a phone and not following the width, Tab not reaching the toggle, the help hidden while
+  the rows are folded, More filters saying folded over rows the inline style opened, a narrowed page's rows showing
+  and a widened one's staying hidden); MobileResponsiveTests passes, 32 of 32, before the change as after.
+  `MobileResponsiveTests`' two fold facts read the computed display (the old pins read the inline style). Green:
+  Playwright, 134 of 134 with MobileResponsiveTests, ViewportSweepTests, FilterBarTests, ToolbarStylingTests,
+  ControlTitlesAuditTests, FocusClearOfTheBarTests and TagFilterTests. Mutations (`checks/mutate-s12p2.py`, 11: 5
+  core, 6 Playwright): 11 of 11 killed (the 5 core: the fold back to a desktop only, the phone's search line grey
+  again, the button's ink a literal grey, an empty media block back, the toggle a div again; the 6 Playwright: the
+  button not folding the rows, its aria-expanded never painted, the readout never riding the line, the readout placed
+  only at load, the line showing on a desktop, the inline-style fold back at load).
+  Checks: The core classes above, 92 of 92 (run on the same tree in a second worktree, every file of the change
+  compared), and the Playwright classes above, 134 of 134, on `aa0e72b3`; the full suites run when S12 closes.
