@@ -46,7 +46,9 @@ public class MergeReadsDurationsTests : IDisposable
         var html = File.ReadAllText(Path.Combine(_directory, "Combined.html"));
 
         Assert.Equal(["1.5s"], Regex.Matches(html, "<span class=\"duration-badge [^\"]*\">([^<]*)</span>").Select(m => m.Groups[1].Value));
-        Assert.Single(Regex.Matches(html, "data-duration-ms=\""));
+        // the timed scenario's element, and since 5.0.0 its row in the timeline (plans/OPTION_C_PLAN.md S11, D27)
+        Assert.Single(Regex.Matches(html, "<details class=\"scenario[^>]*data-duration-ms=\""));
+        Assert.Single(Regex.Matches(html, "<div class=\"timeline-row[^>]*data-duration-ms=\""));
         // The data file still writes the unknown duration as 0, as its schema says.
         Assert.Contains("\"durationSeconds\": 0", File.ReadAllText(Path.Combine(_directory, "Combined.json")), StringComparison.Ordinal);
     }

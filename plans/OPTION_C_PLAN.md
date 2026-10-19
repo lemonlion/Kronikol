@@ -847,3 +847,29 @@ decision of the owner's, not part of this plan.
   ArrowLink, DiagramActivityAndComponentColours and ComponentDiagram classes), and the core classes it touches, 518 of
   518 (the InternalFlow and ComponentDiagram namespaces, `StylesheetRulesTests`, `ReportGeneratorStyleOrderTests`,
   `ReportThemeTests`, `CultureInvariantOutputTests`).
+- 2026-10-19, S11d: the Timeline tab's controls (D27; the preview's `c-layout.js` 338-450, `c-extra.css` 102-106,
+  `c-round3.css` 60-74, `c-round4.css` 40, `c-round5.css` 141, `c-contrast.css` 32-36 and 48-55; stylesheet inventory
+  row 19), prepared in the session's scratch and applied with `edits/scripts-s11d.py` and `edits/tests-s11d.py`. The
+  header line holds Show (Filtered, the start, or Full) and, where a row paid a first-call warm-up, Warm-up (Shown or
+  Hidden) and Order (With or Without warm-up); a note says how many rows Filtered leaves out. The behaviour is
+  `report-timeline-script.js` (new, loaded only where the timeline is): rows follow each change of the filters and a
+  link's filters as the page opens, bars are drawn to the longest row showing, and with the warm-up hidden a bar and
+  its time are the scenario's own. A failed scenario's row opens with a cross; the timeline's rules are on the tokens.
+  Deviations: rows name their scenario by `data-sid`, not `data-stable-id`, since a `#sid-` link resolves to the first
+  match not hidden by `style.display` and a row in a hidden panel passes that check (`StableIdDeepLinkTests` also
+  counts the attribute's copies); the times keep their attribute names, so `MergeReadsDurationsTests`' count of
+  `data-duration-ms` is anchored on the scenario's element and the row; the page formats only own times, so every
+  other time stays the generator's text; the note shows only while the timeline draws fewer rows than it has (the
+  preview showed it whenever the filters hid a run); the phone rule is the report's 768 px, not the preview's 600 px;
+  the bypassed bar is blue, as the run's ring draws it (owner question).
+  Preview defects not ported: rows matched to scenarios by name, seconds read from the bar's title by a pattern that
+  cannot read "1m 5s" (a row of a minute or more kept its width, fell out of the scale and sorted last), and
+  `fmtSeconds` with no minute form.
+  Tests: core `TimelineControlsTests` (new, 9 facts) and Playwright `TimelineTabTests` (new, 11 facts, 12 cases),
+  failing 12 of 12 before the change (run with the three sources stashed; four time out waiting for a control that is
+  not there yet), and the core facts with the moved pins failing 11 of 11; three pins move (`WarmUpHtmlTests`' legend,
+  `MergeReadsDurationsTests`' count, `WarmUpMarkTests`' report as a static `WriteOrders`). Mutations: 12 of 12 killed;
+  the note never showing survived its first aim, the two-features fact, which read the note's text only, so that fact
+  now checks the note shows, and kills it (`checks/mutate-s11d.py`).
+  Checks: the timeline's neighbours pass, 142 of 142 (the Timeline, WarmUp, Duration, StableId, ReportTabs,
+  ReportToolbar, ViewportSweep and Filter classes), and the core Reports namespace, 2,736 of 2,737 with 1 skipped.

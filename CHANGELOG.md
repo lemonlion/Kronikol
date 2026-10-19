@@ -75,6 +75,11 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   system's own font (`skinparam defaultFontName system-ui`). The diagrams fetcher passes it for BrowserJs and NodeJs
   rendering, whose engine measures and paints that face; the JVM (Server and Local rendering) knows no `system-ui` and
   keeps its own font.
+- **The Timeline tab has its controls.** Show Filtered (the start) or Full, and where a scenario paid a first-call
+  warm-up, Warm-up Shown or Hidden and Order With or Without warm-up. Filtered draws the scenarios the filters leave
+  showing and says how many it leaves out; the bars are drawn to the longest one showing; with the warm-up hidden a
+  bar and its time are the scenario's own. A failed scenario's row opens with a cross, the timeline takes the theme's
+  colours, and a bypassed scenario's bar is blue, as the run's ring draws it (orange before).
 
 ### Changed (breaking)
 

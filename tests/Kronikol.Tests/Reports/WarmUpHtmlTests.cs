@@ -220,8 +220,10 @@ public class WarmUpHtmlTests : IDisposable
     {
         var info = Page(Marked()).QuerySelector("#scenario-timeline .timeline-info")!.GetAttribute("title")!;
 
-        // Skipped bars are painted grey and bypassed ones orange (stylesheets.css .timeline-bar-skipped, -bypassed).
-        Assert.Contains("green = passed, red = failed, grey = skipped, orange = bypassed.", info);
+        // Skipped bars are painted grey and bypassed ones blue (stylesheets.css .timeline-bar-skipped, -bypassed): since
+        // 5.0.0 on --kron-dot and --kron-bypass, as the run's ring draws them, where 4.x drew a bypassed bar orange.
+        Assert.Contains("green = passed, red = failed, grey = skipped, blue = bypassed.", info);
+        Assert.DoesNotContain("orange", info);
         Assert.DoesNotContain("yellow", info);
     }
 

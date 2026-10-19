@@ -1556,6 +1556,10 @@ public static class ReportGenerator
         var themeSwitchScript = LoadResource("report-theme-switch-script.js");
         var runBandScript = LoadResource("report-run-band-script.js");
         var reportTabsScript = LoadResource("report-tabs-script.js");
+        // the Timeline tab's controls (5.0.0, plans/OPTION_C_PLAN.md S11, D27), in a page that has a timeline
+        var timelineScript = hasDurations
+            ? "<script id=\"kronikol-timeline\">" + LoadResource("report-timeline-script.js") + "</script>"
+            : "";
 
         var customCssBlock = customCss is not null ? $"<style>{customCss}</style>" : "";
         var faviconLink = $"<link rel=\"icon\" href=\"{customFaviconBase64 ?? Constants.DefaultFavicon.DataUri}\">";
@@ -1622,7 +1626,7 @@ public static class ReportGenerator
                             <script id="kronikol-theme-switch">{{themeSwitchScript}}</script>
                             <script id="kronikol-run-band">{{runBandScript}}</script>
                             <script id="kronikol-report-tabs">{{reportTabsScript}}</script>
-                            {{scenarioSettingsScript}}
+                            {{scenarioSettingsScript}}{{timelineScript}}
                         </head>
                         <body>
                     """;
@@ -2088,11 +2092,16 @@ public static class ReportGenerator
             if (timelineScenarios.Length > 0)
             {
                 var maxDuration = timelineScenarios.Max(x => x.Scenario.Duration!.Value.TotalMilliseconds);
+                // The Timeline tab's controls in the header line, and under it the note Filtered fills (5.0.0,
+                // plans/OPTION_C_PLAN.md S11, D27): Warm-up and Order only where a row paid a first-call warm-up, since
+                // without one they would change nothing. report-timeline-script.js acts on them.
+                var timelineWarmUp = timelineScenarios.Any(x => WarmUpMsOf(warmUp, x.Scenario.Id) > 0);
                 timelineHtml.Append("<div id=\"scenario-timeline\" class=\"scenario-timeline\">");
-                timelineHtml.Append("<div class=\"timeline-header\">Scenario Timeline <span class=\"timeline-info\" title=\"The Scenario Timeline shows every test scenario ordered by duration (longest first). Each bar is proportional to the scenario's elapsed time, colour-coded by result: green = passed, red = failed, grey = skipped, orange = bypassed. Use it to quickly spot slow tests, compare relative durations, and identify performance outliers across the entire test run."
+                timelineHtml.Append("<div class=\"timeline-header\">Scenario Timeline <span class=\"timeline-info\" title=\"The Scenario Timeline shows every test scenario ordered by duration (longest first). Each bar is proportional to the scenario's elapsed time, colour-coded by result: green = passed, red = failed, grey = skipped, blue = bypassed. Use it to quickly spot slow tests, compare relative durations, and identify performance outliers across the entire test run."
                     // A page that draws a warm-up stripe says what it is (until 4.16.3 the legend named every colour but it).
                     + (warmUp.ScenarioMs.Count > 0 ? " A striped start is the first-call warm-up the scenario paid; hover over the bar for its calls." : "")
-                    + "\">&#x1F6C8;</span></div>");
+                    + "\">&#x1F6C8;</span>" + TimelineControls(timelineWarmUp) + "</div>");
+                timelineHtml.Append(TimelineFilteredNote);
                 foreach (var (featureName, scenario) in timelineScenarios)
                 {
                     var durationMs = scenario.Duration!.Value.TotalMilliseconds;
@@ -2104,9 +2113,15 @@ public static class ReportGenerator
                         ExecutionResult.Bypassed => "timeline-bar-bypassed",
                         _ => "timeline-bar-passed"
                     };
-                    timelineHtml.Append($"<div class=\"timeline-row\">");
-                    timelineHtml.Append($"<div class=\"timeline-label\" title=\"{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}\">{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}</div>");
                     var timelineWarmUpMs = WarmUpMsOf(warmUp, scenario.Id);
+                    // The scenario the row draws, by the stable id its element carries, and its time and warm-up in whole
+                    // milliseconds as that element writes them (D27), so the page reads nothing back from a title or a
+                    // name. Under data-sid: data-stable-id is the scenario element's own address, which a #sid- link
+                    // resolves through. A failed scenario's row is marked, and the stylesheet opens its name with a cross.
+                    var timelineStableId = ScenarioStableId.Compute(suite, featureName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+                    var timelineWarmUpAttr = timelineWarmUpMs > 0 ? string.Create(CultureInfo.InvariantCulture, $" data-warmup-ms=\"{timelineWarmUpMs:F0}\"") : "";
+                    timelineHtml.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-row{(scenario.Result == ExecutionResult.Failed ? " timeline-row-failed" : "")}\" data-sid=\"{timelineStableId}\" data-duration-ms=\"{durationMs:F0}\"{timelineWarmUpAttr}>");
+                    timelineHtml.Append($"<div class=\"timeline-label\" title=\"{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}\">{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}</div>");
                     if (timelineWarmUpMs > 0)
                     {
                         // The warm-up's share of the bar, shaded from its start: the bar is elapsed time, the share is what
@@ -2782,6 +2797,43 @@ public static class ReportGenerator
     /// <summary>A tab's panel: hidden unless its tab is the one selected.</summary>
     private static string ReportPanel(string key, string selected) =>
         $"<div class=\"report-panel\" id=\"panel-{key}\" role=\"tabpanel\" aria-labelledby=\"tab-{key}\" data-panel=\"{key}\"{(key == selected ? "" : " hidden")}>";
+
+    /// <summary>
+    /// The Timeline tab's controls (5.0.0, plans/OPTION_C_PLAN.md S11, D27), at the right of the timeline's header line:
+    /// Show, Filtered or Full, and where a row paid a first-call warm-up, Warm-up, Shown or Hidden, and Order, With warm-up
+    /// or Without warm-up. Each is a group of buttons whose first starts pressed (<c>aria-pressed</c>), each titled with what
+    /// it shows; report-timeline-script.js acts on them.
+    /// </summary>
+    private static string TimelineControls(bool warmUp)
+    {
+        var html = new StringBuilder("<div class=\"timeline-controls\">");
+        html.Append(TimelineSegments("Show", "view",
+            ("filtered", "Filtered", "Only the scenarios the filters show"),
+            ("full", "Full", "Every scenario in the run, whatever the filters")));
+        if (warmUp)
+        {
+            html.Append(TimelineSegments("Warm-up", "warm",
+                ("shown", "Shown", "Bars and times include the first-call warm-up each scenario paid, marked in its bar"),
+                ("hidden", "Hidden", "Bars and times leave the warm-up out: each scenario's own time")));
+            html.Append(TimelineSegments("Order", "order",
+                ("with", "With warm-up", "Slowest first, counting the warm-up"),
+                ("without", "Without warm-up", "Slowest first by each scenario's own time, warm-up left out")));
+        }
+        return html.Append("</div>").ToString();
+    }
+
+    /// <summary>One of the timeline's control groups: its label, then a button for each choice, the first pressed.</summary>
+    private static string TimelineSegments(string label, string key, params (string Value, string Text, string Title)[] choices)
+    {
+        var html = new StringBuilder($"<span class=\"tl-seg\" role=\"group\" aria-label=\"{label}\"><span class=\"tl-seg-label\">{label}</span>");
+        for (var i = 0; i < choices.Length; i++)
+            html.Append($"<button type=\"button\" class=\"tl-seg-btn\" data-{key}=\"{choices[i].Value}\" aria-pressed=\"{(i == 0 ? "true" : "false")}\" title=\"{System.Net.WebUtility.HtmlEncode(choices[i].Title)}\">{choices[i].Text}</button>");
+        return html.Append("</span>").ToString();
+    }
+
+    /// <summary>What Filtered leaves out, said under the timeline's header line while it draws fewer rows than it has
+    /// (D27); report-timeline-script.js writes the words.</summary>
+    private const string TimelineFilteredNote = "<div class=\"filtered-note\" role=\"status\" hidden></div>";
 
     private const string HappyPathTag = "Happy Path";
 

@@ -23,7 +23,13 @@ public class WarmUpMarkTests : PlaywrightTestBase
     /// shape; "Browse" and "Search" run 300 and 400 ms with no call. By wall time "Place" is the slowest; by its own time
     /// (500 ms) it is below "Place again".
     /// </summary>
-    private string Generate(string fileName, bool includeTestRunData = true, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null)
+    private string Generate(string fileName, bool includeTestRunData = true, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null) =>
+        WriteOrders(TempDir, OutputDir, fileName, includeTestRunData, diagrams);
+
+    /// <summary>The same report for another class's facts (TimelineTabTests, 5.0.0): written in <paramref name="tempDir"/>,
+    /// copied to <paramref name="outputDir"/>.</summary>
+    internal static string WriteOrders(string tempDir, string outputDir, string fileName, bool includeTestRunData = true,
+        DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null)
     {
         var logs = new List<RequestResponseLog>();
         Call(logs, "place", 0, 1500);
@@ -44,9 +50,9 @@ public class WarmUpMarkTests : PlaywrightTestBase
             }
         ];
         var path = ReportGenerator.GenerateHtmlReport(diagrams ?? [], features, T0.UtcDateTime, T0.UtcDateTime.AddMinutes(1), null,
-            Path.Combine(TempDir, fileName), "Warm-up", includeTestRunData,
+            Path.Combine(tempDir, fileName), "Warm-up", includeTestRunData,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs, trackedLogs: logs.ToArray());
-        File.Copy(path, Path.Combine(OutputDir, fileName), true);
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
     }
 

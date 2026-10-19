@@ -1637,29 +1637,66 @@
             overflow-wrap: anywhere;
         }
 
-        /* Scenario Timeline / Gantt */
+        /* The Scenario Timeline, the Timeline tab's card (5.0.0, plans/OPTION_C_PLAN.md S11, D27): the header line holds the
+           title and the controls (Show; Warm-up and Order where a row paid a first-call warm-up), the note under it says
+           what Filtered leaves out, and every colour is a token. A failed row's name opens with the cross a failed
+           scenario's heading shows, so the failure is not told by its colour alone. */
         .scenario-timeline {
-            margin: 1em 0;
-            border: 1px solid rgb(200, 200, 200);
-            border-radius: 0.8em;
-            padding: 1em;
-            background: rgb(250, 250, 250);
+            margin: 0 0 14px;
+            border: 1px solid var(--kron-hairline);
+            border-radius: 12px;
+            padding: 12px 16px;
+            background: var(--kron-card);
+            box-shadow: var(--kron-card-shadow);
             overflow-x: auto;
         }
         .timeline-header {
-            font-weight: bold;
-            font-size: 1.05em;
-            margin-bottom: 0.6em;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            margin-bottom: 8px;
+            color: var(--kron-label);
+            font-size: var(--kron-fs-label);
+            font-weight: 600;
+            letter-spacing: var(--kron-label-track);
+            text-transform: uppercase;
         }
         .timeline-info {
             cursor: help;
+            color: var(--kron-label);
             font-weight: normal;
             font-size: 0.95em;
-            opacity: 0.55;
             vertical-align: top;
             line-height: 1;
         }
-        .timeline-info:hover { opacity: 1; }
+        .timeline-info:hover { color: var(--kron-ink); }
+        .timeline-controls {
+            display: flex; flex-wrap: wrap; gap: 8px 18px; margin-left: auto;
+            font-weight: 400; letter-spacing: normal; text-transform: none;
+        }
+        .tl-seg { display: inline-flex; align-items: baseline; }
+        .tl-seg-label {
+            margin-right: 8px; color: var(--kron-label);
+            font-size: var(--kron-fs-label); font-weight: 600; letter-spacing: var(--kron-label-track); text-transform: uppercase;
+        }
+        /* a group's choices drawn as one segmented control, the pressed one over its neighbours' edge */
+        .tl-seg-btn {
+            margin: 0 0 0 -1px; padding: 4px 10px; border: 1px solid var(--kron-control-border); border-radius: 0;
+            background: var(--kron-card); color: var(--kron-ink-soft); font: var(--kron-fs-control)/16px var(--kron-font); cursor: pointer;
+        }
+        .tl-seg-btn:first-of-type { margin-left: 0; border-radius: 6px 0 0 6px; }
+        .tl-seg-btn:last-of-type { border-radius: 0 6px 6px 0; }
+        .tl-seg-btn:hover { background: var(--kron-hover); }
+        .tl-seg-btn[aria-pressed="true"] {
+            position: relative; z-index: 1; border-color: var(--kron-selected-edge); background: var(--kron-selected); color: var(--kron-selected-ink); font-weight: 600;
+        }
+        .tl-seg-btn:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+        /* a tab that follows the filters and shows less than the whole run says so, in bold, under its header line */
+        .filtered-note {
+            margin: 0 0 10px; padding: 7px 10px; border: 1px solid var(--kron-warn-edge); border-radius: 6px;
+            background: var(--kron-warn-soft); color: var(--kron-warn); font-size: 12.5px; font-weight: 700; line-height: 1.4;
+        }
         .timeline-row {
             display: flex;
             align-items: center;
@@ -1669,18 +1706,20 @@
         .timeline-label {
             min-width: 200px;
             max-width: 200px;
-            font-size: 0.8em;
+            color: var(--kron-ink-soft);
+            font-size: var(--kron-fs-control);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             text-align: right;
             padding-right: 0.4em;
         }
+        .timeline-row-failed .timeline-label::before { content: '\2717'; margin-right: 5px; font-weight: 700; color: var(--kron-fail); }
         .timeline-track {
             flex: 1;
             position: relative;
             height: 1.2em;
-            background: rgb(240, 240, 240);
+            background: var(--kron-track);
             border-radius: 3px;
         }
         .timeline-bar {
@@ -1690,22 +1729,17 @@
             min-width: 2px;
             top: 0;
         }
-        .timeline-bar-passed {
-            background: rgb(34, 139, 34);
-        }
-        .timeline-bar-failed {
-            background: rgb(191, 0, 0);
-        }
-        .timeline-bar-skipped {
-            background: rgb(148, 148, 148);
-        }
-        .timeline-bar-bypassed {
-            background: rgb(255, 165, 0);
-        }
+        .timeline-bar-passed { background: var(--kron-pass-ring); }
+        .timeline-bar-failed { background: var(--kron-fail); }
+        /* skipped and bypassed as the run's ring draws them: 4.x drew a bypassed bar orange where its pie was blue */
+        .timeline-bar-skipped { background: var(--kron-dot); }
+        .timeline-bar-bypassed { background: var(--kron-bypass); }
         .timeline-duration {
-            font-size: 0.75em;
-            color: rgb(100, 100, 100);
             min-width: 3.5em;
+            color: var(--kron-faint);
+            font-family: var(--kron-font);
+            font-size: var(--kron-fs-meta);
+            font-variant-numeric: tabular-nums;
         }
 
         /* Parameterized test grouping table */
@@ -2023,12 +2057,9 @@
             .timeline-label {
                 min-width: 100px;
                 max-width: 100px;
-                font-size: 0.7em;
             }
-
-            .scenario-timeline {
-                padding: 0.5em;
-            }
+            /* where the Timeline's control groups wrap, their buttons start in one column (5.0.0, D27) */
+            .timeline-controls .tl-seg-label { min-width: 9.5em; }
 
             .param-test-table {
                 display: block;
