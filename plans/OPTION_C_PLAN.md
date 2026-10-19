@@ -993,3 +993,14 @@ decision of the owner's, not part of this plan.
   fixture held no markup, so the fact now writes some into the source it opens.
   Checks: the context menu's core tests pass, 130 of 130 (the DiagramContextMenu, ContextMenu and
   NoteCopyFidelityScript classes). The full suites run on v5 with this commit.
+- 2026-10-19, S12 steps alignment (R17.18; the preview's `c-round17.css` 26-28, 37-40 and 53-66): regression facts for
+  the rules S1 ported (`fc254b55`), the brief having found no CSS left to port. `StepAlignmentTests` (new, Playwright,
+  2 facts): the four headings' triangles share one column, a collapsible step's triangle sits in it, and each
+  heading's first letter starts where the status circles do (the background step's among them), in Chromium and in
+  Playwright's Firefox (skipped where it is missing). The facts pass on the unchanged code, so their red is their
+  mutations: 5 of 5 killed (a sixth, the Steps heading's own left padding, survived as an equivalent mutation: the
+  shared heading rule after it sets the same side again, so it is not kept) (`checks/mutate-s12a.py`). Not covered:
+  the Specifications page, where step numbers precede the circle and the heading's letter and the circle do not share
+  a column (S13).
+  Checks: the facts pass in both browsers, with BaseSurfaceStyleTests, 11 of 11. Found while running them: Playwright
+  cannot fill a positional record from an evaluation (Return type mismatch), so the layout comes back as JSON.
