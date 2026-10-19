@@ -45,7 +45,7 @@ public class StaleOutputTests : IDisposable
         try { Directory.Delete(_dir, true); } catch { /* best effort */ }
     }
 
-    private string Run()
+    private string Run(bool compress = false)
     {
         var testId = "stale-" + Guid.NewGuid().ToString("N");
         RequestResponseLogger.LogPair("Pay", testId, HttpMethod.Post, new Uri("http://payments/charge"), "payments", "Test");
@@ -71,6 +71,7 @@ public class StaleOutputTests : IDisposable
                     GenerateComponentDiagram = false,
                     GenerateSpecificationsReport = false,
                     GenerateSpecificationsData = false,
+                    CompressTestRunReport = compress,
                 });
         }
         finally
@@ -86,24 +87,27 @@ public class StaleOutputTests : IDisposable
     private static string Pointer(string console) =>
         console.Split('\n').First(l => l.StartsWith("Kronikol: reports written to", StringComparison.Ordinal));
 
-    [Fact]
-    public void The_pointer_does_not_name_the_previous_runs_file_when_this_run_could_not_replace_it()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void The_pointer_does_not_name_the_previous_runs_file_when_this_run_could_not_replace_it(bool compress)
     {
         // The access-denied mode needs an existing file this process is refused, and root on Linux and macOS is
         // refused no file for its mode, nor for anything else a test can set up. The code under test is the same
         // whoever runs it, so a run as any other user covers it; the held mode has its own fact below.
         Assert.SkipUnless(ReadOnlyProbe.RefusesThisProcess, "a read-only file does not refuse this process (root), so the write this fact needs cannot fail");
 
-        var stale = Path.Combine(_dir, "TestRunReport.json");
+        var name = compress ? "TestRunReport.krkl" : "TestRunReport.json";
+        var stale = Path.Combine(_dir, name);
         File.WriteAllText(stale, "{\"from\":\"an earlier run\"}");
         File.SetAttributes(stale, FileAttributes.ReadOnly);
 
-        var console = Run();
+        var console = Run(compress);
 
         // The write failed and was announced...
-        Assert.Contains("could not write TestRunReport.json", console, StringComparison.Ordinal);
+        Assert.Contains($"could not write {name}", console, StringComparison.Ordinal);
         // ...so the pointer must not hand the reader the bytes of a different run.
-        Assert.DoesNotContain("TestRunReport.json", Pointer(console), StringComparison.Ordinal);
+        Assert.DoesNotContain(name, Pointer(console), StringComparison.Ordinal);
         // And what this run DID write is still named — this must not become a pointer that names nothing.
         Assert.Contains("Failures.md", Pointer(console), StringComparison.Ordinal);
     }

@@ -138,9 +138,21 @@ public class KrklWriterTests : IDisposable
         File.WriteAllText(target, "an earlier run");
 
         Exception? thrown;
+        var original = Console.Out;
+        var captured = new StringWriter();
         // A viewer reading the earlier run's file.
         using (new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.Read))
-            thrown = Record.Exception(() => Run("held", compress: true));
+        {
+            Console.SetOut(captured);
+            try
+            {
+                thrown = Record.Exception(() => Run("held", compress: true));
+            }
+            finally
+            {
+                Console.SetOut(original);
+            }
+        }
 
         // Each output is isolated: one that fails is a diagnostic and a warning, and the run goes on.
         Assert.Null(thrown);
@@ -153,6 +165,8 @@ public class KrklWriterTests : IDisposable
             var manifest = RunManifest.TryRead(Path.Combine(directory, RunManifest.FileName));
             Assert.True(manifest is null || manifest.Files.Contains("TestRunReport2.krkl") && !manifest.Files.Contains("TestRunReport.krkl"),
                 "the manifest names the earlier run's file");
+            // The warning names the folder, as a JSON file's does; a failed rename's own message names no path.
+            Assert.Contains("could not write TestRunReport.krkl", Reports.ConsoleLines.About(captured.ToString(), directory), StringComparison.Ordinal);
         }
         else
         {
