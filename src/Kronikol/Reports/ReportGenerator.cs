@@ -1139,7 +1139,8 @@ public static class ReportGenerator
 
     /// <summary>
     /// What the page's Setup filter (stripSetup in collapsible-notes-script.js) finds a setup by: the Setup frame the
-    /// SeparateSetup option writes, or a When step bar in either of the forms <see cref="StepBarPlantUml"/> writes.
+    /// SeparateSetup option writes, or a When step bar in either of the forms
+    /// <see cref="PlantUml.StepBarPlantUml"/> writes.
     /// </summary>
     private static readonly Regex SetupMarker = new(
         @"^[ \t]*(?:partition\b.*\bSetup\r?$|hnote across <<stepDelimiter>>(?: #black:<color:white>|<<stepBody>>: )(?:<b>)?when\b)",

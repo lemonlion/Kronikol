@@ -949,3 +949,7 @@ decision of the owner's, not part of this plan.
   runs end (`checks/mutate-s11e.py`; the drop of a render that lands after a newer one has no deterministic browser
   fact and is held by `checks/components-script-check.js` under node, which three mutations of the script each fail).
   Checks: The full suites run on v5 with this commit and the 11 Playwright mutations, recorded with S11's status.
+- 2026-10-19, S9a fix: the doc comment on `ReportGenerator.SetupMarker` named `StepBarPlantUml` from
+  `Kronikol.Reports`, where the compiler could not resolve it (CS1574 at ReportGenerator.cs 1137, a warning in every
+  build since S9a); it names `PlantUml.StepBarPlantUml` now (`edits/fix-s9a-cref.py`). Red: the warning in the S11e
+  builds. Green: a build of the library with no CS1574 and no warning from ReportGenerator.cs.
