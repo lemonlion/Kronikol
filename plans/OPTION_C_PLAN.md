@@ -953,3 +953,12 @@ decision of the owner's, not part of this plan.
   `Kronikol.Reports`, where the compiler could not resolve it (CS1574 at ReportGenerator.cs 1137, a warning in every
   build since S9a); it names `PlantUml.StepBarPlantUml` now (`edits/fix-s9a-cref.py`). Red: the warning in the S11e
   builds. Green: a build of the library with no CS1574 and no warning from ReportGenerator.cs.
+- 2026-10-19, S12 phone layout, part 1: one fact holds the phone breakpoint to one value everywhere (the brief's "a
+  core fact pinning one breakpoint across sheets and JS"), added with `edits/tests-s12p1.py`:
+  `StylesheetRulesTests.The_phone_breakpoint_is_one_in_every_sheet_and_every_script` reads every width bound from 760
+  to 780 px in every sheet (the token sheet too) and in every embedded script's `matchMedia`, and requires `max-width:
+  768px` or `min-width: 768.02px`. The fact before it read only the sheets' `min-width` bounds, so a script asking at
+  769 px, or a phone block written as `max-width: 769px`, passed. Every rule holds today (no 769 in `src/`), so the
+  fact's red is its mutations: 4 of 4 killed (`checks/mutate-s12p1.py`: two scripts and two sheets moved off the
+  breakpoint).
+  Checks: the StylesheetRules class passes, 29 of 29.
