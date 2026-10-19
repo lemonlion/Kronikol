@@ -103,7 +103,10 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   thin edges, thin lifelines and note edges, and messages centred over their arrows, and, where a browser engine draws
   it (BrowserJs and NodeJs rendering), the system's own font; component diagrams and their diffs drawn by those
   engines take the font too. A diagram drawn with a `PlantUmlTheme` leaves the look out and keeps the theme's. Where
-  the page draws a diagram, every step bar is a rectangle with its label in bold, in place of the black hexagon.
+  the page draws a diagram, every step bar is a rectangle with its label in bold, in place of the black hexagon, and
+  the drawing's parts take the theme's colours by their role: lifelines and participants, step bars as light bands
+  with dark text, a step bar's table on its own ground with its header row shaded, and notes as rounded cards, an
+  event's card in its own colour. Every strip (a step, an assertion, the Test bar) runs the drawing's full width.
 - **A service is drawn as a box.** `DependencyPalette.GetSequenceShape(DependencyType.HttpApi)` returns `participant`,
   which was `entity`, and a caller after the first that has no category is a `participant` too: a service reads as a
   box among the participants around it, not a circle on a line.

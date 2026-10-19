@@ -662,3 +662,34 @@ decision of the owner's, not part of this plan.
   (`checks/mutate-s10b-a.py`).
   Checks: Playwright `DiagramLookShimTests`, `StepTableBarTests`, `FilteredMarkerTests` and
   `EventsAndSetupToggleTests` pass (13); the full suites run at the end of S10.
+- 2026-10-19, S10b-2: the role pass (P24 to P30), the preview's `c-diagram-look.js` section 2 re-derived at the end of
+  `plantuml-browser-render-script.js`. Once the page has drawn a sequence diagram, each element is found by its
+  structure and given a role class, which `inline-svg-styles.css` colours from the theme's tokens (P31: the preview's
+  role rules and round 17's step table header and rules): lifelines and participants; step bars, which the shim draws
+  as rectangles, as light bands with dark ink; a step bar's table on its own ground with its header row shaded, the
+  bar's contents lifted 1.5 units; every strip (a step bar, an assertion, the Test bar, a Row marker) stretched to the
+  drawing's full width with what is drawn in it centred again; notes redrawn as rounded cards of the same bounds, an
+  event note as an event card, the fold kept, hidden, for the note script that finds notes by it. The shim marks a
+  sequence diagram's container (`data-k-sequence`, from its source's pragma) and records its note kinds; a
+  MutationObserver tags every picture as it arrives, and an IntersectionObserver one drawn hidden when it comes into
+  view; `data-k-roles` holds the counts and the time taken. Measuring, deciding and writing are three phases, so the
+  drawing is laid out once.
+- Not ported: the levers (the owner took every one but the badges), the number badges (P29, off since round 8), and
+  the note kinds read from one stereotype (F3): a note widened by its width button carries
+  `<<kronNoteWide>><<eventNote>>`, which the preview skipped, so the kinds no longer matched the notes drawn and every
+  event card in the diagram lost its colour. The port reads every stereotype and takes the one ending in Note.
+  Left out until S10c: exports. A copied, saved or opened SVG or PNG carries no page CSS (F9), so the roles' colours
+  are lost there, and the two rects the pass adds behind a step table, with no fill of their own, export black; S10c
+  carries the look into exports.
+  Tests: Playwright `DiagramRolesTests` (new, 9, each failing before: lifelines and participants in their colours, the
+  light band and its dark ink, the step table's ground and shaded header, a strip the drawing's full width with its
+  label centred, notes as cards and an event card with the fold hidden, a widened event note keeping its colour, a
+  card keeping its note buttons, the dark theme's colours, a diagram drawn again tagged again). Mutations: 9 of 9
+  killed (`checks/mutate-s10b-b.py`). The first run's two survivors found the strip fact comparing the band with a
+  note in the middle of the drawing, which an unstretched band passed too (it now takes the rightmost card), and a
+  mutation too weak to stop a redrawn picture's tagging (it now tags only a container's first picture).
+  Checks: `DiagramRolesTests` pass on this source, and the 435 Playwright facts whose class or name says note,
+  diagram, step, marker, toggle, context menu, split, fragment, render or internal flow passed on it before a cleanup
+  that changes no behaviour (a redundant condition dropped, two comments reworded). The role pass's cost against
+  `BrowserRenderWorkerTests`' main-thread budgets, which the batch's filter did not reach, and the full suites are
+  measured at the end of S10.
