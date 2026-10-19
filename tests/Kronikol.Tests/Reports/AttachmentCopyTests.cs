@@ -50,18 +50,26 @@ public class AttachmentCopyTests : IDisposable
     }
 
     [Fact]
-    public void Missing_source_file_is_skipped_without_error()
+    public void Missing_source_file_is_kept_without_error_and_said_in_one_entry()
     {
+        // Until #148 the file was kept and nothing was recorded, so the report linked a path that existed nowhere and no
+        // reader said why (plans/MISSING_ATTACHMENTS_PLAN.md F1).
         var reportsDir = Path.Combine(_tempDir, "Reports");
         Directory.CreateDirectory(reportsDir);
+        var missing = Path.Combine(_tempDir, "nonexistent", "missing.png");
 
-        var features = CreateFeatures(new FileAttachment("missing.png", "/nonexistent/missing.png"));
+        var features = CreateFeatures(new FileAttachment("missing.png", missing));
 
-        ReportGenerator.CopyAttachmentsToReportsFolder(features, reportsDir);
+        var collector = new ReportDiagnosticsCollector();
+        using (ReportDiagnosticsScope.Begin(collector))
+            ReportGenerator.CopyAttachmentsToReportsFolder(features, reportsDir);
 
         // RelativePath unchanged because file doesn't exist
-        Assert.Equal("/nonexistent/missing.png", features[0].Scenarios[0].Steps[0].Attachments![0].RelativePath);
+        Assert.Equal(missing, features[0].Scenarios[0].Steps[0].Attachments![0].RelativePath);
         Assert.False(Directory.Exists(Path.Combine(reportsDir, "attachments")));
+        var entry = Assert.Single(collector.Entries);
+        Assert.Equal(DiagnosticKind.AttachmentFailure, entry.Kind);
+        Assert.Equal($"1 attachment(s) are not in the report: 1 not found when the report was drawn: {missing}.", entry.Message);
     }
 
     [Fact]
@@ -272,9 +280,11 @@ public class AttachmentCopyTests : IDisposable
     public void Already_relative_attachments_path_is_not_rewritten()
     {
         var reportsDir = Path.Combine(_tempDir, "Reports");
-        Directory.CreateDirectory(reportsDir);
+        Directory.CreateDirectory(Path.Combine(reportsDir, "attachments"));
+        File.WriteAllText(Path.Combine(reportsDir, "attachments", "shot.png"), "fake image data");
 
-        // Path that's already in attachments/ subfolder (e.g. from LightBDD which manages its own copies)
+        // A path an earlier call over the same model already rewrote (LightBDD's formatter, then the host's own): this
+        // run's copy, there already
         var features = CreateFeatures(new FileAttachment("shot.png", "attachments/shot.png"));
 
         ReportGenerator.CopyAttachmentsToReportsFolder(features, reportsDir);

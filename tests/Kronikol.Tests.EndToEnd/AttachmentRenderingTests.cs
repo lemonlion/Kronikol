@@ -105,6 +105,32 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task Images_whose_names_hold_a_hash_or_a_percent_sign_draw_and_open_in_the_lightbox()
+    {
+        // #148 F11: linked HTML-encoded only, shot#1.png requested attachments/shot and 50%.png an escape it is not.
+        await Page.GotoAsync(GenerateReportWithAwkwardAttachmentNames("AttAwkward.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+
+        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+
+        foreach (var name in new[] { "shot#1.png", "50%.png" })
+        {
+            await Page.Locator($"img.attachment-image[alt=\"{name}\"]").First.WaitForAsync();
+            await Page.WaitForFunctionAsync(
+                "name => { const img = [...document.querySelectorAll('img.attachment-image')].find(i => i.alt === name); return !!img && img.complete && img.naturalWidth > 0; }",
+                name, new() { PollingInterval = 200, Timeout = 10_000 });
+
+            await Page.Locator($"img.attachment-image[alt=\"{name}\"]").First.ClickAsync();
+            await Page.WaitForFunctionAsync(
+                "name => { const img = document.querySelector('.lightbox-overlay.active img'); return !!img && img.alt === name && img.complete && img.naturalWidth > 0; }",
+                name, new() { PollingInterval = 200, Timeout = 10_000 });
+            await Page.Keyboard.PressAsync("Escape");
+            await Page.WaitForFunctionAsync("() => !document.querySelector('.lightbox-overlay.active')", null, new() { PollingInterval = 200 });
+        }
+    }
+
+    [Fact]
     public async Task Image_attachment_has_lightbox_link()
     {
         await Page.GotoAsync(GenerateReportWithAttachments("AttImgLink.html"));

@@ -166,7 +166,9 @@ public static class ReportGenerator
     // historyBaseDirectory: where the history ledger is looked for first (then above the reports directory); null is this
     // process's base directory, right for a test binary built inside its repository. An ingest passes the directory it
     // runs in: the tool's own folder says nothing about whose run it is replaying.
-    internal static void CreateStandardReportsWithDiagramsInEnvironment(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite = null, IReadOnlyList<FlowSpan>? spans = null, string? historyBaseDirectory = null)
+    // attachments: what an ingest knows of its capture's attachments that the copier cannot see (AttachmentContext); null for
+    // an in-process run.
+    internal static void CreateStandardReportsWithDiagramsInEnvironment(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite = null, IReadOnlyList<FlowSpan>? spans = null, string? historyBaseDirectory = null, AttachmentContext? attachments = null)
     {
         var previous = ActiveReportsDirectory.Value;
         ActiveReportsDirectory.Value = ResolveReportsDirectory(options);
@@ -181,7 +183,10 @@ public static class ReportGenerator
         var runFiles = RunFileCollector.Begin(ActiveReportsDirectory.Value);
         try
         {
-            CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options, environment, getEnv, beforeFirstWrite, spans, historyBaseDirectory);
+            // A run that scoped its own collector has no host to print what it recorded, so it prints what a reader must
+            // not miss itself; a host that scoped one (kronikol ingest) prints every entry already.
+            CreateStandardReportsWithDiagramsCore(features, startRunTime, endRunTime, options, environment, getEnv, beforeFirstWrite, spans, historyBaseDirectory,
+                attachments, printsDiagnostics: ownScope is not null);
         }
         finally
         {
@@ -191,7 +196,8 @@ public static class ReportGenerator
         }
     }
 
-    private static void CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite, IReadOnlyList<FlowSpan>? suppliedSpans, string? historyBaseDirectory)
+    private static void CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment? environment, Func<string, string?> getEnv, Action<string>? beforeFirstWrite, IReadOnlyList<FlowSpan>? suppliedSpans, string? historyBaseDirectory,
+        AttachmentContext? attachmentContext, bool printsDiagnostics)
     {
         // Guard: skip report generation entirely when there are zero scenarios.
         // This prevents the xUnit v3 test-discovery pass (which triggers
@@ -460,7 +466,17 @@ public static class ReportGenerator
         // written beside it: planned, not yet written. A query.cs someone else put here is not Kronikol's to
         // replace, and the digest must not send anyone to run it.
         var queryScriptPlanned = WritesQueryScript(options) && queryScriptBlockedBy is null && !QueryScriptGenerator.IsForeign(reportsDir);
-        CopyAttachmentsToReportsFolder(features, reportsDir);
+        // Every attachment the report does not hold is said once (#148): recorded before the snapshot below, so the HTML, the
+        // data files and kronikol query all carry it, and printed by a run with no host to print it, which is otherwise
+        // where a broken screenshot went unexplained.
+        var attachmentAccount = CopyAttachments(features, reportsDir);
+        attachmentAccount.Include(attachmentContext);
+        if (attachmentAccount.Describe(attachmentContext) is { } attachmentMessage)
+        {
+            ReportDiagnosticsScope.Record(DiagnosticKind.AttachmentFailure, attachmentMessage);
+            if (printsDiagnostics)
+                Console.WriteLine("⚠ WARNING: " + attachmentMessage);
+        }
 
         // The run report's component diagram, drawn now by the report's renderer where the page will not draw it
         // (NodeJs, Server, Local), and before the diagnostics are taken below, so a failure to draw it is in the report.
@@ -2274,11 +2290,11 @@ public static class ReportGenerator
                     {
                         if (attachment.IsInlineImage)
                         {
-                            body.Append($"<a class=\"attachment-image-link\" href=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" target=\"_blank\"><img class=\"attachment-image\" src=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
+                            body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" target=\"_blank\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
                         }
                         else
                         {
-                            body.Append($"<a class=\"step-attachment\" href=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</a>");
+                            body.Append($"<a class=\"step-attachment\" href=\"{AttachmentHref(attachment)}\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</a>");
                         }
                     }
                     body.Append("</div>");
@@ -3289,11 +3305,11 @@ public static class ReportGenerator
                     {
                         if (attachment.IsInlineImage)
                         {
-                            body.Append($"<a class=\"attachment-image-link\" href=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" target=\"_blank\"><img class=\"attachment-image\" src=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
+                            body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" target=\"_blank\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
                         }
                         else
                         {
-                            body.Append($"<a class=\"step-attachment\" href=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</a>");
+                            body.Append($"<a class=\"step-attachment\" href=\"{AttachmentHref(attachment)}\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</a>");
                         }
                     }
                     body.Append("</div>");
@@ -3888,12 +3904,12 @@ public static class ReportGenerator
             {
                 if (attachment.IsInlineImage)
                 {
-                    body.Append($"<a class=\"attachment-image-link\" href=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" onclick=\"openLightbox(event, this)\"><img class=\"attachment-image\" src=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
+                    body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" onclick=\"openLightbox(event, this)\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
                     body.Append($"<span class=\"attachment-image-name\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</span>");
                 }
                 else
                 {
-                    body.Append($"<a class=\"step-attachment\" href=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</a>");
+                    body.Append($"<a class=\"step-attachment\" href=\"{AttachmentHref(attachment)}\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</a>");
                 }
             }
         }
@@ -6061,140 +6077,140 @@ public static class ReportGenerator
     }
 
     /// <summary>
-    /// Copies attachment files referenced by steps into the reports directory and rewrites
-    /// their <see cref="FileAttachment.RelativePath"/> to point to the local copy.
-    /// Attachments whose source file does not exist or whose path is already relative
-    /// to an <c>attachments/</c> subfolder are left unchanged.
+    /// Copies the files the features' attachments name into the reports directory's <c>attachments/</c> folder and
+    /// rewrites each <see cref="FileAttachment.RelativePath"/> to the copy, so the report's links work wherever the folder
+    /// is opened or uploaded. A URL is left as it is. A file already in that folder is linked where it is, and so is a
+    /// relative <c>attachments/</c> path to a file there (the copy an earlier call over the same model made). Any other
+    /// relative path is read against the working directory it was attached in, when <c>Track.Attachment</c> could not
+    /// find it then, and against the binary folder.
     /// </summary>
+    /// <remarks>
+    /// An attachment the report cannot hold keeps its path: one whose file is not there (and one that was there when it was
+    /// attached and is gone), one whose file could not be copied, one whose path is not usable on this machine. Every such
+    /// attachment, and every one whose file changed after it was attached, is said in ONE
+    /// <see cref="DiagnosticKind.AttachmentFailure"/> entry recorded on the current <see cref="ReportDiagnosticsScope"/>,
+    /// which leads with the count (#148, plans/MISSING_ATTACHMENTS_PLAN.md).
+    /// </remarks>
     public static void CopyAttachmentsToReportsFolder(Feature[] features, string reportsDirectory)
     {
-        var attachmentsDir = Path.Combine(reportsDirectory, "attachments");
-        var copiedFiles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (CopyAttachments(features, reportsDirectory).Describe() is { } message)
+            ReportDiagnosticsScope.Record(DiagnosticKind.AttachmentFailure, message);
+    }
+
+    /// <summary>
+    /// <see cref="CopyAttachmentsToReportsFolder"/>'s work, returning what the report could not hold for the caller to
+    /// say: a run also prints it, and an ingest adds what it dropped before the model held it.
+    /// </summary>
+    internal static AttachmentAccount CopyAttachments(Feature[] features, string reportsDirectory)
+    {
+        var account = new AttachmentAccount(reportsDirectory);
+        var attachmentsDir = Path.Combine(reportsDirectory, AttachmentPlacement.FolderName);
+        var scenarios = features.Where(f => f.Scenarios is not null).SelectMany(f => f.Scenarios).ToArray();
+
+        // Every path is read before anything is copied, so a file already in the folder keeps its name: copied in first, a
+        // file of the same name from elsewhere would have been written over it.
+        var sources = new Dictionary<FileAttachment, AttachmentPlacement.Source>(ReferenceEqualityComparer.Instance);
         var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var feature in features)
+        AttachmentPlacement.ForEachList(scenarios, attachments =>
         {
-            if (feature.Scenarios is null) continue;
-            foreach (var scenario in feature.Scenarios)
+            foreach (var attachment in attachments)
             {
-                if (scenario.Attachments is { Length: > 0 })
-                    scenario.Attachments = ProcessAttachments(scenario.Attachments, attachmentsDir, copiedFiles, usedNames);
-                if (scenario.BackgroundSteps is { Length: > 0 })
-                    ProcessSteps(scenario.BackgroundSteps, attachmentsDir, copiedFiles, usedNames);
-                if (scenario.Steps is { Length: > 0 })
-                    ProcessSteps(scenario.Steps, attachmentsDir, copiedFiles, usedNames);
-            }
-        }
-    }
-
-    private static void ProcessSteps(ScenarioStep[] steps, string attachmentsDir,
-        Dictionary<string, string> copiedFiles, HashSet<string> usedNames)
-    {
-        for (var i = 0; i < steps.Length; i++)
-        {
-            var step = steps[i];
-            if (step.Attachments is { Length: > 0 })
-                step.Attachments = ProcessAttachments(step.Attachments, attachmentsDir, copiedFiles, usedNames);
-            if (step.SubSteps is { Length: > 0 })
-                ProcessSteps(step.SubSteps, attachmentsDir, copiedFiles, usedNames);
-        }
-    }
-
-    private static FileAttachment[] ProcessAttachments(FileAttachment[] attachments, string attachmentsDir,
-        Dictionary<string, string> copiedFiles, HashSet<string> usedNames)
-    {
-        var result = new FileAttachment[attachments.Length];
-        for (var i = 0; i < attachments.Length; i++)
-        {
-            var att = attachments[i];
-            var sourcePath = att.RelativePath;
-
-            // A link to something that lives elsewhere (a Playwright report, a Grafana trace) is not a
-            // file: it must survive untouched, and must never be handed to the path APIs — a URL's
-            // "http://host:port/…" is not a legal Windows path and GetFullPath throws on it.
-            if (att.IsUrl)
-            {
-                result[i] = att;
-                continue;
+                if (sources.ContainsKey(attachment))
+                    continue;
+                string[] bases = attachment.AttachedFrom is { } attachedFrom
+                    ? [attachedFrom, AppDomain.CurrentDomain.BaseDirectory]
+                    : [AppDomain.CurrentDomain.BaseDirectory];
+                var source = AttachmentPlacement.Classify(attachment, reportsDirectory, bases);
+                sources[attachment] = source;
+                if (source.Kind == AttachmentPlacement.SourceKind.InReport)
+                    usedNames.Add(Path.GetFileName(source.Path));
             }
 
-            // Skip paths already pointing to attachments/ subfolder
-            if (sourcePath.StartsWith("attachments/", StringComparison.OrdinalIgnoreCase) ||
-                sourcePath.StartsWith("attachments\\", StringComparison.OrdinalIgnoreCase))
+            return attachments;
+        });
+
+        var copiedFiles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var failedFiles = new Dictionary<string, Exception>(StringComparer.OrdinalIgnoreCase);
+        AttachmentPlacement.ForEachList(scenarios, attachments => attachments.Select(Place).ToArray());
+        return account;
+
+        FileAttachment Place(FileAttachment attachment)
+        {
+            var source = sources[attachment];
+            switch (source.Kind)
             {
-                // Still this run's, though nothing is copied: the path was rewritten by an earlier call
-                // over the same model in this process (LightBDD's formatter, then the host's own), and the
-                // report written now links to it. Left out of this call's manifest, the file would stay
-                // behind when the run is moved to runs/<run>/ and the retained report's link would dangle.
-                if (Path.GetDirectoryName(attachmentsDir) is { } reportsDirectory)
+                case AttachmentPlacement.SourceKind.Link:
+                    return attachment;
+                case AttachmentPlacement.SourceKind.Unusable:
+                    account.NotUsable(source.Shown);
+                    return attachment with { Problem = AttachmentProblem.NotUsable };
+                case AttachmentPlacement.SourceKind.Missing:
+                    account.NotFound(source.Shown, source.Path, wasThere: attachment.WhenAttached is not null);
+                    return attachment with { Problem = AttachmentProblem.NotFound };
+                case AttachmentPlacement.SourceKind.InReport:
+                    // This run's own, though nothing is copied: left out of the run's manifest, the file would stay behind
+                    // when the run is moved to runs/<run>/ and the retained report's link would dangle.
+                    RunFileCollector.Record(source.Path);
+                    NoteAChange(attachment, source);
+                    return attachment with { RelativePath = source.Link, Problem = null };
+            }
+
+            if (failedFiles.TryGetValue(source.Path, out var failed))
+            {
+                account.NotCopied(source.Shown, failed);
+                return attachment with { Problem = AttachmentProblem.NotCopied };
+            }
+
+            if (!copiedFiles.TryGetValue(source.Path, out var relativePath))
+            {
+                var destName = GetUniqueFileName(Path.GetFileName(source.Path), usedNames);
+                usedNames.Add(destName);
+                var destPath = Path.Combine(attachmentsDir, destName);
+                try
                 {
-                    var alreadyThere = Path.Combine(reportsDirectory, sourcePath);
-                    if (File.Exists(alreadyThere))
-                        RunFileCollector.Record(alreadyThere);
+                    // Inside the guard: a file named attachments in the reports folder is one attachment that could not
+                    // be copied, not a report that was never written.
+                    Directory.CreateDirectory(attachmentsDir);
+                    File.Copy(source.Path, destPath, overwrite: true);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    // A capturer may still hold the file, or the disk may be full: the report links where it is rather than
+                    // losing the whole report over one screenshot.
+                    failedFiles[source.Path] = ex;
+                    account.NotCopied(source.Shown, ex);
+                    return attachment with { Problem = AttachmentProblem.NotCopied };
                 }
 
-                result[i] = att;
-                continue;
+                // The destination, not the source: the copy is what the report links to and what the run owns.
+                RunFileCollector.Record(destPath);
+                copiedFiles[source.Path] = relativePath = $"{AttachmentPlacement.FolderName}/{destName}";
             }
 
-            // Resolve to absolute if relative
-            string fullPath;
-            try
-            {
-                fullPath = Path.IsPathRooted(sourcePath)
-                    ? sourcePath
-                    : Path.GetFullPath(sourcePath, AppDomain.CurrentDomain.BaseDirectory);
-            }
-            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
-            {
-                ReportDiagnosticsScope.Record(DiagnosticKind.AttachmentFailure, $"Attachment path '{sourcePath}' is not usable", ex);
-                result[i] = att;
-                continue;
-            }
-
-            if (!File.Exists(fullPath))
-            {
-                result[i] = att;
-                continue;
-            }
-
-            // Check if we've already copied this exact source file
-            var normalizedSource = Path.GetFullPath(fullPath);
-            if (copiedFiles.TryGetValue(normalizedSource, out var existingRelative))
-            {
-                result[i] = att with { RelativePath = existingRelative };
-                continue;
-            }
-
-            // Deduplicate the destination file name
-            var fileName = Path.GetFileName(fullPath);
-            var destName = GetUniqueFileName(fileName, usedNames);
-            usedNames.Add(destName);
-
-            Directory.CreateDirectory(attachmentsDir);
-            var destPath = Path.Combine(attachmentsDir, destName);
-            try
-            {
-                File.Copy(fullPath, destPath, overwrite: true);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                // A capturer may still hold the file, or the disk may be full: link to where it is
-                // rather than losing the whole report over one screenshot.
-                ReportDiagnosticsScope.Record(DiagnosticKind.AttachmentFailure, $"Could not copy attachment {fullPath}", ex);
-                result[i] = att;
-                continue;
-            }
-
-            // The destination, not the source: the copy is what the report links to and what the run owns.
-            RunFileCollector.Record(destPath);
-
-            var relativePath = $"attachments/{destName}";
-            copiedFiles[normalizedSource] = relativePath;
-            result[i] = att with { RelativePath = relativePath };
+            NoteAChange(attachment, source);
+            return attachment with { RelativePath = relativePath, Problem = null };
         }
 
-        return result;
+        void NoteAChange(FileAttachment attachment, AttachmentPlacement.Source source)
+        {
+            if (AttachmentPlacement.ChangedSinceAttached(attachment, source.Path))
+                account.Changed(source.Shown);
+        }
+    }
+
+    /// <summary>
+    /// An attachment's path as an <c>href</c> or <c>src</c>, HTML-encoded. A file's path is percent-encoded first for the
+    /// three characters a URL reads otherwise, <c>%</c> before <c>#</c> and <c>?</c> so nothing is encoded twice: the copy
+    /// keeps the file's name, and <c>attachments/shot#1.png</c> requested <c>attachments/shot</c> (#148 F11). Only those
+    /// three, so a space or a letter outside ASCII is linked as it always was. A URL is linked as it was given: its
+    /// query and fragment are its own.
+    /// </summary>
+    internal static string AttachmentHref(FileAttachment attachment)
+    {
+        var path = attachment.IsUrl
+            ? attachment.RelativePath
+            : attachment.RelativePath.Replace("%", "%25").Replace("#", "%23").Replace("?", "%3F");
+        return System.Net.WebUtility.HtmlEncode(path);
     }
 
     private static string GetUniqueFileName(string fileName, HashSet<string> usedNames)

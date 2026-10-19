@@ -102,6 +102,11 @@ internal static class MergeCommand
         try
         {
             merged = MergeableReportRenderer.MergeFiles(files);
+            // The shards' files are carried beside the merged report before anything is written, so the entry saying which
+            // could not be (#148) is on the report itself: its HTML, its data file, its digest, its labs page and kronikol
+            // query all read the one list. Render alone could only add it to the HTML it draws.
+            if (MergeableReportRenderer.DestinationDirectory(output) is { Length: > 0 } destination)
+                merged = MergeableReportRenderer.CarryAttachments(merged, destination);
             if (historyPath is not null)
             {
                 history = ReadHistory(historyPath, merged, error, getEnvironmentVariable, out var historyExit);
@@ -110,7 +115,7 @@ internal static class MergeCommand
             }
             // A default report, as a run writes: what --history read is on the labs page beside it, with the
             // shards' diagnostics (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md).
-            written = MergeableReportRenderer.Render(merged, output, title, options: new ReportConfigurationOptions(), history: history);
+            written = MergeableReportRenderer.RenderCarried(merged, output, title, options: new ReportConfigurationOptions(), history: history);
             @out.WriteLine($"Wrote combined report to {written}");
         }
         catch (FormatException ex)

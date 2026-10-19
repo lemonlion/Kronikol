@@ -3,6 +3,7 @@ using LightBDD.Core.Formatting.NameDecorators;
 using LightBDD.Core.Metadata;
 using LightBDD.Core.Results.Parameters;
 using LightBDD.Core.Results.Parameters.Tabular;
+using LightBDD.Framework.Reporting;
 using Kronikol.LightBDD;
 using Kronikol.Reports;
 using Kronikol.Tracking;
@@ -147,9 +148,13 @@ public class FeatureResultExtensionsTests
     }
 
     [Fact]
-    public void ToFeatures_maps_file_attachments()
+    public void ToFeatures_maps_file_attachments_to_the_file_LightBDD_wrote()
     {
-        var attachment = new FileAttachment("screenshot", "C:\\Reports\\shot.png", "Reports/shot.png");
+        // The shape LightBDD's FileAttachmentsManager writes: FilePath absolute, RelativePath the bare file name, relative
+        // to the manager's own folder. The bare name was mapped, and the copier looked for it in the binary folder
+        // (#148, plans/MISSING_ATTACHMENTS_PLAN.md F3).
+        var filePath = Path.Combine(Path.GetTempPath(), "lightbdd", "0f8fad5b-d9cb-469f-a165-70867728950e.png");
+        var attachment = new FileAttachment("screenshot", filePath, "0f8fad5b-d9cb-469f-a165-70867728950e.png");
         var step = new StubStepResult("Then", "verify", ExecutionStatus.Passed, attachments: [attachment]);
         var scenario = new StubExecutionResult("s1", "Test").WithStep(step);
         var feature = new StubFeatureResult("F").WithScenario(scenario);
@@ -158,7 +163,150 @@ public class FeatureResultExtensionsTests
         var att = features[0].Scenarios[0].Steps![0].Attachments;
         Assert.NotNull(att);
         Assert.Equal("screenshot", att![0].Name);
-        Assert.Equal("Reports/shot.png", att[0].RelativePath);
+        Assert.Equal(filePath, att[0].RelativePath);
+    }
+
+    [Fact]
+    public void ToFeatures_maps_the_relative_path_of_an_attachment_with_no_file_path()
+    {
+        var attachment = new FileAttachment("screenshot", "", "Reports/shot.png");
+        var step = new StubStepResult("Then", "verify", ExecutionStatus.Passed, attachments: [attachment]);
+        var feature = new StubFeatureResult("F").WithScenario(new StubExecutionResult("s1", "Test").WithStep(step));
+
+        Assert.Equal("Reports/shot.png", new[] { feature }.ToFeatures()[0].Scenarios[0].Steps![0].Attachments![0].RelativePath);
+    }
+
+    // ─── #148: attachments LightBDD's own manager wrote, through a whole run (F3, F21) ───────────
+
+    private static readonly DateTime LightBddRunStart = new(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+
+    /// <summary>An attachment made the way <c>StepExecution.Current.AttachFile</c> makes one: by LightBDD's own manager.</summary>
+    private static FileAttachment LightBddAttachment(string folder, string name = "probe-screenshot") =>
+        new FileAttachmentsManager(folder).CreateFromData(name, "png", [137, 80, 78, 71, 13, 10, 26, 10]).GetAwaiter().GetResult();
+
+    private static Kronikol.Reports.Feature[] LightBddFeatures(FileAttachment attachment) =>
+        new[]
+        {
+            new StubFeatureResult("Attachments").WithScenario(new StubExecutionResult("s1", "A step attaches a screenshot")
+                .WithStep(new StubStepResult("Then", "it attaches a screenshot", ExecutionStatus.Passed, attachments: [attachment]))),
+        }.ToFeatures();
+
+    /// <summary>A run of <paramref name="features"/> into <paramref name="reports"/>, as LightBDD's formatter hands it over.</summary>
+    private static IReadOnlyList<DiagnosticEntry> LightBddRun(Kronikol.Reports.Feature[] features, string reports, string runId)
+    {
+        var options = new ReportConfigurationOptions
+        {
+            ReportsFolderPath = reports,
+            PlantUmlRendering = PlantUmlRendering.BrowserJs,
+            GenerateComponentDiagram = false,
+            WriteRunSummaryToConsole = false,
+            HistoryFilePath = Path.Combine(Path.GetDirectoryName(reports)!, "history.ndjson"),
+            HistoryRunId = runId,
+            HistoryBranch = "",
+            KeepRuns = 3,
+        };
+        var collector = new ReportDiagnosticsCollector();
+        DefaultDiagramsFetcher.Reset();
+        using (ReportDiagnosticsScope.Begin(collector))
+            ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(features, LightBddRunStart, LightBddRunStart.AddMinutes(1), options, RunEnvironment.Unrecorded, _ => null);
+        DefaultDiagramsFetcher.Reset();
+        return collector.Entries;
+    }
+
+    private static Kronikol.Reports.FileAttachment OnlyAttachment(Kronikol.Reports.Feature[] features) =>
+        features[0].Scenarios[0].Steps![0].Attachments!.Single();
+
+    private static string NewFolder() =>
+        Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "kronikol-lightbdd-attachments-" + Guid.NewGuid().ToString("N"))).FullName;
+
+    [Fact]
+    public void A_LightBDD_attachment_in_the_documented_setup_is_copied_listed_and_kept_with_its_run()
+    {
+        // The documented setup: LightBDD's default folder, ~\Reports, is the report's own, so the bare name linked by
+        // accident while the file was never copied, Run.json listed no attachment, and a kept run's link was dead.
+        var dir = NewFolder();
+        try
+        {
+            var reports = Path.Combine(dir, "Reports");
+            var first = LightBddAttachment(reports);
+            var firstName = Path.GetFileName(first.FilePath);
+            var features = LightBddFeatures(first);
+
+            LightBddRun(features, reports, "run-1");
+
+            Assert.Equal("attachments/" + firstName, OnlyAttachment(features).RelativePath);
+            Assert.True(File.Exists(Path.Combine(reports, "attachments", firstName)));
+            Assert.Contains("attachments/" + firstName, RunManifest.TryRead(Path.Combine(reports, RunManifest.FileName))!.Attachments);
+
+            // The next run, in a process of its own: a process rotates a folder only the first time it writes there.
+            RunRotation.ForgetForTests(reports);
+            LightBddRun(LightBddFeatures(LightBddAttachment(reports)), reports, "run-2");
+
+            var kept = Path.Combine(reports, "runs", "run-1");
+            Assert.Contains($"src=\"attachments/{firstName}\"", File.ReadAllText(Path.Combine(kept, "TestRunReport.html")), StringComparison.Ordinal);
+            Assert.True(File.Exists(Path.Combine(kept, "attachments", firstName)));
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public void A_LightBDD_attachment_written_to_a_folder_of_its_own_is_copied_into_the_report()
+    {
+        var dir = NewFolder();
+        try
+        {
+            var reports = Path.Combine(dir, "Reports");
+            var attachment = LightBddAttachment(Path.Combine(dir, "lightbdd-attachments"));
+            var features = LightBddFeatures(attachment);
+
+            LightBddRun(features, reports, "run-1");
+
+            var name = Path.GetFileName(attachment.FilePath);
+            Assert.Equal("attachments/" + name, OnlyAttachment(features).RelativePath);
+            Assert.True(File.Exists(Path.Combine(reports, "attachments", name)));
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public void A_LightBDD_image_named_without_an_extension_draws_as_an_image()
+    {
+        var dir = NewFolder();
+        try
+        {
+            // LightBDD names carry no extension and the mapping passes no media type: the file's own extension decides.
+            Assert.True(OnlyAttachment(LightBddFeatures(LightBddAttachment(dir, "probe-screenshot"))).IsInlineImage);
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public void A_run_with_LightBDD_attachments_records_no_attachment_failure()
+    {
+        // Guards the order of plans/MISSING_ATTACHMENTS_PLAN.md R1 and R2: had the "not found" entry shipped without the
+        // mapping, every LightBDD attachment would have been reported missing while its link worked.
+        var dir = NewFolder();
+        try
+        {
+            var reports = Path.Combine(dir, "Reports");
+
+            var entries = LightBddRun(LightBddFeatures(LightBddAttachment(reports)), reports, "run-1");
+
+            Assert.DoesNotContain(entries, e => e.Kind == DiagnosticKind.AttachmentFailure);
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
     }
 
     [Fact]

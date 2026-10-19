@@ -234,8 +234,12 @@ internal static class FeatureResultExtensions
         // Namespace stripping is applied only to template literal segments in BuildTextSegments.
 
         var comments = step.Comments?.ToArray();
+        // The file LightBDD wrote, by its full path: its RelativePath is the bare file name, relative to LightBDD's own
+        // attachments folder, which the copier read against the binary folder and never found (#148 F3). In the documented
+        // setup that folder is the report's own, so the bare name linked by accident while the file was never copied, never
+        // listed in Run.json, and dead in every kept run.
         var nativeAttachments = step.FileAttachments?
-            .Select(a => new Reports.FileAttachment(a.Name, a.RelativePath))
+            .Select(a => new Reports.FileAttachment(a.Name, string.IsNullOrWhiteSpace(a.FilePath) ? a.RelativePath : a.FilePath))
             .ToArray();
         var collectedAttachments = collected?.Attachments;
         var attachments = MergeAttachments(nativeAttachments, collectedAttachments);

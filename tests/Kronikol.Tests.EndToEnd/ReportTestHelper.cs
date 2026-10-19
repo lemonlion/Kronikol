@@ -2044,6 +2044,62 @@ public static class ReportTestHelper
         return new Uri(path).AbsoluteUri;
     }
 
+    /// <summary>A 1×1 PNG, so an image's naturalWidth says whether it loaded.</summary>
+    public static readonly byte[] OnePixelPng = Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
+
+    /// <summary>
+    /// A report beside its own <c>attachments/</c> folder, holding two images whose names a URL reads otherwise:
+    /// <c>shot#1.png</c> (a fragment) and <c>50%.png</c> (an escape), both copied there by the run's copier (#148 F11).
+    /// </summary>
+    public static string GenerateReportWithAwkwardAttachmentNames(string tempDir, string outputDir, string fileName)
+    {
+        var sources = Directory.CreateDirectory(Path.Combine(tempDir, "sources")).FullName;
+        var shot = Path.Combine(sources, "shot#1.png");
+        var percent = Path.Combine(sources, "50%.png");
+        File.WriteAllBytes(shot, OnePixelPng);
+        File.WriteAllBytes(percent, OnePixelPng);
+
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Awkward names",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "awkward1", DisplayName = "Screenshots with awkward names", IsHappyPath = true,
+                        Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                        Steps =
+                        [
+                            new ScenarioStep
+                            {
+                                Keyword = "Then", Text = "the screenshots are attached",
+                                Status = ExecutionResult.Passed,
+                                Attachments = [new FileAttachment("shot#1.png", shot), new FileAttachment("50%.png", percent)]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var reportsDir = Path.Combine(tempDir, "Reports");
+        Directory.CreateDirectory(reportsDir);
+        ReportGenerator.CopyAttachmentsToReportsFolder(features, reportsDir);
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            Array.Empty<DiagramAsCode>(), features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(reportsDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
     public static string GenerateReportWithCopiedAttachment(string tempDir, string outputDir, string fileName)
     {
         // Create a real source file with an absolute path

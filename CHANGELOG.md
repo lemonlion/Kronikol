@@ -4,6 +4,127 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.27.2] - 2026-10-19
+
+**Patch - an attachment the report does not hold is said, and the producers hand the report a file it can find
+(`plans/MISSING_ATTACHMENTS_PLAN.md` R1 and R2, #148).** Bug fixes, with nothing new to call, so the patch part moves
+(4.27.1 to 4.27.2). The diagnostic is the one `DiagnosticKind.AttachmentFailure`'s documentation already promised.
+Behaviour that changes: LightBDD attachments are copied into `attachments/` and kept with their run; an image attached
+under a display name draws as an image; a relative `Track.Attachment` path is read when it is attached; a relative
+Cucumber attachment `url` is read against `--attachments-base`; and an in-process run prints a `⚠ WARNING:` line when
+attachments are missing.
+
+### Fixed
+
+- **An attachment whose file is missing is said** (#148, F1, F2). The run's copier kept an attachment whose file was not
+  there exactly as it was given and recorded nothing, so the HTML linked a path that existed on no machine opening the
+  report, `Failures.md` listed it like any other, and `kronikol query` printed no `!` line. Every attachment the report
+  does not hold is now said in **one** `AttachmentFailure` entry per run: a file not found when the report was drawn,
+  one that was there when it was attached and is gone, one that could not be copied, one whose path is not usable on
+  this machine, a Cucumber body that could not be written. It leads with the count, says how many files, and names the
+  first five paths in report order and how many more:
+  `3 attachment(s) are not in the report: 3 not found when the report was drawn (2 files): …`. One entry, because
+  `query`'s `!` line shows only the first message of a kind: the copier's own entries for a failed copy and an unusable
+  path are folded into it. A path starting `attachments/` that names no file in the reports folder is counted too. An
+  ingest adds the base its relative paths were read against, and says when `--clean-attachments` emptied the folder
+  before a capture's files in it were read. An in-process run also prints the entry as a `⚠ WARNING:` line, since
+  nothing else prints a recorded entry there; `kronikol ingest` prints it once, as it prints every entry. The path is
+  still kept, and linked, as it was.
+- **A file changed or gone after it was attached is said** (F23). The copy is made when the report is drawn, so a file
+  deleted at teardown was lost with no word, and one `screenshot.png` path reused by every test showed its last version
+  wherever it was attached. `Track.Attachment` notes the file's length and last write when it attaches it, and the entry
+  says the file "was there when it was attached and gone when the report was drawn", or "changed after it was attached,
+  and the report holds the version found when it was drawn".
+- **`kronikol merge` never links another shard's file** (F5). A shard's `attachments/x.png` that was not in its folder
+  stayed relative, so beside the merged report it named whatever the merge had put there under that name, which could
+  be another shard's `x.png`. It keeps the path of where it should be in its shard's folder, and the merged report says
+  every file it could not carry in one entry, put first in its diagnostics so that `query`'s `!` line shows the merged
+  report's own account; its HTML, data file, digest and labs page all carry it.
+- **LightBDD attachments are copied into the report and kept with their run** (F3). Kronikol mapped a LightBDD
+  attachment's `RelativePath`, the bare `{guid}.png` relative to LightBDD's own folder, which the copier read against
+  the binary folder and never found. In the documented setup LightBDD's folder is the report's own, so the link worked
+  by accident while the file was never copied, `Run.json` listed no attachment, and every kept run's link was dead;
+  with LightBDD's folder set elsewhere every link was dead. The file LightBDD wrote is mapped by its full path.
+- **An image attached under a display name draws as an image** (F21). With no media type only the name's extension was
+  read, so `Track.Attachment(path, "Page Screenshot")`, the wiki's own example, and every LightBDD image were drawn as
+  links. The file's own extension is read when the name's says nothing.
+- **A relative `Track.Attachment` path is read when it is attached** (F20): against the working directory, then the
+  binary folder. It was read against the binary folder when the report was drawn, while the test wrote the file
+  relative to the working directory, and the two differ under NUnit's `WorkDirectory` (measured on VSTest and on
+  Microsoft.Testing.Platform) and after a test moves the working directory: every such attachment was lost. In every
+  runner's default the two are one folder, and nothing changes there. A path found in neither is looked for in both
+  when the report is drawn, and the entry names both.
+- **A relative Cucumber attachment `url` is read against `--attachments-base`** (F4), as a tests file's relative path
+  is, or the working directory when none is given. It was read against the tool's own folder, while the join's hashing
+  read it against the working directory.
+- **`kronikol ingest` no longer ends with no report on a path it cannot read** (F8). A tests-file attachment path with
+  a NUL character ended the ingest with an unhandled `ArgumentException`, and so did a library caller's relative
+  `IngestRequest.AttachmentsBase`. The path is said as not usable, and a relative base is read against the working
+  directory, as the CLI reads `--attachments-base`.
+- **A file named `attachments` in the reports folder no longer stops the report** (F9): the folder is made inside the
+  copy's guard, and the attachment is said as not copied.
+- **A file already in the report's `attachments/` folder is linked where it is** (F10). It was copied onto itself,
+  which on Windows fails with "being used by another process", so the run recorded that false cause, linked the
+  absolute path and left the file out of `Run.json`. Every path is now read before anything is copied, so a file of
+  the same name from elsewhere takes a number rather than being written over it.
+- **A file name with `#`, `?` or `%` is linked to its file** (F11). The copy keeps the file's name and the link was
+  HTML-encoded only, so `attachments/shot#1.png` requested `attachments/shot`. The link percent-encodes those three
+  characters, `%` first; nothing else in a link changes, and a URL is linked as it was given.
+- **A Cucumber body that cannot be written is an `AttachmentFailure`, not an `Other`** (F17), and a blank tests-file
+  `path` is counted as not usable rather than dropped without a word (F16). `CucumberSynthesisResult.Warnings` still
+  carries the write failure's text.
+- **`--clean-attachments` on a pass with no scenarios says what it deleted** (F15): that pass writes no report, so a
+  report already in the folder may link the files it deleted.
+- **Docs that said otherwise**: `DiagnosticKind.AttachmentFailure`, `ShowReportDiagnosticsSection` (which entries an
+  in-process run prints), the copier's doc comment, `FileAttachment`'s image rule and `--attachments-base`'s help.
+
+Report output changes: a file attachment's `href` and `src` percent-encode `%`, `#` and `?`; an image attached under a
+display name, and every LightBDD image, draws as an `img`. Recorded in the Kronikol4J ledger.
+
+### Tests
+
+- `MissingAttachmentTests`: the one entry (a missing file; three attachments of two missing files beside a present one,
+  which is copied; seven files, five named and "and 2 more"; a failed copy and three missing files as one entry whose
+  `!` line in `query summary` and `query failures` leads with the count and has no `(×N)`; an `attachments/` path with
+  no file), the warning an in-process run prints and none under a host's scope, a file deleted after it was attached
+  and one rewritten between two attaches, a file named `attachments` in the reports folder, a file already in the
+  folder linked where it is and keeping its name, the image rule, links percent-encoded at a scenario's, a step's and a
+  parameterized row's sites with a URL's query kept, a relative attachment beside the binaries with no entry, and a
+  parity fact: eight inputs through the run's copier and the merge's carrier give the same states.
+- `WorkingDirectoryAttachmentTests`, in a collection that runs alone: a relative path attached with the working
+  directory elsewhere, one beside the binaries, one rewritten after it was attached, and one in neither folder, whose
+  entry names both.
+- `IngestMissingAttachmentTests`: the plan harness's three ingest cases (the issue's own, with the base named; a NUL
+  path; `--clean-attachments` over the capture's own files), a blank path, a relative library base that finds its
+  file, the empty cleaning pass, and `kronikol ingest` printing the entry once.
+- `CucumberMissingAttachmentTests`: a relative `url` and an `attachments/` `url` read against the base, a body that is
+  not base64 and one that cannot be written.
+- `MergeCarriesAttachmentsTests`: a shard's missing file never names another shard's, the merged data file and labs
+  page carry the entry, the merged HTML's diagnostics section draws it, and the merged report's own entry is the one the
+  `!` line shows.
+- `FeatureResultExtensionsTests`: the LightBDD stub turned round to the shape LightBDD writes, the fallback for an
+  attachment with no file path, and attachments made by LightBDD's own `FileAttachmentsManager` through whole runs: the
+  documented setup (copied, in `Run.json`, and linked in the kept run), a folder of LightBDD's own, an image named
+  without an extension, and no `AttachmentFailure`.
+- `AttachmentCopyTests.Missing_source_file_is_skipped_without_error`, which pinned the silence, is turned round to the
+  one entry, its message exact.
+- Playwright `AttachmentRenderingTests`: images named `shot#1.png` and `50%.png` draw (`naturalWidth > 0`) and open in
+  the lightbox.
+
+- Proofs: the facts were written first, and 36 failed on 4.27.1's code (given only the declaration of the state the
+  parity fact reads), each at its assertion, as did the Playwright fact (`shot#1.png` never loaded); the 4 that passed
+  there guard what 4.27.1 already did. The three added after (a file in the folder keeping its name, a relative path
+  rewritten after it was attached, a relative library base finding its file) were proved by mutation: 33 of 33
+  mutations of the new code are killed, among them LightBDD's relative path mapped again, the image rule reading the
+  name alone, a relative path read against the binary folder alone or never when attached, a Cucumber `url` read
+  against the working directory, a missing shard path left relative, the whole path or `#` before `%` encoded, a URL
+  encoded, the NUL path uncaught, the folder made outside the guard, a file in the folder copied onto itself, the
+  attachments counted for the files, every path named, a copy failure its own entry again, the merge's entry put on
+  after `Render` or last, no console line or one under a host too, and each sentence of the message left out.
+- Checks: after the version bump the core suite passes 7,785 with 2 skipped and the full Playwright suite passes
+  1,073 with 28 skipped when run alone; release.slnf builds in Release for every target. The templates pin 4.27.1
+  and the history action's VERSION installs Kronikol.Tool 4.27.2.
+
 ## [4.27.1] - 2026-10-19
 
 **Patch - fixes, and a smaller report page (`plans/REPORT_FORMAT_PLAN.md` R2 and section 8).** Nothing new to call, so

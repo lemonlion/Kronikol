@@ -466,7 +466,11 @@ public record ReportConfigurationOptions
     /// The list is on the labs page beside the report whenever the run recorded an entry
     /// (<see cref="GenerateLabsReport"/>), and every diagnostic still reaches
     /// <see cref="Kronikol.Ingestion.IngestResult.Diagnostics"/>, the <c>diagnostics</c> array of
-    /// <c>TestRunReport.json</c>, and the console. <see cref="ReportToggleDefaults.DiagnosticsOpen"/> decides whether
+    /// <c>TestRunReport.json</c>, and <c>kronikol query</c>'s <c>!</c> lines; <c>kronikol ingest</c> prints every one.
+    /// An in-process run prints to the console only what a reader must not miss: the attachments the report does not
+    /// hold (<see cref="DiagnosticKind.AttachmentFailure"/>) and an option it ignored
+    /// (<see cref="DiagnosticKind.OptionNotApplied"/>), each as a <c>⚠ WARNING:</c> line, beside the run summary's own
+    /// lines. <see cref="ReportToggleDefaults.DiagnosticsOpen"/> decides whether
     /// the report's section starts open, and is inert while this is <c>false</c>; the labs page's list is always open.
     /// </summary>
     public bool ShowReportDiagnosticsSection { get; set; }

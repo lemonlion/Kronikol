@@ -695,7 +695,8 @@ internal static class IngestCommand
         w.WriteLine("  --separate-setup         Draw each test's setup calls inside a Setup partition: the calls before its");
         w.WriteLine("                           first When/Then step that follows a Given step, else before its first call");
         w.WriteLine("                           phased Action that follows one phased Setup. A capture's own boundary wins.");
-        w.WriteLine("  --attachments-base <dir> Resolve relative attachment paths in --tests against this directory.");
+        w.WriteLine("  --attachments-base <dir> Resolve relative attachment paths in --tests, and relative attachment URLs in");
+        w.WriteLine("                           --cucumber-messages, against this directory (default: the working directory).");
         w.WriteLine("  --source-root <dir>      Write a tests record's absolute sourceFile relative to this directory (default: the");
         w.WriteLine("                           current directory, which in CI is the checkout); one outside it is kept and counted.");
         w.WriteLine("  --spans <file|dir|glob>  OTLP/JSON lines (one {\"resourceSpans\":…} object per line, as OpenTelemetry JS's");

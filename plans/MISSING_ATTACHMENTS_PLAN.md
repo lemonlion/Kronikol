@@ -4,8 +4,9 @@
 148 and create a detailed, well researched plan to fix its underlying issue(s)"). Revised the same day after a
 verification pass the owner asked for ("make sure the plan is complete and fully accurate, and do any deep dives that
 might change the plan"): every line reference re-read, five deep dives run (section 10), four findings added (F20 to
-F23), five corrected (F2, F3, F5, F8, F10), and the R2 and merge designs changed. **Not green-lit.** Nothing in a package changes until the owner says
-so; the questions are in section 8.
+F23), five corrected (F2, F3, F5, F8, F10), and the R2 and merge designs changed. **Green-lit 2026-10-19**: the owner
+asked for it to be implemented in full, and every question in section 8 was taken as recommended (the precedent of
+`REPORT_FORMAT_PLAN.md`). R1 and R2 ship as one patch (Q2); section 10 logs each release.
 
 **Issue:** [#148](https://github.com/lemonlion/Kronikol/issues/148), "An attachment whose file is missing when the
 report is drawn keeps its original path, and no diagnostic says so" (filed 2026-10-08 against 4.6.0, label `bug`, no
@@ -586,3 +587,41 @@ Not in this plan's class (attachments that never reach the model, or render choi
   Design changes: one entry per run instead of one per state; a console line on in-process runs; the merge entry put on
   the report before `Render`; the changed-after-attached check; the query marker after the path. No product code was
   changed or built.
+- 2026-10-19, kronikol-7c, **R1 and R2 as one patch, 4.27.2** (Q2), in worktree `Kronikol-148` on 4.27.1 (`d4158464`).
+  The owner asked for the plan to be implemented in full; every section 8 question was taken as recommended. What
+  shipped follows sections 4.1, 4.2 and 4.4, with these differences, each found while building it:
+  - **The merge's entry goes first, not last** (section 4.2 said `[.. merged.Diagnostics, entry]`). A shard that
+    recorded its own entry about its own report would otherwise be the one `query`'s `!` line shows, with `(×2)`,
+    hiding the merged report's count. A fact merges a shard with its own entry and checks the line.
+  - **The run's copier reads every path before it copies anything.** Linking a file already in `attachments/` where it
+    is (F10) made a second clash possible: a file of the same name copied in first was written over it (the run copier
+    overwrites). The names of files already there are reserved first, so the other takes a number.
+  - **F20 keeps a second chance.** A relative path that neither the working directory nor the binary folder holds when
+    it is attached keeps the working directory it was attached in (internal `AttachedFrom`), and the copier looks there
+    and in the binary folder when the report is drawn, since a test may write the file after attaching it; the entry
+    names both places. A relative path found when attached gets the attach-time stamp (F23) like an absolute one.
+  - **What an ingest drops before the model holds it is in the one entry**: a blank tests-file path (F16) and a
+    Cucumber body that could not be written (F17), through an internal `AttachmentContext` the pipeline hands the
+    generator, with the base and whether `--clean-attachments` ran. `CucumberSynthesisResult.Warnings`, which is public,
+    still carries the write failure's text; the pipeline no longer records it as `Other`. Section 4.2's second sentence
+    is two: the base, and `--clean-attachments emptied the report's attachments/ folder before these were read.`
+  - **Q6 "say it" reaches the empty pass too**: `--clean-attachments` on a pass with no scenarios writes no report and
+    now records how many files it deleted (F15's second half).
+  - **A relative `IngestRequest.AttachmentsBase` is made absolute against the working directory**, as the CLI makes
+    `--attachments-base`, besides the catch section 4.4 asked for (F8), so a library caller's relative base finds its
+    files instead of having every path handed on.
+  - **The console line is printed only when the run scoped its own diagnostics**: a host that scoped them (`kronikol
+    ingest`) prints every entry already, and the line would have been printed twice there.
+  - **The state is kept on the attachment already**, as an internal `Problem` with the internal enum R3 makes public,
+    so the parity fact (section 6) reads both writers' decisions directly. Nothing serialises it in this release.
+  Message shape as shipped: `N attachment(s) are not in the report: <parts>: <first five paths>, and M more.` with the
+  parts in the order not found (`(F files)` when the count differs), there when attached and gone, could not be copied
+  (`Type: message` of the first), has/have a path that is not usable, could not be written from the Cucumber messages;
+  then `N attachment(s) changed after it was/they were attached, and the report holds the version found when it was
+  drawn: <paths>.`, then the ingest's sentences.
+  Proofs: 36 facts failed on 4.27.1's code, given only the declaration of the state the parity fact reads, each at its
+  assertion, and the Playwright fact timed out waiting for `shot#1.png` to load; the 4 facts that passed there guard
+  what 4.27.1 already did. Mutations: 33 of 33 killed, the section 6 list for R1 and R2 and one for each difference
+  above. Checks: after the version bump the core suite passes 7,785 with 2 skipped and the full Playwright suite 1,073
+  with 28 skipped when run alone, and release.slnf builds in Release for every target with no warning from the changed
+  files.
