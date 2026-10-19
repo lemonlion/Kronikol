@@ -775,10 +775,7 @@
         // and buildSourceWithNoteStates stay aligned.
         var filteredToOrigMap = null;
         if (owner._noteOriginalSource && ownerNoteBlocks.length > 0) {
-            var cleanFilt = owner._noteOriginalSource;
-            if (!filterShown(owner, '_assertionsVisible')) cleanFilt = stripAssertionNotes(cleanFilt);
-            if (!filterShown(owner, '_stepsVisible')) cleanFilt = stripStepDelimiters(cleanFilt);
-            if (!filterShown(owner, '_databasesVisible')) cleanFilt = stripDatabaseCalls(cleanFilt);
+            var cleanFilt = applyFilters(owner._noteOriginalSource, owner);
             var cleanFiltNotes = parseNoteBlocks(cleanFilt);
             if (cleanFiltNotes.length < ownerNoteBlocks.length && cleanFiltNotes.length > 0) {
                 var _map = [];
@@ -1705,11 +1702,20 @@
     // The whole source-rebuild chain, in one place. Every caller — a per-note toggle, the zero-click
     // pre-process, and the bulk render queue — has to apply exactly the same passes in exactly the
     // same order, or the note indices they each compute stop agreeing with each other.
-    // A container's own filter state, or the report's for one drawn without any (the pre-processor never saw it).
-    // Every reader resolves a missing flag this one way: the Databases toggle read it as shown and every other
-    // reader as hidden, so changing such a diagram's notes hid its databases and steps (4.26.8).
+    // A container's own filter state, else its scenario's own choice, else the report's (one drawn without any state:
+    // the pre-processor never saw it). Every reader resolves a missing flag this one way: the Databases toggle read it
+    // as shown and every other reader as hidden, so changing such a diagram's notes hid its databases and steps
+    // (4.26.8).
     function filterShown(container, flag) {
-        return container[flag] === undefined ? !!window[flag] : !!container[flag];
+        return container[flag] === undefined ? scenarioChoice(container, flag) : !!container[flag];
+    }
+
+    // The state a diagram takes when it is drawn: its scenario's own choice where the scenario's toggle made one, else
+    // the report's (5.0.0, plans/OPTION_C_PLAN.md F5). A diagram is given its source only when it is drawn, so a
+    // scenario's toggle reaches the diagrams already drawn; until 5.0.0 one drawn after it took the report's state.
+    function scenarioChoice(el, flag) {
+        var scenario = el && el.closest ? el.closest('details.scenario') : null;
+        return scenario && scenario[flag] !== undefined ? !!scenario[flag] : !!window[flag];
     }
 
     function composeNoteSource(container, origSource, noteBlocks) {
@@ -1717,11 +1723,7 @@
         var withAppearance = applyNoteAppearance(withFormats, container);
         var built = buildSourceWithNoteStates(withAppearance, container._noteSteps, noteBlocks,
             !!container._headersHidden, container._truncateLines);
-        return applyDatabasesFilter(
-            applyStepsFilter(
-                applyAssertionFilter(built, filterShown(container, '_assertionsVisible')),
-                filterShown(container, '_stepsVisible')),
-            filterShown(container, '_databasesVisible'));
+        return applyFilters(built, container);
     }
 
     // ── Choosing the width ───────────────────────────────────────────────────
@@ -2173,6 +2175,8 @@
     window._assertionsVisible = __ASSERTIONS_VISIBLE_DEFAULT__;
     window._stepsVisible = __STEPS_VISIBLE_DEFAULT__;
     window._databasesVisible = __DATABASES_VISIBLE_DEFAULT__;
+    window._eventsVisible = __EVENTS_VISIBLE_DEFAULT__;
+    window._setupVisible = __SETUP_VISIBLE_DEFAULT__;
     window._noteFormatDefault = '__NOTE_FORMAT_DEFAULT__';
     window._noteWidthDefault = '__NOTE_WIDTH_DEFAULT__';
 
@@ -2208,20 +2212,33 @@
         return !!(el.closest && el.closest('.component-diagram-section'));
     }
 
+    // The databases filter: the calls to and from the participants declared database or collections.
     function stripDatabaseCalls(source) {
-        // Find all database participant aliases
-        var dbAliases = [];
-        var dbDeclRe = /^(?:database|collections)\s+"[^"]*"\s+as\s+(\S+)/gm;
+        return stripParticipantCalls(source, 'database|collections');
+    }
+
+    // The events filter (5.0.0, D38): the calls to and from message brokers, the participants declared queue (Kafka,
+    // Event Hubs, Pub/Sub, Service Bus), cut as the databases filter cuts a database's.
+    function stripEventCalls(source) {
+        return stripParticipantCalls(source, 'queue');
+    }
+
+    // The calls to and from the participants declared as one of `kinds` (a regex alternation), with their
+    // declarations, the notes that follow a removed call or name such a participant, and its activations.
+    function stripParticipantCalls(source, kinds) {
+        // Find all the aliases of participants of those kinds
+        var aliases = [];
+        var declRe = new RegExp('^(?:' + kinds + ')\\s+"[^"]*"\\s+as\\s+(\\S+)', 'gm');
         var m;
-        while ((m = dbDeclRe.exec(source)) !== null) {
-            dbAliases.push(m[1].replace(/\s.*$/, ''));
+        while ((m = declRe.exec(source)) !== null) {
+            aliases.push(m[1].replace(/\s.*$/, ''));
         }
-        if (dbAliases.length === 0) return source;
+        if (aliases.length === 0) return source;
 
         // Build set of escaped aliases for regex matching
-        var escaped = dbAliases.map(function(a) { return a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
+        var escaped = aliases.map(function(a) { return a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
 
-        function isDbArrow(line) {
+        function isCall(line) {
             for (var i = 0; i < escaped.length; i++) {
                 // Arrow where alias is the source
                 if (new RegExp('^' + escaped[i] + '\\s+-').test(line)) return true;
@@ -2231,11 +2248,11 @@
             return false;
         }
 
-        function isDbDecl(line) {
-            return /^(?:database|collections)\s+"[^"]*"\s+as\s+\S+/.test(line);
+        function isDecl(line) {
+            return new RegExp('^(?:' + kinds + ')\\s+"[^"]*"\\s+as\\s+\\S+').test(line);
         }
 
-        function isDbExplicitNote(line) {
+        function isExplicitNote(line) {
             for (var i = 0; i < escaped.length; i++) {
                 if (new RegExp('^note\\s+(?:left|right|over)\\s+(?:of\\s+)?' + escaped[i] + '(\\s|:|$)').test(line)) return true;
             }
@@ -2256,21 +2273,21 @@
             var line = lines[i];
             var trimmed = line.trim();
 
-            if (isDbDecl(trimmed)) {
-                // Skip database declaration
+            if (isDecl(trimmed)) {
+                // Skip the declaration
                 i++;
                 continue;
             }
 
-            if (isDbArrow(trimmed)) {
-                // Skip database arrow and mark for trailing note removal
+            if (isCall(trimmed)) {
+                // Skip the call and mark for trailing note removal
                 lastRemovedArrow = true;
                 i++;
                 continue;
             }
 
-            if (isDbExplicitNote(trimmed)) {
-                // Skip note block explicitly referencing database alias
+            if (isExplicitNote(trimmed)) {
+                // Skip a note block naming the alias
                 if (trimmed.indexOf(':') !== -1) {
                     // Single-line note: "note left of alias: text"
                     i++;
@@ -2283,7 +2300,7 @@
                 continue;
             }
 
-            // Remove positional notes that follow a removed database arrow
+            // Remove positional notes that follow a removed call
             if (lastRemovedArrow && isPositionalNoteStart(trimmed)) {
                 // Multi-line positional note following a removed arrow
                 i++;
@@ -2292,7 +2309,7 @@
                 continue;
             }
 
-            // Activate/deactivate for database alias
+            // Activate/deactivate for the alias
             var isActivate = false;
             for (var ai = 0; ai < escaped.length; ai++) {
                 if (new RegExp('^(?:activate|deactivate)\\s+' + escaped[ai] + '\\s*$').test(trimmed)) {
@@ -2312,6 +2329,105 @@
 
     function applyDatabasesFilter(source, showing) {
         return showing ? source : stripDatabaseCalls(source);
+    }
+
+    function applyEventsFilter(source, showing) {
+        return showing ? source : stripEventCalls(source);
+    }
+
+    function applySetupFilter(source, showing) {
+        return showing ? source : stripSetup(source);
+    }
+
+    // Every filter, in the one order every reader applies them, each with the diagram's state (filterShown): the setup
+    // first, as it is found by the When step bar the steps filter takes out.
+    function applyFilters(source, container) {
+        var s = applySetupFilter(source, filterShown(container, '_setupVisible'));
+        s = applyAssertionFilter(s, filterShown(container, '_assertionsVisible'));
+        s = applyStepsFilter(s, filterShown(container, '_stepsVisible'));
+        s = applyDatabasesFilter(s, filterShown(container, '_databasesVisible'));
+        return applyEventsFilter(s, filterShown(container, '_eventsVisible'));
+    }
+
+    // The setup filter (5.0.0, D38): a scenario's setup, taken out of its sequence diagram's source. The setup is the
+    // Setup frame where the report keeps setup apart (partition ... Setup ... end, the SeparateSetup option), and
+    // otherwise everything before the first When step: the Given steps and the calls they made. The participants only
+    // the setup used go with it. A source with neither, or whose cut would leave a frame or a loop open, comes back as
+    // it was. Note bodies are never read as statements.
+    function stripSetup(source) {
+        if (!source) return source;
+        var lines = source.split('\n');
+        var OPENS = /^(?:alt|opt|loop|par|break|critical|group|partition)\b/;
+        var WHEN = /^hnote across <<stepDelimiter>>(?: #black:<color:white>|<<stepBody>>: )(?:<b>)?when\b/i;
+        var CONTENT = /^(?:[A-Za-z0-9_]+\s*-|\[|note\b|hnote\b|rnote\b|==|\.\.\.|\|\|\||activate\b|deactivate\b|destroy\b|alt\b|opt\b|loop\b|par\b|break\b|critical\b|group\b|partition\b|end$|ref\b|delay\b)/;
+        function noteStart(t) { return /^(?:note|hnote|rnote)\b/.test(t) && t.indexOf(':') < 0; }
+        function noteEnd(t) { return /^end ?(?:note|hnote|rnote)$/.test(t) || t === 'endnote'; }
+        // the statements outside note bodies and style blocks, with their line numbers
+        var stmts = [], inNote = false, inStyle = false;
+        for (var i = 0; i < lines.length; i++) {
+            var t = lines[i].trim();
+            if (inStyle) { if (/^<\/style>/.test(t)) inStyle = false; continue; }
+            if (inNote) { if (noteEnd(t)) inNote = false; continue; }
+            // (written without a literal style tag, which a report-wide scan could not tell from a real block)
+            if (/^<style\s*>/.test(t)) { inStyle = true; continue; }
+            stmts.push({ i: i, t: t });
+            if (noteStart(t)) inNote = true;
+        }
+        var drop = {}, cut = false, k, d;
+        // the Setup frame, through the end that closes it
+        for (k = 0; k < stmts.length; k++) {
+            if (!/^partition\b.*\bSetup$/.test(stmts[k].t)) continue;
+            d = 0;
+            for (var j = k; j < stmts.length; j++) {
+                if (OPENS.test(stmts[j].t)) d++;
+                else if (stmts[j].t === 'end') d--;
+                if (d === 0) break;
+            }
+            if (j >= stmts.length) return source;
+            for (var n = stmts[k].i; n <= stmts[j].i; n++) drop[n] = true;
+            cut = true;
+            k = j;
+        }
+        if (!cut) {
+            // everything from the first statement of the scenario to the first When step
+            var first = -1, when = -1;
+            for (k = 0; k < stmts.length; k++) {
+                if (first < 0 && CONTENT.test(stmts[k].t)) first = k;
+                if (WHEN.test(stmts[k].t)) { when = k; break; }
+            }
+            if (first < 0 || when <= first) return source;
+            d = 0;
+            for (k = first; k < when; k++) {
+                if (OPENS.test(stmts[k].t)) d++;
+                else if (stmts[k].t === 'end') { d--; if (d < 0) return source; }
+            }
+            if (d !== 0) return source;
+            for (var m = stmts[first].i; m < stmts[when].i; m++) drop[m] = true;
+        }
+        var kept = lines.filter(function (l, x) { return !drop[x]; });
+        // the participants nothing left calls, declared, go too, as long as one that is called stays
+        var used = {}, anyCall = false, inN = false;
+        kept.forEach(function (l) {
+            var t = l.trim();
+            if (inN) { if (noteEnd(t)) inN = false; return; }
+            if (noteStart(t)) inN = true;
+            var a = /^([A-Za-z0-9_]+)\s+-(?:\[[^\]]*\])?-?>+\s*([A-Za-z0-9_]+)/.exec(t);
+            if (a) { used[a[1]] = used[a[2]] = true; anyCall = true; return; }
+            var o = /^(?:h|r)?note\b.*?\b(?:over|of)\s+([A-Za-z0-9_]+)(?:\s*,\s*([A-Za-z0-9_]+))?/.exec(t);
+            if (o) { used[o[1]] = true; if (o[2]) used[o[2]] = true; }
+            var act = /^(?:activate|deactivate)\s+([A-Za-z0-9_]+)/.exec(t);
+            if (act) used[act[1]] = true;
+        });
+        if (anyCall) {
+            var DECL = /^(?:participant|actor|boundary|control|entity|database|collections|queue)\s+(?:"[^"]*"|\S+)(?:\s+as\s+([A-Za-z0-9_]+))?/;
+            kept = kept.filter(function (l) {
+                var dm = DECL.exec(l.trim());
+                if (!dm) return true;
+                var alias = dm[1] || (/^\S+\s+"?([^"\s]+)/.exec(l.trim()) || [])[1];
+                return !alias || used[alias];
+            });
+        }
+        return kept.join('\n');
     }
 
     // Parse assertion source locations from PlantUML comments
@@ -2409,13 +2525,13 @@
     window._preProcessSource = function(el, source) {
         // The component diagram renders its source untouched — filters never apply to it
         if (isComponentDiagramContainer(el)) return source;
-        // Strip assertion notes before note-block parsing when hidden
-        el._assertionsVisible = window._assertionsVisible;
-        el._stepsVisible = window._stepsVisible;
-        el._databasesVisible = window._databasesVisible;
-        var renderSource = !el._assertionsVisible ? stripAssertionNotes(source) : source;
-        renderSource = !el._stepsVisible ? stripStepDelimiters(renderSource) : renderSource;
-        renderSource = !el._databasesVisible ? stripDatabaseCalls(renderSource) : renderSource;
+        // The filters apply before note-block parsing, each with the state the diagram is drawn in
+        el._assertionsVisible = scenarioChoice(el, '_assertionsVisible');
+        el._stepsVisible = scenarioChoice(el, '_stepsVisible');
+        el._databasesVisible = scenarioChoice(el, '_databasesVisible');
+        el._eventsVisible = scenarioChoice(el, '_eventsVisible');
+        el._setupVisible = scenarioChoice(el, '_setupVisible');
+        var renderSource = applyFilters(source, el);
         // Always use the ORIGINAL source for note indexing so that
         // _noteSteps indices align with buildSourceWithNoteStates and
         // setNoteState, which both operate on the original source.
@@ -2876,20 +2992,17 @@
         renderWithPending(buildHeadersQueue(containers, !shown), scenario.querySelectorAll('.toggle-btn[data-toggle="headers"]'));
     };
 
-    function buildAssertionsQueue(containers, showing) {
+    // One queue builder for every diagram filter (5.0.0): the five differ only in the flag they set.
+    function buildFilterQueue(containers, flag, showing) {
         var queue = [];
         containers.forEach(function(container) {
             if (container.classList.contains('puml-fragment')) return;
             if (isComponentDiagramContainer(container)) return;
             if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
             // A container with no state of its own is drawn again with the new one.
-            if (container._assertionsVisible !== undefined && !!container._assertionsVisible === showing) return;
-            container._assertionsVisible = showing;
-            var origSource = container._noteOriginalSource;
-            var renderSource = applyAssertionFilter(origSource, showing);
-            renderSource = applyStepsFilter(renderSource, filterShown(container, '_stepsVisible'));
-            renderSource = applyDatabasesFilter(renderSource, filterShown(container, '_databasesVisible'));
-            var noteBlocks = parseNoteBlocks(renderSource);
+            if (container[flag] !== undefined && !!container[flag] === showing) return;
+            container[flag] = showing;
+            var noteBlocks = parseNoteBlocks(applyFilters(container._noteOriginalSource, container));
             if (container._truncateLines === undefined) container._truncateLines = window._truncateLines;
             if (!container._noteSteps) container._noteSteps = {};
             queue.push({ container: container, noteBlocks: noteBlocks });
@@ -2897,113 +3010,42 @@
         return queue;
     }
 
-    // Report-level: toggle assertions for all scenarios
-    window._toggleAssertions = function(btn) {
+    // One model for every diagram filter (5.0.0, F5): the report's toggle sets the report's state and clears every
+    // scenario's own choice, as the report's choice holds everywhere; a scenario's toggle records its choice on the
+    // scenario, so the diagrams it draws later take it (scenarioChoice).
+    function toggleReportFilter(name, flag, btn) {
         var shown = btn.getAttribute('data-shown') !== 'true';
-        window._assertionsVisible = shown;
-        syncToggleBtn(document.querySelector('.toolbar-right'), 'assertions', shown);
+        window[flag] = shown;
+        syncToggleBtn(document.querySelector('.toolbar-right'), name, shown);
         document.querySelectorAll('details.scenario').forEach(function(sc) {
-            syncToggleBtn(sc, 'assertions', shown);
+            sc[flag] = undefined;
+            syncToggleBtn(sc, name, shown);
         });
-        var containers = document.querySelectorAll('[data-plantuml]');
-        renderWithPending(buildAssertionsQueue(containers, shown), document.querySelectorAll('.toggle-btn[data-toggle="assertions"]'));
-    };
-
-    // Scenario-level: toggle assertions for one scenario
-    window._toggleScenarioAssertions = function(btn) {
-        var shown = btn.getAttribute('data-shown') !== 'true';
-        var scenario = btn.closest('details.scenario');
-        if (!scenario) return;
-        syncToggleBtn(scenario, 'assertions', shown);
-        var containers = scenario.querySelectorAll('[data-plantuml]');
-        renderWithPending(buildAssertionsQueue(containers, shown), scenario.querySelectorAll('.toggle-btn[data-toggle="assertions"]'));
-    };
-
-    function buildStepsQueue(containers, showing) {
-        var queue = [];
-        containers.forEach(function(container) {
-            if (container.classList.contains('puml-fragment')) return;
-            if (isComponentDiagramContainer(container)) return;
-            if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
-            // A container with no state of its own is drawn again with the new one.
-            if (container._stepsVisible !== undefined && !!container._stepsVisible === showing) return;
-            container._stepsVisible = showing;
-            var origSource = container._noteOriginalSource;
-            var renderSource = applyAssertionFilter(origSource, filterShown(container, '_assertionsVisible'));
-            renderSource = applyStepsFilter(renderSource, showing);
-            renderSource = applyDatabasesFilter(renderSource, filterShown(container, '_databasesVisible'));
-            var noteBlocks = parseNoteBlocks(renderSource);
-            if (container._truncateLines === undefined) container._truncateLines = window._truncateLines;
-            if (!container._noteSteps) container._noteSteps = {};
-            queue.push({ container: container, noteBlocks: noteBlocks });
-        });
-        return queue;
+        renderWithPending(buildFilterQueue(document.querySelectorAll('[data-plantuml]'), flag, shown),
+            document.querySelectorAll('.toggle-btn[data-toggle="' + name + '"]'));
     }
 
-    // Report-level: toggle step delimiters for all scenarios
-    window._toggleSteps = function(btn) {
-        var shown = btn.getAttribute('data-shown') !== 'true';
-        window._stepsVisible = shown;
-        syncToggleBtn(document.querySelector('.toolbar-right'), 'steps', shown);
-        document.querySelectorAll('details.scenario').forEach(function(sc) {
-            syncToggleBtn(sc, 'steps', shown);
-        });
-        var containers = document.querySelectorAll('[data-plantuml]');
-        renderWithPending(buildStepsQueue(containers, shown), document.querySelectorAll('.toggle-btn[data-toggle="steps"]'));
-    };
-
-    // Scenario-level: toggle step delimiters for one scenario
-    window._toggleScenarioSteps = function(btn) {
+    function toggleScenarioFilter(name, flag, btn) {
         var shown = btn.getAttribute('data-shown') !== 'true';
         var scenario = btn.closest('details.scenario');
         if (!scenario) return;
-        syncToggleBtn(scenario, 'steps', shown);
-        var containers = scenario.querySelectorAll('[data-plantuml]');
-        renderWithPending(buildStepsQueue(containers, shown), scenario.querySelectorAll('.toggle-btn[data-toggle="steps"]'));
-    };
-
-    function buildDatabasesQueue(containers, showing) {
-        var queue = [];
-        containers.forEach(function(container) {
-            if (container.classList.contains('puml-fragment')) return;
-            if (isComponentDiagramContainer(container)) return;
-            if (!container._noteOriginalSource) container._noteOriginalSource = container.getAttribute('data-plantuml');
-            // A container with no state of its own is drawn again with the new one.
-            if (container._databasesVisible !== undefined && !!container._databasesVisible === showing) return;
-            container._databasesVisible = showing;
-            var origSource = container._noteOriginalSource;
-            var renderSource = applyAssertionFilter(origSource, filterShown(container, '_assertionsVisible'));
-            renderSource = applyStepsFilter(renderSource, filterShown(container, '_stepsVisible'));
-            renderSource = applyDatabasesFilter(renderSource, showing);
-            var noteBlocks = parseNoteBlocks(renderSource);
-            if (container._truncateLines === undefined) container._truncateLines = window._truncateLines;
-            if (!container._noteSteps) container._noteSteps = {};
-            queue.push({ container: container, noteBlocks: noteBlocks });
-        });
-        return queue;
+        scenario[flag] = shown;
+        syncToggleBtn(scenario, name, shown);
+        renderWithPending(buildFilterQueue(scenario.querySelectorAll('[data-plantuml]'), flag, shown),
+            scenario.querySelectorAll('.toggle-btn[data-toggle="' + name + '"]'));
     }
 
-    // Report-level: toggle database participants for all scenarios
-    window._toggleDatabases = function(btn) {
-        var shown = btn.getAttribute('data-shown') !== 'true';
-        window._databasesVisible = shown;
-        syncToggleBtn(document.querySelector('.toolbar-right'), 'databases', shown);
-        document.querySelectorAll('details.scenario').forEach(function(sc) {
-            syncToggleBtn(sc, 'databases', shown);
-        });
-        var containers = document.querySelectorAll('[data-plantuml]');
-        renderWithPending(buildDatabasesQueue(containers, shown), document.querySelectorAll('.toggle-btn[data-toggle="databases"]'));
-    };
-
-    // Scenario-level: toggle database participants for one scenario
-    window._toggleScenarioDatabases = function(btn) {
-        var shown = btn.getAttribute('data-shown') !== 'true';
-        var scenario = btn.closest('details.scenario');
-        if (!scenario) return;
-        syncToggleBtn(scenario, 'databases', shown);
-        var containers = scenario.querySelectorAll('[data-plantuml]');
-        renderWithPending(buildDatabasesQueue(containers, shown), scenario.querySelectorAll('.toggle-btn[data-toggle="databases"]'));
-    };
+    // The report's and each scenario's toggles for assertion notes, step bars, database calls, event calls and setup
+    window._toggleAssertions = function(btn) { toggleReportFilter('assertions', '_assertionsVisible', btn); };
+    window._toggleScenarioAssertions = function(btn) { toggleScenarioFilter('assertions', '_assertionsVisible', btn); };
+    window._toggleSteps = function(btn) { toggleReportFilter('steps', '_stepsVisible', btn); };
+    window._toggleScenarioSteps = function(btn) { toggleScenarioFilter('steps', '_stepsVisible', btn); };
+    window._toggleDatabases = function(btn) { toggleReportFilter('databases', '_databasesVisible', btn); };
+    window._toggleScenarioDatabases = function(btn) { toggleScenarioFilter('databases', '_databasesVisible', btn); };
+    window._toggleEvents = function(btn) { toggleReportFilter('events', '_eventsVisible', btn); };
+    window._toggleScenarioEvents = function(btn) { toggleScenarioFilter('events', '_eventsVisible', btn); };
+    window._toggleSetup = function(btn) { toggleReportFilter('setup', '_setupVisible', btn); };
+    window._toggleScenarioSetup = function(btn) { toggleScenarioFilter('setup', '_setupVisible', btn); };
 
     // ── JSON ⇄ YAML note payload format dropdowns ─────────────────────────────
     // A compact <select> beside the filter toggles, at report and scenario

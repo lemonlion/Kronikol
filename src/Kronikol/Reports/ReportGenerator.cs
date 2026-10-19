@@ -1091,8 +1091,8 @@ public static class ReportGenerator
     /// scenario's settings, so they cannot drift (the same contract as the note-format select).
     /// </summary>
     private static string BuildScenarioDiagramToolbar(ResolvedToggleDefaults toggles,
-        bool includeAssertions, bool includeSteps, bool includeDatabases, string scenarioNoteFormatSelect,
-        string scenarioNoteWidthSelect = "")
+        bool includeAssertions, bool includeSteps, bool includeDatabases, bool includeEvents, bool includeSetup,
+        string scenarioNoteFormatSelect, string scenarioNoteWidthSelect = "")
     {
         var sb = new StringBuilder();
         sb.Append(BuildDetailsRadio(toggles, scenarioLevel: true));
@@ -1106,9 +1106,21 @@ public static class ReportGenerator
             sb.Append(BuildFilterToggleButton("steps", toggles.StepsShown, scenarioLevel: true));
         if (includeDatabases)
             sb.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: true));
+        if (includeEvents)
+            sb.Append(BuildFilterToggleButton("events", toggles.EventsShown, scenarioLevel: true));
+        if (includeSetup)
+            sb.Append(BuildFilterToggleButton("setup", toggles.SetupShown, scenarioLevel: true));
         sb.Append("</span>");
         return sb.ToString();
     }
+
+    /// <summary>
+    /// What the page's Setup filter (stripSetup in collapsible-notes-script.js) finds a setup by: the Setup frame the
+    /// SeparateSetup option writes, or a When step bar in either of the forms <see cref="StepBarPlantUml"/> writes.
+    /// </summary>
+    private static readonly Regex SetupMarker = new(
+        @"^[ \t]*(?:partition\b.*\bSetup\r?$|hnote across <<stepDelimiter>>(?: #black:<color:white>|<<stepBody>>: )(?:<b>)?when\b)",
+        RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private const string DiagramTabsOpen = "<div class=\"diagram-toggle diagram-toggle-tabs\" role=\"tablist\" aria-label=\"Diagram views\">";
 
@@ -1466,6 +1478,14 @@ public static class ReportGenerator
         var hasDatabaseParticipants = isPlantUmlBrowser && (
             (trackedLogs is not null && trackedLogs.Any(l => l.PlantUml is not null && (l.PlantUml.Contains("\ndatabase \"") || l.PlantUml.Contains("\ncollections \"")))) ||
             diagrams.Any(d => d.CodeBehind.Contains("\ndatabase \"") || d.CodeBehind.Contains("\ncollections \"")));
+        // The Events and Setup toggles (5.0.0, D38): a message broker is a participant drawn as a queue; a setup is one the
+        // page's stripSetup finds, a Setup frame or a When step bar with the setup before it.
+        var hasEventParticipants = isPlantUmlBrowser && (
+            (trackedLogs is not null && trackedLogs.Any(l => l.PlantUml is not null && l.PlantUml.Contains("\nqueue \""))) ||
+            diagrams.Any(d => d.CodeBehind.Contains("\nqueue \"")));
+        var hasSetup = isPlantUmlBrowser && (
+            (trackedLogs is not null && trackedLogs.Any(l => l.PlantUml is not null && SetupMarker.IsMatch(l.PlantUml))) ||
+            diagrams.Any(d => SetupMarker.IsMatch(d.CodeBehind)));
         // Pretty-printed JSON note payloads open with a bare { or [ on its own
         // line. A false positive is harmless — the dropdown's queue builder
         // finds nothing eligible and the no-op clears its pending state.
@@ -1506,8 +1526,8 @@ public static class ReportGenerator
             : "";
         // The scenario-level control run, built once (see BuildScenarioDiagramToolbar).
         var scenarioToolbarControls = BuildScenarioDiagramToolbar(toggles,
-            hasAssertionNotes, hasStepDelimiters, hasDatabaseParticipants, scenarioNoteFormatSelect,
-            scenarioNoteWidthSelect);
+            hasAssertionNotes, hasStepDelimiters, hasDatabaseParticipants, hasEventParticipants, hasSetup,
+            scenarioNoteFormatSelect, scenarioNoteWidthSelect);
         // A report drawn when it was written (NodeJs, Server, Local) still has views only the page draws: the Activity
         // tab and the internal-flow popups, whose diagrams are one per scenario and one per call. It carries the engine
         // on demand for them, fetched the first time one is shown; until 3.31.8 it carried none and they stayed blank,
@@ -1931,6 +1951,10 @@ public static class ReportGenerator
                 body.Append(BuildFilterToggleButton("steps", toggles.StepsShown, scenarioLevel: false));
             if (hasDatabaseParticipants)
                 body.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: false));
+            if (hasEventParticipants)
+                body.Append(BuildFilterToggleButton("events", toggles.EventsShown, scenarioLevel: false));
+            if (hasSetup)
+                body.Append(BuildFilterToggleButton("setup", toggles.SetupShown, scenarioLevel: false));
             body.Append("</span>");
         }
         body.Append("</div>");

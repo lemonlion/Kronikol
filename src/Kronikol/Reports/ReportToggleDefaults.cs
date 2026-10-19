@@ -33,6 +33,19 @@ public record ReportToggleDefaults
     public bool? DatabasesShown { get; set; }
 
     /// <summary>
+    /// Calls to and from message brokers (the participants drawn as queues: Kafka, Event Hubs, Pub/Sub, Service Bus),
+    /// with their payloads, shown in sequence diagrams (5.0.0). Default: <c>true</c>.
+    /// </summary>
+    public bool? EventsShown { get; set; }
+
+    /// <summary>
+    /// A scenario's setup shown in its sequence diagrams (5.0.0): its Setup frame where the report keeps setup apart,
+    /// otherwise everything before its first When step, with the participants only the setup called. Default:
+    /// <c>true</c>.
+    /// </summary>
+    public bool? SetupShown { get; set; }
+
+    /// <summary>
     /// Initial JSON ⇄ YAML display format for note payloads. Default: <c>null</c> — falls back to
     /// the flat <see cref="ReportConfigurationOptions.NotePayloadFormat"/> option (which remains
     /// the simple both-reports knob); a value set here wins over the flat option.

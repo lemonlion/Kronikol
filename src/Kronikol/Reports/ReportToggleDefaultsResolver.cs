@@ -20,6 +20,8 @@ public record ResolvedToggleDefaults
     public bool AssertionsShown { get; init; }
     public bool StepsShown { get; init; } = true;
     public bool DatabasesShown { get; init; } = true;
+    public bool EventsShown { get; init; } = true;
+    public bool SetupShown { get; init; } = true;
     public NotePayloadFormat NotePayloadFormat { get; init; } = NotePayloadFormat.Yaml;
     public NoteWidthMode NoteWidth { get; init; } = NoteWidthMode.Default;
 
@@ -74,6 +76,8 @@ public static class ReportToggleDefaultsResolver
         AssertionsShown = overrides.AssertionsShown ?? baseline.AssertionsShown,
         StepsShown = overrides.StepsShown ?? baseline.StepsShown,
         DatabasesShown = overrides.DatabasesShown ?? baseline.DatabasesShown,
+        EventsShown = overrides.EventsShown ?? baseline.EventsShown,
+        SetupShown = overrides.SetupShown ?? baseline.SetupShown,
         NotePayloadFormat = Defined(overrides.NotePayloadFormat) ?? baseline.NotePayloadFormat,
         NoteWidth = Defined(overrides.NoteWidth) ?? baseline.NoteWidth,
         FeaturesExpanded = overrides.FeaturesExpanded ?? baseline.FeaturesExpanded,

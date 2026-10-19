@@ -62,6 +62,14 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   tabs. On a phone the gear sits on the diagrams' title. Each bar starts closed, and nothing is remembered.
 - **A scenario's diagram views are tabs.** Sequence Diagrams, Activity Diagrams and Flame Chart are `role="tab"` on a
   bar of their own; the arrow keys, Home and End move between them, and only the one showing is in the tab order.
+- **Events and Setup toggles.** Beside Assertions, Steps and Databases, in the report's bar and in each scenario's
+  settings: Events takes the calls to and from message brokers (the participants drawn as queues: Kafka, Event Hubs,
+  Pub/Sub, Service Bus) out of the sequence diagrams, with their payloads; Setup takes a scenario's setup out, its
+  Setup frame where the report keeps setup apart, otherwise everything before its first When step, with the
+  participants only the setup called. Each appears where some diagram has something for it to take out. New options
+  `ReportToggleDefaults.EventsShown` and `SetupShown` (both default `true`) set their start states. The five filters
+  share one model: a scenario's own choice holds for the diagrams it draws later, and the report's choice holds
+  everywhere, over a scenario's own.
 
 ### Changed (breaking)
 

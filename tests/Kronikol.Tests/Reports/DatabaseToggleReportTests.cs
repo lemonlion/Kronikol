@@ -88,7 +88,8 @@ public class DatabaseToggleReportTests
         var content = GenerateReport("DbToggle_StripFn.html", PlantUmlSourceWithDatabase);
         Assert.Contains("function stripDatabaseCalls", content);
         Assert.Contains("function applyDatabasesFilter", content);
-        Assert.Contains("function buildDatabasesQueue", content);
+        // since 5.0.0 the five diagram filters share one queue builder, which takes the flag to set
+        Assert.Contains("function buildFilterQueue", content);
     }
 
     [Fact]
@@ -180,9 +181,8 @@ public class DatabaseToggleReportTests
         [
             "function buildDetailsQueue",
             "function buildHeadersQueue",
-            "function buildAssertionsQueue",
-            "function buildStepsQueue",
-            "function buildDatabasesQueue",
+            // the assertions, steps, databases, events and setup filters' one builder (5.0.0)
+            "function buildFilterQueue",
             "function buildNoteFormatQueue"
         ];
 

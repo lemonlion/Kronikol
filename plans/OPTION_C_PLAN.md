@@ -527,3 +527,28 @@ decision of the owner's, not part of this plan.
   Tests: Playwright `FilteredMarkerTests` (new, 3, all failing before), and core `StepBarPlantUmlTests` reads the
   strip regex from the script, where it kept a copy whose Contains check could not see the lines run together.
   Checks: the core suite passes 7,770 with 2 skipped; the full Playwright suite passes 1,153 with 28 skipped.
+- 2026-10-19, S9a: the Events and Setup toggles (D38, P4 to P8, P11) on one model for every diagram filter (F2, F5,
+  F11). In the page, `stripEventCalls` is the databases filter with `queue` for its participants' keyword
+  (`stripDatabaseCalls` became `stripParticipantCalls(source, kinds)`, as P4's port note asks, in place of the
+  preview's clone of its text) and `stripSetup` is the preview's; `applyFilters` applies the five in one order, the
+  setup first, and every reader uses it (`composeNoteSource`, `_preProcessSource`, the note-index replay, and
+  `buildFilterQueue`, one builder in place of three that differed only in their flag). One model (F5): a scenario's
+  toggle records its choice on the scenario, the report's toggle clears every scenario's, and `scenarioChoice` gives a
+  diagram drawn later its scenario's choice, else the report's; `filterShown` resolves a missing flag that way for all
+  five (F2). The generator writes the two toggles after Databases in the report's bar and every scenario's settings,
+  gated report-wide like the others (a `queue` participant; a Setup frame or a When step bar, `SetupMarker`), not only
+  beside a Databases toggle (F11), with `ReportToggleDefaults.EventsShown` and `SetupShown` (new, default true) and
+  their script tokens.
+  Measured on the way: a diagram is given its source only when it is drawn, and in a page that draws its diagrams
+  every diagram of an open scenario is drawn at once (a parameterized scenario's hidden examples too), so the 4.x
+  model's gap (a diagram drawn after a scenario's toggle took the report's state) was open only while a source was
+  still being decompressed. The tests reach it by drawing a diagram into the scenario after its toggle, the way a
+  later diagram arrives; no 4.x bug is claimed.
+  Measured with `checks/style-parity.js` at 1,400 px in Chrome and Firefox: the toggle zones of the report's bar and
+  of a scenario's settings now match the preview's, D38 having been their last difference.
+  Tests: core `EventsAndSetupToggleReportTests` (new, 11); `DatabaseToggleReportTests`'s two script pins name
+  `buildFilterQueue`; `ToggleDefaultsMarkupTests`'s token list carries the two new tokens. Playwright
+  `EventsAndSetupToggleTests` (new, 4) and `FilterToggleModelTests` (new, 6). `checks/mutate-s9a.py` undoes five
+  behaviours one at a time, and each fails its test; the setup filter running after the steps filter survived a first
+  run, as no test hid the step bars and the setup together, and one now does.
+  Checks: the core suite passes 7,781 with 2 skipped; the full Playwright suite passes 1,163 with 28 skipped.
