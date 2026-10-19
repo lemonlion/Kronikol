@@ -87,6 +87,12 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   Direction Left to right (the start) or Top to bottom, and Call summaries Shown (the start) or Hidden. Filtered draws
   the components and connections used by the scenarios the filters leave showing, read from the run's calls rather
   than matched by name, and a note says how many scenarios it follows.
+- **Focus the keyboard moves is never left under the report bar.** Tab or Shift+Tab to a control the pinned bar covers,
+  or a scenario's settings stuck under it, brings the control 12 px below them, and to one cut by the top or the foot of
+  the window, 12 px inside it. For a second after, a control the page moves away, as a diagram drawn above it does, is
+  brought back, until the reader scrolls, points or presses a key. Focus a click or a script gives stays where it lands,
+  as does a control in the bar, in those settings or in the internal-flow popup, and a scenario taller than the window.
+  On a phone, where the bar scrolls away, nothing moves.
 
 ### Changed (breaking)
 

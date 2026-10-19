@@ -1612,6 +1612,19 @@ public static class ReportGenerator
         var componentsScript = componentControls
             ? "<script id=\"kronikol-components\">" + LoadResource("report-components-script.js") + "</script>"
             : "";
+        // The report's tabs (5.0.0, plans/OPTION_C_PLAN.md S3, D20): each section that sat above the features as a
+        // panel of its own (the Scenario Timeline, the Component Diagram, History, Report diagnostics) is a tab of the
+        // bar, and the features, with the failure clusters and the background calls at their top (Q4), are the Features
+        // tab. A page with nothing beside its features has no tabs, and so no bar.
+        var hasComponentTab = !string.IsNullOrEmpty(componentDiagramPlantUml);
+        var hasHistoryTab = history is not null && showHistorySection;
+        var hasDiagnosticsTab = includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 };
+        var useTabs = hasDurations || hasComponentTab || hasHistoryTab || hasDiagnosticsTab;
+        // focus the keyboard moves is never left under the pinned bar (5.0.0, plans/OPTION_C_PLAN.md S12, D48), in a page
+        // that has the bar
+        var focusScript = useTabs
+            ? "<script id=\"kronikol-focus\">" + LoadResource("report-focus-script.js") + "</script>"
+            : "";
 
         var customCssBlock = customCss is not null ? $"<style>{customCss}</style>" : "";
         var faviconLink = $"<link rel=\"icon\" href=\"{customFaviconBase64 ?? Constants.DefaultFavicon.DataUri}\">";
@@ -1678,7 +1691,7 @@ public static class ReportGenerator
                             <script id="kronikol-theme-switch">{{themeSwitchScript}}</script>
                             <script id="kronikol-run-band">{{runBandScript}}</script>
                             <script id="kronikol-report-tabs">{{reportTabsScript}}</script>
-                            {{scenarioSettingsScript}}{{timelineScript}}{{componentsScript}}
+                            {{scenarioSettingsScript}}{{timelineScript}}{{componentsScript}}{{focusScript}}
                         </head>
                         <body>
                     """;
@@ -1930,15 +1943,8 @@ public static class ReportGenerator
         body.Append("</div>"); // close filters
         body.Append("</div>"); // close filtering-box
 
-        // The report's tabs (5.0.0, plans/OPTION_C_PLAN.md S3, D20): each section that sat above the features as a
-        // panel of its own (the Scenario Timeline, the Component Diagram, History, Report diagnostics) is a tab of the
-        // bar, and the features, with the failure clusters and the background calls at their top (Q4), are the Features
-        // tab. A page with nothing beside its features has no tabs. A panel configured visible is the tab the page opens
-        // on; when both are, the timeline, which exists in both reports (Q2).
-        var hasComponentTab = !string.IsNullOrEmpty(componentDiagramPlantUml);
-        var hasHistoryTab = history is not null && showHistorySection;
-        var hasDiagnosticsTab = includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 };
-        var useTabs = hasDurations || hasComponentTab || hasHistoryTab || hasDiagnosticsTab;
+        // The tab the page opens on (the tabs are worked out above the head, which loads the focus script only where the
+        // bar is): a panel configured visible; when both are, the timeline, which exists in both reports (Q2).
         var showTimelinePanel = toggles.ScenarioTimelineVisible && hasDurations;
         var showComponentPanel = toggles.ComponentDiagramVisible && hasComponentTab && !showTimelinePanel;
         var startTab = showTimelinePanel ? "timeline" : showComponentPanel ? "components" : "features";

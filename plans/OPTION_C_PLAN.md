@@ -1031,3 +1031,32 @@ decision of the owner's, not part of this plan.
   133, on `3fce16bb`; on `f077cda6` (T2), with D48 beside it, 90 of 90 with D48's neighbours. Mutations: 4 of 4 killed
   (`checks/mutate-count-contrast.py`: each block's ink set to one that fails AA, and the count back on
   `--kron-on-solid`).
+- 2026-10-19, S12 D48: focus the keyboard moves is never left under the report bar (R17.20; the preview's
+  `c-round13.js` 58-114), prepared in the session's scratch and applied with `edits/s12d48/scripts-s12d48.py` and
+  `edits/s12d48/tests-s12d48.py`. `report-focus-script.js` (new) loads in the head of a page with the report bar,
+  after the tabs script. Tab or Shift+Tab focus only: a click's and a script's are left where they land. The free band
+  starts 12 px below the pinned bar, or below a scenario's open settings stuck under it for a control after them
+  (decision a), and ends 12 px above the window's foot; a control in the bar, in those settings or in anything fixed
+  is left alone, as is one taller than the band that already shows in it. For a second after, every scroll and timers
+  at 150, 400 and 800 ms check the control again, until the reader scrolls, points or presses a key, or focus moves
+  on.
+  Deviations: the bar counts only while it is pinned (the preview scrolled the page up for a control above the bar at
+  rest); a pointer press or any key ends the watch; no script where there is no bar; a pixel's grace for the bar's
+  rounded height.
+  Tests: core `FocusScriptTests` (new, 4 cases), red 2 of 4 before the change (the 2 absence cases are guards), green
+  with the ReportTabs, VerdictFences and ComponentsTabHtml classes, 44 of 44; Playwright `FocusClearOfTheBarTests`
+  (new, 13 facts): red 4 of 13 before the change, each on its assertion (a link under the stuck settings 6 px short of
+  the band, a scenario ending in the window's last 12 px, one pushed 1,950 px away, the search 0.09 px into the
+  window), the other 9 guards; green with the FeaturesTools, ReportTabs and ScenarioSettings classes, 46 of 46. The
+  Firefox fact is a guard as well: Playwright's Firefox already brings a scenario half under the bar below it (the
+  package's risk 1). The fixture wraps the diagram's linked label in the `<a>` the Java engine writes, as
+  `IflowPopupTests` builds its links: the browser engine draws a link's label as text the render script binds, so the
+  first run's two settings facts waited 60 s for an `<a>` that never came. `checks/focus-script-check.js` holds the
+  timing paths under node (19 checks, 16 probes caught). Mutations: 14 of 14 killed (the 3 core on 3fce16bb; the 11
+  Playwright on f077cda6: a click's focus moved, a control taller than the band moved, one in anything fixed moved, no
+  check after the first frame, no room at the window's foot, stuck settings covering nothing, the bar covering the
+  window's top at rest, no room at the top while the bar rests, the bar's own controls moved, a control in the stuck
+  settings moved, a phone's page moved) (`checks/mutate-s12d48.py`). Owner questions (seven): Tab only, the settings
+  band, the window's top at rest, what ends the watch, S7's empty state from the keyboard, pages without the bar, the
+  phone's sticky search line (phone part 2).
+  Checks: The classes above, core and Playwright, on f077cda6 (T2); the full suites run when S12 closes.
