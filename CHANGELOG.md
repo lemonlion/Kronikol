@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.28.1] - 2026-10-19
+
+**Patch - an Azure DevOps artifact holds the attachments its report links (`plans/MISSING_ATTACHMENTS_PLAN.md` R4,
+#148).** A bug fix with nothing new to call, so the patch part moves (4.28.0 to 4.28.1).
+
+### Fixed
+
+- **An Azure DevOps upload names the report's attachments** (F7). With `PublishCiArtifacts` on Azure DevOps, an
+  `##vso[artifact.upload]` line names every file the artifact gets. A run named its report outputs and the runs kept
+  under `runs/`, and `kronikol merge --publish-artifacts` its outputs, but neither named a file under `attachments/`,
+  so every screenshot, trace and video the report linked was a dead link in the artifact. A run now names each
+  attachment `Run.json` lists, and a merge each file it carried beside the merged report, under
+  `containerfolder={artifact}/attachments`, so the artifact links them as the reports folder does. An attachment the
+  report does not hold (its `AttachmentFailure` entry, since 4.27.2) names no file. GitHub Actions, which uploads the
+  whole folder, is unchanged.
+
+### Tests
+
+- `MissingAttachmentTests`: a run on Azure DevOps names its copied screenshot under `TestReports/attachments`.
+- `MergeCarriesAttachmentsTests`: a merge on Azure DevOps names each of the four files it carried under
+  `TestReports/attachments`; a shard's path that cannot be read here (a NUL in it) names no file, and the merge still
+  writes the files beside its report.
+
+- Proofs: the first two facts were written first and failed on 4.27.2's code at their assertions, with no attachment
+  named (4.28.0 changed none of the files this release does). The third failed with the merge's check that leaves out
+  an attachment it could not place removed: reading that path again for the upload threw, and the merge said "The
+  merged report was written, but the files beside it were not: Null character in path". 5 of 5 mutations of the new
+  code are killed: the run naming no attachment, the merge naming none, the files named at the artifact's root, a link
+  under `attachments/` not recognised, and that check removed.
+- Checks: after the version bump the core suite passes 7,827 with 2 skipped and the full Playwright suite passes
+  1,073 with 28 skipped when run alone; release.slnf builds in Release for every target. The templates pin
+  4.27.2 and the history action's VERSION installs Kronikol.Tool 4.28.1.
+
 ## [4.28.0] - 2026-10-19
 
 **Minor - a new query verb, `attachments`, new members in `failures --json` and a column in `Failures.md`

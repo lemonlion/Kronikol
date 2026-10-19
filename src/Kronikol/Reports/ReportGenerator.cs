@@ -766,7 +766,9 @@ public static class ReportGenerator
                 RunIsolated("the CI artifact list", () =>
                     CiArtifactPublisher.Publish(CiArtifactPublisher.ReportFiles(ciReportsDir), ciEnvironment, options.CiArtifactName, options.CiArtifactRetentionDays,
                         getEnv, File.AppendAllText, Console.WriteLine, File.Exists,
-                        CiArtifactPublisher.RetainedFiles(ciReportsDir)));
+                        // The attachments Run.json lists, beside the kept runs.
+                        [.. CiArtifactPublisher.RetainedFiles(ciReportsDir),
+                            .. CiArtifactPublisher.AttachmentFiles(ciReportsDir, RunFileCollector.Current?.Snapshot().Attachments ?? [])]));
             }
         }
 

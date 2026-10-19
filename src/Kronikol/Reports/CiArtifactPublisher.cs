@@ -42,6 +42,21 @@ public static class CiArtifactPublisher
             .Select(path => (path, Path.GetRelativePath(reportsDirectory, Path.GetDirectoryName(path)!).Replace('\\', '/')))
             .ToArray();
 
+    /// <summary>
+    /// The report's own attachment copies, from the links the report holds (<c>attachments/shot.png</c>), each with the
+    /// folder it sits in relative to the reports directory, as <see cref="RetainedFiles"/> gives a kept run's. An Azure
+    /// DevOps upload names every file, and it named neither these nor any other file under <c>attachments/</c>, so every
+    /// copied screenshot was a dead link in the artifact (#148 F7); GitHub Actions uploads the whole folder. A link
+    /// elsewhere, or a path the report does not hold, names no file of the report's and is left out.
+    /// </summary>
+    internal static IReadOnlyList<(string Path, string Folder)> AttachmentFiles(string reportsDirectory, IEnumerable<string> links) =>
+        links.Where(AttachmentPlacement.IsReportRelative)
+            .Select(link => link.Replace('\\', '/'))
+            .Distinct(StringComparer.FromComparison(AttachmentPlacement.PathComparison))
+            .Select(link => (Path.GetFullPath(Path.Combine(reportsDirectory, link)), link[..link.LastIndexOf('/')]))
+            .OrderBy(file => file.Item1, StringComparer.Ordinal)
+            .ToArray();
+
     internal static void Publish(
         string[] reportFilePaths,
         CiEnvironment environment,
@@ -62,9 +77,10 @@ public static class CiArtifactPublisher
                     writeLine($"##vso[artifact.upload containerfolder={artifactName};artifactname={artifactName}]{path}");
                 }
 
-                // The runs kept under runs/ (an earlier attempt of this same run, on CI): each file under
-                // the folder it has on disk, so the artifact opens with --run exactly as the directory
-                // does. GitHub Actions is handed the directory, and uploads them with it.
+                // The runs kept under runs/ (an earlier attempt of this same run, on CI), and the report's own
+                // attachment copies: each file under the folder it has on disk, so the artifact opens with --run
+                // and links its screenshots exactly as the directory does. GitHub Actions is handed the directory,
+                // and uploads them with it.
                 foreach (var (path, folder) in retained ?? [])
                 {
                     if (!fileExists(path)) continue;

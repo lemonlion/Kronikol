@@ -624,4 +624,17 @@ Not in this plan's class (attachments that never reach the model, or render choi
   what 4.27.1 already did. Mutations: 33 of 33 killed, the section 6 list for R1 and R2 and one for each difference
   above. Checks: after the version bump the core suite passes 7,785 with 2 skipped and the full Playwright suite 1,073
   with 28 skipped when run alone, and release.slnf builds in Release for every target with no warning from the changed
-  files.
+  files. Published the same day: once nuget listed all 62 packages, the wiki edits, the Kronikol4J ledger line and a
+  comment on #148 followed.
+- 2026-10-19, kronikol-7c, **R4 as a patch, 4.28.1**, on 4.28.0 (`978b1b1c`), built on 4.27.2 (4.28.0 changed none of
+  the files R4 touches). As section 5 has it: `CiArtifactPublisher.AttachmentFiles` turns the report's own links
+  (`attachments/shot.png`) into files, each with its folder, as `RetainedFiles` does for `runs/`; a run hands it what
+  `RunFileCollector` recorded under `attachments/` (the list `Run.json` gets), and a merge (`MergedRunOutputs`) the links
+  of the attachments `CarryAttachments` placed. One difference, found while building it: **the merge leaves out an
+  attachment it could not place** (`Problem` set). A path that could not be read (a NUL in it) keeps the `attachments/`
+  prefix it was given, and reading it again for the upload threw, so the merge said the files beside its report were
+  not written. A third fact holds it. Proofs: the two section 6 facts failed on 4.27.2's code at their assertions, no
+  attachment named; the third failed with that check removed. Mutations: 5 of 5 killed (the run naming no attachment,
+  the merge naming none, the files named at the artifact's root, a link under `attachments/` not recognised, the check
+  removed). Checks: after the version bump the core suite passes 7,827 with 2 skipped and the full Playwright
+  suite 1,073 with 28 skipped when run alone, and release.slnf builds in Release for every target.

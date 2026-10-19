@@ -413,6 +413,30 @@ public class MissingAttachmentTests : IDisposable
         Assert.DoesNotContain("attachments/shot#1.png\"", html, StringComparison.Ordinal);
     }
 
+    // ─── The Azure DevOps upload (R4, F7) ──────────────────────────
+
+    [Fact]
+    public void An_azure_devops_upload_carries_the_runs_attachments_under_their_folder()
+    {
+        // An upload names every file, and it named the top-level outputs and the kept runs but not attachments/, so every
+        // copied screenshot was a dead link in the artifact. GitHub Actions uploads the whole folder.
+        var shot = Written("sources/shot.png");
+        var features = OneScenario(null, [new FileAttachment("shot.png", shot)]);
+
+        string console;
+        using (var scoped = new ThreadScopedConsole())
+        {
+            DefaultDiagramsFetcher.Reset();
+            ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(features, Start, Start.AddMinutes(1),
+                Options(o => o.PublishCiArtifacts = true), RunEnvironment.Unrecorded, name => name == "TF_BUILD" ? "True" : null);
+            DefaultDiagramsFetcher.Reset();
+            console = scoped.Text;
+        }
+
+        Assert.Contains($"##vso[artifact.upload containerfolder=TestReports/attachments;artifactname=TestReports]{Path.Combine(Reports, "attachments", "shot.png")}",
+            console, StringComparison.Ordinal);
+    }
+
     // ─── Guards ────────────────────────────────────────────
 
     [Fact]

@@ -191,6 +191,46 @@ public class MergeCarriesAttachmentsTests : IDisposable
     }
 
     [Fact]
+    public void An_azure_devops_upload_of_a_merge_carries_the_merged_reports_attachments()
+    {
+        // #148 R4: the merge named its top-level outputs only, so the files it carried beside the merged report were not
+        // in the artifact.
+        var first = Shard("runner1", "Pay", 1);
+        var second = Shard("runner2", "Refund", 2);
+        var merged = Path.Combine(_dir, "merged");
+
+        var output = new StringWriter();
+        var error = new StringWriter();
+        var exit = MergeCommand.Run([first, second, "-o", Path.Combine(merged, "Combined.html"), "--publish-artifacts"], output, error,
+            name => name == "TF_BUILD" ? "True" : null);
+
+        Assert.True(exit == 0, error.ToString());
+        var carried = Directory.GetFiles(Path.Combine(merged, "attachments")).Order(StringComparer.Ordinal).ToArray();
+        Assert.Equal(4, carried.Length);
+        Assert.All(carried, file => Assert.Contains($"##vso[artifact.upload containerfolder=TestReports/attachments;artifactname=TestReports]{file}",
+            output.ToString(), StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void An_azure_devops_upload_of_a_merge_names_no_file_for_a_path_it_could_not_read()
+    {
+        // A shard's path that cannot be read here (a NUL in it) keeps its attachments/ prefix as it was given, and
+        // reading it for the upload threw where every other reader had said it was not usable.
+        var first = Shard("runner1", "Pay", 1, missing: "attachments/lost\0.png");
+        var second = Shard("runner2", "Refund", 2);
+        var merged = Path.Combine(_dir, "merged");
+
+        var output = new StringWriter();
+        var error = new StringWriter();
+        var exit = MergeCommand.Run([first, second, "-o", Path.Combine(merged, "Combined.html"), "--publish-artifacts"], output, error,
+            name => name == "TF_BUILD" ? "True" : null);
+
+        Assert.True(exit == 0, error.ToString());
+        Assert.Equal(Directory.GetFiles(Path.Combine(merged, "attachments")).Length,
+            output.ToString().Split('\n').Count(l => l.Contains("containerfolder=TestReports/attachments;", StringComparison.Ordinal)));
+    }
+
+    [Fact]
     public void The_merged_reports_own_entry_is_the_one_the_bang_line_shows()
     {
         // The first shard said its own missing file; the merged report holds neither that one nor the second shard's
