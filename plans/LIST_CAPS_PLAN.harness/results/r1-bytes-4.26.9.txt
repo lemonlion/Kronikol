@@ -1,0 +1,15 @@
+recipe   s0 harness own 10 failing-step 0 other 0 | today  1126 B | R1  1559 B | +433 B | per 6,000 B: 5 -> 3
+recipe   s4 harness own 10 failing-step 0 other 0 | today  1130 B | R1  1568 B | +438 B | per 6,000 B: 5 -> 3
+recipe   s0 ci      own 10 failing-step 0 other 0 | today   802 B | R1  1073 B | +271 B | per 6,000 B: 7 -> 5
+        … 4 more attachment(s) (after-step.png ×3, step-shot.png): attachments s0
+recipe   s4 ci      own 10 failing-step 0 other 0 | today   806 B | R1  1082 B | +276 B | per 6,000 B: 7 -> 5
+messages s0 harness own  6 failing-step 1 other 3 | today  1624 B | R1  2083 B | +459 B | per 6,000 B: 3 -> 2
+messages s4 harness own  6 failing-step 1 other 3 | today  1627 B | R1  2090 B | +463 B | per 6,000 B: 3 -> 2
+messages s0 ci      own  6 failing-step 1 other 3 | today  1209 B | R1  1502 B | +293 B | per 6,000 B: 4 -> 3
+        … 3 more attachment(s) on other steps (after-step.png ×2, step-shot.png): attachments s0
+messages s4 ci      own  6 failing-step 1 other 3 | today  1212 B | R1  1509 B | +297 B | per 6,000 B: 4 -> 3
+hooks    s0 harness own  0 failing-step 1 other 9 | today   854 B | R1  1009 B | +155 B | per 6,000 B: 7 -> 5
+hooks    s4 harness own  0 failing-step 1 other 9 | today   852 B | R1  1007 B | +155 B | per 6,000 B: 7 -> 5
+hooks    s0 ci      own  0 failing-step 1 other 9 | today   774 B | R1   929 B | +155 B | per 6,000 B: 7 -> 6
+        … 9 more attachment(s) on other steps (after-step.png ×2, step-shot.png, screenshot, screenshot-start.png, error-context, trace, …): attachments s0
+hooks    s4 ci      own  0 failing-step 1 other 9 | today   772 B | R1   927 B | +155 B | per 6,000 B: 7 -> 6
