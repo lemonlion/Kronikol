@@ -105,7 +105,8 @@ public static partial class PlantUmlCreator
         bool collapseConsecutiveIdenticalCalls = false,
         int collapseThreshold = 2,
         int? maxArrowsPerDiagram = null,
-        int diagramNoteWrapWidth = DefaultNoteWrapWidth)
+        int diagramNoteWrapWidth = DefaultNoteWrapWidth,
+        bool systemUiFont = false)
     {
         excludedHeaders ??= DefaultExcludedHeaders;
         DiagramWidth.ValidateNoteWrapWidth(diagramNoteWrapWidth);
@@ -148,7 +149,8 @@ public static partial class PlantUmlCreator
                 collapseConsecutiveIdenticalCalls,
                 collapseThreshold,
                 maxArrowsPerDiagram,
-                diagramNoteWrapWidth);
+                diagramNoteWrapWidth,
+                systemUiFont);
             var imageTags = results.Select(x => x.GetPlantUmlImageTag(plantUmlServerRendererUrl, lazyLoadImages)).ToArray();
             return new PlantUmlForTest(testTraces.Key, testName, results.Select(result => (result.PlantUml, result.PlantUmlEncoded)), testTraces.ToList(), imageTags);
         });
@@ -185,7 +187,8 @@ public static partial class PlantUmlCreator
         bool collapseConsecutiveIdenticalCalls = false,
         int collapseThreshold = 2,
         int? maxArrowsPerDiagram = null,
-        int diagramNoteWrapWidth = DefaultNoteWrapWidth)
+        int diagramNoteWrapWidth = DefaultNoteWrapWidth,
+        bool systemUiFont = false)
     {
         // Collapse poll/retry bursts and apply the arrow cap before rendering (no-op when both are off).
         var collapsed = SequenceCollapser.Apply(tracesForTest, collapseConsecutiveIdenticalCalls, collapseThreshold, maxArrowsPerDiagram);
@@ -196,7 +199,7 @@ public static partial class PlantUmlCreator
 
         var builder = new DiagramBuilder(tracesForTest, plantUmlTheme, clientSideSplitting ? int.MaxValue : maxEncodedDiagramLength,
             sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides,
-            diagramNoteWrapWidth);
+            diagramNoteWrapWidth, systemUiFont);
         var lastTrace = tracesForTest[^1];
 
         var currentlyOverriding = false;
@@ -1199,7 +1202,8 @@ public static partial class PlantUmlCreator
         bool sequenceDiagramParticipantColors = false,
         Dictionary<string, string>? dependencyColors = null,
         Dictionary<string, string>? serviceTypeOverrides = null,
-        int noteWrapWidth = DefaultNoteWrapWidth)
+        int noteWrapWidth = DefaultNoteWrapWidth,
+        bool systemUiFont = false)
     {
         var entitiesPlantUml = CreateEntitiesPlantUml(tracesForTest, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides);
         var themeDirective = !string.IsNullOrWhiteSpace(plantUmlTheme) ? $"!theme {plantUmlTheme}\n" : "";
@@ -1208,7 +1212,7 @@ public static partial class PlantUmlCreator
 
                 @startuml
                 {themeDirective}!pragma teoz true
-                {AddEventStyling(tracesForTest)}
+                {DiagramLook.ForSequence(plantUmlTheme, systemUiFont)}{AddEventStyling(tracesForTest)}
                 {AddMarkerNoteStyling(tracesForTest)}
                 skinparam wrapWidth {noteWrapWidth}
                 autonumber {stepNumber}
@@ -1399,8 +1403,8 @@ public static partial class PlantUmlCreator
                 }
                 else
                 {
-                    // Callers without a category: use actor (first) or entity (subsequent)
-                    sb.Append(actorDefined ? "entity" : "actor")
+                    // Callers without a category: an actor (the first) or a box, as a service is (5.0.0, P20)
+                    sb.Append(actorDefined ? "participant" : "actor")
                         .Append(" \"")
                         .Append(WrapParticipantName(trace.CallerName))
                         .Append("\" as ")
@@ -1981,7 +1985,8 @@ public static partial class PlantUmlCreator
         bool sequenceDiagramParticipantColors = false,
         Dictionary<string, string>? dependencyColors = null,
         Dictionary<string, string>? serviceTypeOverrides = null,
-        int noteWrapWidth = DefaultNoteWrapWidth)
+        int noteWrapWidth = DefaultNoteWrapWidth,
+        bool systemUiFont = false)
     {
         private readonly List<PlantUmlResult> _results = [];
         // The prefix is kept alongside the buffer it opens so that FinishAndStartNewDiagram can tell
@@ -1989,9 +1994,9 @@ public static partial class PlantUmlCreator
         // instance field initialiser cannot read another field, so the (pure, deterministic) prefix
         // builder is simply called twice for the first diagram; every later one reuses the string.
         private string _currentPrefix = CreatePlantUmlPrefix(tracesForTest, 1, plantUmlTheme,
-            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth);
+            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth, systemUiFont);
         private StringBuilder _currentDiagram = new(CreatePlantUmlPrefix(tracesForTest, 1, plantUmlTheme,
-            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth));
+            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth, systemUiFont));
         private int _stepNumber = 1;
         private string? _openPartitionLine;
         private string? _cachedEncoded;
@@ -2199,7 +2204,7 @@ public static partial class PlantUmlCreator
             _statementGuard.Reset();
             _results.Add(new PlantUmlResult(plainText, encodedPlantUml));
             _currentPrefix = CreatePlantUmlPrefix(tracesForTest, _stepNumber, plantUmlTheme,
-                sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth);
+                sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth, systemUiFont);
             _currentDiagram = new StringBuilder(_currentPrefix);
 
             if (partitionToReopen != null)

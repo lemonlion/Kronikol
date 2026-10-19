@@ -450,9 +450,11 @@ public class IngestPipelineTests : IDisposable
         var diagram = ReportPayloadText.Of(json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0])!;
 
         // The table-carrying bar takes the styled body form; the doc-string bar likewise; and the
-        // diagram carries the .stepBody style that colours them.
-        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: Given the following muffins exist\n\n|= name |= price |\n| Blueberry | 3.50 |\n| Double Chocolate | 4.00 |\n", diagram);
-        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: When the request body is\n\n{ ""muffin"": ""Blueberry"" }\n", diagram);
+        // diagram carries the .stepBody style that colours them. Each bar ends at its last row, with no blank
+        // line under it from 5.0.0 (plans/OPTION_C_PLAN.md R17.6): the source's own line break follows.
+        var lines = diagram.ReplaceLineEndings("\n");
+        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: Given the following muffins exist\n\n|= name |= price |\n| Blueberry | 3.50 |\n| Double Chocolate | 4.00 |" + "\n", lines);
+        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: When the request body is\n\n{ ""muffin"": ""Blueberry"" }" + "\n", lines);
         Assert.Contains(".stepBody {", diagram);
         Assert.Contains("FontColor white", diagram);
     }

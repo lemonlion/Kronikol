@@ -614,3 +614,39 @@ decision of the owner's, not part of this plan.
   fact move their pins to the drawn triangles, the packing, B1's condition and `keepPlace` (`tests-s9c-b.py`).
   Mutations: 10 of 10 killed (`checks/mutate-s9c.py`).
   Checks: the core suite passes 7,782 with 2 skipped; the full Playwright suite passes 1,182 with 28 skipped.
+- 2026-10-19, S10a: the emitter's half of the diagram look (P17 to P22, P35 to P37), on Q6's recommendation: what the
+  C# source can set is set there, for every rendering. A sequence diagram's source starts after its pragma with the
+  look (`DiagramLook`): no shadows, messages padded by 4 and centred, participants with rounded corners, padding and
+  thin edges, the other shapes thin edges, thin lifelines and note edges; and the system's own font (`skinparam
+  defaultFontName system-ui`) where a browser engine draws it: `GetPlantUmlImageTagsPerTestId` takes `systemUiFont`,
+  which the fetcher sets for BrowserJs and NodeJs rendering, since the JVM (Server, Local) knows no `system-ui`.
+  Component diagrams and their diffs drawn without C4, which is how the JS engine draws them, take the font too. A
+  diagram with a user's `PlantUmlTheme` leaves the look out and keeps the theme's (not in the preview, which had no
+  theme; a question for the owner). Services are participants, drawn as boxes, and so is a caller after the first that
+  has no category (P20). Databases are deep cyan `#0E7C86` in the palette (P35, R17.22), and a component database box
+  `#0B6C75` edged `#09616A`. The cache and queue boxes are `#B35900` and `#8E44AD`, so their white names read at AA,
+  4.83:1 and 5.87:1 where they read 2.19:1 and 4.67:1 (the S10 row's "cache box's contrast", P36.20, P37). A step
+  bar's table or doc string ends at its last row (P22, R17.6). The donut was done in S2, whose ring takes the tokens
+  by class; the diagram's background needs nothing in C#, its light value being the engine's own white (the dark one
+  is the page's, S10b).
+- Deviation from the preview: the look is written one rule to a line, each line opening `sequenceDiagram {`. The
+  preview added its look at render time, so the source's line readers never saw it. Written into the source one
+  property to a line, `  note {` opened a note for the query tool's payload reader (`PayloadReader.IsNoteOpener` takes
+  "note" and a space), `  participant {` was a declaration to the report's Setup filter (`stripSetup`'s `DECL` takes
+  "participant" and any word), and the suite's note and partition balance checks counted the style's note line.
+  Measured on the pinned engine (1.2026.8, `plantuml-render.js --batch`, `checks/look-one-line-probe.py`): the
+  one-line form draws the same SVG byte for byte as the preview's form, 4,730 bytes against 4,578 with no look.
+  Tests: core `DiagramLookTests` (new, 14 facts and cases: the font where a browser engine draws and not for the JVM,
+  the look and its place after the pragma, no look line read as a note or a declaration, a user theme's own look,
+  services as boxes, the database colour, the component diagram's and the diff's font, every component box's white
+  name at AA, measured as WCAG contrast), and `PlantUmlBrowserDiagramFetcherTests` (the font by rendering; the "not
+  Mermaid" fact reads Mermaid's header line, now that the style names its diagram type). The 14 pins of `entity`
+  declarations in `PlantUmlCreatorTests` and the names of nine of its facts say participant; six pins of the database
+  colour move to `#0E7C86`; the step bar's six pins in `StepBarPlantUmlTests`, four in `CapturedTextEscapeTests`
+  (which found a doc string's last line by the blank line under it, and now read it at the bar's end), the ingest
+  pipeline's and Playwright `StepTableBarTests` (no blank line painted below the last row) end a bar at its last row.
+  Mutations: 12 of 12 killed (`checks/mutate-s10a.py`). The edit scripts are in `edits/s10a/`; the change was made in
+  a second worktree while S9c's suites ran, and applied to the branch as one patch.
+  Checks: the classes S10a touches pass on the branch (core 1,328: PlantUml, ComponentDiagram, PlantUmlBrowser, the
+  ingest and payload readers, the Setup and dependency filters; Playwright `StepTableBarTests` 3); the full suites run
+  at the end of S10, as the machine was another session's for its own full runs.

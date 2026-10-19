@@ -276,7 +276,8 @@ public class CapturedTextEscapeTests
     {
         var bar = StepBarPlantUml.Build("Given a doc string", docString: line);
 
-        Assert.Contains(@"\n\n" + expected + @"\n", bar);
+        // the doc string's line ends the bar: no blank line under it from 5.0.0 (plans/OPTION_C_PLAN.md R17.6)
+        Assert.EndsWith(@"\n\n" + expected, bar);
     }
 
     [Theory]
@@ -441,7 +442,7 @@ public class CapturedTextEscapeTests
         {
             Assert.Equal($"a{cp}b", PlantUmlCreator.EscapeLoaderMarkup($"a{c}b"));
             Assert.Equal($"GET: /a{cp}b", PlantUmlCreator.EscapeCapturedLabel($"GET: /a{c}b"));
-            Assert.Contains(@"\n\na" + cp + @"b\n", StepBarPlantUml.Build("Given x", docString: $"a{c}b"));
+            Assert.EndsWith(@"\n\na" + cp + "b", StepBarPlantUml.Build("Given x", docString: $"a{c}b"));
             Assert.Contains($"| a{cp}b |", StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], [$"a{c}b"]])]));
         }
     }
@@ -450,7 +451,7 @@ public class CapturedTextEscapeTests
     public void A_captured_code_point_is_broken_in_every_one_line_escaper()
     {
         Assert.Equal("GET: /x<U+003C><U+200B>U+0041>", PlantUmlCreator.EscapeCapturedLabel("GET: /x<U+0041>"));
-        Assert.Contains(@"\n\n<U+003C><U+200B>U+0041>\n", StepBarPlantUml.Build("Given x", docString: "<U+0041>"));
+        Assert.EndsWith(@"\n\n<U+003C><U+200B>U+0041>", StepBarPlantUml.Build("Given x", docString: "<U+0041>"));
         Assert.Contains("| <U+003C><U+200B>U+0041> |", StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], ["<U+0041>"]])]));
     }
 
@@ -459,7 +460,7 @@ public class CapturedTextEscapeTests
     {
         // The Java engine reads `\<` in a one-line statement as an escape, so the `\<U+200B>` a bar wrote since 3.0.78 painted
         // "U+200B>" for every backslash under Local and Server. Both as code points, the two draw a backslash on both engines.
-        Assert.Contains(@"\n\nC:<U+005C><U+200B>temp<U+005C><U+200B>new\n", StepBarPlantUml.Build("Given x", docString: @"C:\temp\new"));
+        Assert.EndsWith(@"\n\nC:<U+005C><U+200B>temp<U+005C><U+200B>new", StepBarPlantUml.Build("Given x", docString: @"C:\temp\new"));
         Assert.Contains("| a<U+005C><U+200B>b |", StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], [@"a\b"]])]));
     }
 

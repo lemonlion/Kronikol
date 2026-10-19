@@ -1030,8 +1030,8 @@ public class ComponentDiagramGeneratorTests
 
         var result = ComponentDiagramGenerator.GeneratePlantUml(relationships);
 
-        // Database color = #E74C3C
-        Assert.Contains("$tags=\"#E74C3C\"", result);
+        // Database color = #0E7C86 (deep cyan from 5.0.0: red read as a failure, plans/OPTION_C_PLAN.md R17.22)
+        Assert.Contains("$tags=\"#0E7C86\"", result);
     }
 
     [Fact]
@@ -1094,7 +1094,7 @@ public class ComponentDiagramGeneratorTests
         var result = ComponentDiagramGenerator.GeneratePlantUml(relationships);
 
         Assert.Contains("#438DD5", result); // HttpApi
-        Assert.Contains("#E74C3C", result); // Database
+        Assert.Contains("#0E7C86", result); // Database (deep cyan from 5.0.0, R17.22)
         Assert.Contains("#F39C12", result); // Cache
         Assert.Contains("#9B59B6", result); // MessageQueue
     }

@@ -60,15 +60,15 @@ public class StepTableBarTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
-    public async Task Tables_and_doc_strings_get_a_blank_line_of_breathing_room_in_the_bar()
+    public async Task Tables_and_doc_strings_get_a_blank_line_above_and_none_below_in_the_bar()
     {
         await OpenStepTableReport("StepTableBarPadding.html");
 
         // Judged on what the engine PAINTS, not the source bytes: the blank padding line above a
         // table pushes its header row a full extra text line below the step label (measured 32px
-        // padded vs 17px unpadded on the pinned engine), the trailing blank line paints as a
-        // whitespace-only text line just below the last data row, and the doc-string bar gets the
-        // same gap between its label and first payload line.
+        // padded vs 17px unpadded on the pinned engine), and the doc-string bar gets the same gap
+        // between its label and first payload line. No blank line is painted below the last data row
+        // from 5.0.0, as the owner asked (plans/OPTION_C_PLAN.md R17.6).
         var m = await Page.Locator("[data-diagram-type='plantuml'] svg").First.EvaluateAsync<double[]>("""
             el => {
                 const ts = Array.from(el.querySelectorAll('text'))
@@ -88,7 +88,7 @@ public class StepTableBarTests : DiagramNotePlaywrightBase
         Assert.True(label > 0 && header > 0 && lastRow > 0 && docLabel > 0 && docFirst > 0,
             $"expected all bar texts drawn, got y = [{string.Join(", ", m)}]");
         Assert.True(header - label >= 25, $"expected a blank line between step text and table header, gap was {header - label}px");
-        Assert.True(spacerBelow == 1, "expected a blank spacer line painted below the last table row");
+        Assert.True(spacerBelow == 0, "expected no blank line painted below the last table row");
         Assert.True(docFirst - docLabel >= 25, $"expected a blank line between step text and doc string, gap was {docFirst - docLabel}px");
     }
 

@@ -108,6 +108,10 @@ public static partial class ComponentDiagramGenerator
         }
         else
         {
+            // drawn by the JS engine (the JVM draws with C4), so in the system font, unless a user's theme sets the look
+            // (5.0.0, plans/OPTION_C_PLAN.md S10, P17)
+            if (string.IsNullOrWhiteSpace(options.PlantUmlTheme))
+                sb.AppendLine("skinparam defaultFontName system-ui");
             sb.AppendLine("skinparam defaultTextAlignment center");
             sb.AppendLine("skinparam wrapWidth 200");
             sb.AppendLine("skinparam shadowing false");
@@ -127,18 +131,21 @@ public static partial class ComponentDiagramGenerator
             sb.AppendLine("  StereotypeFontColor #438DD5");
             sb.AppendLine("  StereotypeFontSize 0");
             sb.AppendLine("}");
+            // a shade deeper than the database's arrows, so its white name reads at 6.15:1 (5.0.0, R17.22)
             sb.AppendLine("skinparam database {");
-            sb.AppendLine("  BackgroundColor #E74C3C");
+            sb.AppendLine("  BackgroundColor #0B6C75");
             sb.AppendLine("  FontColor #FFFFFF");
-            sb.AppendLine("  BorderColor #C0392B");
+            sb.AppendLine("  BorderColor #09616A");
             sb.AppendLine("}");
+            // the cache and queue boxes a shade deeper than their arrows, so their white names read at AA: 4.83:1 and
+            // 5.87:1, where #F39C12 gave 2.19:1 and #9B59B6 4.67:1 (5.0.0)
             sb.AppendLine("skinparam collections {");
-            sb.AppendLine("  BackgroundColor #F39C12");
+            sb.AppendLine("  BackgroundColor #B35900");
             sb.AppendLine("  FontColor #FFFFFF");
-            sb.AppendLine("  BorderColor #D68910");
+            sb.AppendLine("  BorderColor #8F4700");
             sb.AppendLine("}");
             sb.AppendLine("skinparam queue {");
-            sb.AppendLine("  BackgroundColor #9B59B6");
+            sb.AppendLine("  BackgroundColor #8E44AD");
             sb.AppendLine("  FontColor #FFFFFF");
             sb.AppendLine("  BorderColor #7D3C98");
             sb.AppendLine("}");

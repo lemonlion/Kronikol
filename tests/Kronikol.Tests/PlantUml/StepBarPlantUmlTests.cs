@@ -92,13 +92,13 @@ public class StepBarPlantUmlTests
     [Fact]
     public void A_table_switches_to_the_styled_body_form_with_breathing_room()
     {
-        // One blank display line above the table and one below — butted directly against the step
-        // text and the note border the table reads cramped. Measured on the pinned engine: the \n\n
-        // renders a blank line, and a bare trailing \n renders an empty bottom line (each +15px).
+        // One blank display line above the table, butted against the step text it reads cramped, and none
+        // below it from 5.0.0, as the owner asked (plans/OPTION_C_PLAN.md R17.6). Measured on the pinned
+        // engine: the \n\n renders a blank line, and a bare trailing \n an empty bottom line (each +15px).
         var bar = StepBarPlantUml.Build("Given muffins", [new StepBarTable(null, Menu())]);
 
         Assert.Equal(
-            RichPrefix + @"Given muffins\n\n|= name |= price |\n| Blueberry | 3.50 |\n",
+            RichPrefix + @"Given muffins\n\n|= name |= price |\n| Blueberry | 3.50 |",
             bar);
     }
 
@@ -108,7 +108,7 @@ public class StepBarPlantUmlTests
         var bar = StepBarPlantUml.Build("Given the request body", docString: "{ \"a\": 1,\r\n  \"b\": 2 }");
 
         Assert.Equal(
-            RichPrefix + "Given the request body\\n\\n{ \"a\": 1,\\n  \"b\": 2 }\\n",
+            RichPrefix + "Given the request body\\n\\n{ \"a\": 1,\\n  \"b\": 2 }",
             bar);
     }
 
@@ -141,7 +141,7 @@ public class StepBarPlantUmlTests
     {
         var bar = StepBarPlantUml.Build("Given columns", [new StepBarTable(null, [["a", "b"]])]);
 
-        Assert.Equal(RichPrefix + @"Given columns\n\n|= a |= b |\n", bar);
+        Assert.Equal(RichPrefix + @"Given columns\n\n|= a |= b |", bar);
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public class StepBarPlantUmlTests
         var bar = StepBarPlantUml.Build("Given a payload\nwith detail",
             [new StepBarTable(null, [["a"], ["1"]])]);
 
-        Assert.Equal(RichPrefix + @"Given a payload\nwith detail\n\n|= a |\n| 1 |\n", bar);
+        Assert.Equal(RichPrefix + @"Given a payload\nwith detail\n\n|= a |\n| 1 |", bar);
     }
 
     // ── Escaping: measured against the real engine ──────────────
@@ -268,9 +268,9 @@ public class StepBarPlantUmlTests
             new StepBarTable("outputs", [["b"], ["2"]]),
         ]);
         Assert.Contains(@"\n\ninputs:\n|= a |", two);
-        // Adjacent blocks share a single blank line — the "after" of one is the "before" of the next.
+        // Adjacent blocks keep a single blank line between them: the one before the next block.
         Assert.Contains(@"| 1 |\n\noutputs:\n|= b |", two);
-        Assert.EndsWith(@"| 2 |\n", two);
+        Assert.EndsWith(@"| 2 |", two);
     }
 
     // ── Caps ────────────────────────────────────────────────────
@@ -298,7 +298,7 @@ public class StepBarPlantUmlTests
         var bar = InteractionRecord.StepDelimiterPlantUml("Given", "the muffins exist",
             table: Menu(), docString: null);
 
-        Assert.Equal(RichPrefix + @"Given the muffins exist\n\n|= name |= price |\n| Blueberry | 3.50 |\n", bar);
+        Assert.Equal(RichPrefix + @"Given the muffins exist\n\n|= name |= price |\n| Blueberry | 3.50 |", bar);
 
         var unchanged = InteractionRecord.StepDelimiterPlantUml("Given", "the mock is armed");
         Assert.Equal(LegacyPrefix + "Given the mock is armed", unchanged);

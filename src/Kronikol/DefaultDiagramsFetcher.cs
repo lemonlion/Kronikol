@@ -285,7 +285,9 @@ public static class DefaultDiagramsFetcher
             collapseConsecutiveIdenticalCalls: options.CollapseConsecutiveIdenticalCalls,
             collapseThreshold: options.CollapseThreshold,
             maxArrowsPerDiagram: options.MaxArrowsPerDiagram,
-            diagramNoteWrapWidth: options.DiagramNoteWrapWidth).ToArray();
+            diagramNoteWrapWidth: options.DiagramNoteWrapWidth,
+            // the JS engine, in the page or under Node, draws in the system font; the JVM knows no system-ui (5.0.0)
+            systemUiFont: options.PlantUmlRendering is PlantUmlRendering.BrowserJs or PlantUmlRendering.NodeJs).ToArray();
     }
 
     public static (DiagramAsCode[] TruncatedDiagrams, DiagramAsCode[] FullDiagrams) GetCiSummaryDiagrams(DiagramsFetcherOptions options, int truncateNotesAfterLines = 10)

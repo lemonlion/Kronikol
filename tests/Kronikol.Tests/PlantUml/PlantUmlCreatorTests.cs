@@ -188,14 +188,15 @@ public class PlantUmlCreatorTests
         Assert.Contains($"webApp -[#438DD5]> orderService: GET: /api/orders?id=1{Nl}", plantUml);
     }
 
+    // A service is a participant, drawn as a box, from 5.0.0; it was an entity through 4.x (plans/OPTION_C_PLAN.md S10, P20).
     [Fact]
-    public void First_caller_is_actor_and_service_is_entity()
+    public void First_caller_is_actor_and_service_is_a_participant()
     {
         var logs = new[] { MakeRequest(callerName: "User", serviceName: "Api") };
         var plantUml = GetPlantUml(logs);
 
         Assert.Contains("actor \"User\" as user", plantUml);
-        Assert.Contains("entity \"Api\" as api", plantUml);
+        Assert.Contains("participant \"Api\" as api", plantUml);
     }
 
     // ─── GraphQL label enrichment ───────────────────────────────
@@ -692,7 +693,7 @@ public class PlantUmlCreatorTests
     // ─── Multiple entities ──────────────────────────────────────
 
     [Fact]
-    public void Second_caller_is_entity_not_actor()
+    public void Second_caller_is_a_participant_not_an_actor()
     {
         var logs = new[]
         {
@@ -705,11 +706,11 @@ public class PlantUmlCreatorTests
 
         // "User" is the first caller, so it's actor
         Assert.Contains("actor \"User\" as user", plantUml);
-        // "Gateway" first appears as a service, then as a caller — entity both times
-        Assert.Contains("entity \"Gateway\" as gateway", plantUml);
-        Assert.Contains("entity \"Backend\" as backend", plantUml);
-        // "Gateway" should only appear once in the entity declarations
-        var gatewayEntityCount = plantUml.Split("entity \"Gateway\" as gateway").Length - 1;
+        // "Gateway" first appears as a service, then as a caller: a participant both times
+        Assert.Contains("participant \"Gateway\" as gateway", plantUml);
+        Assert.Contains("participant \"Backend\" as backend", plantUml);
+        // "Gateway" should only appear once in the participant declarations
+        var gatewayEntityCount = plantUml.Split("participant \"Gateway\" as gateway").Length - 1;
         Assert.Equal(1, gatewayEntityCount);
     }
 
@@ -726,7 +727,7 @@ public class PlantUmlCreatorTests
         var plantUml = GetPlantUml(logs);
 
         var actorCount = plantUml.Split("actor \"Client\"").Length - 1;
-        var entityCount = plantUml.Split("entity \"Api\"").Length - 1;
+        var entityCount = plantUml.Split("participant \"Api\"").Length - 1;
         Assert.Equal(1, actorCount);
         Assert.Equal(1, entityCount);
     }
@@ -1259,7 +1260,7 @@ public class PlantUmlCreatorTests
     }
 
     [Fact]
-    public void Service_display_names_remain_original_in_entity_declarations()
+    public void Service_display_names_remain_original_in_participant_declarations()
     {
         var logs = new[]
         {
@@ -1314,7 +1315,7 @@ public class PlantUmlCreatorTests
 
         Assert.Contains("@startuml", plantUml);
         Assert.Contains("actor \"Browser\" as browser", plantUml);
-        Assert.Contains("entity \"Api\" as api", plantUml);
+        Assert.Contains("participant \"Api\" as api", plantUml);
         Assert.Contains("browser -[#438DD5]> api: POST: /users", plantUml);
         Assert.Contains("note left", plantUml);
         Assert.Contains("\"name\": \"Alice\"", plantUml);
@@ -1940,7 +1941,7 @@ public class PlantUmlCreatorTests
     }
 
     [Fact]
-    public void StartAction_marker_is_not_rendered_as_entity()
+    public void StartAction_marker_is_not_rendered_as_a_participant()
     {
         var logs = new[]
         {
@@ -1952,7 +1953,7 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs, separateSetup: true);
 
-        Assert.DoesNotContain("entity \"\" as", plantUml);
+        Assert.DoesNotContain("participant \"\" as", plantUml);
         Assert.DoesNotContain("actor \"\" as", plantUml);
     }
 
@@ -3121,21 +3122,21 @@ public class PlantUmlCreatorTests
     }
 
     [Fact]
-    public void HTTP_service_uses_entity_shape()
+    public void HTTP_service_uses_participant_shape()
     {
         var logs = new[] { MakeRequestWithCategory("HTTP", serviceName: "Payment API") };
         var plantUml = GetPlantUml(logs);
 
-        Assert.Contains("entity \"Payment API\" as paymentAPI", plantUml);
+        Assert.Contains("participant \"Payment API\" as paymentAPI", plantUml);
     }
 
     [Fact]
-    public void Null_category_defaults_to_entity_shape()
+    public void Null_category_defaults_to_participant_shape()
     {
         var logs = new[] { MakeRequest(serviceName: "Unknown Service") };
         var plantUml = GetPlantUml(logs);
 
-        Assert.Contains("entity \"Unknown Service\" as unknownService", plantUml);
+        Assert.Contains("participant \"Unknown Service\" as unknownService", plantUml);
     }
 
     [Fact]
@@ -3148,8 +3149,9 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs);
 
-        Assert.Contains("webApp -[#E74C3C]> cosmosDB:", plantUml);
-        Assert.Contains("cosmosDB -[#E74C3C]-> webApp:", plantUml);
+        // a database's colour is deep cyan from 5.0.0 (red read as a failure, plans/OPTION_C_PLAN.md R17.22)
+        Assert.Contains("webApp -[#0E7C86]> cosmosDB:", plantUml);
+        Assert.Contains("cosmosDB -[#0E7C86]-> webApp:", plantUml);
     }
 
     [Fact]
@@ -3210,7 +3212,7 @@ public class PlantUmlCreatorTests
     }
 
     [Fact]
-    public void Participant_colors_enabled_adds_color_to_entity_declaration()
+    public void Participant_colors_enabled_adds_color_to_participant_declaration()
     {
         var logs = new[]
         {
@@ -3218,11 +3220,11 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUmlWithOptions(logs, sequenceDiagramParticipantColors: true);
 
-        Assert.Contains("database \"Cosmos DB\" as cosmosDB #E74C3C", plantUml);
+        Assert.Contains("database \"Cosmos DB\" as cosmosDB #0E7C86", plantUml);
     }
 
     [Fact]
-    public void Participant_colors_disabled_by_default_no_color_on_entity()
+    public void Participant_colors_disabled_by_default_no_color_on_participant()
     {
         var logs = new[]
         {
@@ -3246,7 +3248,7 @@ public class PlantUmlCreatorTests
             sequenceDiagramArrowColors: false,
             sequenceDiagramParticipantColors: false);
 
-        Assert.Contains("entity \"OrderService\" as orderService", plantUml);
+        Assert.Contains("participant \"OrderService\" as orderService", plantUml);
         Assert.Contains("webApp -> orderService:", plantUml);
         Assert.Contains("orderService --> webApp:", plantUml);
         Assert.DoesNotContain("[#", plantUml);
@@ -3301,9 +3303,9 @@ public class PlantUmlCreatorTests
         Assert.Contains("database \"Cosmos DB\" as cosmosDB", plantUml);
         Assert.Contains("collections \"Redis Cache\" as redisCache", plantUml);
         Assert.Contains("queue \"Service Bus\" as serviceBus", plantUml);
-        Assert.Contains("entity \"Payment API\" as paymentAPI", plantUml);
+        Assert.Contains("participant \"Payment API\" as paymentAPI", plantUml);
 
-        Assert.Contains("-[#E74C3C]>", plantUml); // Cosmos
+        Assert.Contains("-[#0E7C86]>", plantUml); // Cosmos (deep cyan from 5.0.0, R17.22)
         Assert.Contains("-[#F39C12]>", plantUml); // Redis
         Assert.Contains("-[#9B59B6]>", plantUml); // ServiceBus
         Assert.Contains("-[#438DD5]>", plantUml); // HTTP
@@ -3506,11 +3508,11 @@ public class PlantUmlCreatorTests
         var plantUml = GetPlantUml(logs);
 
         Assert.Contains("queue \"Kafka Broker\" as kafkaBroker", plantUml);
-        Assert.Contains("entity \"Breakfast Provider\" as breakfastProvider", plantUml);
+        Assert.Contains("participant \"Breakfast Provider\" as breakfastProvider", plantUml);
     }
 
     [Fact]
-    public void Caller_without_CallerDependencyCategory_renders_as_actor_or_entity()
+    public void Caller_without_CallerDependencyCategory_renders_as_actor_or_participant()
     {
         var logs = new[]
         {
@@ -3538,8 +3540,8 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs);
 
-        // ServiceName with null DependencyCategory should remain entity
-        Assert.Contains("entity \"Breakfast Provider\" as breakfastProvider", plantUml);
+        // ServiceName with null DependencyCategory should remain a participant
+        Assert.Contains("participant \"Breakfast Provider\" as breakfastProvider", plantUml);
         // Caller should be queue
         Assert.Contains("queue \"Kafka Broker\" as kafkaBroker", plantUml);
     }
@@ -3604,7 +3606,7 @@ public class PlantUmlCreatorTests
         var plantUml = GetPlantUml(logs);
 
         Assert.Contains("queue \"Kafka Broker\" as kafkaBroker", plantUml);
-        Assert.Contains("entity \"Breakfast Provider\" as breakfastProvider", plantUml);
+        Assert.Contains("participant \"Breakfast Provider\" as breakfastProvider", plantUml);
         Assert.Contains("database \"Reporting DB\" as reportingDB", plantUml);
     }
 

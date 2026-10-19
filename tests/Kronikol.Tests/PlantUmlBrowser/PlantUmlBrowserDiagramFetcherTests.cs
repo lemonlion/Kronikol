@@ -91,7 +91,27 @@ public class PlantUmlBrowserDiagramFetcherTests : IDisposable
         var diagrams = fetcher();
         var diagram = diagrams.Single(d => d.TestRuntimeId == testId);
 
-        Assert.DoesNotContain("sequenceDiagram", diagram.CodeBehind);
+        // PlantUML, not Mermaid: Mermaid opens with a line holding only its diagram type. From 5.0.0 the PlantUML
+        // source's style names the type too ("sequenceDiagram { note { ... } }", plans/OPTION_C_PLAN.md S10).
+        Assert.StartsWith("@startuml", diagram.CodeBehind.TrimStart());
+        Assert.DoesNotMatch(@"(?m)^\s*sequenceDiagram\s*$", diagram.CodeBehind);
+    }
+
+    // The engine measures and paints the same face only when it is the system's own, and the JVM knows no system-ui
+    // (5.0.0, plans/OPTION_C_PLAN.md S10, P17).
+    [Theory]
+    [InlineData(PlantUmlRendering.BrowserJs, true)]
+    [InlineData(PlantUmlRendering.Server, false)]
+    public void The_system_font_is_set_where_a_browser_engine_draws(PlantUmlRendering rendering, bool systemFont)
+    {
+        var testId = SeedLog();
+        var fetcher = DefaultDiagramsFetcher.GetDiagramsFetcher(new DiagramsFetcherOptions
+        {
+            DiagramFormat = DiagramFormat.PlantUml, PlantUmlRendering = rendering
+        });
+        var diagram = fetcher().Single(d => d.TestRuntimeId == testId);
+
+        Assert.Equal(systemFont, diagram.CodeBehind.Contains("skinparam defaultFontName system-ui", StringComparison.Ordinal));
     }
 
     [Fact]

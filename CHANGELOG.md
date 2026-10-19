@@ -71,6 +71,11 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   share one model: a scenario's own choice holds for the diagrams it draws later, and the report's choice holds
   everywhere, over a scenario's own.
 
+- **`systemUiFont` on `PlantUmlCreator.GetPlantUmlImageTagsPerTestId`.** True sets a sequence diagram in the
+  system's own font (`skinparam defaultFontName system-ui`). The diagrams fetcher passes it for BrowserJs and NodeJs
+  rendering, whose engine measures and paints that face; the JVM (Server and Local rendering) knows no `system-ui` and
+  keeps its own font.
+
 ### Changed (breaking)
 
 - **Every diagram toggle but Headers starts on, and payloads start truncated at 10 lines.** Assertion notes are drawn
@@ -94,6 +99,18 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   parameter table has one even border in a rounded frame and no longer tints its rows by status (the Status column
   says it). Every colour of these comes from the tokens, so the dark theme reaches them. A `CustomCss` sheet or a
   theme written against the 4.x rules or colours of these parts may no longer apply; set the tokens instead.
+- **Diagrams take Option C's look.** A sequence diagram starts with flat boxes, participants with rounded corners and
+  thin edges, thin lifelines and note edges, and messages centred over their arrows, and, where a browser engine draws
+  it (BrowserJs and NodeJs rendering), the system's own font; component diagrams and their diffs drawn by those engines
+  take the font too. A diagram drawn with a `PlantUmlTheme` leaves the look out and keeps the theme's.
+- **A service is drawn as a box.** `DependencyPalette.GetSequenceShape(DependencyType.HttpApi)` returns `participant`,
+  which was `entity`, and a caller after the first that has no category is a `participant` too: a service reads as a
+  box among the participants around it, not a circle on a line.
+- **Databases are deep cyan.** `DependencyPalette.DefaultColors[DependencyType.Database]` is `#0E7C86`, which was
+  `#E74C3C`: red read as a failure among the failures it sat beside. It colours a database's arrows and, with
+  participant colours on, its participant. A component diagram's database box is `#0B6C75` with a `#09616A` edge, a
+  shade deeper, so its white name reads at 6.15:1. `DependencyColors` still overrides it.
+- **A step bar's table or doc string ends at its last row.** The blank line under it is gone; the one above stays.
 - **The dependency filter shows a scenario with any of the chosen dependencies by default, as the category (tag) filter
   does.** `ReportToggleDefaults.DependencyFilterMode` defaults to `FilterCombinationMode.Or` (4.x: `And`, a scenario
   with all of them), and the mode button starts on OR. A report that wants the 4.x behaviour sets
@@ -193,6 +210,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **A scenario with one view of its flow keeps its span warning.** The warning that a scenario has ten times the median
   span count was written beside the view tabs only, so a scenario with no sequence diagram and an activity diagram or
   a flame chart alone lost it. It now sits on the diagrams' title.
+- **A component diagram's cache and queue boxes carry their names at AA.** White on the cache box's `#F39C12`
+  measured 2.19:1 and on the queue box's `#9B59B6` 4.67:1. The boxes are `#B35900` (4.83:1) and `#8E44AD` (5.87:1),
+  each with a deeper edge; the arrows keep the palette's colours.
 - **Making a note shorter from its lower part keeps your place.** Collapsing or truncating a note from its bottom
   buttons, or by a double-click low in a tall note, pulled what was below it up past the window, so you landed
   somewhere else, often in another scenario; the note's new bottom is now brought back to where the click was, in a

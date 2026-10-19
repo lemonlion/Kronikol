@@ -19,12 +19,12 @@ internal readonly record struct StepBarTable(string? Name, string[][] Rows);
 /// engine's stack in the render worker past 880 characters with V8's optimizing compilers off, 1,040 with the JIT on,
 /// and the engine draws its RangeError text in place of the diagram);</item>
 /// <item>a Gherkin data table, a doc string, or multi-line marker text — the styled form,
-/// <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;&lt;&lt;stepBody&gt;&gt;: label\n\n|= … |\n</c>, still one
+/// <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;&lt;&lt;stepBody&gt;&gt;: label\n\n|= … |</c>, still one
 /// physical line (the report's hide-steps strip regex and every line-oriented consumer keep working)
-/// with <c>\n</c> escapes between display lines. Every table/doc-string block is padded with one
-/// blank display line above and below (adjacent blocks share the one between them; multi-line
-/// marker text is step text and gets none) — measured on the pinned engine, an empty display line
-/// renders as a blank note line even as a bare trailing <c>\n</c>. Colours come from the <c>.stepBody</c> style
+/// with <c>\n</c> escapes between display lines. Every table/doc-string block has one blank display
+/// line above it (multi-line marker text is step text and gets none) and none below the last, which
+/// the owner asked to lose in 5.0.0 (plans/OPTION_C_PLAN.md R17.6): measured on the pinned engine, a
+/// bare trailing <c>\n</c> renders as an empty bottom line. Colours come from the <c>.stepBody</c> style
 /// <see cref="PlantUmlCreator"/> injects, not inline tags: <c>&lt;color:white&gt;</c> styles only the
 /// first display line (everything after a <c>\n</c> painted black-on-black), and a tag-free statement
 /// rides the <see cref="PlantUmlStatementLimits.MaxNoteLineChars"/> ceiling instead of the coloured
@@ -84,12 +84,9 @@ internal static class StepBarPlantUml
         foreach (var extra in labelLines.Skip(1))
             body.AddRange(EscapeWrappedBodyLine(extra));
 
-        // Each table/doc-string block gets one blank display line above and one below — butted
-        // directly against the step text and the note border they read cramped. Adjacent blocks
-        // share the blank line between them. Measured on the pinned engine: an empty body entry
-        // renders as a blank note line, including as a bare trailing \n at the end of the statement.
-        var padded = false;
-
+        // Each table/doc-string block gets one blank display line above it: butted directly against
+        // the step text it reads cramped. None below the last block from 5.0.0 (R17.6): measured on the
+        // pinned engine, a bare trailing \n at the end of the statement renders as an empty bottom line.
         if (tables is not null)
         {
             var named = tables.Count(t => t.Rows.Length > 0) > 1;
@@ -98,7 +95,6 @@ internal static class StepBarPlantUml
                 if (table.Rows.Length == 0)
                     continue;
                 body.Add("");
-                padded = true;
                 if (named && !string.IsNullOrWhiteSpace(table.Name))
                     body.Add(EscapeBodyLine(table.Name!.Trim() + ":"));
                 body.Add(TableRow(table.Rows[0], header: true));
@@ -110,13 +106,9 @@ internal static class StepBarPlantUml
         if (!string.IsNullOrWhiteSpace(docString))
         {
             body.Add("");
-            padded = true;
             foreach (var line in docString!.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'))
                 body.AddRange(EscapeWrappedBodyLine(line));
         }
-
-        if (padded)
-            body.Add("");
 
         // A literal \n already in the text displays as a line break too — anything multi-line on
         // screen needs the styled form to be visible at all.

@@ -46,7 +46,8 @@ public static class DependencyPalette
         new Dictionary<DependencyType, string>
         {
             [DependencyType.HttpApi] = "#438DD5",
-            [DependencyType.Database] = "#E74C3C",
+            // deep cyan from 5.0.0: red read as a failure among the failures it sat beside (plans/OPTION_C_PLAN.md R17.22)
+            [DependencyType.Database] = "#0E7C86",
             [DependencyType.Cache] = "#F39C12",
             [DependencyType.MessageQueue] = "#9B59B6",
             [DependencyType.Storage] = "#2ECC71",
@@ -79,7 +80,7 @@ public static class DependencyPalette
     /// <summary>Gets the PlantUML sequence diagram participant shape keyword for a dependency type.</summary>
     public static string GetSequenceShape(DependencyType type) => type switch
     {
-        DependencyType.HttpApi => "entity",
+        DependencyType.HttpApi => "participant",
         DependencyType.Database => "database",
         DependencyType.Cache => "collections",
         DependencyType.MessageQueue => "queue",

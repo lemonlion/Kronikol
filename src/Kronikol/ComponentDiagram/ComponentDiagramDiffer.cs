@@ -89,6 +89,8 @@ public static partial class ComponentDiagramDiffer
         }
         else
         {
+            // drawn by the JS engine (the JVM draws with C4), so in the system font (5.0.0, plans/OPTION_C_PLAN.md S10)
+            sb.AppendLine("skinparam defaultFontName system-ui");
             sb.AppendLine("skinparam defaultTextAlignment center");
             sb.AppendLine("skinparam wrapWidth 200");
             sb.AppendLine("skinparam shadowing false");
