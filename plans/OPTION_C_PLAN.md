@@ -971,3 +971,25 @@ decision of the owner's, not part of this plan.
   case). Green: 17 of 17 (the AttachmentRendering class and both cases of the popup theory). Lesson: a stage's
   neighbour checks pick the classes by name, and this class's name gave no hint it reads the popup; the full suite
   after each stage is what catches such a test.
+- 2026-10-19, S12 D43: the diagram menu's "in new tab" items open the tab in the click (R17.21; the preview's
+  `c-round17.js` 1-29 and `build.js` 203-226; `script-patches-and-diagrams.md` P13), applied with
+  `edits/scripts-s12d43.py` and `edits/tests-s12d43.py`. The helpers sit inside `context-menu-script.js`'s wrapper,
+  not on `window`: `openTab` opens `about:blank` while the click is handled (`createMenuItem` runs the action in the
+  click), `writeTab` writes a page into it, `openPngInTab` writes the canvas as a PNG data URL once it is drawn, and
+  `openSvgInTab` and `openTextInTab` write an SVG data URL or the escaped text; each falls back to the `blob:` URL
+  when no tab opened. All nine sites go through them.
+  Deviations: the box text's tabs are titled "Box text" and a source's "PlantUML source" (the preview titled every
+  text tab "Diagram source", its F12).
+  Tests: Playwright `OpenInNewTabTests` (new, 3 facts, 4 cases: the tab opens before the picture is drawn, its title,
+  an image from a data URL that loads, and a source written as text equal to the diagram's) and
+  `NoteCopyFidelityTests`' box-text fact (its tab's title, and no `blob:` URL); core `DiagramContextMenuTests`' two
+  facts turned round (they held "blob URLs, not data URIs"), failing 2 of 2 before the change. Red with the menu
+  script at its last commit: the four OpenInNewTabTests cases and the box-text fact fail, each tab's title never
+  coming. Green: 4 of 4, with the box-text fact and the menu's neighbours (ContextMenuExtended, IflowPopup,
+  NoteCopyFidelity, DiagramExportLook). Mutations: 7 of 7 killed (checks/mutate-s12d43.py). Found while running them:
+  the first green ran on a stale build (the chain put the script back with a copy that kept its old time, so the build
+  skipped the compile); the order check first recorded toDataURL, which comes after the tab opens even when the tab
+  opens late, and records drawImage now, which killed the two mutations that had survived; and the source fact's
+  fixture held no markup, so the fact now writes some into the source it opens.
+  Checks: the context menu's core tests pass, 130 of 130 (the DiagramContextMenu, ContextMenu and
+  NoteCopyFidelityScript classes). The full suites run on v5 with this commit.

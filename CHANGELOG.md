@@ -266,6 +266,11 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   arrow, which was no longer drawn, or the assertion's source-location comment. As assertions start hidden, this was
   the default. A diagram of nothing but hidden markers reached the engine, which failed on it, in place of the
   "Nothing to draw" message, and that message now names the toggles by the words they show (Assertions, Steps).
+- **A diagram opens in a new tab in Firefox too.** The diagram menu's "in new tab" items open the tab while the click
+  is handled and write the picture or the text into it, titled for what it holds ("Diagram (PNG)", "Diagram (SVG)",
+  "PlantUML source", "Box text"). The PNG items opened their tab only once the picture was drawn, after the click,
+  which Firefox's popup blocker refuses, and every item opened a `blob:` URL, which a report opened from a file makes
+  with an opaque origin. Where no tab opens, the `blob:` URL is tried as before.
 
 ## [4.32.0] - 2026-10-19
 
