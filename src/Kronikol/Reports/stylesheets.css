@@ -286,7 +286,7 @@
         .more-filters[aria-expanded="true"] svg { transform: rotate(180deg); }
         .more-filters-count {
             display: inline-block; min-width: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px;
-            background: var(--kron-accent); color: var(--kron-on-solid); font-size: var(--kron-fs-label); font-weight: 600;
+            background: var(--kron-accent); color: var(--kron-on-accent); font-size: var(--kron-fs-label); font-weight: 600;
             line-height: 18px; text-align: center; font-variant-numeric: tabular-nums;
         }
         .more-filters-count[hidden] { display: none; }

@@ -1022,3 +1022,12 @@ decision of the owner's, not part of this plan.
   within the filter change's 150 ms settle and the settle drew the change itself. The fact now waits for the hidden
   tab's note to say the change was taken before it opens the tab. Mutation: the survivor is killed now, 1 of 1, so
   S11e's Playwright mutations stand at 11 of 11. Checks: the ComponentsTab class passes, 12 of 12.
+- 2026-10-19, a v5 contrast fix the S13 preparation found: More filters' count, white (`--kron-on-solid`) on the
+  accent, read at 2.44:1 in both dark blocks, the dark accent being a light blue. A new token, `--kron-on-accent`, is
+  white in the light block and `#10161e` in both dark ones (7.5:1) (`edits/scripts-count-contrast.py`).
+  `StylesheetRulesTests.The_more_filters_count_reads_at_AA_in_every_theme` (new, 3 cases,
+  `edits/tests-count-contrast.py`) resolves the count's ink and ground through each block of the token sheet; it
+  failed 2 of 3 before the change and passes with the StylesheetRules, token, theme and filter bar classes, 133 of
+  133, on `3fce16bb`; on `f077cda6` (T2), with D48 beside it, 90 of 90 with D48's neighbours. Mutations: 4 of 4 killed
+  (`checks/mutate-count-contrast.py`: each block's ink set to one that fails AA, and the count back on
+  `--kron-on-solid`).
