@@ -693,3 +693,26 @@ decision of the owner's, not part of this plan.
   that changes no behaviour (a redundant condition dropped, two comments reworded). The role pass's cost against
   `BrowserRenderWorkerTests`' main-thread budgets, which the batch's filter did not reach, and the full suites are
   measured at the end of S10.
+- 2026-10-19, S10b-3: the colours the engine paints in a sequence diagram, mapped to the theme's tokens (P36: the
+  preview's `c-round5.css` 90-110, keyed on the product's own literals since S10a), at the end of
+  `inline-svg-styles.css` (`edits/scripts-s10b-d.py`): the drawing's ground, its ink, its lines and arrowheads, the
+  assertion strips, a bar that is not a step, and the three dependency colours a call is drawn in (HTTP `#438DD5`, a
+  database `#0E7C86`, a message queue `#9B59B6`). The light theme takes Option C's softer ink and lines; the
+  dependency colours keep the palette's values there and are lightened on the dark ground. The participants and notes
+  take their colours from their roles (S10b-2).
+- Moved to S11: the preview's rules for the internal-flow activity diagram (`#f0f4ff`, `#666`, `#ccc` and the soft ink
+  of `#666666` and `#686868` text) and for the component diagram (`#08427B`, the database box's `#09616A` edge), which
+  the popup and the Components tab draw: they are written there with tests on those pages, since the popup's test page
+  carries none of the report's theme styles. Not ported: the preview's fallbacks for the participant and note colours
+  (`#E2E2F0`, `#FEFFDD`, `#CFECF7`), which the role pass covers.
+  Bugs found on the way: none in the product. The tests' first draft looked for a line's colour in its style; the
+  pinned engine writes it as an attribute (`stroke="#181818"`), which the rules match as well as the style form, and a
+  lifeline is drawn in the arrows' colour, so the arrow is the level line.
+  Tests: Playwright `DiagramThemeColoursTests` (new, 3 theories, 10 cases in the light and the dark theme: the ground,
+  ink, lines and arrowheads; the assertion strips and the Test bar; each dependency call and its arrowhead). 7 of the
+  10 failed before; the other 3 are the light theme's dependency colours, which are the palette's own. Mutations: 13
+  of 13 killed (`checks/mutate-s10b-c.py`, one rule out at a time).
+  Checks: `DiagramThemeColoursTests` and `DiagramRolesTests` pass (19); the 445 Playwright facts whose class or name
+  says note, diagram, step, marker, toggle, context menu, split, fragment, render or internal flow pass; and
+  `BrowserRenderWorkerTests` passes (19), which S10b-2's role pass also had to: on the large fixture the worst
+  main-thread task took 122 ms against its budget of 500 ms (145 and 167 ms in today's runs before it).

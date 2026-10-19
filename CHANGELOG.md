@@ -106,7 +106,12 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   the page draws a diagram, every step bar is a rectangle with its label in bold, in place of the black hexagon, and
   the drawing's parts take the theme's colours by their role: lifelines and participants, step bars as light bands
   with dark text, a step bar's table on its own ground with its header row shaded, and notes as rounded cards, an
-  event's card in its own colour. Every strip (a step, an assertion, the Test bar) runs the drawing's full width.
+  event's card in its own colour. Every strip (a step, an assertion, the Test bar) runs the drawing's full width. The
+  rest of what the engine paints there follows the report's light and dark theme too: the drawing's ground, its ink,
+  lines and arrowheads (in the light theme a softer dark grey than the engine's black), the assertion strips, a bar
+  that is not a step, and a call to an HTTP API, a database or a message queue, whose palette colour is lightened on
+  the dark ground. A colour set by `DependencyColors` or a `PlantUmlTheme` keeps its own value, unless it is one of
+  these defaults.
 - **A service is drawn as a box.** `DependencyPalette.GetSequenceShape(DependencyType.HttpApi)` returns `participant`,
   which was `entity`, and a caller after the first that has no category is a `participant` too: a service reads as a
   box among the participants around it, not a circle on a line.
