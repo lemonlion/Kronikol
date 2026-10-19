@@ -1060,9 +1060,9 @@ public static class ReportGenerator
     private static string BuildButtonLabel(string text) => $"<span class=\"btn-label\" data-label=\"{text}\">{text}</span>";
 
     /// <summary>
-    /// One Shown/Hidden filter toggle button (headers / assertions / steps / databases) with the
-    /// configured start state computed into class, <c>data-shown</c> and label — the label must
-    /// match what <c>syncToggleBtn</c> derives from the toggle name on every later click.
+    /// One filter toggle (headers / assertions / steps / databases): its bare word, with the configured
+    /// start state in its class, <c>data-shown</c> and <c>aria-pressed</c>, which <c>syncToggleBtn</c>
+    /// keeps on every later click (5.0.0; the label no longer changes).
     /// </summary>
     private static string BuildFilterToggleButton(string toggleName, bool shown, bool scenarioLevel)
     {

@@ -1219,7 +1219,7 @@
             var lines = item.source.split('\n');
             var queueDone = false;
             if (!hasDrawableBody(lines)) {
-                item.el.innerHTML = '<div class="no-interactions" data-nothing-to-draw="true">Nothing to draw with the current filters — this diagram is only assertion notes and/or step bars (use Assertions Shown / Steps Shown to see them).</div>';
+                item.el.innerHTML = '<div class="no-interactions" data-nothing-to-draw="true">Nothing to draw with the current filters: this diagram holds only assertion notes or step bars. Turn on Assertions or Steps to see them.</div>';
                 item.el.dataset.rendered = '1';
                 processQueue();
                 return;

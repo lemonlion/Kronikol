@@ -412,18 +412,28 @@ public class StepBarPlantUmlTests
     [Fact]
     public void The_report_strip_regex_still_removes_the_styled_bar()
     {
-        // collapsible-notes-script.js strips hidden step bars with
-        // /\n?hnote across <<stepDelimiter>>[^\n]*\n?/g — the styled bar stays a single physical line
-        // and keeps the <<stepDelimiter>> prefix precisely so this regex needs no change.
-        var strip = new System.Text.RegularExpressions.Regex(@"\n?hnote across <<stepDelimiter>>[^\n]*\n?");
+        // collapsible-notes-script.js strips hidden step bars with the regex read here from the script itself: the
+        // styled bar stays a single physical line and keeps the <<stepDelimiter>> prefix precisely so that regex needs
+        // no change. The lines around the bar stay apart (until 5.0.0 the regex took the line break on both sides, so
+        // they ran together, which a Contains check on the next line could not see).
+        var strip = new System.Text.RegularExpressions.Regex(StepStripPattern(), System.Text.RegularExpressions.RegexOptions.Multiline);
 
         var bar = StepBarPlantUml.Build("Given muffins", [new StepBarTable(null, Menu())]);
-        var source = $"participant \"Api\" as api\n{bar}\napi -> api: x\n";
+        var source = $"participant \"Api\" as api\n{bar}\n{bar}\napi -> api: x\n";
 
-        var stripped = strip.Replace(source, "");
-        Assert.DoesNotContain("hnote", stripped);
-        Assert.DoesNotContain("Blueberry", stripped);
-        Assert.Contains("api -> api: x", stripped);
+        Assert.Equal("participant \"Api\" as api\napi -> api: x\n", strip.Replace(source, ""));
+    }
+
+    // the pattern of the regex literal in the script's stripStepDelimiters, which carries the m flag
+    private static string StepStripPattern()
+    {
+        var assembly = typeof(Kronikol.Reports.ReportGenerator).Assembly;
+        var name = assembly.GetManifestResourceNames().First(n => n.EndsWith("collapsible-notes-script.js", StringComparison.OrdinalIgnoreCase));
+        using var reader = new StreamReader(assembly.GetManifestResourceStream(name)!);
+        var m = System.Text.RegularExpressions.Regex.Match(reader.ReadToEnd(),
+            @"function stripStepDelimiters\(source\) \{\s+return source\.replace\(/(?<p>.+?)/gm, ''\);");
+        Assert.True(m.Success, "stripStepDelimiters no longer reads source.replace(/.../gm, '')");
+        return m.Groups["p"].Value;
     }
 
     // ── Harness ─────────────────────────────────────────────────

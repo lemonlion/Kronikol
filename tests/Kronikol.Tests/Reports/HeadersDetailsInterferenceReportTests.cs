@@ -161,7 +161,7 @@ public class HeadersDetailsInterferenceReportTests
     public void Toolbar_right_has_no_right_margin()
     {
         // The toolbar-right should not have margin-right so that the toggle buttons
-        // (Assertions Shown/Hidden, etc.) align with the right edge of the filtering-box.
+        // (Assertions, Steps, etc.) align with the right edge of the filtering-box.
         var css = Stylesheets.HtmlReportStyleSheet;
         Assert.NotEmpty(CssRules.For(css, ".toolbar-right"));
         Assert.Null(CssRules.Value(css, ".toolbar-right", "margin-right"));

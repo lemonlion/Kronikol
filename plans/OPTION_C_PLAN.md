@@ -518,3 +518,12 @@ decision of the owner's, not part of this plan.
   Checks: the core suite passes 7,770 with 2 skipped; the full Playwright suite passes 1,149 with 28 skipped, and one
   test timed out under load (ArrowLinkOpensPopupTests, whose 300 s wait for every diagram on its page to draw ran out;
   the class passes 8 of 8 run alone).
+- 2026-10-19, S8 follow-up: hiding assertion notes or step bars took the line break on both sides of each, so wherever
+  a diagram's lines end in LF the statement before it ran on into the one after it, and a diagram of nothing but an
+  assertion note reached the engine, which failed on it, in place of the "Nothing to draw" message (4.x too; a report
+  written on Windows keeps a lone CR that PlantUML reads as a line break, which is why the parity run showed nothing).
+  Each marker now goes with its own lines and the one break after them. The message named the labels S8 retired
+  ("Assertions Shown / Steps Shown"); it names Assertions and Steps.
+  Tests: Playwright `FilteredMarkerTests` (new, 3, all failing before), and core `StepBarPlantUmlTests` reads the
+  strip regex from the script, where it kept a copy whose Contains check could not see the lines run together.
+  Checks: the core suite passes 7,770 with 2 skipped; the full Playwright suite passes 1,153 with 28 skipped.

@@ -2179,12 +2179,15 @@
     // The note ends at a line reading `end note`: its message can say "the end notes" mid-line, which ended the match
     // there and left the rest of the note in the source, so hiding assertions broke the diagram (§12.6). A message line
     // reading exactly `end note` is written as code points (EscapePreprocessorLine), so the first such line is the end.
+    // A marker goes with its own lines and the one line break after them, so the statements around it stay on lines
+    // of their own (the m flag lets a marker that follows another start where that one ended). Taking the break on
+    // both sides once ran the statement before a marker into the one after it wherever lines end in LF.
     function stripAssertionNotes(source) {
-        return source.replace(/\n?hnote across <<assertionNote>>[^\n]*\n(?:[^\n]*\n)*?end note(?=\n|$)\n?/g, '');
+        return source.replace(/^[ \t]*hnote across <<assertionNote>>[^\n]*\n(?:[^\n]*\n)*?[ \t]*end note\r?(?:\n|$)/gm, '');
     }
 
     function stripStepDelimiters(source) {
-        return source.replace(/\n?hnote across <<stepDelimiter>>[^\n]*\n?/g, '');
+        return source.replace(/^[ \t]*hnote across <<stepDelimiter>>[^\n]*(?:\n|$)/gm, '');
     }
 
     function applyAssertionFilter(source, showing) {
@@ -2547,7 +2550,7 @@
                         // A fragment with nothing to draw (every arrow filtered away) is a message, not an
                         // engine call — plantuml.js answers an empty body with "Syntax Error?".
                         if (window._hasDrawableBody && !window._hasDrawableBody(fItem.source.split('\n'))) {
-                            fItem.el.innerHTML = '<div class="no-interactions" data-nothing-to-draw="true">Nothing to draw with the current filters — this diagram is only assertion notes and/or step bars (use Assertions Shown / Steps Shown to see them).</div>';
+                            fItem.el.innerHTML = '<div class="no-interactions" data-nothing-to-draw="true">Nothing to draw with the current filters: this diagram holds only assertion notes or step bars. Turn on Assertions or Steps to see them.</div>';
                             fItem.el.dataset.rendered = '1';
                             renderNextFragment();
                             return;

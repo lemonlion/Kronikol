@@ -171,6 +171,12 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **A scenario with one view of its flow keeps its span warning.** The warning that a scenario has ten times the median
   span count was written beside the view tabs only, so a scenario with no sequence diagram and an activity diagram or
   a flame chart alone lost it. It now sits on the diagrams' title.
+- **Hiding assertion notes or step bars keeps the diagram's other statements apart.** Taking a hidden note or bar out
+  of a sequence diagram took the line break on both sides of it, so wherever a diagram's lines end in LF (a report
+  written on Linux or macOS) the statement before it ran on into the one after it: an arrow's label took in the next
+  arrow, which was no longer drawn, or the assertion's source-location comment. As assertions start hidden, this was
+  the default. A diagram of nothing but hidden markers reached the engine, which failed on it, in place of the
+  "Nothing to draw" message, and that message now names the toggles by the words they show (Assertions, Steps).
 
 ## [4.26.9] - 2026-10-18
 
