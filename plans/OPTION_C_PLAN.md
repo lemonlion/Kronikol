@@ -801,3 +801,21 @@ decision of the owner's, not part of this plan.
   Checks: the new class and the classes it touches pass, 41 of 41 (`DiagramActivityAndComponentColoursTests`,
   `DiagramThemeColoursTests`, `DiagramRolesTests`, `ComponentDiagramPageTests`, `ArrowLinkOpensPopupTests`,
   `DiagramCentringTests`).
+- 2026-10-19, S11b: the flame chart in the diagrams' manner (D44, the owner's round 17 item 10; `mock/build.js`
+  238-255 and `mock/c-round17.css` 98-110), in `edits/scripts-s11b.py`. A source takes one of eight hues (blue,
+  violet, teal, rose, green, amber, purple, coral), written as `--fh` on its bar by the page's flame script and by
+  `InternalFlowRenderer` alike (`FLAME_HUES`, `FlameHues`), where any hue from 0 to 359 at 60% saturation was
+  lightened with depth. The popup sheet draws the bar from it: a pale fill and a 3px edge in a stronger shade, ink
+  text, 20px rows 2px apart and 4px corners. The fill, edge and hover shades are tokens (`--dg-flame-fill`,
+  `--dg-flame-edge`, `--dg-flame-hover`) with dark values in both dark blocks of the token sheet, not the preview's
+  `:root[data-theme="dark"]` rules, and the bar's rules fall back to the light shades where a page has no token sheet.
+  The flame data keeps its depth field (its format is the report's); the script's `buildBar` and the renderer's
+  `RenderFlameNode` no longer take one (F7).
+  Tests: Playwright `FlameChartPaletteTests` (new, a theory in both themes: the bar's hue is one of the eight, its
+  fill and edge are that hue at the theme's shades, 3px edge, ink text, 20px rows 2px apart, and a lightness inside
+  the theme's range, since a dark page drawing the light shades would still match the tokens it reads; failing both
+  cases before the change, at the missing hue), and core `CultureInvariantOutputTests`' flame fact reads the palette
+  hue (`--fh:`) where it read `background:hsl(h, 60%, ...)`, failing before. Mutations: 8 of 8 killed, among them the
+  dark theme left with the light fill, which only the lightness check sees (`checks/mutate-s11b.py`).
+  Checks: the core flame and internal-flow classes pass (277); `FlameChartPaletteTests` passes in both themes. S11a's
+  lane fix (`edits/fix-s11a-lanes.py`: the flow-arrows fixture's opt-in second source) is committed with S11b.

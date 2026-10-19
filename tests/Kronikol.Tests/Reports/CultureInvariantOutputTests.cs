@@ -247,8 +247,10 @@ public class CultureInvariantOutputTests
 
         foreach (var source in new[] { "Microsoft.AspNetCore", "Npgsql" })
         {
-            var hue = Math.Abs((long)JavaHash(source)) % 360;
-            Assert.Contains($"background:hsl({hue}, 60%, ", html, StringComparison.Ordinal);
+            // one of the flame chart's eight hues, as flame-chart-render-script.js picks it (5.0.0)
+            int[] hues = [212, 262, 188, 338, 152, 32, 290, 8];
+            var hue = hues[Math.Abs((long)JavaHash(source)) % hues.Length];
+            Assert.Contains($"--fh:{hue}\"", html, StringComparison.Ordinal);
         }
     }
 

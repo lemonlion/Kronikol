@@ -83,6 +83,9 @@
     --dg-step-edge: #c4cfdf;
     --dg-step-ink: #2f3b4f;
     --dg-step-table: #ffffff;
+    --dg-flame-fill: 58% 93%;
+    --dg-flame-edge: 42% 54%;
+    --dg-flame-hover: 62% 87%;
     --dg-activity: #eef3fc;
     --dg-activity-edge: #5f6878;
     --dg-lane: #c9d1de;
@@ -190,6 +193,9 @@
     --dg-step-edge: #3b4a60;
     --dg-step-ink: #dbe3ee;
     --dg-step-table: #131a24;
+    --dg-flame-fill: 26% 21%;
+    --dg-flame-edge: 48% 60%;
+    --dg-flame-hover: 30% 27%;
     --dg-activity: #1d2638;
     --dg-activity-edge: #7d899b;
     --dg-lane: #3a4656;
@@ -285,6 +291,9 @@
         --dg-step-edge: #3b4a60;
         --dg-step-ink: #dbe3ee;
         --dg-step-table: #131a24;
+        --dg-flame-fill: 26% 21%;
+        --dg-flame-edge: 48% 60%;
+        --dg-flame-hover: 30% 27%;
         --dg-activity: #1d2638;
         --dg-activity-edge: #7d899b;
         --dg-lane: #3a4656;

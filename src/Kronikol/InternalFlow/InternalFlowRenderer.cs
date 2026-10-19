@@ -346,12 +346,15 @@ public static class InternalFlowRenderer
         var sb = new StringBuilder();
         sb.AppendLine("<div class=\"iflow-flame\" data-diagram-type=\"flamechart\">");
         foreach (var root in roots)
-            RenderFlameNode(sb, root, earliest, totalMs, 0);
+            RenderFlameNode(sb, root, earliest, totalMs);
         sb.AppendLine("</div>");
         return sb.ToString();
     }
 
-    private static void RenderFlameNode(StringBuilder sb, SpanNode node, DateTime earliest, double totalMs, int depth)
+    // The flame chart's eight hues, as flame-chart-render-script.js has them (5.0.0, plans/OPTION_C_PLAN.md S11, D44)
+    private static readonly int[] FlameHues = [212, 262, 188, 338, 152, 32, 290, 8];
+
+    private static void RenderFlameNode(StringBuilder sb, SpanNode node, DateTime earliest, double totalMs)
     {
         var offsetMs = (node.Span.StartTimeUtc - earliest).TotalMilliseconds;
         var durationMs = node.Span.Duration.TotalMilliseconds;
@@ -363,19 +366,19 @@ public static class InternalFlowRenderer
         var name = System.Net.WebUtility.HtmlEncode(node.Span.Name);
         var durationText = durationMs >= 1 ? $" ({durationMs:F0}ms)" : "";
 
-        // The hue the browser's flame chart gives the source (flame-chart-render-script.js hashCode): string.GetHashCode
-        // is randomised per process, so the same source changed colour from one run to the next until 4.7.3.
-        var hue = Math.Abs((long)SourceHash(rawSource)) % 360;
-        var color = $"hsl({hue}, 60%, {70 + Math.Min(depth * 5, 20)}%)";
+        // The hue the browser's flame chart gives the source (flame-chart-render-script.js hashCode and FLAME_HUES):
+        // string.GetHashCode is randomised per process, so the same source changed colour from one run to the next until
+        // 4.7.3. The stylesheet draws the bar from it (5.0.0).
+        var hue = FlameHues[(int)(Math.Abs((long)SourceHash(rawSource)) % FlameHues.Length)];
 
         // Percentages a browser reads, with a point on every machine (a comma-decimal culture wrote 12,30%, which it drops).
-        sb.Append(CultureInfo.InvariantCulture, $"<div class=\"iflow-flame-bar\" style=\"margin-left:{leftPct:F2}%;width:{widthPct:F2}%;background:{color}\" ");
+        sb.Append(CultureInfo.InvariantCulture, $"<div class=\"iflow-flame-bar\" style=\"margin-left:{leftPct:F2}%;width:{widthPct:F2}%;--fh:{hue}\" ");
         sb.Append($"title=\"[{source}] {name}{durationText}\">");
         sb.Append($"<span class=\"iflow-flame-label\">{name}{durationText}</span>");
         sb.AppendLine("</div>");
 
         foreach (var child in node.Children)
-            RenderFlameNode(sb, child, earliest, totalMs, depth + 1);
+            RenderFlameNode(sb, child, earliest, totalMs);
     }
 
     /// <summary>Java's string hash, which the browser's flame chart computes in JavaScript: the same for a source in every process.</summary>
@@ -419,7 +422,7 @@ public static class InternalFlowRenderer
         }
 
         foreach (var root in roots)
-            RenderFlameNode(sb, root, earliest, totalMs, 0);
+            RenderFlameNode(sb, root, earliest, totalMs);
 
         sb.AppendLine("</div>");
         return sb.ToString();
@@ -499,7 +502,7 @@ public static class InternalFlowRenderer
 
             var roots = BuildSpanTree(segment.FlowSpans);
             foreach (var root in roots)
-                RenderFlameNode(sb, root, earliest, totalMs, 0);
+                RenderFlameNode(sb, root, earliest, totalMs);
 
             sb.AppendLine("</div>");
         }

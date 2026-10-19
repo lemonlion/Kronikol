@@ -2,14 +2,16 @@
 (function() {
     var MIN_BAR_PCT = 0; // minimum display width enforced via CSS min-width
 
-    function buildBar(source, name, leftPct, widthPct, depth, durMs, totalDurMs) {
-        var hue = Math.abs(hashCode(source)) % 360;
-        var lightness = 70 + Math.min(depth * 5, 20);
+    // One hue per source from eight that sit with the diagrams (blue, violet, teal, rose, green, amber, purple, coral);
+    // the stylesheet draws the bar from it (5.0.0, plans/OPTION_C_PLAN.md S11, D44). InternalFlowRenderer picks the same.
+    var FLAME_HUES = [212, 262, 188, 338, 152, 32, 290, 8];
+    function buildBar(source, name, leftPct, widthPct, durMs, totalDurMs) {
+        var hue = FLAME_HUES[Math.abs(hashCode(source)) % FLAME_HUES.length];
         var durText = durMs >= 1 ? ' (' + durMs + 'ms)' : '';
         var pctText = totalDurMs > 0 ? ' — ' + (durMs / totalDurMs * 100).toFixed(1) + '% of total' : '';
         return '<div class="iflow-flame-bar" style="margin-left:' + leftPct.toFixed(2)
-            + '%;width:' + widthPct.toFixed(2) + '%;background:hsl(' + hue + ', 60%, ' + lightness
-            + '%)" data-left="' + leftPct.toFixed(4) + '" data-width="' + widthPct.toFixed(4)
+            + '%;width:' + widthPct.toFixed(2) + '%;--fh:' + hue
+            + '" data-left="' + leftPct.toFixed(4) + '" data-width="' + widthPct.toFixed(4)
             + '" title="[' + escHtml(source) + '] ' + escHtml(name) + durText + pctText
             + '"><span class="iflow-flame-label">' + escHtml(name) + durText + '</span></div>';
     }
@@ -54,7 +56,7 @@
         }
         for (var i = 0; i < data.f.length; i++) {
             var sp = data.f[i];
-            var srcIdx = sp[0], name = sp[1], leftPct = sp[2], widthPct = sp[3], depth = sp[4], durMs = sp[5];
+            var srcIdx = sp[0], name = sp[1], leftPct = sp[2], widthPct = sp[3], durMs = sp[5];
             if (isZoomed) {
                 var right = leftPct + widthPct;
                 if (right < vl || leftPct > vr) continue; // outside viewport
@@ -64,7 +66,7 @@
                 widthPct = (clampedRight - clampedLeft) / vw * 100;
             }
             var source = sources[srcIdx];
-            html.push(buildBar(source, name, leftPct, widthPct, depth, durMs, totalDurMs));
+            html.push(buildBar(source, name, leftPct, widthPct, durMs, totalDurMs));
         }
         container.innerHTML = html.join('');
     }
@@ -82,9 +84,9 @@
             html.push('<div class="iflow-test-band"><div class="iflow-test-band-label">' + escHtml(band.id) + '</div>');
             for (var i = 0; i < band.f.length; i++) {
                 var sp = band.f[i];
-                var srcIdx = sp[0], name = sp[1], leftPct = sp[2], widthPct = sp[3], depth = sp[4], durMs = sp[5];
+                var srcIdx = sp[0], name = sp[1], leftPct = sp[2], widthPct = sp[3], durMs = sp[5];
                 var source = sources[srcIdx];
-                html.push(buildBar(source, name, leftPct, widthPct, depth, durMs, totalDurMs));
+                html.push(buildBar(source, name, leftPct, widthPct, durMs, totalDurMs));
             }
             html.push('</div>');
         }

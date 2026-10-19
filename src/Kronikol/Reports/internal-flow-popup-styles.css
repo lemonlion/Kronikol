@@ -76,20 +76,25 @@
 .iflow-toggle-btn:hover { background: #e8f0fe; }
 .iflow-toggle-active { background: #4285f4; color: #fff; border-color: #4285f4; }
 .iflow-toggle-active:hover { background: #3367d6; }
-.iflow-flame { padding: 4px 0; }
+.iflow-flame { padding: 6px 0; }
+/* A bar in its source's hue (--fh, one of eight): a pale fill, a 3px edge in a stronger shade, ink text, 20px rows 2px
+   apart (5.0.0, plans/OPTION_C_PLAN.md S11, D44); the shades are the theme's, the light ones where a page has none. */
 .iflow-flame-bar {
     position: relative;
-    height: 22px;
+    height: 20px;
     min-width: 4px;
-    border-radius: 3px;
-    margin: 1px 0;
+    border-radius: 4px;
+    margin: 2px 0;
     overflow: hidden;
-    font: 11px/22px -apple-system, 'Segoe UI', sans-serif;
-    color: #333;
+    font: 11px/20px -apple-system, 'Segoe UI', sans-serif;
+    color: var(--kron-ink, #333);
     cursor: pointer;
-    border: 1px solid rgba(0,0,0,0.08);
+    box-sizing: border-box;
+    border: 0;
+    border-left: 3px solid hsl(var(--fh, 215) var(--dg-flame-edge, 42% 54%));
+    background: hsl(var(--fh, 215) var(--dg-flame-fill, 58% 93%));
 }
-.iflow-flame-bar:hover { filter: brightness(0.92); }
+.iflow-flame-bar:hover { background: hsl(var(--fh, 215) var(--dg-flame-hover, 62% 87%)); }
 .iflow-flame-zoom-hint {
     font: 11px -apple-system, 'Segoe UI', sans-serif;
     color: #666;
