@@ -376,7 +376,7 @@ public class ExamplesTableReportTests
     }
 
     [Fact]
-    public void Outline_section_has_data_categories_attribute()
+    public void Outline_section_carries_its_rows_tags_with_their_categories()
     {
         var features = new[]
         {
@@ -404,7 +404,8 @@ public class ExamplesTableReportTests
         };
 
         var content = GenerateReport(features);
-        Assert.Contains("data-categories=", content);
+        Assert.Contains(" data-tags=\"Banking,ATM\"", content);
+        Assert.DoesNotContain("data-categories=", content);
     }
 
     [Fact]

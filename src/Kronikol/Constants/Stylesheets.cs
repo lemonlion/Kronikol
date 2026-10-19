@@ -66,8 +66,8 @@ public class Stylesheets
                 .happy-seg:hover,
                 .tag-toggle:hover,
                 .dependency-toggle:hover,
-                .status-toggle:hover,
-                .category-toggle:hover {
+                .tag-more:hover,
+                .status-toggle:hover {
                     background: #EDE9FE;
                     border-color: #A78BFA;
                 }
@@ -75,15 +75,14 @@ public class Stylesheets
                 .export-btn:hover, .fold-btn:hover, .percentile-btn:hover, .timeline-toggle:hover,
                 .details-radio-btn:hover, .scenario-diagram-controls-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }
                 .diagram-toggle-btn:hover, .iflow-toggle-btn:hover { background: #EDE9FE; }
-                .dep-mode-toggle:hover, .cat-mode-toggle:hover, .tag-mode-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }
+                .dep-mode-toggle:hover, .tag-mode-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }
                 .iflow-rel-summary-table tr:hover td { background: #EDE9FE; }
                 .scenario-link:hover, .copy-scenario-name:hover { background: #EDE9FE; }
 
                 .happy-seg[aria-pressed="true"],
                 .tag-toggle.tag-active,
                 .dependency-toggle.dependency-active,
-                .status-toggle.status-active,
-                .category-toggle.category-active {
+                .status-toggle.status-active {
                     background: #8B5CF6;
                     color: white;
                     border-color: #8B5CF6;
@@ -96,7 +95,7 @@ public class Stylesheets
                 .timeline-toggle-active { background: #8B5CF6; color: white; border-color: #8B5CF6; }
                 .timeline-toggle-active:hover { background: #7C3AED; }
 
-                .dep-mode-toggle, .cat-mode-toggle { background: #F5F3FF; }
+                .dep-mode-toggle, .tag-mode-toggle { background: #F5F3FF; }
                 .scenario-focused { outline-color: #8B5CF6; }
                 .step-attachment { color: #8B5CF6; }
                 .attachment-image { border-color: #A78BFA; }

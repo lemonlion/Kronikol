@@ -46,7 +46,7 @@ public class ReportToggleDefaultsResolverTests
         Assert.False(b.ComponentDiagramVisible);
         // 5.0.0: a scenario with any of the chosen dependencies shows, as tags do (the owner, 2026-10-18).
         Assert.Equal(FilterCombinationMode.Or, b.DependencyFilterMode);
-        Assert.Equal(FilterCombinationMode.Or, b.CategoryFilterMode);
+        Assert.Equal(FilterCombinationMode.Or, b.TagFilterMode);
         Assert.False(b.FeaturesSummaryOpen);
         Assert.True(b.FailureClustersOpen);
         Assert.True(b.StepsSectionOpen);
@@ -80,7 +80,7 @@ public class ReportToggleDefaultsResolverTests
             Assert.Equal(FilterCombinationMode.Or, resolved.DependencyFilterMode);
             // Untouched properties keep the built-ins
             Assert.Equal(TruncateLineCount.Lines10, resolved.TruncateLines);
-            Assert.Equal(FilterCombinationMode.Or, resolved.CategoryFilterMode);
+            Assert.Equal(FilterCombinationMode.Or, resolved.TagFilterMode);
         }
     }
 

@@ -664,7 +664,7 @@ public class WikiGifTests : PlaywrightTestBase
         await ScrollTo("details.feature"); await Hold(1);
         await ScrollToTop(); await Hold(0.5);
 
-        await JsClick(".category-toggle[data-category='Smoke']"); await Hold(1);
+        await JsClick(".filtering-box .tag-toggle[data-tag='Smoke']"); await Hold(1);
 
         await JsClick(".export-btn[onclick*='clear_all']"); await Hold(1);
         await ScrollToTop(); await Hold(2);
@@ -1582,12 +1582,12 @@ public class WikiGifTests : PlaywrightTestBase
         await NavigateToReport();
         await ScrollToTop(); await Hold(1);
 
-        await JsClick(".category-toggle[data-category='Smoke']"); await Hold(2);
+        await JsClick(".filtering-box .tag-toggle[data-tag='Smoke']"); await Hold(2);
         await ScrollTo("details.feature"); await Hold(1.5);
         await ScrollToTop(); await Hold(0.5);
 
-        try { await JsClick(".cat-mode-toggle"); await Hold(1); } catch { }
-        try { await JsClick(".category-toggle[data-category='Orders']"); await Hold(2); } catch { }
+        try { await JsClick(".filtering-box .tag-mode-toggle"); await Hold(1); } catch { }
+        try { await JsClick(".filtering-box .tag-toggle[data-tag='Orders']"); await Hold(2); } catch { }
 
         await JsClick(".export-btn[onclick*='clear_all']"); await Hold(1);
         await ScrollToTop(); await Hold(1);

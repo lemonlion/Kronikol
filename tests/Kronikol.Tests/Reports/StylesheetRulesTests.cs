@@ -167,7 +167,7 @@ public partial class StylesheetRulesTests
     // ── T4: the violet theme's hovers come before its active states (S4) ──
 
     // 5.0.0: the tags are chips of their own, and Happy paths a three-way control (plans/OPTION_C_PLAN.md S6)
-    private static readonly string[] FilterToggles = ["tag", "dependency", "status", "category"];
+    private static readonly string[] FilterToggles = ["tag", "dependency", "status"];
 
     [Fact]
     public void A_violet_filter_toggle_keeps_its_active_colour_while_hovered()
@@ -181,18 +181,27 @@ public partial class StylesheetRulesTests
         }
     }
 
+    [Fact]
+    public void The_violet_theme_grounds_the_tags_switch_as_it_does_the_dependencies_switch()
+    {
+        // Found by plans/TAGS_PLAN.md T2: the violet theme gave .dep-mode-toggle and .cat-mode-toggle their idle ground and
+        // missed .tag-mode-toggle, so the Tags row's ANY / ALL read apart from the Dependencies row's.
+        Assert.Equal("#F5F3FF", CssRules.Value(Violet, ".dep-mode-toggle", "background"));
+        Assert.Equal("#F5F3FF", CssRules.Value(Violet, ".tag-mode-toggle", "background"));
+    }
+
     private static readonly string[] IdleHovers =
     [
-        ".happy-seg:hover", ".tag-toggle:hover", ".dependency-toggle:hover", ".status-toggle:hover", ".category-toggle:hover",
+        ".happy-seg:hover", ".tag-toggle:hover", ".dependency-toggle:hover", ".status-toggle:hover",
         ".export-btn:hover", ".fold-btn:hover", ".percentile-btn:hover", ".timeline-toggle:hover",
         ".details-radio-btn:hover", ".scenario-diagram-controls-toggle:hover", ".diagram-toggle-btn:hover",
-        ".iflow-toggle-btn:hover", ".dep-mode-toggle:hover", ".cat-mode-toggle:hover", ".iflow-rel-summary-table tr:hover td",
+        ".iflow-toggle-btn:hover", ".dep-mode-toggle:hover", ".iflow-rel-summary-table tr:hover td",
     ];
 
     private static readonly string[] ActiveStates =
     [
         ".happy-seg[aria-pressed=\"true\"]", ".tag-toggle.tag-active", ".dependency-toggle.dependency-active", ".status-toggle.status-active",
-        ".category-toggle.category-active", ".percentile-btn.percentile-active", ".details-radio-btn.details-active",
+        ".percentile-btn.percentile-active", ".details-radio-btn.details-active",
         ".timeline-toggle-active", ".timeline-toggle-active:hover", ".iflow-toggle-active", ".iflow-toggle-active:hover",
         ".diagram-toggle-active", ".diagram-toggle-active:hover",
     ];

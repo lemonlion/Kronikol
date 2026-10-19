@@ -145,11 +145,8 @@ function run_search_scenarios() {
         let advSearchTokens = [];
         for (let i = 0; i < c.items.length; i++) {
             let item = c.items[i];
-            let tags = new Set();
-            let cats = (item.el.getAttribute('data-categories') || '').toLowerCase();
-            let labels = (item.el.getAttribute('data-labels') || '').toLowerCase();
-            if (cats) cats.split(',').forEach(function(t) { tags.add(t.trim()); });
-            if (labels) labels.split(',').forEach(function(t) { tags.add(t.trim()); });
+            // what the Tags row filters on, Happy Path with it (plans/TAGS_PLAN.md §4.8), compared without case
+            let tags = search_tags(item.el);
 
 // kron:verdicts
             let result = advancedSearchMatch(input, item.searchText, tags, item.status, item.verdicts);
@@ -241,12 +238,7 @@ function run_search_scenarios() {
         }
         let tagMatch = true;
         if (tagExpr) {
-            let cats = (c.items[i].el.getAttribute('data-categories') || '').toLowerCase();
-            let labels = (c.items[i].el.getAttribute('data-labels') || '').toLowerCase();
-            let allTags = new Set();
-            if (cats) cats.split(',').forEach(function(t) { allTags.add(t.trim()); });
-            if (labels) labels.split(',').forEach(function(t) { allTags.add(t.trim()); });
-            tagMatch = evaluateTagExpression(tagExpr, allTags);
+            tagMatch = evaluateTagExpression(tagExpr, search_tags(c.items[i].el));
         }
         c.items[i].sr = !(textMatch && tagMatch);
         if (textMatch && tagMatch) {
@@ -291,6 +283,10 @@ function run_search_scenarios() {
     if (window._kronDeepQuery) window._kronDeepQuery(input);
 }
 
+// A legacy query's words, where @"a tag" is one word for a tag with spaces (plans/TAGS_PLAN.md §4.8).
+function legacySearchWords(input) {
+    return input.match(/@"[^"]*"?|\S+/g) || [];
+}
 // Splits a legacy query into its @tag expression and its plain-text remainder. Shared with the
 // deep-search worker (included in its Blob by name), so the two paths cannot drift.
 function splitLegacyTagExpression(input) {
@@ -299,7 +295,7 @@ function splitLegacyTagExpression(input) {
     if (input.indexOf('@') !== -1) {
         var tagParts = [];
         var textParts = [];
-        var tokens = input.split(/\s+/);
+        var tokens = legacySearchWords(input);
         var inTag = false;
         for (var t = 0; t < tokens.length; t++) {
             var tok = tokens[t];
@@ -345,12 +341,13 @@ function parseSearchTokensIncludingQuotes(str) {
 function evaluateTagExpression(expr, tags) {
     // Tokenize
     let tokens = [];
-    let parts = expr.split(/\s+/);
+    let parts = legacySearchWords(expr);
     for (let i = 0; i < parts.length; i++) {
         let p = parts[i];
         if (p === 'and' || p === 'or' || p === 'not') tokens.push({type: p});
         else if (p === '(') tokens.push({type: 'lparen'});
         else if (p === ')') tokens.push({type: 'rparen'});
+        else if (p.startsWith('@"')) tokens.push({type: 'tag', value: p.substring(2).replace(/"$/, '').trim().toLowerCase()});
         else if (p.startsWith('@')) tokens.push({type: 'tag', value: p.substring(1).toLowerCase()});
         else tokens.push({type: 'tag', value: p.toLowerCase()});
     }

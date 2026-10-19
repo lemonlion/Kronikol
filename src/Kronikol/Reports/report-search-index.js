@@ -467,11 +467,7 @@ function kronSearchWorkerMain(self) {
         var items = [];
         for (var i = 0; i < c.items.length; i++) {
             var el = c.items[i].el;
-            var tags = [];
-            var cats = (el.getAttribute('data-categories') || '').toLowerCase();
-            var labels = (el.getAttribute('data-labels') || '').toLowerCase();
-            if (cats) cats.split(',').forEach(function(t) { tags.push(t.trim()); });
-            if (labels) labels.split(',').forEach(function(t) { tags.push(t.trim()); });
+            var tags = Array.from(search_tags(el));
             var diagramIds = [];
             el.querySelectorAll('.plantuml-browser[id], .plantuml-inline-svg[id]').forEach(function(d) {
                 // #puml-data is written once and never mutated; data-plantuml attributes are
@@ -512,7 +508,7 @@ function kronSearchWorkerMain(self) {
             kronExtractFlameText,
             isAdvancedSearch, advancedSearchTokenise, advancedSearchParse,
             advancedSearchEvaluate, advancedSearchMatch,
-            splitLegacyTagExpression, parseSearchTokensIncludingQuotes, evaluateTagExpression,
+            legacySearchWords, splitLegacyTagExpression, parseSearchTokensIncludingQuotes, evaluateTagExpression,
             kronSearchWorkerMain
         ];
         var src = fns.map(function(f) { return f.toString(); }).join('\n\n') + '\n\nkronSearchWorkerMain(self);\n';

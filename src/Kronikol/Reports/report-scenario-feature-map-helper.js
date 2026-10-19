@@ -19,9 +19,9 @@ function fc() {
 // kron:verdicts
             // The cross-run history verdicts, when the run had a ledger: what `$flaky` and `$broke` read.
             var hv = s.getAttribute('data-history-verdicts') || '';
-            var item = { el: s, deps: d, status: s.getAttribute('data-status') || '', verdicts: hv ? new Set(hv.split(',')) : null, isHappy: s.classList.contains('happy-path'), f: features[fi], searchText: s.getAttribute('data-search') || '', runs: n, tag: false, dep: false, st: false, sr: false, dur: false, cat: false, q: false };
+            var item = { el: s, deps: d, status: s.getAttribute('data-status') || '', verdicts: hv ? new Set(hv.split(',')) : null, isHappy: s.classList.contains('happy-path'), f: features[fi], searchText: s.getAttribute('data-search') || '', runs: n, tag: false, dep: false, st: false, sr: false, dur: false, q: false };
 // kron:else
-//|            var item = { el: s, deps: d, status: s.getAttribute('data-status') || '', isHappy: s.classList.contains('happy-path'), f: features[fi], searchText: s.getAttribute('data-search') || '', runs: n, tag: false, dep: false, st: false, sr: false, dur: false, cat: false, q: false };
+//|            var item = { el: s, deps: d, status: s.getAttribute('data-status') || '', isHappy: s.classList.contains('happy-path'), f: features[fi], searchText: s.getAttribute('data-search') || '', runs: n, tag: false, dep: false, st: false, sr: false, dur: false, q: false };
 // kron:/verdicts
             items.push(item);
             fMap.set(s, features[fi]);
@@ -30,13 +30,27 @@ function fc() {
     _filterCache = { items: items, features: features, scenarios: scenarios, fMap: fMap, runs: runs, shown: null };
     return _filterCache;
 }
+// A scenario's tags as its data-tags attribute carries them (5.0.0, plans/TAGS_PLAN.md §4.9): its feature's and its
+// own, each in its chip's spelling, percent-encoded one by one and joined with commas, so that a comma, a quote or a
+// space inside a name survives. A name that does not decode is kept as written.
+function tag_names(el) {
+    var raw = el.getAttribute('data-tags');
+    if (!raw) return [];
+    return raw.split(',').filter(Boolean).map(function (t) { try { return decodeURIComponent(t); } catch (e) { return t; } });
+}
+// The names @tag compares a scenario's against: the same tags, in lower case.
+function search_tags(el) {
+    var tags = new Set();
+    tag_names(el).forEach(function (t) { tags.add(t.trim().toLowerCase()); });
+    return tags;
+}
 // Every filter has a flag of its own on each scenario: the tags (with Happy paths), dependencies, status, the search,
-// duration, categories and the search's qualifiers. A scenario shows while no flag hides it, a rule or a feature while
-// one of its scenarios shows.
+// duration and the search's qualifiers. A scenario shows while no flag hides it, a rule or a feature while one of its
+// scenarios shows.
 function applyVisibility(c) {
     for (var i = 0; i < c.items.length; i++) {
         var d = c.items[i];
-        var hidden = d.tag || d.dep || d.st || d.sr || d.dur || d.cat || d.q;
+        var hidden = d.tag || d.dep || d.st || d.sr || d.dur || d.q;
         d.el.style.display = hidden ? 'none' : '';
     }
     var rules = document.getElementsByClassName('rule');

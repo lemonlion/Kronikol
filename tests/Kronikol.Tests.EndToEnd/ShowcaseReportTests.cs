@@ -606,31 +606,31 @@ public class ShowcaseReportTests : PlaywrightTestBase
         await CaptureFrames("09_search_or", 36, 33);
         await ShowCursor();
 
-        // ── Scene 10: Category filter toggle ──
+        // ── Scene 10: Tag filter toggle (the fixture's categories are tags, plans/TAGS_PLAN.md §4.8) ──
         await Page.Locator("#searchbar").FillAsync("");
         await Page.Locator("#searchbar").DispatchEventAsync("keyup");
         await Task.Delay(300);
 
-        var catCount = await Page.Locator(".category-toggle").CountAsync();
+        var catCount = await Page.Locator(".filtering-box .tag-toggle").CountAsync();
         if (catCount > 0)
         {
-            await ScrollTo(".category-toggle");
+            await ScrollTo(".filtering-box .tag-toggle");
             await Task.Delay(200);
 
-            var smokeCount = await Page.Locator(".category-toggle:has-text('Smoke')").CountAsync();
+            var smokeCount = await Page.Locator(".filtering-box .tag-toggle:has-text('Smoke')").CountAsync();
             if (smokeCount > 0)
             {
-                await JsClick(".category-toggle[data-category='Smoke']");
+                await JsClick(".filtering-box .tag-toggle[data-tag='Smoke']");
                 await Task.Delay(400);
                 await CaptureFrames("10_category_smoke", 48, 33);
             }
 
-            var errorCount = await Page.Locator(".category-toggle:has-text('Error')").CountAsync();
+            var errorCount = await Page.Locator(".filtering-box .tag-toggle:has-text('Error')").CountAsync();
             if (errorCount > 0)
             {
                 await Page.EvaluateAsync("""
                     (() => {
-                        var t = document.querySelectorAll('.category-toggle');
+                        var t = document.querySelectorAll('.filtering-box .tag-toggle');
                         for (var c of t) { if (c.textContent.includes('Error')) { c.click(); break; } }
                     })()
                 """);

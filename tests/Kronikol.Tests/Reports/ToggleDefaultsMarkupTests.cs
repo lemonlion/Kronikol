@@ -350,8 +350,10 @@ public class ToggleDefaultsMarkupTests
     }
 
     [Fact]
-    public void Category_filter_mode_default_seeds_button_text_and_script()
+    public void Tag_filter_mode_default_seeds_button_text_and_script()
     {
+        // TagFilterMode replaces CategoryFilterMode (plans/TAGS_PLAN.md §4.11): the Tags row's switch and the chip
+        // script's default were the literal OR on the branch before it (F21).
         var features = new[]
         {
             new Feature
@@ -362,23 +364,23 @@ public class ToggleDefaultsMarkupTests
                     new Scenario
                     {
                         Id = "s1", DisplayName = "S1", Result = ExecutionResult.Passed,
-                        Categories = ["smoke"]
+                        Labels = ["smoke"]
                     }
                 ]
             }
         };
-        var content = Generate(t => t.CategoryFilterMode = FilterCombinationMode.And, features: features);
-        Assert.Contains("<button type=\"button\" class=\"cat-mode-toggle\" data-mode=\"AND\" title=\"ANY: scenarios in any of the chosen categories. ALL: scenarios in every one of them. Click to switch.\">ALL</button>", content);
-        Assert.Contains("var _catModeDefault = 'AND'", content);
+        var content = Generate(t => t.TagFilterMode = FilterCombinationMode.And, features: features);
+        Assert.Contains("<button type=\"button\" class=\"tag-mode-toggle\" data-mode=\"AND\" title=\"ANY: scenarios with any of the chosen tags. ALL: scenarios with every one of them. Click to switch.\">ALL</button>", content);
+        Assert.Contains("var _tagModeDefault = 'AND'", content);
     }
 
     [Fact]
     public void Filter_mode_builtins_seed_any_for_both_filters()
     {
-        // 5.0.0: dependencies combine with OR by default, as categories always have (4.x: AND).
+        // 5.0.0: dependencies combine with OR by default, as tags always have (4.x: AND).
         var content = Generate();
         Assert.Contains("var _depModeDefault = 'OR'", content);
-        Assert.Contains("var _catModeDefault = 'OR'", content);
+        Assert.Contains("var _tagModeDefault = 'OR'", content);
         Assert.Contains("<button type=\"button\" class=\"dep-mode-toggle\" data-mode=\"OR\" title=\"ANY: scenarios that call any of the chosen dependencies. ALL: scenarios that call every one of them. Click to switch.\">ANY</button>", content);
     }
 

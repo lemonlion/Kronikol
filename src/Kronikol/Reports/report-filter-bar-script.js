@@ -55,12 +55,11 @@
         var more = $('.more-filters', box), count = more && $('.more-filters-count', more);
         if (!more) return;
         var idle = more.getAttribute('title');
-        // the filters on in the rows: each status, each tag, dependency or category chip set either way, and one for the
+        // the filters on in the rows: each status, each tag or dependency chip set either way, and one for the
         // duration threshold, a percentile or a custom value
         function on() {
             var n = box.querySelectorAll('.status-toggle.status-active, .tag-toggle.tag-active, .tag-toggle.tag-exclude, '
-                + '.dependency-toggle.dependency-active, .dependency-toggle.dependency-exclude, '
-                + '.category-toggle.category-active, .category-toggle.category-exclude').length;
+                + '.dependency-toggle.dependency-active, .dependency-toggle.dependency-exclude').length;
             var dur = $('#duration-threshold', box);
             if ($('.percentile-btn.percentile-active', box) || (dur && dur.value)) n += 1;
             return n;

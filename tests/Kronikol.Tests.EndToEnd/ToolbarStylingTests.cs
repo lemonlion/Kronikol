@@ -91,7 +91,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
     {
         { true, Tint, TintBorder, ".dependency-toggle" },
         { true, Tint, TintBorder, ".dep-mode-toggle" },
-        { true, Tint, TintBorder, ".cat-mode-toggle" },
+        { true, Tint, TintBorder, ".tag-mode-toggle" },
         { true, Tint, TintBorder, ".percentile-btn" },
         { true, Tint, TintBorder, ".fold-btn" },
         { true, Tint, TintBorder, ".export-btn" },
@@ -99,7 +99,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
         // 5.0.0: a filter row's controls take the hover tint and keep their edge (plans/OPTION_C_PLAN.md S6)
         { false, Hover, ControlBorder, ".dependency-toggle" },
         { false, Hover, ControlBorder, ".dep-mode-toggle" },
-        { false, Hover, ControlBorder, ".cat-mode-toggle" },
+        { false, Hover, ControlBorder, ".tag-mode-toggle" },
         { false, Hover, ControlBorder, ".percentile-btn" },
         // 5.0.0: expand and collapse are icon buttons with a transparent edge (plans/OPTION_C_PLAN.md S4)
         { false, Hover, "rgba(0, 0, 0, 0)", ".fold-btn" },

@@ -701,7 +701,7 @@ public class StepRenderingReportTests
     }
 
     [Fact]
-    public void Report_renders_category_filter_when_categories_present()
+    public void A_category_is_a_chip_of_the_tags_row_and_the_report_has_no_categories_row()
     {
         var scenario = new Scenario
         {
@@ -709,16 +709,8 @@ public class StepRenderingReportTests
             Categories = ["Orders"]
         };
         var content = GenerateReport(MakeFeatures(scenario), "CategoryFilter.html");
-        Assert.Contains("category-filters", content);
-        Assert.Contains("Orders", content);
-    }
-
-    [Fact]
-    public void Report_does_not_render_category_filter_when_no_categories()
-    {
-        var scenario = new Scenario { Id = "s1", DisplayName = "Test" };
-        var content = GenerateReport(MakeFeatures(scenario), "NoCategoryFilter.html");
-        Assert.DoesNotContain("<div class=\"category-filters\">", content);
+        Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"Orders\"", content);
+        Assert.DoesNotContain("category-filters", content);
     }
 
     [Fact]

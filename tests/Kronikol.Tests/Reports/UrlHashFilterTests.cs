@@ -95,32 +95,28 @@ public class UrlHashFilterTests
         Assert.Contains("update_url_hash()", body);
     }
 
-    [Fact]
-    public void Filter_categories_calls_update_url_hash()
-    {
-        var content = GenerateReport("UrlHashCategories.html");
-        var body = ExtractFunctionBody(content, "filter_categories");
-        Assert.Contains("update_url_hash()", body);
-    }
-
-    // --- Bug 1: update_url_hash should save categories ---
+    // --- Bug 1: update_url_hash should save the tags; a category is a tag (plans/TAGS_PLAN.md §4.10) ---
 
     [Fact]
-    public void Update_url_hash_saves_categories()
+    public void Update_url_hash_saves_the_tags_and_writes_no_categories()
     {
-        var content = GenerateReport("UrlHashSavesCats.html");
+        var content = GenerateReport("UrlHashSavesTags.html");
         var body = ExtractFunctionBody(content, "update_url_hash");
-        Assert.Contains("list('cats', chip_values('category', 'in'));", body);
-        Assert.Contains("list('catx', chip_values('category', 'out'));", body);
+        Assert.Contains("names('tags', chip_values('tag', 'in').filter(notHappy));", body);
+        Assert.Contains("names('tagx', chip_values('tag', 'out').filter(notHappy));", body);
+        Assert.DoesNotContain("cats", body);
+        Assert.DoesNotContain("catmode", body);
     }
 
-    // --- Bug 2: parse_url_hash should restore categories ---
+    // --- Bug 2: parse_url_hash should restore a 4.x link's categories, as tags ---
 
     [Fact]
-    public void Parse_url_hash_restores_categories()
+    public void Parse_url_hash_reads_a_4x_link_s_categories_as_tags()
     {
         var content = GenerateReport("UrlHashRestoresCats.html");
         var body = ExtractFunctionBody(content, "parse_url_hash");
         Assert.Contains("params.cats", body);
+        Assert.Contains("params.catmode", body);
+        Assert.DoesNotContain("filter_categories", body);
     }
 }

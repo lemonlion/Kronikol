@@ -1425,7 +1425,9 @@ public static class ReportGenerator
         // where the BrowserJs render script is absent.
         var decompressHelper = LoadResource("report-decompress-helper.js");
 
-        var filterChipsScript = LoadResource("report-filter-chips-script.js");
+        // The Tags row's start mode, which the chip script and the row's switch both carry (plans/TAGS_PLAN.md §4.11).
+        var tagModeText = toggles.TagFilterMode == FilterCombinationMode.And ? "AND" : "OR";
+        var filterChipsScript = LoadResource("report-filter-chips-script.js").Replace("__TAG_MODE_DEFAULT__", tagModeText);
         var filterBarScript = LoadResource("report-filter-bar-script.js");
         var searchFunction = LoadScript("report-search-function.js", drawsVerdicts);
 
@@ -1436,12 +1438,8 @@ public static class ReportGenerator
         // The filter-mode scripts seed their AND/OR start mode from the resolved toggle defaults;
         // the substitution happens on the returned copy, never in the resource cache.
         var depModeText = toggles.DependencyFilterMode == FilterCombinationMode.Or ? "OR" : "AND";
-        var catModeText = toggles.CategoryFilterMode == FilterCombinationMode.And ? "AND" : "OR";
         var dependencyFilterFunction = LoadResource("report-dependency-filter-function.js")
             .Replace("__DEP_MODE_DEFAULT__", depModeText);
-
-        var categoryFilterFunction = LoadResource("report-category-filter-function.js")
-            .Replace("__CAT_MODE_DEFAULT__", catModeText);
 
         var statusFilterFunction = LoadResource("report-status-filter-function.js");
 
@@ -1648,7 +1646,6 @@ public static class ReportGenerator
                                 {{searchFunction}}
                                 {{searchIndexClientScript}}
                                 {{dependencyFilterFunction}}
-                                {{categoryFilterFunction}}
                                 {{statusFilterFunction}}
                                 {{featuresToolsScript}}
                                 {{filterBarScript}}
@@ -1839,7 +1836,7 @@ public static class ReportGenerator
                     <tr><td><code>||</code></td><td>OR — either side must match</td><td><code>payment || order</code></td></tr>
                     <tr><td><code>!!</code></td><td>NOT — excludes matches</td><td><code>order && !!delete</code></td></tr>
                     <tr><td><code>( )</code></td><td>Parentheses — group expressions</td><td><code>(a || b) && c</code></td></tr>
-                    <tr><td><code>@tag</code></td><td>Filter by tag / category</td><td><code>@smoke && @api</code></td></tr>
+                    <tr><td><code>@tag</code></td><td>Filter by tag (a feature's tags count for its scenarios); quotes for a tag with spaces</td><td><code>@smoke && @api</code>, <code>@"Happy Path"</code></td></tr>
                     <tr><td><code>$status</code></td><td>Filter by status</td><td><code>$failed</code>, <code>$passed</code>, <code>$skipped</code></td></tr>
                     <tr><td><code>dep:name</code></td><td>Scenarios that call a dependency: part of its name is enough; commas for any of several</td><td><code>dep:payment</code>, <code>dep:"order service"</code>, <code>dep:payment,order</code></td></tr>
                     <tr><td><code>duration:&gt;2s</code></td><td>Scenarios by their own time: &gt;, &gt;=, &lt;, &lt;= or a range; ms, s or m; p50, p90, p95, p99 are this report's percentiles</td><td><code>duration:&gt;2s</code>, <code>duration:&lt;500ms</code>, <code>duration:&gt;p90</code>, <code>duration:1s..5s</code></td></tr>
@@ -1851,10 +1848,12 @@ public static class ReportGenerator
                  """);
 
         // The filter rows (5.0.0, plans/OPTION_C_PLAN.md S6, D6 to D12, D19): labels without colons and each row's controls
-        // in a span.fltr-controls; Status, Duration and Happy paths share the first row; then Tags, Dependencies and
-        // Categories, each a row of tri-state chips (off, has, has not) with an ANY / ALL switch, a chip for the scenarios
-        // with none, and a Clear (report-filter-chips-script.js). A chip's title counts the scenarios it picks out.
+        // in a span.fltr-controls; Status, Duration and Happy paths share the first row; then Tags and Dependencies, each
+        // a row of tri-state chips (off, has, has not) with an ANY / ALL switch, a chip for the scenarios with none, and a
+        // Clear (report-filter-chips-script.js). A chip's title counts the scenarios it picks out. A category is a tag
+        // (plans/TAGS_PLAN.md §4.8).
         var runs = features.SelectMany(f => f.Scenarios).ToArray();
+        var tagChips = TagChips.For(features);
         // Status filter toggles
         {
             body.Append("""<div class="status-filters"><span class="status-filters-label">Status</span><span class="fltr-controls">""");
@@ -1898,17 +1897,19 @@ public static class ReportGenerator
 
         body.Append("</div>"); // close filter-row
 
-        // Tags: a scenario's labels, with Happy Path for a happy path, pinned first (D9)
-        string[] TagsOf(Scenario sc) => sc.IsHappyPath ? [HappyPathTag, .. (sc.Labels ?? []).Where(l => l != HappyPathTag)] : sc.Labels ?? [];
-        var tagNames = runs.SelectMany(TagsOf).Distinct().OrderBy(t => t == HappyPathTag ? 0 : 1).ThenBy(t => t).ToArray();
+        // Tags: each scenario's effective tags, its feature's and then its own, with Happy Path for a happy path pinned
+        // first (D9, plans/TAGS_PLAN.md §4.8). A category is one more tag. One chip per tag, spelled as the report first
+        // meets it, in an order no culture sets (TagChips).
+        var tagNames = tagChips.Names;
         if (tagNames.Length > 0)
         {
             body.Append("""<div class="tag-filters"><span class="tag-filters-label">Tags</span><span class="fltr-controls">""");
-            body.Append(FilterModeToggle("tag-mode-toggle", "OR", "ANY: scenarios with any of the chosen tags. ALL: scenarios with every one of them. Click to switch."));
+            body.Append(FilterModeToggle("tag-mode-toggle", tagModeText, "ANY: scenarios with any of the chosen tags. ALL: scenarios with every one of them. Click to switch."));
             foreach (var tag in tagNames)
-                body.Append(FilterChip("tag", tag, tag, runs.Count(sc => TagsOf(sc).Contains(tag))));
-            var untagged = runs.Count(sc => TagsOf(sc).Length == 0);
+                body.Append(FilterChip("tag", tag, tag, tagChips.Count(tag), more: tagChips.Hidden.Contains(tag)));
+            var untagged = tagChips.Untagged;
             if (untagged > 0) body.Append(FilterChip("tag", "__untagged__", "Untagged", untagged, none: true));
+            if (tagChips.Hidden.Count > 0) body.Append(TagMoreChip(tagChips.Hidden.Count));
             body.Append(GroupClear("tag"));
             body.Append("</span></div>");
         }
@@ -1923,25 +1924,6 @@ public static class ReportGenerator
             var noDependencies = runs.Count(sc => !scenarioDependencies.TryGetValue(sc.Id, out var ds) || ds.Count == 0);
             if (noDependencies > 0) body.Append(FilterChip("dependency", "__none__", "No dependencies", noDependencies, none: true));
             body.Append(GroupClear("dependency"));
-            body.Append("</span></div>");
-        }
-
-        // Category filter (only shown when scenarios have category data)
-        var allCategories = features.SelectMany(f => f.Scenarios)
-            .Where(s => s.Categories is { Length: > 0 })
-            .SelectMany(s => s.Categories!)
-            .Distinct()
-            .OrderBy(c => c)
-            .ToArray();
-        if (allCategories.Length > 0)
-        {
-            body.Append("""<div class="category-filters"><span class="category-filters-label">Categories</span><span class="fltr-controls">""");
-            body.Append(FilterModeToggle("cat-mode-toggle", catModeText, "ANY: scenarios in any of the chosen categories. ALL: scenarios in every one of them. Click to switch."));
-            foreach (var cat in allCategories)
-                body.Append(FilterChip("category", cat, cat, runs.Count(sc => sc.Categories is { } cs && cs.Contains(cat))));
-            var uncategorized = runs.Count(sc => sc.Categories is not { Length: > 0 });
-            if (uncategorized > 0) body.Append(FilterChip("category", "__uncategorized__", "Uncategorized", uncategorized, none: true));
-            body.Append(GroupClear("category"));
             body.Append("</span></div>");
         }
 
@@ -2318,6 +2300,7 @@ public static class ReportGenerator
                         featureDescription: feature.Description,
                         featureEndpoint: feature.Endpoint,
                         featureLabels: feature.Labels,
+                        tagChips: tagChips,
                         precomputedWholeTestContent: precomputedWholeTestContent,
                         separateBackgroundSteps: separateBackgroundSteps,
                         collapseRepeatedStepKeywords: collapseRepeatedStepKeywords,
@@ -2364,9 +2347,8 @@ public static class ReportGenerator
                 if (feature.Endpoint is not null) searchParts.Add(feature.Endpoint);
                 if (!string.IsNullOrWhiteSpace(scenario.Description)) searchParts.Add(scenario.Description);
                 if (scenario.Rule is not null) searchParts.Add(scenario.Rule);
-                if (feature.Labels is { Length: > 0 }) searchParts.AddRange(feature.Labels);
-                if (scenario.Categories is { Length: > 0 }) searchParts.AddRange(scenario.Categories);
-                if (scenario.Labels is { Length: > 0 }) searchParts.AddRange(scenario.Labels);
+                searchParts.AddRange(ScenarioTags.Effective(feature, scenario));
+                if (TagChips.RetryText(scenario) is { } retried) searchParts.Add(retried);
                 if (failed && scenario.ErrorMessage is not null) searchParts.Add(scenario.ErrorMessage);
                 CollectStepText(scenario.BackgroundSteps, searchParts);
                 CollectStepText(scenario.Steps, searchParts);
@@ -2377,20 +2359,12 @@ public static class ReportGenerator
                 var searchAttr = $" data-search=\"{System.Net.WebUtility.HtmlEncode(searchText)}\"";
                 searchIndexPieces?[scenario.Id].Add(searchText);
 
-                var categoriesAttr = scenario.Categories is { Length: > 0 }
-                    ? $" data-categories=\"{System.Net.WebUtility.HtmlEncode(string.Join(",", scenario.Categories))}\""
-                    : "";
-
-                var labelsAttr = scenario.Labels is { Length: > 0 }
-                    ? $" data-labels=\"{System.Net.WebUtility.HtmlEncode(string.Join(",", scenario.Labels))}\""
-                    : "";
+                // Its effective tags in their chips' spellings (plans/TAGS_PLAN.md §4.9), which the chips, @tag and the
+                // link read; its badges are its own tags, its feature's being on the feature, then the retry badge (§4.6).
+                var tagsAttr = tagChips.Attribute(feature.Labels, scenario);
 
                 var encodedName = System.Net.WebUtility.HtmlEncode(scenario.DisplayName);
-                var scenarioLabelsHtml = scenario.Labels is { Length: > 0 }
-                    ? string.Concat(scenario.Labels
-                        .Where(l => !scenario.IsHappyPath || !l.Equals("Happy Path", StringComparison.OrdinalIgnoreCase))
-                        .Select(l => $" <span class=\"label\">{System.Net.WebUtility.HtmlEncode(l)}</span>"))
-                    : "";
+                var scenarioLabelsHtml = TagChips.Badges(TagChips.BadgeTags(feature.Labels, scenario)) + TagChips.RetryBadge(scenario);
 
                 var scenarioTooltip = scenario.Result switch
                 {
@@ -2413,7 +2387,7 @@ public static class ReportGenerator
                 var historyBadges = historyEntry is null ? "" : HistoryHtml.Sparkline(historyEntry) + HistoryHtml.Pill(historyEntry);
 
                 body.Append($"""
-                         <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{(toggles.ScenariosExpanded ? " open" : "")}{depsAttr}{statusAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr}{historyAttr} data-stable-id="{scenarioStableId}" id="{anchorId}" tabindex="0">
+                         <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{(toggles.ScenariosExpanded ? " open" : "")}{depsAttr}{statusAttr}{searchAttr}{durationAttr}{tagsAttr}{historyAttr} data-stable-id="{scenarioStableId}" id="{anchorId}" tabindex="0">
                             <summary class="h3{(failed ? " failed" : skipped ? " skipped" : "")}" title="{scenarioTooltip}">{encodedName}{(scenario.IsHappyPath ? " <span class=\"label\">Happy Path</span>" : "")}{scenarioLabelsHtml}{durationBadge}{historyBadges}<button class="copy-scenario-name" title="Copy scenario name" data-scenario-name="{encodedName}" onclick="copy_scenario_name(this, event)">&#128203;</button><a class="scenario-link" href="#{anchorId}" title="Link to this scenario" onclick="event.stopPropagation()">&#128279;</a></summary>
                          """);
 
@@ -2984,17 +2958,22 @@ public static class ReportGenerator
         return System.Text.Json.JsonSerializer.Serialize(model);
     }
 
-    private const string HappyPathTag = "Happy Path";
-
     /// <summary>
     /// A tri-state filter chip (5.0.0, plans/OPTION_C_PLAN.md S6): off, then has, which takes the row's active class as in
     /// 4.x, then has not, its exclude class (report-filter-chips-script.js cycles them). The chip for the scenarios with
     /// none carries <c>data-none</c> and a reserved value, which the link writes. Its title counts the scenarios it picks out.
     /// </summary>
-    private static string FilterChip(string family, string value, string label, int scenarios, bool none = false) =>
-        $"<button type=\"button\" class=\"{family}-toggle{(none ? $" {family}-none" : "")}\" data-{family}=\"{System.Net.WebUtility.HtmlEncode(value)}\"{(none ? " data-none=\"1\"" : "")} aria-pressed=\"false\" title=\"{ScenarioCount(scenarios)}\">{System.Net.WebUtility.HtmlEncode(label)}</button>";
+    private static string FilterChip(string family, string value, string label, int scenarios, bool none = false, bool more = false) =>
+        $"<button type=\"button\" class=\"{family}-toggle{(none ? $" {family}-none" : "")}\" data-{family}=\"{System.Net.WebUtility.HtmlEncode(value)}\"{(none ? " data-none=\"1\"" : "")}{(more ? " data-more=\"1\" hidden" : "")} aria-pressed=\"false\" title=\"{ScenarioCount(scenarios)}\">{System.Net.WebUtility.HtmlEncode(label)}</button>";
 
     private static string ScenarioCount(int n) => n == 1 ? "1 scenario" : string.Create(CultureInfo.InvariantCulture, $"{n} scenarios");
+
+    /// <summary>
+    /// A long Tags row's More chip (plans/TAGS_PLAN.md §4.8, Q9): it shows the chips the row starts without, and hides them
+    /// again but for those that are set (<c>report-filter-chips-script.js</c>).
+    /// </summary>
+    private static string TagMoreChip(int hidden) => string.Create(CultureInfo.InvariantCulture,
+        $"<button type=\"button\" class=\"tag-more\" data-shown=\"{TagChips.MostShown}\" aria-expanded=\"false\" title=\"Show the other {hidden} {(hidden == 1 ? "tag" : "tags")}. The row starts with the {TagChips.MostShown} tags the most scenarios carry.\">{hidden} more</button>");
 
     /// <summary>A filter row's ANY / ALL switch; the mode underneath, OR or AND, is what the link writes (D11).</summary>
     private static string FilterModeToggle(string cssClass, string mode, string title) =>
@@ -3006,7 +2985,7 @@ public static class ReportGenerator
 
     /// <summary>
     /// The rows More filters folds away (S7, D15), named in their order for its title: Status always, then Duration,
-    /// Happy paths, Tags, Dependencies and Categories where the box has them.
+    /// Happy paths, Tags and Dependencies where the box has them.
     /// </summary>
     private static string FilterRowsTitle(Feature[] features, bool hasDurations, bool hasDependencies)
     {
@@ -3014,9 +2993,8 @@ public static class ReportGenerator
         var rows = new List<string> { "Status" };
         if (hasDurations) rows.Add("duration");
         if (runs.Any(s => s.IsHappyPath)) rows.Add("happy paths");
-        if (runs.Any(s => s.IsHappyPath || s.Labels is { Length: > 0 })) rows.Add("tags");
+        if (features.Any(f => f.Scenarios.Any(s => s.IsHappyPath || ScenarioTags.Effective(f, s).Length > 0))) rows.Add("tags");
         if (hasDependencies) rows.Add("dependencies");
-        if (runs.Any(s => s.Categories is { Length: > 0 })) rows.Add("categories");
         return rows.Count == 1 ? rows[0] : string.Join(", ", rows.Take(rows.Count - 1)) + " and " + rows[^1];
     }
 
@@ -3369,6 +3347,7 @@ public static class ReportGenerator
         string? featureDescription = null,
         string? featureEndpoint = null,
         string[]? featureLabels = null,
+        TagChips? tagChips = null,
         Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null,
         bool showNoInteractionsMarker = false,
         bool separateBackgroundSteps = false,
@@ -3429,8 +3408,8 @@ public static class ReportGenerator
             searchParts.Add(s.DisplayName);
             if (!string.IsNullOrWhiteSpace(s.Description)) searchParts.Add(s.Description);
             if (s.Rule is not null) searchParts.Add(s.Rule);
-            if (s.Categories is { Length: > 0 }) searchParts.AddRange(s.Categories);
-            if (s.Labels is { Length: > 0 }) searchParts.AddRange(s.Labels);
+            searchParts.AddRange(ScenarioTags.OwnOf(s));
+            if (TagChips.RetryText(s) is { } retried) searchParts.Add(retried);
             if (s.ErrorMessage is not null) searchParts.Add(s.ErrorMessage);
             CollectStepText(s.BackgroundSteps, searchParts);
             CollectStepText(s.Steps, searchParts);
@@ -3451,11 +3430,10 @@ public static class ReportGenerator
             foreach (var s in scenarios)
                 searchIndexPieces[s.Id].Add(groupSearchText);
 
-        // Aggregate categories, labels, dependencies
-        var categories = scenarios.Where(s => s.Categories is { Length: > 0 }).SelectMany(s => s.Categories!).Distinct().ToArray();
-        var categoriesAttr = categories.Length > 0 ? $" data-categories=\"{System.Net.WebUtility.HtmlEncode(string.Join(",", categories))}\"" : "";
-        var labels = scenarios.Where(s => s.Labels is { Length: > 0 }).SelectMany(s => s.Labels!).Distinct().ToArray();
-        var labelsAttr = labels.Length > 0 ? $" data-labels=\"{System.Net.WebUtility.HtmlEncode(string.Join(",", labels))}\"" : "";
+        // Aggregate tags and dependencies: the group matches a chip any of its rows matches (plans/TAGS_PLAN.md §4.8),
+        // and shows the tags all its rows share (F23)
+        var tagsAttr = tagChips?.GroupAttribute(featureLabels, scenarios) ?? "";
+        var groupTagBadges = TagChips.Badges(TagChips.GroupBadgeTags(featureLabels, scenarios));
         var allDeps = scenarios.Where(s => scenarioDependencies.ContainsKey(s.Id)).SelectMany(s => scenarioDependencies[s.Id]).Distinct().OrderBy(d => d).ToArray();
         var depsAttr = allDeps.Length > 0 ? $" data-dependencies=\"{System.Net.WebUtility.HtmlEncode(string.Join(",", allDeps))}\"" : "";
 
@@ -3485,8 +3463,8 @@ public static class ReportGenerator
         var happyPathClass = isGroupHappyPath ? " happy-path" : "";
         var happyPathBadge = isGroupHappyPath ? " <span class=\"label\">Happy Path</span>" : "";
 
-        body.Append($"<details class=\"scenario scenario-parameterized{happyPathClass}\"{(toggles.ScenariosExpanded ? " open" : "")} data-status=\"{overallStatus}\"{(scenarios.Length > 1 ? string.Create(CultureInfo.InvariantCulture, $" data-runs=\"{scenarios.Length}\"") : "")}{depsAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr}{groupHistoryAttr} id=\"{anchorId}\" tabindex=\"0\">");
-        body.Append($"<summary class=\"h3{(hasFailure ? " failed" : hasSkipped ? " skipped" : "")}\">{encodedGroupName}{happyPathBadge}{summaryText}{durationBadge}{groupHistoryBadge}<button class=\"copy-scenario-name\" title=\"Copy scenario name\" data-scenario-name=\"{encodedGroupName}\" onclick=\"copy_scenario_name(this, event)\">&#128203;</button><a class=\"scenario-link\" href=\"#{anchorId}\" title=\"Link to this scenario\" onclick=\"event.stopPropagation()\">&#128279;</a></summary>");
+        body.Append($"<details class=\"scenario scenario-parameterized{happyPathClass}\"{(toggles.ScenariosExpanded ? " open" : "")} data-status=\"{overallStatus}\"{(scenarios.Length > 1 ? string.Create(CultureInfo.InvariantCulture, $" data-runs=\"{scenarios.Length}\"") : "")}{depsAttr}{searchAttr}{durationAttr}{tagsAttr}{groupHistoryAttr} id=\"{anchorId}\" tabindex=\"0\">");
+        body.Append($"<summary class=\"h3{(hasFailure ? " failed" : hasSkipped ? " skipped" : "")}\">{encodedGroupName}{happyPathBadge}{groupTagBadges}{summaryText}{durationBadge}{groupHistoryBadge}<button class=\"copy-scenario-name\" title=\"Copy scenario name\" data-scenario-name=\"{encodedGroupName}\" onclick=\"copy_scenario_name(this, event)\">&#128203;</button><a class=\"scenario-link\" href=\"#{anchorId}\" title=\"Link to this scenario\" onclick=\"event.stopPropagation()\">&#128279;</a></summary>");
 
         // Parameter table — where both views exist, the configured default picks which one
         // starts visible (toggleFlattenParams reads live visibility, so it needs no seeding).
@@ -3549,8 +3527,8 @@ public static class ReportGenerator
                 if (featureEndpoint is not null) rowSearchParts.Add(featureEndpoint);
                 if (!string.IsNullOrWhiteSpace(s.Description)) rowSearchParts.Add(s.Description);
                 if (featureLabels is { Length: > 0 }) rowSearchParts.AddRange(featureLabels);
-                if (s.Categories is { Length: > 0 }) rowSearchParts.AddRange(s.Categories);
-                if (s.Labels is { Length: > 0 }) rowSearchParts.AddRange(s.Labels);
+                rowSearchParts.AddRange(ScenarioTags.OwnOf(s));
+                if (TagChips.RetryText(s) is { } rowRetried) rowSearchParts.Add(rowRetried);
                 if (s.ErrorMessage is not null) rowSearchParts.Add(s.ErrorMessage);
                 CollectStepText(s.BackgroundSteps, rowSearchParts);
                 CollectStepText(s.Steps, rowSearchParts);
@@ -3652,8 +3630,8 @@ public static class ReportGenerator
             if (featureEndpoint is not null) rowSearchParts.Add(featureEndpoint);
             if (!string.IsNullOrWhiteSpace(s.Description)) rowSearchParts.Add(s.Description);
             if (featureLabels is { Length: > 0 }) rowSearchParts.AddRange(featureLabels);
-            if (s.Categories is { Length: > 0 }) rowSearchParts.AddRange(s.Categories);
-            if (s.Labels is { Length: > 0 }) rowSearchParts.AddRange(s.Labels);
+            rowSearchParts.AddRange(ScenarioTags.OwnOf(s));
+            if (TagChips.RetryText(s) is { } rowRetried) rowSearchParts.Add(rowRetried);
             if (s.ErrorMessage is not null) rowSearchParts.Add(s.ErrorMessage);
             CollectStepText(s.BackgroundSteps, rowSearchParts);
             CollectStepText(s.Steps, rowSearchParts);

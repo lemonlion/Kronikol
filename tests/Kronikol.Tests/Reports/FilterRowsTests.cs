@@ -5,8 +5,9 @@ namespace Kronikol.Tests.Reports;
 
 /// <summary>
 /// The filter box's rows (5.0.0, plans/OPTION_C_PLAN.md S5 and S6, D6 to D14, D16, D19): labels without colons and each
-/// row's controls in a group of their own; Duration and Happy paths on the Status line; Tags, Dependencies and Categories
-/// as rows of tri-state chips with an ANY / ALL switch, a chip for the scenarios with none and a Clear; the counts in
+/// row's controls in a group of their own; Duration and Happy paths on the Status line; Tags and Dependencies as rows of
+/// tri-state chips with an ANY / ALL switch, a chip for the scenarios with none and a Clear, a category being one more tag
+/// (plans/TAGS_PLAN.md §4.8); the counts in
 /// the chips' titles, counted as the run counts scenarios (a parameterized scenario once per example); what the filters
 /// leave showing, beside Clear All; and the search's qualifiers in its help.
 /// </summary>
@@ -26,8 +27,8 @@ public class FilterRowsTests
         ErrorMessage = result == ExecutionResult.Failed ? "boom" : null
     };
 
-    // five runs in two features: a parameterized scenario of two examples with no tag, a marker-only diagram, a
-    // scenario with no category
+    // five runs in two features: a parameterized scenario of two examples with no tag, a marker-only diagram, and
+    // categories, which are tags
     private static Feature[] Bakery() =>
     [
         new Feature
@@ -37,8 +38,8 @@ public class FilterRowsTests
             [
                 Run("s1", "Create order", ExecutionResult.Passed, 100, ["smoke", "api"], ["Fast"], happy: true),
                 Run("s2", "Reject order", ExecutionResult.Failed, 300, ["api"]),
-                Run("s3", "Price(size: S)", ExecutionResult.Passed, 50, categories: ["Slow"], outline: "Price"),
-                Run("s4", "Price(size: L)", ExecutionResult.Passed, 50, categories: ["Slow"], outline: "Price")
+                Run("s3", "Price(size: S)", ExecutionResult.Passed, 50, outline: "Price"),
+                Run("s4", "Price(size: L)", ExecutionResult.Passed, 50, outline: "Price")
             ]
         },
         new Feature { DisplayName = "Refunds", Scenarios = [Run("s5", "Refund", ExecutionResult.Passed, 20, ["smoke"], ["Fast", "Slow"])] }
@@ -80,7 +81,7 @@ public class FilterRowsTests
             "<div class=\"status-filters\"><span class=\"status-filters-label\">Status</span><span class=\"fltr-controls\"><button class=\"status-toggle\"",
             "<div class=\"duration-filters\"", "<span class=\"duration-filters-label\">Duration ≥</span><span class=\"fltr-controls\"><button class=\"percentile-btn\"",
             "<div class=\"happy-filters\"><span class=\"happy-filters-label\">Happy paths</span><span class=\"fltr-controls\" role=\"group\" aria-label=\"Happy paths\">",
-            "<div class=\"tag-filters\">", "<div class=\"dependency-filters\">", "<div class=\"category-filters\">");
+            "<div class=\"tag-filters\">", "<div class=\"dependency-filters\">");
         Assert.DoesNotContain("Status:", box);
         Assert.DoesNotContain("happy-path-toggle", box);
     }
@@ -107,6 +108,8 @@ public class FilterRowsTests
             + "<button type=\"button\" class=\"tag-mode-toggle\" data-mode=\"OR\" title=\"ANY: scenarios with any of the chosen tags. ALL: scenarios with every one of them. Click to switch.\">ANY</button>"
             + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"Happy Path\" aria-pressed=\"false\" title=\"1 scenario\">Happy Path</button>"
             + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"api\" aria-pressed=\"false\" title=\"2 scenarios\">api</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"Fast\" aria-pressed=\"false\" title=\"2 scenarios\">Fast</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"Slow\" aria-pressed=\"false\" title=\"1 scenario\">Slow</button>"
             + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"smoke\" aria-pressed=\"false\" title=\"2 scenarios\">smoke</button>"
             + "<button type=\"button\" class=\"tag-toggle tag-none\" data-tag=\"__untagged__\" data-none=\"1\" aria-pressed=\"false\" title=\"2 scenarios\">Untagged</button>"
             + "<button type=\"button\" class=\"group-clear\" title=\"Clear the tag filters\" hidden>Clear</button></span></div>", box);
@@ -129,16 +132,65 @@ public class FilterRowsTests
     }
 
     [Fact]
-    public void The_categories_row_is_tri_state_with_no_All_button()
+    public void A_category_is_a_tag_and_the_report_has_no_categories_row()
     {
-        var box = Box(Generate("FilterRows_Cats.html"));
-        Assert.Contains("<div class=\"category-filters\"><span class=\"category-filters-label\">Categories</span><span class=\"fltr-controls\">"
-            + "<button type=\"button\" class=\"cat-mode-toggle\" data-mode=\"OR\" title=\"ANY: scenarios in any of the chosen categories. ALL: scenarios in every one of them. Click to switch.\">ANY</button>"
-            + "<button type=\"button\" class=\"category-toggle\" data-category=\"Fast\" aria-pressed=\"false\" title=\"2 scenarios\">Fast</button>"
-            + "<button type=\"button\" class=\"category-toggle\" data-category=\"Slow\" aria-pressed=\"false\" title=\"3 scenarios\">Slow</button>"
-            + "<button type=\"button\" class=\"category-toggle category-none\" data-category=\"__uncategorized__\" data-none=\"1\" aria-pressed=\"false\" title=\"1 scenario\">Uncategorized</button>"
-            + "<button type=\"button\" class=\"group-clear\" title=\"Clear the category filters\" hidden>Clear</button></span></div>", box);
-        Assert.DoesNotContain(">All</button>", box);
+        var html = Generate("FilterRows_Cats.html");
+        var box = Box(html);
+        Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"Fast\" aria-pressed=\"false\" title=\"2 scenarios\">Fast</button>", box);
+        // (a 4.x link's __uncategorized__ is still read, as the Untagged chip)
+        foreach (var gone in new[] { "category-filters", "category-toggle", "cat-mode-toggle", "data-category=", "data-categories=", "_catMode" })
+            Assert.DoesNotContain(gone, html);
+    }
+
+    [Fact]
+    public void A_feature_s_tags_pick_out_every_one_of_its_scenarios()
+    {
+        Feature[] features =
+        [
+            new Feature
+            {
+                DisplayName = "Checkout", Labels = ["checkout"],
+                Scenarios = [Run("c1", "Pay", ExecutionResult.Passed, 5, ["smoke"]), Run("c2", "Refuse", ExecutionResult.Passed, 5)]
+            },
+            new Feature { DisplayName = "Other", Scenarios = [Run("o1", "Browse", ExecutionResult.Passed, 5)] }
+        ];
+        var box = Box(Generate("FilterRows_FeatureTags.html", features));
+        Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"checkout\" aria-pressed=\"false\" title=\"2 scenarios\">checkout</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"smoke\" aria-pressed=\"false\" title=\"1 scenario\">smoke</button>"
+            + "<button type=\"button\" class=\"tag-toggle tag-none\" data-tag=\"__untagged__\" data-none=\"1\" aria-pressed=\"false\" title=\"1 scenario\">Untagged</button>", box);
+    }
+
+    [Fact]
+    public void Names_that_differ_only_in_the_case_of_ASCII_letters_are_one_chip_in_the_spelling_the_report_meets_first()
+    {
+        Feature[] features =
+        [
+            new Feature { DisplayName = "A", Scenarios = [Run("a1", "First", ExecutionResult.Passed, 5, ["Smoke"])] },
+            new Feature { DisplayName = "B", Scenarios = [Run("b1", "Second", ExecutionResult.Passed, 5, ["smoke"], ["SMOKE", "über"]), Run("b2", "Third", ExecutionResult.Passed, 5, ["Über"])] }
+        ];
+        var box = Box(Generate("FilterRows_Case.html", features));
+        Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"Smoke\" aria-pressed=\"false\" title=\"2 scenarios\">Smoke</button>", box);
+        Assert.DoesNotContain("data-tag=\"smoke\"", box);
+        Assert.DoesNotContain("data-tag=\"SMOKE\"", box);
+        // a letter outside ASCII is not folded (§4.3): two chips (HtmlEncode writes U+00A0 to U+00FF as numbers)
+        Assert.Contains("data-tag=\"&#252;ber\" aria-pressed=\"false\" title=\"1 scenario\">", box);
+        Assert.Contains("data-tag=\"&#220;ber\" aria-pressed=\"false\" title=\"1 scenario\">", box);
+    }
+
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("sv-SE")]
+    [InlineData("tr-TR")]
+    [InlineData("cs-CZ")]
+    public void The_chips_are_in_the_same_order_under_every_culture(string culture)
+    {
+        Feature[] features = [new Feature { DisplayName = "F", Scenarios = [Run("x", "X", ExecutionResult.Passed, 5, ["Äpfel", "ice", "Ich", "chip", "hat", "Zebra", "apple"])] }];
+        CultureRun.Under(culture, () =>
+        {
+            var box = Box(Generate($"FilterRows_Order_{culture}.html", features));
+            InOrder(box, "data-tag=\"apple\"", "data-tag=\"chip\"", "data-tag=\"hat\"", "data-tag=\"ice\"", "data-tag=\"Ich\"",
+                "data-tag=\"Zebra\"", "data-tag=\"&#196;pfel\"");
+        });
     }
 
     [Fact]

@@ -23,15 +23,16 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **The features can be sorted.** A Sort dropdown at the right of the Features tab's tools orders the feature cards and
   the features table alike: the report's own order, the feature's name A to Z, failures first, most scenarios, and,
   for a run with durations, slowest total, slowest average and longest scenario.
-- **Tags have a filter row,** as dependencies and categories do: a chip for each tag (its tooltip says how many
-  scenarios carry it), an Untagged chip when a scenario has none, and an ANY / ALL switch, ANY by default. A report with
-  a happy path puts the Happy Path tag's chip first.
-- **A chip can leave its scenarios out.** A chip of the Tags, Dependencies or Categories row goes from off to has (a
-  scenario must have it) to has not (it must not), and back to off; Alt+click or a right-click goes straight to has not.
-  A chosen chip carries its row's 4.x class (`tag-active`, `dependency-active`, `category-active`) and a left-out one a
-  class of its own (`tag-exclude`, `dependency-exclude`, `category-exclude`), with `aria-pressed` `true`, `mixed` or
-  `false`. Each row has a chip for the scenarios with none (Untagged, No dependencies, Uncategorized) and a Clear while
-  one of its chips is set.
+- **Tags have a filter row,** as dependencies do: a chip for each tag (its tooltip says how many scenarios carry it),
+  an Untagged chip when a scenario has none, and an ANY / ALL switch, ANY by default
+  (`ReportToggleDefaults.TagFilterMode`). A report with a happy path puts the Happy Path tag's chip first. A row of more
+  than 30 tags starts with the 30 that the most scenarios carry and a chip that shows the rest (`5 more`, then
+  `Fewer`); a chip that is set always shows.
+- **A chip can leave its scenarios out.** A chip of the Tags or Dependencies row goes from off to has (a scenario must
+  have it) to has not (it must not), and back to off; Alt+click or a right-click goes straight to has not. A chosen
+  chip carries its row's 4.x class (`tag-active`, `dependency-active`) and a left-out one a class of its own
+  (`tag-exclude`, `dependency-exclude`), with `aria-pressed` `true`, `mixed` or `false`. Each row has a chip for the
+  scenarios with none (Untagged, No dependencies) and a Clear while one of its chips is set.
 - **The search takes qualifiers.** `dep:`, `duration:` and `is:happy` narrow a search as the filters do: `dep:payment`
   (part of a dependency's name, case and spaces ignored; quotes for a name with spaces, commas for any of several),
   `duration:>2s`, `duration:<500ms`, `duration:1s..5s` or `duration:>=p90` (a scenario's own time, the first-call
@@ -42,9 +43,11 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   of its examples. Whenever the scenarios shown change, the page raises a `kron-filter-change` event on the document,
   with `{ shown, total }` in its `detail`.
 - **The page's link carries every filter.** What a 4.x link could not say has parameters of its own: `tags=` and
-  `tagx=` for the tags chosen and left out, `tagmode=`, `depx=` and `catx=` for the dependencies and categories left
-  out, and `hpx=1` for happy paths hidden. Every 4.x parameter keeps its meaning (`hp=1` is happy paths only), so a
+  `tagx=` for the tags chosen and left out, `tagmode=`, `depx=` for the dependencies left out, and `hpx=1` for happy
+  paths hidden. Every 4.x parameter keeps its meaning (`hp=1` is happy paths only), so a
   link copied from a 4.x report opens the same view.
+- **`@"two words"` finds a tag with a space,** such as `@"Happy Path"`, on its own or with `&&`, `||` and `!`.
+- **A parameterized scenario shows the tags all its examples carry,** less its feature's; 4.x drew none.
 - **The duration buttons say what they show.** Each percentile's tooltip names its threshold and its share of the run
   (the slowest half for P50), and that the first-call warm-up is left out when the run had one.
 - **The report bar carries the filters.** Right of the tabs it shows what the filters leave showing (shortened, then
@@ -142,8 +145,8 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   shade deeper, so its white name reads at 6.15:1. `DependencyColors` still overrides it.
 - **A step bar's table or doc string ends at its last row.** The blank line under it is gone; the one above stays.
   A report written before 5.0.0 draws that way too where the page draws its diagrams.
-- **The dependency filter shows a scenario with any of the chosen dependencies by default, as the category (tag) filter
-  does.** `ReportToggleDefaults.DependencyFilterMode` defaults to `FilterCombinationMode.Or` (4.x: `And`, a scenario
+- **The dependency filter shows a scenario with any of the chosen dependencies by default, as the tag filter does.**
+  `ReportToggleDefaults.DependencyFilterMode` defaults to `FilterCombinationMode.Or` (4.x: `And`, a scenario
   with all of them), and the mode button starts on OR. A report that wants the 4.x behaviour sets
   `DependencyFilterMode = FilterCombinationMode.And`. A link made on a 4.x report that chose dependencies with no
   `depmode` meant AND; opened on a 5.0.0 report it means OR. One that says `depmode=OR` still means OR, and a 5.0.0
@@ -196,18 +199,37 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **Happy paths is Show, Only or Hide.** The Happy Paths Only button becomes a three-way control on the Status line,
   which drives the Tags row's Happy Path chip; a report without a happy path has neither. `.happy-path-toggle`,
   `.happy-path-active` and `filter_happy_paths` are gone, and `#hp=1` still opens on Only.
-- **The categories' chips are tri-state, and their All button is gone:** nothing chosen shows every category, as in
-  the other rows.
+- **A category is a tag, and the Categories row is gone.** A scenario's categories are chips of the Tags row, and so
+  are its feature's tags, which now pick out every scenario of the feature; `@` search reads the same tags as the row,
+  Happy Path included. Gone with the row: `report-category-filter-function.js` (`filter_categories`, `toggle_cat_mode`),
+  the `.category-filters`, `.category-toggle`, `.category-active`, `.category-exclude`, `.category-none` and
+  `.cat-mode-toggle` rules a `CustomCss` sheet may target, and `ReportToggleDefaults.CategoryFilterMode`, which
+  `TagFilterMode` replaces.
+- **`data-tags` replaces `data-labels` and `data-categories`.** A scenario's element carries its tags, its feature's
+  first, each spelled as its chip is, percent-encoded and joined with commas
+  (`data-tags="Happy%20Path,checkout,a%2Cb"`), so a comma, a quote or a space in a name survives. A parameterized
+  group's element carries what any of its rows carries.
+- **Tags that differ only in the case of an ASCII letter are one tag:** `Smoke` and `smoke` are one chip, spelled as the
+  report's data first lists it. No other letter folds, so `Über` and `über` are two, since .NET, JavaScript and Java
+  fold the rest of Unicode differently. The chips sort Happy Path first, then by name with its ASCII letters folded,
+  then by code unit, the same under every culture (4.x sorted by the machine's).
+- **The link names each tag on its own.** `tags=` and `tagx=` percent-encode each name and join the names with commas,
+  so `a,b` stays one tag. A 4.x link's `cats=` chooses tags, its `catmode=` sets the tags' mode when the link has no
+  `tagmode=`, and its Uncategorized chip (`__uncategorized__`) is Untagged. A value that does not decode loses only
+  itself.
+- **A retry is a badge, not tags.** The `retry N` labels an ingest lane gives a scenario for each earlier attempt are no
+  longer chips or badges. The scenario shows one badge, `retry 2` for a third attempt, drawn from `Scenario.Attempt`,
+  and its tooltip says the earlier attempts are not in the report; a search for `retry 2` still finds it. An author's
+  own `retry 2` tag is a tag like any other.
 - **The filter rows take Option C's look.** Each row's label is an uppercase word in a column of its own (`Status`,
-  4.x `Status:`), Status, Duration and Happy paths are segmented groups, tags, dependencies and categories are chips,
+  4.x `Status:`), Status, Duration and Happy paths are segmented groups, tags and dependencies are chips,
   every control is 28 px tall (36 px on a phone), and the rows reflow on the filter box's own width, not the window's.
   A row's switch reads ANY or ALL (4.x: OR or AND) and keeps the mode in `data-mode`, which the link writes as before;
   the switches and chips answer one delegated handler rather than an `onclick` each. The exports read Export HTML and
   Export CSV where the box is narrow. A `CustomCss` sheet written against the 4.x rules of `.status-toggle`,
-  `.percentile-btn`, `.dependency-toggle`, `.category-toggle`, `.dep-mode-toggle` or `.cat-mode-toggle` may no longer
-  apply; set the tokens instead.
+  `.percentile-btn`, `.dependency-toggle` or `.dep-mode-toggle` may no longer apply; set the tokens instead.
 - **On a desktop the filter rows fold under More filters.** A More filters button ends the search line, and the rows
-  under it (Status, Duration, Happy paths, Tags, Dependencies, Categories) stay folded until it is pressed; while they
+  under it (Status, Duration, Happy paths, Tags, Dependencies) stay folded until it is pressed; while they
   are folded it counts the filters on in them. The readout and Clear All stay in view either way, and the search help
   opens on its own. The box carries `rows-folded` while they are folded, so a script or test that uses a row's control
   on a desktop opens them first. On a phone (768 px wide or less) the box's own Filters toggle folds them, as before.
@@ -238,6 +260,10 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 
 ### Fixed
 
+- **A feature's tags pick out its scenarios.** They were drawn on the feature and found by free text, but no chip and no
+  `@` search picked out the feature's scenarios.
+- **A tag with a comma in its name is one tag.** The chips, the search and the link split it in two. A double quote in a
+  category's name lost a shared link its category filter and the scenario the link pointed to.
 - **The summary ring reads 100% only when every scenario passed.** It rounded the pass rate, so 213 passed of 214 read
   100%; a rate under 100 now rounds down and stops at 99%.
 - **A scenario skipped after an earlier failure is counted.** The summary and the ring left out the scenarios a

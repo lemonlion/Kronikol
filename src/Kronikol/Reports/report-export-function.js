@@ -14,16 +14,14 @@ function clear_all_filters() {
     var cw = document.getElementById('custom-duration-wrap');
     if (cw) cw.style.display = 'none';
     for (var i = 0; i < c.items.length; i++) c.items[i].dur = false;
-    // Clear the chips of tags (Happy paths with them), dependencies and categories. The modes reset to the report's
+    // Clear the chips of tags (Happy paths with them) and dependencies. The modes reset to the report's
     // SEEDED defaults, not a literal (a hard-coded 'AND' would silently un-configure a report generated with an OR default).
     for (var family in FILTER_CHIP_ROWS) filter_chips(family).forEach(function(b) { set_chip_state(b, 'off'); });
     _tagMode = _tagModeDefault;
     set_mode_button(document.querySelector('.tag-mode-toggle'), _tagMode);
     _depMode = _depModeDefault;
     set_mode_button(document.querySelector('.dep-mode-toggle'), _depMode);
-    if (typeof _catMode !== 'undefined') _catMode = _catModeDefault;
-    set_mode_button(document.querySelector('.cat-mode-toggle'), _catMode);
-    for (var i = 0; i < c.items.length; i++) { c.items[i].tag = false; c.items[i].dep = false; c.items[i].cat = false; }
+    for (var i = 0; i < c.items.length; i++) { c.items[i].tag = false; c.items[i].dep = false; }
     sync_happy_paths();
     sync_group_clears();
     // Clear deep-search state (chip + in-flight queries)

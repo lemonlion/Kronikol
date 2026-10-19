@@ -4,8 +4,9 @@ using Microsoft.Playwright;
 namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
-/// The filters (5.0.0, plans/OPTION_C_PLAN.md S5 and S6): tags, dependencies and categories as tri-state chips (off, has,
-/// has not) with an ANY / ALL switch and a chip for the scenarios with none; Happy paths as a three-way control over the
+/// The filters (5.0.0, plans/OPTION_C_PLAN.md S5 and S6): tags and dependencies as tri-state chips (off, has, has not)
+/// with an ANY / ALL switch and a chip for the scenarios with none, a category being one more tag (plans/TAGS_PLAN.md
+/// §4.8); Happy paths as a three-way control over the
 /// Happy Path tag; a Clear per row; what the filters leave showing and the event that says so; every filter in the
 /// page's link, which a fresh page reads back, links from 4.x reports included; the search's qualifiers (dep:, duration:,
 /// is:); Clear All; and the exports.
@@ -19,10 +20,10 @@ public class FilterPipelineTests : PlaywrightTestBase
     private const string PaymentSource = "@startuml\nactor \"Caller\" as caller\nparticipant \"Payment Service\" as pay\ncaller -> pay : POST /refunds\n@enduml";
     private const string MarkerOnlySource = "@startuml\nparticipant \"(no interactions)\" as noInteractions\n@enduml";
 
-    // the scenarios' anchors: A happy, smoke and api, Fast, calls Caller, Order Service and Order Db, 100 ms; B api,
-    // uncategorized, no call, failed, 300 ms; P a parameterized scenario of two examples, untagged, Slow, 50 ms each; R
-    // smoke, Fast and Slow, calls Caller and Payment Service, 20 ms. A feature lists its happy paths first, then the rest by
-    // name, so the page order is A, P, B, R.
+    // the scenarios' anchors: A happy, smoke and api, Fast, calls Caller, Order Service and Order Db, 100 ms; B api, no
+    // call, failed, 300 ms; P a parameterized scenario of two examples, untagged, 50 ms each; R smoke, Fast and Slow, calls
+    // Caller and Payment Service, 20 ms. Fast and Slow are categories, which are tags. A feature lists its happy paths
+    // first, then the rest by name, so the page order is A, P, B, R.
     private const string A = "scenario-create-order", B = "scenario-reject-order", P = "scenario-price", R = "scenario-refund";
     private static readonly string[] All = [A, P, B, R];
 
@@ -45,8 +46,8 @@ public class FilterPipelineTests : PlaywrightTestBase
                 [
                     Run("s1", "Create order", ExecutionResult.Passed, 100, ["smoke", "api"], ["Fast"], happy: true),
                     Run("s2", "Reject order", ExecutionResult.Failed, 300, ["api"]),
-                    Run("s3", "Price(size: S)", ExecutionResult.Passed, 50, categories: ["Slow"], outline: "Price"),
-                    Run("s4", "Price(size: L)", ExecutionResult.Passed, 50, categories: ["Slow"], outline: "Price")
+                    Run("s3", "Price(size: S)", ExecutionResult.Passed, 50, outline: "Price"),
+                    Run("s4", "Price(size: L)", ExecutionResult.Passed, 50, outline: "Price")
                 ]
             },
             new() { DisplayName = "Refunds", Scenarios = [Run("s5", "Refund", ExecutionResult.Passed, 20, ["smoke"], ["Fast", "Slow"])] }
@@ -130,7 +131,7 @@ public class FilterPipelineTests : PlaywrightTestBase
     }
 
     [Fact]
-    public async Task The_chips_for_none_pick_out_the_scenarios_with_no_tag_dependency_or_category()
+    public async Task The_chips_for_none_pick_out_the_scenarios_with_no_tag_or_no_dependency()
     {
         await OpenAsync("Filters_None.html");
         await Page.Locator(".tag-toggle[data-none='1']").ClickAsync();
@@ -143,14 +144,10 @@ public class FilterPipelineTests : PlaywrightTestBase
         Assert.Equal([P, B], await Shown());
         await RightClick(Page.Locator(".dependency-toggle[data-none='1']"));
         Assert.Equal([A, R], await Shown());
-        await RightClick(Page.Locator(".dependency-toggle[data-none='1']"));
-
-        await Page.Locator(".category-toggle[data-none='1']").ClickAsync();
-        Assert.Equal([B], await Shown());
     }
 
     [Fact]
-    public async Task Dependencies_and_categories_are_tri_state()
+    public async Task Dependencies_are_tri_state_and_a_category_is_a_tag_chip()
     {
         await OpenAsync("Filters_DepCat.html");
         await RightClick(Chip("dependency", "Order Service"));
@@ -159,11 +156,12 @@ public class FilterPipelineTests : PlaywrightTestBase
         await RightClick(Chip("dependency", "Order Service"));
         Assert.Equal(All, await Shown());
 
-        await RightClick(Chip("category", "Slow"));
-        await Expect(Chip("category", "Slow")).ToHaveAttributeAsync("aria-pressed", "mixed");
-        Assert.Equal([A, B], await Shown());
-        await Chip("category", "Fast").ClickAsync();
+        await RightClick(Tag("Slow"));
+        await Expect(Tag("Slow")).ToHaveAttributeAsync("aria-pressed", "mixed");
+        Assert.Equal([A, P, B], await Shown());
+        await Tag("Fast").ClickAsync();
         Assert.Equal([A], await Shown());
+        Assert.Equal(0, await Page.Locator(".category-toggle, .cat-mode-toggle, .category-filters").CountAsync());
     }
 
     [Fact]
@@ -220,14 +218,15 @@ public class FilterPipelineTests : PlaywrightTestBase
         await Expect(readout).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\bis-filtered\\b"));
         await Page.Locator(".status-toggle[data-status='Failed']").ClickAsync();
 
-        await Chip("category", "Slow").ClickAsync();
+        await Tag("api").ClickAsync();
+        await Expect(readout).ToHaveTextAsync("Filtered 2 of 5 scenarios, 1 of 2 features");
+        await Tag("api").ClickAsync(new() { Modifiers = [KeyboardModifier.Alt] });
         await Expect(readout).ToHaveTextAsync("Filtered 3 of 5 scenarios, 2 of 2 features");
-        await Chip("category", "Slow").ClickAsync(new() { Modifiers = [KeyboardModifier.Alt] });
-        await Chip("category", "Slow").ClickAsync(new() { Modifiers = [KeyboardModifier.Alt] });
+        await Tag("api").ClickAsync(new() { Modifiers = [KeyboardModifier.Alt] });
         await Expect(readout).ToHaveTextAsync("All 5 scenarios, 2 features");
 
         // one event per change of what shows, none for a filter that changes nothing
-        Assert.Equal(["1/5", "5/5", "3/5", "2/5", "5/5"], await Page.EvaluateAsync<string[]>("() => window.__changes"));
+        Assert.Equal(["1/5", "5/5", "2/5", "3/5", "5/5"], await Page.EvaluateAsync<string[]>("() => window.__changes"));
     }
 
     [Fact]
@@ -238,15 +237,16 @@ public class FilterPipelineTests : PlaywrightTestBase
         await RightClick(Tag("smoke"));
         await Page.Locator(".tag-mode-toggle").ClickAsync();
         await RightClick(Chip("dependency", "Payment Service"));
-        await RightClick(Chip("category", "Fast"));
+        await RightClick(Tag("Fast"));
         await Page.Locator(".happy-seg[data-hp='out']").ClickAsync();
         var shown = await Shown();
         var hash = await Page.EvaluateAsync<string>("() => location.hash");
         Assert.Contains("tags=api", hash);
-        Assert.Contains("tagx=smoke", hash);
+        // the chips left out, in the row's order
+        Assert.Contains("tagx=Fast,smoke", hash);
         Assert.Contains("tagmode=AND", hash);
         Assert.Contains("depx=Payment%20Service", hash);
-        Assert.Contains("catx=Fast", hash);
+        Assert.DoesNotContain("cat", hash);
         Assert.Contains("hpx=1", hash);
 
         var url = await Page.EvaluateAsync<string>("() => location.href");
@@ -259,7 +259,7 @@ public class FilterPipelineTests : PlaywrightTestBase
         await Expect(fresh.Locator(".tag-toggle[data-tag='smoke']")).ToHaveAttributeAsync("aria-pressed", "mixed");
         await Expect(fresh.Locator(".tag-mode-toggle")).ToHaveTextAsync("ALL");
         await Expect(fresh.Locator(".dependency-toggle[data-dependency='Payment Service']")).ToHaveAttributeAsync("aria-pressed", "mixed");
-        await Expect(fresh.Locator(".category-toggle[data-category='Fast']")).ToHaveAttributeAsync("aria-pressed", "mixed");
+        await Expect(fresh.Locator(".tag-toggle[data-tag='Fast']")).ToHaveAttributeAsync("aria-pressed", "mixed");
         await Expect(fresh.Locator(".happy-seg[data-hp='out']")).ToHaveAttributeAsync("aria-pressed", "true");
         await fresh.CloseAsync();
     }
@@ -267,13 +267,14 @@ public class FilterPipelineTests : PlaywrightTestBase
     [Fact]
     public async Task A_link_from_a_4x_report_still_reads()
     {
-        // 4.x wrote hp=1 for Happy Paths Only, deps= and cats= for the chosen chips, and the modes as AND and OR
+        // 4.x wrote hp=1 for Happy Paths Only, deps= and cats= for the chosen chips, and the modes as AND and OR; its
+        // categories are tags now (plans/TAGS_PLAN.md §4.10), so cats= chooses tags and catmode= sets the tags' mode
         await OpenAsync("Filters_OldLink.html", "#deps=Caller&depmode=AND&cats=Fast&catmode=AND&hp=1");
         await Expect(Page.Locator(".happy-seg[data-hp='in']")).ToHaveAttributeAsync("aria-pressed", "true");
         await Expect(Chip("dependency", "Caller")).ToHaveAttributeAsync("aria-pressed", "true");
-        await Expect(Chip("category", "Fast")).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(Tag("Fast")).ToHaveAttributeAsync("aria-pressed", "true");
         await Expect(Page.Locator(".dep-mode-toggle")).ToHaveTextAsync("ALL");
-        await Expect(Page.Locator(".cat-mode-toggle")).ToHaveTextAsync("ALL");
+        await Expect(Page.Locator(".tag-mode-toggle")).ToHaveTextAsync("ALL");
         Assert.Equal([A], await Shown());
     }
 

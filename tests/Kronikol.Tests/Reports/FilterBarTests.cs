@@ -60,7 +60,7 @@ public class FilterBarTests
         InOrder(html,
             "<div class=\"filter-search\"><span class=\"search-field\"><input id=\"searchbar\" ",
             "</span><button type=\"button\" class=\"search-help-toggle\"",
-            "<button type=\"button\" class=\"more-filters\" aria-controls=\"filter-rows\" aria-expanded=\"false\" title=\"Status, duration, happy paths, tags and categories\"><span class=\"more-filters-label\">More filters</span><span class=\"more-filters-count\" hidden></span><svg ",
+            "<button type=\"button\" class=\"more-filters\" aria-controls=\"filter-rows\" aria-expanded=\"false\" title=\"Status, duration, happy paths and tags\"><span class=\"more-filters-label\">More filters</span><span class=\"more-filters-count\" hidden></span><svg ",
             "</svg></button></div>",
             "<div class=\"filters\" id=\"filter-rows\">");
     }

@@ -387,15 +387,16 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         await Expect(hpBtn).ToHaveAttributeAsync("aria-pressed", "true");
     }
 
-    // ── Category filter ──
+    // ── Categories are tags (plans/TAGS_PLAN.md §4.8) ──
 
     [Fact]
-    public async Task Category_buttons_render_for_scenarios_with_categories()
+    public async Task A_scenario_s_categories_are_chips_of_the_tags_row()
     {
         await Page.GotoAsync(GenerateReport("ScenarioCategoryBtns.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        var catBtns = await Page.Locator(".category-toggle").CountAsync();
-        Assert.True(catBtns >= 2, $"Should have category buttons but found {catBtns}");
+        Assert.Equal(1, await Page.Locator(".filtering-box .tag-toggle[data-tag='Smoke']").CountAsync());
+        Assert.Equal(1, await Page.Locator(".filtering-box .tag-toggle[data-tag='API']").CountAsync());
+        Assert.Equal(0, await Page.Locator(".category-toggle").CountAsync());
     }
 }
