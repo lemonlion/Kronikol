@@ -45,7 +45,7 @@ public class StaleOutputTests : IDisposable
         try { Directory.Delete(_dir, true); } catch { /* best effort */ }
     }
 
-    private string Run(bool compress = false)
+    private string Run(bool? compress = null)
     {
         var testId = "stale-" + Guid.NewGuid().ToString("N");
         RequestResponseLogger.LogPair("Pay", testId, HttpMethod.Post, new Uri("http://payments/charge"), "payments", "Test");
@@ -71,7 +71,8 @@ public class StaleOutputTests : IDisposable
                     GenerateComponentDiagram = false,
                     GenerateSpecificationsReport = false,
                     GenerateSpecificationsData = false,
-                    CompressTestRunReport = compress,
+                    // The product's default unless a fact asks for one form (both, for a write that fails).
+                    CompressTestRunReport = compress ?? new ReportConfigurationOptions().CompressTestRunReport,
                 });
         }
         finally
@@ -137,7 +138,7 @@ public class StaleOutputTests : IDisposable
         var console = Run();
 
         Assert.Contains("TestRunReport.html", Pointer(console), StringComparison.Ordinal);
-        Assert.Contains("TestRunReport.json", Pointer(console), StringComparison.Ordinal);
+        Assert.Contains("TestRunReport.krkl", Pointer(console), StringComparison.Ordinal);
         Assert.Contains("Failures.md", Pointer(console), StringComparison.Ordinal);
         Assert.DoesNotContain("could not write", console, StringComparison.Ordinal);
     }

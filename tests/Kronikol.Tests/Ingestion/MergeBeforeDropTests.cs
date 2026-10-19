@@ -73,7 +73,7 @@ public class MergeBeforeDropTests : IDisposable
             DropUnattributed = record => record.ServiceName == "mongo",
         });
 
-        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
+        using var document = System.Text.Json.JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
         var workerA = document.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .Single(s => s.GetProperty("id").GetString() == "worker-a");
@@ -131,7 +131,7 @@ public class MergeBeforeDropTests : IDisposable
             MergeDuplicateInteractions = true, DropUnattributed = record => record.ServiceName is "mongo" or "redis",
         });
 
-        Assert.DoesNotContain("\"redis\"", File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
+        Assert.DoesNotContain("\"redis\"", ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
     }
 
     /// <summary>
@@ -173,7 +173,7 @@ public class MergeBeforeDropTests : IDisposable
             DropUnattributed = record => record.ServiceName == "mongo",
         });
 
-        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
+        using var document = System.Text.Json.JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
         var requests = document.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .Single(s => s.GetProperty("id").GetString() == "worker-a")
@@ -264,10 +264,10 @@ public class MergeBeforeDropTests : IDisposable
         string Interactions(IngestRequest request)
         {
             var result = IngestPipeline.Run(request);
-            using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
+            using var document = System.Text.Json.JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
             return string.Join("\n", document.RootElement.GetProperty("features").EnumerateArray()
                 .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
-                .SelectMany(s => s.GetProperty("httpInteractions").EnumerateArray()
+                .SelectMany(s => ReportFile.Items(s, "httpInteractions")
                     .Select(i => $"{s.GetProperty("id").GetString()} {i.GetProperty("type").GetString()} {i.GetProperty("method").GetString()} {(i.TryGetProperty("content", out var c) ? c.GetString() : null)}")));
         }
 

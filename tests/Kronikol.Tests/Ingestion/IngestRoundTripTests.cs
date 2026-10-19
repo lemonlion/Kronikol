@@ -224,7 +224,7 @@ public class IngestRoundTripTests : IDisposable
 
     private static JsonElement Scenario(string directory, string testId)
     {
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(directory, "TestRunReport.json")));
         return json.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .Single(s => s.GetProperty("id").GetString() == testId)

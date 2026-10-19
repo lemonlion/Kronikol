@@ -86,10 +86,11 @@ public class QueryScriptEndToEndTests : IClassFixture<QueryScriptEndToEndTests.R
 
             var package = ReportGenerator.KronikolVersion.Split('+')[0];
             var assembly = typeof(QueryScriptGenerator).Assembly.GetName().Version!.ToString();
+            var report = ReportFile.Resolve(Path.Combine(Run, "TestRunReport.json"));
             foreach (var directory in new[] { CacheOnly, Nowhere, Configured })
             {
                 Directory.CreateDirectory(directory);
-                File.Copy(Path.Combine(Run, "TestRunReport.json"), Path.Combine(directory, "TestRunReport.json"));
+                File.Copy(report, Path.Combine(directory, Path.GetFileName(report)));
                 File.WriteAllText(Path.Combine(directory, "query.cs"), QueryScriptGenerator.Build(package, assembly, ownCopy: null));
             }
 

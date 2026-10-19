@@ -676,8 +676,9 @@ internal static class IngestCommand
         w.WriteLine("                           more: as text, or compressed in place (formatVersion 2, read by kronikol");
         w.WriteLine("                           3.35.0 and later). Default: compressed.");
         w.WriteLine("  --data-file <json|krkl>  The data file the ingest writes: TestRunReport.json, or TestRunReport.krkl, the");
-        w.WriteLine("                           same report compressed whole, about a twentieth of the size, read by kronikol");
-        w.WriteLine("                           4.30.0 and later (kronikol decode writes its JSON). Default: json.");
+        w.WriteLine("                           same report compressed whole (a twentieth of the size on a report of small");
+        w.WriteLine("                           payloads), read by kronikol 4.30.0 and later (kronikol decode writes its JSON).");
+        w.WriteLine("                           Default: krkl from 5.0.0; json in 4.x.");
         w.WriteLine("  --headers <shown|hidden>  Whether the browserjs report's diagrams start with request and response");
         w.WriteLine("                           headers in their notes (default: hidden); readers can still switch either way.");
         w.WriteLine("  --no-component-diagram   Skip ComponentDiagram.html.");

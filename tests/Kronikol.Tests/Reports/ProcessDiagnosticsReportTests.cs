@@ -53,8 +53,8 @@ public class ProcessDiagnosticsReportTests : IDisposable
         using (hostCollector is null ? null : ReportDiagnosticsScope.Begin(hostCollector))
             ReportGenerator.CreateStandardReportsWithDiagrams(Features(), Start, Start.AddMinutes(1), options);
 
-        using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(folder, "TestRunReport.json")));
-        return document.RootElement.GetProperty("diagnostics").EnumerateArray()
+        using var document = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(folder, "TestRunReport.json")));
+        return ReportFile.Items(document.RootElement, "diagnostics")
             .Where(d => d.GetProperty("message").GetString() == Message)
             .Select(d => d.Clone())
             .ToArray();

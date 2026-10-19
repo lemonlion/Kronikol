@@ -115,7 +115,7 @@ public class SchemaClosedContractTests : IDisposable
             OneFeature(testId), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, MergeableOptions(_dir));
 
         var reportPath = Path.Combine(_dir, "TestRunReport.json");
-        var root = JsonNode.Parse(File.ReadAllText(reportPath))!.AsObject();
+        var root = JsonNode.Parse(ReportFile.ReadAny(reportPath))!.AsObject();
         root["internalFlowSegments"] = new JsonObject
         {
             ["seg-from-a-future-version"] = new JsonObject

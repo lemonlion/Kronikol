@@ -130,7 +130,7 @@ public class DiagramFailureIsolationTests : IDisposable
     private static Dictionary<string, string> DiagramsFromDataFile(string reportsDirectory)
     {
         using var document = System.Text.Json.JsonDocument.Parse(
-            File.ReadAllText(Path.Combine(reportsDirectory, "TestRunReport.json")));
+            ReportFile.ReadAny(Path.Combine(reportsDirectory, "TestRunReport.json")));
 
         return document.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
@@ -147,7 +147,7 @@ public class DiagramFailureIsolationTests : IDisposable
         Directory.CreateDirectory(reportsDirectory);
 
         // A directory where the data file wants to be: every write to that path fails, nothing else does.
-        Directory.CreateDirectory(Path.Combine(reportsDirectory, "TestRunReport.json"));
+        Directory.CreateDirectory(Path.Combine(reportsDirectory, "TestRunReport.krkl"));
 
         var result = IngestPipeline.Run(BuildRequest(options));
 
@@ -156,7 +156,7 @@ public class DiagramFailureIsolationTests : IDisposable
         Assert.True(File.Exists(Path.Combine(reportsDirectory, "Specifications.html")));
 
         var failure = Assert.Single(result.Diagnostics, d => d.Kind == DiagnosticKind.OutputFailure);
-        Assert.Contains("TestRunReport.json", failure.Message);
+        Assert.Contains("TestRunReport.krkl", failure.Message);
     }
 
     [Fact]

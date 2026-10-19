@@ -44,8 +44,8 @@ public class ReportGeneratorDiagnosticsScopeTests : IDisposable
 
     private static JsonElement[] DiagnosticsIn(string dir)
     {
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, "TestRunReport.json")));
-        return json.RootElement.GetProperty("diagnostics").EnumerateArray().Select(e => e.Clone()).ToArray();
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(dir, "TestRunReport.json")));
+        return ReportFile.Items(json.RootElement, "diagnostics").Select(e => e.Clone()).ToArray();
     }
 
     [Fact]

@@ -87,6 +87,12 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 
 ### Changed (breaking)
 
+- **The data file is `TestRunReport.krkl` by default.** `ReportConfigurationOptions.CompressTestRunReport` defaults to
+  `true` (4.x: `false`), so a run whose `TestRunReportDataFormat` is JSON writes the compressed file 4.32.0 introduced in
+  place of `TestRunReport.json`: compact, without the keys that hold nothing, every payload as text, in one zstd frame
+  (`plans/REPORT_FORMAT_PLAN.md` 6.2). `kronikol query`, `merge`, `ctrf`, `history gate` and `history import` read it as
+  they read the JSON, from 4.30.0, and `kronikol decode` writes the JSON out for a script that reads the file itself. To
+  keep the JSON, set `CompressTestRunReport` to `false`.
 - **Every diagram toggle but Headers starts on, and payloads start truncated at 10 lines.** Assertion notes are drawn
   from the first render (from 4.0.0 they started hidden), and the Payloads control starts on Truncated at 10 lines,
   where 4.x truncated at 40. Steps, Databases, Events and Setup start on, and Headers off, as before. To open a report

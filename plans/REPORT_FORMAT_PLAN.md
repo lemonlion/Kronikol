@@ -1425,6 +1425,12 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
       owner had made read-only, and on Windows the salvage's warning named no folder. The writer now leaves a file it
       may not write as it is, with the error that names its path, as the JSON writer does; Kronikol4J's writer does the
       same.
+    - 5.0.0, on the branch `v5-report-format` (unreleased): `CompressTestRunReport` defaults to `true`. With the flip,
+      168 core facts failed, nearly all reading `TestRunReport.json` by name. They now read the data file in either form
+      (`ReportFile.Resolve` and `ReadAny`, and `Items` for an array a `.krkl` leaves out when empty), and the five about
+      the JSON file itself (payload compression, the pointer's size, a file written before a key existed, the JSON case
+      of the agent rule) turn the option off. The two read-only facts it found were fixed in 4.32.1. `kronikol
+      ingest --help` names the new default.
 
 ## Appendix A. Edit sites at `a8563d21`
 

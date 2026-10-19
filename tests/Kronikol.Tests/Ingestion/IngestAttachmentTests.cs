@@ -274,7 +274,7 @@ public class IngestAttachmentTests : IDisposable
         };
 
         var json = Run("data-json", records);
-        using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(json.ReportsDirectory, "TestRunReport.json")));
+        using var document = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(json.ReportsDirectory, "TestRunReport.json")));
         var attachment = document.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("attachments")[0];
         Assert.Equal("image/png", attachment.GetProperty("mediaType").GetString());
 

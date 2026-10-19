@@ -181,7 +181,7 @@ public class QueryScriptTests : IDisposable
 
         Run(options);
 
-        Assert.True(File.Exists(Path.Combine(dir, "TestRunReport.json")));
+        Assert.True(File.Exists(Path.Combine(dir, "TestRunReport.krkl")));
         Assert.False(File.Exists(Path.Combine(dir, "query.cs")));
     }
 
@@ -212,7 +212,7 @@ public class QueryScriptTests : IDisposable
         Run(Options(dir));
 
         Assert.Equal(theirs, File.ReadAllText(Path.Combine(dir, "query.cs")));
-        Assert.True(File.Exists(Path.Combine(dir, "TestRunReport.json")));
+        Assert.True(File.Exists(Path.Combine(dir, "TestRunReport.krkl")));
     }
 
     /// <summary>
@@ -232,7 +232,7 @@ public class QueryScriptTests : IDisposable
         using (new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
             Run(Options(dir));
 
-        Assert.True(File.Exists(Path.Combine(dir, "TestRunReport.json")));
+        Assert.True(File.Exists(Path.Combine(dir, "TestRunReport.krkl")));
         Assert.DoesNotContain("query.cs", File.ReadAllText(Path.Combine(dir, "Failures.md")), StringComparison.Ordinal);
         Assert.Equal(earlier, File.ReadAllText(path));
     }
@@ -258,7 +258,7 @@ public class QueryScriptTests : IDisposable
 
         using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, "Run.json")));
         var files = manifest.RootElement.GetProperty("files").EnumerateArray().Select(f => f.GetString()).ToArray();
-        Assert.Contains("TestRunReport.json", files);
+        Assert.Contains("TestRunReport.krkl", files);
         Assert.DoesNotContain("query.cs", files);
     }
 
@@ -271,7 +271,7 @@ public class QueryScriptTests : IDisposable
         Run(Options(dir));
 
         Assert.False(File.Exists(Path.Combine(dir, "query.cs")), "a C# project compiles every .cs below it, so query.cs would break its build");
-        using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, "TestRunReport.json")));
+        using var report = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(dir, "TestRunReport.json")));
         var entry = Assert.Single(report.RootElement.GetProperty("diagnostics").EnumerateArray()
             .Where(d => d.GetProperty("kind").GetString() == "OptionNotApplied"));
         var message = entry.GetProperty("message").GetString()!;
@@ -335,8 +335,8 @@ public class QueryScriptTests : IDisposable
         Run(Options(dir));
 
         Assert.True(File.Exists(Path.Combine(dir, "query.cs")));
-        using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, "TestRunReport.json")));
-        Assert.DoesNotContain(report.RootElement.GetProperty("diagnostics").EnumerateArray(),
+        using var report = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(dir, "TestRunReport.json")));
+        Assert.DoesNotContain(ReportFile.Items(report.RootElement, "diagnostics"),
             d => d.GetProperty("kind").GetString() == "OptionNotApplied");
     }
 
@@ -365,8 +365,8 @@ public class QueryScriptTests : IDisposable
         Run(Options(dir));
 
         Assert.True(File.Exists(Path.Combine(dir, "query.cs")));
-        using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, "TestRunReport.json")));
-        Assert.DoesNotContain(report.RootElement.GetProperty("diagnostics").EnumerateArray(),
+        using var report = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(dir, "TestRunReport.json")));
+        Assert.DoesNotContain(ReportFile.Items(report.RootElement, "diagnostics"),
             d => d.GetProperty("kind").GetString() == "OptionNotApplied");
     }
 

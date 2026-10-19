@@ -265,7 +265,7 @@ public class BackgroundCallsReportTests : IDisposable
             GenerateSpecificationsData = false,
         });
 
-        using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "TestRunReport.json")));
+        using var document = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_dir, "TestRunReport.json")));
         var root = document.RootElement;
 
         // The scenario's own block: this test's scenario, with only the pair it made.

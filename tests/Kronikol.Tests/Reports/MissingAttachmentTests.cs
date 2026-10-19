@@ -224,7 +224,7 @@ public class MissingAttachmentTests : IDisposable
         var line = Assert.Single(console.Split('\n'), l => l.Contains("attachment(s) are not in the report", StringComparison.Ordinal));
         Assert.StartsWith("⚠ WARNING: 1 attachment(s) are not in the report: 1 not found when the report was drawn: ", line, StringComparison.Ordinal);
         // And the run's data file carries the same entry.
-        var data = JsonNode.Parse(File.ReadAllText(Path.Combine(Reports, "TestRunReport.json")))!;
+        var data = JsonNode.Parse(ReportFile.ReadAny(Path.Combine(Reports, "TestRunReport.json")))!;
         Assert.Single(data["diagnostics"]!.AsArray(), d => d!["message"]!.GetValue<string>().StartsWith("1 attachment(s) are not in the report", StringComparison.Ordinal));
     }
 

@@ -132,6 +132,8 @@ public class PayloadCompressionTests : IDisposable
         {
             ReportsFolderPath = _directory,
             CompressTestRunReportPayloads = true,
+            // The payload rule is the JSON file's: a .krkl holds every payload as text.
+            CompressTestRunReport = false,
             InternalFlowTracking = false,
             GenerateComponentDiagram = false,
             GenerateSpecificationsReport = false,

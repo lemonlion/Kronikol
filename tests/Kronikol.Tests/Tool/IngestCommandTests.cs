@@ -257,7 +257,7 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("web.ndjson", @out.ToString());
         Assert.DoesNotContain("tests.ndjson", @out.ToString().Split('\n').First(l => l.Contains("Ingesting")));
         // Secure by default: credential header redacted at ingest.
-        Assert.DoesNotContain("cli-secret", File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        Assert.DoesNotContain("cli-secret", ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         // Browser rendering defaults to the worker path.
         Assert.Contains("var WORKERS_REQUESTED = 4;", html);
     }
@@ -418,7 +418,7 @@ public class IngestCommandTests : IDisposable
             var output = Path.Combine(_dir, name);
             var err = new StringWriter();
             Assert.True(0 == IngestCommand.Run([captures, "--tests", tests, "-o", output, .. flags], new StringWriter(), err), err.ToString());
-            using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+            using var json = System.Text.Json.JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
             return ReportPayloadText.Of(json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0])!;
         }
 
@@ -467,7 +467,7 @@ public class IngestCommandTests : IDisposable
 
         Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", output, "--source-root", checkout], new StringWriter(), new StringWriter()));
 
-        using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = System.Text.Json.JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         var scenario = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
         Assert.Equal("tests/health.test.ts", scenario.GetProperty("sourceFile").GetString());
         Assert.Equal(7, scenario.GetProperty("sourceLine").GetInt32());
@@ -480,7 +480,7 @@ public class IngestCommandTests : IDisposable
         ]);
         var windows = Path.Combine(_dir, "out-source-root-windows");
         Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", windows, "--source-root", @"D:\a\repo\repo"], new StringWriter(), new StringWriter()));
-        using var fromWindows = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(windows, "TestRunReport.json")));
+        using var fromWindows = System.Text.Json.JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(windows, "TestRunReport.json")));
         Assert.Equal("tests/health.test.ts", fromWindows.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("sourceFile").GetString());
 
         var usage = new StringWriter();
@@ -516,18 +516,19 @@ public class IngestCommandTests : IDisposable
             new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
         ]);
 
-        // Without the flag, ingest keeps the library's default: compressed from 4.0.0.
+        // Without the flag, ingest keeps the library's default: compressed from 4.0.0. The rule is the JSON file's (a .krkl
+        // holds every payload as text), so each ingest here asks for the JSON.
         foreach (var (folder, flag) in new[] { ("out-compressed", new[] { "--payloads", "compressed" }), ("out-unset", Array.Empty<string>()) })
         {
             var compressed = Path.Combine(_dir, folder);
-            Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", compressed, .. flag], new StringWriter(), err));
+            Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", compressed, "--data-file", "json", .. flag], new StringWriter(), err));
             var compressedJson = File.ReadAllText(Path.Combine(compressed, "TestRunReport.json"));
             Assert.Contains("\"$z\"", compressedJson, StringComparison.Ordinal);
             Assert.Contains("\"formatVersion\": 2", compressedJson, StringComparison.Ordinal);
         }
 
         var plain = Path.Combine(_dir, "out-plain");
-        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", plain, "--payloads", "plain"], new StringWriter(), err));
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", plain, "--data-file", "json", "--payloads", "plain"], new StringWriter(), err));
         var plainJson = File.ReadAllText(Path.Combine(plain, "TestRunReport.json"));
         Assert.DoesNotContain("\"$z\"", plainJson, StringComparison.Ordinal);
         Assert.Contains("\"formatVersion\": 1", plainJson, StringComparison.Ordinal);
@@ -716,7 +717,7 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", page);
         Assert.True(printed.IndexOf("TestRunReport.labs.html", StringComparison.Ordinal) > printed.IndexOf("TestRunReport.html", StringComparison.Ordinal),
             $"the pointer does not list the page after the report:\n{printed}");
-        using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = System.Text.Json.JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         Assert.Contains(json.RootElement.GetProperty("diagnostics").EnumerateArray(),
             d => d.GetProperty("kind").GetString() == "CaptureDegraded");
 

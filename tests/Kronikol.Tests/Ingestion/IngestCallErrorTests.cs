@@ -69,10 +69,11 @@ public class IngestCallErrorTests : IDisposable
         });
 
         Assert.DoesNotContain(result.Diagnostics, d => d.Kind == DiagnosticKind.MalformedLine);
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(options.ReportsFolderPath, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(options.ReportsFolderPath, "TestRunReport.json")));
         var scenario = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
         var calls = scenario.GetProperty("httpInteractions").EnumerateArray().ToArray();
-        string? Error(int i) => calls[i].GetProperty("error").GetString();
+        // A call with no error has no key for it in a .krkl.
+        string? Error(int i) => calls[i].TryGetProperty("error", out var error) ? error.GetString() : null;
         string? StatusText(int i) => calls[i].GetProperty("statusText").GetString();
 
         Assert.Equal("fetch failed Caused by: connect ECONNREFUSED 127.0.0.1:443", Error(1));

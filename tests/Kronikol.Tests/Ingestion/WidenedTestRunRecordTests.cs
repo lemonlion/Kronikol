@@ -317,7 +317,7 @@ public class WidenedTestRunRecordTests
             Assert.Contains("A returning customer opens the overview.", File.ReadAllText(result.TestRunReportHtml));
 
             using var document = System.Text.Json.JsonDocument.Parse(
-                File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
+                ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
             Assert.Equal("A returning customer opens the overview.",
                 document.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("description").GetString());
             Assert.Contains("\"description\"", File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.schema.json")));

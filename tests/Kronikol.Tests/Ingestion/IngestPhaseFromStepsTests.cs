@@ -142,7 +142,7 @@ public class IngestPhaseFromStepsTests : IDisposable
 
     private static JsonElement[] Interactions(string reports)
     {
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(reports, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(reports, "TestRunReport.json")));
         return json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0]
             .GetProperty("httpInteractions").EnumerateArray()
             .Where(c => c.TryGetProperty("uri", out var uri) && uri.GetString() is { } u && u.StartsWith("http://", StringComparison.Ordinal))

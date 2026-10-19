@@ -39,7 +39,7 @@ public class IngestPointerTests : IDisposable
         try { Directory.Delete(_dir, true); } catch { /* best effort */ }
     }
 
-    private string Ingest(string status)
+    private string Ingest(string status, params string[] flags)
     {
         const string testId = "b17c651916cd43dd8448eb211c80319c";
         var captures = Path.Combine(_dir, "captures");
@@ -58,7 +58,7 @@ public class IngestPointerTests : IDisposable
         var output = Path.Combine(_dir, "out-" + status);
         var @out = new StringWriter();
         var err = new StringWriter();
-        var exit = IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", output], @out, err);
+        var exit = IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", output, .. flags], @out, err);
         Assert.Equal(0, exit);
         return @out.ToString();
     }
@@ -66,7 +66,9 @@ public class IngestPointerTests : IDisposable
     [Fact]
     public void The_pointer_names_the_files_and_their_sizes()
     {
-        var console = Ingest("failed");
+        // The size is the JSON's: a .krkl's size on disk says nothing about what reading it costs, so the pointer gives it
+        // none (KrklRunOutputTests).
+        var console = Ingest("failed", "--data-file", "json");
 
         var pointer = console.Split('\n').FirstOrDefault(l => l.StartsWith("Kronikol: reports written to", StringComparison.Ordinal));
         Assert.NotNull(pointer);

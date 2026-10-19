@@ -65,7 +65,7 @@ public class IngestHostDiagnosticsTests : IDisposable
     }
 
     private static JsonDocument ReadJson(IngestResult result) =>
-        JsonDocument.Parse(File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
+        JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
 
     [Fact]
     public void Host_diagnostics_lead_the_result_and_reach_the_html_and_json_report()
@@ -94,7 +94,7 @@ public class IngestHostDiagnosticsTests : IDisposable
         Assert.True(diagnostics.Length >= 2);
         Assert.Equal("CaptureDegraded", diagnostics[0].GetProperty("kind").GetString());
         Assert.Equal(DeadTap.Message, diagnostics[0].GetProperty("message").GetString());
-        Assert.Equal(JsonValueKind.Null, diagnostics[0].GetProperty("scenarioId").ValueKind);
+        Assert.False(diagnostics[0].TryGetProperty("scenarioId", out _), "the host's entry names no scenario");
         Assert.Equal("Other", diagnostics[1].GetProperty("kind").GetString());
         Assert.Equal(TestId, diagnostics[1].GetProperty("scenarioId").GetString());
 
@@ -116,7 +116,7 @@ public class IngestHostDiagnosticsTests : IDisposable
         Assert.DoesNotContain(result.Diagnostics, d => d.Kind == DiagnosticKind.CaptureDegraded);
 
         using var json = ReadJson(result);
-        var written = json.RootElement.GetProperty("diagnostics").EnumerateArray()
+        var written = ReportFile.Items(json.RootElement, "diagnostics")
             .Select(d => d.GetProperty("message").GetString()).ToArray();
         // Everything the data file lists was recorded (an OutputFailure raised by a parallel output can only be in the result).
         Assert.All(written, message => Assert.Contains(result.Diagnostics, d => d.Message == message));

@@ -449,13 +449,15 @@ public record ReportConfigurationOptions
     /// <summary>
     /// When <c>true</c> and <see cref="TestRunReportDataFormat"/> is JSON, the run writes its data file as
     /// <c>TestRunReport.krkl</c> in place of <c>TestRunReport.json</c>: the same report, compact, without the keys that hold
-    /// nothing (unless the schema requires them), every payload as text, and the whole compressed with zstd, about a
-    /// twentieth of the JSON's size. <c>formatVersion</c> 3 says so. Only Kronikol's tools read it: <c>kronikol query</c>,
+    /// nothing (unless the schema requires them), every payload as text, and the whole compressed with zstd: a twentieth
+    /// of the JSON's size on a report of small payloads, less of a saving where large ones fill it. <c>formatVersion</c> 3
+    /// says so. Only Kronikol's tools read it: <c>kronikol query</c>,
     /// <c>kronikol merge</c> and the rest from 4.30.0, and <c>kronikol decode</c> writes the JSON out for a script that needs
     /// it. <see cref="CompressTestRunReportPayloads"/> does not apply to it. A mergeable run (<see cref="GenerateMergeableData"/>)
-    /// writes its mergeable file the same way. Default: <c>false</c>.
+    /// writes its mergeable file the same way. Set it to <c>false</c> for the JSON file every release before 5.0.0
+    /// wrote. Default: <c>true</c> from 5.0.0; <c>false</c> in 4.x.
     /// </summary>
-    public bool CompressTestRunReport { get; set; }
+    public bool CompressTestRunReport { get; set; } = true;
 
     /// <summary>Data format for the specifications data output. Default: <see cref="DataFormat.Yaml"/>.</summary>
     public DataFormat SpecificationsDataFormat { get; set; } = DataFormat.Yaml;

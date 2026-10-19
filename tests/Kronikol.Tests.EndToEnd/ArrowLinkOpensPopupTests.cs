@@ -202,8 +202,8 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
         var (_, shardA) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, "ArrowLink_ShardA.html", 1, 1, name: "Shard A", mergeableData: true);
         var (_, shardB) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, "ArrowLink_ShardB.html", 2, 0, name: "Shard B", mergeableData: true);
         var merged = Kronikol.Reports.Merge.MergeableReportMerger.Merge([
-            Kronikol.Reports.Merge.MergeableReportReader.ReadFile(Path.Combine(shardA, "TestRunReport.json")),
-            Kronikol.Reports.Merge.MergeableReportReader.ReadFile(Path.Combine(shardB, "TestRunReport.json"))]);
+            Kronikol.Reports.Merge.MergeableReportReader.ReadFile(DataFile.In(shardA)),
+            Kronikol.Reports.Merge.MergeableReportReader.ReadFile(DataFile.In(shardB))]);
         var written = Kronikol.Reports.Merge.MergeableReportRenderer.Render(merged, Path.Combine(TempDir, "merged-" + Guid.NewGuid().ToString("N"), "TestRunReport.html"));
         File.Copy(written, Path.Combine(OutputDir, "ArrowLink_Merged.html"), true);
 

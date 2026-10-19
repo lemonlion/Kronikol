@@ -125,7 +125,7 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
             """);
         Assert.Equal(["svg", "svg"], states);
 
-        using var report = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(reportsDir, "TestRunReport.json")));
+        using var report = System.Text.Json.JsonDocument.Parse(DataFile.Read(reportsDir));
         var kinds = report.RootElement.GetProperty("diagnostics").EnumerateArray()
             .Select(d => d.GetProperty("kind").GetString()).ToList();
         Assert.Single(kinds, k => k == "OptionNotApplied");

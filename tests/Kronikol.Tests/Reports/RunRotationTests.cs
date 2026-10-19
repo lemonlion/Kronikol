@@ -162,7 +162,7 @@ public class RunRotationTests : IDisposable
 
         Run(ExecutionResult.Failed, o => History(o, "local:first:1"));
         // The labs page too: a run that reads history writes it, a first run against an empty ledger included.
-        var kept = new[] { "TestRunReport.json", "TestRunReport.html", "TestRunReport.labs.html", "Failures.md", "Failures.jsonl", HistoryFormat.FragmentFileName };
+        var kept = new[] { "TestRunReport.krkl", "TestRunReport.html", "TestRunReport.labs.html", "Failures.md", "Failures.jsonl", HistoryFormat.FragmentFileName };
         var first = Snapshot(Reports, kept);
         Assert.Contains("# Failures — 1 of 2 scenarios", File.ReadAllText(Path.Combine(Reports, "Failures.md")));
 
@@ -186,7 +186,7 @@ public class RunRotationTests : IDisposable
         Assert.Equal("local:second:1", Manifest().Run);
         Assert.Equal(0, Manifest().Failed);
         Assert.Equal(
-            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "History.run.json", "Run.json", "TestRunReport.html", "TestRunReport.json", "TestRunReport.labs.html", "TestRunReport.schema.json", "query.cs"],
+            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "History.run.json", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "TestRunReport.labs.html", "TestRunReport.schema.json", "query.cs"],
             TopLevel(Reports));
     }
 
@@ -271,7 +271,7 @@ public class RunRotationTests : IDisposable
         // one name, so the last writer's manifest is the directory's — and the NEXT process to arrive
         // is, half the time, the other report's.
         Run(ExecutionResult.Failed, o => o.HtmlTestRunReportFileName = "Checkout");
-        var checkout = Snapshot(Reports, "Checkout.html", "Checkout.json");
+        var checkout = Snapshot(Reports, "Checkout.html", "Checkout.krkl");
 
         // Payments arrives: the manifest on top is Checkout's CURRENT run. Rotating it would take the
         // newest Checkout report out of the top level, where its reader and its CI glob expect it.
@@ -284,15 +284,15 @@ public class RunRotationTests : IDisposable
         Run(ExecutionResult.Passed, o => o.HtmlTestRunReportFileName = "Payments");
         var retained = Path.Combine(Runs, LocalName(2));
         Assert.Equal([LocalName(2)], RetainedNames());
-        Assert.True(File.Exists(Path.Combine(retained, "Payments.json")));
-        Assert.False(File.Exists(Path.Combine(retained, "Checkout.json")), "only the files the rotated manifest lists move");
+        Assert.True(File.Exists(Path.Combine(retained, "Payments.krkl")));
+        Assert.False(File.Exists(Path.Combine(retained, "Checkout.krkl")), "only the files the rotated manifest lists move");
         foreach (var (name, bytes) in checkout)
             Assert.True(bytes.AsSpan().SequenceEqual(File.ReadAllBytes(Path.Combine(Reports, name))), $"{name} was touched by the second Payments run");
 
         // Checkout again: the manifest on top is Payments' current run. Left alone.
         Run(ExecutionResult.Passed, o => o.HtmlTestRunReportFileName = "Checkout");
         Assert.Equal([LocalName(2)], RetainedNames());
-        Assert.True(File.Exists(Path.Combine(Reports, "Payments.json")), "Checkout's run rotated Payments' current report away");
+        Assert.True(File.Exists(Path.Combine(Reports, "Payments.krkl")), "Checkout's run rotated Payments' current report away");
         Assert.True(File.Exists(Path.Combine(Reports, "Payments.html")));
     }
 
@@ -357,8 +357,8 @@ public class RunRotationTests : IDisposable
             "a read-only file refuses this process a write, so it has no read-only report it can write: the fact above covers it");
 
         Run(ExecutionResult.Failed);
-        var first = Snapshot(Reports, "TestRunReport.json", "Failures.md");
-        File.SetAttributes(Path.Combine(Reports, "TestRunReport.json"), FileAttributes.ReadOnly);
+        var first = Snapshot(Reports, "TestRunReport.krkl", "Failures.md");
+        File.SetAttributes(Path.Combine(Reports, "TestRunReport.krkl"), FileAttributes.ReadOnly);
 
         var (console, diagnostics) = Run(ExecutionResult.Passed);
 
@@ -368,7 +368,7 @@ public class RunRotationTests : IDisposable
             Assert.True(bytes.AsSpan().SequenceEqual(File.ReadAllBytes(Path.Combine(Runs, LocalName(1), name))), $"{name} under runs/ is not what the first run wrote");
         Assert.Contains("# No failures", File.ReadAllText(Path.Combine(Reports, "Failures.md")));
         Assert.DoesNotContain("could not write", console);
-        Assert.Contains("TestRunReport.json", Manifest().Files);
+        Assert.Contains("TestRunReport.krkl", Manifest().Files);
     }
 
     // ─── 9. History off ────────────────────────────────────────
@@ -410,7 +410,7 @@ public class RunRotationTests : IDisposable
 
         Assert.False(Directory.Exists(Runs), "nothing is rotated at KeepRuns = 0");
         Assert.Equal(
-            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.json", "TestRunReport.schema.json", "query.cs"],
+            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "TestRunReport.schema.json", "query.cs"],
             TopLevel(Reports));
         Assert.Equal(LocalId(2), Manifest().Run);
     }
@@ -516,8 +516,8 @@ public class RunRotationTests : IDisposable
         File.WriteAllText(Path.Combine(Reports, "notes.txt"), "somebody's own file");
         Directory.CreateDirectory(Path.Combine(Reports, "attachments"));
         File.WriteAllText(Path.Combine(Reports, "attachments", "old.png"), "from the old run");
-        var old = Snapshot(Reports, "TestRunReport.json", "TestRunReport.html", "Failures.md", "Failures.jsonl", "TestRunReport.schema.json");
-        var stamp = File.GetLastWriteTimeUtc(Path.Combine(Reports, "TestRunReport.json"));
+        var old = Snapshot(Reports, "TestRunReport.krkl", "TestRunReport.html", "Failures.md", "Failures.jsonl", "TestRunReport.schema.json");
+        var stamp = File.GetLastWriteTimeUtc(Path.Combine(Reports, "TestRunReport.krkl"));
 
         Run(ExecutionResult.Passed);
 
@@ -576,13 +576,13 @@ public class RunRotationTests : IDisposable
         WrittenBeforeManifestsExisted(ExecutionResult.Failed);
         File.Delete(Path.Combine(Reports, "Failures.md"));
         File.Delete(Path.Combine(Reports, "Failures.jsonl"));
-        var stamp = File.GetLastWriteTimeUtc(Path.Combine(Reports, "TestRunReport.json"));
+        var stamp = File.GetLastWriteTimeUtc(Path.Combine(Reports, "TestRunReport.krkl"));
         var name = HistoryRunId.DirectoryName(HistoryRunBuilder.RunId(null, new DateTimeOffset(stamp)));
 
         Run(ExecutionResult.Passed, o => o.KeepRuns = 1);
 
         var killed = Path.Combine(Runs, name);
-        Assert.True(File.Exists(Path.Combine(killed, "TestRunReport.json")));
+        Assert.True(File.Exists(Path.Combine(killed, "TestRunReport.krkl")));
         Assert.False(File.Exists(Path.Combine(killed, RunManifest.FileName)));
         Assert.Equal([killed], ReportFolders.Unfinished(Reports));
         Assert.Empty(ReportFolders.RetainedRuns(Reports));
@@ -809,7 +809,7 @@ public class RunRotationTests : IDisposable
 
         Assert.Equal(onDisk, manifest.Files.Concat(manifest.Attachments).Order(StringComparer.Ordinal).ToArray());
         // Named, so that a manifest that lists nothing and a directory that holds nothing cannot agree.
-        foreach (var expected in new[] { "TestRunReport.html", "TestRunReport.json", "TestRunReport.labs.html", "TestRunReport.schema.json", "ComponentDiagram.html", "ComponentDiagram.svg", "CiSummary.md", "DiagnosticReport.html", "Failures.md", "Failures.jsonl", "Specifications.html", "Specifications.yml", "Specifications.md", "ctrf-report.json" })
+        foreach (var expected in new[] { "TestRunReport.html", "TestRunReport.krkl", "TestRunReport.labs.html", "TestRunReport.schema.json", "ComponentDiagram.html", "ComponentDiagram.svg", "CiSummary.md", "DiagnosticReport.html", "Failures.md", "Failures.jsonl", "Specifications.html", "Specifications.yml", "Specifications.md", "ctrf-report.json" })
             Assert.Contains(expected, manifest.Files);
         Assert.Equal(["attachments/shot.png"], manifest.Attachments);
         Assert.Equal(manifest.Files.Order(StringComparer.Ordinal).ToArray(), manifest.Files.ToArray());
@@ -825,7 +825,7 @@ public class RunRotationTests : IDisposable
 
         Assert.DoesNotContain("Failures.md", Manifest().Files);
         Assert.Contains("Failures.jsonl", Manifest().Files);
-        Assert.Contains("TestRunReport.json", Manifest().Files);
+        Assert.Contains("TestRunReport.krkl", Manifest().Files);
     }
 
     [Fact]
@@ -945,11 +945,11 @@ public class RunRotationTests : IDisposable
 
         (string Console, IReadOnlyList<DiagnosticEntry> Diagnostics) second;
         // The way `kronikol query` holds it (ReportScanner.cs:73).
-        using (File.OpenRead(Path.Combine(Reports, "TestRunReport.json")))
+        using (File.OpenRead(Path.Combine(Reports, "TestRunReport.krkl")))
             second = Run(ExecutionResult.Passed, o => o.GenerateTestRunReport = false);
 
         var failure = Assert.Single(second.Diagnostics, d => d.Kind == DiagnosticKind.ReportRotationFailed);
-        Assert.Contains("TestRunReport.json", failure.Message);
+        Assert.Contains("TestRunReport.krkl", failure.Message);
         // The report goes first, so nothing had moved: no retained run, no staging directory, no runs/ at all.
         Assert.False(Directory.Exists(Runs), "runs/ exists: " + string.Join(", ", Directory.Exists(Runs) ? Directory.GetFileSystemEntries(Runs) : []));
         // The second run does not write an HTML report, so the first run's is exactly where and what it was.
@@ -1019,7 +1019,7 @@ public class RunRotationTests : IDisposable
 
         Assert.Equal("not Kronikol's", File.ReadAllText(outside));
         Assert.Equal([LocalName(1)], RetainedNames());
-        Assert.Equal(["Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.json", "TestRunReport.schema.json"], TopLevel(Path.Combine(Runs, LocalName(1))));
+        Assert.Equal(["Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "TestRunReport.schema.json"], TopLevel(Path.Combine(Runs, LocalName(1))));
         Assert.True(File.Exists(Path.Combine(Reports, "CLAUDE.md")));
     }
 
@@ -1066,7 +1066,7 @@ public class RunRotationTests : IDisposable
         var all = Snapshot(Reports, Manifest().Files.ToArray());
         var staged = Path.Combine(Runs, ReportFolders.IncomingPrefix + LocalName(1));
         Directory.CreateDirectory(staged);
-        File.Move(Path.Combine(Reports, "TestRunReport.json"), Path.Combine(staged, "TestRunReport.json"));
+        File.Move(Path.Combine(Reports, "TestRunReport.krkl"), Path.Combine(staged, "TestRunReport.krkl"));
 
         Run(ExecutionResult.Passed);
 
@@ -1180,9 +1180,9 @@ public class RunRotationTests : IDisposable
 
         // The folder's name opens the kept run, where the alias opens the one on top.
         Assert.Equal(Kronikol.Query.RetainedRunOutcome.Found, Kronikol.Query.RetainedRunResolver.Resolve(Reports, LocalName(1), TextWriter.Null, out var report, out _));
-        Assert.Equal(Path.Combine(kept, "TestRunReport.json"), report);
+        Assert.Equal(Path.Combine(kept, "TestRunReport.krkl"), report);
         Kronikol.Query.RetainedRunResolver.Resolve(Reports, "last-failed", TextWriter.Null, out var aliased, out _);
-        Assert.Equal(Path.Combine(Reports, "TestRunReport.json"), aliased);
+        Assert.Equal(Path.Combine(Reports, "TestRunReport.krkl"), aliased);
     }
 
     /// <summary>
@@ -1198,11 +1198,11 @@ public class RunRotationTests : IDisposable
 
         var digest = File.ReadAllText(Path.Combine(Reports, "Failures.md"));
         Assert.DoesNotMatch(@"kronikol query [a-z]+ \.(?![/\w])", digest);
-        Assert.Contains("kronikol query failures Checkout.json", digest);
-        Assert.Contains($"`kronikol query failures Checkout.json --run {LocalName(1)}`", digest);
+        Assert.Contains("kronikol query failures Checkout.krkl", digest);
+        Assert.Contains($"`kronikol query failures Checkout.krkl --run {LocalName(1)}`", digest);
 
-        // Each answers, the kept run's included (run from the folder the digest is in, where Checkout.json is that path).
-        var data = Path.Combine(Reports, "Checkout.json");
+        // Each answers, the kept run's included (run from the folder the digest is in, where Checkout.krkl is that path).
+        var data = Path.Combine(Reports, "Checkout.krkl");
         foreach (var args in new[] { new[] { "failures", data }, ["failures", data, "--run", LocalName(1)] })
         {
             var output = new StringWriter();
@@ -1213,7 +1213,7 @@ public class RunRotationTests : IDisposable
         // An earlier attempt of the same CI run is named by its folder, with the file in it.
         Run(ExecutionResult.Failed, o => o.HtmlTestRunReportFileName = "Checkout", env: GitHub("7"));
         Run(ExecutionResult.Passed, o => o.HtmlTestRunReportFileName = "Checkout", env: GitHub("7"));
-        Assert.Contains("`kronikol query failures ./runs/gh_7_1/Checkout.json`", File.ReadAllText(Path.Combine(Reports, "Failures.md")));
+        Assert.Contains("`kronikol query failures ./runs/gh_7_1/Checkout.krkl`", File.ReadAllText(Path.Combine(Reports, "Failures.md")));
     }
 
     [Fact]

@@ -149,8 +149,8 @@ public class StepCapitalisationReportTests : IDisposable
         var json = Run("agree-json");
         var scenario = json.Features[0].Scenarios[0];
         Assert.Contains("The user accepts the trial", File.ReadAllText(json.TestRunReportHtml));
-        Assert.Contains("\"text\": \"The user accepts the trial\"",
-            File.ReadAllText(Path.Combine(json.ReportsDirectory, "TestRunReport.json")));
+        Assert.Contains("\"text\":\"The user accepts the trial\"",
+            ReportFile.ReadAny(Path.Combine(json.ReportsDirectory, "TestRunReport.json")));
 
         // The model is capitalised once, before any format is written, so the other two cannot disagree.
         Assert.Equal("The user accepts the trial", scenario.Steps![1].Text);
@@ -159,7 +159,7 @@ public class StepCapitalisationReportTests : IDisposable
     private static string DiagramsFor(string reportsDirectory, string scenarioId)
     {
         using var document = System.Text.Json.JsonDocument.Parse(
-            File.ReadAllText(Path.Combine(reportsDirectory, "TestRunReport.json")));
+            ReportFile.ReadAny(Path.Combine(reportsDirectory, "TestRunReport.json")));
 
         return string.Join("\n", document.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
@@ -176,8 +176,8 @@ public class StepCapitalisationReportTests : IDisposable
         var scenario = on.Features[0].Scenarios[0];
         Assert.Equal("Overview renders", scenario.DisplayName);
         Assert.Contains("Overview renders", File.ReadAllText(on.TestRunReportHtml));
-        Assert.Contains("\"name\": \"Overview renders\"",
-            File.ReadAllText(Path.Combine(on.ReportsDirectory, "TestRunReport.json")));
+        Assert.Contains("\"name\":\"Overview renders\"",
+            ReportFile.ReadAny(Path.Combine(on.ReportsDirectory, "TestRunReport.json")));
         Assert.DoesNotContain(on.Diagnostics, d => d.Kind == DiagnosticKind.TitlesNotStartingWithCapital);
 
         var off = Run("titles-off", capitalise: false);

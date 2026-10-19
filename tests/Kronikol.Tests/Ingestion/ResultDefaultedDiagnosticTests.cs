@@ -101,9 +101,9 @@ public class ResultDefaultedDiagnosticTests : IDisposable
     public void It_reaches_the_data_file_and_every_query_answer()
     {
         var result = Ingest();
-        var report = Path.Combine(result.ReportsDirectory, "TestRunReport.json");
+        var report = ReportFile.Resolve(Path.Combine(result.ReportsDirectory, "TestRunReport.json"));
 
-        using (var document = JsonDocument.Parse(File.ReadAllText(report)))
+        using (var document = JsonDocument.Parse(ReportFile.Read(report)))
         {
             Assert.Contains(document.RootElement.GetProperty("diagnostics").EnumerateArray(),
                 d => d.GetProperty("kind").GetString() == nameof(DiagnosticKind.ResultDefaulted));
@@ -130,8 +130,8 @@ public class ResultDefaultedDiagnosticTests : IDisposable
     [Fact]
     public void Diff_says_which_side_had_its_verdicts_defaulted()
     {
-        var old = Path.Combine(CleanRun().ReportsDirectory, "TestRunReport.json");
-        var current = Path.Combine(Ingest(subdirectory: "new").ReportsDirectory, "TestRunReport.json");
+        var old = ReportFile.Resolve(Path.Combine(CleanRun().ReportsDirectory, "TestRunReport.json"));
+        var current = ReportFile.Resolve(Path.Combine(Ingest(subdirectory: "new").ReportsDirectory, "TestRunReport.json"));
 
         var output = new StringWriter();
         var error = new StringWriter();

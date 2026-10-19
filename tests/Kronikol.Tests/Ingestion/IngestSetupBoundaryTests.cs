@@ -203,7 +203,7 @@ public class IngestSetupBoundaryTests : IDisposable
         });
 
         Assert.True(result.Generated);
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(options.ReportsFolderPath, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(options.ReportsFolderPath, "TestRunReport.json")));
         return json.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .ToDictionary(s => s.GetProperty("id").GetString()!, s => ReportPayloadText.Of(s.GetProperty("diagrams")[0])!);

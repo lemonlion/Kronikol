@@ -36,7 +36,7 @@ public class AgentInstructionsOverwriteTests : IDisposable
 
     private void Run() => Run(DataFormat.Json);
 
-    private void Run(DataFormat format)
+    private void Run(DataFormat format, bool compress = true)
     {
         var testId = "agents-" + Guid.NewGuid().ToString("N");
         RequestResponseLogger.LogPair("Pay", testId, HttpMethod.Post, new Uri("http://payments/charge"), "payments", "Test");
@@ -57,17 +57,20 @@ public class AgentInstructionsOverwriteTests : IDisposable
                 GenerateSpecificationsReport = false,
                 GenerateSpecificationsData = false,
                 TestRunReportDataFormat = format,
+                CompressTestRunReport = compress,
             });
     }
 
     [Theory]
+    [InlineData(DataFormat.Json, "TestRunReport.krkl")]
     [InlineData(DataFormat.Json, "TestRunReport.json")]
     [InlineData(DataFormat.Xml, "TestRunReport.xml")]
     [InlineData(DataFormat.Yaml, "TestRunReport.yml")]
     public void The_rule_names_the_data_file_the_run_wrote(DataFormat format, string dataFile)
     {
         // Until 4.27.1 the rule said TestRunReport.json whatever the format (plans/REPORT_FORMAT_PLAN.md section 8).
-        Run(format);
+        // The JSON case is the run that turns the compressed default off.
+        Run(format, compress: dataFile != "TestRunReport.json");
 
         Assert.True(File.Exists(Path.Combine(_dir, dataFile)), $"the run wrote no {dataFile}");
         foreach (var agentFile in new[] { AgentInstructionsGenerator.ClaudeFileName, AgentInstructionsGenerator.AgentsFileName })

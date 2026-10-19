@@ -155,7 +155,7 @@ public class AttachmentProblemTests : IDisposable
     {
         var (lost, _) = RunWithMissingFiles();
 
-        var root = JsonNode.Parse(File.ReadAllText(Path.Combine(Reports, "TestRunReport.json")));
+        var root = JsonNode.Parse(ReportFile.ReadAny(Path.Combine(Reports, "TestRunReport.json")));
 
         var missing = Assert.Single(Named(root, "name", "lost.png"));
         Assert.Equal(lost, (string?)missing["relativePath"]);
@@ -220,7 +220,7 @@ public class AttachmentProblemTests : IDisposable
     {
         RunWithMissingFiles(o => o.GenerateMergeableData = true);
 
-        var report = MergeableReportReader.ReadFile(Path.Combine(Reports, "TestRunReport.json"));
+        var report = MergeableReportReader.ReadFile(ReportFile.Resolve(Path.Combine(Reports, "TestRunReport.json")));
 
         var attachments = report.Features.SelectMany(f => f.Scenarios)
             .SelectMany(s => (s.Attachments ?? []).Concat((s.Steps ?? []).SelectMany(step => step.Attachments ?? []))).ToArray();
@@ -232,8 +232,13 @@ public class AttachmentProblemTests : IDisposable
     [Fact]
     public void A_mergeable_data_file_with_no_problem_key_reads_as_no_problem()
     {
-        // A file written before the key existed: the same run with every problem key taken out.
-        RunWithMissingFiles(o => o.GenerateMergeableData = true);
+        // A file written before the key existed: the same run with every problem key taken out. Every release before the
+        // key wrote the JSON, so this run does too.
+        RunWithMissingFiles(o =>
+        {
+            o.GenerateMergeableData = true;
+            o.CompressTestRunReport = false;
+        });
         var path = Path.Combine(Reports, "TestRunReport.json");
         File.WriteAllText(path, System.Text.RegularExpressions.Regex.Replace(File.ReadAllText(path), @",\s*""problem""\s*:\s*""[A-Za-z]+""", ""));
 

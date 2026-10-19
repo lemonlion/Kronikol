@@ -56,7 +56,7 @@ public class ReportsFolderPathTests : IDisposable
 
         ReportGenerator.CreateStandardReportsWithDiagrams(OneFeature(testId), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, Options(_dir));
 
-        foreach (var file in new[] { "TestRunReport.html", "TestRunReport.json", "TestRunReport.schema.json", "Specifications.html", "Specifications.yml", "ComponentDiagram.html", "CiSummary.md" })
+        foreach (var file in new[] { "TestRunReport.html", "TestRunReport.krkl", "TestRunReport.schema.json", "Specifications.html", "Specifications.yml", "ComponentDiagram.html", "CiSummary.md" })
             Assert.True(File.Exists(Path.Combine(_dir, file)), $"expected {file} in {_dir}");
 
         Assert.Contains("Place order", File.ReadAllText(Path.Combine(_dir, "TestRunReport.html")));

@@ -131,7 +131,7 @@ public class OptionDiagnosticsTests : IDisposable
     {
         Run(o => o.PlantUmlTheme = "cerulean");
 
-        using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "TestRunReport.json")));
+        using var report = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_dir, "TestRunReport.json")));
         var entry = Assert.Single(report.RootElement.GetProperty("diagnostics").EnumerateArray(),
             d => d.GetProperty("kind").GetString() == "OptionNotApplied");
         Assert.True(!entry.TryGetProperty("scenarioId", out var id) || id.ValueKind == JsonValueKind.Null);

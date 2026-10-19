@@ -75,7 +75,7 @@ public class MergeCarriesAttachmentsTests : IDisposable
         DefaultDiagramsFetcher.Reset();
         ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(features, Start, Start.AddMinutes(1), options, RunEnvironment.Unrecorded, Environment.GetEnvironmentVariable);
         DefaultDiagramsFetcher.Reset();
-        return Path.Combine(directory, "TestRunReport.json");
+        return ReportFile.Resolve(Path.Combine(directory, "TestRunReport.json"));
     }
 
     private static IEnumerable<FileAttachment> Attachments(MergeableReport report) =>
@@ -95,7 +95,7 @@ public class MergeCarriesAttachmentsTests : IDisposable
         var exit = MergeCommand.Run([first, second, "-o", Path.Combine(merged, "Combined.html")], new StringWriter(), error, _ => null);
 
         Assert.True(exit == 0, error.ToString());
-        var attachments = Attachments(MergeableReportReader.ReadFile(Path.Combine(merged, "Combined.json"))).ToArray();
+        var attachments = Attachments(MergeableReportReader.ReadFile(ReportFile.Resolve(Path.Combine(merged, "Combined.json")))).ToArray();
         Assert.Equal(4, attachments.Length);
         Assert.All(attachments, a =>
         {
@@ -123,7 +123,7 @@ public class MergeCarriesAttachmentsTests : IDisposable
 
         Assert.True(exit == 0, error.ToString());
         Assert.Equal(before, Directory.GetFiles(Path.Combine(folder, "attachments")).Order());
-        Assert.All(Attachments(MergeableReportReader.ReadFile(Path.Combine(folder, "Combined.json"))), a =>
+        Assert.All(Attachments(MergeableReportReader.ReadFile(ReportFile.Resolve(Path.Combine(folder, "Combined.json")))), a =>
         {
             Assert.StartsWith("attachments/", a.RelativePath, StringComparison.Ordinal);
             Assert.True(File.Exists(Path.Combine(folder, a.RelativePath)), a.RelativePath);
@@ -156,7 +156,7 @@ public class MergeCarriesAttachmentsTests : IDisposable
         var error = new StringWriter();
         Assert.True(MergeCommand.Run([first, second, "-o", Path.Combine(merged, "Combined.html")], new StringWriter(), error, _ => null) == 0, error.ToString());
 
-        var report = MergeableReportReader.ReadFile(Path.Combine(merged, "Combined.json"));
+        var report = MergeableReportReader.ReadFile(ReportFile.Resolve(Path.Combine(merged, "Combined.json")));
         var refund = ScreenshotOf(report, "Refund");
         Assert.NotEqual(ScreenshotOf(report, "Pay").RelativePath, refund.RelativePath);
         Assert.False(File.Exists(Path.Combine(merged, refund.RelativePath)), refund.RelativePath);
@@ -172,7 +172,7 @@ public class MergeCarriesAttachmentsTests : IDisposable
         var error = new StringWriter();
         Assert.True(MergeCommand.Run([first, second, "-o", Path.Combine(merged, "Combined.html")], new StringWriter(), error, _ => null) == 0, error.ToString());
 
-        var message = Assert.Single(MergeableReportReader.ReadFile(Path.Combine(merged, "Combined.json")).Diagnostics, d => d.Kind == DiagnosticKind.AttachmentFailure).Message;
+        var message = Assert.Single(MergeableReportReader.ReadFile(ReportFile.Resolve(Path.Combine(merged, "Combined.json"))).Diagnostics, d => d.Kind == DiagnosticKind.AttachmentFailure).Message;
         Assert.StartsWith("1 attachment(s) are not in the report: 1 not found when the report was drawn: ", message, StringComparison.Ordinal);
         Assert.Contains(gone, message, StringComparison.Ordinal);
         Assert.Contains("1 attachment(s) are not in the report: 1 not found when the report was drawn: ", File.ReadAllText(Path.Combine(merged, "Combined.labs.html")), StringComparison.Ordinal);
@@ -240,7 +240,7 @@ public class MergeCarriesAttachmentsTests : IDisposable
         Assert.True(MergeCommand.Run([first, second, "-o", Path.Combine(merged, "Combined.html")], new StringWriter(), new StringWriter(), _ => null) == 0);
 
         var output = new StringWriter();
-        Assert.Equal(0, Kronikol.Query.QueryCommand.Run(["summary", Path.Combine(merged, "Combined.json")], output, new StringWriter()));
+        Assert.Equal(0, Kronikol.Query.QueryCommand.Run(["summary", ReportFile.Resolve(Path.Combine(merged, "Combined.json"))], output, new StringWriter()));
 
         var line = Assert.Single(output.ToString().Split('\n'), l => l.StartsWith("! ", StringComparison.Ordinal) && l.Contains("attachment(s) are not in the report", StringComparison.Ordinal)).TrimEnd('\r');
         Assert.StartsWith("! 2 attachment(s) are not in the report: 2 not found when the report was drawn: ", line, StringComparison.Ordinal);

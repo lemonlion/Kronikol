@@ -74,7 +74,7 @@ public class IngestPipelineTests : IDisposable
         Assert.DoesNotContain("data-no-interactions", html); // the calls were attributed
 
         // The data file carries the interactions under the scenario, in timestamp order, with the name from the tests file.
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         var scenario = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
         Assert.Equal(testId, scenario.GetProperty("id").GetString());
         var interactions = scenario.GetProperty("httpInteractions").EnumerateArray().ToArray();
@@ -134,7 +134,7 @@ public class IngestPipelineTests : IDisposable
 
         var result = IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], Options = options });
 
-        var json = File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json"));
+        var json = ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json"));
         Assert.DoesNotContain("leaked-in-capture", json);
         Assert.Contains("[REDACTED]", json);
     }
@@ -310,7 +310,7 @@ public class IngestPipelineTests : IDisposable
         Assert.Contains("data-no-interactions=\"true\"", html);
         Assert.Contains("function hasDrawableBody", html);
         Assert.Contains("Nothing to draw with the current filters", html);
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         var diagram = ReportPayloadText.Of(json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0])!;
         Assert.Contains("<<assertionNote>>", diagram);
         Assert.Contains("✓ The mock answers 200", diagram);
@@ -370,7 +370,7 @@ public class IngestPipelineTests : IDisposable
         var result = IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], TestsFile = tests, Options = options });
 
         Assert.True(result.Generated);
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         var scenario = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
         var diagram = ReportPayloadText.Of(scenario.GetProperty("diagrams")[0])!;
         var lines = diagram.Split('\n').Select(l => l.TrimEnd('\r')).ToArray();
@@ -446,7 +446,7 @@ public class IngestPipelineTests : IDisposable
         var result = IngestPipeline.Run(new IngestRequest { InteractionFiles = [file], TestsFile = tests, Options = options });
 
         Assert.True(result.Generated);
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         var diagram = ReportPayloadText.Of(json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams")[0])!;
 
         // The table-carrying bar takes the styled body form; the doc-string bar likewise; and the
@@ -489,9 +489,9 @@ public class IngestPipelineTests : IDisposable
             .ToArray();
         Assert.Equal([DiagramMarkerKind.Step, DiagramMarkerKind.Step, DiagramMarkerKind.Assertion, DiagramMarkerKind.Assertion], kinds);
 
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         var scenario = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
-        Assert.Equal(0, scenario.GetProperty("annotations").GetArrayLength());
+        Assert.Empty(ReportFile.Items(scenario, "annotations"));
         var interactions = scenario.GetProperty("httpInteractions").EnumerateArray().ToArray();
         Assert.Equal(2, interactions.Length);
         Assert.All(interactions, i => Assert.Equal("0", i.GetProperty("stepPath").GetString()));
@@ -524,8 +524,8 @@ public class IngestPipelineTests : IDisposable
         Assert.Equal(1, Count(alone.Diagram, "<<stepDelimiter>>"));
         Assert.Equal(1, Count(alone.Diagram, "cache warmed"));
         Assert.Equal(1, Count(alone.Diagram, "Row 3"));
-        // No tests file, so no step list: a bar with no step to open leaves the path null rather than guessing.
-        Assert.All(alone.Interactions, i => Assert.Equal(JsonValueKind.Null, i.GetProperty("stepPath").ValueKind));
+        // No tests file, so no step list: a bar with no step to open leaves the path out rather than guessing.
+        Assert.All(alone.Interactions, i => Assert.False(i.TryGetProperty("stepPath", out _)));
 
         // With a tests file naming the same step (and an assertion): the capture's markers are the drawing,
         // the tests file's events fill the step list and draw nothing, or the diagram grows two bars.
@@ -554,7 +554,7 @@ public class IngestPipelineTests : IDisposable
         ], "R-projected-mismatch");
         Assert.Equal(1, Count(other.Diagram, "<<stepDelimiter>>"));
         Assert.Single(other.Result.Diagnostics, d => d.Kind == DiagnosticKind.StepAttributionMismatch);
-        Assert.All(other.Interactions, i => Assert.Equal(JsonValueKind.Null, i.GetProperty("stepPath").ValueKind));
+        Assert.All(other.Interactions, i => Assert.False(i.TryGetProperty("stepPath", out _)));
     }
 
     [Fact]
@@ -676,11 +676,11 @@ public class IngestPipelineTests : IDisposable
         var result = IngestPipeline.Run(new IngestRequest { InteractionFiles = [capture], TestRecords = testRecords, Options = options, CallTreeOrdering = false });
 
         Assert.True(result.Generated);
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         var scenario = json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].Clone();
         return (result,
-            scenario.GetProperty("httpInteractions").EnumerateArray().ToArray(),
-            scenario.GetProperty("annotations").EnumerateArray().Select(a => $"{a.GetProperty("kind").GetString()}: {a.GetProperty("text").GetString()}").ToArray(),
+            ReportFile.Items(scenario, "httpInteractions").ToArray(),
+            ReportFile.Items(scenario, "annotations").Select(a => $"{a.GetProperty("kind").GetString()}: {a.GetProperty("text").GetString()}").ToArray(),
             ReportPayloadText.Of(scenario.GetProperty("diagrams")[0])!);
     }
 

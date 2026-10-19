@@ -119,7 +119,7 @@ public class MergeCarriesWarmUpTests : IDisposable
         var exit = IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", output], new StringWriter(), err);
 
         Assert.True(exit == 0, err.ToString());
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         var mark = Assert.Single(Records(json), r => r.TryGetProperty("warmUp", out _));
         Assert.Equal("first", mark.GetProperty("warmUp").GetProperty("kind").GetString());
         Assert.Equal(0.6, Assert.Single(Scenarios(json), s => s.TryGetProperty("warmUpSeconds", out _)).GetProperty("warmUpSeconds").GetDouble(), 6);

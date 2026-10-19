@@ -43,7 +43,7 @@ public class IngestAttemptTests : IDisposable
 
         Assert.Equal("Passed", scenario.GetProperty("result").GetString());
         Assert.Equal(2, scenario.GetProperty("attempt").GetInt32());
-        Assert.Equal(JsonValueKind.Null, scenario.GetProperty("errorMessage").ValueKind);
+        Assert.False(scenario.TryGetProperty("errorMessage", out _), "the last attempt passed, so the scenario has no error message");
         // A keyword-less label reads as a sentence in the report (--no-capitalise leaves it).
         Assert.Equal(["Attempt two"], scenario.GetProperty("steps").EnumerateArray().Select(s => s.GetProperty("text").GetString()));
         Assert.Contains("retry 1", scenario.GetProperty("labels").EnumerateArray().Select(l => l.GetString()));
@@ -107,7 +107,7 @@ public class IngestAttemptTests : IDisposable
         Assert.Equal(2, scenario.GetProperty("attempt").GetInt32());
         Assert.Equal(["http://localhost:5000/second"], scenario.GetProperty("httpInteractions").EnumerateArray()
             .Where(i => i.GetProperty("type").GetString() == "Request").Select(i => i.GetProperty("uri").GetString()));
-        Assert.Equal(JsonValueKind.Null, scenario.GetProperty("errorMessage").ValueKind);
+        Assert.False(scenario.TryGetProperty("errorMessage", out _), "the last attempt passed, so the scenario has no error message");
         Assert.Single(result.Diagnostics, d => d.Message.Contains("2 interaction record(s) of earlier attempts", StringComparison.Ordinal));
         Assert.DoesNotContain(result.Diagnostics, d => d.Message.Contains("more than one start without an attempt number", StringComparison.Ordinal));
     }
@@ -228,14 +228,14 @@ public class IngestAttemptTests : IDisposable
             Options = Options(output),
         });
         Assert.True(result.Generated);
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         var scenario = Assert.Single(json.RootElement.GetProperty("features").EnumerateArray().SelectMany(f => f.GetProperty("scenarios").EnumerateArray()));
         return (result, scenario.Clone());
     }
 
     private static JsonElement ScenarioById(string output, string id)
     {
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         return json.RootElement.GetProperty("features").EnumerateArray().SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .Single(s => s.GetProperty("id").GetString() == id).Clone();
     }

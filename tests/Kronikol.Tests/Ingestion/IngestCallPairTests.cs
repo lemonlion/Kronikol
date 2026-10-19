@@ -154,10 +154,10 @@ public class IngestCallPairTests : IDisposable
     /// <summary>For each scenario of the data file, the type and phase of each of its records with this URI.</summary>
     private static (string Type, string? Phase)[][] HalvesByScenario(string reports, string uri)
     {
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(reports, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(reports, "TestRunReport.json")));
         return json.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
-            .Select(s => s.GetProperty("httpInteractions").EnumerateArray()
+            .Select(s => ReportFile.Items(s, "httpInteractions")
                 .Where(c => c.TryGetProperty("uri", out var u) && u.GetString() == uri)
                 .Select(c => (c.GetProperty("type").GetString()!, c.TryGetProperty("phase", out var p) ? p.GetString() : null))
                 .ToArray())

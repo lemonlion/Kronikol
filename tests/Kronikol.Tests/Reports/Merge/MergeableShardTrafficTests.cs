@@ -53,7 +53,7 @@ public class MergeableShardTrafficTests
             ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(features, Start, End, options, RunEnvironment.Unrecorded, Environment.GetEnvironmentVariable);
             DefaultDiagramsFetcher.Reset();
 
-            using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "TestRunReport.json")));
+            using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(directory, "TestRunReport.json")));
             Assert.True(json.RootElement.TryGetProperty("mergeableFormatVersion", out _), "not a mergeable file");
             var scenario = json.RootElement.GetProperty("features").EnumerateArray()
                 .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())

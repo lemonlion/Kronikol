@@ -137,7 +137,7 @@ public class ReportToggleTests : IDisposable
         ReportGenerator.CreateStandardReportsWithDiagrams(
             SimpleFeatures, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
 
-        Assert.True(File.Exists(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.json")));
+        Assert.True(File.Exists(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.krkl")));
     }
 
     [Fact]
@@ -149,6 +149,7 @@ public class ReportToggleTests : IDisposable
             SimpleFeatures, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
 
         Assert.False(File.Exists(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.json")));
+        Assert.False(File.Exists(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.krkl")));
     }
 
     // --- Test Run Report Schema ---
@@ -321,7 +322,7 @@ public class ReportToggleTests : IDisposable
             SimpleFeatures, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
 
         Assert.True(File.Exists(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.html")));
-        Assert.True(File.Exists(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.json")));
+        Assert.True(File.Exists(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.krkl")));
     }
 
     [Fact]

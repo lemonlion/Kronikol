@@ -3,10 +3,10 @@ namespace Kronikol.Tests;
 public class ReportConfigurationOptionsDefaultsTests
 {
     [Fact]
-    public void CompressTestRunReport_defaults_to_false_in_4x()
+    public void CompressTestRunReport_defaults_to_true_from_5()
     {
-        // The data file stays TestRunReport.json unless a run asks (plans/REPORT_FORMAT_PLAN.md 4.3); v5 turns it on.
-        Assert.False(new ReportConfigurationOptions().CompressTestRunReport);
+        // From 5.0.0 the data file is TestRunReport.krkl unless a run asks for the JSON (plans/REPORT_FORMAT_PLAN.md 4.3, 6.2).
+        Assert.True(new ReportConfigurationOptions().CompressTestRunReport);
     }
 
     [Fact]

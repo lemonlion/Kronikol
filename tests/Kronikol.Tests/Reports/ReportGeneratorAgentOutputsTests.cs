@@ -99,7 +99,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
         var failure = Assert.Single(FailuresJsonl.Failures(File.ReadAllText(Path.Combine(_dir, "Failures.jsonl"))));
         var address = failure.GetProperty("address").GetString();
 
-        using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "TestRunReport.json")));
+        using var report = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_dir, "TestRunReport.json")));
         var ordinal = int.Parse(address![1..]);
         var scenarios = report.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray()).ToArray();
@@ -127,7 +127,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
         var caseFailure = Assert.Single(FailuresJsonl.Failures(File.ReadAllText(Path.Combine(_dir, "Failures.jsonl"))));
         var ordinal = int.Parse(caseFailure.GetProperty("address").GetString()![1..]);
 
-        using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "TestRunReport.json")));
+        using var report = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_dir, "TestRunReport.json")));
         var scenarios = report.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray()).ToArray();
 
@@ -155,7 +155,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
 
         // Every other output is intact, including the instruction files that share the isolated list.
         Assert.True(File.Exists(Path.Combine(_dir, "TestRunReport.html")));
-        Assert.True(File.Exists(Path.Combine(_dir, "TestRunReport.json")));
+        Assert.True(File.Exists(Path.Combine(_dir, "TestRunReport.krkl")));
         Assert.True(File.Exists(Path.Combine(_dir, "CLAUDE.md")));
         Assert.True(File.Exists(Path.Combine(_dir, "AGENTS.md")));
         // ...and the digest's own two halves are two actions, so the machine-readable one survives the
@@ -205,7 +205,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
         Assert.Equal("failed", test.GetProperty("status").GetString());
 
         // The address it hands a consumer has to be the one kronikol query answers to.
-        using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "TestRunReport.json")));
+        using var report = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_dir, "TestRunReport.json")));
         var ordinal = int.Parse(test.GetProperty("extra").GetProperty("kronikolAddress").GetString()![1..]);
         var scenarios = report.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray()).ToArray();

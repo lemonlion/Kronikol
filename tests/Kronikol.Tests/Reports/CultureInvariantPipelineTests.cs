@@ -45,7 +45,7 @@ public class CultureInvariantPipelineTests : IDisposable
         Assert.Equal(expected.Keys.Order(StringComparer.Ordinal), actual.Keys.Order(StringComparer.Ordinal));
         // The report and the data file are among them, so the comparison is not over an empty run.
         Assert.Contains("TestRunReport.html", expected.Keys);
-        Assert.Contains("TestRunReport.json", expected.Keys);
+        Assert.Contains("TestRunReport.krkl", expected.Keys);
         Assert.Contains("Failures.md", expected.Keys);
         Assert.Contains("data-duration-ms=\"1260\"", expected["TestRunReport.html"], StringComparison.Ordinal);
         Assert.Contains("iflow-flame-bar", expected["TestRunReport.html"], StringComparison.Ordinal);
@@ -66,7 +66,10 @@ public class CultureInvariantPipelineTests : IDisposable
         Assert.Fail($"{file} differs at character {at}:\n  en-US:   {Around(expected)}\n  culture: {Around(actual)}");
     }
 
-    /// <summary>The run's files, keyed by their path under the reports directory, with what the process shares left out.</summary>
+    /// <summary>
+    /// The run's files, keyed by their path under the reports directory, with what the process shares left out. A
+    /// <c>.krkl</c> is compared as the JSON it holds.
+    /// </summary>
     private Dictionary<string, string> Run(string name)
     {
         var reports = Path.Combine(_dir, name);
@@ -94,7 +97,8 @@ public class CultureInvariantPipelineTests : IDisposable
             RunEnvironment.Unrecorded, variable => variable == "KRONIKOL_HISTORY" ? "off" : null, spans: Spans());
 
         return Directory.EnumerateFiles(reports, "*", SearchOption.AllDirectories)
-            .ToDictionary(path => Path.GetRelativePath(reports, path).Replace('\\', '/'), path => Normalise(path, File.ReadAllText(path)));
+            .ToDictionary(path => Path.GetRelativePath(reports, path).Replace('\\', '/'),
+                path => Normalise(path, path.EndsWith(".krkl", StringComparison.Ordinal) ? ReportFile.Read(path) : File.ReadAllText(path)));
     }
 
     /// <summary>
@@ -107,7 +111,7 @@ public class CultureInvariantPipelineTests : IDisposable
         if (path.EndsWith(".html", StringComparison.Ordinal))
             return Regex.Replace(text, "<details class=\"background-calls\">.*?</details>", "", RegexOptions.Singleline);
 
-        if (path.EndsWith(".json", StringComparison.Ordinal) && JsonNode.Parse(text) is JsonObject root)
+        if ((path.EndsWith(".json", StringComparison.Ordinal) || path.EndsWith(".krkl", StringComparison.Ordinal)) && JsonNode.Parse(text) is JsonObject root)
         {
             root.Remove("background");
             return root.ToJsonString();

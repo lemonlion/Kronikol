@@ -653,10 +653,10 @@ public class IngestAttributionTests : IDisposable
     /// </summary>
     private static (string ScenarioId, string Service, string? Phase)[] InteractionsInReport(IngestResult result)
     {
-        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
+        using var document = System.Text.Json.JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
         return document.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
-            .SelectMany(sc => sc.GetProperty("httpInteractions").EnumerateArray()
+            .SelectMany(sc => ReportFile.Items(sc, "httpInteractions")
                 .Select(i => (
                     sc.GetProperty("id").GetString() ?? "",
                     i.GetProperty("serviceName").GetString() ?? "",
@@ -667,11 +667,11 @@ public class IngestAttributionTests : IDisposable
     /// <summary>Interactions of one scenario as the written report has them — not the process-global store, which parallel test classes clear.</summary>
     private static int InteractionsOf(IngestResult result, string scenarioId)
     {
-        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
+        using var document = System.Text.Json.JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
         return document.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .Where(s => s.GetProperty("id").GetString() == scenarioId)
-            .Sum(s => s.GetProperty("httpInteractions").GetArrayLength());
+            .Sum(s => ReportFile.Items(s, "httpInteractions").Count());
     }
 
     [Fact]

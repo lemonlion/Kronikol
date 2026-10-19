@@ -58,7 +58,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         Assert.Contains($"iflow-{run.Second}", inPage);
         Assert.All(inPage, key => Assert.Contains(key, linked));
 
-        using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "TestRunReport.json")));
+        using var data = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_directory, "TestRunReport.json")));
         var root = data.RootElement;
         var linkedInData = LinkedIds(root.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
@@ -141,7 +141,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         var run = Generate(InternalFlowNoDataBehavior.HideLink);
 
         var merged = Kronikol.Reports.Merge.MergeableReportRenderer.Render(
-            Kronikol.Reports.Merge.MergeableReportReader.ReadFile(Path.Combine(_directory, "TestRunReport.json")),
+            Kronikol.Reports.Merge.MergeableReportReader.ReadFile(ReportFile.Resolve(Path.Combine(_directory, "TestRunReport.json"))),
             Path.Combine(_directory, "merged", "TestRunReport.html"));
 
         var element = Element(run.Html);
@@ -165,7 +165,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         // hold that flow once, in the first call's segment, and the nested call's segment names it.
         var run = Generate(InternalFlowNoDataBehavior.HideLink, nestedCall: true);
 
-        using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "TestRunReport.json")));
+        using var data = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_directory, "TestRunReport.json")));
         foreach (var map in new[] { PageMap(run.Html), data.RootElement.GetProperty("internalFlowSegments") })
         {
             Assert.Contains("first.root", SegmentMapText.Resolve(map, $"iflow-{run.First}").Content, StringComparison.Ordinal);
@@ -195,7 +195,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         Assert.Contains($"iflow-{run.First}", linkedInPage);
         Assert.All(SegmentKeysInPage(run.Html), key => Assert.Contains(key, linkedInPage));
 
-        using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "TestRunReport.json")));
+        using var data = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_directory, "TestRunReport.json")));
         var root = data.RootElement;
         var linkedInData = LinkedIds(root.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
@@ -214,7 +214,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
         Assert.DoesNotContain($"iflow-{run.Second}", LinkedIds(DiagramSourcesInPage(run.Html)));
         Assert.Contains($"iflow-{run.First}", SegmentKeysInPage(run.Html));
         Assert.DoesNotContain($"iflow-{run.Second}", SegmentKeysInPage(run.Html));
-        using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "TestRunReport.json")));
+        using var data = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_directory, "TestRunReport.json")));
         Assert.False(data.RootElement.GetProperty("internalFlowSegments").TryGetProperty($"iflow-{run.Second}", out _),
             "the data file carries no segment for the undrawn call");
     }
@@ -224,7 +224,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
     {
         var run = Generate(InternalFlowNoDataBehavior.HideLink);
 
-        using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "TestRunReport.json")));
+        using var data = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_directory, "TestRunReport.json")));
         var flows = data.RootElement.GetProperty("wholeTestFlow");
 
         // The scenario with only a step bar and an assertion note has no trace id of its own, and was given every
@@ -238,7 +238,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
     {
         var run = Generate(InternalFlowNoDataBehavior.HideLink);
 
-        using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "TestRunReport.json")));
+        using var data = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_directory, "TestRunReport.json")));
         var flows = data.RootElement.GetProperty("wholeTestFlow");
 
         // A dashed line per call, and none for the step bar and the assertion note, which drew one each labelled ": /".

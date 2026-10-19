@@ -117,7 +117,7 @@ public class IngestSpanTests : IDisposable
 
         var graphQl = SegmentMapText.Resolve(InternalFlowSegmentMapReportTests.PageMap(File.ReadAllText(result.TestRunReportHtml)), Key(_graphQl));
         Assert.Equal("Internal Flow (15 spans)", graphQl.Title);
-        using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
+        using var data = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
         var call = data.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions")[0];
         Assert.Equal(Trace, call.GetProperty("activityTraceId").GetString());
         Assert.False(call.TryGetProperty("activitySpanId", out var spanId) && spanId.ValueKind == JsonValueKind.String);

@@ -98,7 +98,7 @@ public class CucumberIngestPipelineTests : IDisposable
         Assert.Contains("Expected visible, got hidden", assertion.Comments!);
 
         // The capture joined on the same id, so the scenario has its own diagram.
-        using var json = JsonDocument.Parse(File.ReadAllText(System.IO.Path.Combine(output, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(System.IO.Path.Combine(output, "TestRunReport.json")));
         var diagram = FindDiagram(json, testId);
         var lines = diagram.Split('\n').Select(l => l.TrimEnd('\r')).ToArray();
         var arrows = lines.Where(l => l.Contains("]> ") || l.Contains("]-> ") || l.Contains("hnote")).ToArray();
@@ -285,7 +285,7 @@ public class CucumberIngestPipelineTests : IDisposable
             Options = options,
         });
 
-        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "TestRunReport.json")));
+        using var json = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(output, "TestRunReport.json")));
         var scenario = json.RootElement.GetProperty("features").EnumerateArray().SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .Single(s => s.GetProperty("id").GetString() == testId);
         Assert.Equal(["Setup", "Setup", "Action", "Action"],

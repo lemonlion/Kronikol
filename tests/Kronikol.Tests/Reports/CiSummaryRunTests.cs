@@ -300,8 +300,8 @@ public class CiSummaryRunTests : IDisposable
 
         Assert.Equal(2, exit);
         Assert.StartsWith("Several reports under ", error);
-        Assert.Matches(@"reports-checkout[\\/]TestRunReport\.json  [\d.]+ (B|KB|MB) · suite Checkout · 1 of 2 failed", error);
-        Assert.Matches(@"reports-payments[\\/]TestRunReport\.json  [\d.]+ (B|KB|MB) · suite Payments · 2 of 3 failed", error);
+        Assert.Matches(@"reports-checkout[\\/]TestRunReport\.krkl  [\d.]+ (B|KB|MB) · suite Checkout · 1 of 2 failed", error);
+        Assert.Matches(@"reports-payments[\\/]TestRunReport\.krkl  [\d.]+ (B|KB|MB) · suite Payments · 2 of 3 failed", error);
     }
 
     // ─── R1: the data file the commands are handed (F11) ───────
@@ -311,7 +311,7 @@ public class CiSummaryRunTests : IDisposable
     {
         var reports = Path.Combine(_root, "custom", "Reports");
         var console = Run(reports, GitHub(runId: null), o => o.HtmlTestRunReportFileName = "Checkout");
-        var data = Path.Combine(reports, "Checkout.json");
+        var data = Path.Combine(reports, "Checkout.krkl");
 
         var pointer = console.Split('\n').Single(l => l.Contains("1 failed — kronikol query failures ", StringComparison.Ordinal)).TrimEnd('\r');
         var command = pointer[(pointer.IndexOf("kronikol query failures ", StringComparison.Ordinal) + "kronikol query failures ".Length)..];
@@ -349,7 +349,7 @@ public class CiSummaryRunTests : IDisposable
 
         var lines = QueryLines(section);
         Assert.Equal(2, lines.Length);
-        Assert.All(lines, line => Assert.Contains(@"-name 'Checkout \[linux\].json'", line));
+        Assert.All(lines, line => Assert.Contains(@"-name 'Checkout \[linux\].krkl'", line));
         var previous = Regex.Match(section, "`--run ([^`]+)` opens it");
         Assert.True(previous.Success, section);
         var kept = previous.Groups[1].Value;
@@ -411,7 +411,7 @@ public class CiSummaryRunTests : IDisposable
         var markdown = File.ReadAllText(Path.Combine(reports, "CiSummary.md"));
         var debug = markdown.IndexOf("\n## Debug this run\n\n**People:** open `TestRunReport.html`", StringComparison.Ordinal);
         Assert.True(debug > 0, markdown);
-        Assert.Contains("\n\n**AI agents:** do not open `TestRunReport.json` or `TestRunReport.html` — ", markdown[debug..]);
+        Assert.Contains("\n\n**AI agents:** do not open `TestRunReport.krkl` or `TestRunReport.html` — ", markdown[debug..]);
         Assert.DoesNotContain("## The report", markdown);
     }
 

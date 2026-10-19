@@ -85,7 +85,8 @@ public class CtrfCommandTests : IDisposable
             });
     }
 
-    private string Report => Path.Combine(_directory, "TestRunReport.json");
+    /// <summary>The run's data file, in the form it wrote.</summary>
+    private string Report => ReportFile.Resolve(Path.Combine(_directory, "TestRunReport.json"));
 
     // ─── The conversion ────────────────────────────────────────
 
