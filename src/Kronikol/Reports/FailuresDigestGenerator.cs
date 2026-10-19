@@ -208,9 +208,11 @@ public static class FailuresDigestGenerator
         string? Actual,
         string ClusterKey,
         IReadOnlyList<StepLine> Context,
+        int StepsBeforeTotal,
         IReadOnlyList<StepLine> Failing,
         IReadOnlyList<CallLine> Calls,
         string CallsScope,
+        int CallsTotal,
         IReadOnlyList<AttachmentLine> Attachments,
         string? DeepLink,
         string? SourceFile,
@@ -275,7 +277,9 @@ public static class FailuresDigestGenerator
             ? []
             : ordered.Take(failingIndexes[0]).TakeLast(StepsBeforeFailure).Select(Line).ToArray();
 
-        var (calls, callsScope) = BuildCalls(located, failing, stepPaths, interactions, address);
+        // How many steps came before the first failing one: the context above holds the last few of them (#161).
+        var stepsBeforeTotal = failingIndexes.Length == 0 ? 0 : failingIndexes[0];
+        var (calls, callsScope, callsTotal) = BuildCalls(located, failing, stepPaths, interactions, address);
 
         return new Entry(
             address, stableId, located.Feature.DisplayName, scenario.DisplayName,
@@ -284,7 +288,7 @@ public static class FailuresDigestGenerator
             scenario.ErrorMessage,
             diff?.Expected, diff?.Actual,
             ClusterKey(scenario.ErrorMessage),
-            context, failing, calls, callsScope,
+            context, stepsBeforeTotal, failing, calls, callsScope, callsTotal,
             // The scenario's own, then each step's in the order the steps are listed, with the step's address. The scenario's
             // alone missed every screenshot taken inside a step, in every lane (#175).
             [
@@ -306,12 +310,12 @@ public static class FailuresDigestGenerator
     /// common case and the file never said so, which is how "we did not look there" and "there was nothing
     /// there" became the same fact. <c>callsScope</c> separates them.</para>
     /// </summary>
-    private static (IReadOnlyList<CallLine> Calls, string Scope) BuildCalls(Located located, IReadOnlyList<StepLine> failing,
+    private static (IReadOnlyList<CallLine> Calls, string Scope, int Total) BuildCalls(Located located, IReadOnlyList<StepLine> failing,
         IReadOnlyDictionary<string, List<string?>> stepPaths,
         IReadOnlyDictionary<string, List<RequestResponseLog>> interactions, string address)
     {
         if (!interactions.TryGetValue(located.Scenario.Id, out var logs))
-            return ([], "none");
+            return ([], "none", 0);
 
         // A response is not a row of its own: it supplies the status and the duration of the request it
         // answers, and the request's ordinal is the address an agent can act on.
@@ -338,10 +342,10 @@ public static class FailuresDigestGenerator
             .ToArray();
 
         if (requests.Length == 0)
-            return ([], "none");
+            return ([], "none", 0);
 
         stepPaths.TryGetValue(located.Scenario.Id, out var paths);
-        var inStep = failing.Count == 0 || paths is null
+        var attributedToFailing = failing.Count == 0 || paths is null
             ? []
             : requests
                 .Where(x =>
@@ -349,12 +353,12 @@ public static class FailuresDigestGenerator
                     var attributed = x.Index < paths.Count ? paths[x.Index] : null;
                     return attributed is not null && failing.Any(f => Covers(attributed, f.Path));
                 })
-                .Take(MaxCallsPerFailure)
-                .Select(x => Line(x.Index, x.Log))
                 .ToArray();
+        var inStep = attributedToFailing.Take(MaxCallsPerFailure).Select(x => Line(x.Index, x.Log)).ToArray();
 
+        // The total is what the list was drawn from, so the file can say how many it left out (#161).
         if (inStep.Length > 0)
-            return (inStep, "failingStep");
+            return (inStep, "failingStep", attributedToFailing.Length);
 
         // The fallback. The scenario's own calls, failures first, then the most recent — because a naive
         // "last N" pushes out the 502 that is the reason anyone is reading this, and a naive "first N"
@@ -365,7 +369,7 @@ public static class FailuresDigestGenerator
         var rest = requests.Where(x => !IsError(x, responses)).TakeLast(MaxCallsPerFailure).ToArray();
 
         var chosen = errored.Concat(rest).Take(MaxCallsPerFailure).Select(x => Line(x.Index, x.Log)).ToArray();
-        return chosen.Length > 0 ? (chosen, "scenario") : ([], "none");
+        return chosen.Length > 0 ? (chosen, "scenario", requests.Length) : ([], "none", 0);
 
         static bool IsError((int Index, RequestResponseLog Log) request, Dictionary<Guid, RequestResponseLog> responses)
         {
@@ -669,7 +673,7 @@ public static class FailuresDigestGenerator
         markdown.Append("## Failures\n\n");
         var number = 0;
         foreach (var entry in shown)
-            AppendEntry(markdown, entry, ++number);
+            AppendEntry(markdown, entry, ++number, here);
 
         var remaining = entries.Count - shown.Length;
         if (remaining > 0)
@@ -698,7 +702,7 @@ public static class FailuresDigestGenerator
         return markdown.ToString();
     }
 
-    private static void AppendEntry(StringBuilder markdown, Entry entry, int number)
+    private static void AppendEntry(StringBuilder markdown, Entry entry, int number, string here)
     {
         markdown.Append($"### {number}. {Escape(entry.Feature)} › {Escape(entry.Scenario)}\n\n");
         markdown.Append($"`{entry.Address}` · stableId `{entry.StableId}`");
@@ -754,6 +758,9 @@ public static class FailuresDigestGenerator
         if (entry.Context.Count > 0)
         {
             markdown.Append("Steps before it:\n\n");
+            // The last few: the earlier ones are counted, and the tree has them all (#161, plans/LIST_CAPS_PLAN.md R2).
+            if (entry.StepsBeforeTotal > entry.Context.Count)
+                markdown.Append($"- … {entry.StepsBeforeTotal - entry.Context.Count} earlier step(s): `kronikol query steps {here} {entry.Address}`\n");
             foreach (var step in entry.Context)
                 markdown.Append($"- `{entry.Address}/{step.Path}` {Escape(Truncate(step.Text, 160))}{DurationSuffix(step)}\n");
             markdown.Append('\n');
@@ -782,6 +789,10 @@ public static class FailuresDigestGenerator
                 markdown.Append($"| `{call.Address}` | {Escape(call.Service)} | {Code(call.Summary)} | {Escape(call.Status ?? "")} | "
                                 + $"{(call.DurationMs is { } ms ? ms.ToString("0", CultureInfo.InvariantCulture) + " ms" : "")} |\n");
             markdown.Append('\n');
+            // Past the table's eight, counted, with the view that lists every call in order (#161). After the blank line, so
+            // that a renderer does not read it as a row of the table.
+            if (entry.CallsTotal > entry.Calls.Count)
+                markdown.Append($"… {entry.CallsTotal - entry.Calls.Count} more call(s) not in this table: `kronikol query flow {here} {entry.Address}`\n\n");
 
             // Why a call failed, where the table says that it did (4.3.0): the message chain of a call that threw, on one
             // line and capped as `kronikol query http` caps it, by the address the table gives the call.
@@ -970,6 +981,9 @@ public static class FailuresDigestGenerator
                     s.SourceLine
                 }).ToArray(),
                 ["stepsBefore"] = entry.Context.Select(s => new { Path = $"{entry.Address}/{s.Path}", Text = Capped(s.Text), s.Status }).ToArray(),
+                // How many steps came before the failing one, and below how many calls the list was drawn from: a capped list
+                // carries its total beside it (#161, plans/LIST_CAPS_PLAN.md R2).
+                ["stepsBeforeTotal"] = entry.StepsBeforeTotal,
                 // Why a call failed, as Failures.md prints it under the table; written only for a call that says.
                 ["calls"] = entry.Calls.Select(c =>
                 {
@@ -986,6 +1000,7 @@ public static class FailuresDigestGenerator
                 // because the step had none attributed to it, or nothing captured at all. Without it an
                 // empty array meant all three.
                 ["callsScope"] = entry.CallsScope,
+                ["callsTotal"] = entry.CallsTotal,
                 // A step's attachment says which step holds it; one of the scenario's own is the object this has always been.
                 // problem only on one the report does not hold (#148), as step only on a step's.
                 ["attachments"] = entry.Attachments.Select(a => (a.Step, a.Attachment.Problem) switch

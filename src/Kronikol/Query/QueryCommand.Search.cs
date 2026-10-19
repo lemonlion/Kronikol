@@ -128,11 +128,12 @@ public static partial class QueryCommand
 
                 if (options.Values)
                 {
-                    var paths = PathEngine.PathsContaining(content, needle).Take(4).ToList();
+                    var paths = PathEngine.PathsContaining(content, needle).ToList();
                     if (paths.Count == 0)
                         hits.Add($"{where,-16} body       {Excerpt(content, needle)}");
-                    foreach (var path in paths)
-                        hits.Add($"{where,-16} body       {path}");
+                    var shown = Math.Min(paths.Count, MaxPathsPerBody);
+                    for (var p = 0; p < shown; p++)
+                        hits.Add($"{where,-16} body       {paths[p]}" + (p == shown - 1 ? MorePaths(paths.Count - shown, body.Hash) : ""));
                 }
                 else
                 {
@@ -202,6 +203,17 @@ public static partial class QueryCommand
         return stack;
     }
 
+    /// <summary>How many paths in one body <c>grep --values</c> and <c>grep --number</c> print, each a row of their own.</summary>
+    private const int MaxPathsPerBody = 4;
+
+    /// <summary>
+    /// What a body's last printed path adds when the body holds more matches than <see cref="MaxPathsPerBody"/>: how many,
+    /// and the view of its shape, where the rest are (#161, plans/LIST_CAPS_PLAN.md R2). On the row, not a row of its own,
+    /// so <c>--count</c> and the footer go on counting the rows printed.
+    /// </summary>
+    private static string MorePaths(int more, string hash) =>
+        more > 0 ? $" · {more.ToString(System.Globalization.CultureInfo.InvariantCulture)} more path(s) in this body: body {hash} --keys" : "";
+
     private static string Excerpt(string text, string needle)
     {
         var at = text.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
@@ -246,11 +258,13 @@ public static partial class QueryCommand
 
         CompareSequences(writer, "steps",
             left.AllSteps().Select(s => $"{s.Step.Display} [{s.Step.Status}]").ToList(),
-            right.AllSteps().Select(s => $"{s.Step.Display} [{s.Step.Status}]").ToList());
+            right.AllSteps().Select(s => $"{s.Step.Display} [{s.Step.Status}]").ToList(),
+            $"steps {left.Address} · steps {right.Address}");
 
         CompareSequences(writer, "calls",
             left.Interactions.Where(i => i.Type == "Request").Select(i => $"{i.ServiceName} {i.Summary()}").ToList(),
-            right.Interactions.Where(i => i.Type == "Request").Select(i => $"{i.ServiceName} {i.Summary()}").ToList());
+            right.Interactions.Where(i => i.Type == "Request").Select(i => $"{i.ServiceName} {i.Summary()}").ToList(),
+            $"flow {left.Address} · flow {right.Address}");
 
         var leftBodies = left.Interactions.Select(i => i.BodyHash).Where(h => h is not null).ToHashSet();
         var rightBodies = right.Interactions.Select(i => i.BodyHash).Where(h => h is not null).ToHashSet();
@@ -304,23 +318,29 @@ public static partial class QueryCommand
         return groups;
     }
 
-    private static void CompareSequences(QueryWriter writer, string noun, List<string> left, List<string> right)
-    {
-        writer.Line($"{noun}: {left.Count} vs {right.Count}");
-        var shown = 0;
-        for (var i = 0; i < Math.Max(left.Count, right.Count) && shown < 20; i++)
-        {
-            var a = i < left.Count ? left[i] : null;
-            var b = i < right.Count ? right[i] : null;
-            if (a == b)
-                continue;
+    /// <summary>How many differences of each sequence <c>compare</c> prints.</summary>
+    private const int MaxDifferencesShown = 20;
 
-            writer.Line($"  {i,3}  - {QueryWriter.OneLine(a ?? "(none)", 70)}");
-            writer.Line($"       + {QueryWriter.OneLine(b ?? "(none)", 70)}");
-            shown++;
+    /// <summary>
+    /// Two sequences side by side, position by position: how long each is and how many positions differ, then the first
+    /// <see cref="MaxDifferencesShown"/> differences and a line naming <paramref name="view"/>, the two whole sequences,
+    /// for the rest. The heading counted the sequences and the cut said nothing (#161, plans/LIST_CAPS_PLAN.md R2).
+    /// </summary>
+    private static void CompareSequences(QueryWriter writer, string noun, List<string> left, List<string> right, string view)
+    {
+        var differing = Enumerable.Range(0, Math.Max(left.Count, right.Count))
+            .Where(i => (i < left.Count ? left[i] : null) != (i < right.Count ? right[i] : null))
+            .ToList();
+        writer.Line($"{noun}: {left.Count} vs {right.Count}" + (differing.Count > 0 ? $", {differing.Count} differ" : ""));
+        foreach (var i in differing.Take(MaxDifferencesShown))
+        {
+            writer.Line($"  {i,3}  - {QueryWriter.OneLine(i < left.Count ? left[i] : "(none)", 70)}");
+            writer.Line($"       + {QueryWriter.OneLine(i < right.Count ? right[i] : "(none)", 70)}");
         }
 
-        if (shown == 0)
+        if (differing.Count > MaxDifferencesShown)
+            writer.Line("  " + QueryWriter.CutLine(differing.Count - MaxDifferencesShown, "difference(s)", null, view));
+        if (differing.Count == 0)
             writer.Line("  identical");
     }
 

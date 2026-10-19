@@ -119,6 +119,9 @@ public static partial class QueryCommand
             storedBytes = s.Stored,
             decodedBytes = s.Decoded
         }).ToList());
+        // How many scenarios the ranking was taken from, which the text says ("The 10 largest of N") and the JSON did not
+        // (#161, plans/LIST_CAPS_PLAN.md R2): a capped list carries its total beside it.
+        writer.Data("largestScenariosTotal", sizes.Scenarios.Count);
 
         if (largest.Count > 0)
         {

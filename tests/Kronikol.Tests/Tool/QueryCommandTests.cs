@@ -153,6 +153,36 @@ public class QueryCommandTests : IDisposable
     }
 
     [Fact]
+    public void Summary_says_how_many_failed_scenarios_it_did_not_list_and_names_the_listing()
+    {
+        // Twelve failures: ten listed, then a line that counts the other two and names the listing of them all. The JSON
+        // carries the same ten and the total (plans/LIST_CAPS_PLAN.md Appendix A row 5, held by this fact since 4.29.0).
+        var path = Write("ManyFailed.json",
+        [
+            new Feature
+            {
+                DisplayName = "Failing",
+                Scenarios = [.. Enumerable.Range(0, 12).Select(i => new Scenario
+                {
+                    Id = $"f{i}", DisplayName = $"Failure {i}", Result = ExecutionResult.Failed, Duration = TimeSpan.FromSeconds(1),
+                    ErrorMessage = $"broke {i}"
+                })]
+            }
+        ], null);
+
+        var text = Run("summary", path).Replace("\r\n", "\n");
+        Assert.True(text.Contains("\nFailed:\n", StringComparison.Ordinal), text);
+        var failed = text[(text.IndexOf("\nFailed:\n", StringComparison.Ordinal) + "\nFailed:\n".Length)..];
+        Assert.Equal(10, failed.Split('\n').TakeWhile(l => !l.StartsWith("  … ", StringComparison.Ordinal)).Count(l => l.StartsWith("  s", StringComparison.Ordinal)));
+        Assert.Contains("\n  … 2 more · scenarios --result Failed\n", text, StringComparison.Ordinal);
+        Assert.Equal("12", Run("scenarios", path, "--result", "Failed", "--count").Trim());
+
+        var envelope = JsonDocument.Parse(Run("summary", path, "--json")).RootElement;
+        Assert.Equal(10, envelope.GetProperty("failed").GetArrayLength());
+        Assert.Equal(12, envelope.GetProperty("failedTotal").GetInt32());
+    }
+
+    [Fact]
     public void Summary_says_nothing_about_ci_on_a_run_that_was_not_on_ci()
     {
         // `provider: None` is a fact about the run, not a line worth spending the budget on.

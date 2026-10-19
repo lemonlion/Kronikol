@@ -371,10 +371,14 @@ public static partial class QueryCommand
         // Paged like every other listing rather than printed whole: it used to hand-roll its loop and its
         // footer, which is how it came to be the one listing that could overflow the budget with nothing
         // said about how to resume. The closing line is preserved because it says what a row count cannot.
+        var statusesCut = false;
         writer.Page(ordered, options.Offset, options.PageSize(200, writer, "services"), "services", entry =>
+            {
                 writer.Line($"{QueryWriter.OneLine(entry.Name, 24),-24} {entry.Calls,5} {entry.Errors,6} "
                             + $"{QueryWriter.Size(entry.Bytes),9} {QueryWriter.Duration(entry.Median()),8} {QueryWriter.Duration(entry.MaxMs),8}  "
-                            + entry.StatusSummary()),
+                            + entry.StatusSummary());
+                statusesCut |= entry.StatusesCut;
+            },
             options.RerunArgs(),
             entry => new
             {
@@ -389,8 +393,15 @@ public static partial class QueryCommand
             },
             $"{ordered.Count} services · a service missing here was never called");
 
+        // The column names a service's four commonest statuses; a "+N more" in it has an address, as every cut does.
+        if (statusesCut && !writer.Json)
+            writer.Note($"+N more: past its {MaxStatusesShown} commonest, `services --json` lists every status of a service");
+
         return 0;
     }
+
+    /// <summary>How many kinds of status a row of <c>services</c> names; <c>--json</c> gives every one.</summary>
+    private const int MaxStatusesShown = 4;
 
     private sealed class ServiceStats(string name)
     {
@@ -443,8 +454,21 @@ public static partial class QueryCommand
             return sorted[sorted.Length / 2];
         }
 
-        public string StatusSummary() =>
-            _statuses.Count == 0 ? "" : string.Join(" ", _statuses.OrderByDescending(s => s.Value).Take(4).Select(s => $"{s.Key}×{s.Value}"));
+        /// <summary>
+        /// The status column: the four most frequent kinds, and how many more there are, which the column used to leave
+        /// unsaid (#161, plans/LIST_CAPS_PLAN.md R2). <see cref="Statuses"/> holds every one, and <c>services --json</c>
+        /// prints it.
+        /// </summary>
+        public string StatusSummary()
+        {
+            if (_statuses.Count == 0)
+                return "";
+            var shown = string.Join(" ", _statuses.OrderByDescending(s => s.Value).Take(MaxStatusesShown).Select(s => $"{s.Key}×{s.Value}"));
+            return _statuses.Count > MaxStatusesShown ? $"{shown} +{_statuses.Count - MaxStatusesShown} more" : shown;
+        }
+
+        /// <summary>Whether <see cref="StatusSummary"/> leaves kinds of status out.</summary>
+        public bool StatusesCut => _statuses.Count > MaxStatusesShown;
 
         /// <summary>
         /// The whole status mix, unsummarised and uncapped. <see cref="StatusSummary"/> renders a column;

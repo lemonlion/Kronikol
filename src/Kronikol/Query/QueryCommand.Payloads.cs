@@ -275,10 +275,10 @@ public static partial class QueryCommand
             }
 
             writer.Line($"{address.BodyHash} is carried by {carried.Occurrences.Count} call{(carried.Occurrences.Count == 1 ? "" : "s")}:");
-            foreach (var occurrence in carried.Occurrences.Take(12))
+            foreach (var occurrence in carried.Occurrences.Take(MaxCarriersListed))
                 writer.Line("  " + Describe(index, occurrence));
-            if (carried.Occurrences.Count > 12)
-                writer.Line($"  … {carried.Occurrences.Count - 12} more");
+            if (carried.Occurrences.Count > MaxCarriersListed)
+                writer.Line(MoreCarriers(carried.Occurrences.Count));
             writer.Line();
 
             if (!Address.TryParse(carried.Occurrences[0], out address))
@@ -431,14 +431,24 @@ public static partial class QueryCommand
         }
 
         writer.Line($"{hash}  {QueryWriter.Size(entry.Length)}  at {entry.Occurrences.Count} address(es)");
-        foreach (var occurrence in entry.Occurrences.Take(12))
+        foreach (var occurrence in entry.Occurrences.Take(MaxCarriersListed))
             writer.Line("  " + Describe(index, occurrence));
-        if (entry.Occurrences.Count > 12)
-            writer.Line($"  … {entry.Occurrences.Count - 12} more");
+        if (entry.Occurrences.Count > MaxCarriersListed)
+            writer.Line(MoreCarriers(entry.Occurrences.Count));
         writer.Line();
 
         return EmitPayload(index, options, writer, error, PayloadReader.Read(index, entry.First), hash);
     }
+
+    /// <summary>How many of the calls carrying one body <c>http b:</c> and <c>body</c> list.</summary>
+    private const int MaxCarriersListed = 12;
+
+    /// <summary>
+    /// The line after a body's first <see cref="MaxCarriersListed"/> carriers: how many more, and the view that lists every
+    /// call with its bodies' hashes. It said "… N more" and named nothing (#161, plans/LIST_CAPS_PLAN.md R2).
+    /// </summary>
+    private static string MoreCarriers(int carriers) =>
+        $"  … {(carriers - MaxCarriersListed).ToString(System.Globalization.CultureInfo.InvariantCulture)} more: interactions --json gives every call's request and response bodyHash";
 
     /// <summary>
     /// The one place a payload is rendered, so every route to one offers the same four cheap views and the

@@ -5,7 +5,8 @@
 verification pass the owner asked for ("make sure the plan is complete and fully accurate, and do any deep dives that
 might change the plan"): section 10 lists what changed. **Executing** since the owner's ask of 2026-10-19 ("implement
 the plan in full"), with section 9's recommendations; CLAUDE.md's rule to fix every bug found along the way answers Q7,
-so the things in 3.10 are fixed rather than filed. **R1 is 4.28.0.** Section 10 logs each release.
+so the things in 3.10 are fixed rather than filed. **R1 is 4.28.0 and R2 is 4.31.0;** the two other things 3.10
+found (the ANSI codes and the lightbox) follow as a patch. Section 10 logs each release.
 
 **Issue:** [#161](https://github.com/lemonlion/Kronikol/issues/161), "`query failures` keeps a scenario's first four
 attachments and doesn't say there are more" (filed 2026-10-08 on a 4.6.0 report, label `bug`).
@@ -760,6 +761,54 @@ rebased onto 4.27.1 (`d4158464`) before release.
   run failed one guard, `ProcessGlobalStoreTests`: a class that runs an ingest must sit in the `DiagramsFetcher`
   collection, and `QueryAttachmentListTests` now does); `release.slnf` builds in Release for every target, with no
   warning from the changed files.
+
+**2026-10-19, R2 executed as 4.31.0 (kronikol-71),** in worktree `C:/Code/Kronikol-161` on branch `release/161-r2`,
+from 4.28.0 (`978b1b1c`) and rebased onto 4.30.0 (`aa311cd7`) before release. The number moved twice while it was built:
+kronikol-7c took 4.29.0 (#148 R3) and kronikol-39 4.30.0 (`REPORT_FORMAT_PLAN.md` R3).
+
+- **Built as designed** (4.9): every silent row of Appendix A says what it cut and names a view that prints the rest.
+  `steps` cuts a step's parameters past eight (`… N more parameter(s): steps sN/P`) and its attachments as `failures`
+  does; `services` ends a long status mix with `+N more` and names `services --json`; `sizes --json` carries
+  `largestScenariosTotal`; `grep --values` and `--number` end a body's last row with how many more paths it holds and
+  `body b:… --keys`; the line diff of `diff --body` no longer counts its marker, and its footer, `total` and `--count`
+  count every line that differs; `compare` counts the differences in its heading and names both trees past twenty;
+  `history sN` counts the runs before its last fifteen and names `--json`; `http b:` and `body` name
+  `interactions --json` past twelve carriers; `Failures.md` counts the steps before the last three and the calls past
+  the table's eight, naming `steps` and `flow`, and `Failures.jsonl` carries `stepsBeforeTotal` and `callsTotal`.
+- **Decided where the plan was silent:** a step's parameters keep their first eight (they are read in order, a name
+  then a value); `grep`'s count goes on the last row it prints, so its rows, `--count` and footer still count rows;
+  `QueryWriter.Page` gained an optional `total`, so `diff --body` pages over the lines it lists while its footer and
+  JSON count all of them; `http b:` and `body` name `interactions --json`, the one listing that gives every call's body
+  hashes; `history sN`'s line goes above its runs, since the ones it leaves out are the earliest; in `Failures.md` the
+  steps line is the first bullet under "Steps before it" and the calls line follows the table's blank line, so a
+  renderer does not read it as a row.
+- **Q5:** three new members (`largestScenariosTotal`, `stepsBeforeTotal`, `callsTotal`), so a minor. **Q7:** the CI
+  summary's green-run count (3.10) is fixed here; the ANSI codes at ingest and the scenario-level lightbox follow as
+  patches.
+- **Guards** (4.9 and 6.5): `ListCapRegistry` holds every cap with a census row, the fact that holds it, or the reason
+  it needs none; `ListCapSourceTests` refuses a `Take` or `TakeLast` with a constant that no entry covers (its control
+  plants a silent `Take(5)` in a real file and finds it on its line), holds each entry to the lines it names, and checks
+  that each fact an entry names exists; `CapCensusTests` runs one row per census cap, plus a fact that every check is a
+  registered cap and the vacuity fact, which reads each cap from the code by reflection. `history sN` is held by its
+  own fact, since the census report has no ledger, and R1's caps by R1's facts.
+- **Found by the registry and fixed:** four caps announced before #161 had no fact (`summary`'s failed scenarios,
+  `history`'s absent scenarios, `history --run`'s list when no run matches, and the run diff's Tracking section), and
+  `DigestSuppressionCapTests` accepted either of the digest's two elision lines; each is held now, the elision lines
+  with their numbers. One more: no fact read the digest's
+  `callsTotal` for calls attributed to the failing step, so `DigestCallScopeTests`' cap fact reads it now, with
+  the `Failures.md` line, and the mutation of that total (N22) is killed by it.
+- **Fixture traps:** a run lacking more than a tenth of the last full run's roster is read as partial
+  (`HistoryVerdicts.PartialThreshold`), and a partial run prints no absent list, so that fact's last run has 212
+  scenarios; the run diff's Tracking section counts its `total` row.
+- **Red proof:** the facts for each fixed list were written first and failed on 4.28.0's code at the missing line or
+  member. The guards passed on their first run, as guards do; the planted control is what shows the lint can fail, and
+  the named-fact check failed until the four new facts existed. **Mutations:** 30 of 30 killed (`mutations-r2.py`, `results/mutations-r2.txt`), each
+  announcement removed or miscounted in turn. The run was paused after N21 for a peer's Playwright run and resumed
+  with N22 to N30 after the rebase onto 4.30.0.
+- **Checks:** the core suite passes 8,099 with 2 skipped after the version bump and the rebase onto 4.30.0; its one
+  failure was the CI fault this release fixes (`ZstdCopyTests`, 19 of 19 with the fix, run with no package in the
+  build output, as on CI). `release.slnf` builds in Release for every target with no warning from the changed code,
+  and `repro.sh` and `census.py` on the built tool give R1's rows unchanged (`results/census-4.31.0.md`).
 
 ## Appendix A. Every list cap (sweep at `6f6043e2`)
 

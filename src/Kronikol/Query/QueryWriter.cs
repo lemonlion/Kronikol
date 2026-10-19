@@ -362,10 +362,15 @@ internal sealed class QueryWriter
     /// empty array. <paramref name="whenComplete"/> replaces the exhausted-listing footer for the verbs
     /// whose closing line says something a row count cannot — that a service missing from the table was
     /// never called, or where to go after the failures.</para>
+    ///
+    /// <para><paramref name="total"/> is for a listing that counts more than it lists: <c>diff --body</c>'s line diff stops
+    /// listing at twenty lines and counts the rest, and its footer, <c>total</c> and <c>--count</c> give every difference
+    /// (#161). Paging stays over <paramref name="all"/>, and the verb says what it did not list.</para>
     /// </summary>
     public void Page<T>(IReadOnlyList<T> all, int offset, int limit, string noun, Action<T> render,
-        IReadOnlyList<string>? rerunArgs = null, Func<T, object>? json = null, string? whenComplete = null)
+        IReadOnlyList<string>? rerunArgs = null, Func<T, object>? json = null, string? whenComplete = null, int? total = null)
     {
+        var count = total ?? all.Count;
         var shown = 0;
         for (var i = offset; i < all.Count && shown < limit; i++)
         {
@@ -385,7 +390,7 @@ internal sealed class QueryWriter
 
         if (Json)
         {
-            _total = all.Count;
+            _total = count;
             // An argument vector, not a string: the report path and every filter value reach the consumer
             // as their own element, so a service called "Dessert Provider" cannot arrive as two arguments.
             // It carries the page size too - a pointer that resumes at a different width has not resumed.
@@ -401,12 +406,12 @@ internal sealed class QueryWriter
         }
 
         Footer(past
-            ? $"{noun}: nothing at --offset {offset} · {all.Count} {noun} in total"
+            ? $"{noun}: nothing at --offset {offset} · {count} {noun} in total"
             : stuck
                 ? $"{noun}: nothing fits — row {offset + 1} is larger than {_maxBytes} bytes · raise with --max-bytes"
                 : complete
-                    ? whenComplete ?? (offset == 0 ? $"{all.Count} {noun}" : $"{noun}: {offset + 1}-{last} of {all.Count}")
-                    : $"{noun}: {offset + 1}-{last} of {all.Count} · next: {Prefix(rerunArgs)}--offset {last}");
+                    ? whenComplete ?? (offset == 0 ? $"{count} {noun}" : $"{noun}: {offset + 1}-{last} of {count}")
+                    : $"{noun}: {offset + 1}-{last} of {count} · next: {Prefix(rerunArgs)}--offset {last}");
     }
 
     /// <summary>Rerun tokens as a pasteable prefix, with the trailing space a footer appends its offset to.</summary>

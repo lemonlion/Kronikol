@@ -22,6 +22,9 @@ public static partial class QueryCommand
     /// <summary>How many of the calls made in a failing step <c>failures</c> prints under it; <c>flow sN/P</c> lists them all.</summary>
     private const int MaxFailingStepCalls = 6;
 
+    /// <summary>How many of a step's parameter lines the whole tree of <c>steps</c> prints; the tree scoped to the step prints them all.</summary>
+    private const int MaxParametersShown = 8;
+
     private static int Failures(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error, Func<string, string?> getEnv)
     {
         // `failures` prints step addresses (`s1/1.1`) and used to refuse to take one back: the positional
@@ -179,11 +182,13 @@ public static partial class QueryCommand
     /// shapes depending on whether it read the digest the run wrote or asked the tool for it afterwards.
     ///
     /// <para><b>They are not yet the same object, and this is the list.</b> The digest carries
-    /// <c>expected</c>, <c>actual</c>, <c>cluster</c>, <c>stepsBefore</c>, <c>callsScope</c> and
-    /// <c>truncated</c>; this does not. Since 3.7.0 both carry <c>thrownAt</c>, <c>testName</c> and
-    /// <c>rerun</c>, read from <c>errorStackTrace</c> by the same reader. This nests <c>calls</c> under
+    /// <c>expected</c>, <c>actual</c>, <c>cluster</c>, <c>stepsBefore</c> (with <c>stepsBeforeTotal</c>),
+    /// <c>callsScope</c> and <c>truncated</c>; this does not. Since 3.7.0 both carry <c>thrownAt</c>, <c>testName</c>
+    /// and <c>rerun</c>, read from <c>errorStackTrace</c> by the same reader. This nests <c>calls</c> under
     /// the failing step that made them and caps them at six per step, with <c>callsTotal</c> beside them; the
-    /// digest lists them once per failure, with a <c>status</c>, capped at eight. The scenario's own attachments
+    /// digest lists them once per failure, with a <c>status</c>, capped at eight, with its own <c>callsTotal</c>
+    /// (4.31.0): the calls its list was drawn from, which are the scenario's when none is attributed to the
+    /// failing step. The scenario's own attachments
     /// and a failing step's (nested under it) are capped here at the text's six, the first and the last five, each
     /// list with its total beside it (<c>attachmentsTotal</c>, and <c>stepAttachmentsTotal</c> for every step's);
     /// the digest lists every attachment of every step, each with a <c>step</c> address, and so does
@@ -409,12 +414,18 @@ public static partial class QueryCommand
                             + (step.SourceFile is { } file ? $"   at {file}:{step.SourceLine}" : ""));
             if (step.BypassReason is { } bypass)
                 writer.Line($"{indent}      bypassed: {QueryWriter.OneLine(bypass, 120)}");
-            foreach (var parameter in step.Parameters.Take(8))
+            // The whole tree cuts a long parameter list, and names the tree scoped to the step, which prints it whole (#161).
+            var parameters = scope is null
+                ? QueryWriter.CutList(step.Parameters, MaxParametersShown, MaxParametersShown)
+                : new ListCut<string>(step.Parameters, [], []);
+            foreach (var parameter in parameters.Head)
                 writer.Line($"{indent}      · {QueryWriter.OneLine(parameter, 100)}");
+            if (parameters.Cut.Count > 0)
+                writer.Line($"{indent}      " + QueryWriter.CutLine(parameters.Cut.Count, "parameter(s)", null, $"steps {scenario.Address}/{path}"));
             if (step.DocString is { } doc)
                 writer.Line($"{indent}      \"\"\"{QueryWriter.OneLine(doc, 100)}\"\"\"");
-            foreach (var attachment in step.Attachments)
-                writer.Line($"{indent}      attachment: {AttachmentText(attachment, index)}");
+            // Cut as failures cuts them, scoped or not: a tree cannot page, and sixty filled the byte budget on their own.
+            WriteAttachments(writer, index, step.Attachments, $"{indent}      ", $"attachments {scenario.Address}/{path}");
         }
 
         var unattributed = scope is null && byStep.TryGetValue("", out var loose) ? loose.Length : 0;

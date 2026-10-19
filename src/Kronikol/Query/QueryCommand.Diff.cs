@@ -310,11 +310,14 @@ public static partial class QueryCommand
             return 1;
         }
 
-        var rows = DiffBodies(left.Content, right.Content);
+        // The line diff lists twenty lines and counts the rest. Its marker was a row, so the footer, total and --count said
+        // 21 whatever the number (#161): the count is every difference, and the lines not listed are said once below.
+        var rows = DiffBodies(left.Content, right.Content, out var notListed);
+        var differences = rows.Count + notListed;
 
         if (options.Count)
         {
-            writer.Count(rows.Count);
+            writer.Count(differences);
             return 0;
         }
 
@@ -336,7 +339,9 @@ public static partial class QueryCommand
         // envelope, which is why it does not need them here.
         writer.Page(rows, options.Offset, options.PageSize(200, writer, "paths"), "paths differ",
             row => { foreach (var line in row.Text.Split('\n')) writer.Line(line); }, [],
-            row => new { kind = row.Kind, path = row.Path, before = row.Before, after = row.After });
+            row => new { kind = row.Kind, path = row.Path, before = row.Before, after = row.After }, total: differences);
+        if (notListed > 0)
+            writer.Note($"… {notListed} more line(s) differ: --out both bodies and diff the files");
         return 0;
     }
 
@@ -348,15 +353,20 @@ public static partial class QueryCommand
     /// </summary>
     private sealed record DiffRow(string Kind, string Path, string? Before, string? After, string Text);
 
-    private static List<DiffRow> DiffBodies(string leftBody, string rightBody)
+    /// <summary>
+    /// The differences between two bodies, path by path when both are JSON, else line by line. <paramref name="notListed"/> is
+    /// how many differing lines the line diff counted past the ones it lists; a path diff lists every difference.
+    /// </summary>
+    private static List<DiffRow> DiffBodies(string leftBody, string rightBody, out int notListed)
     {
+        notListed = 0;
         // A capped body is read as its document, as the page reads it (#168 F8); the note above names the footnotes.
         if (BodyCache.ParseJson(leftBody) is not { } leftDocument)
-            return DiffLines(leftBody, rightBody);
+            return DiffLines(leftBody, rightBody, out notListed);
         if (BodyCache.ParseJson(rightBody) is not { } rightDocument)
         {
             leftDocument.Dispose();
-            return DiffLines(leftBody, rightBody);
+            return DiffLines(leftBody, rightBody, out notListed);
         }
 
         using (leftDocument)
@@ -472,9 +482,14 @@ public static partial class QueryCommand
             rows.Add(Added($"{path}[{i}]", RenderOrShape(b[i])));
     }
 
-    /// <summary>First 20 differing lines of the pretty-printed texts — the fallback when either side is not JSON.</summary>
-    private static List<DiffRow> DiffLines(string leftBody, string rightBody)
+    /// <summary>
+    /// The first 20 differing lines of the pretty-printed texts, the fallback when either side is not JSON, and in
+    /// <paramref name="notListed"/> how many more differ. Lines are compared by position, so one inserted line makes every
+    /// line after it differ: past twenty, two files and a real diff tool answer better than more rows.
+    /// </summary>
+    private static List<DiffRow> DiffLines(string leftBody, string rightBody, out int notListed)
     {
+        notListed = 0;
         var left = PayloadReader.Pretty(leftBody).ReplaceLineEndings("\n").Split('\n');
         var right = PayloadReader.Pretty(rightBody).ReplaceLineEndings("\n").Split('\n');
         var rows = new List<DiffRow>();
@@ -486,11 +501,11 @@ public static partial class QueryCommand
             var b = i < right.Length ? right[i] : null;
             if (a == b)
                 continue;
-            if (shown == 20)
+            // Counted, not listed, and not a row: as a row, the marker made the footer, total and --count say 21 (#161).
+            if (shown == MaxLinesListed)
             {
-                rows.Add(new DiffRow("elided", "", null, null,
-                    "… more lines differ — --out both bodies and diff the files"));
-                break;
+                notListed++;
+                continue;
             }
             // ONE record, two rendered lines. As two rows the count double-counted every difference,
             // so the footer said "40 of 40" about twenty of them.
@@ -502,6 +517,9 @@ public static partial class QueryCommand
 
         return rows;
     }
+
+    /// <summary>How many differing lines the line diff lists.</summary>
+    private const int MaxLinesListed = 20;
 
     private static DiffRow Changed(string path, string before, string after) =>
         new("changed", path, before, after, $"{path}: {before} → {after}");

@@ -112,14 +112,16 @@ public static partial class QueryCommand
                     continue;
                 }
 
-                // A numeric match is always a value match, so --number always emits paths.
+                // A numeric match is always a value match, so --number always emits paths: the first few, with what the
+                // body holds past them said on the last (#161). Every match is counted, so the walk does not stop there.
                 var found = 0;
+                var lastShown = -1;
                 Walk(document.RootElement, "$");
+                if (found > MaxPathsPerBody)
+                    hits[lastShown] += MorePaths(found - MaxPathsPerBody, body.Hash);
 
                 void Walk(JsonElement element, string path)
                 {
-                    if (found >= 4)
-                        return;
                     switch (element.ValueKind)
                     {
                         case JsonValueKind.Object:
@@ -133,19 +135,23 @@ public static partial class QueryCommand
                             break;
                         case JsonValueKind.Number:
                             if (element.TryGetDouble(out var value) && Matches(value))
-                            {
-                                hits.Add($"{where,-16} body       {path} = {element.GetRawText()}{Approx(element.GetRawText())}");
-                                found++;
-                            }
+                                Found($"{where,-16} body       {path} = {element.GetRawText()}{Approx(element.GetRawText())}");
                             break;
                         case JsonValueKind.String:
                             if (TokenIn(element.GetString() ?? "") is { } token)
-                            {
-                                hits.Add($"{where,-16} body       {path} = \"{QueryWriter.OneLine(element.GetString(), 40)}\"{Approx(token)}");
-                                found++;
-                            }
+                                Found($"{where,-16} body       {path} = \"{QueryWriter.OneLine(element.GetString(), 40)}\"{Approx(token)}");
                             break;
                     }
+                }
+
+                void Found(string row)
+                {
+                    if (found < MaxPathsPerBody)
+                    {
+                        hits.Add(row);
+                        lastShown = hits.Count - 1;
+                    }
+                    found++;
                 }
             }
         }

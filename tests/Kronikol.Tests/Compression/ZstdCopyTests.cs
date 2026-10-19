@@ -47,19 +47,26 @@ public partial class ZstdCopyTests
         Assert.Contains("ZstdSharp", notices, StringComparison.Ordinal);
         Assert.Contains("BSD", notices, StringComparison.Ordinal);
 
-        // Kronikol packs on every build, so the package itself is read.
+        // Both projects are read, as the other package facts do: a test run that builds the test project alone (CI's
+        // Core Tests job) packs nothing, and reading Kronikol's package failed there on a file no build had written.
+        foreach (var project in new[] { Path.Combine("src", "Kronikol", "Kronikol.csproj"), Path.Combine("src", "Kronikol.Tool", "Kronikol.Tool.csproj") })
+        {
+            var document = XDocument.Load(Path.Combine(RepoRoot, project));
+            Assert.Contains(document.Descendants("None"), item =>
+                (string?)item.Attribute("Include") == @"..\..\THIRD-PARTY-NOTICES.md"
+                && (string?)item.Attribute("Pack") == "true"
+                && (string?)item.Attribute("PackagePath") == @"\");
+        }
+
+        // Where a build did pack Kronikol (a Release build of release.slnf), the package itself is read as well.
         var version = XDocument.Load(Path.Combine(RepoRoot, "Directory.Build.props")).Descendants("Version").Single().Value;
         var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
         var package = Path.Combine(RepoRoot, "src", "Kronikol", "bin", configuration, $"Kronikol.{version}.nupkg");
-        using (var archive = ZipFile.OpenRead(package))
+        if (File.Exists(package))
+        {
+            using var archive = ZipFile.OpenRead(package);
             Assert.Contains(archive.Entries, entry => entry.FullName == "THIRD-PARTY-NOTICES.md");
-
-        // The tool packs only when asked, so its project is read, as the other package facts do.
-        var tool = XDocument.Load(Path.Combine(RepoRoot, "src", "Kronikol.Tool", "Kronikol.Tool.csproj"));
-        Assert.Contains(tool.Descendants("None"), item =>
-            (string?)item.Attribute("Include") == @"..\..\THIRD-PARTY-NOTICES.md"
-            && (string?)item.Attribute("Pack") == "true"
-            && (string?)item.Attribute("PackagePath") == @"\");
+        }
     }
 
     [Fact]

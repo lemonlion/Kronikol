@@ -128,7 +128,9 @@ item carries `warmUpSeconds`.
 ### `services <report> [s3] [--sort duration\|bytes\|errors]`
 Per service: call count, errors, bytes, median and max duration, status mix. Scoped to one scenario when
 given an address. `--sort` takes `calls` (the default), `duration` (the time its calls took in all; each
-call counted once, whichever record carries its time), `bytes` or `errors`; anything else exits 2.
+call counted once, whichever record carries its time), `bytes` or `errors`; anything else exits 2. The
+status mix names a service's four commonest statuses; since 4.31.0 a service with more ends it with `+N more`,
+and a line under the table says `services --json` lists every status.
 
 **This is the only command that answers a negative question.** A service that is not in the table was
 never called — no payload needed to establish that.
@@ -145,8 +147,9 @@ what it stores and decodes to what it would take written as text. Then the ten l
 with their addresses. `--json`: `totals` (`file`, `bytesOnDisk`, `jsonBytes`, `decodedBytes`, `formatVersion`,
 `compressedPayloads`; named `report` in 4.27.0, where it hid the envelope's own `report`), one item per part
 (`storedBytes`, `decodedBytes`; `emptyKeyBytes`
-on steps; `count`, `distinct`, `distinctDecodedBytes` on bodies) and `largestScenarios`. Which calls carry
-the bytes: `interactions --group-by service,path --sort bytes`.
+on steps; `count`, `distinct`, `distinctDecodedBytes` on bodies), `largestScenarios` and, since 4.31.0,
+`largestScenariosTotal`, how many scenarios the ten are taken from. Which calls carry the bytes:
+`interactions --group-by service,path --sort bytes`.
 
 ## Narrative
 
@@ -186,7 +189,10 @@ The step and assertion tree with statuses, durations, parameters, doc strings, b
 and an `[i12-i39]` range against each step saying which calls happened inside it. Also prints the
 scenario's `stableId` and example values, and, when the scenario holds attachments,
 `attachments: 6 of its own, 4 on its steps · attachments s3`: the tree prints each step's, and `attachments`
-lists them all, the scenario's own with them.
+lists them all, the scenario's own with them. Since 4.31.0 the tree cuts two lists, each with a line naming
+the view that prints the rest: a step's parameters past eight (`… N more parameter(s): steps s3/2`; a step's
+own tree prints them all), and a step's attachments, cut as `failures` cuts them
+(`… N more attachment(s) (names): attachments s3/2`).
 
 ### `attachments <report> s3`
 Every attachment of one scenario, in `Failures.jsonl`'s order: the scenario's own, then each step's (background
@@ -339,7 +345,9 @@ The interaction: direction, participants, method, URI, status, duration, owning 
 call's other half (`response s3/i50` on a request, `answers s3/i47` on a response), W3C trace and span
 ids, phase, dependency category, capture path.
 
-Given a `b:` address instead, it names every call carrying that payload and describes the first.
+Given a `b:` address instead, it names every call carrying that payload and describes the first. The list
+stops at twelve; past them, since 4.31.0, `… N more: interactions --json gives every call's request and
+response bodyHash`.
 
 With no payload flag it *describes* the body — size, `b:` address, how many other places it occurs — and
 lists the cheap ways to look at it.
@@ -374,7 +382,8 @@ the flags that window it — instead of refusing.
 
 ### `body <report> b:4bdea521 | s3/i47 [same payload flags]`
 The same views, addressed by content **or** by location, plus every address the body occurs at. Two
-identical bodies are one entry: reading it once is reading all of them.
+identical bodies are one entry: reading it once is reading all of them. The list of addresses stops at
+twelve, with the same line as `http b:…`'s.
 
 Both address kinds work here and in `http`, because both are addresses a listing hands you and neither
 tells you which verb it belongs to. `body s3/i47` is the payload that call carried; `http b:4bdea521`
@@ -423,6 +432,9 @@ the command in a `next:` line continues the search you asked for rather than the
 
 `--values` names the JSON path a match came from: `s3/i47  $.data.customers[2].total = 4173`. This is the
 command for "the number on screen is wrong" — it finds where the number entered the system.
+`--values` and `--number` print at most four paths for one body. Since 4.31.0 a body that holds more ends
+its last row with ` · N more path(s) in this body: body b:4bdea521 --keys`, the view of its shape; the
+rows, `--count` and the footer count the rows printed.
 
 Bodies are searched once per distinct content, not once per occurrence.
 
@@ -451,7 +463,10 @@ Two scenarios side by side: example values, the first differing steps, the first
 many bodies are byte-identical — plus the address of the first differing body, ready to paste into
 `diff` (`first differing body: diff s3/i12 s7/i14`): the first call whose body differs from the same call
 in the other scenario, paired by service, method and URI as `diff --body` pairs one across runs, not by
-position. A passing neighbour is the best available oracle for a failing scenario.
+position. A passing neighbour is the best available oracle for a failing scenario. Steps and calls are
+compared position by position: the heading counts the positions that differ (`steps: 25 vs 25, 25 differ`),
+and past twenty a line names the two trees that hold the rest (`… 5 more difference(s): steps s3 · steps s7`;
+for calls, `flow s3 · flow s7`). Before 4.31.0 the heading counted the steps and the cut said nothing.
 
 ### `diff` — bodies and runs
 
@@ -483,7 +498,9 @@ $.total: 4173 → 3902
 - An added/removed subtree is one row with a shape summary (`{sku, price, qty}`, `[3 elements]`), never a dump.
 - An array where one insert shifted everything collapses to one honest row
   (`$.items: elements shifted/reordered — 9 vs 10, 8 identical`) instead of a page of misleading per-index rows.
-- Non-JSON bodies fall back to a line diff (`line 12:  - … / + …`).
+- Non-JSON bodies fall back to a line diff (`line 12:  - … / + …`) of at most twenty lines; past them,
+  `… N more line(s) differ: --out both bodies and diff the files`. The footer, `--count` and `--json`'s
+  `total` count every line that differs (before 4.31.0, the twenty and a marker row).
 - Two integers are compared by their digits, so Int64 values past 2^53 that differ are reported; a number with a
   fraction or an exponent is compared as a double.
 - A capped body (a document, then `... (N more documents not shown)`) is diffed as its document, and the
@@ -645,6 +662,9 @@ around ` … ` (the end of an error is where "but found Y" is); when it has cut 
 its messages; their footer names the view that prints each whole - `steps s3 prints the message whole`,
 `history s3 prints the evidence whole` (3.27.2, 3.27.3). `steps sN` is the detail view and cuts nothing
 of a message (3.27.3).
+
+`history s3` lists the scenario's last fifteen runs; since 4.31.0, when it had more, a line above them says
+`… N earlier run(s) not listed: history s3 --json`, and the JSON carries every run.
 
 **When `behaviour-changed` looks like noise.** The fingerprint is made from templated call lines, and a
 variable part the templater does not know (an application's own cache-key format) changes it on every

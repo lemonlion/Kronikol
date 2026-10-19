@@ -4,6 +4,79 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.31.0] - 2026-10-19
+
+**Minor - new members in `sizes --json` and `Failures.jsonl` (`plans/LIST_CAPS_PLAN.md` R2, #161).**
+`largestScenariosTotal`, `stepsBeforeTotal` and `callsTotal` are new things to read, so the minor part moves (4.30 to
+4.31). Everything else below is a fix that would be a patch on its own: a list that `kronikol query`, `Failures.md` or
+the CI summary cuts now says what it left out and names a view that prints the rest.
+
+### Added
+
+- **`sizes --json`: `largestScenariosTotal`**, how many scenarios the ten in `largestScenarios` are taken from. The text
+  already said "The 10 largest of N".
+- **`Failures.jsonl`: `stepsBeforeTotal` and `callsTotal`.** `stepsBefore` holds the last three steps before the failing
+  one, and `stepsBeforeTotal` says how many there were; `calls` holds at most eight, and `callsTotal` says how many it
+  was drawn from (the failing step's calls, or the scenario's when none is attributed to a step).
+
+### Fixed
+
+Each list below was cut with nothing said, so it read as the whole list.
+
+- **`steps`:** a step's parameters stopped at eight. Past them the tree now prints
+  `… N more parameter(s): steps sN/P`, and a step's own tree prints them all. A step's attachments were printed whole,
+  in a view that cannot page (sixty filled the byte budget on their own); they are cut as `failures` cuts them, the
+  first and the last five around `… N more attachment(s) (names): attachments sN/P`.
+- **`services`:** the status column names a service's four commonest statuses. A service with more now ends it with
+  `+N more`, and a line under the table says that `services --json` lists every status.
+- **`grep --values` and `grep --number`:** four paths per body. A body holding more now ends its last row with
+  ` · N more path(s) in this body: body b:… --keys`, the view of its shape.
+- **`diff` of two bodies:** the line diff's marker was a row, so the footer, `total` and `--count` said 21 whatever the
+  number was. They now count every line that differs; twenty are listed, and a line says how many more differ and how
+  to see them (`--out` both bodies and diff the files).
+- **`compare`:** the heading counted the steps (`steps: 25 vs 25`), not the differences, and twenty were listed with
+  nothing said of the rest. It now reads `steps: 25 vs 25, 25 differ`, and past twenty
+  `… N more difference(s): steps sA · steps sB` (`flow sA · flow sB` for calls).
+- **`history sN`:** the last fifteen runs, with nothing said of the earlier ones. Above them it now prints
+  `… N earlier run(s) not listed: history sN --json`; the JSON carries every run.
+- **`http b:…` and `body`:** the list of addresses carrying a body stops at twelve, and its count named no view. It now
+  ends `… N more: interactions --json gives every call's request and response bodyHash`.
+- **`Failures.md`:** "Steps before it" lists the last three, now under
+  `… N earlier step(s): kronikol query steps <dir> sN`, and the calls table holds eight, now followed by
+  `… N more call(s) not in this table: kronikol query flow <dir> sN`.
+- **The CI summary of a green run** said "N more scenario(s) not shown" counting every scenario in the run, though it
+  lists only scenarios with a diagram: forty scenarios, three of them with a diagram, all three shown, said "37 more".
+  It now counts the scenarios with a diagram that it did not show. Kronikol4J's summary makes the same count (ledger).
+- **Main's CI, red since 4.30.0 (found on the way; test-only).**
+  `ZstdCopyTests.The_notices_are_packed_into_Kronikol_and_the_tool` read Kronikol's package from the build output,
+  which a test run that builds only the test project, as CI's Core Tests jobs do, never writes. It now reads both
+  projects' pack item for `THIRD-PARTY-NOTICES.md`, and the package only where a build wrote one. Nothing in a package
+  changes.
+
+### Tests
+
+- **`ListCapRegistry`** lists every list cap in the query tool and the digest with what answers for it: a census row,
+  the fact that holds it, or the reason it needs none. **`ListCapSourceTests`** refuses a `Take` or `TakeLast` with a
+  constant that no entry covers (its control plants one in a real file and finds it on its line), holds every entry to
+  the lines it names, and checks that every fact an entry names exists. **`CapCensusTests`** builds one report with
+  every list over its cap and runs one row per cap the registry gives it, reading the cut line and its number and
+  running the view it names; its vacuity fact checks each list against the cap the code holds.
+- Four caps announced before #161 had no fact: `summary`'s failed scenarios, `history`'s absent scenarios, the list of
+  runs when `history --run` finds none, and the run diff's Tracking section. Each has one now.
+  `DigestSuppressionCapTests` holds both of the digest's elision lines with their numbers; it accepted either.
+- **Proofs:** every fact for a fixed list was written first and failed on 4.28.0's code at the missing line or member.
+  Mutations: 30 of 30 killed, each announcement removed or miscounted in turn, the four older caps' lines and both
+  of the digest's elision lines among them (`plans/LIST_CAPS_PLAN.harness/mutations-r2.py`, `results/mutations-r2.txt`).
+- **Checks:** the core suite passes 8,099 with 2 skipped after the version bump and the rebase onto 4.30.0; its one
+  failure was the CI fault this release fixes (`ZstdCopyTests`, 19 of 19 with the fix, run with no package in the
+  build output, as on CI). `release.slnf` builds in Release for every target with no warning from the changed code,
+  and `repro.sh` and `census.py` on the built tool give R1's rows unchanged (`results/census-4.31.0.md`).
+
+### Documentation
+
+- The skill's command reference (`steps`, `services`, `sizes`, `grep`, `compare`, `diff`, `http`, `body`, `history`) and
+  SKILL.md's `Failures.md` line, in both copies; the wiki's Querying-Reports and Generated-Reports pages.
+
 ## [4.30.0] - 2026-10-19
 
 **Minor - a new report file format read, and a new command, `kronikol decode` (`plans/REPORT_FORMAT_PLAN.md` R3).** A

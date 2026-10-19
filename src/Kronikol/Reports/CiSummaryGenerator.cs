@@ -62,7 +62,7 @@ public static partial class CiSummaryGenerator
         if (hasFailed)
             AppendFailedScenarios(sb, features, truncatedByTestId, fullByTestId, failed, maxDiagrams, diagramFormat, plantUmlServerBaseUrl);
         else
-            AppendPassedDiagrams(sb, features, truncatedByTestId, fullByTestId, total, maxDiagrams, diagramFormat, plantUmlServerBaseUrl);
+            AppendPassedDiagrams(sb, features, truncatedByTestId, fullByTestId, maxDiagrams, diagramFormat, plantUmlServerBaseUrl);
 
         return sb.ToString();
     }
@@ -133,7 +133,6 @@ public static partial class CiSummaryGenerator
         Feature[] features,
         ILookup<string, DefaultDiagramsFetcher.DiagramAsCode> truncatedByTestId,
         ILookup<string, DefaultDiagramsFetcher.DiagramAsCode> fullByTestId,
-        int totalScenarios,
         int maxDiagrams,
         DiagramFormat diagramFormat,
         string plantUmlServerBaseUrl)
@@ -162,7 +161,9 @@ public static partial class CiSummaryGenerator
             shown++;
         }
 
-        var remaining = totalScenarios - shown;
+        // The scenarios with a diagram this list was drawn from, not every scenario in the run: a scenario without a
+        // diagram has nothing to show, so it was never left out (#161, plans/LIST_CAPS_PLAN.md R2).
+        var remaining = scenariosWithDiagrams.Length - shown;
         if (remaining > 0)
         {
             sb.AppendLine($"*{remaining} more scenario(s) not shown — see full report*");

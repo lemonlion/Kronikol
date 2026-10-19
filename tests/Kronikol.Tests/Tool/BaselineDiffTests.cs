@@ -212,6 +212,25 @@ public class BaselineDiffTests : IDisposable
     }
 
     [Fact]
+    public void A_long_tracking_section_says_how_many_rows_it_did_not_list()
+    {
+        // Twelve services in the baseline and one now: the total's row and eleven services', ten listed and a line counting
+        // the other two that names the JSON, which lists all twelve (plans/LIST_CAPS_PLAN.md Appendix A row 15).
+        string[] services = [.. Enumerable.Range(0, 12).Select(i => $"Service{i:D2}Api")];
+        WriteReport(Path.Combine(_directory, "baseline"), "TestRunReport.json", "Passed", services: services);
+        var current = WriteReport(_directory, "TestRunReport.json", "Passed", services: services[..1]);
+
+        var output = Run(current, "--baseline").Output.Replace("\r\n", "\n");
+
+        Assert.True(output.Contains("Tracking (12):\n  total  12 → 1 calls  (-11)\n", StringComparison.Ordinal), output);
+        Assert.Equal(9, output.Split('\n').Count(l => l.StartsWith("  ", StringComparison.Ordinal) && l.Contains("no longer tracked", StringComparison.Ordinal)));
+        Assert.Contains("\n  … and 2 more (--json lists every row)\n", output, StringComparison.Ordinal);
+
+        var json = System.Text.Json.JsonDocument.Parse(Run(current, "--baseline", "--json").Output).RootElement;
+        Assert.Equal(12, json.GetProperty("tracking").GetArrayLength());
+    }
+
+    [Fact]
     public void Capturing_more_than_last_time_is_not_a_warning()
     {
         WriteReport(Path.Combine(_directory, "baseline"), "TestRunReport.json", "Passed", services: ["OrdersApi"]);

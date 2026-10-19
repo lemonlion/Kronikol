@@ -52,7 +52,9 @@ A run writes more than the report, and two of the files are meant to be read who
 
 - **`Failures.md`** — every failure of that run in context: the error, the parsed expected and actual, the
   failing step with its source location, the calls made inside that step, attachments (a count, for a
-  failure it does not work through), and the address of each. Failures sharing an error message are
+  failure it does not work through), and the address of each. A cut list says what it left out and the
+  command that lists it: `… 2 earlier step(s)` above the last three steps, `… 9 more call(s) not in this
+  table` under the eight calls (4.31.0). Failures sharing an error message are
   clustered, so twenty scenarios broken by one cause read as one cause. On a failing run this is usually
   the entire answer and it costs a single `Read`. `# No failures` means nothing failed; if the file is
   absent, the run did not finish.

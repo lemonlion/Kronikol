@@ -161,11 +161,17 @@ public class DigestCallScopeTests
         for (var i = 0; i < 30; i++)
             logs.AddRange(Pair("t0", $"svc{i}", $"http://svc{i}/thing", HttpStatusCode.OK));
 
-        var record = Record(Generate(WithNestedFailure(), logs.ToArray()));
+        var digest = Generate(WithNestedFailure(), logs.ToArray());
+        var record = Record(digest);
         var calls = record.GetProperty("calls").EnumerateArray().ToArray();
 
         Assert.Equal("failingStep", record.GetProperty("callsScope").GetString());
         Assert.Equal(FailuresDigestGenerator.MaxCallsPerFailure, calls.Length);
+
+        // The thirty the eight were drawn from, counted in both files, with the view that lists them (#161).
+        Assert.Equal(30, record.GetProperty("callsTotal").GetInt32());
+        Assert.Contains($"\n… {30 - FailuresDigestGenerator.MaxCallsPerFailure} more call(s) not in this table: `kronikol query flow . s0`\n",
+            digest.Markdown.Replace("\r\n", "\n"), StringComparison.Ordinal);
     }
 
     [Fact]
