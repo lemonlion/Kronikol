@@ -267,6 +267,28 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   the default. A diagram of nothing but hidden markers reached the engine, which failed on it, in place of the
   "Nothing to draw" message, and that message now names the toggles by the words they show (Assertions, Steps).
 
+## [4.32.1] - 2026-10-19
+
+**Patch - a read-only `TestRunReport.krkl` is left as it is (`plans/REPORT_FORMAT_PLAN.md` R4).** A fix to 4.32.0's
+opt-in writer with nothing new to call or configure, so the patch part moves (4.32.0 to 4.32.1).
+
+### Fixed
+
+- **A read-only `TestRunReport.krkl` is left as it is, as a read-only `TestRunReport.json` is.** With
+  `CompressTestRunReport` on, 4.32.0 wrote the compressed file beside its name and renamed it over the name. A rename
+  needs only the folder's permission, so on Linux and macOS it replaced a report its owner had made read-only, where
+  the JSON writer stops and the rotation into `runs/` leaves the file alone. On Windows, where that rename fails, the
+  run's copy went to `TestRunReport2.krkl` and the warning named the file but not its folder. Now a file the process
+  may not write stays as it is: the run says it could not write it, with its full path, and writes no second copy, as
+  for the JSON. A file a reader holds open is still replaced where the system allows and goes beside it where it does
+  not, and that warning names the folder too.
+
+### Tests
+
+RunRotationTests (a read-only earlier report stops the rotation, stays as it was and gets no second copy) and
+StaleOutputTests (the pointer never names a file this run could not replace), each now over both forms of the data
+file, and KrklWriterTests' held-file fact, which checks that the warning names the folder.
+
 ## [4.32.0] - 2026-10-19
 
 **Minor - a new option, `CompressTestRunReport`, and the flags that ask for it (`plans/REPORT_FORMAT_PLAN.md` R4).** The

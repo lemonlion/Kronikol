@@ -1420,6 +1420,11 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
       262,664 to 221,086 (−16%, level 9 against 3). That puts the 80 MB report at 5 to 10 MB as a `.krkl`, by how much
       its payloads resemble each other. The exact figure (`content.py`, then `zstd -9`), the window question (A2) and
       the memory a 100 MB report takes (Q5) still wait for that file to run through the harness.
+    - 4.32.1: the 5.0.0 branch's core suite, with the option on by default, found that the writer renamed its file over
+      a read-only `TestRunReport.krkl`. A rename needs only the folder, so on Linux and macOS it replaced a report its
+      owner had made read-only, and on Windows the salvage's warning named no folder. The writer now leaves a file it
+      may not write as it is, with the error that names its path, as the JSON writer does; Kronikol4J's writer does the
+      same.
 
 ## Appendix A. Edit sites at `a8563d21`
 

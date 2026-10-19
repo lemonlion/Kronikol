@@ -6843,6 +6843,24 @@ public static class ReportGenerator
             throw;
         }
 
+        // A file this process may not write (read-only, or not its own) stays as it is, as the string writer leaves it:
+        // a rename needs only the directory, so it would replace the file on Linux and macOS, and on Windows its error
+        // names no path. Opening for write without truncating asks the question and changes nothing.
+        try
+        {
+            if (File.Exists(filePath))
+                using (new FileStream(filePath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete)) { }
+        }
+        catch (UnauthorizedAccessException)
+        {
+            TryDelete(temporary);
+            throw;
+        }
+        catch (IOException)
+        {
+            // Held open by a reader: the rename below replaces it where it can, and salvages where it cannot.
+        }
+
         try
         {
             File.Move(temporary, filePath, overwrite: true);
@@ -6868,7 +6886,8 @@ public static class ReportGenerator
                 TryDelete(temporary);
             }
 
-            throw new IOException($"Could not write {fileName}: {exception.Message}", exception);
+            // The full path, which a failed rename's own message leaves out where the string writer's names it.
+            throw new IOException($"Could not write {filePath}: {exception.Message}", exception);
         }
         return filePath;
 

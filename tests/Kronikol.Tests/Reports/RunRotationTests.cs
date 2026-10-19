@@ -315,27 +315,36 @@ public class RunRotationTests : IDisposable
 
     // ─── 5. A read-only previous report ────────────────────────
 
-    [Fact]
-    public void A_read_only_previous_report_stops_the_rotation_and_never_the_run()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void A_read_only_previous_report_stops_the_rotation_and_never_the_run(bool compress)
     {
         Assert.SkipUnless(ReadOnlyProbe.RefusesThisProcess,
             "this process writes read-only files (root on Linux and macOS), so a read-only report is not one it cannot replace: the next fact covers it");
 
-        Run(ExecutionResult.Failed);
-        var report = Path.Combine(Reports, "TestRunReport.json");
+        // Either form of the data file: the compressed one is written by a rename, which a read-only file does not stop
+        // everywhere (CompressTestRunReport, 4.32.0).
+        var name = compress ? "TestRunReport.krkl" : "TestRunReport.json";
+        Run(ExecutionResult.Failed, o => o.CompressTestRunReport = compress);
+        var report = Path.Combine(Reports, name);
         File.SetAttributes(report, FileAttributes.ReadOnly);
+        var before = File.ReadAllBytes(report);
 
-        var (console, diagnostics) = Run(ExecutionResult.Passed);
+        var (console, diagnostics) = Run(ExecutionResult.Passed, o => o.CompressTestRunReport = compress);
 
         var failure = Assert.Single(diagnostics, d => d.Kind == DiagnosticKind.ReportRotationFailed);
-        Assert.Contains("TestRunReport.json", failure.Message);
+        Assert.Contains(name, failure.Message);
         Assert.Empty(RetainedNames());
         Assert.False(Directory.Exists(Runs) && Directory.GetDirectories(Runs).Length > 0, "a staging directory was left behind");
         // The run carried on exactly as it does today: every other output replaced, the one it could not
         // replace announced (StaleOutputTests pins the pointer's half of that).
         Assert.Contains("# No failures", File.ReadAllText(Path.Combine(Reports, "Failures.md")));
-        Assert.Contains("could not write TestRunReport.json", console);
-        Assert.DoesNotContain("TestRunReport.json", Manifest().Files);
+        Assert.Contains($"could not write {name}", console);
+        Assert.DoesNotContain(name, Manifest().Files);
+        // The earlier run's file is as it was, and no second copy stands beside it: the mark is the owner's.
+        Assert.Equal(before, File.ReadAllBytes(report));
+        Assert.False(File.Exists(Path.Combine(Reports, Path.GetFileNameWithoutExtension(name) + "2" + Path.GetExtension(name))));
     }
 
     [Fact]
