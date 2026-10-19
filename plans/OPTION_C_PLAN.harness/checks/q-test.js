@@ -76,8 +76,13 @@ const path = require('path');
     check('search ' + q, wrong.length === 0, vis.filter(Boolean).length + ' shown, base ' + base.filter(Boolean).length + (wrong.length ? ', ' + wrong.length + ' wrong' : ''));
   }
   // text that only looks like a qualifier stays text; a qualifier that cannot be read says so
-  const phrase = await p.evaluate(() => window.__kronikolQuery.split('"status: 400" milk:'));
-  check('a phrase and an unknown key stay text', phrase.quals.length === 0 && phrase.rest === '"status: 400" milk:', JSON.stringify(phrase.rest));
+  // the product's split_search_qualifiers (a page function), else the preview's window.__kronikolQuery.split (D50)
+  const phrase = await p.evaluate(() => {
+    const split = typeof window.split_search_qualifiers === 'function' ? window.split_search_qualifiers : window.__kronikolQuery.split;
+    const r = split('"status: 400" milk:');
+    return { quals: r.quals.length, rest: r.rest };
+  });
+  check('a phrase and an unknown key stay text', phrase.quals === 0 && phrase.rest === '"status: 400" milk:', JSON.stringify(phrase.rest));
   await search('duration:>soon');
   const bad = await p.evaluate(() => document.getElementById('searchbar').classList.contains('kron-q-bad'));
   check('an unreadable qualifier marks the field', bad);

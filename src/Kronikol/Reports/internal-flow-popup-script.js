@@ -61,6 +61,9 @@
         var closeBtn = document.createElement('button');
         closeBtn.className = 'iflow-popup-close';
         closeBtn.innerHTML = '&times;';
+        // the cross's name and title (5.0.0, plans/OPTION_C_PLAN.md D49)
+        closeBtn.setAttribute('aria-label', 'Close');
+        closeBtn.title = 'Close (Esc)';
         closeBtn.onclick = function() { overlay.remove(); };
         popup.appendChild(closeBtn);
 
@@ -192,6 +195,10 @@
         var toggleBtns = popup.querySelectorAll('.iflow-toggle-btn');
         if (toggleBtns.length) {
             toggleBtns.forEach(function(btn) {
+                // what each view shows (D49), said here, where the tabs are made live, and not in every segment's markup
+                btn.title = btn.getAttribute('data-view') === 'flame'
+                    ? 'Where the time went inside the services for this call, span by span, as nested bars'
+                    : 'The work inside the services for this call, span by span, as an activity diagram';
                 btn.addEventListener('click', function() {
                     var view = btn.getAttribute('data-view');
                     var container = popup.querySelector('.iflow-diagram');

@@ -1060,3 +1060,28 @@ decision of the owner's, not part of this plan.
   band, the window's top at rest, what ends the watch, S7's empty state from the keyboard, pages without the bar, the
   phone's sticky search line (phone part 2).
   Checks: The classes above, core and Playwright, on f077cda6 (T2); the full suites run when S12 closes.
+- 2026-10-20, S12 D49 and D50: a title on every control (the 53 rows of `inventory/structure-and-behaviour.md` 3.1: 36
+  added, 7 changed, 10 already there; 8 controls outside the table), the where-words from the C#, the scripts only for
+  what they draw; three controls get names (Back to top, Payload length, the popup's Close); D50 settled (no debug
+  global; `checks/nav-check.js` and `checks/q-test.js` use the product's controls). Prepared in the session's scratch
+  at `a1235d98` and `d385c715`, then ported to T2 (`f077cda6`) before it was applied: the rows title has no Categories
+  row (a category is a tag), `FilterChip` keeps T2's `more` parameter, `FilterRowsTests` pins 18 chip titles, and
+  `ControlTitlesTests` names the rows as T2 has them (`edits/s12d49/`: `scripts-s12d49.py`, `tests-s12d49.py` and the
+  two new test files, all as ported; `design.md` has the nine owner questions, Q7 the bytes: 2,023 to 2,962 per
+  scenario bar with a sequence diagram).
+  Tests: `ControlTitlesTests` (new, 18 facts and a theory, 20 cases), red 20 of 20; with the 22 pinned classes (90 pin
+  lines), 81 of 569 failed before the change and 569 of 569 after (the first green run failed 2: Clear All pins in
+  FilterBarTests and FilterRowsTests still named a Categories row; ported, those classes and ControlTitlesTests pass,
+  42 of 42). `ControlTitlesAuditTests` (new, 3 Playwright facts): red 3 of 3 before the change, each on its assertion
+  (the audit listed the controls left without a title, View run and Clear All first; the composite step's summary had
+  none; the popup's close had no name); green with the 13 classes that assert a title and IflowPopupTests, 164 of 164.
+  The audit fact's first form counted the settings bars with :visible, and a closed bar is 0 px tall, so it failed
+  before and after the change on "0 scenario settings show" (the package could not run Playwright): it counts the
+  gears now, found by its first run and fixed before the red counted. Mutations (`checks/mutate-s12d49.py`, 101): the
+  93 core killed in the package's scratch runner on `d385c715`'s code, anchors found once each on `f077cda6`
+  (`edits/s12d49/mutate-scratch.txt`); on the real tree, the 17 under or beside T2's code: 17 of 17 killed; the 8
+  Playwright killed, 8 of 8 (the popup's cross with no name and with no title, its view tabs with no title and with
+  their titles swapped, a composite step's summary never titled and one step inside counted as many, a feature's name
+  with no title in the Summary view, back to top with neither name nor title).
+  Checks: The core classes above, 569 of 569, and the Playwright classes above, 164 of 164, on `0bdfe8b6` (the count
+  fix and D48 over T2); the full suites run when S12 closes.

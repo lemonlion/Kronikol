@@ -324,7 +324,7 @@ public class HistoryOutputsTests : IDisposable
         // its History tab (plans/OPTION_C_PLAN.md S3), and nothing of it is in the features: no verdict attribute, no
         // sparkline (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md). The labs page beside the report carries both.
         var byDefault = File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.html"));
-        Assert.Contains("data-panel=\"history\" hidden><details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\">History ", byDefault);
+        Assert.Contains("data-panel=\"history\" hidden><details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\" title=\"This run against the earlier runs on the same branch: what is failing, flaky, fixed, slower, new or gone\">History ", byDefault);
         Assert.DoesNotContain("data-history-verdicts=\"", byDefault);
         Assert.DoesNotContain("<span class=\"history-sparkline\"", byDefault);
         Assert.Contains("<span class=\"history-verdict history-verdict-broke\"", File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.labs.html")));

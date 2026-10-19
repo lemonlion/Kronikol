@@ -93,7 +93,7 @@ public class DiagramToggleReportTests : IDisposable
     {
         var content = GenerateReport(MakeDiagrams(), MakeFeatures(), "ToggleSeqOnly.html");
 
-        Assert.Contains("<summary class=\"h4\">Sequence Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\"", content);
+        Assert.Contains("<summary class=\"h4\" title=\"This scenario's sequence diagrams\">Sequence Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\"", content);
         Assert.DoesNotContain("data-dtype=", content);
     }
 
@@ -120,8 +120,8 @@ public class DiagramToggleReportTests : IDisposable
             MakeDiagrams(), MakeFeatures(), "ToggleSummary.html",
             wholeTestSegments: MakeWholeTestSegments());
 
-        Assert.Contains("<summary class=\"h4\">Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\"", content);
-        Assert.DoesNotContain("<summary class=\"h4\">Sequence Diagrams", content);
+        Assert.Contains("<summary class=\"h4\" title=\"This scenario's diagrams\">Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\"", content);
+        Assert.DoesNotContain(">Sequence Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle", content);
     }
 
     [Fact]
@@ -203,7 +203,7 @@ public class DiagramToggleReportTests : IDisposable
             wholeTestSegments: new Dictionary<string, InternalFlowSegment>(),
             visualization: WholeTestFlowVisualization.Both);
 
-        Assert.Contains("<summary class=\"h4\">Sequence Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\"", content);
+        Assert.Contains("<summary class=\"h4\" title=\"This scenario's sequence diagrams\">Sequence Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\"", content);
         Assert.DoesNotContain("data-dtype=", content);
     }
 
@@ -337,7 +337,7 @@ public class DiagramToggleReportTests : IDisposable
             wholeTestVisualization: WholeTestFlowVisualization.ActivityDiagram);
         var content = File.ReadAllText(path);
 
-        Assert.Contains("<summary class=\"h4\">Activity Diagrams<span class=\"span-count-warning\">(Warning: 150 spans.", content);
+        Assert.Contains("<summary class=\"h4\" title=\"The work inside the services, span by span, as an activity diagram\">Activity Diagrams<span class=\"span-count-warning\">(Warning: 150 spans.", content);
     }
 
     [Fact]
@@ -364,7 +364,7 @@ public class DiagramToggleReportTests : IDisposable
             wholeTestVisualization: WholeTestFlowVisualization.Both);
         var content = File.ReadAllText(path);
 
-        Assert.Contains("data-dtype=\"flame\">Flame Chart</button><span class=\"span-count-warning\">(Warning: 150 spans.", content);
+        Assert.Contains("data-dtype=\"flame\" title=\"Where the time went inside the services, span by span, as nested bars\">Flame Chart</button><span class=\"span-count-warning\">(Warning: 150 spans.", content);
     }
 
     [Fact]

@@ -175,7 +175,7 @@
             return '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
                 + '<strong>Diagram too large for client-side rendering.</strong><br>'
                 + 'Use <code>PlantUmlRendering.Server</code> or <code>PlantUmlRendering.Local</code> for large diagrams.'
-                + '<details style="margin-top:0.5em"><summary>Raw PlantUML</summary><pre style="white-space:pre-wrap">'
+                + '<details style="margin-top:0.5em"><summary title="The PlantUML source this diagram was drawn from">Raw PlantUML</summary><pre style="white-space:pre-wrap">'
                 + escapeMarkupText(source || '') + '</pre></details></div>';
         }
         function writeFailure(target, source, message) {
@@ -1166,7 +1166,7 @@
             if (!el) return false;
             var text = el.textContent || '';
             var svg = el.querySelector('svg');
-            var rawDetails = '<details style="margin-top:0.5em"><summary>Raw PlantUML</summary><pre style="white-space:pre-wrap">'
+            var rawDetails = '<details style="margin-top:0.5em"><summary title="The PlantUML source this diagram was drawn from">Raw PlantUML</summary><pre style="white-space:pre-wrap">'
                 + escapeMarkupText(source || el.getAttribute('data-plantuml') || '') + '</pre></details>';
             if (!svg && _engineTooLargeRx.test(text)) {
                 el.innerHTML = '<div class="engine-failure" data-engine-failure="too-large" style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
@@ -1317,7 +1317,7 @@
                     item.el.innerHTML = '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
                         + '<strong>Diagram too large for client-side rendering.</strong><br>'
                         + 'Use <code>PlantUmlRendering.Server</code> or <code>PlantUmlRendering.Local</code> for large diagrams.'
-                        + '<details style="margin-top:0.5em"><summary>Raw PlantUML</summary><pre style="white-space:pre-wrap">'
+                        + '<details style="margin-top:0.5em"><summary title="The PlantUML source this diagram was drawn from">Raw PlantUML</summary><pre style="white-space:pre-wrap">'
                         + escapeMarkupText(item.source) + '</pre></details></div>';
                 } else {
                     item.el.textContent = 'Render error: ' + msg;

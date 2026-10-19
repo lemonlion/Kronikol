@@ -1153,7 +1153,7 @@ public class DiagramContextMenuTests
         Assert.Contains("{ onError: handleRenderFailure }", _plantUmlScript);
         Assert.Contains("function handleRenderFailure(", _plantUmlScript);
         Assert.Contains("Diagram too large for client-side rendering.", _plantUmlScript);
-        Assert.Contains("<summary>Raw PlantUML</summary>", _plantUmlScript);
+        Assert.Contains("<summary title=\"The PlantUML source this diagram was drawn from\">Raw PlantUML</summary>", _plantUmlScript);
     }
 
     [Fact]

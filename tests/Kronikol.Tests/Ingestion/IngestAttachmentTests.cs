@@ -106,7 +106,7 @@ public class IngestAttachmentTests : IDisposable
 
         var html = File.ReadAllText(result.TestRunReportHtml);
         Assert.Contains("<img class=\"attachment-image\" src=\"attachments/screenshot-end.png\"", html);
-        Assert.Contains("<a class=\"step-attachment\" href=\"attachments/trace.zip\">trace.zip</a>", html);
+        Assert.Contains("<a class=\"step-attachment\" href=\"attachments/trace.zip\" title=\"Open trace.zip, a file this scenario attached\">trace.zip</a>", html);
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class IngestAttachmentTests : IDisposable
 
         var html = File.ReadAllText(result.TestRunReportHtml);
         Assert.Contains("src=\"attachments/screenshot-start\"", html);
-        Assert.Contains("<a class=\"step-attachment\" href=\"attachments/report.png\">report.png</a>", html);
+        Assert.Contains("<a class=\"step-attachment\" href=\"attachments/report.png\" title=\"Open report.png, a file this scenario attached\">report.png</a>", html);
     }
 
     [Theory]

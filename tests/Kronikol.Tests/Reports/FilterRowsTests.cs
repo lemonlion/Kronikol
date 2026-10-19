@@ -90,9 +90,9 @@ public class FilterRowsTests
     public void Happy_paths_are_a_three_way_control_that_starts_on_Show()
     {
         var box = Box(Generate("FilterRows_Happy.html"));
-        Assert.Contains("<button type=\"button\" class=\"happy-seg\" data-hp=\"off\" aria-pressed=\"true\">Show</button>"
-            + "<button type=\"button\" class=\"happy-seg\" data-hp=\"in\" aria-pressed=\"false\">Only</button>"
-            + "<button type=\"button\" class=\"happy-seg\" data-hp=\"out\" aria-pressed=\"false\">Hide</button>", box);
+        Assert.Contains("<button type=\"button\" class=\"happy-seg\" data-hp=\"off\" aria-pressed=\"true\" title=\"Happy-path scenarios and the rest\">Show</button>"
+            + "<button type=\"button\" class=\"happy-seg\" data-hp=\"in\" aria-pressed=\"false\" title=\"Only the scenarios tagged as happy paths\">Only</button>"
+            + "<button type=\"button\" class=\"happy-seg\" data-hp=\"out\" aria-pressed=\"false\" title=\"Leave out the scenarios tagged as happy paths\">Hide</button>", box);
 
         // a run with no happy path has nothing to show only or hide
         var none = Box(Generate("FilterRows_NoHappy.html", [new Feature { DisplayName = "F", Scenarios = [Run("x", "X", ExecutionResult.Passed, 5, ["api"])] }]));
@@ -106,12 +106,12 @@ public class FilterRowsTests
         var box = Box(Generate("FilterRows_Tags.html"));
         Assert.Contains("<div class=\"tag-filters\"><span class=\"tag-filters-label\">Tags</span><span class=\"fltr-controls\">"
             + "<button type=\"button\" class=\"tag-mode-toggle\" data-mode=\"OR\" title=\"ANY: scenarios with any of the chosen tags. ALL: scenarios with every one of them. Click to switch.\">ANY</button>"
-            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"Happy Path\" aria-pressed=\"false\" title=\"1 scenario\">Happy Path</button>"
-            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"api\" aria-pressed=\"false\" title=\"2 scenarios\">api</button>"
-            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"Fast\" aria-pressed=\"false\" title=\"2 scenarios\">Fast</button>"
-            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"Slow\" aria-pressed=\"false\" title=\"1 scenario\">Slow</button>"
-            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"smoke\" aria-pressed=\"false\" title=\"2 scenarios\">smoke</button>"
-            + "<button type=\"button\" class=\"tag-toggle tag-none\" data-tag=\"__untagged__\" data-none=\"1\" aria-pressed=\"false\" title=\"2 scenarios\">Untagged</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"Happy Path\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Happy Path</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"api\" aria-pressed=\"false\" title=\"2 scenarios. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">api</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"Fast\" aria-pressed=\"false\" title=\"2 scenarios. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Fast</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"Slow\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Slow</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"smoke\" aria-pressed=\"false\" title=\"2 scenarios. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">smoke</button>"
+            + "<button type=\"button\" class=\"tag-toggle tag-none\" data-tag=\"__untagged__\" data-none=\"1\" aria-pressed=\"false\" title=\"2 scenarios. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Untagged</button>"
             + "<button type=\"button\" class=\"group-clear\" title=\"Clear the tag filters\" hidden>Clear</button></span></div>", box);
     }
 
@@ -122,11 +122,11 @@ public class FilterRowsTests
         // the marker-only diagram's "(no interactions)" participant is no dependency: its scenario has none
         Assert.Contains("<div class=\"dependency-filters\"><span class=\"dependency-filters-label\">Dependencies</span><span class=\"fltr-controls\">"
             + "<button type=\"button\" class=\"dep-mode-toggle\" data-mode=\"OR\" title=\"ANY: scenarios that call any of the chosen dependencies. ALL: scenarios that call every one of them. Click to switch.\">ANY</button>"
-            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Caller\" aria-pressed=\"false\" title=\"2 scenarios\">Caller</button>"
-            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Order Db\" aria-pressed=\"false\" title=\"1 scenario\">Order Db</button>"
-            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Order Service\" aria-pressed=\"false\" title=\"1 scenario\">Order Service</button>"
-            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Payment Service\" aria-pressed=\"false\" title=\"1 scenario\">Payment Service</button>"
-            + "<button type=\"button\" class=\"dependency-toggle dependency-none\" data-dependency=\"__none__\" data-none=\"1\" aria-pressed=\"false\" title=\"3 scenarios\">No dependencies</button>"
+            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Caller\" aria-pressed=\"false\" title=\"2 scenarios. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Caller</button>"
+            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Order Db\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Order Db</button>"
+            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Order Service\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Order Service</button>"
+            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Payment Service\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Payment Service</button>"
+            + "<button type=\"button\" class=\"dependency-toggle dependency-none\" data-dependency=\"__none__\" data-none=\"1\" aria-pressed=\"false\" title=\"3 scenarios. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">No dependencies</button>"
             + "<button type=\"button\" class=\"group-clear\" title=\"Clear the dependency filters\" hidden>Clear</button></span></div>", box);
         Assert.DoesNotContain("data-dependency=\"(no interactions)\"", box);
     }
@@ -136,7 +136,7 @@ public class FilterRowsTests
     {
         var html = Generate("FilterRows_Cats.html");
         var box = Box(html);
-        Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"Fast\" aria-pressed=\"false\" title=\"2 scenarios\">Fast</button>", box);
+        Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"Fast\" aria-pressed=\"false\" title=\"2 scenarios. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Fast</button>", box);
         // (a 4.x link's __uncategorized__ is still read, as the Untagged chip)
         foreach (var gone in new[] { "category-filters", "category-toggle", "cat-mode-toggle", "data-category=", "data-categories=", "_catMode" })
             Assert.DoesNotContain(gone, html);
@@ -155,9 +155,9 @@ public class FilterRowsTests
             new Feature { DisplayName = "Other", Scenarios = [Run("o1", "Browse", ExecutionResult.Passed, 5)] }
         ];
         var box = Box(Generate("FilterRows_FeatureTags.html", features));
-        Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"checkout\" aria-pressed=\"false\" title=\"2 scenarios\">checkout</button>"
-            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"smoke\" aria-pressed=\"false\" title=\"1 scenario\">smoke</button>"
-            + "<button type=\"button\" class=\"tag-toggle tag-none\" data-tag=\"__untagged__\" data-none=\"1\" aria-pressed=\"false\" title=\"1 scenario\">Untagged</button>", box);
+        Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"checkout\" aria-pressed=\"false\" title=\"2 scenarios. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">checkout</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"smoke\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">smoke</button>"
+            + "<button type=\"button\" class=\"tag-toggle tag-none\" data-tag=\"__untagged__\" data-none=\"1\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Untagged</button>", box);
     }
 
     [Fact]
@@ -169,12 +169,12 @@ public class FilterRowsTests
             new Feature { DisplayName = "B", Scenarios = [Run("b1", "Second", ExecutionResult.Passed, 5, ["smoke"], ["SMOKE", "über"]), Run("b2", "Third", ExecutionResult.Passed, 5, ["Über"])] }
         ];
         var box = Box(Generate("FilterRows_Case.html", features));
-        Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"Smoke\" aria-pressed=\"false\" title=\"2 scenarios\">Smoke</button>", box);
+        Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"Smoke\" aria-pressed=\"false\" title=\"2 scenarios. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Smoke</button>", box);
         Assert.DoesNotContain("data-tag=\"smoke\"", box);
         Assert.DoesNotContain("data-tag=\"SMOKE\"", box);
         // a letter outside ASCII is not folded (§4.3): two chips (HtmlEncode writes U+00A0 to U+00FF as numbers)
-        Assert.Contains("data-tag=\"&#252;ber\" aria-pressed=\"false\" title=\"1 scenario\">", box);
-        Assert.Contains("data-tag=\"&#220;ber\" aria-pressed=\"false\" title=\"1 scenario\">", box);
+        Assert.Contains("data-tag=\"&#252;ber\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">", box);
+        Assert.Contains("data-tag=\"&#220;ber\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">", box);
     }
 
     [Theory]
@@ -197,21 +197,21 @@ public class FilterRowsTests
     public void The_readout_says_what_the_filters_leave_showing_counting_runs_and_a_parameterized_scenario_carries_its_runs()
     {
         var html = Generate("FilterRows_Readout.html");
-        Assert.Contains("<div class=\"filtering-box-export\"><span class=\"filter-readout\" role=\"status\">All 5 scenarios, 2 features</span>"
-            + "<button class=\"export-btn\" onclick=\"clear_all_filters()\">Clear All</button>", html);
+        Assert.Contains("<div class=\"filtering-box-export\"><span class=\"filter-readout\" role=\"status\" title=\"The scenarios and features the filters leave showing\">All 5 scenarios, 2 features</span>"
+            + "<button class=\"export-btn\" onclick=\"clear_all_filters()\" title=\"Clear every filter: the search with its dep:, duration: and is: terms, and the statuses, duration, happy paths, tags and dependencies\">Clear All</button>", html);
         Assert.Contains(" data-runs=\"2\"", html);
         Assert.Equal(1, System.Text.RegularExpressions.Regex.Count(html, " data-runs=\""));
 
         var one = Generate("FilterRows_ReadoutOne.html", [new Feature { DisplayName = "F", Scenarios = [Run("x", "X", ExecutionResult.Passed, 5)] }]);
-        Assert.Contains("<span class=\"filter-readout\" role=\"status\">All 1 scenario, 1 feature</span>", one);
+        Assert.Contains("<span class=\"filter-readout\" role=\"status\" title=\"The scenarios and features the filters leave showing\">All 1 scenario, 1 feature</span>", one);
     }
 
     [Fact]
     public void The_exports_say_Filtered_where_there_is_room()
     {
         var box = Box(Generate("FilterRows_Exports.html"));
-        Assert.Contains("<button class=\"export-btn\" onclick=\"export_html()\">Export <span class=\"wide-only\">Filtered </span>HTML</button>", box);
-        Assert.Contains("<button class=\"export-btn\" onclick=\"export_csv()\">Export <span class=\"wide-only\">Filtered </span>CSV</button>", box);
+        Assert.Contains("<button class=\"export-btn\" onclick=\"export_html()\" title=\"Download a copy of this report holding only the features the filters show\">Export <span class=\"wide-only\">Filtered </span>HTML</button>", box);
+        Assert.Contains("<button class=\"export-btn\" onclick=\"export_csv()\" title=\"Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds\">Export <span class=\"wide-only\">Filtered </span>CSV</button>", box);
     }
 
     [Fact]

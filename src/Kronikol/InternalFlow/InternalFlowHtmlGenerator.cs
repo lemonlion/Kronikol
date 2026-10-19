@@ -341,7 +341,7 @@ public static class InternalFlowHtmlGenerator
     {
         var sb = new StringBuilder();
         sb.Append("No internal activity captured for this segment.");
-        sb.Append("<br/><br/><details class=\"iflow-diagnostics\"><summary>Diagnostic info</summary><ul>");
+        sb.Append("<br/><br/><details class=\"iflow-diagnostics\"><summary title=\"Why this call may have no spans: click to show or hide the details\">Diagnostic info</summary><ul>");
         sb.Append($"<li>InternalFlowSpanStore: {totalSpansInStore} total span(s) globally</li>");
         sb.Append($"<li>Granularity: {granularity}</li>");
 
@@ -369,7 +369,7 @@ public static class InternalFlowHtmlGenerator
     {
         var sb = new StringBuilder();
         sb.Append("No internal activity captured for this segment.");
-        sb.Append("<br/><br/><details class=\"iflow-diagnostics\"><summary>Diagnostic info</summary><ul>");
+        sb.Append("<br/><br/><details class=\"iflow-diagnostics\"><summary title=\"Why this call may have no spans: click to show or hide the details\">Diagnostic info</summary><ul>");
         sb.Append($"<li>Spans supplied to the ingest: {suppliedSpans}</li>");
         if (granularity == InternalFlowSpanGranularity.Manual && configuredActivitySources is { Length: > 0 })
             sb.Append($"<li>Only the spans of these sources are drawn: {System.Net.WebUtility.HtmlEncode(string.Join(", ", configuredActivitySources))}</li>");

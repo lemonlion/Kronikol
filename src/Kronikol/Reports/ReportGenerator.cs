@@ -1070,7 +1070,9 @@ public static class ReportGenerator
     /// <c>selected</c> (the list is built from <see cref="TruncateLineCount"/>, the single source of
     /// truth for the presets), and <c>disabled</c> on the select whenever the state is not
     /// truncated — <c>syncRadioButtons</c> disables it on every state change, so the markup must
-    /// agree before the first click. Report and scenario level differ only in their handlers.
+    /// agree before the first click. Report and scenario level differ in their handlers, and in the diagrams their titles
+    /// say they act on (5.0.0, plans/OPTION_C_PLAN.md D49, <see cref="PayloadsWhere"/>). The line-count select is named
+    /// "Payload length", its group's heading, as the format and width selects are named by theirs.
     /// </summary>
     private static string BuildDetailsRadio(ResolvedToggleDefaults toggles, bool scenarioLevel)
     {
@@ -1082,11 +1084,12 @@ public static class ReportGenerator
         var disabled = toggles.Details == ReportDetailsState.Truncated ? "" : " disabled";
         var options = string.Concat(Enum.GetValues<TruncateLineCount>().Select(v =>
             $"<option value=\"{(int)v}\"{(v == toggles.TruncateLines ? " selected" : "")}>{(int)v} lines</option>"));
-        return "<span class=\"details-radio\"><span class=\"details-radio-label\">Payloads</span>"
-            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Expanded)}\" data-state=\"expanded\" onclick=\"{Click("expanded")}\">{BuildButtonLabel("Expanded")}</button>"
-            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Collapsed)}\" data-state=\"collapsed\" onclick=\"{Click("collapsed")}\">{BuildButtonLabel("Collapsed")}</button>"
-            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Truncated)}\" data-state=\"truncated\" onclick=\"{Click("truncated")}\">{BuildButtonLabel("Truncated")}</button>"
-            + $"<select class=\"truncate-lines-select\" autocomplete=\"off\"{disabled} onchange=\"{change}\"><optgroup label=\"Payload length\">{options}</optgroup></select></span>";
+        var diagrams = PayloadsWhere(scenarioLevel);
+        return $"<span class=\"details-radio\"><span class=\"details-radio-label\" title=\"How the payloads in {diagrams} are shown (the boxes beside the arrows, holding each request, response and message, with its headers): whole, folded to one line, or cut at a line limit\">Payloads</span>"
+            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Expanded)}\" data-state=\"expanded\" onclick=\"{Click("expanded")}\" title=\"The payloads in {diagrams} show in full\">{BuildButtonLabel("Expanded")}</button>"
+            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Collapsed)}\" data-state=\"collapsed\" onclick=\"{Click("collapsed")}\" title=\"The payloads in {diagrams} fold to one line each; a box's + button opens it\">{BuildButtonLabel("Collapsed")}</button>"
+            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Truncated)}\" data-state=\"truncated\" onclick=\"{Click("truncated")}\" title=\"Payloads in {diagrams} longer than the line limit beside this are cut at that many lines\">{BuildButtonLabel("Truncated")}</button>"
+            + $"<select class=\"truncate-lines-select\" autocomplete=\"off\" aria-label=\"Payload length\" title=\"How many lines a cut payload box keeps in {diagrams} (with Truncated picked)\"{disabled} onchange=\"{change}\"><optgroup label=\"Payload length\">{options}</optgroup></select></span>";
     }
 
     /// <summary>
@@ -1099,15 +1102,43 @@ public static class ReportGenerator
     /// <summary>
     /// One filter toggle (headers / assertions / steps / databases): its bare word, with the configured
     /// start state in its class, <c>data-shown</c> and <c>aria-pressed</c>, which <c>syncToggleBtn</c>
-    /// keeps on every later click (5.0.0; the label no longer changes).
+    /// keeps on every later click (5.0.0; the label no longer changes), titled with what it shows or hides and in which
+    /// diagrams (D49).
     /// </summary>
     private static string BuildFilterToggleButton(string toggleName, bool shown, bool scenarioLevel)
     {
         var label = char.ToUpperInvariant(toggleName[0]) + toggleName[1..];
         var handler = scenarioLevel ? $"window._toggleScenario{label}(this)" : $"window._toggle{label}(this)";
         var on = shown ? "true" : "false";
-        return $"<button class=\"details-radio-btn toggle-btn{(shown ? " details-active" : "")}\" data-toggle=\"{toggleName}\" data-shown=\"{on}\" aria-pressed=\"{on}\" onclick=\"{handler}\">{BuildButtonLabel(label)}</button>";
+        return $"<button class=\"details-radio-btn toggle-btn{(shown ? " details-active" : "")}\" data-toggle=\"{toggleName}\" data-shown=\"{on}\" aria-pressed=\"{on}\" onclick=\"{handler}\" title=\"{ToggleTitle(toggleName, PayloadsWhere(scenarioLevel))}\">{BuildButtonLabel(label)}</button>";
     }
+
+    /// <summary>
+    /// The diagrams a payload control acts on, as its title names them (5.0.0, plans/OPTION_C_PLAN.md D49): the report
+    /// bar's act on every sequence diagram in the report, a scenario's own bar on that scenario's only.
+    /// </summary>
+    private static string PayloadsWhere(bool scenarioLevel) =>
+        scenarioLevel ? "this scenario's sequence diagrams" : "every sequence diagram in the report";
+
+    /// <summary>What a filter toggle shows or hides in <paramref name="diagrams"/> (D49).</summary>
+    private static string ToggleTitle(string toggleName, string diagrams) => toggleName switch
+    {
+        "headers" => $"Show or hide the headers at the top of each payload in {diagrams}",
+        "assertions" => $"Show or hide the boxes with the test's assertions in {diagrams}",
+        "steps" => $"Show or hide the bars marking where each step starts in {diagrams}",
+        "databases" => $"Show or hide the databases and their calls in {diagrams}",
+        "events" => $"Show or hide the calls to and from message brokers (the participants drawn as queues), with their payloads, in {diagrams}",
+        "setup" => $"Show or hide the setup in {diagrams}: everything before the first When step, or the Setup section where the report keeps setup apart",
+        _ => throw new ArgumentOutOfRangeException(nameof(toggleName), toggleName, "a toggle with no title")
+    };
+
+    /// <summary>The payload format select's title (D49).</summary>
+    private static string NoteFormatTitle(bool scenarioLevel) =>
+        $"How the payloads in {PayloadsWhere(scenarioLevel)} are written: JSON as captured, or the same data as YAML";
+
+    /// <summary>The payload width select's title, which spells out both states (D49).</summary>
+    private static string NoteWidthTitle(bool scenarioLevel) =>
+        $"How wide the payloads are in {PayloadsWhere(scenarioLevel)}. Wrap: they wrap at a set width. Wide: they widen to fill the diagram.";
 
     /// <summary>
     /// Which diagram-type tab a scenario's diagram section starts on: the requested tab where that
@@ -1172,7 +1203,18 @@ public static class ReportGenerator
     private const string ScenarioSettingsSummaryGear = "<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\" aria-label=\"Diagram settings\" title=\"Diagram settings\" aria-expanded=\"false\">\u2699</button>";
 
     private static string BuildDiagramTab(string dtype, string label, bool active) =>
-        $"<button class=\"diagram-toggle-btn{(active ? " diagram-toggle-active" : "")}\" role=\"tab\" aria-selected=\"{(active ? "true" : "false")}\" tabindex=\"{(active ? "0" : "-1")}\" data-dtype=\"{dtype}\">{label}</button>";
+        $"<button class=\"diagram-toggle-btn{(active ? " diagram-toggle-active" : "")}\" role=\"tab\" aria-selected=\"{(active ? "true" : "false")}\" tabindex=\"{(active ? "0" : "-1")}\" data-dtype=\"{dtype}\" title=\"{DiagramViewTitle(dtype)}\">{label}</button>";
+
+    /// <summary>
+    /// What a diagram view shows (5.0.0, plans/OPTION_C_PLAN.md D49): its tab's title, and the section's heading's where
+    /// the section has that view alone.
+    /// </summary>
+    private static string DiagramViewTitle(string dtype) => dtype switch
+    {
+        "seq" => "The calls between the test and the services, in order",
+        "activity" => "The work inside the services, span by span, as an activity diagram",
+        _ => "Where the time went inside the services, span by span, as nested bars"
+    };
 
     /// <summary>
     /// A diagram section's head (5.0.0, plans/OPTION_C_PLAN.md D29 to D34), for a scenario and for a parameterized group:
@@ -1191,7 +1233,8 @@ public static class ReportGenerator
         var notSeq = hasSettings && activeTab != DiagramTabKind.Sequence;
         body.Append($"<details class=\"example-diagrams{(notSeq ? " diagrams-not-seq" : "")}\"{(open ? " open" : "")}>");
         var title = views > 1 ? "Diagrams" : hasSeq ? "Sequence Diagrams" : hasActivity ? "Activity Diagrams" : "Flame Chart";
-        body.Append("<summary class=\"h4\">").Append(title);
+        var tooltip = views > 1 ? "This scenario's diagrams" : hasSeq ? "This scenario's sequence diagrams" : DiagramViewTitle(hasActivity ? "activity" : "flame");
+        body.Append($"<summary class=\"h4\" title=\"{tooltip}\">").Append(title);
         if (hasSettings) body.Append(ScenarioSettingsSummaryGear);
         if (views == 1) body.Append(warning);
         body.Append("</summary>");
@@ -1549,10 +1592,10 @@ public static class ReportGenerator
         var yamlDefaultSelected = toggles.NotePayloadFormat == NotePayloadFormat.Yaml;
         var noteFormatOptions = $"<option value=\"json\"{(yamlDefaultSelected ? "" : " selected")}>JSON</option><option value=\"yaml\"{(yamlDefaultSelected ? " selected" : "")}>YAML</option>";
         var reportNoteFormatSelect = hasJsonNotePayloads
-            ? $"<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Payload format\" title=\"Payload format\" onchange=\"window._setNoteFormat(this)\"><optgroup label=\"Payload format\">{noteFormatOptions}</optgroup></select>"
+            ? $"<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Payload format\" title=\"{NoteFormatTitle(scenarioLevel: false)}\" onchange=\"window._setNoteFormat(this)\"><optgroup label=\"Payload format\">{noteFormatOptions}</optgroup></select>"
             : "";
         var scenarioNoteFormatSelect = hasJsonNotePayloads
-            ? $"<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Payload format\" title=\"Payload format\" onchange=\"window._setScenarioNoteFormat(this)\"><optgroup label=\"Payload format\">{noteFormatOptions}</optgroup></select>"
+            ? $"<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Payload format\" title=\"{NoteFormatTitle(scenarioLevel: true)}\" onchange=\"window._setScenarioNoteFormat(this)\"><optgroup label=\"Payload format\">{noteFormatOptions}</optgroup></select>"
             : "";
         // The note appearance controls need notes to act on, and nothing more: unlike the JSON/YAML
         // select they apply to any payload, so the gate is simply "this report draws notes".
@@ -1562,13 +1605,12 @@ public static class ReportGenerator
         // "Wrap" is the start state (notes wrap at DiagramNoteWrapWidth); "Wide" lifts the ceiling to
         // the diagram's width. The option VALUES are what the handlers and NoteWidthMode key on.
         (string, string)[] noteWidthOptions = [("default", "Wrap"), ("full", "Wide")];
-        const string noteWidthTitle = "Payload width. Wrap: they wrap at a set width. Wide: they widen to fill the diagram.";
         var widthSelected = toggles.NoteWidth == NoteWidthMode.Full ? "full" : "default";
         var reportNoteWidthSelect = hasDiagramNotes
-            ? BuildNoteAppearanceSelect("note-width-select", "Payload width", noteWidthTitle, "_setNoteWidth", noteWidthOptions, widthSelected)
+            ? BuildNoteAppearanceSelect("note-width-select", "Payload width", NoteWidthTitle(scenarioLevel: false), "_setNoteWidth", noteWidthOptions, widthSelected)
             : "";
         var scenarioNoteWidthSelect = hasDiagramNotes
-            ? BuildNoteAppearanceSelect("note-width-select", "Payload width", noteWidthTitle, "_setScenarioNoteWidth", noteWidthOptions, widthSelected)
+            ? BuildNoteAppearanceSelect("note-width-select", "Payload width", NoteWidthTitle(scenarioLevel: true), "_setScenarioNoteWidth", noteWidthOptions, widthSelected)
             : "";
         // The scenario-level control run, built once (see BuildScenarioDiagramToolbar).
         var scenarioToolbarControls = BuildScenarioDiagramToolbar(toggles,
@@ -1760,7 +1802,7 @@ public static class ReportGenerator
 
                 featureTable.Append($"<tr{(featureHasFail ? " class=\"failed\"" : "")}>");
                 // the name is a button: a row opens its feature in the Full view, from the keyboard as well
-                featureTable.Append($"<td><button type=\"button\" class=\"feature-open\">{System.Net.WebUtility.HtmlEncode(feature.DisplayName)}</button></td>");
+                featureTable.Append($"<td><button type=\"button\" class=\"feature-open\" title=\"Open this feature's card in the Full view\">{System.Net.WebUtility.HtmlEncode(feature.DisplayName)}</button></td>");
                 featureTable.Append($"<td>{totalSc}</td>");
                 featureTable.Append($"<td>{passedSc}</td>");
                 featureTable.Append($"<td>{failedSc}</td>");
@@ -1833,12 +1875,14 @@ public static class ReportGenerator
         // the run counts them. The exports drop "Filtered" where there is no room for it (D13).
         // More filters (S7, D15) names the rows the box has, in their order
         var rowsTitle = FilterRowsTitle(features, hasDurations, allDependencies.Count > 0);
+        // Clear All's title names what it clears, the same rows (D49)
+        var clearTitle = ClearAllTitle(features, hasDurations, allDependencies.Count > 0);
         var readoutText = $"All {ScenarioCount(features.Sum(f => f.Scenarios.Length))}, {(features.Length == 1 ? "1 feature" : string.Create(CultureInfo.InvariantCulture, $"{features.Length} features"))}";
         body.Append($"""
                  <div class="filtering-box rows-folded" id="filtering-box">
-                    <div class="filtering-box-header"><h2>Filtering</h2><div class="filtering-box-export"><span class="filter-readout" role="status">{readoutText}</span><button class="export-btn" onclick="clear_all_filters()">Clear All</button><button class="export-btn" onclick="export_html()">Export <span class="wide-only">Filtered </span>HTML</button><button class="export-btn" onclick="export_csv()">Export <span class="wide-only">Filtered </span>CSV</button>{FiltersClose}</div></div>
-                    <div class="filter-search"><span class="search-field"><input id="searchbar" autocomplete="off" placeholder="Search... (@tag, $status, dep:, duration:, &&, ||, !!)" onkeyup="search_scenarios()" /></span><button type="button" class="search-help-toggle" onclick="toggle_search_help()" title="Search syntax help">?</button>{MoreFilters(rowsTitle)}</div>
-                    <div class="mobile-filter-toggle">Filters</div>
+                    <div class="filtering-box-header"><h2>Filtering</h2><div class="filtering-box-export"><span class="filter-readout" role="status" title="{FiltersLeaveShowing}">{readoutText}</span><button class="export-btn" onclick="clear_all_filters()" title="{clearTitle}">Clear All</button><button class="export-btn" onclick="export_html()" title="Download a copy of this report holding only the features the filters show">Export <span class="wide-only">Filtered </span>HTML</button><button class="export-btn" onclick="export_csv()" title="Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds">Export <span class="wide-only">Filtered </span>CSV</button>{FiltersClose}</div></div>
+                    <div class="filter-search"><span class="search-field"><input id="searchbar" autocomplete="off" placeholder="Search... (@tag, $status, dep:, duration:, &&, ||, !!)" onkeyup="search_scenarios()" title="{SearchTitle}" /></span><button type="button" class="search-help-toggle" onclick="toggle_search_help()" title="{SearchHelpTitle}">?</button>{MoreFilters(rowsTitle)}</div>
+                    <div class="mobile-filter-toggle" title="Show or hide the filters">Filters</div>
                     <div class="filters" id="filter-rows">
                     <div class="search-help-panel" style="display:none">
                     <table class="search-help-table">
@@ -1863,8 +1907,8 @@ public static class ReportGenerator
         // The filter rows (5.0.0, plans/OPTION_C_PLAN.md S6, D6 to D12, D19): labels without colons and each row's controls
         // in a span.fltr-controls; Status, Duration and Happy paths share the first row; then Tags and Dependencies, each
         // a row of tri-state chips (off, has, has not) with an ANY / ALL switch, a chip for the scenarios with none, and a
-        // Clear (report-filter-chips-script.js). A chip's title counts the scenarios it picks out. A category is a tag
-        // (plans/TAGS_PLAN.md §4.8).
+        // Clear (report-filter-chips-script.js). A chip's title counts the scenarios it picks out and says what a click
+        // does (D49). A category is a tag (plans/TAGS_PLAN.md §4.8).
         var runs = features.SelectMany(f => f.Scenarios).ToArray();
         var tagChips = TagChips.For(features);
         // Status filter toggles
@@ -1874,7 +1918,7 @@ public static class ReportGenerator
             {
                 if (status == ExecutionResult.SkippedAfterFailure) continue;
                 var statusName = status.ToString();
-                body.Append($"""<button class="status-toggle" data-status="{statusName}" onclick="toggle_status(this)">{statusName}</button>""");
+                body.Append($"""<button class="status-toggle" data-status="{statusName}" onclick="toggle_status(this)" title="{StatusToggleTitle(status)}">{statusName}</button>""");
             }
             body.Append("</span></div>");
         }
@@ -1901,12 +1945,12 @@ public static class ReportGenerator
             var warm = warmUp.ScenarioMs.Count > 0;
             var notWarm = warm ? ", not counting first-call warm-up" : "";
             string Threshold(double ms, string share) => $"Scenarios taking {FormatDurationBadge(TimeSpan.FromMilliseconds(ms))} or more{notWarm} ({share})";
-            body.Append(CultureInfo.InvariantCulture, $"""<div class="duration-filters" data-p50="{p50Ms:F0}" data-p90="{p90Ms:F0}" data-p95="{p95Ms:F0}" data-p99="{p99Ms:F0}"><span class="duration-filters-label"{(warm ? " title=\"Each scenario's own time, without the first-call warm-up it paid\"" : "")}>Duration ≥</span><span class="fltr-controls"><button class="percentile-btn" data-threshold-ms="{p50Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p50Ms, "the slowest half")}">P50 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p50Ms))})</button><button class="percentile-btn" data-threshold-ms="{p90Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p90Ms, "the slowest 10%")}">P90 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p90Ms))})</button><button class="percentile-btn" data-threshold-ms="{p95Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p95Ms, "the slowest 5%")}">P95 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p95Ms))})</button><button class="percentile-btn" data-threshold-ms="{p99Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p99Ms, "the slowest 1%")}">P99 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p99Ms))})</button><button class="percentile-btn" data-custom="1" onclick="set_percentile(this)" title="Scenarios taking at least the seconds you enter{notWarm}">Custom</button><span id="custom-duration-wrap" style="display:none;align-items:center;gap:0.3em"><input id="duration-threshold" autocomplete="off" type="number" step="0.1" min="0" placeholder="seconds" onchange="filter_duration()" /><span class="duration-filters-unit">seconds</span></span></span></div>""");
+            body.Append(CultureInfo.InvariantCulture, $"""<div class="duration-filters" data-p50="{p50Ms:F0}" data-p90="{p90Ms:F0}" data-p95="{p95Ms:F0}" data-p99="{p99Ms:F0}"><span class="duration-filters-label"{(warm ? " title=\"Each scenario's own time, without the first-call warm-up it paid\"" : "")}>Duration ≥</span><span class="fltr-controls"><button class="percentile-btn" data-threshold-ms="{p50Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p50Ms, "the slowest half")}">P50 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p50Ms))})</button><button class="percentile-btn" data-threshold-ms="{p90Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p90Ms, "the slowest 10%")}">P90 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p90Ms))})</button><button class="percentile-btn" data-threshold-ms="{p95Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p95Ms, "the slowest 5%")}">P95 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p95Ms))})</button><button class="percentile-btn" data-threshold-ms="{p99Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p99Ms, "the slowest 1%")}">P99 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p99Ms))})</button><button class="percentile-btn" data-custom="1" onclick="set_percentile(this)" title="Scenarios taking at least the seconds you enter{notWarm}">Custom</button><span id="custom-duration-wrap" style="display:none;align-items:center;gap:0.3em"><input id="duration-threshold" autocomplete="off" type="number" step="0.1" min="0" placeholder="seconds" onchange="filter_duration()" title="Seconds: scenarios taking at least this long{notWarm}" /><span class="duration-filters-unit">seconds</span></span></span></div>""");
         }
 
         // Happy paths: Show, Only or Hide, a face of the Tags row's Happy Path chip, so one filter underneath (D8)
         if (runs.Any(s => s.IsHappyPath))
-            body.Append("""<div class="happy-filters"><span class="happy-filters-label">Happy paths</span><span class="fltr-controls" role="group" aria-label="Happy paths"><button type="button" class="happy-seg" data-hp="off" aria-pressed="true">Show</button><button type="button" class="happy-seg" data-hp="in" aria-pressed="false">Only</button><button type="button" class="happy-seg" data-hp="out" aria-pressed="false">Hide</button></span></div>""");
+            body.Append("""<div class="happy-filters"><span class="happy-filters-label">Happy paths</span><span class="fltr-controls" role="group" aria-label="Happy paths"><button type="button" class="happy-seg" data-hp="off" aria-pressed="true" title="Happy-path scenarios and the rest">Show</button><button type="button" class="happy-seg" data-hp="in" aria-pressed="false" title="Only the scenarios tagged as happy paths">Only</button><button type="button" class="happy-seg" data-hp="out" aria-pressed="false" title="Leave out the scenarios tagged as happy paths">Hide</button></span></div>""");
 
         body.Append("</div>"); // close filter-row
 
@@ -1960,13 +2004,14 @@ public static class ReportGenerator
         if (useTabs)
         {
             body.Append("""<div class="nav-row"><div class="report-tabs" role="tablist" aria-label="Report sections">""");
-            body.Append(ReportTab("features", "Features", startTab, features.Length));
-            if (hasDurations) body.Append(ReportTab("timeline", "Timeline", startTab));
-            if (hasComponentTab) body.Append(ReportTab("components", "Components", startTab));
-            if (hasHistoryTab) body.Append(ReportTab("history", "History", startTab));
-            if (hasDiagnosticsTab) body.Append(ReportTab("diagnostics", "Diagnostics", startTab, diagnostics!.Count));
+            // each tab titled with what it shows (D49); the timeline's names the warm-up only where a scenario paid one
+            body.Append(ReportTab("features", "Features", "The features and their scenarios, with the filters applied", startTab, features.Length));
+            if (hasDurations) body.Append(ReportTab("timeline", "Timeline", "Every scenario as a bar, slowest first" + (warmUp.ScenarioMs.Count > 0 ? ", with the first-call warm-up it paid" : ""), startTab));
+            if (hasComponentTab) body.Append(ReportTab("components", "Components", "The services, databases and queues the scenarios called, drawn as one diagram", startTab));
+            if (hasHistoryTab) body.Append(ReportTab("history", "History", HistoryHtml.Description, startTab));
+            if (hasDiagnosticsTab) body.Append(ReportTab("diagnostics", "Diagnostics", DiagnosticsDescription, startTab, diagnostics!.Count));
             body.Append("</div>");
-            body.Append(NavFilters(readoutText, ScenarioCount(features.Sum(f => f.Scenarios.Length)))).Append("</div>");
+            body.Append(NavFilters(readoutText, ScenarioCount(features.Sum(f => f.Scenarios.Length)), clearTitle)).Append("</div>");
         }
         // The Features tools (5.0.0, plans/OPTION_C_PLAN.md S4, D21, D22, D35): the Full and Summary views as tabs when
         // the page has the features table; expand and collapse for features and for scenarios, each a pair of icon
@@ -2096,7 +2141,7 @@ public static class ReportGenerator
                     // has never drawn is aimed at their content-visibility placeholders, and ends past the
                     // scenario (jump_into_view, in report-url-hash-function.js, says why).
                     var prefix = featureName.Length > 0 ? $"<span class=\"failure-cluster-feature\">{System.Net.WebUtility.HtmlEncode(featureName)} &rsaquo;</span> " : "";
-                    return $"<li>{prefix}<a class=\"failure-cluster-scenario-link\" href=\"#{anchorId}\" onclick=\"event.preventDefault();var el=document.getElementById('{anchorId}');if(el){{var p=el;while(p){{if(p.tagName==='DETAILS')p.setAttribute('open','');p=p.parentElement;}}if(el.tagName==='TR')el.click();else el.setAttribute('open','');jump_into_view(el,'start');history.replaceState(null,'',location.pathname+location.search+'#{anchorId}');}}\">{System.Net.WebUtility.HtmlEncode(s.DisplayName)}</a></li>";
+                    return $"<li>{prefix}<a class=\"failure-cluster-scenario-link\" href=\"#{anchorId}\" onclick=\"event.preventDefault();var el=document.getElementById('{anchorId}');if(el){{var p=el;while(p){{if(p.tagName==='DETAILS')p.setAttribute('open','');p=p.parentElement;}}if(el.tagName==='TR')el.click();else el.setAttribute('open','');jump_into_view(el,'start');history.replaceState(null,'',location.pathname+location.search+'#{anchorId}');}}\" title=\"Go to this scenario\">{System.Net.WebUtility.HtmlEncode(s.DisplayName)}</a></li>";
                 }));
                 body.Append($"<details class=\"failure-cluster\"><summary>{System.Net.WebUtility.HtmlEncode(cluster.ClusterKey)}<span class=\"failure-cluster-count\">{cluster.Scenarios.Length} scenarios</span></summary>");
                 body.Append($"<ul class=\"failure-cluster-scenarios\">{anchorLinks}</ul></details>");
@@ -2409,7 +2454,7 @@ public static class ReportGenerator
                     // break the textContent round-trip the deep-search verify reads through).
                     body.Append($"""
                               <details class="failure-result" open>
-                                 <summary class="h4">Failure Result</summary>
+                                 <summary class="h4" title="{FailureResultTitle}">Failure Result</summary>
                                  <pre>
                               Error: {System.Net.WebUtility.HtmlEncode(scenario.ErrorMessage)}
                               {FailureCauseLine(scenario.FailureCause)}
@@ -2442,11 +2487,11 @@ public static class ReportGenerator
                         }
                         else if (attachment.IsInlineImage)
                         {
-                            body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" onclick=\"openLightbox(event, this)\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
+                            body.Append(AttachmentImageLink(attachment, "scenario"));
                         }
                         else
                         {
-                            body.Append($"<a class=\"step-attachment\" href=\"{AttachmentHref(attachment)}\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</a>");
+                            body.Append(AttachmentLink(attachment, "scenario"));
                         }
                     }
                     body.Append("</div>");
@@ -2578,11 +2623,11 @@ public static class ReportGenerator
         // Jump-to-failure button (only when there are failures)
         if (hasFailures)
         {
-            body.Append($"""<button class="jump-to-failure" onclick="jump_to_next_failure()">Next Failure <span class="failure-counter" id="failure-counter">(0/{failureCount})</span></button>""");
+            body.Append($"""<button class="jump-to-failure" onclick="jump_to_next_failure()" title="Go to the next failed scenario; the count says which one of how many">Next Failure <span class="failure-counter" id="failure-counter">(0/{failureCount})</span></button>""");
         }
 
         // Back-to-top FAB (#10)
-        body.Append("""<button class="back-to-top" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>""");
+        body.Append("""<button class="back-to-top" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top" title="Back to the top of the report">↑</button>""");
 
         html += body;
         if (diagramDataMap.Count > 0)
@@ -2837,9 +2882,9 @@ public static class ReportGenerator
     }
 
     /// <summary>A tab of the report bar (5.0.0, S3): the selected one is in the tab order, the others reached by the arrow
-    /// keys (report-tabs-script.js).</summary>
-    private static string ReportTab(string key, string label, string selected, int? count = null) =>
-        $"<button class=\"report-tab\" id=\"tab-{key}\" role=\"tab\" aria-controls=\"panel-{key}\" aria-selected=\"{(key == selected ? "true" : "false")}\" tabindex=\"{(key == selected ? "0" : "-1")}\" data-tab=\"{key}\">{label}"
+    /// keys (report-tabs-script.js); its title says what the tab shows (D49).</summary>
+    private static string ReportTab(string key, string label, string title, string selected, int? count = null) =>
+        $"<button class=\"report-tab\" id=\"tab-{key}\" role=\"tab\" aria-controls=\"panel-{key}\" aria-selected=\"{(key == selected ? "true" : "false")}\" tabindex=\"{(key == selected ? "0" : "-1")}\" data-tab=\"{key}\" title=\"{title}\">{label}"
         + (count is { } n ? $"<span class=\"tab-n\">{n.ToString(CultureInfo.InvariantCulture)}</span>" : "") + "</button>";
 
     /// <summary>A tab's panel: hidden unless its tab is the one selected.</summary>
@@ -2967,10 +3012,14 @@ public static class ReportGenerator
     /// <summary>
     /// A tri-state filter chip (5.0.0, plans/OPTION_C_PLAN.md S6): off, then has, which takes the row's active class as in
     /// 4.x, then has not, its exclude class (report-filter-chips-script.js cycles them). The chip for the scenarios with
-    /// none carries <c>data-none</c> and a reserved value, which the link writes. Its title counts the scenarios it picks out.
+    /// none carries <c>data-none</c> and a reserved value, which the link writes. Its title counts the scenarios it picks out,
+    /// then says what a click does (D49): the count was the whole title, and the preview's instructions never showed.
     /// </summary>
     private static string FilterChip(string family, string value, string label, int scenarios, bool none = false, bool more = false) =>
-        $"<button type=\"button\" class=\"{family}-toggle{(none ? $" {family}-none" : "")}\" data-{family}=\"{System.Net.WebUtility.HtmlEncode(value)}\"{(none ? " data-none=\"1\"" : "")}{(more ? " data-more=\"1\" hidden" : "")} aria-pressed=\"false\" title=\"{ScenarioCount(scenarios)}\">{System.Net.WebUtility.HtmlEncode(label)}</button>";
+        $"<button type=\"button\" class=\"{family}-toggle{(none ? $" {family}-none" : "")}\" data-{family}=\"{System.Net.WebUtility.HtmlEncode(value)}\"{(none ? " data-none=\"1\"" : "")}{(more ? " data-more=\"1\" hidden" : "")} aria-pressed=\"false\" title=\"{ScenarioCount(scenarios)}. {ChipClicks}\">{System.Net.WebUtility.HtmlEncode(label)}</button>";
+
+    /// <summary>What a click on a filter chip does, after its count (D49; report-filter-chips-script.js cycles it).</summary>
+    private const string ChipClicks = "Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.";
 
     private static string ScenarioCount(int n) => n == 1 ? "1 scenario" : string.Create(CultureInfo.InvariantCulture, $"{n} scenarios");
 
@@ -2993,16 +3042,54 @@ public static class ReportGenerator
     /// The rows More filters folds away (S7, D15), named in their order for its title: Status always, then Duration,
     /// Happy paths, Tags and Dependencies where the box has them.
     /// </summary>
-    private static string FilterRowsTitle(Feature[] features, bool hasDurations, bool hasDependencies)
+    private static string FilterRowsTitle(Feature[] features, bool hasDurations, bool hasDependencies) =>
+        Listed(FilterRows(features, hasDurations, hasDependencies, "Status"));
+
+    /// <summary>
+    /// What Clear All clears (5.0.0, plans/OPTION_C_PLAN.md D49): the search, with the dep:, duration: and is: terms in it,
+    /// and every row the box has, named as More filters names them.
+    /// </summary>
+    private static string ClearAllTitle(Feature[] features, bool hasDurations, bool hasDependencies) =>
+        "Clear every filter: the search with its dep:, duration: and is: terms, and the "
+        + Listed(FilterRows(features, hasDurations, hasDependencies, "statuses"));
+
+    /// <summary>The rows the filter box has, in their order, the first named <paramref name="status"/>.</summary>
+    private static List<string> FilterRows(Feature[] features, bool hasDurations, bool hasDependencies, string status)
     {
         var runs = features.SelectMany(f => f.Scenarios).ToArray();
-        var rows = new List<string> { "Status" };
+        var rows = new List<string> { status };
         if (hasDurations) rows.Add("duration");
         if (runs.Any(s => s.IsHappyPath)) rows.Add("happy paths");
         if (features.Any(f => f.Scenarios.Any(s => s.IsHappyPath || ScenarioTags.Effective(f, s).Length > 0))) rows.Add("tags");
         if (hasDependencies) rows.Add("dependencies");
-        return rows.Count == 1 ? rows[0] : string.Join(", ", rows.Take(rows.Count - 1)) + " and " + rows[^1];
+        return rows;
     }
+
+    /// <summary>Items in words: "a", "a and b", "a, b and c".</summary>
+    private static string Listed(List<string> items) =>
+        items.Count == 1 ? items[0] : string.Join(", ", items.Take(items.Count - 1)) + " and " + items[^1];
+
+    /// <summary>A status filter's title (D49): the scenarios it shows, and that statuses picked together add up.</summary>
+    private static string StatusToggleTitle(ExecutionResult status)
+    {
+        var what = status switch
+        {
+            ExecutionResult.Passed => "passed",
+            ExecutionResult.Failed => "failed",
+            ExecutionResult.Skipped => "were skipped",
+            _ => "were bypassed"
+        };
+        return $"Show only the scenarios that {what}; pick more statuses to show them together";
+    }
+
+    /// <summary>The title of both readouts, the box's and the bar's (D49).</summary>
+    private const string FiltersLeaveShowing = "The scenarios and features the filters leave showing";
+
+    /// <summary>The search field's title (D49), written HTML-encoded as the attribute holds it.</summary>
+    private const string SearchTitle = "Search names, steps, tags and diagram text. Combine words with &amp;&amp; (and), || (or) and !! (not); @tag and $status pick by tag or status, dep:, duration: and is:happy by dependency, time and happy path; ? shows the syntax";
+
+    /// <summary>The search help button's title (D49), written HTML-encoded as the attribute holds it.</summary>
+    private const string SearchHelpTitle = "How to write a search: words, &quot;phrases&quot;, @tags, $statuses, dep:, duration:, is:happy, &amp;&amp;, ||, !! and parentheses";
 
     /// <summary>
     /// More filters, at the end of the search line (S7, D15): it opens the rows, and counts the filters on in them while
@@ -3013,10 +3100,11 @@ public static class ReportGenerator
 
     /// <summary>
     /// The report bar's filters (S7, D24): a copy of the readout, long and short, which the box's readout announces for
-    /// it; Clear All while anything is filtered; and Filters, which takes the box into the bar while the bar floats.
+    /// it; Clear All while anything is filtered, titled with what it clears (<paramref name="clearTitle"/>, D49); and
+    /// Filters, which takes the box into the bar while the bar floats.
     /// </summary>
-    private static string NavFilters(string readout, string scenarios) =>
-        $"""<div class="nav-filters" role="group" aria-label="Filters"><span class="nav-readout" aria-hidden="true"><span class="nav-readout-long">{readout}</span><span class="nav-readout-short">All {scenarios}</span></span><button type="button" class="nav-clear" title="Clear every filter" hidden>Clear All</button><button type="button" class="nav-filters-toggle" aria-expanded="false" aria-controls="filtering-box" title="Show the filter box in this bar, so it stays in view as you scroll"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M2.5 3h11l-4.25 5v4.25l-2.5 1.25V8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span>Filters</span></button></div>""";
+    private static string NavFilters(string readout, string scenarios, string clearTitle) =>
+        $"""<div class="nav-filters" role="group" aria-label="Filters"><span class="nav-readout" aria-hidden="true" title="{FiltersLeaveShowing}"><span class="nav-readout-long">{readout}</span><span class="nav-readout-short">All {scenarios}</span></span><button type="button" class="nav-clear" title="{clearTitle}" hidden>Clear All</button><button type="button" class="nav-filters-toggle" aria-expanded="false" aria-controls="filtering-box" title="Show the filter box in this bar, so it stays in view as you scroll"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M2.5 3h11l-4.25 5v4.25l-2.5 1.25V8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span>Filters</span></button></div>""";
 
     /// <summary>The box's close while it rides in the bar (S7, D24), hidden until then.</summary>
     private const string FiltersClose =
@@ -3024,7 +3112,7 @@ public static class ReportGenerator
 
     /// <summary>What the Features panel says when the filters leave no scenario, with the way back (S7, D24).</summary>
     private const string FiltersEmpty =
-        """<div class="filters-empty" hidden><span>No scenarios match the filters.</span><button type="button" class="filters-empty-clear">Clear All</button></div>""";
+        """<div class="filters-empty" hidden><span>No scenarios match the filters.</span><button type="button" class="filters-empty-clear" title="Clear every filter">Clear All</button></div>""";
 
     /// <summary>The Features tab's views, Full (the cards) and Summary (the features table), as tabs (S4, D21).</summary>
     private static string FeaturesViewSwitch(bool summary) =>
@@ -3129,7 +3217,7 @@ public static class ReportGenerator
             if (ci.Repository is not null)
                 body.Append(Stat("Repository", Encode(ci.Repository)));
             if (ci.PipelineUrl is not null)
-                body.Append(Stat("Run", $"<a class=\"run-link\" href=\"{Encode(ci.PipelineUrl)}\" target=\"_blank\" rel=\"noopener noreferrer\">View run</a>"));
+                body.Append(Stat("Run", $"<a class=\"run-link\" href=\"{Encode(ci.PipelineUrl)}\" target=\"_blank\" rel=\"noopener noreferrer\" title=\"Open the CI run this report came from\">View run</a>"));
             body.Append("</dl></div>");
         }
         body.Append("</section>");
@@ -3748,11 +3836,11 @@ public static class ReportGenerator
                         }
                         else if (attachment.IsInlineImage)
                         {
-                            body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" onclick=\"openLightbox(event, this)\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
+                            body.Append(AttachmentImageLink(attachment, "scenario"));
                         }
                         else
                         {
-                            body.Append($"<a class=\"step-attachment\" href=\"{AttachmentHref(attachment)}\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</a>");
+                            body.Append(AttachmentLink(attachment, "scenario"));
                         }
                     }
                     body.Append("</div>");
@@ -3764,7 +3852,7 @@ public static class ReportGenerator
                     var diffResult = ErrorDiffParser.TryParseExpectedActual(s.ErrorMessage);
                     if (diffResult is not null)
                         diffHtml = ErrorDiffParser.GenerateDiffHtml(diffResult.Expected, diffResult.Actual);
-                    body.Append("<details class=\"failure-result\" open><summary class=\"h4\">Failure Result</summary><pre>");
+                    body.Append($"<details class=\"failure-result\" open><summary class=\"h4\" title=\"{FailureResultTitle}\">Failure Result</summary><pre>");
                     if (s.ErrorMessage is not null)
                         body.Append($"Error: {System.Net.WebUtility.HtmlEncode(s.ErrorMessage)}\n{FailureCauseLine(s.FailureCause)}\n");
                     if (s.ErrorStackTrace is not null)
@@ -4011,7 +4099,7 @@ public static class ReportGenerator
                 // Each section collapses independently, so the Steps list still opens with its own primary.
                 var backgroundKeywords = collapseRepeatedStepKeywords ? StepKeywordCollapser.DisplayKeywords(background) : null;
                 body.Append($"""<details class="scenario-background"{(backgroundStepsOpen ? " open" : "")}>""");
-                body.Append("""<summary class="h4">Background Steps</summary>""");
+                body.Append("""<summary class="h4" title="The steps of the feature's background, which run before this scenario's own">Background Steps</summary>""");
                 for (var bi = 0; bi < background.Length; bi++)
                 {
                     var numberPrefix = showStepNumbers ? $"{bi + 1}." : null;
@@ -4053,7 +4141,8 @@ public static class ReportGenerator
         var displayKeywords = collapseRepeatedStepKeywords ? StepKeywordCollapser.DisplayKeywords(steps) : null;
 
         body.Append($"""<details class="scenario-steps"{(open ? " open" : "")}>""");
-        body.Append("""<summary class="h4">Steps</summary>""");
+        // how long each took only where the steps say (D49)
+        body.Append($"""<summary class="h4" title="This scenario's steps{(steps.Any(s => s.Duration.HasValue) ? ", with how long each took" : "")}">Steps</summary>""");
 
         var renderCombined = ShouldRenderCombinedTable(steps);
         var afterThen = false;
@@ -4215,7 +4304,7 @@ public static class ReportGenerator
                             var json = ParameterParser.FormatComplexValueAsJson(matchingParam.InlineValue.Value)
                                        ?? matchingParam.InlineValue.Value;
                             body.Append("</span>");
-                            body.Append($"<button class=\"step-table-ref\" onclick=\"toggle_table_ref(this)\" data-param=\"{System.Net.WebUtility.HtmlEncode(seg.TableReference)}\" data-value=\"{System.Net.WebUtility.HtmlEncode(json)}\">{System.Net.WebUtility.HtmlEncode(seg.TableReference)}</button>");
+                            body.Append($"<button class=\"step-table-ref\" onclick=\"toggle_table_ref(this)\" data-param=\"{System.Net.WebUtility.HtmlEncode(seg.TableReference)}\" data-value=\"{System.Net.WebUtility.HtmlEncode(json)}\" title=\"Show or hide the value of {System.Net.WebUtility.HtmlEncode(seg.TableReference)}\">{System.Net.WebUtility.HtmlEncode(seg.TableReference)}</button>");
                             body.Append("<span class=\"step-text\">");
                         }
                     }
@@ -4232,7 +4321,7 @@ public static class ReportGenerator
                         {
                             // Table/Tree parameter — render as button (scrolls to table)
                             body.Append("</span>");
-                            body.Append($"<button class=\"step-table-ref\" onclick=\"toggle_table_ref(this)\" data-param=\"{System.Net.WebUtility.HtmlEncode(seg.TableReference)}\">{System.Net.WebUtility.HtmlEncode(seg.TableReference)}</button>");
+                            body.Append($"<button class=\"step-table-ref\" onclick=\"toggle_table_ref(this)\" data-param=\"{System.Net.WebUtility.HtmlEncode(seg.TableReference)}\" title=\"Show {System.Net.WebUtility.HtmlEncode(seg.TableReference)} in its table\">{System.Net.WebUtility.HtmlEncode(seg.TableReference)}</button>");
                             body.Append("<span class=\"step-text\">");
                         }
                         else
@@ -4295,12 +4384,12 @@ public static class ReportGenerator
                 }
                 else if (attachment.IsInlineImage)
                 {
-                    body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" onclick=\"openLightbox(event, this)\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
+                    body.Append(AttachmentImageLink(attachment, "step"));
                     body.Append($"<span class=\"attachment-image-name\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</span>");
                 }
                 else
                 {
-                    body.Append($"<a class=\"step-attachment\" href=\"{AttachmentHref(attachment)}\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</a>");
+                    body.Append(AttachmentLink(attachment, "step"));
                 }
             }
         }
@@ -4757,6 +4846,9 @@ public static class ReportGenerator
         return $"scenario-{slug}";
     }
 
+    /// <summary>What the Diagnostics tab shows: its title, and its heading's in the tab (5.0.0, plans/OPTION_C_PLAN.md D49).</summary>
+    private const string DiagnosticsDescription = "What Kronikol noticed while building this report, such as calls it could not put under a scenario";
+
     /// <summary>
     /// The "Report diagnostics" block: a <c>&lt;details&gt;</c> listing every <see cref="DiagnosticEntry"/> the
     /// generation (and the host, via <see cref="Kronikol.Ingestion.IngestRequest.HostDiagnostics"/>) recorded, by
@@ -4779,8 +4871,10 @@ public static class ReportGenerator
 
         var html = new StringBuilder();
         html.Append($"<details class=\"report-diagnostics\"{(open || inTab ? " open" : "")}>");
-        // In its tab the summary is the section's heading and nothing to click: the tabs script keeps it open.
-        html.Append($"<summary{(inTab ? " tabindex=\"-1\"" : "")}>{summary}</summary>"); // enum names and counts only — nothing to encode, and the × must stay a glyph
+        // In its tab the summary is the section's heading and nothing to click: the tabs script keeps it open. Its title
+        // says what the section is, and only where it is a disclosure that a click shows or hides it (D49).
+        var title = inTab ? DiagnosticsDescription : "What Kronikol noticed while building this report: click to show or hide the list";
+        html.Append($"<summary{(inTab ? " tabindex=\"-1\"" : "")} title=\"{title}\">{summary}</summary>"); // enum names and counts only: nothing to encode, and the × must stay a glyph
         html.Append("<ul class=\"report-diagnostics-list\">");
         foreach (var entry in diagnostics)
         {
@@ -6639,6 +6733,29 @@ public static class ReportGenerator
                 account.Changed(source.Shown);
         }
     }
+
+    /// <summary>
+    /// An attachment the report holds, or one that lives elsewhere, as a link to it titled with what it opens and whose it
+    /// is (5.0.0, plans/OPTION_C_PLAN.md D49): <paramref name="owner"/> is "scenario" or "step".
+    /// </summary>
+    private static string AttachmentLink(FileAttachment attachment, string owner)
+    {
+        var name = System.Net.WebUtility.HtmlEncode(attachment.Name);
+        return $"<a class=\"step-attachment\" href=\"{AttachmentHref(attachment)}\" title=\"Open {name}, {(attachment.IsUrl ? "a link" : "a file")} this {owner} attached\">{name}</a>";
+    }
+
+    /// <summary>
+    /// An image the report holds, as a link that opens it full size (report-lightbox-function.js), titled as
+    /// <see cref="AttachmentLink"/> is (D49).
+    /// </summary>
+    private static string AttachmentImageLink(FileAttachment attachment, string owner)
+    {
+        var name = System.Net.WebUtility.HtmlEncode(attachment.Name);
+        return $"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" onclick=\"openLightbox(event, this)\" title=\"Show {name}, an image this {owner} attached, at full size\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{name}\" /></a>";
+    }
+
+    /// <summary>The title of a scenario's Failure Result (D49).</summary>
+    private const string FailureResultTitle = "Why the scenario failed: the error, with the expected and actual values where it gives them";
 
     /// <summary>
     /// An attachment the report does not hold (#148), drawn as its name and why, with no image or link that would be dead.

@@ -219,7 +219,7 @@ public class MergeCommandTests
             // The merged report is a default report: since 5.0.0 what --history read is its History tab, and nothing of
             // it is in the features (plans/OPTION_C_PLAN.md S3). It is on the labs page beside it too, named after it.
             var combined = File.ReadAllText(output);
-            Assert.Contains("<details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\">", combined);
+            Assert.Contains("<details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\" title=\"This run against the earlier runs on the same branch: what is failing, flaky, fixed, slower, new or gone\">", combined);
             Assert.DoesNotContain("data-history-verdicts=\"", combined);
             Assert.DoesNotContain("<span class=\"history-sparkline\"", combined);
             var page = File.ReadAllText(Path.Combine(dir, "Combined.labs.html"));

@@ -925,7 +925,7 @@ public class ParameterizedGroupRenderTests
         Assert.Contains("param-detail-panel", content);
         // Should use <details> with <summary>, not a plain <div>
         Assert.Contains("<details class=\"scenario-steps\" open>", content);
-        Assert.Contains("<summary class=\"h4\">Steps</summary>", content);
+        Assert.Contains("<summary class=\"h4\" title=\"This scenario's steps\">Steps</summary>", content);
         Assert.DoesNotContain("<div class=\"scenario-steps\">", content);
     }
 
@@ -1056,7 +1056,7 @@ public class ParameterizedGroupRenderTests
         var paramGroupStart = content.IndexOf("<details class=\"scenario scenario-parameterized");
         Assert.True(paramGroupStart >= 0, "parameterized group not found");
         var paramGroupHtml = content.Substring(paramGroupStart);
-        Assert.Contains("aria-pressed=\"true\" onclick=\"window._toggleScenarioAssertions(this)\"><span class=\"btn-label\" data-label=\"Assertions\">Assertions</span></button>", paramGroupHtml);
+        Assert.Contains("aria-pressed=\"true\" onclick=\"window._toggleScenarioAssertions(this)\" title=\"Show or hide the boxes with the test's assertions in this scenario's sequence diagrams\"><span class=\"btn-label\" data-label=\"Assertions\">Assertions</span></button>", paramGroupHtml);
     }
 
     [Fact]
@@ -1076,7 +1076,7 @@ public class ParameterizedGroupRenderTests
         var paramGroupStart = content.IndexOf("<details class=\"scenario scenario-parameterized");
         Assert.True(paramGroupStart >= 0, "parameterized group not found");
         var paramGroupHtml = content.Substring(paramGroupStart);
-        Assert.Contains("aria-pressed=\"true\" onclick=\"window._toggleScenarioSteps(this)\"><span class=\"btn-label\" data-label=\"Steps\">Steps</span></button>", paramGroupHtml);
+        Assert.Contains("aria-pressed=\"true\" onclick=\"window._toggleScenarioSteps(this)\" title=\"Show or hide the bars marking where each step starts in this scenario's sequence diagrams\"><span class=\"btn-label\" data-label=\"Steps\">Steps</span></button>", paramGroupHtml);
     }
 
     [Fact]
@@ -1327,7 +1327,7 @@ public class ParameterizedGroupRenderTests
         var content = GenerateGroupReport(MakeFeature(scenarios), separateBackgroundSteps: true);
 
         Assert.Equal(2, Regex.Matches(content, "<details class=\"scenario-background\">").Count);
-        Assert.Contains("<summary class=\"h4\">Background Steps</summary>", content);
+        Assert.Contains("<summary class=\"h4\" title=\"The steps of the feature's background, which run before this scenario's own\">Background Steps</summary>", content);
     }
 
     [Fact]

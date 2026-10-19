@@ -114,7 +114,7 @@ public class LabsReportTests : IDisposable
     {
         var page = Page(Broke(), []);
 
-        Assert.Contains($"<a class=\"history-link\" href=\"TestRunReport.html#sid-{PayId}\">Checkout &rsaquo; Pay by card</a>", page);
+        Assert.Contains($"<a class=\"history-link\" href=\"TestRunReport.html#sid-{PayId}\" title=\"Open this scenario in the report\">Checkout &rsaquo; Pay by card</a>", page);
         Assert.Contains($"href=\"TestRunReport.html#sid-{RefundId}\"", Table(page));
         Assert.DoesNotContain("onclick", page);
         Assert.DoesNotContain("<script", page);

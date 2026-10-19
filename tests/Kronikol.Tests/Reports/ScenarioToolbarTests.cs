@@ -83,8 +83,8 @@ public class ScenarioToolbarTests
         Assert.True(start >= 0, "no tabs bar");
         InOrder(html[start..],
             "<div class=\"diagram-toggle diagram-toggle-tabs\" role=\"tablist\" aria-label=\"Diagram views\">"
-            + "<button class=\"diagram-toggle-btn diagram-toggle-active\" role=\"tab\" aria-selected=\"true\" tabindex=\"0\" data-dtype=\"seq\">Sequence Diagrams</button>"
-            + "<button class=\"diagram-toggle-btn\" role=\"tab\" aria-selected=\"false\" tabindex=\"-1\" data-dtype=\"activity\">Activity Diagrams</button>",
+            + "<button class=\"diagram-toggle-btn diagram-toggle-active\" role=\"tab\" aria-selected=\"true\" tabindex=\"0\" data-dtype=\"seq\" title=\"The calls between the test and the services, in order\">Sequence Diagrams</button>"
+            + "<button class=\"diagram-toggle-btn\" role=\"tab\" aria-selected=\"false\" tabindex=\"-1\" data-dtype=\"activity\" title=\"The work inside the services, span by span, as an activity diagram\">Activity Diagrams</button>",
             "</div><div class=\"scenario-settings\"><div class=\"diagram-toggle diagram-options-bar\"><span class=\"scenario-settings-label\">This scenario:</span><span class=\"details-radio\">",
             "<span class=\"diagram-format\">",
             "<span class=\"diagram-flags\"><button class=\"details-radio-btn toggle-btn",
@@ -100,8 +100,8 @@ public class ScenarioToolbarTests
 
         InOrder(html,
             "<details class=\"example-diagrams diagrams-not-seq\"",
-            "<button class=\"diagram-toggle-btn\" role=\"tab\" aria-selected=\"false\" tabindex=\"-1\" data-dtype=\"seq\">Sequence Diagrams</button>"
-            + "<button class=\"diagram-toggle-btn diagram-toggle-active\" role=\"tab\" aria-selected=\"true\" tabindex=\"0\" data-dtype=\"activity\">Activity Diagrams</button>",
+            "<button class=\"diagram-toggle-btn\" role=\"tab\" aria-selected=\"false\" tabindex=\"-1\" data-dtype=\"seq\" title=\"The calls between the test and the services, in order\">Sequence Diagrams</button>"
+            + "<button class=\"diagram-toggle-btn diagram-toggle-active\" role=\"tab\" aria-selected=\"true\" tabindex=\"0\" data-dtype=\"activity\" title=\"The work inside the services, span by span, as an activity diagram\">Activity Diagrams</button>",
             "</div><div class=\"scenario-settings\"><div class=\"diagram-toggle diagram-options-bar\">");
         Assert.DoesNotContain("not-seq\"", html.Replace("diagrams-not-seq\"", ""));
     }
@@ -134,7 +134,7 @@ public class ScenarioToolbarTests
         Assert.DoesNotContain("<div class=\"diagram-toggle diagram-toggle-tabs\"", html);
         InOrder(html,
             "<details class=\"example-diagrams\"",
-            "<summary class=\"h4\">Sequence Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\" aria-label=\"Diagram settings\" title=\"Diagram settings\" aria-expanded=\"false\">⚙</button></summary>"
+            "<summary class=\"h4\" title=\"This scenario's sequence diagrams\">Sequence Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\" aria-label=\"Diagram settings\" title=\"Diagram settings\" aria-expanded=\"false\">⚙</button></summary>"
             + "<div class=\"scenario-settings\"><div class=\"diagram-toggle diagram-options-bar\"><span class=\"scenario-settings-label\">This scenario:</span>");
     }
 
@@ -144,11 +144,11 @@ public class ScenarioToolbarTests
         var html = Generate();
 
         InOrder(html,
-            "<span class=\"scenario-settings-label\">This scenario:</span><span class=\"details-radio\"><span class=\"details-radio-label\">Payloads</span>"
-            + "<button class=\"details-radio-btn\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>"
-            + "<button class=\"details-radio-btn\" data-state=\"collapsed\" onclick=\"window._setAllNotes(this,'collapsed')\"><span class=\"btn-label\" data-label=\"Collapsed\">Collapsed</span></button>"
-            + "<button class=\"details-radio-btn details-active\" data-state=\"truncated\" onclick=\"window._setAllNotes(this,'truncated')\"><span class=\"btn-label\" data-label=\"Truncated\">Truncated</span></button>"
-            + "<select class=\"truncate-lines-select\" autocomplete=\"off\" onchange=\"window._setScenarioTruncateLines(this)\"><optgroup label=\"Payload length\"><option value=\"3\">3 lines</option>",
+            "<span class=\"scenario-settings-label\">This scenario:</span><span class=\"details-radio\"><span class=\"details-radio-label\" title=\"How the payloads in this scenario's sequence diagrams are shown (the boxes beside the arrows, holding each request, response and message, with its headers): whole, folded to one line, or cut at a line limit\">Payloads</span>"
+            + "<button class=\"details-radio-btn\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\" title=\"The payloads in this scenario's sequence diagrams show in full\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>"
+            + "<button class=\"details-radio-btn\" data-state=\"collapsed\" onclick=\"window._setAllNotes(this,'collapsed')\" title=\"The payloads in this scenario's sequence diagrams fold to one line each; a box's + button opens it\"><span class=\"btn-label\" data-label=\"Collapsed\">Collapsed</span></button>"
+            + "<button class=\"details-radio-btn details-active\" data-state=\"truncated\" onclick=\"window._setAllNotes(this,'truncated')\" title=\"Payloads in this scenario's sequence diagrams longer than the line limit beside this are cut at that many lines\"><span class=\"btn-label\" data-label=\"Truncated\">Truncated</span></button>"
+            + "<select class=\"truncate-lines-select\" autocomplete=\"off\" aria-label=\"Payload length\" title=\"How many lines a cut payload box keeps in this scenario's sequence diagrams (with Truncated picked)\" onchange=\"window._setScenarioTruncateLines(this)\"><optgroup label=\"Payload length\"><option value=\"3\">3 lines</option>",
             "</optgroup></select></span>");
         Assert.DoesNotContain("class=\"truncate-lines-label\"", html);
         Assert.DoesNotContain(">Details:<", html);
@@ -159,8 +159,8 @@ public class ScenarioToolbarTests
     {
         var html = Generate();
 
-        Assert.Contains("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"headers\" data-shown=\"false\" aria-pressed=\"false\" onclick=\"window._toggleScenarioHeaders(this)\"><span class=\"btn-label\" data-label=\"Headers\">Headers</span></button>", html);
-        Assert.Contains("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"steps\" data-shown=\"true\" aria-pressed=\"true\" onclick=\"window._toggleScenarioSteps(this)\"><span class=\"btn-label\" data-label=\"Steps\">Steps</span></button>", html);
+        Assert.Contains("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"headers\" data-shown=\"false\" aria-pressed=\"false\" onclick=\"window._toggleScenarioHeaders(this)\" title=\"Show or hide the headers at the top of each payload in this scenario's sequence diagrams\"><span class=\"btn-label\" data-label=\"Headers\">Headers</span></button>", html);
+        Assert.Contains("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"steps\" data-shown=\"true\" aria-pressed=\"true\" onclick=\"window._toggleScenarioSteps(this)\" title=\"Show or hide the bars marking where each step starts in this scenario's sequence diagrams\"><span class=\"btn-label\" data-label=\"Steps\">Steps</span></button>", html);
         Assert.DoesNotContain(" Shown</", html);
         Assert.DoesNotContain(" Hidden</", html);
     }
@@ -170,8 +170,8 @@ public class ScenarioToolbarTests
     {
         var html = Generate();
 
-        Assert.Contains("<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Payload format\" title=\"Payload format\" onchange=\"window._setScenarioNoteFormat(this)\"><optgroup label=\"Payload format\"><option value=\"json\">JSON</option><option value=\"yaml\" selected>YAML</option></optgroup></select>", html);
-        Assert.Contains("<select class=\"note-width-select\" autocomplete=\"off\" aria-label=\"Payload width\" title=\"Payload width. Wrap: they wrap at a set width. Wide: they widen to fill the diagram.\" onchange=\"window._setScenarioNoteWidth(this)\"><optgroup label=\"Payload width\">", html);
+        Assert.Contains("<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Payload format\" title=\"How the payloads in this scenario's sequence diagrams are written: JSON as captured, or the same data as YAML\" onchange=\"window._setScenarioNoteFormat(this)\"><optgroup label=\"Payload format\"><option value=\"json\">JSON</option><option value=\"yaml\" selected>YAML</option></optgroup></select>", html);
+        Assert.Contains("<select class=\"note-width-select\" autocomplete=\"off\" aria-label=\"Payload width\" title=\"How wide the payloads are in this scenario's sequence diagrams. Wrap: they wrap at a set width. Wide: they widen to fill the diagram.\" onchange=\"window._setScenarioNoteWidth(this)\"><optgroup label=\"Payload width\">", html);
         Assert.DoesNotContain("Note payload format", html);
         Assert.DoesNotContain("\"Note width\"", html);
     }

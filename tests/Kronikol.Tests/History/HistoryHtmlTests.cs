@@ -121,9 +121,9 @@ public class HistoryHtmlTests : IDisposable
         var features = Features(pay: ExecutionResult.Passed);
         var html = Html(features, Verdicts(features, "PPP", "PPP", "PPP"));
 
-        Assert.Contains("<button class=\"report-tab\" id=\"tab-history\" role=\"tab\" aria-controls=\"panel-history\" aria-selected=\"false\" tabindex=\"-1\" data-tab=\"history\">History</button>", html);
+        Assert.Contains("<button class=\"report-tab\" id=\"tab-history\" role=\"tab\" aria-controls=\"panel-history\" aria-selected=\"false\" tabindex=\"-1\" data-tab=\"history\" title=\"This run against the earlier runs on the same branch: what is failing, flaky, fixed, slower, new or gone\">History</button>", html);
         Assert.Contains("<div class=\"report-panel\" id=\"panel-history\" role=\"tabpanel\" aria-labelledby=\"tab-history\" data-panel=\"history\" hidden>"
-                        + "<details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\">History ", html);
+                        + "<details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\" title=\"This run against the earlier runs on the same branch: what is failing, flaky, fixed, slower, new or gone\">History ", html);
     }
 
     [Fact]

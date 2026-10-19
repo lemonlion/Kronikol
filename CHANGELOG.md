@@ -23,8 +23,8 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **The features can be sorted.** A Sort dropdown at the right of the Features tab's tools orders the feature cards and
   the features table alike: the report's own order, the feature's name A to Z, failures first, most scenarios, and,
   for a run with durations, slowest total, slowest average and longest scenario.
-- **Tags have a filter row,** as dependencies do: a chip for each tag (its tooltip says how many scenarios carry it),
-  an Untagged chip when a scenario has none, and an ANY / ALL switch, ANY by default
+- **Tags have a filter row,** as dependencies do: a chip for each tag (its tooltip says how many scenarios carry it,
+  and what a click does), an Untagged chip when a scenario has none, and an ANY / ALL switch, ANY by default
   (`ReportToggleDefaults.TagFilterMode`). A report with a happy path puts the Happy Path tag's chip first. A row of more
   than 30 tags starts with the 30 that the most scenarios carry and a chip that shows the rest (`5 more`, then
   `Fewer`); a chip that is set always shows.
@@ -93,6 +93,13 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   brought back, until the reader scrolls, points or presses a key. Focus a click or a script gives stays where it lands,
   as does a control in the bar, in those settings or in the internal-flow popup, and a scenario taller than the window.
   On a phone, where the bar scrolls away, nothing moves.
+- **Every control says what it does.** Each tab of the report bar, each payload control, each filter, each heading of
+  a scenario's sections, each link and the page's own buttons has a tooltip saying what it does or what it holds. A
+  payload control's tooltip names the diagrams it acts on: every sequence diagram in the report on the report bar,
+  the scenario's own on a scenario's bar. Clear All's names the search and every filter row the box has. A chip's gives
+  the number of scenarios it picks out and then what a click does. A composite step's says how many steps it holds,
+  given when it is first pointed at or focused. In their tabs, the History and Diagnostics headings say what the
+  section is, not that a click opens it.
 
 ### Changed (breaking)
 
@@ -303,6 +310,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   "PlantUML source", "Box text"). The PNG items opened their tab only once the picture was drawn, after the click,
   which Firefox's popup blocker refuses, and every item opened a `blob:` URL, which a report opened from a file makes
   with an opaque origin. Where no tab opens, the `blob:` URL is tried as before.
+- **Three controls have names.** The back-to-top button (an arrow), the payload line count dropdown and the
+  internal-flow popup's close (a cross) had no name a screen reader could read; they are "Back to top", "Payload
+  length" and "Close".
 
 ## [4.32.0] - 2026-10-19
 

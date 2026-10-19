@@ -173,7 +173,7 @@ public class IngestHostDiagnosticsTests : IDisposable
             new DiagnosticEntry(DiagnosticKind.MalformedLine, "file.ndjson:12 <torn>", "<s>"),
         ]);
 
-        Assert.StartsWith("<details class=\"report-diagnostics\"><summary>", html);
+        Assert.StartsWith("<details class=\"report-diagnostics\"><summary title=\"What Kronikol noticed while building this report: click to show or hide the list\">", html);
         Assert.DoesNotContain("<details class=\"report-diagnostics\" open", html);
         Assert.Contains("Report diagnostics (3: CaptureDegraded ×2, MalformedLine)", html);
         Assert.Contains("&lt;torn&gt;", html);

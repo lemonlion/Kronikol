@@ -98,7 +98,7 @@ public class StepRenderingReportTests
         };
         var content = GenerateReport(MakeFeatures(scenario), "CollapsibleSteps.html");
         Assert.Contains("<details class=\"scenario-steps\"", content);
-        Assert.Contains("<summary class=\"h4\">Steps</summary>", content);
+        Assert.Contains("<summary class=\"h4\" title=\"This scenario's steps\">Steps</summary>", content);
     }
 
     [Fact]
@@ -977,7 +977,7 @@ public class StepRenderingReportTests
         };
         var content = GenerateReportSeparateBackground(MakeFeatures(scenario), "BgSeparate.html");
         Assert.Contains("<details class=\"scenario-background\">", content);
-        Assert.Contains("<summary class=\"h4\">Background Steps</summary>", content);
+        Assert.Contains("<summary class=\"h4\" title=\"The steps of the feature's background, which run before this scenario's own\">Background Steps</summary>", content);
     }
 
     [Fact]

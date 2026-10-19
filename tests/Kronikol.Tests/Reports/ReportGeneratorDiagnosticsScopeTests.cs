@@ -62,7 +62,7 @@ public class ReportGeneratorDiagnosticsScopeTests : IDisposable
         // off). The diagnostic is on the labs page beside the report too.
         var html = File.ReadAllText(Path.Combine(_dir, "TestRunReport.html"));
         Assert.Contains("id=\"tab-diagnostics\"", html);
-        Assert.Contains("<details class=\"report-diagnostics\" open><summary tabindex=\"-1\">", html);
+        Assert.Contains("<details class=\"report-diagnostics\" open><summary tabindex=\"-1\" title=\"What Kronikol noticed while building this report, such as calls it could not put under a scenario\">", html);
         Assert.Contains("<details class=\"report-diagnostics\" open>", File.ReadAllText(Path.Combine(_dir, "TestRunReport.labs.html")));
     }
 
