@@ -873,3 +873,30 @@ decision of the owner's, not part of this plan.
   now checks the note shows, and kills it (`checks/mutate-s11d.py`).
   Checks: the timeline's neighbours pass, 142 of 142 (the Timeline, WarmUp, Duration, StableId, ReportTabs,
   ReportToolbar, ViewportSweep and Filter classes), and the core Reports namespace, 2,736 of 2,737 with 1 skipped.
+- 2026-10-19, S11f: the History section's rings and timed bars (R17.29, R17.30; the preview's `c-round2.css` 89-116,
+  `c-round7.css` 86-91, `c-round4.css` 9-12 and `c-round17.css` 165-181; stylesheet inventory row 21), prepared in the
+  session's scratch and applied with `edits/scripts-s11f.py` and `edits/tests-s11f.py`. The pass rate is a ring per
+  run through the run band's ring code (`RingSvg` and `RingRate`, the run band's bytes unchanged), floored and never
+  100% while any scenario did not pass; the duration is an HTML bar per run carrying its time, in the bar or above one
+  under 30% of the chart, scrolling in its card and opening on the newest run. `HistoryHtml` emits it all, so the labs
+  page draws it too; the card and every verdict kind are on the tokens with light fallbacks. The run band's formatter,
+  shared with the bars, gains an hour form ("1h 5m" in the run band and features table, where they wrote "65m 0s").
+  Deviations: D47's hatch is not ported (round 17 hid the chart it hatched); the bars use the run band's formatter,
+  not `FormatDurationBadge` (which writes a tenth under a minute and minutes past an hour); 48 px columns and an rtl
+  scroller for a full window of 51 runs (the preview's fixture had 5); every verdict kind keeps its 4.x hue on tokens
+  (the preview's red `new` and amber `slower` are not ported, nor its `.history-verdict-faster`).
+  Preview defects not ported: the convert script that rebuilt the charts from tooltips, the rounding `short()` (which
+  could write "1h 60m" and "1000ms"), and the `[style*="height: 8%"]` rule that left bars between 8% and 28% with a
+  time across their edge.
+  Tests: core `HistoryRingsMarkupTests` (new, 11 facts, 27 cases) and Playwright `HistoryRingsTests` (new, 5 facts, 6
+  cases), failing 8 of 10 before the change in Playwright (run with the three sources stashed; the two that passed are
+  `HistorySectionTests` facts the change leaves alone), and the core facts 28 of 28; five pins move in
+  `HistoryHtmlTests` and `HistorySectionTests`. Found while preparing the mutations: no case of the rate theory told a
+  floored rate from a rounded one (every case hit the 99 cap or a whole share), so a case was added before applying (2
+  of 3 reads 66%). Mutations: 12 of 12 killed (`checks/mutate-s11f.py`; the 99 cap is not mutated, being equivalent
+  while the rate is floored).
+  Checks: the History section's neighbours pass, 60 of 60 (the History, RunBand, LabsPage, ReportTabs,
+  ReportSectionWidth, ViewportSweep, FeaturesTable and Verdict classes), once two test faults that run found were
+  fixed: the labs page's fact read the first ring, a failed run's, whose rate is in the failure ink, and now reads a
+  run that passed; and `HistorySectionTests` read the list headings with innerText, which the new uppercase labels
+  change, and now reads their text. The core History and Reports namespaces pass, 3,052 of 3,053 with 1 skipped.

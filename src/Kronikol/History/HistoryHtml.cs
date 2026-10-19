@@ -229,49 +229,80 @@ internal static class HistoryHtml
             sb.Append($"<li class=\"history-more\">… and {(count - ListCap).ToString(CultureInfo.InvariantCulture)} more</li>");
     }
 
-    private static string PassRateChart(IReadOnlyList<RunPoint> runs) =>
-        Chart("Pass rate, oldest run first", runs,
-            r => r.Passed + r.Failed == 0 ? 0 : (double)r.Passed / (r.Passed + r.Failed),
-            1.0,
-            r => r.Failed == 0 ? "history-bar-pass" : "history-bar-fail",
-            r => $"{r.RunId} · {r.At.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)}{(r.Commit is { } c ? " · " + (c.Length > 7 ? c[..7] : c) : "")} · {r.Passed.ToString(CultureInfo.InvariantCulture)} passed, {r.Failed.ToString(CultureInfo.InvariantCulture)} failed of {r.Total.ToString(CultureInfo.InvariantCulture)}{(r.Partial ? " · partial" : "")}{DegradedTail(r)}");
+    /// <summary>
+    /// The pass rate, a ring per run, oldest first (5.0.0, plans/OPTION_C_PLAN.md S11; the owner's round 17 item 29): the
+    /// ring the run band draws (<see cref="Reports.ReportGenerator.RingSvg"/>), a pass arc and a fail arc over a track that
+    /// shows what neither counts, with the rate inside, which reads 100% only when every scenario of the run passed. A ring is
+    /// marked when its run failed (<c>history-ring-failed</c>) and when it was partial (<c>history-run-partial</c>), and
+    /// carries its run's tooltip, as the 4.x bar did. Markup, not script: the labs page, which runs none, draws it too.
+    /// </summary>
+    private static string PassRateChart(IReadOnlyList<RunPoint> runs)
+    {
+        const string title = "Pass rate, oldest run first";
+        var sb = new StringBuilder();
+        sb.Append("<div class=\"history-chart\"><div class=\"history-chart-title\">").Append(title).Append("</div>");
+        sb.Append("<div class=\"history-rings\" role=\"list\" aria-label=\"").Append(title).Append("\">");
+        foreach (var run in runs)
+        {
+            sb.Append("<div class=\"history-ring").Append(run.Failed > 0 ? " history-ring-failed" : "").Append(run.Partial ? " history-run-partial" : "")
+                .Append("\" role=\"listitem\" title=\"").Append(HtmlEncode(PassRateTooltip(run))).Append("\">")
+                .Append(Reports.ReportGenerator.RingSvg(run.Passed, run.Failed, 0, 0, run.Total, track: true, arcTitles: false))
+                .Append("</div>");
+        }
+        sb.Append("</div></div>");
+        return sb.ToString();
+    }
 
+    private static string PassRateTooltip(RunPoint r) =>
+        $"{r.RunId} · {r.At.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)}{(r.Commit is { } c ? " · " + (c.Length > 7 ? c[..7] : c) : "")} · {r.Passed.ToString(CultureInfo.InvariantCulture)} passed, {r.Failed.ToString(CultureInfo.InvariantCulture)} failed of {r.Total.ToString(CultureInfo.InvariantCulture)}{(r.Partial ? " · partial" : "")}{DegradedTail(r)}";
+
+    /// <summary>
+    /// Total duration, a bar per run, oldest first (5.0.0; the owner's round 17 item 30): bars drawn as HTML, so each carries
+    /// its time unstretched, written as the run band writes a duration (<see cref="Reports.ReportGenerator.FormatDuration"/>:
+    /// "850ms", "44s", "2m 26s", "1h 5m"), in the middle of its bar, or just above a bar under <see cref="ShortBarPercent"/>
+    /// of the chart's height. A run with no recorded duration keeps its column and its tooltip but has no bar. A column is
+    /// wide enough for its time, and a row of more runs than its card holds scrolls inside the card, opening on the newest
+    /// (history-styles.css).
+    /// </summary>
     private static string DurationChart(IReadOnlyList<RunPoint> runs)
     {
+        const string title = "Total duration, oldest run first";
         var max = runs.Max(r => r.DurationMs ?? 0);
-        return Chart("Total duration, oldest run first", runs,
-            r => r.DurationMs ?? 0,
-            max == 0 ? 1 : max,
-            _ => "history-bar-duration",
-            r => $"{r.RunId} · {r.At.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)} · {FormatMs(r.DurationMs)}{(r.Partial ? " · partial" : "")}{DegradedTail(r)}");
+        var sb = new StringBuilder();
+        sb.Append("<div class=\"history-chart\"><div class=\"history-chart-title\">").Append(title).Append("</div>");
+        sb.Append("<div class=\"history-bars-scroll\"><div class=\"history-bars\" role=\"list\" aria-label=\"").Append(title).Append("\">");
+        foreach (var run in runs)
+        {
+            sb.Append("<div class=\"history-col").Append(run.Partial ? " history-run-partial" : "")
+                .Append("\" role=\"listitem\" title=\"").Append(HtmlEncode(DurationTooltip(run))).Append("\">");
+            if (run.DurationMs is { } ms)
+            {
+                var height = max <= 0 ? MinBarPercent : Math.Clamp(100.0 * ms / max, MinBarPercent, 100.0);
+                sb.Append("<div class=\"history-bar").Append(height < ShortBarPercent ? " history-bar-short" : "")
+                    .Append("\" style=\"height:").Append(height.ToString("0.#", CultureInfo.InvariantCulture)).Append("%\">")
+                    .Append("<span class=\"history-time\">").Append(Reports.ReportGenerator.FormatDuration(TimeSpan.FromMilliseconds(ms)))
+                    .Append("</span></div>");
+            }
+            sb.Append("</div>");
+        }
+        sb.Append("</div></div></div>");
+        return sb.ToString();
     }
+
+    private static string DurationTooltip(RunPoint r) =>
+        $"{r.RunId} · {r.At.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)} · {FormatMs(r.DurationMs)}{(r.Partial ? " · partial" : "")}{DegradedTail(r)}";
 
     private static string DegradedTail(RunPoint run) => run is { Degraded: true, Pace: { } pace } ? $" · degraded {HistorySummary.Times(pace)}" : "";
 
-    /// <summary>A bar per run in one small SVG: a handful of nodes for the whole report, sized by CSS.</summary>
-    private static string Chart(string title, IReadOnlyList<RunPoint> runs, Func<RunPoint, double> value, double max,
-        Func<RunPoint, string> barClass, Func<RunPoint, string> tooltip)
-    {
-        const int barWidth = 5;
-        const int gap = 1;
-        const int height = 40;
-        var width = runs.Count * (barWidth + gap);
-        var sb = new StringBuilder();
-        sb.Append($"<div class=\"history-chart\"><div class=\"history-chart-title\">{HtmlEncode(title)}</div>");
-        sb.Append($"<svg class=\"history-chart-svg\" viewBox=\"0 0 {width.ToString(CultureInfo.InvariantCulture)} {height.ToString(CultureInfo.InvariantCulture)}\" preserveAspectRatio=\"none\" role=\"img\" aria-label=\"{HtmlEncode(title)}\">");
-        for (var i = 0; i < runs.Count; i++)
-        {
-            var run = runs[i];
-            var share = max <= 0 ? 0 : Math.Clamp(value(run) / max, 0, 1);
-            var barHeight = Math.Max(1.0, share * (height - 2));
-            var x = (i * (barWidth + gap)).ToString(CultureInfo.InvariantCulture);
-            var y = (height - 1 - barHeight).ToString("0.##", CultureInfo.InvariantCulture);
-            var h = barHeight.ToString("0.##", CultureInfo.InvariantCulture);
-            sb.Append($"<rect class=\"history-bar {barClass(run)}{(run.Partial ? " history-bar-partial" : "")}\" x=\"{x}\" y=\"{y}\" width=\"{barWidth.ToString(CultureInfo.InvariantCulture)}\" height=\"{h}\"><title>{HtmlEncode(tooltip(run))}</title></rect>");
-        }
-        sb.Append("</svg></div>");
-        return sb.ToString();
-    }
+    /// <summary>The least a bar is drawn at, as a share of the chart's height, so a run of a few milliseconds still shows.</summary>
+    private const double MinBarPercent = 8;
+
+    /// <summary>
+    /// Under this share of the chart's height a bar is too short to hold its time, which is drawn just above it instead: the
+    /// chart is 56 px high and the time 11.5 px (history-styles.css), so a bar of 30% (16.8 px) holds it with 2.6 px above
+    /// and below. Move it with either.
+    /// </summary>
+    private const double ShortBarPercent = 30;
 
     private static string PillHtml(HistoryVerdictKind kind, string title, string? suffix = null)
     {

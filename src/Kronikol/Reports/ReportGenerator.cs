@@ -3002,13 +3002,32 @@ public static class ReportGenerator
         body.Append("</section>");
     }
 
-    internal static string GeneratePieChartSvg(int passed, int failed, int skipped, int bypassed)
-    {
-        var total = passed + failed + skipped + bypassed;
-        if (total == 0) return "";
+    internal static string GeneratePieChartSvg(int passed, int failed, int skipped, int bypassed) =>
+        RingSvg(passed, failed, skipped, bypassed, passed + failed + skipped + bypassed, track: false, arcTitles: true);
 
-        // A run with any scenario that did not pass never reads 100%: rounding put 213 of 214 at 100 until 5.0.0.
-        var passRate = passed == total ? 100 : (int)Math.Min(99, Math.Floor(100.0 * passed / total));
+    /// <summary>
+    /// The rate a run's ring reads (5.0.0): 100 only when every scenario passed, otherwise the share that passed, rounded down
+    /// and at most 99, so a run with any scenario that did not pass never reads 100% (rounding put 213 of 214 at 100 until
+    /// 5.0.0). 0 for a run of no scenarios.
+    /// </summary>
+    internal static int RingRate(int passed, int total) =>
+        total <= 0 ? 0 : passed >= total ? 100 : (int)Math.Min(99, Math.Floor(100.0 * passed / total));
+
+    /// <summary>
+    /// A run's ring (5.0.0): an arc for each outcome the run had, passed, failed, skipped and bypassed in that order, each its
+    /// share of <paramref name="total"/>, with the rate inside (<see cref="RingRate"/>); the arcs and the rate take their
+    /// colours from the page's tokens through their classes. The run band draws the run's own (<see cref="GeneratePieChartSvg"/>),
+    /// each arc titled with its count, and nothing for a run of no scenarios. The History section draws one per run of its
+    /// window (<c>HistoryHtml</c>, plans/OPTION_C_PLAN.md S11) over a track (<paramref name="track"/>), which shows the
+    /// scenarios no arc counts, with untitled arcs, so the run's own tooltip shows wherever the ring is pointed at; there a run
+    /// of no scenarios is the track alone, with a dash for its rate.
+    /// </summary>
+    internal static string RingSvg(int passed, int failed, int skipped, int bypassed, int total, bool track, bool arcTitles)
+    {
+        total = Math.Max(total, passed + failed + skipped + bypassed);
+        if (total == 0 && !track) return "";
+
+        var passRate = RingRate(passed, total);
         var segments = new List<(double pct, string kind, string label, int count)>();
         if (passed > 0) segments.Add((100.0 * passed / total, "pass", "Passed", passed));
         if (failed > 0) segments.Add((100.0 * failed / total, "fail", "Failed", failed));
@@ -3019,7 +3038,11 @@ public static class ReportGenerator
         const double circumference = 2 * Math.PI * radius;
         var sb = new StringBuilder();
         // The arcs and the rate take their colours from the page's tokens through these classes (5.0.0).
-        sb.Append($"<svg viewBox=\"0 0 100 100\" role=\"img\" aria-label=\"{passRate}% passed\">");
+        sb.Append(total == 0
+            ? "<svg viewBox=\"0 0 100 100\" role=\"img\" aria-label=\"no scenarios\">"
+            : $"<svg viewBox=\"0 0 100 100\" role=\"img\" aria-label=\"{passRate}% passed\">");
+        if (track)
+            sb.Append(CultureInfo.InvariantCulture, $"<circle class=\"ring-track\" cx=\"50\" cy=\"50\" r=\"{radius:F1}\" fill=\"none\" stroke-width=\"12\"></circle>");
 
         var offset = 0.0;
         foreach (var (pct, kind, label, count) in segments)
@@ -3029,24 +3052,36 @@ public static class ReportGenerator
             var dashOffset = -offset * circumference / 100.0;
             sb.Append(CultureInfo.InvariantCulture,
                 $"<circle class=\"ring-{kind}\" cx=\"50\" cy=\"50\" r=\"{radius:F1}\" fill=\"none\" stroke-width=\"12\" " +
-                $"stroke-dasharray=\"{dash:F2} {gap:F2}\" stroke-dashoffset=\"{dashOffset:F2}\" transform=\"rotate(-90 50 50)\">" +
-                $"<title>{label}: {count} ({pct:F0}%)</title></circle>");
+                $"stroke-dasharray=\"{dash:F2} {gap:F2}\" stroke-dashoffset=\"{dashOffset:F2}\" transform=\"rotate(-90 50 50)\">");
+            if (arcTitles)
+                sb.Append(CultureInfo.InvariantCulture, $"<title>{label}: {count} ({pct:F0}%)</title>");
+            sb.Append("</circle>");
             offset += pct;
         }
 
-        sb.Append($"<text class=\"ring-rate\" x=\"50\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"central\">{passRate}%</text>");
+        sb.Append(total == 0
+            ? "<text class=\"ring-rate\" x=\"50\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"central\">&#8211;</text>"
+            : $"<text class=\"ring-rate\" x=\"50\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"central\">{passRate}%</text>");
         sb.Append("</svg>");
         return sb.ToString();
     }
 
-    private static string FormatDuration(TimeSpan duration)
+    /// <summary>
+    /// A duration in whole units, cut and never rounded up, as <see cref="FormatDurationBadge"/> cuts: "850ms" under a second,
+    /// "44s" under a minute, "2m 26s" under an hour and "1h 5m" from an hour (5.0.0; it wrote "65m 0s" until then). The run
+    /// band's duration, the features table and the History section's bars write it (plans/OPTION_C_PLAN.md S11, the owner's
+    /// round 17 item 30); a scenario's badge and the timeline keep <see cref="FormatDurationBadge"/>'s tenth of a second.
+    /// </summary>
+    internal static string FormatDuration(TimeSpan duration)
     {
         var total = duration.Duration();
         if (total.TotalSeconds < 1)
-            return $"{total.Milliseconds}ms";
+            return string.Create(CultureInfo.InvariantCulture, $"{total.Milliseconds}ms");
         if (total.TotalMinutes < 1)
-            return $"{total.Seconds}s";
-        return $"{(int)total.TotalMinutes}m {total.Seconds}s";
+            return string.Create(CultureInfo.InvariantCulture, $"{total.Seconds}s");
+        if (total.TotalHours < 1)
+            return string.Create(CultureInfo.InvariantCulture, $"{total.Minutes}m {total.Seconds}s");
+        return string.Create(CultureInfo.InvariantCulture, $"{(long)total.TotalHours}h {total.Minutes}m");
     }
 
     private static bool HasAnyFailed(ScenarioStep step)

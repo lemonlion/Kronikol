@@ -164,6 +164,15 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   their count on it. Nothing of history is in the features unless `ShowScenarioHistory` asks, and a run that read no
   history and recorded no diagnostic still carries neither anywhere in the file. The labs page beside the report
   carries both, as before. `kronikol ingest` shows the Diagnostics tab by default too.
+- **History's pass rate is a ring per run,** drawn like the run band's ring with the rate inside, never 100% while
+  any scenario of the run did not pass; a run that failed has a fail arc. Each ring keeps its run's tooltip, and the
+  labs page draws them too. The `svg.history-chart-svg` chart and its `history-bar-pass`, `history-bar-fail`,
+  `history-bar-duration` and `history-bar-partial` classes are gone.
+- **History's duration bars carry their time** ("850ms", "44s", "2m 26s", "1h 5m"), in the bar or just above a
+  short one; a window too long for its card scrolls inside it and opens on the newest run.
+- **The History section and its verdict pills take the theme,** each kind in its own colour.
+- **A duration of an hour or more reads in hours** in the run band and the features table ("1h 5m", where it read
+  "65m 0s").
 - **The features table is the Features tab's Summary view.** Full and Summary, at the left of the Features tab's tools,
   show the feature cards or the table, one at a time, and a row of the table opens its feature in the Full view, from
   a click or from the keyboard (the name is a button). The table names its column groups, Scenarios, Steps and

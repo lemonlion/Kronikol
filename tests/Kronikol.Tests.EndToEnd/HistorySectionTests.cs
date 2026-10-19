@@ -34,11 +34,13 @@ public class HistorySectionTests : PlaywrightTestBase
         Assert.Contains("1 flaky", summary);
         Assert.Contains("against 6 earlier runs", summary);
 
-        var headings = await section.Locator(".history-list h4").AllInnerTextsAsync();
+        // their text, not as drawn: the headings are uppercase labels since 5.0.0 (S11)
+        var headings = await section.Locator(".history-list h4").AllTextContentsAsync();
         Assert.Contains(headings, h => h.StartsWith("New failures", StringComparison.Ordinal));
         Assert.Contains(headings, h => h.StartsWith("Flaky", StringComparison.Ordinal));
-        await Expect(section.Locator("svg.history-chart-svg")).ToHaveCountAsync(2);
-        await Expect(section.Locator("svg.history-chart-svg").First.Locator("rect")).ToHaveCountAsync(7);
+        // the two charts: a ring per run and a bar per run since 5.0.0, where 4.x drew bars in two stretched svgs (S11)
+        await Expect(section.Locator(".history-chart")).ToHaveCountAsync(2);
+        await Expect(section.Locator(".history-rings > .history-ring")).ToHaveCountAsync(7);
     }
 
     [Fact]
@@ -62,15 +64,15 @@ public class HistorySectionTests : PlaywrightTestBase
     [Fact]
     public async Task A_degraded_run_says_so_on_its_bars_and_a_healthy_one_does_not()
     {
-        // 3.24.0 (#83): the fourth earlier run took three times as long in every scenario. Its bar in each
-        // chart names it; the run being reported is healthy, so nothing is said above the charts.
+        // 3.24.0 (#83): the fourth earlier run took three times as long in every scenario. Its ring and its bar
+        // name it in their tooltips (since 5.0.0); the run being reported is healthy, so nothing is said above the charts.
         await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, "HistorySection_Degraded.html",
             (i, run) => i == 3 ? run with { Durations = [.. run.Durations!.Select(d => d * 3)] } : run, wide: true));
         await OpenReportTabAsync("history");
         var section = Page.Locator("#history-section");
         await section.WaitForAsync();
 
-        var titles = await Page.EvaluateAsync<string[]>("() => Array.from(document.querySelectorAll('#history-section .history-chart rect.history-bar title')).map(t => t.textContent)");
+        var titles = await Page.EvaluateAsync<string[]>("() => Array.from(document.querySelectorAll('#history-section .history-chart [role=listitem]')).map(t => t.getAttribute('title'))");
         var degraded = titles.Where(t => t.Contains("degraded")).ToArray();
         Assert.Equal(2, degraded.Length);
         Assert.All(degraded, title => Assert.StartsWith("e2e:4:1 ", title));

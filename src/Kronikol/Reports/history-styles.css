@@ -9,129 +9,283 @@
             vertical-align: middle;
             background: rgb(230, 230, 230);
         }
+        /* The verdict pill: each kind's colours from the report's tokens (5.0.0, plans/OPTION_C_PLAN.md S11), every kind drawn
+           apart as 4.x drew them, where the preview's one card rule drew six kinds as the quiet pill (stylesheet inventory 3.8
+           item 4). Every token in this sheet falls back to its light value: the labs page has no token sheet until S13. */
         .history-verdict {
-            font-size: 0.72em;
-            font-weight: normal;
-            padding: 0.1em 0.45em;
-            border-radius: 0.3em;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 8px;
+            border-radius: 999px;
             margin-left: 0.4em;
             display: inline-block;
             white-space: nowrap;
-            background: rgb(232, 232, 232);
-            color: rgb(60, 60, 60);
+            background: var(--kron-quiet, #f7f9fc);
+            color: var(--kron-ink-quiet, #545c6a);
+            border: 1px solid var(--kron-quiet-edge, #d3d9e3);
         }
         .history-verdict-broke, .history-verdict-failing, .history-verdict-always-failing {
-            background: rgb(255, 220, 220);
-            color: rgb(191, 0, 0);
+            background: var(--kron-fail-soft, #fbecea);
+            color: var(--kron-fail, #b3372e);
+            border-color: var(--kron-fail-edge, #efc7c2);
         }
         .history-verdict-fixed {
-            background: rgb(220, 245, 220);
-            color: rgb(30, 100, 30);
+            background: var(--kron-pass-soft, #e6f3ec);
+            color: var(--kron-pass, #276c44);
+            border-color: transparent;
         }
         .history-verdict-flaky {
-            background: rgb(255, 240, 200);
-            color: rgb(150, 90, 0);
+            background: var(--kron-warn-soft, #fbf3e7);
+            color: var(--kron-warn, #8a5a17);
+            border-color: var(--kron-warn-edge, #ecd3ae);
         }
         .history-verdict-new {
-            background: rgb(220, 230, 245);
-            color: rgb(30, 60, 140);
+            background: var(--kron-selected, #dce8fb);
+            color: var(--kron-selected-ink, #1d4fb0);
+            border-color: var(--kron-selected-edge, #6a8fd9);
         }
         .history-verdict-slower {
-            background: rgb(240, 225, 250);
-            color: rgb(100, 40, 140);
+            background: color-mix(in srgb, var(--kron-prop-key, #7d3c98) 12%, var(--kron-card, #ffffff));
+            color: var(--kron-prop-key, #7d3c98);
+            border-color: color-mix(in srgb, var(--kron-prop-key, #7d3c98) 35%, var(--kron-card, #ffffff));
         }
         .history-verdict-behaviour-changed, .history-verdict-reordered, .history-verdict-unstable-shape, .history-verdict-alternating {
-            background: rgb(215, 240, 240);
-            color: rgb(0, 100, 100);
+            background: color-mix(in srgb, var(--dg-db, #0e7c86) 12%, var(--kron-card, #ffffff));
+            color: color-mix(in srgb, var(--dg-db, #0e7c86) 75%, var(--kron-ink, #242b36));
+            border-color: color-mix(in srgb, var(--dg-db, #0e7c86) 35%, var(--kron-card, #ffffff));
         }
         .history-verdict-quarantined {
-            background: repeating-linear-gradient(45deg, rgb(232, 232, 232) 0 4px, rgb(248, 248, 248) 4px 8px);
-            color: rgb(90, 90, 90);
+            background: repeating-linear-gradient(45deg, var(--kron-skip-soft, #eef0f3) 0 4px, var(--kron-card, #ffffff) 4px 8px);
+            color: var(--kron-ink-quiet, #545c6a);
         }
+
+        /* The History section as a card (5.0.0, plans/OPTION_C_PLAN.md S11; the preview's c-round2.css 89-116, with its type
+           from c-round7.css and its shadow from c-round4.css): the heading over a hairline, then the body. It sets its own
+           font, for the labs page, where the base sheet's font token resolves to nothing. */
         .history-section {
             margin: 1em 0;
-            border: 1px solid rgb(200, 200, 200);
-            border-radius: 0.8em;
-            padding: 0.4em 1em;
-            background: rgb(250, 250, 250);
+            padding: 0;
+            border: 1px solid var(--kron-hairline, #d0d7e2);
+            border-radius: 12px;
+            background: var(--kron-card, #ffffff);
+            box-shadow: var(--kron-card-shadow, 0 1px 2px rgba(20, 30, 60, .07), 0 2px 6px rgba(20, 30, 60, .05));
+            color: var(--kron-ink, #242b36);
+            font-family: var(--kron-font, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Roboto, "Helvetica Neue", Arial, sans-serif);
+            overflow: hidden;
         }
         .history-section > summary {
-            cursor: pointer;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--kron-ink, #242b36);
+        }
+        .history-section[open] > summary {
+            border-bottom: 1px solid var(--kron-hairline-soft, #e2e7ee);
+        }
+        /* in its tab the summary is the panel's heading, which the tab script keeps open; the labs page keeps the disclosure */
+        .report-panel > .history-section > summary {
+            list-style: none;
+            cursor: default;
+        }
+        .report-panel > .history-section > summary::-webkit-details-marker {
+            display: none;
         }
         .history-summary-line {
-            font-weight: normal;
-            font-size: 0.8em;
-            margin-left: 0.6em;
-            color: rgb(90, 90, 90);
+            font-weight: 400;
+            font-size: var(--kron-fs-control, 13px);
+            margin-left: 10px;
+            color: var(--kron-muted, #5b6474);
+        }
+        .history-body {
+            padding: 12px 16px 4px;
         }
         .history-meta, .history-note, .history-compare {
-            font-size: 0.85em;
-            color: rgb(90, 90, 90);
-            margin: 0.4em 0;
+            font-size: var(--kron-fs-meta, 12px);
+            color: var(--kron-muted, #5b6474);
+            margin: 0 0 12px;
         }
+        .history-meta code, .history-note code, .history-compare code, .history-evidence code {
+            font-family: var(--kron-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, "Liberation Mono", monospace);
+            font-size: 11.5px;
+            background: var(--kron-field, #f2f5f9);
+            border-radius: 4px;
+            padding: 0 5px;
+        }
+
+        /* The run trend (5.0.0; the owner's round 17 items 29 and 30), written by HistoryHtml as markup, so the labs page,
+           which runs no script, draws it too: a ring per run, and a bar per run carrying its time */
         .history-charts {
             display: flex;
-            gap: 1.5em;
             flex-wrap: wrap;
-            margin: 0.6em 0;
+            gap: 14px;
+            margin: 0 0 16px;
         }
         .history-chart {
             flex: 1 1 260px;
-            min-width: 200px;
+            min-width: 0;
+            padding: 10px 12px;
+            border: 1px solid var(--kron-hairline, #d0d7e2);
+            border-radius: 8px;
         }
         .history-chart-title {
-            font-size: 0.8em;
-            color: rgb(90, 90, 90);
-            margin-bottom: 0.2em;
+            margin-bottom: 8px;
+            font-size: var(--kron-fs-label, 11px);
+            font-weight: 600;
+            letter-spacing: var(--kron-label-track, .06em);
+            text-transform: uppercase;
+            color: var(--kron-label, #5f6878);
         }
-        .history-chart-svg {
-            width: 100%;
-            height: 40px;
+        /* rings: a few runs spread across the card, more in rows, oldest first */
+        .history-rings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+            gap: 10px;
+            justify-items: center;
+            align-items: center;
+        }
+        .history-ring {
+            width: 56px;
+            height: 56px;
+        }
+        .history-ring svg {
             display: block;
-            background: rgb(244, 244, 244);
-            border-radius: 0.3em;
+            width: 56px;
+            height: 56px;
         }
-        .history-bar-pass {
-            fill: rgb(34, 139, 34);
+        .history-ring .ring-track { stroke: var(--kron-track, #edf0f5); }
+        .history-ring .ring-pass { stroke: var(--kron-pass-ring, #3f9a62); }
+        .history-ring .ring-fail { stroke: var(--kron-fail, #b3372e); }
+        .history-ring .ring-rate {
+            fill: var(--kron-ink, #242b36);
+            font-size: 21px;
+            font-weight: 650;
+            letter-spacing: -.02em;
         }
-        .history-bar-fail {
-            fill: rgb(191, 0, 0);
+        .history-ring-failed .ring-rate { fill: var(--kron-fail-ink, #7c2a24); }
+        /* bars: a column wide enough for its time; a row of more runs than the card holds scrolls inside it and opens on the
+           newest run, as the scroller runs right to left (so it starts at its right end) and the row inside it left to right */
+        .history-bars-scroll {
+            overflow-x: auto;
+            overflow-y: hidden;
+            direction: rtl;
         }
-        .history-bar-duration {
-            fill: rgb(100, 150, 255);
+        .history-bars {
+            direction: ltr;
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            width: max-content;
+            min-width: 100%;
+            height: 56px;
+            background: var(--kron-strip, #f8fafd);
         }
-        .history-bar-partial {
-            opacity: 0.45;
+        .history-col {
+            flex: 1 0 auto;
+            width: 48px;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+        }
+        .history-bar {
+            position: relative;
+            width: 100%;
+            min-height: 8px;
+            border-radius: 3px 3px 0 0;
+            background: color-mix(in srgb, var(--kron-accent, #2559c7) 26%, var(--kron-card, #ffffff));
+            box-shadow: inset 0 2px 0 var(--kron-accent, #2559c7);
+        }
+        .history-time {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            text-align: center;
+            font-size: 11.5px;
+            font-weight: 600;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            color: var(--kron-ink, #242b36);
+        }
+        /* a bar too short to hold its time (HistoryHtml.ShortBarPercent) has it just above */
+        .history-bar-short .history-time {
+            top: auto;
+            bottom: 100%;
+            transform: none;
+            margin-bottom: 2px;
+            color: var(--kron-ink-soft, #4a5361);
+        }
+        /* a partial run, a filtered re-run, is drawn paler, as 4.x drew its bar; its rate and its time keep their ink */
+        .history-run-partial .ring-pass, .history-run-partial .ring-fail {
+            opacity: .45;
+        }
+        .history-run-partial .history-bar {
+            background: color-mix(in srgb, var(--kron-accent, #2559c7) 10%, var(--kron-card, #ffffff));
+            box-shadow: inset 0 2px 0 color-mix(in srgb, var(--kron-accent, #2559c7) 45%, var(--kron-card, #ffffff));
+        }
+
+        /* What changed, one list to a kind */
+        .history-list {
+            margin: 0 0 14px;
         }
         .history-list h4 {
-            margin: 0.6em 0 0.2em;
-            font-size: 0.95em;
+            display: flex;
+            gap: 8px;
+            align-items: baseline;
+            margin: 0 0 4px;
+            font-size: var(--kron-fs-label, 11px);
+            font-weight: 600;
+            letter-spacing: var(--kron-label-track, .06em);
+            text-transform: uppercase;
+            color: var(--kron-label, #5f6878);
         }
         .history-count {
             font-weight: normal;
-            font-size: 0.85em;
-            color: rgb(120, 120, 120);
+            font-size: 11px;
+            letter-spacing: 0;
+            font-variant-numeric: tabular-nums;
+            color: var(--kron-faint, #626b7a);
         }
         .history-list ul {
+            list-style: none;
             margin: 0;
-            padding-left: 1.2em;
+            padding: 0;
         }
         .history-list li {
-            margin: 0.15em 0;
-            font-size: 0.9em;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 2px 10px;
+            padding: 7px 0;
+            border-top: 1px solid var(--kron-hairline-soft, #e2e7ee);
+            font-size: 13px;
+        }
+        .history-link {
+            flex: 1 1 360px;
+            min-width: 0;
+            color: var(--kron-ink, #242b36);
+            text-decoration: none;
+        }
+        .history-link:hover {
+            color: var(--kron-accent, #2559c7);
+            text-decoration: underline;
         }
         .history-evidence {
-            color: rgb(90, 90, 90);
+            flex: 2 1 300px;
             margin-left: 0.3em;
+            font-size: 12px;
+            color: var(--kron-muted, #5b6474);
         }
         .history-series {
-            font-family: Consolas, "Courier New", monospace;
-            font-size: 0.85em;
             margin-left: 0.3em;
-            letter-spacing: 0.1em;
+            font-family: var(--kron-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, "Liberation Mono", monospace);
+            font-size: var(--kron-fs-meta, 12px);
+            letter-spacing: .12em;
+            color: var(--kron-muted, #5b6474);
         }
         .history-more {
-            color: rgb(120, 120, 120);
+            color: var(--kron-faint, #626b7a);
             list-style: none;
         }
 
