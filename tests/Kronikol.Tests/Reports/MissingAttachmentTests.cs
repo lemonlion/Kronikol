@@ -403,7 +403,7 @@ public class MissingAttachmentTests : IDisposable
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs));
 
         // The scenario's own, a step's, and a parameterized row's panel: % first, then # and ?, so nothing is encoded twice.
-        Assert.Contains("href=\"attachments/shot%231.png\" target=\"_blank\"><img class=\"attachment-image\" src=\"attachments/shot%231.png\"", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"attachments/shot%231.png\" onclick=\"openLightbox(event, this)\"><img class=\"attachment-image\" src=\"attachments/shot%231.png\"", html, StringComparison.Ordinal);
         Assert.Contains("src=\"attachments/50%25.png\"", html, StringComparison.Ordinal);
         Assert.Contains("<a class=\"step-attachment\" href=\"attachments/what%3F.txt\">what?.txt</a>", html, StringComparison.Ordinal);
         Assert.Contains("<a class=\"step-attachment\" href=\"attachments/a%25%23.log\">a%#.log</a>", html, StringComparison.Ordinal);

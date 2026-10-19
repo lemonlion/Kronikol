@@ -298,4 +298,45 @@ public class FeatureSynthesizerTests
         Assert.False(TestRunRecord.IsKnownEvent("testrun"));
         Assert.True(TestRunRecord.IsKnownEvent("Attachment"));
     }
+
+    [Fact]
+    public void A_terminal_colour_code_in_an_error_does_not_reach_the_report()
+    {
+        // Playwright's reporter API gives an error's message with the terminal's colour codes, and the wiki's recipe
+        // writes it to the tests file as it is. The report, Failures.md and every query printed the codes, and they were
+        // part of the cluster key. '^' stands for ESC here.
+        var error = Esc("^[31mexpected 201^[39m, received ^[1m502^[22m");
+        var stack = Esc("^[2mat charge.test.ts:18^[22m");
+        var records = new List<TestRunRecord>
+        {
+            new() { Event = "start", TestId = "t", TestName = "charges a card", Feature = "charge", Timestamp = T0 },
+            new() { Event = "step", TestId = "t", Text = "the card is charged", Status = "failed", Error = error, StackTrace = stack, Timestamp = T0.AddSeconds(1) },
+            new() { Event = "end", TestId = "t", Status = "failed", Error = error, StackTrace = stack, Timestamp = T0.AddSeconds(2) },
+        };
+
+        var scenario = FeatureSynthesizer.Build(records, logs: null).Features.Single().Scenarios.Single();
+
+        Assert.Equal("expected 201, received 502", scenario.ErrorMessage);
+        Assert.Equal("at charge.test.ts:18", scenario.ErrorStackTrace);
+        Assert.Equal("expected 201, received 502", scenario.Steps![0].FailureMessage);
+    }
+
+    [Theory]
+    [InlineData("^[31mred^[0m", "red")]
+    [InlineData("^[38;5;196mred^[39m", "red")]
+    [InlineData("^[2K^[1Gline", "line")]
+    [InlineData("^]8;;https://example.test^\\link^]8;;^\\", "link")]
+    [InlineData("a [31m bracket with no escape", "a [31m bracket with no escape")]
+    [InlineData("plain", "plain")]
+    public void A_tests_file_lines_error_loses_its_terminal_control_codes_and_keeps_the_rest(string written, string read)
+    {
+        var line = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, string> { ["event"] = "end", ["testId"] = "t", ["error"] = Esc(written), ["stackTrace"] = Esc(written) });
+
+        var record = TestRunRecord.FromJson(line);
+
+        Assert.Equal(read, record.Error);
+        Assert.Equal(read, record.StackTrace);
+    }
+
+    private static string Esc(string text) => text.Replace('^', (char)27);
 }

@@ -2296,7 +2296,7 @@ public static class ReportGenerator
                         }
                         else if (attachment.IsInlineImage)
                         {
-                            body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" target=\"_blank\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
+                            body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" onclick=\"openLightbox(event, this)\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
                         }
                         else
                         {
@@ -3315,7 +3315,7 @@ public static class ReportGenerator
                         }
                         else if (attachment.IsInlineImage)
                         {
-                            body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" target=\"_blank\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
+                            body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" onclick=\"openLightbox(event, this)\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
                         }
                         else
                         {

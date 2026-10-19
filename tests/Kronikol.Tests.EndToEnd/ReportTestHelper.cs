@@ -2059,6 +2059,73 @@ public static class ReportTestHelper
     /// A report beside its own <c>attachments/</c> folder, holding two images whose names a URL reads otherwise:
     /// <c>shot#1.png</c> (a fragment) and <c>50%.png</c> (an escape), both copied there by the run's copier (#148 F11).
     /// </summary>
+    /// <summary>
+    /// A scenario's own image, a step's, and a parameterized row's (the first row, whose panel shows when its group
+    /// opens), each a real one-pixel PNG copied into the report's attachments folder.
+    /// </summary>
+    public static string GenerateReportWithScenarioImages(string tempDir, string outputDir, string fileName)
+    {
+        var sources = Directory.CreateDirectory(Path.Combine(tempDir, "image-sources")).FullName;
+        string Image(string name)
+        {
+            var path = Path.Combine(sources, name);
+            File.WriteAllBytes(path, OnePixelPng);
+            return path;
+        }
+
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Scenario images",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "own", DisplayName = "A scenario with its own screenshot", IsHappyPath = true,
+                        Result = ExecutionResult.Failed, Duration = TimeSpan.FromSeconds(1),
+                        Attachments = [new FileAttachment("own.png", Image("own.png"))],
+                        Steps =
+                        [
+                            new ScenarioStep
+                            {
+                                Keyword = "Then", Text = "the page is captured", Status = ExecutionResult.Failed,
+                                Attachments = [new FileAttachment("step.png", Image("step.png"))]
+                            }
+                        ]
+                    },
+                    new Scenario
+                    {
+                        Id = "row-1", DisplayName = "A row with a screenshot", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                        OutlineId = "outline", ExampleValues = new() { ["n"] = "1" },
+                        Attachments = [new FileAttachment("row.png", Image("row.png"))],
+                        Steps = [new ScenarioStep { Keyword = "Then", Text = "row 1 passes", Status = ExecutionResult.Passed }]
+                    },
+                    new Scenario
+                    {
+                        Id = "row-2", DisplayName = "A row without one", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                        OutlineId = "outline", ExampleValues = new() { ["n"] = "2" },
+                        Steps = [new ScenarioStep { Keyword = "Then", Text = "row 2 passes", Status = ExecutionResult.Passed }]
+                    }
+                ]
+            }
+        };
+
+        var reportsDir = Path.Combine(tempDir, "Reports");
+        Directory.CreateDirectory(reportsDir);
+        ReportGenerator.CopyAttachmentsToReportsFolder(features, reportsDir);
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            Array.Empty<DiagramAsCode>(), features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(reportsDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
     public static string GenerateReportWithAwkwardAttachmentNames(string tempDir, string outputDir, string fileName)
     {
         var sources = Directory.CreateDirectory(Path.Combine(tempDir, "sources")).FullName;

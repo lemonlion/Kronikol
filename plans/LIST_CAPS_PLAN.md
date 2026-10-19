@@ -5,8 +5,8 @@
 verification pass the owner asked for ("make sure the plan is complete and fully accurate, and do any deep dives that
 might change the plan"): section 10 lists what changed. **Executing** since the owner's ask of 2026-10-19 ("implement
 the plan in full"), with section 9's recommendations; CLAUDE.md's rule to fix every bug found along the way answers Q7,
-so the things in 3.10 are fixed rather than filed. **R1 is 4.28.0 and R2 is 4.31.0;** the two other things 3.10
-found (the ANSI codes and the lightbox) follow as a patch. Section 10 logs each release.
+so the things in 3.10 are fixed rather than filed. **Executed: R1 is 4.28.0, R2 is 4.31.0, and the two other things
+3.10 found (the ANSI codes and the lightbox) are 4.31.1.** Section 10 logs each release.
 
 **Issue:** [#161](https://github.com/lemonlion/Kronikol/issues/161), "`query failures` keeps a scenario's first four
 attachments and doesn't say there are more" (filed 2026-10-08 on a 4.6.0 report, label `bug`).
@@ -809,6 +809,24 @@ kronikol-7c took 4.29.0 (#148 R3) and kronikol-39 4.30.0 (`REPORT_FORMAT_PLAN.md
   failure was the CI fault this release fixes (`ZstdCopyTests`, 19 of 19 with the fix, run with no package in the
   build output, as on CI). `release.slnf` builds in Release for every target with no warning from the changed code,
   and `repro.sh` and `census.py` on the built tool give R1's rows unchanged (`results/census-4.31.0.md`).
+
+**2026-10-19, the found bugs executed as 4.31.1 (kronikol-71),** in worktree `C:/Code/Kronikol-161q7` on branch
+`release/161-q7`, from 4.30.0 and rebased onto 4.31.0.
+
+- **The ANSI codes (3.10):** `TestRunRecord`'s `error` and `stackTrace` drop a terminal's control sequences (CSI and
+  OSC, `TerminalCodes`) as a record is built or read, so the scenario, its steps, `Failures.md`'s cluster key and every
+  query get the text without them. A bracket without the escape before it stays.
+- **The lightbox (3.10):** a scenario's own image (`GenerateHtmlReportCore`) and a parameterized row's
+  (`RenderParameterizedGroup`) call `openLightbox` as a step's does, in place of `target="_blank"`.
+  `MissingAttachmentTests`' pin of the encoded href follows. Kronikol4J's `DotNetHtmlReportRenderer.java` L1141 still
+  opens a tab (ledger).
+- **Red proof:** the ANSI facts failed on 4.30.0's code (five of seven rows; the two controls passed), the unit
+  lightbox fact failed at the scenario's own image, and the browser fact timed out waiting for the lightbox with the
+  fix stashed; each passed with it (474 ingestion facts, 371 report and attachment facts, and the 15 attachment
+  rendering facts in the browser).
+- **Checks:** the core suite passes 8,108 with 2 skipped after the version bump and the rebase onto 4.31.0, the 15
+  attachment rendering facts pass in the browser, and `release.slnf` builds in Release for every target with no
+  warning from the changed code.
 
 ## Appendix A. Every list cap (sweep at `6f6043e2`)
 

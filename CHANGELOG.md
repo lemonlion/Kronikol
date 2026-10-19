@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.31.1] - 2026-10-19
+
+**Patch - two fixes found while planning #161 (`plans/LIST_CAPS_PLAN.md` 3.10).** Nothing new to call or configure,
+so the patch part moves (4.31.0 to 4.31.1). The second changes the report's HTML (below).
+
+### Fixed
+
+- **Terminal colour codes in an ingested error.** Playwright's reporter API gives an error's message with the
+  terminal's colour codes, and a tests file written from it, as the wiki's recipe writes one, carried them into the
+  report, `Failures.md` (where they were part of the cluster key, so one cause could read as several) and every
+  `kronikol query` that prints the error. The ingest now removes a terminal's control sequences from a tests-file
+  record's `error` and `stackTrace` as the line is read. A bracket without the escape before it is text and stays.
+  playwright-bdd's messages carry the same error without the codes, so a report built from both files was already
+  clean.
+- **A scenario's own image, and a parameterized row's, open in the lightbox.** Only a step's image called the report's
+  lightbox; a scenario's own (Playwright's failure screenshot among them) and a row's image in a parameterized group's
+  panel were links that opened a new tab, although the wiki promised the lightbox for the failure screenshot. Each is
+  now the step's link, `onclick="openLightbox(event, this)"` in place of `target="_blank"`. This changes the report's
+  HTML, so Kronikol4J's output differs until it is ported (ledger).
+
+### Tests
+
+- `FeatureSynthesizerTests`: an error and a stack trace with colour codes reach the scenario and its step without
+  them, and a tests-file line loses CSI and OSC sequences and keeps a bracket without an escape.
+  `ScenarioImageLightboxTests`: the scenario's own image, a row's and a step's each carry the lightbox, and none opens
+  a tab. `AttachmentRenderingTests.A_scenarios_own_image_and_a_parameterized_rows_image_open_in_the_lightbox` clicks
+  each in a browser and finds it in the lightbox with no new page. `MissingAttachmentTests`' pin of the encoded
+  href moves to the lightbox form.
+- **Proofs:** each fact was written first and failed on 4.30.0's code, which 4.31.0 left as it was.
+- **Checks:** the core suite passes 8,108 with 2 skipped after the version bump and the rebase onto 4.31.0, the 15
+  attachment rendering facts pass in the browser, and `release.slnf` builds in Release for every target with no
+  warning from the changed code.
+
 ## [4.31.0] - 2026-10-19
 
 **Minor - new members in `sizes --json` and `Failures.jsonl` (`plans/LIST_CAPS_PLAN.md` R2, #161).**

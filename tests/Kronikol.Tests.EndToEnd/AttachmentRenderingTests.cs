@@ -209,6 +209,34 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task A_scenarios_own_image_and_a_parameterized_rows_image_open_in_the_lightbox()
+    {
+        // Only a step's image called openLightbox; a scenario's own, Playwright's failure screenshot among them, and a
+        // parameterized row's opened a new tab (plans/LIST_CAPS_PLAN.md 3.10).
+        await Page.GotoAsync(GenerateReportWithScenarioImages("AttScenarioImages.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+
+        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        var group = Page.Locator("details.scenario-parameterized").First;
+        if (await group.GetAttributeAsync("open") == null)
+            await group.Locator("summary").First.ClickAsync();
+
+        foreach (var name in new[] { "own.png", "row.png", "step.png" })
+        {
+            var image = Page.Locator($"img.attachment-image[alt=\"{name}\"]").First;
+            await Expect(image).ToBeVisibleAsync();
+            await image.ClickAsync();
+            await Page.WaitForFunctionAsync(
+                "name => { const img = document.querySelector('.lightbox-overlay.active img'); return !!img && img.alt === name && img.complete && img.naturalWidth > 0; }",
+                name, new() { PollingInterval = 200, Timeout = 10_000 });
+            Assert.Single(Page.Context.Pages);
+            await Page.Keyboard.PressAsync("Escape");
+            await Page.WaitForFunctionAsync("() => !document.querySelector('.lightbox-overlay.active')", null, new() { PollingInterval = 200 });
+        }
+    }
+
+    [Fact]
     public async Task Image_attachment_has_lightbox_link()
     {
         await Page.GotoAsync(GenerateReportWithAttachments("AttImgLink.html"));
