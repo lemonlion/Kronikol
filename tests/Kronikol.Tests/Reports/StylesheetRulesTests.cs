@@ -127,7 +127,8 @@ public partial class StylesheetRulesTests
 
     // ── T4: the violet theme's hovers come before its active states (S4) ──
 
-    private static readonly string[] FilterToggles = ["happy-path", "dependency", "status", "category"];
+    // 5.0.0: the tags are chips of their own, and Happy paths a three-way control (plans/OPTION_C_PLAN.md S6)
+    private static readonly string[] FilterToggles = ["tag", "dependency", "status", "category"];
 
     [Fact]
     public void A_violet_filter_toggle_keeps_its_active_colour_while_hovered()
@@ -143,7 +144,7 @@ public partial class StylesheetRulesTests
 
     private static readonly string[] IdleHovers =
     [
-        ".happy-path-toggle:hover", ".dependency-toggle:hover", ".status-toggle:hover", ".category-toggle:hover",
+        ".happy-seg:hover", ".tag-toggle:hover", ".dependency-toggle:hover", ".status-toggle:hover", ".category-toggle:hover",
         ".export-btn:hover", ".fold-btn:hover", ".percentile-btn:hover", ".timeline-toggle:hover",
         ".details-radio-btn:hover", ".scenario-diagram-controls-toggle:hover", ".diagram-toggle-btn:hover",
         ".iflow-toggle-btn:hover", ".dep-mode-toggle:hover", ".cat-mode-toggle:hover", ".iflow-rel-summary-table tr:hover td",
@@ -151,7 +152,7 @@ public partial class StylesheetRulesTests
 
     private static readonly string[] ActiveStates =
     [
-        ".happy-path-toggle.happy-path-active", ".dependency-toggle.dependency-active", ".status-toggle.status-active",
+        ".happy-seg[aria-pressed=\"true\"]", ".tag-toggle.tag-active", ".dependency-toggle.dependency-active", ".status-toggle.status-active",
         ".category-toggle.category-active", ".percentile-btn.percentile-active", ".details-radio-btn.details-active",
         ".timeline-toggle-active", ".timeline-toggle-active:hover", ".iflow-toggle-active", ".iflow-toggle-active:hover",
         ".diagram-toggle-active", ".diagram-toggle-active:hover",

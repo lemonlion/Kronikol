@@ -1225,7 +1225,8 @@ public static partial class PlantUmlCreator
     /// assertion notes) so that <c>hnote across</c> has a lifeline to span. The browser render script
     /// recognises this exact line and does not count it as a drawable body.
     /// </summary>
-    internal const string MarkerOnlyParticipant = "participant \"(no interactions)\" as noInteractions";
+    internal const string MarkerOnlyParticipantName = "(no interactions)";
+    internal const string MarkerOnlyParticipant = "participant \"" + MarkerOnlyParticipantName + "\" as noInteractions";
 
     /// <summary>
     /// The styles for the injected marker notes, emitted only when a diagram carries one: the

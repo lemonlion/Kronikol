@@ -352,3 +352,59 @@ decision of the owner's, not part of this plan.
   test rounded the bar's height with `Math.Round`, which takes 128.5 to 128 where the page's `Math.round` gives 129; it
   rounds the page's way.
   Checks: the core suite passes 7,742 with 2 skipped; the full Playwright suite passes 1,104 with 28 skipped.
+- 2026-10-19, S5 and S6: the filter pipeline (D14, Q5) and the filter rows (D6 to D13, D16, D19), done as one stage of
+  work, since every change to a row runs through the pipeline. Pipeline: each scenario carries a flag for each filter
+  (`tag`, the tags with Happy paths, in place of 4.x's `hp`, and `q`, the search's qualifiers) and shows while none
+  hides it. `applyVisibility` writes the readout, `All N scenarios, F features` or `Filtered n of N scenarios, f of F
+  features`, with a parameterized scenario counted once for each example (`data-runs`, written only past one), and
+  raises `kron-filter-change` with `{ shown, total }` when the scenarios shown change. The link is version 2 (Q5):
+  4.x's `deps`, `cats`, `depmode`, `catmode` and `hp=1` keep their meaning, and `tags`, `tagx`, `tagmode`, `depx`,
+  `catx` and `hpx=1` say the rest, a chip for none by its reserved value. Clear All clears the qualifiers, every chip
+  state and the modes, back to the report's seeded defaults. Rows (`report-filter-chips-script.js`, new, one
+  delegated handler for clicks and right-clicks, which replaces `report-toggle-happy-paths-function.js`): the labels
+  lose their colons and the controls sit in a wrapping group of their own (D6); Duration and Happy paths are on the
+  Status line (D7); tags have a row (D9) and every chip row is tri-state (D9, D10), off, has (the row's 4.x active class) and has
+  not (a new exclude class for each row, the compatibility contract's additive class; Alt+click and right-click go
+  straight to it), with `aria-pressed` true, mixed or false, and a chip for none (`__untagged__`, `__none__`,
+  `__uncategorized__`) where some scenario has none; each row has ANY / ALL (D11; the button says ANY or ALL and
+  `data-mode` keeps OR or AND) and a Clear while one of its chips is set (D12; focus goes back to the row's first
+  chip); Happy paths is Show, Only and Hide, the Happy Path tag chip under another face, and neither shows without a
+  happy path (D8); the categories' All button gives way to the same chips (Q5). The exports say Filtered only where
+  the box has room (D13). The search takes `dep:`, `duration:` and `is:happy` (D16), split out before it runs, so
+  the deep search and the link see the rest; a qualifier it cannot read stays text and marks the field (`kron-q-bad`,
+  `data-q-bad`), and the help names all three. The duration buttons name their threshold and share, and the warm-up
+  where the run had one (D19). `(no interactions)`, the participant of a diagram with no call, was a dependency: it is
+  not, and a 4.x link that chose it opens on No dependencies (the changelog's Fixed). D17, the deep search chip in the
+  field, moves to S7 with D15: its 3em offset only goes wrong once More filters sits after the field.
+  The stylesheet: `edits/edits-s5-a.py` (32 edits) replaces 4.x's chip, toggle, percentile and mode rules with the
+  preview's final ones, makes the filter box a size container (`container-type: inline-size`, as the preview's is) and
+  ports the rows' `@container` rules at 520, 430 and 300 px. Duration and Happy paths each take a line of their own
+  until S7 measures when they fit beside Status (D18), which is what the preview does when they do not fit.
+  Measured with `checks/style-parity.js`, surface fr (new, 23 picks): 0 differences at 1,400 px in Chrome and Firefox,
+  light and dark. At 400 px, 14, each deliberate or left to a later stage: the phone grid's pills are round at every
+  corner (the preview's cascade left the first and last of each group square on their inner side), tag chips are cut
+  with an ellipsis as the others are, the Dependencies row no longer clips what overflows it (4.x's rule cut the
+  chips' focus rings), the readout's phone line is S12's, and a label on a line of its own keeps a right margin the
+  preview's cascade gave only some of them, which draws nothing. Every filter control is a 36 px touch target on a
+  phone (4.x left the tag chips and Happy paths out). Surfaces 0 to 13 show the 10 known differences of S4 and no new
+  one.
+  Found on the way and fixed: `checks/cssedit.py` indented an edit's text by its rule's indentation on top of the
+  text's own, so the rules S1 to S4 added sat 8 spaces too deep. `checks/css-reindent.py` (whitespace only, checked
+  against the sheet with all whitespace taken out, and a no-op on 4.26.9's sheet) put 209 lines back, 1,868 bytes off
+  every report, 796 of them S1 to S4's; the tool now dedents what it is given, and HEAD, reindented, with
+  `edits-s5-a.py` gives the stylesheet byte for byte. The readout does not wrap, and in a filter box under 430 px it
+  widened the actions past the box (`ReportSectionWidthTests` caught it): it wraps there, as the preview's rule has it.
+  Tests: core `FilterRowsTests` (new, 10 facts: the rows' markup, the chips with their counts and the chips for none,
+  the modes, the Clear, the readout and `data-runs`, the exports, the search's placeholder and help, the duration
+  titles; 9 failed before), `ExtractDependenciesTests` (the marker participant is no dependency), `VerdictFencesTests`
+  (the helper's and the search function's pins are 5.0.0's text, with 4.5.0's verdict lines), and the pins of the old
+  markup in `UrlHashFilterTests`, `ToggleDefaultsMarkupTests`, `WarmUpHtmlTests` and `StylesheetRulesTests`;
+  Playwright `FilterPipelineTests` (new, 24: the tag cycle, Alt+click and right-click, ANY and ALL, the chips for
+  none, the dependency and category tri-states, Happy paths' three ways, a row's Clear, the readout and its events, a
+  link there and back and a 4.x link, 12 qualifier searches, a qualifier it cannot read, Clear All, the CSV export of
+  a filtered page). The tests that clicked Happy Paths Only or read OR and AND (`ScenarioInteractionTests`,
+  `UrlHashFilterHighlightTests`, `ToolbarStylingTests`, `FilterModeDefaultsTests`, `ShowcaseReportTests`,
+  `WikiGifTests`) use the new controls, a chosen filter is checked against `--kron-selected` as the page resolves it
+  rather than 4.x's solid blue, and `ReportSectionWidthTests` holds the filter box at 100 px, under the width of
+  Export HTML, now that 140 px fits it whole.
+  Checks: the core suite passes 7,753 with 2 skipped; the full Playwright suite passes 1,128 with 28 skipped.

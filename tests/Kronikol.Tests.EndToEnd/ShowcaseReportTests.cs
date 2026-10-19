@@ -666,14 +666,14 @@ public class ShowcaseReportTests : PlaywrightTestBase
         }
 
         // ── Scene 12: Happy path toggle ──
-        var hpToggle = Page.Locator(".happy-path-toggle");
+        var hpToggle = Page.Locator(".filtering-box .happy-seg[data-hp='in']");
         if (await hpToggle.CountAsync() > 0)
         {
-            await ScrollTo(".happy-path-toggle");
-            await JsClick(".happy-path-toggle");
+            await ScrollTo(".filtering-box .happy-seg[data-hp='in']");
+            await JsClick(".filtering-box .happy-seg[data-hp='in']");
             await Task.Delay(500);
             await CaptureFrames("12_happy_path", 48, 33);
-            await JsClick(".happy-path-toggle");
+            await JsClick(".filtering-box .happy-seg[data-hp='off']");
             await Task.Delay(300);
         }
 

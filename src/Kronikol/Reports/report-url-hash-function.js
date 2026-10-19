@@ -63,6 +63,11 @@ function jump_into_view(target, block) {
         if (--frames > 0) requestAnimationFrame(settle);
     });
 }
+// The page's link carries every filter (5.0.0, plans/OPTION_C_PLAN.md S5, Q5: hash v2). Each 4.x parameter keeps its
+// meaning, so a link copied from a 4.x report opens the same view: deps= and cats= are the chosen chips, hp=1 is Happy
+// paths Only, depmode= and catmode= the modes. What 4.x could not say rides parameters of its own: depx=, catx=, tags=,
+// tagx= for the chips left out and the chosen tags, tagmode=, and hpx=1 for Happy paths Hide. A chip for the scenarios
+// with none is written by its reserved value (__none__, __uncategorized__, __untagged__).
 function update_url_hash() {
     var parts = [];
     var search = document.getElementById('searchbar');
@@ -70,17 +75,20 @@ function update_url_hash() {
     var statuses = [];
     document.querySelectorAll('.status-toggle.status-active').forEach(function(b) { statuses.push(b.getAttribute('data-status')); });
     if (statuses.length > 0) parts.push('status=' + statuses.join(','));
-    var deps = [];
-    document.querySelectorAll('.dependency-toggle.dependency-active').forEach(function(b) { deps.push(b.getAttribute('data-dependency')); });
-    if (deps.length > 0) parts.push('deps=' + encodeURIComponent(deps.join(',')));
+    function list(key, values) { if (values.length > 0) parts.push(key + '=' + encodeURIComponent(values.join(','))); }
+    list('deps', chip_values('dependency', 'in'));
+    list('depx', chip_values('dependency', 'out'));
     if (_depMode !== _depModeDefault) parts.push('depmode=' + _depMode);
     if (typeof _catMode !== 'undefined' && _catMode !== _catModeDefault) parts.push('catmode=' + _catMode);
-    if (document.querySelector('.happy-path-toggle.happy-path-active')) parts.push('hp=1');
-    var cats = [];
-    if (!document.querySelector('.category-toggle.category-active[data-category=""]')) {
-        document.querySelectorAll('.category-toggle.category-active').forEach(function(b) { cats.push(b.getAttribute('data-category')); });
-    }
-    if (cats.length > 0) parts.push('cats=' + encodeURIComponent(cats.join(',')));
+    var happy = find_chip('tag', HAPPY_PATH_TAG), happyState = happy ? chip_state(happy) : 'off';
+    if (happyState === 'in') parts.push('hp=1');
+    if (happyState === 'out') parts.push('hpx=1');
+    list('cats', chip_values('category', 'in'));
+    list('catx', chip_values('category', 'out'));
+    function notHappy(v) { return v !== HAPPY_PATH_TAG; }
+    list('tags', chip_values('tag', 'in').filter(notHappy));
+    list('tagx', chip_values('tag', 'out').filter(notHappy));
+    if (_tagMode !== _tagModeDefault) parts.push('tagmode=' + _tagMode);
     var dur = document.getElementById('duration-threshold');
     if (dur && dur.value) parts.push('dur=' + dur.value);
     var activeP = document.querySelector('.percentile-btn.percentile-active');
@@ -117,25 +125,32 @@ function parse_url_hash() {
     // value can differ from this report's own start mode).
     if (params.depmode === 'OR' || params.depmode === 'AND') {
         _depMode = params.depmode;
-        var modeBtn = document.querySelector('.dep-mode-toggle');
-        if (modeBtn) modeBtn.textContent = _depMode;
+        set_mode_button(document.querySelector('.dep-mode-toggle'), _depMode);
     }
     if (params.catmode === 'AND' || params.catmode === 'OR') {
         _catMode = params.catmode;
-        var catModeBtn = document.querySelector('.cat-mode-toggle');
-        if (catModeBtn) catModeBtn.textContent = _catMode;
+        set_mode_button(document.querySelector('.cat-mode-toggle'), _catMode);
     }
-    if (params.deps) {
-        params.deps.split(',').forEach(function(d) {
-            var btn = document.querySelector('.dependency-toggle[data-dependency="' + d + '"]');
-            if (btn) btn.classList.add('dependency-active');
+    if (params.tagmode === 'AND' || params.tagmode === 'OR') {
+        _tagMode = params.tagmode;
+        set_mode_button(document.querySelector('.tag-mode-toggle'), _tagMode);
+    }
+    // a 4.x report drew the participant of a diagram with no call as a dependency: a link that chose it means none
+    function chips(family, value, state) {
+        if (value === undefined) return false;
+        value.split(',').forEach(function(v) {
+            var b = find_chip(family, v);
+            if (!b && family === 'dependency' && v === '(no interactions)') b = find_chip(family, '__none__');
+            if (b) set_chip_state(b, state);
         });
-        filter_dependencies();
+        return true;
     }
-    if (params.hp === '1') {
-        var hp = document.querySelector('.happy-path-toggle');
-        if (hp) { hp.classList.add('happy-path-active'); filter_happy_paths(); }
-    }
+    var deps = chips('dependency', params.deps, 'in') | chips('dependency', params.depx, 'out');
+    if (deps || params.depmode) filter_dependencies();
+    var tags = chips('tag', params.tags, 'in') | chips('tag', params.tagx, 'out');
+    var happy = find_chip('tag', HAPPY_PATH_TAG);
+    if (happy && (params.hp === '1' || params.hpx === '1')) { set_chip_state(happy, params.hp === '1' ? 'in' : 'out'); tags = true; }
+    if (tags || params.tagmode) filter_tags();
     if (params.pctl) {
         document.querySelectorAll('.percentile-btn').forEach(function(b) {
             if (b.textContent === params.pctl) {
@@ -151,15 +166,8 @@ function parse_url_hash() {
         var dur = document.getElementById('duration-threshold');
         if (dur) { dur.value = params.dur; filter_duration(); }
     }
-    if (params.cats) {
-        var allBtn = document.querySelector('.category-toggle[data-category=""]');
-        if (allBtn) allBtn.classList.remove('category-active');
-        params.cats.split(',').forEach(function(c) {
-            var btn = document.querySelector('.category-toggle[data-category="' + c + '"]');
-            if (btn) btn.classList.add('category-active');
-        });
-        filter_categories();
-    }
+    var cats = chips('category', params.cats, 'in') | chips('category', params.catx, 'out');
+    if (cats || params.catmode) filter_categories();
     // Last, because a filter pass can collapse what the anchor has to open, and the scroll has to
     // land on the layout the filters produced rather than the one they replaced.
     if (anchor) reveal_url_anchor(anchor);

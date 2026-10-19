@@ -1,16 +1,12 @@
 function clear_all_filters() {
     var c = fc();
-    // Clear search
+    // Clear search, and the qualifiers it held
     var sb = document.getElementById('searchbar');
-    if (sb) { sb.value = ''; }
-    for (var i = 0; i < c.items.length; i++) c.items[i].sr = false;
+    if (sb) { sb.value = ''; sb.classList.remove('kron-q-bad'); sb.removeAttribute('data-q-bad'); }
+    for (var i = 0; i < c.items.length; i++) { c.items[i].sr = false; c.items[i].q = false; }
     // Clear status
     document.querySelectorAll('.status-toggle.status-active').forEach(function(b) { b.classList.remove('status-active'); });
     for (var i = 0; i < c.items.length; i++) c.items[i].st = false;
-    // Clear happy paths
-    var hp = document.querySelector('.happy-path-toggle.happy-path-active');
-    if (hp) hp.classList.remove('happy-path-active');
-    for (var i = 0; i < c.items.length; i++) c.items[i].hp = false;
     // Clear duration
     document.querySelectorAll('.percentile-btn.percentile-active').forEach(function(b) { b.classList.remove('percentile-active'); });
     var dur = document.getElementById('duration-threshold');
@@ -18,21 +14,18 @@ function clear_all_filters() {
     var cw = document.getElementById('custom-duration-wrap');
     if (cw) cw.style.display = 'none';
     for (var i = 0; i < c.items.length; i++) c.items[i].dur = false;
-    // Clear dependencies — the mode resets to the report's SEEDED default, not a literal
-    // (a hard-coded 'AND' would silently un-configure a report generated with an OR default)
-    document.querySelectorAll('.dependency-toggle.dependency-active').forEach(function(b) { b.classList.remove('dependency-active'); });
+    // Clear the chips of tags (Happy paths with them), dependencies and categories. The modes reset to the report's
+    // SEEDED defaults, not a literal (a hard-coded 'AND' would silently un-configure a report generated with an OR default).
+    for (var family in FILTER_CHIP_ROWS) filter_chips(family).forEach(function(b) { set_chip_state(b, 'off'); });
+    _tagMode = _tagModeDefault;
+    set_mode_button(document.querySelector('.tag-mode-toggle'), _tagMode);
     _depMode = _depModeDefault;
-    var depModeBtn = document.querySelector('.dep-mode-toggle');
-    if (depModeBtn) depModeBtn.textContent = _depMode;
-    for (var i = 0; i < c.items.length; i++) c.items[i].dep = false;
-    // Clear categories
-    document.querySelectorAll('.category-toggle.category-active').forEach(function(b) { b.classList.remove('category-active'); });
-    var allCatBtn = document.querySelector('.category-toggle[data-category=""]');
-    if (allCatBtn) allCatBtn.classList.add('category-active');
+    set_mode_button(document.querySelector('.dep-mode-toggle'), _depMode);
     if (typeof _catMode !== 'undefined') _catMode = _catModeDefault;
-    var catModeBtn = document.querySelector('.cat-mode-toggle');
-    if (catModeBtn) catModeBtn.textContent = _catMode;
-    for (var i = 0; i < c.items.length; i++) c.items[i].cat = false;
+    set_mode_button(document.querySelector('.cat-mode-toggle'), _catMode);
+    for (var i = 0; i < c.items.length; i++) { c.items[i].tag = false; c.items[i].dep = false; c.items[i].cat = false; }
+    sync_happy_paths();
+    sync_group_clears();
     // Clear deep-search state (chip + in-flight queries)
     if (window._kronDeepReset) window._kronDeepReset();
     // Apply and clear URL. The anchor is not filter state: somebody who followed a link to one

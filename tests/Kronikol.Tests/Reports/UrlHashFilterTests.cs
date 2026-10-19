@@ -69,11 +69,14 @@ public class UrlHashFilterTests
     }
 
     [Fact]
-    public void Filter_happy_paths_calls_update_url_hash()
+    public void Filter_tags_calls_update_url_hash()
     {
+        // 5.0.0: Happy paths is the Happy Path tag chip, so filter_tags writes it (hp=1 Only, hpx=1 Hide)
         var content = GenerateReport("UrlHashHappyPath.html");
-        var body = ExtractFunctionBody(content, "filter_happy_paths");
-        Assert.Contains("update_url_hash()", body);
+        Assert.Contains("update_url_hash()", ExtractFunctionBody(content, "filter_tags"));
+        var hash = ExtractFunctionBody(content, "update_url_hash");
+        Assert.Contains("parts.push('hp=1')", hash);
+        Assert.Contains("parts.push('hpx=1')", hash);
     }
 
     [Fact]
@@ -107,7 +110,8 @@ public class UrlHashFilterTests
     {
         var content = GenerateReport("UrlHashSavesCats.html");
         var body = ExtractFunctionBody(content, "update_url_hash");
-        Assert.Contains("category-toggle.category-active", body);
+        Assert.Contains("list('cats', chip_values('category', 'in'));", body);
+        Assert.Contains("list('catx', chip_values('category', 'out'));", body);
     }
 
     // --- Bug 2: parse_url_hash should restore categories ---

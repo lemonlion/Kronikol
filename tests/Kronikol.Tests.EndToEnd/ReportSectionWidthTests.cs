@@ -98,8 +98,11 @@ public class ReportSectionWidthTests : PlaywrightTestBase
     public async Task An_export_button_wider_than_the_filtering_box_wraps_its_label_inside_it()
     {
         await Open(1161, textSpacing: true);
-        await HoldFilteringBox(140);
+        // Since 5.0.0 a filtering box under 430 px drops the word Filtered (OPTION_C_PLAN S6), and Export HTML fits a
+        // 140 px box whole, so the box is held narrower than that.
+        await HoldFilteringBox(100);
         var button = Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" });
+        Assert.True(await button.Locator(".wide-only").EvaluateAsync<bool>("s => getComputedStyle(s).display === 'none'"));
 
         // The right edge of the export labels, the filtering box's content edge, and the button's lines. Since 5.0.0 an
         // export button is a text button whose padding runs past the content edge on purpose (OPTION_C_PLAN S2), so

@@ -164,7 +164,7 @@ public class WarmUpHtmlTests : IDisposable
         // Time left: 1,400, 1,410 and 2,000 ms; by wall time all three are 2,000.
         Assert.Equal("1410", filters.GetAttribute("data-p50"));
         Assert.Equal("2000", filters.GetAttribute("data-p90"));
-        Assert.Equal("Each scenario's own time: the first-call warm-up it paid is left out",
+        Assert.Equal("Each scenario's own time, without the first-call warm-up it paid",
             filters.QuerySelector(".duration-filters-label")!.GetAttribute("title"));
     }
 

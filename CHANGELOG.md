@@ -23,6 +23,30 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **The features can be sorted.** A Sort dropdown at the right of the Features tab's tools orders the feature cards and
   the features table alike: the report's own order, the feature's name A to Z, failures first, most scenarios, and,
   for a run with durations, slowest total, slowest average and longest scenario.
+- **Tags have a filter row,** as dependencies and categories do: a chip for each tag (its tooltip says how many
+  scenarios carry it), an Untagged chip when a scenario has none, and an ANY / ALL switch, ANY by default. A report with
+  a happy path puts the Happy Path tag's chip first.
+- **A chip can leave its scenarios out.** A chip of the Tags, Dependencies or Categories row goes from off to has (a
+  scenario must have it) to has not (it must not), and back to off; Alt+click or a right-click goes straight to has not.
+  A chosen chip carries its row's 4.x class (`tag-active`, `dependency-active`, `category-active`) and a left-out one a
+  class of its own (`tag-exclude`, `dependency-exclude`, `category-exclude`), with `aria-pressed` `true`, `mixed` or
+  `false`. Each row has a chip for the scenarios with none (Untagged, No dependencies, Uncategorized) and a Clear while
+  one of its chips is set.
+- **The search takes qualifiers.** `dep:`, `duration:` and `is:happy` narrow a search as the filters do: `dep:payment`
+  (part of a dependency's name, case and spaces ignored; quotes for a name with spaces, commas for any of several),
+  `duration:>2s`, `duration:<500ms`, `duration:1s..5s` or `duration:>=p90` (a scenario's own time, the first-call
+  warm-up left out, in ms, s or m or the report's percentiles), and `is:happy`. `!!` negates one, and they combine with
+  the rest of the search by AND. A qualifier the search cannot read stays in it as text, and the field's border says so.
+- **A readout says what the filters leave showing,** on the Filtering line left of Clear All: `All 214 scenarios, 73
+  features`, or `Filtered 12 of 214 scenarios, 3 of 73 features`, with a parameterized scenario counted once for each
+  of its examples. Whenever the scenarios shown change, the page raises a `kron-filter-change` event on the document,
+  with `{ shown, total }` in its `detail`.
+- **The page's link carries every filter.** What a 4.x link could not say has parameters of its own: `tags=` and
+  `tagx=` for the tags chosen and left out, `tagmode=`, `depx=` and `catx=` for the dependencies and categories left
+  out, and `hpx=1` for happy paths hidden. Every 4.x parameter keeps its meaning (`hp=1` is happy paths only), so a
+  link copied from a 4.x report opens the same view.
+- **The duration buttons say what they show.** Each percentile's tooltip names its threshold and its share of the run
+  (the slowest half for P50), and that the first-call warm-up is left out when the run had one.
 
 ### Changed (breaking)
 
@@ -75,6 +99,19 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   4.x seeded its label. `toggle_expand_collapse` and the `.collapse-expand-all` class are gone.
 - **The report bar's display settings are grouped,** the payload details first, then the payload's format and width,
   then the toggles, and on a phone (768 px wide or less) they show behind a Display settings gear.
+- **Happy paths is Show, Only or Hide.** The Happy Paths Only button becomes a three-way control on the Status line,
+  which drives the Tags row's Happy Path chip; a report without a happy path has neither. `.happy-path-toggle`,
+  `.happy-path-active` and `filter_happy_paths` are gone, and `#hp=1` still opens on Only.
+- **The categories' chips are tri-state, and their All button is gone:** nothing chosen shows every category, as in
+  the other rows.
+- **The filter rows take Option C's look.** Each row's label is an uppercase word in a column of its own (`Status`,
+  4.x `Status:`), Status, Duration and Happy paths are segmented groups, tags, dependencies and categories are chips,
+  every control is 28 px tall (36 px on a phone), and the rows reflow on the filter box's own width, not the window's.
+  A row's switch reads ANY or ALL (4.x: OR or AND) and keeps the mode in `data-mode`, which the link writes as before;
+  the switches and chips answer one delegated handler rather than an `onclick` each. The exports read Export HTML and
+  Export CSV where the box is narrow. A `CustomCss` sheet written against the 4.x rules of `.status-toggle`,
+  `.percentile-btn`, `.dependency-toggle`, `.category-toggle`, `.dep-mode-toggle` or `.cat-mode-toggle` may no longer
+  apply; set the tokens instead.
 
 ### Fixed
 
@@ -85,6 +122,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **A dropdown keeps its arrow keys.** The report's keys for moving between scenarios took the down and up arrows from
   every dropdown on the page (the payload format, width and line count among them), so a keyboard could not change
   one with them.
+- **A scenario whose diagram makes no call has no dependency.** The participant PlantUML draws for such a diagram,
+  `(no interactions)`, was listed as a dependency, and filtering on it picked those scenarios out by accident; they are
+  under No dependencies now, and a 4.x link that chose `(no interactions)` opens on No dependencies.
 
 ## [4.26.9] - 2026-10-18
 

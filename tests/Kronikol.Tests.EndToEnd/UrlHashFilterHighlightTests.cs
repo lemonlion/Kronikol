@@ -48,7 +48,12 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     private async Task<string> GetComputedBgColor(string selector) =>
         await Page.Locator(selector).EvaluateAsync<string>("el => getComputedStyle(el).backgroundColor");
 
-    private static bool IsHighlighted(string bgColor) => bgColor.Contains("66, 133, 244");
+    // A chosen filter is drawn in the selected tint (5.0.0, plans/OPTION_C_PLAN.md S6; 4.x: a solid rgb(66, 133, 244)),
+    // read from the page as it resolves the token, so the check holds in either theme.
+    private async Task<string> SelectedBgColor() => await Page.EvaluateAsync<string>(
+        "() => { const p = document.createElement('span'); p.style.backgroundColor = 'var(--kron-selected)'; document.body.appendChild(p); const c = getComputedStyle(p).backgroundColor; p.remove(); return c; }");
+
+    private async Task<bool> IsHighlighted(string bgColor) => bgColor == await SelectedBgColor();
 
     [Fact]
     public async Task Status_filter_buttons_highlighted_after_url_hash_restore()
@@ -60,8 +65,8 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         await Expect(passedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
 
         var bgColor = await GetComputedBgColor(".status-toggle[data-status='Passed']");
-        Assert.True(IsHighlighted(bgColor),
-            $"Expected 'Passed' button to be highlighted (rgb(66, 133, 244)) but got: {bgColor}");
+        Assert.True(await IsHighlighted(bgColor),
+            $"Expected 'Passed' button to be highlighted (the selected tint) but got: {bgColor}");
     }
 
     [Fact]
@@ -73,7 +78,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         var failedBtn = Page.Locator(".status-toggle[data-status='Failed']");
         await Expect(failedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
 
-        Assert.True(IsHighlighted(await GetComputedBgColor(".status-toggle[data-status='Failed']")),
+        Assert.True(await IsHighlighted(await GetComputedBgColor(".status-toggle[data-status='Failed']")),
             "Failed button should be highlighted after URL hash restore");
 
         var allHidden = await Page.EvaluateAsync<bool>("""
@@ -89,10 +94,11 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         var url = GenerateAndServeReport("UrlHashHappyPathHighlight.html");
         await Page.GotoAsync(url + "#hp=1");
 
-        var hpBtn = Page.Locator(".happy-path-toggle");
+        // 5.0.0: hp=1 is Happy paths Only (plans/OPTION_C_PLAN.md S6)
+        var hpBtn = Page.Locator(".filtering-box .happy-seg[data-hp='in']");
         await hpBtn.WaitForAsync();
-        await Expect(hpBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("happy-path-active"));
-        Assert.True(IsHighlighted(await GetComputedBgColor(".happy-path-toggle")));
+        await Expect(hpBtn).ToHaveAttributeAsync("aria-pressed", "true");
+        Assert.True(await IsHighlighted(await GetComputedBgColor(".filtering-box .happy-seg[data-hp='in']")));
     }
 
     [Fact]
@@ -116,13 +122,13 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         await passedBtn.WaitForAsync();
         await passedBtn.ClickAsync();
 
-        Assert.True(IsHighlighted(await GetComputedBgColor(".status-toggle[data-status='Passed']")));
+        Assert.True(await IsHighlighted(await GetComputedBgColor(".status-toggle[data-status='Passed']")));
         Assert.Contains("#", Page.Url);
 
         await Page.ReloadAsync();
 
         await Expect(passedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
-        Assert.True(IsHighlighted(await GetComputedBgColor(".status-toggle[data-status='Passed']")));
+        Assert.True(await IsHighlighted(await GetComputedBgColor(".status-toggle[data-status='Passed']")));
     }
 
     [Fact]
@@ -131,17 +137,19 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         var url = GenerateAndServeReport("UrlHashHPClickRefresh.html");
         await Page.GotoAsync(url);
 
-        var hpBtn = Page.Locator(".happy-path-toggle");
+        // 5.0.0: Happy paths Only (plans/OPTION_C_PLAN.md S6)
+        const string only = ".filtering-box .happy-seg[data-hp='in']";
+        var hpBtn = Page.Locator(only);
         await hpBtn.WaitForAsync();
         await hpBtn.ClickAsync();
 
-        Assert.True(IsHighlighted(await GetComputedBgColor(".happy-path-toggle")));
+        Assert.True(await IsHighlighted(await GetComputedBgColor(only)));
 
         await Page.ReloadAsync();
 
         await hpBtn.WaitForAsync(new() { Timeout = 10000 });
-        await Expect(hpBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("happy-path-active"));
-        Assert.True(IsHighlighted(await GetComputedBgColor(".happy-path-toggle")));
+        await Expect(hpBtn).ToHaveAttributeAsync("aria-pressed", "true");
+        Assert.True(await IsHighlighted(await GetComputedBgColor(only)));
     }
 
     [Fact]
@@ -172,15 +180,15 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         await Page.GotoAsync(url);
 
         await Page.Locator(".status-toggle[data-status='Failed']").ClickAsync();
-        await Page.Locator(".happy-path-toggle").ClickAsync();
+        await Page.Locator(".filtering-box .happy-seg[data-hp='in']").ClickAsync();
 
         await Page.ReloadAsync();
 
         var failedBtn = Page.Locator(".status-toggle[data-status='Failed']");
         await Expect(failedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
 
-        var hpBtn2 = Page.Locator(".happy-path-toggle");
-        await Expect(hpBtn2).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("happy-path-active"));
+        var hpBtn2 = Page.Locator(".filtering-box .happy-seg[data-hp='in']");
+        await Expect(hpBtn2).ToHaveAttributeAsync("aria-pressed", "true");
     }
 
     [Fact]
@@ -200,7 +208,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
 
         await p99Btn.WaitForAsync(new() { Timeout = 10000 });
         await Expect(p99Btn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("percentile-active"));
-        Assert.True(IsHighlighted(await GetComputedBgColor("button.percentile-btn:has-text('P99')")));
+        Assert.True(await IsHighlighted(await GetComputedBgColor("button.percentile-btn:has-text('P99')")));
     }
 
     [Fact]
@@ -213,7 +221,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         await Expect(passedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
 
         var bgColor = await GetComputedBgColor(".status-toggle[data-status='Passed']");
-        Assert.True(IsHighlighted(bgColor),
-            $"Expected 'Passed' button to be highlighted (rgb(66, 133, 244)) but got: {bgColor}");
+        Assert.True(await IsHighlighted(bgColor),
+            $"Expected 'Passed' button to be highlighted (the selected tint) but got: {bgColor}");
     }
 }

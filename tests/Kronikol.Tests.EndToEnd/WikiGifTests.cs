@@ -660,7 +660,7 @@ public class WikiGifTests : PlaywrightTestBase
 
         await JsClick(".export-btn[onclick*='clear_all']"); await Hold(0.5);
 
-        await JsClick(".happy-path-toggle"); await Hold(1.5);
+        await JsClick(".filtering-box .happy-seg[data-hp='in']"); await Hold(1.5);
         await ScrollTo("details.feature"); await Hold(1);
         await ScrollToTop(); await Hold(0.5);
 

@@ -175,4 +175,14 @@ public class ExtractDependenciesTests
 
         Assert.Equal(2, deps.Count);
     }
+
+    [Fact]
+    public void The_participant_of_a_diagram_with_no_calls_is_no_dependency()
+    {
+        // A scenario that made no call is drawn with one participant, "(no interactions)", to hold its step markers. It
+        // was a chip of the dependency filter until 5.0.0; the scenario has no dependency (plans/OPTION_C_PLAN.md S6).
+        var puml = "@startuml\n" + global::Kronikol.PlantUml.PlantUmlCreator.MarkerOnlyParticipant + "\n@enduml";
+
+        Assert.Empty(ReportGenerator.ExtractDependencies(puml, DiagramFormat.PlantUml));
+    }
 }

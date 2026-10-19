@@ -32,7 +32,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
         await Page.GotoAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        Assert.Equal("OR", (await Page.Locator(".dep-mode-toggle").TextContentAsync())!.Trim());
+        Assert.Equal("ANY", (await Page.Locator(".dep-mode-toggle").TextContentAsync())!.Trim());
         Assert.Equal("OR", await Page.EvaluateAsync<string>("() => _depMode"));
     }
 
@@ -42,7 +42,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
         await NavigateOrDefault("FilterMode_OrDefault.html");
 
         var modeBtn = Page.Locator(".dep-mode-toggle");
-        Assert.Equal("OR", (await modeBtn.TextContentAsync())!.Trim());
+        Assert.Equal("ANY", (await modeBtn.TextContentAsync())!.Trim());
         Assert.Equal("OR", await Page.EvaluateAsync<string>("() => _depMode"));
 
         // Selecting a chip writes the hash WITHOUT depmode — OR is this report's default now
@@ -53,7 +53,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
 
         // Toggling to AND — the historically-omitted value — now lands in the hash
         await modeBtn.ClickAsync();
-        Assert.Equal("AND", (await modeBtn.TextContentAsync())!.Trim());
+        Assert.Equal("ALL", (await modeBtn.TextContentAsync())!.Trim());
         hash = await Page.EvaluateAsync<string>("() => window.location.hash");
         Assert.Contains("depmode=AND", hash);
     }
@@ -70,7 +70,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
 
         await Page.WaitForFunctionAsync("() => _depMode === 'AND'",
             null, new() { Timeout = 10000, PollingInterval = 200 });
-        Assert.Equal("AND", (await Page.Locator(".dep-mode-toggle").TextContentAsync())!.Trim());
+        Assert.Equal("ALL", (await Page.Locator(".dep-mode-toggle").TextContentAsync())!.Trim());
     }
 
     [Fact]
@@ -80,10 +80,10 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
 
         var modeBtn = Page.Locator(".dep-mode-toggle");
         await modeBtn.ClickAsync();
-        Assert.Equal("AND", (await modeBtn.TextContentAsync())!.Trim());
+        Assert.Equal("ALL", (await modeBtn.TextContentAsync())!.Trim());
 
         await Page.Locator("button.export-btn", new() { HasTextString = "Clear All" }).ClickAsync();
-        Assert.Equal("OR", (await modeBtn.TextContentAsync())!.Trim());
+        Assert.Equal("ANY", (await modeBtn.TextContentAsync())!.Trim());
         Assert.Equal("OR", await Page.EvaluateAsync<string>("() => _depMode"));
     }
 
@@ -97,7 +97,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var catBtn = Page.Locator(".cat-mode-toggle");
-        Assert.Equal("AND", (await catBtn.TextContentAsync())!.Trim());
+        Assert.Equal("ALL", (await catBtn.TextContentAsync())!.Trim());
         Assert.Equal("AND", await Page.EvaluateAsync<string>("() => _catMode"));
 
         // Select a category so the hash is written; AND is the configured default → omitted

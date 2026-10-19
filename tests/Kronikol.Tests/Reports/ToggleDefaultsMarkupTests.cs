@@ -343,7 +343,7 @@ public class ToggleDefaultsMarkupTests
     public void Dependency_filter_mode_default_seeds_button_text_and_script()
     {
         var content = Generate(t => t.DependencyFilterMode = FilterCombinationMode.And);
-        Assert.Contains("onclick=\"toggle_dep_mode(this)\">AND</button>", content);
+        Assert.Contains("<button type=\"button\" class=\"dep-mode-toggle\" data-mode=\"AND\" title=\"ANY: scenarios that call any of the chosen dependencies. ALL: scenarios that call every one of them. Click to switch.\">ALL</button>", content);
         Assert.Contains("var _depModeDefault = 'AND'", content);
     }
 
@@ -366,7 +366,7 @@ public class ToggleDefaultsMarkupTests
             }
         };
         var content = Generate(t => t.CategoryFilterMode = FilterCombinationMode.And, features: features);
-        Assert.Contains("onclick=\"toggle_cat_mode(this)\">AND</button>", content);
+        Assert.Contains("<button type=\"button\" class=\"cat-mode-toggle\" data-mode=\"AND\" title=\"ANY: scenarios in any of the chosen categories. ALL: scenarios in every one of them. Click to switch.\">ALL</button>", content);
         Assert.Contains("var _catModeDefault = 'AND'", content);
     }
 
@@ -377,7 +377,7 @@ public class ToggleDefaultsMarkupTests
         var content = Generate();
         Assert.Contains("var _depModeDefault = 'OR'", content);
         Assert.Contains("var _catModeDefault = 'OR'", content);
-        Assert.Contains("onclick=\"toggle_dep_mode(this)\">OR</button>", content);
+        Assert.Contains("<button type=\"button\" class=\"dep-mode-toggle\" data-mode=\"OR\" title=\"ANY: scenarios that call any of the chosen dependencies. ALL: scenarios that call every one of them. Click to switch.\">ANY</button>", content);
     }
 
     // ═══════════════════════════════════════════════════════════

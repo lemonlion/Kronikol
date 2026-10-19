@@ -17,6 +17,15 @@ const PICKS = {
       ['stat dt', '.run-summary .run-stat dt'], ['stat dd', '.run-summary .run-stat dd'], ['stat fail dd', '.run-stat-fail dd'], ['ci zone', '.run-ci'],
       ['ci title', '.run-ci .run-title'], ['ci dt', '.run-ci .run-stat dt'], ['ci dd', '.run-ci .run-stat dd'], ['commit', '.run-stat dd code'], ['run link', '.run-link'], ['filter box', '.filtering-box'],
       ['filter header', '.filtering-box-header'], ['filter title', '.filtering-box-header h2'], ['export row', '.filtering-box-export'], ['export button', '.filtering-box-export .export-btn']],
+  // the filter rows (S5 and S6): labels, segments, chips, mode switches, the readout and the search field, as loaded
+  fr: [['status row', '.status-filters'], ['status label', '.status-filters-label'], ['status controls', '.status-filters .fltr-controls'],
+      ['status first', '.status-toggle'], ['status last', '.status-toggle:last-of-type'], ['duration label', '.duration-filters-label'],
+      ['percentile', '.percentile-btn'], ['happy row', '.happy-filters'], ['happy label', '.happy-filters-label'],
+      ['happy seg on', '.happy-seg[aria-pressed="true"]'], ['happy seg off', '.happy-seg[aria-pressed="false"]'],
+      ['tags row', '.tag-filters'], ['tags label', '.tag-filters-label'], ['tags controls', '.tag-filters .fltr-controls'],
+      ['tag mode', '.tag-mode-toggle'], ['tag chip', '.tag-toggle'], ['deps row', '.dependency-filters'], ['deps label', '.dependency-filters-label'],
+      ['deps controls', '.dependency-filters .fltr-controls'], ['dep mode', '.dep-mode-toggle'], ['dep chip', '.dependency-toggle'],
+      ['readout', '.filter-readout'], ['search', '#searchbar']],
   5: [['bar', '.toolbar-row.report-nav'], ['tabs', '.report-tabs'], ['tab on', '.report-tab[aria-selected="true"]'], ['tab off', '.report-tab[aria-selected="false"]'],
       ['tab count', '.report-tab[aria-selected="true"] .tab-n'], ['tools', '.features-tools'], ['panels', '.report-panels']],
   // a third element is the branch's selector where its markup names the thing differently

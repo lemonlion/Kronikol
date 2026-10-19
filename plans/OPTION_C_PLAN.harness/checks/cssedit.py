@@ -6,7 +6,9 @@
 #   op 'after'  : insert `text` (whole rules) after the rule `selector`
 #   op 'delete' : remove the rule `selector`
 #   op 'append' : append `text` at the end of the @media block `media` (or of the file when media is None)
-import re, sys
+# A text's own indentation is taken off first (textwrap.dedent), so it can be written indented or not; until S5 it was
+# kept, and the rules S1 to S4 added came out 8 spaces too deep (css-reindent.py put them back).
+import re, sys, textwrap
 
 def norm(s):
     return ' '.join(s.replace('\n', ' ').split())
@@ -88,12 +90,12 @@ def apply(css, edits):
         if op == 'body':
             line_start = css.rfind('\n', 0, start) + 1
             indent = css[line_start:start]
-            body = '\n'.join(indent + '    ' + l if l.strip() else l for l in text.strip('\n').split('\n'))
+            body = '\n'.join(indent + '    ' + l if l.strip() else l for l in textwrap.dedent(text).strip('\n').split('\n'))
             css = css[:ob + 1] + '\n' + body + '\n' + indent + css[cb:]
         elif op == 'after':
             line_start = css.rfind('\n', 0, start) + 1
             indent = css[line_start:start]
-            add = '\n'.join(indent + l if l.strip() else l for l in text.strip('\n').split('\n'))
+            add = '\n'.join(indent + l if l.strip() else l for l in textwrap.dedent(text).strip('\n').split('\n'))
             css = css[:cb + 1] + '\n' + add + css[cb + 1:]
         elif op == 'delete':
             line_start = css.rfind('\n', 0, start) + 1

@@ -29,9 +29,98 @@ function search_scenarios() {
     }, 300);
 }
 
+// Every filter can be written in the search (5.0.0, plans/OPTION_C_PLAN.md S6, D16): tags (@tag) and statuses ($status)
+// could already, and dependencies, duration and happy paths are qualifiers, a key and a colon, as GitHub's search writes
+// them. dep:cow is a scenario that calls a dependency whose name holds "cow" (case, spaces and punctuation ignored;
+// quotes for a name with spaces, commas for any of several); duration: compares a scenario's own time (the first-call
+// warm-up left out, as the duration filter does) with >, >=, <, <=, = or a range a..b, in ms, s or m, or the report's
+// percentiles p50 to p99, a bare value meaning at least; is:happy is a happy path. !! negates one. A qualifier only
+// narrows: it combines with the rest of the search, and with the others, by AND. Only these keys, and never inside
+// quotes, so a search for "status: 400" or "milk:" is still text. The qualifiers are taken out before the search runs,
+// so the search, its deep search of the diagrams and the link see the rest, and a flag of their own hides a scenario.
+var SEARCH_QUALIFIER = /(^|[\s(])(!!\s*)?(dep|dependency|duration|is):("[^"]*"|[^\s()"]+)/gi;
+var DURATION_UNIT = { ms: 1, s: 1000, m: 60000, min: 60000 };
+function qualifier_name(s) { return String(s).toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function qualifier_ms(v, percentiles) {
+    v = v.toLowerCase();
+    if (percentiles[v] !== undefined) return percentiles[v];
+    var m = /^(\d+(?:\.\d+)?)(ms|s|m|min)?$/.exec(v);
+    return m ? parseFloat(m[1]) * DURATION_UNIT[m[2] || 's'] : null;
+}
+// a scenario's own time, as the duration filter reads it
+function qualifier_own_ms(d) {
+    if (!d.el.hasAttribute('data-duration-ms')) return null;
+    return parseFloat(d.el.getAttribute('data-duration-ms')) - parseFloat(d.el.getAttribute('data-warmup-ms') || '0');
+}
+// one qualifier as a test of a scenario; null when it cannot be read, and it stays text
+function search_qualifier(key, value, negated, percentiles) {
+    key = key.toLowerCase();
+    if (value.charAt(0) === '"') value = value.slice(1, -1);
+    var test = null;
+    if (key === 'dep' || key === 'dependency') {
+        var wants = value.split(',').map(qualifier_name).filter(Boolean);
+        if (!wants.length) return null;
+        test = function (d) {
+            var names = Array.from(d.deps || []).map(qualifier_name);
+            return wants.some(function (w) { return names.some(function (n) { return n.indexOf(w) >= 0; }); });
+        };
+    } else if (key === 'duration') {
+        var range = /^(.+?)\.\.(.+)$/.exec(value);
+        if (range) {
+            var lo = qualifier_ms(range[1], percentiles), hi = qualifier_ms(range[2], percentiles);
+            if (lo === null || hi === null) return null;
+            test = function (d) { var t = qualifier_own_ms(d); return t !== null && t >= lo && t <= hi; };
+        } else {
+            var m = /^(>=|<=|>|<|=)?(.+)$/.exec(value), op = m[1] || '>=', at = qualifier_ms(m[2], percentiles);
+            if (at === null) return null;
+            test = function (d) {
+                var t = qualifier_own_ms(d);
+                if (t === null) return false;
+                return op === '>' ? t > at : op === '>=' ? t >= at : op === '<' ? t < at : op === '<=' ? t <= at : Math.abs(t - at) < 0.5;
+            };
+        }
+    } else if (key === 'is') {
+        if (!/^happy(-?paths?)?$/.test(value.toLowerCase())) return null;
+        test = function (d) { return !!d.isHappy; };
+    }
+    if (!test) return null;
+    return negated ? function (d) { return !test(d); } : test;
+}
+// the search, split into its qualifiers and the rest; an operator a qualifier leaves dangling goes with it
+function split_search_qualifiers(input) {
+    var quals = [], bad = [], percentiles = {};
+    var box = document.querySelector('.duration-filters');
+    if (box) ['p50', 'p90', 'p95', 'p99'].forEach(function (k) { var v = parseFloat(box.getAttribute('data-' + k)); if (!isNaN(v)) percentiles[k] = v; });
+    SEARCH_QUALIFIER.lastIndex = 0;
+    var rest = input.replace(SEARCH_QUALIFIER, function (all, lead, negated, key, value) {
+        var q = search_qualifier(key, value, !!negated, percentiles);
+        if (!q) { bad.push(all.trim()); return all; }
+        quals.push(q);
+        return lead + ' ';
+    });
+    if (quals.length) {
+        for (var i = 0, prev = null; i < 6 && prev !== rest; i++) {
+            prev = rest;
+            rest = rest.replace(/(&&|\|\|)\s*(&&|\|\|)/g, '$1').replace(/\(\s*(&&|\|\|)/g, '(').replace(/(&&|\|\|)\s*\)/g, ')')
+                .replace(/\(\s*\)/g, ' ').replace(/^\s*(&&|\|\|)/, '').replace(/(&&|\|\|)\s*$/, '').replace(/!!\s*(?=$|&&|\|\||\))/g, '');
+        }
+        rest = rest.replace(/\s+/g, ' ').trim();
+    }
+    return { quals: quals, rest: rest, bad: bad };
+}
+
 function run_search_scenarios() {
     var c = fc();
-    let input = document.getElementById('searchbar').value;
+    var bar = document.getElementById('searchbar');
+    var parts = split_search_qualifiers(bar.value);
+    for (var qi = 0; qi < c.items.length; qi++) {
+        var qItem = c.items[qi];
+        qItem.q = parts.quals.length > 0 && !parts.quals.every(function (test) { return test(qItem); });
+    }
+    // a qualifier that cannot be read stays text, and the bar says so
+    bar.classList.toggle('kron-q-bad', parts.bad.length > 0);
+    if (parts.bad.length) bar.setAttribute('data-q-bad', parts.bad.join(' ')); else bar.removeAttribute('data-q-bad');
+    let input = parts.rest;
     input = input.toLowerCase().trim();
 
     // Advanced search path: when input contains &&, ||, or !!

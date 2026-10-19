@@ -1,0 +1,194 @@
+using Kronikol.Reports;
+using Kronikol.Tracking;
+
+namespace Kronikol.Tests.Reports;
+
+/// <summary>
+/// The filter box's rows (5.0.0, plans/OPTION_C_PLAN.md S5 and S6, D6 to D14, D16, D19): labels without colons and each
+/// row's controls in a group of their own; Duration and Happy paths on the Status line; Tags, Dependencies and Categories
+/// as rows of tri-state chips with an ANY / ALL switch, a chip for the scenarios with none and a Clear; the counts in
+/// the chips' titles, counted as the run counts scenarios (a parameterized scenario once per example); what the filters
+/// leave showing, beside Clear All; and the search's qualifiers in its help.
+/// </summary>
+public class FilterRowsTests
+{
+    private static readonly DateTime Start = new(2026, 10, 16, 17, 27, 11, DateTimeKind.Utc);
+
+    private const string OrderSource = "@startuml\nactor \"Caller\" as caller\nparticipant \"Order Service\" as svc\ndatabase \"Order Db\" as db\ncaller -> svc : POST /orders\nsvc -> db : INSERT\n@enduml";
+    private const string PaymentSource = "@startuml\nactor \"Caller\" as caller\nparticipant \"Payment Service\" as pay\ncaller -> pay : POST /refunds\n@enduml";
+    private static readonly string MarkerOnlySource = "@startuml\n" + global::Kronikol.PlantUml.PlantUmlCreator.MarkerOnlyParticipant + "\n@enduml";
+
+    private static Scenario Run(string id, string name, ExecutionResult result, int ms, string[]? labels = null, string[]? categories = null,
+        bool happy = false, string? outline = null) => new()
+    {
+        Id = id, DisplayName = name, Result = result, Duration = TimeSpan.FromMilliseconds(ms), Labels = labels, Categories = categories,
+        IsHappyPath = happy, OutlineId = outline, ExampleValues = outline is null ? null : new() { ["size"] = name[^2..^1] },
+        ErrorMessage = result == ExecutionResult.Failed ? "boom" : null
+    };
+
+    // five runs in two features: a parameterized scenario of two examples with no tag, a marker-only diagram, a
+    // scenario with no category
+    private static Feature[] Bakery() =>
+    [
+        new Feature
+        {
+            DisplayName = "Orders",
+            Scenarios =
+            [
+                Run("s1", "Create order", ExecutionResult.Passed, 100, ["smoke", "api"], ["Fast"], happy: true),
+                Run("s2", "Reject order", ExecutionResult.Failed, 300, ["api"]),
+                Run("s3", "Price(size: S)", ExecutionResult.Passed, 50, categories: ["Slow"], outline: "Price"),
+                Run("s4", "Price(size: L)", ExecutionResult.Passed, 50, categories: ["Slow"], outline: "Price")
+            ]
+        },
+        new Feature { DisplayName = "Refunds", Scenarios = [Run("s5", "Refund", ExecutionResult.Passed, 20, ["smoke"], ["Fast", "Slow"])] }
+    ];
+
+    private static string Generate(string fileName, Feature[]? features = null, bool includeTestRunData = true)
+    {
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DefaultDiagramsFetcher.DiagramAsCode("s1", "", OrderSource), new DefaultDiagramsFetcher.DiagramAsCode("s2", "", MarkerOnlySource),
+             new DefaultDiagramsFetcher.DiagramAsCode("s5", "", PaymentSource)],
+            features ?? Bakery(), Start, Start.AddSeconds(5), null, fileName, "Test", includeTestRunData,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+        return File.ReadAllText(path);
+    }
+
+    private static string Box(string html)
+    {
+        var start = html.IndexOf("<div class=\"filtering-box\" id=\"filtering-box\">", StringComparison.Ordinal);
+        Assert.True(start >= 0, "the filter box is missing");
+        return html[start..html.IndexOf("<div class=\"toolbar-row", start, StringComparison.Ordinal)];
+    }
+
+    private static void InOrder(string text, params string[] parts)
+    {
+        var at = -1;
+        foreach (var part in parts)
+        {
+            var next = text.IndexOf(part, at + 1, StringComparison.Ordinal);
+            Assert.True(next > at, $"'{part}' is missing or out of order");
+            at = next;
+        }
+    }
+
+    [Fact]
+    public void Status_duration_and_happy_paths_share_the_first_row_with_labels_that_carry_no_colon()
+    {
+        var box = Box(Generate("FilterRows_Line.html"));
+        InOrder(box, "<div class=\"filter-row\">",
+            "<div class=\"status-filters\"><span class=\"status-filters-label\">Status</span><span class=\"fltr-controls\"><button class=\"status-toggle\"",
+            "<div class=\"duration-filters\"", "<span class=\"duration-filters-label\">Duration ≥</span><span class=\"fltr-controls\"><button class=\"percentile-btn\"",
+            "<div class=\"happy-filters\"><span class=\"happy-filters-label\">Happy paths</span><span class=\"fltr-controls\" role=\"group\" aria-label=\"Happy paths\">",
+            "<div class=\"tag-filters\">", "<div class=\"dependency-filters\">", "<div class=\"category-filters\">");
+        Assert.DoesNotContain("Status:", box);
+        Assert.DoesNotContain("happy-path-toggle", box);
+    }
+
+    [Fact]
+    public void Happy_paths_are_a_three_way_control_that_starts_on_Show()
+    {
+        var box = Box(Generate("FilterRows_Happy.html"));
+        Assert.Contains("<button type=\"button\" class=\"happy-seg\" data-hp=\"off\" aria-pressed=\"true\">Show</button>"
+            + "<button type=\"button\" class=\"happy-seg\" data-hp=\"in\" aria-pressed=\"false\">Only</button>"
+            + "<button type=\"button\" class=\"happy-seg\" data-hp=\"out\" aria-pressed=\"false\">Hide</button>", box);
+
+        // a run with no happy path has nothing to show only or hide
+        var none = Box(Generate("FilterRows_NoHappy.html", [new Feature { DisplayName = "F", Scenarios = [Run("x", "X", ExecutionResult.Passed, 5, ["api"])] }]));
+        Assert.DoesNotContain("happy-filters", none);
+        Assert.DoesNotContain("data-tag=\"Happy Path\"", none);
+    }
+
+    [Fact]
+    public void The_tags_row_has_a_switch_a_chip_per_tag_Happy_Path_first_and_one_for_the_untagged()
+    {
+        var box = Box(Generate("FilterRows_Tags.html"));
+        Assert.Contains("<div class=\"tag-filters\"><span class=\"tag-filters-label\">Tags</span><span class=\"fltr-controls\">"
+            + "<button type=\"button\" class=\"tag-mode-toggle\" data-mode=\"OR\" title=\"ANY: scenarios with any of the chosen tags. ALL: scenarios with every one of them. Click to switch.\">ANY</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"Happy Path\" aria-pressed=\"false\" title=\"1 scenario\">Happy Path</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"api\" aria-pressed=\"false\" title=\"2 scenarios\">api</button>"
+            + "<button type=\"button\" class=\"tag-toggle\" data-tag=\"smoke\" aria-pressed=\"false\" title=\"2 scenarios\">smoke</button>"
+            + "<button type=\"button\" class=\"tag-toggle tag-none\" data-tag=\"__untagged__\" data-none=\"1\" aria-pressed=\"false\" title=\"2 scenarios\">Untagged</button>"
+            + "<button type=\"button\" class=\"group-clear\" title=\"Clear the tag filters\" hidden>Clear</button></span></div>", box);
+    }
+
+    [Fact]
+    public void The_dependencies_row_counts_each_chip_and_gathers_the_scenarios_with_none()
+    {
+        var box = Box(Generate("FilterRows_Deps.html"));
+        // the marker-only diagram's "(no interactions)" participant is no dependency: its scenario has none
+        Assert.Contains("<div class=\"dependency-filters\"><span class=\"dependency-filters-label\">Dependencies</span><span class=\"fltr-controls\">"
+            + "<button type=\"button\" class=\"dep-mode-toggle\" data-mode=\"OR\" title=\"ANY: scenarios that call any of the chosen dependencies. ALL: scenarios that call every one of them. Click to switch.\">ANY</button>"
+            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Caller\" aria-pressed=\"false\" title=\"2 scenarios\">Caller</button>"
+            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Order Db\" aria-pressed=\"false\" title=\"1 scenario\">Order Db</button>"
+            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Order Service\" aria-pressed=\"false\" title=\"1 scenario\">Order Service</button>"
+            + "<button type=\"button\" class=\"dependency-toggle\" data-dependency=\"Payment Service\" aria-pressed=\"false\" title=\"1 scenario\">Payment Service</button>"
+            + "<button type=\"button\" class=\"dependency-toggle dependency-none\" data-dependency=\"__none__\" data-none=\"1\" aria-pressed=\"false\" title=\"3 scenarios\">No dependencies</button>"
+            + "<button type=\"button\" class=\"group-clear\" title=\"Clear the dependency filters\" hidden>Clear</button></span></div>", box);
+        Assert.DoesNotContain("data-dependency=\"(no interactions)\"", box);
+    }
+
+    [Fact]
+    public void The_categories_row_is_tri_state_with_no_All_button()
+    {
+        var box = Box(Generate("FilterRows_Cats.html"));
+        Assert.Contains("<div class=\"category-filters\"><span class=\"category-filters-label\">Categories</span><span class=\"fltr-controls\">"
+            + "<button type=\"button\" class=\"cat-mode-toggle\" data-mode=\"OR\" title=\"ANY: scenarios in any of the chosen categories. ALL: scenarios in every one of them. Click to switch.\">ANY</button>"
+            + "<button type=\"button\" class=\"category-toggle\" data-category=\"Fast\" aria-pressed=\"false\" title=\"2 scenarios\">Fast</button>"
+            + "<button type=\"button\" class=\"category-toggle\" data-category=\"Slow\" aria-pressed=\"false\" title=\"3 scenarios\">Slow</button>"
+            + "<button type=\"button\" class=\"category-toggle category-none\" data-category=\"__uncategorized__\" data-none=\"1\" aria-pressed=\"false\" title=\"1 scenario\">Uncategorized</button>"
+            + "<button type=\"button\" class=\"group-clear\" title=\"Clear the category filters\" hidden>Clear</button></span></div>", box);
+        Assert.DoesNotContain(">All</button>", box);
+    }
+
+    [Fact]
+    public void The_readout_says_what_the_filters_leave_showing_counting_runs_and_a_parameterized_scenario_carries_its_runs()
+    {
+        var html = Generate("FilterRows_Readout.html");
+        Assert.Contains("<div class=\"filtering-box-export\"><span class=\"filter-readout\" role=\"status\">All 5 scenarios, 2 features</span>"
+            + "<button class=\"export-btn\" onclick=\"clear_all_filters()\">Clear All</button>", html);
+        Assert.Contains(" data-runs=\"2\"", html);
+        Assert.Equal(1, System.Text.RegularExpressions.Regex.Count(html, " data-runs=\""));
+
+        var one = Generate("FilterRows_ReadoutOne.html", [new Feature { DisplayName = "F", Scenarios = [Run("x", "X", ExecutionResult.Passed, 5)] }]);
+        Assert.Contains("<span class=\"filter-readout\" role=\"status\">All 1 scenario, 1 feature</span>", one);
+    }
+
+    [Fact]
+    public void The_exports_say_Filtered_where_there_is_room()
+    {
+        var box = Box(Generate("FilterRows_Exports.html"));
+        Assert.Contains("<button class=\"export-btn\" onclick=\"export_html()\">Export <span class=\"wide-only\">Filtered </span>HTML</button>", box);
+        Assert.Contains("<button class=\"export-btn\" onclick=\"export_csv()\">Export <span class=\"wide-only\">Filtered </span>CSV</button>", box);
+    }
+
+    [Fact]
+    public void The_search_names_its_qualifiers_in_the_placeholder_and_the_help()
+    {
+        var box = Box(Generate("FilterRows_Search.html"));
+        Assert.Contains("placeholder=\"Search... (@tag, $status, dep:, duration:, &&, ||, !!)\"", box);
+        Assert.Contains("<tr><td><code>dep:name</code></td><td>Scenarios that call a dependency: part of its name is enough; commas for any of several</td>", box);
+        Assert.Contains("<tr><td><code>duration:&gt;2s</code></td>", box);
+        Assert.Contains("<tr><td><code>is:happy</code></td><td>Happy paths</td>", box);
+        Assert.Contains("<code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be negated with <code>!!</code>.</p>", box);
+    }
+
+    [Fact]
+    public void The_duration_buttons_say_what_they_show()
+    {
+        var box = Box(Generate("FilterRows_DurationTitles.html"));
+        // P50 of 20, 50, 50, 100 and 300 ms is 50 ms
+        Assert.Contains("title=\"Scenarios taking 50ms or more (the slowest half)\">P50 (50ms)</button>", box);
+        Assert.Contains("data-custom=\"1\" onclick=\"set_percentile(this)\" title=\"Scenarios taking at least the seconds you enter\">Custom</button>", box);
+    }
+
+    [Fact]
+    public void A_report_with_no_tags_categories_or_dependencies_has_none_of_their_rows()
+    {
+        var box = Box(Generate("FilterRows_Bare.html", [new Feature { DisplayName = "F", Scenarios = [Run("x", "X", ExecutionResult.Passed, 5)] }]));
+        Assert.DoesNotContain("tag-filters", box);
+        Assert.DoesNotContain("category-filters", box);
+        // the diagrams passed belong to scenarios this run does not have: no scenario has a dependency
+        Assert.DoesNotContain("dependency-filters", box);
+    }
+}

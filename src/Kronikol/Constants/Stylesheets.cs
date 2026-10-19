@@ -63,7 +63,8 @@ public class Stylesheets
                 .example-diagrams { border-color: #DDD6FE; }
 
                 /* Idle hovers first: an active rule of the same specificity must come after them. */
-                .happy-path-toggle:hover,
+                .happy-seg:hover,
+                .tag-toggle:hover,
                 .dependency-toggle:hover,
                 .status-toggle:hover,
                 .category-toggle:hover {
@@ -74,11 +75,12 @@ public class Stylesheets
                 .export-btn:hover, .fold-btn:hover, .percentile-btn:hover, .timeline-toggle:hover,
                 .details-radio-btn:hover, .scenario-diagram-controls-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }
                 .diagram-toggle-btn:hover, .iflow-toggle-btn:hover { background: #EDE9FE; }
-                .dep-mode-toggle:hover, .cat-mode-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }
+                .dep-mode-toggle:hover, .cat-mode-toggle:hover, .tag-mode-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }
                 .iflow-rel-summary-table tr:hover td { background: #EDE9FE; }
                 .scenario-link:hover, .copy-scenario-name:hover { background: #EDE9FE; }
 
-                .happy-path-toggle.happy-path-active,
+                .happy-seg[aria-pressed="true"],
+                .tag-toggle.tag-active,
                 .dependency-toggle.dependency-active,
                 .status-toggle.status-active,
                 .category-toggle.category-active {

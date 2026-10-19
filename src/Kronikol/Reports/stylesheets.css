@@ -205,6 +205,8 @@
             border: 1px solid var(--kron-hairline);
             border-radius: 12px;
             box-shadow: var(--kron-card-shadow);
+            /* the filter rows reflow on the box's own width (S6) */
+            container-type: inline-size;
         }
 
         .filtering-box h2 {
@@ -239,7 +241,7 @@
         .filters {
             display: flex;
             flex-direction: column;
-            gap: 1em;
+            gap: 0;
         }
 
         .filter-search {
@@ -255,13 +257,21 @@
             border-radius: 0.5em;
             width: 100%;
             box-sizing: border-box;
-            border: 1px solid rgb(180, 180, 180);
+            border: 1px solid var(--kron-select-border);
+            background: var(--kron-field);
+            color: var(--kron-ink);
+            font-family: var(--kron-font);
+            font-size: var(--kron-fs-body);
         }
 
         #searchbar:disabled {
             background: rgb(245, 245, 245);
             cursor: not-allowed;
         }
+        #searchbar::placeholder { color: var(--kron-faint); opacity: 1; }
+        #searchbar:focus { background: var(--kron-card); border-color: var(--kron-accent); outline: 2px solid var(--kron-accent); outline-offset: 1px; box-shadow: none; }
+        /* a dep:, duration: or is: qualifier the search could not read stays in it as text, and the field says so (S6) */
+        #searchbar.kron-q-bad { border-color: var(--kron-warn); }
 
         /* Deep-search status chip ("+N more found in payloads & diagrams") */
         .kron-deep-chip {
@@ -356,9 +366,9 @@
         .filter-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5em;
-            align-items: center;
-            margin-top: 0.5em;
+            gap: 14px;
+            align-items: baseline;
+            margin-top: 12px;
         }
 
         .failure-result {
@@ -444,75 +454,114 @@
         .hp-hidden {
             display: none !important;
         }
-        
-        .happy-path-filters, .dependency-filters, .status-filters {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.3em;
+        /* The filter rows (5.0.0, S5 and S6). Each row is a label in a 92 px column and 8 px, then its controls in a
+           wrapping flex of their own, so a second line of chips stays in the control column and the label sits on the
+           first chip's baseline. Every boxed control is 28 px: a 16 px line, 5 px of padding each side and the border. */
+        .status-filters, .duration-filters, .happy-filters, .tag-filters, .dependency-filters, .category-filters { display: flex; align-items: baseline; column-gap: 0; margin-top: 10px; }
+        .filter-row > .status-filters, .filter-row > .duration-filters, .filter-row > .happy-filters { margin-top: 0; }
+        .filter-row > .status-filters { flex: none; flex-wrap: nowrap; }
+        .filter-row > .duration-filters, .filter-row > .happy-filters { flex-basis: 100%; }
+        .status-filters-label, .duration-filters-label, .happy-filters-label, .tag-filters-label, .dependency-filters-label, .category-filters-label {
+            flex: 0 0 92px; margin-right: 8px; color: var(--kron-label);
+            font-size: var(--kron-fs-label); font-weight: 600; line-height: 16px; letter-spacing: var(--kron-label-track); text-transform: uppercase;
+        }
+        .fltr-controls { display: flex; flex: 1 1 0; flex-wrap: wrap; align-items: baseline; min-width: 0; row-gap: 6px; }
+        .tag-filters .fltr-controls, .dependency-filters .fltr-controls, .category-filters .fltr-controls { column-gap: 6px; }
+        .filter-row > .status-filters > .fltr-controls, .happy-filters > .fltr-controls { flex: none; flex-wrap: nowrap; }
+
+        /* Status, Duration and Happy paths: segmented radio groups, the chosen segment drawn over its neighbours' edge */
+        .status-toggle, .percentile-btn, .happy-seg {
+            margin: 0 0 0 -1px; padding: 5px 11px; border: 1px solid var(--kron-control-border); border-radius: 0;
+            background: var(--kron-card); color: var(--kron-ink-soft); font: var(--kron-fs-control)/16px var(--kron-font); cursor: pointer;
+        }
+        .status-toggle:first-of-type, .percentile-btn:first-of-type, .happy-seg:first-of-type { margin-left: 0; border-radius: 6px 0 0 6px; }
+        .status-toggle:last-of-type, .percentile-btn:last-of-type, .happy-seg:last-of-type { border-radius: 0 6px 6px 0; }
+        .status-toggle:hover, .percentile-btn:hover, .happy-seg:hover { background: var(--kron-hover); }
+        .status-toggle.status-active, .percentile-btn.percentile-active, .happy-seg[aria-pressed="true"] {
+            position: relative; z-index: 1; border-color: var(--kron-selected-edge); background: var(--kron-selected); color: var(--kron-selected-ink); font-weight: 600;
         }
 
-        .happy-path-filters {
+        /* Tags, Dependencies and Categories: word chips. Has is the row's active class, has not its exclude class, a red
+           tint with no strike through the name; a chip for the scenarios with none is in italics. */
+        .tag-toggle, .dependency-toggle, .category-toggle {
+            position: relative; padding: 5px 10px; border: 1px solid var(--kron-control-border); border-radius: 999px;
+            background: var(--kron-card); color: var(--kron-ink-quiet); font: var(--kron-fs-control)/16px var(--kron-font); cursor: pointer;
         }
-        
-        .happy-path-filters-label, .dependency-filters-label, .status-filters-label {
-            font-weight: bold;
-            margin-right: 0.3em;
+        .tag-toggle:hover, .dependency-toggle:hover, .category-toggle:hover { background: var(--kron-hover); }
+        .tag-toggle.tag-active, .dependency-toggle.dependency-active, .category-toggle.category-active {
+            z-index: 1; border-color: var(--kron-selected-edge); background: var(--kron-selected); color: var(--kron-selected-ink);
         }
-        
-        .happy-path-toggle, .dependency-toggle, .status-toggle {
-            padding: 0.25em 0.6em;
-            border: 1px solid rgb(180, 180, 180);
-            border-radius: 0.4em;
-            background: white;
-            cursor: pointer;
-            font-size: 0.85em;
+        .tag-toggle.tag-exclude, .dependency-toggle.dependency-exclude, .category-toggle.category-exclude {
+            border-color: var(--kron-exclude-edge); background: var(--kron-exclude-soft); color: var(--kron-exclude-ink);
         }
-        
-        .happy-path-toggle:hover, .dependency-toggle:hover, .status-toggle:hover {
-            background: rgb(230, 240, 255);
-            border-color: rgb(100, 150, 255);
+        .tag-none, .dependency-none, .category-none { font-style: italic; }
+
+        /* a row's ANY / ALL switch is a mode, not a filter: a small square button before the chips */
+        .tag-mode-toggle, .dep-mode-toggle, .cat-mode-toggle {
+            margin-right: 2px; padding: 6px 9px 4px; border: 1px solid var(--kron-control-border); border-radius: 6px;
+            background: var(--kron-field); color: var(--kron-ink-quiet); font: 600 11px/16px var(--kron-font); letter-spacing: 0.03em; cursor: pointer;
         }
-        
-        .happy-path-toggle.happy-path-active, .dependency-toggle.dependency-active, .status-toggle.status-active {
-            background: rgb(66, 133, 244);
-            color: white;
-            border-color: rgb(66, 133, 244);
+        .tag-mode-toggle:hover, .dep-mode-toggle:hover, .cat-mode-toggle:hover { background: var(--kron-hover); }
+
+        /* a row's Clear: a text action in the accent after its last chip, there only while one of them is set */
+        .group-clear {
+            align-self: center; margin-left: 2px; padding: 4px 6px; border: 0; border-radius: 4px; background: none;
+            color: var(--kron-accent); font: 600 var(--kron-fs-control)/16px var(--kron-font); cursor: pointer;
+        }
+        .group-clear:hover { text-decoration: underline; }
+        .group-clear[hidden] { display: none; }
+
+        .status-toggle:focus-visible, .percentile-btn:focus-visible, .happy-seg:focus-visible, .tag-toggle:focus-visible,
+        .dependency-toggle:focus-visible, .category-toggle:focus-visible, .tag-mode-toggle:focus-visible, .dep-mode-toggle:focus-visible,
+        .cat-mode-toggle:focus-visible, .group-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+
+        /* what the filters leave showing, on the FILTERING line left of Clear All, set apart from the actions by a rule */
+        .filter-readout {
+            align-self: center; margin-right: 8px; padding-right: 12px; border-right: 1px solid var(--kron-divider);
+            color: var(--kron-muted); font-size: var(--kron-fs-meta); line-height: 20px; font-variant-numeric: tabular-nums; white-space: nowrap;
+        }
+        .filter-readout.is-filtered { color: var(--kron-selected-ink); }
+        .filter-readout.is-filtered b {
+            display: inline-block; margin-right: 6px; padding: 0 7px; border: 1px solid var(--kron-selected-edge); border-radius: 999px;
+            background: var(--kron-selected); font-weight: 600; line-height: 18px;
         }
 
-        .dep-mode-toggle {
-            padding: 0.15em 0.5em;
-            border: 1px solid rgb(180, 180, 180);
-            border-radius: 0.4em;
-            background: rgb(240, 240, 240);
-            cursor: pointer;
-            font-size: 0.75em;
-            font-weight: bold;
-            min-width: 2.5em;
-            text-align: center;
+        /* The rows reflow on the filter box's own width, not the window's. Under 520 px a segmented run that cannot fit
+           whole becomes a grid of equal pills; under 430 px each label takes a line of its own above its controls (which
+           must claim the whole line too, or they collapse to nothing beside it), and the exports drop "Filtered". */
+        @container (max-width: 520px) {
+            .status-filters > .fltr-controls, .duration-filters > .fltr-controls, .happy-filters > .fltr-controls { display: grid; flex: 1 1 0; gap: 6px; }
+            .status-filters > .fltr-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            .duration-filters > .fltr-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .happy-filters > .fltr-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .filter-row > .status-filters { flex: 1 1 100%; flex-wrap: wrap; }
+            .status-toggle, .percentile-btn, .happy-seg, .status-toggle:first-of-type, .percentile-btn:first-of-type, .happy-seg:first-of-type,
+            .status-toggle:last-of-type, .percentile-btn:last-of-type, .happy-seg:last-of-type { margin: 0; border-radius: 6px; text-align: center; }
+            .status-toggle { padding-left: 4px; padding-right: 4px; }
+            .percentile-btn:last-of-type { grid-column: 1 / -1; }
         }
+        @container (max-width: 430px) {
+            .status-filters, .duration-filters, .happy-filters, .tag-filters, .dependency-filters, .category-filters { flex-wrap: wrap; }
+            .status-filters-label, .duration-filters-label, .happy-filters-label, .tag-filters-label, .dependency-filters-label,
+            .category-filters-label { flex-basis: 100%; margin: 0 8px 2px 0; }
+            .fltr-controls { flex-basis: 100%; }
+            .wide-only { display: none; }
+            /* the readout wraps rather than widen the actions past the box */
+            .filter-readout { white-space: normal; }
+        }
+        @container (max-width: 300px) {
+            .status-filters > .fltr-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        
 
-        .dep-mode-toggle:hover {
-            background: rgb(220, 230, 245);
-            border-color: rgb(100, 150, 255);
-        }
+        
+        
+        
+        
 
-        .cat-mode-toggle {
-            padding: 0.15em 0.5em;
-            border: 1px solid rgb(180, 180, 180);
-            border-radius: 0.4em;
-            background: rgb(240, 240, 240);
-            cursor: pointer;
-            font-size: 0.75em;
-            font-weight: bold;
-            min-width: 2.5em;
-            text-align: center;
-        }
 
-        .cat-mode-toggle:hover {
-            background: rgb(220, 230, 245);
-            border-color: rgb(100, 150, 255);
-        }
+
+
 
         .duration-badge {
             display: inline-block;
@@ -538,17 +587,7 @@
             color: var(--kron-fail);
         }
 
-        .duration-filters {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.3em;
-        }
 
-        .duration-filters-label {
-            font-weight: bold;
-            margin-right: 0.3em;
-        }
 
         #duration-threshold {
             width: 7em;
@@ -569,25 +608,8 @@
             gap: 0.3em;
         }
 
-        .percentile-btn {
-            padding: 0.25em 0.6em;
-            border: 1px solid rgb(180, 180, 180);
-            border-radius: 0.4em;
-            background: white;
-            cursor: pointer;
-            font-size: 0.85em;
-        }
 
-        .percentile-btn:hover {
-            background: rgb(230, 240, 255);
-            border-color: rgb(100, 150, 255);
-        }
 
-        .percentile-btn.percentile-active {
-            background: rgb(66, 133, 244);
-            color: white;
-            border-color: rgb(66, 133, 244);
-        }
 
 
 
@@ -743,51 +765,51 @@
             display: flex; flex-wrap: wrap; align-items: center; column-gap: 14px; row-gap: 6px; padding: 7px 14px 8px;
             border-top: 1px solid var(--kron-divider-soft);
         }
-                /* The Features tools (5.0.0, S4): Full and Summary, the Features tab's own tabs drawn one step below the report's
-                   (13 px to its 14, the same accent underline); a short rule keeps them apart from the fold groups beside them. */
-                .view-switch { position: relative; display: inline-flex; gap: 18px; margin-right: 8px; padding-right: 18px; }
-                .view-switch::after { content: ''; position: absolute; right: 0; top: 50%; width: 1px; height: 18px; margin-top: -9px; background: var(--kron-divider); }
-                .view-btn {
-                    margin: 0; border: 0; border-radius: 0; background: none; padding: 4px 1px; cursor: pointer;
-                    font: 600 var(--kron-fs-control)/20px var(--kron-font); color: var(--kron-ink-quiet); box-shadow: inset 0 -2px 0 transparent;
-                }
-                .view-btn:hover { color: var(--kron-ink); }
-                .view-btn[aria-selected="true"], .view-btn[aria-selected="true"]:hover { color: var(--kron-accent); box-shadow: inset 0 -2px 0 var(--kron-accent); }
-                .view-btn:focus-visible, .fold-btn:focus-visible, .sort-select:focus-visible, .tools-gear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
-                /* expand and collapse, per level, as a label and two icon buttons (item R17.2); one with nothing to do is dimmed */
-                .fold-group { display: inline-flex; align-items: center; gap: 2px; margin-left: 12px; }
-                .fold-group + .fold-group { margin-left: 14px; }
-                .fold-label, .sort-label {
-                    font-size: var(--kron-fs-label); font-weight: 600; letter-spacing: var(--kron-label-track); line-height: 16px;
-                    text-transform: uppercase; color: var(--kron-label);
-                }
-                .fold-label { margin-right: 4px; }
-                .fold-btn {
-                    display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0;
-                    border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--kron-ink-soft); cursor: pointer;
-                }
-                .fold-btn:hover { background: var(--kron-hover); color: var(--kron-ink); }
-                .fold-btn[aria-disabled="true"] { opacity: 0.38; cursor: default; background: transparent; color: var(--kron-ink-soft); }
-                .fold-btn svg { width: 16px; height: 16px; display: block; }
-                .tools-spacer { flex: 1 1 auto; }
-                /* the sort, at the right end: the order holds for both views */
-                .sort-group { display: inline-flex; align-items: center; gap: 8px; }
-                .sort-select {
-                    appearance: none; -webkit-appearance: none; margin: 0; padding: 5px 22px 5px 9px; cursor: pointer;
-                    font: 13px/1.25 var(--kron-font); color: var(--kron-ink-soft); border: 1px solid var(--kron-select-border); border-radius: 6px;
-                    background: var(--kron-card) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%236a7280'/%3E%3C/svg%3E") no-repeat right 7px center;
-                }
-                .sort-select:hover { border-color: var(--kron-ink-quiet); }
-                .tools-gear { display: none; }
-                .tools-gear:hover { background: var(--kron-hover); }
-                /* the Summary view: the tools that act on the cards hide with them (item R17.28) */
-                .features-table-mode .toolbar-right, .features-table-mode .fold-group { display: none; }
-                .features-table-mode .view-switch::after { content: none; }
-                @media (min-width: 768.02px) {
-                    /* the views' underline sits on the line under the tools, as the report's tabs sit on theirs */
-                    .features-tools-line > .view-switch { align-self: stretch; margin-top: -8px; margin-bottom: -8px; }
-                    .features-tools-line > .view-switch > .view-btn { padding: 0 1px; }
-                }
+        /* The Features tools (5.0.0, S4): Full and Summary, the Features tab's own tabs drawn one step below the report's
+           (13 px to its 14, the same accent underline); a short rule keeps them apart from the fold groups beside them. */
+        .view-switch { position: relative; display: inline-flex; gap: 18px; margin-right: 8px; padding-right: 18px; }
+        .view-switch::after { content: ''; position: absolute; right: 0; top: 50%; width: 1px; height: 18px; margin-top: -9px; background: var(--kron-divider); }
+        .view-btn {
+            margin: 0; border: 0; border-radius: 0; background: none; padding: 4px 1px; cursor: pointer;
+            font: 600 var(--kron-fs-control)/20px var(--kron-font); color: var(--kron-ink-quiet); box-shadow: inset 0 -2px 0 transparent;
+        }
+        .view-btn:hover { color: var(--kron-ink); }
+        .view-btn[aria-selected="true"], .view-btn[aria-selected="true"]:hover { color: var(--kron-accent); box-shadow: inset 0 -2px 0 var(--kron-accent); }
+        .view-btn:focus-visible, .fold-btn:focus-visible, .sort-select:focus-visible, .tools-gear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+        /* expand and collapse, per level, as a label and two icon buttons (item R17.2); one with nothing to do is dimmed */
+        .fold-group { display: inline-flex; align-items: center; gap: 2px; margin-left: 12px; }
+        .fold-group + .fold-group { margin-left: 14px; }
+        .fold-label, .sort-label {
+            font-size: var(--kron-fs-label); font-weight: 600; letter-spacing: var(--kron-label-track); line-height: 16px;
+            text-transform: uppercase; color: var(--kron-label);
+        }
+        .fold-label { margin-right: 4px; }
+        .fold-btn {
+            display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0;
+            border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--kron-ink-soft); cursor: pointer;
+        }
+        .fold-btn:hover { background: var(--kron-hover); color: var(--kron-ink); }
+        .fold-btn[aria-disabled="true"] { opacity: 0.38; cursor: default; background: transparent; color: var(--kron-ink-soft); }
+        .fold-btn svg { width: 16px; height: 16px; display: block; }
+        .tools-spacer { flex: 1 1 auto; }
+        /* the sort, at the right end: the order holds for both views */
+        .sort-group { display: inline-flex; align-items: center; gap: 8px; }
+        .sort-select {
+            appearance: none; -webkit-appearance: none; margin: 0; padding: 5px 22px 5px 9px; cursor: pointer;
+            font: 13px/1.25 var(--kron-font); color: var(--kron-ink-soft); border: 1px solid var(--kron-select-border); border-radius: 6px;
+            background: var(--kron-card) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%236a7280'/%3E%3C/svg%3E") no-repeat right 7px center;
+        }
+        .sort-select:hover { border-color: var(--kron-ink-quiet); }
+        .tools-gear { display: none; }
+        .tools-gear:hover { background: var(--kron-hover); }
+        /* the Summary view: the tools that act on the cards hide with them (item R17.28) */
+        .features-table-mode .toolbar-right, .features-table-mode .fold-group { display: none; }
+        .features-table-mode .view-switch::after { content: none; }
+        @media (min-width: 768.02px) {
+            /* the views' underline sits on the line under the tools, as the report's tabs sit on theirs */
+            .features-tools-line > .view-switch { align-self: stretch; margin-top: -8px; margin-bottom: -8px; }
+            .features-tools-line > .view-switch > .view-btn { padding: 0 1px; }
+        }
         .report-panel > .scenario-timeline, .report-panel > .component-diagram-section { margin: 0 0 14px; }
         /* what scrolls into view inside the panels stops below the bar while it sticks (report-tabs-script.js sets the height) */
         .report-panels, .report-panels * { scroll-margin-top: calc(var(--kron-nav-h, 0px) + 12px); }
@@ -1140,37 +1162,10 @@
         .examples-row-expanded { background: #ffe0e0; }
         .examples-detail-row td { padding: 0.5em 1em; background: #fff5f5; }
 
-        .category-filters {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.3em;
-        }
 
-        .category-filters-label {
-            font-weight: bold;
-            margin-right: 0.3em;
-        }
 
-        .category-toggle {
-            padding: 0.25em 0.6em;
-            border: 1px solid rgb(180, 180, 180);
-            border-radius: 0.4em;
-            background: white;
-            cursor: pointer;
-            font-size: 0.85em;
-        }
 
-        .category-toggle:hover {
-            background: rgb(230, 240, 255);
-            border-color: rgb(100, 150, 255);
-        }
 
-        .category-toggle.category-active {
-            background: rgb(66, 133, 244);
-            color: white;
-            border-color: rgb(66, 133, 244);
-        }
 
         .cat-hidden {
             display: none !important;
@@ -1178,63 +1173,63 @@
 
 
         .features-summary-table-wrapper {
-                        padding: 0;
-                        overflow-x: auto;
+            padding: 0;
+            overflow-x: auto;
         }
 
         .feature-summary-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        font-size: 12.5px;
-                        color: var(--kron-ink-soft);
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+            color: var(--kron-ink-soft);
         }
         .feature-summary-table th, .feature-summary-table td {
-                        border: none;
-                        border-bottom: 1px solid var(--kron-hairline-soft);
-                        padding: 5px 12px;
-                        text-align: left;
+            border: none;
+            border-bottom: 1px solid var(--kron-hairline-soft);
+            padding: 5px 12px;
+            text-align: left;
         }
         .feature-summary-table th {
-                        padding: 7px 12px;
-                        font-size: 10.5px;
-                        font-weight: 600;
-                        letter-spacing: 0.06em;
-                        text-transform: uppercase;
-                        color: var(--kron-label-soft);
-                        background: var(--kron-strip);
-                        cursor: pointer;
-                        user-select: none;
+            padding: 7px 12px;
+            font-size: 10.5px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--kron-label-soft);
+            background: var(--kron-strip);
+            cursor: pointer;
+            user-select: none;
         }
         .feature-summary-table th:hover {
-                        color: var(--kron-ink);
+            color: var(--kron-ink);
         }
         .feature-summary-table tr.failed td {
-                        background: var(--kron-fail-soft);
+            background: var(--kron-fail-soft);
         }
-                /* The features table is the Features tab's Summary view (5.0.0, S4): a card beside the feature cards, a row above
-                   the headers naming the column groups, each group's first column ruled off, and a row opening its feature. */
-                .features-table-view {
-                    margin: 0 0 14px; overflow: hidden; background: var(--kron-card);
-                    border: 1px solid var(--kron-hairline); border-radius: 12px; box-shadow: var(--kron-card-shadow);
-                }
-                .feature-summary-table thead tr:last-child th { border-bottom: 1px solid var(--kron-hairline); }
-                .feature-summary-table tr.table-groups th { padding: 8px 12px 2px; text-align: center; border-bottom: none; color: var(--kron-label); cursor: default; }
-                .feature-summary-table tr.table-groups th:hover { color: var(--kron-label); }
-                .feature-summary-table td { vertical-align: baseline; font-variant-numeric: tabular-nums; }
-                .feature-summary-table th:not(:first-child), .feature-summary-table td:not(:first-child) { text-align: right; }
-                .feature-summary-table tr.table-groups th:not(:first-child) { text-align: center; }
-                /* numbers are text: the page's font with tabular figures, so the columns line up without a second typeface */
+        /* The features table is the Features tab's Summary view (5.0.0, S4): a card beside the feature cards, a row above
+           the headers naming the column groups, each group's first column ruled off, and a row opening its feature. */
+        .features-table-view {
+            margin: 0 0 14px; overflow: hidden; background: var(--kron-card);
+            border: 1px solid var(--kron-hairline); border-radius: 12px; box-shadow: var(--kron-card-shadow);
+        }
+        .feature-summary-table thead tr:last-child th { border-bottom: 1px solid var(--kron-hairline); }
+        .feature-summary-table tr.table-groups th { padding: 8px 12px 2px; text-align: center; border-bottom: none; color: var(--kron-label); cursor: default; }
+        .feature-summary-table tr.table-groups th:hover { color: var(--kron-label); }
+        .feature-summary-table td { vertical-align: baseline; font-variant-numeric: tabular-nums; }
+        .feature-summary-table th:not(:first-child), .feature-summary-table td:not(:first-child) { text-align: right; }
+        .feature-summary-table tr.table-groups th:not(:first-child) { text-align: center; }
+        /* numbers are text: the page's font with tabular figures, so the columns line up without a second typeface */
         .feature-summary-table td:not(:first-child) { font-size: 12px; }
-                .feature-summary-table tr:last-child td { border-bottom: none; }
-                .feature-summary-table .grp-start { border-left: 1px solid var(--kron-hairline); }
-                .feature-summary-table tbody tr { cursor: pointer; }
-                .feature-summary-table tbody tr:hover td { background: var(--kron-hover); }
-                .feature-summary-table tbody tr.failed td:first-child { color: var(--kron-fail); font-weight: 600; }
-                .feature-summary-table tbody tr.failed td:nth-child(4) { color: var(--kron-fail); font-weight: 650; }
-                /* a feature's name opens it: a button, so the keyboard reaches it, drawn as the cell's own text */
-                .feature-open { margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: inherit; cursor: pointer; }
-                .feature-open:hover { color: var(--kron-accent); text-decoration: underline; text-underline-offset: 2px; }
-                .feature-open:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 2px; }
+        .feature-summary-table tr:last-child td { border-bottom: none; }
+        .feature-summary-table .grp-start { border-left: 1px solid var(--kron-hairline); }
+        .feature-summary-table tbody tr { cursor: pointer; }
+        .feature-summary-table tbody tr:hover td { background: var(--kron-hover); }
+        .feature-summary-table tbody tr.failed td:first-child { color: var(--kron-fail); font-weight: 600; }
+        .feature-summary-table tbody tr.failed td:nth-child(4) { color: var(--kron-fail); font-weight: 650; }
+        /* a feature's name opens it: a button, so the keyboard reaches it, drawn as the cell's own text */
+        .feature-open { margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: inherit; cursor: pointer; }
+        .feature-open:hover { color: var(--kron-accent); text-decoration: underline; text-underline-offset: 2px; }
+        .feature-open:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 2px; }
 
         .step-param-inline {
             padding: 1px 4px;
@@ -1924,7 +1919,6 @@
 
             .filter-row {
                 flex-direction: column;
-                align-items: flex-start;
             }
 
             /* #2 Collapsible filter section — toggle styling */
@@ -2061,6 +2055,8 @@
             .tools-open .tools-gear { background: var(--kron-selected); color: var(--kron-selected-ink); border-color: var(--kron-selected-edge); }
             .report-nav:not(.tools-open) .features-tools .toolbar-right { display: none; }
             .features-tools .toolbar-right { padding: 0 14px 10px; }
+
+            #searchbar { font-size: 16px; }
 }
 
         @media (max-width: 480px) {
@@ -2077,13 +2073,6 @@
                 gap: 0.3em;
             }
 
-            /* #6 Touch target size bump */
-            .happy-path-toggle, .dependency-toggle, .status-toggle,
-            .category-toggle, .percentile-btn {
-                font-size: 0.75em;
-                padding: 0.3em 0.6em;
-                min-height: 36px;
-            }
             /* an export button keeps the card's type and padding (5.0.0) and only grows to the touch height */
             .export-btn { min-height: 36px; }
 
@@ -2096,18 +2085,7 @@
             .features-tools-line .fold-group + .fold-group { margin-left: 14px; }
             .tools-gear { order: 5; margin-left: auto; }
 
-            /* #5 Dependency/category buttons overflow — truncate long labels */
-            .dependency-toggle, .category-toggle {
-                max-width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
 
-            .dependency-filters, .category-filters {
-                max-width: 100%;
-                overflow: hidden;
-            }
 
 
 
@@ -2116,7 +2094,18 @@
             .truncate-lines-label {
                 display: none;
             }
-        }
+        
+            /* #6 Touch target size bump: every filter control */
+            .status-toggle, .percentile-btn, .happy-seg, .tag-toggle, .dependency-toggle, .category-toggle { min-height: 36px; }
+
+            /* #5 Long chip names are cut with an ellipsis inside the box */
+            .tag-toggle, .dependency-toggle, .category-toggle {
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+}
         /* K9: explicit state for scenarios with no tracked interactions */
         .no-interactions {
             color: #8a8f98;

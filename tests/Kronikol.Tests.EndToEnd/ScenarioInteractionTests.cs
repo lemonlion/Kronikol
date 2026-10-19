@@ -370,7 +370,8 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ScenarioHappyFilter.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        var hpBtn = Page.Locator(".happy-path-toggle");
+        // 5.0.0: Happy paths is Show, Only or Hide (plans/OPTION_C_PLAN.md S6)
+        var hpBtn = Page.Locator(".filtering-box .happy-seg[data-hp='in']");
         await hpBtn.ClickAsync();
 
         await Page.WaitForFunctionAsync("""
@@ -380,7 +381,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
             }
         """, null, new() { Timeout = 3000, PollingInterval = 200 });
 
-        await Expect(hpBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("happy-path-active"));
+        await Expect(hpBtn).ToHaveAttributeAsync("aria-pressed", "true");
     }
 
     // ── Category filter ──

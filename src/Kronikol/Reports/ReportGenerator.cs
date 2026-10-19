@@ -1312,7 +1312,7 @@ public static class ReportGenerator
         // where the BrowserJs render script is absent.
         var decompressHelper = LoadResource("report-decompress-helper.js");
 
-        var toggleHappyPathsFunction = LoadResource("report-toggle-happy-paths-function.js");
+        var filterChipsScript = LoadResource("report-filter-chips-script.js");
         var searchFunction = LoadScript("report-search-function.js", drawsVerdicts);
 
         // Deep search ("search everything") client — always included; it no-ops when the
@@ -1509,7 +1509,7 @@ public static class ReportGenerator
                                 {{decompressHelper}}
                                 {{advancedSearchScript}}
                                 {{scenarioFeatureMapHelper}}
-                                {{toggleHappyPathsFunction}}
+                                {{filterChipsScript}}
                                 {{searchFunction}}
                                 {{searchIndexClientScript}}
                                 {{dependencyFilterFunction}}
@@ -1680,10 +1680,14 @@ public static class ReportGenerator
             foreach (var d in deps) allDependencies.Add(d);
         }
 
+        // What the filters leave showing (5.0.0, plans/OPTION_C_PLAN.md S5, D14), beside Clear All: written here for the
+        // page as it opens, and kept by the filters (report-scenario-feature-map-helper.js), counting the scenarios as
+        // the run counts them. The exports drop "Filtered" where there is no room for it (D13).
+        var readoutText = $"All {ScenarioCount(features.Sum(f => f.Scenarios.Length))}, {(features.Length == 1 ? "1 feature" : string.Create(CultureInfo.InvariantCulture, $"{features.Length} features"))}";
         body.Append($"""
                  <div class="filtering-box" id="filtering-box">
-                    <div class="filtering-box-header"><h2>Filtering</h2><div class="filtering-box-export"><button class="export-btn" onclick="clear_all_filters()">Clear All</button><button class="export-btn" onclick="export_html()">Export Filtered HTML</button><button class="export-btn" onclick="export_csv()">Export Filtered CSV</button></div></div>
-                    <div class="filter-search"><input id="searchbar" autocomplete="off" placeholder="Search... (@tag, $status, &&, ||, !!, parentheses)" onkeyup="search_scenarios()" /><button type="button" class="search-help-toggle" onclick="toggle_search_help()" title="Search syntax help">?</button></div>
+                    <div class="filtering-box-header"><h2>Filtering</h2><div class="filtering-box-export"><span class="filter-readout" role="status">{readoutText}</span><button class="export-btn" onclick="clear_all_filters()">Clear All</button><button class="export-btn" onclick="export_html()">Export <span class="wide-only">Filtered </span>HTML</button><button class="export-btn" onclick="export_csv()">Export <span class="wide-only">Filtered </span>CSV</button></div></div>
+                    <div class="filter-search"><input id="searchbar" autocomplete="off" placeholder="Search... (@tag, $status, dep:, duration:, &&, ||, !!)" onkeyup="search_scenarios()" /><button type="button" class="search-help-toggle" onclick="toggle_search_help()" title="Search syntax help">?</button></div>
                     <div class="mobile-filter-toggle">Filters</div>
                     <div class="filters" id="filter-rows">
                     <div class="search-help-panel" style="display:none">
@@ -1697,31 +1701,34 @@ public static class ReportGenerator
                     <tr><td><code>( )</code></td><td>Parentheses — group expressions</td><td><code>(a || b) && c</code></td></tr>
                     <tr><td><code>@tag</code></td><td>Filter by tag / category</td><td><code>@smoke && @api</code></td></tr>
                     <tr><td><code>$status</code></td><td>Filter by status</td><td><code>$failed</code>, <code>$passed</code>, <code>$skipped</code></td></tr>
+                    <tr><td><code>dep:name</code></td><td>Scenarios that call a dependency: part of its name is enough; commas for any of several</td><td><code>dep:payment</code>, <code>dep:"order service"</code>, <code>dep:payment,order</code></td></tr>
+                    <tr><td><code>duration:&gt;2s</code></td><td>Scenarios by their own time: &gt;, &gt;=, &lt;, &lt;= or a range; ms, s or m; p50, p90, p95, p99 are this report's percentiles</td><td><code>duration:&gt;2s</code>, <code>duration:&lt;500ms</code>, <code>duration:&gt;p90</code>, <code>duration:1s..5s</code></td></tr>
+                    <tr><td><code>is:happy</code></td><td>Happy paths</td><td><code>is:happy</code>, <code>!!is:happy</code></td></tr>
                     </table>
-                    <p class="search-help-note">Space-separated words use implicit AND. Press <kbd>/</kbd> to focus the search bar. Operators <code>&&</code> <code>||</code> <code>!!</code> activate advanced mode; without them, legacy tag expressions (<code>@a and @b or not @c</code>) are also supported.</p>
+                    <p class="search-help-note">Space-separated words use implicit AND. Press <kbd>/</kbd> to focus the search bar. Operators <code>&&</code> <code>||</code> <code>!!</code> activate advanced mode; without them, legacy tag expressions (<code>@a and @b or not @c</code>) are also supported. <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be negated with <code>!!</code>.</p>
                     </div>
                     <div class="filter-row">
                  """);
 
+        // The filter rows (5.0.0, plans/OPTION_C_PLAN.md S6, D6 to D12, D19): labels without colons and each row's controls
+        // in a span.fltr-controls; Status, Duration and Happy paths share the first row; then Tags, Dependencies and
+        // Categories, each a row of tri-state chips (off, has, has not) with an ANY / ALL switch, a chip for the scenarios
+        // with none, and a Clear (report-filter-chips-script.js). A chip's title counts the scenarios it picks out.
+        var runs = features.SelectMany(f => f.Scenarios).ToArray();
         // Status filter toggles
         {
-            body.Append("""<div class="status-filters"><span class="status-filters-label">Status:</span>""");
+            body.Append("""<div class="status-filters"><span class="status-filters-label">Status</span><span class="fltr-controls">""");
             foreach (var status in Enum.GetValues<ExecutionResult>().OrderBy(s => s))
             {
                 if (status == ExecutionResult.SkippedAfterFailure) continue;
                 var statusName = status.ToString();
                 body.Append($"""<button class="status-toggle" data-status="{statusName}" onclick="toggle_status(this)">{statusName}</button>""");
             }
-            body.Append("</div>");
+            body.Append("</span></div>");
         }
 
-        body.Append("""
-                    <div class="happy-path-filters"><span class="happy-path-filters-label">Happy Paths:</span><button class="happy-path-toggle" onclick="toggle_happy_paths(this)">Happy Paths Only</button></div>
-                 """);
-
-        body.Append("</div>"); // close filter-row
-
-        // Duration filter (only shown when scenarios have duration data)
+        // Duration filter (only shown when scenarios have duration data), on the Status line (D7). Each button says what
+        // it shows, and that the first-call warm-up is left out when the run had one (D19).
         if (hasDurations)
         {
             // Each scenario's own time: a scenario slow only because it paid the run's first-call warm-up is not slow
@@ -1739,17 +1746,44 @@ public static class ReportGenerator
             var p95Ms = Percentile(durationsMs, 0.95);
             var p99Ms = Percentile(durationsMs, 0.99);
 
-            body.Append(CultureInfo.InvariantCulture, $"""<div class="duration-filters" data-p50="{p50Ms:F0}" data-p90="{p90Ms:F0}" data-p95="{p95Ms:F0}" data-p99="{p99Ms:F0}"><span class="duration-filters-label"{(warmUp.ScenarioMs.Count > 0 ? " title=\"Each scenario's own time: the first-call warm-up it paid is left out\"" : "")}>Duration ≥:</span><button class="percentile-btn" data-threshold-ms="{p50Ms:F0}" onclick="set_percentile(this)">P50 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p50Ms))})</button><button class="percentile-btn" data-threshold-ms="{p90Ms:F0}" onclick="set_percentile(this)">P90 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p90Ms))})</button><button class="percentile-btn" data-threshold-ms="{p95Ms:F0}" onclick="set_percentile(this)">P95 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p95Ms))})</button><button class="percentile-btn" data-threshold-ms="{p99Ms:F0}" onclick="set_percentile(this)">P99 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p99Ms))})</button><button class="percentile-btn" data-custom="1" onclick="set_percentile(this)">Custom</button><span id="custom-duration-wrap" style="display:none;align-items:center;gap:0.3em"><input id="duration-threshold" autocomplete="off" type="number" step="0.1" min="0" placeholder="seconds" onchange="filter_duration()" /><span class="duration-filters-unit">seconds</span></span></div>""");
+            var warm = warmUp.ScenarioMs.Count > 0;
+            var notWarm = warm ? ", not counting first-call warm-up" : "";
+            string Threshold(double ms, string share) => $"Scenarios taking {FormatDurationBadge(TimeSpan.FromMilliseconds(ms))} or more{notWarm} ({share})";
+            body.Append(CultureInfo.InvariantCulture, $"""<div class="duration-filters" data-p50="{p50Ms:F0}" data-p90="{p90Ms:F0}" data-p95="{p95Ms:F0}" data-p99="{p99Ms:F0}"><span class="duration-filters-label"{(warm ? " title=\"Each scenario's own time, without the first-call warm-up it paid\"" : "")}>Duration ≥</span><span class="fltr-controls"><button class="percentile-btn" data-threshold-ms="{p50Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p50Ms, "the slowest half")}">P50 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p50Ms))})</button><button class="percentile-btn" data-threshold-ms="{p90Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p90Ms, "the slowest 10%")}">P90 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p90Ms))})</button><button class="percentile-btn" data-threshold-ms="{p95Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p95Ms, "the slowest 5%")}">P95 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p95Ms))})</button><button class="percentile-btn" data-threshold-ms="{p99Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p99Ms, "the slowest 1%")}">P99 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p99Ms))})</button><button class="percentile-btn" data-custom="1" onclick="set_percentile(this)" title="Scenarios taking at least the seconds you enter{notWarm}">Custom</button><span id="custom-duration-wrap" style="display:none;align-items:center;gap:0.3em"><input id="duration-threshold" autocomplete="off" type="number" step="0.1" min="0" placeholder="seconds" onchange="filter_duration()" /><span class="duration-filters-unit">seconds</span></span></span></div>""");
         }
 
+        // Happy paths: Show, Only or Hide, a face of the Tags row's Happy Path chip, so one filter underneath (D8)
+        if (runs.Any(s => s.IsHappyPath))
+            body.Append("""<div class="happy-filters"><span class="happy-filters-label">Happy paths</span><span class="fltr-controls" role="group" aria-label="Happy paths"><button type="button" class="happy-seg" data-hp="off" aria-pressed="true">Show</button><button type="button" class="happy-seg" data-hp="in" aria-pressed="false">Only</button><button type="button" class="happy-seg" data-hp="out" aria-pressed="false">Hide</button></span></div>""");
+
+        body.Append("</div>"); // close filter-row
+
+        // Tags: a scenario's labels, with Happy Path for a happy path, pinned first (D9)
+        string[] TagsOf(Scenario sc) => sc.IsHappyPath ? [HappyPathTag, .. (sc.Labels ?? []).Where(l => l != HappyPathTag)] : sc.Labels ?? [];
+        var tagNames = runs.SelectMany(TagsOf).Distinct().OrderBy(t => t == HappyPathTag ? 0 : 1).ThenBy(t => t).ToArray();
+        if (tagNames.Length > 0)
+        {
+            body.Append("""<div class="tag-filters"><span class="tag-filters-label">Tags</span><span class="fltr-controls">""");
+            body.Append(FilterModeToggle("tag-mode-toggle", "OR", "ANY: scenarios with any of the chosen tags. ALL: scenarios with every one of them. Click to switch."));
+            foreach (var tag in tagNames)
+                body.Append(FilterChip("tag", tag, tag, runs.Count(sc => TagsOf(sc).Contains(tag))));
+            var untagged = runs.Count(sc => TagsOf(sc).Length == 0);
+            if (untagged > 0) body.Append(FilterChip("tag", "__untagged__", "Untagged", untagged, none: true));
+            body.Append(GroupClear("tag"));
+            body.Append("</span></div>");
+        }
+
+        // Dependencies: the participants a scenario's diagrams name; "No dependencies" for those that name none (D10)
         if (allDependencies.Count > 0)
         {
-            body.Append($"""<div class="dependency-filters"><span class="dependency-filters-label">Dependencies:</span><button class="dep-mode-toggle" title="AND: show scenarios matching ALL selected dependencies. OR: show scenarios matching ANY selected dependency. Click to toggle." onclick="toggle_dep_mode(this)">{depModeText}</button>""");
+            body.Append("""<div class="dependency-filters"><span class="dependency-filters-label">Dependencies</span><span class="fltr-controls">""");
+            body.Append(FilterModeToggle("dep-mode-toggle", depModeText, "ANY: scenarios that call any of the chosen dependencies. ALL: scenarios that call every one of them. Click to switch."));
             foreach (var dep in allDependencies.OrderBy(d => d))
-            {
-                body.Append($"""<button class="dependency-toggle" data-dependency="{System.Net.WebUtility.HtmlEncode(dep)}" onclick="toggle_dependency(this)">{System.Net.WebUtility.HtmlEncode(dep)}</button>""");
-            }
-            body.Append("</div>");
+                body.Append(FilterChip("dependency", dep, dep, runs.Count(sc => scenarioDependencies.TryGetValue(sc.Id, out var ds) && ds.Contains(dep))));
+            var noDependencies = runs.Count(sc => !scenarioDependencies.TryGetValue(sc.Id, out var ds) || ds.Count == 0);
+            if (noDependencies > 0) body.Append(FilterChip("dependency", "__none__", "No dependencies", noDependencies, none: true));
+            body.Append(GroupClear("dependency"));
+            body.Append("</span></div>");
         }
 
         // Category filter (only shown when scenarios have category data)
@@ -1761,14 +1795,14 @@ public static class ReportGenerator
             .ToArray();
         if (allCategories.Length > 0)
         {
-            body.Append($"""<div class="category-filters"><span class="category-filters-label">Categories:</span><button class="cat-mode-toggle" title="OR: show scenarios matching ANY selected category. AND: show scenarios matching ALL selected categories. Click to toggle." onclick="toggle_cat_mode(this)">{catModeText}</button>""");
-            body.Append("""<button class="category-toggle category-active" data-category="" onclick="toggle_category(this)">All</button>""");
+            body.Append("""<div class="category-filters"><span class="category-filters-label">Categories</span><span class="fltr-controls">""");
+            body.Append(FilterModeToggle("cat-mode-toggle", catModeText, "ANY: scenarios in any of the chosen categories. ALL: scenarios in every one of them. Click to switch."));
             foreach (var cat in allCategories)
-            {
-                body.Append($"""<button class="category-toggle" data-category="{System.Net.WebUtility.HtmlEncode(cat)}" onclick="toggle_category(this)">{System.Net.WebUtility.HtmlEncode(cat)}</button>""");
-            }
-            body.Append("""<button class="category-toggle" data-category="__uncategorized__" onclick="toggle_category(this)">Uncategorized</button>""");
-            body.Append("</div>");
+                body.Append(FilterChip("category", cat, cat, runs.Count(sc => sc.Categories is { } cs && cs.Contains(cat))));
+            var uncategorized = runs.Count(sc => sc.Categories is not { Length: > 0 });
+            if (uncategorized > 0) body.Append(FilterChip("category", "__uncategorized__", "Uncategorized", uncategorized, none: true));
+            body.Append(GroupClear("category"));
+            body.Append("</span></div>");
         }
 
         body.Append("</div>"); // close filters
@@ -2715,6 +2749,26 @@ public static class ReportGenerator
     private static string ReportPanel(string key, string selected) =>
         $"<div class=\"report-panel\" id=\"panel-{key}\" role=\"tabpanel\" aria-labelledby=\"tab-{key}\" data-panel=\"{key}\"{(key == selected ? "" : " hidden")}>";
 
+    private const string HappyPathTag = "Happy Path";
+
+    /// <summary>
+    /// A tri-state filter chip (5.0.0, plans/OPTION_C_PLAN.md S6): off, then has, which takes the row's active class as in
+    /// 4.x, then has not, its exclude class (report-filter-chips-script.js cycles them). The chip for the scenarios with
+    /// none carries <c>data-none</c> and a reserved value, which the link writes. Its title counts the scenarios it picks out.
+    /// </summary>
+    private static string FilterChip(string family, string value, string label, int scenarios, bool none = false) =>
+        $"<button type=\"button\" class=\"{family}-toggle{(none ? $" {family}-none" : "")}\" data-{family}=\"{System.Net.WebUtility.HtmlEncode(value)}\"{(none ? " data-none=\"1\"" : "")} aria-pressed=\"false\" title=\"{ScenarioCount(scenarios)}\">{System.Net.WebUtility.HtmlEncode(label)}</button>";
+
+    private static string ScenarioCount(int n) => n == 1 ? "1 scenario" : string.Create(CultureInfo.InvariantCulture, $"{n} scenarios");
+
+    /// <summary>A filter row's ANY / ALL switch; the mode underneath, OR or AND, is what the link writes (D11).</summary>
+    private static string FilterModeToggle(string cssClass, string mode, string title) =>
+        $"<button type=\"button\" class=\"{cssClass}\" data-mode=\"{mode}\" title=\"{title}\">{(mode == "AND" ? "ALL" : "ANY")}</button>";
+
+    /// <summary>A filter row's Clear, shown while one of its chips is set (D12).</summary>
+    private static string GroupClear(string noun) =>
+        $"<button type=\"button\" class=\"group-clear\" title=\"Clear the {noun} filters\" hidden>Clear</button>";
+
     /// <summary>The Features tab's views, Full (the cards) and Summary (the features table), as tabs (S4, D21).</summary>
     private static string FeaturesViewSwitch(bool summary) =>
         "<div class=\"view-switch\" role=\"tablist\" aria-label=\"Features view\">"
@@ -3127,7 +3181,7 @@ public static class ReportGenerator
         var happyPathClass = isGroupHappyPath ? " happy-path" : "";
         var happyPathBadge = isGroupHappyPath ? " <span class=\"label\">Happy Path</span>" : "";
 
-        body.Append($"<details class=\"scenario scenario-parameterized{happyPathClass}\"{(toggles.ScenariosExpanded ? " open" : "")} data-status=\"{overallStatus}\"{depsAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr}{groupHistoryAttr} id=\"{anchorId}\" tabindex=\"0\">");
+        body.Append($"<details class=\"scenario scenario-parameterized{happyPathClass}\"{(toggles.ScenariosExpanded ? " open" : "")} data-status=\"{overallStatus}\"{(scenarios.Length > 1 ? string.Create(CultureInfo.InvariantCulture, $" data-runs=\"{scenarios.Length}\"") : "")}{depsAttr}{searchAttr}{durationAttr}{categoriesAttr}{labelsAttr}{groupHistoryAttr} id=\"{anchorId}\" tabindex=\"0\">");
         body.Append($"<summary class=\"h3{(hasFailure ? " failed" : hasSkipped ? " skipped" : "")}\">{encodedGroupName}{happyPathBadge}{summaryText}{durationBadge}{groupHistoryBadge}<button class=\"copy-scenario-name\" title=\"Copy scenario name\" data-scenario-name=\"{encodedGroupName}\" onclick=\"copy_scenario_name(this, event)\">&#128203;</button><a class=\"scenario-link\" href=\"#{anchorId}\" title=\"Link to this scenario\" onclick=\"event.stopPropagation()\">&#128279;</a></summary>");
 
         // Parameter table — where both views exist, the configured default picks which one
@@ -6420,7 +6474,8 @@ public static class ReportGenerator
             // Match all PlantUML participant types: actor, boundary, control, entity, database, collections, queue, participant
             var match = System.Text.RegularExpressions.Regex.Match(trimmed,
                 @"^(?:actor|boundary|control|entity|database|collections|queue|participant)\s+""([^""]+)""\s+as\s+");
-            if (match.Success)
+            // the participant a diagram with no call is drawn with holds its step markers: no dependency (5.0.0)
+            if (match.Success && match.Groups[1].Value != Kronikol.PlantUml.PlantUmlCreator.MarkerOnlyParticipantName)
                 deps.Add(match.Groups[1].Value);
         }
 

@@ -26,6 +26,10 @@ public class ToolbarStylingTests : PlaywrightTestBase
     private const string BlueTintBorder = "rgb(100, 150, 255)";
     private const string Grey = "rgb(245, 245, 245)";         // an idle diagram tab
     private const string Hover = "rgb(237, 241, 248)";        // --kron-hover: 5.0.0's hover (plans/OPTION_C_PLAN.md S1)
+    private const string Selected = "rgb(220, 232, 251)";     // --kron-selected: a chosen filter, 5.0.0 (S6; 4.x a solid Blue)
+    private const string SelectedEdge = "rgb(106, 143, 217)"; // --kron-selected-edge
+    private const string SelectedInk = "rgb(29, 79, 176)";    // --kron-selected-ink
+    private const string ControlBorder = "rgb(174, 183, 198)"; // --kron-control-border: a filter control's edge (S6)
 
     private async Task Open(string fileName, bool violet, bool internalFlowTracking = true, string? stylesheet = null)
     {
@@ -67,17 +71,17 @@ public class ToolbarStylingTests : PlaywrightTestBase
     // ── T7: every toolbar state on the violet page, and the blue report unchanged ──
 
     [Theory]
-    [InlineData(true, Violet)]
-    [InlineData(false, Blue)]
-    public async Task An_active_filter_toggle_keeps_its_active_colour_while_hovered(bool violet, string active)
+    [InlineData(true, Violet, Violet)]
+    [InlineData(false, Selected, SelectedEdge)]
+    public async Task An_active_filter_toggle_keeps_its_active_colour_while_hovered(bool violet, string active, string edge)
     {
         await Open($"FilterHover{violet}.html", violet);
 
-        var happyPath = Page.Locator(".happy-path-toggle").First;
+        var happyPath = Page.Locator(".filtering-box .happy-seg[data-hp='in']").First;
         await happyPath.ClickAsync();
-        await Expect(happyPath).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("happy-path-active"));
+        await Expect(happyPath).ToHaveAttributeAsync("aria-pressed", "true");
         Assert.True(await happyPath.EvaluateAsync<bool>("b => b.matches(':hover')"), "the clicked toggle is still hovered");
-        await Paints(happyPath, active, active);
+        await Paints(happyPath, active, edge);
     }
 
     public static TheoryData<bool, string, string?, string> HeaderHovers => new()
@@ -89,10 +93,11 @@ public class ToolbarStylingTests : PlaywrightTestBase
         { true, Tint, TintBorder, ".fold-btn" },
         { true, Tint, TintBorder, ".export-btn" },
         { true, Tint, TintBorder, ".toolbar-right .details-radio-btn:not(.details-active)" },
-        { false, BlueTint, BlueTintBorder, ".dependency-toggle" },
-        { false, "rgb(220, 230, 245)", BlueTintBorder, ".dep-mode-toggle" },
-        { false, "rgb(220, 230, 245)", BlueTintBorder, ".cat-mode-toggle" },
-        { false, BlueTint, BlueTintBorder, ".percentile-btn" },
+        // 5.0.0: a filter row's controls take the hover tint and keep their edge (plans/OPTION_C_PLAN.md S6)
+        { false, Hover, ControlBorder, ".dependency-toggle" },
+        { false, Hover, ControlBorder, ".dep-mode-toggle" },
+        { false, Hover, ControlBorder, ".cat-mode-toggle" },
+        { false, Hover, ControlBorder, ".percentile-btn" },
         // 5.0.0: expand and collapse are icon buttons with a transparent edge (plans/OPTION_C_PLAN.md S4)
         { false, Hover, "rgba(0, 0, 0, 0)", ".fold-btn" },
         { false, Hover, "rgba(0, 0, 0, 0)", ".export-btn" }, // 5.0.0: a text button in the filter card (OPTION_C_PLAN S2)
@@ -116,18 +121,18 @@ public class ToolbarStylingTests : PlaywrightTestBase
     /// <summary>The percentile buttons' active state. The timeline toggle this covered too is a tab since 5.0.0, whose
     /// selected look ReportTabsTests covers (plans/OPTION_C_PLAN.md S3).</summary>
     [Theory]
-    [InlineData(true, Violet, Violet)]
-    [InlineData(false, Blue, Blue)]
-    public async Task Active_percentile_buttons_take_the_themes_colours(bool violet, string active, string activeHovered)
+    [InlineData(true, Violet, Violet, Violet)]
+    [InlineData(false, Selected, Selected, SelectedEdge)] // 5.0.0: the selected tint (S6)
+    public async Task Active_percentile_buttons_take_the_themes_colours(bool violet, string active, string activeHovered, string edge)
     {
         await Open($"ActiveHeader{violet}.html", violet);
 
         var percentile = Page.Locator(".percentile-btn").First;
         await percentile.ClickAsync();
         await Expect(percentile).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("percentile-active"));
-        await Paints(percentile, activeHovered, active);
+        await Paints(percentile, activeHovered, edge);
         await Page.Mouse.MoveAsync(0, 0);
-        await Paints(percentile, active, active);
+        await Paints(percentile, active, edge);
     }
 
     [Theory]
@@ -263,9 +268,9 @@ public class ToolbarStylingTests : PlaywrightTestBase
     // ── T11: a tapped filter on a phone ──
 
     [Theory]
-    [InlineData(true, Violet)]
-    [InlineData(false, Blue)]
-    public async Task A_tapped_filter_on_a_phone_keeps_its_active_colour(bool violet, string active)
+    [InlineData(true, Violet, "rgb(255, 255, 255)")]
+    [InlineData(false, Selected, SelectedInk)]
+    public async Task A_tapped_filter_on_a_phone_keeps_its_active_colour(bool violet, string active, string ink)
     {
         await using var phone = await OpenContextAsync(_fixture.Browser, new BrowserNewContextOptions
         {
@@ -279,13 +284,13 @@ public class ToolbarStylingTests : PlaywrightTestBase
         await page.Locator("details.feature").First.WaitForAsync();
 
         await page.Locator(".mobile-filter-toggle").TapAsync();
-        var happyPath = page.Locator(".happy-path-toggle").First;
+        var happyPath = page.Locator(".filtering-box .happy-seg[data-hp='in']").First;
         await happyPath.TapAsync();
 
-        await Assertions.Expect(happyPath).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("happy-path-active"));
+        await Assertions.Expect(happyPath).ToHaveAttributeAsync("aria-pressed", "true");
         Assert.True(await happyPath.EvaluateAsync<bool>("b => b.matches(':hover')"),
             "a tap leaves the control hovered on a touch screen; without that this fact proves nothing");
         await Assertions.Expect(happyPath).ToHaveCSSAsync("background-color", active);
-        await Assertions.Expect(happyPath).ToHaveCSSAsync("color", "rgb(255, 255, 255)");
+        await Assertions.Expect(happyPath).ToHaveCSSAsync("color", ink);
     }
 }
