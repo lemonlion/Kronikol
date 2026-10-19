@@ -95,6 +95,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         Assert.False(await SvgContainsAssertionText(scenario2, "Scenario2"));
 
         // Click Show for scenario 1 only
+        await OpenScenarioSettingsAsync(scenario1);
         await ClickAndWaitForRender(AssertionShowBtn(scenario1));
 
         // Scenario 1 should now show assertion text
@@ -123,6 +124,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
             null, new() { Timeout = 30000, PollingInterval = 200 });
 
         // Now hide assertions for scenario 1 only
+        await OpenScenarioSettingsAsync(scenario1);
         await ClickAndWaitForRender(AssertionHideBtn(scenario1));
 
         // Scenario 1 should NOT show assertion text
@@ -192,6 +194,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         var scenario1 = ScenarioLocator(0);
 
         // Show assertions for scenario 1
+        await OpenScenarioSettingsAsync(scenario1);
         await ClickAndWaitForRender(AssertionShowBtn(scenario1));
         Assert.True(await SvgContainsAssertionText(scenario1, "Scenario1"));
 
@@ -210,6 +213,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         var scenario1 = ScenarioLocator(0);
 
         // Show assertions
+        await OpenScenarioSettingsAsync(scenario1);
         await ClickAndWaitForRender(AssertionShowBtn(scenario1));
 
         // Change to collapsed
@@ -229,6 +233,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         var scenario1 = ScenarioLocator(0);
 
         // Show assertions
+        await OpenScenarioSettingsAsync(scenario1);
         await ClickAndWaitForRender(AssertionShowBtn(scenario1));
 
         // Hide headers — headers toggle triggers a full PlantUML re-render
@@ -247,6 +252,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
 
         // Assertions start hidden (default). Toggle headers hide and wait for that render to complete -
         // Assert.False on the OLD SVG would pass without having looked at the re-rendered one.
+        await OpenScenarioSettingsAsync(scenario1);
         await ClickAndWaitForRender(scenario1.Locator(".toggle-btn[data-toggle='headers'][data-shown='true']"));
 
         // Assertions should still be hidden
@@ -263,6 +269,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         var scenario1 = ScenarioLocator(0);
 
         // Initially assertions are hidden — button should NOT have details-active
+        await OpenScenarioSettingsAsync(scenario1);
         await Expect(AssertionShowBtn(scenario1)).Not.ToHaveClassAsync(
             new System.Text.RegularExpressions.Regex("details-active"));
 
@@ -309,6 +316,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
             null, new() { Timeout = 30000, PollingInterval = 200 });
 
         // Now hide for scenario 1 only
+        await OpenScenarioSettingsAsync(scenario1);
         await ClickAndWaitForRender(AssertionHideBtn(scenario1));
 
         // Scenario 1 hidden, scenario 2 still shown
@@ -325,6 +333,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
         var scenario2 = ScenarioLocator(1);
 
         // Assertions are already hidden by default; show for scenario 1 only
+        await OpenScenarioSettingsAsync(scenario1);
         await ClickAndWaitForRender(AssertionShowBtn(scenario1));
 
         // Scenario 1 shown, scenario 2 still hidden

@@ -255,13 +255,22 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
                     if (!el) return 'MISSING ' + sel;
                     var cs = getComputedStyle(el);
                     return [el.getBoundingClientRect().height, cs.borderRadius, cs.fontSize, cs.borderTopColor,
-                        cs.borderTopWidth, cs.marginLeft, cs.paddingLeft, cs.paddingTop].join('|');
+                        cs.borderTopWidth, cs.paddingLeft, cs.paddingTop].join('|');
                 });
             }
             """);
 
         Assert.Equal(2, metrics.Length);
         Assert.Equal(metrics[0], metrics[1]);
+        // 5.0.0: the two share the Format zone, the width dropdown 6 px after the format one (plans/OPTION_C_PLAN.md S8)
+        var gap = await Page.EvaluateAsync<double>("""
+            () => {
+                var format = document.querySelector('.note-format-select');
+                var width = format.parentElement.querySelector('.note-width-select');
+                return width.getBoundingClientRect().left - format.getBoundingClientRect().right;
+            }
+            """);
+        Assert.Equal(6, gap, 0.5);
     }
 
     [Fact]
@@ -270,7 +279,7 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
         await NavigateToSqlNote("NoteWidthLabels.html");
 
         var select = Page.Locator(".note-width-select").First;
-        Assert.Equal("Note width", await select.Locator("optgroup").First.GetAttributeAsync("label"));
+        Assert.Equal("Payload width", await select.Locator("optgroup").First.GetAttributeAsync("label"));
         Assert.Equal(["Wrap", "Wide"], await select.Locator("option").AllTextContentsAsync());
         Assert.Equal("default", await select.InputValueAsync());
     }

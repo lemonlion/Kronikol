@@ -1,73 +1,180 @@
-.details-radio { display: inline-flex; align-items: center; gap: 0.3em; }
-.details-radio-label { font-weight: bold; margin-right: 0.3em; font-size: 13px; }
+/* The payload controls (5.0.0, plans/OPTION_C_PLAN.md D30 to D32, D37 and item 25): Payloads with its line count, the
+   format and width dropdowns, and the toggles, in three zones, in the report's bar and in each scenario's settings.
+   Only a report whose diagrams the page draws has them, so they live in this sheet. */
+
+/* Payloads: its label, Expanded, Collapsed and Truncated, then the line count while Truncated is picked. On a desktop
+   the group is one row of whole controls, centred on each other (R17.12, R17.31). */
+.details-radio { display: inline-flex; align-items: center; gap: 4px; }
+.details-radio-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-label); }
+@media (min-width: 768.02px) {
+    .details-radio { column-gap: 0; white-space: nowrap; font-size: 0; }
+    .details-radio-label { align-self: center; margin-right: 8px; }
+    .details-radio > .details-radio-btn { margin-left: 4px; }
+    .details-radio > .truncate-lines-select { margin-left: 10px; }
+}
 .details-radio-btn {
-    padding: 0.25em 0.6em;
-    border: 1px solid rgb(180, 180, 180);
-    border-radius: 0.4em;
-    background: white;
-    cursor: pointer;
-    font-size: 0.85em;
+    margin: 0; padding: 5px 10px; border: 1px solid transparent; border-radius: 5px; background: none; cursor: pointer;
+    font-size: 13px; line-height: 1.25; font-family: var(--kron-font); color: var(--kron-ink-soft);
+    transition: background .12s, color .12s;
 }
-.details-radio-btn:hover { background: rgb(230, 240, 255); border-color: rgb(100, 150, 255); }
-.details-radio-btn.details-active { background: rgb(66, 133, 244); color: white; border-color: rgb(66, 133, 244); }
-.toggle-btn { margin-left: 0.5em; }
-.truncate-lines-select {
-    padding: 0.2em 0.3em;
-    border: 1px solid rgb(180, 180, 180);
-    border-radius: 0.4em;
-    font-size: 0.85em;
-    margin-left: 0;
+.details-radio-btn:hover { background: var(--kron-hover); }
+/* after the hover, which it outranks by its place, so a theme's own rule for it applies hovered too */
+.details-radio-btn.details-active {
+    position: relative; z-index: 1; font-weight: 600; color: var(--kron-selected-ink); background: var(--kron-selected);
+    border-color: var(--kron-selected-edge);
 }
-.truncate-lines-label { font-size: 0.85em; color: rgb(100, 100, 100); margin-left: 0; margin-right: 0.3em; }
-/* The note dropdowns: JSON ⇄ YAML payload format and note width
-   (collapsible-notes-script.js _setNoteFormat, _setNoteWidth) */
-.note-format-select,
-.note-width-select {
-    padding: 0.2em 0.3em;
-    border: 1px solid rgb(180, 180, 180);
-    border-radius: 0.4em;
-    font-size: 0.85em;
-    margin-left: 0.5em;
+
+/* A toggle: its word and a dot, filled while it is on (aria-pressed). The padding sets the word on the dot's line in
+   Chrome and Firefox alike (R17.8). */
+.details-radio-btn.toggle-btn { position: relative; margin-left: 8px; padding: 5.375px 10px 4.625px 24px; }
+.details-radio-btn.toggle-btn::before {
+    content: ""; position: absolute; left: 8px; top: 50%; width: 9px; height: 9px; margin-top: -4.12px; box-sizing: border-box;
+    border: 1.5px solid var(--kron-dot); border-radius: 50%; transition: background .12s, border-color .12s;
 }
+@supports (-moz-appearance: none) { .details-radio-btn.toggle-btn::before { margin-top: -3.12px; } }
+.details-radio-btn.toggle-btn.details-active::before { background: var(--kron-accent); border-color: var(--kron-accent); }
+
+/* The dropdowns match the buttons' box exactly (line height, padding and border), so their words share a line. The line
+   count and the width read in capitals, as the bar's labels do. */
+.truncate-lines-select, .note-format-select, .note-width-select {
+    appearance: none; -webkit-appearance: none; margin: 0 0 0 6px; padding: 5px 20px 5px 8px; cursor: pointer;
+    font-size: 13px; line-height: 1.25; font-family: var(--kron-font); color: var(--kron-ink-soft);
+    border: 1px solid var(--kron-select-border); border-radius: 5px;
+    background: var(--kron-card) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%236a7280'/%3E%3C/svg%3E") no-repeat right 6px center;
+}
+.truncate-lines-select, .note-width-select { text-transform: uppercase; }
+.truncate-lines-select:hover, .note-format-select:hover, .note-width-select:hover { border-color: var(--kron-ink-quiet); }
+.details-radio:not(:has(> .details-radio-btn[data-state="truncated"].details-active)) > .truncate-lines-select { display: none; }
+.details-radio-btn:focus-visible, .truncate-lines-select:focus-visible, .note-format-select:focus-visible,
+.note-width-select:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+
+/* The zones: the dropdowns after Payloads, the toggles at the bar's right end. Where a bar is too narrow to keep the
+   toggles apart, a rule marks them off (report-scenario-settings-script.js measures it). */
+.toolbar-right { position: relative; }
+.diagram-format { display: inline-flex; align-items: center; }
+.diagram-format .note-format-select { margin-left: 0; }
+.diagram-flags { position: relative; display: inline-flex; align-items: center; flex-wrap: wrap; row-gap: 6px; }
+.diagram-flags > .toggle-btn:first-child { margin-left: 0; }
+@media (min-width: 768.02px) {
+    .diagram-flags { margin-left: auto; }
+    .diagram-options-bar .diagram-flags.zone-adjacent::after {
+        content: ""; position: absolute; left: -8px; top: 4px; bottom: 4px; border-left: 1px solid var(--kron-divider);
+    }
+}
+
+/* A control whose diagrams are being drawn again (collapsible-notes-script.js setPending): after 0.2 s its label throbs
+   and a sweep runs along its bottom edge, and a dropdown's border pulses. Nothing changes size (item 25), so a fast
+   redraw shows nothing and the controls beside it never move. */
+.details-pending { cursor: progress; }
+.details-radio-btn.details-pending {
+    position: relative; overflow: hidden; box-shadow: inset 0 -3px 0 var(--kron-accent-rail);
+    animation: details-pending-throb 1.1s ease-in-out 0.2s infinite;
+}
+.details-radio-btn.details-pending::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--kron-accent) 30%, var(--kron-accent) 70%, transparent);
+    transform: translateX(-100%); animation: details-pending-sweep 1.1s linear 0.2s infinite;
+}
+.truncate-lines-select.details-pending, .note-format-select.details-pending, .note-width-select.details-pending {
+    animation: details-pending-throb 1.1s ease-in-out 0.2s infinite, details-pending-border 1.1s ease-in-out 0.2s infinite;
+}
+@keyframes details-pending-throb { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@keyframes details-pending-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@keyframes details-pending-border { 0%, 100% { border-color: var(--kron-select-border); } 50% { border-color: var(--kron-accent); } }
+
+/* A control's label holds its bold width: the same words, unseen and in bold, beneath it (its data-label), so switching
+   a control on does not move the ones beside it (item 25). inline-flex keeps the label's own baseline (R17.31). */
+.btn-label { display: inline-flex; flex-direction: column; }
+.btn-label::after { content: attr(data-label); display: block; height: 0; overflow: hidden; visibility: hidden; font-weight: 600; }
+
+/* A scenario's settings (D23, R17.23, R17.26): its options bar behind the gear at the top right of its diagrams, grey
+   until pointed at. Open, the bar starts "This scenario:", the gear is its last control in the same place, and the bar
+   stays under the report's bar while the scenario's diagrams are in view. The settings act on sequence diagrams only,
+   so they step aside, gear and all, while the section shows another view. */
+.diagram-options-bar {
+    margin: 4px 0 10px; padding-top: 5px; padding-bottom: 5px; background: var(--kron-strip);
+    border-top: 1px solid var(--kron-strip-edge); border-bottom: 1px solid var(--kron-strip-edge);
+}
+.scenario-settings-label {
+    flex: none; align-self: center; margin-right: 12px; white-space: nowrap;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kron-ink-soft);
+}
+.diagrams-not-seq > .scenario-settings { display: none; }
+@media (min-width: 768.02px) {
+    .scenario-settings { position: relative; z-index: 4; display: flex; align-items: flex-start; justify-content: flex-end; }
+    .scenario-settings:not(.is-open) { height: 0; }
+    .scenario-settings:not(.is-open) > .diagram-options-bar { display: none; }
+    .scenario-settings.is-open {
+        position: sticky; top: var(--kron-nav-h, 0px); background: var(--kron-strip);
+        box-shadow: inset 0 1px 0 var(--kron-strip-edge), 0 1px 0 var(--kron-strip-edge);
+    }
+    .diagram-options-bar { column-gap: 14px; }
+    .scenario-settings.is-open > .diagram-options-bar {
+        flex: 1 1 auto; min-width: 0; margin: 0; background: transparent; border-top-color: transparent; border-bottom: 0;
+    }
+}
+.scenario-settings-gear {
+    flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; margin: 6px 10px 0 4px; padding: 0;
+    border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--kron-faint); opacity: .5;
+    cursor: pointer; transition: opacity .12s ease, color .12s ease, background-color .12s ease;
+}
+.scenario-settings-gear > svg { width: 16px; height: 16px; fill: currentColor; }
+.scenario-settings-gear:hover, .scenario-settings-gear:focus-visible { opacity: 1; color: var(--kron-ink); background: var(--kron-hover); }
+.scenario-settings-gear:focus-visible, .gear-in-summary:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+.scenario-settings.is-open > .scenario-settings-gear {
+    opacity: 1; color: var(--kron-selected-ink); background: var(--kron-selected); border-color: var(--kron-selected-edge);
+}
+/* the phone's gear, on the section's title */
+.gear-in-summary { display: none; }
+.diagrams-not-seq > summary > .gear-in-summary { display: none; }
+
 .note-toggle-icon { user-select: none; -webkit-user-select: none; }
 /* JSON ⇄ YAML note format toggle button (collapsible-notes-script.js) */
 .note-format-btn text { font-weight: bold; }
+
+/* A phone: the title's gear opens the settings in place of the one at the diagram's corner, and every bar of
+   controls is a sheet, its zones one under another, each headed and every control as wide as it. */
 @media (max-width: 768px) {
-    .details-radio { flex-wrap: wrap; }
-    .toggle-btn { margin-left: 0; }
-    .diagram-toggle { flex-wrap: wrap; gap: 0.3em; }
-    .diagram-toggle-spacer { display: none; }
-    .diagram-toggle-btn { text-align: center; }
+    .scenario-settings { display: contents; }
+    .scenario-settings-gear { display: none; }
+    .scenario-settings:not(.is-open) > .diagram-options-bar { display: none; }
+    .scenario-settings-label { align-self: flex-start; margin: 2px 0; }
+    .gear-in-summary {
+        display: inline-block; float: right; margin: -2.5px 0 0; padding: 6px 8px; cursor: pointer;
+        font-size: 15px; line-height: 1; font-family: var(--kron-font); color: var(--kron-ink-soft); background: var(--kron-card);
+        border: 1px solid var(--kron-select-border); border-radius: 6px; transition: background .12s;
+    }
+    .gear-in-summary:hover { background: var(--kron-hover); }
+    .gear-in-summary[aria-expanded="true"] { color: var(--kron-selected-ink); background: var(--kron-selected); border-color: var(--kron-selected-edge); }
+
+    .diagram-options-bar { flex-direction: column; align-items: stretch; gap: 0; margin: 6px 0 12px; padding: 0 14px 12px; }
+    .toolbar-right { flex-direction: column; align-items: stretch; gap: 0; }
+    .details-radio, .diagram-flags {
+        display: flex; flex-wrap: wrap; align-items: center; row-gap: 6px; margin: 0; padding: 10px 0;
+        border-bottom: 1px solid var(--kron-divider-soft);
+    }
+    .diagram-flags { border-bottom: none; }
+    .details-radio-label { flex-basis: 100%; margin: 0 0 4px; }
+    .details-radio > .details-radio-btn { flex: 1; text-align: center; }
+    .details-radio > .truncate-lines-select { flex-basis: 100%; margin: 4px 0 0; }
+    .diagram-format {
+        display: flex; flex-direction: column; align-items: stretch; margin: 0; padding: 10px 0;
+        border-bottom: 1px solid var(--kron-divider-soft);
+    }
+    .diagram-format .note-format-select { margin: 0; }
+    .diagram-format .note-width-select { margin: 6px 0 0; }
+    .diagram-format::before, .diagram-flags::before {
+        font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--kron-muted);
+    }
+    .diagram-format::before { content: "Format"; margin-bottom: 8px; }
+    .diagram-flags::before { content: "Toggle"; flex-basis: 100%; margin-bottom: 4px; }
+    .diagram-flags .details-radio-btn.toggle-btn { flex: none; width: 100%; margin: 0; padding-left: 26px; text-align: left; }
+    .diagram-flags .details-radio-btn.toggle-btn::before { left: 9px; }
+    /* the report's bar: the same sheet, its headings in the label ink and its toggles spaced */
+    .toolbar-right .diagram-format::before, .toolbar-right .diagram-flags::before { letter-spacing: 0.06em; color: var(--kron-label); }
+    .toolbar-right .diagram-flags .details-radio-btn.toggle-btn { margin: 0 0 6px; }
+    .toolbar-right .diagram-flags .details-radio-btn.toggle-btn:last-child { margin-bottom: 0; }
 }
-/* A toolbar control whose re-render is still in flight (collapsible-notes-script.js setPending):
-   the label throbs and a small spinner sits in the right padding. Both start after 0.2 s, so a fast
-   re-render is imperceptible and a slow one is clearly "loading" from the button itself. */
-.details-radio-btn.details-pending,
-.truncate-lines-select.details-pending,
-.note-format-select.details-pending,
-.note-width-select.details-pending {
-    position: relative;
-    cursor: progress;
-    animation: details-pending-throb 1.1s ease-in-out 0.2s infinite;
+@media (max-width: 480px) {
+    .details-radio-btn, .truncate-lines-select, .note-format-select, .note-width-select { min-height: 34px; }
 }
-.details-radio-btn.details-pending {
-    padding-right: 1.5em; /* room for the spinner, so the label does not jump */
-}
-.details-radio-btn.details-pending::after {
-    content: '';
-    position: absolute;
-    right: 0.35em;
-    top: 50%;
-    width: 0.65em;
-    height: 0.65em;
-    margin-top: -0.39em;
-    border: 2px solid currentColor;
-    border-right-color: transparent;
-    border-radius: 50%;
-    box-sizing: border-box;
-    opacity: 0;
-    animation: details-pending-spin 0.8s linear infinite, details-pending-show 0.15s linear 0.2s forwards;
-}
-@keyframes details-pending-throb { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
-@keyframes details-pending-spin { to { transform: rotate(360deg); } }
-@keyframes details-pending-show { to { opacity: 1; } }

@@ -107,6 +107,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
 
         // Both dropdowns read the seeded value
         Assert.Equal("10", await Page.Locator(".toolbar-right .truncate-lines-select").InputValueAsync());
+        await OpenScenarioSettingsAsync();
         Assert.Equal("10", await Page.Locator("details.scenario .truncate-lines-select").First.InputValueAsync());
         Assert.Equal(10, await Page.EvaluateAsync<int>("() => window._truncateLines"));
 
@@ -136,11 +137,13 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
         Assert.Contains("customerId", text);
 
         var btn = Page.Locator(".toolbar-right .toggle-btn[data-toggle='headers']");
-        Assert.Equal("Headers Hidden", (await btn.TextContentAsync())!.Trim());
+        Assert.Equal("Headers", (await btn.TextContentAsync())!.Trim());
+        Assert.Equal("false", await btn.GetAttributeAsync("aria-pressed"));
         Assert.Equal("false", await btn.GetAttributeAsync("data-shown"));
 
         // Toggling back on works from the seeded state
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await OpenScenarioSettingsAsync();
         await Page.Locator("details.scenario .toggle-btn[data-toggle='headers'][data-shown='false']").ClickAsync();
         await WaitForRenderCountIncrease(renderCount);
         Assert.Contains("traceparent", await GetNormalizedSvgText());
@@ -155,9 +158,11 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
         Assert.Contains("✓ Put steps response message status code should be OK", text);
 
         var btn = Page.Locator(".toolbar-right .toggle-btn[data-toggle='assertions']");
-        Assert.Equal("Assertions Shown", (await btn.TextContentAsync())!.Trim());
+        Assert.Equal("Assertions", (await btn.TextContentAsync())!.Trim());
+        Assert.Equal("true", await btn.GetAttributeAsync("aria-pressed"));
 
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await OpenScenarioSettingsAsync();
         await Page.Locator("details.scenario .toggle-btn[data-toggle='assertions'][data-shown='true']").ClickAsync();
         await WaitForRenderCountIncrease(renderCount);
         Assert.DoesNotContain("✓ Put steps response message status code should be OK", await GetNormalizedSvgText());
@@ -173,9 +178,11 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
         Assert.Contains("customerId", text);
 
         var btn = Page.Locator(".toolbar-right .toggle-btn[data-toggle='steps']");
-        Assert.Equal("Steps Hidden", (await btn.TextContentAsync())!.Trim());
+        Assert.Equal("Steps", (await btn.TextContentAsync())!.Trim());
+        Assert.Equal("false", await btn.GetAttributeAsync("aria-pressed"));
 
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await OpenScenarioSettingsAsync();
         await Page.Locator("details.scenario .toggle-btn[data-toggle='steps'][data-shown='false']").ClickAsync();
         await WaitForRenderCountIncrease(renderCount);
         Assert.Contains("Given a valid customer preference request", await GetNormalizedSvgText());
@@ -191,9 +198,11 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
         Assert.Contains("customerId", text);
 
         var btn = Page.Locator(".toolbar-right .toggle-btn[data-toggle='databases']");
-        Assert.Equal("Databases Hidden", (await btn.TextContentAsync())!.Trim());
+        Assert.Equal("Databases", (await btn.TextContentAsync())!.Trim());
+        Assert.Equal("false", await btn.GetAttributeAsync("aria-pressed"));
 
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await OpenScenarioSettingsAsync();
         await Page.Locator("details.scenario .toggle-btn[data-toggle='databases'][data-shown='false']").ClickAsync();
         await WaitForRenderCountIncrease(renderCount);
         Assert.Contains("UPSERT CustomerPreferences", await GetNormalizedSvgText());
@@ -240,12 +249,14 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
         Assert.DoesNotContain("\"customerId\"", text);
 
         var headers = Page.Locator(".toolbar-right .toggle-btn[data-toggle='headers']");
-        Assert.Equal("Headers Hidden", (await headers.TextContentAsync())!.Trim());
+        Assert.Equal("Headers", (await headers.TextContentAsync())!.Trim());
+        Assert.Equal("false", await headers.GetAttributeAsync("aria-pressed"));
         Assert.Equal("false", await headers.GetAttributeAsync("data-shown"));
         Assert.Equal("yaml", await Page.Locator(".toolbar-right .note-format-select").InputValueAsync());
 
         // Both switch back from the first render.
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await OpenScenarioSettingsAsync();
         await Page.Locator("details.scenario .toggle-btn[data-toggle='headers'][data-shown='false']").ClickAsync();
         await WaitForRenderCountIncrease(renderCount);
         Assert.Contains("traceparent", await GetNormalizedSvgText());

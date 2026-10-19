@@ -58,6 +58,7 @@ public class KafkaNoteTests : DiagramNotePlaywrightBase
         await Navigate("KafkaNote_Collapsed.html", headersShown: true);
 
         var before = await GetSvgHtml();
+        await OpenScenarioSettingsAsync();
         var collapse = Page.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").First;
         await collapse.ClickAsync();
         await Expect(collapse).ToHaveClassAsync(new Regex("details-active"));
@@ -89,6 +90,7 @@ public class KafkaNoteTests : DiagramNotePlaywrightBase
         await Navigate("KafkaNote_HideHeaders.html", headersShown: true);
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
 
+        await OpenScenarioSettingsAsync();
         await Page.Locator("details.scenario .toggle-btn[data-toggle='headers'][data-shown='true']").First.ClickAsync();
         await WaitForRenderCountIncrease(renderCount);
 

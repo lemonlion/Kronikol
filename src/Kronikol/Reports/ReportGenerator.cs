@@ -1044,14 +1044,20 @@ public static class ReportGenerator
         var change = scenarioLevel ? "window._setScenarioTruncateLines(this)" : "window._setTruncateLines(this)";
         var disabled = toggles.Details == ReportDetailsState.Truncated ? "" : " disabled";
         var options = string.Concat(Enum.GetValues<TruncateLineCount>().Select(v =>
-            $"<option value=\"{(int)v}\"{(v == toggles.TruncateLines ? " selected" : "")}>{(int)v}</option>"));
-        return "<span class=\"details-radio\"><span class=\"details-radio-label\">Details:</span>"
-            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Expanded)}\" data-state=\"expanded\" onclick=\"{Click("expanded")}\">Expand</button>"
-            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Collapsed)}\" data-state=\"collapsed\" onclick=\"{Click("collapsed")}\">Collapse</button>"
-            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Truncated)}\" data-state=\"truncated\" onclick=\"{Click("truncated")}\">Truncate</button>"
-            + $"<select class=\"truncate-lines-select\" autocomplete=\"off\"{disabled} onchange=\"{change}\">{options}</select>"
-            + "<span class=\"truncate-lines-label\">lines</span></span>";
+            $"<option value=\"{(int)v}\"{(v == toggles.TruncateLines ? " selected" : "")}>{(int)v} lines</option>"));
+        return "<span class=\"details-radio\"><span class=\"details-radio-label\">Payloads</span>"
+            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Expanded)}\" data-state=\"expanded\" onclick=\"{Click("expanded")}\">{BuildButtonLabel("Expanded")}</button>"
+            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Collapsed)}\" data-state=\"collapsed\" onclick=\"{Click("collapsed")}\">{BuildButtonLabel("Collapsed")}</button>"
+            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Truncated)}\" data-state=\"truncated\" onclick=\"{Click("truncated")}\">{BuildButtonLabel("Truncated")}</button>"
+            + $"<select class=\"truncate-lines-select\" autocomplete=\"off\"{disabled} onchange=\"{change}\"><optgroup label=\"Payload length\">{options}</optgroup></select></span>";
     }
+
+    /// <summary>
+    /// A payload control's label (5.0.0): the words in a span that also holds them, unseen, in bold (its
+    /// <c>data-label</c>, drawn by the stylesheet), so a control is as wide off as on and switching it does not move the
+    /// ones beside it. The toggle code writes a label back into this span, never over the button.
+    /// </summary>
+    private static string BuildButtonLabel(string text) => $"<span class=\"btn-label\" data-label=\"{text}\">{text}</span>";
 
     /// <summary>
     /// One Shown/Hidden filter toggle button (headers / assertions / steps / databases) with the
@@ -1062,7 +1068,8 @@ public static class ReportGenerator
     {
         var label = char.ToUpperInvariant(toggleName[0]) + toggleName[1..];
         var handler = scenarioLevel ? $"window._toggleScenario{label}(this)" : $"window._toggle{label}(this)";
-        return $"<button class=\"details-radio-btn toggle-btn{(shown ? " details-active" : "")}\" data-toggle=\"{toggleName}\" data-shown=\"{(shown ? "true" : "false")}\" onclick=\"{handler}\">{label} {(shown ? "Shown" : "Hidden")}</button>";
+        var on = shown ? "true" : "false";
+        return $"<button class=\"details-radio-btn toggle-btn{(shown ? " details-active" : "")}\" data-toggle=\"{toggleName}\" data-shown=\"{on}\" aria-pressed=\"{on}\" onclick=\"{handler}\">{BuildButtonLabel(label)}</button>";
     }
 
     /// <summary>
@@ -1079,17 +1086,19 @@ public static class ReportGenerator
     }
 
     /// <summary>
-    /// The scenario-level diagram toolbar controls (spacer, Details radio, filter toggles, note
-    /// format dropdown). Built once per report — the five scenario toolbar emission sites all use
-    /// this builder, so they cannot drift (the same contract as the note-format select).
+    /// The scenario-level payload controls, in three zones (5.0.0, D30): the Payloads radio, the format and width
+    /// dropdowns, the toggles. Built once per report and written by <see cref="AppendDiagramSectionHead"/> into every
+    /// scenario's settings, so they cannot drift (the same contract as the note-format select).
     /// </summary>
     private static string BuildScenarioDiagramToolbar(ResolvedToggleDefaults toggles,
         bool includeAssertions, bool includeSteps, bool includeDatabases, string scenarioNoteFormatSelect,
         string scenarioNoteWidthSelect = "")
     {
         var sb = new StringBuilder();
-        sb.Append("<span class=\"diagram-toggle-spacer\"></span>");
         sb.Append(BuildDetailsRadio(toggles, scenarioLevel: true));
+        if (scenarioNoteFormatSelect.Length + scenarioNoteWidthSelect.Length > 0)
+            sb.Append("<span class=\"diagram-format\">").Append(scenarioNoteFormatSelect).Append(scenarioNoteWidthSelect).Append("</span>");
+        sb.Append("<span class=\"diagram-flags\">");
         sb.Append(BuildFilterToggleButton("headers", toggles.HeadersShown, scenarioLevel: true));
         if (includeAssertions)
             sb.Append(BuildFilterToggleButton("assertions", toggles.AssertionsShown, scenarioLevel: true));
@@ -1097,9 +1106,56 @@ public static class ReportGenerator
             sb.Append(BuildFilterToggleButton("steps", toggles.StepsShown, scenarioLevel: true));
         if (includeDatabases)
             sb.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: true));
-        sb.Append(scenarioNoteFormatSelect);
-        sb.Append(scenarioNoteWidthSelect);
+        sb.Append("</span>");
         return sb.ToString();
+    }
+
+    private const string DiagramTabsOpen = "<div class=\"diagram-toggle diagram-toggle-tabs\" role=\"tablist\" aria-label=\"Diagram views\">";
+
+    /// <summary>The cog the settings gear draws: eight teeth around a ring, the hole cut by the even-odd rule.</summary>
+    private const string ScenarioSettingsCog = "M6.81 -2.33L9.41 -1.91L9.41 1.91L6.81 2.33L6.47 3.17L8.00 5.30L5.30 8.00L3.17 6.47L2.33 6.81L1.91 9.41L-1.91 9.41L-2.33 6.81L-3.17 6.47L-5.30 8.00L-8.00 5.30L-6.47 3.17L-6.81 2.33L-9.41 1.91L-9.41 -1.91L-6.81 -2.33L-6.47 -3.17L-8.00 -5.30L-5.30 -8.00L-3.17 -6.47L-2.33 -6.81L-1.91 -9.41L1.91 -9.41L2.33 -6.81L3.17 -6.47L5.30 -8.00L8.00 -5.30L6.47 -3.17Z M3.4 0A3.4 3.4 0 1 0 -3.4 0A3.4 3.4 0 1 0 3.4 0Z";
+
+    private const string ScenarioSettingsGear = "<button type=\"button\" class=\"scenario-settings-gear\" aria-label=\"This scenario's settings\" aria-expanded=\"false\" title=\"This scenario's payload and diagram settings, to set it apart from the report's\">"
+        + "<svg viewBox=\"-12 -12 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"" + ScenarioSettingsCog + "\" fill-rule=\"evenodd\"/></svg></button>";
+
+    /// <summary>The same settings' gear on the section's title line, which a phone shows in place of the one above.</summary>
+    private const string ScenarioSettingsSummaryGear = "<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\" aria-label=\"Diagram settings\" title=\"Diagram settings\" aria-expanded=\"false\">\u2699</button>";
+
+    private static string BuildDiagramTab(string dtype, string label, bool active) =>
+        $"<button class=\"diagram-toggle-btn{(active ? " diagram-toggle-active" : "")}\" role=\"tab\" aria-selected=\"{(active ? "true" : "false")}\" tabindex=\"{(active ? "0" : "-1")}\" data-dtype=\"{dtype}\">{label}</button>";
+
+    /// <summary>
+    /// A diagram section's head (5.0.0, plans/OPTION_C_PLAN.md D29 to D34), for a scenario and for a parameterized group:
+    /// the section's title; the tabs of its views on a bar of their own, when it has more than one; and the scenario's
+    /// settings, the options bar behind a gear, which act on sequence diagrams only and so are written where the section
+    /// has some and the page draws them (<paramref name="settingsControls"/> is empty otherwise). The bar starts with
+    /// "This scenario:", so it reads apart from the report's own; on a phone the gear on the title opens it. A section
+    /// that opens on another view starts with its settings out of sight (<c>diagrams-not-seq</c>, which
+    /// toggle-script.js keeps as the tabs change). The warning goes on the tabs bar, or on the title when there is no bar.
+    /// </summary>
+    private static void AppendDiagramSectionHead(StringBuilder body, bool open, bool hasSeq, bool hasActivity, bool hasFlame,
+        DiagramTabKind activeTab, string settingsControls, string warning)
+    {
+        var views = (hasSeq ? 1 : 0) + (hasActivity ? 1 : 0) + (hasFlame ? 1 : 0);
+        var hasSettings = hasSeq && settingsControls.Length > 0;
+        var notSeq = hasSettings && activeTab != DiagramTabKind.Sequence;
+        body.Append($"<details class=\"example-diagrams{(notSeq ? " diagrams-not-seq" : "")}\"{(open ? " open" : "")}>");
+        var title = views > 1 ? "Diagrams" : hasSeq ? "Sequence Diagrams" : hasActivity ? "Activity Diagrams" : "Flame Chart";
+        body.Append("<summary class=\"h4\">").Append(title);
+        if (hasSettings) body.Append(ScenarioSettingsSummaryGear);
+        if (views == 1) body.Append(warning);
+        body.Append("</summary>");
+        if (views > 1)
+        {
+            body.Append(DiagramTabsOpen);
+            if (hasSeq) body.Append(BuildDiagramTab("seq", "Sequence Diagrams", activeTab == DiagramTabKind.Sequence));
+            if (hasActivity) body.Append(BuildDiagramTab("activity", "Activity Diagrams", activeTab == DiagramTabKind.Activity));
+            if (hasFlame) body.Append(BuildDiagramTab("flame", "Flame Chart", activeTab == DiagramTabKind.FlameChart));
+            body.Append(warning).Append("</div>");
+        }
+        if (hasSettings)
+            body.Append("<div class=\"scenario-settings\"><div class=\"diagram-toggle diagram-options-bar\"><span class=\"scenario-settings-label\">This scenario:</span>")
+                .Append(settingsControls).Append("</div>").Append(ScenarioSettingsGear).Append("</div>");
     }
 
     /// <summary>
@@ -1420,17 +1476,17 @@ public static class ReportGenerator
         // toggles at report and scenario level. Built once — the five scenario
         // toolbar variants all use the same string, so they cannot drift. The
         // control is label-free (kept compact deliberately); aria-label/title
-        // carry its meaning instead. It takes no <optgroup> heading, unlike the
-        // appearance selects: its options are the names of formats and say what
-        // they do, and Chromium indents grouped options, which measured 15px of
-        // closed-state width per select on a toolbar that has none to spare.
+        // carry its meaning instead. Since 5.0.0 it takes an <optgroup> heading,
+        // "Payload format", like the width and line-count selects: the owner's
+        // choice, over the 15px of closed-state width Chromium adds to a select
+        // whose options are grouped.
         var yamlDefaultSelected = toggles.NotePayloadFormat == NotePayloadFormat.Yaml;
         var noteFormatOptions = $"<option value=\"json\"{(yamlDefaultSelected ? "" : " selected")}>JSON</option><option value=\"yaml\"{(yamlDefaultSelected ? " selected" : "")}>YAML</option>";
         var reportNoteFormatSelect = hasJsonNotePayloads
-            ? $"<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Note payload format\" title=\"Note payload format\" onchange=\"window._setNoteFormat(this)\">{noteFormatOptions}</select>"
+            ? $"<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Payload format\" title=\"Payload format\" onchange=\"window._setNoteFormat(this)\"><optgroup label=\"Payload format\">{noteFormatOptions}</optgroup></select>"
             : "";
         var scenarioNoteFormatSelect = hasJsonNotePayloads
-            ? $"<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Note payload format\" title=\"Note payload format\" onchange=\"window._setScenarioNoteFormat(this)\">{noteFormatOptions}</select>"
+            ? $"<select class=\"note-format-select\" autocomplete=\"off\" aria-label=\"Payload format\" title=\"Payload format\" onchange=\"window._setScenarioNoteFormat(this)\"><optgroup label=\"Payload format\">{noteFormatOptions}</optgroup></select>"
             : "";
         // The note appearance controls need notes to act on, and nothing more: unlike the JSON/YAML
         // select they apply to any payload, so the gate is simply "this report draws notes".
@@ -1440,21 +1496,17 @@ public static class ReportGenerator
         // "Wrap" is the start state (notes wrap at DiagramNoteWrapWidth); "Wide" lifts the ceiling to
         // the diagram's width. The option VALUES are what the handlers and NoteWidthMode key on.
         (string, string)[] noteWidthOptions = [("default", "Wrap"), ("full", "Wide")];
-        const string noteWidthTitle = "Note width. Wrap: notes wrap at the report's note width. Wide: notes widen to fill the diagram.";
+        const string noteWidthTitle = "Payload width. Wrap: they wrap at a set width. Wide: they widen to fill the diagram.";
         var widthSelected = toggles.NoteWidth == NoteWidthMode.Full ? "full" : "default";
         var reportNoteWidthSelect = hasDiagramNotes
-            ? BuildNoteAppearanceSelect("note-width-select", "Note width", noteWidthTitle, "_setNoteWidth", noteWidthOptions, widthSelected)
+            ? BuildNoteAppearanceSelect("note-width-select", "Payload width", noteWidthTitle, "_setNoteWidth", noteWidthOptions, widthSelected)
             : "";
         var scenarioNoteWidthSelect = hasDiagramNotes
-            ? BuildNoteAppearanceSelect("note-width-select", "Note width", noteWidthTitle, "_setScenarioNoteWidth", noteWidthOptions, widthSelected)
+            ? BuildNoteAppearanceSelect("note-width-select", "Payload width", noteWidthTitle, "_setScenarioNoteWidth", noteWidthOptions, widthSelected)
             : "";
-        // The full scenario-level control run, built once (see BuildScenarioDiagramToolbar). The
-        // no-filters variant serves the flow-only branch, which has no sequence content to filter.
+        // The scenario-level control run, built once (see BuildScenarioDiagramToolbar).
         var scenarioToolbarControls = BuildScenarioDiagramToolbar(toggles,
             hasAssertionNotes, hasStepDelimiters, hasDatabaseParticipants, scenarioNoteFormatSelect,
-            scenarioNoteWidthSelect);
-        var scenarioToolbarControlsNoFilters = BuildScenarioDiagramToolbar(toggles,
-            includeAssertions: false, includeSteps: false, includeDatabases: false, scenarioNoteFormatSelect,
             scenarioNoteWidthSelect);
         // A report drawn when it was written (NodeJs, Server, Local) still has views only the page draws: the Activity
         // tab and the internal-flow popups, whose diagrams are one per scenario and one per call. It carries the engine
@@ -1476,6 +1528,10 @@ public static class ReportGenerator
         var flameChartRenderScript = internalFlowTracking ? DiagramContextMenu.GetFlameChartRenderScript() : "";
         var toggleScript = internalFlowTracking ? DiagramContextMenu.GetToggleScript() : "";
         var diagramToggleLayoutScript = DiagramContextMenu.GetDiagramToggleLayoutScript();
+        // each scenario's settings and their gears exist only where the page draws the diagrams (AppendDiagramSectionHead)
+        var scenarioSettingsScript = isPlantUmlBrowser
+            ? "<script id=\"kronikol-scenario-settings\">" + LoadResource("report-scenario-settings-script.js") + "</script>"
+            : "";
         var themeBootScript = LoadResource("report-theme-boot-script.js");
         var themeSwitchScript = LoadResource("report-theme-switch-script.js");
         var runBandScript = LoadResource("report-run-band-script.js");
@@ -1546,6 +1602,7 @@ public static class ReportGenerator
                             <script id="kronikol-theme-switch">{{themeSwitchScript}}</script>
                             <script id="kronikol-run-band">{{runBandScript}}</script>
                             <script id="kronikol-report-tabs">{{reportTabsScript}}</script>
+                            {{scenarioSettingsScript}}
                         </head>
                         <body>
                     """;
@@ -2152,9 +2209,6 @@ public static class ReportGenerator
                         showStepNumbers, isPlantUmlBrowser, isInlineSvg, lazyLoadImages,
                         ref plantUmlBrowserCounter, diagramDataMap, wholeTestSegments, trackedLogs, wholeTestVisualization, medianSpanCount,
                         titleizeParameterNames,
-                        hasAssertionNotes: hasAssertionNotes,
-                        hasStepDelimiters: hasStepDelimiters,
-                        hasDatabaseParticipants: hasDatabaseParticipants,
                         showNoInteractionsMarker: showNoInteractionsMarker,
                         scenarioAnchorIds: scenarioAnchorIds,
                         featureDisplayName: feature.DisplayName,
@@ -2164,7 +2218,6 @@ public static class ReportGenerator
                         precomputedWholeTestContent: precomputedWholeTestContent,
                         separateBackgroundSteps: separateBackgroundSteps,
                         collapseRepeatedStepKeywords: collapseRepeatedStepKeywords,
-                        scenarioNoteFormatSelect: scenarioNoteFormatSelect,
                         searchIndexPieces: searchIndexPieces,
                         scenarioToolbarControls: scenarioToolbarControls,
                         toggleDefaults: toggles,
@@ -2335,59 +2388,8 @@ public static class ReportGenerator
                     var hasFlameView = hasWholeTestFlow && !string.IsNullOrEmpty(wholeTestContent!.Value.FlameHtml);
                     var activeTab = ResolveDiagramTab(toggles.DiagramTab, hasSequenceDiagrams, hasActivityView, hasFlameView);
 
-                    body.Append($"<details class=\"example-diagrams\"{(toggles.DiagramsSectionOpen ? " open" : "")}>");
-
-                    if (hasWholeTestFlow && hasSequenceDiagrams)
-                    {
-                        body.Append("<summary class=\"h4\">Diagrams</summary>");
-                        body.Append("<div class=\"diagram-toggle\">");
-                        body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Sequence ? " diagram-toggle-active" : "")}\" data-dtype=\"seq\">Sequence Diagrams</button>");
-                        if (hasActivityView)
-                            body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Activity ? " diagram-toggle-active" : "")}\" data-dtype=\"activity\">Activity Diagrams</button>");
-                        if (hasFlameView)
-                            body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.FlameChart ? " diagram-toggle-active" : "")}\" data-dtype=\"flame\">Flame Chart</button>");
-                        body.Append(spanWarning);
-                        if (isPlantUmlBrowser)
-                            body.Append(scenarioToolbarControls);
-                        body.Append("</div>");
-                    }
-                    else if (hasSequenceDiagrams)
-                    {
-                        body.Append("<summary class=\"h4\">Sequence Diagrams</summary>");
-                        if (isPlantUmlBrowser)
-                        {
-                            body.Append("<div class=\"diagram-toggle\">");
-                            body.Append(scenarioToolbarControls);
-                            body.Append("</div>");
-                        }
-                    }
-                    else
-                    {
-                        // Only whole-test-flow, no sequence diagrams
-                        var hasActivity = hasActivityView;
-                        var hasFlame = hasFlameView;
-                        if (hasActivity && hasFlame)
-                        {
-                            body.Append("<summary class=\"h4\">Diagrams</summary>");
-                            body.Append("<div class=\"diagram-toggle\">");
-                            body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Activity ? " diagram-toggle-active" : "")}\" data-dtype=\"activity\">Activity Diagrams</button>");
-                            body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.FlameChart ? " diagram-toggle-active" : "")}\" data-dtype=\"flame\">Flame Chart</button>");
-                            body.Append(spanWarning);
-                            if (isPlantUmlBrowser)
-                            {
-                                body.Append(scenarioToolbarControlsNoFilters);
-                            }
-                            body.Append("</div>");
-                        }
-                        else if (hasActivity)
-                        {
-                            body.Append("<summary class=\"h4\">Activity Diagrams</summary>");
-                        }
-                        else
-                        {
-                            body.Append("<summary class=\"h4\">Flame Chart</summary>");
-                        }
-                    }
+                    AppendDiagramSectionHead(body, toggles.DiagramsSectionOpen, hasSequenceDiagrams, hasActivityView, hasFlameView,
+                        activeTab, isPlantUmlBrowser ? scenarioToolbarControls : "", spanWarning);
 
                     if (hasSequenceDiagrams)
                     {
@@ -3102,9 +3104,6 @@ public static class ReportGenerator
         WholeTestFlowVisualization wholeTestVisualization,
         int medianSpanCount,
         bool titleizeParameterNames = true,
-        bool hasAssertionNotes = false,
-        bool hasStepDelimiters = false,
-        bool hasDatabaseParticipants = false,
         Dictionary<string, string>? scenarioAnchorIds = null,
         string? featureDisplayName = null,
         string? featureDescription = null,
@@ -3114,7 +3113,6 @@ public static class ReportGenerator
         bool showNoInteractionsMarker = false,
         bool separateBackgroundSteps = false,
         bool collapseRepeatedStepKeywords = true,
-        string scenarioNoteFormatSelect = "",
         Dictionary<string, List<string>>? searchIndexPieces = null,
         string scenarioToolbarControls = "",
         ResolvedToggleDefaults? toggleDefaults = null,
@@ -3563,70 +3561,14 @@ public static class ReportGenerator
 
         if (hasDiagramContent)
         {
-            body.Append($"<details class=\"example-diagrams\"{(toggles.DiagramsSectionOpen ? " open" : "")}>");
-
-            // Determine toggle buttons needed
+            // The views the group has
             var showSeqToggle = hasAnySeqDiagrams;
             var showActivityToggle = hasAnyWholeTestFlow && wholeTestContents.Any(w => !string.IsNullOrEmpty(w?.ActivityHtml));
             var showFlameToggle = hasAnyWholeTestFlow && wholeTestContents.Any(w => !string.IsNullOrEmpty(w?.FlameHtml));
             var multipleTypes = (showSeqToggle ? 1 : 0) + (showActivityToggle ? 1 : 0) + (showFlameToggle ? 1 : 0) > 1;
             var activeTab = ResolveDiagramTab(toggles.DiagramTab, showSeqToggle, showActivityToggle, showFlameToggle);
-
-            if (multipleTypes)
-            {
-                body.Append("<summary class=\"h4\">Diagrams</summary>");
-                body.Append("<div class=\"diagram-toggle\">");
-                if (showSeqToggle)
-                    body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Sequence ? " diagram-toggle-active" : "")}\" data-dtype=\"seq\">Sequence Diagrams</button>");
-                if (showActivityToggle)
-                    body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Activity ? " diagram-toggle-active" : "")}\" data-dtype=\"activity\">Activity Diagrams</button>");
-                if (showFlameToggle)
-                    body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.FlameChart ? " diagram-toggle-active" : "")}\" data-dtype=\"flame\">Flame Chart</button>");
-                if (isPlantUmlBrowser && showSeqToggle)
-                {
-                    body.Append(scenarioToolbarControls);
-                }
-                else
-                {
-                    // No sequence toggle: the Details radio and headers toggle stay out, but the
-                    // report-wide filter buttons and the note-format select are still offered
-                    // (their gates are report-wide, matching the pre-builder emission).
-                    if (hasAssertionNotes)
-                        body.Append(BuildFilterToggleButton("assertions", toggles.AssertionsShown, scenarioLevel: true));
-                    if (hasStepDelimiters)
-                        body.Append(BuildFilterToggleButton("steps", toggles.StepsShown, scenarioLevel: true));
-                    if (hasDatabaseParticipants)
-                        body.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: true));
-                    body.Append(scenarioNoteFormatSelect);
-                }
-                body.Append("</div>");
-            }
-            else if (showSeqToggle)
-            {
-                body.Append("<summary class=\"h4\">Sequence Diagrams</summary>");
-                if (isPlantUmlBrowser)
-                {
-                    body.Append("<div class=\"diagram-toggle\">");
-                    body.Append(scenarioToolbarControls);
-                    body.Append("</div>");
-                }
-            }
-            else if (showActivityToggle && showFlameToggle)
-            {
-                body.Append("<summary class=\"h4\">Diagrams</summary>");
-                body.Append("<div class=\"diagram-toggle\">");
-                body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.Activity ? " diagram-toggle-active" : "")}\" data-dtype=\"activity\">Activity Diagrams</button>");
-                body.Append($"<button class=\"diagram-toggle-btn{(activeTab == DiagramTabKind.FlameChart ? " diagram-toggle-active" : "")}\" data-dtype=\"flame\">Flame Chart</button>");
-                body.Append("</div>");
-            }
-            else if (showActivityToggle)
-            {
-                body.Append("<summary class=\"h4\">Activity Diagrams</summary>");
-            }
-            else
-            {
-                body.Append("<summary class=\"h4\">Flame Chart</summary>");
-            }
+            AppendDiagramSectionHead(body, toggles.DiagramsSectionOpen, showSeqToggle, showActivityToggle, showFlameToggle,
+                activeTab, isPlantUmlBrowser ? scenarioToolbarControls : "", warning: "");
 
             // Sequence diagrams
             if (hasAnySeqDiagrams)

@@ -1,11 +1,11 @@
 <script>
-// Scenario diagram toolbar layout. The Details / Headers / Assertions / Steps / Databases buttons
-// (and the Sequence / Activity / Flame tabs when a scenario has several diagram types) float to the
-// right of the "Sequence Diagrams" / "Diagrams" title, on the title line, when both fit side by
-// side; when the container is too narrow for that — a phone, a narrow pane, a scenario with many
-// toggles — they go back under the title, full width, as before. Measured, not guessed: the widths
-// depend on the title, the font and on which toggles a scenario has, so no fixed breakpoint is right
-// for every report. The CSS lives under `.diagram-toggle[data-layout="inline"]`.
+// Scenario diagram tabs layout. The Sequence / Activity / Flame tabs of a scenario with several kinds of
+// diagram float to the right of the "Diagrams" title, on the title line, when both fit side by side;
+// when the section is too narrow for that (a phone, a narrow pane) they go back under the title, full
+// width. Measured, not guessed: the widths depend on the title, the font and the tabs a scenario has,
+// so no fixed breakpoint is right for every report. The CSS lives under
+// `.diagram-toggle[data-layout="inline"]`. Since 5.0.0 the tabs have a bar of their own and a
+// scenario's settings sit after it, never on the title line.
 (function () {
     var GAP = 16; // px kept between the end of the title text and the toolbar
     var scheduled = false;
@@ -52,9 +52,7 @@
         layoutAll();
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
         window.addEventListener('resize', schedule);
-        // Button labels change width ("Headers Shown" → "Headers Hidden"), report-level toggles
-        // rewrite every scenario's buttons, and opening a scenario or its diagrams section renders a
-        // toolbar that had no size before.
+        // Opening a scenario or its diagrams section renders a bar that had no size before.
         document.addEventListener('click', schedule, true);
         document.addEventListener('toggle', schedule, true);
         if (typeof ResizeObserver === 'function') {

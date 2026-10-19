@@ -27,7 +27,9 @@ document.addEventListener('keydown', function(e) {
         scenarios[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
         var feature = scenarios[idx].closest('details.feature');
         if (feature) feature.setAttribute('open', '');
-    } else if (e.key === 'Enter' && focused) {
+    } else if (e.key === 'Enter' && focused && (e.target === document.body || e.target === document.documentElement)) {
+        // only while nothing has the keyboard's focus: Enter on a button presses it (until 5.0.0 it folded the
+        // scenario the arrow keys had picked, and the button did nothing)
         e.preventDefault();
         if (focused.hasAttribute('open')) focused.removeAttribute('open');
         else focused.setAttribute('open', '');

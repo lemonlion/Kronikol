@@ -2,7 +2,7 @@ namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
 /// Tests that verify step delimiters remain hidden after note collapse/expand
-/// when the steps toggle is set to "Steps Hidden".
+/// when the Steps toggle is off.
 /// </summary>
 [Collection(PlaywrightCollections.Notes)]
 public class DiagramNoteStepsToggleTests : DiagramNotePlaywrightBase
@@ -23,7 +23,7 @@ public class DiagramNoteStepsToggleTests : DiagramNotePlaywrightBase
         var sourceBeforeToggle = await GetDataPlantuml();
         Assert.Contains("stepDelimiter", sourceBeforeToggle);
 
-        // Click "Steps Shown" button to hide steps
+        // Click Steps, on, to hide the steps
         await Page.Locator("button[data-toggle='steps']").First.ClickAsync();
 
         // Wait for re-render after steps toggle

@@ -199,7 +199,8 @@ public class WarmUpMarkTests : PlaywrightTestBase
         await Expect(ScenarioNamed("Place").Locator(":scope > summary .duration-badge > .warm-up-note")).ToHaveTextAsync(" · 1.5s warm-up");
         await Page.Locator("details.feature > summary").First.ClickAsync();
         await ScenarioNamed("Place").Locator(":scope > summary").ClickAsync();
-        var svg = ScenarioNamed("Place").Locator("svg").First;
+        // the diagram's own picture: since 5.0.0 the scenario's settings gear is an svg too, ahead of it (S8)
+        var svg = ScenarioNamed("Place").Locator("[data-diagram-type='plantuml'] svg").First;
         await svg.WaitForAsync(new() { Timeout = 60_000 });
 
         await DispatchContextMenu(svg);

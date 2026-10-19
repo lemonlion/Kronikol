@@ -448,3 +448,73 @@ decision of the owner's, not part of this plan.
   the rows first with `PlaywrightTestBase.OpenFilterRowsAsync` (new), and `ReportToolbarTests` finds the box's Clear
   All by its class, now that the bar and the empty state have one too.
   Checks: the core suite passes 7,759 with 2 skipped; the full Playwright suite passes 1,140 with 28 skipped.
+- 2026-10-19, S8: the scenario toolbars split (D29 to D34, D37), the scenario's settings (D23, sequence-only toolbars
+  included, items R17.23 and R17.26), the controls' loading state and bold widths (item 25), and the line count's
+  heading (R17.27); the format dropdown's heading (R17.3), listed under S9, came with the selects' wording. The
+  generator writes a diagram section's head once, for a scenario and for a parameterized group
+  (`AppendDiagramSectionHead`): the title; the views' tabs on `div.diagram-toggle-tabs[role=tablist]`, each `role=tab`
+  with `aria-selected` and a roving `tabindex`; and, where the section has sequence diagrams and the page draws them,
+  `div.scenario-settings` holding the options bar (`div.diagram-toggle.diagram-options-bar`, starting
+  `span.scenario-settings-label` "This scenario:", then the three zones) and `button.scenario-settings-gear` (the
+  preview's cog path, written out), with the phone's gear in the title (`button.gear-in-summary`, U+2699). A section
+  opening on another view carries `diagrams-not-seq`. The Payloads radio, its "N lines" options under "Payload
+  length", the bare toggle words with `aria-pressed` and `span.btn-label[data-label]` come from the shared builders,
+  so the report's bar has them too; the format and width dropdowns are "Payload format" (with its heading, the owner's
+  pick over Chromium's 15 px) and "Payload width". `report-scenario-settings-script.js` (new) opens and closes the
+  settings from either gear (one state, `is-open`, both gears' `aria-expanded`; the title's gear does not fold the
+  section) and sets `.zone-adjacent` on an open bar's toggles where they sit beside the dropdowns (D18's last part).
+  `toggle-script.js` keeps `aria-selected`, the tabindex and `diagrams-not-seq` and moves along the tabs with the
+  arrow keys, Home and End; `syncToggleBtn` writes `aria-pressed` and leaves the label alone; the note's width button
+  says "box"; `report-init-script.js` no longer makes the phone's "Diagram Settings" button. Stylesheet: the tabs bar
+  and the section's card in `stylesheets.css`; the payload controls, the zones, the loading state, the bold widths,
+  the settings, the gears and the phone's sheet (every bar's zones one under another, headed Format and Toggle) in
+  `collapsible-notes-styles.css`, which only a report drawn in the page carries; the span-count warning a pill.
+  Deviations from the preview: the options bar carries no `not-seq` class of its own (the section's class hides the
+  settings, gear and all); a section with no sequence diagrams has no settings (the preview wrote its bar and always
+  hid it); the span-count warning stays on the tabs bar (the preview's split left it in the options bar, hidden with
+  it), and a section with one view and no tabs carries it on its title; the line count and the width read in capitals
+  by `text-transform`, their text "3 lines", "Wrap" and "Wide" as a screen reader should say them (the preview wrote
+  "3 LINES", "WRAP" and "WIDE"); the width dropdown takes the 34 px phone touch height the other controls take (the
+  preview's rule missed it); Firefox keeps R17.8's dot offset on a phone's report bar too, which the preview's later
+  phone rule undid there only; the settings share one open state at every width (the preview's phone button and its
+  gear kept two); the tabs move with the arrow keys and keep a roving tabindex, as the report's tabs and the Full and
+  Summary views do (the preview only gave them roles); a phone's view tabs share their row but never grow narrower
+  than their longest word (the preview's `min-width: 0` let them, and at 320 and 340 px "Sequence Diagrams" broke
+  inside its words over four lines); and the title's gear calls no `preventDefault`, as the preview's did: a button in
+  a summary is its click's own target, so the section stays open without it, by click, Enter and Space, in Chrome and
+  Firefox (measured; a mutation removing the call survived, which is how it was found).
+  Bugs found on the way and fixed: once the arrow keys had picked a scenario, Enter folded it wherever the keyboard's
+  focus was and the focused button or heading did nothing (4.x too; the handler now acts only while nothing has the
+  focus); a scenario with one view of its flow and no sequence diagram lost its span warning (4.x too); and S1's
+  restyle of the steps had dropped `user-select: none` from a step's status icon, which a bare-substring test kept
+  passing because other rules on the page carried both of its strings (it now reads the rule).
+  Measured with `checks/style-parity.js`, surfaces 7a (the report bar's controls), 14 (a scenario's section, tabs and
+  settings) and 14o (the settings opened), with pseudo-elements, transitions off (a page busy drawing every diagram
+  makes no frames, and a transition read after a click had not started) and Firefox at a phone width through a frame
+  of that width (this Firefox build takes no viewport from the driver): at 1,400 px in Chrome and Firefox, light and
+  dark, and at 400 px, only the differences named above remain, with the report bar's Events and Setup toggles (D38, a
+  later stage) and the diagrams' own heights (S10).
+  Tests: core `ScenarioToolbarTests` (new, 9 facts: the tabs bar then the settings behind the gear, a section on
+  another view, a sequence-only section, the Payloads wording and bold-width spans, a toggle's bare word with
+  `aria-pressed`, the format and width wording, a section with no sequence diagrams, the script only where settings
+  exist, a report drawn when written; 6 of the first 7 failed before), `DiagramToggleReportTests` (the one-view
+  warning, which failed before, and the tabs bar's warning), and the toolbar pins moved to the new markup in
+  `ToggleDefaultsMarkupTests`, `ParameterizedGroupRenderTests`, `ReportToggleTests`, `DatabaseToggleReportTests`,
+  `TrackThatIntegrationTests`, `NoteAppearanceScriptTests` and `StylesheetRulesTests`; `StepRenderingReportTests`
+  reads the step icon's rule. Playwright `ScenarioSettingsTests` (new, 9: the gear opening and closing in place, the
+  open bar under the report's bar, stepping aside on another view, the arrow keys, the phone's title gear leaving the
+  section open, a toggle's word and width, a payload button's width, the line count only while Truncated, Enter
+  pressing the focused button); `PlaywrightTestBase.OpenScenarioSettingsAsync` (new) opens a scenario's settings, the
+  way a reader would at the page's width, before the 67 places in 24 files that use its controls;
+  `MobileResponsiveTests` and `ViewportSweepTests` use the title's gear (the sweep opens every scenario's settings at
+  every width, and lets a phone's view tab wrap at a space but not inside a word); `DiagramToggleLayoutTests` lays out
+  the tabs bar, and checks that the settings open on a row of their own; the label assertions read the word and
+  `aria-pressed`; `ToolbarStylingTests` read the C look on the default theme (the violet theme's rows keep its 4.x
+  colours over the new base until S13); `NoteAppearanceTests` checks the 6 px between the format and width dropdowns;
+  `WarmUpMarkTests` finds the diagram's picture by its container, as the gear is an svg too. `checks/mutate-s8.py`
+  undoes six of these behaviours one at a time and runs the test meant to catch each: all six fail (Enter folding the
+  picked scenario again, a toggle rewriting its label, the tabs' arrow keys doing nothing, the title's gear opening
+  nothing, the open settings not sticking under the bar, a label losing its bold width).
+  Checks: the core suite passes 7,770 with 2 skipped; the full Playwright suite passes 1,149 with 28 skipped, and one
+  test timed out under load (ArrowLinkOpensPopupTests, whose 300 s wait for every diagram on its page to draw ran out;
+  the class passes 8 of 8 run alone).

@@ -38,6 +38,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
 
+        await OpenScenarioSettingsAsync();
         var truncBtn = Page.Locator(".diagram-toggle .details-radio-btn[data-state='truncated']");
         await Expect(truncBtn.First).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
     }
@@ -50,6 +51,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
 
+        await OpenScenarioSettingsAsync();
         var expandBtn = Page.Locator(".diagram-toggle .details-radio-btn[data-state='expanded']").First;
         await expandBtn.ClickAsync();
         await Expect(expandBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
@@ -67,6 +69,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
 
+        await OpenScenarioSettingsAsync();
         var collapseBtn = Page.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").First;
         await collapseBtn.ClickAsync();
         await Expect(collapseBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
@@ -80,6 +83,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
 
+        await OpenScenarioSettingsAsync();
         var select = Page.Locator(".diagram-toggle .truncate-lines-select").First;
         var value = await select.InputValueAsync();
         Assert.Equal("40", value);
@@ -93,6 +97,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
 
+        await OpenScenarioSettingsAsync();
         var select = Page.Locator(".diagram-toggle .truncate-lines-select").First;
         Assert.Equal("40", await select.InputValueAsync());
         await select.SelectOptionAsync("3");
@@ -108,8 +113,10 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
 
+        await OpenScenarioSettingsAsync();
         var headersBtn = Page.Locator(".diagram-toggle .toggle-btn[data-toggle='headers']").First;
-        await Expect(headersBtn).ToHaveTextAsync("Headers Hidden");
+        await Expect(headersBtn).ToHaveAttributeAsync("aria-pressed", "false");
+        await Expect(headersBtn).ToHaveTextAsync("Headers");
         await Expect(headersBtn).Not.ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
     }
 
@@ -121,13 +128,16 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
 
+        await OpenScenarioSettingsAsync();
         var headersBtn = Page.Locator(".diagram-toggle .toggle-btn[data-toggle='headers']").First;
         await headersBtn.ClickAsync();
-        await Expect(headersBtn).ToHaveTextAsync("Headers Shown");
+        await Expect(headersBtn).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(headersBtn).ToHaveTextAsync("Headers");
         await Expect(headersBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
 
         await headersBtn.ClickAsync();
-        await Expect(headersBtn).ToHaveTextAsync("Headers Hidden");
+        await Expect(headersBtn).ToHaveAttributeAsync("aria-pressed", "false");
+        await Expect(headersBtn).ToHaveTextAsync("Headers");
         var headersBtnClass = await headersBtn.GetAttributeAsync("class");
         Assert.DoesNotContain("details-active", headersBtnClass!);
     }
@@ -154,6 +164,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
         await WaitForDiagramSvg();
 
         var scenario = Page.Locator("details.scenario").First;
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").ClickAsync();
 
         await scenario.Locator("[data-note-btn='plus']").First.WaitForAsync(new() { Timeout = 10000 });

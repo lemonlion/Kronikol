@@ -77,6 +77,7 @@ public class ShouldlyAssertionNoteTests : DiagramNotePlaywrightBase
         await RenderAllDiagramsAndWait(minCount: 1);
 
         var scenario = Page.Locator("details.scenario").First;
+        await OpenScenarioSettingsAsync(scenario);
         var show = scenario.Locator(".toggle-btn[data-toggle='assertions'][data-shown='false']");
         if (await show.CountAsync() > 0)
         {

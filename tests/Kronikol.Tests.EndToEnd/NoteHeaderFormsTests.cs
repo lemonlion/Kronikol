@@ -154,6 +154,7 @@ public class NoteHeaderFormsTests : DiagramNotePlaywrightBase
         await Open(headerTag);
 
         var before = await GetSvgHtml();
+        await OpenScenarioSettingsAsync();
         var collapse = Page.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").First;
         await collapse.ClickAsync();
         await Expect(collapse).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));

@@ -1056,7 +1056,7 @@ public class ParameterizedGroupRenderTests
         var paramGroupStart = content.IndexOf("<details class=\"scenario scenario-parameterized");
         Assert.True(paramGroupStart >= 0, "parameterized group not found");
         var paramGroupHtml = content.Substring(paramGroupStart);
-        Assert.Contains("onclick=\"window._toggleScenarioAssertions(this)\">Assertions Hidden</button>", paramGroupHtml);
+        Assert.Contains("aria-pressed=\"false\" onclick=\"window._toggleScenarioAssertions(this)\"><span class=\"btn-label\" data-label=\"Assertions\">Assertions</span></button>", paramGroupHtml);
     }
 
     [Fact]
@@ -1076,7 +1076,7 @@ public class ParameterizedGroupRenderTests
         var paramGroupStart = content.IndexOf("<details class=\"scenario scenario-parameterized");
         Assert.True(paramGroupStart >= 0, "parameterized group not found");
         var paramGroupHtml = content.Substring(paramGroupStart);
-        Assert.Contains("onclick=\"window._toggleScenarioSteps(this)\">Steps Shown</button>", paramGroupHtml);
+        Assert.Contains("aria-pressed=\"true\" onclick=\"window._toggleScenarioSteps(this)\"><span class=\"btn-label\" data-label=\"Steps\">Steps</span></button>", paramGroupHtml);
     }
 
     [Fact]

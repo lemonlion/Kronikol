@@ -580,17 +580,13 @@ public class StepRenderingReportTests
         Assert.Contains(".step-keyword", content);
     }
 
+    // Read from the rule itself: as two substrings of the page, other rules carried both, and when 5.0.0's restyle
+    // (plans/OPTION_C_PLAN.md S1) dropped user-select from the step's icon this still passed.
     [Fact]
-    public void Report_step_status_css_has_user_select_none_and_margin_left()
+    public void A_steps_status_icon_is_not_selected_with_its_text_and_keeps_its_margins()
     {
-        var scenario = new Scenario
-        {
-            Id = "s1", DisplayName = "Test",
-            Steps = [new ScenarioStep { Keyword = "Given", Text = "something" }]
-        };
-        var content = GenerateReport(MakeFeatures(scenario), "StepStatusCss.html");
-        Assert.Contains("user-select: none", content);
-        Assert.Contains("margin-left: 0.5em", content);
+        Assert.Equal("none", CssRules.Value(Stylesheets.HtmlReportStyleSheet, ".step-status", "user-select"));
+        Assert.Equal("0 7px 0 2px", CssRules.Value(Stylesheets.HtmlReportStyleSheet, ".step-status", "margin"));
     }
 
     [Fact]

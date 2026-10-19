@@ -161,7 +161,8 @@ public class ReportToolbarTests : PlaywrightTestBase
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var headersBtn = Page.Locator(".toolbar-row .toggle-btn[data-toggle='headers']");
-        await Expect(headersBtn).ToHaveTextAsync("Headers Hidden");
+        await Expect(headersBtn).ToHaveAttributeAsync("aria-pressed", "false");
+        await Expect(headersBtn).ToHaveTextAsync("Headers");
         await Expect(headersBtn).Not.ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
     }
 
@@ -174,11 +175,13 @@ public class ReportToolbarTests : PlaywrightTestBase
         var headersBtn = Page.Locator(".toolbar-row .toggle-btn[data-toggle='headers']");
 
         await headersBtn.ClickAsync();
-        await Expect(headersBtn).ToHaveTextAsync("Headers Shown");
+        await Expect(headersBtn).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(headersBtn).ToHaveTextAsync("Headers");
         await Expect(headersBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
 
         await headersBtn.ClickAsync();
-        await Expect(headersBtn).ToHaveTextAsync("Headers Hidden");
+        await Expect(headersBtn).ToHaveAttributeAsync("aria-pressed", "false");
+        await Expect(headersBtn).ToHaveTextAsync("Headers");
         var headersBtnClass = await headersBtn.GetAttributeAsync("class");
         Assert.DoesNotContain("details-active", headersBtnClass!);
     }

@@ -3,20 +3,21 @@ using Microsoft.Playwright;
 namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
-/// The scenario diagram toolbar (Details / Headers / Assertions / …) sits on the "Sequence Diagrams"
-/// title line, floated right, when it fits beside the title — and goes back under the title, full
-/// width, when the container is too narrow (diagram-toggle-layout-script.js).
+/// A scenario's view tabs (Sequence Diagrams, Activity Diagrams, Flame Chart) sit on the "Diagrams" title line, floated
+/// right, when they fit beside the title, and go back under the title, full width, when the section is too narrow
+/// (diagram-toggle-layout-script.js). Until 5.0.0 the payload controls rode with them; since then they are the
+/// scenario's settings, on a row of their own, and never on the title line (plans/OPTION_C_PLAN.md S8).
 /// </summary>
 [Collection(PlaywrightCollections.Diagrams)]
 public class DiagramToggleLayoutTests : DiagramNotePlaywrightBase
 {
     public DiagramToggleLayoutTests(PlaywrightFixture fixture) : base(fixture) { }
 
-    private const string Toggle = "details.example-diagrams > summary + .diagram-toggle";
+    private const string Toggle = "details.example-diagrams > summary + .diagram-toggle-tabs";
 
     private async Task OpenReport(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithAssertionNotes(TempDir, OutputDir, fileName));
+        await Page.GotoAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, fileName, _ => { }));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await Page.EvaluateAsync("() => document.querySelectorAll('details.example-diagrams').forEach(d => d.open = true)");
@@ -71,5 +72,30 @@ public class DiagramToggleLayoutTests : DiagramNotePlaywrightBase
         // And back again when the page grows.
         await Page.SetViewportSizeAsync(1400, 900);
         await Page.WaitForFunctionAsync($"() => document.querySelector('{Toggle}[data-layout=\"inline\"]') !== null", null, new() { PollingInterval = 200 });
+    }
+
+    [Fact]
+    public async Task A_scenarios_settings_open_on_a_row_of_their_own_never_on_the_title_line()
+    {
+        // a scenario with only sequence diagrams: no tabs, and its settings are the only bar
+        await Page.SetViewportSizeAsync(1400, 900);
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithAssertionNotes(TempDir, OutputDir, "ToggleLayoutSettings.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await OpenScenarioSettingsAsync();
+        await TwoAnimationFramesAsync(Page);
+
+        var geometry = await Page.EvaluateAsync<string>("""
+            () => {
+                var bar = document.querySelector('details.example-diagrams > .scenario-settings > .diagram-options-bar');
+                var s = bar.closest('details').querySelector(':scope > summary');
+                return JSON.stringify({ layout: bar.getAttribute('data-layout'), float: getComputedStyle(bar).float,
+                    below: bar.getBoundingClientRect().top >= s.getBoundingClientRect().bottom - 1 });
+            }
+            """);
+        var g = System.Text.Json.JsonDocument.Parse(geometry).RootElement;
+        Assert.Equal(System.Text.Json.JsonValueKind.Null, g.GetProperty("layout").ValueKind);
+        Assert.Equal("none", g.GetProperty("float").GetString());
+        Assert.True(g.GetProperty("below").GetBoolean(), "the settings must open under the title");
     }
 }

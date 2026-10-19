@@ -174,21 +174,21 @@ public class ToggleDefaultsMarkupTests
     public void Details_default_seeds_active_button_and_disables_the_truncate_select()
     {
         var content = Generate(t => t.Details = ReportDetailsState.Expanded);
-        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setReportDetails('expanded')\">Expand</button>", content);
-        Assert.Contains("<button class=\"details-radio-btn\" data-state=\"truncated\" onclick=\"window._setReportDetails('truncated')\">Truncate</button>", content);
+        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setReportDetails('expanded')\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>", content);
+        Assert.Contains("<button class=\"details-radio-btn\" data-state=\"truncated\" onclick=\"window._setReportDetails('truncated')\"><span class=\"btn-label\" data-label=\"Truncated\">Truncated</span></button>", content);
         // syncRadioButtons disables the select whenever the state is not truncated — the
         // seeded markup must agree before the first click.
         Assert.Contains("<select class=\"truncate-lines-select\" autocomplete=\"off\" disabled onchange=\"window._setTruncateLines(this)\">", content);
         // Scenario-level twin seeds consistently
-        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\">Expand</button>", content);
+        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>", content);
     }
 
     [Fact]
     public void Truncate_lines_default_selects_the_configured_option()
     {
         var content = Generate(t => t.TruncateLines = TruncateLineCount.Lines10);
-        Assert.Contains("<option value=\"10\" selected>10</option>", content);
-        Assert.DoesNotContain("<option value=\"40\" selected>40</option>", content);
+        Assert.Contains("<option value=\"10\" selected>10 lines</option>", content);
+        Assert.DoesNotContain("<option value=\"40\" selected>40 lines</option>", content);
     }
 
     [Fact]
@@ -196,40 +196,40 @@ public class ToggleDefaultsMarkupTests
     {
         var content = Generate();
         Assert.Contains(
-            "<option value=\"3\">3</option><option value=\"4\">4</option><option value=\"5\">5</option>" +
-            "<option value=\"10\">10</option><option value=\"15\">15</option><option value=\"20\">20</option>" +
-            "<option value=\"25\">25</option><option value=\"30\">30</option><option value=\"35\">35</option>" +
-            "<option value=\"40\" selected>40</option><option value=\"50\">50</option><option value=\"60\">60</option>" +
-            "<option value=\"80\">80</option><option value=\"100\">100</option>", content);
+            "<option value=\"3\">3 lines</option><option value=\"4\">4 lines</option><option value=\"5\">5 lines</option>" +
+            "<option value=\"10\">10 lines</option><option value=\"15\">15 lines</option><option value=\"20\">20 lines</option>" +
+            "<option value=\"25\">25 lines</option><option value=\"30\">30 lines</option><option value=\"35\">35 lines</option>" +
+            "<option value=\"40\" selected>40 lines</option><option value=\"50\">50 lines</option><option value=\"60\">60 lines</option>" +
+            "<option value=\"80\">80 lines</option><option value=\"100\">100 lines</option>", content);
     }
 
     [Fact]
     public void Headers_hidden_default_seeds_both_toolbar_levels()
     {
         var content = Generate(t => t.HeadersShown = false);
-        Assert.Contains("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"headers\" data-shown=\"false\" onclick=\"window._toggleHeaders(this)\">Headers Hidden</button>", content);
-        Assert.Contains("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"headers\" data-shown=\"false\" onclick=\"window._toggleScenarioHeaders(this)\">Headers Hidden</button>", content);
+        Assert.Contains("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"headers\" data-shown=\"false\" aria-pressed=\"false\" onclick=\"window._toggleHeaders(this)\"><span class=\"btn-label\" data-label=\"Headers\">Headers</span></button>", content);
+        Assert.Contains("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"headers\" data-shown=\"false\" aria-pressed=\"false\" onclick=\"window._toggleScenarioHeaders(this)\"><span class=\"btn-label\" data-label=\"Headers\">Headers</span></button>", content);
     }
 
     [Fact]
     public void Assertions_shown_default_seeds_the_gated_button()
     {
         var content = Generate(t => t.AssertionsShown = true);
-        Assert.Contains("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"assertions\" data-shown=\"true\" onclick=\"window._toggleAssertions(this)\">Assertions Shown</button>", content);
+        Assert.Contains("<button class=\"details-radio-btn toggle-btn details-active\" data-toggle=\"assertions\" data-shown=\"true\" aria-pressed=\"true\" onclick=\"window._toggleAssertions(this)\"><span class=\"btn-label\" data-label=\"Assertions\">Assertions</span></button>", content);
     }
 
     [Fact]
     public void Steps_hidden_default_seeds_the_gated_button()
     {
         var content = Generate(t => t.StepsShown = false);
-        Assert.Contains("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"steps\" data-shown=\"false\" onclick=\"window._toggleSteps(this)\">Steps Hidden</button>", content);
+        Assert.Contains("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"steps\" data-shown=\"false\" aria-pressed=\"false\" onclick=\"window._toggleSteps(this)\"><span class=\"btn-label\" data-label=\"Steps\">Steps</span></button>", content);
     }
 
     [Fact]
     public void Databases_hidden_default_seeds_the_gated_button()
     {
         var content = Generate(t => t.DatabasesShown = false);
-        Assert.Contains("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"databases\" data-shown=\"false\" onclick=\"window._toggleDatabases(this)\">Databases Hidden</button>", content);
+        Assert.Contains("<button class=\"details-radio-btn toggle-btn\" data-toggle=\"databases\" data-shown=\"false\" aria-pressed=\"false\" onclick=\"window._toggleDatabases(this)\"><span class=\"btn-label\" data-label=\"Databases\">Databases</span></button>", content);
     }
 
     [Fact]
@@ -273,9 +273,9 @@ public class ToggleDefaultsMarkupTests
     public void Note_width_select_names_its_states()
     {
         var content = Generate();
-        Assert.Contains("<optgroup label=\"Note width\"><option value=\"default\" selected>Wrap</option><option value=\"full\">Wide</option></optgroup>", content);
-        Assert.Contains("title=\"Note width. Wrap: notes wrap at the report's note width. Wide: notes widen to fill the diagram.\" onchange=\"window._setNoteWidth(this)\"", content);
-        Assert.Contains("aria-label=\"Note width\"", content);
+        Assert.Contains("<optgroup label=\"Payload width\"><option value=\"default\" selected>Wrap</option><option value=\"full\">Wide</option></optgroup>", content);
+        Assert.Contains("title=\"Payload width. Wrap: they wrap at a set width. Wide: they widen to fill the diagram.\" onchange=\"window._setNoteWidth(this)\"", content);
+        Assert.Contains("aria-label=\"Payload width\"", content);
     }
 
     // The embedded script names both the class (in a selector) and the handler (in its own
@@ -434,8 +434,8 @@ public class ToggleDefaultsMarkupTests
     {
         var content = GenerateRich(t => t.DiagramTab = DiagramTabKind.Activity);
         // Where seq + activity + flame all exist, activity starts active and seq is hidden
-        Assert.Contains("<button class=\"diagram-toggle-btn diagram-toggle-active\" data-dtype=\"activity\">Activity Diagrams</button>", content);
-        Assert.Contains("<button class=\"diagram-toggle-btn\" data-dtype=\"seq\">Sequence Diagrams</button>", content);
+        Assert.Contains("<button class=\"diagram-toggle-btn diagram-toggle-active\" role=\"tab\" aria-selected=\"true\" tabindex=\"0\" data-dtype=\"activity\">Activity Diagrams</button>", content);
+        Assert.Contains("<button class=\"diagram-toggle-btn\" role=\"tab\" aria-selected=\"false\" tabindex=\"-1\" data-dtype=\"seq\">Sequence Diagrams</button>", content);
         Assert.Contains("<div class=\"diagram-view diagram-view-seq\" style=\"display:none\">", content);
         Assert.Contains("<div class=\"diagram-view diagram-view-activity\">", content);
     }
@@ -444,7 +444,7 @@ public class ToggleDefaultsMarkupTests
     public void Flame_chart_tab_default_seeds_where_flame_exists()
     {
         var content = GenerateRich(t => t.DiagramTab = DiagramTabKind.FlameChart);
-        Assert.Contains("<button class=\"diagram-toggle-btn diagram-toggle-active\" data-dtype=\"flame\">Flame Chart</button>", content);
+        Assert.Contains("<button class=\"diagram-toggle-btn diagram-toggle-active\" role=\"tab\" aria-selected=\"true\" tabindex=\"0\" data-dtype=\"flame\">Flame Chart</button>", content);
         Assert.Contains("<div class=\"diagram-view diagram-view-flame\">", content);
         Assert.Contains("<div class=\"diagram-view diagram-view-activity\" style=\"display:none\">", content);
     }
@@ -613,8 +613,8 @@ public class ToggleDefaultsMarkupTests
         var output = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports", $"ToggleMerge_{Guid.NewGuid():N}.html");
         var written = MergeableReportRenderer.Render(report, output, options: options);
         var content = File.ReadAllText(written);
-        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setReportDetails('expanded')\">Expand</button>", content);
+        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setReportDetails('expanded')\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>", content);
         Assert.Contains("window._detailsDefault = 'expanded'", content);
-        Assert.Contains("Headers Hidden</button>", content);
+        Assert.Contains("data-toggle=\"headers\" data-shown=\"false\" aria-pressed=\"false\"", content);
     }
 }

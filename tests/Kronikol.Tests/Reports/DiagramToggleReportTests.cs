@@ -93,7 +93,7 @@ public class DiagramToggleReportTests : IDisposable
     {
         var content = GenerateReport(MakeDiagrams(), MakeFeatures(), "ToggleSeqOnly.html");
 
-        Assert.Contains("Sequence Diagrams</summary>", content);
+        Assert.Contains("<summary class=\"h4\">Sequence Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\"", content);
         Assert.DoesNotContain("data-dtype=", content);
     }
 
@@ -120,8 +120,8 @@ public class DiagramToggleReportTests : IDisposable
             MakeDiagrams(), MakeFeatures(), "ToggleSummary.html",
             wholeTestSegments: MakeWholeTestSegments());
 
-        Assert.Contains("Diagrams</summary>", content);
-        Assert.DoesNotContain("Sequence Diagrams</summary>", content);
+        Assert.Contains("<summary class=\"h4\">Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\"", content);
+        Assert.DoesNotContain("<summary class=\"h4\">Sequence Diagrams", content);
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class DiagramToggleReportTests : IDisposable
             MakeDiagrams(), MakeFeatures(), "ToggleDefault.html",
             wholeTestSegments: MakeWholeTestSegments());
 
-        Assert.Contains("diagram-toggle-active\" data-dtype=\"seq\"", content);
+        Assert.Contains("diagram-toggle-active\" role=\"tab\" aria-selected=\"true\" tabindex=\"0\" data-dtype=\"seq\"", content);
     }
 
     [Fact]
@@ -203,7 +203,7 @@ public class DiagramToggleReportTests : IDisposable
             wholeTestSegments: new Dictionary<string, InternalFlowSegment>(),
             visualization: WholeTestFlowVisualization.Both);
 
-        Assert.Contains("Sequence Diagrams</summary>", content);
+        Assert.Contains("<summary class=\"h4\">Sequence Diagrams<button type=\"button\" class=\"scenario-diagram-controls-toggle gear-in-summary\"", content);
         Assert.DoesNotContain("data-dtype=", content);
     }
 
@@ -311,9 +311,60 @@ public class DiagramToggleReportTests : IDisposable
             wholeTestVisualization: WholeTestFlowVisualization.Both);
         var content = File.ReadAllText(path);
 
-        Assert.Contains("span-count-warning", content);
+        Assert.Contains("<span class=\"span-count-warning\">", content);
         Assert.Contains("150 spans", content);
         Assert.Contains("might indicate a problem", content);
+    }
+
+    // 4.x wrote the warning only beside tabs, so a scenario with one view of its flow and no sequence diagrams lost it.
+    [Fact]
+    public void A_flow_with_one_view_and_no_sequence_diagrams_shows_the_span_warning_on_its_title()
+    {
+        var features = MakeTwoScenarioFeatures();
+        var diagrams = new[] { new DefaultDiagramsFetcher.DiagramAsCode("t1", "", "@startuml\nA->B: call\n@enduml") };
+        var segments = MakeWholeTestSegmentsWithSpanCount("t1", 10);
+        foreach (var kv in MakeWholeTestSegmentsWithSpanCount("t2", 150))
+            segments[kv.Key] = kv.Value;
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, "ToggleSpanWarningOneView.html", "Test", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            internalFlowTracking: true,
+            wholeTestSegments: segments,
+            wholeTestVisualization: WholeTestFlowVisualization.ActivityDiagram);
+        var content = File.ReadAllText(path);
+
+        Assert.Contains("<summary class=\"h4\">Activity Diagrams<span class=\"span-count-warning\">(Warning: 150 spans.", content);
+    }
+
+    [Fact]
+    public void The_span_warning_sits_on_the_tabs_bar_where_there_are_tabs()
+    {
+        var features = MakeTwoScenarioFeatures();
+        var diagrams = new[]
+        {
+            new DefaultDiagramsFetcher.DiagramAsCode("t1", "", "@startuml\nA->B: call\n@enduml"),
+            new DefaultDiagramsFetcher.DiagramAsCode("t2", "", "@startuml\nA->B: call\n@enduml")
+        };
+        var segments = MakeWholeTestSegmentsWithSpanCount("t1", 10);
+        foreach (var kv in MakeWholeTestSegmentsWithSpanCount("t2", 150))
+            segments[kv.Key] = kv.Value;
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, "ToggleSpanWarningTabs.html", "Test", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            internalFlowTracking: true,
+            wholeTestSegments: segments,
+            wholeTestVisualization: WholeTestFlowVisualization.Both);
+        var content = File.ReadAllText(path);
+
+        Assert.Contains("data-dtype=\"flame\">Flame Chart</button><span class=\"span-count-warning\">(Warning: 150 spans.", content);
     }
 
     [Fact]

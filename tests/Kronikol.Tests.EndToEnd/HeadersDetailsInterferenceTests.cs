@@ -272,6 +272,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
         await WaitForDiagramRender();
 
         var scenario = Page.Locator("details.scenario");
+        await OpenScenarioSettingsAsync(scenario);
         var scenTruncBtn = scenario.Locator(".details-radio-btn[data-state='truncated']");
         await Expect(scenTruncBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("details-active"));
 
@@ -289,6 +290,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
         await WaitForDiagramRender();
 
         var scenario = Page.Locator("details.scenario");
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".toggle-btn[data-toggle='headers'][data-shown='true']").ClickAsync();
         await Page.WaitForTimeoutAsync(500);
 
@@ -326,6 +328,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
         await WaitForDiagramRender();
 
         var scenario = Page.Locator("details.scenario");
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".truncate-lines-select").SelectOptionAsync("5");
         await Page.WaitForTimeoutAsync(2000);
 
@@ -352,6 +355,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
         await WaitForDiagramRender();
 
         var scenario = Page.Locator("details.scenario");
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".truncate-lines-select").SelectOptionAsync("5");
         await Page.WaitForTimeoutAsync(2000);
 
@@ -381,6 +385,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
         await WaitForDiagramRender();
 
         var scenario = Page.Locator("details.scenario");
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".truncate-lines-select").SelectOptionAsync("5");
         await Page.WaitForTimeoutAsync(2000);
 

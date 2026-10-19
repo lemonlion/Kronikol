@@ -69,7 +69,7 @@ public class DatabaseToggleReportTests
     {
         var content = GenerateReport("DbToggle_Present.html", PlantUmlSourceWithDatabase);
         Assert.Contains("data-toggle=\"databases\"", content);
-        Assert.Contains("Databases Shown", content);
+        Assert.Contains("data-toggle=\"databases\" data-shown=\"true\" aria-pressed=\"true\"", content);
         Assert.Contains("_toggleDatabases", content);
     }
 
@@ -79,7 +79,7 @@ public class DatabaseToggleReportTests
         var content = GenerateReport("DbToggle_Absent.html", PlantUmlSourceWithoutDatabase);
 
         Assert.Empty(ReportMarkup.Elements(content, "button", "data-toggle=\"databases\""));
-        Assert.DoesNotContain("Databases Shown", ReportMarkup.Only(content));
+        Assert.DoesNotContain("data-toggle=\"databases\"", ReportMarkup.Only(content));
     }
 
     [Fact]

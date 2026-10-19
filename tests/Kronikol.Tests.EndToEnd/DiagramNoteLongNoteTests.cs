@@ -241,6 +241,7 @@ public class DiagramNoteLongNoteTests : DiagramNotePlaywrightBase
     {
         await ExpandAndRenderLongNoteDiagram("NoteTruncReduceBecomesLong.html");
 
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .truncate-lines-select").First.SelectOptionAsync("3");
         await Page.Locator(".note-hover-rect").First.WaitForAsync(new() { Timeout = 10000 });
 
@@ -259,6 +260,7 @@ public class DiagramNoteLongNoteTests : DiagramNotePlaywrightBase
     {
         await ExpandAndRenderLongNoteDiagram("ScenarioTruncChangeButtons.html");
 
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .truncate-lines-select").First.SelectOptionAsync("3");
         await Page.Locator(".note-hover-rect").First.WaitForAsync(new() { Timeout = 10000 });
 

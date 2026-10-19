@@ -59,6 +59,7 @@ public class CapturedTextEscapeTests : PlaywrightTestBase
         // the escapes (<U+0027>a', 'b') and the width bound's join markers (DIAGRAM_COLOURS_PLAN §12.5).
         await OpenReport(ReportTestHelper.GenerateReportWithCapturedTextHazards(TempDir, OutputDir, "CapturedTextHazards_Tooltip.html"));
 
+        await OpenScenarioSettingsAsync();
         var collapse = Page.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").First;
         await collapse.ClickAsync();
         await Page.WaitForFunctionAsync(

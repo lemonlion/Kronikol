@@ -98,6 +98,7 @@ public class FormStateRestorationTests : IAsyncLifetime
         Assert.SkipWhen(_browser is null, "Firefox is not installed (CI installs chromium only)");
 
         await NavigateAndRender("FormRestore_ScenarioNoteFormat.html");
+        await PlaywrightTestBase.OpenScenarioSettingsAsync(_page);
         await SelectAndWaitForRerender(ScenarioNoteFormatSelect, "yaml");
         Assert.Contains("query: |-", await SvgText());
 
@@ -117,6 +118,7 @@ public class FormStateRestorationTests : IAsyncLifetime
         Assert.SkipWhen(_browser is null, "Firefox is not installed (CI installs chromium only)");
 
         await NavigateAndRender("FormRestore_ScenarioTruncateLines.html");
+        await PlaywrightTestBase.OpenScenarioSettingsAsync(_page);
         await SelectAndWaitForRerender(ScenarioTruncateSelect, "3");
 
         await _page.ReloadAsync();

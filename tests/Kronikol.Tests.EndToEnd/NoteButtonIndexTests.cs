@@ -4,7 +4,7 @@ namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
 /// Tests that note hover buttons affect the correct note when some notes become empty
-/// (e.g., header-only notes with "Headers: Hidden"). Verifies that the index mapping
+/// (e.g., header-only notes with Headers off). Verifies that the index mapping
 /// between SVG note groups and PlantUML source note blocks remains aligned.
 /// </summary>
 [Collection(PlaywrightCollections.Notes)]
@@ -159,6 +159,7 @@ public class NoteButtonIndexTests : PlaywrightTestBase
         var url = ReportTestHelper.GenerateReportWithHeaderOnlyNotes(TempDir, OutputDir, "NoteIdxCollapse.html");
         await ExpandAndRender(url);
 
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .details-radio-btn[data-state='expanded']").First.ClickAsync();
         await WaitForReRender();
         await HideHeaders();
@@ -181,6 +182,7 @@ public class NoteButtonIndexTests : PlaywrightTestBase
         var url = ReportTestHelper.GenerateReportWithMultipleHeaderOnlyNotes(TempDir, OutputDir, "NoteIdxMultiEmpty.html");
         await ExpandAndRender(url);
 
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .details-radio-btn[data-state='expanded']").First.ClickAsync();
         await WaitForReRender();
         await HideHeaders();
@@ -196,6 +198,7 @@ public class NoteButtonIndexTests : PlaywrightTestBase
         var url = ReportTestHelper.GenerateReportWithMultipleHeaderOnlyNotes(TempDir, OutputDir, "NoteIdxMultiCollapse.html");
         await ExpandAndRender(url);
 
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .details-radio-btn[data-state='expanded']").First.ClickAsync();
         await WaitForReRender();
         await HideHeaders();
@@ -220,6 +223,7 @@ public class NoteButtonIndexTests : PlaywrightTestBase
         var url = ReportTestHelper.GenerateReportWithHeaderOnlyNotes(TempDir, OutputDir, "NoteIdxCollapsedGray.html");
         await ExpandAndRender(url);
 
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").First.ClickAsync();
         await WaitForReRender();
 
@@ -234,6 +238,7 @@ public class NoteButtonIndexTests : PlaywrightTestBase
         var url = ReportTestHelper.GenerateReportWithHeaderOnlyNotes(TempDir, OutputDir, "NoteIdxExpandAfter.html");
         await ExpandAndRender(url);
 
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").First.ClickAsync();
         await WaitForReRender();
 
@@ -255,6 +260,7 @@ public class NoteButtonIndexTests : PlaywrightTestBase
         var url = ReportTestHelper.GenerateReportWithHeaderOnlyNotes(TempDir, OutputDir, "NoteIdxDblClick.html");
         await ExpandAndRender(url);
 
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .details-radio-btn[data-state='expanded']").First.ClickAsync();
         await WaitForReRender();
         await HideHeaders();

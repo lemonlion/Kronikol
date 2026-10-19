@@ -19,6 +19,7 @@ public class NoteExpandArrowHeaderHiddenTests : DiagramNotePlaywrightBase
         var scenario = Page.Locator("details.scenario");
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
 
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".toggle-btn[data-toggle='headers'][data-shown='true']").ClickAsync();
 
         await Page.WaitForFunctionAsync(

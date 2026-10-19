@@ -174,6 +174,7 @@ public class NoteContextMenuIndexTests : DiagramNotePlaywrightBase
     {
         await NavigateToFragments("NoteMenuIdx_FragmentFull.html");
         await MarkDrawnFragmentsOld();
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").First.ClickAsync();
         Assert.True(await MarkFragmentNote("Item 95") >= 1, "the note is in a later fragment");
 
@@ -191,6 +192,7 @@ public class NoteContextMenuIndexTests : DiagramNotePlaywrightBase
     {
         await NavigateToFragments("NoteMenuIdx_FragmentState.html");
         await MarkDrawnFragmentsOld();
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").First.ClickAsync();
         await MarkFragmentNote("Item 95");
 

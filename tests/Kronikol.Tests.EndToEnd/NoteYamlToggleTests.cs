@@ -278,6 +278,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
 
         var scenario = Page.Locator("details.scenario");
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".toggle-btn[data-toggle='headers'][data-shown='true']").ClickAsync();
         await Page.WaitForFunctionAsync(
             "(prev) => !window._plantumlRendering && (window._renderCompleteCount || 0) > prev",
@@ -296,6 +297,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
 
         var scenario = Page.Locator("details.scenario");
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".toggle-btn[data-toggle='steps'][data-shown='true']").ClickAsync();
         await Page.WaitForFunctionAsync(
             "(prev) => !window._plantumlRendering && (window._renderCompleteCount || 0) > prev",
@@ -321,6 +323,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
 
         var scenario = Page.Locator("details.scenario");
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".toggle-btn[data-toggle='assertions'][data-shown='false']").ClickAsync();
         await Page.WaitForFunctionAsync(
             "(prev) => !window._plantumlRendering && (window._renderCompleteCount || 0) > prev",
@@ -344,6 +347,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
 
         var scenario = Page.Locator("details.scenario");
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".toggle-btn[data-toggle='databases'][data-shown='true']").ClickAsync();
         await Page.WaitForFunctionAsync(
             "(prev) => !window._plantumlRendering && (window._renderCompleteCount || 0) > prev",

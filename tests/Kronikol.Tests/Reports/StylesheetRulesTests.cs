@@ -97,7 +97,7 @@ public partial class StylesheetRulesTests
     private static readonly string[] ToolbarSelectors =
     [
         ".diagram-toggle", ".diagram-toggle-btn", ".diagram-toggle-btn:hover",
-        ".diagram-toggle-active", ".diagram-toggle-active:hover", ".diagram-toggle-spacer",
+        ".diagram-toggle-active", ".diagram-toggle-active:hover", ".diagram-toggle[data-layout=\"inline\"]",
     ];
 
     [Fact]
@@ -105,9 +105,9 @@ public partial class StylesheetRulesTests
     {
         Assert.Equal("flex", CssRules.Value(Base, ".diagram-toggle", "display"));
         Assert.Equal("wrap", CssRules.Value(Base, ".diagram-toggle", "flex-wrap"));
-        // 5.0.0 (plans/OPTION_C_PLAN.md S1): a length, since 1em became 14px with the page's type
-        Assert.Equal("16px", CssRules.Value(Base, ".diagram-toggle", "padding-left"));
-        Assert.Equal("16px", CssRules.Value(Base, ".diagram-toggle", "padding-right"));
+        // 5.0.0 (plans/OPTION_C_PLAN.md S1): a length, since 1em became 14px with the page's type; since S8 the tabs bar
+        // and the options bar share it, and only the options bar adds its own top and bottom padding
+        Assert.Equal("0 16px", CssRules.Value(Base, ".diagram-toggle", "padding"));
     }
 
     [Fact]

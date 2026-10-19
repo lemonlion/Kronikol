@@ -21,6 +21,7 @@ public class NoteButtonsAfterHeaderHideTests : DiagramNotePlaywrightBase
         // Capture render queue counter so we can detect when the re-render queue completes
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
 
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".toggle-btn[data-toggle='headers'][data-shown='true']").ClickAsync();
 
         // Wait for the render queue to finish processing (counter increments on completion,
@@ -43,6 +44,7 @@ public class NoteButtonsAfterHeaderHideTests : DiagramNotePlaywrightBase
 
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
 
+        await OpenScenarioSettingsAsync(scenario);
         await scenario.Locator(".toggle-btn[data-toggle='headers'][data-shown='false']").ClickAsync();
 
         await Page.WaitForFunctionAsync(

@@ -84,6 +84,7 @@ public abstract class DiagramNotePlaywrightBase : PlaywrightTestBase
 
     protected async Task SetScenarioState(string state)
     {
+        await OpenScenarioSettingsAsync();
         await Page.Locator($".diagram-toggle .details-radio-btn[data-state='{state}']").First.ClickAsync();
         await WaitForNoteElements();
     }

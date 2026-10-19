@@ -237,11 +237,13 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
             if (injectedCss is not null) await page.AddStyleTagAsync(new() { Content = injectedCss });
             if (width <= 768)
             {
-                // The init script hides the filters and every scenario toolbar on a phone; open them
-                // as a reader would, or the sweep measures nothing of them.
+                // The init script hides the filters on a phone; open them as a reader would, or the sweep
+                // measures nothing of them.
                 await page.Locator(".mobile-filter-toggle").ClickAsync();
-                await page.Locator(".scenario-diagram-controls-toggle").First.ClickAsync();
             }
+            // Every scenario's settings start closed (5.0.0, plans/OPTION_C_PLAN.md S8): open each by the gear a
+            // reader has at this width, the one on the diagrams' title on a phone
+            await page.EvaluateAsync("w => document.querySelectorAll(w <= 768 ? '.gear-in-summary' : '.scenario-settings-gear').forEach(g => g.click())", width);
             // The search help starts closed on every load; a reader opens it.
             await page.Locator(".search-help-toggle").First.ClickAsync();
             // Since 5.0.0 the sections are tabs, one panel shown at a time (plans/OPTION_C_PLAN.md S3); the sweep shows
@@ -291,8 +293,11 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
                 const row = b.parentElement, cs = getComputedStyle(row);
                 return b.getBoundingClientRect().width >= row.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 1;
             };
+            //    A scenario's view tab on a phone may wrap its label at a space, as the tabs share the row in equal parts
+            //    (5.0.0, plans/OPTION_C_PLAN.md S8, D34), but never inside a word.
+            const atSpaces = b => b.closest('.diagram-toggle-tabs') && lines(b) <= label(b).split(/\s+/).length;
             for (const b of document.querySelectorAll('.filtering-box-export button, .toolbar-row button, .diagram-toggle button'))
-                if (vis(b) && lines(b) > 1 && !fills(b)) problems.push(`"${label(b)}" wraps its label inside its button (${lines(b)} lines)`);
+                if (vis(b) && lines(b) > 1 && !fills(b) && !atSpaces(b)) problems.push(`"${label(b)}" wraps its label inside its button (${lines(b)} lines)`);
 
             // 3. The export labels inside the filtering box's content, and the buttons inside the box. Since 5.0.0 an
             //    export button is a text button whose padding runs into the box's padding on purpose, so the last

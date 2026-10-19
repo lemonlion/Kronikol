@@ -126,6 +126,25 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
 
     protected Task OpenFilterRowsAsync() => OpenFilterRowsAsync(Page);
 
+    /// <summary>
+    /// Opens a scenario's settings (5.0.0, plans/OPTION_C_PLAN.md S8): its payload controls sit in an options bar
+    /// behind the gear of its diagrams, closed until it is pressed. <paramref name="scope"/> holds the scenario, or is
+    /// null for the first scenario on the page that has settings. On a phone the gear on the section's title opens them,
+    /// at a desktop width the one at the diagram's corner. Does nothing when they are open already.
+    /// </summary>
+    internal static async Task OpenScenarioSettingsAsync(IPage page, ILocator? scope = null)
+    {
+        var settings = (scope ?? page.Locator("body")).Locator(".scenario-settings").First;
+        await settings.WaitForAsync(new() { State = WaitForSelectorState.Attached });
+        if (await settings.EvaluateAsync<bool>("s => s.classList.contains('is-open')")) return;
+        var phone = await page.EvaluateAsync<bool>("() => matchMedia('(max-width: 768px)').matches");
+        await (phone
+            ? settings.Locator("xpath=../summary/button[contains(concat(' ', @class, ' '), ' gear-in-summary ')]")
+            : settings.Locator(".scenario-settings-gear")).ClickAsync();
+    }
+
+    protected Task OpenScenarioSettingsAsync(ILocator? scope = null) => OpenScenarioSettingsAsync(Page, scope);
+
     protected Task ExpandAllFeaturesAsync() => FoldAllAsync(Page, "features", expand: true);
     protected Task ExpandAllScenariosAsync() => FoldAllAsync(Page, "scenarios", expand: true);
     protected Task CollapseAllFeaturesAsync() => FoldAllAsync(Page, "features", expand: false);

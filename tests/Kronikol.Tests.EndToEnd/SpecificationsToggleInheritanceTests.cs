@@ -27,7 +27,8 @@ public class SpecificationsToggleInheritanceTests : DiagramNotePlaywrightBase
         await Page.Locator("details.feature").First.WaitForAsync();
         Assert.True(await Page.EvaluateAsync<bool>(
             "() => document.querySelector('.toolbar-right .details-radio-btn[data-state=\"truncated\"]').classList.contains('details-active')"));
-        Assert.Equal("Headers Hidden", (await Page.Locator(".toolbar-right .toggle-btn[data-toggle='headers']").TextContentAsync())!.Trim());
+        Assert.Equal("Headers", (await Page.Locator(".toolbar-right .toggle-btn[data-toggle='headers']").TextContentAsync())!.Trim());
+        Assert.Equal("false", await Page.Locator(".toolbar-right .toggle-btn[data-toggle='headers']").GetAttributeAsync("aria-pressed"));
         Assert.Equal("truncated", await Page.EvaluateAsync<string>("() => window._detailsDefault"));
 
         // Specifications: Details overridden to expanded; HeadersShown INHERITED from the test-run group.
@@ -35,13 +36,16 @@ public class SpecificationsToggleInheritanceTests : DiagramNotePlaywrightBase
         await Page.Locator("details.feature").First.WaitForAsync();
         Assert.True(await Page.EvaluateAsync<bool>(
             "() => document.querySelector('.toolbar-right .details-radio-btn[data-state=\"expanded\"]').classList.contains('details-active')"));
-        Assert.Equal("Headers Hidden", (await Page.Locator(".toolbar-right .toggle-btn[data-toggle='headers']").TextContentAsync())!.Trim());
+        Assert.Equal("Headers", (await Page.Locator(".toolbar-right .toggle-btn[data-toggle='headers']").TextContentAsync())!.Trim());
+        Assert.Equal("false", await Page.Locator(".toolbar-right .toggle-btn[data-toggle='headers']").GetAttributeAsync("aria-pressed"));
         Assert.Equal("expanded", await Page.EvaluateAsync<string>("() => window._detailsDefault"));
 
         // An unset property matches between the two files (steps toggle seeds shown in both).
-        Assert.Equal("Steps Shown", (await Page.Locator(".toolbar-right .toggle-btn[data-toggle='steps']").TextContentAsync())!.Trim());
+        Assert.Equal("Steps", (await Page.Locator(".toolbar-right .toggle-btn[data-toggle='steps']").TextContentAsync())!.Trim());
+        Assert.Equal("true", await Page.Locator(".toolbar-right .toggle-btn[data-toggle='steps']").GetAttributeAsync("aria-pressed"));
         await Page.GotoAsync(testRunUri);
         await Page.Locator("details.feature").First.WaitForAsync();
-        Assert.Equal("Steps Shown", (await Page.Locator(".toolbar-right .toggle-btn[data-toggle='steps']").TextContentAsync())!.Trim());
+        Assert.Equal("Steps", (await Page.Locator(".toolbar-right .toggle-btn[data-toggle='steps']").TextContentAsync())!.Trim());
+        Assert.Equal("true", await Page.Locator(".toolbar-right .toggle-btn[data-toggle='steps']").GetAttributeAsync("aria-pressed"));
     }
 }

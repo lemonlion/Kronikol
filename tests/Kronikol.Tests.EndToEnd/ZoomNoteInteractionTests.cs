@@ -97,6 +97,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
 
     private async Task ClickRadioButton(string state)
     {
+        await OpenScenarioSettingsAsync();
         await Page.Locator($".diagram-toggle .details-radio-btn[data-state='{state}']").First.ClickAsync();
     }
 
@@ -196,6 +197,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
         await ZoomIn();
         Assert.True(await IsZoomedIn());
 
+        await OpenScenarioSettingsAsync();
         var headersHidden = Page.Locator(".diagram-toggle .toggle-btn[data-toggle='headers'][data-shown='true']");
         if (await headersHidden.CountAsync() == 0) return;
         await headersHidden.First.ClickAsync();

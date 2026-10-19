@@ -176,10 +176,10 @@ public class NoteAppearanceScriptTests
     {
         var css = DiagramContextMenu.GetCollapsibleNotesStyles().ReplaceLineEndings("\n");
 
-        Assert.Contains(".note-format-select,\n.note-width-select {\n    padding: 0.2em 0.3em;", css);
+        Assert.Contains(".truncate-lines-select, .note-format-select, .note-width-select {\n    appearance: none;", css);
         Assert.DoesNotContain("note-font-select", css);
         Assert.Contains(
-            ".note-format-select.details-pending,\n.note-width-select.details-pending {\n    position: relative;",
+            ".truncate-lines-select.details-pending, .note-format-select.details-pending, .note-width-select.details-pending {\n    animation:",
             css);
     }
 

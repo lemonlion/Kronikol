@@ -94,6 +94,7 @@ public class NoteFormatDefaultTests : DiagramNotePlaywrightBase
         await NavigateYamlDefault("FormatDefault_DropdownSeed.html");
 
         Assert.Equal("yaml", await Page.Locator(".toolbar-right .note-format-select").InputValueAsync());
+        await OpenScenarioSettingsAsync();
         Assert.Equal("yaml", await Page.Locator("details.scenario .note-format-select").First.InputValueAsync());
         Assert.Equal("yaml", await Page.EvaluateAsync<string>("() => window._noteFormatDefault"));
     }

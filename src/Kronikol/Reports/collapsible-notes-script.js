@@ -455,7 +455,7 @@
                 var nextSlot = (state === 'expanded' && longNote) ? 4 : 3;
                 widthBtn = glyphButton(nextSlot,
                     appearanceInfo.width === 'full' ? '\u2192\u2190' : '\u2194',
-                    appearanceInfo.width === 'full' ? 'Back to the default note width' : 'Widen this note to fill the diagram',
+                    appearanceInfo.width === 'full' ? 'Back to the default width' : 'Widen this box to fill the diagram',
                     function() { appearanceInfo.onToggleWidth(); }, 'width', appearanceInfo.width !== 'full');
                 buttons.push(widthBtn);
             }
@@ -2840,13 +2840,14 @@
         syncRadioButtons(scenario, 'truncated');
     };
 
+    // A toggle says its word alone (5.0.0): whether it is on is its state, aria-pressed, never its label, which stays
+    // in the span the generator wrote (it holds the bold width, so switching moves nothing beside it).
     function syncToggleBtn(parent, toggleName, shown) {
         parent.querySelectorAll('.toggle-btn[data-toggle="' + toggleName + '"]').forEach(function(b) {
             b.setAttribute('data-shown', shown ? 'true' : 'false');
+            b.setAttribute('aria-pressed', shown ? 'true' : 'false');
             if (shown) b.classList.add('details-active');
             else b.classList.remove('details-active');
-            var label = toggleName.charAt(0).toUpperCase() + toggleName.slice(1);
-            b.textContent = label + (shown ? ' Shown' : ' Hidden');
         });
     }
 

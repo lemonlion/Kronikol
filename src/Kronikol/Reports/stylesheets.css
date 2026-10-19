@@ -100,21 +100,18 @@
            longest word would split words that fit. */
         table, .error-diff { overflow-wrap: normal; }
 
-        .example-diagrams {
-            border-radius: 1em;
-            border: 1px solid;
-            border-color: rgb(224, 224, 224);
-        }
+        /* A scenario's diagrams (5.0.0): a card in the scenario, its title set like the Steps title */
+        .example-diagrams { margin-top: 10px; background: var(--kron-card); border: 1px solid var(--kron-hairline); border-radius: 10px; }
 
         [data-diagram-type]:not(:has(svg)):not(:has(img)) {
             padding: 1em;
         }
 
         .example-diagrams > summary {
-            background-color: white;
-            padding: 1em;
-            border-radius: 1em;
+            padding: 9px 14px; background: var(--kron-card); border-radius: 9px;
+            font-size: 13px; font-weight: 600; color: var(--kron-ink-soft);
         }
+        .example-diagrams[open] > summary { border-radius: 9px 9px 0 0; }
         
         .example-image {
             padding: 1em;
@@ -1022,6 +1019,8 @@
             font-size: 10px;
             font-weight: bold;
             color: var(--kron-ink-soft);
+            /* copying a step takes its words, not its tick */
+            user-select: none;
         }
 
         .step-status.passed {
@@ -1953,22 +1952,6 @@
             transform: rotate(90deg);
         }
 
-        /* #4 Per-scenario diagram controls — shown on desktop, toggle hidden */
-        .scenario-diagram-controls-toggle {
-            display: none;
-            padding: 0.2em 0.5em;
-            border: 1px solid rgb(180, 180, 180);
-            border-radius: 0.4em;
-            background: rgb(245, 245, 245);
-            cursor: pointer;
-            font-size: 0.8em;
-            color: rgb(100, 100, 100);
-        }
-        .scenario-diagram-controls-toggle:hover {
-            background: rgb(230, 240, 255);
-            border-color: rgb(100, 150, 255);
-        }
-
         /* #10 Back-to-top FAB */
         .back-to-top {
             display: none;
@@ -2031,26 +2014,9 @@
 
             .toolbar-right {
                 flex-wrap: wrap;
-                width: 100%;
                 box-sizing: border-box;
             }
 
-            .details-radio {
-                flex-wrap: wrap;
-            }
-
-            .headers-radio {
-                margin-left: 0;
-            }
-
-            .diagram-toggle {
-                flex-wrap: wrap;
-                gap: 0.3em;
-            }
-
-            .diagram-toggle-spacer {
-                display: none;
-            }
 
 
 
@@ -2118,15 +2084,6 @@
                 width: auto;
             }
 
-            /* #4 Per-scenario diagram controls collapse on mobile */
-            .scenario-diagram-controls {
-                display: none;
-            }
-            .scenario-diagram-controls-toggle {
-                display: block;
-                margin: 0 1em;
-            }
-
             /* #9 Step duration stays inline */
             .step-duration {
                 white-space: nowrap;
@@ -2187,10 +2144,7 @@
 
 
 
-            /* #3 "lines" label wrapping fix */
-            .truncate-lines-label {
-                display: none;
-            }
+            .diagram-toggle-btn { min-height: 34px; }
         
             /* #6 Touch target size bump: every filter control */
             .status-toggle, .percentile-btn, .happy-seg, .tag-toggle, .dependency-toggle, .category-toggle { min-height: 36px; }
@@ -2210,40 +2164,35 @@
             font-size: 0.9em;
             margin: 4px 0 10px;
         }
-        /* The scenario diagram toolbar, in every report (these rules lived in the internal-flow sheet,
-           so a report without internal-flow tracking got an unstyled block). It wraps whole controls
-           onto a new row: squeezed, their labels wrapped, and inside a scenario, whose
-           content-visibility clips what overflows it, the last controls were cut off out of sight. */
-        .diagram-toggle { margin-top: 8px; margin-bottom: 8px; padding-left: 16px; padding-right: 16px; display: flex; flex-wrap: wrap; align-items: center; width: 100%; box-sizing: border-box; }
+        /* A scenario's diagram bars (5.0.0, D29): the views' tabs on a bar of their own, in every report, which sits on the
+           section's title line where it fits (diagram-toggle-layout-script.js sets data-layout="inline" and the margin that
+           centres it on the title) and under it where it does not; then, where the page draws the diagrams, the scenario's
+           settings (collapsible-notes-styles.css). A bar wraps whole controls onto a new row. */
+        .diagram-toggle {
+            display: flex; flex-wrap: wrap; align-items: baseline; row-gap: 6px; width: 100%; box-sizing: border-box;
+            padding: 0 16px; font-family: var(--kron-font);
+        }
+        .diagram-toggle button, .diagram-toggle select { user-select: none; }
         .diagram-toggle-btn {
-            padding: 4px 14px;
-            border: 1px solid #ccc;
-            background: #f5f5f5;
-            cursor: pointer;
-            font-size: 13px;
-            border-radius: 4px;
-            margin-right: 4px;
+            margin: 0; padding: 6px 11px; border: none; border-radius: 5px; background: none; cursor: pointer;
+            font-size: 13px; line-height: 1.25; font-weight: 400; font-family: var(--kron-font); color: var(--kron-ink-quiet);
+            transition: background .12s, color .12s;
         }
-        .diagram-toggle-btn:hover { background: #e8f0fe; }
-        .diagram-toggle-active { background: #4285f4; color: #fff; border-color: #4285f4; }
-        .diagram-toggle-active:hover { background: #3367d6; }
-        .diagram-toggle-spacer { flex: 1; }
-        /* Scenario diagram toolbar on the title line (diagram-toggle-layout-script.js decides per
-           toolbar whether it fits beside the "Sequence Diagrams" / "Diagrams" title and sets
-           data-layout="inline" plus the negative margin-top that centres it on the title; without the
-           attribute the toolbar stacks under the title, full width, as before). */
-        .diagram-toggle[data-layout="inline"] {
-            float: right;
-            width: auto;
-            margin-right: 1em;
-            margin-bottom: 0;
-            position: relative;
-            z-index: 1;
+        .diagram-toggle-btn:hover { background: var(--kron-hover); color: var(--kron-ink); }
+        .diagram-toggle-btn:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+        .diagram-toggle-active, .diagram-toggle-active:hover {
+            color: var(--kron-accent); font-weight: 600; border-radius: 5px 5px 0 0; box-shadow: inset 0 -2px 0 var(--kron-accent);
         }
-        .diagram-toggle[data-layout="inline"] .diagram-toggle-spacer {
-            display: none;
-        }
-        .diagram-toggle[data-layout="inline"] + * {
-            clear: right;
+        .diagram-toggle-active { background: none; }
+        .diagram-toggle-active:hover { background: var(--kron-hover); }
+        .diagram-toggle[data-layout="inline"] { float: right; width: auto; margin: 0 1em 0 0; padding: 0; position: relative; z-index: 1; }
+        .diagram-toggle[data-layout="inline"] + * { clear: right; }
+        @media (max-width: 768px) {
+            /* the views' tabs share the row in equal parts, a label wrapping at a space and centring against its
+               neighbours; a tab is never narrower than its longest word, so where three cannot keep theirs one moves
+               to a second row (the preview's min-width: 0 broke "Sequence Diagrams" inside its words below 360 px) */
+            .diagram-toggle { gap: 4px; }
+            .diagram-toggle-tabs { align-items: center; }
+            .diagram-toggle-tabs .diagram-toggle-btn { flex: 1 1 0; text-align: center; overflow-wrap: normal; }
         }
 

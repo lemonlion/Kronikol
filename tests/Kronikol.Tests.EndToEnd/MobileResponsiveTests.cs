@@ -211,15 +211,14 @@ public class MobileResponsiveTests : PlaywrightTestBase
             }
         """);
 
-        // On a phone the init script hides every scenario toolbar behind a "Diagram Settings" button, so
-        // the toolbar is measured after the tap that shows it: read off the hidden box, flex-wrap says
-        // nothing about what a reader sees.
-        await Page.Locator(".scenario-diagram-controls-toggle").First.ClickAsync();
-        var toggle = Page.Locator(".diagram-toggle").First;
+        // On a phone a scenario's settings open from the gear on its diagrams' title (5.0.0), so the bar is
+        // measured after the tap that shows it: read off the hidden box, flex-wrap says nothing about what a
+        // reader sees.
+        await Page.Locator(".gear-in-summary").First.ClickAsync();
+        var toggle = Page.Locator(".diagram-options-bar").First;
         await Expect(toggle).ToBeVisibleAsync();
         Assert.Equal("flex", await GetComputedStyle(toggle, "display"));
         Assert.Equal("wrap", await GetComputedStyle(toggle, "flex-wrap"));
-        Assert.Equal("none", await GetComputedStyle(Page.Locator(".diagram-toggle-spacer").First, "display"));
 
         var pastEdge = await toggle.EvaluateAsync<double>("""
             t => Math.max(0, ...[...t.querySelectorAll('button, select')]
@@ -498,14 +497,14 @@ public class MobileResponsiveTests : PlaywrightTestBase
         await Page.Locator("[data-diagram-type='plantuml'] svg").First
             .WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 20000 });
 
-        // The toggle button should be visible
-        var toggleBtn = Page.Locator(".scenario-diagram-controls-toggle").First;
+        // The gear on the diagrams' title is visible, the one at the diagram's corner is not (5.0.0)
+        var toggleBtn = Page.Locator(".gear-in-summary").First;
         await Expect(toggleBtn).ToBeVisibleAsync();
+        Assert.Equal("Diagram settings", await toggleBtn.GetAttributeAsync("aria-label"));
+        await Expect(Page.Locator(".scenario-settings-gear").First).ToBeHiddenAsync();
 
-        // The controls should be hidden initially
-        var controlsHidden = await Page.EvaluateAsync<bool>(
-            "() => { var c = document.querySelector('.scenario-diagram-controls'); return c && c.style.display === 'none'; }");
-        Assert.True(controlsHidden, "Diagram controls should be hidden by default on mobile");
+        // The settings are closed until it is pressed
+        await Expect(Page.Locator(".diagram-options-bar").First).ToBeHiddenAsync();
     }
 
     [Fact]
@@ -520,19 +519,19 @@ public class MobileResponsiveTests : PlaywrightTestBase
         await Page.Locator("[data-diagram-type='plantuml'] svg").First
             .WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 20000 });
 
-        var toggleBtn = Page.Locator(".scenario-diagram-controls-toggle").First;
+        var toggleBtn = Page.Locator(".gear-in-summary").First;
+        var bar = Page.Locator(".diagram-options-bar").First;
 
-        // Click to show controls
+        // Click to show the settings: the section stays open, the gear says it is
         await toggleBtn.ClickAsync();
-        var shown = await Page.EvaluateAsync<bool>(
-            "() => { var c = document.querySelector('.scenario-diagram-controls'); return c && c.style.display === 'flex'; }");
-        Assert.True(shown, "Controls should be visible after clicking toggle");
+        await Expect(bar).ToBeVisibleAsync();
+        Assert.Equal("true", await toggleBtn.GetAttributeAsync("aria-expanded"));
+        Assert.True(await Page.Locator("details.example-diagrams").First.EvaluateAsync<bool>("d => d.open"));
 
-        // Click to hide controls
+        // Click to hide them
         await toggleBtn.ClickAsync();
-        var hidden = await Page.EvaluateAsync<bool>(
-            "() => { var c = document.querySelector('.scenario-diagram-controls'); return c && c.style.display === 'none'; }");
-        Assert.True(hidden, "Controls should be hidden after clicking toggle again");
+        await Expect(bar).ToBeHiddenAsync();
+        Assert.Equal("false", await toggleBtn.GetAttributeAsync("aria-expanded"));
     }
 
     // ── #6 Touch target sizes ──
@@ -607,11 +606,12 @@ public class MobileResponsiveTests : PlaywrightTestBase
         await Page.Locator("[data-diagram-type='plantuml'] svg").First
             .WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 20000 });
 
-        var toggleBtn = Page.Locator(".scenario-diagram-controls-toggle").First;
+        // 5.0.0: the gear sits at the right end of the diagrams' title, floated, so it computes as a block
+        var toggleBtn = Page.Locator(".gear-in-summary").First;
         await Expect(toggleBtn).ToBeVisibleAsync();
 
-        var display = await GetComputedStyle(toggleBtn, "display");
-        Assert.Equal("block", display);
+        Assert.Equal("block", await GetComputedStyle(toggleBtn, "display"));
+        Assert.Equal("right", await GetComputedStyle(toggleBtn, "float"));
     }
 
     // ── The CI zone under the summary on a phone (5.0.0: the run band; the 4.x test's report had no CI, so it measured nothing) ──

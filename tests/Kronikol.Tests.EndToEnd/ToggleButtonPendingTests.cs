@@ -25,6 +25,7 @@ public class ToggleButtonPendingTests : DiagramNotePlaywrightBase
     {
         await OpenRendered("PendingScenarioExpand.html");
         var scenario = Page.Locator("details.scenario").First;
+        await OpenScenarioSettingsAsync(scenario);
         var expand = scenario.Locator(".details-radio-btn[data-state='expanded']");
 
         // Pending is set synchronously in the click handler…
@@ -56,6 +57,7 @@ public class ToggleButtonPendingTests : DiagramNotePlaywrightBase
 
         // Re-applying the state the scenario is already in queues nothing: pending must not linger.
         var scenario = Page.Locator("details.scenario").First;
+        await OpenScenarioSettingsAsync(scenario);
         var truncate = scenario.Locator(".details-radio-btn[data-state='truncated']");
         await truncate.EvaluateAsync("b => b.click()");
         await Page.WaitForFunctionAsync("() => document.querySelectorAll('.details-pending').length === 0", null, new() { Timeout = 5000 });

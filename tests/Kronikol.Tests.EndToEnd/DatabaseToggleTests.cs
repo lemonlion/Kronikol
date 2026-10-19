@@ -1,7 +1,7 @@
 namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
-/// Tests that verify the "Databases Shown/Hidden" toggle removes database
+/// Tests that verify the Databases toggle removes database
 /// participant declarations and all arrows to/from database aliases.
 /// </summary>
 [Collection(PlaywrightCollections.Notes)]
@@ -17,8 +17,8 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
 
         var btn = Page.Locator("button[data-toggle='databases']").First;
         await btn.WaitForAsync(new() { Timeout = 5000 });
-        var text = await btn.TextContentAsync();
-        Assert.Equal("Databases Shown", text);
+        Assert.Equal("Databases", await btn.TextContentAsync());
+        Assert.Equal("true", await btn.GetAttributeAsync("aria-pressed"));
         Assert.True(await btn.EvaluateAsync<bool>("el => el.classList.contains('details-active')"));
     }
 
@@ -35,7 +35,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
         Assert.Contains("database", sourceBefore);
         Assert.Contains("cosmosdb", sourceBefore);
 
-        // Click "Databases Shown" to hide
+        // Click Databases, on, to hide them
         await Page.Locator("button[data-toggle='databases']").First.ClickAsync();
 
         // Wait for re-render
@@ -101,17 +101,19 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
         var btn = Page.Locator("button[data-toggle='databases']").First;
         await btn.WaitForAsync(new() { Timeout = 5000 });
 
-        Assert.Equal("Databases Shown", await btn.TextContentAsync());
+        Assert.Equal("Databases", await btn.TextContentAsync());
+        Assert.Equal("true", await btn.GetAttributeAsync("aria-pressed"));
         await btn.ClickAsync();
 
         await Page.WaitForFunctionAsync("""
             () => {
                 var btn = document.querySelector("button[data-toggle='databases']");
-                return btn && btn.textContent === 'Databases Hidden';
+                return btn && btn.getAttribute('aria-pressed') === 'false';
             }
         """, null, new() { Timeout = 5000, PollingInterval = 200 });
 
-        Assert.Equal("Databases Hidden", await btn.TextContentAsync());
+        Assert.Equal("Databases", await btn.TextContentAsync());
+        Assert.Equal("false", await btn.GetAttributeAsync("aria-pressed"));
         Assert.False(await btn.EvaluateAsync<bool>("el => el.classList.contains('details-active')"));
     }
 
@@ -278,8 +280,8 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
 
         var btn = Page.Locator("button[data-toggle='databases']").First;
         await btn.WaitForAsync(new() { Timeout = 5000 });
-        var text = await btn.TextContentAsync();
-        Assert.Contains("Shown", text);
+        Assert.Equal("Databases", await btn.TextContentAsync());
+        Assert.Equal("true", await btn.GetAttributeAsync("aria-pressed"));
     }
 
     [Fact]

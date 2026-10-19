@@ -54,8 +54,9 @@ public class NoteFormatDropdownTests : DiagramNotePlaywrightBase
         await NavigateSingleScenario("FormatDropdown_Defaults.html");
 
         Assert.Equal("json", await ReportSelect.InputValueAsync());
+        await OpenScenarioSettingsAsync();
         Assert.Equal("json", await Page.Locator("details.scenario .note-format-select").First.InputValueAsync());
-        Assert.Equal("Note payload format", await ReportSelect.GetAttributeAsync("aria-label"));
+        Assert.Equal("Payload format", await ReportSelect.GetAttributeAsync("aria-label"));
     }
 
     [Fact]
@@ -129,6 +130,7 @@ public class NoteFormatDropdownTests : DiagramNotePlaywrightBase
         await NavigateTwoScenariosAndRenderBoth("FormatDropdown_ScenarioIsolation.html");
 
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
+        await OpenScenarioSettingsAsync(Page.Locator("details.scenario").Nth(0));
         await ScenarioSelect(0).SelectOptionAsync("yaml");
         await WaitForRenderCountIncrease(renderCount);
 
@@ -152,6 +154,7 @@ public class NoteFormatDropdownTests : DiagramNotePlaywrightBase
 
         Assert.Contains("query: |-", await GetNormalizedSvgText());
         Assert.Equal("json", await ReportSelect.InputValueAsync());
+        await OpenScenarioSettingsAsync();
         Assert.Equal("json", await Page.Locator("details.scenario .note-format-select").First.InputValueAsync());
     }
 
@@ -208,6 +211,7 @@ public class NoteFormatDropdownTests : DiagramNotePlaywrightBase
         // BEFORE its diagram has been decompressed — _noteFormatPreference is
         // stamped on the lazy container and honoured when it renders.
         await Page.Locator("details.scenario").Nth(0).Locator("summary").First.ClickAsync();
+        await OpenScenarioSettingsAsync(Page.Locator("details.scenario").Nth(0));
         await ScenarioSelect(0).SelectOptionAsync("yaml");
 
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.querySelectorAll('details.scenario')[0])");

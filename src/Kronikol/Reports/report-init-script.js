@@ -30,24 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // #4 Per-scenario diagram controls toggle on mobile
-    if (isMobile) {
-        document.querySelectorAll('.diagram-toggle').forEach(function(controls) {
-            controls.classList.add('scenario-diagram-controls');
-            controls.style.display = 'none';
-            var btn = document.createElement('button');
-            btn.className = 'scenario-diagram-controls-toggle';
-            btn.textContent = '\u2699 Diagram Settings';
-            btn.style.display = 'block';
-            controls.parentNode.insertBefore(btn, controls);
-            btn.addEventListener('click', function() {
-                var showing = controls.style.display === 'flex';
-                controls.style.display = showing ? 'none' : 'flex';
-                btn.textContent = showing ? '\u2699 Diagram Settings' : '\u2699 Hide Settings';
-            });
-        });
-    }
-
     // Restore filters from URL hash if present. Last, for the reason parse_url_hash reveals its anchor
     // last: the scroll to a `#sid-` scenario is aimed when it starts, so it has to start on the finished
     // layout. Run first, it was aimed before the mobile blocks above folded the filter panel away, and

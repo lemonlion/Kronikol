@@ -54,6 +54,14 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   just below the bar. On a phone the bar scrolls away as before and the box keeps its own Filters toggle.
 - **The Features tab says when no scenario is left,** with a Clear All that puts focus back in the search.
 - **The report bar shows when it is pinned:** its corners square and it casts a shadow while the list scrolls under it.
+- **Each scenario's settings are behind a gear.** A gear at the top right of a scenario's diagrams, grey until pointed
+  at, opens that scenario's payload settings: Payloads, the format and width dropdowns and the toggles, on a bar that
+  starts "This scenario:" so it reads apart from the report's own. The gear stays where it was, as the bar's last
+  control, so a second click closes it, and the open bar stays under the report's bar while the scenario's diagrams
+  are in view. The settings act on sequence diagrams only, so they step aside on the Activity Diagrams and Flame Chart
+  tabs. On a phone the gear sits on the diagrams' title. Each bar starts closed, and nothing is remembered.
+- **A scenario's diagram views are tabs.** Sequence Diagrams, Activity Diagrams and Flame Chart are `role="tab"` on a
+  bar of their own; the arrow keys, Home and End move between them, and only the one showing is in the tab order.
 
 ### Changed (breaking)
 
@@ -127,6 +135,24 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   The search field sits in a `span.search-field`, which holds the deep search's chip at its right end.
 - **Duration and Happy paths join the Status line only where they fit whole,** decided on their measured widths (a
   reader's text spacing and late fonts included), and otherwise each takes a line of its own.
+- **A scenario's diagram toolbar is split in two.** The view tabs have a bar of their own,
+  `div.diagram-toggle.diagram-toggle-tabs`, and the payload controls moved into `div.scenario-settings`: an options bar,
+  `div.diagram-toggle.diagram-options-bar`, closed behind its gear, `button.scenario-settings-gear`. A section showing
+  another view carries `diagrams-not-seq`. A section with only sequence diagrams has the settings too, and a section
+  with no sequence diagrams has none (4.x gave it payload controls that acted on nothing). The spacer is gone. On a
+  phone 4.x's "Diagram Settings" button is replaced by the gear on the diagrams' title,
+  `button.scenario-diagram-controls-toggle.gear-in-summary`, which leaves the section open. A script or test that uses
+  a scenario's payload controls opens its settings first.
+- **The payload controls say Payloads.** The Details radio reads Payloads, with Expanded, Collapsed and Truncated; its
+  line count reads "N lines" under a "Payload length" heading and shows only while Truncated is picked (the separate
+  "lines" label is gone). The format and width dropdowns are "Payload format" and "Payload width", the format one with
+  a heading of its own, and a note's width button says "Widen this box to fill the diagram" and "Back to the default
+  width". A toggle says its word alone (Headers, Assertions, Steps, Databases) and whether it is on with
+  `aria-pressed`; the toggle code no longer rewrites its label. Each label sits in `span.btn-label`, which holds its
+  bold width, so switching a control moves nothing beside it, and a control being redrawn keeps its size, with a sweep
+  along its bottom edge in place of 4.x's spinner.
+- **The payload controls and the diagrams' card take Option C's look,** in the report's bar and in each scenario's
+  settings. On a phone each bar is a sheet, its zones (Payloads, Format, Toggle) one under another.
 
 ### Fixed
 
@@ -140,6 +166,11 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **A scenario whose diagram makes no call has no dependency.** The participant PlantUML draws for such a diagram,
   `(no interactions)`, was listed as a dependency, and filtering on it picked those scenarios out by accident; they are
   under No dependencies now, and a 4.x link that chose `(no interactions)` opens on No dependencies.
+- **Enter presses the button that has the keyboard's focus.** Once the arrow keys had picked a scenario, Enter folded
+  that scenario wherever the focus was, and the button or heading that had it did nothing.
+- **A scenario with one view of its flow keeps its span warning.** The warning that a scenario has ten times the median
+  span count was written beside the view tabs only, so a scenario with no sequence diagram and an activity diagram or
+  a flame chart alone lost it. It now sits on the diagrams' title.
 
 ## [4.26.9] - 2026-10-18
 

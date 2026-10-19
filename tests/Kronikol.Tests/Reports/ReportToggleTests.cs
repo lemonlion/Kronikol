@@ -443,11 +443,11 @@ public class ReportToggleTests : IDisposable
         var testRun = File.ReadAllText(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.html"));
         Assert.Contains("window._detailsDefault = 'truncated'", testRun);
         Assert.Contains("window._headersHidden = true", testRun);
-        Assert.Contains(">Headers Hidden</button>", testRun);
+        Assert.Contains("data-toggle=\"headers\" data-shown=\"false\" aria-pressed=\"false\"", testRun);
 
         var specs = File.ReadAllText(Path.Combine(_reportsDir, $"Specifications_{_suffix}.html"));
         Assert.Contains("window._detailsDefault = 'expanded'", specs);
         Assert.Contains("window._headersHidden = true", specs);   // inherited
-        Assert.Contains(">Headers Hidden</button>", specs);
+        Assert.Contains("data-toggle=\"headers\" data-shown=\"false\" aria-pressed=\"false\"", specs);
     }
 }

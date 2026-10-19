@@ -22,14 +22,14 @@ public class ToolbarStylingTests : PlaywrightTestBase
     private const string Tint = "rgb(237, 233, 254)";        // #EDE9FE, an idle control hovered
     private const string TintBorder = "rgb(167, 139, 250)";  // #A78BFA
     private const string Blue = "rgb(66, 133, 244)";
-    private const string BlueTint = "rgb(230, 240, 255)";
-    private const string BlueTintBorder = "rgb(100, 150, 255)";
-    private const string Grey = "rgb(245, 245, 245)";         // an idle diagram tab
     private const string Hover = "rgb(237, 241, 248)";        // --kron-hover: 5.0.0's hover (plans/OPTION_C_PLAN.md S1)
     private const string Selected = "rgb(220, 232, 251)";     // --kron-selected: a chosen filter, 5.0.0 (S6; 4.x a solid Blue)
     private const string SelectedEdge = "rgb(106, 143, 217)"; // --kron-selected-edge
     private const string SelectedInk = "rgb(29, 79, 176)";    // --kron-selected-ink
     private const string ControlBorder = "rgb(174, 183, 198)"; // --kron-control-border: a filter control's edge (S6)
+    private const string SelectBorder = "rgb(122, 132, 150)";  // --kron-select-border: a dropdown's and a gear's edge (S8)
+    private const string Accent = "rgb(37, 89, 199)";          // --kron-accent: the picked view tab's ink (S8)
+    private const string None = "rgba(0, 0, 0, 0)";
 
     private async Task Open(string fileName, bool violet, bool internalFlowTracking = true, string? stylesheet = null)
     {
@@ -60,6 +60,8 @@ public class ToolbarStylingTests : PlaywrightTestBase
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenFirstScenarioDiagrams();
 
+        // 5.0.0: the scenario's settings, behind the gear of its diagrams (S8)
+        await OpenScenarioSettingsAsync();
         var toolbar = Page.Locator("details.example-diagrams .diagram-toggle").First;
         await Expect(toolbar).ToBeVisibleAsync();
         await Expect(toolbar).ToHaveCSSAsync("display", "flex");
@@ -105,7 +107,8 @@ public class ToolbarStylingTests : PlaywrightTestBase
         // 5.0.0: the Scenario Timeline toggle is a tab (plans/OPTION_C_PLAN.md S3); a tab not selected takes the hover
         // tint and has no border. The violet theme's tabs are S13's.
         { false, Hover, null, ".report-tab[aria-selected=\"false\"]" },
-        { false, BlueTint, BlueTintBorder, ".toolbar-right .details-radio-btn:not(.details-active)" },
+        // 5.0.0: a payload button takes the hover tint on its transparent edge (plans/OPTION_C_PLAN.md S8)
+        { false, Hover, None, ".toolbar-right .details-radio-btn:not(.details-active)" },
     };
 
     [Theory]
@@ -139,31 +142,33 @@ public class ToolbarStylingTests : PlaywrightTestBase
     }
 
     [Theory]
-    [InlineData(true, Violet)]
-    [InlineData(false, Blue)]
-    public async Task The_active_details_radio_takes_the_themes_colour_at_rest_and_hovered(bool violet, string active)
+    [InlineData(true, Violet, Violet)]
+    [InlineData(false, Selected, SelectedEdge)] // 5.0.0: the selected tint and edge (S8)
+    public async Task The_active_details_radio_takes_the_themes_colour_at_rest_and_hovered(bool violet, string active, string edge)
     {
         await Open($"DetailsRadio{violet}.html", violet);
 
         var radio = Page.Locator(".toolbar-right .details-radio-btn.details-active").First;
-        await Paints(radio, active, active);
+        await Paints(radio, active, edge);
         await radio.HoverAsync();
-        await Paints(radio, active, active);
+        await Paints(radio, active, edge);
     }
 
-    public static TheoryData<bool, bool, string, string, string, string> TabColours => new()
+    public static TheoryData<bool, bool, string, string, string, string, string?> TabColours => new()
     {
-        // violet, flow tracking, idle, idle hovered, active, active hovered
-        { true, true, Grey, Tint, Violet, VioletDark },
-        { true, false, Grey, Tint, Violet, VioletDark },
-        { false, true, Grey, "rgb(232, 240, 254)", Blue, "rgb(51, 103, 214)" },
-        { false, false, Grey, "rgb(232, 240, 254)", Blue, "rgb(51, 103, 214)" },
+        // violet, flow tracking, idle, idle hovered, active, active hovered, active edge
+        // 5.0.0: the violet theme paints over the C base, whose idle tab has no fill (S8; the theme is S13's)
+        { true, true, None, Tint, Violet, VioletDark, Violet },
+        { true, false, None, Tint, Violet, VioletDark, Violet },
+        // 5.0.0: a view tab has no fill; the picked one is marked by the accent's ink and underline (S8)
+        { false, true, None, Hover, None, Hover, null },
+        { false, false, None, Hover, None, Hover, null },
     };
 
     [Theory]
     [MemberData(nameof(TabColours))]
     public async Task Diagram_tabs_take_the_themes_colours_with_or_without_internal_flow_tracking(
-        bool violet, bool internalFlowTracking, string idle, string idleHovered, string active, string activeHovered)
+        bool violet, bool internalFlowTracking, string idle, string idleHovered, string active, string activeHovered, string? activeEdge)
     {
         await Open($"Tabs{violet}{internalFlowTracking}.html", violet, internalFlowTracking);
         await OpenFirstScenarioDiagrams();
@@ -172,11 +177,12 @@ public class ToolbarStylingTests : PlaywrightTestBase
         var activeTab = Page.Locator("details.example-diagrams .diagram-toggle-btn.diagram-toggle-active").First;
         await Expect(activeTab).ToBeVisibleAsync();
         await Paints(idleTab, idle);
-        await Paints(activeTab, active, active);
+        await Paints(activeTab, active, activeEdge);
+        if (!violet) await Expect(activeTab).ToHaveCSSAsync("color", Accent);
         await idleTab.HoverAsync();
         await Paints(idleTab, idleHovered);
         await activeTab.HoverAsync();
-        await Paints(activeTab, activeHovered, active);
+        await Paints(activeTab, activeHovered, activeEdge);
     }
 
     [Theory]
@@ -240,7 +246,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
 
     [Theory]
     [InlineData(true, Tint, TintBorder)]
-    [InlineData(false, BlueTint, BlueTintBorder)]
+    [InlineData(false, Hover, SelectBorder)] // 5.0.0: the hover tint on the gear's edge (S8)
     public async Task The_phone_diagram_settings_button_takes_the_themes_tint_when_hovered(bool violet, string tint, string border)
     {
         await Page.SetViewportSizeAsync(700, 900);

@@ -274,6 +274,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         Assert.Equal(1, before);
 
         // Collapse notes
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").First.ClickAsync();
 
         await Page.WaitForFunctionAsync("""
@@ -301,6 +302,7 @@ public class DiagramZoomTests : PlaywrightTestBase
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         // Collapse notes
+        await OpenScenarioSettingsAsync();
         await Page.Locator(".diagram-toggle .details-radio-btn[data-state='collapsed']").First.ClickAsync();
 
         await Page.WaitForFunctionAsync("""

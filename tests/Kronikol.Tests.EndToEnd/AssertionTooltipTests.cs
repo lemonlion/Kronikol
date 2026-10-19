@@ -17,6 +17,8 @@ public class AssertionTooltipTests : DiagramNotePlaywrightBase
 
     private async Task ShowAssertionsAndWait()
     {
+        // 5.0.0: the toggle sits in the scenario's settings, behind the gear of its diagrams (plans/OPTION_C_PLAN.md S8)
+        await OpenScenarioSettingsAsync(Page.Locator("details.scenario").First);
         var showBtn = Page.Locator("details.scenario").First
             .Locator(".toggle-btn[data-toggle='assertions'][data-shown='false']");
 
