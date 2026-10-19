@@ -30,10 +30,16 @@ function needsSeededProfile(browserType, options) {
   return /[\\/](chrome|msedge)\.exe$/i.test(options.executablePath || '');
 }
 
-function seededProfile() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pw-installed-browser-'));
-  fs.writeFileSync(path.join(dir, 'Local State'), JSON.stringify(LOCAL_STATE));
+// The answer, written into a profile directory the caller keeps between runs (launchPersistentContext on a directory
+// of its own, or --user-data-dir), unless the browser has already written its own there.
+function seedProfile(dir) {
+  const file = path.join(dir, 'Local State');
+  if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify(LOCAL_STATE));
   return dir;
+}
+
+function seededProfile() {
+  return seedProfile(fs.mkdtempSync(path.join(os.tmpdir(), 'pw-installed-browser-')));
 }
 
 function removeProfile(dir) {
@@ -58,4 +64,4 @@ async function launchInstalled(browserType, options = {}) {
   return browser;
 }
 
-module.exports = { launchInstalled, needsSeededProfile, LOCAL_STATE };
+module.exports = { launchInstalled, seedProfile, needsSeededProfile, LOCAL_STATE };
