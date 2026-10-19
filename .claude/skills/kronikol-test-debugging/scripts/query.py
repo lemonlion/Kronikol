@@ -41,12 +41,12 @@ def load(path):
     if os.path.isdir(path):
         candidate = os.path.join(path, "TestRunReport.json")
         if not os.path.exists(candidate):
-            matches = [
-                os.path.join(root, name)
-                for root, _, names in os.walk(path)
-                for name in names
-                if name.endswith("TestRunReport.json")
-            ]
+            # As the tool searches: runs/ holds earlier runs of the report above it, and baseline/ the copy --baseline
+            # compares against, so neither is a second report.
+            matches = []
+            for root, folders, names in os.walk(path):
+                folders[:] = [f for f in folders if f.lower() not in ("runs", "baseline")]
+                matches += [os.path.join(root, name) for name in names if name.endswith("TestRunReport.json")]
             if len(matches) != 1:
                 die(f"{len(matches)} reports under {path} — name the one you mean")
             candidate = matches[0]

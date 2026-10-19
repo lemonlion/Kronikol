@@ -5,8 +5,9 @@ You are in a Kronikol reports directory. This file is generated; do not edit it.
 ## The rule
 
 **Never open `__REPORT__.json`, `__REPORT__.html`, or a diagram.** Not "prefer not to" — it does not
-work. A real report reaches 10 MB, roughly 2.7 million tokens, and a single embedded PlantUML diagram has
-been measured at 663 KB (about 166,000 tokens): one diagram larger than most context windows. Reading the
+work. A real report reaches tens of megabytes (one suite's reached 183 MB), roughly 2.7 million tokens for
+every 10 MB, and a single embedded PlantUML diagram has been measured at 663 KB (about 166,000 tokens): one
+diagram larger than most context windows. Reading the
 file is not a slow way to answer a question about the run, it is a way to end the session with the question
 unanswered.
 

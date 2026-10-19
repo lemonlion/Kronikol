@@ -324,10 +324,11 @@ public class TcpTapTests
             Assert.Equal("pong", Encoding.UTF8.GetString(await ReadAtLeastAsync(stream, 4)));
         }
 
-        Assert.True(await Wait.UntilAsync(() => tap.DecodeErrors == 1));
+        // The line is written after the counts go up, so the wait is for the line: a wait on the count raced it.
+        Assert.True(await Wait.UntilAsync(() => { lock (diagnostics) return diagnostics.Exists(d => d.Contains("gave up") && d.Contains("forwarding continues")); }),
+            "the decoder giving up was never logged");
+        Assert.Equal(1, tap.DecodeErrors);
         Assert.Empty(sink.Logs);
-        lock (diagnostics)
-            Assert.Contains(diagnostics, d => d.Contains("gave up") && d.Contains("forwarding continues"));
         Assert.Equal(1, tap.DecodingDisabledConnections);
         Assert.Equal(0, tap.DecoderResets);
         var entry = Assert.Single(tap.Diagnostics());

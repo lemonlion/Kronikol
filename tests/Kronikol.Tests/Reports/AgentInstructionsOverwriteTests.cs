@@ -34,7 +34,9 @@ public class AgentInstructionsOverwriteTests : IDisposable
         try { Directory.Delete(_dir, true); } catch { /* best effort */ }
     }
 
-    private void Run()
+    private void Run() => Run(DataFormat.Json);
+
+    private void Run(DataFormat format)
     {
         var testId = "agents-" + Guid.NewGuid().ToString("N");
         RequestResponseLogger.LogPair("Pay", testId, HttpMethod.Post, new Uri("http://payments/charge"), "payments", "Test");
@@ -54,7 +56,27 @@ public class AgentInstructionsOverwriteTests : IDisposable
                 GenerateComponentDiagram = false,
                 GenerateSpecificationsReport = false,
                 GenerateSpecificationsData = false,
+                TestRunReportDataFormat = format,
             });
+    }
+
+    [Theory]
+    [InlineData(DataFormat.Json, "TestRunReport.json")]
+    [InlineData(DataFormat.Xml, "TestRunReport.xml")]
+    [InlineData(DataFormat.Yaml, "TestRunReport.yml")]
+    public void The_rule_names_the_data_file_the_run_wrote(DataFormat format, string dataFile)
+    {
+        // Until 4.27.1 the rule said TestRunReport.json whatever the format (plans/REPORT_FORMAT_PLAN.md section 8).
+        Run(format);
+
+        Assert.True(File.Exists(Path.Combine(_dir, dataFile)), $"the run wrote no {dataFile}");
+        foreach (var agentFile in new[] { AgentInstructionsGenerator.ClaudeFileName, AgentInstructionsGenerator.AgentsFileName })
+        {
+            var text = File.ReadAllText(Path.Combine(_dir, agentFile));
+            Assert.Contains($"**Never open `{dataFile}`, `TestRunReport.html`, or a diagram.**", text, StringComparison.Ordinal);
+            if (format != DataFormat.Json)
+                Assert.DoesNotContain("TestRunReport.json", text, StringComparison.Ordinal);
+        }
     }
 
     [Fact]

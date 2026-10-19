@@ -1,7 +1,7 @@
 # TestRunReport.krkl: a compressed report data file that only Kronikol reads (v5)
 
 **Date:** 2026-10-18 · **Repo version:** 4.26.7 (`origin/main` at `a8563d21`; line numbers are for that commit, and
-hold at 4.26.9, `354cb998`, whose two releases changed none of the files cited) · **Status: draft, not green-lit.**
+hold at 4.26.9, `354cb998`, whose two releases changed none of the files cited) · **Status: executing** (the owner's ask of 2026-10-19; R1 shipped as 4.27.0, R2 and §8's 4.x fixes as 4.27.1, §11).
 
 This plan was written at the owner's asks of 2026-10-18:
 - "Can we investigate reducing the size of TestRunReport.json more ... I'm inclined towards compression of the nested
@@ -1343,6 +1343,21 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
     keeps its meaning (§4.3). The line references hold at 4.26.9, whose releases changed none of the files cited.
   - A last read-through removed a sentence left from the first draft that gave `DataFormat` a new member (§4.5),
     and two counts of "30 sites" that the census had outgrown.
+- **2026-10-19, execution**, at the owner's ask: "can you implement the plan in full, don't interfere with the
+  the other sessions. For v5 we need to release it together with the UI stuff so this should go into an UNRELEASED
+  commit of v5 and then we can push both together". Every §9 question is taken as recommended.
+  - R1 shipped as 4.27.0 (`6f6043e2`; wiki `21914fa`; #119 and #116 closed). The measuring pass's first cut lost its
+    place when a read ended in whitespace after the last token, so it failed on any file larger than its 128 KB
+    window; a theory now measures the fixtures with windows of 4 to 4,096 bytes.
+  - R2 and §8's 4.x fixes shipped as 4.27.1. Three differ from the plan. `history import` keeps searching `runs/`:
+    the wiki promises back-fill from kept runs, and a run already in the ledger is skipped. The `.ignore` block
+    re-includes `Failures.md`, `Failures.jsonl` and the two agent files but not the HTML, which the agent files say
+    never to open. The agent files get the data file's name at the call site in `ReportGenerator`, because
+    `AgentInstructionsGenerator` keeps one entry that takes the report's file name alone, which a test holds so
+    that no text from a run can reach the file.
+  - Found on the way: 4.27.0's CI failed on a TcpTap fact that waited for a count written before the line it read
+    (fixed in 4.27.1), and a section another session added to `CLAUDE.md` inside the managed block had turned CI
+    red on main (moved above the block, `1f667d1d`).
 
 ## Appendix A. Edit sites at `a8563d21`
 

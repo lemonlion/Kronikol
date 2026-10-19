@@ -6,8 +6,9 @@ namespace Kronikol.Query;
 /// Implements <c>kronikol query</c>: answers questions about a <c>TestRunReport.json</c> without anyone
 /// having to read it.
 ///
-/// <para>A real report reaches 10 MB — around 2.7 million tokens, with single embedded diagrams past
-/// 160,000 — so reading it is not a slow way to debug a test run, it is an impossible one. Every command
+/// <para>A real report reaches tens of megabytes (one suite's reached 183 MB) — around 2.7 million tokens for
+/// every 10 MB, with single embedded diagrams past 160,000 — so reading it is not a slow way to debug a test run,
+/// it is an impossible one. Every command
 /// here prints an answer plus the addresses that fetch the next thing, and the payloads that make up the
 /// bulk of the file are fetched only when they are named.</para>
 ///

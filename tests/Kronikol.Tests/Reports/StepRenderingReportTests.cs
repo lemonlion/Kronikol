@@ -528,8 +528,10 @@ public class StepRenderingReportTests
     }
 
     [Fact]
-    public void Report_passed_skipped_tooltip_mentions_skipped_substeps()
+    public void Report_passed_skipped_icon_has_its_own_class_and_the_page_holds_its_tooltip_once()
     {
+        // Turned round by plans/REPORT_FORMAT_PLAN.md R2: the tooltip was a title on the icon, and is a text the page
+        // holds once, given to the icon when it is hovered.
         var scenario = new Scenario
         {
             Id = "s1", DisplayName = "Tooltip test",
@@ -548,7 +550,114 @@ public class StepRenderingReportTests
             ]
         };
         var content = GenerateReport(MakeFeatures(scenario), "SkippedTooltip.html");
-        Assert.Contains("with skipped sub-steps", content);
+        Assert.Contains("<span class=\"step-status passed-skipped\">", content, StringComparison.Ordinal);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(content, "with skipped sub-steps"));
+    }
+
+    // ─── A sub-step's data table (plans/REPORT_FORMAT_PLAN.md F20) ───
+
+    [Fact]
+    public void A_sub_step_draws_its_data_table()
+    {
+        // Until 4.27.1 a sub-step took the default that leaves tables to the combined table under a scenario's steps,
+        // which gathers top-level steps' only, so its table was drawn nowhere.
+        var scenario = new Scenario
+        {
+            Id = "s1", DisplayName = "Sub-step table",
+            Steps =
+            [
+                new ScenarioStep
+                {
+                    Keyword = "When", Text = "I register the users", Status = ExecutionResult.Passed,
+                    SubSteps =
+                    [
+                        new ScenarioStep
+                        {
+                            Keyword = "And", Text = "the users are", Status = ExecutionResult.Passed,
+                            Parameters =
+                            [
+                                new StepParameter
+                                {
+                                    Name = "users",
+                                    Kind = StepParameterKind.Tabular,
+                                    TabularValue = new TabularParameterValue(
+                                        [new TabularColumn("Name", false), new TabularColumn("Age", false)],
+                                        [new TabularRow(TableRowType.Matching,
+                                            [new TabularCell("Alice", null, VerificationStatus.NotApplicable),
+                                             new TabularCell("30", null, VerificationStatus.NotApplicable)])])
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+        var content = GenerateReport(MakeFeatures(scenario), "SubStepTable.html");
+
+        var table = content.IndexOf("<div class=\"step-param-table\" data-param=\"users\"", StringComparison.Ordinal);
+        Assert.True(table >= 0, "the sub-step's table is drawn nowhere");
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(content, "data-param=\"users\""));
+        Assert.True(content.LastIndexOf("<div class=\"sub-steps\">", table, StringComparison.Ordinal) >= 0, "the table is not under the sub-steps");
+        Assert.Contains(">Alice<", content, StringComparison.Ordinal);
+    }
+
+    // ─── The status tooltips, held once per page (plans/REPORT_FORMAT_PLAN.md R2) ───
+
+    private static Scenario EveryStatus() => new()
+    {
+        Id = "statuses", DisplayName = "Every status",
+        Steps =
+        [
+            new ScenarioStep { Keyword = "Given", Text = "a passed leaf", Status = ExecutionResult.Passed },
+            new ScenarioStep
+            {
+                Keyword = "And", Text = "a composite with a skipped child", Status = ExecutionResult.Passed,
+                SubSteps = [new ScenarioStep { Keyword = "And", Text = "the skipped child", Status = ExecutionResult.Skipped }]
+            },
+            new ScenarioStep
+            {
+                Keyword = "And", Text = "a composite with a bypassed child", Status = ExecutionResult.Passed,
+                SubSteps = [new ScenarioStep { Keyword = "And", Text = "the bypassed child", Status = ExecutionResult.Bypassed }]
+            },
+            new ScenarioStep { Keyword = "When", Text = "a failed leaf", Status = ExecutionResult.Failed },
+            new ScenarioStep { Keyword = "Then", Text = "a step never reached", Status = ExecutionResult.SkippedAfterFailure }
+        ]
+    };
+
+    [Fact]
+    public void No_status_icon_carries_a_title_and_the_page_holds_each_text_once()
+    {
+        var content = GenerateReport(MakeFeatures(EveryStatus()), "StatusTitlesOnce.html");
+
+        Assert.True(System.Text.RegularExpressions.Regex.Matches(content, "<span class=\"step-status [^\"]*\"").Count >= 7);
+        Assert.Empty(System.Text.RegularExpressions.Regex.Matches(content, "<span class=\"step-status [^\"]*\" title="));
+        foreach (var (_, text) in ReportGenerator.StepStatusTitles)
+            Assert.Single(System.Text.RegularExpressions.Regex.Matches(content, System.Text.RegularExpressions.Regex.Escape(text)));
+    }
+
+    [Fact]
+    public void Every_status_class_an_icon_carries_has_a_text_in_the_page()
+    {
+        var content = GenerateReport(MakeFeatures(EveryStatus()), "StatusTitlesEveryClass.html");
+
+        var classes = System.Text.RegularExpressions.Regex.Matches(content, "<span class=\"step-status ([^\"]+)\"")
+            .Select(m => m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
+        Assert.Equal(ReportGenerator.StepStatusTitles.Select(t => t.Key).Order(StringComparer.Ordinal), classes.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void A_chain_20_deep_over_one_skipped_leaf_holds_the_long_text_once()
+    {
+        // Every passed ancestor of a skipped step carried the 177-character text as a title: 20 times for this chain.
+        var leaf = new ScenarioStep { Keyword = "And", Text = "the skipped leaf", Status = ExecutionResult.Skipped };
+        for (var depth = 19; depth >= 0; depth--)
+            leaf = new ScenarioStep { Keyword = "And", Text = $"level {depth}", Status = ExecutionResult.Passed, SubSteps = [leaf] };
+        var scenario = new Scenario { Id = "deep", DisplayName = "Deep chain", Steps = [leaf] };
+
+        var content = GenerateReport(MakeFeatures(scenario), "StatusTitlesDeep.html");
+
+        Assert.Equal(20, System.Text.RegularExpressions.Regex.Matches(content, "<span class=\"step-status passed-skipped\">").Count);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(content, "with skipped sub-steps"));
     }
 
     [Fact]

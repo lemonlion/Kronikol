@@ -4,6 +4,54 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.27.1] - 2026-10-19
+
+**Patch - fixes, and a smaller report page (`plans/REPORT_FORMAT_PLAN.md` R2 and section 8).** Nothing new to call, so
+the patch part moves (4.27.0 to 4.27.1). Two of the fixes change what a reader sees: a sub-step's data table is drawn,
+and a run that writes XML or YAML is told the name of its own data file.
+
+### Changed
+
+- **A step's status text is written into the page once, not on every step** (R2). Each status icon carried its tooltip
+  as a `title` attribute: 54 bytes on a passed step, and up to 209 on every passed ancestor of a skipped or bypassed
+  step, so a chain of composite steps 20 deep over one skipped step carried the long text 20 times. The page now holds
+  the seven texts once, and an icon is given its text when the pointer rests on it or its step takes keyboard focus,
+  in the report and in an Export Filtered HTML copy. The texts and the icons are unchanged. On BreakfastProvider's
+  report (2,081 steps) the attributes came to 112,374 bytes, 3.4% of the page; the map and its script add about 2.6
+  KB. Report output changes: `.step-status` loses its `title` attribute and the head script gains the map (recorded in
+  the Kronikol4J ledger).
+
+### Fixed
+
+- **A sub-step's data table is drawn under it** (F20). A composite step passed its own setting, which leaves tables to
+  the combined table under a scenario's steps, down to its sub-steps; that table gathers the top-level steps' tables
+  only, so a sub-step's table was drawn nowhere.
+- **The agent files name the data file the run wrote.** The `CLAUDE.md` and `AGENTS.md` in the reports directory said
+  never to open `TestRunReport.json` whatever `TestRunReportDataFormat` was, so a run that writes XML or YAML was
+  warned off a file it did not have and not off the one it had. They name `TestRunReport.xml` or `TestRunReport.yml`
+  for those runs; a JSON run's files are unchanged byte for byte.
+- **The agent files and the skill no longer say a report reaches 10 MB.** One suite's reached 183 MB (#119). They say
+  tens of megabytes, about 2.7 million tokens for every 10 MB.
+- **`init-agents`' `.ignore` lets a search reach the digests and nothing else of the build output.** The block
+  re-included the whole of `bin/`, so `rg` and the tools built on its rules swept every build output, the report data
+  file among them (6 to 180 MB on real suites). It now re-includes `Failures.md`, `Failures.jsonl`, `CLAUDE.md` and
+  `AGENTS.md` under `bin/**/Reports/`, `TestResults/` and `.logs/kronikol/`, and nothing else there. It also reaches
+  `.logs/kronikol/` in a repository whose `.gitignore` excludes `.logs/`, which the old block could not. The HTML is
+  not re-included, since the instructions say never to open it. Re-run `kronikol init-agents` to replace the block.
+- **The skill's `query.py` finds a report beside its kept runs.** Given a folder, it searched every subfolder, so a
+  reports directory holding earlier runs under `runs/` or a `--baseline` copy under `baseline/` counted three reports
+  and asked which. It skips both, as the .NET tool does. Refresh a copied script with `kronikol init-agents`.
+
+### Tests
+
+- `TcpTapTests.ADecoderThatThrowsStopsDecodingButKeepsForwarding` waited for the decode error count and then read the
+  log line, which is written after the count; it failed on CI for 4.27.0. It now waits for the line it reads.
+
+### Notes
+
+- `kronikol history import` still searches `runs/`: the wiki promises back-fill from kept runs, and a run already in
+  the ledger is skipped (plan section 8 listed it with `query.py`).
+
 ## [4.27.0] - 2026-10-19
 
 **Minor - a new query verb, `sizes`, and a bytes column on `interactions --group-by` (`plans/REPORT_FORMAT_PLAN.md`

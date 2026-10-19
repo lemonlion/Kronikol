@@ -623,7 +623,7 @@ public static class ReportGenerator
         {
             Add(AgentInstructionsGenerator.ClaudeFileName, () =>
             {
-                var block = AgentInstructionsBlock.Wrap(AgentInstructionsGenerator.Build(options.HtmlTestRunReportFileName));
+                var block = AgentInstructionsBlock.Wrap(NamingTheDataFile(AgentInstructionsGenerator.Build(options.HtmlTestRunReportFileName), options));
                 WriteAgentInstructionsFile(block, AgentInstructionsGenerator.ClaudeFileName);
                 WriteAgentInstructionsFile(block, AgentInstructionsGenerator.AgentsFileName);
             });
@@ -1341,6 +1341,9 @@ public static class ReportGenerator
         // Parameterized row selection
         var selectRowFunction = LoadResource("report-select-row-function.js");
 
+        // Step status tooltips, held once for the page
+        var stepStatusTitlesScript = StepStatusTitlesScript();
+
         // Toggle between grouped and flat parameter tables
         var toggleFlattenParamsJs = LoadResource("report-toggle-flatten-params-js.js");
 
@@ -1549,6 +1552,7 @@ public static class ReportGenerator
                                 {{copyScenarioNameFunction}}
                                 {{toggleExamplesDetailFunction}}
                                 {{selectRowFunction}}
+                                {{stepStatusTitlesScript}}
                                 {{toggleFlattenParamsJs}}
                                 {{paramExpandJs}}
                                 {{toggleTimelineFunction}}
@@ -3673,6 +3677,29 @@ public static class ReportGenerator
     }
 
     /// <summary>
+    /// The tooltip of each status a step's icon can show, keyed by the icon's status class: the texts each icon carried
+    /// as a title attribute until the page held them once (<c>plans/REPORT_FORMAT_PLAN.md</c> R2). A passed step whose
+    /// sub-steps include a skipped or bypassed one has a class and a text of its own.
+    /// </summary>
+    internal static readonly IReadOnlyList<KeyValuePair<string, string>> StepStatusTitles =
+    [
+        new("passed", "Passed — all assertions in this step passed"),
+        new("passed-skipped", "Passed (with skipped sub-steps) — all assertions passed, but one or more sub-steps were skipped. Skipped steps did not execute and also prevented execution of subsequent steps"),
+        new("passed-bypassed", "Passed (with bypassed sub-steps) — all assertions passed, but one or more sub-steps were bypassed (intentionally skipped over without preventing execution of subsequent steps)"),
+        new("failed", "Failed — this step threw an exception or an assertion failed"),
+        new("skipped", "Skipped — this step did not execute because it was intentionally skipped, either at the scenario level, or at the step level. In the latter case the skip also prevented execution of subsequent steps"),
+        new("bypassed", "Bypassed — some or all of the logic in this step was intentionally skipped over without preventing execution of subsequent steps"),
+        new("skipped-after-failure", "Skipped after failure — this step was never reached because an earlier step failed")
+    ];
+
+    /// <summary>The page script that gives a status icon its title, with <see cref="StepStatusTitles"/> in it.</summary>
+    private static string StepStatusTitlesScript() =>
+        LoadResource("report-step-status-titles.js").Replace("__STEP_STATUS_TITLES__",
+            System.Text.Json.JsonSerializer.Serialize(StepStatusTitles.ToDictionary(t => t.Key, t => t.Value),
+                new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }),
+            StringComparison.Ordinal);
+
+    /// <summary>
     /// Renders one step (and, recursively, its sub-steps).
     /// <para>
     /// <c>displayKeyword</c> shows in place of <see cref="ScenarioStep.Keyword"/> —
@@ -3708,20 +3735,6 @@ public static class ReportGenerator
             _ => ""
         };
 
-        var statusTooltip = step.Status switch
-        {
-            ExecutionResult.Passed => HasAnySkipped(step)
-                ? "Passed (with skipped sub-steps) — all assertions passed, but one or more sub-steps were skipped. Skipped steps did not execute and also prevented execution of subsequent steps"
-                : HasAnyBypassed(step)
-                ? "Passed (with bypassed sub-steps) — all assertions passed, but one or more sub-steps were bypassed (intentionally skipped over without preventing execution of subsequent steps)"
-                : "Passed — all assertions in this step passed",
-            ExecutionResult.Failed => "Failed — this step threw an exception or an assertion failed",
-            ExecutionResult.Skipped => "Skipped — this step did not execute because it was intentionally skipped, either at the scenario level, or at the step level. In the latter case the skip also prevented execution of subsequent steps",
-            ExecutionResult.Bypassed => "Bypassed — some or all of the logic in this step was intentionally skipped over without preventing execution of subsequent steps",
-            ExecutionResult.SkippedAfterFailure => "Skipped after failure — this step was never reached because an earlier step failed",
-            _ => ""
-        };
-
         var hasSubSteps = step.SubSteps is { Length: > 0 };
         var backgroundClass = isBackground ? " step-background" : "";
 
@@ -3744,7 +3757,9 @@ public static class ReportGenerator
 
         if (step.Status.HasValue)
         {
-            body.Append($"<span class=\"step-status {statusClass}\" title=\"{statusTooltip}\">{statusIcon}</span>");
+            // No title: the page holds each status's text once, and gives an icon its title when it is hovered
+            // (StepStatusTitles, report-step-status-titles.js).
+            body.Append($"<span class=\"step-status {statusClass}\">{statusIcon}</span>");
         }
 
         if (step.Keyword is not null)
@@ -3908,7 +3923,9 @@ public static class ReportGenerator
             for (var ssi = 0; ssi < step.SubSteps!.Length; ssi++)
             {
                 var subPrefix = numberPrefix is not null ? $"{numberPrefix}{ssi + 1}." : null;
-                RenderStep(body, step.SubSteps[ssi], subPrefix, isBackground: isBackground);
+                // Its tables inline: the combined table under a scenario's steps gathers top-level steps' only, so a
+                // sub-step left to the default skipped its tables and drew them nowhere (until 4.27.1).
+                RenderStep(body, step.SubSteps[ssi], subPrefix, skipTabularInline: false, isBackground: isBackground);
             }
             body.Append("</div>");
             body.Append("</details>");
@@ -6346,6 +6363,19 @@ public static class ReportGenerator
             CollectStepText(step.SubSteps, parts);
         }
     }
+
+    /// <summary>
+    /// The agent instructions with the run's own data file in the rule not to open it: they name the JSON one, and a run
+    /// that wrote XML or YAML has none. Until 4.27.1 such a run was told not to open a file it did not have
+    /// (<c>plans/REPORT_FORMAT_PLAN.md</c> section 8). Here rather than in <see cref="AgentInstructionsGenerator"/>, whose
+    /// one entry takes the report's file name and nothing else, so that no text from a run has a way into the file; the
+    /// name here comes from the options alone.
+    /// </summary>
+    internal static string NamingTheDataFile(string instructions, ReportConfigurationOptions options) =>
+        options.TestRunReportDataFormat == DataFormat.Json
+            ? instructions
+            : instructions.Replace($"`{options.HtmlTestRunReportFileName}.json`",
+                $"`{options.HtmlTestRunReportFileName}.{GetDataFormatExtension(options.TestRunReportDataFormat)}`", StringComparison.Ordinal);
 
     private static string GetDataFormatExtension(DataFormat format) => format switch
     {

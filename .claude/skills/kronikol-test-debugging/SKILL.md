@@ -4,8 +4,8 @@ description: >
   Debug a test run from a Kronikol report (TestRunReport.json) — why a test failed, what a service actually
   returned, where a wrong value came from, what changed between runs, what was slow. Use whenever a
   Kronikol report exists (.logs/kronikol/, Reports/, TestResults/) and the question is about test
-  behaviour. Never read TestRunReport.json directly: reports reach 10 MB / 2.7M tokens and a single
-  embedded diagram can be 166k tokens.
+  behaviour. Never read TestRunReport.json directly: reports reach tens of megabytes (2.7M tokens per 10 MB)
+  and a single embedded diagram can be 166k tokens.
 ---
 
 # Debugging a Kronikol test run
