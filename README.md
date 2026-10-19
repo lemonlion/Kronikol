@@ -201,6 +201,8 @@ On GitHub Actions, the [`kronikol-history` action](https://github.com/lemonlion/
 
 For the CI tooling that speaks somebody else's format rather than Kronikol's, `kronikol ctrf ./Reports --out ctrf-report.json` converts a finished report into a [Common Test Report Format](https://ctrf.io) document — or set `GenerateCtrfReport` and the run writes it itself. Each CTRF test carries the `sN` address, so an annotation action that finds a failure can hand it straight back to `kronikol query`.
 
+When a script needs the JSON itself, `kronikol decode ./Reports --indent > report.json` writes it from any report file, `TestRunReport.krkl` included, with every payload stored compressed written out as text.
+
 A green re-run no longer destroys the failing run's report: the reports directory keeps the last three runs, whole, under `runs/` (the newest one that failed is never the one pruned), and `--run last-failed` on any verb opens it - `kronikol query failures ./Reports --run last-failed`. When only the ledger survived, `kronikol query history --run last-failed` still answers, with no report at all. See [Generated Reports](https://github.com/lemonlion/Kronikol/wiki/Generated-Reports#earlier-runs-runjson-and-runs).
 
 Every command prints addresses rather than payloads, announces any truncation with the flags that resume it, and fetches a body only when you name one. `--out FILE` saves any answer to a file instead of printing it, without the budget; `--json` turns the listing verbs into one machine-readable envelope for scripts (text stays the default, and is what to read in a terminal - the same answer as JSON costs about twice the tokens).
@@ -337,3 +339,5 @@ Key pages:
 - [Report Configuration](https://github.com/lemonlion/Kronikol/wiki/Report-Configuration)
 - [API Reference](https://github.com/lemonlion/Kronikol/wiki/API-Reference)
 - [Example Project](https://github.com/lemonlion/Kronikol/wiki/Example-Project)
+
+Kronikol includes source code from [ZstdSharp](https://github.com/oleg-st/ZstdSharp) (MIT) and, through it, [zstd](https://github.com/facebook/zstd) (BSD-3-Clause): their notices are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md), which the Kronikol and Kronikol.Tool packages carry.

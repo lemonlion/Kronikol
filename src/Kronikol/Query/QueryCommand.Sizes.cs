@@ -22,8 +22,16 @@ public static partial class QueryCommand
         }
 
         ReportSizes sizes;
-        using (var stream = ReportScanner.OpenShared(index.Path))
+        if (index.Snapshot is { } snapshot)
         {
+            // The JSON a compressed file holds, as its scan decoded it: one copy, which a replaced file cannot change.
+            using var decoded = snapshot.OpenRead();
+            sizes = ReportSizes.Measure(decoded);
+        }
+        else
+        {
+            using var stream = ReportScanner.OpenShared(index.Path);
+            stream.Position = index.FileLength - index.JsonLength;
             // Measured by a second pass over the file the index was built from, so it must still be that file. One check
             // after the pass covers both ways it can stop being so: a file replaced before the pass is measured whole and
             // then differs from the index, and one rewritten during it differs on the handle the pass read. Half of a
@@ -44,16 +52,22 @@ public static partial class QueryCommand
         string Share(long bytes) => decodedTotal == 0 ? "-" : (100.0 * bytes / decodedTotal).ToString("0.0", CultureInfo.InvariantCulture) + "%";
         static string Bytes(long bytes) => bytes.ToString("N0", CultureInfo.InvariantCulture);
 
-        writer.Data("report", new
+        // Not "report": that is the envelope's own member, the file's path, and a second one shadowed it (4.27.0).
+        writer.Data("totals", new
         {
             file = Path.GetFileName(index.Path),
             bytesOnDisk = index.FileLength,
+            // The JSON the file holds, which the parts divide: decoded from a compressed file (plans/REPORT_FORMAT_PLAN.md
+            // 4.4), where decodedBytes is that JSON with every $z payload inflated as well.
+            jsonBytes = index.JsonLength,
             decodedBytes = decodedTotal,
             formatVersion = sizes.FormatVersion,
             compressedPayloads = sizes.CompressedPayloads
         });
 
-        writer.Line($"{Path.GetFileName(index.Path)}: {Bytes(index.FileLength)} bytes on disk, {Bytes(decodedTotal)} decoded"
+        writer.Line($"{Path.GetFileName(index.Path)}: {Bytes(index.FileLength)} bytes on disk, "
+                    + (index.Snapshot is null ? "" : $"{Bytes(index.JsonLength)} as JSON, ")
+                    + $"{Bytes(decodedTotal)} decoded"
                     + (sizes.FormatVersion is { } version ? $" · formatVersion {version}" : "")
                     + (sizes.CompressedPayloads > 0 ? $" · {Bytes(sizes.CompressedPayloads)} payloads stored compressed" : ""));
         writer.Line($"{"part",-22} {"stored",13} {"decoded",13} {"share",6}");

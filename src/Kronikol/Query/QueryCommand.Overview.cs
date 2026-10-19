@@ -36,6 +36,8 @@ public static partial class QueryCommand
         {
             file = Path.GetFileName(index.Path),
             sizeBytes = index.FileLength,
+            // The JSON the file holds: decoded from a compressed file, and the file's own size for a JSON one.
+            jsonBytes = index.JsonLength,
             startTime = index.StartTime,
             endTime = index.EndTime,
             scenarios = scenarios.Count,
@@ -57,6 +59,7 @@ public static partial class QueryCommand
         });
 
         writer.Line($"{Path.GetFileName(index.Path)}  {QueryWriter.Size((int)Math.Min(index.FileLength, int.MaxValue))}"
+                    + (index.Snapshot is null ? "" : $" on disk, {QueryWriter.Size((int)Math.Min(index.JsonLength, int.MaxValue))} as JSON")
                     + (index.KronikolVersion is { } v ? $"  Kronikol {v}" : ""));
         writer.Line($"{index.StartTime} → {index.EndTime}");
         // Only when there was a CI to read: a line saying "None" on every local run is noise, and the

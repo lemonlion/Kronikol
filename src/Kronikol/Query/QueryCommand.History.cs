@@ -117,7 +117,7 @@ public static partial class QueryCommand
         if (location.Path is not { } ledgerPath)
         {
             error.WriteLine($"No report given, and no history ledger: nothing named by --history or ${HistoryFormat.EnvironmentVariable}, and no .kronikol or .git directory above {start}.");
-            error.WriteLine("Pass a TestRunReport.json (or a directory holding one), or --history <file> to read a ledger without a report.");
+            error.WriteLine("Pass a TestRunReport.json or TestRunReport.krkl (or a directory holding one), or --history <file> to read a ledger without a report.");
             return 2;
         }
 
@@ -131,7 +131,7 @@ public static partial class QueryCommand
         if (read.Outcome == HistoryReadOutcome.Missing || ledger.IsEmpty)
         {
             error.WriteLine($"No report given, and no run is recorded in {ledgerPath}.");
-            error.WriteLine("Pass a TestRunReport.json (or a directory holding one); a ledger answers on its own once a run has been recorded.");
+            error.WriteLine("Pass a TestRunReport.json or TestRunReport.krkl (or a directory holding one); a ledger answers on its own once a run has been recorded.");
             return 2;
         }
 

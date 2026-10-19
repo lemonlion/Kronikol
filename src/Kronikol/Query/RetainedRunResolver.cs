@@ -105,7 +105,8 @@ internal static class RetainedRunResolver
     /// <summary>The refusal every verb but <c>history</c> gives for a run that is not kept: what is, and where its results still are.</summary>
     public static void RefuseNotRetained(string reportArgument, string wanted, TextWriter error)
     {
-        var directory = Directory.Exists(reportArgument) && File.Exists(Path.Combine(reportArgument, "TestRunReport.json"))
+        var directory = Directory.Exists(reportArgument)
+                        && (File.Exists(Path.Combine(reportArgument, "TestRunReport.json")) || File.Exists(Path.Combine(reportArgument, "TestRunReport.krkl")))
             ? Path.GetFullPath(reportArgument)
             : QueryCommand.ResolveReport(reportArgument, TextWriter.Null) is { } top ? Path.GetDirectoryName(Path.GetFullPath(top))! : reportArgument;
         var retained = ReportFolders.RetainedRuns(directory);

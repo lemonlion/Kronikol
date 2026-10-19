@@ -1,7 +1,7 @@
 # TestRunReport.krkl: a compressed report data file that only Kronikol reads (v5)
 
 **Date:** 2026-10-18 · **Repo version:** 4.26.7 (`origin/main` at `a8563d21`; line numbers are for that commit, and
-hold at 4.26.9, `354cb998`, whose two releases changed none of the files cited) · **Status: executing** (the owner's ask of 2026-10-19; R1 shipped as 4.27.0, R2 and §8's 4.x fixes as 4.27.1, §11).
+hold at 4.26.9, `354cb998`, whose two releases changed none of the files cited) · **Status: executing** (the owner's ask of 2026-10-19; R1 shipped as 4.27.0, R2 and §8's 4.x fixes as 4.27.1, R3 as 4.30.0, §11).
 
 This plan was written at the owner's asks of 2026-10-18:
 - "Can we investigate reducing the size of TestRunReport.json more ... I'm inclined towards compression of the nested
@@ -185,7 +185,7 @@ the .NET and Java writers in step.
 | #120 | Each body is stored twice, as the call's content and again reformatted as its diagram note: about 24% of that report | Inside brotli or zstd the copies cost only 8 to 10% (F8), so it becomes a v5 follow-up, not a precondition (§9 Q6) |
 | #119 | No command says what fills a report. One grew from 101,768,517 to 183,557,197 bytes, past GitHub's 100 MiB file limit | `kronikol query sizes`, 4.x minor (§4.9) |
 | #116 | `interactions --group-by` has no bytes column | Same release as #119 |
-| #154 | `kronikol merge <dir>` reads every `*.json` under it, so a JSON attachment aborts the merge | A dedicated extension removes the class; merge reads `*.krkl` and old `TestRunReport.json` names only (§4.6) |
+| #154 | `kronikol merge <dir>` reads every `*.json` under it, so a JSON attachment aborts the merge | A dedicated extension removes the class; merge reads `*.krkl` and old `TestRunReport.json` names only (§4.6). Not done in R3, and #154 stays open: the allow-list would drop a shard with a custom name (§11) |
 
 #85 (closed) carried the earlier analysis. Its body measured whole-file gzip at 6,145,686 bytes against 82,685,589
 raw, with 30 to 40 ms to inflate.
@@ -792,7 +792,8 @@ care, because they fail quietly (F11):
   has the same filter);
 - the baseline lookup, which would find no baseline, or take `Run.json`.
 
-#154 is fixed on the way: merge takes `*.krkl` and `*TestRunReport.json`, not every `*.json` in a folder.
+#154 is fixed on the way: merge takes `*.krkl` and `*TestRunReport.json`, not every `*.json` in a folder. (Not in R3:
+merge sweeps `*.json` as before and `*.krkl` besides, and #154 stays open; §11.)
 
 **The run summary** (F26):
 - For a `.krkl` it prints the decoded size, or none.
@@ -996,7 +997,7 @@ no `force: true`, `PollingInterval = 200`, and `dispatchEvent` for SVG.
    - a folder with only a `.krkl`, only a `.json`, or both (the newer wins and is named);
    - `runs/` and `baseline/` skipped;
    - the baseline lookup finds a `.krkl`, and never takes `Run.json` or `History.run.json`;
-   - merge ignores a JSON attachment (#154's repro).
+   - merge ignores a JSON attachment (#154's repro). Not in R3 (§11).
 8. **Run outputs:** for a `.krkl`, `RunSummaryConsoleWriter` prints the query hint, the decoded size or none, and the
    new reason (F26), and `CiArtifactPublisher` publishes the file.
 9. **query.py:** gzip on any Python, zstd on 3.14 or later, and the message otherwise.
@@ -1118,7 +1119,7 @@ the xUnit2 lane's `ReportFile`.
   - `:469`, which names `TestRunReport.json`.
 
   Also the new option's own documentation.
-- **Issues:** close #119 and #116 with R1, #154 with R3, and #121 with R4, each with a comment naming the release. #120
+- **Issues:** close #119 and #116 with R1, #154 with R3 (not done, §11), and #121 with R4, each with a comment naming the release. #120
   closes when its follow-up ships.
 - **The copy:** each sync names ZstdSharp's release in the changelog entry. `THIRD-PARTY-NOTICES.md` changes only when
   ZstdSharp's licence does.
@@ -1358,6 +1359,37 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
   - Found on the way: 4.27.0's CI failed on a TcpTap fact that waited for a count written before the line it read
     (fixed in 4.27.1), and a section another session added to `CLAUDE.md` inside the managed block had turned CI
     red on main (moved above the block, `1f667d1d`).
+  - R3 shipped as 4.30.0: every reader takes the compressed file, and `kronikol decode` writes the JSON one holds.
+    `LIST_CAPS_PLAN.md`'s R1 took 4.28.0 and `MISSING_ATTACHMENTS_PLAN.md`'s R4 and R3 took 4.28.1 and 4.29.0 the
+    same day, so R3 is 4.30.0, not the 4.28.0 §6.1 counted on. Where it differs from the plan:
+    - #154 stays open. Merge sweeps every `*.json` in a folder as before, and `*.krkl` besides, because §4.6's
+      allow-list (`*.krkl` and `*TestRunReport.json`) would drop a shard with a custom name without a word. Another
+      session's plan for #154, `MERGE_INPUTS_PLAN.md` (not on main), measured that and tells a shard by its content
+      instead. The choice between the two is the owner's. §5's "merge ignores a JSON attachment" is not tested, since
+      it does not hold.
+    - `summary`'s new member is `jsonBytes`, not `decodedBytes`, because `sizes` already gives `decodedBytes` the
+      meaning of every payload inflated; `sizes` gains `jsonBytes` too.
+    - `query.py` decodes in bounded steps rather than with the one-shot call, so it stops at the cap as the tool does.
+    - CodeQL keeps scanning the copy: `paths-ignore` does not take files out of a C# analysis that builds them (Q18).
+    - Rotation's two extensions, the schema text for version 3 and the test helper that reads any form come with R4,
+      the first release that makes them reachable. `merge -o <name>.krkl` is refused until merge has a writer.
+    - The copy needed four changes, not two. Besides internal types and renamed namespaces, `[InlineMethod.Inline]`
+      came out (ZstdSharp builds with InlineMethod.Fody, which Kronikol does not take), and so did
+      `[module: SkipLocalsInit]`, which compiled into `Kronikol.dll` would stop the runtime zeroing the locals of every
+      Kronikol method. Measured against the package the copy was imported from (ZstdSharp.Port 0.8.8), on BreakfastProvider's 4.5 MB of
+      report content at level 9 with the checksum, interleaved round by round: the frames are byte-identical, and the
+      copy takes 12% longer to write (32.9 ms against 29.5 ms, the median of 40 rounds) and 24% longer to read (3.6 ms
+      against 2.9 ms). On the 115 MB synthetic report the writes differ by 9% and the reads not at all. Both are small
+      beside a scan or a render, so the copy keeps the four changes; `[SkipLocalsInit]` on the copy's own types, and
+      `AggressiveInlining` where `[InlineMethod.Inline]` was, could win some of it back.
+    - The container rules §4.1 left open: the three reserved bytes are not read; a container version above 1 is
+      refused, naming it; a marker of the wrong length, or a decoded length that differs from the marker's, is damage;
+      any other skippable frame, or a bare zstd frame, is read as zstd, with the cap applied while decoding.
+  - Found on the way and fixed in R3: `sizes --json` wrote two `report` members (4.27.0), its totals shadowing the
+    envelope's path; a JSON report that starts with a byte order mark could not be queried; `--baseline` took a lone
+    `Run.json` for the report (F11); merge reported a shard it could not read as an output it could not write; and
+    `query.py` printed a traceback for a missing path. R3's first cut of F11 kept report names only, which broke the
+    wiki's "one `*.json`, whatever it is called"; the rule leaves out the files a run writes beside its report instead.
 
 ## Appendix A. Edit sites at `a8563d21`
 
@@ -1379,7 +1411,7 @@ Line numbers come from a read-only census of `origin/main`.
 | `src/Kronikol/Query/QueryCommand.Narrative.cs:787` | The HTML deep link strips `.krkl` as it strips `.json` |
 | `src/Kronikol.Tool/CtrfCommand.cs:73-95` (help `:69`, `:203`, `:211`) | Through `ResolveReport` and the decoded source |
 | `src/Kronikol.Tool/HistoryCommand.Maintenance.cs:166-181` (gate), `:497` (import) | Both extensions. Import also skips `runs/` and `baseline/` (§8) |
-| `src/Kronikol.Tool/MergeCommand.cs`: `ResolveInputFiles` `:277-348` (the schema skip `:286`, `*.json` `:301`), names `:351`, output `:234`, `:263`, errors `:116-124` | Inputs are `*.krkl` and `*TestRunReport.json`, not every `*.json` (#154). The output takes the format of the run options |
+| `src/Kronikol.Tool/MergeCommand.cs`: `ResolveInputFiles` `:277-348` (the schema skip `:286`, `*.json` `:301`), names `:351`, output `:234`, `:263`, errors `:116-124` | Inputs are `*.krkl` and `*TestRunReport.json`, not every `*.json` (#154; R3 sweeps `*.json` and `*.krkl`, §11). The output takes the format of the run options |
 | `src/Kronikol/Reports/Merge/MergeableReportReader.cs:24-29` (`File.ReadAllText`), `:32-67` | Reads the decoded text, and accepts `formatVersion` 3 with absent keys |
 | `src/Kronikol/Reports/RunSummaryConsoleWriter.cs`: find recipe `:630`, `QueryTargetFor` `:677-684`, `QueryableDataFile` `:789-790`, `IsDataFile` `:808-813` | `.krkl` is a data file and is queryable (F11) |
 | `RunSummaryConsoleWriter.cs:121-124`, `:159-162` (size), `:444` (the CI rule's reason), `:683` (`QueryTargetFor`) | The decoded size or none, the new reason, and `TestRunReport.krkl` exempted like `TestRunReport.json` (F26) |

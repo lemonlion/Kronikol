@@ -44,4 +44,9 @@
     <ProjectReference Include="..\Kronikol.Extensions.Otlp\Kronikol.Extensions.Otlp.csproj" />
   </ItemGroup>
 
+  <!-- Kronikol.dll carries a source copy of ZstdSharp, whose notices travel with it. -->
+  <ItemGroup>
+    <None Include="..\..\THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" Link="THIRD-PARTY-NOTICES.md" />
+  </ItemGroup>
+
 </Project>

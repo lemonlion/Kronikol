@@ -671,6 +671,9 @@ public static partial class QueryCommand
             (left, right) = (given, scanned);
         }
 
+        // The given side belongs to the command; the other is this verb's own to dispose.
+        using var other = ReferenceEquals(left, given) ? right : left;
+
         if (options.BodyAddress is { } bodyAddress)
             return CrossRunBodyDiff(left, right, bodyAddress, options, writer, error);
 

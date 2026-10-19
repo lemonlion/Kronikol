@@ -20,8 +20,23 @@ public static class MergeableReportReader
     /// </summary>
     public const int MergeableFormatVersion = 1;
 
-    /// <summary>Reads and parses a mergeable report from a file path.</summary>
-    public static MergeableReport ReadFile(string path) => Parse(File.ReadAllText(path));
+    /// <summary>
+    /// Reads and parses a mergeable report from a file path: JSON, or JSON compressed with zstd or gzip, told apart by its
+    /// first bytes as every reader of a report does (plans/REPORT_FORMAT_PLAN.md 4.4).
+    /// </summary>
+    public static MergeableReport ReadFile(string path)
+    {
+        using var file = File.OpenRead(path);
+        // A UTF-16 or UTF-32 file, which File.ReadAllText read before 4.30.0, still reads as text.
+        Span<byte> head = stackalloc byte[2];
+        if (file.ReadAtLeast(head, 2, throwOnEndOfStream: false) == 2 && (head[0], head[1]) is (0xFF, 0xFE) or (0xFE, 0xFF))
+            return Parse(File.ReadAllText(path));
+        file.Position = 0;
+
+        using var content = Kronikol.Compression.ReportFileFormat.Open(file);
+        using var reader = new StreamReader(content.Stream, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: false);
+        return Parse(reader.ReadToEnd());
+    }
 
     /// <summary>Parses a mergeable report from a JSON string.</summary>
     public static MergeableReport Parse(string json)
@@ -59,11 +74,12 @@ public static class MergeableReportReader
             if (formatVersion.ValueKind != JsonValueKind.Number || !formatVersion.TryGetInt32(out var shape))
                 throw new FormatException("This report declares a formatVersion that is not a number.");
 
-            // 2 is 1 with payloads that may be compressed in place (ReportPayloads), inflated below.
-            if (shape != ReportGenerator.ReportFormatVersion && shape != ReportPayloads.CompressedFormatVersion)
+            // 2 is 1 with payloads that may be compressed in place (ReportPayloads), inflated below; 3 is a compressed
+            // file's JSON, whose empty keys may be left out, which every helper below reads as null or empty.
+            if (!ReportPayloads.Reads(shape))
                 throw new FormatException(
                     $"This report declares formatVersion {shape}; this build of Kronikol understands " +
-                    $"{ReportGenerator.ReportFormatVersion} and {ReportPayloads.CompressedFormatVersion}. Upgrade Kronikol to merge it.");
+                    $"{ReportPayloads.ReadVersions}. Upgrade Kronikol to merge it.");
         }
 
         var features = new List<Feature>();

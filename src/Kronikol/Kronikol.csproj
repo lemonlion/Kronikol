@@ -8,6 +8,9 @@
          first for the capability query and carries most of the ~3M lifetime downloads (LLM_FIRST_PLAN H1). -->
     <Description>Kronikol, formerly TestTrackingDiagrams. Autogenerate PlantUML sequence diagrams from your component and acceptance tests. Tracks HTTP calls, database operations (Cosmos DB, SQL via EF Core), Redis commands, events/messages, and arbitrary method calls, then converts them into searchable HTML reports and structured data files.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <!-- For the ZstdSharp copy in Compression\Zstd alone, which is a translation of C and unsafe throughout; a fact
+         holds every other file free of unsafe code (plans/REPORT_FORMAT_PLAN.md 4.10). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -54,6 +57,17 @@
 	     builds carry none of it and are unchanged by it. -->
 	<ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
 		<Compile Remove="Query\**" />
+	</ItemGroup>
+
+	<!-- zstd for the report data file comes from a source copy of ZstdSharp below .NET 11, and from .NET's own
+	     ZstandardStream from .NET 11 on (plans/REPORT_FORMAT_PLAN.md 4.10). The copy is imported by
+	     tools/vendor-zstd and never edited by hand. -->
+	<ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0'))">
+		<Compile Remove="Compression\Zstd\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" Link="THIRD-PARTY-NOTICES.md" />
 	</ItemGroup>
 
 	<ItemGroup>

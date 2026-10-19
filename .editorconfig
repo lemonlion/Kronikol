@@ -19,6 +19,17 @@ trim_trailing_whitespace = false
 end_of_line = crlf
 
 # C# code style
+[src/Kronikol/Compression/Zstd/**.cs]
+# A source copy of ZstdSharp, imported by tools/vendor-zstd and never edited by hand.
+generated_code = true
+# Compiler warnings, which generated_code does not quiet: the copy's own doc comments (Kronikol builds its XML docs,
+# ZstdSharp does not), its unused locals and an obsolete call. Fixes belong upstream, not in the copy.
+dotnet_diagnostic.CS0168.severity = none
+dotnet_diagnostic.CS0219.severity = none
+dotnet_diagnostic.CS1570.severity = none
+dotnet_diagnostic.CS1723.severity = none
+dotnet_diagnostic.SYSLIB0054.severity = none
+
 [*.cs]
 dotnet_sort_system_directives_first = true
 csharp_new_line_before_open_brace = all

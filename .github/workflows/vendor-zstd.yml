@@ -1,0 +1,102 @@
+name: Vendor zstd
+
+# The source copy of ZstdSharp in src/Kronikol/Compression/Zstd (plans/REPORT_FORMAT_PLAN.md 4.10), which reads and writes
+# the compressed report file without making ZstdSharp a package dependency.
+# - On a pull request or a push that touches the copy or its import script: the copy must be exactly what the import
+#   makes of the release its VERSION names, so a hand edit fails here.
+# - Once a month, and by hand: compare VERSION with ZstdSharp's latest release; on a newer one, import it, build, run
+#   the zstd facts and open a pull request named for the release (it ships as a patch). Only a tagged release is ever
+#   imported, never the main branch. Opening the pull request needs "Allow GitHub Actions to create and approve pull
+#   requests" in the repository's Actions settings.
+# - The same run looks for security advisories on ZstdSharp.Port and on facebook/zstd, whose decoder fixes ZstdSharp
+#   ports, published after the copy was imported, and opens an issue for each one it has not opened before.
+
+on:
+  schedule:
+    - cron: "17 6 3 * *"
+  workflow_dispatch:
+  pull_request:
+    paths: ["src/Kronikol/Compression/Zstd/**", "tools/vendor-zstd/**"]
+  push:
+    branches: [main]
+    paths: ["src/Kronikol/Compression/Zstd/**", "tools/vendor-zstd/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: The copy is its release, changed by the import alone
+        run: python3 tools/vendor-zstd/vendor_zstd.py --check
+
+  sync:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Compare the copy with ZstdSharp's latest release
+        id: release
+        run: |
+          latest=$(gh api repos/oleg-st/ZstdSharp/releases/latest --jq .tag_name)
+          current=$(head -n 1 src/Kronikol/Compression/Zstd/VERSION | awk '{print $2}')
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          if [ "$latest" = "$current" ]; then echo "The copy is ZstdSharp $current, the latest release."; fi
+
+      - name: Import the newer release, build every target and run the zstd facts
+        if: steps.release.outputs.latest != steps.release.outputs.current
+        run: |
+          python3 tools/vendor-zstd/vendor_zstd.py --tag "${{ steps.release.outputs.latest }}"
+          dotnet build src/Kronikol --configuration Release
+          dotnet test tests/Kronikol.Tests --configuration Release --filter "FullyQualifiedName~Kronikol.Tests.Compression"
+
+      - name: Open a pull request for it
+        if: steps.release.outputs.latest != steps.release.outputs.current
+        run: |
+          tag="${{ steps.release.outputs.latest }}"
+          branch="vendor-zstd/$tag"
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+            echo "A pull request branch for ZstdSharp $tag exists already."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add src/Kronikol/Compression/Zstd
+          git commit -m "ZstdSharp $tag: the source copy imported from its release by tools/vendor-zstd (no other change)"
+          git push origin "$branch"
+          gh pr create --head "$branch" --title "ZstdSharp $tag" \
+            --body "The source copy of ZstdSharp moves from ${{ steps.release.outputs.current }} to $tag (https://github.com/oleg-st/ZstdSharp/releases/tag/$tag), imported by tools/vendor-zstd. Every target built and the zstd facts passed in the run that opened this. It ships in the next release as a patch, and the changelog entry names the release."
+
+      - name: Look for advisories newer than the copy
+        run: |
+          imported=$(git log -1 --format=%cI -- src/Kronikol/Compression/Zstd/VERSION)
+          {
+            gh api -X GET /advisories -f ecosystem=nuget -f affects=ZstdSharp.Port --paginate \
+              --jq '.[] | [.ghsa_id, .published_at, .summary, .html_url] | @tsv'
+            gh api /repos/facebook/zstd/security-advisories --paginate \
+              --jq '.[] | select(.state == "published") | [.ghsa_id, .published_at, .summary, .html_url] | @tsv' || true
+          } | while IFS=$'\t' read -r id published summary url; do
+            [ -z "$id" ] && continue
+            if [[ "$published" > "$imported" ]] && [ -z "$(gh issue list --state all --search "$id in:title" --json number --jq '.[].number')" ]; then
+              gh issue create --title "zstd advisory $id: $summary" \
+                --body "$url was published on $published, after the ZstdSharp copy in src/Kronikol/Compression/Zstd was imported ($imported). Check whether the copy's release has the fix; a fix ships as a patch."
+            fi
+          done

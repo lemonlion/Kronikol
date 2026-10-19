@@ -36,7 +36,7 @@ internal static partial class PayloadReader
     /// handle for a whole command; opening per body was measured at up to ~0.75 s per bulk command on a
     /// 130 MB report (plans/QUERY_PERF_PLAN.md §1.2). Single-shot call sites keep the path-opening overload.
     /// </summary>
-    public static string? Read(FileStream stream, Slice slice)
+    public static string? Read(Stream stream, Slice slice)
     {
         if (!slice.Exists)
             return null;
@@ -86,10 +86,18 @@ internal static partial class PayloadReader
         return Encoding.UTF8.GetString(raw);
     }
 
-    /// <summary>Every payload open comes through here so <see cref="ReportIndex.PayloadOpens"/> counts them all.</summary>
-    public static FileStream Open(ReportIndex index)
+    /// <summary>
+    /// Every payload open comes through here so <see cref="ReportIndex.PayloadOpens"/> counts them all. A compressed
+    /// report's payloads are read from the snapshot its scan decoded: one consistent copy, so the file being replaced
+    /// after the scan changes nothing (plans/REPORT_FORMAT_PLAN.md 4.4). A JSON report's are read from the file, which
+    /// must still be the one scanned.
+    /// </summary>
+    public static Stream Open(ReportIndex index)
     {
         index.PayloadOpens++;
+        if (index.Snapshot is { } snapshot)
+            return snapshot.OpenRead();
+
         FileStream stream;
         try
         {
@@ -127,7 +135,9 @@ internal static partial class PayloadReader
             return found;
 
         stream.Seek(start, SeekOrigin.Begin);
-        var length = (int)Math.Min(index.FileLength - start, 1 << 20);
+        // Bounded by the end of the JSON the offsets index: the decoded copy for a compressed file, which runs past the
+        // file's size on disk, or the file itself (F17).
+        var length = (int)Math.Min((index.Snapshot?.Length ?? index.FileLength) - start, 1 << 20);
         var raw = new byte[length];
         var got = stream.Read(raw, 0, length);
 
@@ -163,7 +173,7 @@ internal static partial class PayloadReader
         return found;
     }
 
-    private static long FindArrayStart(FileStream stream, long fromKeyToken)
+    private static long FindArrayStart(Stream stream, long fromKeyToken)
     {
         // Walk back over `{"key":` and the `[` that opens the header array. A short bounded scan: the
         // preamble is a handful of bytes and a malformed file simply yields no headers.

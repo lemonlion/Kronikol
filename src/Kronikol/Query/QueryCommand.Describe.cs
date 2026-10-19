@@ -33,7 +33,7 @@ public static partial class QueryCommand
             // package ships at one version, and still true when query.cs runs this without the tool.
             toolVersion = Kronikol.Reports.ReportGenerator.KronikolVersion.Split('+')[0],
             usage = "kronikol query <verb> <report> [addresses] [flags]",
-            report = "A TestRunReport.json, or the directory holding one. A directory holding several reports is refused, and they are listed.",
+            report = "A TestRunReport.json or TestRunReport.krkl, or the directory holding one. A directory holding several reports is refused, and they are listed.",
             envelope = new
             {
                 formatVersion = QueryWriter.JsonFormatVersion,

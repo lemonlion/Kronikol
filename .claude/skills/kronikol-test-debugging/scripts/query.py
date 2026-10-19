@@ -37,23 +37,121 @@ import sys
 BUDGET = 6000
 
 
-def load(path):
-    if os.path.isdir(path):
-        candidate = os.path.join(path, "TestRunReport.json")
-        if not os.path.exists(candidate):
-            # As the tool searches: runs/ holds earlier runs of the report above it, and baseline/ the copy --baseline
-            # compares against, so neither is a second report.
-            matches = []
-            for root, folders, names in os.walk(path):
-                folders[:] = [f for f in folders if f.lower() not in ("runs", "baseline")]
-                matches += [os.path.join(root, name) for name in names if name.endswith("TestRunReport.json")]
-            if len(matches) != 1:
-                die(f"{len(matches)} reports under {path} — name the one you mean")
-            candidate = matches[0]
-        path = candidate
+# The most a report may decode to, as the tool's: a small file from a fork's CI that decodes to more is refused.
+CAP = 4 << 30
+FORMATS = ("a report is JSON (starting with {, after a byte order mark or none), or that JSON compressed with zstd "
+           "(Kronikol's TestRunReport.krkl, or a bare zstd frame) or gzip")
 
-    with open(path, encoding="utf-8") as handle:
-        return path, inflate(json.load(handle))
+
+def load(path):
+    path = find(path)
+    data = read_report(path)
+    try:
+        return path, inflate(json.loads(data.decode("utf-8")))
+    except (UnicodeDecodeError, ValueError) as error:
+        die(f"{path} is not valid JSON: {error}")
+
+
+def find(path):
+    """The report a path names: a file, or the one report in a folder, as the tool finds it. TestRunReport.krkl or
+    TestRunReport.json at the top, the newer when both are there, else the one report below; runs/ holds earlier
+    runs of the report above it, and baseline/ the copy --baseline compares against, so neither is a second report."""
+    if not os.path.exists(path):
+        die(f"No such file or directory: {path}")
+    if not os.path.isdir(path):
+        return path
+    top = [os.path.join(path, name) for name in ("TestRunReport.krkl", "TestRunReport.json")
+           if os.path.exists(os.path.join(path, name))]
+    if top:
+        return max(top, key=os.path.getmtime)
+    reports = {}
+    for root, folders, names in os.walk(path):
+        folders[:] = [f for f in folders if f.lower() not in ("runs", "baseline")]
+        for name in names:
+            if name.lower().endswith(".krkl") or name.endswith("TestRunReport.json"):
+                stem = os.path.join(root, os.path.splitext(name)[0]).lower()
+                reports.setdefault(stem, []).append(os.path.join(root, name))
+    matches = [max(pair, key=os.path.getmtime) for pair in reports.values()]
+    if len(matches) != 1:
+        die(f"{len(matches)} reports under {path} — name the one you mean")
+    return matches[0]
+
+
+def read_report(path):
+    """The JSON a report file holds, told apart by its first bytes as the tool's reader does."""
+    with open(path, "rb") as handle:
+        data = handle.read()
+    head = data[:24]
+    if len(head) >= 12 and head[:4] == b"\x50\x2a\x4d\x18" and head[8:12] == b"KRKL":
+        # Kronikol's marker: a skippable frame naming the file, its container version and the decoded length.
+        if len(head) < 24 or int.from_bytes(head[4:8], "little") != 16:
+            die(f"{path}: it is damaged or truncated: Kronikol's marker at its start is not the 24 bytes it should be")
+        if head[12] > 1:
+            die(f"{path}: it was written by a newer Kronikol (container version {head[12]}; this script reads "
+                "version 1). Upgrade Kronikol.Tool.")
+        declared = int.from_bytes(head[16:24], "little", signed=True)
+        if declared < 0:
+            die(f"{path}: it is damaged or truncated: Kronikol's marker gives a negative length")
+        if declared > CAP:
+            die(f"{path}: it says it decodes to {declared:,} bytes, more than {CAP:,} bytes (4 GiB), the most a "
+                "report may decode to")
+        return zstd_report(path, data[24:], declared)
+    magic = int.from_bytes(head[:4], "little") if len(head) >= 4 else None
+    if magic is not None and (magic & 0xFFFFFFF0 == 0x184D2A50 or magic == 0xFD2FB528):
+        return zstd_report(path, data, None)
+    if head[:2] == b"\x1f\x8b":
+        return gzip_report(path, data)
+    json_text = data[3:] if data[:3] == b"\xef\xbb\xbf" else data
+    start = json_text.lstrip(b" \t\r\n")
+    if not start or start[:1] == b"{":
+        return json_text
+    die(f"{path}: it is not a report Kronikol reads: {FORMATS}")
+
+
+def zstd_report(path, data, declared):
+    try:
+        from compression import zstd
+    except ImportError:
+        die(f"{path} is compressed with zstd, which Python reads from 3.14 on (this is {sys.version.split()[0]}). "
+            "Use the tool: kronikol query, or dotnet run --file query.cs beside the report.")
+    out = bytearray()
+    try:
+        # Frame after frame, as a zstd decoder reads them, skippable ones stepped over; never past the cap.
+        while data:
+            decoder = zstd.ZstdDecompressor()
+            out += decoder.decompress(data, max_length=CAP + 1 - len(out))
+            while not decoder.eof and len(out) <= CAP:
+                if decoder.needs_input:
+                    die(f"{path}: it is damaged or truncated: its zstd frame ends early")
+                out += decoder.decompress(b"", max_length=CAP + 1 - len(out))
+            if len(out) > CAP:
+                die(f"{path}: it decodes to more than {CAP:,} bytes (4 GiB), the most a report may decode to")
+            data = decoder.unused_data
+    except zstd.ZstdError as error:
+        die(f"{path}: it is damaged or truncated: its zstd frame does not decode ({error})")
+    if declared is not None and len(out) != declared:
+        die(f"{path}: it is damaged or truncated: it decodes to {len(out):,} bytes, where Kronikol's marker says "
+            f"{declared:,}")
+    return bytes(out)
+
+
+def gzip_report(path, data):
+    import zlib
+    if len(data) < 18:
+        die(f"{path}: it is damaged or truncated: it is too short to be a gzip stream")
+    out = bytearray()
+    try:
+        decoder = zlib.decompressobj(wbits=31)
+        out += decoder.decompress(data, CAP + 1 - len(out))
+        while not decoder.eof and len(out) <= CAP:
+            if not decoder.unconsumed_tail:
+                die(f"{path}: it is damaged or truncated: its gzip stream ends before its trailer")
+            out += decoder.decompress(decoder.unconsumed_tail, CAP + 1 - len(out))
+        if len(out) > CAP:
+            die(f"{path}: it decodes to more than {CAP:,} bytes (4 GiB), the most a report may decode to")
+    except zlib.error as error:
+        die(f"{path}: it is damaged or truncated: its gzip stream does not decode ({error})")
+    return bytes(out)
 
 
 def inflate(report):

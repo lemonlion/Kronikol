@@ -135,13 +135,16 @@ never called — no payload needed to establish that.
 
 ### `sizes <report>`
 What fills the report file, for a report that outgrew a limit (GitHub's 100 MiB per file, an artifact quota):
-its bytes on disk and decoded, then one row per part, stored and decoded, with its share of the decoded total.
+its bytes on disk (and the JSON a compressed `.krkl` holds) and decoded, then one row per part, stored and decoded,
+with its share of the decoded total.
 The parts are `steps` (with how many of their bytes are keys holding null or an empty array), `calls`
 (everything in a call but its body), `bodies` (with how many there are and how many distinct), `diagrams`,
 `annotations`, `internal-flow segments` and `whole-test flow` (a mergeable file's), `whitespace` (outside
 strings) and `other`; every byte of the file is in exactly one. A payload stored compressed (`$z`) is charged
 what it stores and decodes to what it would take written as text. Then the ten largest scenarios, decoded,
-with their addresses. `--json`: `report`, one item per part (`storedBytes`, `decodedBytes`; `emptyKeyBytes`
+with their addresses. `--json`: `totals` (`file`, `bytesOnDisk`, `jsonBytes`, `decodedBytes`, `formatVersion`,
+`compressedPayloads`; named `report` in 4.27.0, where it hid the envelope's own `report`), one item per part
+(`storedBytes`, `decodedBytes`; `emptyKeyBytes`
 on steps; `count`, `distinct`, `distinctDecodedBytes` on bodies) and `largestScenarios`. Which calls carry
 the bytes: `interactions --group-by service,path --sort bytes`.
 
@@ -687,6 +690,14 @@ and the gate said `gate: passed`, the failure is one the ledger already knew abo
 file; `kronikol history doctor` explains a ledger that behaves oddly, and `kronikol history doctor
 <reports-dir>` (3.27.0) says which runs are kept under `runs/`, which is the newest failing one, and what
 an interrupted rotation left - whether or not history is on.
+
+## The JSON itself: `kronikol decode`
+
+`kronikol decode <report>` (4.30.0; run it alone for its options) writes the JSON a report file holds, from any form
+the query
+reads (a `TestRunReport.krkl` decoded), with every payload stored compressed (`$z`) written out as text: for a script or
+a `jq` recipe that needs the JSON itself. Never for answering a question about a run, which the verbs above do without
+it.
 
 ## Exit codes
 

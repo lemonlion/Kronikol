@@ -246,7 +246,8 @@ public static class MergeableReportRenderer
                 PointAttachmentsAtTheirShard(report, Path.GetDirectoryName(Path.GetFullPath(path)) ?? "");
                 reports.Add(report);
             }
-            catch (Exception exception) when (exception is FormatException or System.Text.Json.JsonException or ArgumentException)
+            catch (Exception exception) when (exception is FormatException or System.Text.Json.JsonException or ArgumentException
+                                                 or Kronikol.Compression.ReportDecodeException)
             {
                 throw new FormatException($"{path}: {exception.Message}", exception);
             }

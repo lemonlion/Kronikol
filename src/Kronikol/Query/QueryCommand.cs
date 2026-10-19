@@ -125,7 +125,7 @@ public static partial class QueryCommand
             // One verb answers without a report: the ledger holds the run a re-run overwrote (#81).
             if (command is not "history")
             {
-                error.WriteLine("No report given. Pass a TestRunReport.json, or a directory holding one.");
+                error.WriteLine("No report given. Pass a TestRunReport.json or TestRunReport.krkl, or a directory holding one.");
                 return 2;
             }
 
@@ -187,6 +187,8 @@ public static partial class QueryCommand
             return 1;
         }
 
+        // A compressed report's decoded copy lives as long as the command, and its temporary file, if it needed one, goes with it.
+        using var scanned = index;
         _lastKronikolVersion = index.KronikolVersion;
         AfterScan?.Invoke(resolved);
 
@@ -448,23 +450,20 @@ public static partial class QueryCommand
             return null;
         }
 
-        var direct = Path.Combine(path, "TestRunReport.json");
-        if (File.Exists(direct))
+        if (Newer(Path.Combine(path, "TestRunReport.krkl"), Path.Combine(path, "TestRunReport.json"), error) is { } direct)
             return direct;
 
         // A `baseline/` folder beside the report is the --baseline convention, not a second report:
         // without this, adopting the convention turns every directory lookup into an ambiguity.
         // Nor are the runs kept under `runs/`: they are earlier runs of the report above them, opened
         // with --run, and counted here they would make every lookup from a parent directory ambiguous.
-        var found = Directory.GetFiles(path, "*.json", SearchOption.AllDirectories)
-            .Where(f => Path.GetFileName(f).EndsWith("TestRunReport.json", StringComparison.OrdinalIgnoreCase)
-                        && !ReportFolders.IsReserved(path, f))
-            .ToArray();
+        var found = DistinctReports(Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories)
+            .Where(f => IsReportFile(f) && !ReportFolders.IsReserved(path, f)), error);
 
         switch (found.Length)
         {
             case 0:
-                error.WriteLine($"No TestRunReport.json under {path}.");
+                error.WriteLine($"No TestRunReport.json or TestRunReport.krkl under {path}.");
                 return null;
             case 1:
                 return found[0];
@@ -514,6 +513,38 @@ public static partial class QueryCommand
     internal const string BaselineFolderName = ReportFolders.BaselineFolderName;
 
     /// <summary>
+    /// A report data file by its name: a compressed one (<c>*.krkl</c>, named for <c>HtmlTestRunReportFileName</c>) or a
+    /// JSON one ending <c>TestRunReport.json</c>; never the run summary or the history line written beside one
+    /// (plans/REPORT_FORMAT_PLAN.md 4.4).
+    /// </summary>
+    internal static bool IsReportFile(string path) =>
+        path.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase)
+        || Path.GetFileName(path).EndsWith("TestRunReport.json", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The newer of two files that may both exist, saying which was taken when they do: a report written both ways,
+    /// which happens once, when the first <c>.krkl</c> is written beside the last <c>.json</c> (4.4).
+    /// </summary>
+    internal static string? Newer(string first, string second, TextWriter error)
+    {
+        var hasFirst = File.Exists(first);
+        var hasSecond = File.Exists(second);
+        if (!hasFirst || !hasSecond)
+            return hasFirst ? first : hasSecond ? second : null;
+
+        var (newer, older) = File.GetLastWriteTimeUtc(first) >= File.GetLastWriteTimeUtc(second) ? (first, second) : (second, first);
+        error.WriteLine($"{Path.GetDirectoryName(newer)} holds {Path.GetFileName(first)} and {Path.GetFileName(second)}: reading {Path.GetFileName(newer)}, the newer.");
+        return newer;
+    }
+
+    /// <summary>The report files among <paramref name="files"/>, a report written both ways counted once: the newer, named.</summary>
+    internal static string[] DistinctReports(IEnumerable<string> files, TextWriter error) =>
+        files.GroupBy(f => Path.Combine(Path.GetDirectoryName(f)!, Path.GetFileNameWithoutExtension(f)), StringComparer.OrdinalIgnoreCase)
+            .Select(pair => pair.Count() == 1 ? pair.Single() : Newer(pair.First(), pair.Last(), error)!)
+            .OrderBy(f => f, StringComparer.Ordinal)
+            .ToArray();
+
+    /// <summary>
     /// Finds the report a <c>--baseline</c> diff compares against: the conventional
     /// <c>&lt;reports&gt;/baseline/</c> folder beside the current report first, then
     /// <c>$KRONIKOL_BASELINE</c> (a file or a directory, resolved the same way any report path is).
@@ -522,15 +553,14 @@ public static partial class QueryCommand
     private static string? ResolveBaseline(ReportIndex index, Func<string, string?> getEnv, TextWriter error)
     {
         var folder = Path.Combine(index.Directory, BaselineFolderName);
-        var conventional = Path.Combine(folder, "TestRunReport.json");
-        if (File.Exists(conventional))
+        if (Newer(Path.Combine(folder, "TestRunReport.krkl"), Path.Combine(folder, "TestRunReport.json"), error) is { } conventional)
             return conventional;
 
         if (Directory.Exists(folder))
         {
-            var single = Directory.GetFiles(folder, "*.json", SearchOption.TopDirectoryOnly)
-                .Where(f => !f.EndsWith(".schema.json", StringComparison.OrdinalIgnoreCase))
-                .ToArray();
+            // One report, whatever it is called. Not a schema, nor what a run writes beside its report: those are JSON too,
+            // and a copied run folder's lone Run.json was taken for the baseline (F11).
+            var single = DistinctReports(Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly).Where(IsBaselineCandidate), error);
             if (single.Length == 1)
                 return single[0];
         }
@@ -544,10 +574,17 @@ public static partial class QueryCommand
             return null;
         }
 
-        error.WriteLine($"No baseline to compare against. Looked for {conventional}, and $KRONIKOL_BASELINE is not set.");
+        error.WriteLine($"No baseline to compare against. Looked for {Path.Combine(folder, "TestRunReport.json")} and its .krkl, and $KRONIKOL_BASELINE is not set.");
         error.WriteLine("Point $KRONIKOL_BASELINE at a report (or a directory holding one), name the older report (kronikol query diff <old.json> <new.json>), or a run kept under runs/ (kronikol query diff <report> --baseline-run last-failed).");
         return null;
     }
+
+    /// <summary>A file in the <c>baseline/</c> folder that may be its one report: a <c>*.krkl</c>, or a <c>*.json</c> that is not a schema or a file a run writes beside its report.</summary>
+    private static bool IsBaselineCandidate(string path) =>
+        path.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase)
+        || (path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+            && !path.EndsWith(".schema.json", StringComparison.OrdinalIgnoreCase)
+            && !ReportFolders.IsWrittenBesideAReport(Path.GetFileName(path)));
 
     /// <summary>Writes the <c>kronikol query</c> help: every verb, by group, with the flags it accepts.</summary>
     /// <param name="writer">Where the help goes.</param>
@@ -555,7 +592,7 @@ public static partial class QueryCommand
     {
         writer.WriteLine("kronikol query <command> <report> [args]   Debug a test run without reading the report.");
         writer.WriteLine();
-        writer.WriteLine("  <report> is a TestRunReport.json, or a directory holding one.");
+        writer.WriteLine("  <report> is a TestRunReport.json or TestRunReport.krkl, or a directory holding one.");
 
         // Rendered from the table --describe prints, so the help cannot list a verb the table lacks or
         // omit one it has. The lines themselves are the table's, verbatim.

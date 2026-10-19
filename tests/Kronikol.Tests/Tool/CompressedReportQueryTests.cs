@@ -133,13 +133,13 @@ public class CompressedReportQueryTests : IDisposable
     {
         var future = Path.Combine(_root, "future", "TestRunReport.json");
         Directory.CreateDirectory(Path.GetDirectoryName(future)!);
-        File.WriteAllText(future, File.ReadAllText(_compressed).Replace("\"formatVersion\": 2", "\"formatVersion\": 3", StringComparison.Ordinal));
+        File.WriteAllText(future, File.ReadAllText(_compressed).Replace("\"formatVersion\": 2", "\"formatVersion\": 4", StringComparison.Ordinal));
 
         var error = new StringWriter();
         var exit = QueryCommand.Run(["summary", future], new StringWriter(), error);
 
         Assert.Equal(1, exit);
-        Assert.Contains("formatVersion 3", error.ToString(), StringComparison.Ordinal);
+        Assert.Contains("formatVersion 4", error.ToString(), StringComparison.Ordinal);
     }
 
     // ─── Running ───────────────────────────────────────────────

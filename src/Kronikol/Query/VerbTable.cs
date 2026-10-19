@@ -87,7 +87,7 @@ internal static class VerbTable
         new("--request", null, "On values: read the request bodies instead of the responses."),
         new("--both", null, "On values: read both halves of every call."),
         new("--number", null, "On grep: match numbers across formatting - 4,173.00, 4173 and 4.173,00 are one number."),
-        new("--baseline", null, "On diff: compare the report against last-green, found at <reports>/baseline/TestRunReport.json or $KRONIKOL_BASELINE."),
+        new("--baseline", null, "On diff: compare the report against last-green, found at <reports>/baseline/TestRunReport.json (or .krkl) or $KRONIKOL_BASELINE."),
         new("--baseline-run", "ID", "On diff: compare the report against a run kept under <reports>/runs/, named as --run names one: a run id, a substring only one id has, its folder name, last-failed or previous."),
         new("--describe", null, "Print the verbs, their flags, the address forms and the exit codes as JSON; needs no report."),
         new("--history", "FILE", "On history: the ledger to read, instead of $KRONIKOL_HISTORY or the .kronikol/history.jsonl above the report."),

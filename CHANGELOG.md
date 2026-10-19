@@ -4,6 +4,80 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.30.0] - 2026-10-19
+
+**Minor - a new report file format read, and a new command, `kronikol decode` (`plans/REPORT_FORMAT_PLAN.md` R3).** A
+format accepted and a verb added are new things for a consumer to use, so the minor part moves (4.29 to 4.30). No
+package dependency is added: zstd comes from a source copy of ZstdSharp compiled into `Kronikol.dll`.
+
+### Added
+
+- **Every reader of a report data file reads the compressed `TestRunReport.krkl`.** `kronikol query` (its `diff`
+  included), `ctrf`, `history gate` and `history import`, `merge`, and the skill's `query.py` tell a file's form from
+  its first bytes, whatever its name:
+  - Kronikol's 24-byte marker (a zstd skippable frame naming the file and its decoded length), then one zstd frame;
+  - a bare zstd frame, as the `zstd` tool writes one;
+  - gzip, as Kronikol4J will write the file;
+  - JSON, with or without a UTF-8 byte order mark, as every report written so far.
+
+  Anything else is refused with the formats named. `formatVersion` 3, the JSON a compressed file holds, whose empty
+  keys may be left out, is read by every gate, and a version 3 file from another writer is read as carrying step
+  attribution. A file that would decode past 4 GiB is refused, before anything is decoded when its marker says so,
+  and a damaged or truncated one is one error that says so, from every command. A compressed report is decoded once
+  per command, on the scanning thread; payloads are read from that copy, held in memory up to 256 MiB and in a
+  temporary file above it that is deleted when the command ends, so a file replaced after the scan changes no answer.
+  Every lookup takes `*.krkl` as it takes `*TestRunReport.json`, and when a folder holds a report written both ways the
+  newer is read and named. Nothing writes the format yet: the writer comes with a separate option in a later release,
+  so that every tool that can meet a `.krkl` reads it first.
+- **`kronikol decode <report> [-o <file>] [--indent]`** writes the JSON a report file holds, from any form, with every
+  payload stored compressed (`$z`) written out as text: the supported route for a script or a `jq` recipe that needs the
+  JSON itself. One forward pass; a report is never held whole.
+- **`summary` and `sizes` give `jsonBytes`**, the JSON a file holds (decoded from a `.krkl`, the file itself for a
+  `.json`); their text names it beside the size on disk for a compressed file.
+- **`query.py` reads gzip on any Python and zstd on Python 3.14 or later**, decoding in bounded steps so it stops at the
+  cap as the tool does; an older Python is told to use the tool or `query.cs`. A parity fact holds it to accepting and
+  refusing exactly what the tool does.
+- **The ZstdSharp copy.** `src/Kronikol/Compression/Zstd` is ZstdSharp 0.8.8, imported by `tools/vendor-zstd`, whose
+  only changes are its types made internal, its namespaces renamed, and two attributes removed that belong to its own
+  build (`[InlineMethod.Inline]`, which needs InlineMethod.Fody, and `[module: SkipLocalsInit]`, which in
+  `Kronikol.dll` would stop the runtime zeroing the locals of every Kronikol method). `THIRD-PARTY-NOTICES.md` holds
+  ZstdSharp's MIT and zstd's BSD-3-Clause notices and is packed into `Kronikol` and `Kronikol.Tool`. A workflow checks
+  that the copy is still exactly its import on every change to it, and once a month opens a pull request for a newer
+  ZstdSharp release and an issue for any advisory on ZstdSharp.Port or zstd published after the copy was imported.
+
+### Fixed
+
+- **`sizes --json` wrote two `report` members** (4.27.0): its totals shadowed the envelope's own `report`, the file's
+  path, so a reader of `.report` got one or the other depending on its parser. The totals are now `totals`; a script
+  that read `.report.bytesOnDisk` reads `.totals.bytesOnDisk`. A fact now holds every `--json` answer to naming each
+  envelope member once.
+- **A JSON report that starts with a byte order mark could not be queried**: the scanner refused it as not valid JSON.
+  It is read, with every offset as before.
+- **`--baseline` could take a run summary for the baseline report** (F11). The rule that takes a `baseline/` folder's
+  one report whatever it is called counted every `*.json`, so a folder holding a copied run's `Run.json` alone was
+  compared against as a report, and a renamed report beside its `Run.json` and `History.run.json` found no baseline. It
+  now leaves out a schema and the files a run writes beside its report, and takes a `*.krkl` as well.
+- **`merge` reported a shard it could not read as an output it could not write** ("Could not write
+  TestRunReport.html"). It says it could not read the report, and a damaged compressed shard is named like a malformed
+  one.
+- **`query.py` printed a traceback for a path that does not exist.** It says so and exits 2, as the tool does.
+
+### Notes
+
+- Against the plan: #154 stays open. Merge keeps sweeping every `*.json` in a folder and adds `*.krkl`, because the
+  plan's allow-list (`*.krkl` and `*TestRunReport.json`) would drop a shard with a custom name without a word, which
+  `MERGE_INPUTS_PLAN.md` measured; that plan closes #154 another way, and the choice between them is the owner's.
+- Against the plan: `summary`'s new member is `jsonBytes`, not `decodedBytes`, since `sizes` already gives
+  `decodedBytes` the meaning of every payload inflated. `query.py` decodes zstd in bounded steps rather than with the
+  one-shot call, so it can stop at the cap. CodeQL keeps scanning the copy, because `paths-ignore` does not take files
+  out of a C# analysis that builds them. Rotation's two extensions, the schema text for version 3 and the test helper
+  that reads any form come with the writer (R4), the release that first makes them reachable.
+- The copy, measured against the package it was imported from on BreakfastProvider's 4.5 MB of report content at
+  level 9: the frames are byte-identical, and the copy takes 12% longer to write (32.9 ms against 29.5 ms, the median
+  of 40 rounds) and 24% longer to read (3.6 ms against 2.9 ms), small beside a scan or a render.
+- The container: the marker's three reserved bytes are not read, a container version above 1 is refused with the
+  version named, and a marker of the wrong length, or a decoded length that differs from the marker's, is damage.
+
 ## [4.29.0] - 2026-10-19
 
 **Minor - an attachment the report does not hold says so wherever it is read (`plans/MISSING_ATTACHMENTS_PLAN.md` R3,

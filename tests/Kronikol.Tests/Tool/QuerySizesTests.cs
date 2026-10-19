@@ -406,7 +406,7 @@ public class QuerySizesTests : IDisposable
         var parts = items.ToDictionary(i => i.GetProperty("part").GetString()!,
             i => new Part(i.GetProperty("storedBytes").GetInt64(), i.GetProperty("decodedBytes").GetInt64()));
         var bodies = items.Single(i => i.GetProperty("part").GetString() == "bodies");
-        return new Measured(root.GetProperty("report"), items, parts, bodies, root.GetProperty("largestScenarios").EnumerateArray().ToList());
+        return new Measured(root.GetProperty("totals"), items, parts, bodies, root.GetProperty("largestScenarios").EnumerateArray().ToList());
     }
 
     private static string Query(IReadOnlyList<string> args)

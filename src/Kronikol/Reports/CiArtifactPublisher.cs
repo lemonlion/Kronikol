@@ -15,7 +15,7 @@ public static class CiArtifactPublisher
         => Publish(reportFilePaths, environment, artifactName, retentionDays,
             Environment.GetEnvironmentVariable, File.AppendAllText, Console.WriteLine, File.Exists);
 
-    private static readonly string[] PublishedExtensions = [".html", ".yml", ".md", ".json", ".jsonl", ".xml"];
+    private static readonly string[] PublishedExtensions = [".html", ".yml", ".md", ".json", ".jsonl", ".xml", ".krkl"];
 
     /// <summary>
     /// The files at the top of a reports directory that a run or a merge hands the upload: the report outputs

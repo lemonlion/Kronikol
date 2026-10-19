@@ -70,6 +70,7 @@ internal static partial class HistoryCommand
 
         if (LoadReport(args.Inputs[0], error) is not { } index)
             return 2;
+        using var loaded = index;
 
         var ledgerPath = Locate(args.Ledger, index.Directory, getEnv, error, mustExist: true);
         if (ledgerPath is null)
@@ -464,7 +465,7 @@ internal static partial class HistoryCommand
         {
             error.WriteLine(args.FromCtrf ? "No CTRF document found under the inputs (a *.json with reportFormat CTRF)."
                 : args.FromAllure ? "No Allure results found under the inputs (*-result.json)."
-                : "No TestRunReport.json found under the inputs.");
+                : "No TestRunReport.json or TestRunReport.krkl found under the inputs.");
             return failed > 0 ? 1 : 2;
         }
 
@@ -494,13 +495,14 @@ internal static partial class HistoryCommand
         var files = File.Exists(full)
             ? [full]
             : Directory.Exists(full)
-                ? Directory.GetFiles(full, "*.json", SearchOption.AllDirectories).Where(f => Path.GetFileName(f).EndsWith("TestRunReport.json", StringComparison.OrdinalIgnoreCase)).OrderBy(f => f, StringComparer.Ordinal).ToArray()
+                ? QueryCommand.DistinctReports(Directory.EnumerateFiles(full, "*", SearchOption.AllDirectories).Where(QueryCommand.IsReportFile), error)
                 : throw new FileNotFoundException($"not found: {input}");
 
         foreach (var file in files)
         {
             if (LoadReport(file, error) is not { } index)
                 continue;
+            using var loaded = index;
             if (!ReportHistory.TryBuild(index, args.Suite, error, out var roster, out var run, out _, out var shapes))
                 continue;
             yield return (roster, run with { Branch = args.Branch ?? run.Branch, Id = args.RunId ?? run.Id }, shapes);

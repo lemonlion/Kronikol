@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using Kronikol.Compression;
 using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Tool;
@@ -152,6 +153,86 @@ public class QueryStreamingTests : IDisposable
                 $"{command} produced {Encoding.UTF8.GetByteCount(output.ToString())} bytes");
         }
     }
+
+    // ─── A compressed report (plans/REPORT_FORMAT_PLAN.md section 5, R3, F24) ─────
+
+    [Fact]
+    public void A_compressed_report_s_scan_costs_a_fraction_of_its_decoded_size_beside_the_copy_it_keeps()
+    {
+        var json = Synthesize("Streamed.json", scenarios: 30, callsEach: 20, fillerFields: 150);
+        var krkl = Compressed(json);
+        var decoded = new FileInfo(json).Length;
+
+        var allocated = CostOfScanning(krkl);
+
+        // The decoded copy is held once, as bytes, in whole chunks; everything else the scan takes is the index and
+        // the decoder's own buffers, which stay under the third the JSON scan is held to.
+        var copy = Chunks(decoded);
+        Assert.True(allocated - copy < decoded / 3,
+            $"beside its {copy / (1024 * 1024)} MB copy, scanning a {decoded / (1024 * 1024)} MB compressed report allocated {(allocated - copy) / (1024 * 1024)} MB");
+        Assert.True(allocated <= decoded + decoded / 3 + ReportSnapshot.ChunkSize,
+            $"scanning a {decoded / (1024 * 1024)} MB compressed report allocated {allocated / (1024 * 1024)} MB in all: the copy is held more than once");
+    }
+
+    [Fact]
+    public void What_a_compressed_report_s_scan_costs_beside_its_copy_tracks_the_number_of_interactions()
+    {
+        var small = Compressed(Synthesize("Small.json", scenarios: 10, callsEach: 10, fillerFields: 10));
+        var large = Compressed(Synthesize("Large.json", scenarios: 10, callsEach: 10, fillerFields: 400));
+
+        var smallCost = CostOfScanning(small) - Chunks(new FileInfo(Path.ChangeExtension(small, ".json")).Length);
+        var largeCost = CostOfScanning(large) - Chunks(new FileInfo(Path.ChangeExtension(large, ".json")).Length);
+
+        Assert.True(largeCost < Math.Max(smallCost, 1) * 2 + ReportSnapshot.ChunkSize,
+            $"beside the copy, the scan's cost grew from {smallCost / 1024} KB to {largeCost / 1024} KB with the bodies");
+    }
+
+    [Fact]
+    public void Above_the_memory_limit_nothing_is_held_and_the_temporary_file_is_gone_afterwards()
+    {
+        var json = Synthesize("Spilled.json", scenarios: 30, callsEach: 20, fillerFields: 150);
+        var krkl = Compressed(json);
+        var decoded = new FileInfo(json).Length;
+        ReportSnapshot.MemoryLimitForTests.Value = 1 << 20;
+        try
+        {
+            CostOfScanning(krkl);
+            string spilled;
+            var before = GC.GetAllocatedBytesForCurrentThread();
+            using (var index = ReportScanner.Scan(krkl))
+            {
+                var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+                Assert.NotNull(index.Snapshot!.SpillPath);
+                Assert.True(File.Exists(index.Snapshot.SpillPath));
+                Assert.True(allocated < decoded / 3 + (1 << 20),
+                    $"with the copy in a temporary file, scanning a {decoded / (1024 * 1024)} MB compressed report still allocated {allocated / (1024 * 1024)} MB");
+                spilled = index.Snapshot.SpillPath;
+            }
+            Assert.False(File.Exists(spilled), "the temporary file outlived the index");
+
+            // And through the command, which disposes its index when it ends.
+            var leftBefore = Directory.GetFiles(Path.GetTempPath(), "kronikol-*.json").ToHashSet();
+            var output = new StringWriter();
+            var error = new StringWriter();
+            Assert.Equal(0, QueryCommand.Run(["summary", krkl], output, error));
+            Assert.Empty(Directory.GetFiles(Path.GetTempPath(), "kronikol-*.json").Where(path => !leftBefore.Contains(path)));
+        }
+        finally
+        {
+            ReportSnapshot.MemoryLimitForTests.Value = null;
+        }
+    }
+
+    /// <summary>The report as a <c>.krkl</c> beside it, made with the copy as section 4.1 lays it out.</summary>
+    private static string Compressed(string json)
+    {
+        var krkl = Path.ChangeExtension(json, ".krkl");
+        File.WriteAllBytes(krkl, Compression.ReportFileFormatTests.Krkl(File.ReadAllBytes(json)));
+        return krkl;
+    }
+
+    /// <summary>What the snapshot's chunks take for <paramref name="bytes"/> decoded bytes.</summary>
+    private static long Chunks(long bytes) => (bytes + ReportSnapshot.ChunkSize - 1) / ReportSnapshot.ChunkSize * ReportSnapshot.ChunkSize;
 
     /// <summary>Allocation on this thread for one scan, with the JIT and the statics already warm.</summary>
     private static long CostOfScanning(string report)

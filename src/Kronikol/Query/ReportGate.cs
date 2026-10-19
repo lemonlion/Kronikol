@@ -32,7 +32,7 @@ internal static class ReportGate
         {
             error.WriteLine(
                 $"{path} is not a Kronikol report: it has no `features` array at the root. "
-                + "Point at a TestRunReport.json, or the directory holding one.");
+                + "Point at a TestRunReport.json or TestRunReport.krkl, or the directory holding one.");
             return 1;
         }
 
@@ -41,13 +41,12 @@ internal static class ReportGate
         // produces a confident wrong answer rather than an error, which is what the field exists to stop.
         // 2 is 1 with payloads that may be compressed in place (Kronikol.Reports.ReportPayloads), which the
         // scanner and PayloadReader read as they read the plain form.
-        if (index.FormatVersion is { } format
-            && format != Kronikol.Reports.ReportGenerator.ReportFormatVersion
-            && format != Kronikol.Reports.ReportPayloads.CompressedFormatVersion)
+        // 3 is the JSON of a compressed report file, whose empty keys may be left out (plans/REPORT_FORMAT_PLAN.md 4.2).
+        if (index.FormatVersion is { } format && !Kronikol.Reports.ReportPayloads.Reads(format))
         {
             error.WriteLine(format == ReportScanner.UnreadableVersion
                 ? $"{path} declares a formatVersion that is not a number. It is not a Kronikol report this tool can read."
-                : $"{path} declares formatVersion {format}; this tool understands {Kronikol.Reports.ReportGenerator.ReportFormatVersion} and {Kronikol.Reports.ReportPayloads.CompressedFormatVersion}. Upgrade Kronikol.Tool.");
+                : $"{path} declares formatVersion {format}; this tool understands {Kronikol.Reports.ReportPayloads.ReadVersions}. Upgrade Kronikol.Tool.");
             return 1;
         }
 
