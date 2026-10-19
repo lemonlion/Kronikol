@@ -80,6 +80,10 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   showing and says how many it leaves out; the bars are drawn to the longest one showing; with the warm-up hidden a
   bar and its time are the scenario's own. A failed scenario's row opens with a cross, the timeline takes the theme's
   colours, and a bypassed scenario's bar is blue, as the run's ring draws it (orange before).
+- **The Components tab has its controls.** Where the page draws the diagram: Show Filtered (the start) or Full,
+  Direction Left to right (the start) or Top to bottom, and Call summaries Shown (the start) or Hidden. Filtered draws
+  the components and connections used by the scenarios the filters leave showing, read from the run's calls rather
+  than matched by name, and a note says how many scenarios it follows.
 
 ### Changed (breaking)
 
@@ -228,6 +232,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   along its bottom edge in place of 4.x's spinner.
 - **The payload controls and the diagrams' card take Option C's look,** in the report's bar and in each scenario's
   settings. On a phone each bar is a sheet, its zones (Payloads, Format, Toggle) one under another.
+- **The component diagram's title heads the Components tab and leaves its drawing.** `ComponentDiagramOptions.Title`
+  is the tab's heading under every renderer; `ComponentDiagram.html` still draws it. A run whose calls give the diagram
+  no connection has no Components tab, where it drew the title alone.
 
 ### Fixed
 

@@ -1650,8 +1650,9 @@
         /* The Scenario Timeline, the Timeline tab's card (5.0.0, plans/OPTION_C_PLAN.md S11, D27): the header line holds the
            title and the controls (Show; Warm-up and Order where a row paid a first-call warm-up), the note under it says
            what Filtered leaves out, and every colour is a token. A failed row's name opens with the cross a failed
-           scenario's heading shows, so the failure is not told by its colour alone. */
-        .scenario-timeline {
+           scenario's heading shows, so the failure is not told by its colour alone. The Components tab's card is the same
+           card, with the same header line, controls and note (S11, D26, D28). */
+        .scenario-timeline, .component-diagram-section {
             margin: 0 0 14px;
             border: 1px solid var(--kron-hairline);
             border-radius: 12px;

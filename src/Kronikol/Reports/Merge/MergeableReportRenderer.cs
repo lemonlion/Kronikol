@@ -57,16 +57,20 @@ public static class MergeableReportRenderer
 
         var hasInternalFlow = report.InternalFlowSegments.Count > 0 || report.WholeTestFlow.Count > 0;
 
-        string? componentDiagramPlantUml = null;
+        EmbeddedComponentDiagram? componentDiagram = null;
         if (report.ComponentRelationships.Length > 0)
         {
             var componentOptions = options.ComponentDiagramOptions ?? new ComponentDiagramOptions();
             // The report's colours when the component options name none, as the run report and ComponentDiagram.html
             // take them: a merged report drew the default palette for the same options.
             componentOptions.DependencyColors ??= options.DependencyColors;
-            // Browser-rendered reports use the non-C4 PlantUML dialect.
-            componentDiagramPlantUml = ComponentDiagramGenerator.GeneratePlantUml(report.ComponentRelationships, componentOptions, useC4: false);
+            // Browser-rendered reports use the non-C4 PlantUML dialect, drawn as a run's Components tab draws it (5.0.0,
+            // plans/OPTION_C_PLAN.md S11, D28): its Show control only where the shards carried the calls that say which
+            // scenarios made each connection's.
+            componentDiagram = ComponentDiagramGenerator.GenerateEmbedded(report.ComponentRelationships, componentOptions, useC4: false,
+                logs: report.Interactions.Length > 0 ? report.Interactions : null);
         }
+        var componentDiagramPlantUml = componentDiagram?.PlantUml;
 
         var internalFlowDataScript = BuildInternalFlowDataScript(report, options, componentDiagramPlantUml);
 
@@ -105,6 +109,7 @@ public static class MergeableReportRenderer
             wholeTestVisualization: report.WholeTestVisualization,
             ciMetadata: report.CiMetadata,
             componentDiagramPlantUml: componentDiagramPlantUml,
+            componentDiagram: componentDiagram,
             precomputedWholeTestContent: report.WholeTestFlow.Count > 0 ? report.WholeTestFlow : null,
             browserRenderWorkers: options.BrowserRenderWorkers,
             browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes,

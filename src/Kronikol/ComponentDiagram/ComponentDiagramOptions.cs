@@ -13,7 +13,10 @@ public record ComponentDiagramOptions
     /// <summary>When <c>true</c>, the component diagram is embedded in the test run report. Default: <c>true</c>.</summary>
     public bool EmbedInTestRunReport { get; set; } = true;
 
-    /// <summary>Title displayed above the component diagram. Default: <c>"Component Diagram"</c>.</summary>
+    /// <summary>
+    /// The component diagram's title: drawn above it in ComponentDiagram.html and, since 5.0.0, the heading of the run
+    /// report's Components tab, whose drawing leaves it out. Default: <c>"Component Diagram"</c>.
+    /// </summary>
     public string Title { get; set; } = "Component Diagram";
 
     /// <summary>

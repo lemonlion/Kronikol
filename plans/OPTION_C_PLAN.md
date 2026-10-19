@@ -916,3 +916,36 @@ decision of the owner's, not part of this plan.
   (`checks/mutate-s11g.py`).
   Checks: the diagnostics' neighbours pass, 29 of 29 (the DiagnosticsCard, Diagnostic, ReportTabs, LabsPage and
   ReportSectionWidth classes).
+- 2026-10-19, S11e: the Components tab's heading and controls (D26, D28; the preview's `c-layout.js` 452-555 and
+  569-576, `c-round9.js` 94-102, `c-extra.css` 103 and `c-round4.css` 9), prepared in the session's scratch and
+  applied on the merge of origin/main (`9bb77de6`) with `edits/scripts-s11e.py` and `edits/tests-s11e.py`. The tab is
+  headed by `ComponentDiagramOptions.Title` ("Component Diagram" when blank) with the timeline's info mark, and the
+  run report's drawing leaves the title out (`ComponentDiagramGenerator.GenerateEmbedded`; `ComponentDiagram.html`
+  keeps it, and `GeneratePlantUml`'s bytes are unchanged). Where the page draws the diagram the tab has S11d's
+  segmented groups: Show (Filtered or Full), Direction (Left to right or Top to bottom) and Call summaries (Shown or
+  Hidden), with S11d's note while Filtered draws less than the whole run. Filtered follows which scenarios made each
+  connection's calls, read from the run's calls (`DrawnCalls`, the filter `ExtractRelationships` used, and `TestsOf`)
+  and handed to the page as a JSON model of the source's lines and the scenarios' stable ids, so nothing is matched by
+  name. `report-components-script.js` (new) builds each form from the original in `puml-data`, hands the first to the
+  renderer before it draws, so a link's filters reach the first drawing, and draws later forms out of sight and swaps
+  them in, dropping a render a newer one overtook; a change while the tab is hidden is drawn when it opens. A run
+  whose calls give the diagram no connection has no Components tab. `kronikol merge` builds the model from the shards'
+  calls when they carried any, and has Show only then.
+  Deviations: the configured title is the heading (the preview's was fixed); no `_preProcessSource` hook (pages that
+  draw when the report is written do not load collapsible-notes, and every toggle skips this diagram); no patterns
+  over drawn labels; no emptying before a redraw; "the 1 scenario" in the singular; the counts sentence only while the
+  counts show. Not ported: the preview's two `.component-header` rules, which cancel out.
+  Tests: core `ComponentsTabHtmlTests` (new, 12 facts, 14 cases) and Playwright `ComponentsTabTests` (new, 11 facts,
+  12 cases); `OnDemandRenderingReportTests`' Server panel fact is rewritten to decode both image addresses and hold
+  them equal but for the title line. Red with the tests and the generator stage applied: the core class 12 of 14 (its
+  two generator facts pass, their red being the missing members) and the rewritten fact, and the Playwright class 12
+  of 12. Two test faults found on the way and fixed before green: the renderer theory's Local case asked for Svg files
+  with no image directory, which throws whatever the report holds (now Base64Svg for Local), and the head check found
+  the "</head>" that `report-export-function.js` carries in its text (now read from the parsed head). Green: the core
+  class with every `OnDemandRenderingReportTests` fact, 32 of 32, and the Playwright class, 12 of 12. Owner questions
+  (six): the configured title as the heading; no tab for a run with no connection; the empty-state wording; Copy
+  source giving the form drawn; no start option; the title left out under NodeJs, Server and Local. Mutations: 18 of
+  18 core mutations killed, the 11 Playwright ones to run with S11's full suites once the other sessions' Playwright
+  runs end (`checks/mutate-s11e.py`; the drop of a render that lands after a newer one has no deterministic browser
+  fact and is held by `checks/components-script-check.js` under node, which three mutations of the script each fail).
+  Checks: The full suites run on v5 with this commit and the 11 Playwright mutations, recorded with S11's status.

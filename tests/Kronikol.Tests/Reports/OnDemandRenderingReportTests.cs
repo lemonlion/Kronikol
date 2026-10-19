@@ -111,7 +111,7 @@ public class OnDemandRenderingReportTests : IDisposable
     }
 
     [Fact]
-    public void Under_server_rendering_the_panel_is_the_servers_image_the_standalone_page_shows()
+    public void Under_server_rendering_the_panel_is_the_servers_image_of_the_standalone_pages_diagram_without_its_title()
     {
         var html = RunReport(o =>
         {
@@ -123,8 +123,34 @@ public class OnDemandRenderingReportTests : IDisposable
 
         var src = Regex.Match(Panel(html), "<img src=\"([^\"]+)\" alt=\"Component diagram\"").Groups[1].Value;
         Assert.StartsWith("https://plantuml.example/plantuml/svg/", src);
-        var standalone = File.ReadAllText(Path.Combine(_dir, "ComponentDiagram.html"));
-        Assert.Contains($"<img src=\"{src}\"", standalone);
+        var standalone = Regex.Match(File.ReadAllText(Path.Combine(_dir, "ComponentDiagram.html")),
+            "<img src=\"(https://plantuml\\.example/plantuml/svg/[^\"]+)\"").Groups[1].Value;
+        // Since 5.0.0 the Components tab's heading carries the diagram's title, so the panel's drawing leaves it out
+        // (plans/OPTION_C_PLAN.md S11, D26): it is the standalone page's diagram, which keeps the title, but for that line.
+        var drawn = ServerSource(src);
+        var shown = ServerSource(standalone);
+        Assert.DoesNotMatch(new Regex("^title ", RegexOptions.Multiline), drawn);
+        Assert.Matches(new Regex("^title Component Diagram\r?$", RegexOptions.Multiline), shown);
+        Assert.Equal(Regex.Replace(shown, @"^title [^\r\n]*\r?\n\r?\n", "", RegexOptions.Multiline), drawn);
+    }
+
+    /// <summary>The PlantUML source a server address carries: the encoder's alphabet read back to bytes
+    /// (<see cref="Kronikol.PlantUml.PlantUmlTextEncoder"/>), then inflated.</summary>
+    private static string ServerSource(string address)
+    {
+        const string alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
+        var digits = address[(address.LastIndexOf('/') + 1)..].Select(c => alphabet.IndexOf(c)).ToArray();
+        Assert.DoesNotContain(-1, digits);
+        var bytes = new List<byte>();
+        for (var i = 0; i + 3 < digits.Length; i += 4)
+        {
+            bytes.Add((byte)(digits[i] << 2 | digits[i + 1] >> 4));
+            bytes.Add((byte)((digits[i + 1] & 0xF) << 4 | digits[i + 2] >> 2));
+            bytes.Add((byte)((digits[i + 2] & 0x3) << 6 | digits[i + 3]));
+        }
+        using var inflate = new System.IO.Compression.DeflateStream(new MemoryStream(bytes.ToArray()), System.IO.Compression.CompressionMode.Decompress);
+        using var reader = new StreamReader(inflate, Encoding.UTF8);
+        return reader.ReadToEnd();
     }
 
     /// <summary>

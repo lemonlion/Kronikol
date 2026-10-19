@@ -55,6 +55,25 @@ public static partial class ComponentDiagramGenerator
         IEnumerable<RequestResponseLog> logs,
         Func<string, bool>? participantFilter = null)
     {
+        var groups = DrawnCalls(logs, participantFilter).GroupBy(log => (log.CallerName, log.ServiceName, Protocol: GetProtocol(log)));
+
+        return groups.Select(g =>
+        {
+            var methods = new HashSet<string>(g.Select(log => GetMethodName(log)));
+            var callCount = g.Count();
+            var testCount = g.Select(log => log.TestId).Distinct().Count();
+            var dependencyCategory = g.Select(log => log.DependencyCategory).FirstOrDefault(c => c is not null);
+            return new ComponentRelationship(g.Key.CallerName, g.Key.ServiceName, g.Key.Protocol, methods, callCount, testCount, dependencyCategory);
+        }).ToArray();
+    }
+
+    /// <summary>
+    /// The calls a component diagram draws: requests, without the tracking's own markers and the calls it was told to
+    /// ignore, between two participants <paramref name="participantFilter"/> keeps. <see cref="ExtractRelationships"/>
+    /// counts them and <see cref="TestsOf"/> says which tests made them, so the two agree on every edge.
+    /// </summary>
+    private static IEnumerable<RequestResponseLog> DrawnCalls(IEnumerable<RequestResponseLog> logs, Func<string, bool>? participantFilter)
+    {
         var filtered = logs.Where(log =>
             !log.TrackingIgnore &&
             !log.IsOverrideStart &&
@@ -67,26 +86,88 @@ public static partial class ComponentDiagramGenerator
                 participantFilter(log.CallerName) &&
                 participantFilter(log.ServiceName));
 
-        var groups = filtered.GroupBy(log => (log.CallerName, log.ServiceName, Protocol: GetProtocol(log)));
-
-        return groups.Select(g =>
-        {
-            var methods = new HashSet<string>(g.Select(log => GetMethodName(log)));
-            var callCount = g.Count();
-            var testCount = g.Select(log => log.TestId).Distinct().Count();
-            var dependencyCategory = g.Select(log => log.DependencyCategory).FirstOrDefault(c => c is not null);
-            return new ComponentRelationship(g.Key.CallerName, g.Key.ServiceName, g.Key.Protocol, methods, callCount, testCount, dependencyCategory);
-        }).ToArray();
+        return filtered;
     }
+
+    /// <summary>
+    /// The ids of the tests whose calls each edge draws, by the edge's caller, service and protocol, read from the calls
+    /// <see cref="ExtractRelationships"/> counts: what the run report's Components tab draws its Filtered form from (5.0.0,
+    /// plans/OPTION_C_PLAN.md S11, D28).
+    /// </summary>
+    internal static Dictionary<(string Caller, string Service, string Protocol), HashSet<string>> TestsOf(
+        IEnumerable<RequestResponseLog> logs,
+        Func<string, bool>? participantFilter = null) =>
+        DrawnCalls(logs, participantFilter)
+            .GroupBy(log => (Caller: log.CallerName, Service: log.ServiceName, Protocol: GetProtocol(log)))
+            .ToDictionary(g => g.Key, g => g.Select(log => log.TestId).ToHashSet(StringComparer.Ordinal));
 
     public static string GeneratePlantUml(
         ComponentRelationship[] relationships,
         ComponentDiagramOptions? options = null,
         Dictionary<string, RelationshipStats>? stats = null,
-        bool useC4 = true)
+        bool useC4 = true) =>
+        Generate(relationships, options ?? new ComponentDiagramOptions(), stats, useC4, roles: null);
+
+    /// <summary>
+    /// The diagram as the run report's Components tab draws it (5.0.0, plans/OPTION_C_PLAN.md S11, D26, D28):
+    /// <see cref="GeneratePlantUml"/>'s source without its title, which the tab's heading carries (ComponentDiagram.html
+    /// keeps it), with the line each component and each connection is written on, each connection without its label, and,
+    /// where <paramref name="logs"/> are given, the tests whose calls each connection draws (<see cref="TestsOf"/>).
+    /// </summary>
+    internal static EmbeddedComponentDiagram GenerateEmbedded(
+        ComponentRelationship[] relationships,
+        ComponentDiagramOptions? options = null,
+        bool useC4 = true,
+        IEnumerable<RequestResponseLog>? logs = null)
     {
         options ??= new ComponentDiagramOptions();
+        var roles = new LineRoles();
+        var plantUml = Generate(relationships, options, stats: null, useC4, roles);
+        var component = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (var i = 0; i < roles.Components.Count; i++)
+            component[roles.Components[i].Name] = i;
+        var tests = logs is null ? null : TestsOf(logs, options.ParticipantFilter);
+        return new EmbeddedComponentDiagram(
+            plantUml,
+            string.IsNullOrWhiteSpace(options.Title) ? EmbeddedComponentDiagram.DefaultHeading : options.Title,
+            roles.Direction,
+            roles.Components.Select(c => c.Line).ToArray(),
+            roles.Connections.Select(c => new EmbeddedComponentDiagram.Connection(
+                c.Line,
+                component[c.Relationship.Caller],
+                component[c.Relationship.Service],
+                PlantUml.PlantUmlCreator.ReplaceXmlInvalidCharacters(c.Bare),
+                tests is not null && tests.TryGetValue((c.Relationship.Caller, c.Relationship.Service, c.Relationship.Protocol), out var ids) ? ids : null))
+                .ToArray());
+    }
+
+    /// <summary>Where <see cref="Generate"/> wrote each part of a diagram, for <see cref="GenerateEmbedded"/>.</summary>
+    private sealed class LineRoles
+    {
+        public int Direction;
+        public readonly List<(int Line, string Name)> Components = [];
+        public readonly List<(int Line, ComponentRelationship Relationship, string Bare)> Connections = [];
+    }
+
+    private static string Generate(
+        ComponentRelationship[] relationships,
+        ComponentDiagramOptions options,
+        Dictionary<string, RelationshipStats>? stats,
+        bool useC4,
+        LineRoles? roles)
+    {
         var sb = new StringBuilder();
+        // The line the next statement starts on, counted from 0 as the page splits the source: every line feed written so
+        // far. Counted only for the Components tab's model (roles).
+        var counted = 0;
+        var lineNumber = 0;
+        int NextLine()
+        {
+            for (; counted < sb.Length; counted++)
+                if (sb[counted] == '\n')
+                    lineNumber++;
+            return lineNumber;
+        }
 
         // Build service → DependencyType map from relationships
         var serviceTypes = new Dictionary<string, DependencyType>();
@@ -100,6 +181,8 @@ public static partial class ComponentDiagramGenerator
         }
 
         sb.AppendLine("@startuml");
+        if (roles is not null)
+            roles.Direction = NextLine();
         sb.AppendLine("left to right direction");
 
         if (useC4)
@@ -162,8 +245,12 @@ public static partial class ComponentDiagramGenerator
         sb.AppendLine();
         // A title does not wrap at any width, at any skinparam, on either engine: a user-configured
         // title is one more unbounded width axis, so it takes the same budget an edge label does.
-        sb.AppendLine($"title {WrapLabel(options.Title)}");
-        sb.AppendLine();
+        // The Components tab's drawing has none: the tab's heading carries it (GenerateEmbedded).
+        if (roles is null)
+        {
+            sb.AppendLine($"title {WrapLabel(options.Title)}");
+            sb.AppendLine();
+        }
 
         // Discover all unique participants
         var allCallers = new HashSet<string>(relationships.Select(r => r.Caller));
@@ -180,6 +267,8 @@ public static partial class ComponentDiagramGenerator
 
         foreach (var participant in allParticipants)
         {
+            // each participant is one statement, whatever its shape
+            roles?.Components.Add((NextLine(), participant));
             var alias = SanitizeAlias(participant);
             var isPureCaller = pureCallers.Contains(participant);
             var depType = serviceTypes.GetValueOrDefault(participant, DependencyType.HttpApi);
@@ -259,6 +348,7 @@ public static partial class ComponentDiagramGenerator
 
             // Determine arrow style
             var color = "";
+            var lowCoverage = false;
             if (options.ArrowColorMode == ArrowColorMode.DependencyType)
             {
                 color = DependencyPalette.GetColor(rel.DependencyCategory, options.DependencyColors);
@@ -274,27 +364,29 @@ public static partial class ComponentDiagramGenerator
                 };
 
                 // Low coverage uses dashed line
-                if (arrowStats.IsLowCoverage)
-                {
-                    sb.AppendLine($"{callerAlias} ..> {serviceAlias} : \"{label}\"");
-                    continue;
-                }
+                lowCoverage = arrowStats.IsLowCoverage;
             }
 
-            if (useC4)
+            // The edge as written, and as the Components tab writes it without its label (Call summaries: Hidden).
+            string edge, bare;
+            if (lowCoverage)
             {
-                if (!string.IsNullOrEmpty(color))
-                    sb.AppendLine($"Rel({callerAlias}, {serviceAlias}, \"{label}\", $tags=\"{color}\")");
-                else
-                    sb.AppendLine($"Rel({callerAlias}, {serviceAlias}, \"{label}\")");
+                bare = $"{callerAlias} ..> {serviceAlias}";
+                edge = $"{bare} : \"{label}\"";
+            }
+            else if (useC4)
+            {
+                var tags = string.IsNullOrEmpty(color) ? "" : $", $tags=\"{color}\"";
+                edge = $"Rel({callerAlias}, {serviceAlias}, \"{label}\"{tags})";
+                bare = $"Rel({callerAlias}, {serviceAlias}, \"\"{tags})";
             }
             else
             {
-                if (!string.IsNullOrEmpty(color))
-                    sb.AppendLine($"{callerAlias} -[{color}]-> {serviceAlias} : \"{label}\"");
-                else
-                    sb.AppendLine($"{callerAlias} --> {serviceAlias} : \"{label}\"");
+                bare = string.IsNullOrEmpty(color) ? $"{callerAlias} --> {serviceAlias}" : $"{callerAlias} -[{color}]-> {serviceAlias}";
+                edge = $"{bare} : \"{label}\"";
             }
+            roles?.Connections.Add((NextLine(), rel, bare));
+            sb.AppendLine(edge);
         }
 
         sb.AppendLine();

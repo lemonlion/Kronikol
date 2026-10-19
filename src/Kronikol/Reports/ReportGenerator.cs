@@ -415,8 +415,11 @@ public static class ReportGenerator
         // empties attachments/, and emptied it while the run about to be kept still owned what was in it.
         beforeFirstWrite?.Invoke(CurrentReportsDirectory);
 
-        // Pre-compute component diagram PlantUML for embedding
-        string? componentDiagramPlantUml = null;
+        // Pre-compute component diagram PlantUML for embedding, as the Components tab draws it: without its title, which the
+        // tab's heading carries, and with the tests that made each connection's calls, for its controls (5.0.0,
+        // plans/OPTION_C_PLAN.md S11, D26, D28). A run whose calls give the diagram no connection has no tab: there is
+        // nothing to draw. ComponentDiagram.html is written from the same calls on its own, title and all.
+        EmbeddedComponentDiagram? componentDiagram = null;
         if (options.GenerateComponentDiagram)
         {
             var componentOptions = options.ComponentDiagramOptions ?? new ComponentDiagramOptions();
@@ -425,9 +428,11 @@ public static class ReportGenerator
             var componentRelationships = ComponentDiagramGenerator.ExtractRelationships(componentLogs, componentOptions.ParticipantFilter);
             // The syntax ComponentDiagram.html is written in: until 3.31.8 the run report gave NodeJs the C4 library, which
             // the Node renderer cannot load.
-            componentDiagramPlantUml = ComponentDiagramGenerator.GeneratePlantUml(componentRelationships, componentOptions,
-                useC4: ComponentDiagramReportGenerator.UsesC4(options.PlantUmlRendering));
+            if (componentRelationships.Length > 0)
+                componentDiagram = ComponentDiagramGenerator.GenerateEmbedded(componentRelationships, componentOptions,
+                    useC4: ComponentDiagramReportGenerator.UsesC4(options.PlantUmlRendering), logs: componentLogs);
         }
+        var componentDiagramPlantUml = componentDiagram?.PlantUml;
 
         if (perBoundarySegments is not null)
         {
@@ -527,7 +532,7 @@ public static class ReportGenerator
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, componentDiagram: ShouldEmbedComponentDiagram(options) ? componentDiagram : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp));
         }
 
         if (options.GenerateSpecificationsData)
@@ -1316,7 +1321,9 @@ public static class ReportGenerator
     /// <summary>
     /// <see cref="GenerateHtmlReport"/> with the run report's component diagram as the report's renderer drew it
     /// (<see cref="ComponentDiagramReportGenerator.DrawEmbedded"/>), which the page shows in its panel in place of drawing
-    /// <paramref name="componentDiagramPlantUml"/> itself.
+    /// <paramref name="componentDiagramPlantUml"/> itself, and with <paramref name="componentDiagram"/>, the diagram as the
+    /// Components tab draws it: its source stands for <paramref name="componentDiagramPlantUml"/>, and where the page draws
+    /// it, the tab's controls redraw it from its parts (5.0.0, plans/OPTION_C_PLAN.md S11, D28).
     /// </summary>
     internal static string GenerateHtmlReportCore(DefaultDiagramsFetcher.DiagramAsCode[] diagrams,
         Feature[] features,
@@ -1364,7 +1371,8 @@ public static class ReportGenerator
         bool showReportDiagnostics = false,
         ComponentDiagramReportGenerator.DrawnDiagram? componentDiagramDrawn = null,
         bool showScenarioHistory = false,
-        WarmUpResult? warmUp = null)
+        WarmUpResult? warmUp = null,
+        EmbeddedComponentDiagram? componentDiagram = null)
     {
         if (generateBlankOnFailedTests && CannotVouchForSpecifications(features))
             return WriteFile(string.Empty, fileName);
@@ -1374,6 +1382,10 @@ public static class ReportGenerator
         // written as it was without them.
         warmUp ??= trackedLogs is null ? WarmUpResult.None : WarmUpCalls.Find(features, trackedLogs);
         var warmUpByScenario = warmUp.Calls.Values.ToLookup(m => m.ScenarioId, StringComparer.Ordinal);
+
+        // The Components tab's diagram with the parts its controls draw it from: its source is the one the tab draws.
+        if (componentDiagram is not null)
+            componentDiagramPlantUml = componentDiagram.PlantUml;
 
         // Defaulted here as well as in the data writers, and for the same reason: the HTML's
         // data-stable-id attributes and the data file's stableId values are the same identity, and a
@@ -1581,6 +1593,12 @@ public static class ReportGenerator
         var timelineScript = hasDurations
             ? "<script id=\"kronikol-timeline\">" + LoadResource("report-timeline-script.js") + "</script>"
             : "";
+        // the Components tab's controls (5.0.0, plans/OPTION_C_PLAN.md S11, D28), where the page draws the diagram and the
+        // report knows its parts: a diagram the report's renderer drew is a picture the page cannot draw again
+        var componentControls = componentDiagram is not null && componentDiagramDrawn is null;
+        var componentsScript = componentControls
+            ? "<script id=\"kronikol-components\">" + LoadResource("report-components-script.js") + "</script>"
+            : "";
 
         var customCssBlock = customCss is not null ? $"<style>{customCss}</style>" : "";
         var faviconLink = $"<link rel=\"icon\" href=\"{customFaviconBase64 ?? Constants.DefaultFavicon.DataUri}\">";
@@ -1648,7 +1666,7 @@ public static class ReportGenerator
                             <script id="kronikol-theme-switch">{{themeSwitchScript}}</script>
                             <script id="kronikol-run-band">{{runBandScript}}</script>
                             <script id="kronikol-report-tabs">{{reportTabsScript}}</script>
-                            {{scenarioSettingsScript}}{{timelineScript}}
+                            {{scenarioSettingsScript}}{{timelineScript}}{{componentsScript}}
                         </head>
                         <body>
                     """;
@@ -2176,7 +2194,16 @@ public static class ReportGenerator
                 { Failure: { } why } => $"<div class=\"component-diagram-failure\">{System.Net.WebUtility.HtmlEncode(why)}</div>",
                 _ => $"<div class=\"plantuml-browser\" id=\"{compDiagramId}\" data-diagram-type=\"plantuml\"></div>"
             };
-            componentHtml = $"""<div id="component-diagram" class="component-diagram-section">{componentDiagramHtml}</div>""";
+            // The tab's heading, which is the diagram's title, and where the page draws the diagram from parts the report
+            // knows, its controls, the note Filtered writes and the model report-components-script.js draws from (5.0.0,
+            // plans/OPTION_C_PLAN.md S11, D26, D28). Show and its note only where the report knows which scenarios made each
+            // connection's calls.
+            var componentUsage = componentControls ? ComponentUsage(componentDiagram!, features, suite) : null;
+            var componentHeader = ComponentHeader(componentDiagram?.Heading ?? EmbeddedComponentDiagram.DefaultHeading, componentControls, componentUsage is not null);
+            var componentNote = componentUsage is not null ? TimelineFilteredNote : "";
+            componentHtml = $"""<div id="component-diagram" class="component-diagram-section">{componentHeader}{componentNote}{componentDiagramHtml}</div>""";
+            if (componentControls)
+                componentHtml += $"""<script id="component-diagram-model" type="application/json">{ComponentModelJson(componentDiagram!, componentUsage)}</script>""";
         }
 
         if (hasFeatureTable)
@@ -2858,8 +2885,89 @@ public static class ReportGenerator
     }
 
     /// <summary>What Filtered leaves out, said under the timeline's header line while it draws fewer rows than it has
-    /// (D27); report-timeline-script.js writes the words.</summary>
+    /// (D27); report-timeline-script.js writes the words. The Components tab says it under its own header line (D28), in
+    /// words report-components-script.js writes.</summary>
     private const string TimelineFilteredNote = "<div class=\"filtered-note\" role=\"status\" hidden></div>";
+
+    /// <summary>
+    /// The Components tab's header line (5.0.0, plans/OPTION_C_PLAN.md S11, D26, D28): its heading, which is the diagram's
+    /// title (the drawing leaves the title out), with the timeline's info mark, and where <paramref name="controls"/>, the
+    /// tab's controls at the right of the line, in the timeline's groups (<see cref="TimelineSegments"/>): Show, Filtered
+    /// or Full, where <paramref name="usage"/> (the report knows which scenarios made each connection's calls); Direction,
+    /// Left to right or Top to bottom; and Call summaries, Shown or Hidden. report-components-script.js acts on them.
+    /// </summary>
+    private static string ComponentHeader(string heading, bool controls, bool usage)
+    {
+        var info = "The Component Diagram shows the services, databases and queues the scenarios called, and the calls between them. "
+            + "Each connection is labelled with the calls made along it and how many tests made them. "
+            + (usage ? "Filtered draws only what the scenarios the filters show used; Full draws the whole run. " : "")
+            + "Use it to see what a set of tests depends on.";
+        var html = new StringBuilder($"<div class=\"timeline-header component-header\">{System.Net.WebUtility.HtmlEncode(heading)} <span class=\"timeline-info\" title=\"{System.Net.WebUtility.HtmlEncode(info)}\">&#x1F6C8;</span>");
+        if (!controls)
+            return html.Append("</div>").ToString();
+        html.Append("<div class=\"timeline-controls\">");
+        if (usage)
+            html.Append(TimelineSegments("Show", "view",
+                ("filtered", "Filtered", "Only the components and connections the scenarios the filters show used"),
+                ("full", "Full", "Every component and connection of the run, whatever the filters")));
+        html.Append(TimelineSegments("Direction", "dir",
+            ("lr", "Left to right", "Each caller to the left of what it calls"),
+            ("tb", "Top to bottom", "Each caller above what it calls")));
+        html.Append(TimelineSegments("Call summaries", "calls",
+            ("shown", "Shown", "Each connection labelled with its calls and how many tests made them"),
+            ("hidden", "Hidden", "The connections without their labels")));
+        return html.Append("</div></div>").ToString();
+    }
+
+    /// <summary>
+    /// Which scenarios on the page made the calls each of <paramref name="diagram"/>'s connections draws, for the Components
+    /// tab's Filtered (5.0.0, plans/OPTION_C_PLAN.md S11, D28): their stable ids in the page's order, and for each
+    /// connection its scenarios as places in that list. Null where that is not known: a connection whose tests the report
+    /// was not given, or no connection made by a scenario on the page (the calls carry ids no scenario has), where Filtered
+    /// would draw nothing whatever the filters.
+    /// </summary>
+    private static (string[] StableIds, int[][] ByConnection)? ComponentUsage(EmbeddedComponentDiagram diagram, Feature[] features, string? suite)
+    {
+        if (diagram.Connections.Any(c => c.TestIds is null))
+            return null;
+        var used = diagram.Connections.SelectMany(c => c.TestIds!).ToHashSet(StringComparer.Ordinal);
+        var stableIds = new List<string>();
+        var placeOf = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var feature in features)
+            foreach (var scenario in feature.Scenarios)
+                if (used.Contains(scenario.Id) && placeOf.TryAdd(scenario.Id, stableIds.Count))
+                    stableIds.Add(ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues));
+        var byConnection = diagram.Connections
+            .Select(c => c.TestIds!.Where(placeOf.ContainsKey).Select(t => placeOf[t]).Distinct().OrderBy(i => i).ToArray())
+            .ToArray();
+        return byConnection.Any(s => s.Length > 0) ? (stableIds.ToArray(), byConnection) : null;
+    }
+
+    /// <summary>
+    /// The Components tab's model of its diagram, for report-components-script.js (5.0.0, plans/OPTION_C_PLAN.md S11, D28):
+    /// the line of the direction, of each component and of each connection in the source the tab draws, each connection's
+    /// two components (places in the components) and its line without the label, and where <paramref name="usage"/> is
+    /// known, each connection's scenarios and their stable ids. The page reads nothing back from the source or a name.
+    /// </summary>
+    private static string ComponentModelJson(EmbeddedComponentDiagram diagram, (string[] StableIds, int[][] ByConnection)? usage)
+    {
+        var connections = diagram.Connections.Select((c, i) =>
+        {
+            var connection = new Dictionary<string, object> { ["line"] = c.Line, ["from"] = c.From, ["to"] = c.To, ["bare"] = c.Bare };
+            if (usage is { } known)
+                connection["scenarios"] = known.ByConnection[i];
+            return connection;
+        }).ToArray();
+        var model = new Dictionary<string, object>
+        {
+            ["direction"] = diagram.DirectionLine,
+            ["components"] = diagram.ComponentLines,
+            ["connections"] = connections
+        };
+        if (usage is { } all)
+            model["scenarios"] = all.StableIds;
+        return System.Text.Json.JsonSerializer.Serialize(model);
+    }
 
     private const string HappyPathTag = "Happy Path";
 
