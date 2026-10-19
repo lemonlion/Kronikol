@@ -265,6 +265,9 @@ public class ComponentsTabTests : PlaywrightTestBase
         await OpenReportTabAsync("features");
 
         await ShowOnlyAsync("Failed");
+        // the change is taken while the tab is hidden (its note says so) and drawn only when the tab shows again;
+        // opening the tab within the change's 150 ms settle would have it drawn by the settle itself
+        await Expect(Note).ToHaveTextAsync(OneScenarioNote);
         await OpenReportTabAsync("components");
 
         await DrawingAsync([run.Orders], [run.Payments]);

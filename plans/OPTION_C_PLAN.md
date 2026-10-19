@@ -1010,3 +1010,15 @@ decision of the owner's, not part of this plan.
   markup now (`edits/tests-img-pins.py`); renaming the attachment image's class fails the image facts, 6 of 6 cases,
   and the class and the attachment tests pass, 237 of 237. The lesson is the one the Report-HTML substring rule
   states: a pin reads an emitted attribute, never a bare substring of the page.
+- 2026-10-19, S11 closed and S12 begun, checked: origin/main merged into v5 at 4.31.1 (`9bb77de6`) and at 4.32.0
+  (`c010bcb6`, REPORT_FORMAT_PLAN R4, which that plan's 5.0.0 flips build on); two test faults the first merge and
+  S11c left, found by kronikol-89's full Playwright run, fixed (`7200017e`); the full suites pass: core 8,327 with 2
+  skipped on `0eeb9644`, Playwright 1,285 with 28 skipped on `d385c715` (the commit before it, which differs only in a
+  core test). The core suite on `d385c715` had failed 2, the attachment pins D43's script text broke (fixed in
+  `0eeb9644`).
+- 2026-10-19, S11e follow-up (S11e's Playwright mutations, run with the full suites on `d385c715`: 10 of 11 killed):
+  the survivor turned off the IntersectionObserver that draws a change made while the Components tab is hidden, and
+  `A_filter_changed_on_another_tab_reaches_the_diagram_when_its_tab_opens` still passed, because it opened the tab
+  within the filter change's 150 ms settle and the settle drew the change itself. The fact now waits for the hidden
+  tab's note to say the change was taken before it opens the tab. Mutation: the survivor is killed now, 1 of 1, so
+  S11e's Playwright mutations stand at 11 of 11. Checks: the ComponentsTab class passes, 12 of 12.
