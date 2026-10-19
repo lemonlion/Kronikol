@@ -39,6 +39,7 @@
 // at a Playwright package (default: the end-to-end project's).
 const fs = require('fs'), path = require('path'), url = require('url'), os = require('os');
 const pw = require(process.env.BENCH_PW || path.resolve(__dirname, '../../tests/Kronikol.Tests.EndToEnd/bin/Debug/net10.0/.playwright/package'));
+const { launchInstalled } = require('../playwright/installed-browser.js');
 
 // PlantUmlStatementLimits.TruncateLabel, line for line: never inside a `<U+hhhh>` escape, never stranding a backslash.
 function truncateLabel(label, budget) {
@@ -234,7 +235,8 @@ function run(shapes, defaults, rest) {
     const browserType = browserName === 'chrome' ? pw.chromium : pw[browserName];
     const options = Object.assign(browserName === 'chromium' || browserName === 'chrome' ? { args: launchArgs } : {},
       browserName === 'chrome' ? { channel: 'chrome' } : {}, extra);
-    const browser = await browserType.launch(options);
+    // An installed Chrome on a fresh profile signs in to Windows with an empty password (tools/playwright).
+    const browser = await launchInstalled(browserType, options);
     const rows = [], summaries = [];
     for (const arg of bases) {
       const i = arg.indexOf('='), lbl = arg.slice(0, i), cdn = arg.slice(i + 1);

@@ -1,9 +1,10 @@
 // node dump-svg.js <page.html> [browser] [jsflags]: the texts of #comp-diagram's SVG, for reading an error picture.
 const path = require('path'), url = require('url');
 const pw = require(process.env.BENCH_PW || 'C:/Code/Kronikol/tests/Kronikol.Tests.EndToEnd/bin/Debug/net10.0/.playwright/package');
+const { launchInstalled } = require('../../../tools/playwright/installed-browser.js');
 (async () => {
   const [file, browser = 'chromium', jsflags = ''] = process.argv.slice(2);
-  const b = await pw[browser === 'chrome' ? 'chromium' : browser].launch(Object.assign({ headless: true }, browser === 'chrome' ? { channel: 'chrome' } : {}, jsflags ? { args: ['--js-flags=' + jsflags] } : {}));
+  const b = await launchInstalled(pw[browser === 'chrome' ? 'chromium' : browser], Object.assign({ headless: true }, browser === 'chrome' ? { channel: 'chrome' } : {}, jsflags ? { args: ['--js-flags=' + jsflags] } : {}));
   const page = await b.newPage();
   await page.goto(url.pathToFileURL(path.resolve(file)).href);
   await page.waitForFunction(() => { const el = document.getElementById('comp-diagram'); return el && (el.querySelector('svg') || el.textContent.trim()); }, null, { polling: 200, timeout: 180000 });

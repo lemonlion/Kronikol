@@ -66,6 +66,20 @@ When writing or modifying Playwright end-to-end tests in `tests/Kronikol.Tests.E
 - **Search bar** — use `FillSearchBar()` helper which dispatches `keyup` event after `FillAsync` (required by `onkeyup="search_scenarios()"`).
 
 <!-- kronikol:begin -->
+## Installed Chrome or Edge: never on a fresh profile
+
+On Windows, the installed Chrome and Edge find out whether the account's password is blank by signing in to it with
+an empty one, about ten seconds after launch, and keep the answer in the profile. `browserType.launch()` always
+starts a fresh profile, so every launch of Playwright's `channel: 'chrome'` or `'msedge'` (or an `executablePath` to
+`chrome.exe` or `msedge.exe`) is one failed Windows sign-in, and ten in ten minutes lock the owner out of the machine.
+
+- In a Node script, launch any browser with `launchInstalled(browserType, options)` from
+  `tools/playwright/installed-browser.js` in place of `browserType.launch(options)`. It seeds a temporary profile so
+  the browser skips the sign-in, returns a `Browser` (`newContext`, `newPage` and `close` as usual), deletes the
+  profile on close, and falls through to `launch()` for every other browser.
+- Anywhere else (.NET, another tool), use the bundled Chromium, which the E2E suite already does and which never
+  runs the check, or a persistent profile seeded the same way.
+
 ## Debugging a test run (Kronikol)
 
 These tests write a Kronikol report. **Never open `TestRunReport.json`, `TestRunReport.html` or a

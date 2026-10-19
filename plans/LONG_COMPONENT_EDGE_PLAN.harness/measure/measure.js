@@ -17,6 +17,7 @@
 const fs = require('fs'), path = require('path'), url = require('url'), zlib = require('zlib'), os = require('os');
 const PW = process.env.BENCH_PW || 'C:/Code/Kronikol/tests/Kronikol.Tests.EndToEnd/bin/Debug/net10.0/.playwright/package';
 const pw = require(PW);
+const { seedProfile } = require('../../../tools/playwright/installed-browser.js');
 const ROOT = __dirname;
 const GEN = path.join(ROOT, 'gen');
 const LOGS = path.join(ROOT, 'logs');
@@ -111,7 +112,7 @@ function profileDir(cfg) {
   const key = [cfg.browser, (cfg.jsflags || '').replace(/[^a-z0-9]+/gi, '_'), JSON.stringify(cfg.prefs || {}).replace(/[^a-z0-9]+/gi, '_'), JSON.stringify(cfg.env || {}).replace(/[^a-z0-9]+/gi, '_')].join('-').slice(0, 120);
   const d = path.join(PROFILES, key);
   fs.mkdirSync(d, { recursive: true });
-  return d;
+  return seedProfile(d);
 }
 async function launch(cfg) {
   const opts = { headless: true };
