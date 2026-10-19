@@ -1987,13 +1987,14 @@ public class QueryCommandTests : IDisposable
     }
 
     [Fact]
-    public void A_sort_that_only_one_view_supports_is_refused_by_the_other()
+    public void A_sort_the_buckets_cannot_take_is_refused_rather_than_ignored()
     {
-        // `services --sort bytes` is real; `--group-by ... --sort bytes` is not, and used to fall through
-        // to the default ordering as though it had been honoured.
-        var (_, error, exit) = RunFull("interactions", Report(), "--group-by", "service", "--sort", "bytes");
+        // A value the buckets do not order by used to fall through to the default ordering as though it had been
+        // honoured. Since 4.27.0 (#116) both views order by bytes, so the refusal is proved with one neither knows.
+        var (_, error, exit) = RunFull("interactions", Report(), "--group-by", "service", "--sort", "slowest");
 
         Assert.Equal(2, exit);
+        Assert.Contains("slowest", error);
         Assert.Contains("bytes", error);
     }
 

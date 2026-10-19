@@ -140,6 +140,12 @@ internal static class VerbTable
             ["--sort", "--count", "--offset", "--limit", "--json"], Json: true,
             ["  services     <report> [s3] [--sort duration]  per service: calls, status mix, errors, bytes, timings"]),
 
+        new("sizes", "Overview",
+            "What fills the report file: its bytes by part, stored and decoded, and the scenarios that hold the most.",
+            ["<report>"],
+            ["--json"], Json: true,
+            ["  sizes        <report>                        bytes by part (steps, calls, bodies, diagrams...), largest scenarios"]),
+
         new("failures", "Narrative",
             "Why each failing test failed, in context: the message, the failing step, its calls, where it was written and thrown.",
             ["<report>", "<report> s3"],
@@ -192,7 +198,7 @@ internal static class VerbTable
             [
                 "  interactions <report> [s3] [--service X] [--status 5xx] [--method GET] [--grep T] [--group]",
                 "               [--where \"$.success = false\"]   repeatable; AND; req: prefix targets the request body",
-                "               [--group-by service,status]      buckets with calls/errors/median/max/bodies; dims:",
+                "               [--group-by service,status]      buckets with calls/errors/median/max/bodies/bytes; dims:",
                 "                                                service method status path step phase category kind capturedBy"
             ]),
 

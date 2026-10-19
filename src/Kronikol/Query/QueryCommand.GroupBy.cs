@@ -3,7 +3,7 @@ namespace Kronikol.Query;
 
 /// <summary>
 /// <c>interactions --group-by</c> — generic bucketing over the index: any combination of dimensions, a
-/// count/error/timing/bodies summary per bucket. <c>services</c> stays as the curated view and the only
+/// count/error/timing/bodies/bytes summary per bucket. <c>services</c> stays as the curated view and the only
 /// answerer of negative questions; this is the general form. Index-only unless combined with
 /// <c>--where</c>.
 /// </summary>
@@ -46,6 +46,8 @@ public static partial class QueryCommand
                 bucket.Durations.Add(ms);
             if (response?.BodyHash is { } hash)
                 bucket.Bodies.Add(hash);
+            // As `services` counts a service's bytes: each body's length as the index records it, decoded (#116).
+            bucket.Bytes += request.BodyLength + (response?.BodyLength ?? 0);
         }
 
         if (options.Count)
@@ -62,6 +64,7 @@ public static partial class QueryCommand
         {
             "errors" => buckets.Values.OrderByDescending(b => b.Errors).ThenByDescending(b => b.Calls).ToList(),
             "duration" => buckets.Values.OrderByDescending(b => b.Median() ?? 0).ToList(),
+            "bytes" => buckets.Values.OrderByDescending(b => b.Bytes).ThenByDescending(b => b.Calls).ToList(),
             _ => buckets.Values.OrderByDescending(b => b.Calls).ToList()
         };
 
@@ -71,12 +74,13 @@ public static partial class QueryCommand
             writer.Note("! step \"2\" spans scenarios — the same path is a different step in each; scope with s3 for one scenario's steps");
 
         var widths = dims.Select((d, i) => Math.Max(d.Length, ordered.Count == 0 ? 0 : ordered.Max(b => b.Values[i].Length)) + 2).ToArray();
-        writer.Line(string.Concat(dims.Select((d, i) => d.PadRight(widths[i]))) + $"{"calls",5} {"errors",6} {"median",8} {"max",8} {"bodies",6}");
+        writer.Line(string.Concat(dims.Select((d, i) => d.PadRight(widths[i]))) + $"{"calls",5} {"errors",6} {"median",8} {"max",8} {"bodies",6} {"bytes",9}");
 
         writer.Page(ordered, options.Offset, options.PageSize(200, writer, "buckets"), "buckets", bucket =>
         {
             var cells = string.Concat(bucket.Values.Select((v, i) => v.PadRight(widths[i])));
-            writer.Line($"{cells}{bucket.Calls,5} {bucket.Errors,6} {QueryWriter.Duration(bucket.Median()),8} {QueryWriter.Duration(bucket.Max()),8} {bucket.Bodies.Count,6}");
+            writer.Line($"{cells}{bucket.Calls,5} {bucket.Errors,6} {QueryWriter.Duration(bucket.Median()),8} {QueryWriter.Duration(bucket.Max()),8} {bucket.Bodies.Count,6} "
+                        + $"{QueryWriter.Size((int)Math.Min(bucket.Bytes, int.MaxValue)),9}");
         }, options.RerunArgs(), bucket => new
         {
             // The bucket holds its dimension values positionally against `dims`, so the key has to come
@@ -88,7 +92,8 @@ public static partial class QueryCommand
             errors = bucket.Errors,
             medianMs = bucket.Median(),
             maxMs = bucket.Max(),
-            bodies = bucket.Bodies.Count
+            bodies = bucket.Bodies.Count,
+            bytes = bucket.Bytes
         });
         NoteWhereExclusions(options, writer, error, clauses, unevaluable, capped);
 
@@ -124,6 +129,7 @@ public static partial class QueryCommand
         public int Errors { get; set; }
         public List<double> Durations { get; } = [];
         public HashSet<string> Bodies { get; } = new(StringComparer.Ordinal);
+        public long Bytes { get; set; }
 
         public double? Median()
         {

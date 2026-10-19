@@ -61,7 +61,7 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--limit N` | cap rows. The verbs that list rows |
 | `--count` | print how many matched, and nothing else. Every verb that counts something — not `http`, `body`, `note`, `diagram`, `steps`, `compare` |
 | `--out FILE` | write the answer to a file instead of the terminal; prints one line. Lifts the byte budget — a file is not a context window. `http`, `body`, `note` and `diagram` write the payload; every other verb writes what it would have printed |
-| `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `repro`, `services`, `interactions`, `assertions`, `diff`, `history`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
+| `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `repro`, `services`, `sizes`, `interactions`, `assertions`, `diff`, `history`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
 | `--history FILE` | the cross-run ledger `history` reads, instead of `$KRONIKOL_HISTORY` or the `.kronikol/history.jsonl` above the report. `history` only |
 | `--flaky`, `--new`, `--failing`, `--regressed`, `--changed` | which verdicts `history` lists; several combine as OR. `history` only |
 | `--branch NAME`, `--compare-branch NAME` | the branch stream `history` reads against, and a second one to read the same run against. `history` only |
@@ -132,6 +132,18 @@ call counted once, whichever record carries its time), `bytes` or `errors`; anyt
 
 **This is the only command that answers a negative question.** A service that is not in the table was
 never called — no payload needed to establish that.
+
+### `sizes <report>`
+What fills the report file, for a report that outgrew a limit (GitHub's 100 MiB per file, an artifact quota):
+its bytes on disk and decoded, then one row per part, stored and decoded, with its share of the decoded total.
+The parts are `steps` (with how many of their bytes are keys holding null or an empty array), `calls`
+(everything in a call but its body), `bodies` (with how many there are and how many distinct), `diagrams`,
+`annotations`, `internal-flow segments` and `whole-test flow` (a mergeable file's), `whitespace` (outside
+strings) and `other`; every byte of the file is in exactly one. A payload stored compressed (`$z`) is charged
+what it stores and decodes to what it would take written as text. Then the ten largest scenarios, decoded,
+with their addresses. `--json`: `report`, one item per part (`storedBytes`, `decodedBytes`; `emptyKeyBytes`
+on steps; `count`, `distinct`, `distinctDecodedBytes` on bodies) and `largestScenarios`. Which calls carry
+the bytes: `interactions --group-by service,path --sort bytes`.
 
 ## Narrative
 
@@ -284,18 +296,18 @@ kronikol query interactions <report> [s3] --group-by service,status [--sort erro
 ```
 
 ```
-service      status               calls  errors   median      max  bodies
-payments     OK                      38       0    12 ms    80 ms       4
-payments     InternalServerError      2       2   230 ms   410 ms       1
+service      status               calls  errors   median      max  bodies     bytes
+payments     OK                      38       0    12 ms    80 ms       4    96.2 KB
+payments     InternalServerError      2       2   230 ms   410 ms       1     1.1 KB
 ```
 
 Dimensions (comma list, any order): `service`, `method`, `status`, `path` (URI path, query stripped),
 `step`, `phase`, `category`, `kind` (metaType), `capturedBy`. `bodies` is the number of distinct
-response bodies in the bucket — a bucket with 120 calls and 1 body is one fact. Index-only unless
+response bodies in the bucket — a bucket with 120 calls and 1 body is one fact. `bytes` is the length of
+every request and response body in the bucket, decoded, as `services` counts it per service. Index-only unless
 combined with `--where`; composes with every filter. Default sort is calls descending;
-`--sort errors|duration` (`duration` orders buckets by their median, where `services` orders by the
-total; a bucket has no single byte total, so `--sort bytes` — valid on `services` —
-exits 2 here rather than quietly ordering by calls). The `next:` line carries `--sort` forward: an offset
+`--sort errors|duration|bytes` (`duration` orders buckets by their median, where `services` orders by the
+total; any other value exits 2 rather than quietly ordering by calls). The `next:` line carries `--sort` forward: an offset
 counted against one ordering is meaningless against another. **`--sort` needs `--group-by`** — the
 ungrouped listing is capture order and cannot be sorted, so it exits 2 rather than accepting a flag it
 would discard. Distinct from `--group` (which folds *adjacent identical* calls in sequence

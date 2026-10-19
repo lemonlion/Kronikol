@@ -185,6 +185,7 @@ kronikol query history  ./Reports          # what the last runs say: a regressio
 kronikol history gate   ./Reports          # CI: fail on what is new, not on the test that has flipped for a month
 kronikol query repro    ./Reports          # the dotnet test --filter line that re-runs each failure
 kronikol query services ./Reports          # per service: calls, errors, timings — and what was never called
+kronikol query sizes    ./Reports          # what fills the report file, part by part, and its largest scenarios
 kronikol query flow     ./Reports s3       # the sequence, in 2 KB instead of 663
 kronikol query trace    ./Reports 4bf92f3577b34da6   # follow one W3C trace across scenarios, in order
 kronikol query grep     ./Reports "4173" --values    # where a wrong number entered the system

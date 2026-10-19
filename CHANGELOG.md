@@ -4,14 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [4.27.0] - 2026-10-19
+
+**Minor - a new query verb, `sizes`, and a bytes column on `interactions --group-by` (`plans/REPORT_FORMAT_PLAN.md`
+R1, #119 and #116).** Both are new things to call, so the minor part moves (4.26 to 4.27). The release also carries the
+documentation change that was under `[Unreleased]`.
+
+### Added
+
+- **`kronikol query sizes <report>` says what fills a report file** (#119). A report can outgrow a limit (GitHub's
+  100 MiB per file stopped one consumer's Pages publish), and no command said which part of it grew, short of opening
+  it. `sizes` prints the file's bytes on disk and decoded, then one row per part, stored and decoded, with its share of
+  the decoded total:
+  - `steps`, with how many of their bytes are keys holding null, an empty array or an empty object;
+  - `calls`, everything in a call but its body;
+  - `bodies`, with how many there are and how many distinct;
+  - `diagrams`, `annotations`, and a mergeable file's `internal-flow segments` and `whole-test flow`;
+  - `whitespace` outside strings, and `other`.
+
+  Then the ten largest scenarios by decoded bytes, with their addresses. Every byte of the file is in exactly one part.
+  A payload stored compressed (`$z`, on by default since 4.0.0) is charged what it stores, and decodes to what it would
+  take written as a string, so the decoded column adds up to the file the same run writes with
+  `CompressTestRunReportPayloads` off. `--json` gives a `report` member, one item per part and `largestScenarios`. On
+  BreakfastProvider's LightBDD report (6,150,370 bytes, written by 4.9.1) it reports 7,607,997 bytes decoded, the
+  figure the plan's harness got by decoding every payload in Python, of which 2,168,568 are whitespace and 1,878,651
+  call metadata. The measurement is a second pass over the file, refused like any payload read when the file changed
+  after the scan.
+- **`interactions --group-by` rows carry `bytes`, and `--sort bytes` orders them** (#116). `services` kept a byte total
+  per service, but a bucket had none and `--sort bytes` exited 2 there, so finding which family of calls made a report
+  grow took a script over every page of `interactions --json`. A bucket's `bytes` is the length of every request and
+  response body in it, decoded, counted as `services` counts it, so a `--group-by service` bucket carries that
+  service's figure. It is the last column of the table and a member of each `--json` row, and the `next:` line carries
+  `--sort bytes` forward like any other ordering.
 
 ### Documentation
 
+- The skill's command reference and recipe table (both copies) document `sizes` and the bytes column, and answer "why
+  is the report so big?". The README's command list names `sizes`, and the wiki's Querying Reports page has a section
+  for it and the new column.
 - The doc comments of `CurrentStepTypeFetcher`, which nothing reads, on 23 extensions' options types and on
   `MessageTrackerOptions` put its removal in v6 (`plans/V6_PLAN.md`), where they said v5: on 2026-10-18 the owner
   made 5.0.0 the report data file and Option C, and moved the rest of the old v5 to v6 (`plans/ROADMAP.md` D39).
-  The wiki's pages for those options say the same.
+  The wiki's pages for those options say the same. This was under `[Unreleased]`.
 
 ## [4.26.9] - 2026-10-18
 

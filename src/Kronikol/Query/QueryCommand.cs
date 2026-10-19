@@ -233,7 +233,7 @@ public static partial class QueryCommand
         if (options.Sort is not null && command is not ("services" or "interactions"))
         {
             error.WriteLine($"{command} lists rows in the report's own order and cannot sort them.");
-            error.WriteLine("Only `services --sort calls|duration|bytes|errors` and `interactions --group-by … --sort calls|duration|errors` order their rows.");
+            error.WriteLine("Only `services --sort calls|duration|bytes|errors` and `interactions --group-by … --sort calls|duration|bytes|errors` order their rows.");
             return 2;
         }
 
@@ -257,6 +257,7 @@ public static partial class QueryCommand
             "steps" => Steps(index, options, writer, error),
             "assertions" => Assertions(index, options, writer, error),
             "services" => Services(index, options, writer, error),
+            "sizes" => Sizes(index, options, writer, error),
             "flow" => Flow(index, options, writer, error),
             "interactions" => Interactions(index, options, writer, error),
             "values" => Values(index, options, writer, error),

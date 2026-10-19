@@ -71,6 +71,7 @@ public class QueryCultureTests : IDisposable
         ("summary", []),
         ("scenarios", []),
         ("services", ["--sort", "duration"]),
+        ("sizes", []),
         ("failures", []),
         ("repro", []),
         ("steps", ["s0"]),
