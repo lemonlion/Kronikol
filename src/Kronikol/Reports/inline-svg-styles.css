@@ -97,21 +97,24 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
 .plantuml-browser svg .k-step-table-head-text.k-step-table-head-text { fill: var(--kron-ink-soft) !important; }
 
 /* A sequence diagram's own colours, mapped to the theme's tokens (5.0.0, plans/OPTION_C_PLAN.md S10): the engine's
-   ground, ink and lines, the report's assertion strips and bars, and the dependency colours a call is drawn in. A
-   user's DependencyColors or PlantUmlTheme writes colours no rule here knows: those keep their own. */
-.plantuml-browser svg { background: var(--dg-bg) !important; }
-.plantuml-browser svg text[fill="#000000" i] { fill: var(--dg-ink); }
-.plantuml-browser svg :is([style*="stroke:#181818" i], [stroke="#181818" i]) { stroke: var(--dg-line) !important; }
-.plantuml-browser svg polygon[fill="#181818" i] { fill: var(--dg-line); }
-.plantuml-browser svg :is(path, polygon)[fill="#d4edda" i] { fill: var(--dg-pass); stroke: var(--dg-pass-edge) !important; }
-.plantuml-browser svg :is(path, polygon)[fill="#f8d7da" i] { fill: var(--dg-fail); stroke: var(--dg-fail-edge) !important; }
-.plantuml-browser svg polygon[fill="#000000" i] { fill: var(--dg-bar); }
-.plantuml-browser svg [fill="#438dd5" i] { fill: var(--dg-http); }
-.plantuml-browser svg :is([style*="stroke:#438dd5" i], [stroke="#438dd5" i]) { stroke: var(--dg-http) !important; }
-.plantuml-browser svg [fill="#0e7c86" i] { fill: var(--dg-db); }
-.plantuml-browser svg :is([style*="stroke:#0e7c86" i], [stroke="#0e7c86" i]) { stroke: var(--dg-db) !important; }
-.plantuml-browser svg [fill="#9b59b6" i] { fill: var(--dg-msg); }
-.plantuml-browser svg :is([style*="stroke:#9b59b6" i], [stroke="#9b59b6" i]) { stroke: var(--dg-msg) !important; }
+   ground, ink and lines, the report's assertion strips and bars, and the dependency colours a call is drawn in (its line
+   and its arrowhead: a box filled in one, a component diagram's system box, keeps it). A user's DependencyColors or
+   PlantUmlTheme writes colours no rule here knows: those keep their own. An activity diagram (.iflow-diagram) is
+   left as the engine draws it, and so is any diagram on a page without the theme's tokens (ComponentDiagram.html):
+   each colour falls back to the engine's own. */
+.plantuml-browser:where(:not(.iflow-diagram)) svg { background: var(--dg-bg, transparent) !important; }
+.plantuml-browser:where(:not(.iflow-diagram)) svg text[fill="#000000" i] { fill: var(--dg-ink, #000000); }
+.plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#181818" i], [stroke="#181818" i]) { stroke: var(--dg-line, #181818) !important; }
+.plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#181818" i] { fill: var(--dg-line, #181818); }
+.plantuml-browser:where(:not(.iflow-diagram)) svg :is(path, polygon)[fill="#d4edda" i] { fill: var(--dg-pass, #d4edda); stroke: var(--dg-pass-edge, #181818) !important; }
+.plantuml-browser:where(:not(.iflow-diagram)) svg :is(path, polygon)[fill="#f8d7da" i] { fill: var(--dg-fail, #f8d7da); stroke: var(--dg-fail-edge, #181818) !important; }
+.plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#000000" i] { fill: var(--dg-bar, #000000); }
+.plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#438dd5" i] { fill: var(--dg-http, #438dd5); }
+.plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#438dd5" i], [stroke="#438dd5" i]) { stroke: var(--dg-http, #438dd5) !important; }
+.plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#0e7c86" i] { fill: var(--dg-db, #0e7c86); }
+.plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#0e7c86" i], [stroke="#0e7c86" i]) { stroke: var(--dg-db, #0e7c86) !important; }
+.plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#9b59b6" i] { fill: var(--dg-msg, #9b59b6); }
+.plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#9b59b6" i], [stroke="#9b59b6" i]) { stroke: var(--dg-msg, #9b59b6) !important; }
 
 /* A diagram narrower than its box stands in the middle of it, drawn whole or in fragments (5.0.0, plans/OPTION_C_PLAN.md
    S10); one as wide as its box still fills it, the auto margins coming to 0. The box held its drawing 1em in from the
@@ -120,4 +123,4 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
 .plantuml-inline-svg, .plantuml-browser { padding-right: 1em; }
 /* A request's link, drawn on hover (or always, where links are always shown), in the report's accent and not the
    engine's #0000FF, which read as purple beside the rest of the palette. A theme's own link colour stays its own. */
-.plantuml-browser svg text[data-iflow-fill="#0000ff" i][text-decoration="underline"] { fill: var(--kron-accent) !important; }
+.plantuml-browser svg text[data-iflow-fill="#0000ff" i][text-decoration="underline"] { fill: var(--kron-accent, #0000ff) !important; }

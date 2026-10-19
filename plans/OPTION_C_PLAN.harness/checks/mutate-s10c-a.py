@@ -20,7 +20,7 @@ MUTATIONS = [
     ("the box keeps no padding on its right", CSS,
      '.plantuml-inline-svg, .plantuml-browser { padding-right: 1em; }\n', '', WHOLE),
     ("a link keeps the engine's blue", CSS,
-     '.plantuml-browser svg text[data-iflow-fill="#0000ff" i][text-decoration="underline"] { fill: var(--kron-accent) !important; }\n', '', LINK),
+     '.plantuml-browser svg text[data-iflow-fill="#0000ff" i][text-decoration="underline"] { fill: var(--kron-accent, #0000ff) !important; }\n', '', LINK),
     ("a copy carries no paint", CMS,
      "                    if (v && v !== computed(from[i].getAttribute(p))) to[i].style.setProperty(p, v);\n", '', SVG),
     ("a copy carries the dark theme's look", CMS,

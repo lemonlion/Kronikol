@@ -48,7 +48,7 @@ public class DiagramThemeColoursTests : DiagramNotePlaywrightBase
         };
         """;
 
-    private async Task OpenAsync(string fileName, string theme)
+    private async Task OpenAsync(string fileName, string theme, string? source = null)
     {
         Feature[] features =
         [
@@ -58,7 +58,7 @@ public class DiagramThemeColoursTests : DiagramNotePlaywrightBase
                 Scenarios = [new() { Id = "s1", DisplayName = "Place an order", Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(10) }]
             }
         ];
-        var path = ReportGenerator.GenerateHtmlReport([new DefaultDiagramsFetcher.DiagramAsCode("s1", "", Source)],
+        var path = ReportGenerator.GenerateHtmlReport([new DefaultDiagramsFetcher.DiagramAsCode("s1", "", source ?? Source)],
             features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Bakery", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
@@ -138,5 +138,58 @@ public class DiagramThemeColoursTests : DiagramNotePlaywrightBase
         Assert.Equal(r[1], r[0]);
         Assert.Equal(r[3], r[2]);
         Assert.Equal(r[5], r[4]);
+    }
+
+    // The report's component diagram is drawn in the same box: a system box is filled in the HTTP colour with a white
+    // name, and keeps that colour in the dark theme too, whose lighter blue left the name at about 2.5:1. A call's
+    // colour is mapped on its line and its arrowhead only.
+    private const string SystemBoxes = """
+        @startuml
+        skinparam rectangle<<system>> {
+          BackgroundColor #438DD5
+          FontColor #FFFFFF
+          BorderColor #3C7FC0
+        }
+        rectangle "Order Service" <<system>> as svc
+        rectangle "Stock Api" <<system>> as stock
+        svc --> stock : GET /api/stock
+        @enduml
+        """;
+
+    [Fact]
+    public async Task A_box_filled_in_a_dependency_colour_keeps_it_in_the_dark_theme()
+    {
+        await OpenAsync("ThemeSystemBox-dark.html", "dark", SystemBoxes);
+
+        var r = await InSvgAsync("""
+            const box = Array.from(el.querySelectorAll('rect, path')).find(e => (e.getAttribute('fill') || '').toLowerCase() === '#438dd5');
+            return [box ? getComputedStyle(box).fill : 'none'];
+            """);
+
+        Assert.Equal("rgb(67, 141, 213)", r[0]);
+    }
+
+    // A scenario's whole-test flow is an activity diagram drawn in a .plantuml-browser box too, with black text on light
+    // boxes. Its colours are mapped with the popup's (S11); until then they stay the engine's in the dark theme, where a
+    // sequence diagram's light ink left the text on those boxes unreadable.
+    [Fact]
+    public async Task An_activity_diagram_keeps_its_own_colours_in_the_dark_theme()
+    {
+        var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, "ThemeActivity-dark.html", withFlow: 1, withoutFlow: 0);
+        await Page.GotoAsync(uri);
+        await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", "dark");
+        await ExpandFirstScenarioWithDiagram();
+        await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
+        await Page.WaitForFunctionAsync("() => !!document.querySelector('.plantuml-browser.iflow-diagram svg text')", null,
+            new() { Timeout = 300000, PollingInterval = 200 });
+
+        var fill = await Page.EvaluateAsync<string>("""
+            () => {
+                const t = Array.from(document.querySelectorAll('.plantuml-browser.iflow-diagram svg text')).find(t => /^#000000$/i.test(t.getAttribute('fill') || ''));
+                return t ? getComputedStyle(t).fill : 'none';
+            }
+            """);
+
+        Assert.Equal("rgb(0, 0, 0)", fill);
     }
 }

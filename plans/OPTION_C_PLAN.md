@@ -741,3 +741,28 @@ decision of the owner's, not part of this plan.
   predicate in WaitForFunctionAsync, and its PNG cases still read the clipboard before the image was written: they
   poll inside their own evaluation. Mutations: 10 of 10 killed (`checks/mutate-s10c-a.py`).
   Checks: the three classes and the context menu tests pass (22); the full suites run at the end of S10.
+- 2026-10-19, S10b-3 follow-up: S10b-3's colour rules reached three things they should not have
+  (`edits/scripts-s10b-e.py`, `edits/scripts-s10b-f.py`). (1) The report's component diagram, drawn by the page in a
+  `.plantuml-browser` box too, fills a system box `#438DD5` with a white name, and the HTTP colour's fill rule gave it
+  the dark theme's lighter blue (`#6AA5E4`), which left the name at about 2.5:1, below AA: a sequence diagram fills
+  only a call's arrowhead in its colour (its participants take their roles), so the three fill rules keep to polygons.
+  (2) A scenario's whole-test flow is an activity diagram (`.iflow-diagram`) with black text on light boxes
+  (`#f0f4ff`), which the ink rule turned light in the dark theme, unreadable on those boxes: the whole block leaves
+  `.iflow-diagram` alone. The scope is written `:where(:not(.iflow-diagram))`, which adds nothing to the rules'
+  specificity: as `:not()` it tied the roles' doubled classes, and the line rule, coming later, would have taken the
+  lifelines', participants' and cards' edges. (3) ComponentDiagram.html carries `inline-svg-styles.css` but not the
+  token sheet, so a mapped colour resolved to nothing and a stroke with no value computes to none: the component
+  diagram's HTTP edges and arrowheads vanished. Each mapping now falls back to the colour the engine painted, and the
+  link rule to the engine's link blue, so a page without the theme draws as it did before 5.0.0. The activity
+  diagram's colours, the component diagram's dark look and whether ComponentDiagram.html takes the theme are S11's
+  (D26, D28; the S11 brief's open question). (1) and (2) were found by reading the component skin and the
+  internal-flow markup while drafting S14's wiki list; (3) by the S11 research, and measured before the fix.
+  Tests: Playwright `DiagramThemeColoursTests` gains two facts, a box filled in a dependency colour keeping it in the
+  dark theme and an activity diagram's black text staying black there, and `ComponentDiagramPageTests` one, every line
+  the engine drew still painted on a page without the theme. All three failed before: the box took rgb(106, 165, 228),
+  the text rgb(228, 233, 240), and four HTTP paths and arrowheads computed no stroke. `checks/mutate-s10b-c.py` and
+  `checks/mutate-s10c-a.py` read the rules' new form (all 23 of their strings checked against the files). Mutations: 3
+  of 3 killed (`checks/mutate-s10b-e.py`).
+  Checks: the S10 classes the fixes touch pass (34: `DiagramThemeColoursTests`, `DiagramRolesTests`,
+  `DiagramExportLookTests`, `DiagramCentringTests`, `DiagramLinkHoverTests`, `ComponentDiagramPageTests`); the full
+  suites run next, at the end of S10.

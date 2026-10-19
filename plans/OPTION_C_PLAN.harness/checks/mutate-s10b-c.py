@@ -10,19 +10,19 @@ GROUND = T + 'The_diagrams_ground_ink_and_lines_take_the_theme'
 STRIPS = T + 'The_assertion_strips_and_a_bar_that_is_not_a_step_take_the_theme'
 CALLS = T + 'A_call_to_a_dependency_takes_the_themes_colour_for_it'
 MUTATIONS = [
-    ("the ground stays the engine's", '.plantuml-browser svg { background: var(--dg-bg) !important; }\n', GROUND),
-    ("the ink stays black", '.plantuml-browser svg text[fill="#000000" i] { fill: var(--dg-ink); }\n', GROUND),
-    ("the lines stay the engine's", '.plantuml-browser svg :is([style*="stroke:#181818" i], [stroke="#181818" i]) { stroke: var(--dg-line) !important; }\n', GROUND),
-    ("the arrowheads stay the engine's", '.plantuml-browser svg polygon[fill="#181818" i] { fill: var(--dg-line); }\n', GROUND),
-    ("a passed assertion keeps its green", '.plantuml-browser svg :is(path, polygon)[fill="#d4edda" i] { fill: var(--dg-pass); stroke: var(--dg-pass-edge) !important; }\n', STRIPS),
-    ("a failed assertion keeps its red", '.plantuml-browser svg :is(path, polygon)[fill="#f8d7da" i] { fill: var(--dg-fail); stroke: var(--dg-fail-edge) !important; }\n', STRIPS),
-    ("a bar stays black", '.plantuml-browser svg polygon[fill="#000000" i] { fill: var(--dg-bar); }\n', STRIPS),
-    ("an HTTP call's head keeps the palette's blue", '.plantuml-browser svg [fill="#438dd5" i] { fill: var(--dg-http); }\n', CALLS),
-    ("an HTTP call keeps the palette's blue", '.plantuml-browser svg :is([style*="stroke:#438dd5" i], [stroke="#438dd5" i]) { stroke: var(--dg-http) !important; }\n', CALLS),
-    ("a database call's head keeps the palette's cyan", '.plantuml-browser svg [fill="#0e7c86" i] { fill: var(--dg-db); }\n', CALLS),
-    ("a database call keeps the palette's cyan", '.plantuml-browser svg :is([style*="stroke:#0e7c86" i], [stroke="#0e7c86" i]) { stroke: var(--dg-db) !important; }\n', CALLS),
-    ("a message's head keeps the palette's violet", '.plantuml-browser svg [fill="#9b59b6" i] { fill: var(--dg-msg); }\n', CALLS),
-    ("a message keeps the palette's violet", '.plantuml-browser svg :is([style*="stroke:#9b59b6" i], [stroke="#9b59b6" i]) { stroke: var(--dg-msg) !important; }\n', CALLS),
+    ("the ground stays the engine's", '.plantuml-browser:where(:not(.iflow-diagram)) svg { background: var(--dg-bg, transparent) !important; }\n', GROUND),
+    ("the ink stays black", '.plantuml-browser:where(:not(.iflow-diagram)) svg text[fill="#000000" i] { fill: var(--dg-ink, #000000); }\n', GROUND),
+    ("the lines stay the engine's", '.plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#181818" i], [stroke="#181818" i]) { stroke: var(--dg-line, #181818) !important; }\n', GROUND),
+    ("the arrowheads stay the engine's", '.plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#181818" i] { fill: var(--dg-line, #181818); }\n', GROUND),
+    ("a passed assertion keeps its green", '.plantuml-browser:where(:not(.iflow-diagram)) svg :is(path, polygon)[fill="#d4edda" i] { fill: var(--dg-pass, #d4edda); stroke: var(--dg-pass-edge, #181818) !important; }\n', STRIPS),
+    ("a failed assertion keeps its red", '.plantuml-browser:where(:not(.iflow-diagram)) svg :is(path, polygon)[fill="#f8d7da" i] { fill: var(--dg-fail, #f8d7da); stroke: var(--dg-fail-edge, #181818) !important; }\n', STRIPS),
+    ("a bar stays black", '.plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#000000" i] { fill: var(--dg-bar, #000000); }\n', STRIPS),
+    ("an HTTP call's head keeps the palette's blue", '.plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#438dd5" i] { fill: var(--dg-http, #438dd5); }\n', CALLS),
+    ("an HTTP call keeps the palette's blue", '.plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#438dd5" i], [stroke="#438dd5" i]) { stroke: var(--dg-http, #438dd5) !important; }\n', CALLS),
+    ("a database call's head keeps the palette's cyan", '.plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#0e7c86" i] { fill: var(--dg-db, #0e7c86); }\n', CALLS),
+    ("a database call keeps the palette's cyan", '.plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#0e7c86" i], [stroke="#0e7c86" i]) { stroke: var(--dg-db, #0e7c86) !important; }\n', CALLS),
+    ("a message's head keeps the palette's violet", '.plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#9b59b6" i] { fill: var(--dg-msg, #9b59b6); }\n', CALLS),
+    ("a message keeps the palette's violet", '.plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#9b59b6" i], [stroke="#9b59b6" i]) { stroke: var(--dg-msg, #9b59b6) !important; }\n', CALLS),
 ]
 
 killed = 0

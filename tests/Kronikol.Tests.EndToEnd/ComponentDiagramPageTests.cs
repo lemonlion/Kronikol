@@ -70,6 +70,26 @@ public class ComponentDiagramPageTests : PlaywrightTestBase
         Assert.InRange(standards.Height, control.Height - 1, control.Height + 1);
     }
 
+    // The page carries the report's diagram stylesheet but not its theme tokens (5.0.0, plans/OPTION_C_PLAN.md S10): a
+    // rule that maps one of the engine's colours to a token keeps the engine's colour here, so every line it drew stays
+    [Fact]
+    public async Task Every_line_the_engine_drew_is_still_painted_on_a_page_without_the_theme()
+    {
+        await Page.GotoAsync(new Uri(Generate("component-page-lines")).AbsoluteUri);
+        var svg = await WaitForDiagramSvg(60000);
+
+        var lost = await svg.EvaluateAsync<string[]>("""
+            el => Array.from(el.querySelectorAll('path, line, rect, polygon, ellipse'))
+                .filter(e => { const s = (e.getAttribute('stroke') || '').toLowerCase(); return s && s !== 'none'; })
+                .filter(e => getComputedStyle(e).stroke === 'none')
+                .map(e => e.tagName + ' ' + e.getAttribute('stroke'))
+            """);
+        var drawn = await svg.EvaluateAsync<int>("el => el.querySelectorAll('[stroke]').length");
+
+        Assert.True(drawn > 0, "the engine drew no stroked element");
+        Assert.Empty(lost);
+    }
+
     private async Task<(string Mode, float Width, float Height, string Text)> Drawn(string path)
     {
         await Page.GotoAsync(new Uri(path).AbsoluteUri);
