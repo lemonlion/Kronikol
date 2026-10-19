@@ -222,7 +222,7 @@ internal static class RunRotation
         // The data file first: the largest, and the one `kronikol query` holds open. If it will not move,
         // nothing has moved.
         files = files
-            .OrderBy(name => string.Equals(name, $"{request.ReportName}.{request.DataExtension}", StringComparison.OrdinalIgnoreCase) ? 0 : IsThisReport(name, request) ? 1 : 2)
+            .OrderBy(name => IsDataFile(name, request) ? 0 : IsThisReport(name, request) ? 1 : 2)
             .ThenBy(name => name, StringComparer.Ordinal)
             .ToList();
 
@@ -410,8 +410,18 @@ internal static class RunRotation
     }
 
     private static bool IsThisReport(string name, Request request) =>
-        string.Equals(name, $"{request.ReportName}.{request.DataExtension}", StringComparison.OrdinalIgnoreCase)
+        IsDataFile(name, request)
         || string.Equals(name, $"{request.ReportName}.html", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Whether <paramref name="name"/> is this report's data file: under its extension, or for the JSON data file under
+    /// either of its names, <c>.json</c> and the compressed <c>.krkl</c> (plans/REPORT_FORMAT_PLAN.md 4.5). The run before
+    /// a switch between them then moves into <c>runs/</c> with the rest of its files, rather than staying on top beside
+    /// the new one.
+    /// </summary>
+    private static bool IsDataFile(string name, Request request) =>
+        (request.DataExtension is "json" or "krkl" ? ["json", "krkl"] : new[] { request.DataExtension })
+            .Any(extension => string.Equals(name, $"{request.ReportName}.{extension}", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Any HTML on top that the rotated manifest does not list: another report, which may link into <c>attachments/</c>.</summary>
     private static bool AnotherReportIsPresent(string directory, List<string> files) =>
@@ -454,7 +464,7 @@ internal static class RunRotation
     private static (string RunId, RunManifest? Manifest) Reconstruct(string directory, List<string> files, Request request)
     {
         // The report's own timestamp: the data file, else the HTML, else whatever there is.
-        var report = files.FirstOrDefault(name => string.Equals(name, $"{request.ReportName}.{request.DataExtension}", StringComparison.OrdinalIgnoreCase))
+        var report = files.FirstOrDefault(name => IsDataFile(name, request))
                      ?? files.FirstOrDefault(name => IsThisReport(name, request))
                      ?? files[0];
         var stamp = new DateTimeOffset(File.GetLastWriteTimeUtc(Path.Combine(directory, report)));

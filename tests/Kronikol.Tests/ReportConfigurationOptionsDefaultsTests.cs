@@ -3,6 +3,13 @@ namespace Kronikol.Tests;
 public class ReportConfigurationOptionsDefaultsTests
 {
     [Fact]
+    public void CompressTestRunReport_defaults_to_false_in_4x()
+    {
+        // The data file stays TestRunReport.json unless a run asks (plans/REPORT_FORMAT_PLAN.md 4.3); v5 turns it on.
+        Assert.False(new ReportConfigurationOptions().CompressTestRunReport);
+    }
+
+    [Fact]
     public void InternalFlowTracking_defaults_to_true()
     {
         var options = new ReportConfigurationOptions();

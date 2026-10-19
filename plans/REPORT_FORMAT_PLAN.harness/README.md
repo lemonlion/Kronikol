@@ -29,6 +29,7 @@ the bytes on disk are the bytes Kronikol wrote.
 | `html_steps.py` | What a `TestRunReport.html` spends on steps: step elements, their markup up to `</summary>` or `</div>`, the status tooltips (their text, and the whole `title` attributes) and how many are distinct, and the collapsible composites (open and closed). Run it on the deep-steps consumer's page for A1 |
 | `brotli_levels.py` | Brotli qualities 4 to 7 with 22- and 24-bit windows on the `.krkl` content: size, write and read time |
 | `notes.py` | #120 inside one compressed stream: each diagram note of 200 or more characters replaced by a short reference, under gzip 6, zstd 9, zstd 19 and brotli 5. Then the per-payload `$z` threshold inside the container (8,192, 65,536, 262,144 and off): the decoded working set the tool would hold, and the zstd 9 and brotli 5 sizes |
+| `payload_split.py` | What the `$z` payloads cost under `zstd -3` of the file as written (the `zstd` command's default) against what they cost inside a `.krkl`, and what everything else costs at each: how a report compressed with `zstd` compares with its `.krkl` |
 
 ```bash
 PYTHONUTF8=1 python -E measure.py <TestRunReport.json>...
@@ -36,6 +37,7 @@ PYTHONUTF8=1 python -E codecs.py <TestRunReport.json>
 PYTHONUTF8=1 python -E deepmodel.py
 PYTHONUTF8=1 python -E blocked.py <TestRunReport.json>...
 PYTHONUTF8=1 python -E notes.py <TestRunReport.json>...
+PYTHONUTF8=1 python -E payload_split.py <TestRunReport.json>
 PYTHONUTF8=1 python -E html_steps.py <TestRunReport.html>
 PYTHONUTF8=1 python -E brotli_levels.py content.bin
 PYTHONUTF8=1 python -E content.py <TestRunReport.json> content.bin

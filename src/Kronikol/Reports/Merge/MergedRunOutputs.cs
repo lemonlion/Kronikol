@@ -95,7 +95,14 @@ public static class MergedRunOutputs
 
         if (options.WriteAgentInstructions)
         {
-            var block = AgentInstructionsBlock.Wrap(AgentInstructionsGenerator.Build(baseName));
+            // Naming the data file this merge wrote, as a run's do: a .krkl is named, with the reason it is not opened.
+            var block = AgentInstructionsBlock.Wrap(ReportGenerator.NamingTheDataFile(AgentInstructionsGenerator.Build(baseName),
+                options with
+                {
+                    HtmlTestRunReportFileName = baseName,
+                    TestRunReportDataFormat = DataFormat.Json,
+                    CompressTestRunReport = dataFilePath?.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase) == true,
+                }));
             foreach (var name in new[] { AgentInstructionsGenerator.ClaudeFileName, AgentInstructionsGenerator.AgentsFileName })
                 Attempt(name, () => WriteInstructionFile(Path.Combine(directory, name), block));
         }

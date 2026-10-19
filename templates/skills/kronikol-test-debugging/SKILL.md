@@ -22,6 +22,9 @@ the question unanswered.
 Use `kronikol query` instead; the `query.cs` beside every report runs it with nothing installed. Every
 command prints an answer plus the addresses that fetch the next thing.
 
+A run with `CompressTestRunReport` on writes `TestRunReport.krkl` in place of the JSON: compressed, so a text
+tool finds nothing in it, and every command here takes it as it takes the JSON.
+
 ```
 dotnet run --file .logs/kronikol/query.cs -- summary .logs/kronikol   # nothing to install, no network: the report's own query.cs
 kronikol query summary .logs/kronikol/TestRunReport.json              # the same, where the tool is installed

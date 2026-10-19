@@ -6,7 +6,7 @@ description: >
 
 inputs:
   reports:
-    description: The reports to gate, one per line, each a TestRunReport.json or the directory holding it.
+    description: The reports to gate, one per line, each a TestRunReport.json or TestRunReport.krkl, or the directory holding it.
     required: true
   test-outcome:
     description: The test step's outcome (steps.<id>.outcome). Without a ledger, the phase fails only when this is failure.

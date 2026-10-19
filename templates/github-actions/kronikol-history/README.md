@@ -178,7 +178,7 @@ Outputs: `found` (`true` or `false`), `ledger` (the path, or empty), `bytes`. Wh
 
 | Input | Default | Description |
 |---|---|---|
-| `reports` | *(required)* | The reports to gate, one per line: a `TestRunReport.json`, or the directory holding it. |
+| `reports` | *(required)* | The reports to gate, one per line: a `TestRunReport.json` or `TestRunReport.krkl`, or the directory holding it. |
 | `test-outcome` | empty | The test step's outcome, `${{ steps.<id>.outcome }}`. Without a ledger the phase fails only when this is `failure`. |
 | `fail-on` | `new-failures` | What trips the gate: a comma list of `new-failures`, `flaky`, `duration-regression` and `behaviour-change`. |
 | `min-runs` | the tool's | Runs of history the statistical verdicts need before they trip the gate. |

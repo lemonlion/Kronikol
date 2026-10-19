@@ -267,6 +267,66 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   the default. A diagram of nothing but hidden markers reached the engine, which failed on it, in place of the
   "Nothing to draw" message, and that message now names the toggles by the words they show (Assertions, Steps).
 
+## [4.32.0] - 2026-10-19
+
+**Minor - a new option, `CompressTestRunReport`, and the flags that ask for it (`plans/REPORT_FORMAT_PLAN.md` R4).** The
+option, `kronikol ingest --data-file` and the `.krkl` name `kronikol merge -o` now takes are new public surface, so the
+minor part moves (4.31 to 4.32). It is off by default: a run writes `TestRunReport.json` exactly as before unless it
+asks. 4.30.0 taught every reader the compressed file first, so a `.krkl` this release writes is read by `kronikol`
+4.30.0 and later.
+
+### Added
+
+- **`ReportConfigurationOptions.CompressTestRunReport`.** When `true` and `TestRunReportDataFormat` is JSON, the run
+  writes `TestRunReport.krkl` in place of `TestRunReport.json`: the same report, written compact, with every payload as
+  text (`formatVersion` 3, no `$z`), and with a key whose value is `null`, `[]` or `{}` left out unless the schema
+  requires it where it stands, so a reader takes a missing key as holding nothing. The schema's own `required` lists
+  decide what stays, read from the schema this build writes, at every depth; the two parts the schema leaves open
+  (`internalFlowSegments` and a step's `exampleValues`) are kept as written. The whole is one zstd frame at level 9 with
+  its checksum, behind the 24-byte marker that names the file and gives the length of its JSON. On BreakfastProvider's
+  report as published, 6,150,370 bytes of JSON, the plan's harness measured 279,968 bytes (4.6%).
+  `CompressTestRunReportPayloads` does not apply to it, and a mergeable run (`GenerateMergeableData`) writes its
+  mergeable file the same way.
+- **The JSON is never built as a string.** The serializer writes into a filter that drops the empty keys as the tokens
+  pass, then into the compressor: writing a model whose JSON is 4,182,940 bytes allocates 146,904, where building the
+  JSON as one string takes 25,094,696. The file is written beside its name and renamed over it, so a reader never sees
+  half a file; where the name is held open and cannot be replaced (Windows), this run's file goes to
+  `TestRunReport2.krkl` with the warning a held JSON file gives, and `Run.json` lists the name that reached the disk,
+  never the temporary one.
+- **`kronikol ingest --data-file <json|krkl>`** writes the ingested report's data file either way (sets
+  `CompressTestRunReport`); `--payloads` does not apply to a `.krkl`, and the pointer ingest prints names the file it
+  wrote.
+- **`kronikol merge -o <name>.krkl`** writes the merged data file compressed, with the report beside it as `<name>.html`
+  (4.30.0 refused the name, having no writer). A merge whose shards include a compressed one writes a `.krkl` too, so a
+  merged report never takes more room than its shards, and it holds every payload as text whatever the shards held.
+
+### Changed
+
+- The run before a switch moves into `runs/` whole: retention takes `TestRunReport.json` and `TestRunReport.krkl` for
+  the one data file, so the earlier run's JSON no longer stays on top beside the new `.krkl`, with or without a
+  `Run.json` to name it.
+- The agent files and `Failures.md` name the data file the run wrote, `TestRunReport.krkl` included, and the agent files
+  say why it is not opened: it is compressed, `kronikol query` reads it, and `kronikol decode` writes its JSON. The
+  skill says the same in one line.
+- The schema's description of `formatVersion` names 3, and `compressedPayload` says a `.krkl` never holds one.
+- The history action's `gate` input and its README say a report to gate may be a `TestRunReport.krkl`, as `kronikol
+  history gate` takes one from 4.30.0.
+- The option docs that said the data file is always JSON (`GenerateTestRunReportData`, `GenerateMergeableData`,
+  `WriteQueryScript`, `ShowReportDiagnosticsSection`) name the `.krkl`.
+
+### Tests
+
+KrklWriterTests (the option writes a `.krkl` and no `.json`; the container's bytes; the JSON inside equals the JSON file
+with its empty keys pruned by an independent walker over the schema, `formatVersion` 3; every required key at every
+depth, standard and mergeable; payloads as text; `Run.json`; a held file on Windows and elsewhere; the allocation fact
+with the string path as its control), ReportJsonPrunerTests (the filter on its own), KrklRunTests (rotation both ways,
+with and without a manifest, an earlier run without one named for its data file under the other name, the agent files,
+`Failures.md`, the size guard, and the raw-bytes absence check that passes whatever the file holds), the schema contract
+walker, the schema validation of a `.krkl` and of a compressed mergeable file, CaptureRedactionTests over both forms,
+KrklLookupTests (merge to a `.krkl` name, a compressed shard merged with a payload large enough to wrap, plain shards
+merged to JSON), IngestCommandTests (`--data-file`) and PythonProbeTests (the test project's interpreter probe, which
+now waits a minute for an answer).
+
 ## [4.31.1] - 2026-10-19
 
 **Patch - two fixes found while planning #161 (`plans/LIST_CAPS_PLAN.md` 3.10).** Nothing new to call or configure,

@@ -33,6 +33,7 @@ internal static class IngestCommand
         Kronikol.Reports.NotePayloadFormat? notePayloadFormat = null;
         // The library's default until the flag says otherwise (#85: off in 3.x, on from 4.0.0).
         bool? compressPayloads = null;
+        bool? compressReport = null;
         // The library's default until the flag says otherwise (shown in 3.x, hidden from 4.0.0).
         bool? headersShown = null;
         var componentDiagram = true;
@@ -151,6 +152,15 @@ internal static class IngestCommand
                         return 2;
                     }
                     compressPayloads = args[i] == "compressed";
+                    break;
+                case "--data-file":
+                    if (++i >= args.Count ||
+                        (args[i] != "json" && args[i] != "krkl"))
+                    {
+                        error.WriteLine("--data-file needs json or krkl");
+                        return 2;
+                    }
+                    compressReport = args[i] == "krkl";
                     break;
                 case "--headers":
                     if (++i >= args.Count ||
@@ -390,6 +400,8 @@ internal static class IngestCommand
             options.NotePayloadFormat = format;
         if (compressPayloads is { } compress)
             options.CompressTestRunReportPayloads = compress;
+        if (compressReport is { } compressFile)
+            options.CompressTestRunReport = compressFile;
         if (headersShown is { } shown)
             options.TestRunReportToggleDefaults.HeadersShown = shown;
         options.GenerateComponentDiagram = componentDiagram;
@@ -463,7 +475,7 @@ internal static class IngestCommand
             var summary = RunSummaryConsoleWriter.Summarise(
                 result.Features,
                 result.ReportsDirectory,
-                new[] { "TestRunReport.html", "TestRunReport.json", "Failures.md", LabsReportGenerator.FileName("TestRunReport") }.Where(written.Contains),
+                new[] { "TestRunReport.html", "TestRunReport.json", "TestRunReport.krkl", "Failures.md", LabsReportGenerator.FileName("TestRunReport") }.Where(written.Contains),
                 agentInstructionsWritten: File.Exists(Path.Combine(result.ReportsDirectory, AgentInstructionsGenerator.ClaudeFileName)),
                 // The same suite the pipeline wrote the report under. Without it this pointer prints ids
                 // computed with no suite at all, addressing a report whose own ids were computed with one
@@ -476,7 +488,8 @@ internal static class IngestCommand
             // lines of its own naming the directory and the HTML, and then Skip(1) the pointer's first
             // line as a duplicate — but that line is the one carrying the FILE SIZES, and the size is the
             // whole warning. A reader never told `TestRunReport.json 48.2 MB` has no reason not to open
-            // it, which is the single behaviour the rest of this design exists to prevent. This is also
+            // it, which is the single behaviour the rest of this design exists to prevent (a .krkl is named with its own
+            // reason, that it is compressed and read by kronikol query, F26). This is also
             // the only pointer an ingest user sees (`WriteRunSummaryToConsole` is off above) and the one
             // channel where a workflow annotation is guaranteed to survive: `ingest` runs as a CI step and
             // owns its stdout, which the library pointer under VSTest does not.
@@ -662,6 +675,9 @@ internal static class IngestCommand
         w.WriteLine("  --payloads <plain|compressed>  How TestRunReport.json holds a body or diagram of 8,192 characters or");
         w.WriteLine("                           more: as text, or compressed in place (formatVersion 2, read by kronikol");
         w.WriteLine("                           3.35.0 and later). Default: compressed.");
+        w.WriteLine("  --data-file <json|krkl>  The data file the ingest writes: TestRunReport.json, or TestRunReport.krkl, the");
+        w.WriteLine("                           same report compressed whole, about a twentieth of the size, read by kronikol");
+        w.WriteLine("                           4.30.0 and later (kronikol decode writes its JSON). Default: json.");
         w.WriteLine("  --headers <shown|hidden>  Whether the browserjs report's diagrams start with request and response");
         w.WriteLine("                           headers in their notes (default: hidden); readers can still switch either way.");
         w.WriteLine("  --no-component-diagram   Skip ComponentDiagram.html.");

@@ -1,5 +1,8 @@
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Kronikol.Query;
+using Kronikol.Reports;
 using Kronikol.Tool;
 
 namespace Kronikol.Tests.Compression;
@@ -202,16 +205,56 @@ public class KrklLookupTests : IDisposable
     }
 
     [Fact]
-    public void Merge_does_not_take_a_krkl_name_for_its_output_before_anything_writes_one()
+    public void Merge_takes_a_krkl_name_for_its_data_file_and_writes_the_report_beside_it()
     {
         var output = new StringWriter();
         var error = new StringWriter();
 
         var exit = MergeCommand.Run([Mergeable, "-o", Path.Combine(_root, "merged", "Merged.krkl")], output, error, _ => null);
 
-        Assert.Equal(2, exit);
-        Assert.Contains("takes an .html name", error.ToString(), StringComparison.Ordinal);
-        Assert.False(File.Exists(Path.Combine(_root, "merged", "Merged.krkl")));
+        Assert.True(exit == 0, $"exit {exit}: {error}");
+        Assert.True(File.Exists(Path.Combine(_root, "merged", "Merged.html")));
+        Assert.False(File.Exists(Path.Combine(_root, "merged", "Merged.json")));
+        var text = Encoding.UTF8.GetString(KrklWriterTests.Decode(File.ReadAllBytes(Path.Combine(_root, "merged", "Merged.krkl"))));
+        Assert.Equal(3, JsonNode.Parse(text)!["formatVersion"]!.GetValue<int>());
+    }
+
+    [Fact]
+    public void A_merge_of_a_compressed_shard_writes_a_compressed_file_with_every_payload_as_text()
+    {
+        var shard = Path.Combine(_root, "shards", "TestRunReport.krkl");
+        Directory.CreateDirectory(Path.GetDirectoryName(shard)!);
+        // A body long enough to be wrapped in $z, which a merge writing its data file plain would wrap.
+        var document = JsonNode.Parse(File.ReadAllText(Mergeable))!;
+        var body = FirstWithContent(document);
+        Assert.NotNull(body);
+        var longBody = new string('x', ReportPayloads.Threshold * 2);
+        body!["content"] = longBody;
+        File.WriteAllBytes(shard, ReportFileFormatTests.Krkl(Encoding.UTF8.GetBytes(document.ToJsonString())));
+        var output = new StringWriter();
+        var error = new StringWriter();
+
+        var exit = MergeCommand.Run([shard, "-o", Path.Combine(_root, "merged", "TestRunReport.html")], output, error, _ => null);
+
+        Assert.True(exit == 0, $"exit {exit}: {error}");
+        Assert.False(File.Exists(Path.Combine(_root, "merged", "TestRunReport.json")));
+        var text = Encoding.UTF8.GetString(KrklWriterTests.Decode(File.ReadAllBytes(Path.Combine(_root, "merged", "TestRunReport.krkl"))));
+        Assert.DoesNotContain("\"$z\"", text, StringComparison.Ordinal);
+        Assert.Contains(longBody, text, StringComparison.Ordinal);
+        Assert.NotNull(JsonNode.Parse(text)!["mergeableFormatVersion"]);
+    }
+
+    [Fact]
+    public void A_merge_of_plain_shards_writes_plain_json_as_before()
+    {
+        var output = new StringWriter();
+        var error = new StringWriter();
+
+        var exit = MergeCommand.Run([Mergeable, "-o", Path.Combine(_root, "plain", "TestRunReport.html")], output, error, _ => null);
+
+        Assert.True(exit == 0, $"exit {exit}: {error}");
+        Assert.True(File.Exists(Path.Combine(_root, "plain", "TestRunReport.json")));
+        Assert.False(File.Exists(Path.Combine(_root, "plain", "TestRunReport.krkl")));
     }
 
     [Fact]
@@ -272,7 +315,15 @@ public class KrklLookupTests : IDisposable
     }
 
     /// <summary>A report written with GenerateMergeableData, which merge needs.</summary>
-    private static string Mergeable => Path.Combine(AppContext.BaseDirectory, "TestData", "Reports", "failing-with-steps.mergeable.json");
+    private static JsonObject? FirstWithContent(JsonNode? node) => node switch
+    {
+        JsonObject o when o["content"] is JsonValue v && v.TryGetValue<string>(out _) => o,
+        JsonObject o => o.Select(p => FirstWithContent(p.Value)).FirstOrDefault(found => found is not null),
+        JsonArray a => a.Select(FirstWithContent).FirstOrDefault(found => found is not null),
+        _ => null,
+    };
+
+    private static string Mergeable =>Path.Combine(AppContext.BaseDirectory, "TestData", "Reports", "failing-with-steps.mergeable.json");
 
     private string Version3(string name, int formatVersion, string? kronikolVersion = null, string? source = null, string[]? withoutKeys = null)
     {

@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Kronikol.ComponentDiagram;
+using Kronikol.Compression;
 using Kronikol.InternalFlow;
 using Kronikol.Tracking;
 
@@ -387,7 +388,7 @@ public static class ReportGenerator
             options, CurrentReportsDirectory, KronikolVersion, getEnv, historyBaseDirectory);
 
         var specsDataExtension = GetDataFormatExtension(options.SpecificationsDataFormat);
-        var testRunDataExtension = GetDataFormatExtension(options.TestRunReportDataFormat);
+        var testRunDataExtension = DataFileExtension(options);
 
         // A run always has a name, because the directory a run is retained under is made from it: the id
         // on its line of history when history is on, and the same minting — the host's HistoryRunId, else
@@ -547,13 +548,21 @@ public static class ReportGenerator
                 // dataLogs, not trackedLogs: the latter is null with internal-flow tracking off, and a
                 // shard written that way carried no interactions at all, the gap 3.8.0 closed for the
                 // standard file and this branch kept.
-                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => WriteFile(
-                    BuildMergeableReportJson(features, startRunTime, endRunTime, diagrams, dataLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite, environment, attribution.Value, suppliedSpans?.Count, warmUp),
-                    $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"));
+                var compressed = WritesCompressedReport(options);
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () =>
+                {
+                    var model = BuildRunMergeableModel(features, startRunTime, endRunTime, diagrams, dataLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite, environment, attribution.Value, suppliedSpans?.Count, warmUp,
+                        compressPayloads: !compressed && options.CompressTestRunReportPayloads);
+                    if (compressed)
+                        WriteCompressedReport(model, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}");
+                    else
+                        WriteFile(JsonSerializer.Serialize(model, TestRunReportJsonOptions), $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}");
+                });
             }
             else
             {
-                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite, environment, attribution.Value, options.CompressTestRunReportPayloads, warmUp));
+                Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite, environment, attribution.Value, options.CompressTestRunReportPayloads, warmUp,
+                    compressedFile: WritesCompressedReport(options)));
             }
         }
 
@@ -603,7 +612,7 @@ public static class ReportGenerator
                             : null,
                     // A data file the folder lookup would not find is named in every command, as the CI text names it.
                     dataFileName: options.GenerateTestRunReportData && options.TestRunReportDataFormat == DataFormat.Json
-                                  && RunSummaryConsoleWriter.QueryTargetFor(Path.Combine(reportsDir, $"{options.HtmlTestRunReportFileName}.json")) is { } named
+                                  && RunSummaryConsoleWriter.QueryTargetFor(Path.Combine(reportsDir, $"{options.HtmlTestRunReportFileName}.{DataFileExtension(options)}")) is { } named
                         ? Path.GetFileName(named)
                         : null));
 
@@ -825,7 +834,12 @@ public static class ReportGenerator
     {
         var planned = new List<string>();
         if (options.GenerateTestRunReportData)
+        {
             planned.Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}");
+            // The JSON data file's other name, which this run replaces: the run before a switch wrote that one.
+            if (testRunDataExtension is "json" or "krkl")
+                planned.Add($"{options.HtmlTestRunReportFileName}.{(testRunDataExtension == "json" ? "krkl" : "json")}");
+        }
         if (options.GenerateTestRunReport)
             planned.Add($"{options.HtmlTestRunReportFileName}.html");
         if (options.GenerateTestRunReportSchema)
@@ -949,7 +963,7 @@ public static class ReportGenerator
     internal const string CiSummaryFileName = "CiSummary.md";
 
     /// <summary>
-    /// The directory a writer that is handed the options, rather than called through <see cref="WriteFile"/>,
+    /// The directory a writer that is handed the options, rather than called through <see cref="WriteFile(string, string, bool)"/>,
     /// writes into: the run's own while one is in flight (or a merge's scoped one), else the one the options name.
     /// </summary>
     internal static string ReportsDirectoryFor(ReportConfigurationOptions options) =>
@@ -4930,7 +4944,7 @@ public static class ReportGenerator
     /// </summary>
     internal static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams, RequestResponseLog[]? trackedLogs, IReadOnlyList<DiagnosticEntry>? diagnostics, bool fullStepDetail, CiMetadata? ciMetadata, string? suite, RunEnvironment? environment,
         (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)? attribution,
-        bool compressPayloads = false, WarmUpResult? warmUp = null)
+        bool compressPayloads = false, WarmUpResult? warmUp = null, bool compressedFile = false)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
         // Diagram markers belong to the diagram, not the interaction list: exported as-is they read as
@@ -4943,6 +4957,8 @@ public static class ReportGenerator
 
         return format switch
         {
+            // Every payload as text: the file is compressed whole (plans/REPORT_FORMAT_PLAN.md 4.2, Q14).
+            DataFormat.Json when compressedFile => WriteCompressedReport(BuildTestRunReportModel(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads: false, warmUp), fileName),
             DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads, warmUp), fileName),
             DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment, warmUp), fileName),
             DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment, warmUp), fileName),
@@ -5148,7 +5164,14 @@ public static class ReportGenerator
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
-    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, bool compressPayloads = false, WarmUpResult? warmUp = null)
+    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, bool compressPayloads = false, WarmUpResult? warmUp = null) =>
+        JsonSerializer.Serialize(BuildTestRunReportModel(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads, warmUp), TestRunReportJsonOptions);
+
+    /// <summary>
+    /// The standard data file's model: what <see cref="GenerateTestRunReportJson"/> writes as JSON, and a compressed report
+    /// streams into its file (plans/REPORT_FORMAT_PLAN.md 4.5).
+    /// </summary>
+    private static Dictionary<string, object?> BuildTestRunReportModel(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, bool compressPayloads = false, WarmUpResult? warmUp = null)
     {
         var payloads = new ReportPayloads(compressPayloads);
         // Resolved ONCE and used for both the key and the ids under it. Writing `suite ?? RunSuite.Current`
@@ -5182,7 +5205,7 @@ public static class ReportGenerator
         // Known only once every payload is written; the key keeps its place at the top of the file.
         data["formatVersion"] = payloads.FormatVersion;
 
-        return JsonSerializer.Serialize(data, TestRunReportJsonOptions);
+        return data;
     }
 
     /// <summary>
@@ -5265,7 +5288,7 @@ public static class ReportGenerator
     /// internal-flow segment data and per-scenario whole-test-flow fragments (inlining their payloads
     /// so no shared diagram-data map is required), then serializes everything to JSON.
     /// </summary>
-    private static string BuildMergeableReportJson(
+    private static Dictionary<string, object?> BuildRunMergeableModel(
         Feature[] features,
         DateTime startTime,
         DateTime endTime,
@@ -5280,7 +5303,8 @@ public static class ReportGenerator
         RunEnvironment? environment = null,
         (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)? attribution = null,
         int? suppliedSpans = null,
-        WarmUpResult? warmUp = null)
+        WarmUpResult? warmUp = null,
+        bool compressPayloads = false)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
 
@@ -5325,12 +5349,12 @@ public static class ReportGenerator
             }
         }
 
-        return GenerateMergeableReportJson(
+        return BuildMergeableReportModel(
             features, startTime, endTime, diagramLookup,
             relationships, internalFlowSegmentData, wholeTestFlow,
             options.WholeTestFlowVisualization, ciMetadata, diagnostics, trackedLogs,
             stepPathsOverride: attribution?.StepPaths, annotationsOverride: attribution?.Annotations,
-            suite: suite, environment: environment, compressPayloads: options.CompressTestRunReportPayloads, warmUp: warmUp);
+            suite: suite, environment: environment, compressPayloads: compressPayloads, warmUp: warmUp);
     }
 
     /// <summary>
@@ -5348,6 +5372,33 @@ public static class ReportGenerator
     /// <see cref="Merge.MergeableReportRenderer"/> passes the source's.</para>
     /// </summary>
     internal static string GenerateMergeableReportJson(
+        Feature[] features,
+        DateTime startTime,
+        DateTime endTime,
+        ILookup<string, string>? diagramLookup,
+        Kronikol.ComponentDiagram.ComponentRelationship[]? componentRelationships,
+        Dictionary<string, object>? internalFlowSegmentData,
+        Dictionary<string, Merge.WholeTestFlowFragment>? wholeTestFlow,
+        WholeTestFlowVisualization wholeTestVisualization,
+        CiMetadata? ciMetadata,
+        IReadOnlyList<DiagnosticEntry>? diagnostics = null,
+        RequestResponseLog[]? trackedLogs = null,
+        string? kronikolVersion = null,
+        IReadOnlyDictionary<string, List<string?>>? stepPathsOverride = null,
+        IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotationsOverride = null,
+        string? suite = null,
+        RunEnvironment? environment = null,
+        bool compressPayloads = false,
+        WarmUpResult? warmUp = null) =>
+        JsonSerializer.Serialize(BuildMergeableReportModel(features, startTime, endTime, diagramLookup, componentRelationships,
+            internalFlowSegmentData, wholeTestFlow, wholeTestVisualization, ciMetadata, diagnostics, trackedLogs, kronikolVersion,
+            stepPathsOverride, annotationsOverride, suite, environment, compressPayloads, warmUp), TestRunReportJsonOptions);
+
+    /// <summary>
+    /// The mergeable file's model: what <see cref="GenerateMergeableReportJson"/> writes as JSON, and a compressed report
+    /// streams into its file (plans/REPORT_FORMAT_PLAN.md 4.5).
+    /// </summary>
+    internal static Dictionary<string, object?> BuildMergeableReportModel(
         Feature[] features,
         DateTime startTime,
         DateTime endTime,
@@ -5434,7 +5485,7 @@ public static class ReportGenerator
         if (MapEnvironmentJson(environment) is { } environmentJson)
             data["environment"] = environmentJson;
 
-        return JsonSerializer.Serialize(data, TestRunReportJsonOptions);
+        return data;
     }
 
     /// <summary>
@@ -6736,6 +6787,104 @@ public static class ReportGenerator
         return filePath;
     }
 
+    /// <summary>
+    /// Writes <paramref name="model"/> as a compressed report (plans/REPORT_FORMAT_PLAN.md 4.1 and 4.2): <c>formatVersion</c> 3,
+    /// streamed through the filter that leaves out every key that holds nothing into one zstd frame behind Kronikol's marker.
+    /// The JSON is never held whole, so the run's peak is the model, not three times the file on top of it (F14).
+    /// </summary>
+    private static string WriteCompressedReport(Dictionary<string, object?> model, string fileName) =>
+        WriteFile(stream => WriteCompressedReport(model, stream), fileName);
+
+    /// <summary>
+    /// Writes <paramref name="model"/> as a compressed report into <paramref name="destination"/>, which must be seekable:
+    /// a run's file, and a merge's (<see cref="Merge.MergeableReportRenderer.WriteCompressed"/>). Returns the length of the
+    /// JSON the file holds.
+    /// </summary>
+    internal static long WriteCompressedReport(Dictionary<string, object?> model, Stream destination)
+    {
+        // Version 3: keys that hold nothing may be absent, and no payload is wrapped. The key keeps its place at the top.
+        model["formatVersion"] = ReportPayloads.CompactFormatVersion;
+        return ReportFileWriter.Write(destination, json => JsonSerializer.Serialize(json, model, CompactReportJsonOptions), ReportRequiredKeys.Value);
+    }
+
+    /// <summary>A data file's model as the JSON file holds it: indented, with the relaxed encoder.</summary>
+    internal static string SerializeReportJson(Dictionary<string, object?> model) => JsonSerializer.Serialize(model, TestRunReportJsonOptions);
+
+    /// <summary>The data file's options without the indentation, which the filter would only strip again.</summary>
+    private static readonly JsonSerializerOptions CompactReportJsonOptions = new(TestRunReportJsonOptions) { WriteIndented = false };
+
+    /// <summary>What the report's schema requires where, read once from the schema this generator writes.</summary>
+    private static readonly Lazy<RequiredKeys> ReportRequiredKeys = new(() =>
+    {
+        using var schema = JsonDocument.Parse(GenerateTestRunReportJsonSchema());
+        return RequiredKeys.FromSchema(schema.RootElement);
+    });
+
+    /// <summary>
+    /// <see cref="WriteFile(string, string, bool)"/> for a file written as a stream: into a temporary file beside it, then
+    /// renamed over it, so a reader never sees half a file. When the name cannot be replaced, this run's file goes to the
+    /// same fallback name, and only the name that reached disk is recorded, never the temporary one (F25).
+    /// </summary>
+    private static string WriteFile(Action<Stream> write, string fileName, bool partOfTheRun = true)
+    {
+        var directory = CurrentReportsDirectory;
+        Directory.CreateDirectory(directory);
+        var filePath = Path.Combine(directory, fileName);
+        // Named so that nothing takes it for a report or publishes it: it ends neither .krkl nor .json.
+        var temporary = Path.Combine(directory, $"{fileName}.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            using var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None);
+            write(stream);
+        }
+        catch
+        {
+            TryDelete(temporary);
+            throw;
+        }
+
+        try
+        {
+            File.Move(temporary, filePath, overwrite: true);
+            if (partOfTheRun)
+                RunFileCollector.Record(filePath);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // Held open where a rename cannot replace it (Windows): the same salvage, and the same rethrow, as the string
+            // writer above.
+            var fallback = Path.Combine(directory,
+                Path.GetFileNameWithoutExtension(fileName) + "2" + Path.GetExtension(fileName));
+            try
+            {
+                File.Move(temporary, fallback, overwrite: true);
+                if (partOfTheRun)
+                    RunFileCollector.Record(fallback);
+                Console.WriteLine($"⚠ WARNING: {fileName} was not writable — this run's copy is in {Path.GetFileName(fallback)}; "
+                                  + $"{fileName} on disk is from an earlier run.");
+            }
+            catch (Exception salvageFailure) when (salvageFailure is IOException or UnauthorizedAccessException)
+            {
+                TryDelete(temporary);
+            }
+
+            throw new IOException($"Could not write {fileName}: {exception.Message}", exception);
+        }
+        return filePath;
+
+        static void TryDelete(string path)
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                // Left behind; it ends .tmp, which nothing reads, publishes or lists.
+            }
+        }
+    }
+
     internal static HashSet<string> ExtractDependencies(string codeBehind, DiagramFormat format)
     {
         var deps = new HashSet<string>();
@@ -6802,11 +6951,28 @@ public static class ReportGenerator
     /// one entry takes the report's file name and nothing else, so that no text from a run has a way into the file; the
     /// name here comes from the options alone.
     /// </summary>
-    internal static string NamingTheDataFile(string instructions, ReportConfigurationOptions options) =>
-        options.TestRunReportDataFormat == DataFormat.Json
-            ? instructions
-            : instructions.Replace($"`{options.HtmlTestRunReportFileName}.json`",
-                $"`{options.HtmlTestRunReportFileName}.{GetDataFormatExtension(options.TestRunReportDataFormat)}`", StringComparison.Ordinal);
+    internal static string NamingTheDataFile(string instructions, ReportConfigurationOptions options)
+    {
+        var extension = DataFileExtension(options);
+        if (extension == "json")
+            return instructions;
+
+        var name = options.HtmlTestRunReportFileName;
+        var named = instructions.Replace($"`{name}.json`", $"`{name}.{extension}`", StringComparison.Ordinal);
+        // A compressed file says nothing to a reader who opens it, so the rule gives the reason that holds for it (F26).
+        var rule = $"**Never open `{name}.krkl`, `{name}.html`, or a diagram.**";
+        return extension == "krkl"
+            ? named.Replace(rule, rule + " The data file is compressed: `kronikol query` reads it, and `kronikol decode` writes its JSON for a script that needs the JSON itself.", StringComparison.Ordinal)
+            : named;
+    }
+
+    /// <summary>Whether the run writes its data file compressed: <see cref="ReportConfigurationOptions.CompressTestRunReport"/>, read only for JSON.</summary>
+    internal static bool WritesCompressedReport(ReportConfigurationOptions options) =>
+        options.CompressTestRunReport && options.TestRunReportDataFormat == DataFormat.Json;
+
+    /// <summary>The data file's extension, without the dot: <c>krkl</c> for a compressed report, else its format's.</summary>
+    internal static string DataFileExtension(ReportConfigurationOptions options) =>
+        WritesCompressedReport(options) ? "krkl" : GetDataFormatExtension(options.TestRunReportDataFormat);
 
     private static string GetDataFormatExtension(DataFormat format) => format switch
     {
@@ -6889,7 +7055,7 @@ public static class ReportGenerator
             ["required"] = new[] { "formatVersion", "startTime", "endTime", "features", "background" },
             ["properties"] = new Dictionary<string, object?>
             {
-                ["formatVersion"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Version of the report SHAPE, as distinct from the Kronikol build that wrote it. Bumped when a key changes meaning or type, not when one is added. 2 means the same shape with at least one payload (a content or a diagrams entry) written as a compressedPayload object; a file with none says 1." },
+                ["formatVersion"] = new Dictionary<string, object?> { ["type"] = "integer", ["description"] = "Version of the report SHAPE, as distinct from the Kronikol build that wrote it. Bumped when a key changes meaning or type, not when one is added. 2 means the same shape with at least one payload (a content or a diagrams entry) written as a compressedPayload object; a file with none says 1. 3 means the JSON a compressed report holds (TestRunReport.krkl, CompressTestRunReport): the same keys, any optional one of which may be absent where it would hold null or nothing, and no payload written compressed." },
                 ["kronikolVersion"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Version of Kronikol that generated this report" },
                 ["suite"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The test suite this run belongs to. Every stableId in the file is scoped to it, which is what stops two suites that name a feature and a scenario the same way from minting the same id. Null when it could not be resolved, in which case ids are unscoped." },
                 ["startTime"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "date-time", ["description"] = "UTC start time of the test run" },
@@ -7108,7 +7274,7 @@ public static class ReportGenerator
                 ["compressedPayload"] = new Dictionary<string, object?>
                 {
                     ["type"] = "object",
-                    ["description"] = "A payload (a body or a diagram's PlantUML source) written compressed in place of its text, by CompressTestRunReportPayloads (#85), on by default from 4.0.0. kronikol query, kronikol merge and query.py read it as they read the text; to read it yourself, base64-decode $z and gunzip it, which gives the text's UTF-8",
+                    ["description"] = "A payload (a body or a diagram's PlantUML source) written compressed in place of its text, by CompressTestRunReportPayloads (#85), on by default from 4.0.0. kronikol query, kronikol merge and query.py read it as they read the text; to read it yourself, base64-decode $z and gunzip it, which gives the text's UTF-8. A compressed report (TestRunReport.krkl, formatVersion 3) writes none, and every reader still reads one",
                     ["properties"] = new Dictionary<string, object?>
                     {
                         ["$h"] = new Dictionary<string, object?> { ["type"] = "string", ["pattern"] = "^b:[0-9a-f]{8}$", ["description"] = "The text's b: address, the one kronikol query prints for it: the first eight hex digits of the SHA-1 of its UTF-8", ["examples"] = new[] { "b:4bdea521" } },

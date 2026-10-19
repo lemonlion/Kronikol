@@ -16,31 +16,46 @@ namespace Kronikol.Tests;
 internal static class PythonProbe
 {
     private static readonly Lazy<string?> Interpreter = new(() =>
-    {
-        foreach (var candidate in new[] { "python3", "python" })
-        {
-            try
-            {
-                var psi = new ProcessStartInfo(candidate, "--version")
-                {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-                using var probe = Process.Start(psi);
-                probe?.WaitForExit(5000);
-                if (probe?.ExitCode == 0)
-                    return candidate;
-            }
-            catch
-            {
-                // Not on PATH under this name; try the next.
-            }
-        }
+        new[] { "python3", "python" }.FirstOrDefault(candidate => Answers(candidate, "--version", TimeSpan.FromMinutes(1))));
 
-        return null;
-    });
+    /// <summary>
+    /// Whether <c>candidate arguments</c> exits with 0 within <paramref name="wait"/>; an interpreter still running then is
+    /// stopped and does not count, nor does a name that is not on PATH. A loaded machine can take seconds to start one, so
+    /// the run's probe waits a minute: waiting five seconds and then reading the exit code of a process still running
+    /// threw, which read as "no python", and every script fact of a busy run skipped.
+    /// </summary>
+    internal static bool Answers(string candidate, string arguments, TimeSpan wait)
+    {
+        try
+        {
+            var psi = new ProcessStartInfo(candidate, arguments)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using var probe = Process.Start(psi);
+            if (probe is null)
+                return false;
+            _ = probe.StandardOutput.ReadToEndAsync();
+            _ = probe.StandardError.ReadToEndAsync();
+            if (!probe.WaitForExit(wait))
+            {
+                try { probe.Kill(entireProcessTree: true); } catch { }
+                return false;
+            }
+            return probe.ExitCode == 0;
+        }
+        catch
+        {
+            // Not on PATH under this name.
+            return false;
+        }
+    }
+
+    /// <summary>The interpreter's name on this machine, <c>python3</c> or <c>python</c>, or null.</summary>
+    internal static string? Name => Interpreter.Value;
 
     public static bool IsAvailable => Interpreter.Value is not null;
 

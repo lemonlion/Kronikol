@@ -85,6 +85,11 @@ internal static class MergeCommand
             return 1;
         }
 
+        // -o names the data file when it ends .krkl (plans/REPORT_FORMAT_PLAN.md 4.3): the report beside it takes .html.
+        var compressOutput = output.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase);
+        if (compressOutput)
+            output = Path.ChangeExtension(output, ".html");
+
         // Before anything is read or written. The check used to live below the render, where it could
         // only ever report the damage: the HTML destination was never compared against the inputs at all
         // - only the .json name derived from it - so `-o <a-shard>.json` overwrote a shard with half a
@@ -92,13 +97,6 @@ internal static class MergeCommand
         if (RefuseAnOutputThatIsAnInput(output, writeJson, files, error))
             return 2;
 
-        // A compressed report file has no writer before CompressTestRunReport (plans/REPORT_FORMAT_PLAN.md R4); a .krkl
-        // holding plain JSON would be read only because every reader looks at the first bytes, not the name.
-        if (output.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase))
-        {
-            error.WriteLine($"-o {output}: merge writes the HTML report and its JSON data file, so it takes an .html name.");
-            return 2;
-        }
 
         @out.WriteLine($"Merging {files.Count} report file(s):");
         foreach (var f in files)
@@ -158,7 +156,8 @@ internal static class MergeCommand
 
         // Only after the render succeeded: a data file beside a report that was never written is worse
         // than neither, because the next command finds it and believes the merge worked.
-        var dataFile = WriteMergedData(merged, written, @out, error);
+        // Compressed when -o asked for it or any shard was, so that a merged report never loses ground against its shards.
+        var dataFile = WriteMergedData(merged, written, compressOutput || merged.FileCompressed, @out, error);
         if (dataFile is null)
             return 1;
 
@@ -253,10 +252,12 @@ internal static class MergeCommand
     private static bool RefuseAnOutputThatIsAnInput(string output, bool writeJson, List<string> inputs, TextWriter error)
     {
         var html = Path.GetFullPath(output);
+        // Either name the data file may take: .krkl when -o or a shard asks for it, which is known once the shards are read.
         var json = Path.GetFullPath(Path.ChangeExtension(output, ".json"));
+        var krkl = Path.GetFullPath(Path.ChangeExtension(output, ".krkl"));
 
         foreach (var (destination, what) in writeJson
-                     ? new[] { (html, "combined report"), (json, "merged data file") }
+                     ? new[] { (html, "combined report"), (json, "merged data file"), (krkl, "merged data file") }
                      : [(html, "combined report")])
         {
             if (!inputs.Any(f => string.Equals(f, destination, StringComparison.OrdinalIgnoreCase)))
@@ -280,11 +281,14 @@ internal static class MergeCommand
     /// caller acts on the answer rather than discarding it - a merge that wrote a report and failed to
     /// write the data file beside it has not done what it was asked, and must not exit 0.
     /// </remarks>
-    private static string? WriteMergedData(MergeableReport merged, string writtenHtml, TextWriter @out, TextWriter error)
+    private static string? WriteMergedData(MergeableReport merged, string writtenHtml, bool compress, TextWriter @out, TextWriter error)
     {
-        var destination = Path.GetFullPath(Path.ChangeExtension(writtenHtml, ".json"));
+        var destination = Path.GetFullPath(Path.ChangeExtension(writtenHtml, compress ? ".krkl" : ".json"));
 
-        if (!QueryWriter.TryWriteFile(destination, MergeableReportRenderer.Serialize(merged), error, "-o"))
+        var wrote = compress
+            ? QueryWriter.TryWriteFile(destination, stream => MergeableReportRenderer.WriteCompressed(merged, stream), error, "-o")
+            : QueryWriter.TryWriteFile(destination, MergeableReportRenderer.Serialize(merged), error, "-o");
+        if (!wrote)
             return null;
 
         @out.WriteLine($"Wrote merged data to {destination}");
@@ -388,7 +392,8 @@ internal static class MergeCommand
         w.WriteLine("                       A `baseline` folder is skipped: it is last-green, not a shard.");
         w.WriteLine("Options:");
         w.WriteLine("  -o, --output <path>  Output HTML path (default: TestRunReport.html). The data file and its");
-        w.WriteLine("                       schema take the same name with .json and .schema.json extensions.");
+        w.WriteLine("                       schema take the same name with .json and .schema.json extensions; the data");
+        w.WriteLine("                       file is .krkl, compressed, when a shard was or -o names a .krkl.");
         w.WriteLine("  -t, --title <text>   Report title (default: \"Test Run Report\").");
         w.WriteLine("      --no-json        Write the HTML only (the report, and its labs page when it has one): no data");
         w.WriteLine("                       file, and none of the other files beside it.");
