@@ -1004,3 +1004,9 @@ decision of the owner's, not part of this plan.
   a column (S13).
   Checks: the facts pass in both browsers, with BaseSurfaceStyleTests, 11 of 11. Found while running them: Playwright
   cannot fill a positional record from an evaluation (Return type mismatch), so the layout comes back as JSON.
+- 2026-10-19, S12 D43 follow-up (found by the full core suite on `d385c715`, its only 2 failures): four
+  `StepRenderingReportTests` pins read "<img" anywhere in the page, which D43's menu script now carries in its text,
+  so the two "no image" facts failed and the two "an image" facts could not fail. They read the attachment's own
+  markup now (`edits/tests-img-pins.py`); renaming the attachment image's class fails the image facts, 6 of 6 cases,
+  and the class and the attachment tests pass, 237 of 237. The lesson is the one the Report-HTML substring rule
+  states: a pin reads an emitted attribute, never a bare substring of the page.

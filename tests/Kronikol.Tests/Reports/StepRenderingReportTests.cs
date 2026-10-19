@@ -253,7 +253,8 @@ public class StepRenderingReportTests
             ]
         };
         var content = GenerateReport(MakeFeatures(scenario), $"ImgAttach_{fileName}.html");
-        Assert.Contains("<img", content);
+        // the attachment's own image (the page's scripts carry "<img" in their text)
+        Assert.Contains("<img class=\"attachment-image\"", content);
         Assert.Contains($"attachments/{fileName}", content);
         Assert.Contains("attachment-image", content);
     }
@@ -274,7 +275,8 @@ public class StepRenderingReportTests
             ]
         };
         var content = GenerateReport(MakeFeatures(scenario), "NonImgAttach.html");
-        Assert.DoesNotContain("<img", content);
+        // no image, image link or image name for the attachment (the page's scripts carry "<img" in their text)
+        Assert.DoesNotContain("class=\"attachment-image", content);
         Assert.Contains("<a class=\"step-attachment\"", content);
         Assert.Contains("output.txt", content);
     }
@@ -925,7 +927,8 @@ public class StepRenderingReportTests
             ]
         };
         var content = GenerateReport(MakeFeatures(scenario), "ScenarioImgAttach.html");
-        Assert.Contains("<img", content);
+        // the attachment's own image (the page's scripts carry "<img" in their text)
+        Assert.Contains("<img class=\"attachment-image\"", content);
         Assert.Contains("attachment-image", content);
         Assert.Contains("attachments/screenshot.png", content);
     }
@@ -944,7 +947,8 @@ public class StepRenderingReportTests
             ]
         };
         var content = GenerateReport(MakeFeatures(scenario), "ScenarioLinkAttach.html");
-        Assert.DoesNotContain("<img", content);
+        // no image, image link or image name for the attachment (the page's scripts carry "<img" in their text)
+        Assert.DoesNotContain("class=\"attachment-image", content);
         Assert.Contains("step-attachment", content);
         Assert.Contains("output.txt", content);
     }
