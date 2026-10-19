@@ -17,13 +17,13 @@ public record ReportToggleDefaults
     /// <summary>The Details radio group (Expand / Collapse / Truncate). Default: <see cref="ReportDetailsState.Truncated"/>.</summary>
     public ReportDetailsState? Details { get; set; }
 
-    /// <summary>The truncate-lines dropdown — one of its preset states. Default: <see cref="TruncateLineCount.Lines40"/>.</summary>
+    /// <summary>The truncate-lines dropdown — one of its preset states. Default: <see cref="TruncateLineCount.Lines10"/> from 5.0.0; <see cref="TruncateLineCount.Lines40"/> in 4.x.</summary>
     public TruncateLineCount? TruncateLines { get; set; }
 
     /// <summary>Note header lines (gray metadata) shown. Default: <c>false</c> from 4.0.0; <c>true</c> through 3.x.</summary>
     public bool? HeadersShown { get; set; }
 
-    /// <summary>Assertion notes shown in diagrams. Default: <c>false</c>.</summary>
+    /// <summary>Assertion notes shown in diagrams. Default: <c>true</c> from 5.0.0; <c>false</c> in 4.x.</summary>
     public bool? AssertionsShown { get; set; }
 
     /// <summary>Step-delimiter bars shown in diagrams. Default: <c>true</c>.</summary>

@@ -15,13 +15,19 @@ namespace Kronikol.Tests.EndToEnd;
 public static class ReportTestHelper
 {
     /// <summary>
-    /// The start states 3.x reports opened in: headers shown and notes as JSON. 4.0.0 opens a report with headers
-    /// hidden and notes as YAML (<c>plans/V4_PLAN.md</c> R8). A fixture whose facts drive the header or note-format
-    /// controls from the 3.x start pins these, so each fact starts where it was written to start; the 4.0.0 start
-    /// itself is pinned by <c>ToggleDefaultsTests</c>.
+    /// The start states the fixtures here were written for: headers shown and notes as JSON, as 3.x reports opened,
+    /// and assertions hidden with payloads truncated at 40 lines, as 4.x reports opened. 4.0.0 opens a report with
+    /// headers hidden and notes as YAML (<c>plans/V4_PLAN.md</c> R8), and 5.0.0 with assertions shown and payloads
+    /// truncated at 10 lines (the owner, 2026-10-19). A fixture whose facts drive those controls from the older start
+    /// pins it, so each fact starts where it was written to start; the current start itself is pinned by
+    /// <c>ToggleDefaultsTests</c>.
     /// </summary>
     public static readonly ResolvedToggleDefaults ClassicStart =
-        ResolvedToggleDefaults.BuiltIn with { HeadersShown = true, NotePayloadFormat = NotePayloadFormat.Json };
+        ResolvedToggleDefaults.BuiltIn with
+        {
+            HeadersShown = true, NotePayloadFormat = NotePayloadFormat.Json, AssertionsShown = false,
+            TruncateLines = TruncateLineCount.Lines40
+        };
 
     private const string PlantUmlSource = """
         @startuml
@@ -4000,7 +4006,11 @@ public static class ReportTestHelper
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
-            toggleDefaults: ResolvedToggleDefaults.BuiltIn with { HeadersShown = headersShown, NotePayloadFormat = notePayloadFormat });
+            // the note is longer than 5.0.0's 10-line truncation, and its facts read it whole
+            toggleDefaults: ResolvedToggleDefaults.BuiltIn with
+            {
+                HeadersShown = headersShown, NotePayloadFormat = notePayloadFormat, TruncateLines = TruncateLineCount.Lines40
+            });
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -4071,7 +4081,9 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            // the note is longer than 5.0.0's 10-line truncation, and its facts read it whole
+            toggleDefaults: ResolvedToggleDefaults.BuiltIn with { TruncateLines = TruncateLineCount.Lines40 });
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -4344,7 +4356,9 @@ public static class ReportTestHelper
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
-            notePayloadFormat: notePayloadFormat);
+            notePayloadFormat: notePayloadFormat,
+            // the notes are longer than 5.0.0's 10-line truncation, and the facts read every line
+            toggleDefaults: ResolvedToggleDefaults.BuiltIn with { TruncateLines = TruncateLineCount.Lines40, NotePayloadFormat = notePayloadFormat });
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;

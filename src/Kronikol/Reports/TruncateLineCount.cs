@@ -8,7 +8,7 @@ namespace Kronikol.Reports;
 /// Off-preset values are unrepresentable by design (adding or removing a preset is a breaking
 /// API change, accepted knowingly); an undefined cast like <c>(TruncateLineCount)37</c> fails
 /// report generation with an error naming the valid members. The built-in default lives in the
-/// resolver: <see cref="Lines40"/>.
+/// resolver: <see cref="Lines10"/> (5.0.0; <see cref="Lines40"/> in 4.x).
 /// </summary>
 public enum TruncateLineCount
 {
@@ -18,7 +18,7 @@ public enum TruncateLineCount
     Lines4 = 4,
     /// <summary>5 lines.</summary>
     Lines5 = 5,
-    /// <summary>10 lines.</summary>
+    /// <summary>10 lines (the built-in default from 5.0.0).</summary>
     Lines10 = 10,
     /// <summary>15 lines.</summary>
     Lines15 = 15,
@@ -30,7 +30,7 @@ public enum TruncateLineCount
     Lines30 = 30,
     /// <summary>35 lines.</summary>
     Lines35 = 35,
-    /// <summary>40 lines (the built-in default).</summary>
+    /// <summary>40 lines (the built-in default through 4.x).</summary>
     Lines40 = 40,
     /// <summary>50 lines.</summary>
     Lines50 = 50,

@@ -75,7 +75,7 @@ public class FilterToggleModelTests : PlaywrightTestBase
     [Theory]
     [InlineData("databases", "Order Db", false)]
     [InlineData("steps", "When the order is stored", false)]
-    [InlineData("assertions", "Stored in the database", true)]
+    [InlineData("assertions", "Stored in the database", false)]
     [InlineData("events", "OrderStored", false)]
     [InlineData("setup", "clear cache", false)]
     public async Task A_scenarios_choice_holds_for_the_diagrams_it_draws_after_it(string toggle, string marker, bool shownAfter)

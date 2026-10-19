@@ -24,11 +24,15 @@ public class ReportToggleDefaultsResolverTests
     {
         var b = ResolvedToggleDefaults.BuiltIn;
         Assert.Equal(ReportDetailsState.Truncated, b.Details);
-        Assert.Equal(TruncateLineCount.Lines40, b.TruncateLines);
+        // 5.0.0 (the owner, 2026-10-19): every diagram toggle but Headers starts on, and payloads truncate at 10
+        // lines; through 4.x assertions started hidden and the truncation was 40 lines.
+        Assert.Equal(TruncateLineCount.Lines10, b.TruncateLines);
         // 4.0.0 (plans/V4_PLAN.md R8): headers start hidden and notes start as YAML; through 3.x
         // headers started shown and notes as JSON.
         Assert.False(b.HeadersShown);
-        Assert.False(b.AssertionsShown);
+        Assert.True(b.AssertionsShown);
+        Assert.True(b.EventsShown);
+        Assert.True(b.SetupShown);
         Assert.True(b.StepsShown);
         Assert.True(b.DatabasesShown);
         Assert.Equal(NotePayloadFormat.Yaml, b.NotePayloadFormat);
@@ -75,7 +79,7 @@ public class ReportToggleDefaultsResolverTests
             Assert.False(resolved.HeadersShown);
             Assert.Equal(FilterCombinationMode.Or, resolved.DependencyFilterMode);
             // Untouched properties keep the built-ins
-            Assert.Equal(TruncateLineCount.Lines40, resolved.TruncateLines);
+            Assert.Equal(TruncateLineCount.Lines10, resolved.TruncateLines);
             Assert.Equal(FilterCombinationMode.Or, resolved.CategoryFilterMode);
         }
     }
@@ -85,16 +89,17 @@ public class ReportToggleDefaultsResolverTests
     {
         var options = new ReportConfigurationOptions
         {
-            SpecificationsToggleDefaults = { ScenariosExpanded = true, TruncateLines = TruncateLineCount.Lines10 }
+            // a preset other than the built-in 10 lines (5.0.0), so the two reports' values differ
+            SpecificationsToggleDefaults = { ScenariosExpanded = true, TruncateLines = TruncateLineCount.Lines20 }
         };
 
         var testRun = ReportToggleDefaultsResolver.Resolve(options, specifications: false);
         Assert.False(testRun.ScenariosExpanded);
-        Assert.Equal(TruncateLineCount.Lines40, testRun.TruncateLines);
+        Assert.Equal(TruncateLineCount.Lines10, testRun.TruncateLines);
 
         var specs = ReportToggleDefaultsResolver.Resolve(options, specifications: true);
         Assert.True(specs.ScenariosExpanded);
-        Assert.Equal(TruncateLineCount.Lines10, specs.TruncateLines);
+        Assert.Equal(TruncateLineCount.Lines20, specs.TruncateLines);
     }
 
     [Fact]

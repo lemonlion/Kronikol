@@ -89,12 +89,13 @@ public class ToggleDefaultsMarkupTests
     public void Script_tokens_substitute_to_the_builtin_globals()
     {
         var script = DiagramContextMenu.GetCollapsibleNotesScript(ResolvedToggleDefaults.BuiltIn);
-        // 4.0.0 (plans/V4_PLAN.md R8): headers start hidden and notes as YAML.
+        // 4.0.0 (plans/V4_PLAN.md R8): headers start hidden and notes as YAML. 5.0.0 (the owner): assertions start
+        // shown and payloads truncate at 10 lines.
         Assert.Contains("window._headersHidden = true", script);
-        Assert.Contains("window._truncateLinesDefault = 40", script);
+        Assert.Contains("window._truncateLinesDefault = 10", script);
         Assert.Contains("window._truncateLines = window._truncateLinesDefault", script);
         Assert.Contains("window._detailsDefault = 'truncated'", script);
-        Assert.Contains("window._assertionsVisible = false", script);
+        Assert.Contains("window._assertionsVisible = true", script);
         Assert.Contains("window._stepsVisible = true", script);
         Assert.Contains("window._databasesVisible = true", script);
         Assert.Contains("window._noteFormatDefault = 'yaml'", script);
@@ -136,7 +137,7 @@ public class ToggleDefaultsMarkupTests
         })
         {
             Assert.Contains("window._detailsDefault = 'truncated'", script);
-            Assert.Contains("window._truncateLinesDefault = 40", script);
+            Assert.Contains("window._truncateLinesDefault = 10", script);
             foreach (var token in ScriptTokens)
                 Assert.DoesNotContain(token, script);
         }
@@ -186,9 +187,10 @@ public class ToggleDefaultsMarkupTests
     [Fact]
     public void Truncate_lines_default_selects_the_configured_option()
     {
-        var content = Generate(t => t.TruncateLines = TruncateLineCount.Lines10);
-        Assert.Contains("<option value=\"10\" selected>10 lines</option>", content);
-        Assert.DoesNotContain("<option value=\"40\" selected>40 lines</option>", content);
+        // a preset other than the built-in 10 lines (5.0.0)
+        var content = Generate(t => t.TruncateLines = TruncateLineCount.Lines20);
+        Assert.Contains("<option value=\"20\" selected>20 lines</option>", content);
+        Assert.DoesNotContain("<option value=\"10\" selected>10 lines</option>", content);
     }
 
     [Fact]
@@ -197,9 +199,9 @@ public class ToggleDefaultsMarkupTests
         var content = Generate();
         Assert.Contains(
             "<option value=\"3\">3 lines</option><option value=\"4\">4 lines</option><option value=\"5\">5 lines</option>" +
-            "<option value=\"10\">10 lines</option><option value=\"15\">15 lines</option><option value=\"20\">20 lines</option>" +
+            "<option value=\"10\" selected>10 lines</option><option value=\"15\">15 lines</option><option value=\"20\">20 lines</option>" +
             "<option value=\"25\">25 lines</option><option value=\"30\">30 lines</option><option value=\"35\">35 lines</option>" +
-            "<option value=\"40\" selected>40 lines</option><option value=\"50\">50 lines</option><option value=\"60\">60 lines</option>" +
+            "<option value=\"40\">40 lines</option><option value=\"50\">50 lines</option><option value=\"60\">60 lines</option>" +
             "<option value=\"80\">80 lines</option><option value=\"100\">100 lines</option>", content);
     }
 

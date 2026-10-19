@@ -24,7 +24,9 @@ public class FilteredMarkerTests : PlaywrightTestBase
     private const string AssertionOnly = "@startuml\nparticipant \"(no interactions)\" as noInteractions\n" +
         "hnote across <<assertionNote>> #E8F5E9\n✓ The mock answers 200\nend note\n@enduml";
 
-    private async Task OpenAsync(string fileName, string source)
+    // assertions start shown since 5.0.0; these tests write the report with them hidden, the first render being the
+    // path the strip took
+    private async Task OpenAsync(string fileName, string source, bool assertionsShown = true)
     {
         Feature[] features =
         [
@@ -36,7 +38,8 @@ public class FilteredMarkerTests : PlaywrightTestBase
         ];
         var path = ReportGenerator.GenerateHtmlReport([new DefaultDiagramsFetcher.DiagramAsCode("s1", "", source)],
             features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Bakery", true,
-            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ResolvedToggleDefaults.BuiltIn with { AssertionsShown = assertionsShown });
         await Page.GotoAsync(new Uri(path).AbsoluteUri);
         await ExpandFirstScenarioWithDiagram();
     }
@@ -47,9 +50,9 @@ public class FilteredMarkerTests : PlaywrightTestBase
     [Fact]
     public async Task Hiding_assertions_keeps_the_statement_after_a_note_on_a_line_of_its_own()
     {
-        await OpenAsync("FilteredMarkerAssertion.html", NoteBetweenArrows);
+        await OpenAsync("FilteredMarkerAssertion.html", NoteBetweenArrows, assertionsShown: false);
 
-        // assertions start hidden: the note goes, both arrows stay, and neither label takes in the next line
+        // assertions hidden: the note goes, both arrows stay, and neither label takes in the next line
         var texts = await Texts(await WaitForDiagramSvg());
         Assert.DoesNotContain(texts, t => t.Contains("The order is taken"));
         Assert.Contains("one", texts);
@@ -79,10 +82,10 @@ public class FilteredMarkerTests : PlaywrightTestBase
     [Fact]
     public async Task A_diagram_of_nothing_but_hidden_markers_says_so_and_names_the_toggles_by_their_words()
     {
-        await OpenAsync("FilteredMarkerNothingToDraw.html", AssertionOnly);
+        await OpenAsync("FilteredMarkerNothingToDraw.html", AssertionOnly, assertionsShown: false);
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
 
-        // assertions start hidden, so the note is filtered away and the lifeline alone is not drawn
+        // assertions hidden, so the note is filtered away and the lifeline alone is not drawn
         var message = Page.Locator("[data-nothing-to-draw]").First;
         await message.WaitForAsync(new() { Timeout = 30000 });
         var text = await message.InnerTextAsync();

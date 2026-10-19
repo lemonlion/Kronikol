@@ -552,3 +552,20 @@ decision of the owner's, not part of this plan.
   behaviours one at a time, and each fails its test; the setup filter running after the steps filter survived a first
   run, as no test hid the step bars and the setup together, and one now does.
   Checks: the core suite passes 7,781 with 2 skipped; the full Playwright suite passes 1,163 with 28 skipped.
+- 2026-10-19, the owner's defaults for 5.0.0 (asked during S9a: "for v5 I want all the report level diagram toggles
+  except Headers to be on by default, and the default should be Truncate 10 Lines"):
+  `ResolvedToggleDefaults.AssertionsShown` is true (false from 4.0.0) and `TruncateLines` is `Lines10` (`Lines40`
+  through 4.x); Steps, Databases, Events and Setup already started on, and Headers stays off. A change of defaults,
+  listed in the changelog's breaking changes, with the two settings that open a report as 4.x did. The built-in pins
+  move; a fact that seeded 10 lines, now the default, seeds 20; `ReportTestHelper.ClassicStart`, the start the older
+  fixtures were written for, pins assertions hidden and 40 lines as well as 3.x's headers and JSON; the facts that
+  read a long note whole write their reports with 40 lines, and those that relied on assertions starting hidden write
+  them hidden.
+  Tests: Playwright `ToggleDefaultsTests` gains a fact that a report with nothing configured draws its assertion notes
+  and truncates a long payload at 10 lines (failing before).
+  Checks: the core suite passes 7,781 with 2 skipped; the full Playwright suite passed 1,160 with 28 skipped and
+  failed 4, all facts written on the old start, fixed and passing 19 of 19 in their classes:
+  ComponentDiagramDatabaseToggleTests's Assertions click now hides them (after checking the notes are there),
+  FilterStateDefaultTests's assertions row reads the notes' stereotype, as the fixture's style block names
+  .assertionNote and the bare word made the row unable to fail, and CapturedTextEscapeTests's fixture, whose facts
+  read notes longer than 10 lines, truncates at 40.

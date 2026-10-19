@@ -73,6 +73,11 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 
 ### Changed (breaking)
 
+- **Every diagram toggle but Headers starts on, and payloads start truncated at 10 lines.** Assertion notes are drawn
+  from the first render (from 4.0.0 they started hidden), and the Payloads control starts on Truncated at 10 lines,
+  where 4.x truncated at 40. Steps, Databases, Events and Setup start on, and Headers off, as before. To open a report
+  as 4.x did, set `ReportToggleDefaults.AssertionsShown` to `false` and `TruncateLines` to
+  `TruncateLineCount.Lines40`.
 - **The report's look (Option C, in progress on the branch).** Features are cards on a tinted ground, with their
   scenarios as rows inside them and a cross before a failed one; steps line up on one column with their status
   circles, the triangles of collapsible steps in the gutter beside it; a failure shows its diff with the expected

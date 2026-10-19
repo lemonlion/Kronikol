@@ -15,9 +15,9 @@ public record ResolvedToggleDefaults
     public static ResolvedToggleDefaults BuiltIn { get; } = new();
 
     public ReportDetailsState Details { get; init; } = ReportDetailsState.Truncated;
-    public TruncateLineCount TruncateLines { get; init; } = TruncateLineCount.Lines40;
+    public TruncateLineCount TruncateLines { get; init; } = TruncateLineCount.Lines10;
     public bool HeadersShown { get; init; }
-    public bool AssertionsShown { get; init; }
+    public bool AssertionsShown { get; init; } = true;
     public bool StepsShown { get; init; } = true;
     public bool DatabasesShown { get; init; } = true;
     public bool EventsShown { get; init; } = true;

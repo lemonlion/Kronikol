@@ -51,7 +51,8 @@ public class FilterStateDefaultTests : DiagramNotePlaywrightBase
     [Theory]
     [InlineData("_databasesVisible", "databases", "mongoDB")]
     [InlineData("_stepsVisible", "steps", "stepDelimiter")]
-    [InlineData("_assertionsVisible", "assertions", "assertionNote")]
+    // the notes' stereotype: the fixture's style block names .assertionNote too, so the bare word is always in the source
+    [InlineData("_assertionsVisible", "assertions", "<<assertionNote>>")]
     public async Task A_diagram_without_its_own_filter_state_follows_the_reports_toggle(string flag, string toggle, string token)
     {
         await Page.GotoAsync(GenerateDatabaseStepNoteCollapseReport($"FilterStateToggle{flag}.html"));

@@ -208,10 +208,11 @@ public class ComponentDiagramDatabaseToggleTests : PlaywrightTestBase
         Assert.Contains("database \"Spanner\"", componentAfterSteps);
         Assert.Contains("collections \"Redis\"", componentAfterSteps);
 
-        // Assertions default to hidden, so this click SHOWS them — the queue builder runs
+        // Assertions start shown since 5.0.0, so this click HIDES them — the queue builder runs
         // over every container either way, re-applying the databases filter as it goes.
-        await Page.Locator("button[data-toggle='assertions']").First.ClickAsync();
         await WaitForScenarioSourceWith("<<assertionNote>>");
+        await Page.Locator("button[data-toggle='assertions']").First.ClickAsync();
+        await WaitForScenarioSourceWithout("<<assertionNote>>");
         var componentAfterAssertions = await GetComponentDiagramSource();
         Assert.Contains("database \"Spanner\"", componentAfterAssertions);
         Assert.Contains("collections \"Redis\"", componentAfterAssertions);

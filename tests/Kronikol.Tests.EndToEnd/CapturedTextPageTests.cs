@@ -41,7 +41,8 @@ public class CapturedTextPageTests : PlaywrightTestBase
     [Fact]
     public async Task Hiding_assertions_keeps_a_diagram_whose_assertion_says_end_note()
     {
-        // Assertions start hidden: the page takes each assertion note out of the source before drawing it, and the
+        // Assertions hidden (written so, as they start shown since 5.0.0): the page takes each assertion note out of
+        // the source before drawing it, and the
         // pattern ended the note at the first "end note" anywhere, mid-line included. The rest of the note stayed in the
         // source, with its own `end note`, and the engine drew its syntax-error picture in place of the diagram.
         const string source = """
@@ -69,7 +70,8 @@ public class CapturedTextPageTests : PlaywrightTestBase
         var fileName = "CapturedText_end_note.html";
         var path = ReportGenerator.GenerateHtmlReport([new DiagramAsCode("assert-1", "", source)], features,
             DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Assertions", true,
-            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: ResolvedToggleDefaults.BuiltIn with { AssertionsShown = false });
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
 
         await Page.GotoAsync(new Uri(path).AbsoluteUri);

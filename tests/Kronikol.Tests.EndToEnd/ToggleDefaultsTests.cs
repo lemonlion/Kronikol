@@ -87,10 +87,10 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
             "() => String(document.querySelector('.toolbar-right .details-radio-btn[data-state=\"collapsed\"]').classList.contains('details-active'))"));
 
         // The per-note plus button expands away from the seeded state (a long note goes
-        // collapsed → truncated, so the body lines come back up to the truncation limit)
+        // collapsed → truncated, so the body lines come back up to the truncation limit, 10 lines since 5.0.0)
         await ClickNoteButton("[data-note-btn='plus']");
         var reopened = await CountNoteLinesInSource();
-        Assert.True(reopened > 30, $"plus on the seeded-collapsed note should restore the body (got {reopened} lines)");
+        Assert.True(reopened is > 5 and < 15, $"plus on the seeded-collapsed note should open it to the 10-line truncation (got {reopened} lines)");
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -100,16 +100,17 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Truncate_lines_default_governs_the_zero_click_truncation()
     {
-        await NavigateLongNote("Toggle_TruncateLines10.html", t => t.TruncateLines = Kronikol.Reports.TruncateLineCount.Lines10);
+        // a preset other than the built-in 10 lines (5.0.0)
+        await NavigateLongNote("Toggle_TruncateLines20.html", t => t.TruncateLines = Kronikol.Reports.TruncateLineCount.Lines20);
 
         var lines = await CountNoteLinesInSource();
-        Assert.True(lines is > 5 and < 15, $"the 45-line note should truncate near the seeded 10 lines (got {lines})");
+        Assert.True(lines is > 15 and < 25, $"the 45-line note should truncate near the seeded 20 lines (got {lines})");
 
         // Both dropdowns read the seeded value
-        Assert.Equal("10", await Page.Locator(".toolbar-right .truncate-lines-select").InputValueAsync());
+        Assert.Equal("20", await Page.Locator(".toolbar-right .truncate-lines-select").InputValueAsync());
         await OpenScenarioSettingsAsync();
-        Assert.Equal("10", await Page.Locator("details.scenario .truncate-lines-select").First.InputValueAsync());
-        Assert.Equal(10, await Page.EvaluateAsync<int>("() => window._truncateLines"));
+        Assert.Equal("20", await Page.Locator("details.scenario .truncate-lines-select").First.InputValueAsync());
+        Assert.Equal(20, await Page.EvaluateAsync<int>("() => window._truncateLines"));
 
         // Changing the dropdown still works
         await Page.Locator("details.scenario .truncate-lines-select").First.SelectOptionAsync("40");
@@ -150,22 +151,36 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
-    public async Task Assertions_shown_default_renders_assertions_with_zero_clicks()
+    public async Task Assertions_hidden_default_strips_assertions_with_zero_clicks()
     {
-        await NavigateWide("Toggle_AssertionsShown.html", t => t.AssertionsShown = true);
+        // assertions start shown since 5.0.0, so the configured state here is the other one
+        await NavigateWide("Toggle_AssertionsHidden.html", t => t.AssertionsShown = false);
 
-        var text = await GetNormalizedSvgText();
-        Assert.Contains("✓ Put steps response message status code should be OK", text);
+        Assert.DoesNotContain("✓ Put steps response message status code should be OK", await GetNormalizedSvgText());
 
         var btn = Page.Locator(".toolbar-right .toggle-btn[data-toggle='assertions']");
         Assert.Equal("Assertions", (await btn.TextContentAsync())!.Trim());
-        Assert.Equal("true", await btn.GetAttributeAsync("aria-pressed"));
+        Assert.Equal("false", await btn.GetAttributeAsync("aria-pressed"));
 
         var renderCount = await Page.EvaluateAsync<int>("() => window._renderCompleteCount || 0");
         await OpenScenarioSettingsAsync();
-        await Page.Locator("details.scenario .toggle-btn[data-toggle='assertions'][data-shown='true']").ClickAsync();
+        await Page.Locator("details.scenario .toggle-btn[data-toggle='assertions'][data-shown='false']").ClickAsync();
         await WaitForRenderCountIncrease(renderCount);
-        Assert.DoesNotContain("✓ Put steps response message status code should be OK", await GetNormalizedSvgText());
+        Assert.Contains("✓ Put steps response message status code should be OK", await GetNormalizedSvgText());
+    }
+
+    [Fact]
+    public async Task With_nothing_configured_assertion_notes_are_drawn_and_payloads_truncate_at_10_lines()
+    {
+        // 5.0.0 (the owner, 2026-10-19): every diagram toggle but Headers starts on; payloads truncate at 10 lines
+        await NavigateWide("Toggle_V5Assertions.html", _ => { });
+        Assert.Contains("✓ Put steps response message status code should be OK", await GetNormalizedSvgText());
+        Assert.Equal("true", await Page.Locator(".toolbar-right .toggle-btn[data-toggle='assertions']").GetAttributeAsync("aria-pressed"));
+
+        await NavigateLongNote("Toggle_V5Truncation.html", _ => { });
+        var lines = await CountNoteLinesInSource();
+        Assert.True(lines is > 5 and < 15, $"the 45-line note should truncate near 10 lines (got {lines})");
+        Assert.Equal("10", await Page.Locator(".toolbar-right .truncate-lines-select").InputValueAsync());
     }
 
     [Fact]

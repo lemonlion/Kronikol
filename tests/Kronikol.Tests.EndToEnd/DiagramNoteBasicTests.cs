@@ -86,7 +86,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
         await OpenScenarioSettingsAsync();
         var select = Page.Locator(".diagram-toggle .truncate-lines-select").First;
         var value = await select.InputValueAsync();
-        Assert.Equal("40", value);
+        Assert.Equal("10", value); // the built-in 10 lines since 5.0.0 (40 through 4.x)
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
 
         await OpenScenarioSettingsAsync();
         var select = Page.Locator(".diagram-toggle .truncate-lines-select").First;
-        Assert.Equal("40", await select.InputValueAsync());
+        Assert.Equal("10", await select.InputValueAsync());
         await select.SelectOptionAsync("3");
         Assert.Equal("3", await select.InputValueAsync());
     }
