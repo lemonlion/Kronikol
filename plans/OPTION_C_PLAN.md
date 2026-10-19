@@ -779,3 +779,25 @@ decision of the owner's, not part of this plan.
   Node classes then pass: the probe's facts and the nine classes that had skipped run 450 tests, every one passing and
   none skipped; one mutation, the wait capped at five seconds again, is killed (`checks/mutate-nodeprobe.py`). The
   probe is the same on main (a 4.x patch, for the owner).
+- 2026-10-19, S11a: the colours carried from S10 mapped to the theme's tokens (the preview's `c-round5.css` 90-110 and
+  `c-round17.css` 119-121, sp P36.2, P36.10-12, P36.16, P36.21), in `edits/scripts-s11a.py`, each falling back to the
+  engine's colour: an activity diagram's ground, ink, lines, arrowheads, boxes (`#F0F4FF` edged `#666666`) and lanes
+  (`#CCCCCC`), in an `.iflow-diagram` box, which holds both a scenario's whole-test flow and the internal-flow popup's
+  diagram; the component diagram's person box (`#08427B`), its database box's edge (`#09616A`) and its edge labels
+  (`#666666`), scoped to `#component-diagram`, since `#666666` is an activity's edge too; and a sequence note's header
+  line (`NotePalette.HeaderInk`, `#686868`). The pinned engine writes each as a six-digit attribute (probed). S10b-3
+  follow-up's interim fact, an activity diagram's black text staying black in the dark theme, is replaced by the facts
+  that it takes the theme, and its mutation, which no longer changes anything a test can see, is removed.
+- Not ported: the preview's soft ink for `#666666` and `#686868` text inside an activity diagram, which no activity
+  diagram Kronikol draws carries.
+  Tests: Playwright `DiagramActivityAndComponentColoursTests` (new, 4 theories, 8 cases in both themes: the whole-test
+  flow's ground, ink, lines, arrowheads, boxes, edges and lanes; the popup's boxes and ink; the component diagram's
+  person box, database edge and labels; a note's header line), failing 8 of 8 before the change. A lane's colour is
+  drawn only between two swimlanes (Kronikol's `SwimlaneBorderColor #ccc`; a flow whose spans share one source draws
+  one lane and no line), so `ReportTestHelper.GenerateRunReportWithFlowArrows` gains an opt-in second source
+  (`twoSources`) that the theories ask for. Mutations: 11 of 11 killed (`checks/mutate-s11a.py`, which now takes part
+  of a test name): the component diagram's and the note header's four in a first run, the whole-test flow's seven
+  again after the lane fix, since the first run's flow mutations read a theory that failed without them.
+  Checks: the new class and the classes it touches pass, 41 of 41 (`DiagramActivityAndComponentColoursTests`,
+  `DiagramThemeColoursTests`, `DiagramRolesTests`, `ComponentDiagramPageTests`, `ArrowLinkOpensPopupTests`,
+  `DiagramCentringTests`).

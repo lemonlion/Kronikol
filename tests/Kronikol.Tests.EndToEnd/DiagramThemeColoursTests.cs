@@ -168,28 +168,4 @@ public class DiagramThemeColoursTests : DiagramNotePlaywrightBase
 
         Assert.Equal("rgb(67, 141, 213)", r[0]);
     }
-
-    // A scenario's whole-test flow is an activity diagram drawn in a .plantuml-browser box too, with black text on light
-    // boxes. Its colours are mapped with the popup's (S11); until then they stay the engine's in the dark theme, where a
-    // sequence diagram's light ink left the text on those boxes unreadable.
-    [Fact]
-    public async Task An_activity_diagram_keeps_its_own_colours_in_the_dark_theme()
-    {
-        var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, "ThemeActivity-dark.html", withFlow: 1, withoutFlow: 0);
-        await Page.GotoAsync(uri);
-        await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", "dark");
-        await ExpandFirstScenarioWithDiagram();
-        await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
-        await Page.WaitForFunctionAsync("() => !!document.querySelector('.plantuml-browser.iflow-diagram svg text')", null,
-            new() { Timeout = 300000, PollingInterval = 200 });
-
-        var fill = await Page.EvaluateAsync<string>("""
-            () => {
-                const t = Array.from(document.querySelectorAll('.plantuml-browser.iflow-diagram svg text')).find(t => /^#000000$/i.test(t.getAttribute('fill') || ''));
-                return t ? getComputedStyle(t).fill : 'none';
-            }
-            """);
-
-        Assert.Equal("rgb(0, 0, 0)", fill);
-    }
 }

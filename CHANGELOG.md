@@ -115,6 +115,8 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   A diagram narrower than its box stands in the middle of it, drawn whole or in fragments, and a request's link is
   drawn in the report's accent, not the engine's blue. A diagram copied, saved or opened as SVG or PNG carries the
   look the page gives it, in the light theme's colours whichever theme the page shows, as every copy did before.
+  The activity diagrams of a scenario's whole-test flow and of the internal-flow popup take the theme's colours too,
+  as do the component diagram's person box, database edge and edge labels, and a note's header line.
 - **A service is drawn as a box.** `DependencyPalette.GetSequenceShape(DependencyType.HttpApi)` returns `participant`,
   which was `entity`, and a caller after the first that has no category is a `participant` too: a service reads as a
   box among the participants around it, not a circle on a line.

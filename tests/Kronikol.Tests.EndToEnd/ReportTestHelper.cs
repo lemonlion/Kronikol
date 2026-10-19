@@ -4512,16 +4512,19 @@ public static class ReportTestHelper
     /// </summary>
     public static (string Uri, string ReportsDir) GenerateRunReportWithFlowArrows(string tempDir, string outputDir, string fileName,
         int withFlow, int withoutFlow, string name = "Flow arrows", bool mergeableData = false, string[]? paths = null,
-        int? browserFragmentMaxHeight = null)
+        int? browserFragmentMaxHeight = null, bool twoSources = false)
     {
         var reportsDir = Path.Combine(tempDir, "flow-arrows-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(reportsDir);
         var testId = "flow-arrows-" + Guid.NewGuid().ToString("N");
         var sourceName = "Kronikol.Tests.FlowArrows.E2E." + Guid.NewGuid().ToString("N");
         using var source = new System.Diagnostics.ActivitySource(sourceName);
+        // twoSources: the database span comes from a source of its own, so a flow draws two swimlanes and the line
+        // between them
+        using var database = new System.Diagnostics.ActivitySource(sourceName + ".Db");
         using var listener = new System.Diagnostics.ActivityListener
         {
-            ShouldListenTo = s => s.Name == sourceName,
+            ShouldListenTo = s => s.Name == sourceName || s.Name == database.Name,
             Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
                 System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded
         };
@@ -4529,10 +4532,11 @@ public static class ReportTestHelper
         var spans = new List<System.Diagnostics.Activity>();
         var at = DateTimeOffset.UtcNow.AddSeconds(-30);
 
-        void Span(string name, System.Diagnostics.ActivityTraceId trace, DateTimeOffset start, int ms)
+        void Span(string name, System.Diagnostics.ActivityTraceId trace, DateTimeOffset start, int ms,
+            System.Diagnostics.ActivitySource? from = null)
         {
             System.Diagnostics.Activity.Current = null;
-            var span = source.StartActivity(name, System.Diagnostics.ActivityKind.Internal,
+            var span = (from ?? source).StartActivity(name, System.Diagnostics.ActivityKind.Internal,
                 new System.Diagnostics.ActivityContext(trace, System.Diagnostics.ActivitySpanId.CreateRandom(), System.Diagnostics.ActivityTraceFlags.Recorded))!;
             span.SetStartTime(start.UtcDateTime);
             span.SetEndTime(start.UtcDateTime.AddMilliseconds(ms));
@@ -4557,7 +4561,7 @@ public static class ReportTestHelper
                 if (flow)
                 {
                     Span("GET " + path, trace, start.AddMilliseconds(1), 60);
-                    Span("SELECT orders " + i, trace, start.AddMilliseconds(10), 20);
+                    Span("SELECT orders " + i, trace, start.AddMilliseconds(10), 20, twoSources ? database : null);
                 }
             }
             foreach (var span in spans)

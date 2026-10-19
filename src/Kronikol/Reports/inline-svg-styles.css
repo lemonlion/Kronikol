@@ -116,6 +116,21 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
 .plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#9b59b6" i] { fill: var(--dg-msg, #9b59b6); }
 .plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#9b59b6" i], [stroke="#9b59b6" i]) { stroke: var(--dg-msg, #9b59b6) !important; }
 
+/* An activity diagram's own colours (a scenario's whole-test flow and the internal-flow popup), the component diagram's,
+   and a sequence note's header line, mapped to the theme's tokens (5.0.0, plans/OPTION_C_PLAN.md S11); each falls back
+   to the colour the engine painted. */
+.iflow-diagram svg { background: var(--dg-bg, transparent) !important; }
+.iflow-diagram svg text[fill="#000000" i] { fill: var(--dg-ink, #000000); }
+.iflow-diagram svg :is([style*="stroke:#181818" i], [stroke="#181818" i]) { stroke: var(--dg-line, #181818) !important; }
+.iflow-diagram svg polygon[fill="#181818" i] { fill: var(--dg-line, #181818); }
+.iflow-diagram svg rect[fill="#f0f4ff" i] { fill: var(--dg-activity, #f0f4ff); }
+.iflow-diagram svg :is([style*="stroke:#666666" i], [stroke="#666666" i]) { stroke: var(--dg-activity-edge, #666666) !important; }
+.iflow-diagram svg :is([style*="stroke:#cccccc" i], [stroke="#cccccc" i]) { stroke: var(--dg-lane, #cccccc) !important; }
+#component-diagram svg [fill="#08427b" i] { fill: var(--dg-person, #08427b); }
+#component-diagram svg :is([style*="stroke:#09616a" i], [stroke="#09616a" i]) { stroke: var(--dg-db-edge, #09616a) !important; }
+#component-diagram svg text[fill="#666666" i] { fill: var(--dg-ink-soft, #666666); }
+.plantuml-browser:where(:not(.iflow-diagram)) svg text[fill="#686868" i] { fill: var(--dg-ink-soft, #686868); }
+
 /* A diagram narrower than its box stands in the middle of it, drawn whole or in fragments (5.0.0, plans/OPTION_C_PLAN.md
    S10); one as wide as its box still fills it, the auto margins coming to 0. The box held its drawing 1em in from the
    left and 0 from the right, which put a centred drawing half an em right of the box's middle. */
