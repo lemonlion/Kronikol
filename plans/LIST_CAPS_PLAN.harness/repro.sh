@@ -34,6 +34,8 @@ run_lane() {
   "$KRONIKOL" query failures "$report" --json --out "$OUT/$lane/failures.out.json" > /dev/null 2>&1 || true
   for s in s0 s4; do
     "$KRONIKOL" query steps "$report" "$s" > "$OUT/$lane/steps-$s.txt" 2>&1 || true
+    # The full view, from 4.28.0 (R1); an older tool answers that it has no such verb.
+    "$KRONIKOL" query attachments "$report" "$s" --max-bytes 0 > "$OUT/$lane/attachments-$s.txt" 2>&1 || true
   done
   cp "$report/Failures.md" "$OUT/$lane/Failures.md"
   cp "$report/Failures.jsonl" "$OUT/$lane/Failures.jsonl"

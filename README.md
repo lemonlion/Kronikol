@@ -187,6 +187,7 @@ kronikol query repro    ./Reports          # the dotnet test --filter line that 
 kronikol query services ./Reports          # per service: calls, errors, timings — and what was never called
 kronikol query sizes    ./Reports          # what fills the report file, part by part, and its largest scenarios
 kronikol query flow     ./Reports s3       # the sequence, in 2 KB instead of 663
+kronikol query attachments ./Reports s3    # every screenshot, trace and video a scenario holds, with its step
 kronikol query trace    ./Reports 4bf92f3577b34da6   # follow one W3C trace across scenarios, in order
 kronikol query grep     ./Reports "4173" --values    # where a wrong number entered the system
 kronikol query grep     ./Reports 19.99 --number     # numeric match however the payload formats it

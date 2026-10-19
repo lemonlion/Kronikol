@@ -41,9 +41,19 @@ def digest_worked_through(md):
     return worked
 
 
+def digest_counted(md):
+    """The further-failures table's Attachments column (4.28.0, R1), by address; empty before it had one."""
+    if "| Address | stableId | Scenario | Error | Attachments |" not in md:
+        return {}
+    return {m.group(1): m.group(2) or "0" for m in re.finditer(r"^\| `(s\d+)` \|.* \| (\d*) \|$", md, re.M)}
+
+
+ENTRY = re.compile(r"^s\d+(?:/\S+)? +.+ → ")
+
+
 print("| Lane | Scenario | In the data (own + steps) | `failures` text | said how many more | `failures --json` (own + steps) "
-      "| `--json --out` | `steps sN` | Failures.md |")
-print("|---|---|---|---|---|---|---|---|---|")
+      "| `--json --out` | `steps sN` | `attachments sN` | Failures.md |")
+print("|---|---|---|---|---|---|---|---|---|---|")
 for lane in ("recipe", "messages", "hooks"):
     folder = out / lane
     if not folder.exists():
@@ -54,7 +64,9 @@ for lane in ("recipe", "messages", "hooks"):
     text = failures_text_blocks((folder / "failures.txt").read_text(encoding="utf-8"))
     envelope = json.loads((folder / "failures.json").read_text(encoding="utf-8"))
     unbudgeted = json.loads((folder / "failures.out.json").read_text(encoding="utf-8"))
-    md = digest_worked_through((folder / "Failures.md").read_text(encoding="utf-8"))
+    md_text = (folder / "Failures.md").read_text(encoding="utf-8")
+    md = digest_worked_through(md_text)
+    counted = digest_counted(md_text)
     for record in digest:
         address = record["address"]
         own = [a for a in record.get("attachments", []) if "step" not in a]
@@ -68,11 +80,22 @@ for lane in ("recipe", "messages", "hooks"):
         def json_counts(i):
             if i is None:
                 return "record absent"
-            return f"{len(i['attachments'])} + {sum(len(s.get('attachments', [])) for s in i['failingSteps'])}"
+            counts = f"{len(i['attachments'])} + {sum(len(s.get('attachments', [])) for s in i['failingSteps'])}"
+            # The totals, from 4.28.0 (R1).
+            if "attachmentsTotal" in i:
+                counts += f" (totals {i['attachmentsTotal']} + {i['stepAttachmentsTotal']})"
+            return counts
 
         steps_file = folder / f"steps-{address}.txt"
         steps_shown = (sum(1 for line in steps_file.read_text(encoding="utf-8").splitlines() if ATTACH.match(line))
                        if steps_file.exists() else "not run")
-        in_md = f"{md[address]} (worked through)" if address in md else "table row, none"
+        listing_file = folder / f"attachments-{address}.txt"
+        listing = listing_file.read_text(encoding="utf-8") if listing_file.exists() else None
+        listed = ("not run" if listing is None
+                  else "no such verb" if "Unknown query command" in listing
+                  else sum(1 for line in listing.splitlines() if ENTRY.match(line)))
+        in_md = (f"{md[address]} (worked through)" if address in md
+                 else f"table row, counts {counted[address]}" if address in counted
+                 else "table row, none")
         print(f"| {lane} | {address} | {len(own)} + {len(stepped)} | {shown} | {more if more else 'nothing'} "
-              f"| {json_counts(item)} | {json_counts(item_out)} | {steps_shown} | {in_md} |")
+              f"| {json_counts(item)} | {json_counts(item_out)} | {steps_shown} | {listed} | {in_md} |")

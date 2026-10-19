@@ -437,12 +437,13 @@ public class CucumberAttachmentIngestTests : IDisposable
         Assert.Equal(listed.Length, listed.Distinct().Count());
         Assert.DoesNotContain(listed, path => Regex.IsMatch(Path.GetFileName(path), @"^\d{4}-"));
 
-        // And `query failures` gives the failing scenario four different artefacts, where it gave a duplicate.
+        // And `query failures` gives the failing scenario its own six artefacts, each once, where it gave a duplicate: all of
+        // them, since six is under the cap that once cut the list at four, the error context and the trace among them (#161).
         var query = new StringWriter();
         Assert.Equal(0, QueryCommand.Run(["failures", output], query, new StringWriter()));
         var block = query.ToString().Split("\n\n").First(b => b.Contains(AttachmentFixture.FailingScenario, StringComparison.Ordinal));
         var own = Regex.Matches(block, @"^  attachment: (.+?) →", RegexOptions.Multiline).Select(m => m.Groups[1].Value).ToArray();
-        Assert.Equal(["screenshot-start.png", "screenshot", "screenshot-end.png", "video"], own);
+        Assert.Equal(["screenshot-start.png", "screenshot", "screenshot-end.png", "video", "error-context", "trace"], own);
     }
 
     [Fact]

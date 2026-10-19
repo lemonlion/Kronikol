@@ -61,7 +61,7 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--limit N` | cap rows. The verbs that list rows |
 | `--count` | print how many matched, and nothing else. Every verb that counts something — not `http`, `body`, `note`, `diagram`, `steps`, `compare` |
 | `--out FILE` | write the answer to a file instead of the terminal; prints one line. Lifts the byte budget — a file is not a context window. `http`, `body`, `note` and `diagram` write the payload; every other verb writes what it would have printed |
-| `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `repro`, `services`, `sizes`, `interactions`, `assertions`, `diff`, `history`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
+| `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `repro`, `attachments`, `services`, `sizes`, `interactions`, `assertions`, `diff`, `history`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
 | `--history FILE` | the cross-run ledger `history` reads, instead of `$KRONIKOL_HISTORY` or the `.kronikol/history.jsonl` above the report. `history` only |
 | `--flaky`, `--new`, `--failing`, `--regressed`, `--changed` | which verdicts `history` lists; several combine as OR. `history` only |
 | `--branch NAME`, `--compare-branch NAME` | the branch stream `history` reads against, and a second one to read the same run against. `history` only |
@@ -149,14 +149,20 @@ the bytes: `interactions --group-by service,path --sort bytes`.
 
 ### `failures <report>`
 For every failing scenario: the error, the failing step in context, its assertions with their messages and
-`file:line`, the calls that happened inside that step, what that step attached (under it, since 4.24.0: the first
-six, then a line naming `steps` for the rest; a link is printed as it is), and the scenario's own first four
-attachments. A screenshot a hook took (Playwright's own on failure, a fixture's) is one of the scenario's, or, in a
-report ingested with its hooks kept, its hook step's, where `Failures.md` and `steps` list it. Usually the whole answer.
-Since 3.7.0 each failure also prints `thrown at <method> — <file>:<line>` (the frame that raised, read from
-`errorStackTrace`; not the line the scenario was declared on) and `rerun: dotnet test --filter …`; under
-`--json` the same are `thrownAt`, `testName` and `rerun`, and a failing step's attachments are its
-`attachments`.
+`file:line`, the calls that happened inside that step (six, then `… N more call(s): flow s3/2`), what that step
+attached (under it; a link is printed as it is), and the scenario's own attachments. Since 4.28.0 a list of more
+than six attachments keeps its first and its last five, and in place of the rest prints
+`… N more attachment(s) (names): attachments s3` (`attachments s3/2` for a step's), naming what it cut and the view
+that lists every one; attachments on the steps that did not fail are counted on one line,
+`… N more attachment(s) on other steps (names): attachments s3`. Before that the scenario's list kept its first four
+with nothing said, and from 4.26.4 a step's its first six. A screenshot a hook took (Playwright's own on failure, a
+fixture's) is one of the scenario's, or, in a report ingested with its hooks kept, its hook step's, where
+`Failures.md`, `steps` and `attachments` list it. Usually the whole answer. Since 3.7.0 each failure also prints
+`thrown at <method> — <file>:<line>` (the frame that raised, read from `errorStackTrace`; not the line the scenario
+was declared on) and `rerun: dotnet test --filter …`; under `--json` the same are `thrownAt`, `testName` and
+`rerun`. A failing step's attachments are its `attachments`, the entries the text prints, with `attachmentsTotal`
+beside them and `callsTotal` beside its `calls`; the scenario's carry `attachmentsTotal` and `stepAttachmentsTotal`
+(every step's), which add up to what `Failures.jsonl` lists for the failure.
 
 Prints `nothing failed` on a green run rather than an empty response.
 
@@ -174,7 +180,17 @@ same name through its own flag (xUnit v3: the filter-method option, TUnit: the t
 ### `steps <report> s3`
 The step and assertion tree with statuses, durations, parameters, doc strings, bypass reasons, attachments,
 and an `[i12-i39]` range against each step saying which calls happened inside it. Also prints the
-scenario's `stableId` and example values.
+scenario's `stableId` and example values, and, when the scenario holds attachments,
+`attachments: 6 of its own, 4 on its steps · attachments s3`: the tree prints each step's, and `attachments`
+lists them all, the scenario's own with them.
+
+### `attachments <report> s3`
+Every attachment of one scenario, in `Failures.jsonl`'s order: the scenario's own, then each step's (background
+steps, then steps, each followed by its sub-steps). One line each: the address of what holds it, its name and its
+absolute path (a link as it is). `attachments s3/2` lists a step's and its sub-steps'. It pages like any listing
+(`--offset`, `--limit`, `next:`), so a list of any length comes whole, and `--count` says how many; `--json` gives an
+item per attachment, `{name, path, step}`, `step` null for the scenario's own. Every cut list of attachments in
+`failures` names it. Since 4.28.0.
 
 ### `assertions <report> [s3] [--failed]`
 Every tracked assertion, flat: expression with resolved values, pass/fail, failure message, source

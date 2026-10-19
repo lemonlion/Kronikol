@@ -4,6 +4,71 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.28.0] - 2026-10-19
+
+**Minor - a new query verb, `attachments`, new members in `failures --json` and a column in `Failures.md`
+(`plans/LIST_CAPS_PLAN.md` R1, #161).** All three are new things to read, so the minor part moves (4.27 to 4.28), as
+4.24.0's one new `Failures.jsonl` member did. The fixes below would be a patch on their own.
+
+### Added
+
+- **`kronikol query attachments <report> sN`** lists every attachment of one scenario, one line each with the address
+  of what holds it, its name and its absolute path: the scenario's own, then each step's in the order `Failures.jsonl`
+  lists them (background steps, then steps, each followed by its sub-steps). `attachments sN/P` lists a step's and its
+  sub-steps'. It pages like any listing (`--offset`, `--limit`, `next:`, `--count`), so a list of any length comes
+  whole, and `--json` gives one item per attachment, `{name, path, step}`, with `step` null for the scenario's own.
+  Every capped list of attachments in `failures` names it.
+- **`failures --json` carries a total beside every capped list:** `attachmentsTotal` (the scenario's own) and
+  `stepAttachmentsTotal` (every step's, background steps and sub-steps included) on a failure, which add up to what
+  `Failures.jsonl` lists for it, and `attachmentsTotal` and `callsTotal` on a failing step. They are always present,
+  zero when there is nothing, by the envelope's rule for `total`. `formatVersion` stays 1.
+- **`Failures.md`'s further-failures table has an `Attachments` column:** how many attachments a failure the file does
+  not work through holds, its own and every step's, and the sentence above the table names
+  `kronikol query attachments`.
+- **`steps sN` says when a scenario holds attachments**, in one line after its header:
+  `attachments: 6 of its own, 4 on its steps · attachments sN`. A scoped tree prints no such line.
+
+### Fixed
+
+- **`query failures` printed the first four of a scenario's own attachments and said nothing of the rest** (#161). On
+  the repo's Playwright 1.62.1 capture, ingested as the wiki's reporter recipe writes it, that was 4 of 10: the start
+  screenshot and three step screenshots were printed, and the failure screenshot, the end screenshot, the video, the
+  error context and the trace were cut, in the text and in `--json`. A list of more than six attachments, the
+  scenario's own or a failing step's, now keeps its first entry and its last five, and prints one line in place of the
+  rest: how many, their names (in the order each first appears, a repeated name once with ×N, whole names while they
+  fit in a hundred characters) and the view that lists them, `attachments sN` or `attachments sN/P`. A failing step's
+  list kept its first six from 4.26.4, with a line naming `steps`, and its `--json` kept the same six with nothing
+  said; both now keep the ends the text keeps.
+- **Attachments on the steps that did not fail were neither shown nor counted.** With the hooks kept, Playwright's
+  artefacts are on the after-hook and fixture steps, and `failures` showed 1 of 10. It now counts them on one line,
+  `… 9 more attachment(s) on other steps (…): attachments sN`, and still does not list them, as the #175 plan decided
+  for a hook's artefacts.
+- **A failing step's calls past the sixth named no view.** The list now ends `… N more call(s): flow sN/P`; `flow`'s
+  step address covers the step's sub-steps as well, so it lists every call cut and, for a step with sub-steps, more.
+- **`Failures.md` gave a failure it did not work through no attachments.** A failure clustered with another is never
+  worked through, so a run with two failures already had one, and its own trace and video were in no list meant for a
+  person. The new column counts them.
+- **The skill and the wiki dated the cap of six to 4.24.0.** 4.24.0 printed every attachment of a failing step, and the
+  cap arrived in 4.26.4. Both now say what each version did.
+
+### Notes
+
+- A report's own `query.cs` loads the `Kronikol.dll` of the version that wrote the report, so a report written before
+  4.28.0 keeps the cap of four when read through its `query.cs`. The `kronikol` tool at 4.28.0 or later reads the same
+  report with the fix.
+- A default page of `failures` holds one or two fewer failures that have many attachments: a failure gains up to two
+  attachment lines, a cut line and the other-steps line, 155 to 463 bytes on the plan's harness. Nothing is lost,
+  because `failures` pages and its `next:` line resumes.
+- `scripts/query.py` does not implement `attachments`, and the skill says so.
+
+### Tests
+
+- `QueryAttachmentListTests`: the plan harness's three ingest lanes of the Playwright capture, and a built report whose
+  first scenario holds 60 attachments of its own, 9 on a passing step and its sub-step, and 60 and 47 calls on its
+  failing step. `QueryListCutTests` holds the selection and the name list at their edges. The existing facts the
+  release changes are `CucumberAttachmentIngestTests`, `DigestStepAttachmentTests`, `QueryJsonTests`,
+  `QueryCultureTests` (a failure with seven attachments, and a row for the new verb) and `CountFlagTests`.
+
 ## [4.27.2] - 2026-10-19
 
 **Patch - an attachment the report does not hold is said, and the producers hand the report a file it can find

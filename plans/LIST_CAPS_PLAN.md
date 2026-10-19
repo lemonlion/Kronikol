@@ -3,7 +3,9 @@
 **Status:** written 2026-10-19 at 4.27.0 (`6f6043e2`) by kronikol-71, at the owner's ask ("critically analyse issue
 161 and create a detailed, well researched plan to fix its underlying issue(s)"). Revised the same day after a
 verification pass the owner asked for ("make sure the plan is complete and fully accurate, and do any deep dives that
-might change the plan"): section 10 lists what changed. **Draft, not green-lit.** Nothing in a package changes.
+might change the plan"): section 10 lists what changed. **Executing** since the owner's ask of 2026-10-19 ("implement
+the plan in full"), with section 9's recommendations; CLAUDE.md's rule to fix every bug found along the way answers Q7,
+so the things in 3.10 are fixed rather than filed. **R1 is 4.28.0.** Section 10 logs each release.
 
 **Issue:** [#161](https://github.com/lemonlion/Kronikol/issues/161), "`query failures` keeps a scenario's first four
 attachments and doesn't say there are more" (filed 2026-10-08 on a 4.6.0 report, label `bug`).
@@ -722,6 +724,42 @@ plan changed.
 - **Found:** `diff --body` counts its own marker as a difference. The skill and the wiki date the cap of six to 4.24.0,
   not 4.26.4. The lightbox and the CI summary's count were checked, and both hold.
 - Nothing was built, and the shared checkout was not written to.
+
+**2026-10-19, R1 executed as 4.28.0 (kronikol-71),** in worktree `C:/Code/Kronikol-161` on branch `release/161-r1`,
+rebased onto 4.27.1 (`d4158464`) before release.
+
+- **Built as designed** (4.1 to 4.6): `QueryWriter.CutList`, `NameList` and `CutLine` (the primitive R2 extends), the
+  `attachments` verb, `failures`' cut lines, other-steps line and calls pointer, the `--json` totals, `steps`' line and
+  the `Failures.md` column. Every `attachment:` line of `failures`, `steps` and `attachments` is rendered by one helper
+  (`AttachmentText`, with `AttachmentObject` its JSON form), so #148's R3 marker goes in one place (agreed with
+  kronikol-7c, which is executing `MISSING_ATTACHMENTS_PLAN.md`).
+- **Decided where the plan was silent:** a cut line whose first cut name is over 100 characters drops the parentheses
+  (`… N more attachment(s): attachments sN`); the calls pointer sits at the calls' indentation; `attachments` on a
+  scenario with none says so in a note and exits 0.
+- **Facts:** T1 to T12 as section 6.2 has them, in `QueryAttachmentListTests` and `QueryListCutTests` (T10), plus four:
+  the totals against `Failures.jsonl` in all three lanes, the built scenario's order, a scenario without attachments,
+  and the refusals. T9 runs in all three lanes: in the recipe lane every attachment is the scenario's own, so it alone
+  could not kill M9. In tests, a lane is ingested as `repro.sh` does it, with an empty capture file and
+  `--allow-empty`, since the tests file alone is not an input.
+- **Red proof:** on 4.27.0's code 19 of the 20 facts failed, each at the missing verb, the missing member or the missing
+  line (the messages were read); T7 passed, as the guard it is. **Mutations:** 19 of 19 killed: M1 to M14, and M15 to
+  M19 for `callsTotal`, the calls pointer, the sub-steps in `steps`' count and in `stepAttachmentsTotal`, and a failing
+  step's JSON keeping its first six (`mutations.py`, `results/mutations-r1.txt`).
+- **Existing facts changed as 6.3 says,** and one more: `DigestStepAttachmentTests.Query_failures_prints_the_failing_steps_attachments_under_it`
+  held that a passing step's screenshot appears nowhere in `failures`; the other-steps line now names it, so the fact
+  holds that no `attachment:` line prints it and that the count line does.
+- **Q7:** the lightbox fix changes the same HTML lines as #148's patch (`ReportGenerator.cs`, the scenario-level image
+  links), so it waits for that patch to reach `main`.
+- **Measured on the built tool** (`release.slnf` in Release): `repro.sh` gained an `attachments sN` call per failure,
+  and `census.py` columns for it, for the JSON totals and for the digest's new column. `results/census-4.28.0.md` shows
+  the target row in every lane: each failure's ten attachments are shown or counted by `failures`, listed by
+  `attachments sN`, totalled in `--json`, and counted by `Failures.md` for the failure it does not work through. R1
+  adds +433 to +438 bytes to a failure in the recipe lane, +459 to +463 in the messages lane and +155 in the hooks lane,
+  r1_bytes.py's estimates to the byte (`results/r1-bytes-measured-4.28.0.txt`).
+- **Checks:** the core suite passes 7,824 with 2 skipped, after the version bump and the rebase onto 4.27.2 (its first
+  run failed one guard, `ProcessGlobalStoreTests`: a class that runs an ingest must sit in the `DiagramsFetcher`
+  collection, and `QueryAttachmentListTests` now does); `release.slnf` builds in Release for every target, with no
+  warning from the changed files.
 
 ## Appendix A. Every list cap (sweep at `6f6043e2`)
 

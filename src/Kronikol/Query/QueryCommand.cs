@@ -256,6 +256,7 @@ public static partial class QueryCommand
             "failures" => Failures(index, options, writer, error, getEnv),
             "repro" => Repro(index, options, writer, error),
             "steps" => Steps(index, options, writer, error),
+            "attachments" => Attachments(index, options, writer, error),
             "assertions" => Assertions(index, options, writer, error),
             "services" => Services(index, options, writer, error),
             "sizes" => Sizes(index, options, writer, error),

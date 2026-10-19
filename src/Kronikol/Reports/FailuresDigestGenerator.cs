@@ -676,8 +676,11 @@ public static class FailuresDigestGenerator
         {
             markdown.Append($"## {remaining} further failures\n\n");
             markdown.Append("Not worked through here — clustered above, or past this file's budget. Every one of them ");
-            markdown.Append($"is in `Failures.jsonl`, and `kronikol query failures {here}` has them all:\n\n");
-            markdown.Append("| Address | stableId | Scenario | Error |\n|---|---|---|---|\n");
+            markdown.Append($"is in `Failures.jsonl`, and `kronikol query failures {here}` has them all; ");
+            markdown.Append($"`kronikol query attachments {here} sN` lists a row's attachments:\n\n");
+            // Each row counts its failure's attachments, its own and every step's, as Failures.jsonl lists them: a failure
+            // clustered with another was in no list meant for a person, Playwright's trace and video among them (#161).
+            markdown.Append("| Address | stableId | Scenario | Error | Attachments |\n|---|---|---|---|---|\n");
             var further = entries.Where(e => !shown.Contains(e)).ToArray();
             foreach (var entry in further.Take(MaxFurtherFailuresListed))
                 // The WHOLE message flattened, not its first line. This column is the only thing a reader
@@ -686,7 +689,8 @@ public static class FailuresDigestGenerator
                 // repeating the heading above and says nothing about this failure in particular.
                 // `kronikol query failures` has always flattened instead, which is why the two surfaces
                 // could show the same run as one cause and as four.
-                markdown.Append($"| `{entry.Address}` | `{entry.StableId}` | {Escape(entry.Scenario)} | {Escape(Truncate(FailureText.CollapseWhitespace(entry.ErrorMessage ?? ""), 80))} |\n");
+                markdown.Append($"| `{entry.Address}` | `{entry.StableId}` | {Escape(entry.Scenario)} | {Escape(Truncate(FailureText.CollapseWhitespace(entry.ErrorMessage ?? ""), 80))} | "
+                                + (entry.Attachments.Count > 0 ? entry.Attachments.Count.ToString(CultureInfo.InvariantCulture) : "") + " |\n");
             AppendElision(markdown, further.Length - MaxFurtherFailuresListed, here);
             markdown.Append('\n');
         }

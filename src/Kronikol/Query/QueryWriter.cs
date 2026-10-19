@@ -593,4 +593,68 @@ internal sealed class QueryWriter
         // nothing anywhere reports it.
         return Kronikol.Reports.FailureText.Truncate(flat, max);
     }
+
+    /// <summary>
+    /// Which entries of a capped list a list view prints (#161): the whole list up to <paramref name="cap"/>, else its first
+    /// <paramref name="head"/> and its last <c>cap - head</c>, with the entries between them cut. Both ends, as <see cref="Cut"/>
+    /// keeps both ends of a text: the last entries of a list are often the ones that matter. Playwright attaches its failure
+    /// screenshot, video, error context and trace when the test ends, after everything the test attached itself, and a cap
+    /// that kept the first four printed none of them.
+    /// </summary>
+    public static ListCut<T> CutList<T>(IReadOnlyList<T> all, int cap, int head)
+    {
+        if (all.Count <= cap)
+            return new ListCut<T>(all, [], []);
+
+        var tail = cap - head;
+        return new ListCut<T>(all.Take(head).ToList(), all.Skip(head).Take(all.Count - cap).ToList(), all.Skip(all.Count - tail).ToList());
+    }
+
+    /// <summary>
+    /// The names of a list's cut entries, for the line that stands in for them: in the order each first appears, a repeated
+    /// name once with ×N, and whole names while the list stays within <paramref name="max"/> characters, then <c>, …</c>. Not
+    /// <see cref="OneLine"/>, which cuts at the character and would end the list on half a name. Null when not even the first
+    /// name fits.
+    /// </summary>
+    public static string? NameList(IEnumerable<string> names, int max = 100)
+    {
+        // GroupBy yields its groups in the order each key first appears.
+        var counted = names
+            .GroupBy(name => Flat(name), StringComparer.Ordinal)
+            .Select(group => group.Count() > 1 ? $"{group.Key} ×{group.Count().ToString(CultureInfo.InvariantCulture)}" : group.Key)
+            .ToList();
+
+        var list = new StringBuilder();
+        var taken = 0;
+        foreach (var name in counted)
+        {
+            if (list.Length + (taken > 0 ? 2 : 0) + name.Length > max)
+                break;
+            if (taken > 0)
+                list.Append(", ");
+            list.Append(name);
+            taken++;
+        }
+
+        if (taken == 0)
+            return null;
+        return taken < counted.Count ? list.Append(", …").ToString() : list.ToString();
+    }
+
+    /// <summary>
+    /// The line that stands in for a list's cut entries: how many, their names when any fit, and the view that lists every
+    /// one of them. An ellipsis always has an address (#82), and a cut line that named no view was #161.
+    /// </summary>
+    public static string CutLine(int count, string noun, string? names, string view) =>
+        $"… {count.ToString(CultureInfo.InvariantCulture)} more {noun}" + (names is null ? "" : $" ({names})") + $": {view}";
+}
+
+/// <summary>
+/// A list as a capped view prints it (<see cref="QueryWriter.CutList{T}"/>): the entries before the cut, the entries cut, and
+/// the entries after it. <see cref="Cut"/> is empty when the whole list fits, and then <see cref="Tail"/> is too.
+/// </summary>
+internal readonly record struct ListCut<T>(IReadOnlyList<T> Head, IReadOnlyList<T> Cut, IReadOnlyList<T> Tail)
+{
+    /// <summary>The entries printed, in order: the head, then the tail.</summary>
+    public IEnumerable<T> Shown => Head.Concat(Tail);
 }

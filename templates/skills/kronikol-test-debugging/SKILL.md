@@ -51,10 +51,11 @@ the file.
 A run writes more than the report, and two of the files are meant to be read whole:
 
 - **`Failures.md`** — every failure of that run in context: the error, the parsed expected and actual, the
-  failing step with its source location, the calls made inside that step, attachments, and the address of
-  each. Failures sharing an error message are clustered, so twenty scenarios broken by one cause read as
-  one cause. On a failing run this is usually the entire answer and it costs a single `Read`. `# No
-  failures` means nothing failed; if the file is absent, the run did not finish.
+  failing step with its source location, the calls made inside that step, attachments (a count, for a
+  failure it does not work through), and the address of each. Failures sharing an error message are
+  clustered, so twenty scenarios broken by one cause read as one cause. On a failing run this is usually
+  the entire answer and it costs a single `Read`. `# No failures` means nothing failed; if the file is
+  absent, the run did not finish.
 - `Failures.jsonl` — the same failures, one JSON object per line, for scripts. Each line opens with
   `formatVersion`.
 - `CLAUDE.md` and `AGENTS.md` — byte-identical instructions generated beside that particular run.
@@ -109,6 +110,7 @@ matters.
 | "what did the messages on a topic carry?" | `values --path '$.field' --service Kafka --request`: a message's value is its request half's body |
 | "which calls returned a bad value?" | `interactions --where '$.success = false'` — run-wide; `req:$.x` targets the request |
 | "which example row broke?" | `steps s3` (its parameters) + `annotations s3` |
+| "where is the screenshot / the trace / the video?" | `attachments s3` — every attachment of the scenario, its own and each step's, with the step that holds it and its absolute path, paged; `attachments s3/2` for one step. `failures` cuts a list past six to the first and the last five, and its cut line names this |
 | "it failed, I re-ran it, and now the report is green" | The reports directory holds the NEWEST run; the ones before it are kept under `runs/`. `history <reports-dir> --failing` names what failed earlier and in which run → `failures <reports-dir> --run last-failed` opens that run, and every verb takes `--run` from there (`interactions`, `http`, …). Not kept any more: `history --run last-failed` still answers from the ledger, the stored text of each error included |
 | "what differs between the failing run and the green re-run?" | `diff <reports-dir> --baseline-run last-failed` - the kept failing run is the old side, the newest run the new one, and `--run previous --baseline-run last-failed` diffs two kept runs. The same by path: `diff <reports-dir>/runs/<name> <reports-dir>`, the kept run first (`<name>` is the folder `failures --run last-failed` reported, or `kronikol history doctor <reports-dir>` lists them) |
 | "what broke since yesterday?" | `diff <report> --baseline` — finds last-green itself; or name both: `diff old.json new.json`. Matched on `stableId`, and it also reports services that stopped being tracked |
@@ -161,9 +163,10 @@ matters.
   parents of the step that actually failed, so this is the common case, not the corner.
 - **A body ending `…truncated (N chars total)` was capped at capture time.** The rest was never recorded —
   it is not somewhere else in the file. `query` says so when it prints one.
-- **Attachments are pointers.** `failures` and `steps` print absolute paths for screenshots; `Read` them
-  individually. They are never inlined. `scripts/query.py` lists none: read `Failures.md`, which lists every one
-  with the step that holds it.
+- **Attachments are pointers.** `failures`, `steps` and `attachments` print absolute paths for screenshots; `Read`
+  them individually. They are never inlined. `attachments s3` lists every one a scenario holds, with the step that
+  holds it. `scripts/query.py` lists none: read `Failures.md`, which lists every attachment of each failure it works
+  through, and counts them for the rest.
 - **`traceId` is not the W3C trace id.** `traceId` is Kronikol's own identifier for the request/response
   pair; `activityTraceId` (printed by `http`) is the W3C one that matches your OTel traces and app logs.
 - **Aggregate counts are per occurrence, not per distinct body.** `values` counts a body every time it

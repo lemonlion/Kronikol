@@ -164,6 +164,12 @@ internal static class VerbTable
             [], Json: false,
             ["  steps        <report> s3                     the step and assertion tree, with interaction ranges"]),
 
+        new("attachments", "Narrative",
+            "Every attachment of one scenario, or of one step and its sub-steps, with the address of what holds it, paged: the list failures cuts.",
+            ["<report> s3", "<report> s3/2"],
+            ["--count", "--offset", "--limit", "--json"], Json: true,
+            ["  attachments  <report> s3                     every attachment, the scenario's own then each step's, paged; s3/2 for one step"]),
+
         new("assertions", "Narrative",
             "Every tracked assertion as a flat list, with its result, message and source location.",
             ["<report>", "<report> s3", "<report> s3/2"],
