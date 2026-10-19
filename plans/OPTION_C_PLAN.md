@@ -569,3 +569,13 @@ decision of the owner's, not part of this plan.
   FilterStateDefaultTests's assertions row reads the notes' stereotype, as the fixture's style block names
   .assertionNote and the bare word made the row unable to fail, and CapturedTextEscapeTests's fixture, whose facts
   read notes longer than 10 lines, truncates at 40.
+- 2026-10-19, S9b: a collapsed payload's one-line preview leaves out a JSON body's braces (P1): the opening brace
+  goes, and the closing one too when the whole body fits; a longer body is cut after its brace; "{}" and an array are
+  unchanged. P9 (the exact note map) is not ported: F6 did not reproduce at v5. With the Databases or the Setup filter
+  off, whether clicked or configured before the report opens, a note's buttons act on their own note, the case F6
+  describes ("1 row" taken out, "1 row" kept after it); `ExactNoteMapTests`, written to reproduce it, pass before any
+  change and stay as regression tests. 4.26.8's note index map covers the buttons; the text match in
+  `makeNotesCollapsible` is left as it is until something reproduces through it.
+  Tests: Playwright `NotePreviewBraceTests` (new, 7, failing before) and `ExactNoteMapTests` (new, 2);
+  `NoteHeaderFormsTests` reads the preview without its braces.
+  Checks: the core suite passes 7,781 with 2 skipped; the full Playwright suite passes 1,173 with 28 skipped.

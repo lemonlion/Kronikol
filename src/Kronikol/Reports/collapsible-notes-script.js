@@ -99,6 +99,14 @@
             .filter(function(l) { return !isNoteMetaLine(l); });
         var raw = nonGray.join(' ').trim();
         if (!raw) return '';
+        // A JSON body's braces say nothing on one line (5.0.0): the opening one goes, and the closing one too when the
+        // whole body fits. "{}" stays as it is.
+        if (raw.charAt(0) === '{') {
+            var body = raw.replace(/^\{\s*/, '');
+            var whole = body.replace(/\s*\}$/, '');
+            if (whole && whole !== body && whole.length <= 60) return whole;
+            if (whole) raw = body;
+        }
         if (raw.length <= 60) return raw;
         // The preview is drawn, so the cut never splits a <…> (a code point or a tag) nor strands a `~`.
         var cut = 60;
@@ -2148,6 +2156,7 @@
     window._paintedNoteRowCount = paintedRowCount;
     window._applyNoteAppearance = applyNoteAppearance;
     window._parseNoteBlocks = parseNoteBlocks;
+    window._getNotePreview = getNotePreview;
     window._rejoinWrappedNoteLines = rejoinWrappedNoteLines;
     window._stripZeroWidth = stripZeroWidth;
     window._computeGlobalNoteIndex = computeGlobalNoteIndex;

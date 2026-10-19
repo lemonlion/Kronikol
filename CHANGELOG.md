@@ -78,6 +78,8 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   where 4.x truncated at 40. Steps, Databases, Events and Setup start on, and Headers off, as before. To open a report
   as 4.x did, set `ReportToggleDefaults.AssertionsShown` to `false` and `TruncateLines` to
   `TruncateLineCount.Lines40`.
+- **A collapsed payload's one-line preview leaves out a JSON body's braces.** The opening brace goes, and the closing
+  one too when the whole body fits; `{}` stays as it is, and an array keeps its brackets.
 - **The report's look (Option C, in progress on the branch).** Features are cards on a tinted ground, with their
   scenarios as rows inside them and a cross before a failed one; steps line up on one column with their status
   circles, the triangles of collapsible steps in the gutter beside it; a failure shows its diff with the expected

@@ -164,7 +164,9 @@ public class NoteHeaderFormsTests : DiagramNotePlaywrightBase
         // which svg.textContent would mix in, so the two are read apart.
         var svg = Page.Locator("[data-diagram-type='plantuml'] svg").First;
         var painted = string.Join(" ", await svg.EvaluateAsync<string[]>("s => Array.from(s.querySelectorAll('text')).map(t => t.textContent)"));
-        Assert.Contains("{\"item\":\"Widget\",\"qty\":2}", painted);
+        // without the body's braces since 5.0.0 (plans/OPTION_C_PLAN.md P1)
+        Assert.Contains("\"item\":\"Widget\",\"qty\":2", painted);
+        Assert.DoesNotContain("{\"item\"", painted);
         Assert.DoesNotContain("Content-Type", painted);
         Assert.DoesNotContain("color:", painted);
 
