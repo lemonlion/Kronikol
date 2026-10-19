@@ -14,10 +14,30 @@ namespace Kronikol.Query;
 /// and, for the fourth, holds only a content hash, a length and a byte offset. Asking for a payload seeks
 /// to that offset; nothing else ever pays for it.</para>
 /// </summary>
-internal sealed class ReportIndex
+internal sealed class ReportIndex : IDisposable
 {
     public required string Path { get; init; }
+
+    /// <summary>The file's size on disk, compressed or not: what <c>summary</c> prints as <c>sizeBytes</c>.</summary>
     public long FileLength { get; init; }
+
+    /// <summary>The form the file was written in, read from its first bytes (plans/REPORT_FORMAT_PLAN.md 4.1).</summary>
+    public Kronikol.Compression.ReportForm Form { get; set; }
+
+    /// <summary>
+    /// The length of the JSON the file holds: decoded for a compressed file, and the file's own length for a JSON one.
+    /// Offsets in the index are positions in that JSON, so payload reads bound themselves by this, never by
+    /// <see cref="FileLength"/> (F17).
+    /// </summary>
+    public long JsonLength { get; set; }
+
+    /// <summary>
+    /// The decoded JSON of a compressed file, which payload reads seek in instead of the file; null for a JSON file,
+    /// whose payloads are read from the file itself. Disposing the index deletes it when it is held in a temporary file.
+    /// </summary>
+    internal Kronikol.Compression.ReportSnapshot? Snapshot { get; set; }
+
+    public void Dispose() => Snapshot?.Dispose();
 
     /// <summary>
     /// When the file was last written, as the scan's own handle saw it. With <see cref="FileLength"/> it is
@@ -329,6 +349,13 @@ internal sealed class AttachmentEntry
     public string Name { get; set; } = "";
     public string RelativePath { get; set; } = "";
     public string? MediaType { get; set; }
+
+    /// <summary>
+    /// Why the report does not hold the file, as the data file spells it (<c>NotFound</c>), or null when it does (#148). Its
+    /// path is then the one it was given, printed as recorded and never resolved: resolved against the report's folder it
+    /// would name a file that never was.
+    /// </summary>
+    public string? Problem { get; set; }
 
     /// <summary>
     /// Absolute path, resolved against the report's own directory. The HTML uses the relative form as an

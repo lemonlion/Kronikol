@@ -59,6 +59,21 @@ public class QueryHistoryLedgerOnlyTests : IDisposable
     }
 
     [Fact]
+    public void A_run_not_found_lists_the_newest_ten_and_counts_them_all()
+    {
+        // Twelve runs and a name none of them has: the refusal counts the twelve and lists the newest ten, newest first
+        // (plans/LIST_CAPS_PLAN.md Appendix A row 23).
+        Seed([.. Enumerable.Repeat("PP", 12)]);
+
+        var (_, error, exit) = Query("history", "--run", "nothing-like-this");
+
+        Assert.Equal(2, exit);
+        Assert.Contains("No run matching nothing-like-this among the 12 run(s) of ", error, StringComparison.Ordinal);
+        var listed = error.Replace("\r\n", "\n").Split('\n').Where(l => l.StartsWith("  gh:", StringComparison.Ordinal)).Select(l => l.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0]).ToArray();
+        Assert.Equal([.. Enumerable.Range(3, 10).Reverse().Select(i => $"gh:{i.ToString(CultureInfo.InvariantCulture)}:1")], listed);
+    }
+
+    [Fact]
     public void A_pointer_printed_for_a_named_run_names_that_run_so_following_it_stays_in_it()
     {
         // Found by driving the CLI over a real ledger: `next: history --sid <id>` under `--run gh:3:1`

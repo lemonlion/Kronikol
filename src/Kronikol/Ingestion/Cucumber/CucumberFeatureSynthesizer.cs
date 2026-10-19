@@ -45,6 +45,13 @@ public sealed class CucumberSynthesisOptions
 
     /// <summary>Write plain-text attachment bodies out as files too. Default <c>false</c> — text attachments are usually diagnostics noise.</summary>
     public bool WriteTextAttachments { get; init; }
+
+    /// <summary>
+    /// The folder an attachment's relative <c>url</c> is read against (<c>--attachments-base</c>), the rule a tests file's
+    /// relative path follows; null reads it against the working directory. It was passed on as given and read against the
+    /// tool's own folder (#148 F4).
+    /// </summary>
+    internal string? AttachmentsBase { get; init; }
 }
 
 /// <summary>One executed Gherkin step and the wall-clock window it occupied.</summary>
@@ -68,6 +75,9 @@ public sealed record CucumberStepWindow(ScenarioStep Step, DateTimeOffset Start,
 /// <param name="Sha256">The decoded body's SHA-256; null for an attachment the messages only point at.</param>
 /// <param name="WrittenPath">The file the synthesis wrote the body to, which nothing needs once the reporter's copy of the same artefact is kept.</param>
 internal sealed record CucumberAttachmentOrigin(string? OriginalName, long? Length, byte[]? Sha256, string? WrittenPath);
+
+/// <summary>An attachment body the synthesis could not write to a file (#148 F17): its display name, why, and the warning it gave.</summary>
+internal sealed record CucumberUnwrittenAttachment(string Name, Exception Error, string Warning);
 
 /// <summary>Outcome of <see cref="CucumberFeatureSynthesizer.Build(CucumberMessages, CucumberSynthesisOptions?)"/>.</summary>
 /// <param name="Features">The Gherkin structure as Kronikol's report model.</param>
@@ -116,6 +126,15 @@ public sealed record CucumberSynthesisResult(
     /// </summary>
     internal IReadOnlyDictionary<FileAttachment, CucumberAttachmentOrigin> AttachmentOrigins { get; init; } =
         new Dictionary<FileAttachment, CucumberAttachmentOrigin>(ReferenceEqualityComparer.Instance);
+
+    /// <summary>
+    /// The attachment bodies that could not be written to a file, so no report holds them: each is in
+    /// <see cref="Warnings"/> too, and <see cref="IngestPipeline"/> says them in the run's one attachment entry (#148 F17).
+    /// </summary>
+    internal IReadOnlyList<CucumberUnwrittenAttachment> UnwrittenAttachments { get; init; } = [];
+
+    /// <summary>Whether any attachment's <c>url</c> was relative, so the attachment entry names the base it was read against.</summary>
+    internal bool RelativeAttachmentUrls { get; init; }
 
     /// <summary>
     /// The attachment names the synthesis reads as signals and never writes out: the test id's
@@ -362,6 +381,8 @@ public static class CucumberFeatureSynthesizer
             EarlierAttemptTestIds = earlierIds,
             UnmatchedTestsFileBypasses = unmatchedBypasses,
             AttachmentOrigins = attachmentWriter.Origins,
+            UnwrittenAttachments = attachmentWriter.Unwritten,
+            RelativeAttachmentUrls = attachmentWriter.RelativeUrls,
             SignalAttachmentNames = new HashSet<string>([options.TestIdAttachmentName, BypassAttachmentName], StringComparer.OrdinalIgnoreCase),
         };
     }
@@ -1159,6 +1180,12 @@ public static class CucumberFeatureSynthesizer
         /// <summary>What each attachment this writer returned was, for the merger (<see cref="CucumberSynthesisResult.AttachmentOrigins"/>).</summary>
         public Dictionary<FileAttachment, CucumberAttachmentOrigin> Origins { get; } = new(ReferenceEqualityComparer.Instance);
 
+        /// <summary>The bodies this writer could not write (<see cref="CucumberSynthesisResult.UnwrittenAttachments"/>).</summary>
+        public List<CucumberUnwrittenAttachment> Unwritten { get; } = [];
+
+        /// <summary>Whether a relative <c>url</c> was read against the attachments base.</summary>
+        public bool RelativeUrls { get; private set; }
+
         public FileAttachment? Materialise(CucumberAttachment attachment)
         {
             var name = NullIfBlank(attachment.FileName) ?? "attachment";
@@ -1198,16 +1225,34 @@ public static class CucumberFeatureSynthesizer
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or FormatException)
             {
-                warnings.Add($"Cucumber messages: attachment '{displayName}' could not be written ({ex.Message}).");
+                var warning = $"Cucumber messages: attachment '{displayName}' could not be written ({ex.Message}).";
+                warnings.Add(warning);
+                Unwritten.Add(new CucumberUnwrittenAttachment(displayName, ex, warning));
                 return null;
             }
         }
 
-        private static string ToLocalPath(string url)
+        /// <summary>
+        /// The file a <c>url</c> names: an absolute <c>file:</c> URI's path; any other absolute URI as it is; and a relative
+        /// one read against the attachments base, as a tests file's relative path is, so the join's hashing and the report's
+        /// copier read the same file.
+        /// </summary>
+        private string ToLocalPath(string url)
         {
-            if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.IsFile)
-                return uri.LocalPath;
-            return url;
+            if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                return uri.IsFile ? uri.LocalPath : url;
+            if (Path.IsPathRooted(url))
+                return url;
+            try
+            {
+                var local = Path.GetFullPath(url, options.AttachmentsBase ?? Directory.GetCurrentDirectory());
+                RelativeUrls = true;
+                return local;
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                return url;
+            }
         }
 
         private static string Sanitise(string name)

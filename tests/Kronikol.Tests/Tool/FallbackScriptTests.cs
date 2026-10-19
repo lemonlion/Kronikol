@@ -96,6 +96,25 @@ public class FallbackScriptTests : IDisposable
     }
 
     [Fact]
+    public void It_finds_a_report_beside_its_retained_runs_and_baseline_as_the_tool_does()
+    {
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        var report = WriteReport();
+        var top = Path.Combine(Path.GetDirectoryName(report)!, "search-" + Guid.NewGuid().ToString("N")[..8]);
+        var reports = Path.Combine(top, "bin", "Reports");
+        foreach (var copy in new[] { reports, Path.Combine(reports, "runs", "gh_1_1"), Path.Combine(reports, "baseline") })
+        {
+            Directory.CreateDirectory(copy);
+            File.Copy(report, Path.Combine(copy, "TestRunReport.json"));
+        }
+
+        // Until 4.27.1 query.py counted three reports here and asked which; the tool takes the one its runs belong to.
+        var summary = PythonProbe.Run(ScriptPath, "summary", top);
+
+        Assert.Contains(Tool("summary", top, "--count").Trim() + " scenarios", summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Its_failures_footer_agrees_with_the_tool()
     {
         Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");

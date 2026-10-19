@@ -17,7 +17,7 @@
 
 Kronikol follows **semantic versioning**. All packages must use the same version number.
 
-- **MAJOR** — a breaking change to the public API or to configuration: removing or renaming a public type, member or option, or changing a default so that existing code behaves differently without being touched. Reserved for the planned v5 (`plans/ROADMAP.md` D30; v4 shipped as 4.0.0 on 2026-09-30); never bump it without asking first.
+- **MAJOR** — a breaking change to the public API or to configuration: removing or renaming a public type, member or option, or changing a default so that existing code behaves differently without being touched. Reserved for the planned v5 (`plans/ROADMAP.md` D39: the report data file of `plans/REPORT_FORMAT_PLAN.md` and Option C, built on the local `v5` branch; v4 shipped as 4.0.0 on 2026-09-30, and the rest of the old v5 is now v6, `plans/V6_PLAN.md`); never bump it without asking first.
 - **MINOR** — anything new. A new option, public type or member; a new report control, diagram feature or integration; a new package. **A release that adds a feature is a minor bump even when it also fixes bugs** — the highest-ranking change in the release decides the bump.
 - **PATCH** — bug fixes, performance work and internal refactoring. Nothing new for a consumer to call.
 
@@ -64,6 +64,20 @@ When writing or modifying Playwright end-to-end tests in `tests/Kronikol.Tests.E
   - Note double-click: `dispatchEvent(new MouseEvent('dblclick', ...))` to avoid `<text>` element pointer interception
 - **Strict mode** — always use `.First` or `.Nth(n)` when selectors may match multiple elements (per-diagram buttons, nested summaries, report+scenario level controls).
 - **Search bar** — use `FillSearchBar()` helper which dispatches `keyup` event after `FillAsync` (required by `onkeyup="search_scenarios()"`).
+
+## Installed Chrome or Edge: never on a fresh profile
+
+On Windows, the installed Chrome and Edge find out whether the account's password is blank by signing in to it with
+an empty one, about ten seconds after launch, and keep the answer in the profile. `browserType.launch()` always
+starts a fresh profile, so every launch of Playwright's `channel: 'chrome'` or `'msedge'` (or an `executablePath` to
+`chrome.exe` or `msedge.exe`) is one failed Windows sign-in, and ten in ten minutes lock the owner out of the machine.
+
+- In a Node script, launch any browser with `launchInstalled(browserType, options)` from
+  `tools/playwright/installed-browser.js` in place of `browserType.launch(options)`. It seeds a temporary profile so
+  the browser skips the sign-in, returns a `Browser` (`newContext`, `newPage` and `close` as usual), deletes the
+  profile on close, and falls through to `launch()` for every other browser.
+- Anywhere else (.NET, another tool), use the bundled Chromium, which the E2E suite already does and which never
+  runs the check, or a persistent profile seeded the same way.
 
 <!-- kronikol:begin -->
 ## Debugging a test run (Kronikol)

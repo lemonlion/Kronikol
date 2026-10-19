@@ -26,7 +26,12 @@ public enum DiagnosticKind
     /// <summary>Unattributed interactions that <see cref="Kronikol.Ingestion.IngestRequest.DropUnattributed"/> discarded.</summary>
     DroppedUnattributed,
 
-    /// <summary>A capture referenced an attachment that could not be found or copied.</summary>
+    /// <summary>
+    /// A capture referenced an attachment that could not be found or copied, or whose path is not usable on this machine,
+    /// or whose file changed after it was attached; or <c>kronikol ingest --clean-attachments</c> could not delete a file,
+    /// or deleted files on a pass that wrote no report. The attachments a report does not hold are said in one entry per
+    /// report, which leads with the count and names the first few paths (#148).
+    /// </summary>
     AttachmentFailure,
 
     /// <summary>Anything a host wants to surface that has no dedicated kind yet.</summary>

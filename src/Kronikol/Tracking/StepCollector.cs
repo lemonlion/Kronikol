@@ -246,7 +246,7 @@ public static class StepCollector
             return;
 
         var resolvedName = name ?? ExtractFileName(filePath);
-        var attachment = new FileAttachment(resolvedName, filePath);
+        var attachment = AsAttached(new FileAttachment(resolvedName, filePath));
         var state = States.GetOrAdd(testId, _ => new TestStepState());
 
         lock (state)
@@ -262,6 +262,42 @@ public static class StepCollector
                 state.ScenarioAttachments ??= new List<FileAttachment>();
                 state.ScenarioAttachments.Add(attachment);
             }
+        }
+    }
+
+    /// <summary>
+    /// The attachment as it stands when it is attached (#148, plans/MISSING_ATTACHMENTS_PLAN.md F20 and F23). A relative
+    /// path is read now, not when the report is drawn: against the working directory, where a test wrote the file, then
+    /// against the binary folder, where a fixture shipped beside the binaries is, the first holding the file winning. They
+    /// are one folder in every runner's default, and differ under NUnit's WorkDirectory or after a test moves the working
+    /// directory, where the copier read the path against the binary folder alone and lost the file. When neither holds it,
+    /// the path is kept as given with the working directory noted, so the copier looks there too. The file's length and
+    /// last write are noted, so the report can say when it changed or went after it was attached.
+    /// </summary>
+    internal static FileAttachment AsAttached(FileAttachment attachment)
+    {
+        var path = attachment.RelativePath;
+        if (attachment.IsUrl || string.IsNullOrWhiteSpace(path))
+            return attachment;
+        try
+        {
+            if (!Path.IsPathRooted(path))
+            {
+                var workingDirectory = Directory.GetCurrentDirectory();
+                var found = new[] { workingDirectory, AppDomain.CurrentDomain.BaseDirectory }
+                    .Select(folder => Path.GetFullPath(path, folder))
+                    .FirstOrDefault(File.Exists);
+                if (found is null)
+                    return attachment with { AttachedFrom = workingDirectory };
+                path = found;
+            }
+
+            return attachment with { RelativePath = path, WhenAttached = AttachedFile.Of(path) };
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException or IOException or UnauthorizedAccessException)
+        {
+            // Not a path this machine can read: the copier says so when the report is drawn.
+            return attachment;
         }
     }
 

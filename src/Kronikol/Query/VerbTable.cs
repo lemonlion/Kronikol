@@ -87,7 +87,7 @@ internal static class VerbTable
         new("--request", null, "On values: read the request bodies instead of the responses."),
         new("--both", null, "On values: read both halves of every call."),
         new("--number", null, "On grep: match numbers across formatting - 4,173.00, 4173 and 4.173,00 are one number."),
-        new("--baseline", null, "On diff: compare the report against last-green, found at <reports>/baseline/TestRunReport.json or $KRONIKOL_BASELINE."),
+        new("--baseline", null, "On diff: compare the report against last-green, found at <reports>/baseline/TestRunReport.json (or .krkl) or $KRONIKOL_BASELINE."),
         new("--baseline-run", "ID", "On diff: compare the report against a run kept under <reports>/runs/, named as --run names one: a run id, a substring only one id has, its folder name, last-failed or previous."),
         new("--describe", null, "Print the verbs, their flags, the address forms and the exit codes as JSON; needs no report."),
         new("--history", "FILE", "On history: the ledger to read, instead of $KRONIKOL_HISTORY or the .kronikol/history.jsonl above the report."),
@@ -140,6 +140,12 @@ internal static class VerbTable
             ["--sort", "--count", "--offset", "--limit", "--json"], Json: true,
             ["  services     <report> [s3] [--sort duration]  per service: calls, status mix, errors, bytes, timings"]),
 
+        new("sizes", "Overview",
+            "What fills the report file: its bytes by part, stored and decoded, and the scenarios that hold the most.",
+            ["<report>"],
+            ["--json"], Json: true,
+            ["  sizes        <report>                        bytes by part (steps, calls, bodies, diagrams...), largest scenarios"]),
+
         new("failures", "Narrative",
             "Why each failing test failed, in context: the message, the failing step, its calls, where it was written and thrown.",
             ["<report>", "<report> s3"],
@@ -157,6 +163,12 @@ internal static class VerbTable
             ["<report> s3", "<report> s3/2"],
             [], Json: false,
             ["  steps        <report> s3                     the step and assertion tree, with interaction ranges"]),
+
+        new("attachments", "Narrative",
+            "Every attachment of one scenario, or of one step and its sub-steps, with the address of what holds it, paged: the list failures cuts.",
+            ["<report> s3", "<report> s3/2"],
+            ["--count", "--offset", "--limit", "--json"], Json: true,
+            ["  attachments  <report> s3                     every attachment, the scenario's own then each step's, paged; s3/2 for one step"]),
 
         new("assertions", "Narrative",
             "Every tracked assertion as a flat list, with its result, message and source location.",
@@ -192,7 +204,7 @@ internal static class VerbTable
             [
                 "  interactions <report> [s3] [--service X] [--status 5xx] [--method GET] [--grep T] [--group]",
                 "               [--where \"$.success = false\"]   repeatable; AND; req: prefix targets the request body",
-                "               [--group-by service,status]      buckets with calls/errors/median/max/bodies; dims:",
+                "               [--group-by service,status]      buckets with calls/errors/median/max/bodies/bytes; dims:",
                 "                                                service method status path step phase category kind capturedBy"
             ]),
 

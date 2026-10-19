@@ -73,7 +73,7 @@ internal static class MergeCommand
 
         if (inputs.Count == 0)
         {
-            error.WriteLine("No inputs given. Specify one or more files, directories, or glob patterns containing mergeable TestRunReport.json files.");
+            error.WriteLine("No inputs given. Specify one or more files, directories, or glob patterns containing mergeable TestRunReport.json or .krkl files.");
             PrintUsage(error);
             return 2;
         }
@@ -92,6 +92,14 @@ internal static class MergeCommand
         if (RefuseAnOutputThatIsAnInput(output, writeJson, files, error))
             return 2;
 
+        // A compressed report file has no writer before CompressTestRunReport (plans/REPORT_FORMAT_PLAN.md R4); a .krkl
+        // holding plain JSON would be read only because every reader looks at the first bytes, not the name.
+        if (output.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase))
+        {
+            error.WriteLine($"-o {output}: merge writes the HTML report and its JSON data file, so it takes an .html name.");
+            return 2;
+        }
+
         @out.WriteLine($"Merging {files.Count} report file(s):");
         foreach (var f in files)
             @out.WriteLine("  " + f);
@@ -101,7 +109,21 @@ internal static class MergeCommand
         History.HistoryVerdicts? history = null;
         try
         {
-            merged = MergeableReportRenderer.MergeFiles(files);
+            try
+            {
+                merged = MergeableReportRenderer.MergeFiles(files);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // A shard that could not be read, which the catch for the output below reported as "Could not write".
+                error.WriteLine("Could not read a report: " + ex.Message);
+                return 1;
+            }
+            // The shards' files are carried beside the merged report before anything is written, so the entry saying which
+            // could not be (#148) is on the report itself: its HTML, its data file, its digest, its labs page and kronikol
+            // query all read the one list. Render alone could only add it to the HTML it draws.
+            if (MergeableReportRenderer.DestinationDirectory(output) is { Length: > 0 } destination)
+                merged = MergeableReportRenderer.CarryAttachments(merged, destination);
             if (historyPath is not null)
             {
                 history = ReadHistory(historyPath, merged, error, getEnvironmentVariable, out var historyExit);
@@ -110,7 +132,7 @@ internal static class MergeCommand
             }
             // A default report, as a run writes: what --history read is on the labs page beside it, with the
             // shards' diagnostics (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md).
-            written = MergeableReportRenderer.Render(merged, output, title, options: new ReportConfigurationOptions(), history: history);
+            written = MergeableReportRenderer.RenderCarried(merged, output, title, options: new ReportConfigurationOptions(), history: history);
             @out.WriteLine($"Wrote combined report to {written}");
         }
         catch (FormatException ex)
@@ -298,16 +320,16 @@ internal static class MergeCommand
                 // `runs/` holds the runs before this one. Sweeping either in as a shard would merge
                 // yesterday's results into today's: a green report gained a retained run's failure.
                 // What a sweep FINDS, not what it is GIVEN: `merge Reports/runs/gh_1_1` is still read.
-                foreach (var f in Directory.EnumerateFiles(input, "*.json", SearchOption.AllDirectories)
-                             .Where(f => !ReportFolders.IsReserved(input, f))
-                             .OrderBy(x => x, StringComparer.Ordinal))
+                foreach (var f in QueryCommand.DistinctReports(Directory.EnumerateFiles(input, "*", SearchOption.AllDirectories)
+                             .Where(f => (f.EndsWith(".json", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase))
+                                         && !ReportFolders.IsReserved(input, f)), error))
                 {
                     // What Kronikol itself writes beside a report, by name: none of them is a report, and
                     // the reader fails the whole merge on the first one (every history-enabled run has
                     // written History.run.json since 3.9.0). By NAME, and only when FOUND: a rule that
                     // skipped anything without `features` would drop a truncated shard without a word,
                     // and a file named on the command line is still read and refused for what it is.
-                    if (WrittenBesideAReport.Contains(Path.GetFileName(f), StringComparer.OrdinalIgnoreCase))
+                    if (ReportFolders.IsWrittenBesideAReport(Path.GetFileName(f)))
                     {
                         skipped++;
                         besideAReport.Add(Path.GetFileName(f));
@@ -347,14 +369,11 @@ internal static class MergeCommand
         return result;
     }
 
-    /// <summary>The JSON files a run writes into its reports directory that are not reports.</summary>
-    private static readonly string[] WrittenBesideAReport = [Kronikol.History.HistoryFormat.FragmentFileName, CtrfReportGenerator.FileName, RunManifest.FileName];
-
     public static void PrintUsage(TextWriter w)
     {
         w.WriteLine("Usage: kronikol merge <inputs...> [-o <output.html>] [-t <title>] [--no-json] [--ci-summary] [--publish-artifacts] [--history <ledger>]");
         w.WriteLine();
-        w.WriteLine("  Combines several mergeable TestRunReport.json files (produced with");
+        w.WriteLine("  Combines several mergeable TestRunReport.json or .krkl files (produced with");
         w.WriteLine("  ReportConfigurationOptions.GenerateMergeableData = true) into one combined HTML report, and");
         w.WriteLine("  writes beside it what a run writes beside its report: the merged data file - readable with");
         w.WriteLine("  `kronikol query`, and usable as the baseline a later run diffs against - plus Failures.md and");

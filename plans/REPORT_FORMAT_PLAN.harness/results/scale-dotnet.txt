@@ -1,0 +1,2 @@
+content 115,396,210  .NET 10.0.11
+ZstdSharp 9: 859,068 write 168 ms read 39 ms | gzip: 2,811,668 write 140 ms read 33 ms | decoded 115,396,210

@@ -466,8 +466,12 @@ public record ReportConfigurationOptions
     /// features rather than a line above them (4.6.0 to 4.x: <c>false</c>). A healthy run has nothing to list and no
     /// tab. The list is also on the labs page beside the report (<see cref="GenerateLabsReport"/>), and every
     /// diagnostic still reaches <see cref="Kronikol.Ingestion.IngestResult.Diagnostics"/>, the <c>diagnostics</c>
-    /// array of <c>TestRunReport.json</c>, and the console. <see cref="ReportToggleDefaults.DiagnosticsOpen"/> has
-    /// nothing to open in a tab; the labs page's list is always open.
+    /// array of <c>TestRunReport.json</c>, and <c>kronikol query</c>'s <c>!</c> lines; <c>kronikol ingest</c> prints
+    /// every one. An in-process run prints to the console only what a reader must not miss: the attachments the
+    /// report does not hold (<see cref="DiagnosticKind.AttachmentFailure"/>) and an option it ignored
+    /// (<see cref="DiagnosticKind.OptionNotApplied"/>), each as a <c>⚠ WARNING:</c> line, beside the run summary's own
+    /// lines. <see cref="ReportToggleDefaults.DiagnosticsOpen"/> has nothing to open in a tab; the labs page's list is
+    /// always open.
     /// </summary>
     public bool ShowReportDiagnosticsSection { get; set; } = true;
 

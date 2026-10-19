@@ -117,7 +117,7 @@ public static partial class QueryCommand
         if (location.Path is not { } ledgerPath)
         {
             error.WriteLine($"No report given, and no history ledger: nothing named by --history or ${HistoryFormat.EnvironmentVariable}, and no .kronikol or .git directory above {start}.");
-            error.WriteLine("Pass a TestRunReport.json (or a directory holding one), or --history <file> to read a ledger without a report.");
+            error.WriteLine("Pass a TestRunReport.json or TestRunReport.krkl (or a directory holding one), or --history <file> to read a ledger without a report.");
             return 2;
         }
 
@@ -131,7 +131,7 @@ public static partial class QueryCommand
         if (read.Outcome == HistoryReadOutcome.Missing || ledger.IsEmpty)
         {
             error.WriteLine($"No report given, and no run is recorded in {ledgerPath}.");
-            error.WriteLine("Pass a TestRunReport.json (or a directory holding one); a ledger answers on its own once a run has been recorded.");
+            error.WriteLine("Pass a TestRunReport.json or TestRunReport.krkl (or a directory holding one); a ledger answers on its own once a run has been recorded.");
             return 2;
         }
 
@@ -370,6 +370,9 @@ public static partial class QueryCommand
             writer.Line($"  {call}");
     }
 
+    /// <summary>How many of a scenario's runs <c>history sN</c> lists, the last; <c>--json</c> carries every one.</summary>
+    private const int MaxRunsListed = 15;
+
     private static void WriteScenario(QueryWriter writer, HistoryReading reading, HistorySubject scenario, ScenarioHistory entry)
     {
         var verdicts = reading.Verdicts;
@@ -407,8 +410,12 @@ public static partial class QueryCommand
                         + (quarantine.Until is { } until ? $" · until {until.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}" : ""));
         writer.Line($"stream: {verdicts.Stream} · {verdicts.RunsRecorded} earlier run(s) in the window");
         writer.Line("last runs, oldest first (this run last):");
+        // The last fifteen are listed and the earlier ones counted, which they were not (#161, plans/LIST_CAPS_PLAN.md R2):
+        // the line above counts the stream's runs, not this scenario's. --json carries every one.
+        if (entry.Points.Count > MaxRunsListed)
+            writer.Line($"  … {(entry.Points.Count - MaxRunsListed).ToString(CultureInfo.InvariantCulture)} earlier run(s) not listed: history {scenario.Address} --json");
         var runs = verdicts.Runs.ToDictionary(r => r.RunId, StringComparer.Ordinal);
-        foreach (var point in entry.Points.TakeLast(15))
+        foreach (var point in entry.Points.TakeLast(MaxRunsListed))
         {
             writer.Line($"  {point.Result}  {point.RunId,-24} {point.At.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)}"
                         + (point.Commit is { } c ? $"  {(c.Length > 7 ? c[..7] : c)}" : "")

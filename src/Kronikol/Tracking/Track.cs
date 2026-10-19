@@ -158,8 +158,9 @@ public static class Track
     }
 
     /// <summary>
-    /// Attaches a file to the current step (or to the scenario if no step is active).
-    /// The file will be rendered as a download link in the report.
+    /// Attaches a file to the current step (or to the scenario if no step is active). The report copies it into its
+    /// <c>attachments/</c> folder when it is drawn: an image draws inline, anything else as a link, and a file the report
+    /// does not hold then (not there, or it could not be copied) is shown as its name and why, with no link.
     /// </summary>
     public static void Attachment(string filePath, string? name = null)
     {

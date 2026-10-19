@@ -1,0 +1,35 @@
+LIST_CAPS_PLAN R2 (#161) mutations, 2026-10-19 (mutations-r2.py): N1-N21 on 4.28.0 + R2, N22-N30 after the rebase onto 4.30.0.
+The run was paused for a peer's Playwright run after N21 and resumed with the N ids after the rebase; N22's fact was strengthened before its run.
+
+N1   steps: no cut line under a step's parameters: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N2   steps: the parameters' count off by one: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N3   steps: a scoped tree cuts its parameters too: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest, Every_list_in_the_census_report_is_over_its_cap
+N4   steps: a step's attachment cut names the scenario: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N5   services: no +N more in the column: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N6   services: no line naming the JSON: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N7   sizes: largestScenariosTotal is the ten: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N8   grep --values: no more paths: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N9   grep --number: no more paths: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest, Every_entry_is_on_the_lines_it_says
+N10  diff --body: the total counts the listed lines only: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N11  diff --body: no line for the lines not listed: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N12  compare: the heading counts the listed differences: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N13  compare: no cut line: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N14  history sN: no earlier-runs line: KILLED by One_scenario_says_how_many_earlier_runs_it_did_not_list_and_names_the_json_that_has_them
+N15  http b:: no more-carriers line: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N16  body: no more-carriers line: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N17  Failures.md: no earlier-steps line: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N18  Failures.md: no more-calls line: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N19  Failures.jsonl: stepsBeforeTotal is the listed steps: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N20  Failures.jsonl: callsTotal is the listed calls: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N21  digest: the scenario-wide total is the chosen calls: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N22  digest: the failing step's total is the listed calls: KILLED by The_call_cap_is_what_its_name_says_it_is
+N23  digest: the steps before it counted one short: KILLED by Every_announced_cap_says_what_it_cut_and_names_a_view_that_prints_the_rest
+N24  CI summary: a green run counts every scenario again: KILLED by GenerateMarkdown_all_passed_counts_only_the_diagrams_it_did_not_show
+N25  summary: no more-failed line: KILLED by Summary_says_how_many_failed_scenarios_it_did_not_list_and_names_the_listing
+N26  history: no more-absent line: KILLED by A_run_says_how_many_absent_scenarios_it_did_not_list
+N27  history --run: eleven runs listed: KILLED by A_run_not_found_lists_the_newest_ten_and_counts_them_all, Every_cap_in_the_query_tool_and_the_digest_is_in_the_registry, Every_entry_is_on_the_lines_it_says
+N28  diff of runs: no more-tracking line: KILLED by A_long_tracking_section_says_how_many_rows_it_did_not_list
+N29  Failures.md: no elision under the further failures: KILLED by Every_cap_says_how_many_it_left_out
+N30  Failures.md: no elision under a cluster: KILLED by Every_cap_says_how_many_it_left_out
+
+30 of 30 killed

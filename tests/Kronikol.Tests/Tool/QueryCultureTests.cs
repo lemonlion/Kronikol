@@ -71,9 +71,12 @@ public class QueryCultureTests : IDisposable
         ("summary", []),
         ("scenarios", []),
         ("services", ["--sort", "duration"]),
+        ("sizes", []),
         ("failures", []),
         ("repro", []),
         ("steps", ["s0"]),
+        // s1 holds seven attachments, so failures prints a cut line with its count (#161).
+        ("attachments", ["s1"]),
         ("assertions", []),
         ("flow", ["s0"]),
         ("annotations", ["s0"]),
@@ -222,6 +225,7 @@ public class QueryCultureTests : IDisposable
                         Id = "q1", DisplayName = "Cancel an order", Result = ExecutionResult.Failed, Duration = TimeSpan.FromSeconds(2.54),
                         ErrorMessage = "Expected 4173 but found 3902",
                         ErrorStackTrace = "   at OrderTests.Cancel() in OrderTests.cs:line 42",
+                        Attachments = Enumerable.Range(0, 7).Select(i => new FileAttachment($"receipt-{i}.png", $"attachments/receipt-{i}.png", "image/png")).ToArray(),
                         Steps =
                         [
                             new ScenarioStep

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Deliberately sets nothing: no ResultsDirectory, no environment, no adapter options. -->
+<RunSettings>
+  <RunConfiguration>
+  </RunConfiguration>
+</RunSettings>

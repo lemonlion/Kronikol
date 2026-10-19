@@ -10,6 +10,7 @@
 // drawn line does not start with "PlantUML ", and that draws every expected name (a sequence participant twice).
 const fs = require('fs'), path = require('path'), url = require('url'), zlib = require('zlib');
 const pw = require(process.env.BENCH_PW || 'C:/Code/Kronikol/tests/Kronikol.Tests.EndToEnd/bin/Debug/net10.0/.playwright/package');
+const { seedProfile } = require('../../../../tools/playwright/installed-browser.js');
 const ROOT = __dirname;
 const SRC = path.join(ROOT, 'src');
 const GEN = path.join(ROOT, 'pages'), LOGS = path.join(ROOT, 'logs'), PROFILES = path.join(ROOT, 'profiles');
@@ -127,7 +128,7 @@ function writePage(name, src) {
 function profileDir(cfg) {
   const d = path.join(PROFILES, cfg.browser + '-' + (cfg.jsflags ? cfg.jsflags.replace(/[^a-z0-9]+/gi, '_') : 'jit'));
   fs.mkdirSync(d, { recursive: true });
-  return d;
+  return seedProfile(d);
 }
 function launch(cfg) {
   const opts = { headless: true, args: cfg.jsflags ? ['--js-flags=' + cfg.jsflags] : [] };

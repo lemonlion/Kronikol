@@ -26,7 +26,7 @@ public class MergeCarriesAttachmentsTests : IDisposable
     /// A shard as a run writes it: one failing scenario whose failing step attached <c>shot.png</c> and which attached a
     /// <c>trace</c> of its own, both copied into the shard's <c>attachments/</c>. Returns its data file.
     /// </summary>
-    private string Shard(string name, string scenario, byte mark)
+    private string Shard(string name, string scenario, byte mark, string? missing = null)
     {
         var captured = Path.Combine(_dir, "captured-" + name);
         Directory.CreateDirectory(captured);
@@ -54,7 +54,9 @@ public class MergeCarriesAttachmentsTests : IDisposable
                             new ScenarioStep
                             {
                                 Keyword = "When", Text = "the card is charged", Status = ExecutionResult.Failed,
-                                Attachments = [new FileAttachment("shot.png", shot, "image/png")],
+                                Attachments = missing is null
+                                    ? [new FileAttachment("shot.png", shot, "image/png")]
+                                    : [new FileAttachment("shot.png", shot, "image/png"), new FileAttachment("lost.png", missing, "image/png")],
                             },
                         ],
                     },
@@ -126,5 +128,122 @@ public class MergeCarriesAttachmentsTests : IDisposable
             Assert.StartsWith("attachments/", a.RelativePath, StringComparison.Ordinal);
             Assert.True(File.Exists(Path.Combine(folder, a.RelativePath)), a.RelativePath);
         });
+    }
+
+    // ─── #148: a shard's file that is not there (plans/MISSING_ATTACHMENTS_PLAN.md F5, section 4.2) ──────────
+
+    /// <summary>Two shards whose screenshots share a name, the second's deleted after its run wrote it.</summary>
+    private (string First, string Second, string Gone) ShardsWithOneScreenshotGone(string? missingInFirst = null)
+    {
+        var first = Shard("runner1", "Pay", 1, missingInFirst);
+        var second = Shard("runner2", "Refund", 2);
+        var gone = Path.Combine(Path.GetDirectoryName(second)!, "attachments", "shot.png");
+        File.Delete(gone);
+        return (first, second, gone);
+    }
+
+    private static FileAttachment ScreenshotOf(MergeableReport report, string scenario) =>
+        report.Features.SelectMany(f => f.Scenarios).Single(s => s.DisplayName == scenario).Steps!.Single().Attachments!.Single(a => a.Name == "shot.png");
+
+    [Fact]
+    public void A_shards_missing_file_never_names_another_shards_file_of_the_same_name()
+    {
+        // Left relative, the second shard's attachments/shot.png named the first shard's shot.png, which the merge had
+        // carried beside the merged report under that very name: the report showed the wrong screenshot.
+        var (first, second, gone) = ShardsWithOneScreenshotGone();
+        var merged = Path.Combine(_dir, "merged");
+
+        var error = new StringWriter();
+        Assert.True(MergeCommand.Run([first, second, "-o", Path.Combine(merged, "Combined.html")], new StringWriter(), error, _ => null) == 0, error.ToString());
+
+        var report = MergeableReportReader.ReadFile(Path.Combine(merged, "Combined.json"));
+        var refund = ScreenshotOf(report, "Refund");
+        Assert.NotEqual(ScreenshotOf(report, "Pay").RelativePath, refund.RelativePath);
+        Assert.False(File.Exists(Path.Combine(merged, refund.RelativePath)), refund.RelativePath);
+        Assert.Equal(gone, refund.RelativePath);
+    }
+
+    [Fact]
+    public void A_merge_says_a_shards_missing_file_in_its_data_file_and_its_labs_page()
+    {
+        var (first, second, gone) = ShardsWithOneScreenshotGone();
+        var merged = Path.Combine(_dir, "merged");
+
+        var error = new StringWriter();
+        Assert.True(MergeCommand.Run([first, second, "-o", Path.Combine(merged, "Combined.html")], new StringWriter(), error, _ => null) == 0, error.ToString());
+
+        var message = Assert.Single(MergeableReportReader.ReadFile(Path.Combine(merged, "Combined.json")).Diagnostics, d => d.Kind == DiagnosticKind.AttachmentFailure).Message;
+        Assert.StartsWith("1 attachment(s) are not in the report: 1 not found when the report was drawn: ", message, StringComparison.Ordinal);
+        Assert.Contains(gone, message, StringComparison.Ordinal);
+        Assert.Contains("1 attachment(s) are not in the report: 1 not found when the report was drawn: ", File.ReadAllText(Path.Combine(merged, "Combined.labs.html")), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_merged_report_drawn_with_its_diagnostics_section_shows_the_entry()
+    {
+        var (first, second, _) = ShardsWithOneScreenshotGone();
+        var html = Path.Combine(_dir, "merged", "Combined.html");
+
+        MergeableReportRenderer.Render(MergeableReportRenderer.MergeFiles([first, second]), html,
+            options: new ReportConfigurationOptions { ShowReportDiagnosticsSection = true });
+
+        Assert.Contains("1 attachment(s) are not in the report: 1 not found when the report was drawn: ", File.ReadAllText(html), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_azure_devops_upload_of_a_merge_carries_the_merged_reports_attachments()
+    {
+        // #148 R4: the merge named its top-level outputs only, so the files it carried beside the merged report were not
+        // in the artifact.
+        var first = Shard("runner1", "Pay", 1);
+        var second = Shard("runner2", "Refund", 2);
+        var merged = Path.Combine(_dir, "merged");
+
+        var output = new StringWriter();
+        var error = new StringWriter();
+        var exit = MergeCommand.Run([first, second, "-o", Path.Combine(merged, "Combined.html"), "--publish-artifacts"], output, error,
+            name => name == "TF_BUILD" ? "True" : null);
+
+        Assert.True(exit == 0, error.ToString());
+        var carried = Directory.GetFiles(Path.Combine(merged, "attachments")).Order(StringComparer.Ordinal).ToArray();
+        Assert.Equal(4, carried.Length);
+        Assert.All(carried, file => Assert.Contains($"##vso[artifact.upload containerfolder=TestReports/attachments;artifactname=TestReports]{file}",
+            output.ToString(), StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void An_azure_devops_upload_of_a_merge_names_no_file_for_a_path_it_could_not_read()
+    {
+        // A shard's path that cannot be read here (a NUL in it) keeps its attachments/ prefix as it was given, and
+        // reading it for the upload threw where every other reader had said it was not usable.
+        var first = Shard("runner1", "Pay", 1, missing: "attachments/lost\0.png");
+        var second = Shard("runner2", "Refund", 2);
+        var merged = Path.Combine(_dir, "merged");
+
+        var output = new StringWriter();
+        var error = new StringWriter();
+        var exit = MergeCommand.Run([first, second, "-o", Path.Combine(merged, "Combined.html"), "--publish-artifacts"], output, error,
+            name => name == "TF_BUILD" ? "True" : null);
+
+        Assert.True(exit == 0, error.ToString());
+        Assert.Equal(Directory.GetFiles(Path.Combine(merged, "attachments")).Length,
+            output.ToString().Split('\n').Count(l => l.Contains("containerfolder=TestReports/attachments;", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public void The_merged_reports_own_entry_is_the_one_the_bang_line_shows()
+    {
+        // The first shard said its own missing file; the merged report holds neither that one nor the second shard's
+        // screenshot. query's ! line shows the first entry of a kind, so the merge's own account comes first.
+        var (first, second, _) = ShardsWithOneScreenshotGone(missingInFirst: Path.Combine(_dir, "nowhere", "lost.png"));
+        var merged = Path.Combine(_dir, "merged");
+        Assert.True(MergeCommand.Run([first, second, "-o", Path.Combine(merged, "Combined.html")], new StringWriter(), new StringWriter(), _ => null) == 0);
+
+        var output = new StringWriter();
+        Assert.Equal(0, Kronikol.Query.QueryCommand.Run(["summary", Path.Combine(merged, "Combined.json")], output, new StringWriter()));
+
+        var line = Assert.Single(output.ToString().Split('\n'), l => l.StartsWith("! ", StringComparison.Ordinal) && l.Contains("attachment(s) are not in the report", StringComparison.Ordinal)).TrimEnd('\r');
+        Assert.StartsWith("! 2 attachment(s) are not in the report: 2 not found when the report was drawn: ", line, StringComparison.Ordinal);
+        Assert.EndsWith("(×2)", line, StringComparison.Ordinal);
     }
 }

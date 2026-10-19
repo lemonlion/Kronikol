@@ -1,0 +1,11 @@
+Measured on the built tool (4.28.0) against Kronikol.Tool 4.26.9, each failure block of query failures, the same
+harness paths (run folders of equal length), history lines left out of both. r1_bytes.py estimated +433 to +438,
++459 to +463 and +155 on the same reports.
+
+lane      scenario  4.26.9 B  4.28.0 B  added
+recipe    s0           1,060    1,493   +433
+recipe    s4           1,064    1,502   +438
+messages  s0           1,558    2,017   +459
+messages  s4           1,561    2,024   +463
+hooks     s0             788      943   +155
+hooks     s4             786      941   +155

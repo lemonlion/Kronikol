@@ -1,0 +1,17 @@
+`kronikol query failures <report> --json --out <file>` on Kronikol.Tool 4.26.9, the three lanes of repro.sh, 2026-10-19.
+Sizes are each item serialized compactly (separators "," and ":"), UTF-8. Paths are absolute under the session's
+scratchpad, 161 to 164 characters; a CI runner's report path is shorter.
+
+lane      scenario  record   attachment entries (bytes)   mean
+recipe    s0        1,745 B  216, 204, 202, 204           206 B
+recipe    s4        1,736 B  217, 205, 203, 205           207 B
+messages  s0        2,957 B  218, 203, 215, 191           206 B
+messages  s4        2,947 B  219, 205, 215, 193           208 B
+
+Default budget (QueryOptions.DefaultMaxBytes) 6,000 B. A record without its scenario attachments: about 921 B (recipe)
+and 1,927 B (messages). Holding every attachment, a record stops fitting at all at about 25 entries (recipe:
+921 + 24 x 206 = 5,865; 25 x 206 + 921 = 6,071) and about 20 (messages: 1,927 + 19 x 206 = 5,841; 20 x 206 + 1,927 =
+6,047). These are estimates from the means; the writer charges its own serialization.
+
+Default budget, messages lane, `failures --json` (no --out): items 1, total 2, truncated {limitBytes 6000,
+droppedItems 1}, next [... --limit 25 --offset 1]. The second record was dropped whole and announced.

@@ -185,7 +185,9 @@ kronikol query history  ./Reports          # what the last runs say: a regressio
 kronikol history gate   ./Reports          # CI: fail on what is new, not on the test that has flipped for a month
 kronikol query repro    ./Reports          # the dotnet test --filter line that re-runs each failure
 kronikol query services ./Reports          # per service: calls, errors, timings — and what was never called
+kronikol query sizes    ./Reports          # what fills the report file, part by part, and its largest scenarios
 kronikol query flow     ./Reports s3       # the sequence, in 2 KB instead of 663
+kronikol query attachments ./Reports s3    # every screenshot, trace and video a scenario holds, with its step
 kronikol query trace    ./Reports 4bf92f3577b34da6   # follow one W3C trace across scenarios, in order
 kronikol query grep     ./Reports "4173" --values    # where a wrong number entered the system
 kronikol query grep     ./Reports 19.99 --number     # numeric match however the payload formats it
@@ -198,6 +200,8 @@ kronikol query http     ./Reports s3/i47 --keys      # a payload's shape, then -
 On GitHub Actions, the [`kronikol-history` action](https://github.com/lemonlion/Kronikol/tree/main/templates/github-actions/kronikol-history) keeps the ledger that `query history` and `history gate` read on a data branch of the repository: it reads the ledger before the tests, can gate the run, and records the run after.
 
 For the CI tooling that speaks somebody else's format rather than Kronikol's, `kronikol ctrf ./Reports --out ctrf-report.json` converts a finished report into a [Common Test Report Format](https://ctrf.io) document — or set `GenerateCtrfReport` and the run writes it itself. Each CTRF test carries the `sN` address, so an annotation action that finds a failure can hand it straight back to `kronikol query`.
+
+When a script needs the JSON itself, `kronikol decode ./Reports --indent > report.json` writes it from any report file, `TestRunReport.krkl` included, with every payload stored compressed written out as text.
 
 A green re-run no longer destroys the failing run's report: the reports directory keeps the last three runs, whole, under `runs/` (the newest one that failed is never the one pruned), and `--run last-failed` on any verb opens it - `kronikol query failures ./Reports --run last-failed`. When only the ledger survived, `kronikol query history --run last-failed` still answers, with no report at all. See [Generated Reports](https://github.com/lemonlion/Kronikol/wiki/Generated-Reports#earlier-runs-runjson-and-runs).
 
@@ -335,3 +339,5 @@ Key pages:
 - [Report Configuration](https://github.com/lemonlion/Kronikol/wiki/Report-Configuration)
 - [API Reference](https://github.com/lemonlion/Kronikol/wiki/API-Reference)
 - [Example Project](https://github.com/lemonlion/Kronikol/wiki/Example-Project)
+
+Kronikol includes source code from [ZstdSharp](https://github.com/oleg-st/ZstdSharp) (MIT) and, through it, [zstd](https://github.com/facebook/zstd) (BSD-3-Clause): their notices are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md), which the Kronikol and Kronikol.Tool packages carry.

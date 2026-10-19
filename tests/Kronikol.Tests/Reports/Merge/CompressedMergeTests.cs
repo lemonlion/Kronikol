@@ -75,11 +75,11 @@ public class CompressedMergeTests : IDisposable
     {
         WriteShard("runner1.json", "a1", "Orders", Body("orders"), compress: true);
         var path = Path.Combine(_directory, "runner1.json");
-        File.WriteAllText(path, File.ReadAllText(path).Replace("\"formatVersion\": 2", "\"formatVersion\": 3", StringComparison.Ordinal));
+        File.WriteAllText(path, File.ReadAllText(path).Replace("\"formatVersion\": 2", "\"formatVersion\": 4", StringComparison.Ordinal));
 
         var error = Assert.Throws<FormatException>(() => MergeableReportReader.ReadFile(path));
 
-        Assert.Contains("formatVersion 3", error.Message, StringComparison.Ordinal);
+        Assert.Contains("formatVersion 4", error.Message, StringComparison.Ordinal);
     }
 
     // ─── Fixture ───────────────────────────────────────────────

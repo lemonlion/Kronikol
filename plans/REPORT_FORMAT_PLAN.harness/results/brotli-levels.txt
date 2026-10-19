@@ -1,0 +1,9 @@
+raw 4,551,457
+brotli q4 w22:   308,302  write    19 ms  read  5.3 ms
+brotli q4 w24:   308,283  write    19 ms  read  6.0 ms
+brotli q5 w22:   272,006  write    32 ms  read  6.6 ms
+brotli q5 w24:   271,994  write    32 ms  read  6.5 ms
+brotli q6 w22:   267,345  write    36 ms  read  6.2 ms
+brotli q6 w24:   267,328  write    36 ms  read  6.7 ms
+brotli q7 w22:   263,675  write    50 ms  read  6.3 ms
+brotli q7 w24:   263,670  write    52 ms  read  6.2 ms

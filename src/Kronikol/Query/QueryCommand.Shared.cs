@@ -203,13 +203,13 @@ public static partial class QueryCommand
     /// <summary>The orderings <c>services --sort</c> understands.</summary>
     internal static readonly string[] ServiceSorts = ["calls", "duration", "bytes", "errors"];
 
-    /// <summary>The orderings <c>interactions --group-by ... --sort</c> understands. Narrower than
-    /// <see cref="ServiceSorts"/>: a bucket has no single byte total to sort on.</summary>
-    internal static readonly string[] BucketSorts = ["calls", "duration", "errors"];
+    /// <summary>The orderings <c>interactions --group-by ... --sort</c> understands: the same as <see cref="ServiceSorts"/>
+    /// since 4.27.0, when a bucket gained the byte total <c>services</c> keeps per service (#116).</summary>
+    internal static readonly string[] BucketSorts = ["calls", "duration", "bytes", "errors"];
 
     /// <summary>
     /// Refuses an ordering the view cannot apply. Both call sites used to end in a <c>_ =&gt;</c> arm, so a
-    /// misspelling - or a value only the other view supports, like <c>--group-by ... --sort bytes</c> -
+    /// misspelling - or, until 4.27.0, <c>--group-by ... --sort bytes</c>, which only <c>services</c> knew -
     /// silently produced the default ordering while the agent read the output as sorted by what it asked
     /// for. Wrong order is a quieter failure than no output, which is exactly why it needs saying.
     /// </summary>

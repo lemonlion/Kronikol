@@ -4,8 +4,8 @@ description: >
   Debug a test run from a Kronikol report (TestRunReport.json) — why a test failed, what a service actually
   returned, where a wrong value came from, what changed between runs, what was slow. Use whenever a
   Kronikol report exists (.logs/kronikol/, Reports/, TestResults/) and the question is about test
-  behaviour. Never read TestRunReport.json directly: reports reach 10 MB / 2.7M tokens and a single
-  embedded diagram can be 166k tokens.
+  behaviour. Never read TestRunReport.json directly: reports reach tens of megabytes (2.7M tokens per 10 MB)
+  and a single embedded diagram can be 166k tokens.
 ---
 
 # Debugging a Kronikol test run
@@ -51,10 +51,13 @@ the file.
 A run writes more than the report, and two of the files are meant to be read whole:
 
 - **`Failures.md`** — every failure of that run in context: the error, the parsed expected and actual, the
-  failing step with its source location, the calls made inside that step, attachments, and the address of
-  each. Failures sharing an error message are clustered, so twenty scenarios broken by one cause read as
-  one cause. On a failing run this is usually the entire answer and it costs a single `Read`. `# No
-  failures` means nothing failed; if the file is absent, the run did not finish.
+  failing step with its source location, the calls made inside that step, attachments (a count, for a
+  failure it does not work through), and the address of each. A cut list says what it left out and the
+  command that lists it: `… 2 earlier step(s)` above the last three steps, `… 9 more call(s) not in this
+  table` under the eight calls (4.31.0). Failures sharing an error message are
+  clustered, so twenty scenarios broken by one cause read as one cause. On a failing run this is usually
+  the entire answer and it costs a single `Read`. `# No failures` means nothing failed; if the file is
+  absent, the run did not finish.
 - `Failures.jsonl` — the same failures, one JSON object per line, for scripts. Each line opens with
   `formatVersion`.
 - `CLAUDE.md` and `AGENTS.md` — byte-identical instructions generated beside that particular run.
@@ -109,10 +112,12 @@ matters.
 | "what did the messages on a topic carry?" | `values --path '$.field' --service Kafka --request`: a message's value is its request half's body |
 | "which calls returned a bad value?" | `interactions --where '$.success = false'` — run-wide; `req:$.x` targets the request |
 | "which example row broke?" | `steps s3` (its parameters) + `annotations s3` |
+| "where is the screenshot / the trace / the video?" | `attachments s3` — every attachment of the scenario, its own and each step's, with the step that holds it and its absolute path, paged; `attachments s3/2` for one step. `failures` cuts a list past six to the first and the last five, and its cut line names this |
 | "it failed, I re-ran it, and now the report is green" | The reports directory holds the NEWEST run; the ones before it are kept under `runs/`. `history <reports-dir> --failing` names what failed earlier and in which run → `failures <reports-dir> --run last-failed` opens that run, and every verb takes `--run` from there (`interactions`, `http`, …). Not kept any more: `history --run last-failed` still answers from the ledger, the stored text of each error included |
 | "what differs between the failing run and the green re-run?" | `diff <reports-dir> --baseline-run last-failed` - the kept failing run is the old side, the newest run the new one, and `--run previous --baseline-run last-failed` diffs two kept runs. The same by path: `diff <reports-dir>/runs/<name> <reports-dir>`, the kept run first (`<name>` is the folder `failures --run last-failed` reported, or `kronikol history doctor <reports-dir>` lists them) |
 | "what broke since yesterday?" | `diff <report> --baseline` — finds last-green itself; or name both: `diff old.json new.json`. Matched on `stableId`, and it also reports services that stopped being tracked |
 | "these two runs/scenarios differ — how?" | `compare s3 s7` (it names the first differing body) → `diff s3/i47 s7/i47` — only the differing paths, never two payloads |
+| "why is the report so big?" / "what grew?" | `sizes` — the file's bytes by part (steps, calls, bodies, diagrams, whitespace), stored and decoded, and the ten largest scenarios → `interactions --group-by service,path --sort bytes` for the calls that carry the most |
 | "why is this slow?" | `summary` → `services --sort duration` → `flow s3`: the calls indented under the slow one are where its time went. Slowest leaves out the app's first-call warm-up and says where it went; a call marked `first … of the run` in `flow` is that warm-up, paid by whichever scenario went first, and one marked `waited for …` waited for it; neither is the scenario's own work |
 | "is this flaky?" / "has this failed before?" / "is this failure new?" | `history <report> s3` — the ledger's verdict with the evidence: `broke` (a regression), `failing` since which run, `flaky` (flip rate, not fail rate), `new`. `history <report> --flaky` lists every flaky scenario; `failures` already prints the same `history:` line under each failure when a ledger is there. `trace <id>` flags a trace id leaking across scenarios, the classic flaky smell |
 | "did it fail because the machine was slow?" | `history <report> s3` — a failing row in a run where everything was slow reads `[run degraded: passing scenarios took 2.3× their usual]`, and the statistics line says `failed 1 (1 in a degraded run)`. That is weak evidence against the test, not an acquittal: the failure still counts. `(6.4× usual)` on a row is a reading, not a cause — a failing test is usually slow *because* it failed |
@@ -160,9 +165,11 @@ matters.
   parents of the step that actually failed, so this is the common case, not the corner.
 - **A body ending `…truncated (N chars total)` was capped at capture time.** The rest was never recorded —
   it is not somewhere else in the file. `query` says so when it prints one.
-- **Attachments are pointers.** `failures` and `steps` print absolute paths for screenshots; `Read` them
-  individually. They are never inlined. `scripts/query.py` lists none: read `Failures.md`, which lists every one
-  with the step that holds it.
+- **Attachments are pointers.** `failures`, `steps` and `attachments` print absolute paths for screenshots; `Read`
+  them individually. They are never inlined. `attachments s3` lists every one a scenario holds, with the step that
+  holds it. `scripts/query.py` lists none: read `Failures.md`, which lists every attachment of each failure it works
+  through, and counts them for the rest. One the report does not hold has no file to read: it is printed with the path
+  it was given and why, `lost.png → C:\shots\lost.png (not found when the report was drawn)` (4.29.0).
 - **`traceId` is not the W3C trace id.** `traceId` is Kronikol's own identifier for the request/response
   pair; `activityTraceId` (printed by `http`) is the W3C one that matches your OTel traces and app logs.
 - **Aggregate counts are per occurrence, not per distinct body.** `values` counts a body every time it

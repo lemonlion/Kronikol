@@ -1088,6 +1088,16 @@
         }
         .step-attachment a { color: var(--kron-accent); }
 
+        /* An attachment the report does not hold (#148): its name and why, in place of an image or a link that would
+           be dead. The path it was given is its title. */
+        .attachment-missing {
+            display: inline-block;
+            margin-left: 1.5em;
+            font-size: 0.85em;
+            font-style: italic;
+            color: #a33;
+        }
+
         .attachment-image-container {
             display: block;
             margin: 0.5em 0 0.5em 1.5em;

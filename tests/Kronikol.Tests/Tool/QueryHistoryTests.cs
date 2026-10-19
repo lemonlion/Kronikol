@@ -57,8 +57,11 @@ public class QueryHistoryTests : IDisposable
     }
 
     /// <summary>A current report in <c>reports/</c> under the temp root, so the ledger above it is found by the walk.</summary>
-    private string WriteReport(string pay, string refund = "Passed", string runId = "99", string branch = "main")
+    /// <param name="more">Passing scenarios after the two, as their stable ids and names.</param>
+    private string WriteReport(string pay, string refund = "Passed", string runId = "99", string branch = "main", (string StableId, string Name)[]? more = null)
     {
+        var extra = string.Concat((more ?? []).Select((s, i) =>
+            $$""", { "id": "t{{i + 2}}", "stableId": "{{s.StableId}}", "name": "{{s.Name}}", "result": "Passed", "durationSeconds": 0.05, "labels": [], "categories": [], "steps": [], "httpInteractions": [] }"""));
         var directory = Path.Combine(_dir, "reports");
         Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, "TestRunReport.json");
@@ -76,7 +79,7 @@ public class QueryHistoryTests : IDisposable
                   "labels": [],
                   "scenarios": [
                     { "id": "t0", "stableId": "{{PayId}}", "name": "Pay by card", "result": "{{pay}}", "durationSeconds": 0.1, "errorMessage": {{(pay == "Failed" ? "\"Expected 200 but got 500\"" : "null")}}, "labels": [], "categories": [], "steps": [], "httpInteractions": [] },
-                    { "id": "t1", "stableId": "{{RefundId}}", "name": "Refund an order", "result": "{{refund}}", "durationSeconds": 0.05, "labels": [], "categories": [], "steps": [], "httpInteractions": [] }
+                    { "id": "t1", "stableId": "{{RefundId}}", "name": "Refund an order", "result": "{{refund}}", "durationSeconds": 0.05, "labels": [], "categories": [], "steps": [], "httpInteractions": [] }{{extra}}
                   ]
                 }
               ]
@@ -254,6 +257,67 @@ public class QueryHistoryTests : IDisposable
         Assert.Contains("s0", regressed.Output);
         Assert.Contains("no scenario is new in this run", newOnes.Output);
         Assert.Equal("1", count.Output.Trim());
+    }
+
+    [Fact]
+    public void A_run_says_how_many_absent_scenarios_it_did_not_list()
+    {
+        // Twenty-one of the last run's 212 scenarios are not in this one: the run view lists twenty and counts the other,
+        // and the JSON lists them all (plans/LIST_CAPS_PLAN.md Appendix A row 20). A run that lacks more than a tenth of
+        // the last one's is read as partial, and a partial run has no absent list, so the last run is that large.
+        const int others = 210, gone = 21, scenarios = others + 2;
+        var roster = HistoryRoster.Create("Suite",
+        [
+            new HistoryRosterEntry(PayId, "Pay by card", "Checkout", null), new HistoryRosterEntry(RefundId, "Refund an order", "Checkout", null),
+            .. Enumerable.Range(0, others).Select(i => new HistoryRosterEntry($"{i + 1:x16}", $"Other {i}", "Checkout", null))
+        ]);
+        HistoryLedgerWriter.Append(Ledger, roster, new HistoryRun
+        {
+            Id = "gh:1:1", Suite = "Suite", Partial = false, At = new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero),
+            Branch = "main", Commit = "c000001", Provider = "GitHubActions", Url = null, Shards = 1, RosterHash = roster.Hash,
+            Results = new string('P', scenarios), Attempts = new string('-', scenarios), Durations = [.. Enumerable.Repeat<int?>(100, scenarios)],
+            Calls = null, ShapeSet = null, ShapeOrdered = null, Errors = new string?[scenarios], ErrorText = new Dictionary<string, string>(), Deps = ["Test>orders"]
+        }, "3.9.0");
+        var report = WriteReport(pay: "Passed", more: [.. Enumerable.Range(gone, others - gone).Select(i => ($"{i + 1:x16}", $"Other {i}"))]);
+
+        var (output, error, exit) = Query(null, "history", report);
+
+        Assert.True(exit == 0, error);
+        var text = output.Replace("\r\n", "\n");
+        Assert.True(text.Contains("absent — in gh:1:1 and not in this run:\n", StringComparison.Ordinal), text);
+        Assert.Equal(20, text.Split('\n').Count(l => l.StartsWith("  sid:", StringComparison.Ordinal)));
+        Assert.Contains("\n  … and 1 more\n", text, StringComparison.Ordinal);
+
+        var json = System.Text.Json.JsonDocument.Parse(Query(null, "history", report, "--json").Output).RootElement;
+        Assert.Equal(gone, Absent(json)!.Value.GetArrayLength());
+
+        static System.Text.Json.JsonElement? Absent(System.Text.Json.JsonElement element) => element.ValueKind switch
+        {
+            System.Text.Json.JsonValueKind.Object => element.TryGetProperty("absent", out var absent)
+                ? absent
+                : element.EnumerateObject().Select(p => Absent(p.Value)).FirstOrDefault(found => found is not null),
+            System.Text.Json.JsonValueKind.Array => element.EnumerateArray().Select(Absent).FirstOrDefault(found => found is not null),
+            _ => null
+        };
+    }
+
+    [Fact]
+    public void One_scenario_says_how_many_earlier_runs_it_did_not_list_and_names_the_json_that_has_them()
+    {
+        // Twenty earlier runs and this one: the view lists the last fifteen, and it cut the rest with nothing said (#161).
+        Seed([.. Enumerable.Repeat("PP", 20)]);
+        var report = WriteReport(pay: "Passed");
+
+        var (output, error, exit) = Query(null, "history", report, "s0");
+        var json = System.Text.Json.JsonDocument.Parse(Query(null, "history", report, "s0", "--json").Output).RootElement;
+        var runs = json.GetProperty("items")[0].GetProperty("runs").GetArrayLength();
+
+        Assert.True(exit == 0, error);
+        Assert.True(runs > 15, $"only {runs} runs: the fixture does not reach the cap");
+        var text = output.Replace("\r\n", "\n");
+        Assert.Contains($"\n  … {runs - 15} earlier run(s) not listed: history s0 --json\n", text, StringComparison.Ordinal);
+        // A run's row: its result letter, its id and when it ran.
+        Assert.Equal(15, System.Text.RegularExpressions.Regex.Matches(text, @"^  \S  \S+ +\d{4}-\d\d-\d\dT", System.Text.RegularExpressions.RegexOptions.Multiline).Count);
     }
 
     [Fact]

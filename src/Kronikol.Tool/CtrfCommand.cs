@@ -90,6 +90,8 @@ internal static class CtrfCommand
             return 1;
         }
 
+        using var scanned = index;
+
         // The same gate `query` applies. Without it this command was strictly more permissive than the one
         // it shares a scanner with: any valid JSON became a CTRF document with zero tests and exit 0.
         if (ReportGate.Refuse(index, resolved, error) is { } refused)

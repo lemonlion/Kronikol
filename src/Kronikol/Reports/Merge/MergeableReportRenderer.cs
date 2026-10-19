@@ -30,8 +30,27 @@ public static class MergeableReportRenderer
     /// <remarks>The labs page is written when the merge read history or its shards recorded diagnostics
     /// (<see cref="MergeableReport.Diagnostics"/>), which since 4.6.0 also reach the report's diagnostics section when it is
     /// asked for. Each attachment with an absolute path to a file is copied into <c>attachments/</c> beside the report and
-    /// linked there, as a run's are; <see cref="MergeFiles"/> gives a shard's attachments that path.</remarks>
+    /// linked there, as a run's are; <see cref="MergeFiles"/> gives a shard's attachments that path. Every attachment the
+    /// report cannot hold is said in one <see cref="DiagnosticKind.AttachmentFailure"/> entry, first in the diagnostics the
+    /// report and the labs page draw.</remarks>
     public static string Render(MergeableReport report, string outputPath, string? title = null, ReportConfigurationOptions? options = null, History.HistoryVerdicts? history = null)
+    {
+        // The shards' files go beside the merged report, as a run's go beside its own: MergeFiles pointed each at its
+        // shard's folder, and a shard's own relative names would be dead links here.
+        if (DestinationDirectory(outputPath) is { Length: > 0 } destinationDirectory)
+            report = CarryAttachments(report, destinationDirectory);
+        return RenderCarried(report, outputPath, title, options, history);
+    }
+
+    /// <summary>The folder <see cref="Render"/> writes <paramref name="outputPath"/> into, where the attachments go.</summary>
+    internal static string? DestinationDirectory(string outputPath) => Path.GetDirectoryName(Path.GetFullPath(outputPath));
+
+    /// <summary>
+    /// <see cref="Render"/> for a report whose attachments <see cref="CarryAttachments"/> already placed: <c>kronikol
+    /// merge</c> carries them first, so the entry about the files it could not carry is on the report it then writes as data,
+    /// digest and labs page as well as on this HTML.
+    /// </summary>
+    internal static string RenderCarried(MergeableReport report, string outputPath, string? title = null, ReportConfigurationOptions? options = null, History.HistoryVerdicts? history = null)
     {
         options ??= new ReportConfigurationOptions();
         title ??= "Test Run Report";
@@ -62,11 +81,7 @@ public static class MergeableReportRenderer
         // different destinations raced each other over one intermediate name. That race was invisible for
         // as long as a failed write silently salvaged to `<name>2.html`; it surfaced the moment an
         // unwritable output started being reported, which is the point of reporting it.
-        var destinationDirectory = Path.GetDirectoryName(Path.GetFullPath(outputPath));
-        // The shards' files go beside the merged report, as a run's go beside its own: MergeFiles pointed each at its
-        // shard's folder, and a shard's own relative names would be dead links here.
-        if (!string.IsNullOrEmpty(destinationDirectory))
-            CarryAttachments(report, destinationDirectory);
+        var destinationDirectory = DestinationDirectory(outputPath);
         using var scope = string.IsNullOrEmpty(destinationDirectory)
             ? null
             : ReportGenerator.ScopeReportsDirectory(destinationDirectory);
@@ -231,7 +246,8 @@ public static class MergeableReportRenderer
                 PointAttachmentsAtTheirShard(report, Path.GetDirectoryName(Path.GetFullPath(path)) ?? "");
                 reports.Add(report);
             }
-            catch (Exception exception) when (exception is FormatException or System.Text.Json.JsonException or ArgumentException)
+            catch (Exception exception) when (exception is FormatException or System.Text.Json.JsonException or ArgumentException
+                                                 or Kronikol.Compression.ReportDecodeException)
             {
                 throw new FormatException($"{path}: {exception.Message}", exception);
             }
@@ -252,7 +268,9 @@ public static class MergeableReportRenderer
     /// <summary>
     /// Points a shard's attachments at its own folder. A shard names its files relative to the folder it was written to
     /// (<c>attachments/shot.png</c>), and the merged report is written elsewhere, where <see cref="Render"/> copies them. A
-    /// link, an absolute path, or a file that is not there is left as it is.
+    /// link or an absolute path is left as it is. A file that is not there is pointed at too: left relative, it named
+    /// whatever the merged report's own folder held under that name, which can be another shard's file of the same name
+    /// (#148 F5).
     /// </summary>
     private static void PointAttachmentsAtTheirShard(MergeableReport report, string shardDirectory) =>
         ForEachAttachmentList(report, attachments => attachments.Select(attachment =>
@@ -261,8 +279,7 @@ public static class MergeableReportRenderer
                 return attachment;
             try
             {
-                var file = Path.GetFullPath(Path.Combine(shardDirectory, attachment.RelativePath));
-                return File.Exists(file) ? attachment with { RelativePath = file } : attachment;
+                return attachment with { RelativePath = Path.GetFullPath(Path.Combine(shardDirectory, attachment.RelativePath)) };
             }
             catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
             {
@@ -272,30 +289,54 @@ public static class MergeableReportRenderer
 
     /// <summary>
     /// Copies each file the merged report links into <c>attachments/</c> beside it and links the copy, as a run's generator
-    /// does for its own (<see cref="ReportGenerator.CopyAttachmentsToReportsFolder"/>). A file already in that folder (a
-    /// merge written beside one of its shards) is linked where it is. A name another file holds there takes a number, so
-    /// two shards' <c>shot.png</c> are both kept and nothing is written over; a file with the same bytes is reused. A file
-    /// that cannot be copied keeps its absolute path.
+    /// does for its own (<see cref="ReportGenerator.CopyAttachmentsToReportsFolder"/>), the path read by the same rule
+    /// (<see cref="AttachmentPlacement"/>). A file already in that folder (a merge written beside one of its shards) is
+    /// linked where it is. A name another file holds there takes a number, so two shards' <c>shot.png</c> are both kept and
+    /// nothing is written over; a file with the same bytes is reused. A file that is not there, or cannot be copied, keeps
+    /// its path, and every such file is said in one <see cref="DiagnosticKind.AttachmentFailure"/> entry, put first on the
+    /// report returned (#148): <c>kronikol query</c>'s <c>!</c> line shows the first entry of a kind, and a shard's own
+    /// entry, about its own report, would otherwise stand for the merged report's.
     /// </summary>
-    private static void CarryAttachments(MergeableReport report, string destinationDirectory)
+    internal static MergeableReport CarryAttachments(MergeableReport report, string destinationDirectory)
     {
-        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        var folder = Path.Combine(destinationDirectory, "attachments");
-        var links = new Dictionary<string, string?>(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+        var folder = Path.Combine(destinationDirectory, AttachmentPlacement.FolderName);
+        var placed = new Dictionary<string, (string? Link, Exception? Error)>(StringComparer.FromComparison(AttachmentPlacement.PathComparison));
+        var account = new AttachmentAccount(destinationDirectory);
+        string[] bases = [destinationDirectory];
         ForEachAttachmentList(report, attachments => attachments.Select(attachment =>
         {
-            if (attachment.IsUrl || !Path.IsPathRooted(attachment.RelativePath) || !File.Exists(attachment.RelativePath))
-                return attachment;
-            var source = Path.GetFullPath(attachment.RelativePath);
-            if (!links.TryGetValue(source, out var link))
-                links[source] = link = Place(source);
-            return link is null ? attachment : attachment with { RelativePath = link };
+            var source = AttachmentPlacement.Classify(attachment, destinationDirectory, bases);
+            switch (source.Kind)
+            {
+                case AttachmentPlacement.SourceKind.Link:
+                    return attachment;
+                case AttachmentPlacement.SourceKind.InReport:
+                    return attachment with { RelativePath = source.Link, Problem = null };
+                case AttachmentPlacement.SourceKind.Missing:
+                    account.NotFound(source.Shown, source.Path, wasThere: false);
+                    return attachment with { Problem = AttachmentProblem.NotFound };
+                case AttachmentPlacement.SourceKind.Unusable:
+                    account.NotUsable(source.Shown);
+                    return attachment with { Problem = AttachmentProblem.NotUsable };
+            }
+
+            if (!placed.TryGetValue(source.Path, out var place))
+                placed[source.Path] = place = Place(source.Path);
+            if (place.Link is null)
+            {
+                account.NotCopied(source.Shown, place.Error!);
+                return attachment with { Problem = AttachmentProblem.NotCopied };
+            }
+
+            return attachment with { RelativePath = place.Link, Problem = null };
         }).ToArray());
 
-        string? Place(string source)
+        return account.Describe() is { } message
+            ? report with { Diagnostics = [new DiagnosticEntry(DiagnosticKind.AttachmentFailure, message), .. report.Diagnostics] }
+            : report;
+
+        (string? Link, Exception? Error) Place(string source)
         {
-            if (string.Equals(Path.GetDirectoryName(source), folder, comparison))
-                return "attachments/" + Path.GetFileName(source);
             try
             {
                 Directory.CreateDirectory(folder);
@@ -308,16 +349,16 @@ public static class MergeableReportRenderer
                     if (!File.Exists(destination))
                     {
                         File.Copy(source, destination);
-                        return "attachments/" + name;
+                        return (AttachmentPlacement.FolderName + "/" + name, null);
                     }
 
                     if (SameBytes(source, destination))
-                        return "attachments/" + name;
+                        return (AttachmentPlacement.FolderName + "/" + name, null);
                 }
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                return null;
+                return (null, ex);
             }
         }
 
@@ -331,24 +372,6 @@ public static class MergeableReportRenderer
     }
 
     /// <summary>Replaces each attachment list of <paramref name="report"/>: the scenarios', the background steps' and the steps', sub-steps included.</summary>
-    private static void ForEachAttachmentList(MergeableReport report, Func<FileAttachment[], FileAttachment[]> replace)
-    {
-        foreach (var scenario in report.Features.SelectMany(f => f.Scenarios))
-        {
-            if (scenario.Attachments is { Length: > 0 } own)
-                scenario.Attachments = replace(own);
-            Steps(scenario.BackgroundSteps);
-            Steps(scenario.Steps);
-        }
-
-        void Steps(ScenarioStep[]? steps)
-        {
-            foreach (var step in steps ?? [])
-            {
-                if (step.Attachments is { Length: > 0 } attachments)
-                    step.Attachments = replace(attachments);
-                Steps(step.SubSteps);
-            }
-        }
-    }
+    private static void ForEachAttachmentList(MergeableReport report, Func<FileAttachment[], FileAttachment[]> replace) =>
+        AttachmentPlacement.ForEachList(report.Features.SelectMany(f => f.Scenarios), replace);
 }

@@ -1,0 +1,5 @@
+content 115,396,210 bytes (converted in 0.9 s)
+gzip 6                    1,936,109 ( 1.68%)  write   0.19 s  read  0.05 s
+zstd 3                      893,015 ( 0.77%)  write   0.03 s  read  0.05 s
+zstd 9                      859,011 ( 0.74%)  write   0.12 s  read  0.05 s
+zstd 9 + long 27          1,089,372 ( 0.94%)  write   0.25 s  read  0.08 s

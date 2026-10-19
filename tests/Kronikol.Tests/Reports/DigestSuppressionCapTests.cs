@@ -80,8 +80,11 @@ public class DigestSuppressionCapTests
     {
         var digest = DigestOf(1_200, i => $"Assert.Equal() Failure\nExpected: {i}\nActual: {i + 1}");
 
-        // A list that stops without saying so reads as "that was all of them".
-        Assert.Contains("more not listed", digest.Markdown, StringComparison.Ordinal);
+        // A list that stops without saying so reads as "that was all of them". Both lists are cut here: the cluster's
+        // members past twenty, and the further failures' table past a hundred. Each says its own number, so one that went
+        // silent cannot pass behind the other (plans/LIST_CAPS_PLAN.md R2).
+        var elided = System.Text.RegularExpressions.Regex.Matches(digest.Markdown, @"_(\S+) more not listed").Select(m => m.Groups[1].Value);
+        Assert.Equal(["1,180", "1,095"], elided);
 
         // ...and the jsonl, which has no display budget, still has every one of them.
         Assert.Equal(1_200, FailuresJsonl.Failures(digest.Jsonl).Count());

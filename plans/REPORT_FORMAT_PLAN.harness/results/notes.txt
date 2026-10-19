@@ -1,0 +1,30 @@
+== p-site/lightbdd/TestRunReport.json  content 4,551,457
+  #120: 881 body notes (916,708 chars) -> content 3,548,122
+  gzip 6   as is   490,955  notes as refs   396,705  (-19.2%)
+  zstd 9   as is   279,968  notes as refs   251,768  (-10.1%)
+  zstd 19  as is   242,599  notes as refs   220,390  (-9.2%)
+  brotli 5 as is   271,994  notes as refs   246,430  (-9.4%)
+  $z at   8,192: decoded working set  3,090,501  zstd 9   464,803  brotli 5   455,857
+  $z at  65,536: decoded working set  3,636,915  zstd 9   342,602  brotli 5   335,948
+  $z at 262,144: decoded working set  4,551,457  zstd 9   279,968  brotli 5   271,994
+  $z off      : decoded working set  4,551,457  zstd 9   279,968  brotli 5   271,994
+== p-site/reqnroll/TestRunReport.json  content 4,439,035
+  #120: 888 body notes (905,109 chars) -> content 3,449,500
+  gzip 6   as is   480,182  notes as refs   386,754  (-19.5%)
+  zstd 9   as is   269,446  notes as refs   242,024  (-10.2%)
+  zstd 19  as is   233,009  notes as refs   211,930  (-9.0%)
+  brotli 5 as is   261,167  notes as refs   236,435  (-9.5%)
+  $z at   8,192: decoded working set  3,017,302  zstd 9   466,247  brotli 5   458,356
+  $z at  65,536: decoded working set  3,885,149  zstd 9   301,530  brotli 5   292,892
+  $z at 262,144: decoded working set  4,439,035  zstd 9   269,446  brotli 5   261,167
+  $z off      : decoded working set  4,439,035  zstd 9   269,446  brotli 5   261,167
+== docker_lightbdd/TestRunReport.json  content 3,831,407
+  #120: 759 body notes (698,689 chars) -> content 3,074,044
+  gzip 6   as is   404,209  notes as refs   349,026  (-13.7%)
+  zstd 9   as is   261,245  notes as refs   239,173  (-8.4%)
+  zstd 19  as is   227,618  notes as refs   210,439  (-7.5%)
+  brotli 5 as is   254,618  notes as refs   233,902  (-8.1%)
+  $z at   8,192: decoded working set  2,810,376  zstd 9   410,087  brotli 5   398,726
+  $z at  65,536: decoded working set  3,407,728  zstd 9   272,856  brotli 5   266,715
+  $z at 262,144: decoded working set  3,831,407  zstd 9   261,245  brotli 5   254,618
+  $z off      : decoded working set  3,831,407  zstd 9   261,245  brotli 5   254,618

@@ -23,7 +23,7 @@ internal sealed class BodyCache(ReportIndex index) : IDisposable
     // One handle for the whole command. Grep reads every distinct body — tens of thousands on a large
     // report — and opening the file per body was the second-largest cost after tier-0 JIT (QUERY_PERF_PLAN
     // §1.2: up to ~0.75 s per bulk command). Single-threaded per-command use, so a shared position is safe.
-    private readonly FileStream _stream = PayloadReader.Open(index);
+    private readonly Stream _stream = PayloadReader.Open(index);
 
     /// <summary>The raw text of a body, or null when it cannot be read back.</summary>
     public string? Raw(string hash)

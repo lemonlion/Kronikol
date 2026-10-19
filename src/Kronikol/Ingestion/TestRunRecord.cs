@@ -51,11 +51,21 @@ public sealed record TestRunRecord
     /// <summary>Duration in milliseconds for <c>end</c> (and optionally <c>step</c>) events.</summary>
     [JsonPropertyName("durationMs")] public double? DurationMs { get; init; }
 
-    /// <summary>Failure message for a failed <c>end</c> event.</summary>
-    [JsonPropertyName("error")] public string? Error { get; init; }
+    /// <summary>
+    /// Failure message for a failed <c>end</c> event, without the terminal control sequences a runner wrote for a
+    /// terminal (<see cref="TerminalCodes"/>): Playwright's reporter API gives a message with its colour codes.
+    /// </summary>
+    [JsonPropertyName("error")] public string? Error { get => _error; init => _error = TerminalCodes.Strip(value); }
 
-    /// <summary>Failure stack trace for a failed <c>end</c> event (or a failed <c>step</c>, where it becomes a step comment).</summary>
-    [JsonPropertyName("stackTrace")] public string? StackTrace { get; init; }
+    private readonly string? _error;
+
+    /// <summary>
+    /// Failure stack trace for a failed <c>end</c> event (or a failed <c>step</c>, where it becomes a step comment), without
+    /// terminal control sequences, as <see cref="Error"/>.
+    /// </summary>
+    [JsonPropertyName("stackTrace")] public string? StackTrace { get => _stackTrace; init => _stackTrace = TerminalCodes.Strip(value); }
+
+    private readonly string? _stackTrace;
 
     /// <summary>Step text for <c>step</c> events.</summary>
     [JsonPropertyName("text")] public string? Text { get; init; }

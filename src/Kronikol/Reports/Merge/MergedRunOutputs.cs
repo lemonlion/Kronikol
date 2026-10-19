@@ -176,8 +176,10 @@ public static class MergedRunOutputs
 
         if (options.PublishCiArtifacts)
         {
+            // The files the merge carried beside the merged report, which it links.
             CiArtifactPublisher.Publish(CiArtifactPublisher.ReportFiles(directory), ci, options.CiArtifactName, options.CiArtifactRetentionDays,
-                getEnv, File.AppendAllText, output.WriteLine, File.Exists);
+                getEnv, File.AppendAllText, output.WriteLine, File.Exists,
+                CiArtifactPublisher.AttachmentFiles(directory, AttachmentLinks(report)));
         }
 
         // Last, so it is the final thing the merge says.
@@ -209,5 +211,21 @@ public static class MergedRunOutputs
         }
 
         throw new InvalidOperationException($"left it alone - it {problem}");
+    }
+
+    /// <summary>
+    /// The links of every attachment <see cref="MergeableReportRenderer.CarryAttachments"/> placed, in report order. One it
+    /// could not place is left out: a path that could not be read (a NUL in it) keeps an <c>attachments/</c> prefix it was
+    /// given, and reading it again for the upload threw.
+    /// </summary>
+    private static IEnumerable<string> AttachmentLinks(MergeableReport report)
+    {
+        var links = new List<string>();
+        AttachmentPlacement.ForEachList(report.Features.SelectMany(f => f.Scenarios), attachments =>
+        {
+            links.AddRange(attachments.Where(a => a.Problem is null).Select(a => a.RelativePath));
+            return attachments;
+        });
+        return links;
     }
 }

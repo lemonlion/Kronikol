@@ -440,8 +440,11 @@ public static class RunSummaryConsoleWriter
         var artifact = reader.Provider == CiEnvironment.AzureDevOps && !reader.CanDownload ? reader.ArtifactName : null;
 
         var named = new[] { DataFile(summary), HtmlFileName(summary) }.OfType<string>().Select(n => $"`{OneLine(n)}`").ToArray();
+        // A compressed data file cannot be read without the tool at all, which is the whole reason for it (F26).
         var rule = named.Length > 0
-            ? $"do not open {string.Join(" or ", named)} — a real report reaches megabytes, and a single embedded diagram can be larger than a context window."
+            ? IsCompressed(DataFile(summary))
+                ? $"do not open {string.Join(" or ", named)} — the data file is compressed: use `kronikol query`, and a real report reaches megabytes, a single embedded diagram larger than a context window."
+                : $"do not open {string.Join(" or ", named)} — a real report reaches megabytes, and a single embedded diagram can be larger than a context window."
             : null;
         // "instead" only says something beside the rule, and the label is followed by lower case.
         string Lead(string what, string end) =>
@@ -680,7 +683,11 @@ public static class RunSummaryConsoleWriter
             return null;
 
         var full = Path.GetFullPath(dataFilePath);
-        return string.Equals(Path.GetFileName(full), "TestRunReport.json", StringComparison.OrdinalIgnoreCase) ? null : full;
+        return Path.GetFileName(full) is var name
+               && (string.Equals(name, "TestRunReport.json", StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(name, "TestRunReport.krkl", StringComparison.OrdinalIgnoreCase))
+            ? null
+            : full;
     }
 
     /// <summary>
@@ -785,9 +792,11 @@ public static class RunSummaryConsoleWriter
     private static string? DataFile(RunSummary summary) =>
         summary.Files.FirstOrDefault(f => IsDataFile(f.Name))?.Name;
 
-    /// <summary>The data file when it is JSON, the one format <c>kronikol query</c> reads; null otherwise.</summary>
+    /// <summary>The data file when <c>kronikol query</c> reads it: JSON, or the compressed <c>.krkl</c>; null otherwise.</summary>
     private static string? QueryableDataFile(RunSummary summary) =>
-        DataFile(summary) is { } name && name.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ? name : null;
+        DataFile(summary) is { } name && (name.EndsWith(".json", StringComparison.OrdinalIgnoreCase) || IsCompressed(name)) ? name : null;
+
+    private static bool IsCompressed(string? name) => name?.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase) == true;
 
     /// <summary>What the pointer tells an agent never to open: the data file, or the report when the run wrote no data file.</summary>
     private static string? NeverOpen(RunSummary summary) => DataFile(summary) ?? HtmlFileName(summary);
@@ -803,12 +812,14 @@ public static class RunSummaryConsoleWriter
     /// written rather than discovered later.
     /// </summary>
     private static string Describe(RunSummaryFile file) =>
-        IsDataFile(file.Name) ? $"{file.Name} {Size(file.Bytes)}" : file.Name;
+        // A compressed file's size on disk says nothing about what reading it would cost, so it gets none (4.6).
+        IsDataFile(file.Name) && !IsCompressed(file.Name) ? $"{file.Name} {Size(file.Bytes)}" : file.Name;
 
     private static bool IsDataFile(string name) =>
         !name.EndsWith(".schema.json", StringComparison.OrdinalIgnoreCase)
         && !name.EndsWith(".schema.xsd", StringComparison.OrdinalIgnoreCase)
         && (name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase)
             || name.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
             || name.EndsWith(".yml", StringComparison.OrdinalIgnoreCase));
 

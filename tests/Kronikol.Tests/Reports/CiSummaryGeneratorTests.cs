@@ -94,6 +94,24 @@ public class CiSummaryGeneratorTests
     }
 
     [Fact]
+    public void GenerateMarkdown_all_passed_counts_only_the_diagrams_it_did_not_show()
+    {
+        // Forty scenarios, three with a diagram, all three shown: the line said "37 more scenario(s) not shown", counting
+        // every scenario that had no diagram to show (plans/LIST_CAPS_PLAN.md 3.10).
+        var drawn = Enumerable.Range(1, 3).Select(i => (scenario: Passed($"Drawn {i}", $"d-{i}"), diagram: Diagram($"d-{i}"))).ToArray();
+        var plain = Enumerable.Range(1, 37).Select(i => Passed($"Plain {i}", $"p-{i}")).ToArray();
+        var features = new[] { MakeFeature("Feature", [.. drawn.Select(s => s.scenario), .. plain]) };
+        var diagrams = drawn.Select(s => s.diagram).ToArray();
+
+        var all = CiSummaryGenerator.GenerateMarkdown(features, diagrams, diagrams, Start, End, maxDiagrams: 10);
+        Assert.DoesNotContain("more scenario(s) not shown", all);
+
+        // Past the cap, it counts the diagrams it did not show.
+        var cut = CiSummaryGenerator.GenerateMarkdown(features, diagrams, diagrams, Start, End, maxDiagrams: 2);
+        Assert.Contains("*1 more scenario(s) not shown", cut);
+    }
+
+    [Fact]
     public void GenerateMarkdown_with_failures_shows_failed_status()
     {
         var features = new[] { MakeFeature("Orders", Failed("Bad order")) };

@@ -422,6 +422,7 @@ public static class IngestPipeline
 
         var records = ReadInteractions(request, diagnostics);
         var testRecords = NormaliseSources(ReadTestRecords(request, diagnostics), request.SourceRoot, diagnostics);
+        var attachmentsBase = AbsoluteBase(request.AttachmentsBase);
 
         // The contract puts a failed call's error on its response half, beside the error's type as the status; one on a
         // request is kept where it was written, and the producer told.
@@ -444,6 +445,7 @@ public static class IngestPipeline
                     IncludeHooks = request.IncludeHooks,
                     DefaultFeatureName = request.DefaultFeatureName,
                     AttachmentsDirectory = decodedAttachments,
+                    AttachmentsBase = attachmentsBase,
                 },
                 CucumberTestsFileBypass.Collect(testRecords));
         var earlierAttemptRecords = 0;
@@ -451,7 +453,10 @@ public static class IngestPipeline
         {
             // The synthesis's own account: malformed lines, scenarios captured traffic cannot join, attachments that
             // could not be written.
-            foreach (var warning in cucumber.Warnings)
+            // A body that could not be written is an attachment the report does not hold: said in the run's one attachment
+            // entry, not as an Other (#148 F17).
+            var unwritten = cucumber.UnwrittenAttachments.Select(u => u.Warning).ToHashSet(StringComparer.Ordinal);
+            foreach (var warning in cucumber.Warnings.Where(w => !unwritten.Contains(w)))
                 diagnostics.Add(DiagnosticKind.Other, warning);
             if (cucumber.UnmatchedTestsFileBypasses > 0)
                 diagnostics.Add(DiagnosticKind.Other,
@@ -501,7 +506,19 @@ public static class IngestPipeline
         var logs = Replay(ordered, current);
 
         var synthesised = FeatureSynthesizer.Build(
-            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, request.AttachmentsBase, attempts);
+            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, attachmentsBase, attempts);
+        // What the copier cannot see of the capture's attachments, for its one entry: read before the messages are merged in,
+        // since the merge makes a result of its own.
+        var attachmentContext = new AttachmentContext
+        {
+            RelativeBase = synthesised.RelativeAttachmentPaths || cucumber?.RelativeAttachmentUrls == true
+                ? attachmentsBase ?? Directory.GetCurrentDirectory()
+                : null,
+            BaseGiven = attachmentsBase is not null,
+            CleanedAttachments = request.CleanAttachments,
+            BlankPaths = synthesised.BlankAttachmentPaths,
+            Unwritten = cucumber?.UnwrittenAttachments.Select(u => (u.Name, u.Error)).ToArray() ?? [],
+        };
         if (cucumber is not null)
         {
             // Messages win for structure (feature/rule/background/outline/tags/tables/doc strings);
@@ -563,7 +580,15 @@ public static class IngestPipeline
         // deleted the screenshots of the very run that was about to be kept. A pass with no scenarios
         // rotates nothing and never reaches the hook, so it is cleaned as it always was.
         if (request.CleanAttachments && scenarioCount == 0)
-            CleanAttachmentsFolder(reportsDirectory, diagnostics);
+        {
+            // Said, since nothing else will: this pass writes no report, and a report already in the folder links what it
+            // deleted (#148 F15).
+            var deleted = CleanAttachmentsFolder(reportsDirectory, diagnostics);
+            if (deleted > 0)
+                diagnostics.Add(DiagnosticKind.AttachmentFailure,
+                    $"{deleted} attachment file(s) deleted from {Path.Combine(reportsDirectory, "attachments")} by --clean-attachments, and this "
+                    + "pass wrote no report (it had no scenarios): a report already in that folder may link them.");
+        }
 
         DefaultDiagramsFetcher.Reset();
         using (ReportDiagnosticsScope.Begin(diagnostics))
@@ -575,6 +600,7 @@ public static class IngestPipeline
             ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(synthesised.Features, synthesised.Start, synthesised.End, options, cucumber?.Environment ?? RunEnvironment.Unrecorded,
                 Environment.GetEnvironmentVariable,
                 beforeFirstWrite: request.CleanAttachments ? directory => CleanAttachmentsFolder(directory, diagnostics) : null,
+                attachments: attachmentContext,
                 spans: DistinctSpans(request.Spans, diagnostics),
                 // The ledger of the project the ingest is run in, never that of whatever checkout holds the tool's build.
                 historyBaseDirectory: Directory.GetCurrentDirectory());
@@ -1187,22 +1213,46 @@ public static class IngestPipeline
     /// Empties the report's <c>attachments/</c> folder so it holds exactly this run's artefacts.
     /// A file another process still holds open is skipped and reported, never thrown.
     /// </summary>
-    private static void CleanAttachmentsFolder(string reportsDirectory, ReportDiagnosticsCollector diagnostics)
+    private static int CleanAttachmentsFolder(string reportsDirectory, ReportDiagnosticsCollector diagnostics)
     {
         var attachmentsDir = Path.Combine(reportsDirectory, "attachments");
         if (!Directory.Exists(attachmentsDir))
-            return;
+            return 0;
 
+        var deleted = 0;
         foreach (var file in Directory.EnumerateFiles(attachmentsDir))
         {
             try
             {
                 File.Delete(file);
+                deleted++;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 diagnostics.Add(DiagnosticKind.AttachmentFailure, $"Could not delete stale attachment {file}: {ex.Message}");
             }
+        }
+
+        return deleted;
+    }
+
+    /// <summary>
+    /// <see cref="IngestRequest.AttachmentsBase"/> made absolute against the working directory, as <c>kronikol ingest</c>
+    /// makes <c>--attachments-base</c>: a library caller's relative base made every relative attachment path throw (#148
+    /// F8). One this machine cannot read as a path is kept as given, and each path read against it is then handed on as
+    /// it was, for the copier to say.
+    /// </summary>
+    private static string? AbsoluteBase(string? attachmentsBase)
+    {
+        if (string.IsNullOrWhiteSpace(attachmentsBase))
+            return null;
+        try
+        {
+            return Path.GetFullPath(attachmentsBase);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return attachmentsBase;
         }
     }
 

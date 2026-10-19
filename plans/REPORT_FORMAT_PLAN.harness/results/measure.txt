@@ -1,0 +1,32 @@
+== bp-site/lightbdd/TestRunReport.json
+file 6,150,370  formatVersion 2  ws-outside-strings 2,168,568 (35.3%)
+  content.decoded                       881,434
+  content.stored                        449,946
+  diagrams.decoded                    1,487,372
+  diagrams.stored                       682,354
+  interactions.meta                   1,872,011
+  steps                                 743,824
+  steps.nullOrEmptyKeys                 398,262
+  step depth histogram {0: 613, 1: 827, 2: 593, 3: 36, 4: 12}
+  asis file                        raw   6,150,370 gz6    664,456 (inflate 5 ms) zstd3    562,368 zstd19    466,107 br9    458,805 xz6    458,844
+  compact (wrappers kept)          raw   3,981,802 gz6    596,688 (inflate 4 ms) zstd3    520,831 zstd19    455,592 br9    451,294 xz6    442,272
+  compact, nulls/empties dropped   raw   3,090,769 gz6    567,354 (inflate 4 ms) zstd3    511,957 zstd19    452,144 br9    447,644 xz6    434,016
+  inflated, indented               raw   7,607,997 gz6    619,419 (inflate 6 ms) zstd3    400,717 zstd19    264,608 br9    270,434 xz6    276,836
+  inflated, compact                raw   5,442,490 gz6    533,233 (inflate 5 ms) zstd3    353,924 zstd19    248,911 br9    262,423 xz6    259,924
+  inflated, compact, no nulls      raw   4,551,457 gz6    490,955 (inflate 4 ms) zstd3    346,012 zstd19    242,599 br9    259,219 xz6    251,328
+== bp-site/reqnroll/TestRunReport.json
+file 5,762,341  formatVersion 2  ws-outside-strings 1,953,562 (33.9%)
+  content.decoded                       863,837
+  content.stored                        439,879
+  diagrams.decoded                    1,469,411
+  diagrams.stored                       692,603
+  interactions.meta                   1,822,234
+  steps                                 603,242
+  steps.nullOrEmptyKeys                 295,486
+  step depth histogram {0: 705, 1: 888}
+  asis file                        raw   5,762,341 gz6    638,566 (inflate 5 ms) zstd3    545,685 zstd19    464,122 br9    460,590 xz6    455,368
+  compact (wrappers kept)          raw   3,808,779 gz6    589,872 (inflate 4 ms) zstd3    517,586 zstd19    455,789 br9    453,540 xz6    440,444
+  compact, nulls/empties dropped   raw   3,017,554 gz6    562,286 (inflate 4 ms) zstd3    511,110 zstd19    452,737 br9    446,882 xz6    433,348
+  inflated, indented               raw   7,180,416 gz6    582,468 (inflate 6 ms) zstd3    369,696 zstd19    251,922 br9    257,940 xz6    264,264
+  inflated, compact                raw   5,230,260 gz6    517,932 (inflate 5 ms) zstd3    340,059 zstd19    237,919 br9    250,798 xz6    249,048
+  inflated, compact, no nulls      raw   4,439,035 gz6    480,182 (inflate 4 ms) zstd3    332,899 zstd19    233,009 br9    248,586 xz6    241,752

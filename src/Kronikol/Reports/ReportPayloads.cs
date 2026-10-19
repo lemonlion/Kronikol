@@ -41,6 +41,20 @@ internal sealed class ReportPayloads(bool compress)
     internal const int CompressedFormatVersion = 2;
 
     /// <summary>
+    /// The <c>formatVersion</c> of the JSON inside a compressed report file (plans/REPORT_FORMAT_PLAN.md 4.2): the keys of
+    /// version 2, any optional one of which may be absent, with no wrapper written. A reader still takes a wrapper in it.
+    /// </summary>
+    internal const int CompactFormatVersion = 3;
+
+    /// <summary>Whether a reader of this build takes a file declaring <paramref name="formatVersion"/>.</summary>
+    internal static bool Reads(int formatVersion) =>
+        formatVersion is ReportGenerator.ReportFormatVersion or CompressedFormatVersion or CompactFormatVersion;
+
+    /// <summary>The versions <see cref="Reads"/> takes, for a refusal to name.</summary>
+    internal static string ReadVersions =>
+        $"{ReportGenerator.ReportFormatVersion}, {CompressedFormatVersion} and {CompactFormatVersion}";
+
+    /// <summary>
     /// Bytes a wrapper spends on its keys, the address, the length and the indentation, beyond the base64 itself:
     /// the "smaller" test counts them, so a payload that would only break even stays text.
     /// </summary>

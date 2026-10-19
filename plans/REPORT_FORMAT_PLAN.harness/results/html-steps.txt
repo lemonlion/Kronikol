@@ -1,0 +1,3 @@
+html 3,265,019 bytes; steps 2,081; step markup about 570,213 (274 per step)
+status tooltips 2,081, 93,645 bytes of text, 112,374 bytes as attributes, 1 distinct
+collapsible composites 783, open 0

@@ -63,6 +63,12 @@
               "name": "receipt.png",
               "relativePath": "attachments/receipt.png",
               "mediaType": "image/png"
+            },
+            {
+              "name": "lost.png",
+              "relativePath": "C:/run/shots/lost.png",
+              "mediaType": "image/png",
+              "problem": "NotFound"
             }
           ],
           "backgroundSteps": [

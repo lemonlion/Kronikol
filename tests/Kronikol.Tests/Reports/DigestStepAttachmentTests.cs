@@ -156,8 +156,10 @@ public class DigestStepAttachmentTests : IDisposable
         Assert.Equal("    at Checkout.feature:12", lines[failing + 2]);
         var copied = Path.GetFullPath(Path.Combine(options.ReportsFolderPath, "attachments", "declined.png"));
         Assert.Equal($"    attachment: declined.png → {copied}", lines[failing + 3]);
-        // Only the failing step's: the passing step's screenshot is in `steps`, not here.
-        Assert.DoesNotContain(lines, l => l.Contains("basket.png", StringComparison.Ordinal));
+        // Only the failing step's is listed: the passing step's screenshot is in `steps` and `attachments`, and here it is
+        // counted, with the view that lists it (#161), never printed with its path.
+        Assert.DoesNotContain(lines, l => l.Contains("attachment: basket.png", StringComparison.Ordinal));
+        Assert.Contains("  … 1 more attachment(s) on other steps (basket.png): attachments s0", lines);
         // The scenario's own attachment is printed as it was, and once.
         Assert.Single(lines, l => Regex.IsMatch(l, @"^  attachment: trace → .+trace\.zip$"));
         Assert.DoesNotContain(lines, l => l.StartsWith("  attachment: declined.png", StringComparison.Ordinal));
@@ -227,10 +229,10 @@ public class DigestStepAttachmentTests : IDisposable
     }
 
     [Fact]
-    public void Query_failures_prints_the_first_six_of_a_failing_steps_attachments_and_every_failure()
+    public void Query_failures_prints_both_ends_of_a_failing_steps_attachments_and_every_failure()
     {
         // A step that attached many files was printed whole, and one row past the byte budget hid every other failure: the
-        // text said nothing fits, the object form had no items.
+        // text said nothing fits, the object form had no items. Six are printed, the first and the last five (#161).
         var shots = Enumerable.Range(0, 60).Select(i =>
         {
             var file = Path.Combine(_dir, $"screenshot-taken-while-the-card-was-being-declined-{i:D2}.png");
@@ -241,16 +243,20 @@ public class DigestStepAttachmentTests : IDisposable
 
         var (lines, items) = Failures(reports);
 
-        Assert.Equal(6, lines.Count(l => l.StartsWith("    attachment: ", StringComparison.Ordinal)));
-        Assert.Contains("    … 54 more attachment(s): steps s0/0", lines);
+        string[] shown = ["screenshot-taken-while-the-card-was-being-declined-00.png", .. Enumerable.Range(55, 5).Select(i => $"screenshot-taken-while-the-card-was-being-declined-{i:D2}.png")];
+        Assert.Equal(shown, lines.Where(l => l.StartsWith("    attachment: ", StringComparison.Ordinal))
+            .Select(l => l["    attachment: ".Length..l.IndexOf(" → ", StringComparison.Ordinal)]));
+        // The cut line follows the first, names what it cut while whole names fit in a hundred characters, and names the view.
+        Assert.Equal("    … 54 more attachment(s) (screenshot-taken-while-the-card-was-being-declined-01.png, …): attachments s0/0",
+            lines[Array.FindIndex(lines, l => l.StartsWith("    attachment: ", StringComparison.Ordinal)) + 1]);
         Assert.Contains(lines, l => l.Contains("refund refused", StringComparison.Ordinal));
         Assert.Equal(2, items.Length);
-        Assert.Equal(6, FailingStepPaths(items).Length);
+        Assert.Equal(shown, FailingStepPaths(items).Select(Path.GetFileName));
 
-        // `steps`, which the line names, prints past the sixth.
-        var steps = new StringWriter();
-        Assert.Equal(0, QueryCommand.Run(["steps", reports, "s0/0"], steps, new StringWriter()));
-        Assert.Contains("declined-06.png", steps.ToString(), StringComparison.Ordinal);
+        // `attachments`, which the line names, lists every one of them.
+        var listed = new StringWriter();
+        Assert.Equal(0, QueryCommand.Run(["attachments", reports, "s0/0", "--max-bytes", "0"], listed, new StringWriter()));
+        Assert.Equal(60, Regex.Matches(listed.ToString(), @"^s0/0 +screenshot-taken-while-the-card-was-being-declined-\d{2}\.png → ", RegexOptions.Multiline).Count);
     }
 
     [Fact]
@@ -263,7 +269,8 @@ public class DigestStepAttachmentTests : IDisposable
 
         var (lines, items) = Failures(reports);
 
-        Assert.Contains($"    attachment: odd.png → {odd}", lines);
+        // The report does not hold it (#148 R3), so the line says why after the path as it was given.
+        Assert.Contains($"    attachment: odd.png → {odd} (not a usable path)", lines);
         Assert.Equal([odd], FailingStepPaths(items));
         Assert.Contains(lines, l => l.Contains("refund refused", StringComparison.Ordinal));
         Assert.Equal(0, QueryCommand.Run(["steps", reports, "s0"], new StringWriter(), new StringWriter()));

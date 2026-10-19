@@ -37,23 +37,65 @@ public class InitAgentsIgnoreTests : IDisposable
         return File.ReadAllText(Path.Combine(_dir, ".ignore"));
     }
 
-    [Fact]
-    public void It_writes_an_ignore_file_that_reaches_a_report_under_bin()
+    // Read the way ripgrep reads the two files: its .ignore outranks .gitignore, which is the same as one list with the
+    // .ignore rules after the .gitignore ones, later rules winning. git check-ignore applies that list by the same
+    // gitignore rules, directory by directory, so it answers for every path below without ripgrep installed.
+    private static readonly string[] Roots = ["bin/Debug/net10.0/Reports", "TestResults/run-1", ".logs/kronikol"];
+
+    [Theory]
+    [InlineData("Failures.md")]
+    [InlineData("Failures.jsonl")]
+    [InlineData("CLAUDE.md")]
+    [InlineData("AGENTS.md")]
+    [InlineData("runs/gh_1_1/Failures.md")]
+    public void A_search_reaches_the_failures_digest_and_the_agent_files_under_each_reports_folder(string file)
+    {
+        foreach (var root in Roots)
+            Assert.False(IgnoredBySearch($"{root}/{file}"), $"{root}/{file} is out of a search's reach");
+    }
+
+    [Theory]
+    [InlineData("bin/Debug/net10.0/Reports/TestRunReport.json")]
+    [InlineData("bin/Debug/net10.0/Reports/TestRunReport.html")]
+    [InlineData("bin/Debug/net10.0/Reports/runs/gh_1_1/TestRunReport.json")]
+    [InlineData("bin/Debug/net10.0/Kronikol.Tests.deps.json")]
+    [InlineData("bin/Debug/net10.0/appsettings.json")]
+    [InlineData("TestResults/run-1/TestRunReport.json")]
+    [InlineData(".logs/kronikol/TestRunReport.json")]
+    [InlineData(".logs/other-tool/trace.log")]
+    public void A_search_leaves_the_report_and_the_rest_of_the_build_output_alone(string file)
+    {
+        // Until 4.27.1 the block re-included whole folders: !bin/ brought back the entire build output and
+        // !bin/**/Reports/** the report data file and page, tens of megabytes (plans/REPORT_FORMAT_PLAN.md section 8).
+        Assert.True(IgnoredBySearch(file), $"{file} is within a search's reach");
+    }
+
+    private bool IgnoredBySearch(string relativePath)
     {
         var ignore = Install();
+        var repo = Path.Combine(_dir, "search-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(repo);
+        Git(repo, "init", "-q");
+        var path = Path.Combine(repo, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, "x");
+        var rules = Path.Combine(_dir, "rules-" + Guid.NewGuid().ToString("N")[..8]);
+        File.WriteAllText(rules, "bin/\nobj/\nTestResults/\n.logs/\n" + ignore.ReplaceLineEndings("\n"));
+        var exit = Git(repo, "-c", $"core.excludesFile={rules}", "check-ignore", "--no-index", "-q", relativePath);
+        Assert.True(exit is 0 or 1, $"git check-ignore exited {exit}");
+        return exit == 0;
+    }
 
-        // The directory rules, then the contents. Without the first, the second matches nothing.
-        Assert.Contains("!bin/", ignore, StringComparison.Ordinal);
-        Assert.Contains("!bin/**/Reports/", ignore, StringComparison.Ordinal);
-        Assert.Contains("!bin/**/Reports/**", ignore, StringComparison.Ordinal);
-
-        // The order matters as much as the presence.
-        var dirRule = ignore.IndexOf("!bin/**/Reports/\n", StringComparison.Ordinal) >= 0
-            ? ignore.IndexOf("!bin/**/Reports/\n", StringComparison.Ordinal)
-            : ignore.IndexOf("!bin/**/Reports/\r\n", StringComparison.Ordinal);
-        Assert.True(dirRule >= 0, "the directory itself is never re-included:\n" + ignore);
-        Assert.True(ignore.IndexOf("!bin/", StringComparison.Ordinal) < dirRule,
-            "bin/ is re-included after its subdirectory, which cannot work");
+    private static int Git(string directory, params string[] args)
+    {
+        var start = new System.Diagnostics.ProcessStartInfo("git") { WorkingDirectory = directory, RedirectStandardOutput = true, RedirectStandardError = true };
+        foreach (var arg in args)
+            start.ArgumentList.Add(arg);
+        using var process = System.Diagnostics.Process.Start(start)!;
+        process.StandardOutput.ReadToEnd();
+        process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        return process.ExitCode;
     }
 
     [Fact]

@@ -9,8 +9,21 @@ namespace Kronikol.Query;
 /// </summary>
 public static partial class QueryCommand
 {
-    /// <summary>How many of a failing step's attachments <c>failures</c> prints under it; <c>steps</c> prints them all.</summary>
-    private const int MaxFailingStepAttachments = 6;
+    /// <summary>
+    /// How many of a list of attachments <c>failures</c> prints, the scenario's own or a failing step's: the first
+    /// <see cref="AttachmentsHead"/> and the last five, with a line in place of the rest that names them and
+    /// <c>attachments</c>, which lists every one (#161).
+    /// </summary>
+    private const int MaxAttachmentsShown = 6;
+
+    /// <summary>How many of a capped list of attachments come before the cut: the test's own first, its starting state.</summary>
+    private const int AttachmentsHead = 1;
+
+    /// <summary>How many of the calls made in a failing step <c>failures</c> prints under it; <c>flow sN/P</c> lists them all.</summary>
+    private const int MaxFailingStepCalls = 6;
+
+    /// <summary>How many of a step's parameter lines the whole tree of <c>steps</c> prints; the tree scoped to the step prints them all.</summary>
+    private const int MaxParametersShown = 8;
 
     private static int Failures(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error, Func<string, string?> getEnv)
     {
@@ -116,34 +129,42 @@ public static partial class QueryCommand
             var failingSteps = scenario.AllSteps().Where(s => s.Step.Failed).ToArray();
             foreach (var (path, depth, step) in failingSteps)
             {
-                writer.Line($"  {new string(' ', depth * 2)}✗ {scenario.Address}/{path}  {QueryWriter.OneLine(step.Display, 100)}");
+                var indent = new string(' ', depth * 2);
+                writer.Line($"  {indent}✗ {scenario.Address}/{path}  {QueryWriter.OneLine(step.Display, 100)}");
                 if (step.FailureMessage is { } stepMessage)
-                    writer.Line($"  {new string(' ', depth * 2)}  {CutMessage(stepMessage, 200, scenario.Address)}");
+                    writer.Line($"  {indent}  {CutMessage(stepMessage, 200, scenario.Address)}");
                 if (step.SourceFile is { } file)
-                    writer.Line($"  {new string(' ', depth * 2)}  at {file}:{step.SourceLine}");
-                // What the step attached, as `steps` prints it (the scenario's own list below never held it, #175): the first
-                // six, as with its calls, so one step's long list cannot push every other failure past the byte budget.
-                foreach (var attachment in step.Attachments.Take(MaxFailingStepAttachments))
-                    writer.Line($"  {new string(' ', depth * 2)}  attachment: {attachment.Name} → {attachment.Resolve(index.Directory)}");
-                if (step.Attachments.Count > MaxFailingStepAttachments)
-                    writer.Line($"  {new string(' ', depth * 2)}  … {step.Attachments.Count - MaxFailingStepAttachments} more attachment(s): steps {scenario.Address}/{path}");
+                    writer.Line($"  {indent}  at {file}:{step.SourceLine}");
+                // What the step attached, as `steps` prints it (the scenario's own list below never held it, #175), capped so
+                // one step's long list cannot push every other failure past the byte budget.
+                WriteAttachments(writer, index, step.Attachments, $"  {indent}  ", $"attachments {scenario.Address}/{path}");
 
                 var scoped = scenario.Interactions.Where(i => i.StepPath == path && i.Type == "Request").ToArray();
                 if (scoped.Length > 0)
                 {
-                    writer.Line($"  {new string(' ', depth * 2)}  {scoped.Length} calls in this step:");
-                    foreach (var interaction in scoped.Take(6))
-                        writer.Line($"  {new string(' ', depth * 2)}    {interaction.Address(scenario)}  {interaction.ServiceName}  {QueryWriter.OneLine(interaction.Summary(), 70)}"
+                    writer.Line($"  {indent}  {scoped.Length} calls in this step:");
+                    foreach (var interaction in scoped.Take(MaxFailingStepCalls))
+                        writer.Line($"  {indent}    {interaction.Address(scenario)}  {interaction.ServiceName}  {QueryWriter.OneLine(interaction.Summary(), 70)}"
                             + Failure(FindResponse(scenario, interaction)));
+                    // flow's step address covers the step's sub-steps too, so it lists every call cut here, and more.
+                    if (scoped.Length > MaxFailingStepCalls)
+                        writer.Line($"  {indent}    " + QueryWriter.CutLine(scoped.Length - MaxFailingStepCalls, "call(s)", null, $"flow {scenario.Address}/{path}"));
                 }
             }
 
             if (failingSteps.Length == 0 && scenario.Steps.Count > 0)
                 writer.Line("  (no step is marked failed — the failure was outside a tracked step)");
 
-            if (scenario.Attachments.Count > 0)
-                foreach (var attachment in scenario.Attachments.Take(4))
-                    writer.Line($"  attachment: {attachment.Name} → {attachment.Resolve(index.Directory)}");
+            WriteAttachments(writer, index, scenario.Attachments, "  ", $"attachments {scenario.Address}");
+
+            // What the steps that did not fail attached is not listed here (the #175 plan's Q15 keeps a hook's artefacts to
+            // Failures.md and steps), but it is counted: with the hooks kept, Playwright's failure screenshot, trace and video
+            // are on the after-hook and fixture steps, and this said nothing of them.
+            var failingPaths = failingSteps.Select(s => s.Path).ToHashSet(StringComparer.Ordinal);
+            var elsewhere = scenario.AllSteps().Where(s => !failingPaths.Contains(s.Path)).SelectMany(s => s.Step.Attachments).ToList();
+            if (elsewhere.Count > 0)
+                writer.Line("  " + QueryWriter.CutLine(elsewhere.Count, "attachment(s) on other steps",
+                    QueryWriter.NameList(elsewhere.Select(a => a.Name)), $"attachments {scenario.Address}"));
 
             writer.Line();
         }, options.RerunArgs(), scenario => FailureRecord(index, scenario, deepLink),
@@ -161,13 +182,17 @@ public static partial class QueryCommand
     /// shapes depending on whether it read the digest the run wrote or asked the tool for it afterwards.
     ///
     /// <para><b>They are not yet the same object, and this is the list.</b> The digest carries
-    /// <c>expected</c>, <c>actual</c>, <c>cluster</c>, <c>stepsBefore</c>, <c>callsScope</c> and
-    /// <c>truncated</c>; this does not. Since 3.7.0 both carry <c>thrownAt</c>, <c>testName</c> and
-    /// <c>rerun</c>, read from <c>errorStackTrace</c> by the same reader. This nests <c>calls</c> under
-    /// the failing step that made them and caps them at six per step; the digest lists them once per
-    /// failure, with a <c>status</c>, capped at eight. The scenario's own attachments are capped at four here
-    /// and uncapped there; a failing step's are nested under it here, capped at six, while the digest lists every
-    /// step's, each with a <c>step</c> address. The divergence is written down rather than left for a consumer to
+    /// <c>expected</c>, <c>actual</c>, <c>cluster</c>, <c>stepsBefore</c> (with <c>stepsBeforeTotal</c>),
+    /// <c>callsScope</c> and <c>truncated</c>; this does not. Since 3.7.0 both carry <c>thrownAt</c>, <c>testName</c>
+    /// and <c>rerun</c>, read from <c>errorStackTrace</c> by the same reader. This nests <c>calls</c> under
+    /// the failing step that made them and caps them at six per step, with <c>callsTotal</c> beside them; the
+    /// digest lists them once per failure, with a <c>status</c>, capped at eight, with its own <c>callsTotal</c>
+    /// (4.31.0): the calls its list was drawn from, which are the scenario's when none is attributed to the
+    /// failing step. The scenario's own attachments
+    /// and a failing step's (nested under it) are capped here at the text's six, the first and the last five, each
+    /// list with its total beside it (<c>attachmentsTotal</c>, and <c>stepAttachmentsTotal</c> for every step's);
+    /// the digest lists every attachment of every step, each with a <c>step</c> address, and so does
+    /// <c>attachments sN --json</c>, paged. The divergence is written down rather than left for a consumer to
     /// discover by diffing two files that claim to describe the same failure.</para>
     /// </summary>
     private static object FailureRecord(ReportIndex index, ScenarioEntry scenario, string? deepLink)
@@ -199,7 +224,7 @@ public static partial class QueryCommand
                 sourceLine = s.Step.SourceLine,
                 calls = scenario.Interactions
                     .Where(i => i.StepPath == s.Path && i.Type == "Request")
-                    .Take(6)
+                    .Take(MaxFailingStepCalls)
                     .Select(i => (Request: i, Response: FindResponse(scenario, i)))
                     .Select(c => new
                     {
@@ -211,13 +236,50 @@ public static partial class QueryCommand
                         status = Failed(c.Response) ? c.Response!.StatusCode : null,
                         error = Failed(c.Response) ? c.Response!.Error : null
                     }),
-                // As the text prints them under the step: the first six.
-                attachments = s.Step.Attachments.Take(MaxFailingStepAttachments).Select(a => new { name = a.Name, path = a.Resolve(index.Directory) })
+                // The calls made in the step itself, which the text counts; `flow sN/P` lists them all.
+                callsTotal = scenario.Interactions.Count(i => i.StepPath == s.Path && i.Type == "Request"),
+                // As the text prints them under the step, the first and the last five, so the two cannot disagree.
+                attachments = QueryWriter.CutList(s.Step.Attachments, MaxAttachmentsShown, AttachmentsHead).Shown.Select(a => AttachmentObject(a, index)),
+                attachmentsTotal = s.Step.Attachments.Count
             }),
-            attachments = scenario.Attachments.Take(4)
-                .Select(a => new { name = a.Name, path = a.Resolve(index.Directory) })
+            attachments = QueryWriter.CutList(scenario.Attachments, MaxAttachmentsShown, AttachmentsHead).Shown.Select(a => AttachmentObject(a, index)),
+            // Totals are always present, by the envelope's rule for total: a consumer that branches on a key's presence
+            // cannot tell "none" from "an older tool". The two add up to what Failures.jsonl lists for the failure.
+            attachmentsTotal = scenario.Attachments.Count,
+            stepAttachmentsTotal = scenario.AllSteps().Sum(s => s.Step.Attachments.Count)
         };
     }
+
+    /// <summary>
+    /// A list of attachments as <c>failures</c> prints it, each line opening with <paramref name="indent"/>: every one up to
+    /// <see cref="MaxAttachmentsShown"/>, else the first and the last five around a line naming the cut entries and
+    /// <paramref name="view"/>, which lists them all.
+    /// </summary>
+    private static void WriteAttachments(QueryWriter writer, ReportIndex index, IReadOnlyList<AttachmentEntry> attachments, string indent, string view)
+    {
+        var cut = QueryWriter.CutList(attachments, MaxAttachmentsShown, AttachmentsHead);
+        foreach (var attachment in cut.Head)
+            writer.Line($"{indent}attachment: {AttachmentText(attachment, index)}");
+        if (cut.Cut.Count > 0)
+            writer.Line(indent + QueryWriter.CutLine(cut.Cut.Count, "attachment(s)", QueryWriter.NameList(cut.Cut.Select(a => a.Name)), view));
+        foreach (var attachment in cut.Tail)
+            writer.Line($"{indent}attachment: {AttachmentText(attachment, index)}");
+    }
+
+    /// <summary>
+    /// An attachment as every view prints it: its name, and where it is. <c>failures</c>, <c>steps</c> and <c>attachments</c>
+    /// all print it through here, and <see cref="AttachmentObject"/> is its <c>--json</c> form, so anything said about an
+    /// attachment is said in one place.
+    /// </summary>
+    private static string AttachmentText(AttachmentEntry attachment, ReportIndex index) => attachment.Problem is { } problem
+        // One the report does not hold (#148): the path as it was given, and why; resolving it would invent a file.
+        ? $"{attachment.Name} → {attachment.RelativePath} ({AttachmentProblemText.Of(problem)})"
+        : $"{attachment.Name} → {attachment.Resolve(index.Directory)}";
+
+    /// <summary>An attachment in <c>--json</c>, in the field names <c>Failures.jsonl</c> uses: <see cref="AttachmentText"/>'s object form.</summary>
+    private static object AttachmentObject(AttachmentEntry attachment, ReportIndex index) => attachment.Problem is { } problem
+        ? new { name = attachment.Name, path = attachment.RelativePath, problem }
+        : new { name = attachment.Name, path = attachment.Resolve(index.Directory) };
 
     /// <summary>
     /// <c>repro &lt;report&gt; [s3]</c>: the one line that re-runs each failing test, read from the frame
@@ -305,6 +367,18 @@ public static partial class QueryCommand
             writer.Line($"open: {stepsLink}{scenario.StableId}");
         if (scenario.ExampleValues.Count > 0)
             writer.Line("example: " + string.Join(", ", scenario.ExampleValues.Select(e => $"{e.Key}={e.Value}")));
+        // The tree prints what each step attached, and never printed the scenario's own: that the scenario holds them is
+        // said here, and `attachments` lists them, paged, since a list of them can be longer than a tree (#161). A scoped
+        // tree says nothing of the scenario, as before.
+        if (scope is null)
+        {
+            var own = scenario.Attachments.Count;
+            var onSteps = scenario.AllSteps().Sum(s => s.Step.Attachments.Count);
+            if (own + onSteps > 0)
+                writer.Line("attachments: "
+                            + string.Join(", ", new[] { own > 0 ? $"{own} of its own" : null, onSteps > 0 ? $"{onSteps} on its steps" : null }.OfType<string>())
+                            + $" · attachments {scenario.Address}");
+        }
         writer.Line();
 
         var byStep = scenario.Interactions
@@ -340,12 +414,18 @@ public static partial class QueryCommand
                             + (step.SourceFile is { } file ? $"   at {file}:{step.SourceLine}" : ""));
             if (step.BypassReason is { } bypass)
                 writer.Line($"{indent}      bypassed: {QueryWriter.OneLine(bypass, 120)}");
-            foreach (var parameter in step.Parameters.Take(8))
+            // The whole tree cuts a long parameter list, and names the tree scoped to the step, which prints it whole (#161).
+            var parameters = scope is null
+                ? QueryWriter.CutList(step.Parameters, MaxParametersShown, MaxParametersShown)
+                : new ListCut<string>(step.Parameters, [], []);
+            foreach (var parameter in parameters.Head)
                 writer.Line($"{indent}      · {QueryWriter.OneLine(parameter, 100)}");
+            if (parameters.Cut.Count > 0)
+                writer.Line($"{indent}      " + QueryWriter.CutLine(parameters.Cut.Count, "parameter(s)", null, $"steps {scenario.Address}/{path}"));
             if (step.DocString is { } doc)
                 writer.Line($"{indent}      \"\"\"{QueryWriter.OneLine(doc, 100)}\"\"\"");
-            foreach (var attachment in step.Attachments)
-                writer.Line($"{indent}      attachment: {attachment.Name} → {attachment.Resolve(index.Directory)}");
+            // Cut as failures cuts them, scoped or not: a tree cannot page, and sixty filled the byte budget on their own.
+            WriteAttachments(writer, index, step.Attachments, $"{indent}      ", $"attachments {scenario.Address}/{path}");
         }
 
         var unattributed = scope is null && byStep.TryGetValue("", out var loose) ? loose.Length : 0;
@@ -354,6 +434,52 @@ public static partial class QueryCommand
                         + (index.Enriched ? " (before the first step, or attribution was not trusted)" : " (this report has no step attribution)"));
 
         writer.Footer($"{scenario.Interactions.Count(i => i.Type == "Request")} calls · interactions {scenario.Address} · flow {scenario.Address}");
+        return 0;
+    }
+
+    /// <summary>
+    /// <c>attachments &lt;report&gt; sN[/P]</c>: every attachment of one scenario, or of one step and its sub-steps, with the
+    /// address of what holds it - the view every capped list of attachments names (#161).
+    /// </summary>
+    /// <remarks>
+    /// <para><c>failures</c> printed the first four of a scenario's own attachments and no view printed the rest: <c>steps</c>
+    /// prints only what a step attached. A list of attachments is not narrative-sized, so this pages, where <c>steps</c> and
+    /// <c>flow</c> hand back a whole tree under the byte budget: an attachment line is 130 to 200 bytes, and 25 to 40 of them
+    /// fill a page.</para>
+    ///
+    /// <para>The order is <c>Failures.jsonl</c>'s, entry for entry: the scenario's own, then each step's in the order
+    /// <see cref="ScenarioEntry.AllSteps"/> walks them (background steps, then steps, each followed by its sub-steps), and an
+    /// item carries its <c>step</c> as the digest does, null for the scenario's own.</para>
+    /// </remarks>
+    private static int Attachments(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
+    {
+        if (!TryScenario(index, options, error, out var scenario, out var scope))
+            return 2;
+
+        var rows = new List<(string Address, AttachmentEntry Attachment, string? Step)>();
+        if (scope is null)
+            rows.AddRange(scenario.Attachments.Select(a => (scenario.Address, a, (string?)null)));
+        foreach (var (path, _, step) in scenario.AllSteps().Where(row => scope is null || Address.PathCoveredBy(row.Path, scope)))
+            rows.AddRange(step.Attachments.Select(a => ($"{scenario.Address}/{path}", a, (string?)$"{scenario.Address}/{path}")));
+
+        if (options.Count)
+        {
+            writer.Count(rows.Count);
+            return 0;
+        }
+
+        if (rows.Count == 0)
+        {
+            writer.Note(scope is null
+                ? $"{scenario.Address} has no attachments, of its own or on its steps"
+                : $"{scenario.Address}/{scope} has no attachments, on the step or under it");
+            return 0;
+        }
+
+        writer.Page(rows, options.Offset, options.PageSize(200, writer, "attachments"), "attachments",
+            row => writer.Line($"{row.Address,-6} {AttachmentText(row.Attachment, index)}"),
+            options.RerunArgs(),
+            row => QueryWriter.WithMember(AttachmentObject(row.Attachment, index), "step", row.Step));
         return 0;
     }
 

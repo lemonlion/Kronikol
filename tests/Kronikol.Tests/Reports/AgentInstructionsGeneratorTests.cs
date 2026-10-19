@@ -34,6 +34,16 @@ public class AgentInstructionsGeneratorTests
     }
 
     [Fact]
+    public void It_says_a_report_reaches_tens_of_megabytes()
+    {
+        // 10 MB understated it: one suite's report reached 183 MB (#119).
+        var text = AgentInstructionsGenerator.Build("TestRunReport");
+
+        Assert.Contains("tens of megabytes", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("reaches 10 MB", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void It_carries_the_install_line_and_the_runtime_it_needs()
     {
         var text = AgentInstructionsGenerator.Build("TestRunReport");

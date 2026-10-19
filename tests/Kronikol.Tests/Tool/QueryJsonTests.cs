@@ -391,13 +391,17 @@ public class QueryJsonTests : IDisposable
         foreach (var field in new[]
                  {
                      "address", "stableId", "feature", "scenario", "exampleValues", "durationSeconds",
-                     "errorMessage", "sourceFile", "sourceLine", "failingSteps", "attachments"
+                     "errorMessage", "sourceFile", "sourceLine", "failingSteps", "attachments",
+                     // What each capped list holds in all (#161): present, and zero when there is nothing.
+                     "attachmentsTotal", "stepAttachmentsTotal"
                  })
             Assert.True(failure.TryGetProperty(field, out _), $"failures item has no {field}");
 
         var step = failure.GetProperty("failingSteps").EnumerateArray().First();
         Assert.StartsWith("s2/", step.GetProperty("path").GetString());
         Assert.Contains("4173", step.GetProperty("message").GetString()!);
+        Assert.True(step.TryGetProperty("attachmentsTotal", out _), "a failing step has no attachmentsTotal");
+        Assert.True(step.TryGetProperty("callsTotal", out _), "a failing step has no callsTotal");
     }
 
     [Fact]

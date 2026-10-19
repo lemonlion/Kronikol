@@ -23,7 +23,7 @@ public record GrpcTrackingOptions
     /// <summary>
     /// Has no effect: no part of the gRPC package reads it. (The HTTP handler's option of the same name drives its
     /// implicit start of the action phase; the gRPC interceptor has no such step.) Its removal is an open question
-    /// for v5 (plans/V5_PLAN.md).
+    /// for v6 (plans/V6_PLAN.md).
     /// </summary>
     public Func<string?>? CurrentStepTypeFetcher { get; set; }
 

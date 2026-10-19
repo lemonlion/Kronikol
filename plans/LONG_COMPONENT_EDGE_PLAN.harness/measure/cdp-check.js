@@ -4,12 +4,14 @@
 // own throwaway profile (never the user's). Pages are built by measure.js's shapes (same page, scripts and settings).
 //   node cdp-check.js '<json>'  {label, jsflags, page:'w4'|'w0', cases:[{shape,L}|{n}], reps, exe}
 const fs = require('fs'), path = require('path'), { spawn } = require('child_process'), zlib = require('zlib');
+const { seedProfile } = require('../../../tools/playwright/installed-browser.js');
 const ROOT = __dirname;
 const cfg = JSON.parse(process.argv[2]);
 const EXE = cfg.exe || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PORT = 9333;
 const profile = path.join(ROOT, 'profiles', 'cdp-' + (cfg.jsflags ? 'off' : 'jit'));
 fs.mkdirSync(profile, { recursive: true });
+seedProfile(profile); // the installed Chrome skips its blank-password sign-in (tools/playwright)
 fs.mkdirSync(path.join(ROOT, 'logs'), { recursive: true });
 
 // The page builder from measure.js, loaded without running its main().

@@ -260,6 +260,561 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   the default. A diagram of nothing but hidden markers reached the engine, which failed on it, in place of the
   "Nothing to draw" message, and that message now names the toggles by the words they show (Assertions, Steps).
 
+## [4.31.1] - 2026-10-19
+
+**Patch - two fixes found while planning #161 (`plans/LIST_CAPS_PLAN.md` 3.10).** Nothing new to call or configure,
+so the patch part moves (4.31.0 to 4.31.1). The second changes the report's HTML (below).
+
+### Fixed
+
+- **Terminal colour codes in an ingested error.** Playwright's reporter API gives an error's message with the
+  terminal's colour codes, and a tests file written from it, as the wiki's recipe writes one, carried them into the
+  report, `Failures.md` (where they were part of the cluster key, so one cause could read as several) and every
+  `kronikol query` that prints the error. The ingest now removes a terminal's control sequences from a tests-file
+  record's `error` and `stackTrace` as the line is read. A bracket without the escape before it is text and stays.
+  playwright-bdd's messages carry the same error without the codes, so a report built from both files was already
+  clean.
+- **A scenario's own image, and a parameterized row's, open in the lightbox.** Only a step's image called the report's
+  lightbox; a scenario's own (Playwright's failure screenshot among them) and a row's image in a parameterized group's
+  panel were links that opened a new tab, although the wiki promised the lightbox for the failure screenshot. Each is
+  now the step's link, `onclick="openLightbox(event, this)"` in place of `target="_blank"`. This changes the report's
+  HTML, so Kronikol4J's output differs until it is ported (ledger).
+
+### Tests
+
+- `FeatureSynthesizerTests`: an error and a stack trace with colour codes reach the scenario and its step without
+  them, and a tests-file line loses CSI and OSC sequences and keeps a bracket without an escape.
+  `ScenarioImageLightboxTests`: the scenario's own image, a row's and a step's each carry the lightbox, and none opens
+  a tab. `AttachmentRenderingTests.A_scenarios_own_image_and_a_parameterized_rows_image_open_in_the_lightbox` clicks
+  each in a browser and finds it in the lightbox with no new page. `MissingAttachmentTests`' pin of the encoded
+  href moves to the lightbox form.
+- **Proofs:** each fact was written first and failed on 4.30.0's code, which 4.31.0 left as it was.
+- **Checks:** the core suite passes 8,108 with 2 skipped after the version bump and the rebase onto 4.31.0, the 15
+  attachment rendering facts pass in the browser, and `release.slnf` builds in Release for every target with no
+  warning from the changed code.
+
+## [4.31.0] - 2026-10-19
+
+**Minor - new members in `sizes --json` and `Failures.jsonl` (`plans/LIST_CAPS_PLAN.md` R2, #161).**
+`largestScenariosTotal`, `stepsBeforeTotal` and `callsTotal` are new things to read, so the minor part moves (4.30 to
+4.31). Everything else below is a fix that would be a patch on its own: a list that `kronikol query`, `Failures.md` or
+the CI summary cuts now says what it left out and names a view that prints the rest.
+
+### Added
+
+- **`sizes --json`: `largestScenariosTotal`**, how many scenarios the ten in `largestScenarios` are taken from. The text
+  already said "The 10 largest of N".
+- **`Failures.jsonl`: `stepsBeforeTotal` and `callsTotal`.** `stepsBefore` holds the last three steps before the failing
+  one, and `stepsBeforeTotal` says how many there were; `calls` holds at most eight, and `callsTotal` says how many it
+  was drawn from (the failing step's calls, or the scenario's when none is attributed to a step).
+
+### Fixed
+
+Each list below was cut with nothing said, so it read as the whole list.
+
+- **`steps`:** a step's parameters stopped at eight. Past them the tree now prints
+  `… N more parameter(s): steps sN/P`, and a step's own tree prints them all. A step's attachments were printed whole,
+  in a view that cannot page (sixty filled the byte budget on their own); they are cut as `failures` cuts them, the
+  first and the last five around `… N more attachment(s) (names): attachments sN/P`.
+- **`services`:** the status column names a service's four commonest statuses. A service with more now ends it with
+  `+N more`, and a line under the table says that `services --json` lists every status.
+- **`grep --values` and `grep --number`:** four paths per body. A body holding more now ends its last row with
+  ` · N more path(s) in this body: body b:… --keys`, the view of its shape.
+- **`diff` of two bodies:** the line diff's marker was a row, so the footer, `total` and `--count` said 21 whatever the
+  number was. They now count every line that differs; twenty are listed, and a line says how many more differ and how
+  to see them (`--out` both bodies and diff the files).
+- **`compare`:** the heading counted the steps (`steps: 25 vs 25`), not the differences, and twenty were listed with
+  nothing said of the rest. It now reads `steps: 25 vs 25, 25 differ`, and past twenty
+  `… N more difference(s): steps sA · steps sB` (`flow sA · flow sB` for calls).
+- **`history sN`:** the last fifteen runs, with nothing said of the earlier ones. Above them it now prints
+  `… N earlier run(s) not listed: history sN --json`; the JSON carries every run.
+- **`http b:…` and `body`:** the list of addresses carrying a body stops at twelve, and its count named no view. It now
+  ends `… N more: interactions --json gives every call's request and response bodyHash`.
+- **`Failures.md`:** "Steps before it" lists the last three, now under
+  `… N earlier step(s): kronikol query steps <dir> sN`, and the calls table holds eight, now followed by
+  `… N more call(s) not in this table: kronikol query flow <dir> sN`.
+- **The CI summary of a green run** said "N more scenario(s) not shown" counting every scenario in the run, though it
+  lists only scenarios with a diagram: forty scenarios, three of them with a diagram, all three shown, said "37 more".
+  It now counts the scenarios with a diagram that it did not show. Kronikol4J's summary makes the same count (ledger).
+- **Main's CI, red since 4.30.0 (found on the way; test-only).**
+  `ZstdCopyTests.The_notices_are_packed_into_Kronikol_and_the_tool` read Kronikol's package from the build output,
+  which a test run that builds only the test project, as CI's Core Tests jobs do, never writes. It now reads both
+  projects' pack item for `THIRD-PARTY-NOTICES.md`, and the package only where a build wrote one. Nothing in a package
+  changes.
+
+### Tests
+
+- **`ListCapRegistry`** lists every list cap in the query tool and the digest with what answers for it: a census row,
+  the fact that holds it, or the reason it needs none. **`ListCapSourceTests`** refuses a `Take` or `TakeLast` with a
+  constant that no entry covers (its control plants one in a real file and finds it on its line), holds every entry to
+  the lines it names, and checks that every fact an entry names exists. **`CapCensusTests`** builds one report with
+  every list over its cap and runs one row per cap the registry gives it, reading the cut line and its number and
+  running the view it names; its vacuity fact checks each list against the cap the code holds.
+- Four caps announced before #161 had no fact: `summary`'s failed scenarios, `history`'s absent scenarios, the list of
+  runs when `history --run` finds none, and the run diff's Tracking section. Each has one now.
+  `DigestSuppressionCapTests` holds both of the digest's elision lines with their numbers; it accepted either.
+- **Proofs:** every fact for a fixed list was written first and failed on 4.28.0's code at the missing line or member.
+  Mutations: 30 of 30 killed, each announcement removed or miscounted in turn, the four older caps' lines and both
+  of the digest's elision lines among them (`plans/LIST_CAPS_PLAN.harness/mutations-r2.py`, `results/mutations-r2.txt`).
+- **Checks:** the core suite passes 8,099 with 2 skipped after the version bump and the rebase onto 4.30.0; its one
+  failure was the CI fault this release fixes (`ZstdCopyTests`, 19 of 19 with the fix, run with no package in the
+  build output, as on CI). `release.slnf` builds in Release for every target with no warning from the changed code,
+  and `repro.sh` and `census.py` on the built tool give R1's rows unchanged (`results/census-4.31.0.md`).
+
+### Documentation
+
+- The skill's command reference (`steps`, `services`, `sizes`, `grep`, `compare`, `diff`, `http`, `body`, `history`) and
+  SKILL.md's `Failures.md` line, in both copies; the wiki's Querying-Reports and Generated-Reports pages.
+
+## [4.30.0] - 2026-10-19
+
+**Minor - a new report file format read, and a new command, `kronikol decode` (`plans/REPORT_FORMAT_PLAN.md` R3).** A
+format accepted and a verb added are new things for a consumer to use, so the minor part moves (4.29 to 4.30). No
+package dependency is added: zstd comes from a source copy of ZstdSharp compiled into `Kronikol.dll`.
+
+### Added
+
+- **Every reader of a report data file reads the compressed `TestRunReport.krkl`.** `kronikol query` (its `diff`
+  included), `ctrf`, `history gate` and `history import`, `merge`, and the skill's `query.py` tell a file's form from
+  its first bytes, whatever its name:
+  - Kronikol's 24-byte marker (a zstd skippable frame naming the file and its decoded length), then one zstd frame;
+  - a bare zstd frame, as the `zstd` tool writes one;
+  - gzip, as Kronikol4J will write the file;
+  - JSON, with or without a UTF-8 byte order mark, as every report written so far.
+
+  Anything else is refused with the formats named. `formatVersion` 3, the JSON a compressed file holds, whose empty
+  keys may be left out, is read by every gate, and a version 3 file from another writer is read as carrying step
+  attribution. A file that would decode past 4 GiB is refused, before anything is decoded when its marker says so,
+  and a damaged or truncated one is one error that says so, from every command. A compressed report is decoded once
+  per command, on the scanning thread; payloads are read from that copy, held in memory up to 256 MiB and in a
+  temporary file above it that is deleted when the command ends, so a file replaced after the scan changes no answer.
+  Every lookup takes `*.krkl` as it takes `*TestRunReport.json`, and when a folder holds a report written both ways the
+  newer is read and named. Nothing writes the format yet: the writer comes with a separate option in a later release,
+  so that every tool that can meet a `.krkl` reads it first.
+- **`kronikol decode <report> [-o <file>] [--indent]`** writes the JSON a report file holds, from any form, with every
+  payload stored compressed (`$z`) written out as text: the supported route for a script or a `jq` recipe that needs the
+  JSON itself. One forward pass; a report is never held whole.
+- **`summary` and `sizes` give `jsonBytes`**, the JSON a file holds (decoded from a `.krkl`, the file itself for a
+  `.json`); their text names it beside the size on disk for a compressed file.
+- **`query.py` reads gzip on any Python and zstd on Python 3.14 or later**, decoding in bounded steps so it stops at the
+  cap as the tool does; an older Python is told to use the tool or `query.cs`. A parity fact holds it to accepting and
+  refusing exactly what the tool does.
+- **The ZstdSharp copy.** `src/Kronikol/Compression/Zstd` is ZstdSharp 0.8.8, imported by `tools/vendor-zstd`, whose
+  only changes are its types made internal, its namespaces renamed, and two attributes removed that belong to its own
+  build (`[InlineMethod.Inline]`, which needs InlineMethod.Fody, and `[module: SkipLocalsInit]`, which in
+  `Kronikol.dll` would stop the runtime zeroing the locals of every Kronikol method). `THIRD-PARTY-NOTICES.md` holds
+  ZstdSharp's MIT and zstd's BSD-3-Clause notices and is packed into `Kronikol` and `Kronikol.Tool`. A workflow checks
+  that the copy is still exactly its import on every change to it, and once a month opens a pull request for a newer
+  ZstdSharp release and an issue for any advisory on ZstdSharp.Port or zstd published after the copy was imported.
+
+### Fixed
+
+- **`sizes --json` wrote two `report` members** (4.27.0): its totals shadowed the envelope's own `report`, the file's
+  path, so a reader of `.report` got one or the other depending on its parser. The totals are now `totals`; a script
+  that read `.report.bytesOnDisk` reads `.totals.bytesOnDisk`. A fact now holds every `--json` answer to naming each
+  envelope member once.
+- **A JSON report that starts with a byte order mark could not be queried**: the scanner refused it as not valid JSON.
+  It is read, with every offset as before.
+- **`--baseline` could take a run summary for the baseline report** (F11). The rule that takes a `baseline/` folder's
+  one report whatever it is called counted every `*.json`, so a folder holding a copied run's `Run.json` alone was
+  compared against as a report, and a renamed report beside its `Run.json` and `History.run.json` found no baseline. It
+  now leaves out a schema and the files a run writes beside its report, and takes a `*.krkl` as well.
+- **`merge` reported a shard it could not read as an output it could not write** ("Could not write
+  TestRunReport.html"). It says it could not read the report, and a damaged compressed shard is named like a malformed
+  one.
+- **`query.py` printed a traceback for a path that does not exist.** It says so and exits 2, as the tool does.
+
+### Notes
+
+- Against the plan: #154 stays open. Merge keeps sweeping every `*.json` in a folder and adds `*.krkl`, because the
+  plan's allow-list (`*.krkl` and `*TestRunReport.json`) would drop a shard with a custom name without a word, which
+  `MERGE_INPUTS_PLAN.md` measured; that plan closes #154 another way, and the choice between them is the owner's.
+- Against the plan: `summary`'s new member is `jsonBytes`, not `decodedBytes`, since `sizes` already gives
+  `decodedBytes` the meaning of every payload inflated. `query.py` decodes zstd in bounded steps rather than with the
+  one-shot call, so it can stop at the cap. CodeQL keeps scanning the copy, because `paths-ignore` does not take files
+  out of a C# analysis that builds them. Rotation's two extensions, the schema text for version 3 and the test helper
+  that reads any form come with the writer (R4), the release that first makes them reachable.
+- The copy, measured against the package it was imported from on BreakfastProvider's 4.5 MB of report content at
+  level 9: the frames are byte-identical, and the copy takes 12% longer to write (32.9 ms against 29.5 ms, the median
+  of 40 rounds) and 24% longer to read (3.6 ms against 2.9 ms), small beside a scan or a render.
+- The container: the marker's three reserved bytes are not read, a container version above 1 is refused with the
+  version named, and a marker of the wrong length, or a decoded length that differs from the marker's, is damage.
+
+## [4.29.0] - 2026-10-19
+
+**Minor - an attachment the report does not hold says so wherever it is read (`plans/MISSING_ATTACHMENTS_PLAN.md` R3,
+#148).** A new public member, `FileAttachment.Problem`, a new public type, `AttachmentProblem`, and a new key in the data
+files and their schemas, so the minor part moves (4.28 to 4.29).
+
+### Added
+
+- **`FileAttachment.Problem`** and **`AttachmentProblem`** (`NotFound`, `NotCopied`, `NotUsable`): why the report does
+  not hold an attachment's file, set by the report's writer, null when it holds it and for a link. A host that draws
+  its own view of the model can read it. Since 4.27.2 the run counted such attachments in one `AttachmentFailure`
+  entry; now each one carries its state.
+- **`problem` in the data files**, written only on an attachment the report does not hold, so a report holding every
+  file is written as before: `"problem": "NotFound"` in the JSON (the enum's name, as `result` is spelled),
+  `<Problem>` in the XML and `Problem:` in the YAML. The JSON schema and the XSD declare it. The JSON schema is
+  closed (`additionalProperties: false` on every object), so a consumer validating a new file against a schema it kept
+  from an earlier version rejects an attachment carrying the key. The mergeable reader reads it, so `kronikol merge`
+  keeps a shard's state, and a file written before the key existed reads as no problem. The schema now describes
+  `relativePath` truly: `attachments/<file>` for a file the report holds, the path as it was given for one it does not,
+  or a URL.
+
+### Changed
+
+- **The page draws an attachment the report does not hold as its name and why**, `lost.png (not found when the report
+  was drawn)`, with no image or link that would be dead, at the scenario, the step and the parameterized panel. The
+  path it was given is in the span's title only, so a published page shows no machine path in its text. The other
+  states read `could not be copied into the report` and `not a usable path`.
+- **An image that does not load says so**: one capture-phase `error` listener on the document draws an attachment image
+  whose file is missing when the page is opened (a report folder copied without its `attachments/`, or an Export
+  Filtered HTML copy saved elsewhere, which keeps the listener) as its name and `(could not be loaded)`.
+- **`Failures.md` says the state after the path**, `- lost.png — `C:\shots\lost.png` (not found when the report was
+  drawn; step `s0/2`)`, and **`Failures.jsonl`** adds `problem`, absent when the report holds the file.
+- **`kronikol query`** prints such an attachment with the path as it was given and its state, `lost.png →
+  C:\shots\lost.png (not found when the report was drawn)`, in `failures`, `steps` and `attachments`, and `--json`
+  adds `problem`. A path the report does not hold is no longer resolved against the report's folder, which named a
+  file that never was (F13).
+- **Docs**: `Track.Attachment` (an image draws inline, anything else as a link, a file the report does not hold as its
+  name and why), the agent instructions each run writes (a marked attachment has no file to read), and the skill.
+
+### Tests
+
+- `AttachmentProblemTests`: the public member and type; `problem` in the JSON, XML and YAML, only where there is one; the
+  mergeable reader keeping it, and a file without the key reading as no problem; `Failures.md` and `Failures.jsonl`;
+  `query failures`, `steps`, `attachments` and `--json`, and a relative path never resolved; the page's span with no
+  image or link. `TestRunReportSchemaContractTests.RichFeatures` holds an attachment the report does not hold, so the
+  schema, XSD and YAML schema contract facts check the new key.
+- Playwright `AttachmentRenderingTests`: the three sites draw the name and state and no image or link with the path; an
+  image the report holds still draws (`naturalWidth > 0`); an image deleted after the report was written says it
+  could not be loaded; an Export Filtered HTML copy saved elsewhere says so for its images; and the old fixture writes
+  the files it links, so its image facts check that the image loaded (F12).
+
+- Proofs: the facts were written first, and 12 of the 13 failed on 4.28.1's code at their assertions; the 13th, a
+  file without the key reading as no problem, is a guard. The two added after (a step's attachment in the YAML, and in
+  the XML against its XSD) were proved by mutation. Of the Playwright facts, three failed on 4.28.1's code, each waiting
+  for the span it was written for; the fourth, an image the report holds still drawing, is a guard. 21 of 21 mutations
+  of the new code are killed: the state internal, `problem` written as null, left out of the XML or either YAML writer,
+  undeclared in the JSON schema or either XSD declaration, dropped by the mergeable reader, the image kept on a problem,
+  the path in the page's text, the state left out of `Failures.md`, `Failures.jsonl` or `query --json`, a problem path
+  resolved, the scanner ignoring the key, one state's wording, the listener in the bubbling phase, and each of the
+  page's three sites drawing no span.
+- Checks: after the version bump the core suite passes 7,842 with 2 skipped and the full Playwright suite passes
+  1,077 with 28 skipped when run alone; release.slnf builds in Release for every target with no warning from the
+  changed files. The core suite's first run failed one Node renderer timing fact (two diagrams in 15.6 s) while other
+  suites loaded the machine; it passes alone, 55 of 55, and in the second full run. The templates pin 4.28.1 and the
+  history action's VERSION installs Kronikol.Tool 4.29.0.
+## [4.28.1] - 2026-10-19
+
+**Patch - an Azure DevOps artifact holds the attachments its report links (`plans/MISSING_ATTACHMENTS_PLAN.md` R4,
+#148).** A bug fix with nothing new to call, so the patch part moves (4.28.0 to 4.28.1).
+
+### Fixed
+
+- **An Azure DevOps upload names the report's attachments** (F7). With `PublishCiArtifacts` on Azure DevOps, an
+  `##vso[artifact.upload]` line names every file the artifact gets. A run named its report outputs and the runs kept
+  under `runs/`, and `kronikol merge --publish-artifacts` its outputs, but neither named a file under `attachments/`,
+  so every screenshot, trace and video the report linked was a dead link in the artifact. A run now names each
+  attachment `Run.json` lists, and a merge each file it carried beside the merged report, under
+  `containerfolder={artifact}/attachments`, so the artifact links them as the reports folder does. An attachment the
+  report does not hold (its `AttachmentFailure` entry, since 4.27.2) names no file. GitHub Actions, which uploads the
+  whole folder, is unchanged.
+
+### Tests
+
+- `MissingAttachmentTests`: a run on Azure DevOps names its copied screenshot under `TestReports/attachments`.
+- `MergeCarriesAttachmentsTests`: a merge on Azure DevOps names each of the four files it carried under
+  `TestReports/attachments`; a shard's path that cannot be read here (a NUL in it) names no file, and the merge still
+  writes the files beside its report.
+
+- Proofs: the first two facts were written first and failed on 4.27.2's code at their assertions, with no attachment
+  named (4.28.0 changed none of the files this release does). The third failed with the merge's check that leaves out
+  an attachment it could not place removed: reading that path again for the upload threw, and the merge said "The
+  merged report was written, but the files beside it were not: Null character in path". 5 of 5 mutations of the new
+  code are killed: the run naming no attachment, the merge naming none, the files named at the artifact's root, a link
+  under `attachments/` not recognised, and that check removed.
+- Checks: after the version bump the core suite passes 7,827 with 2 skipped and the full Playwright suite passes
+  1,073 with 28 skipped when run alone; release.slnf builds in Release for every target. The templates pin
+  4.27.2 and the history action's VERSION installs Kronikol.Tool 4.28.1.
+
+## [4.28.0] - 2026-10-19
+
+**Minor - a new query verb, `attachments`, new members in `failures --json` and a column in `Failures.md`
+(`plans/LIST_CAPS_PLAN.md` R1, #161).** All three are new things to read, so the minor part moves (4.27 to 4.28), as
+4.24.0's one new `Failures.jsonl` member did. The fixes below would be a patch on their own.
+
+### Added
+
+- **`kronikol query attachments <report> sN`** lists every attachment of one scenario, one line each with the address
+  of what holds it, its name and its absolute path: the scenario's own, then each step's in the order `Failures.jsonl`
+  lists them (background steps, then steps, each followed by its sub-steps). `attachments sN/P` lists a step's and its
+  sub-steps'. It pages like any listing (`--offset`, `--limit`, `next:`, `--count`), so a list of any length comes
+  whole, and `--json` gives one item per attachment, `{name, path, step}`, with `step` null for the scenario's own.
+  Every capped list of attachments in `failures` names it.
+- **`failures --json` carries a total beside every capped list:** `attachmentsTotal` (the scenario's own) and
+  `stepAttachmentsTotal` (every step's, background steps and sub-steps included) on a failure, which add up to what
+  `Failures.jsonl` lists for it, and `attachmentsTotal` and `callsTotal` on a failing step. They are always present,
+  zero when there is nothing, by the envelope's rule for `total`. `formatVersion` stays 1.
+- **`Failures.md`'s further-failures table has an `Attachments` column:** how many attachments a failure the file does
+  not work through holds, its own and every step's, and the sentence above the table names
+  `kronikol query attachments`.
+- **`steps sN` says when a scenario holds attachments**, in one line after its header:
+  `attachments: 6 of its own, 4 on its steps · attachments sN`. A scoped tree prints no such line.
+
+### Fixed
+
+- **`query failures` printed the first four of a scenario's own attachments and said nothing of the rest** (#161). On
+  the repo's Playwright 1.62.1 capture, ingested as the wiki's reporter recipe writes it, that was 4 of 10: the start
+  screenshot and three step screenshots were printed, and the failure screenshot, the end screenshot, the video, the
+  error context and the trace were cut, in the text and in `--json`. A list of more than six attachments, the
+  scenario's own or a failing step's, now keeps its first entry and its last five, and prints one line in place of the
+  rest: how many, their names (in the order each first appears, a repeated name once with ×N, whole names while they
+  fit in a hundred characters) and the view that lists them, `attachments sN` or `attachments sN/P`. A failing step's
+  list kept its first six from 4.26.4, with a line naming `steps`, and its `--json` kept the same six with nothing
+  said; both now keep the ends the text keeps.
+- **Attachments on the steps that did not fail were neither shown nor counted.** With the hooks kept, Playwright's
+  artefacts are on the after-hook and fixture steps, and `failures` showed 1 of 10. It now counts them on one line,
+  `… 9 more attachment(s) on other steps (…): attachments sN`, and still does not list them, as the #175 plan decided
+  for a hook's artefacts.
+- **A failing step's calls past the sixth named no view.** The list now ends `… N more call(s): flow sN/P`; `flow`'s
+  step address covers the step's sub-steps as well, so it lists every call cut and, for a step with sub-steps, more.
+- **`Failures.md` gave a failure it did not work through no attachments.** A failure clustered with another is never
+  worked through, so a run with two failures already had one, and its own trace and video were in no list meant for a
+  person. The new column counts them.
+- **The skill and the wiki dated the cap of six to 4.24.0.** 4.24.0 printed every attachment of a failing step, and the
+  cap arrived in 4.26.4. Both now say what each version did.
+
+### Notes
+
+- A report's own `query.cs` loads the `Kronikol.dll` of the version that wrote the report, so a report written before
+  4.28.0 keeps the cap of four when read through its `query.cs`. The `kronikol` tool at 4.28.0 or later reads the same
+  report with the fix.
+- A default page of `failures` holds one or two fewer failures that have many attachments: a failure gains up to two
+  attachment lines, a cut line and the other-steps line, 155 to 463 bytes on the plan's harness. Nothing is lost,
+  because `failures` pages and its `next:` line resumes.
+- `scripts/query.py` does not implement `attachments`, and the skill says so.
+
+### Tests
+
+- `QueryAttachmentListTests`: the plan harness's three ingest lanes of the Playwright capture, and a built report whose
+  first scenario holds 60 attachments of its own, 9 on a passing step and its sub-step, and 60 and 47 calls on its
+  failing step. `QueryListCutTests` holds the selection and the name list at their edges. The existing facts the
+  release changes are `CucumberAttachmentIngestTests`, `DigestStepAttachmentTests`, `QueryJsonTests`,
+  `QueryCultureTests` (a failure with seven attachments, and a row for the new verb) and `CountFlagTests`.
+
+## [4.27.2] - 2026-10-19
+
+**Patch - an attachment the report does not hold is said, and the producers hand the report a file it can find
+(`plans/MISSING_ATTACHMENTS_PLAN.md` R1 and R2, #148).** Bug fixes, with nothing new to call, so the patch part moves
+(4.27.1 to 4.27.2). The diagnostic is the one `DiagnosticKind.AttachmentFailure`'s documentation already promised.
+Behaviour that changes: LightBDD attachments are copied into `attachments/` and kept with their run; an image attached
+under a display name draws as an image; a relative `Track.Attachment` path is read when it is attached; a relative
+Cucumber attachment `url` is read against `--attachments-base`; and an in-process run prints a `⚠ WARNING:` line when
+attachments are missing.
+
+### Fixed
+
+- **An attachment whose file is missing is said** (#148, F1, F2). The run's copier kept an attachment whose file was not
+  there exactly as it was given and recorded nothing, so the HTML linked a path that existed on no machine opening the
+  report, `Failures.md` listed it like any other, and `kronikol query` printed no `!` line. Every attachment the report
+  does not hold is now said in **one** `AttachmentFailure` entry per run: a file not found when the report was drawn,
+  one that was there when it was attached and is gone, one that could not be copied, one whose path is not usable on
+  this machine, a Cucumber body that could not be written. It leads with the count, says how many files, and names the
+  first five paths in report order and how many more:
+  `3 attachment(s) are not in the report: 3 not found when the report was drawn (2 files): …`. One entry, because
+  `query`'s `!` line shows only the first message of a kind: the copier's own entries for a failed copy and an unusable
+  path are folded into it. A path starting `attachments/` that names no file in the reports folder is counted too. An
+  ingest adds the base its relative paths were read against, and says when `--clean-attachments` emptied the folder
+  before a capture's files in it were read. An in-process run also prints the entry as a `⚠ WARNING:` line, since
+  nothing else prints a recorded entry there; `kronikol ingest` prints it once, as it prints every entry. The path is
+  still kept, and linked, as it was.
+- **A file changed or gone after it was attached is said** (F23). The copy is made when the report is drawn, so a file
+  deleted at teardown was lost with no word, and one `screenshot.png` path reused by every test showed its last version
+  wherever it was attached. `Track.Attachment` notes the file's length and last write when it attaches it, and the entry
+  says the file "was there when it was attached and gone when the report was drawn", or "changed after it was attached,
+  and the report holds the version found when it was drawn".
+- **`kronikol merge` never links another shard's file** (F5). A shard's `attachments/x.png` that was not in its folder
+  stayed relative, so beside the merged report it named whatever the merge had put there under that name, which could
+  be another shard's `x.png`. It keeps the path of where it should be in its shard's folder, and the merged report says
+  every file it could not carry in one entry, put first in its diagnostics so that `query`'s `!` line shows the merged
+  report's own account; its HTML, data file, digest and labs page all carry it.
+- **LightBDD attachments are copied into the report and kept with their run** (F3). Kronikol mapped a LightBDD
+  attachment's `RelativePath`, the bare `{guid}.png` relative to LightBDD's own folder, which the copier read against
+  the binary folder and never found. In the documented setup LightBDD's folder is the report's own, so the link worked
+  by accident while the file was never copied, `Run.json` listed no attachment, and every kept run's link was dead;
+  with LightBDD's folder set elsewhere every link was dead. The file LightBDD wrote is mapped by its full path.
+- **An image attached under a display name draws as an image** (F21). With no media type only the name's extension was
+  read, so `Track.Attachment(path, "Page Screenshot")`, the wiki's own example, and every LightBDD image were drawn as
+  links. The file's own extension is read when the name's says nothing.
+- **A relative `Track.Attachment` path is read when it is attached** (F20): against the working directory, then the
+  binary folder. It was read against the binary folder when the report was drawn, while the test wrote the file
+  relative to the working directory, and the two differ under NUnit's `WorkDirectory` (measured on VSTest and on
+  Microsoft.Testing.Platform) and after a test moves the working directory: every such attachment was lost. In every
+  runner's default the two are one folder, and nothing changes there. A path found in neither is looked for in both
+  when the report is drawn, and the entry names both.
+- **A relative Cucumber attachment `url` is read against `--attachments-base`** (F4), as a tests file's relative path
+  is, or the working directory when none is given. It was read against the tool's own folder, while the join's hashing
+  read it against the working directory.
+- **`kronikol ingest` no longer ends with no report on a path it cannot read** (F8). A tests-file attachment path with
+  a NUL character ended the ingest with an unhandled `ArgumentException`, and so did a library caller's relative
+  `IngestRequest.AttachmentsBase`. The path is said as not usable, and a relative base is read against the working
+  directory, as the CLI reads `--attachments-base`.
+- **A file named `attachments` in the reports folder no longer stops the report** (F9): the folder is made inside the
+  copy's guard, and the attachment is said as not copied.
+- **A file already in the report's `attachments/` folder is linked where it is** (F10). It was copied onto itself,
+  which on Windows fails with "being used by another process", so the run recorded that false cause, linked the
+  absolute path and left the file out of `Run.json`. Every path is now read before anything is copied, so a file of
+  the same name from elsewhere takes a number rather than being written over it.
+- **A file name with `#`, `?` or `%` is linked to its file** (F11). The copy keeps the file's name and the link was
+  HTML-encoded only, so `attachments/shot#1.png` requested `attachments/shot`. The link percent-encodes those three
+  characters, `%` first; nothing else in a link changes, and a URL is linked as it was given.
+- **A Cucumber body that cannot be written is an `AttachmentFailure`, not an `Other`** (F17), and a blank tests-file
+  `path` is counted as not usable rather than dropped without a word (F16). `CucumberSynthesisResult.Warnings` still
+  carries the write failure's text.
+- **`--clean-attachments` on a pass with no scenarios says what it deleted** (F15): that pass writes no report, so a
+  report already in the folder may link the files it deleted.
+- **Docs that said otherwise**: `DiagnosticKind.AttachmentFailure`, `ShowReportDiagnosticsSection` (which entries an
+  in-process run prints), the copier's doc comment, `FileAttachment`'s image rule and `--attachments-base`'s help.
+
+Report output changes: a file attachment's `href` and `src` percent-encode `%`, `#` and `?`; an image attached under a
+display name, and every LightBDD image, draws as an `img`. Recorded in the Kronikol4J ledger.
+
+### Tests
+
+- `MissingAttachmentTests`: the one entry (a missing file; three attachments of two missing files beside a present one,
+  which is copied; seven files, five named and "and 2 more"; a failed copy and three missing files as one entry whose
+  `!` line in `query summary` and `query failures` leads with the count and has no `(×N)`; an `attachments/` path with
+  no file), the warning an in-process run prints and none under a host's scope, a file deleted after it was attached
+  and one rewritten between two attaches, a file named `attachments` in the reports folder, a file already in the
+  folder linked where it is and keeping its name, the image rule, links percent-encoded at a scenario's, a step's and a
+  parameterized row's sites with a URL's query kept, a relative attachment beside the binaries with no entry, and a
+  parity fact: eight inputs through the run's copier and the merge's carrier give the same states.
+- `WorkingDirectoryAttachmentTests`, in a collection that runs alone: a relative path attached with the working
+  directory elsewhere, one beside the binaries, one rewritten after it was attached, and one in neither folder, whose
+  entry names both.
+- `IngestMissingAttachmentTests`: the plan harness's three ingest cases (the issue's own, with the base named; a NUL
+  path; `--clean-attachments` over the capture's own files), a blank path, a relative library base that finds its
+  file, the empty cleaning pass, and `kronikol ingest` printing the entry once.
+- `CucumberMissingAttachmentTests`: a relative `url` and an `attachments/` `url` read against the base, a body that is
+  not base64 and one that cannot be written.
+- `MergeCarriesAttachmentsTests`: a shard's missing file never names another shard's, the merged data file and labs
+  page carry the entry, the merged HTML's diagnostics section draws it, and the merged report's own entry is the one the
+  `!` line shows.
+- `FeatureResultExtensionsTests`: the LightBDD stub turned round to the shape LightBDD writes, the fallback for an
+  attachment with no file path, and attachments made by LightBDD's own `FileAttachmentsManager` through whole runs: the
+  documented setup (copied, in `Run.json`, and linked in the kept run), a folder of LightBDD's own, an image named
+  without an extension, and no `AttachmentFailure`.
+- `AttachmentCopyTests.Missing_source_file_is_skipped_without_error`, which pinned the silence, is turned round to the
+  one entry, its message exact.
+- Playwright `AttachmentRenderingTests`: images named `shot#1.png` and `50%.png` draw (`naturalWidth > 0`) and open in
+  the lightbox.
+
+- Proofs: the facts were written first, and 36 failed on 4.27.1's code (given only the declaration of the state the
+  parity fact reads), each at its assertion, as did the Playwright fact (`shot#1.png` never loaded); the 4 that passed
+  there guard what 4.27.1 already did. The three added after (a file in the folder keeping its name, a relative path
+  rewritten after it was attached, a relative library base finding its file) were proved by mutation: 33 of 33
+  mutations of the new code are killed, among them LightBDD's relative path mapped again, the image rule reading the
+  name alone, a relative path read against the binary folder alone or never when attached, a Cucumber `url` read
+  against the working directory, a missing shard path left relative, the whole path or `#` before `%` encoded, a URL
+  encoded, the NUL path uncaught, the folder made outside the guard, a file in the folder copied onto itself, the
+  attachments counted for the files, every path named, a copy failure its own entry again, the merge's entry put on
+  after `Render` or last, no console line or one under a host too, and each sentence of the message left out.
+- Checks: after the version bump the core suite passes 7,785 with 2 skipped and the full Playwright suite passes
+  1,073 with 28 skipped when run alone; release.slnf builds in Release for every target. The templates pin 4.27.1
+  and the history action's VERSION installs Kronikol.Tool 4.27.2.
+
+## [4.27.1] - 2026-10-19
+
+**Patch - fixes, and a smaller report page (`plans/REPORT_FORMAT_PLAN.md` R2 and section 8).** Nothing new to call, so
+the patch part moves (4.27.0 to 4.27.1). Two of the fixes change what a reader sees: a sub-step's data table is drawn,
+and a run that writes XML or YAML is told the name of its own data file.
+
+### Changed
+
+- **A step's status text is written into the page once, not on every step** (R2). Each status icon carried its tooltip
+  as a `title` attribute: 54 bytes on a passed step, and up to 209 on every passed ancestor of a skipped or bypassed
+  step, so a chain of composite steps 20 deep over one skipped step carried the long text 20 times. The page now holds
+  the seven texts once, and an icon is given its text when the pointer rests on it or its step takes keyboard focus,
+  in the report and in an Export Filtered HTML copy. The texts and the icons are unchanged. On BreakfastProvider's
+  report (2,081 steps) the attributes came to 112,374 bytes, 3.4% of the page; the map and its script add about 2.6
+  KB. Report output changes: `.step-status` loses its `title` attribute and the head script gains the map (recorded in
+  the Kronikol4J ledger).
+
+### Fixed
+
+- **A sub-step's data table is drawn under it** (F20). A composite step passed its own setting, which leaves tables to
+  the combined table under a scenario's steps, down to its sub-steps; that table gathers the top-level steps' tables
+  only, so a sub-step's table was drawn nowhere.
+- **The agent files name the data file the run wrote.** The `CLAUDE.md` and `AGENTS.md` in the reports directory said
+  never to open `TestRunReport.json` whatever `TestRunReportDataFormat` was, so a run that writes XML or YAML was
+  warned off a file it did not have and not off the one it had. They name `TestRunReport.xml` or `TestRunReport.yml`
+  for those runs; a JSON run's files are unchanged byte for byte.
+- **The agent files and the skill no longer say a report reaches 10 MB.** One suite's reached 183 MB (#119). They say
+  tens of megabytes, about 2.7 million tokens for every 10 MB.
+- **`init-agents`' `.ignore` lets a search reach the digests and nothing else of the build output.** The block
+  re-included the whole of `bin/`, so `rg` and the tools built on its rules swept every build output, the report data
+  file among them (6 to 180 MB on real suites). It now re-includes `Failures.md`, `Failures.jsonl`, `CLAUDE.md` and
+  `AGENTS.md` under `bin/**/Reports/`, `TestResults/` and `.logs/kronikol/`, and nothing else there. It also reaches
+  `.logs/kronikol/` in a repository whose `.gitignore` excludes `.logs/`, which the old block could not. The HTML is
+  not re-included, since the instructions say never to open it. Re-run `kronikol init-agents` to replace the block.
+- **The skill's `query.py` finds a report beside its kept runs.** Given a folder, it searched every subfolder, so a
+  reports directory holding earlier runs under `runs/` or a `--baseline` copy under `baseline/` counted three reports
+  and asked which. It skips both, as the .NET tool does. Refresh a copied script with `kronikol init-agents`.
+
+### Tests
+
+- `TcpTapTests.ADecoderThatThrowsStopsDecodingButKeepsForwarding` waited for the decode error count and then read the
+  log line, which is written after the count; it failed on CI for 4.27.0. It now waits for the line it reads.
+
+### Notes
+
+- `kronikol history import` still searches `runs/`: the wiki promises back-fill from kept runs, and a run already in
+  the ledger is skipped (plan section 8 listed it with `query.py`).
+
+## [4.27.0] - 2026-10-19
+
+**Minor - a new query verb, `sizes`, and a bytes column on `interactions --group-by` (`plans/REPORT_FORMAT_PLAN.md`
+R1, #119 and #116).** Both are new things to call, so the minor part moves (4.26 to 4.27). The release also carries the
+documentation change that was under `[Unreleased]`.
+
+### Added
+
+- **`kronikol query sizes <report>` says what fills a report file** (#119). A report can outgrow a limit (GitHub's
+  100 MiB per file stopped one consumer's Pages publish), and no command said which part of it grew, short of opening
+  it. `sizes` prints the file's bytes on disk and decoded, then one row per part, stored and decoded, with its share of
+  the decoded total:
+  - `steps`, with how many of their bytes are keys holding null, an empty array or an empty object;
+  - `calls`, everything in a call but its body;
+  - `bodies`, with how many there are and how many distinct;
+  - `diagrams`, `annotations`, and a mergeable file's `internal-flow segments` and `whole-test flow`;
+  - `whitespace` outside strings, and `other`.
+
+  Then the ten largest scenarios by decoded bytes, with their addresses. Every byte of the file is in exactly one part.
+  A payload stored compressed (`$z`, on by default since 4.0.0) is charged what it stores, and decodes to what it would
+  take written as a string, so the decoded column adds up to the file the same run writes with
+  `CompressTestRunReportPayloads` off. `--json` gives a `report` member, one item per part and `largestScenarios`. On
+  BreakfastProvider's LightBDD report (6,150,370 bytes, written by 4.9.1) it reports 7,607,997 bytes decoded, the
+  figure the plan's harness got by decoding every payload in Python, of which 2,168,568 are whitespace and 1,878,651
+  call metadata. The measurement is a second pass over the file, refused like any payload read when the file changed
+  after the scan.
+- **`interactions --group-by` rows carry `bytes`, and `--sort bytes` orders them** (#116). `services` kept a byte total
+  per service, but a bucket had none and `--sort bytes` exited 2 there, so finding which family of calls made a report
+  grow took a script over every page of `interactions --json`. A bucket's `bytes` is the length of every request and
+  response body in it, decoded, counted as `services` counts it, so a `--group-by service` bucket carries that
+  service's figure. It is the last column of the table and a member of each `--json` row, and the `next:` line carries
+  `--sort bytes` forward like any other ordering.
+
+### Documentation
+
+- The skill's command reference and recipe table (both copies) document `sizes` and the bytes column, and answer "why
+  is the report so big?". The README's command list names `sizes`, and the wiki's Querying Reports page has a section
+  for it and the new column.
+- The doc comments of `CurrentStepTypeFetcher`, which nothing reads, on 23 extensions' options types and on
+  `MessageTrackerOptions` put its removal in v6 (`plans/V6_PLAN.md`), where they said v5: on 2026-10-18 the owner
+  made 5.0.0 the report data file and Option C, and moved the rest of the old v5 to v6 (`plans/ROADMAP.md` D39).
+  The wiki's pages for those options say the same. This was under `[Unreleased]`.
+
 ## [4.26.9] - 2026-10-18
 
 **Patch - the orphaned-calls diagnostic named two of its three causes (found on BreakfastProvider's report).** A

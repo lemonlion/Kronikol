@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Buffers;
+using Kronikol.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -83,16 +84,23 @@ internal static class ReportScanner
 
     public static ReportIndex Scan(string path)
     {
-        using var stream = OpenShared(path);
-        var index = new ReportIndex { Path = path, FileLength = stream.Length, LastWriteUtc = File.GetLastWriteTimeUtc(stream.SafeFileHandle) };
+        using var file = OpenShared(path);
+        var index = new ReportIndex { Path = path, FileLength = file.Length, LastWriteUtc = File.GetLastWriteTimeUtc(file.SafeFileHandle) };
         var walker = new Walker(index);
+
+        // A JSON file is read where it lies, its offsets positions in the file. A compressed one is decoded on this thread
+        // as the scan reads it (the allocation guards count per thread), and what it decodes is kept in a snapshot that the
+        // offsets index instead (plans/REPORT_FORMAT_PLAN.md 4.4).
+        using var content = ReportFileFormat.Open(file);
+        var snapshot = content.Form == ReportForm.Json ? null : new ReportSnapshot();
+        var stream = snapshot is null ? content.Stream : new SnapshotTee(content.Stream, snapshot);
 
         var buffer = ArrayPool<byte>.Shared.Rent(InitialWindow);
         try
         {
             var state = new JsonReaderState(new JsonReaderOptions { CommentHandling = JsonCommentHandling.Skip });
             var filled = 0;
-            long windowStart = 0;
+            long windowStart = content.Start;
             var eof = false;
 
             while (true)
@@ -130,17 +138,26 @@ internal static class ReportScanner
                 filled -= consumed;
                 windowStart += consumed;
             }
+
+            // One streaming pass over one handle, and the sharing below lets a run overwrite the file under
+            // it - on Linux nothing ever stopped that. The same handle then reads the new bytes, so an index
+            // built across an overwrite is half of one report and half of another.
+            ThrowIfChanged(file, index);
+        }
+        catch
+        {
+            snapshot?.Dispose();
+            throw;
         }
         finally
         {
             ArrayPool<byte>.Shared.Return(buffer);
         }
 
-        // One streaming pass over one handle, and the sharing below lets a run overwrite the file under
-        // it - on Linux nothing ever stopped that. The same handle then reads the new bytes, so an index
-        // built across an overwrite is half of one report and half of another.
-        ThrowIfChanged(stream, index);
-
+        snapshot?.Complete();
+        index.Form = content.Form;
+        index.Snapshot = snapshot;
+        index.JsonLength = snapshot?.Length ?? index.FileLength - content.Start;
         walker.Finish();
         index.SettleAssertionMarks();
         return index;
@@ -281,6 +298,11 @@ internal static class ReportScanner
             // it carried them. The report has always said which Kronikol wrote it, and from the release
             // that introduced attribution that is the whole answer, whatever the run happened to do.
             if (WritesStepAttribution(index.KronikolVersion))
+                index.Enriched = true;
+
+            // Version 3 leaves out the keys attribution used to be told by when they are empty, and Kronikol4J names its
+            // own version (F23): the version is the answer, as the writer's is above.
+            if (index.FormatVersion == Kronikol.Reports.ReportPayloads.CompactFormatVersion)
                 index.Enriched = true;
         }
 
@@ -661,6 +683,7 @@ internal static class ReportScanner
                     case "name": _attachment.Name = reader.GetString() ?? ""; return;
                     case "relativePath": _attachment.RelativePath = reader.GetString() ?? ""; return;
                     case "mediaType": _attachment.MediaType = reader.GetString(); return;
+                    case "problem": _attachment.Problem = reader.GetString(); return;
                 }
                 return;
             }

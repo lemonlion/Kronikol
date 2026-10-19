@@ -50,20 +50,40 @@ internal static class InitAgentsCommand
     private const string IgnoreEnd = "# kronikol:end";
 
     /// <summary>
-    /// Directories are re-included before their contents, because an ignore rule cannot re-include a file
-    /// whose parent directory is still excluded.
+    /// Each folder is re-included, then everything in it excluded again, then its subfolders re-included so a search
+    /// can walk them, and then only the named files: an ignore rule cannot re-include a file whose parent folder is
+    /// still excluded. Until 4.27.1 the block re-included whole folders: <c>!bin/</c> alone brought back the entire build
+    /// output, and <c>!bin/**/Reports/**</c> the report data file and page, tens of megabytes a search then read
+    /// (<c>plans/REPORT_FORMAT_PLAN.md</c> section 8).
     /// </summary>
     private const string IgnoreBody = """
         # Kronikol writes its reports under the build output, which .gitignore excludes. These lines put
-        # Failures.md, Failures.jsonl and the CLAUDE.md beside them back within reach of a content search.
+        # Failures.md, Failures.jsonl and the CLAUDE.md and AGENTS.md beside them back within reach of a content
+        # search, and nothing else: the report itself is tens of megabytes, read through kronikol query.
         # Git does not read this file, so nothing here becomes committable.
         !bin/
-        !bin/**/Reports/
-        !bin/**/Reports/**
+        bin/**
+        !bin/**/
+        !bin/**/Reports/**/Failures.md
+        !bin/**/Reports/**/Failures.jsonl
+        !bin/**/Reports/**/CLAUDE.md
+        !bin/**/Reports/**/AGENTS.md
         !TestResults/
-        !TestResults/**
+        TestResults/**
+        !TestResults/**/
+        !TestResults/**/Failures.md
+        !TestResults/**/Failures.jsonl
+        !TestResults/**/CLAUDE.md
+        !TestResults/**/AGENTS.md
+        !.logs/
+        .logs/*
         !.logs/kronikol/
-        !.logs/kronikol/**
+        .logs/kronikol/**
+        !.logs/kronikol/**/
+        !.logs/kronikol/**/Failures.md
+        !.logs/kronikol/**/Failures.jsonl
+        !.logs/kronikol/**/CLAUDE.md
+        !.logs/kronikol/**/AGENTS.md
         """;
 
 

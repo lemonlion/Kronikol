@@ -34,6 +34,12 @@ public static class FeatureSynthesizer
         /// (<see cref="Cucumber.CucumberFeatureMerger.Merge"/>). The pipeline reports the count as a diagnostic.
         /// </summary>
         internal int AttachmentsKeptTwice { get; init; }
+
+        /// <summary>Attachment records whose path was blank, which no report can hold: said in the run's attachment entry (#148 F16).</summary>
+        internal int BlankAttachmentPaths { get; init; }
+
+        /// <summary>Whether any attachment path was relative, so the entry names the base it was read against (#148).</summary>
+        internal bool RelativeAttachmentPaths { get; init; }
     }
 
     /// <summary>
@@ -72,6 +78,7 @@ public static class FeatureSynthesizer
         var logList = (logs ?? []).ToList();
 
         var byTest = new Dictionary<string, TestAccumulator>(StringComparer.Ordinal);
+        var attachmentPaths = new AttachmentPathNotes();
         var order = new List<string>();
 
         TestAccumulator Get(string testId)
@@ -214,7 +221,7 @@ public static class FeatureSynthesizer
                 SourceLine = acc.SourceLine,
             };
 
-            ApplyAttachments(scenario, acc.Attachments, attachmentsBase);
+            ApplyAttachments(scenario, acc.Attachments, attachmentsBase, attachmentPaths);
 
             var feature = acc.Feature ?? defaultFeatureName;
             if (!featureGroups.TryGetValue(feature, out var list))
@@ -269,6 +276,8 @@ public static class FeatureSynthesizer
             names)
         {
             DefaultedResultCount = defaultedResults,
+            BlankAttachmentPaths = attachmentPaths.Blank,
+            RelativeAttachmentPaths = attachmentPaths.Relative,
         };
     }
 
@@ -312,7 +321,14 @@ public static class FeatureSynthesizer
     /// 0-based top-level step. An index that no longer resolves (fewer steps than the producer thought)
     /// falls back to the scenario, so an artefact is never silently lost.
     /// </summary>
-    private static void ApplyAttachments(Scenario scenario, List<TestRunRecord> attachments, string? attachmentsBase)
+    /// <summary>What the attachment records' paths were, for the run's attachment entry.</summary>
+    private sealed class AttachmentPathNotes
+    {
+        public int Blank;
+        public bool Relative;
+    }
+
+    private static void ApplyAttachments(Scenario scenario, List<TestRunRecord> attachments, string? attachmentsBase, AttachmentPathNotes notes)
     {
         if (attachments.Count == 0)
             return;
@@ -324,7 +340,13 @@ public static class FeatureSynthesizer
         {
             var path = ResolveAttachmentPath(record.Path, attachmentsBase);
             if (path is null)
+            {
+                notes.Blank++;
                 continue;
+            }
+
+            if (!FileAttachment.IsUrlPath(record.Path) && !System.IO.Path.IsPathRooted(record.Path))
+                notes.Relative = true;
 
             var attachment = new FileAttachment(AttachmentName(record, path), path, record.MediaType);
 
@@ -362,7 +384,9 @@ public static class FeatureSynthesizer
 
     /// <summary>
     /// Resolves an attachment path: URLs pass through untouched, absolute paths are kept, relative paths
-    /// are resolved against <paramref name="attachmentsBase"/> (default: the current directory).
+    /// are resolved against <paramref name="attachmentsBase"/> (default: the current directory). A path that cannot be
+    /// read as one on this machine (a NUL character in it) is handed on as given, for the report's copier to say it is not
+    /// usable: it ended the ingest with an unhandled exception and no report (#148 F8).
     /// </summary>
     private static string? ResolveAttachmentPath(string? path, string? attachmentsBase)
     {
@@ -370,7 +394,14 @@ public static class FeatureSynthesizer
             return null;
         if (FileAttachment.IsUrlPath(path) || System.IO.Path.IsPathRooted(path))
             return path;
-        return System.IO.Path.GetFullPath(path, attachmentsBase ?? Directory.GetCurrentDirectory());
+        try
+        {
+            return System.IO.Path.GetFullPath(path, attachmentsBase ?? Directory.GetCurrentDirectory());
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return path;
+        }
     }
 
     /// <summary>
