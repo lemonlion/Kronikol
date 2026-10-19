@@ -68,11 +68,57 @@
         return 'PlantUML';
     }
 
+    // A copy carries no page CSS, so the look the page gives a drawn diagram (5.0.0, plans/OPTION_C_PLAN.md S10, Q6: the
+    // theme's colours, the role pass's cards, bands and step tables, the fold it hides) is written into the copy: each
+    // drawn element's paint where the stylesheet changed it, and the ground, which a copy without transparency takes. A
+    // step table's ground, with no fill of its own, was drawn black (F9). A copy takes the light theme's look whichever
+    // theme the page shows, as every copy did before: it is pasted into documents, nearly always on white. The theme is
+    // put back in the same task, so the page paints nothing in between, and its own picture is left as it is.
+    var PAINTED = /^(path|rect|line|polygon|polyline|circle|ellipse|text|tspan)$/i;
+    function lookClone(svg) {
+        var clone = svg.cloneNode(true);
+        var from = svg.querySelectorAll('*'), to = clone.querySelectorAll('*');
+        if (from.length !== to.length || !window.getComputedStyle) return { svg: clone, ground: null };
+        var root = document.documentElement, theme = root.getAttribute('data-theme');
+        var probe = document.createElement('i');
+        probe.style.display = 'none';
+        document.body.appendChild(probe);
+        root.setAttribute('data-theme', 'light');
+        var ground = null, seen = {};
+        // a colour as an attribute writes it, as the browser computes it ('none' as it is)
+        function computed(v) {
+            if (!v) return null;
+            if (!(v in seen)) {
+                probe.style.color = '';
+                probe.style.color = v;
+                seen[v] = probe.style.color ? getComputedStyle(probe).color : v;
+            }
+            return seen[v];
+        }
+        try {
+            for (var i = 0; i < from.length; i++) {
+                if (!PAINTED.test(from[i].tagName)) continue;
+                var cs = getComputedStyle(from[i]);
+                for (var k = 0; k < 2; k++) {
+                    var p = k ? 'stroke' : 'fill', v = cs.getPropertyValue(p);
+                    if (v && v !== computed(from[i].getAttribute(p))) to[i].style.setProperty(p, v);
+                }
+                if (cs.visibility === 'hidden') to[i].style.setProperty('visibility', 'hidden');
+            }
+            var bg = getComputedStyle(svg).backgroundColor;
+            if (bg && bg !== 'transparent' && !/^rgba\(.*,\s*0\)$/.test(bg)) ground = bg;
+        } finally {
+            if (theme === null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', theme);
+            probe.remove();
+        }
+        return { svg: clone, ground: ground };
+    }
+
     // XMLSerializer writes a C0 control, U+FFFE or U+FFFF as it is, and an SVG holding one is not XML: its PNG never
     // loaded (Copy and Save did nothing) and its SVG file opened in no viewer. Kronikol's generator no longer writes
     // one, but a source from an earlier report can, so the copy writes each as the generator would (§12.6).
     function serializeSvg(svg) {
-        return new XMLSerializer().serializeToString(svg).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, function (c) {
+        return new XMLSerializer().serializeToString(svg.isConnected ? lookClone(svg).svg : svg).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, function (c) {
             var code = c.charCodeAt(0);
             return code < 0x20 ? String.fromCharCode(0x2400 + code) : '\uFFFD';
         });
@@ -136,8 +182,9 @@
     }
 
     function svgToCanvasWithBg(svg, callback) {
-        var bg = getBackgroundColor(svg);
-        var clone = svg.cloneNode(true);
+        var look = svg.isConnected ? lookClone(svg) : null;
+        var bg = look && look.ground ? look.ground : getBackgroundColor(svg);
+        var clone = look ? look.svg : svg.cloneNode(true);
         var vb = clone.getAttribute('viewBox');
         var bx = '0', by = '0', bw, bh;
         if (vb) {

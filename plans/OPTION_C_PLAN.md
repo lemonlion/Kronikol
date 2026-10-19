@@ -716,3 +716,28 @@ decision of the owner's, not part of this plan.
   says note, diagram, step, marker, toggle, context menu, split, fragment, render or internal flow pass; and
   `BrowserRenderWorkerTests` passes (19), which S10b-2's role pass also had to: on the large fixture the worst
   main-thread task took 122 ms against its budget of 500 ms (145 and 167 ms in today's runs before it).
+- 2026-10-19, S10c, which finishes S10's page work: a diagram stands in the middle of its box (the owner's round 17
+  item 19, `c-round17.css` 68-74), a request's link takes the report's accent (item 5, `c-round17.css` 79), and a
+  copied, saved or opened diagram carries the look (Q6, F9), in `edits/scripts-s10c-a.py`. A diagram narrower than its
+  box is centred with auto margins, and the box holds it 1em in from either side, where it held it 1em from the left
+  and 0 from the right; one as wide as its box still fills it. A link painted in the engine's #0000FF and underlined
+  (on hover, or always where links are always shown) is drawn in `--kron-accent`. `context-menu-script.js` writes each
+  drawn element's computed paint into the copy where the stylesheet changed it, and its visibility where hidden (the
+  fold), and the copy without transparency takes the drawing's ground: Copy as SVG, Save and Open as SVG, and both PNG
+  copies. The rect the role pass draws behind a step table, with no fill of its own, was drawn black in every copy
+  (F9, left open by S10b-2).
+- Deviations: a diagram drawn in fragments is centred too (`.puml-fragment > svg`), which the preview's rule did not
+  reach, so a long diagram stood at the left while a short one stood in the middle. The link rule is kept to links
+  painted in the engine's own blue, so a theme's link colour stays its own, as 4.x keeps it (DIAGRAM_COLOURS_PLAN
+  12.5). A copy takes the light theme's look whichever theme the page shows, as every copy did before 5.0.0: in the
+  dark theme a transparent copy would paste light ink onto the white documents it nearly always goes into. The theme
+  is switched for the copy and put back in the same task, so the page paints nothing in between (a question for the
+  owner, who may want the shown theme).
+  Tests: Playwright `DiagramCentringTests` (new, 2: a diagram drawn whole and one drawn in fragments, each within 1 px
+  of its box's middle), `DiagramLinkHoverTests` (new, a theory in both themes) and `DiagramExportLookTests` (new, 2
+  theories, 6 cases: an SVG copy in both themes carries the light theme's step table ground, ink and card colours,
+  keeps the fold hidden and leaves the page's theme as it was; each PNG copy in both themes paints the table's ground
+  white, which was black). All 10 failed before. The export tests' first draft waited for the copy with an async
+  predicate in WaitForFunctionAsync, and its PNG cases still read the clipboard before the image was written: they
+  poll inside their own evaluation. Mutations: 10 of 10 killed (`checks/mutate-s10c-a.py`).
+  Checks: the three classes and the context menu tests pass (22); the full suites run at the end of S10.

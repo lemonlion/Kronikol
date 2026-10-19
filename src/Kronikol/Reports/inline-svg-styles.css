@@ -112,3 +112,12 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
 .plantuml-browser svg :is([style*="stroke:#0e7c86" i], [stroke="#0e7c86" i]) { stroke: var(--dg-db) !important; }
 .plantuml-browser svg [fill="#9b59b6" i] { fill: var(--dg-msg); }
 .plantuml-browser svg :is([style*="stroke:#9b59b6" i], [stroke="#9b59b6" i]) { stroke: var(--dg-msg) !important; }
+
+/* A diagram narrower than its box stands in the middle of it, drawn whole or in fragments (5.0.0, plans/OPTION_C_PLAN.md
+   S10); one as wide as its box still fills it, the auto margins coming to 0. The box held its drawing 1em in from the
+   left and 0 from the right, which put a centred drawing half an em right of the box's middle. */
+.plantuml-browser > svg, .plantuml-inline-svg > svg, .puml-fragment > svg { display: block; margin-inline: auto; }
+.plantuml-inline-svg, .plantuml-browser { padding-right: 1em; }
+/* A request's link, drawn on hover (or always, where links are always shown), in the report's accent and not the
+   engine's #0000FF, which read as purple beside the rest of the palette. A theme's own link colour stays its own. */
+.plantuml-browser svg text[data-iflow-fill="#0000ff" i][text-decoration="underline"] { fill: var(--kron-accent) !important; }
