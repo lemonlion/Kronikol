@@ -127,6 +127,8 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   The internal-flow popup takes the theme too, its Activity and Flame Chart views drawn as tabs, and its overlay
   is the token `--kron-overlay`. Its notes and failure text are styled by class (`iflow-left-out`,
   `iflow-diagnostics`, `iflow-more-tests`, `iflow-render-error`), where they carried inline colours.
+  The Diagnostics tab is a card on the theme's colours, with one rule between its entries, a failure's kind in the
+  failure colour and a degraded capture's in amber.
 - **A service is drawn as a box.** `DependencyPalette.GetSequenceShape(DependencyType.HttpApi)` returns `participant`,
   which was `entity`, and a caller after the first that has no category is a `participant` too: a service reads as a
   box among the participants around it, not a circle on a line.

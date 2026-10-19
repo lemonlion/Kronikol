@@ -900,3 +900,19 @@ decision of the owner's, not part of this plan.
   fixed: the labs page's fact read the first ring, a failed run's, whose rate is in the failure ink, and now reads a
   run that passed; and `HistorySectionTests` read the list headings with innerText, which the new uppercase labels
   change, and now reads their text. The core History and Reports namespaces pass, 3,052 of 3,053 with 1 skipped.
+- 2026-10-19, S11g: the report's diagnostics on the theme's tokens (the preview's `c-round2.css` 89-92 and 117-120,
+  `c-round7.css` 87 and 92; stylesheet inventory row 22), in `edits/scripts-s11g.py`: a card on the card ground with a
+  hairline edge and 12px corners, the heading no longer drawn as a disclosure in its tab (the tab is one, S3) but
+  still one on the labs page, which has no tabs, one rule between entries where each entry carried a rule under it,
+  and each kind's pill in its own colours (a render, output or attachment failure in the failure colours, a degraded
+  capture in amber, the rest quiet). Every colour falls back to its 4.x value where a page has no token sheet.
+  Deviations: not ported (stylesheet inventory 3.8 items 2 and 3), the preview's doubled separators and every kind
+  drawn amber.
+  Tests: Playwright `DiagnosticsCardTests` (new, a theory in both themes: the card's ground and edge equal their
+  tokens, a render failure's pill is in the failure colour and a malformed line's is not, no rule over the first
+  entry, a rule over the second and none under any, the heading with no marker and no pointer in its tab; and the labs
+  page's diagnostics still a disclosure in their 4.x colours, a guard that passes before the change), failing both
+  theme cases before the change, the labs page's guard passing, as a guard does. Mutations: 8 of 8 killed
+  (`checks/mutate-s11g.py`).
+  Checks: the diagnostics' neighbours pass, 29 of 29 (the DiagnosticsCard, Diagnostic, ReportTabs, LabsPage and
+  ReportSectionWidth classes).
