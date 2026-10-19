@@ -265,8 +265,9 @@ public class WikiScreenshotTests : PlaywrightTestBase
         {
             await Page.EvaluateAsync("""
                 (() => {
-                    var details = document.querySelectorAll('details');
-                    details.forEach(d => { if (d.textContent.includes('Features Summary')) d.open = true; });
+                    // 5.0.0: the features table is the Features tab's Summary view (plans/OPTION_C_PLAN.md S4)
+                    var summary = document.getElementById('view-summary');
+                    if (summary) summary.click();
                 })()
             """);
             await Task.Delay(300);

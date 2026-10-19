@@ -11,8 +11,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithAttachments("AttLink.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         // screenshot.png is an image attachment — renders as <img> with caption
         var img = Page.Locator("img.attachment-image").First;
@@ -27,8 +27,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithAttachments("AttHref.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         var attachmentLink = Page.Locator("a.attachment-image-link").First;
         await attachmentLink.WaitForAsync();
@@ -42,8 +42,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithAttachments("AttMultiple.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         // Find the scenario with multiple attachments by title
         var scenario = Page.Locator("details.scenario", new() { HasTextString = "Upload with multiple attachments" });
@@ -61,8 +61,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithAttachments("AttNone.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         // Find the scenario without attachments by title
         var scenario = Page.Locator("details.scenario", new() { HasTextString = "Step without attachments" });
@@ -77,8 +77,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         var attachmentLink = Page.Locator("a.step-attachment").First;
         await attachmentLink.WaitForAsync();
@@ -95,8 +95,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithAttachments("AttImg.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         var img = Page.Locator("img.attachment-image").First;
         await img.WaitForAsync();
@@ -110,8 +110,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithAttachments("AttImgLink.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         var link = Page.Locator("a.attachment-image-link").First;
         await link.WaitForAsync();
@@ -125,8 +125,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithAttachments("AttNonImg.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         // Find the scenario with non-image attachments (log.txt, trace.json)
         var scenario = Page.Locator("details.scenario", new() { HasTextString = "Upload with multiple attachments" });
@@ -143,8 +143,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithAttachments("AttImgCaption.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         var caption = Page.Locator("span.attachment-image-name").First;
         await caption.WaitForAsync();

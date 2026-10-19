@@ -58,8 +58,8 @@ public class MergedReportTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateMergedReport("MergedStepDetail.html"));
         await Page.Locator("details.feature").First.WaitForAsync(new() { Timeout = 10000 });
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         // The inline table-ref toggle and its backing parameter table survived the merge round-trip.
         var toggleBtn = Page.Locator("button.step-table-ref").First;

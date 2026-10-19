@@ -186,7 +186,7 @@ public class HistoryHtmlTests : IDisposable
         // The section is not inside a feature: the export copies features only and leaves the aggregate behind on
         // purpose. Since 5.0.0 it is the History tab's panel, after the features (plans/OPTION_C_PLAN.md S3).
         var panel = html.IndexOf("<div class=\"report-panel\" id=\"panel-history\"", StringComparison.Ordinal);
-        Assert.True(panel > html.IndexOf("<div id=\"report-content\">", StringComparison.Ordinal));
+        Assert.True(panel > html.IndexOf("<div id=\"report-content\"", StringComparison.Ordinal));
         Assert.True(html.IndexOf("<details id=\"history-section\"", StringComparison.Ordinal) > panel);
     }
 

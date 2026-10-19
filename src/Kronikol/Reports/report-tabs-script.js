@@ -18,8 +18,9 @@
         });
         var nav = bar();
         if (nav) nav.classList.toggle('on-features', key === 'features');
-        // a diagram in a panel that was hidden is drawn when the panel shows (the engine is not fetched for a hidden tab)
-        if (typeof window._renderDiagramsInContainer === 'function') window._renderDiagramsInContainer(target);
+        // a diagram in a panel that was hidden is drawn when the panel shows (the engine is not fetched for a hidden tab),
+        // and only one that shows: the Features tab holds every scenario's diagrams, most of them in closed scenarios
+        if (typeof window._renderDiagramsInContainer === 'function') window._renderDiagramsInContainer(target, true);
         window.dispatchEvent(new Event('resize'));
     }
     window.kronikol_activate_tab = activate;

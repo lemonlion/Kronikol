@@ -59,8 +59,8 @@ public class FormStateRestorationTests : IAsyncLifetime
     private async Task RenderAndWait()
     {
         await _page.Locator("details.feature").First.WaitForAsync();
-        await _page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await _page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await PlaywrightTestBase.FoldAllAsync(_page, "features", expand: true);
+        await PlaywrightTestBase.FoldAllAsync(_page, "scenarios", expand: true);
         await _page.EvaluateAsync(
             "() => { if (window._renderDiagramsInContainer) window._renderDiagramsInContainer(document.body); }");
         await _page.WaitForFunctionAsync("""

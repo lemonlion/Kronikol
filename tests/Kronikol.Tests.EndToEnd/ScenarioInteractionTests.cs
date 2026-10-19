@@ -46,7 +46,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ScenarioCopyBtn.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
 
         var copyBtns = await Page.Locator(".copy-scenario-name").CountAsync();
         var scenarios = await Page.Locator("details.scenario").CountAsync();
@@ -62,7 +62,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         // Grant clipboard permissions
         await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
 
         var copyBtn = Page.Locator(".copy-scenario-name").First;
         await copyBtn.ClickAsync();
@@ -78,7 +78,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
 
         await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
 
         var copyBtn = Page.Locator(".copy-scenario-name").First;
         var origText = await copyBtn.TextContentAsync();
@@ -94,7 +94,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ScenarioCopyData.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
 
         var name = await Page.Locator(".copy-scenario-name").First.GetAttributeAsync("data-scenario-name");
         Assert.False(string.IsNullOrEmpty(name), "data-scenario-name should not be empty");
@@ -108,7 +108,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ScenarioLink.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
 
         var links = await Page.Locator(".scenario-link").CountAsync();
         var scenarios = await Page.Locator("details.scenario").CountAsync();
@@ -121,7 +121,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ScenarioLinkHref.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
 
         var href = await Page.Locator(".scenario-link").First.GetAttributeAsync("href");
         Assert.Contains("#scenario-", href!);
@@ -135,7 +135,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ScenarioDuration.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
 
         var badges = Page.Locator(".duration-badge");
         var count = await badges.CountAsync();

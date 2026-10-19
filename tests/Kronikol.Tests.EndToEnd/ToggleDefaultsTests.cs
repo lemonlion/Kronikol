@@ -290,19 +290,21 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
         Assert.True(await Page.EvaluateAsync<bool>(
             "() => Array.from(document.querySelectorAll('details.scenario')).every(d => d.open)"));
 
-        // … and the expand-all buttons carry the flip labels, so their first click works.
-        // (Positional locators: a text-filtered locator would stop matching once the label flips.)
-        var featuresBtn = Page.Locator("button.collapse-expand-all").Nth(0);
-        var scenariosBtn = Page.Locator("button.collapse-expand-all").Nth(1);
-        Assert.Equal("Collapse All Features", (await featuresBtn.TextContentAsync())!.Trim());
-        Assert.Equal("Collapse All Scenarios", (await scenariosBtn.TextContentAsync())!.Trim());
+        // … and the fold buttons start as that leaves them (5.0.0, plans/OPTION_C_PLAN.md S4): expanding has nothing
+        // to do, so it is dimmed, and the first click on collapse works.
+        var expandFeatures = Page.Locator("button.fold-expand[data-fold='features']");
+        var expandScenarios = Page.Locator("button.fold-expand[data-fold='scenarios']");
+        var collapseScenarios = Page.Locator("button.fold-collapse[data-fold='scenarios']");
+        await Expect(expandFeatures).ToHaveAttributeAsync("aria-disabled", "true");
+        await Expect(expandScenarios).ToHaveAttributeAsync("aria-disabled", "true");
 
-        await scenariosBtn.ClickAsync();
+        await collapseScenarios.ClickAsync();
         Assert.True(await Page.EvaluateAsync<bool>(
             "() => Array.from(document.querySelectorAll('details.scenario')).every(d => !d.open)"));
-        Assert.Equal("Expand All Scenarios", (await scenariosBtn.TextContentAsync())!.Trim());
+        await Expect(expandScenarios).ToHaveAttributeAsync("aria-disabled", "false");
+        await Expect(collapseScenarios).ToHaveAttributeAsync("aria-disabled", "true");
 
-        await featuresBtn.ClickAsync();
+        await Page.Locator("button.fold-collapse[data-fold='features']").ClickAsync();
         Assert.True(await Page.EvaluateAsync<bool>(
             "() => Array.from(document.querySelectorAll('details.feature')).every(d => !d.open)"));
     }
@@ -462,10 +464,11 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
         await Page.GotoAsync(ReportTestHelper.GenerateToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_FeaturesSummaryOpen.html",
             o => o.TestRunReportToggleDefaults.FeaturesSummaryOpen = true));
-        await Page.Locator("details.feature").First.WaitForAsync();
+        await Page.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });
 
-        Assert.True(await Page.EvaluateAsync<bool>(
-            "() => document.querySelector('details.features-summary-details').open"));
-        Assert.True(await Page.Locator(".feature-summary-table").IsVisibleAsync());
+        // 5.0.0: the Features tab opens on its Summary view, the table in place of the cards (plans/OPTION_C_PLAN.md S4)
+        await Expect(Page.Locator("#view-summary")).ToHaveAttributeAsync("aria-selected", "true");
+        await Expect(Page.Locator(".feature-summary-table")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#report-content")).ToBeHiddenAsync();
     }
 }

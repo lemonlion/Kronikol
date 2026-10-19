@@ -514,25 +514,13 @@ public class ShowcaseReportTests : PlaywrightTestBase
         await CaptureFrames("01_overview", 48, 33);
 
         // ── Scene 2: Expand everything ──
-        try
-        {
-            var expandFeatures = Page.Locator(".collapse-expand-all", new() { HasTextString = "Expand All Features" });
-            if (await expandFeatures.CountAsync() > 0) { await JsClick(".collapse-expand-all"); await Task.Delay(300); }
-        }
+        // 5.0.0: an expand button per level (plans/OPTION_C_PLAN.md S4)
+        try { await ExpandAllFeaturesAsync(); await Task.Delay(300); }
         catch { }
         try
         {
-            var expandScenarios = Page.Locator(".collapse-expand-all", new() { HasTextString = "Expand All Scenarios" });
-            if (await expandScenarios.CountAsync() > 0)
-            {
-                await Page.EvaluateAsync("""
-                    (() => {
-                        var btns = document.querySelectorAll('.collapse-expand-all');
-                        for (var b of btns) { if (b.textContent.includes('Expand All Scenarios')) { b.click(); break; } }
-                    })()
-                """);
-                await Task.Delay(400);
-            }
+            await ExpandAllScenariosAsync();
+            await Task.Delay(400);
         }
         catch { }
         await CaptureFrames("02_expanded", 36, 33);

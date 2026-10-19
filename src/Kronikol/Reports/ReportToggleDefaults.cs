@@ -46,10 +46,16 @@ public record ReportToggleDefaults
     /// </summary>
     public NoteWidthMode? NoteWidth { get; set; }
 
-    /// <summary>Feature sections start expanded (with the Expand All Features button seeded to match). Default: <c>false</c>.</summary>
+    /// <summary>
+    /// Feature sections start expanded, so the Features tools' expand button for features starts dimmed, with nothing to
+    /// do (5.0.0; until then the Expand All Features button was seeded to read Collapse All Features). Default: <c>false</c>.
+    /// </summary>
     public bool? FeaturesExpanded { get; set; }
 
-    /// <summary>Scenario sections start expanded (with the Expand All Scenarios button seeded to match). Default: <c>false</c>.</summary>
+    /// <summary>
+    /// Scenario sections start expanded, so the Features tools' expand button for scenarios starts dimmed, with nothing to
+    /// do (5.0.0; until then the Expand All Scenarios button was seeded to read Collapse All Scenarios). Default: <c>false</c>.
+    /// </summary>
     public bool? ScenariosExpanded { get; set; }
 
     /// <summary>
@@ -74,7 +80,11 @@ public record ReportToggleDefaults
     /// <summary>The category filter's AND/OR combination mode. Default: <see cref="FilterCombinationMode.Or"/>.</summary>
     public FilterCombinationMode? CategoryFilterMode { get; set; }
 
-    /// <summary>The Features Summary table disclosure starts open (test run report only). Default: <c>false</c>.</summary>
+    /// <summary>
+    /// The Features tab opens on its Summary view, the features table, in place of the feature cards (test run report
+    /// only; until 5.0.0 the table was a Features Summary disclosure above the run's summary, and this opened it).
+    /// Default: <c>false</c>.
+    /// </summary>
     public bool? FeaturesSummaryOpen { get; set; }
 
     /// <summary>The Failure Clusters disclosure starts open. Default: <c>true</c>.</summary>

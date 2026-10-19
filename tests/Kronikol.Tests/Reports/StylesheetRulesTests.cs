@@ -144,7 +144,7 @@ public partial class StylesheetRulesTests
     private static readonly string[] IdleHovers =
     [
         ".happy-path-toggle:hover", ".dependency-toggle:hover", ".status-toggle:hover", ".category-toggle:hover",
-        ".export-btn:hover", ".collapse-expand-all:hover", ".percentile-btn:hover", ".timeline-toggle:hover",
+        ".export-btn:hover", ".fold-btn:hover", ".percentile-btn:hover", ".timeline-toggle:hover",
         ".details-radio-btn:hover", ".scenario-diagram-controls-toggle:hover", ".diagram-toggle-btn:hover",
         ".iflow-toggle-btn:hover", ".dep-mode-toggle:hover", ".cat-mode-toggle:hover", ".iflow-rel-summary-table tr:hover td",
     ];

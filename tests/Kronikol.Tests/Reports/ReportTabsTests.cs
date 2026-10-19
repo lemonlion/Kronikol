@@ -86,7 +86,7 @@ public class ReportTabsTests
         var components = html.IndexOf(Panel("components", false) + "<div id=\"component-diagram\" class=\"component-diagram-section\">", StringComparison.Ordinal);
         var diagnostics = html.IndexOf(Panel("diagnostics", false) + "<details class=\"report-diagnostics\" open><summary tabindex=\"-1\">", StringComparison.Ordinal);
         Assert.True(features > panels, "the features panel is in the panels");
-        Assert.True(timeline > html.IndexOf("<div id=\"report-content\">", StringComparison.Ordinal), "the timeline panel follows the features");
+        Assert.True(timeline > html.IndexOf("<div id=\"report-content\"", StringComparison.Ordinal), "the timeline panel follows the features");
         Assert.True(components > timeline, "then the components panel");
         Assert.True(diagnostics > components, "then the diagnostics panel, open, its summary out of the tab order");
     }
@@ -115,7 +115,7 @@ public class ReportTabsTests
         var panel = html.IndexOf(Panel("features", true), StringComparison.Ordinal);
         var clusters = html.IndexOf("<details class=\"failure-clusters\"", StringComparison.Ordinal);
         var backgroundCalls = html.IndexOf("<details class=\"background-calls\"", StringComparison.Ordinal);
-        var content = html.IndexOf("<div id=\"report-content\">", StringComparison.Ordinal);
+        var content = html.IndexOf("<div id=\"report-content\"", StringComparison.Ordinal);
         Assert.True(panel >= 0 && clusters > panel && backgroundCalls > clusters && content > backgroundCalls,
             $"panel {panel}, clusters {clusters}, background calls {backgroundCalls}, features {content}");
         // a clustered scenario's feature is named through a class the tokens colour, not an inline grey
@@ -147,8 +147,9 @@ public class ReportTabsTests
         Assert.DoesNotContain("class=\"report-tabs\"", html);
         Assert.DoesNotContain("<div class=\"toolbar-row report-nav", html);
         Assert.Contains("<div class=\"toolbar-row\">", html);
-        // no tab names the panel, so it is no tab panel either
-        Assert.Contains("<div class=\"report-panels\"><div class=\"report-panel\" id=\"panel-features\" data-panel=\"features\"><div id=\"report-content\">", html);
+        // no tab names the panel, so it is no tab panel either; its views, the table and the cards, are (S4)
+        Assert.Contains("<div class=\"report-panels\"><div class=\"report-panel\" id=\"panel-features\" data-panel=\"features\"><div class=\"features-panel\">"
+            + "<div class=\"features-table-view\" id=\"features-table-view\" role=\"tabpanel\" aria-labelledby=\"view-summary\" hidden>", html);
     }
 
     [Fact]

@@ -13,8 +13,8 @@ public class ComplexInlineParamTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithComplexInlineParams("SmallInline.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         // The small recipe param should render as an inline span, not a button
         var inlineSpan = Page.Locator("span.step-param-inline[title='recipe']");
@@ -35,8 +35,8 @@ public class ComplexInlineParamTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithComplexInlineParams("LargeButton.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         // The large config param should render as a button with data-value
         var configButton = Page.Locator("button.step-table-ref[data-param='config']");
@@ -52,8 +52,8 @@ public class ComplexInlineParamTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithComplexInlineParams("LargeExpand.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         var configButton = Page.Locator("button.step-table-ref[data-param='config']");
         await configButton.First.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
@@ -85,8 +85,8 @@ public class ComplexInlineParamTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithComplexInlineParams("LargeCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         var configButton = Page.Locator("button.step-table-ref[data-param='config']");
         await configButton.First.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });

@@ -96,9 +96,8 @@ public class MobileResponsiveTests : PlaywrightTestBase
     public async Task Feature_summary_table_scrolls_horizontally()
     {
         await Page.GotoAsync(GenerateReport("MobileTable.html"));
-        await Page.Locator(".features-summary-details").WaitForAsync(new() { Timeout = 5000 });
-
-        await Page.Locator(".features-summary-details > summary").ClickAsync();
+        // 5.0.0: the table is the Features tab's Summary view (plans/OPTION_C_PLAN.md S4)
+        await Page.Locator("#view-summary").ClickAsync();
 
         var table = Page.Locator(".feature-summary-table");
         var display = await GetComputedStyle(table, "display");
@@ -185,6 +184,8 @@ public class MobileResponsiveTests : PlaywrightTestBase
     public async Task Toolbar_right_details_does_not_overflow()
     {
         await Page.GotoAsync(GenerateReport("MobileDetailsOverflow.html"));
+        // since 5.0.0 a phone shows the display settings behind the Features tools' gear (plans/OPTION_C_PLAN.md S4)
+        await Page.Locator(".tools-gear").ClickAsync();
         await Page.Locator(".toolbar-right").WaitForAsync(new() { Timeout = 5000 });
 
         var toolbarRight = Page.Locator(".toolbar-right");
@@ -231,6 +232,8 @@ public class MobileResponsiveTests : PlaywrightTestBase
     public async Task Headers_toggle_has_no_left_margin_on_mobile()
     {
         await Page.GotoAsync(GenerateReport("MobileHeadersMargin.html"));
+        // since 5.0.0 a phone shows the display settings behind the Features tools' gear (plans/OPTION_C_PLAN.md S4)
+        await Page.Locator(".tools-gear").ClickAsync();
         await Page.Locator(".toolbar-right").WaitForAsync(new() { Timeout = 5000 });
 
         var headersToggle = Page.Locator(".toolbar-right .toggle-btn[data-toggle='headers']");
@@ -394,8 +397,8 @@ public class MobileResponsiveTests : PlaywrightTestBase
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Expand features and inject a spacer to guarantee enough page height
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
         await Page.EvaluateAsync("() => { var d = document.createElement('div'); d.style.height = '3000px'; document.body.appendChild(d); }");
 
         // Scroll to bottom of document
@@ -417,8 +420,8 @@ public class MobileResponsiveTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("MobileBackToTop3.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
         await Page.EvaluateAsync("() => { var d = document.createElement('div'); d.style.height = '3000px'; document.body.appendChild(d); }");
 
         // Scroll to bottom of document

@@ -621,7 +621,7 @@ public class WikiGifTests : PlaywrightTestBase
 
         await ScrollToTop(); await Hold(2);
 
-        await JsClick(".collapse-expand-all"); await Hold(1.5);
+        await JsClick("button.fold-expand[data-fold='features']"); await Hold(1.5); // 5.0.0: OPTION_C_PLAN S4
 
         await ScrollTo("details.scenario"); await Hold(1.5);
         await ScrollToTop(); await Hold(0.5);
@@ -721,9 +721,9 @@ public class WikiGifTests : PlaywrightTestBase
         BeginFrameCapture("feature03");
         await NavigateToReport();
 
-        await JsClick("button:has-text('Expand All Features')");
+        await ExpandAllFeaturesAsync();
         await Task.Delay(300);
-        await JsClick("button:has-text('Expand All Scenarios')");
+        await ExpandAllScenariosAsync();
         await Task.Delay(500);
 
         await ScrollTo(".param-test-table"); await Hold(4);
@@ -1560,7 +1560,7 @@ public class WikiGifTests : PlaywrightTestBase
         await ScrollToTop(); await Hold(1);
         await JsClick(".status-toggle[data-status='Failed']"); await Hold(3);
 
-        try { await JsClick(".features-summary-details"); await Hold(2.5); } catch { }
+        try { await JsClick("#view-summary"); await Hold(2.5); } catch { } // 5.0.0: the Summary view (OPTION_C_PLAN S4)
 
         await JsClick(".jump-to-failure"); await Hold(3);
         await ExpandAll(); await Hold(1);
@@ -1669,13 +1669,10 @@ public class WikiGifTests : PlaywrightTestBase
         {
             await Page.EvaluateAsync("""
                 (() => {
-                    var btns = document.querySelectorAll('button');
-                    for (var b of btns) {
-                        if (b.textContent.includes('Expand All Features')) {
-                            b.scrollIntoView({block:'start', behavior:'instant'});
-                            window.scrollBy(0, -10);
-                            break;
-                        }
+                    var b = document.querySelector("button.fold-expand[data-fold='features']");
+                    if (b) {
+                        b.scrollIntoView({block:'start', behavior:'instant'});
+                        window.scrollBy(0, -10);
                     }
                 })()
             """);

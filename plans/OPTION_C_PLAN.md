@@ -167,7 +167,7 @@ decision of the owner's, not part of this plan.
    `ComponentDiagramVisible` choose the tab the page opens on (the timeline when both are set, as before), and every
    tab exists whenever its section does. Read as written, the recommendation would have hidden the Timeline tab by
    default, since `ScenarioTimelineVisible` defaults to `false`. `DiagnosticsOpen` has nothing to open in a tab;
-   `FeaturesSummaryOpen` is S4's (the Summary view).
+   `FeaturesSummaryOpen` opens the Features tab on its Summary view (S4).
 3. **Specifications and labs pages.** Recommendation: the token sheet, the theme and the violet theme as token
    overrides, no layout redesign.
 4. **Failure clusters and background calls.** Recommendation: at the top of the Features tab, as cards.
@@ -290,4 +290,65 @@ decision of the owner's, not part of this plan.
   diagram drawn when its tab shows, Next Failure, a history link and a scenario's address going to Features, the
   sections staying open, the sticky bar and its height, the phone's static bar, the tabs' and the cards' tokens in
   both themes). The 4.x tests that clicked the toggles open the tabs (`PlaywrightTestBase.OpenReportTabAsync`).
-
+- 2026-10-19, S4: the Features tab's tools (D21, D22, D35) and the report bar's zones (D30), written by the generator
+  in `div.features-tools-line`: the Full and Summary views as tabs (`div.view-switch[role=tablist]`, `button.view-btn`
+  with `aria-controls`, roving `tabindex` and the titles of the 53-row table), the two fold groups, `span.tools-spacer`,
+  the sort (`label.sort-group` > `select#features-sort`) and, on a page with tabs, the phone's Display settings gear
+  (`button.tools-gear`, `aria-controls="display-settings"`, the bar's `.tools-open`). The features table is the
+  Summary view: `div.features-panel` holds `div#features-table-view[role=tabpanel]` beside `#report-content`, one of
+  them `hidden`, in place of the 4.x `details.features-summary-details` above the run band; the table gains the
+  `tr.table-groups` row (Scenarios, then Steps and Duration when the run has them), its groups' first columns read
+  Total, `.grp-start` rules each group off, and a feature's name is `button.feature-open`, so a row opens its feature
+  from the keyboard too. `FeaturesSummaryOpen` opens the Summary view (Q2 as built). The fold groups are
+  `span.fold-group` with `button.fold-btn.fold-expand` / `.fold-collapse` (`data-fold`, inline chevrons): the
+  preview's `k-` prefix dropped, as no other page class has it; `aria-disabled` is seeded from `FeaturesExpanded` and
+  `ScenariosExpanded` (both buttons with none to fold). The display settings are `div.toolbar-right#display-settings`
+  with the zones `span.diagram-format` and `span.diagram-flags` after the payload radio; the scenario bars' zones,
+  wording and chips are S8's. `report-features-tools-script.js` replaces `report-collapse-expand-all-function.js`
+  (`toggle_expand_collapse` gone): the views (click, arrow keys, Home and End, the bar's `.features-table-mode`), the
+  sort, a row opening its card in the Full view, the fold buttons (expanding the scenarios opens their rules and
+  features; the dimmed state checked once a frame on `toggle`), the gear, and the Full view for Next Failure, a link
+  to a scenario, a scenario's address and the arrow keys that move between scenarios. Item R17.28: the fold groups,
+  their divider and the display settings hide in the Summary view.
+  Preview defects not ported (structure inventory D21): the sort's columns were fixed numbers that held only with step
+  columns, so without steps the three time sorts did nothing; each option now names its column (`data-col`), and an
+  option for a column the table lacks is not written. "Feature A–Z" was the report's own order (the generator keeps
+  the order it is given): it is now a sort by name, after "Report order". Rows were paired with cards by name, so two
+  features with one name collided; they pair by position, taken as the page opens (a column click reorders rows
+  later). Since round 17 the fold groups stayed in view over the table; they hide. On a phone round 17's fold groups
+  lost the `order: 4` the buttons they replaced had, so at 400 px the line took three rows with the fold groups first;
+  the branch keeps the desktop order on one row while it fits and, at 480 px and under, two rows (the views and the
+  sort, then the fold groups and the gear). Two leftovers of 4.x rules in the preview's table card are not ported: a
+  7 px band above the tinted heading row (the old wrapper's top margin) and an 18.75 px band under the last row (the
+  old table's bottom margin). The column headings, which lost their hover to a later preview rule, keep one.
+  Bugs found on the way and fixed: returning to the Features tab (S3) queued every diagram it held for drawing, those
+  of closed scenarios too, since `_renderDiagramsInContainer` draws all it is given on a page that does not draw on
+  demand; it takes `shownOnly`, which the tabs and the views pass. And the check for a shown diagram,
+  `getClientRects()`, reads a box for content Chrome hides in a closed `<details>` (it uses `content-visibility`), so
+  it now asks `checkVisibility()` first. In 4.x that check served only containers already shown. And the report's
+  keys for moving between scenarios took the down and up arrows from every dropdown on the page (4.x too, in the
+  changelog's Fixed): the keyboard handler leaves a `select` alone.
+  Measured with `checks/style-parity.js` (surface 6, the tools line, and 9b, the table, added; a pick can name the
+  branch's selector where its classes differ): 3 differences at 1,400 px in Chrome and Firefox, light and dark, all
+  deliberate (the two bands above; the fold label's line height is 16 px, as the type pass gave the sort label, where
+  the preview's later rule inherited 17.05), plus at 700 and 400 px the fold groups' and the sort's margins from the
+  phone order. The table's figures take the sans with tabular figures, as the preview's type pass set them.
+  Tests: core `FeaturesToolsTests` (the line's order, the views' markup, the table as the Summary view after the run
+  band, `FeaturesSummaryOpen`, the column groups, the rows and cards in one order, the sort's options by column with
+  and without durations, the seeded fold state, the gear and the zones, a page without the table; 10 of 11 failed
+  before, the 11th pins the order the pairing relies on), `CollapseExpandAllReportTests` rewritten for the fold
+  groups, and the pins of the old buttons and the bare `#report-content` tag in `ToggleDefaultsMarkupTests`,
+  `ReportTabsTests`, `HistoryHtmlTests`, `ComponentDiagramReportTests` and `StylesheetRulesTests` (the violet theme's
+  hover list; its two old selectors renamed until S13); Playwright `FeaturesToolsTests` (the views and what hides with
+  the cards, the keys, the sort over cards and rows with two features of one name, the time sorts of a table without
+  steps, a column sort cleared by the sort, a row opening its card by click and by Enter, expanding the scenarios
+  opening their features, Next Failure from the Summary view, the phone's gear, the Features tab drawing only what
+  shows, a dropdown's arrow keys; the last failed with the keyboard guard reverted, and the drawing test failed with
+  `shownOnly` alone until `checkVisibility`). `PlaywrightTestBase` has `FoldAllAsync` and four helpers, which
+  `ExpandFirstScenarioWithDiagram` and the 20 files that clicked the old buttons by label now use; the label-flip
+  tests (`ReportToolbarTests`, `ToggleDefaultsTests`) check the dimmed state instead, the tests that opened the
+  Features Summary open the Summary view (`DurationPaintTests` sorts the Duration group's Total), and
+  `MobileResponsiveTests` opens the gear before it measures the display settings. Found by the suite: the sticky bar's
+  test rounded the bar's height with `Math.Round`, which takes 128.5 to 128 where the page's `Math.round` gives 129; it
+  rounds the page's way.
+  Checks: the core suite passes 7,742 with 2 skipped; the full Playwright suite passes 1,104 with 28 skipped.

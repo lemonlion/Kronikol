@@ -14,8 +14,8 @@ public class StepTableToggleTests : PlaywrightTestBase
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Expand all to see step content
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         // The toggle button should exist with the param name
         var toggleBtn = Page.Locator("button.step-table-ref");
@@ -30,8 +30,8 @@ public class StepTableToggleTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithStepTableToggle("StepToggleHighlight.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         var toggleBtn = Page.Locator("button.step-table-ref").First;
         await toggleBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
@@ -59,8 +59,8 @@ public class StepTableToggleTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithStepTableToggle("StepToggleFade.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         var toggleBtn = Page.Locator("button.step-table-ref").First;
         await toggleBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
@@ -87,8 +87,8 @@ public class StepTableToggleTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithStepTableToggle("StepToggleData.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         var table = Page.Locator(".step-param-table[data-param='recipe']").First;
         await Expect(table).ToBeVisibleAsync();

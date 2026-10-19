@@ -100,6 +100,24 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
     protected Task OpenReportTabAsync(string key) => OpenReportTabAsync(Page, key);
 
     /// <summary>
+    /// Clicks the Features tools' expand or collapse button for <c>features</c> or <c>scenarios</c>. Since 5.0.0 each
+    /// level has an icon pair in place of the 4.x Expand All button whose label flipped (plans/OPTION_C_PLAN.md S4). A
+    /// button with nothing to do is dimmed with <c>aria-disabled</c>, which Playwright waits on before a click, so a
+    /// level already as asked (expanding the scenarios opens their features too) is left as it is.
+    /// </summary>
+    internal static async Task FoldAllAsync(IPage page, string noun, bool expand)
+    {
+        var button = page.Locator($"button.fold-{(expand ? "expand" : "collapse")}[data-fold='{noun}']");
+        if (await button.GetAttributeAsync("aria-disabled") == "true") return;
+        await button.ClickAsync();
+    }
+
+    protected Task ExpandAllFeaturesAsync() => FoldAllAsync(Page, "features", expand: true);
+    protected Task ExpandAllScenariosAsync() => FoldAllAsync(Page, "scenarios", expand: true);
+    protected Task CollapseAllFeaturesAsync() => FoldAllAsync(Page, "features", expand: false);
+    protected Task CollapseAllScenariosAsync() => FoldAllAsync(Page, "scenarios", expand: false);
+
+    /// <summary>
     /// A new page, failing when the browser has not opened it within <paramref name="timeoutMs"/>: Playwright's
     /// NewPageAsync has no timeout of its own, and a browser that stopped answering held a test, and every test
     /// queued behind it, for ever (<see cref="BrowserStallTests"/>).
@@ -211,8 +229,8 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
 
     protected async Task ExpandFirstScenarioWithDiagram()
     {
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
     }
 
     protected async Task<ILocator> WaitForDiagramSvg(int timeoutMs = 20000)

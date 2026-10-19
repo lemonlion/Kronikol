@@ -77,8 +77,8 @@ public class NonSecureOriginTests : PlaywrightTestBase
     private static async Task ExpandEveryScenario(IPage page)
     {
         await page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
-        await page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await PlaywrightTestBase.FoldAllAsync(page, "features", expand: true);
+        await PlaywrightTestBase.FoldAllAsync(page, "scenarios", expand: true);
     }
 
     private sealed class Drawn

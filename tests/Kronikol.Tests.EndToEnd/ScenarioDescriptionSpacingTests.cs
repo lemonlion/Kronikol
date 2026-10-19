@@ -17,8 +17,8 @@ public class ScenarioDescriptionSpacingTests : PlaywrightTestBase
 
     private async Task ExpandAll()
     {
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
     }
 
     /// <summary>Computed margin-top / margin-bottom / font-size of the nth description, in px.</summary>

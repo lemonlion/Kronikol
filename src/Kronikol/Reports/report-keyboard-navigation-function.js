@@ -1,5 +1,6 @@
 document.addEventListener('keydown', function(e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    // a field keeps its keys: until 5.0.0 a dropdown's arrow keys moved between scenarios instead of changing its value
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
     if (e.key === '/') {
         e.preventDefault();
         var sb = document.getElementById('searchbar');

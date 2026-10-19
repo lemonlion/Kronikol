@@ -7,7 +7,7 @@ namespace Kronikol.Tests.EndToEnd;
 /// <summary>
 /// What the report paints from its durations (plans/WARM_UP_PLAN.md R0). A report generated on a comma-decimal machine
 /// wrote the Scenario Timeline's widths as <c>width:12,3%</c> and the pie chart's lengths as <c>r="40,0"</c>, which a
-/// browser drops: every bar was painted at its 2 px minimum and the chart lost its rings. And the Features Summary
+/// browser drops: every bar was painted at its 2 px minimum and the chart lost its rings. And the features
 /// table sorted its duration columns on the number at the start of each cell's text, so <c>1m 5s</c> sorted as 1 and
 /// below <c>500ms</c>.
 /// </summary>
@@ -110,18 +110,20 @@ public class DurationPaintTests : PlaywrightTestBase
         // Written as "500ms", "1m 5s" and "2s": the number at the start of each is 500, 1 and 2.
         await Page.GotoAsync(Generate("SummarySort.html", [Feature("Short", 500), Feature("Long", 65_400), Feature("Middle", 1200, 800)]));
 
-        await Page.Locator("details.features-summary-details > summary").ClickAsync();
+        // 5.0.0: the table is the Features tab's Summary view, and the Duration group's first column reads Total, the
+        // last of the header row's Total columns (plans/OPTION_C_PLAN.md S4)
+        await Page.Locator("#view-summary").ClickAsync();
         var table = Page.Locator("table.feature-summary-table");
         await Expect(table).ToBeVisibleAsync();
 
         async Task<string[]> SortBy(string column)
         {
-            await table.Locator("th", new() { HasTextString = column }).First.ClickAsync();
+            await table.Locator("thead tr:last-child th", new() { HasTextString = column }).Last.ClickAsync();
             return await table.EvaluateAsync<string[]>("t => Array.from(t.tBodies[0].rows).map(r => r.cells[0].textContent)");
         }
 
-        Assert.Equal(["Long", "Middle", "Short"], await SortBy("Duration"));
-        Assert.Equal(["Short", "Middle", "Long"], await SortBy("Duration"));
+        Assert.Equal(["Long", "Middle", "Short"], await SortBy("Total"));
+        Assert.Equal(["Short", "Middle", "Long"], await SortBy("Total"));
         Assert.Equal(["Long", "Middle", "Short"], await SortBy("Longest"));
         Assert.Equal(["Long", "Middle", "Short"], await SortBy("Avg"));
         // The counts still sort as numbers, and the names as text.

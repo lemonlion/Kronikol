@@ -67,7 +67,7 @@ public class ExamplesBlockE2ETests : PlaywrightTestBase
     private async Task OpenGroup()
     {
         await Page.Locator("details.feature").First.WaitForAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
         var group = Page.Locator("details.scenario-parameterized").First;
         if (await group.GetAttributeAsync("open") == null)
             await group.Locator("summary").First.ClickAsync();

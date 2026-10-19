@@ -171,13 +171,13 @@ public class ParameterizedGroupTests : PlaywrightTestBase
 
     private async Task ExpandFeatures()
     {
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
     }
 
     private async Task ExpandAll()
     {
         await ExpandFeatures();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllScenariosAsync();
     }
 
     // ── Parameterized group renders ──

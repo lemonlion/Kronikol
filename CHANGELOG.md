@@ -20,6 +20,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **`kronikol ingest --no-diagnostics-section`** leaves the Diagnostics tab out of the HTML report. Every diagnostic
   is still on the labs page, in `TestRunReport.json` and printed by the command. `--diagnostics-section`, now the
   default, is still taken, so a command line written for 4.x runs unchanged.
+- **The features can be sorted.** A Sort dropdown at the right of the Features tab's tools orders the feature cards and
+  the features table alike: the report's own order, the feature's name A to Z, failures first, most scenarios, and,
+  for a run with durations, slowest total, slowest average and longest scenario.
 
 ### Changed (breaking)
 
@@ -58,6 +61,20 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   their count on it. Nothing of history is in the features unless `ShowScenarioHistory` asks, and a run that read no
   history and recorded no diagnostic still carries neither anywhere in the file. The labs page beside the report
   carries both, as before. `kronikol ingest` shows the Diagnostics tab by default too.
+- **The features table is the Features tab's Summary view.** Full and Summary, at the left of the Features tab's tools,
+  show the feature cards or the table, one at a time, and a row of the table opens its feature in the Full view, from
+  a click or from the keyboard (the name is a button). The table names its column groups, Scenarios, Steps and
+  Duration, in a row above its headings, and each group's first column reads Total (4.x: Scenarios, Steps and
+  Duration). `ReportToggleDefaults.FeaturesSummaryOpen` opens the Features tab on the Summary view (4.x: it opened
+  the Features Summary disclosure above the run's summary). A `CustomCss` sheet or a script that reads
+  `.features-summary-details` finds none.
+- **Expand and collapse all are icon buttons, a pair for features and a pair for scenarios,** in place of the Expand
+  All buttons whose labels flipped, so what a reader opened by hand can be closed without opening everything first. A
+  button with nothing to do is dimmed (and `aria-disabled`), and expanding the scenarios opens their features and
+  rules too. `ReportToggleDefaults.FeaturesExpanded` and `ScenariosExpanded` start the matching button dimmed where
+  4.x seeded its label. `toggle_expand_collapse` and the `.collapse-expand-all` class are gone.
+- **The report bar's display settings are grouped,** the payload details first, then the payload's format and width,
+  then the toggles, and on a phone (768 px wide or less) they show behind a Display settings gear.
 
 ### Fixed
 
@@ -65,6 +82,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   100%; a rate under 100 now rounds down and stops at 99%.
 - **A scenario skipped after an earlier failure is counted.** The summary and the ring left out the scenarios a
   framework skipped after a failure; they count as skipped.
+- **A dropdown keeps its arrow keys.** The report's keys for moving between scenarios took the down and up arrows from
+  every dropdown on the page (the payload format, width and line count among them), so a keyboard could not change
+  one with them.
 
 ## [4.26.9] - 2026-10-18
 

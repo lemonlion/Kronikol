@@ -14,8 +14,8 @@ public class SeparatedBackgroundRenderingTests : PlaywrightTestBase
     {
         await Page.GotoAsync(GenerateReportWithSeparatedBackground(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
     }
 
     [Fact]

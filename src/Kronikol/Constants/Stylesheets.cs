@@ -56,7 +56,7 @@ public class Stylesheets
     public const string VioletThemeStyleSheet =
         """
                 .feature { background-color: #DDD6FE; }
-                .features-summary-details { background-color: #DDD6FE; }
+                .features-table-view { background-color: #DDD6FE; }
                 .test-execution-summary { background-color: #DDD6FE; }
                 .ci-metadata { background-color: #DDD6FE; }
                 .filtering-box { background-color: #DDD6FE; }
@@ -71,7 +71,7 @@ public class Stylesheets
                     border-color: #A78BFA;
                 }
 
-                .export-btn:hover, .collapse-expand-all:hover, .percentile-btn:hover, .timeline-toggle:hover,
+                .export-btn:hover, .fold-btn:hover, .percentile-btn:hover, .timeline-toggle:hover,
                 .details-radio-btn:hover, .scenario-diagram-controls-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }
                 .diagram-toggle-btn:hover, .iflow-toggle-btn:hover { background: #EDE9FE; }
                 .dep-mode-toggle:hover, .cat-mode-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }

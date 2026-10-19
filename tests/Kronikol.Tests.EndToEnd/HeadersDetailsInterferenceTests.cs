@@ -150,8 +150,8 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
 
     private async Task ExpandScenario()
     {
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
     }
 
     private async Task<string> GetDataPlantuml() =>

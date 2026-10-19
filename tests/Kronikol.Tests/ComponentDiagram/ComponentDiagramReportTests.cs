@@ -508,9 +508,10 @@ public class ComponentDiagramReportTests : IDisposable
             componentDiagramPlantUml: plantUml);
 
         var content = File.ReadAllText(html);
-        // 5.0.0 (S3): the tabs script draws a panel's diagrams when the panel shows, as the toggle did
+        // 5.0.0 (S3): the tabs script draws a panel's diagrams when the panel shows, as the toggle did, and (S4) only
+        // the ones that show
         Assert.Contains("<script id=\"kronikol-report-tabs\">", content);
-        Assert.Contains("window._renderDiagramsInContainer(target)", content);
+        Assert.Contains("window._renderDiagramsInContainer(target, true)", content);
     }
 
     [Fact]

@@ -142,7 +142,8 @@ public class ReportTabsTests : PlaywrightTestBase
         Assert.True(Math.Abs(top) < 1, $"the bar's top is at {top} after scrolling");
         var height = await Page.Locator(".toolbar-row.report-nav").EvaluateAsync<double>("b => b.getBoundingClientRect().height");
         var navH = await Page.EvaluateAsync<string>("() => getComputedStyle(document.documentElement).getPropertyValue('--kron-nav-h').trim()");
-        Assert.Equal($"{Math.Round(height)}px", navH);
+        // rounded as the page's Math.round does: .5 up, where Math.Round's default takes it to the even number
+        Assert.Equal($"{Math.Round(height, MidpointRounding.AwayFromZero)}px", navH);
     }
 
     [Fact]

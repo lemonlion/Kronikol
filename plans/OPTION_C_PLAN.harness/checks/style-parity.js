@@ -19,6 +19,17 @@ const PICKS = {
       ['filter header', '.filtering-box-header'], ['filter title', '.filtering-box-header h2'], ['export row', '.filtering-box-export'], ['export button', '.filtering-box-export .export-btn']],
   5: [['bar', '.toolbar-row.report-nav'], ['tabs', '.report-tabs'], ['tab on', '.report-tab[aria-selected="true"]'], ['tab off', '.report-tab[aria-selected="false"]'],
       ['tab count', '.report-tab[aria-selected="true"] .tab-n'], ['tools', '.features-tools'], ['panels', '.report-panels']],
+  // a third element is the branch's selector where its markup names the thing differently
+  6: [['tools line', '.features-tools-line'], ['view switch', '.view-switch'], ['view on', '.view-btn[aria-selected="true"]'], ['view off', '.view-btn[aria-selected="false"]'],
+      ['fold group', '.k-fold-group', '.fold-group'], ['fold label', '.k-fold-label', '.fold-label'], ['fold button', '.k-fold-expand', '.fold-expand'],
+      ['fold idle', '.k-fold-btn[aria-disabled="true"]', '.fold-btn[aria-disabled="true"]'], ['spacer', '.tools-spacer'], ['sort group', '.sort-group'],
+      ['sort label', '.sort-label'], ['sort select', '#features-sort'], ['display settings', '.features-tools .toolbar-right']],
+  '9b': [['table card', '.features-table-view'], ['table wrapper', '.features-table-view .features-summary-table-wrapper'], ['table', '.feature-summary-table'],
+      ['group th', '.feature-summary-table tr.table-groups th:not(:first-child)'], ['group th start', '.feature-summary-table tr.table-groups th.grp-start'],
+      ['header th', '.feature-summary-table thead tr:last-child th:first-child'], ['header th num', '.feature-summary-table thead tr:last-child th:nth-child(2)'],
+      ['name td', '.feature-summary-table tbody tr:not(.failed) td:first-child'], ['num td', '.feature-summary-table tbody tr:not(.failed) td:nth-child(2)'],
+      ['grp td', '.feature-summary-table tbody tr:not(.failed) td.grp-start'], ['failed name td', '.feature-summary-table tbody tr.failed td:first-child'],
+      ['failed count td', '.feature-summary-table tbody tr.failed td:nth-child(4)']],
   0: [['body', 'body'], ['h1', 'h1'], ['jump', '.jump-to-failure'], ['top', '.back-to-top']],
   9: [['feature', 'details.feature'], ['feature summary', 'details.feature > summary'], ['feature failed summary', 'details.feature > summary.failed'],
       ['scenario', 'details.scenario'], ['scenario summary', 'details.scenario > summary'], ['scenario failed summary', 'details.scenario > summary.failed'],
@@ -38,17 +49,18 @@ const PICKS = {
 (async () => {
   const surfaces = surfaceList.split(',');
   const b = await pw[browserName].launch(browserName === 'chromium' ? { channel: 'chrome' } : { executablePath: 'C:/Users/cex/AppData/Local/ms-playwright/firefox-1511/firefox/firefox.exe' });
-  async function read(file) {
+  async function read(file, branch) {
     const ctx = await b.newContext(browserName === 'firefox' ? { viewport: null } : { viewport: { width: WIDTH, height: 900 } });
     await ctx.addInitScript(t => { try { localStorage.setItem('kronikol.theme', t); } catch (e) {} }, theme);
     const p = await ctx.newPage();
     await p.goto('file:///' + path.resolve(file).split(path.sep).join('/'));
     await p.waitForTimeout(2500);
-    const out = await p.evaluate(([picks, props]) => {
+    const out = await p.evaluate(([picks, props, branch]) => {
       // open every feature, rule and scenario and their steps, so closed details still have styles to read
       document.querySelectorAll('details.feature, details.rule, details.scenario, details.scenario-steps, details.scenario-background, details.failure-result').forEach(d => { d.open = true; });
       const res = {};
-      for (const [name, sel] of picks) {
+      for (const [name, previewSel, branchSel] of picks) {
+        const sel = branch && branchSel ? branchSel : previewSel;
         const el = document.querySelector(sel);
         if (!el) { res[name] = null; continue; }
         const cs = getComputedStyle(el);
@@ -58,11 +70,11 @@ const PICKS = {
         res[name] = { where: where ? where.id : '', v };
       }
       return res;
-    }, [surfaces.flatMap(s => PICKS[s] || []), PROPS]);
+    }, [surfaces.flatMap(s => PICKS[s] || []), PROPS, branch]);
     await ctx.close();
     return out;
   }
-  const a = await read(previewFile), c = await read(branchFile);
+  const a = await read(previewFile, false), c = await read(branchFile, true);
   let total = 0;
   for (const s of surfaces) for (const [name] of PICKS[s] || []) {
     if (!a[name] || !c[name]) { console.log(`[${s}] ${name}: ${!a[name] ? 'missing in preview' : ''} ${!c[name] ? 'missing in branch' : ''}`); continue; }

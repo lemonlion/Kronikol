@@ -164,7 +164,7 @@ public class NoteFormatDropdownTests : DiagramNotePlaywrightBase
     {
         await Page.GotoAsync(ReportTestHelper.GenerateReportWithJsonNotesInTwoScenarios(TempDir, OutputDir, "FormatDropdown_LazyScenario.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
 
         // Open and render ONLY the first scenario — the second stays lazy.
         await Page.Locator("details.scenario").Nth(0).Locator("summary").First.ClickAsync();
@@ -202,7 +202,7 @@ public class NoteFormatDropdownTests : DiagramNotePlaywrightBase
     {
         await Page.GotoAsync(ReportTestHelper.GenerateReportWithJsonNotesInTwoScenarios(TempDir, OutputDir, "FormatDropdown_LazyInScenario.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
 
         // Open the first scenario and issue its scenario-level YAML command
         // BEFORE its diagram has been decompressed — _noteFormatPreference is

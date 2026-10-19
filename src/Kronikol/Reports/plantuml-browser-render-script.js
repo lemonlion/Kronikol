@@ -1540,14 +1540,18 @@
         }, { rootMargin: '200px' });
         // An on-demand page draws only what is shown: a view still hidden is left to the observer, which draws it when
         // it appears, so a row or a toggle that renders a whole container never fetches the engine for a hidden tab.
-        function isShown(el) { return el.getClientRects().length > 0; }
+        // checkVisibility first: Chrome hides a closed <details>' content with content-visibility, where getClientRects
+        // still reports a box, so a diagram in a closed scenario read as shown (5.0.0)
+        function isShown(el) { return typeof el.checkVisibility === 'function' ? el.checkVisibility() : el.getClientRects().length > 0; }
         // decompressGzipBase64 comes from the always-included shared helper
         // (report-decompress-helper.js).
-        window._renderDiagramsInContainer = function(container) {
+        // shownOnly (5.0.0): draw only what shows, as a page that draws on demand always does. A tab or a view coming
+        // into sight asks for it: drawing everything it holds would queue every diagram in every closed scenario.
+        window._renderDiagramsInContainer = function(container, shownOnly) {
             if (!container) return;
             container.querySelectorAll('.plantuml-browser').forEach(function(el) {
                 if (el.dataset.queued) return;
-                if (_onDemand && !isShown(el)) return;
+                if ((_onDemand || shownOnly) && !isShown(el)) return;
                 el.dataset.queued = '1';
                 observer.unobserve(el);
                 enqueueElement(el);

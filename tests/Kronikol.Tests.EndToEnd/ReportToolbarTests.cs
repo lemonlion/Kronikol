@@ -5,7 +5,9 @@ public class ReportToolbarTests : PlaywrightTestBase
 {
     public ReportToolbarTests(PlaywrightFixture fixture) : base(fixture) { }
 
-    // ── Expand / Collapse All buttons ──
+    // ── Expand and collapse all: since 5.0.0 an icon pair per level (plans/OPTION_C_PLAN.md S4, D22) ──
+
+    private ILocator Fold(string action, string noun) => Page.Locator($"button.fold-{action}[data-fold='{noun}']");
 
     [Fact]
     public async Task Expand_all_features_opens_all_feature_details()
@@ -13,8 +15,7 @@ public class ReportToolbarTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ToolbarExpandFeatures.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        var expandBtn = Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" });
-        await expandBtn.ClickAsync();
+        await Fold("expand", "features").ClickAsync();
 
         var features = Page.Locator("details.feature");
         var count = await features.CountAsync();
@@ -29,11 +30,9 @@ public class ReportToolbarTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ToolbarCollapseFeatures.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        var btn = Page.Locator("button.collapse-expand-all").Nth(0);
-        await btn.ClickAsync();
-        await Expect(btn).ToContainTextAsync("Collapse");
+        await Fold("expand", "features").ClickAsync();
+        await Fold("collapse", "features").ClickAsync();
 
-        await btn.ClickAsync();
         var features = Page.Locator("details.feature");
         var count = await features.CountAsync();
         for (var i = 0; i < count; i++)
@@ -46,8 +45,7 @@ public class ReportToolbarTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ToolbarExpandScenarios.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await Fold("expand", "scenarios").ClickAsync();
 
         var scenarios = Page.Locator("details.scenario");
         var count = await scenarios.CountAsync();
@@ -62,12 +60,9 @@ public class ReportToolbarTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ToolbarCollapseScenarios.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        var btn = Page.Locator("button.collapse-expand-all").Nth(1);
-        await btn.ClickAsync();
-        await Expect(btn).ToContainTextAsync("Collapse");
+        await Fold("expand", "scenarios").ClickAsync();
+        await Fold("collapse", "scenarios").ClickAsync();
 
-        await btn.ClickAsync();
         var scenarios = Page.Locator("details.scenario");
         var count = await scenarios.CountAsync();
         for (var i = 0; i < count; i++)
@@ -75,17 +70,23 @@ public class ReportToolbarTests : PlaywrightTestBase
     }
 
     [Fact]
-    public async Task Expand_collapse_button_text_toggles()
+    public async Task A_fold_button_is_dimmed_while_it_has_nothing_to_do()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarToggleText.html"));
+        await Page.GotoAsync(GenerateReport("ToolbarFoldIdle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        var btn = Page.Locator("button.collapse-expand-all").Nth(0);
-        await Expect(btn).ToContainTextAsync("Expand");
-        await btn.ClickAsync();
-        await Expect(btn).ToContainTextAsync("Collapse");
-        await btn.ClickAsync();
-        await Expect(btn).ToContainTextAsync("Expand");
+        // nothing is open: collapsing has nothing to do
+        await Expect(Fold("expand", "features")).ToHaveAttributeAsync("aria-disabled", "false");
+        await Expect(Fold("collapse", "features")).ToHaveAttributeAsync("aria-disabled", "true");
+
+        await Fold("expand", "features").ClickAsync();
+        await Expect(Fold("expand", "features")).ToHaveAttributeAsync("aria-disabled", "true");
+        await Expect(Fold("collapse", "features")).ToHaveAttributeAsync("aria-disabled", "false");
+
+        // one closed by hand: both have something to do (item R17.2, no need to open everything before closing it)
+        await Page.Locator("details.feature > summary").First.ClickAsync();
+        await Expect(Fold("expand", "features")).ToHaveAttributeAsync("aria-disabled", "false");
+        await Expect(Fold("collapse", "features")).ToHaveAttributeAsync("aria-disabled", "false");
     }
 
     // ── Details radio buttons (Expanded / Collapsed / Truncated) ──
@@ -134,8 +135,8 @@ public class ReportToolbarTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReport("ToolbarLineSync.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         var selects = Page.Locator(".truncate-lines-select");
         var selectCount = await selects.CountAsync();

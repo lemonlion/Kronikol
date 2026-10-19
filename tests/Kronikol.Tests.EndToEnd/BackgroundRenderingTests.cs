@@ -14,8 +14,8 @@ public class BackgroundRenderingTests : PlaywrightTestBase
     {
         await Page.GotoAsync(GenerateReportWithBackground(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class BackgroundRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task The_combined_step_list_is_open_by_default_and_needs_no_extra_click()
     {
-        // Expand All Scenarios is wired to details.feature and details.scenario only, so the old
+        // Expanding all scenarios opens features, rules and scenarios only, so the old
         // Background Steps disclosure was never reachable from it. The combined list has no such dead end.
         await OpenReport("BgCollapsed.html");
 

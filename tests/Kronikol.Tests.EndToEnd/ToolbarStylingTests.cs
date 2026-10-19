@@ -86,14 +86,15 @@ public class ToolbarStylingTests : PlaywrightTestBase
         { true, Tint, TintBorder, ".dep-mode-toggle" },
         { true, Tint, TintBorder, ".cat-mode-toggle" },
         { true, Tint, TintBorder, ".percentile-btn" },
-        { true, Tint, TintBorder, ".collapse-expand-all" },
+        { true, Tint, TintBorder, ".fold-btn" },
         { true, Tint, TintBorder, ".export-btn" },
         { true, Tint, TintBorder, ".toolbar-right .details-radio-btn:not(.details-active)" },
         { false, BlueTint, BlueTintBorder, ".dependency-toggle" },
         { false, "rgb(220, 230, 245)", BlueTintBorder, ".dep-mode-toggle" },
         { false, "rgb(220, 230, 245)", BlueTintBorder, ".cat-mode-toggle" },
         { false, BlueTint, BlueTintBorder, ".percentile-btn" },
-        { false, BlueTint, BlueTintBorder, ".collapse-expand-all" },
+        // 5.0.0: expand and collapse are icon buttons with a transparent edge (plans/OPTION_C_PLAN.md S4)
+        { false, Hover, "rgba(0, 0, 0, 0)", ".fold-btn" },
         { false, Hover, "rgba(0, 0, 0, 0)", ".export-btn" }, // 5.0.0: a text button in the filter card (OPTION_C_PLAN S2)
         // 5.0.0: the Scenario Timeline toggle is a tab (plans/OPTION_C_PLAN.md S3); a tab not selected takes the hover
         // tint and has no border. The violet theme's tabs are S13's.
@@ -176,7 +177,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
     public async Task The_scenario_link_and_copy_button_take_the_themes_tint_when_hovered(bool violet, string tint)
     {
         await Open($"ScenarioLinks{violet}.html", violet);
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
 
         foreach (var selector in new[] { ".scenario-link", ".copy-scenario-name" })
         {

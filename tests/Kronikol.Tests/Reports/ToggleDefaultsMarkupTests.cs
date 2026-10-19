@@ -405,8 +405,10 @@ public class ToggleDefaultsMarkupTests
     {
         var content = Generate(t => t.FeaturesExpanded = true);
         Assert.Contains("<details class=\"feature\" open>", content);
-        Assert.Contains(">Collapse All Features</button>", content);
-        Assert.Contains(">Expand All Scenarios</button>", content);
+        // 5.0.0: the fold buttons are seeded dimmed where they have nothing to do (plans/OPTION_C_PLAN.md S4)
+        Assert.Contains("data-fold=\"features\" title=\"Expand all features\" aria-label=\"Expand all features\" aria-disabled=\"true\"", content);
+        Assert.Contains("data-fold=\"features\" title=\"Collapse all features\" aria-label=\"Collapse all features\" aria-disabled=\"false\"", content);
+        Assert.Contains("data-fold=\"scenarios\" title=\"Expand all scenarios\" aria-label=\"Expand all scenarios\" aria-disabled=\"false\"", content);
     }
 
     [Fact]
@@ -414,8 +416,10 @@ public class ToggleDefaultsMarkupTests
     {
         var content = Generate(t => t.ScenariosExpanded = true);
         Assert.Contains("<details class=\"scenario\" open", content);
-        Assert.Contains(">Collapse All Scenarios</button>", content);
-        Assert.Contains(">Expand All Features</button>", content);
+        // 5.0.0: the fold buttons are seeded dimmed where they have nothing to do (plans/OPTION_C_PLAN.md S4)
+        Assert.Contains("data-fold=\"scenarios\" title=\"Expand all scenarios\" aria-label=\"Expand all scenarios\" aria-disabled=\"true\"", content);
+        Assert.Contains("data-fold=\"scenarios\" title=\"Collapse all scenarios\" aria-label=\"Collapse all scenarios\" aria-disabled=\"false\"", content);
+        Assert.Contains("data-fold=\"features\" title=\"Expand all features\" aria-label=\"Expand all features\" aria-disabled=\"false\"", content);
     }
 
     [Fact]

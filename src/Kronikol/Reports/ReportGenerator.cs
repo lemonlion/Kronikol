@@ -1332,7 +1332,7 @@ public static class ReportGenerator
         var statusFilterFunction = LoadResource("report-status-filter-function.js");
 
         // Collapse/Expand All
-        var collapseExpandAllFunction = LoadResource("report-collapse-expand-all-function.js");
+        var featuresToolsScript = LoadResource("report-features-tools-script.js");
 
         var lightboxFunction = LoadResource("report-lightbox-function.js");
 
@@ -1515,7 +1515,7 @@ public static class ReportGenerator
                                 {{dependencyFilterFunction}}
                                 {{categoryFilterFunction}}
                                 {{statusFilterFunction}}
-                                {{collapseExpandAllFunction}}
+                                {{featuresToolsScript}}
                                 {{lightboxFunction}}
                                 {{toggleTableRefFunction}}
                                 {{sortTableFunction}}
@@ -1553,6 +1553,9 @@ public static class ReportGenerator
             body.Append($"<div class=\"custom-logo\">{customLogoHtml}</div>");
         body.Append($"<div class=\"title-line\"><h1>{System.Net.WebUtility.HtmlEncode(title)}</h1>{ThemeSwitchButton}</div>");
 
+        // The features table, the Features tab's Summary view (S4), and the column its duration group starts at.
+        var featureTable = new StringBuilder();
+        int? durationCol = null;
         if (includeTestRunData)
         {
             var numberOfFeatures = features.Length;
@@ -1564,32 +1567,40 @@ public static class ReportGenerator
             var failedScenarios = scenarios.Where(x => x.Result == ExecutionResult.Failed).ToArray();
             var overallStatus = failedScenarios.Any() ? "Failed" : "Passed";
 
-            // Feature summary table (collapsible, above execution summary)
+            // The features table (5.0.0, plans/OPTION_C_PLAN.md S4, D21): one row per feature with its counts and times,
+            // written in the Features tab beside the feature cards (the Summary view) in place of the 4.x collapsible
+            // Features Summary above the execution summary. Passed, Failed and Skipped repeat for scenarios and for steps,
+            // so a row above the headers names each group and the group's first column reads Total. The rows are in the
+            // cards' order, which report-features-tools-script.js relies on to pair a row with its card.
             var hasAnySteps = features.Any(f => f.Scenarios.Any(s => s.Steps is { Length: > 0 } || s.BackgroundSteps is { Length: > 0 }));
             var hasAnyDurations = features.Any(f => f.Scenarios.Any(s => s.Duration.HasValue));
             var nextCol = 5;
-            body.Append($"<details class=\"features-summary-details\"{(toggles.FeaturesSummaryOpen ? " open" : "")}><summary class=\"h2\">Features Summary</summary>");
-            body.Append("<div class=\"features-summary-table-wrapper\">");
-            body.Append("<table class=\"feature-summary-table\"><thead><tr>");
-            body.Append("<th onclick=\"sort_table(0)\">Feature</th>");
-            body.Append("<th onclick=\"sort_table(1)\">Scenarios</th>");
-            body.Append("<th onclick=\"sort_table(2)\">Passed</th>");
-            body.Append("<th onclick=\"sort_table(3)\">Failed</th>");
-            body.Append("<th onclick=\"sort_table(4)\">Skipped</th>");
+            featureTable.Append("<div class=\"features-summary-table-wrapper\">");
+            featureTable.Append("<table class=\"feature-summary-table\"><thead>");
+            featureTable.Append("<tr class=\"table-groups\"><th></th><th colspan=\"4\">Scenarios</th>");
+            if (hasAnySteps) featureTable.Append("<th class=\"grp-start\" colspan=\"4\">Steps</th>");
+            if (hasAnyDurations) featureTable.Append("<th class=\"grp-start\" colspan=\"3\">Duration</th>");
+            featureTable.Append("</tr><tr>");
+            featureTable.Append("<th onclick=\"sort_table(0)\">Feature</th>");
+            featureTable.Append("<th onclick=\"sort_table(1)\">Total</th>");
+            featureTable.Append("<th onclick=\"sort_table(2)\">Passed</th>");
+            featureTable.Append("<th onclick=\"sort_table(3)\">Failed</th>");
+            featureTable.Append("<th onclick=\"sort_table(4)\">Skipped</th>");
             if (hasAnySteps)
             {
-                body.Append($"<th onclick=\"sort_table({nextCol++})\">Steps</th>");
-                body.Append($"<th class=\"step-status-header\" onclick=\"sort_table({nextCol++})\">Passed</th>");
-                body.Append($"<th class=\"step-status-header\" onclick=\"sort_table({nextCol++})\">Failed</th>");
-                body.Append($"<th class=\"step-status-header\" onclick=\"sort_table({nextCol++})\">Skipped</th>");
+                featureTable.Append($"<th class=\"grp-start\" onclick=\"sort_table({nextCol++})\">Total</th>");
+                featureTable.Append($"<th class=\"step-status-header\" onclick=\"sort_table({nextCol++})\">Passed</th>");
+                featureTable.Append($"<th class=\"step-status-header\" onclick=\"sort_table({nextCol++})\">Failed</th>");
+                featureTable.Append($"<th class=\"step-status-header\" onclick=\"sort_table({nextCol++})\">Skipped</th>");
             }
             if (hasAnyDurations)
             {
-                body.Append($"<th onclick=\"sort_table({nextCol++})\">Duration</th>");
-                body.Append($"<th onclick=\"sort_table({nextCol++})\">Avg</th>");
-                body.Append($"<th onclick=\"sort_table({nextCol})\">Longest</th>");
+                durationCol = nextCol;
+                featureTable.Append($"<th class=\"grp-start\" onclick=\"sort_table({nextCol++})\">Total</th>");
+                featureTable.Append($"<th onclick=\"sort_table({nextCol++})\">Avg</th>");
+                featureTable.Append($"<th onclick=\"sort_table({nextCol})\">Longest</th>");
             }
-            body.Append("</tr></thead><tbody>");
+            featureTable.Append("</tr></thead><tbody>");
 
             foreach (var feature in features)
             {
@@ -1599,12 +1610,13 @@ public static class ReportGenerator
                 var skippedSc = feature.Scenarios.Count(s => s.Result is ExecutionResult.Skipped or ExecutionResult.Bypassed or ExecutionResult.SkippedAfterFailure);
                 var featureHasFail = failedSc > 0;
 
-                body.Append($"<tr{(featureHasFail ? " class=\"failed\"" : "")}>");
-                body.Append($"<td>{System.Net.WebUtility.HtmlEncode(feature.DisplayName)}</td>");
-                body.Append($"<td>{totalSc}</td>");
-                body.Append($"<td>{passedSc}</td>");
-                body.Append($"<td>{failedSc}</td>");
-                body.Append($"<td>{skippedSc}</td>");
+                featureTable.Append($"<tr{(featureHasFail ? " class=\"failed\"" : "")}>");
+                // the name is a button: a row opens its feature in the Full view, from the keyboard as well
+                featureTable.Append($"<td><button type=\"button\" class=\"feature-open\">{System.Net.WebUtility.HtmlEncode(feature.DisplayName)}</button></td>");
+                featureTable.Append($"<td>{totalSc}</td>");
+                featureTable.Append($"<td>{passedSc}</td>");
+                featureTable.Append($"<td>{failedSc}</td>");
+                featureTable.Append($"<td>{skippedSc}</td>");
 
                 if (hasAnySteps)
                 {
@@ -1613,10 +1625,10 @@ public static class ReportGenerator
                         .ToArray();
                     var stepCount = CountStepsRecursive(allSteps);
                     var stepStatusCounts = CountStepsByStatusRecursive(allSteps);
-                    body.Append($"<td>{stepCount}</td>");
-                    body.Append($"<td>{stepStatusCounts.Passed}</td>");
-                    body.Append($"<td>{stepStatusCounts.Failed}</td>");
-                    body.Append($"<td>{stepStatusCounts.Skipped}</td>");
+                    featureTable.Append($"<td class=\"grp-start\">{stepCount}</td>");
+                    featureTable.Append($"<td>{stepStatusCounts.Passed}</td>");
+                    featureTable.Append($"<td>{stepStatusCounts.Failed}</td>");
+                    featureTable.Append($"<td>{stepStatusCounts.Skipped}</td>");
                 }
 
                 if (hasAnyDurations)
@@ -1627,17 +1639,16 @@ public static class ReportGenerator
                     var maxDuration = durations.Length > 0 ? durations.Max() : TimeSpan.Zero;
                     // The cell's text is rounded and mixes units ("500ms", "1m 5s"), so sort_table reads data-sort, the
                     // milliseconds: on the text, "1m 5s" sorted as 1, below "500ms", until 4.7.3.
-                    body.Append(CultureInfo.InvariantCulture, $"<td data-sort=\"{totalDuration.TotalMilliseconds:F0}\">{FormatDuration(totalDuration)}</td>");
-                    body.Append(CultureInfo.InvariantCulture, $"<td data-sort=\"{avgDuration.TotalMilliseconds:F0}\">{FormatDuration(avgDuration)}</td>");
-                    body.Append(CultureInfo.InvariantCulture, $"<td data-sort=\"{maxDuration.TotalMilliseconds:F0}\">{FormatDuration(maxDuration)}</td>");
+                    featureTable.Append(CultureInfo.InvariantCulture, $"<td class=\"grp-start\" data-sort=\"{totalDuration.TotalMilliseconds:F0}\">{FormatDuration(totalDuration)}</td>");
+                    featureTable.Append(CultureInfo.InvariantCulture, $"<td data-sort=\"{avgDuration.TotalMilliseconds:F0}\">{FormatDuration(avgDuration)}</td>");
+                    featureTable.Append(CultureInfo.InvariantCulture, $"<td data-sort=\"{maxDuration.TotalMilliseconds:F0}\">{FormatDuration(maxDuration)}</td>");
                 }
 
-                body.Append("</tr>");
+                featureTable.Append("</tr>");
             }
 
-            body.Append("</tbody></table>");
-            body.Append("</div>");
-            body.Append("</details>");
+            featureTable.Append("</tbody></table>");
+            featureTable.Append("</div>");
 
             // The run band (5.0.0, plans/OPTION_C_PLAN.md S2): the ring, the test execution summary and the CI zone on one
             // row, in place of the 4.x header row and its two tables; the filter box follows it on a row of its own.
@@ -1775,9 +1786,13 @@ public static class ReportGenerator
         var showTimelinePanel = toggles.ScenarioTimelineVisible && hasDurations;
         var showComponentPanel = toggles.ComponentDiagramVisible && hasComponentTab && !showTimelinePanel;
         var startTab = showTimelinePanel ? "timeline" : showComponentPanel ? "components" : "features";
+        // FeaturesSummaryOpen opens the Features tab on its Summary view (S4), where 4.x opened the summary's card.
+        var hasFeatureTable = featureTable.Length > 0;
+        var summaryStart = hasFeatureTable && toggles.FeaturesSummaryOpen;
 
         // Toolbar row: the tabs, then expand buttons left, Details/Headers right
-        body.Append(useTabs ? $"""<div class="toolbar-row report-nav{(startTab == "features" ? " on-features" : "")}">""" : """<div class="toolbar-row">""");
+        var tableMode = summaryStart ? " features-table-mode" : "";
+        body.Append(useTabs ? $"""<div class="toolbar-row report-nav{(startTab == "features" ? " on-features" : "")}{tableMode}">""" : $"""<div class="toolbar-row{tableMode}">""");
         if (useTabs)
         {
             body.Append("""<div class="report-tabs" role="tablist" aria-label="Report sections">""");
@@ -1788,18 +1803,29 @@ public static class ReportGenerator
             if (hasDiagnosticsTab) body.Append(ReportTab("diagnostics", "Diagnostics", startTab, diagnostics!.Count));
             body.Append("</div>");
         }
-        // The expand-all buttons flip by label, so a seeded-expanded start must seed the
-        // matching flip label ("Collapse All …") or the first click would be a no-op.
-        var featuresBtnLabel = toggles.FeaturesExpanded ? "Collapse All Features" : "Expand All Features";
-        var scenariosBtnLabel = toggles.ScenariosExpanded ? "Collapse All Scenarios" : "Expand All Scenarios";
-        // On a page with tabs the tools are the Features tab's, in a strip under the tabs that the other tabs hide.
+        // The Features tools (5.0.0, plans/OPTION_C_PLAN.md S4, D21, D22, D35): the Full and Summary views as tabs when
+        // the page has the features table; expand and collapse for features and for scenarios, each a pair of icon
+        // buttons dimmed while it has nothing to do (the seeded start says which, report-features-tools-script.js keeps
+        // it true); the sort; and on a phone the gear that shows the display settings. On a page with tabs they are the
+        // Features tab's, in a strip under the tabs that the other tabs hide.
         if (useTabs) body.Append("""<div class="features-tools">""");
-        body.Append($"""<div class="toolbar-left{(useTabs ? " features-tools-line" : "")}"><button class="collapse-expand-all" onclick="toggle_expand_collapse(this, 'details.feature', 'Expand All Features', 'Collapse All Features')">{featuresBtnLabel}</button><button class="collapse-expand-all" onclick="toggle_expand_collapse(this, 'details.scenario', 'Expand All Scenarios', 'Collapse All Scenarios')">{scenariosBtnLabel}</button>""");
+        body.Append($"""<div class="toolbar-left{(useTabs ? " features-tools-line" : "")}">""");
+        if (hasFeatureTable) body.Append(FeaturesViewSwitch(summaryStart));
+        body.Append(FoldGroup("features", features.Length, toggles.FeaturesExpanded));
+        body.Append(FoldGroup("scenarios", features.Sum(f => f.Scenarios.Length), toggles.ScenariosExpanded));
+        body.Append("""<span class="tools-spacer"></span>""");
+        if (hasFeatureTable) body.Append(FeaturesSortGroup(durationCol));
+        if (useTabs && isPlantUmlBrowser) body.Append(ToolsGear);
         body.Append("</div>");
-        body.Append("""<div class="toolbar-right">""");
+        body.Append("""<div class="toolbar-right" id="display-settings">""");
         if (isPlantUmlBrowser)
         {
+            // The display settings in zones (D30): what a note shows of its payload, then the payload's format and width,
+            // then the toggles for what the diagrams draw.
             body.Append(BuildDetailsRadio(toggles, scenarioLevel: false));
+            if (reportNoteFormatSelect.Length + reportNoteWidthSelect.Length > 0)
+                body.Append("""<span class="diagram-format">""").Append(reportNoteFormatSelect).Append(reportNoteWidthSelect).Append("</span>");
+            body.Append("""<span class="diagram-flags">""");
             body.Append(BuildFilterToggleButton("headers", toggles.HeadersShown, scenarioLevel: false));
             if (hasAssertionNotes)
                 body.Append(BuildFilterToggleButton("assertions", toggles.AssertionsShown, scenarioLevel: false));
@@ -1807,8 +1833,7 @@ public static class ReportGenerator
                 body.Append(BuildFilterToggleButton("steps", toggles.StepsShown, scenarioLevel: false));
             if (hasDatabaseParticipants)
                 body.Append(BuildFilterToggleButton("databases", toggles.DatabasesShown, scenarioLevel: false));
-            body.Append(reportNoteFormatSelect);
-            body.Append(reportNoteWidthSelect);
+            body.Append("</span>");
         }
         body.Append("</div>");
         if (useTabs) body.Append("</div>"); // the features tools
@@ -1994,7 +2019,14 @@ public static class ReportGenerator
             componentHtml = $"""<div id="component-diagram" class="component-diagram-section">{componentDiagramHtml}</div>""";
         }
 
-        body.Append("<div id=\"report-content\">");
+        if (hasFeatureTable)
+        {
+            body.Append("<div class=\"features-panel\">");
+            body.Append($"<div class=\"features-table-view\" id=\"features-table-view\" role=\"tabpanel\" aria-labelledby=\"view-summary\"{(summaryStart ? "" : " hidden")}>");
+            body.Append(featureTable).Append("</div>");
+            body.Append($"<div id=\"report-content\" role=\"tabpanel\" aria-labelledby=\"view-full\"{(summaryStart ? " hidden" : "")}>");
+        }
+        else body.Append("<div id=\"report-content\">");
         var paramGroupCounter = 0;
         foreach (var feature in features)
         {
@@ -2404,6 +2436,7 @@ public static class ReportGenerator
             body.Append("</details>");
         }
         body.Append("</div>");
+        if (hasFeatureTable) body.Append("</div>"); // the features panel
         body.Append("</div>"); // the Features tab's panel
         if (timelineHtml.Length > 0) body.Append(ReportPanel("timeline", startTab)).Append(timelineHtml).Append("</div>");
         if (componentHtml.Length > 0) body.Append(ReportPanel("components", startTab)).Append(componentHtml).Append("</div>");
@@ -2681,6 +2714,54 @@ public static class ReportGenerator
     /// <summary>A tab's panel: hidden unless its tab is the one selected.</summary>
     private static string ReportPanel(string key, string selected) =>
         $"<div class=\"report-panel\" id=\"panel-{key}\" role=\"tabpanel\" aria-labelledby=\"tab-{key}\" data-panel=\"{key}\"{(key == selected ? "" : " hidden")}>";
+
+    /// <summary>The Features tab's views, Full (the cards) and Summary (the features table), as tabs (S4, D21).</summary>
+    private static string FeaturesViewSwitch(bool summary) =>
+        "<div class=\"view-switch\" role=\"tablist\" aria-label=\"Features view\">"
+        + ViewTab("full", "Full", "report-content", "Each feature as a card with its scenarios", !summary)
+        + ViewTab("summary", "Summary", "features-table-view", "One table row per feature, with its counts and times", summary)
+        + "</div>";
+
+    private static string ViewTab(string key, string label, string panel, string title, bool selected) =>
+        $"<button type=\"button\" class=\"view-btn\" id=\"view-{key}\" role=\"tab\" aria-controls=\"{panel}\" aria-selected=\"{(selected ? "true" : "false")}\" tabindex=\"{(selected ? "0" : "-1")}\" data-view=\"{key}\" title=\"{title}\">{label}</button>";
+
+    /// <summary>
+    /// Expand and collapse all features, or all scenarios, as a label and two icon buttons (S4, D22, item R17.2). A button
+    /// with nothing to do is dimmed, not disabled, so it keeps its place in the tab order: expand while every one starts
+    /// open, collapse while none does, both when there are none.
+    /// </summary>
+    private static string FoldGroup(string noun, int count, bool expanded) =>
+        $"<span class=\"fold-group\" role=\"group\" aria-label=\"Expand or collapse all {noun}\"><span class=\"fold-label\" aria-hidden=\"true\">{noun}</span>"
+        + FoldButton("expand", noun, count == 0 || expanded, "<polyline points=\"4,6 8,2 12,6\"/><polyline points=\"4,10 8,14 12,10\"/>")
+        + FoldButton("collapse", noun, count == 0 || !expanded, "<polyline points=\"4,2 8,6 12,2\"/><polyline points=\"4,14 8,10 12,14\"/>")
+        + "</span>";
+
+    private static string FoldButton(string action, string noun, bool idle, string chevrons)
+    {
+        var name = $"{(action == "expand" ? "Expand" : "Collapse")} all {noun}";
+        return $"<button type=\"button\" class=\"fold-btn fold-{action}\" data-fold=\"{noun}\" title=\"{name}\" aria-label=\"{name}\" aria-disabled=\"{(idle ? "true" : "false")}\">"
+            + "<svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\">"
+            + chevrons + "</svg></button>";
+    }
+
+    /// <summary>
+    /// The sort for the feature cards and the table's rows alike (S4, D21). Report order is the order the page is written
+    /// in; each other option names the table column it sorts on, so a report without step or duration columns offers
+    /// only what it has (the preview sorted on fixed column numbers, and called the report's own order Feature A-Z).
+    /// </summary>
+    private static string FeaturesSortGroup(int? durationCol)
+    {
+        var options = new StringBuilder("<option value=\"order\">Report order</option><option value=\"name\" data-col=\"0\">Feature A–Z</option>"
+            + "<option value=\"failed\" data-col=\"3\">Failures first</option><option value=\"scenarios\" data-col=\"1\">Most scenarios</option>");
+        if (durationCol is { } d)
+            options.Append(CultureInfo.InvariantCulture, $"<option value=\"duration\" data-col=\"{d}\">Slowest total</option><option value=\"average\" data-col=\"{d + 1}\">Slowest average</option><option value=\"longest\" data-col=\"{d + 2}\">Longest scenario</option>");
+        return "<label class=\"sort-group\"><span class=\"sort-label\">Sort</span><select id=\"features-sort\" class=\"sort-select\" aria-label=\"Sort features\" title=\"The order the features are listed in\">"
+            + options + "</select></label>";
+    }
+
+    /// <summary>On a phone, the gear that shows the report bar's display settings (S4, D35).</summary>
+    private const string ToolsGear =
+        "<button type=\"button\" class=\"tools-gear\" aria-label=\"Display settings\" title=\"Display settings\" aria-expanded=\"false\" aria-controls=\"display-settings\">\u2699</button>";
 
     /// <summary>
     /// The run band (5.0.0, plans/OPTION_C_PLAN.md S2, D3): the ring, then the test execution summary (status, when,
