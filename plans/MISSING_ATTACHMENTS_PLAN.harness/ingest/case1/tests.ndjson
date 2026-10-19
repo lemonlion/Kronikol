@@ -1,0 +1,8 @@
+{"event":"start","testId":"t1","testName":"checkout shows a receipt","feature":"checkout.spec.ts","timestamp":"2026-10-19T10:00:00Z"}
+{"event":"step","testId":"t1","text":"open the checkout","timestamp":"2026-10-19T10:00:00.5Z","durationMs":500,"status":"passed"}
+{"event":"attachment","testId":"t1","name":"present.png","path":"<scratch>/ingest-repro/case1/base/present.png","mediaType":"image/png"}
+{"event":"attachment","testId":"t1","name":"missing-absolute.png","path":"C:/nowhere/test-results/a-retry1/test-failed-1.png","mediaType":"image/png"}
+{"event":"attachment","testId":"t1","name":"missing-relative.png","path":"tests/test-results/a-retry1/test-failed-2.png","mediaType":"image/png"}
+{"event":"attachment","testId":"t1","name":"prefixed.png","path":"attachments/gone.png","mediaType":"image/png"}
+{"event":"attachment","testId":"t1","name":"blank","path":"","mediaType":"image/png"}
+{"event":"end","testId":"t1","status":"failed","durationMs":9000,"error":"expected 1 got 2","timestamp":"2026-10-19T10:00:09Z"}

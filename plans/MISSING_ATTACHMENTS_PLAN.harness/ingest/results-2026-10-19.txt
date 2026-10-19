@@ -1,0 +1,36 @@
+Kronikol.Tool 4.27.0 from nuget.org, installed into a scratch folder:
+  dotnet tool install --tool-path ./tool Kronikol.Tool --version 4.27.0
+Windows 11, 2026-10-19. Each case folder holds tests.ndjson and an empty captures/none.ndjson (ingest refuses a
+captures folder with no *.ndjson or *.jsonl in it). The absolute paths in the case files point into the scratch
+folder (<scratch>); substitute your own before rerunning. Read through Failures.md and kronikol query only.
+
+case1: kronikol ingest ./captures --tests ./tests.ndjson -o ./out --attachments-base ./base   (base/present.png exists)
+  exit 0
+  out/attachments/: present.png
+  Failures.md:
+    - present.png — `attachments/present.png`
+    - missing-absolute.png — `C:/nowhere/test-results/a-retry1/test-failed-1.png`
+    - missing-relative.png — `<scratch>\ingest-repro\case1\base\tests\test-results\a-retry1\test-failed-2.png`
+    - prefixed.png — `<scratch>\ingest-repro\case1\base\attachments\gone.png`
+    (the blank-path record is not listed at all)
+  query summary: Diagnostics (1): HistoryUnavailable ×1 (nothing about attachments)
+  query failures: no ! line; "attachment: missing-absolute.png → C:\nowhere\test-results\a-retry1\test-failed-1.png", and so on
+  ingest console: nothing about attachments
+  Note: a tests-file path "attachments/gone.png" is made absolute against --attachments-base by FeatureSynthesizer
+  before the copier sees it, so the copier's attachments/ branch (F2) never applies to a tests-file record.
+
+case2: kronikol ingest ./captures --tests ./tests.ndjson -o ./out   (path "shot\u0000.png")
+  exit 127 (Git Bash), no report written
+  Unhandled exception. System.ArgumentException: Null character in path.
+     at Kronikol.Ingestion.FeatureSynthesizer.ResolveAttachmentPath(...) FeatureSynthesizer.cs:line 373
+     at Kronikol.Ingestion.FeatureSynthesizer.ApplyAttachments(...) FeatureSynthesizer.cs:line 325
+     at Kronikol.Ingestion.FeatureSynthesizer.Build(...) FeatureSynthesizer.cs:line 217
+     at Kronikol.Ingestion.IngestPipeline.RunCore(...) IngestPipeline.cs:line 501
+     at Kronikol.Ingestion.IngestPipeline.Run(...) IngestPipeline.cs:line 385
+
+case3: kronikol ingest ./captures --tests ./tests.ndjson -o ./out --clean-attachments   (out/attachments/pre.png
+       existed before the run, and the capture points at it)
+  exit 0
+  out/attachments/: empty (the file was deleted before the copier ran)
+  Failures.md: - pre.png — `<scratch>/ingest-repro/case3/out/attachments/pre.png`
+  query summary: HistoryUnavailable ×1 only; no diagnostic about the deleted file

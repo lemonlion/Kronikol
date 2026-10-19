@@ -1,0 +1,3 @@
+{"event":"start","testId":"t3","testName":"a capture pointing into the cleaned folder","feature":"clean.spec.ts","timestamp":"2026-10-19T10:00:00Z"}
+{"event":"attachment","testId":"t3","name":"pre.png","path":"<scratch>/ingest-repro/case3/out/attachments/pre.png","mediaType":"image/png"}
+{"event":"end","testId":"t3","status":"failed","durationMs":1000,"error":"boom","timestamp":"2026-10-19T10:00:01Z"}

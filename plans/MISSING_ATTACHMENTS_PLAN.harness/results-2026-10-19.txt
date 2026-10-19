@@ -1,0 +1,6 @@
+# 2026-10-19, Windows 11, .NET SDK 10.0.300. P = the probe folder. Each line: working directory | AppContext.BaseDirectory | how launched.
+cwd=P\proj\bin\Debug\net10.0 | base=P\proj\bin\Debug\net10.0\ | via=dotnet test (VSTest) from parent
+cwd=P\proj\bin\Debug\net10.0 | base=P\proj\bin\Debug\net10.0\ | via=dotnet run from project dir
+cwd=P\proj\bin\Debug\net10.0 | base=P\proj\bin\Debug\net10.0\ | via=exe from parent
+cwd=P\tunit\bin\Debug\net10.0 | base=P\tunit\bin\Debug\net10.0\ | via=TUnit dotnet run from project dir
+cwd=P\tunit\bin\Debug\net10.0 | base=P\tunit\bin\Debug\net10.0\ | via=TUnit exe from parent

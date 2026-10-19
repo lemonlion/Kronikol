@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EXTRA: sets NUnit's WorkDirectory (TestContext.WorkDirectory) to a folder that is not the binary folder. -->
+<RunSettings>
+  <NUnit>
+    <WorkDirectory><scratch>\cwdprobe2\elsewhere\nunit-workdir</WorkDirectory>
+  </NUnit>
+</RunSettings>

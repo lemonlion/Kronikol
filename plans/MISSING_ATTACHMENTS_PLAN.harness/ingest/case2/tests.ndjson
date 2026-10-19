@@ -1,0 +1,3 @@
+{"event":"start","testId":"t2","testName":"a nul path","feature":"nul.spec.ts","timestamp":"2026-10-19T10:00:00Z"}
+{"event":"attachment","testId":"t2","name":"nul.png","path":"shot\u0000.png","mediaType":"image/png"}
+{"event":"end","testId":"t2","status":"failed","durationMs":1000,"error":"boom","timestamp":"2026-10-19T10:00:01Z"}

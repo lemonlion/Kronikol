@@ -1,0 +1,14 @@
+Run: dotnet run probe.cs (from this folder), 2026-10-19, Windows 11 (10.0.26200), .NET 10.0.11, SDK 10.0.300.
+
+OS: Microsoft Windows 10.0.26200, .NET 10.0.11
+File.Copy onto itself (overwrite): IOException: The process cannot access the file '<temp>\kronikol-pathprobe-<guid>\shot.png' because it is being used by another process.
+  length after: 5
+GetFullPath with NUL, cwd base: ArgumentException: Null character in path.
+GetFullPath relative base: ArgumentException: Basepath argument is not fully qualified. (Parameter 'basePath')
+GetFullPath pipe in name: OK -> <temp>\kronikol-pathprobe-<guid>\a|b.png
+File.Exists with NUL: OK -> False
+IsPathRooted of a Windows path: OK -> True
+Uri.EscapeDataString of a name: OK -> shot%231%2050%25.png
+
+Not measured: the same probe on Linux. (.NET on Linux reads only a path starting with '/' as rooted, so
+IsPathRooted of a Windows path is false there; that is the documented behaviour, not a measurement.)
