@@ -101,8 +101,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   theme written against the 4.x rules or colours of these parts may no longer apply; set the tokens instead.
 - **Diagrams take Option C's look.** A sequence diagram starts with flat boxes, participants with rounded corners and
   thin edges, thin lifelines and note edges, and messages centred over their arrows, and, where a browser engine draws
-  it (BrowserJs and NodeJs rendering), the system's own font; component diagrams and their diffs drawn by those engines
-  take the font too. A diagram drawn with a `PlantUmlTheme` leaves the look out and keeps the theme's.
+  it (BrowserJs and NodeJs rendering), the system's own font; component diagrams and their diffs drawn by those
+  engines take the font too. A diagram drawn with a `PlantUmlTheme` leaves the look out and keeps the theme's. Where
+  the page draws a diagram, every step bar is a rectangle with its label in bold, in place of the black hexagon.
 - **A service is drawn as a box.** `DependencyPalette.GetSequenceShape(DependencyType.HttpApi)` returns `participant`,
   which was `entity`, and a caller after the first that has no category is a `participant` too: a service reads as a
   box among the participants around it, not a circle on a line.
@@ -111,6 +112,7 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   participant colours on, its participant. A component diagram's database box is `#0B6C75` with a `#09616A` edge, a
   shade deeper, so its white name reads at 6.15:1. `DependencyColors` still overrides it.
 - **A step bar's table or doc string ends at its last row.** The blank line under it is gone; the one above stays.
+  A report written before 5.0.0 draws that way too where the page draws its diagrams.
 - **The dependency filter shows a scenario with any of the chosen dependencies by default, as the category (tag) filter
   does.** `ReportToggleDefaults.DependencyFilterMode` defaults to `FilterCombinationMode.Or` (4.x: `And`, a scenario
   with all of them), and the mode button starts on OR. A report that wants the 4.x behaviour sets

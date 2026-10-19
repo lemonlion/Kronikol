@@ -446,9 +446,30 @@
         }
 
         // --- the shim -------------------------------------------------------------------------
+        // The page's half of a source's look (5.0.0, plans/OPTION_C_PLAN.md S10, P21 and P22), applied to what the
+        // engine draws and to the cache key, never to the source the page keeps and its filters, menus and notes read:
+        // every step bar is drawn as a rectangle with its label in bold, which the role pass gives the band's colours,
+        // and a step bar carrying a table or a doc string drops the blank line under it that a report before 5.0.0
+        // wrote (the owner: no gap under the table).
+        var STEP_BAR = /^hnote across (<<stepDelimiter>>(?: #black:<color:white>|<<stepBody>>: ))/;
+        var STEP_BODY = /^hnote across <<stepDelimiter>><<stepBody>>:/;
+        function lookLines(lines) {
+            var out = null;
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                if (typeof line !== 'string' || line.indexOf('<<stepDelimiter>>') < 0) continue;
+                var drawn = STEP_BODY.test(line) ? line.replace(/(?:\\n)+(\r?)$/, '$1') : line;
+                drawn = drawn.replace(STEP_BAR, 'rnote across $1<b>');
+                if (drawn !== line) { if (!out) out = lines.slice(); out[i] = drawn; }
+            }
+            return out || lines;
+        }
+        function lookSource(source) {
+            return source.indexOf('<<stepDelimiter>>') < 0 ? source : lookLines(source.split('\n')).join('\n');
+        }
         function shimRender(lines, id, opts) {
             start();
-            lines = normalizeLines(lines);
+            lines = lookLines(normalizeLines(lines));
             var key = lines.join('\n');
             var target = { el: id ? document.getElementById(id) : null, id: id || null, opts: opts || null };
             if (engineError) { writeFailure(target, key, 'PlantUML engine unavailable: ' + (engineError.message || engineError)); return; }
@@ -472,6 +493,7 @@
             for (var i = 0; i < sources.length; i++) {
                 var src = sources[i];
                 if (typeof src !== 'string' || !src) continue;
+                src = lookSource(src);
                 if (cache.has(src) || inflightByKey[src]) continue;
                 var job = newJob(src, src.split('\n'), []);
                 inflightByKey[src] = job;

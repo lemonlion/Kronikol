@@ -650,3 +650,15 @@ decision of the owner's, not part of this plan.
   Checks: the classes S10a touches pass on the branch (core 1,328: PlantUml, ComponentDiagram, PlantUmlBrowser, the
   ingest and payload readers, the Setup and dependency filters; Playwright `StepTableBarTests` 3); the full suites run
   at the end of S10, as the machine was another session's for its own full runs.
+- 2026-10-19, S10b-1: the render shim's half of a source's look (P21, P22 for older sources; the preview's bands
+  lever). The shim draws every step bar as a rectangle (`rnote across`) with its label in bold, which the role pass
+  gives the band's colours, and drops the blank line under a step bar's table or doc string that a report before 5.0.0
+  wrote. It rewrites what the engine draws and the cache key, in render and in prefetch, and never the source the page
+  keeps, which its filters, menus and notes read. As the inventory recommended, the rectangle stays a rewrite in the
+  page: emitted from C#, every reader of step bars (the strips, `stripSetup`'s rule, the statement limits, the ingest
+  records) would need two shapes, and older sources would still hold the hexagon.
+  Tests: Playwright `DiagramLookShimTests` (new, 3: the bars drawn as rectangles with a bold label and the older bar's
+  blank line not drawn, each failing before; the page keeping the report's own source). Mutations: 3 of 3 killed
+  (`checks/mutate-s10b-a.py`).
+  Checks: Playwright `DiagramLookShimTests`, `StepTableBarTests`, `FilteredMarkerTests` and
+  `EventsAndSetupToggleTests` pass (13); the full suites run at the end of S10.
