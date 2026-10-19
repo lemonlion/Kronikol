@@ -765,17 +765,5 @@ public class CapturedTextEscapeTests
         Headers: [("Content-Type", contentType)], ServiceName: "Orders API", CallerName: "Caller", Type: RequestResponseType.Response,
         TraceId: Guid.NewGuid(), RequestResponseId: Guid.NewGuid(), TrackingIgnore: false, StatusCode: status);
 
-    internal static bool NodeIsAvailable()
-    {
-        try
-        {
-            using var process = Process.Start(new ProcessStartInfo("node", "--version") { RedirectStandardOutput = true, UseShellExecute = false });
-            process!.WaitForExit(10_000);
-            return process.ExitCode == 0;
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    internal static bool NodeIsAvailable() => NodeProbe.IsAvailable;
 }

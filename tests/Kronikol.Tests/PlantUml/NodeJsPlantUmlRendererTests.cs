@@ -9,25 +9,7 @@ namespace Kronikol.Tests.PlantUml;
 
 public class NodeJsPlantUmlRendererTests
 {
-    internal static bool IsNodeAvailable()
-    {
-        try
-        {
-            var psi = new ProcessStartInfo("node", "--version")
-            {
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            using var p = Process.Start(psi);
-            p?.WaitForExit(5000);
-            return p?.ExitCode == 0;
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    internal static bool IsNodeAvailable() => NodeProbe.IsAvailable;
 
     [Fact]
     [Trait("Category", "Integration")]

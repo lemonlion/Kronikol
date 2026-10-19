@@ -38,17 +38,7 @@ public class OnDemandRenderingTests : PlaywrightTestBase
         @enduml
         """;
 
-    private static readonly Lazy<bool> NodeAvailable = new(() =>
-    {
-        try
-        {
-            using var p = Process.Start(new ProcessStartInfo("node", "--version")
-            { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true });
-            p?.WaitForExit(5000);
-            return p?.ExitCode == 0;
-        }
-        catch { return false; }
-    });
+    private static readonly Lazy<bool> NodeAvailable = new(() => NodeAvailability.IsAvailable);
 
     private readonly List<string> _engineRequests = [];
 

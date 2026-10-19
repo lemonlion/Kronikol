@@ -20,17 +20,7 @@ public class NodeJsSvgFidelityTests : PlaywrightTestBase
         await ExpandFirstScenarioWithDiagram();
     }
 
-    private static readonly Lazy<bool> NodeAvailable = new(() =>
-    {
-        try
-        {
-            using var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("node", "--version")
-            { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true });
-            p?.WaitForExit(5000);
-            return p?.ExitCode == 0;
-        }
-        catch { return false; }
-    });
+    private static readonly Lazy<bool> NodeAvailable = new(() => NodeAvailability.IsAvailable);
 
     [Fact]
     public async Task An_xml_body_paints_its_tags_as_text()

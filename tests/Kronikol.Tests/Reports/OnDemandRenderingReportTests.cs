@@ -31,17 +31,7 @@ public class OnDemandRenderingReportTests : IDisposable
         try { Directory.Delete(_dir, true); } catch { /* best effort */ }
     }
 
-    private static readonly Lazy<bool> NodeAvailable = new(() =>
-    {
-        try
-        {
-            using var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("node", "--version")
-            { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true });
-            p?.WaitForExit(5000);
-            return p?.ExitCode == 0;
-        }
-        catch { return false; }
-    });
+    private static readonly Lazy<bool> NodeAvailable = new(() => NodeProbe.IsAvailable);
 
     private const string ComponentSource = "@startuml\nleft to right direction\nrectangle \"OrdersApi\" as OrdersApi\nrectangle \"StockApi\" as StockApi\nOrdersApi --> StockApi\n@enduml";
 

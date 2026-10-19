@@ -6,11 +6,19 @@ namespace Kronikol.Tests;
 /// <summary>Runs small JavaScript drivers under the machine's <c>node</c> (tests skip when it is missing).</summary>
 internal static class NodeProbe
 {
-    private static readonly Lazy<bool> Available = new(() =>
+    private static readonly Lazy<bool> Available = new(() => Answers("--version", TimeSpan.FromMinutes(1)));
+
+    /// <summary>
+    /// Whether <c>node arguments</c> exits with 0 within <paramref name="wait"/>; a node still running then is stopped and
+    /// does not count. A loaded machine can take seconds to start node, so the run's probe waits a minute: waiting five
+    /// seconds and then reading the exit code of a process still running threw, which read as "no node", and every Node
+    /// test of a busy run skipped.
+    /// </summary>
+    internal static bool Answers(string arguments, TimeSpan wait)
     {
         try
         {
-            var psi = new ProcessStartInfo("node", "--version")
+            var psi = new ProcessStartInfo("node", arguments)
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -18,14 +26,21 @@ internal static class NodeProbe
                 CreateNoWindow = true
             };
             using var p = Process.Start(psi);
-            p?.WaitForExit(5000);
-            return p?.ExitCode == 0;
+            if (p is null) return false;
+            _ = p.StandardOutput.ReadToEndAsync();
+            _ = p.StandardError.ReadToEndAsync();
+            if (!p.WaitForExit(wait))
+            {
+                try { p.Kill(entireProcessTree: true); } catch { }
+                return false;
+            }
+            return p.ExitCode == 0;
         }
         catch
         {
             return false;
         }
-    });
+    }
 
     public static bool IsAvailable => Available.Value;
 

@@ -766,3 +766,16 @@ decision of the owner's, not part of this plan.
   Checks: the S10 classes the fixes touch pass (34: `DiagramThemeColoursTests`, `DiagramRolesTests`,
   `DiagramExportLookTests`, `DiagramCentringTests`, `DiagramLinkHoverTests`, `ComponentDiagramPageTests`); the full
   suites run next, at the end of S10.
+- 2026-10-19, S10's full suites, at the S10b-3 follow-up (`2c39cba2`): the core suite passes 7,755 with 45 skipped,
+  and the full Playwright suite passes 1,217 with 28 skipped (the 28 of S9c's run). The core suite's skips were 2 in
+  S9c's run: all 43 more were Node tests (40 in three classes, one each in three more), skipped because the test
+  projects' node probe (`tests/Kronikol.Tests/NodeProbe.cs` and five copies, two of them in the end-to-end project)
+  waited five seconds for `node --version` and then read the exit code of a process still running, which threw, which
+  it took for "no node": on a loaded machine (the suite ran below normal priority beside three other sessions' builds)
+  every Node test of the run skipped without a failure. Fixed on the branch in the same commit as this entry
+  (`edits/fix-nodeprobe.py`): one probe per test project, waiting a minute and stopping a node that never answers,
+  every copy routed to it; `NodeProbeTests` (new, 3: a node that answers after six seconds still answers, one that
+  never answers is stopped and does not count, one that fails does not count) failed before at the missing member. The
+  Node classes then pass: the probe's facts and the nine classes that had skipped run 450 tests, every one passing and
+  none skipped; one mutation, the wait capped at five seconds again, is killed (`checks/mutate-nodeprobe.py`). The
+  probe is the same on main (a 4.x patch, for the owner).
