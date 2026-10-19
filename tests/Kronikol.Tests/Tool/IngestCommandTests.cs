@@ -537,6 +537,56 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("--payloads <plain|compressed>", usage.ToString());
     }
 
+    /// <summary>
+    /// <c>--data-file krkl</c> writes the report's data file compressed whole, <c>TestRunReport.krkl</c>, in place of the
+    /// JSON (<c>CompressTestRunReport</c>, plans/REPORT_FORMAT_PLAN.md section 5, R4 item 7): every payload as text whatever
+    /// <c>--payloads</c> says, and the pointer ingest prints names the file it wrote.
+    /// </summary>
+    [Fact]
+    public void Data_file_option_is_validated_and_writes_a_krkl()
+    {
+        var err = new StringWriter();
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--data-file", "zip"], new StringWriter(), err));
+        Assert.Contains("--data-file needs json or krkl", err.ToString());
+        Assert.Equal(2, IngestCommand.Run(["x.ndjson", "--data-file"], new StringWriter(), new StringWriter()));
+
+        const string testId = "3c3d4e5f60718293a4b5c6d7e8f90a1b";
+        var captures = Path.Combine(_dir, "captures-data-file");
+        Directory.CreateDirectory(captures);
+        var large = "{\"items\":[" + string.Join(",", Enumerable.Range(0, ReportPayloads.Threshold / 20).Select(i => $"{{\"sku\":\"W-{i}\",\"qty\":{i}}}")) + "]}";
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/stock", "web", "web",
+            requestContent: "", responseContent: large, statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+        var tests = Path.Combine(captures, "tests.ndjson");
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › data file", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+
+        var krkl = Path.Combine(_dir, "out-krkl");
+        var output = new StringWriter();
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", krkl, "--data-file", "krkl", "--payloads", "compressed"], output, err));
+
+        Assert.False(File.Exists(Path.Combine(krkl, "TestRunReport.json")), "the JSON was written beside the .krkl");
+        var decoded = ReportFile.Read(Path.Combine(krkl, "TestRunReport.krkl"));
+        Assert.StartsWith("{\"formatVersion\":3,", decoded, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"$z\"", decoded, StringComparison.Ordinal);
+        Assert.Contains("W-1", decoded, StringComparison.Ordinal);
+        Assert.Contains("TestRunReport.krkl", output.ToString(), StringComparison.Ordinal);
+        Assert.Contains("TestRunReport.krkl", RunManifest.TryRead(krkl)!.Files);
+
+        var json = Path.Combine(_dir, "out-json");
+        Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", json, "--data-file", "json"], new StringWriter(), err));
+        Assert.True(File.Exists(Path.Combine(json, "TestRunReport.json")));
+        Assert.False(File.Exists(Path.Combine(json, "TestRunReport.krkl")));
+
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("--data-file <json|krkl>", usage.ToString());
+    }
+
     [Fact]
     public void Ingest_command_usage_errors()
     {

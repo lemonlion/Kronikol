@@ -58,6 +58,7 @@ public static class MergeableReportMerger
             // lost its second copy's traffic above, which is the only duplication there ever was.
             Interactions = reports.SelectMany(r => r.Interactions).ToArray(),
             PayloadsCompressed = reports.Any(r => r.PayloadsCompressed),
+            FileCompressed = reports.Any(r => r.FileCompressed),
             StepPaths = MergeByScenario(reports.Select(r => r.StepPaths)),
             // Each shard's own marks, carried: never recomputed over the merged calls (plans/WARM_UP_PLAN.md 4.3).
             WarmUp = MergeWarmUp(reports.Select(r => r.WarmUp)),

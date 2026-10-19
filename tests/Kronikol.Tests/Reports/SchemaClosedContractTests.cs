@@ -47,19 +47,21 @@ public class SchemaClosedContractTests : IDisposable
     /// writer beneath it, because that is the only path on which the internal-flow segments and the
     /// whole-test-flow fragments are actually built — and those are the two shapes this is riskiest at.
     /// </remarks>
-    [Fact]
-    public void A_mergeable_report_validates_against_the_schema_written_beside_it()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void A_mergeable_report_validates_against_the_schema_written_beside_it(bool compressReport)
     {
         var testId = "closed-" + Guid.NewGuid().ToString("N");
         RequestResponseLogger.LogPair("Place order", testId, HttpMethod.Post,
             new Uri("http://orders/api/orders"), "OrdersApi", "Test", statusCode: HttpStatusCode.Created);
 
         ReportGenerator.CreateStandardReportsWithDiagrams(
-            OneFeature(testId), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, MergeableOptions(_dir));
+            OneFeature(testId), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, MergeableOptions(_dir) with { CompressTestRunReport = compressReport });
 
         var errors = SchemaValidationTests.Validate(
             Path.Combine(_dir, "TestRunReport.schema.json"),
-            Path.Combine(_dir, "TestRunReport.json"));
+            Path.Combine(_dir, compressReport ? "TestRunReport.krkl" : "TestRunReport.json"));
 
         Assert.True(errors.Count == 0,
             $"{errors.Count} schema violations in a mergeable report this build just wrote:\n  "

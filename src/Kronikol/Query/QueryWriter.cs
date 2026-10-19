@@ -346,6 +346,50 @@ internal sealed class QueryWriter
         }
     }
 
+    /// <summary>
+    /// The same for a file written as a stream (a compressed report): into a temporary file beside it, renamed over it once
+    /// whole so that no reader sees half of it, with the same answer for every way it fails.
+    /// </summary>
+    internal static bool TryWriteFile(string path, Action<Stream> write, TextWriter error, string flag = "--out")
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            error.WriteLine($"{flag} was given an empty path.");
+            return false;
+        }
+
+        string? temporary = null;
+        try
+        {
+            var full = Path.GetFullPath(path);
+            temporary = $"{full}.{Guid.NewGuid():N}.tmp";
+            using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+                write(stream);
+            File.Move(temporary, full, overwrite: true);
+            temporary = null;
+            return true;
+        }
+        catch (Exception exception) when (IsAWriteFailure(exception))
+        {
+            ReportWriteFailure(path, exception, error, flag);
+            return false;
+        }
+        finally
+        {
+            if (temporary is not null)
+            {
+                try
+                {
+                    File.Delete(temporary);
+                }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                {
+                    // Left behind: it ends .tmp, which nothing reads, publishes or lists.
+                }
+            }
+        }
+    }
+
     /// <summary>Every way writing a caller-named file fails without the process being at fault.</summary>
     internal static bool IsAWriteFailure(Exception exception) =>
         exception is IOException or UnauthorizedAccessException

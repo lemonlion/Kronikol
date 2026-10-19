@@ -42,6 +42,33 @@ public class SchemaValidationTests
     }
 
     /// <summary>
+    /// The same report written as <c>TestRunReport.krkl</c> validates as decoded: the keys left out because they held
+    /// nothing are optional, every key the schema requires is there, and no payload is a <c>compressedPayload</c>.
+    /// </summary>
+    [Fact]
+    public void A_krkl_validates_against_its_own_schema_as_decoded()
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var reportPath = ReportGenerator.GenerateTestRunReportData(
+            TestRunReportSchemaContractTests.RichFeatures(),
+            TestRunReportSchemaContractTests.Start,
+            TestRunReportSchemaContractTests.End,
+            $"SchemaValidKrkl_{suffix}.krkl", DataFormat.Json,
+            TestRunReportSchemaContractTests.Diagrams(),
+            TestRunReportSchemaContractTests.Logs(),
+            TestRunReportSchemaContractTests.Diagnostics(),
+            fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null, compressedFile: true);
+        var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"SchemaValidKrkl_{suffix}.schema.json", DataFormat.Json);
+
+        var errors = Validate(schemaPath, reportPath);
+
+        var json = ReportFile.Read(reportPath);
+        Assert.StartsWith("{\"formatVersion\":3,", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"$z\"", json, StringComparison.Ordinal);
+        Assert.True(errors.Count == 0, $"{errors.Count} schema violations in a .krkl this build just wrote:\n  " + string.Join("\n  ", errors.Take(25)));
+    }
+
+    /// <summary>
     /// A report written with <c>CompressTestRunReportPayloads</c> holds both forms of a payload, a string below
     /// <see cref="ReportPayloads.Threshold"/> characters and a <c>compressedPayload</c> object from there on (#85), and
     /// validates as it stands.
@@ -133,7 +160,7 @@ public class SchemaValidationTests
     internal static List<string> Validate(string schemaPath, string reportPath)
     {
         var schema = JsonSchema.FromText(File.ReadAllText(schemaPath));
-        using var instance = JsonDocument.Parse(File.ReadAllText(reportPath));
+        using var instance = JsonDocument.Parse(ReportFile.Read(reportPath));
 
         var result = schema.Evaluate(instance.RootElement, new EvaluationOptions
         {

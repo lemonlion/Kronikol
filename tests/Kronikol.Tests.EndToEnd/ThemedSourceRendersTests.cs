@@ -42,14 +42,30 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
 
         var themed = await EngineSvg("d-themed");
         var plain = await EngineSvg("d-plain");
-        // The 6.1 guard: when the worker registers PLANTUML_THEMES the two differ and the warning is gone,
-        // and this fact fails on purpose.
-        Assert.True(plain == themed,
-            "The worker now applies a theme (THEME_PLAN 6.1). Remove the OptionNotApplied emitter for BrowserJs " +
-            "(ReportGenerator.RecordOptionDiagnostics, pinned by OptionDiagnosticsTests), and update the PlantUmlTheme " +
-            "doc comments and the wiki's theme pages to say BrowserJs applies a theme.");
+        bool warned;
         lock (console)
-            Assert.Contains(console, m => m.Contains("themes.js could not be loaded", StringComparison.Ordinal));
+            warned = console.Any(m => m.Contains("themes.js could not be loaded", StringComparison.Ordinal));
+        // The 6.1 guard: when the worker registers PLANTUML_THEMES the two differ and the warning is gone,
+        // and this fact fails on purpose. Two renders that differ while the worker still says it could not load
+        // the themes are not a theme, and the message says so (one failed so in a full run under load, 4.30.0).
+        Assert.True(plain == themed, warned
+            ? "The themed and plain renders differ, but the worker said themes.js could not be loaded, so this is not "
+              + "a theme: the same source drew two ways. " + FirstDifference(plain, themed)
+            : "The worker now applies a theme (THEME_PLAN 6.1). Remove the OptionNotApplied emitter for BrowserJs " +
+              "(ReportGenerator.RecordOptionDiagnostics, pinned by OptionDiagnosticsTests), and update the PlantUmlTheme " +
+              "doc comments and the wiki's theme pages to say BrowserJs applies a theme.");
+        Assert.True(warned, "the worker did not say themes.js could not be loaded");
+    }
+
+    /// <summary>Where two SVGs first part, with a little of each from there.</summary>
+    private static string FirstDifference(string plain, string themed)
+    {
+        var at = 0;
+        while (at < plain.Length && at < themed.Length && plain[at] == themed[at])
+            at++;
+        static string From(string text, int at) => text.Length <= at ? "(end)" : text.Substring(at, Math.Min(120, text.Length - at));
+        return $"They part at character {at} of {plain.Length} (plain) and {themed.Length} (themed): plain has "
+               + $"\"{From(plain, at)}\", themed has \"{From(themed, at)}\".";
     }
 
     [Fact]

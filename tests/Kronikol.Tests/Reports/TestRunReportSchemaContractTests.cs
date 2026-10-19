@@ -18,15 +18,19 @@ public class TestRunReportSchemaContractTests
     internal static readonly DateTime End = new(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc);
     internal const string TestId = "schema-t1";
 
-    [Fact]
-    public void Every_key_the_json_writer_emits_is_declared_in_the_schema()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Every_key_the_json_writer_emits_is_declared_in_the_schema(bool compressedFile)
     {
         var suffix = Guid.NewGuid().ToString("N")[..8];
+        // The .krkl decoded as well as the JSON (plans/REPORT_FORMAT_PLAN.md section 5, R4 item 4).
         var reportPath = ReportGenerator.GenerateTestRunReportData(RichFeatures(), Start, End,
-            $"SchemaContract_{suffix}.json", DataFormat.Json, Diagrams(), Logs(), Diagnostics());
+            $"SchemaContract_{suffix}.{(compressedFile ? "krkl" : "json")}", DataFormat.Json, Diagrams(), Logs(), Diagnostics(),
+            fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null, compressedFile: compressedFile);
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"SchemaContract_{suffix}.schema.json", DataFormat.Json);
 
-        using var report = JsonDocument.Parse(File.ReadAllText(reportPath));
+        using var report = JsonDocument.Parse(ReportFile.Read(reportPath));
         using var schema = JsonDocument.Parse(File.ReadAllText(schemaPath));
 
         var undeclared = new SortedSet<string>(StringComparer.Ordinal);

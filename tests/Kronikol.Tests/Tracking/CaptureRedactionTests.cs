@@ -128,8 +128,10 @@ public class CaptureRedactionTests : IDisposable
         Assert.Equal("[REDACTED]", result.Headers.Single().Value);
     }
 
-    [Fact]
-    public void Secret_never_reaches_the_TestRunReport_json_when_redaction_is_on()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Secret_never_reaches_the_report_data_file_when_redaction_is_on(bool compressReport)
     {
         RequestResponseLogger.Redaction = CaptureRedaction.Secrets();
         var testId = "redact-" + Guid.NewGuid().ToString("N");
@@ -147,6 +149,7 @@ public class CaptureRedactionTests : IDisposable
                 GenerateComponentDiagram = false,
                 GenerateSpecificationsReport = false,
                 GenerateSpecificationsData = false,
+                CompressTestRunReport = compressReport,
             };
             DefaultDiagramsFetcher.Reset();
             Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagrams(
@@ -154,7 +157,8 @@ public class CaptureRedactionTests : IDisposable
                 DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
             DefaultDiagramsFetcher.Reset();
 
-            var json = File.ReadAllText(Path.Combine(dir, "TestRunReport.json"));
+            // Through the decoder: the bytes of a compressed file hold no text to search (F13).
+            var json = ReportFile.Read(Path.Combine(dir, compressReport ? "TestRunReport.krkl" : "TestRunReport.json"));
             Assert.DoesNotContain("never-on-disk", json);
             Assert.Contains("[REDACTED]", json);
         }

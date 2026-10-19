@@ -1,0 +1,9 @@
+== bp-site/reqnroll/TestRunReport.json
+file 5,762,341  $z payloads 54 holding 306,624 base64 chars
+zstd -3 of the file as written 545,685
+  kept      raw   3,017,554  zstd3   511,110  zstd9   466,651
+  decoded   raw   4,439,035  zstd3   332,899  zstd9   269,446
+  stripped  raw   2,708,990  zstd3   262,664  zstd9   221,086
+payloads under zstd -3, kept as $z: 248,446; inside a .krkl (decoded, zstd 9): 48,360 (19%)
+the rest under zstd -3: 262,664; at zstd 9: 221,086 (84%)
+.krkl content at zstd 9 against zstd -3 of the file: 269,446 / 545,685 = 49%

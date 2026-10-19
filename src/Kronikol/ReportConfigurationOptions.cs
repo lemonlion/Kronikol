@@ -229,7 +229,10 @@ public record ReportConfigurationOptions
     /// <summary>When <c>true</c>, the specifications data file (YAML/JSON/XML) is generated. Default: <c>true</c>.</summary>
     public bool GenerateSpecificationsData { get; set; } = true;
 
-    /// <summary>When <c>true</c>, the test run report data file (JSON/XML/YAML) is generated. Default: <c>true</c>.</summary>
+    /// <summary>
+    /// When <c>true</c>, the test run report data file (JSON/XML/YAML, or <c>TestRunReport.krkl</c> with
+    /// <see cref="CompressTestRunReport"/>) is generated. Default: <c>true</c>.
+    /// </summary>
     public bool GenerateTestRunReportData { get; set; } = true;
 
     /// <summary>When <c>true</c>, the test run report schema file is generated. Default: <c>true</c>.</summary>
@@ -241,7 +244,9 @@ public record ReportConfigurationOptions
     /// data, precomputed whole-test-flow fragments, and CI metadata. This enables several such files
     /// (e.g. from parallel CI runners) to be merged into a single combined <c>TestRunReport.html</c>
     /// via <c>kronikol merge</c>. The enriched file is larger than the standard report. Default: <c>false</c>.
-    /// Only honoured when <see cref="GenerateTestRunReportData"/> is also <c>true</c> and the format is JSON.
+    /// Only honoured when <see cref="GenerateTestRunReportData"/> is also <c>true</c> and the format is JSON. With
+    /// <see cref="CompressTestRunReport"/> the enriched file is <c>TestRunReport.krkl</c>, which <c>kronikol merge</c> reads
+    /// as it reads the JSON.
     /// </summary>
     public bool GenerateMergeableData { get; set; }
 
@@ -254,7 +259,8 @@ public record ReportConfigurationOptions
     /// <c>kronikol</c> older than 3.35.0 refuses rather than half-reads. The file stays JSON, and
     /// <c>kronikol query</c>, <c>kronikol merge</c> and the <c>query.py</c> of this release read it as they read an
     /// uncompressed one (#85). Default: <c>true</c> from 4.0.0; <c>false</c> through 3.x. Only honoured when the
-    /// format is JSON.
+    /// format is JSON, and not for a compressed report (<see cref="CompressTestRunReport"/>), whose payloads are text inside
+    /// a file compressed whole.
     /// </summary>
     public bool CompressTestRunReportPayloads { get; set; } = true;
 
@@ -313,7 +319,8 @@ public record ReportConfigurationOptions
     public bool WriteAgentInstructions { get; set; } = true;
 
     /// <summary>
-    /// When <c>true</c>, writes <c>query.cs</c> into the reports directory beside a JSON data file:
+    /// When <c>true</c>, writes <c>query.cs</c> into the reports directory beside a JSON data file, or its compressed
+    /// <c>TestRunReport.krkl</c>:
     /// <c>kronikol query</c> for a machine where the tool is not installed and cannot be, such as an AI
     /// agent's session that may not install tools or reach the NuGet feed. From the reports directory,
     /// <c>dotnet run --file query.cs -- summary .</c> prints what <c>kronikol query summary .</c> prints,
@@ -439,6 +446,17 @@ public record ReportConfigurationOptions
     /// <summary>Data format for the test run report output. Default: <see cref="DataFormat.Json"/>.</summary>
     public DataFormat TestRunReportDataFormat { get; set; } = DataFormat.Json;
 
+    /// <summary>
+    /// When <c>true</c> and <see cref="TestRunReportDataFormat"/> is JSON, the run writes its data file as
+    /// <c>TestRunReport.krkl</c> in place of <c>TestRunReport.json</c>: the same report, compact, without the keys that hold
+    /// nothing (unless the schema requires them), every payload as text, and the whole compressed with zstd, about a
+    /// twentieth of the JSON's size. <c>formatVersion</c> 3 says so. Only Kronikol's tools read it: <c>kronikol query</c>,
+    /// <c>kronikol merge</c> and the rest from 4.30.0, and <c>kronikol decode</c> writes the JSON out for a script that needs
+    /// it. <see cref="CompressTestRunReportPayloads"/> does not apply to it. A mergeable run (<see cref="GenerateMergeableData"/>)
+    /// writes its mergeable file the same way. Default: <c>false</c>.
+    /// </summary>
+    public bool CompressTestRunReport { get; set; }
+
     /// <summary>Data format for the specifications data output. Default: <see cref="DataFormat.Yaml"/>.</summary>
     public DataFormat SpecificationsDataFormat { get; set; } = DataFormat.Yaml;
 
@@ -465,8 +483,8 @@ public record ReportConfigurationOptions
     /// that failed. Default: <c>false</c>, because on a healthy run it is a line of noise above the features.
     /// The list is on the labs page beside the report whenever the run recorded an entry
     /// (<see cref="GenerateLabsReport"/>), and every diagnostic still reaches
-    /// <see cref="Kronikol.Ingestion.IngestResult.Diagnostics"/>, the <c>diagnostics</c> array of
-    /// <c>TestRunReport.json</c>, and <c>kronikol query</c>'s <c>!</c> lines; <c>kronikol ingest</c> prints every one.
+    /// <see cref="Kronikol.Ingestion.IngestResult.Diagnostics"/>, the <c>diagnostics</c> array of the data file, and
+    /// <c>kronikol query</c>'s <c>!</c> lines; <c>kronikol ingest</c> prints every one.
     /// An in-process run prints to the console only what a reader must not miss: the attachments the report does not
     /// hold (<see cref="DiagnosticKind.AttachmentFailure"/>) and an option it ignored
     /// (<see cref="DiagnosticKind.OptionNotApplied"/>), each as a <c>⚠ WARNING:</c> line, beside the run summary's own

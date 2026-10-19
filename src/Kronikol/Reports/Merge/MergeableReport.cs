@@ -105,6 +105,13 @@ public sealed record MergeableReport
     /// </summary>
     internal bool PayloadsCompressed { get; init; }
 
+    /// <summary>
+    /// Whether the file the report was read from was compressed whole (a <c>.krkl</c>, or zstd or gzip): a merge of such a
+    /// shard writes its data file compressed too, so that a merged report never loses ground against its shards
+    /// (plans/REPORT_FORMAT_PLAN.md 4.3).
+    /// </summary>
+    internal bool FileCompressed { get; init; }
+
     /// <summary>Exported diagram annotations per scenario id.</summary>
     internal IReadOnlyDictionary<string, List<ReportGenerator.ScenarioAnnotation>> Annotations { get; init; } =
         new Dictionary<string, List<ReportGenerator.ScenarioAnnotation>>(StringComparer.Ordinal);

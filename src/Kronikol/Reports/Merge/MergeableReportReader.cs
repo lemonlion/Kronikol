@@ -35,7 +35,8 @@ public static class MergeableReportReader
 
         using var content = Kronikol.Compression.ReportFileFormat.Open(file);
         using var reader = new StreamReader(content.Stream, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: false);
-        return Parse(reader.ReadToEnd());
+        var report = Parse(reader.ReadToEnd());
+        return content.Form == Kronikol.Compression.ReportForm.Json ? report : report with { FileCompressed = true };
     }
 
     /// <summary>Parses a mergeable report from a JSON string.</summary>

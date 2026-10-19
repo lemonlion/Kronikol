@@ -1,7 +1,7 @@
 # TestRunReport.krkl: a compressed report data file that only Kronikol reads (v5)
 
 **Date:** 2026-10-18 · **Repo version:** 4.26.7 (`origin/main` at `a8563d21`; line numbers are for that commit, and
-hold at 4.26.9, `354cb998`, whose two releases changed none of the files cited) · **Status: executing** (the owner's ask of 2026-10-19; R1 shipped as 4.27.0, R2 and §8's 4.x fixes as 4.27.1, R3 as 4.30.0, §11).
+hold at 4.26.9, `354cb998`, whose two releases changed none of the files cited) · **Status: executing** (the owner's ask of 2026-10-19; R1 shipped as 4.27.0, R2 and §8's 4.x fixes as 4.27.1, R3 as 4.30.0, R4 as 4.32.0, §11).
 
 This plan was written at the owner's asks of 2026-10-18:
 - "Can we investigate reducing the size of TestRunReport.json more ... I'm inclined towards compression of the nested
@@ -1390,6 +1390,36 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
     `Run.json` for the report (F11); merge reported a shard it could not read as an output it could not write; and
     `query.py` printed a traceback for a missing path. R3's first cut of F11 kept report names only, which broke the
     wiki's "one `*.json`, whatever it is called"; the rule leaves out the files a run writes beside its report instead.
+  - R4 shipped as 4.32.0: `CompressTestRunReport` writes `TestRunReport.krkl`, and `kronikol ingest --data-file krkl`
+    and `kronikol merge -o <name>.krkl` ask for it. Where it differs from the plan, or settles what it left open:
+    - Pruning is a filter on the serializer's output, not a change to the model: the serializer writes into a stream
+      that reads the tokens back and leaves out the empty keys as they pass, so the dictionaries and the anonymous step
+      mappers needed no change, and the JSON is never held whole. The required keys are read from the schema this build
+      writes, at every depth, through `$defs`, and the joined branches of `oneOf`, `anyOf` and `allOf`; the schema's
+      two open parts (`internalFlowSegments`, a step's `exampleValues`) are kept as written.
+    - The filter's writer is flushed every 32 KB and the flush stops above the compressor: unflushed, the writer's
+      buffer grew to the whole document (8.5 MB allocated for 4.2 MB of JSON), and a flush that reached the compressor
+      would end a zstd block each time. A fact holds the frame equal to one pass over the same JSON at level 9.
+    - A held name on Windows: the run's outputs are isolated, so a `.krkl` that cannot replace a file a reader holds
+      is a diagnostic and a warning, with this run's file at `TestRunReport2.krkl`, as for the JSON; the run does not
+      throw. On Linux the rename replaces the name and the reader keeps the file it opened.
+    - The mergeable `.krkl` of a run that turns the option on is written by the same writer, and a merge writes a
+      `.krkl` when `-o` names one or any shard was one; `--no-json` still means the HTML alone.
+    - `query.cs` names no data file (it takes the folder, which 4.30.0's lookup resolves), so it is unchanged.
+    - The test helper `ReportFile.Read` (any form of the data file) is in, and the tests R4 adds read through it; the
+      sixty-odd existing tests that read `TestRunReport.json` move to it on the v5 branch, where the default changes
+      and they would otherwise meet a `.krkl`. A first full suite under load skipped the 30 `query.py` facts: the
+      Python probe waited five seconds and read a running process's exit code; it waits a minute now (PythonProbeTests).
+    - The option docs the change made false (`GenerateTestRunReportData`, `GenerateMergeableData`,
+      `CompressTestRunReportPayloads`, `WriteQueryScript`, `ShowReportDiagnosticsSection`) now cover the `.krkl`.
+    - Q4 (a large report before R4 ships) is answered in part. On 2026-10-19 the owner compressed a ReqNRoll report of
+      80 MB and 750 scenarios, most of it large payloads, with `zstd -3`: 14.3 MB. The harness's new
+      `payload_split.py` splits what the `.krkl` saves against `zstd -3` of the JSON, on BreakfastProvider's ReqNRoll
+      lane: the file comes to 49% (269,446 bytes against 545,685); its 54 payloads stored as `$z` go from 248,446 to
+      48,360 bytes (−81%), because the `.krkl` decodes them and compresses them together; everything else goes from
+      262,664 to 221,086 (−16%, level 9 against 3). That puts the 80 MB report at 5 to 10 MB as a `.krkl`, by how much
+      its payloads resemble each other. The exact figure (`content.py`, then `zstd -9`), the window question (A2) and
+      the memory a 100 MB report takes (Q5) still wait for that file to run through the harness.
 
 ## Appendix A. Edit sites at `a8563d21`
 

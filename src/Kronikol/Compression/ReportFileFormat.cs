@@ -69,6 +69,21 @@ internal static class ReportFileFormat
     private const uint ZstdFrameMagic = 0xFD2FB528;
 
     /// <summary>
+    /// Writes Kronikol's marker into <paramref name="marker"/>, <see cref="MarkerLength"/> bytes: a skippable frame's magic
+    /// and the length of its content, <c>KRKL</c>, the container version, three reserved bytes, and the length of the JSON
+    /// the zstd frame after it decodes to, as <see cref="Detect"/> reads them.
+    /// </summary>
+    internal static void WriteMarker(Span<byte> marker, long decodedLength)
+    {
+        BinaryPrimitives.WriteUInt32LittleEndian(marker, KronikolMarkerMagic);
+        BinaryPrimitives.WriteUInt32LittleEndian(marker[4..], MarkerLength - 8);
+        "KRKL"u8.CopyTo(marker[8..]);
+        marker[12] = ContainerVersion;
+        marker[13..16].Clear();
+        BinaryPrimitives.WriteInt64LittleEndian(marker[16..], decodedLength);
+    }
+
+    /// <summary>
     /// Opens the report in <paramref name="file"/>, which must be at its start: the file itself for JSON, past a byte
     /// order mark, or a decoding stream for the compressed forms. Throws <see cref="ReportDecodeException"/> for bytes
     /// that are none of the forms, for a marker that is damaged, from a newer version or claims more than

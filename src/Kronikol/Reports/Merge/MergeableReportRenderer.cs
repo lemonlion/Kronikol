@@ -196,8 +196,23 @@ public static class MergeableReportRenderer
     public static string Serialize(MergeableReport report)
     {
         ArgumentNullException.ThrowIfNull(report);
+        // Compressed when any shard was (MergeableReport.PayloadsCompressed).
+        return ReportGenerator.SerializeReportJson(Model(report, report.PayloadsCompressed));
+    }
 
-        return ReportGenerator.GenerateMergeableReportJson(
+    /// <summary>
+    /// Writes the merged data file compressed into <paramref name="destination"/> (plans/REPORT_FORMAT_PLAN.md 4.3): every
+    /// payload as text, whatever the shards held (F28), in one zstd frame behind Kronikol's marker.
+    /// </summary>
+    internal static void WriteCompressed(MergeableReport report, Stream destination)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        ReportGenerator.WriteCompressedReport(Model(report, compressPayloads: false), destination);
+    }
+
+    private static Dictionary<string, object?> Model(MergeableReport report, bool compressPayloads)
+    {
+        return ReportGenerator.BuildMergeableReportModel(
             report.Features,
             report.StartTime,
             report.EndTime,
@@ -221,8 +236,7 @@ public static class MergeableReportRenderer
             // agree, or did not say", and the key is left out rather than filled in with the
             // environment of whatever machine happens to be collecting the artifacts.
             environment: report.Environment ?? RunEnvironment.Unrecorded,
-            // Compressed when any shard was (MergeableReport.PayloadsCompressed).
-            compressPayloads: report.PayloadsCompressed,
+            compressPayloads: compressPayloads,
             // The shards' own marks, never recomputed over the merged calls.
             warmUp: report.WarmUp);
     }
