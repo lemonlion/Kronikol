@@ -1,14 +1,14 @@
 .iflow-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.4);
+    background: var(--kron-overlay, rgba(0,0,0,0.4));
     z-index: 20000;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 .iflow-popup {
-    background: #fff;
+    background: var(--kron-card, #fff);
     border-radius: 8px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.25);
     max-width: 90vw;
@@ -16,7 +16,7 @@
     overflow: auto;
     padding: 20px;
     position: relative;
-    font: 14px/1.5 -apple-system, 'Segoe UI', sans-serif;
+    font: 14px/1.5 var(--kron-font, -apple-system, 'Segoe UI', sans-serif);
 }
 .iflow-popup-close {
     position: absolute;
@@ -24,27 +24,27 @@
     right: 12px;
     cursor: pointer;
     font-size: 20px;
-    color: #666;
+    color: var(--kron-muted, #666);
     background: none;
     border: none;
     padding: 4px 8px;
 }
 .iflow-popup-close:hover {
-    color: #000;
+    color: var(--kron-ink, #000);
 }
 .iflow-popup h3 {
     margin: 0 0 12px 0;
     font-size: 15px;
-    color: #333;
+    color: var(--kron-ink, #333);
 }
 .iflow-popup .iflow-no-data,
 .iflow-popup .iflow-loading {
-    color: #888;
+    color: var(--kron-muted, #888);
     font-style: italic;
     padding: 20px 0;
 }
 .iflow-popup .iflow-load-failed {
-    color: #c00;
+    color: var(--kron-fail, #c00);
     font-style: normal;
 }
 .iflow-popup .iflow-diagram {
@@ -53,29 +53,38 @@
 .iflow-call-tree {
     list-style: none;
     padding-left: 0;
-    font: 13px/1.6 monospace;
+    font: 13px/1.6 var(--kron-mono, monospace);
 }
 .iflow-call-tree ul {
     list-style: none;
     padding-left: 20px;
-    border-left: 1px solid #ddd;
+    border-left: 1px solid var(--kron-hairline, #ddd);
 }
 .iflow-call-tree li { padding: 2px 0; }
-.iflow-source { color: #888; font-size: 11px; }
-.iflow-duration { color: #666; font-size: 12px; }
+.iflow-source { color: var(--kron-faint, #888); font-size: 11px; }
+.iflow-duration { color: var(--kron-muted, #666); font-size: 12px; }
 .iflow-toggle { margin-top: 8px; margin-bottom: 8px; }
+/* The popup's two views as tabs, drawn as a scenario's diagram tabs are (5.0.0, plans/OPTION_C_PLAN.md S11): quiet ink,
+   the chosen one in the accent with its underline and no fill. One class each, as before, so a custom popup sheet wins. */
 .iflow-toggle-btn {
-    padding: 4px 14px;
-    border: 1px solid #ccc;
-    background: #f5f5f5;
+    margin: 0 4px 0 0;
+    padding: 6px 11px;
+    border: 0;
+    border-radius: 5px 5px 0 0;
+    background: none;
+    color: var(--kron-ink-quiet, #333);
+    font: 400 13px/1.25 var(--kron-font, -apple-system, 'Segoe UI', sans-serif);
+    box-shadow: inset 0 -2px 0 transparent;
     cursor: pointer;
-    font-size: 13px;
-    border-radius: 4px;
-    margin-right: 4px;
 }
-.iflow-toggle-btn:hover { background: #e8f0fe; }
-.iflow-toggle-active { background: #4285f4; color: #fff; border-color: #4285f4; }
-.iflow-toggle-active:hover { background: #3367d6; }
+.iflow-toggle-btn:hover { background: var(--kron-hover, #e8f0fe); color: var(--kron-ink, #000); }
+.iflow-toggle-active, .iflow-toggle-active:hover {
+    background: none;
+    color: var(--kron-accent, #4285f4);
+    font-weight: 600;
+    box-shadow: inset 0 -2px 0 var(--kron-accent, #4285f4);
+}
+.iflow-toggle-btn:focus-visible { outline: 2px solid var(--kron-accent, #4285f4); outline-offset: 1px; }
 .iflow-flame { padding: 6px 0; }
 /* A bar in its source's hue (--fh, one of eight): a pale fill, a 3px edge in a stronger shade, ink text, 20px rows 2px
    apart (5.0.0, plans/OPTION_C_PLAN.md S11, D44); the shades are the theme's, the light ones where a page has none. */
@@ -96,14 +105,15 @@
 }
 .iflow-flame-bar:hover { background: hsl(var(--fh, 215) var(--dg-flame-hover, 62% 87%)); }
 .iflow-flame-zoom-hint {
-    font: 11px -apple-system, 'Segoe UI', sans-serif;
-    color: #666;
+    font: 11px var(--kron-font, -apple-system, 'Segoe UI', sans-serif);
+    color: var(--kron-muted, #666);
     padding: 2px 4px;
     margin-bottom: 2px;
     cursor: default;
 }
 .iflow-flame-label {
-    padding: 0 4px;
+    padding: 0 6px;
+    font-family: var(--kron-mono);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -114,39 +124,47 @@
     top: 0;
     bottom: 0;
     width: 0;
-    border-left: 1px dashed rgba(0,0,0,0.3);
+    border-left: 1px dashed color-mix(in srgb, var(--kron-ink, #000) 16%, transparent);
     z-index: 1;
     pointer-events: none;
 }
-.iflow-boundary-marker:hover { border-left-color: rgba(0,0,0,0.6); pointer-events: auto; }
+.iflow-boundary-marker:hover { border-left-color: color-mix(in srgb, var(--kron-ink, #000) 45%, transparent); pointer-events: auto; }
 .whole-test-flow { margin-top: 8px; padding-top: 4px; }
-.whole-test-flow > summary { cursor: pointer; font-weight: 600; color: #555; }
+.whole-test-flow > summary { cursor: pointer; font-weight: 600; color: var(--kron-ink-soft, #555); }
 .collapse-all-notes-btn, .toggle-headers-btn {
     padding: 4px 14px;
-    border: 1px solid #ccc;
-    background: #f5f5f5;
+    border: 1px solid var(--kron-control-border, #ccc);
+    background: var(--kron-field, #f5f5f5);
+    color: var(--kron-ink);
     cursor: pointer;
     font-size: 13px;
     border-radius: 4px;
     margin-right: 1em;
 }
-.collapse-all-notes-btn:hover, .toggle-headers-btn:hover { background: #e8f0fe; }
+.collapse-all-notes-btn:hover, .toggle-headers-btn:hover { background: var(--kron-hover, #e8f0fe); }
 /* a scenario with ten times the median span count and over 100: a warning pill on its tabs bar, or on its title (5.0.0) */
 .span-count-warning {
     margin-left: 10px; padding: 2px 9px; border: 1px solid var(--kron-warn-edge); border-radius: 999px;
     font-size: 11px; font-weight: 400; font-style: normal; color: var(--kron-warn); background: var(--kron-warn-soft);
 }
-.iflow-test-band { border-bottom: 1px solid #eee; padding: 4px 0; }
-.iflow-test-band-label { font: 11px/1.4 monospace; color: #888; padding: 2px 0; }
+.iflow-test-band { border-bottom: 1px solid var(--kron-hairline-soft, #eee); padding: 4px 0; }
+.iflow-test-band-label { font: 11px/1.4 var(--kron-mono, monospace); color: var(--kron-faint, #888); padding: 2px 0; }
 .iflow-sequential-tests { padding: 0; }
 .iflow-rel-list { list-style: none; padding: 0; margin: 16px 0; }
-.iflow-rel-list li { padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 4px; margin: 4px 0; cursor: pointer; font: 13px/1.5 -apple-system, 'Segoe UI', sans-serif; }
-.iflow-rel-list li:hover { background: #f0f4ff; border-color: #4285f4; }
-.iflow-rel-summary-table { width: 100%; border-collapse: collapse; font: 12px/1.5 -apple-system, 'Segoe UI', sans-serif; margin-top: 12px; }
-.iflow-rel-summary-table th { text-align: left; padding: 4px 8px; border-bottom: 2px solid #ddd; color: #555; }
-.iflow-rel-summary-table td { padding: 4px 8px; border-bottom: 1px solid #eee; cursor: pointer; }
-.iflow-rel-summary-table tr:hover td { background: #f0f4ff; }
+.iflow-rel-list li { padding: 6px 12px; border: 1px solid var(--kron-hairline, #e0e0e0); border-radius: 4px; margin: 4px 0; cursor: pointer; font: 13px/1.5 var(--kron-font, -apple-system, 'Segoe UI', sans-serif); }
+.iflow-rel-list li:hover { background: var(--kron-hover, #f0f4ff); border-color: var(--kron-accent, #4285f4); }
+.iflow-rel-summary-table { width: 100%; border-collapse: collapse; font: 12px/1.5 var(--kron-font, -apple-system, 'Segoe UI', sans-serif); margin-top: 12px; }
+.iflow-rel-summary-table th { text-align: left; padding: 4px 8px; border-bottom: 2px solid var(--kron-hairline, #ddd); color: var(--kron-ink-soft, #555); }
+.iflow-rel-summary-table td { padding: 4px 8px; border-bottom: 1px solid var(--kron-hairline-soft, #eee); cursor: pointer; }
+.iflow-rel-summary-table tr:hover td { background: var(--kron-hover, #f0f4ff); }
 svg a.iflow-link-hover, svg text.iflow-link-hover { cursor: default; }
 svg a.iflow-link-hover:hover, svg text.iflow-link-hover:hover { cursor: pointer; }
-svg a.iflow-link-hover:hover text { fill: #0000EE; text-decoration: underline; }
-svg text.iflow-link-hover:hover { fill: #0000EE; text-decoration: underline; }
+svg a.iflow-link-hover:hover text { fill: var(--kron-accent, #0000EE); text-decoration: underline; }
+svg text.iflow-link-hover:hover { fill: var(--kron-accent, #0000EE); text-decoration: underline; }
+/* What the popup writes in place of a diagram it cannot draw, and the notes the generator adds under one (5.0.0): in
+   classes on the theme's colours, where each carried an inline colour. */
+.iflow-render-error { color: var(--kron-fail, #c00); padding: 1em; border: 1px solid var(--kron-fail, #c00); border-radius: 6px; }
+.iflow-render-error-text { color: var(--kron-fail, #c00); }
+.iflow-left-out { font-size: 0.85em; color: var(--kron-muted, #666); margin: 0 0 8px; }
+.iflow-diagnostics { font-size: 0.85em; color: var(--kron-muted, #666); }
+.iflow-more-tests { color: var(--kron-faint, #888); font-style: italic; }

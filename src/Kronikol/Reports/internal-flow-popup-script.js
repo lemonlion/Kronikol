@@ -135,7 +135,7 @@
                             var lines = source.split('\n');
                             if (lines.length > 3000) {
                                 el.dataset.rendered = '1';
-                                el.innerHTML = '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px">' +
+                                el.innerHTML = '<div class="iflow-render-error">' +
                                     '<strong>Activity diagram too large for browser rendering (' + lines.length + ' lines).</strong><br>' +
                                     'Use <code>CallTree</code> style for large relationship flows.</div>';
                                 return;
@@ -151,7 +151,7 @@
                                 if (el.querySelector('svg') || (window._isStackOverflow && window._isStackOverflow(el.innerHTML))) {
                                     if (window._describeEngineFailure) window._describeEngineFailure(el, source);
                                 } else if ((el.textContent || '').indexOf('RuntimeException') >= 0) {
-                                    el.innerHTML = '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px">' +
+                                    el.innerHTML = '<div class="iflow-render-error">' +
                                         '<strong>Activity diagram too large for browser rendering.</strong><br>' +
                                         'Use <code>CallTree</code> style for large relationship flows.</div>';
                                 }
@@ -161,7 +161,7 @@
                         } catch(e) {
                             el.dataset.rendered = '1';
                             el.textContent = 'Activity diagram too large for browser rendering. Use CallTree style instead.';
-                            el.style.color = '#c00';
+                            el.classList.add('iflow-render-error-text');
                         }
                     }
                     var source = el.getAttribute('data-plantuml');

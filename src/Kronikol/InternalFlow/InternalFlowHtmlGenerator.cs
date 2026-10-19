@@ -330,7 +330,7 @@ public static class InternalFlowHtmlGenerator
     private static string LeftOutNote(InternalFlowSegment segment) =>
         segment.SpansLeftOut == 0
             ? ""
-            : $"<p class=\"iflow-left-out\" style=\"font-size:0.85em;color:#666;margin:0 0 8px\">{segment.SpansLeftOut} span{(segment.SpansLeftOut == 1 ? "" : "s")} "
+            : $"<p class=\"iflow-left-out\">{segment.SpansLeftOut} span{(segment.SpansLeftOut == 1 ? "" : "s")} "
               + $"that started during this call {(segment.SpansLeftOut == 1 ? "is" : "are")} left out: a request of another test ran at the same time, "
               + "and neither the trace nor the span tree says which of the two they belong to.</p>";
 
@@ -341,7 +341,7 @@ public static class InternalFlowHtmlGenerator
     {
         var sb = new StringBuilder();
         sb.Append("No internal activity captured for this segment.");
-        sb.Append("<br/><br/><details style=\"font-size:0.85em;color:#666\"><summary>Diagnostic info</summary><ul>");
+        sb.Append("<br/><br/><details class=\"iflow-diagnostics\"><summary>Diagnostic info</summary><ul>");
         sb.Append($"<li>InternalFlowSpanStore: {totalSpansInStore} total span(s) globally</li>");
         sb.Append($"<li>Granularity: {granularity}</li>");
 
@@ -369,7 +369,7 @@ public static class InternalFlowHtmlGenerator
     {
         var sb = new StringBuilder();
         sb.Append("No internal activity captured for this segment.");
-        sb.Append("<br/><br/><details style=\"font-size:0.85em;color:#666\"><summary>Diagnostic info</summary><ul>");
+        sb.Append("<br/><br/><details class=\"iflow-diagnostics\"><summary>Diagnostic info</summary><ul>");
         sb.Append($"<li>Spans supplied to the ingest: {suppliedSpans}</li>");
         if (granularity == InternalFlowSpanGranularity.Manual && configuredActivitySources is { Length: > 0 })
             sb.Append($"<li>Only the spans of these sources are drawn: {System.Net.WebUtility.HtmlEncode(string.Join(", ", configuredActivitySources))}</li>");
@@ -560,7 +560,7 @@ public static class InternalFlowHtmlGenerator
         }
 
         if (flowData.TestSummaries.Length > 20)
-            sb.AppendLine($"<tr><td colspan=\"3\" style=\"color:#888;font-style:italic\">...and {flowData.TestSummaries.Length - 20} more tests</td></tr>");
+            sb.AppendLine($"<tr><td colspan=\"3\" class=\"iflow-more-tests\">...and {flowData.TestSummaries.Length - 20} more tests</td></tr>");
 
         sb.AppendLine("</table>");
         return sb.ToString();

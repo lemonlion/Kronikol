@@ -40,6 +40,13 @@ public class SpansLeftOutPopupTests : PlaywrightTestBase
         var note = popup.Locator(".iflow-left-out");
         await Expect(note).ToBeVisibleAsync();
         await Expect(note).ToHaveTextAsync("2 spans that started during this call are left out: a request of another test ran at the same time, and neither the trace nor the span tree says which of the two they belong to.");
+        // in the theme's muted ink, from the popup's sheet, where it carried an inline grey (5.0.0)
+        var ink = await note.EvaluateAsync<string[]>("""
+            n => { const p = document.createElement('div'); p.style.color = 'var(--kron-muted)'; document.body.appendChild(p);
+                   const muted = getComputedStyle(p).color; p.remove(); return [getComputedStyle(n).color, muted, n.getAttribute('style') ?? '']; }
+            """);
+        Assert.Equal(ink[1], ink[0]);
+        Assert.Equal("", ink[2]);
         await popup.Locator(".iflow-diagram svg").First.WaitForAsync(new() { Timeout = PopupFirstDrawTimeout });
         var diagram = await popup.Locator(".iflow-diagram svg").First.TextContentAsync();
         Assert.Contains("SELECT a-only", diagram);

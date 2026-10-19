@@ -819,3 +819,31 @@ decision of the owner's, not part of this plan.
   dark theme left with the light fill, which only the lightness check sees (`checks/mutate-s11b.py`).
   Checks: the core flame and internal-flow classes pass (277); `FlameChartPaletteTests` passes in both themes. S11a's
   lane fix (`edits/fix-s11a-lanes.py`: the flow-arrows fixture's opt-in second source) is committed with S11b.
+- 2026-10-19, S11c: the internal-flow popup on the theme's tokens (the preview's `c-round5.css` 178-183, `c-dark.css`
+  93, `c-contrast.css` 24-30, `c-extra.css` 195 and `c-round17.css` 107-110; stylesheet inventory row 18), in
+  `edits/scripts-s11c.py`. The card, heading, close mark, messages and failure text, the call tree, test bands,
+  relationship list and table, notes buttons, the flame chart's zoom hint and step boundaries, and the link hover take
+  the theme's colours, each falling back to its 4.x colour where a page has no token sheet (the test pages of
+  `TestPageGenerator`); the overlay is a new token, `--kron-overlay` (.4 light, .6 dark, in both dark blocks). The
+  Activity and Flame Chart switch is a pair of tabs drawn as a scenario's diagram tabs are. The flame chart's labels
+  are set in the monospace face with 6px padding, and its step boundaries are the ink at 16% and 45%. The popup's
+  error boxes (`internal-flow-popup-script.js`) and the generator's notes (`InternalFlowHtmlGenerator`'s left-out
+  note, both diagnostic blocks and the "more tests" row) lose their inline colours for classes.
+  Deviations: every rule keeps its 4.x selector, since a custom `InternalFlowPopupCustomStyleSheet` follows the
+  built-in sheet and wins on order only (`ReportGeneratorStyleOrderTests` sets `.iflow-toggle-active` in one); the
+  preview's `.iflow-toggle-btn.iflow-toggle-active` would have beaten it. The preview's ink rule on `.iflow-popup` is
+  left out: the popup inherits the page's ink (`body` is `var(--kron-ink)`, and no theme sets another), so the rule
+  changed nothing anywhere Kronikol draws. A page without the token sheet draws the step boundaries at 16% and 45%
+  black, where 4.x drew 30% and 60% (no test page shows them).
+  Tests: Playwright `IflowPopupThemeTests` (new: the card, ink, heading and close mark equal their tokens and the
+  overlay darkens to .6, in both themes; the tabs take the accent and the quiet ink on a page that sets them,
+  unfilled, the chosen one underlined), `IflowPopupTests`' style pins turned to the tabs, and `SpansLeftOutPopupTests`
+  reading the left-out note's colour (the theme's muted ink, no style attribute), failing 5 of 5 before the change
+  (run with the four sources stashed), and core `PopupNotesByClassTests` (new, 3 facts, 4 cases: the left-out note,
+  both empty-popup diagnostic blocks and the more-tests row written by class with no inline style) failing 4 of 4
+  before it. Mutations: 11 of 11 killed (`checks/mutate-s11c.py`). The changelog's look entry says it; the Kronikol4J
+  ledger owes a line for the generator's classes.
+  Checks: the popup's classes and their neighbours pass, 72 of 72 (the Iflow, InternalFlow, SpansLeftOut, FlameChart,
+  ArrowLink, DiagramActivityAndComponentColours and ComponentDiagram classes), and the core classes it touches, 518 of
+  518 (the InternalFlow and ComponentDiagram namespaces, `StylesheetRulesTests`, `ReportGeneratorStyleOrderTests`,
+  `ReportThemeTests`, `CultureInvariantOutputTests`).

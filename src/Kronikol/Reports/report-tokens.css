@@ -60,6 +60,7 @@
     --kron-track: #edf0f5;
     --kron-prop-key: #7d3c98;
     --kron-prop-val: #1a5276;
+    --kron-overlay: rgba(0, 0, 0, .4);
 
     --dg-bg: #ffffff;
     --dg-ink: #242b36;
@@ -170,6 +171,7 @@
     --kron-track: #232b37;
     --kron-prop-key: #c99be3;
     --kron-prop-val: #8fc3ec;
+    --kron-overlay: rgba(0, 0, 0, .6);
 
     --dg-bg: #171d26;
     --dg-ink: #e4e9f0;
@@ -268,6 +270,7 @@
         --kron-track: #232b37;
         --kron-prop-key: #c99be3;
         --kron-prop-val: #8fc3ec;
+        --kron-overlay: rgba(0, 0, 0, .6);
 
         --dg-bg: #171d26;
         --dg-ink: #e4e9f0;

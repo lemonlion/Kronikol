@@ -621,19 +621,22 @@ public class IflowPopupTests : PlaywrightTestBase
             .EvaluateAsync<string>("el => getComputedStyle(el).position");
         Assert.Equal("absolute", closePos);
 
-        // Toggle buttons: border-radius
+        // Toggle buttons: tabs, rounded at the top (5.0.0)
         var toggleBtns = popup.Locator(".iflow-toggle-btn");
         var count = await toggleBtns.CountAsync();
         for (var i = 0; i < count; i++)
         {
             var radius = await toggleBtns.Nth(i).EvaluateAsync<string>("el => getComputedStyle(el).borderRadius");
-            Assert.Equal("4px", radius);
+            Assert.Equal("5px 5px 0px 0px", radius);
         }
 
-        // Active toggle: blue background
-        var activeBg = await popup.Locator(".iflow-toggle-active")
-            .EvaluateAsync<string>("el => getComputedStyle(el).backgroundColor");
-        Assert.Equal("rgb(66, 133, 244)", activeBg);
+        // Active toggle: a tab in the accent, underlined and unfilled (5.0.0), the accent's 4.x blue on a page without
+        // the token sheet
+        var active = await popup.Locator(".iflow-toggle-active")
+            .EvaluateAsync<string[]>("el => { const cs = getComputedStyle(el); return [cs.backgroundColor, cs.color, cs.boxShadow]; }");
+        Assert.Equal("rgba(0, 0, 0, 0)", active[0]);
+        Assert.Equal("rgb(66, 133, 244)", active[1]);
+        Assert.Contains("inset", active[2]);
     }
 
     private static string PngOpacityCheckScript(string svgSelector) => $$"""

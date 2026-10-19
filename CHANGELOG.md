@@ -119,6 +119,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   as do the component diagram's person box, database edge and edge labels, and a note's header line.
   The flame chart draws each source in one of eight hues, as a pale bar with a stronger edge in the theme's shades,
   where a source had any hue, lightened with depth.
+  The internal-flow popup takes the theme too, its Activity and Flame Chart views drawn as tabs, and its overlay
+  is the token `--kron-overlay`. Its notes and failure text are styled by class (`iflow-left-out`,
+  `iflow-diagnostics`, `iflow-more-tests`, `iflow-render-error`), where they carried inline colours.
 - **A service is drawn as a box.** `DependencyPalette.GetSequenceShape(DependencyType.HttpApi)` returns `participant`,
   which was `entity`, and a caller after the first that has no category is a `participant` too: a service reads as a
   box among the participants around it, not a circle on a line.
