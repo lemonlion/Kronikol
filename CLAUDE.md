@@ -65,7 +65,6 @@ When writing or modifying Playwright end-to-end tests in `tests/Kronikol.Tests.E
 - **Strict mode** — always use `.First` or `.Nth(n)` when selectors may match multiple elements (per-diagram buttons, nested summaries, report+scenario level controls).
 - **Search bar** — use `FillSearchBar()` helper which dispatches `keyup` event after `FillAsync` (required by `onkeyup="search_scenarios()"`).
 
-<!-- kronikol:begin -->
 ## Installed Chrome or Edge: never on a fresh profile
 
 On Windows, the installed Chrome and Edge find out whether the account's password is blank by signing in to it with
@@ -80,6 +79,7 @@ starts a fresh profile, so every launch of Playwright's `channel: 'chrome'` or `
 - Anywhere else (.NET, another tool), use the bundled Chromium, which the E2E suite already does and which never
   runs the check, or a persistent profile seeded the same way.
 
+<!-- kronikol:begin -->
 ## Debugging a test run (Kronikol)
 
 These tests write a Kronikol report. **Never open `TestRunReport.json`, `TestRunReport.html` or a
