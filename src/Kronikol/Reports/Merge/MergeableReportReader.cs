@@ -395,7 +395,12 @@ public static class MergeableReportReader
         if (!parent.TryGetProperty(name, out var arr) || arr.ValueKind != JsonValueKind.Array)
             return null;
         var list = arr.EnumerateArray()
-            .Select(a => new FileAttachment(GetString(a, "name") ?? "", GetString(a, "relativePath") ?? "", GetString(a, "mediaType")))
+            .Select(a => new FileAttachment(GetString(a, "name") ?? "", GetString(a, "relativePath") ?? "", GetString(a, "mediaType"))
+            {
+                // A shard's state (#148), so the merge does not lose why its report did not hold a file; absent in a file
+                // that holds every one, and in one written before the key existed.
+                Problem = Enum.TryParse<AttachmentProblem>(GetString(a, "problem"), ignoreCase: true, out var problem) && Enum.IsDefined(problem) ? problem : null,
+            })
             .ToArray();
         return list.Length > 0 ? list : null;
     }

@@ -2290,7 +2290,11 @@ public static class ReportGenerator
                     body.Append("""<div class="scenario-attachments">""");
                     foreach (var attachment in scenario.Attachments)
                     {
-                        if (attachment.IsInlineImage)
+                        if (attachment.Problem is { } problem)
+                        {
+                            body.Append(MissingAttachmentHtml(attachment, problem));
+                        }
+                        else if (attachment.IsInlineImage)
                         {
                             body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" target=\"_blank\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
                         }
@@ -3305,7 +3309,11 @@ public static class ReportGenerator
                     body.Append("""<div class="scenario-attachments">""");
                     foreach (var attachment in s.Attachments)
                     {
-                        if (attachment.IsInlineImage)
+                        if (attachment.Problem is { } problem)
+                        {
+                            body.Append(MissingAttachmentHtml(attachment, problem));
+                        }
+                        else if (attachment.IsInlineImage)
                         {
                             body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" target=\"_blank\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
                         }
@@ -3904,7 +3912,11 @@ public static class ReportGenerator
         {
             foreach (var attachment in step.Attachments)
             {
-                if (attachment.IsInlineImage)
+                if (attachment.Problem is { } problem)
+                {
+                    body.Append(MissingAttachmentHtml(attachment, problem));
+                }
+                else if (attachment.IsInlineImage)
                 {
                     body.Append($"<a class=\"attachment-image-link\" href=\"{AttachmentHref(attachment)}\" onclick=\"openLightbox(event, this)\"><img class=\"attachment-image\" src=\"{AttachmentHref(attachment)}\" alt=\"{System.Net.WebUtility.HtmlEncode(attachment.Name)}\" /></a>");
                     body.Append($"<span class=\"attachment-image-name\">{System.Net.WebUtility.HtmlEncode(attachment.Name)}</span>");
@@ -5185,21 +5197,29 @@ public static class ReportGenerator
 
     /// <summary>
     /// An attachment in the data files: the display name, where it is, and the media type the producer
-    /// declared (null when it declared none — the renderer then sniffs the extension).
+    /// declared (null when it declared none — the renderer then sniffs the extension). <c>problem</c> only on one the
+    /// report does not hold (#148), so a report holding every file is written as before.
     /// </summary>
-    private static object MapAttachmentJson(FileAttachment attachment) => new Dictionary<string, object?>
+    private static object MapAttachmentJson(FileAttachment attachment)
     {
-        ["name"] = attachment.Name,
-        ["relativePath"] = attachment.RelativePath,
-        ["mediaType"] = attachment.MediaType,
-    };
+        var json = new Dictionary<string, object?>
+        {
+            ["name"] = attachment.Name,
+            ["relativePath"] = attachment.RelativePath,
+            ["mediaType"] = attachment.MediaType,
+        };
+        if (attachment.Problem is { } problem)
+            json["problem"] = problem.ToString();
+        return json;
+    }
 
     /// <inheritdoc cref="MapAttachmentJson"/>
     private static XElement MapAttachmentXml(FileAttachment attachment) =>
         new("Attachment",
             new XElement("Name", attachment.Name),
             new XElement("RelativePath", attachment.RelativePath),
-            attachment.MediaType != null ? new XElement("MediaType", attachment.MediaType) : null);
+            attachment.MediaType != null ? new XElement("MediaType", attachment.MediaType) : null,
+            attachment.Problem is { } problem ? new XElement("Problem", problem.ToString()) : null);
 
     private static object MapStepJson(ScenarioStep step) => step.IsAssertion
         // "assertion": true on a tracked assertion only (#145), so a report without one is written as before.
@@ -5712,6 +5732,8 @@ public static class ReportGenerator
                         AppendYaml(yml, "            RelativePath: ", att.RelativePath);
                         if (att.MediaType is not null)
                             AppendYaml(yml, "            MediaType: ", att.MediaType);
+                        if (att.Problem is { } problem)
+                            AppendYaml(yml, "            Problem: ", problem.ToString());
                     }
                 }
 
@@ -5838,6 +5860,8 @@ public static class ReportGenerator
                 AppendYaml(yml, indent + "      RelativePath: ", att.RelativePath);
                 if (att.MediaType is not null)
                     AppendYaml(yml, indent + "      MediaType: ", att.MediaType);
+                if (att.Problem is { } problem)
+                    AppendYaml(yml, indent + "      Problem: ", problem.ToString());
             }
         }
     }
@@ -6201,6 +6225,13 @@ public static class ReportGenerator
     }
 
     /// <summary>
+    /// An attachment the report does not hold (#148), drawn as its name and why, with no image or link that would be dead.
+    /// The path it was given is in the title only, so a published page shows no machine path in its text.
+    /// </summary>
+    internal static string MissingAttachmentHtml(FileAttachment attachment, AttachmentProblem problem) =>
+        $"<span class=\"attachment-missing\" title=\"{System.Net.WebUtility.HtmlEncode(attachment.RelativePath)}\">{System.Net.WebUtility.HtmlEncode(attachment.Name)} ({AttachmentProblemText.Of(problem)})</span>";
+
+    /// <summary>
     /// An attachment's path as an <c>href</c> or <c>src</c>, HTML-encoded. A file's path is percent-encoded first for the
     /// three characters a URL reads otherwise, <c>%</c> before <c>#</c> and <c>?</c> so nothing is encoded twice: the copy
     /// keeps the file's name, and <c>attachments/shot#1.png</c> requested <c>attachments/shot</c> (#148 F11). Only those
@@ -6457,8 +6488,9 @@ public static class ReportGenerator
                 ["properties"] = new Dictionary<string, object?>
                 {
                     ["name"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Display name, normally the file name" },
-                    ["relativePath"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Path relative to the report directory (attachments/<file>), or an absolute URL when the attachment is a link; join it to the report's own directory to open the file" },
-                    ["mediaType"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "IANA media type; image/* renders inline, anything else as a link" }
+                    ["relativePath"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Where the file is: attachments/<file> for a file the report holds (join it to the report's own directory to open it), the path as it was given for one it does not hold (problem says why), or an absolute URL when the attachment is a link" },
+                    ["mediaType"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "IANA media type; image/* renders inline, anything else as a link" },
+                    ["problem"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(AttachmentProblem)), ["description"] = "Why the report does not hold the file: NotFound (no file at the path when the report was drawn), NotCopied (it could not be copied in) or NotUsable (not a legal path where the report was drawn). Absent when the report holds the file, and for a link" }
                 }
             }
         };
@@ -7070,7 +7102,8 @@ public static class ReportGenerator
                                     new XElement(xs + "sequence",
                                         new XElement(xs + "element", new XAttribute("name", "Name"), new XAttribute("type", "xs:string")),
                                         new XElement(xs + "element", new XAttribute("name", "RelativePath"), new XAttribute("type", "xs:string")),
-                                        new XElement(xs + "element", new XAttribute("name", "MediaType"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
+                                        new XElement(xs + "element", new XAttribute("name", "MediaType"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                                        new XElement(xs + "element", new XAttribute("name", "Problem"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
                                     )
                                 )
                             )
@@ -7182,7 +7215,8 @@ public static class ReportGenerator
                                     new XElement(xs + "sequence",
                                         new XElement(xs + "element", new XAttribute("name", "Name"), new XAttribute("type", "xs:string")),
                                         new XElement(xs + "element", new XAttribute("name", "RelativePath"), new XAttribute("type", "xs:string")),
-                                        new XElement(xs + "element", new XAttribute("name", "MediaType"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
+                                        new XElement(xs + "element", new XAttribute("name", "MediaType"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                                        new XElement(xs + "element", new XAttribute("name", "Problem"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
                                     )
                                 )
                             )

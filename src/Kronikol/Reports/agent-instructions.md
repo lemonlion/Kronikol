@@ -132,7 +132,9 @@ output yourself, it costs about twice the tokens for the same answer.
   OpenTelemetry traces and application logs.
 - A body ending `…truncated (N chars total)`, or a JSON document followed by `... (N more documents not shown)`,
   `... (N more rows not shown)` or `... (N more)`, was capped at capture time. The rest was never recorded.
-- Attachments are pointers: read a screenshot by its path, individually. They are never inlined.
+- Attachments are pointers: read a screenshot by its path, individually. They are never inlined. One marked
+  `(not found when the report was drawn)`, `(could not be copied into the report)` or `(not a usable path)` is not in
+  the report, and its path is the one it was given: there is no file to read.
 - `! report predates step attribution` means an older Kronikol wrote the file: the answers are correct but
   thinner.
 - Any other `!` line above an answer is a diagnostic the run recorded. It means the report holds less than

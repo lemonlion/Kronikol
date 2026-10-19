@@ -266,12 +266,15 @@ public static partial class QueryCommand
     /// all print it through here, and <see cref="AttachmentObject"/> is its <c>--json</c> form, so anything said about an
     /// attachment is said in one place.
     /// </summary>
-    private static string AttachmentText(AttachmentEntry attachment, ReportIndex index) =>
-        $"{attachment.Name} → {attachment.Resolve(index.Directory)}";
+    private static string AttachmentText(AttachmentEntry attachment, ReportIndex index) => attachment.Problem is { } problem
+        // One the report does not hold (#148): the path as it was given, and why; resolving it would invent a file.
+        ? $"{attachment.Name} → {attachment.RelativePath} ({AttachmentProblemText.Of(problem)})"
+        : $"{attachment.Name} → {attachment.Resolve(index.Directory)}";
 
     /// <summary>An attachment in <c>--json</c>, in the field names <c>Failures.jsonl</c> uses: <see cref="AttachmentText"/>'s object form.</summary>
-    private static object AttachmentObject(AttachmentEntry attachment, ReportIndex index) =>
-        new { name = attachment.Name, path = attachment.Resolve(index.Directory) };
+    private static object AttachmentObject(AttachmentEntry attachment, ReportIndex index) => attachment.Problem is { } problem
+        ? new { name = attachment.Name, path = attachment.RelativePath, problem }
+        : new { name = attachment.Name, path = attachment.Resolve(index.Directory) };
 
     /// <summary>
     /// <c>repro &lt;report&gt; [s3]</c>: the one line that re-runs each failing test, read from the frame

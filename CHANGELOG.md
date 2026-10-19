@@ -4,6 +4,71 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.29.0] - 2026-10-19
+
+**Minor - an attachment the report does not hold says so wherever it is read (`plans/MISSING_ATTACHMENTS_PLAN.md` R3,
+#148).** A new public member, `FileAttachment.Problem`, a new public type, `AttachmentProblem`, and a new key in the data
+files and their schemas, so the minor part moves (4.28 to 4.29).
+
+### Added
+
+- **`FileAttachment.Problem`** and **`AttachmentProblem`** (`NotFound`, `NotCopied`, `NotUsable`): why the report does
+  not hold an attachment's file, set by the report's writer, null when it holds it and for a link. A host that draws
+  its own view of the model can read it. Since 4.27.2 the run counted such attachments in one `AttachmentFailure`
+  entry; now each one carries its state.
+- **`problem` in the data files**, written only on an attachment the report does not hold, so a report holding every
+  file is written as before: `"problem": "NotFound"` in the JSON (the enum's name, as `result` is spelled),
+  `<Problem>` in the XML and `Problem:` in the YAML. The JSON schema and the XSD declare it. The JSON schema is
+  closed (`additionalProperties: false` on every object), so a consumer validating a new file against a schema it kept
+  from an earlier version rejects an attachment carrying the key. The mergeable reader reads it, so `kronikol merge`
+  keeps a shard's state, and a file written before the key existed reads as no problem. The schema now describes
+  `relativePath` truly: `attachments/<file>` for a file the report holds, the path as it was given for one it does not,
+  or a URL.
+
+### Changed
+
+- **The page draws an attachment the report does not hold as its name and why**, `lost.png (not found when the report
+  was drawn)`, with no image or link that would be dead, at the scenario, the step and the parameterized panel. The
+  path it was given is in the span's title only, so a published page shows no machine path in its text. The other
+  states read `could not be copied into the report` and `not a usable path`.
+- **An image that does not load says so**: one capture-phase `error` listener on the document draws an attachment image
+  whose file is missing when the page is opened (a report folder copied without its `attachments/`, or an Export
+  Filtered HTML copy saved elsewhere, which keeps the listener) as its name and `(could not be loaded)`.
+- **`Failures.md` says the state after the path**, `- lost.png — `C:\shots\lost.png` (not found when the report was
+  drawn; step `s0/2`)`, and **`Failures.jsonl`** adds `problem`, absent when the report holds the file.
+- **`kronikol query`** prints such an attachment with the path as it was given and its state, `lost.png →
+  C:\shots\lost.png (not found when the report was drawn)`, in `failures`, `steps` and `attachments`, and `--json`
+  adds `problem`. A path the report does not hold is no longer resolved against the report's folder, which named a
+  file that never was (F13).
+- **Docs**: `Track.Attachment` (an image draws inline, anything else as a link, a file the report does not hold as its
+  name and why), the agent instructions each run writes (a marked attachment has no file to read), and the skill.
+
+### Tests
+
+- `AttachmentProblemTests`: the public member and type; `problem` in the JSON, XML and YAML, only where there is one; the
+  mergeable reader keeping it, and a file without the key reading as no problem; `Failures.md` and `Failures.jsonl`;
+  `query failures`, `steps`, `attachments` and `--json`, and a relative path never resolved; the page's span with no
+  image or link. `TestRunReportSchemaContractTests.RichFeatures` holds an attachment the report does not hold, so the
+  schema, XSD and YAML schema contract facts check the new key.
+- Playwright `AttachmentRenderingTests`: the three sites draw the name and state and no image or link with the path; an
+  image the report holds still draws (`naturalWidth > 0`); an image deleted after the report was written says it
+  could not be loaded; an Export Filtered HTML copy saved elsewhere says so for its images; and the old fixture writes
+  the files it links, so its image facts check that the image loaded (F12).
+
+- Proofs: the facts were written first, and 12 of the 13 failed on 4.28.1's code at their assertions; the 13th, a
+  file without the key reading as no problem, is a guard. The two added after (a step's attachment in the YAML, and in
+  the XML against its XSD) were proved by mutation. Of the Playwright facts, three failed on 4.28.1's code, each waiting
+  for the span it was written for; the fourth, an image the report holds still drawing, is a guard. 21 of 21 mutations
+  of the new code are killed: the state internal, `problem` written as null, left out of the XML or either YAML writer,
+  undeclared in the JSON schema or either XSD declaration, dropped by the mergeable reader, the image kept on a problem,
+  the path in the page's text, the state left out of `Failures.md`, `Failures.jsonl` or `query --json`, a problem path
+  resolved, the scanner ignoring the key, one state's wording, the listener in the bubbling phase, and each of the
+  page's three sites drawing no span.
+- Checks: after the version bump the core suite passes 7,842 with 2 skipped and the full Playwright suite passes
+  1,077 with 28 skipped when run alone; release.slnf builds in Release for every target with no warning from the
+  changed files. The core suite's first run failed one Node renderer timing fact (two diagrams in 15.6 s) while other
+  suites loaded the machine; it passes alone, 55 of 55, and in the second full run. The templates pin 4.28.1 and the
+  history action's VERSION installs Kronikol.Tool 4.29.0.
 ## [4.28.1] - 2026-10-19
 
 **Patch - an Azure DevOps artifact holds the attachments its report links (`plans/MISSING_ATTACHMENTS_PLAN.md` R4,

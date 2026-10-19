@@ -661,6 +661,7 @@ internal static class ReportScanner
                     case "name": _attachment.Name = reader.GetString() ?? ""; return;
                     case "relativePath": _attachment.RelativePath = reader.GetString() ?? ""; return;
                     case "mediaType": _attachment.MediaType = reader.GetString(); return;
+                    case "problem": _attachment.Problem = reader.GetString(); return;
                 }
                 return;
             }

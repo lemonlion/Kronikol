@@ -176,7 +176,12 @@ public class TestRunReportSchemaContractTests
                     ExampleValues = new Dictionary<string, string> { ["item"] = "Widget" },
                     ExampleFlatValues = new Dictionary<string, string> { ["item"] = "Widget" },
                     ExampleDisplayName = "Place an order for Widget",
-                    Attachments = [new FileAttachment("receipt.png", "attachments/receipt.png", "image/png")],
+                    // lost.png is one the report does not hold (#148 R3): its problem key is declared like any other.
+                    Attachments =
+                    [
+                        new FileAttachment("receipt.png", "attachments/receipt.png", "image/png"),
+                        new FileAttachment("lost.png", "C:/run/shots/lost.png", "image/png") { Problem = AttachmentProblem.NotFound },
+                    ],
                     BackgroundSteps =
                     [
                         new ScenarioStep { Keyword = "Given", Text = "the shop is open", Status = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(5) }

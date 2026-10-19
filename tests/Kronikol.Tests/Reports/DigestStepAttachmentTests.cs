@@ -269,7 +269,8 @@ public class DigestStepAttachmentTests : IDisposable
 
         var (lines, items) = Failures(reports);
 
-        Assert.Contains($"    attachment: odd.png → {odd}", lines);
+        // The report does not hold it (#148 R3), so the line says why after the path as it was given.
+        Assert.Contains($"    attachment: odd.png → {odd} (not a usable path)", lines);
         Assert.Equal([odd], FailingStepPaths(items));
         Assert.Contains(lines, l => l.Contains("refund refused", StringComparison.Ordinal));
         Assert.Equal(0, QueryCommand.Run(["steps", reports, "s0"], new StringWriter(), new StringWriter()));

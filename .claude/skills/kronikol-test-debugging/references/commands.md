@@ -150,7 +150,8 @@ the bytes: `interactions --group-by service,path --sort bytes`.
 ### `failures <report>`
 For every failing scenario: the error, the failing step in context, its assertions with their messages and
 `file:line`, the calls that happened inside that step (six, then `… N more call(s): flow s3/2`), what that step
-attached (under it; a link is printed as it is), and the scenario's own attachments. Since 4.28.0 a list of more
+attached (under it; a link is printed as it is, and one the report does not hold with the path it was given and
+why, `(not found when the report was drawn)`, since 4.29.0), and the scenario's own attachments. Since 4.28.0 a list of more
 than six attachments keeps its first and its last five, and in place of the rest prints
 `… N more attachment(s) (names): attachments s3` (`attachments s3/2` for a step's), naming what it cut and the view
 that lists every one; attachments on the steps that did not fail are counted on one line,

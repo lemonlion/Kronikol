@@ -6,7 +6,7 @@ verification pass the owner asked for ("make sure the plan is complete and fully
 might change the plan"): every line reference re-read, five deep dives run (section 10), four findings added (F20 to
 F23), five corrected (F2, F3, F5, F8, F10), and the R2 and merge designs changed. **Green-lit 2026-10-19**: the owner
 asked for it to be implemented in full, and every question in section 8 was taken as recommended (the precedent of
-`REPORT_FORMAT_PLAN.md`). R1 and R2 ship as one patch (Q2); section 10 logs each release.
+`REPORT_FORMAT_PLAN.md`). R1 and R2 ship as one patch (Q2); section 10 logs each release. **Executed 2026-10-19**: R1 and R2 as 4.27.2, R4 as 4.28.1 and R3 as 4.29.0.
 
 **Issue:** [#148](https://github.com/lemonlion/Kronikol/issues/148), "An attachment whose file is missing when the
 report is drawn keeps its original path, and no diagnostic says so" (filed 2026-10-08 against 4.6.0, label `bug`, no
@@ -637,4 +637,26 @@ Not in this plan's class (attachments that never reach the model, or render choi
   attachment named; the third failed with that check removed. Mutations: 5 of 5 killed (the run naming no attachment,
   the merge naming none, the files named at the artifact's root, a link under `attachments/` not recognised, the check
   removed). Checks: after the version bump the core suite passes 7,827 with 2 skipped and the full Playwright
-  suite 1,073 with 28 skipped when run alone, and release.slnf builds in Release for every target.
+  suite 1,073 with 28 skipped when run alone, and release.slnf builds in Release for every target. Published the same day: once nuget listed all 62 packages, the wiki edit
+  and the Kronikol4J ledger line followed.
+- 2026-10-19, kronikol-7c, **R3 as a minor, 4.29.0**, on 4.28.1 (`260b7ddc`). Section 4.3 as designed, with these
+  differences, each found while building it:
+  - **`problem` is spelled with the enum's names** (`NotFound`, `NotCopied`, `NotUsable`), as the data files spell
+    `result` and a step's `status` and as the schema declares every enum (`Enum.GetNames`); section 4.3 wrote camelCase.
+  - **The listener sits in the lightbox script**, which the page carries in its head, so it is registered before any
+    image loads and no pass over the images after load is needed; such a pass would also have marked an SVG with no
+    intrinsic size, whose `naturalWidth` is 0.
+  - **The schema fixture holds the state**: `TestRunReportSchemaContractTests.RichFeatures` gains an attachment the
+    report does not hold, so the JSON schema, XSD and YAML schema contract facts check the new key, and the JSON pin
+    (`TestData/Reports/TestRunReport.pin.json`) gains it. `DigestStepAttachmentTests`' fact for a path no file system
+    takes now expects the state after the path.
+  - **The old Playwright fixture writes the files it links** (F12), so its image fact checks that the image loaded;
+    without them the page's new listener would have replaced its broken images.
+  Proofs: the facts were written first, and 12 of the 13 failed on 4.28.1's code at their assertions; the 13th (a file
+  without the key reads as no problem) is a guard. Of the Playwright facts, three failed
+  there, each waiting for the span it was written for, and the fourth (an image the report holds still draws) is a
+  guard. The two facts added after (a step's attachment in the YAML, and in the XML against its XSD) were proved by
+  mutation. Mutations: 21 of 21 killed, 17 against the core suite's facts (the two XSD declarations each on its own)
+  and 4 against the Playwright facts (the listener in the bubbling phase, and each of the three sites drawing no span). Checks: after the version bump the core suite passes 7,842 with 2 skipped and the full
+  Playwright suite 1,077 with 28 skipped when run alone, and release.slnf builds in Release for every target with no
+  warning from the changed files.

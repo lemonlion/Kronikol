@@ -331,6 +331,13 @@ internal sealed class AttachmentEntry
     public string? MediaType { get; set; }
 
     /// <summary>
+    /// Why the report does not hold the file, as the data file spells it (<c>NotFound</c>), or null when it does (#148). Its
+    /// path is then the one it was given, printed as recorded and never resolved: resolved against the report's folder it
+    /// would name a file that never was.
+    /// </summary>
+    public string? Problem { get; set; }
+
+    /// <summary>
     /// Absolute path, resolved against the report's own directory. The HTML uses the relative form as an
     /// href; an agent needs the absolute one so it can open a screenshot without reconstructing anything. A link (a
     /// Grafana trace, a Playwright report) is the address itself, and a path no file system takes is printed as written.

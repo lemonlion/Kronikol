@@ -2031,6 +2031,13 @@ public static class ReportTestHelper
             }
         };
 
+        // The files it links, so an image is drawn because it loaded (#148 F12): linked to files that were never written,
+        // the image facts passed on broken images.
+        var files = Directory.CreateDirectory(Path.Combine(tempDir, "files")).FullName;
+        File.WriteAllBytes(Path.Combine(files, "screenshot.png"), OnePixelPng);
+        File.WriteAllText(Path.Combine(files, "log.txt"), "log");
+        File.WriteAllText(Path.Combine(files, "trace.json"), "{}");
+
         var diagrams = Array.Empty<DiagramAsCode>();
 
         var path = ReportGenerator.GenerateHtmlReport(
@@ -2095,6 +2102,74 @@ public static class ReportTestHelper
             null, Path.Combine(reportsDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// A report with attachments it does not hold (#148 R3): <c>lost.png</c> on a scenario, <c>lost-step.png</c> on a step and
+    /// <c>lost-outline.png</c> on each example of an outline, none of which exists; <c>shot.png</c>, which it holds;
+    /// and <c>gone.png</c>, which it held when it was written and which is deleted afterwards, as a folder copied without
+    /// its <c>attachments/</c> loses it. Written into <c>Reports/</c> beside its <c>attachments/</c> folder.
+    /// </summary>
+    public static string GenerateReportWithMissingAttachments(string tempDir, string outputDir, string fileName)
+    {
+        var sources = Directory.CreateDirectory(Path.Combine(tempDir, "sources")).FullName;
+        var shot = Path.Combine(sources, "shot.png");
+        var gone = Path.Combine(sources, "gone.png");
+        File.WriteAllBytes(shot, OnePixelPng);
+        File.WriteAllBytes(gone, OnePixelPng);
+        var nowhere = Path.Combine(tempDir, "nowhere");
+
+        static Scenario Example(string method, string lost) => new()
+        {
+            Id = "refund-" + method, DisplayName = $"Refund by {method}", Result = ExecutionResult.Passed,
+            Duration = TimeSpan.FromSeconds(1), OutlineId = "Refund",
+            ExampleValues = new Dictionary<string, string> { ["Method"] = method },
+            // The example's own, which the outline's parameterized panel draws.
+            Attachments = [new FileAttachment("lost-outline.png", lost)],
+            Steps = [new ScenarioStep { Keyword = "Then", Text = "the refund is recorded", Status = ExecutionResult.Passed }]
+        };
+
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Missing attachments",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "missing1", DisplayName = "Pay with a screenshot the report does not hold", IsHappyPath = true,
+                        Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                        Attachments = [new FileAttachment("lost.png", Path.Combine(nowhere, "lost.png")), new FileAttachment("shot.png", shot)],
+                        Steps =
+                        [
+                            new ScenarioStep
+                            {
+                                Keyword = "When", Text = "the card is charged", Status = ExecutionResult.Passed,
+                                Attachments = [new FileAttachment("lost-step.png", Path.Combine(nowhere, "lost-step.png")), new FileAttachment("gone.png", gone)]
+                            }
+                        ]
+                    },
+                    Example("card", Path.Combine(nowhere, "lost-outline.png")),
+                    Example("cash", Path.Combine(nowhere, "lost-outline.png")),
+                ]
+            }
+        };
+
+        var reportsDir = Path.Combine(tempDir, "Reports");
+        Directory.CreateDirectory(reportsDir);
+        ReportGenerator.CopyAttachmentsToReportsFolder(features, reportsDir);
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            Array.Empty<DiagramAsCode>(), features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(reportsDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+        File.Delete(Path.Combine(reportsDir, "attachments", "gone.png"));
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;

@@ -166,7 +166,8 @@ matters.
 - **Attachments are pointers.** `failures`, `steps` and `attachments` print absolute paths for screenshots; `Read`
   them individually. They are never inlined. `attachments s3` lists every one a scenario holds, with the step that
   holds it. `scripts/query.py` lists none: read `Failures.md`, which lists every attachment of each failure it works
-  through, and counts them for the rest.
+  through, and counts them for the rest. One the report does not hold has no file to read: it is printed with the path
+  it was given and why, `lost.png → C:\shots\lost.png (not found when the report was drawn)` (4.29.0).
 - **`traceId` is not the W3C trace id.** `traceId` is Kronikol's own identifier for the request/response
   pair; `activityTraceId` (printed by `http`) is the W3C one that matches your OTel traces and app logs.
 - **Aggregate counts are per occurrence, not per distinct body.** `values` counts a body every time it

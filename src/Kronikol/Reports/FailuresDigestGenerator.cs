@@ -795,9 +795,14 @@ public static class FailuresDigestGenerator
         if (entry.Attachments.Count > 0)
         {
             markdown.Append("Attachments:\n\n");
+            // An attachment the report does not hold says why after its path (#148), which is then the path as it was given.
             foreach (var (attachment, step) in entry.Attachments)
+            {
+                string[] notes = [.. attachment.Problem is { } problem ? [AttachmentProblemText.Of(problem)] : Array.Empty<string>(),
+                    .. step is null ? Array.Empty<string>() : [$"step {Code(step)}"]];
                 markdown.Append($"- {Escape(attachment.Name)} — {Code(attachment.RelativePath)}"
-                                + (step is null ? "" : $" (step {Code(step)})") + "\n");
+                                + (notes.Length == 0 ? "" : $" ({string.Join("; ", notes)})") + "\n");
+            }
             markdown.Append('\n');
         }
     }
@@ -982,9 +987,14 @@ public static class FailuresDigestGenerator
                 // empty array meant all three.
                 ["callsScope"] = entry.CallsScope,
                 // A step's attachment says which step holds it; one of the scenario's own is the object this has always been.
-                ["attachments"] = entry.Attachments.Select(a => a.Step is null
-                    ? (object)new { a.Attachment.Name, Path = a.Attachment.RelativePath }
-                    : new { a.Attachment.Name, Path = a.Attachment.RelativePath, a.Step }).ToArray()
+                // problem only on one the report does not hold (#148), as step only on a step's.
+                ["attachments"] = entry.Attachments.Select(a => (a.Step, a.Attachment.Problem) switch
+                {
+                    (null, null) => (object)new { a.Attachment.Name, Path = a.Attachment.RelativePath },
+                    (null, { } problem) => new { a.Attachment.Name, Path = a.Attachment.RelativePath, Problem = problem.ToString() },
+                    ({ } step, null) => new { a.Attachment.Name, Path = a.Attachment.RelativePath, Step = step },
+                    ({ } step, { } problem) => new { a.Attachment.Name, Path = a.Attachment.RelativePath, Step = step, Problem = problem.ToString() },
+                }).ToArray()
             };
 
             // The cross-run verdict, when a ledger was read: the word, every verdict that applies, the

@@ -9,7 +9,8 @@ namespace Kronikol.Reports;
 /// <param name="RelativePath">
 /// Where the artefact is. Absolute paths are copied into the report's <c>attachments/</c> folder and
 /// rewritten to <c>attachments/&lt;file&gt;</c> by
-/// <see cref="ReportGenerator.CopyAttachmentsToReportsFolder"/>; URLs are left untouched.
+/// <see cref="ReportGenerator.CopyAttachmentsToReportsFolder"/>; URLs are left untouched. A file the report does not
+/// hold keeps the path it was given, and <see cref="Problem"/> says why.
 /// </param>
 /// <param name="MediaType">
 /// Optional IANA media type (<c>image/png</c>, <c>video/webm</c>, <c>application/zip</c>). When present it
@@ -48,8 +49,13 @@ public record FileAttachment(string Name, string RelativePath, string? MediaType
                && Array.Exists(InlineImageExtensions, e => string.Equals(e, extension, StringComparison.OrdinalIgnoreCase));
     }
 
-    /// <summary>Why the report does not hold this file, set by the report's writer; null when it does, or for a URL.</summary>
-    internal AttachmentProblem? Problem { get; init; }
+    /// <summary>
+    /// Why the report does not hold this file, set by the report's writer when it copies the file in; null when it does,
+    /// or for a URL. Every reader shows it: the page draws the name and the state in place of an image or a link, and the
+    /// data files, <c>Failures.md</c>, <c>Failures.jsonl</c> and <c>kronikol query</c> print it after the path, which is
+    /// then the path as it was given (#148).
+    /// </summary>
+    public AttachmentProblem? Problem { get; init; }
 
     /// <summary>
     /// The file's length and last write when it was attached, when it was there then; set by <c>Track.Attachment</c>, read
@@ -73,8 +79,8 @@ public record FileAttachment(string Name, string RelativePath, string? MediaType
             || path.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
 }
 
-/// <summary>Why a report does not hold an attachment's file.</summary>
-internal enum AttachmentProblem
+/// <summary>Why a report does not hold an attachment's file (<see cref="FileAttachment.Problem"/>).</summary>
+public enum AttachmentProblem
 {
     /// <summary>No file was at the path when the report was drawn.</summary>
     NotFound,
@@ -84,6 +90,22 @@ internal enum AttachmentProblem
 
     /// <summary>The path is not a legal path on this machine.</summary>
     NotUsable,
+}
+
+/// <summary>The words every reader shows for an <see cref="AttachmentProblem"/>: the page, <c>Failures.md</c> and <c>kronikol query</c>.</summary>
+internal static class AttachmentProblemText
+{
+    internal static string Of(AttachmentProblem problem) => problem switch
+    {
+        AttachmentProblem.NotFound => "not found when the report was drawn",
+        AttachmentProblem.NotCopied => "could not be copied into the report",
+        AttachmentProblem.NotUsable => "not a usable path",
+        _ => problem.ToString(),
+    };
+
+    /// <summary>The words for a state as a data file spells it (the enum's name), or the spelling itself for one this version does not know.</summary>
+    internal static string Of(string spelled) =>
+        Enum.TryParse<AttachmentProblem>(spelled, ignoreCase: true, out var problem) && Enum.IsDefined(problem) ? Of(problem) : spelled;
 }
 
 /// <summary>A file's length and last write time, as it was when it was attached.</summary>
