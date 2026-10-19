@@ -205,10 +205,12 @@ public class ToolbarStylingTests : PlaywrightTestBase
     /// render on its own: elements carrying the real classes, appended to the page, paint as the
     /// emitted markup paints.</summary>
     [Theory]
-    [InlineData(true, Tint, Violet, VioletDark, Tint, Violet, "rgb(139, 92, 246) 4px 0px 0px 0px inset")]
-    [InlineData(false, "rgb(232, 240, 254)", Blue, "rgb(51, 103, 214)", "rgb(240, 244, 255)", Blue, "rgb(37, 89, 199) 2px 0px 0px 0px inset")] // 5.0.0: the accent's 2px edge (S1)
+    [InlineData(true, Tint, Violet, Violet, VioletDark, Tint, Violet, "rgb(139, 92, 246) 4px 0px 0px 0px inset")]
+    // 5.0.0: the popup's view switch is a pair of tabs on the theme's tokens, the picked one underlined in the accent
+    // (S11c), and the search match has the accent's 2px edge (S1)
+    [InlineData(false, Hover, None, Accent, None, Hover, Accent, "rgb(37, 89, 199) 2px 0px 0px 0px inset")]
     public async Task Popup_controls_and_search_matches_take_the_themes_colours(bool violet, string idleHovered, string active,
-        string activeHovered, string listHovered, string listHoveredBorder, string searchMatchShadow)
+        string activeEdge, string activeHovered, string listHovered, string listHoveredBorder, string searchMatchShadow)
     {
         await Open($"PopupControls{violet}.html", violet);
         await AppendPopupControls();
@@ -218,7 +220,9 @@ public class ToolbarStylingTests : PlaywrightTestBase
         await Paints(idle, idleHovered);
         var toggle = Page.Locator("#probe-active");
         await Page.Mouse.MoveAsync(0, 0);
-        await Paints(toggle, active, active);
+        await Paints(toggle, active, activeEdge);
+        if (!violet)
+            await Expect(toggle).ToHaveCSSAsync("box-shadow", "rgb(37, 89, 199) 0px -2px 0px 0px inset");
         await toggle.HoverAsync();
         await Paints(toggle, activeHovered);
         var item = Page.Locator("#probe-rel-item");

@@ -115,8 +115,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithAwkwardAttachmentNames("AttAwkward.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
 
         foreach (var name in new[] { "shot#1.png", "50%.png" })
         {
@@ -142,8 +142,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     {
         await Page.GotoAsync(ReportTestHelper.GenerateReportWithMissingAttachments(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
     }
 
     [Fact]
@@ -216,8 +216,8 @@ public class AttachmentRenderingTests : PlaywrightTestBase
         await Page.GotoAsync(GenerateReportWithScenarioImages("AttScenarioImages.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Features" }).ClickAsync();
-        await Page.Locator("button.collapse-expand-all", new() { HasTextString = "Expand All Scenarios" }).ClickAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
         var group = Page.Locator("details.scenario-parameterized").First;
         if (await group.GetAttributeAsync("open") == null)
             await group.Locator("summary").First.ClickAsync();

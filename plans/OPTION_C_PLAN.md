@@ -962,3 +962,12 @@ decision of the owner's, not part of this plan.
   fact's red is its mutations: 4 of 4 killed (`checks/mutate-s12p1.py`: two scripts and two sheets moved off the
   breakpoint).
   Checks: the StylesheetRules class passes, 29 of 29.
+- 2026-10-19, v5 test faults after the merge and S11c (found by kronikol-89's full Playwright run on `9bb77de6`),
+  fixed with `edits/tests-v5-fixes.py`: `AttachmentRenderingTests`' three helpers from main (4.29.0, 4.31.1) clicked
+  4.x's "Expand All" buttons, which v5 replaced in S6, and use `ExpandAllFeaturesAsync` and `ExpandAllScenariosAsync`
+  now (six facts); `ToolbarStylingTests`' popup theory held 4.x's literal colours for the default theme, which S11c
+  moved onto the tokens with the view switch as tabs, and holds the tokens now (only its first check had ever run).
+  Red: 7 of 17 failed before it (the six attachment facts, each after a 30 s wait, and the popup theory's default
+  case). Green: 17 of 17 (the AttachmentRendering class and both cases of the popup theory). Lesson: a stage's
+  neighbour checks pick the classes by name, and this class's name gave no hint it reads the popup; the full suite
+  after each stage is what catches such a test.
