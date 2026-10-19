@@ -237,7 +237,7 @@ public class NoteButtonsAfterHeaderHideTests : DiagramNotePlaywrightBase
             () => {
                 var icons = document.querySelectorAll('.note-toggle-icon');
                 return Array.from(icons).some(i =>
-                    Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('\u25B2'))
+                    /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || '')
                     && i.style.opacity !== '0');
             }
         """, null, new() { Timeout = 30000, PollingInterval = 200 });
@@ -257,7 +257,7 @@ public class NoteButtonsAfterHeaderHideTests : DiagramNotePlaywrightBase
             () => {
                 var icons = document.querySelectorAll('.note-toggle-icon');
                 return Array.from(icons).some(i =>
-                    Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('\u25B2'))
+                    /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || '')
                     && i.style.opacity !== '0');
             }
         """, null, new() { Timeout = 10000, PollingInterval = 200 });
@@ -266,7 +266,7 @@ public class NoteButtonsAfterHeaderHideTests : DiagramNotePlaywrightBase
             () => {
                 var icons = Array.from(document.querySelectorAll('.note-toggle-icon'));
                 var upArrow = icons.find(i =>
-                    Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('\u25B2')));
+                    /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || ''));
                 if (upArrow) {
                     var rect = upArrow.querySelector('rect');
                     if (rect) rect.dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true}));
@@ -279,7 +279,7 @@ public class NoteButtonsAfterHeaderHideTests : DiagramNotePlaywrightBase
         var hasUpArrow = await Page.EvaluateAsync<bool>("""
             () => {
                 var icons = Array.from(document.querySelectorAll('.note-toggle-icon'));
-                return icons.some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('\u25B2')));
+                return icons.some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || ''));
             }
         """);
         Assert.False(hasUpArrow);

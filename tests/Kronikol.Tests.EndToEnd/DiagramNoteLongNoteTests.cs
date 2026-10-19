@@ -49,7 +49,7 @@ public class DiagramNoteLongNoteTests : DiagramNotePlaywrightBase
         // No up arrows = not expanded
         var hasUpArrow = await Page.EvaluateAsync<bool>("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲')))
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || ''))
         """);
         Assert.False(hasUpArrow);
     }
@@ -98,7 +98,7 @@ public class DiagramNoteLongNoteTests : DiagramNotePlaywrightBase
 
         await Page.WaitForFunctionAsync("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲')))
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || ''))
         """, null, new() { Timeout = 10000, PollingInterval = 200 });
     }
 
@@ -125,7 +125,7 @@ public class DiagramNoteLongNoteTests : DiagramNotePlaywrightBase
 
         await Page.WaitForFunctionAsync("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲'))
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || '')
                     && i.style.opacity !== '0')
         """, null, new() { Timeout = 10000, PollingInterval = 200 });
     }
@@ -144,7 +144,7 @@ public class DiagramNoteLongNoteTests : DiagramNotePlaywrightBase
 
         var hasUpArrow = await Page.EvaluateAsync<bool>("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲')))
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || ''))
         """);
         Assert.False(hasUpArrow);
     }
@@ -160,14 +160,14 @@ public class DiagramNoteLongNoteTests : DiagramNotePlaywrightBase
 
         await Page.WaitForFunctionAsync("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲'))
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || '')
                     && i.style.opacity !== '0')
         """, null, new() { Timeout = 10000, PollingInterval = 200 });
 
         await Page.EvaluateAsync("""
             () => {
                 var icon = Array.from(document.querySelectorAll('.note-toggle-icon'))
-                    .find(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲')));
+                    .find(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || ''));
                 if (icon) icon.querySelector('rect').dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true}));
             }
         """);
@@ -175,7 +175,7 @@ public class DiagramNoteLongNoteTests : DiagramNotePlaywrightBase
 
         var hasUpArrow = await Page.EvaluateAsync<bool>("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲')))
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || ''))
         """);
         Assert.False(hasUpArrow);
     }
@@ -231,7 +231,7 @@ public class DiagramNoteLongNoteTests : DiagramNotePlaywrightBase
         var hasVisibleUpArrow = await Page.EvaluateAsync<bool>("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
                 .filter(i => i.style.opacity !== '0')
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲')))
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || ''))
         """);
         Assert.False(hasVisibleUpArrow);
     }
@@ -250,7 +250,7 @@ public class DiagramNoteLongNoteTests : DiagramNotePlaywrightBase
 
         await Page.WaitForFunctionAsync("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲'))
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || '')
                     && i.style.opacity !== '0')
         """, null, new() { Timeout = 10000, PollingInterval = 200 });
     }
@@ -269,7 +269,7 @@ public class DiagramNoteLongNoteTests : DiagramNotePlaywrightBase
 
         await Page.WaitForFunctionAsync("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲'))
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || '')
                     && i.style.opacity !== '0')
         """, null, new() { Timeout = 10000, PollingInterval = 200 });
     }

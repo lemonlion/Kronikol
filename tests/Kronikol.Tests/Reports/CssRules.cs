@@ -52,9 +52,31 @@ internal static partial class CssRules
             if (prelude.StartsWith("@media", StringComparison.Ordinal))
                 ParseBlock(css, open + 1, close, Normalise(prelude["@media".Length..]), rules);
             else if (prelude.Length > 0 && !prelude.StartsWith('@'))
-                rules.Add(new CssRule(rules.Count, media, prelude.Split(',').Select(Normalise).ToArray(), Declarations(css[(open + 1)..close])));
+                rules.Add(new CssRule(rules.Count, media, SelectorList(prelude), Declarations(css[(open + 1)..close])));
             i = close + 1;
         }
+    }
+
+    /// <summary>A selector list split at its own commas, not at those inside an argument such as
+    /// <c>:is(.a, .b)</c> or an attribute value.</summary>
+    private static string[] SelectorList(string prelude)
+    {
+        var selectors = new List<string>();
+        var depth = 0;
+        var start = 0;
+        for (var i = 0; i < prelude.Length; i++)
+        {
+            var c = prelude[i];
+            if (c is '(' or '[') depth++;
+            else if (c is ')' or ']') depth--;
+            else if (c == ',' && depth == 0)
+            {
+                selectors.Add(Normalise(prelude[start..i]));
+                start = i + 1;
+            }
+        }
+        selectors.Add(Normalise(prelude[start..]));
+        return selectors.ToArray();
     }
 
     private static int MatchingBrace(string css, int open)

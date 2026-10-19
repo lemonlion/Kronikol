@@ -458,8 +458,9 @@ public class DiagramContextMenuTests
     public void CreateNoteButtons_shows_expand_for_collapsed_and_truncated()
     {
         var funcBody = GetFunction("createNoteButtons");
-        // Expand button shown for collapsed or truncated
-        Assert.Contains("state === 'collapsed' || state === 'truncated'", funcBody);
+        // Expand button shown for collapsed or truncated; from 5.0.0 not for a collapsed note that already shows all
+        // of itself, which it would open to nothing (plans/OPTION_C_PLAN.md S9, B1)
+        Assert.Contains("(state === 'collapsed' && !shownWhole) || state === 'truncated'", funcBody);
     }
 
     [Fact]
@@ -477,8 +478,8 @@ public class DiagramContextMenuTests
     public void CreateNoteButtons_expand_uses_large_downward_arrow()
     {
         var funcBody = GetFunction("createNoteButtons");
-        // Bottom expand button uses ▼ (large downward triangle)
-        Assert.Contains("\\u25BC", funcBody);
+        // Bottom expand button draws a downward triangle (from 5.0.0 drawn, not the ▼ glyph: S9, B5)
+        Assert.Contains("ge.appendChild(drawnTriangle(ex, ey, expandW, expandH, false));", funcBody);
         Assert.DoesNotContain("\\u25BE", funcBody); // not small ▾
         Assert.DoesNotContain("textContent = '+'", funcBody);
     }
@@ -489,16 +490,17 @@ public class DiagramContextMenuTests
         var funcBody = GetFunction("createNoteButtons");
         // Bottom-center ▲ contract button shown when expanded and long note
         Assert.Contains("state === 'expanded' && longNote", funcBody);
-        Assert.Contains("\\u25B2", funcBody); // ▲ large
+        Assert.Contains("gbc.appendChild(drawnTriangle(cx, cy, contractW, contractH, true));", funcBody); // drawn ▲ (B5)
     }
 
     [Fact]
     public void CreateNoteButtons_top_right_arrow_for_expanded_long_notes()
     {
         var funcBody = GetFunction("createNoteButtons");
-        // For expanded long notes: ▴ arrow appears to the left of −
-        // The ▴ block uses offset: topSize * 2 + pad * 2
-        Assert.Contains("bbox.x + bbox.width - topSize * 2 - pad * 2", funcBody);
+        // For expanded long notes: ▴ arrow appears to the left of −. From 5.0.0 every top-right button is made at the
+        // first place and packTopRight moves it, skipping hidden ones (S9, B3), so − is packed first and the ▴ next
+        Assert.Contains("var ax = bbox.x + bbox.width - topSize - pad;", funcBody);
+        Assert.True(funcBody.IndexOf("topRight.push(gc);") < funcBody.IndexOf("if (upTop) topRight.push(upTop);"));
     }
 
     [Fact]
@@ -528,8 +530,8 @@ public class DiagramContextMenuTests
     {
         var funcBody = GetFunction("createNoteButtons");
         // The top-right ▴ arrow on expanded long notes calls onTruncate, not onContract
-        // Find the block for the ▴ arrow (uses bgA click handler)
-        Assert.Contains("onTruncate()", funcBody);
+        // Find the block for the ▴ arrow (uses bgA click handler); from 5.0.0 through keepPlace (S9, R17.9)
+        Assert.Contains("bgA.addEventListener('click', function(ev) { ev.stopPropagation(); keepPlace(onTruncate, ev); });", funcBody);
     }
 
     [Fact]
@@ -538,16 +540,16 @@ public class DiagramContextMenuTests
         var funcBody = GetFunction("createNoteButtons");
         // The bottom ▲ on expanded long notes calls onTruncate, not onContract
         // bgBC click handler should call onTruncate
-        var bottomBlock = funcBody.Substring(funcBody.IndexOf("\\u25B2"));
-        Assert.Contains("onTruncate()", bottomBlock);
+        var bottomBlock = funcBody.Substring(funcBody.IndexOf("'truncate-bottom'"));
+        Assert.Contains("bgBC.addEventListener('click', function(ev) { ev.stopPropagation(); keepPlace(onTruncate, ev); });", bottomBlock);
     }
 
     [Fact]
     public void CreateNoteButtons_minus_button_calls_onContract()
     {
         var funcBody = GetFunction("createNoteButtons");
-        // The − (minus) button calls onContract for full collapse
-        Assert.Contains("onContract()", funcBody);
+        // The − (minus) button calls onContract for full collapse, from 5.0.0 through keepPlace (S9, R17.9)
+        Assert.Contains("bgC.addEventListener('click', function(ev) { ev.stopPropagation(); keepPlace(onContract, ev); });", funcBody);
     }
 
     [Fact]

@@ -579,3 +579,38 @@ decision of the owner's, not part of this plan.
   Tests: Playwright `NotePreviewBraceTests` (new, 7, failing before) and `ExactNoteMapTests` (new, 2);
   `NoteHeaderFormsTests` reads the preview without its braces.
   Checks: the core suite passes 7,781 with 2 skipped; the full Playwright suite passes 1,173 with 28 skipped.
+- 2026-10-19, S9c: the note buttons (P15: B1 to B8, items R17.9, R17.13 to R17.15 and 24) and their tooltips (D42),
+  which finishes S9 (the format dropdown's heading, R17.3, came with S8). `createNoteButtons` is the preview's round
+  17 function, re-derived on the product's (`scripts-s9-d.py`): the triangles are drawn (`drawnTriangle`, 2 px clear
+  of their button's top and bottom edges, the top-right one 3 px); every top-right button is made at the first place
+  from the note's right edge and moved by `packTopRight`, which skips a hidden one and carries a tall note's scroll
+  offset, so the ▲ follows the visible part of a tall note too; a truncated note's bottom holds `collapse-bottom` and
+  `expand-bottom` side by side, each 24 px with 3 px between; a collapsed note that already shows all of itself
+  (`collapsedIsWhole`, P10) has no + and no bottom ▼; and making a note shorter from its lower half brings its new
+  bottom back to the click (`keepPlace`). The buttons are inked from `--dg-icon`, `--dg-icon-edge` and `--dg-icon-ink`
+  (`collapsible-notes-styles.css`).
+- Not ported, as preview defects: `keepPlace` watching the fragment it was given, which a redraw replaces, so a
+  diagram drawn in fragments never scrolled (F4: it watches the diagram that owns the fragments, which carries the
+  rendering flag); the unused slot parameters (F8); the copied "Fragment note indexing" comment (F13); and the
+  triangles without tooltips (rule 7). D42's titles are set by name when a button is made (`giveTitle`,
+  `scripts-s9-e.py`), not by glyph on first hover as in the preview: − and the bottom collapse "Fold this box to one
+  line", the two ▲ "Cut this box back to the line limit", the bottom ▼ "Show more of this box", and the + "Open this
+  box in full", or "Open this box to the line limit" for a note longer than the limit, since a click on that + opens
+  it to the limit (round 9's wording described a short note). `kTriangle` and `_kdy` are renamed `drawnTriangle` and
+  `_followDy`.
+- Found on the way and fixed: `CssRules` split a selector list at every comma, inside `:is()` too, so
+  `Every_selector_in_the_built_in_sheets_is_well_formed` read the four new rules as broken; it now splits at the
+  list's own commas (the preview's diagram look, S10, has 24 more such selectors). F16: the two stale copies under
+  `tests/TestTrackingDiagrams.Tests.EndToEnd/`, with no project, unchanged since 2026-06-07 and still finding the
+  buttons by glyph, are removed.
+  Tests: Playwright `NoteButtonLayoutTests` (new, 9, each failing before: the drawn triangles and their clearance, a
+  truncated note's pair, no gap for a hidden button, nothing to open on a whole collapsed note, the cluster following
+  a tall note, the new bottom back at the click in a whole and a fragmented diagram, and the titles of a long note's
+  buttons in its three states and of a short note's +). The 24 locator lines in 7 files that found ▲ and ▼ by their
+  glyph find the buttons by name (`data-note-btn`, B6, `tests-s9c-a.py`), and `DiagramNotePlaywrightBase`'s wait polls
+  every 200 ms (F15). `DiagramNoteMultiDiagramTests` no longer expects + after collapsing a split note that shows all
+  of itself, and `ExactNoteMapTests` waits for the note's state after its − click, not for its icons (B1). Core:
+  `CssRulesTests` (new, failing before); seven `DiagramContextMenuTests` facts and one `NoteAppearanceScriptTests`
+  fact move their pins to the drawn triangles, the packing, B1's condition and `keepPlace` (`tests-s9c-b.py`).
+  Mutations: 10 of 10 killed (`checks/mutate-s9c.py`).
+  Checks: the core suite passes 7,782 with 2 skipped; the full Playwright suite passes 1,182 with 28 skipped.

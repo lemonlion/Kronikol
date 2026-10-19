@@ -30,12 +30,12 @@ public class YamlNoteCopyTextTests : DiagramNotePlaywrightBase
         await HoverNoteRect(0);
         await Page.WaitForFunctionAsync("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲')) && i.style.opacity === '1');
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || '') && i.style.opacity === '1');
         """, null, new() { Timeout = 10000, PollingInterval = 200 });
         await Page.EvaluateAsync("""
             () => {
                 var up = Array.from(document.querySelectorAll('.note-toggle-icon'))
-                    .find(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲')));
+                    .find(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || ''));
                 up.querySelector('rect').dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true}));
             }
         """);

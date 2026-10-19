@@ -317,8 +317,8 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
                         if (!(ix >= bbox.x-5 && ix <= bbox.x+bbox.width+5
                             && iy >= bbox.y-5 && iy <= bbox.y+bbox.height+5)) continue;
                         if (icons[i].getAttribute('data-note-btn') === 'minus') hasMinus = true;
-                        var txt = icons[i].querySelector('text');
-                        if (txt && (txt.textContent.indexOf('▼') >= 0 || txt.textContent.indexOf('▲') >= 0)) hasExpand = true;
+                        // the triangles are drawn, and named (5.0.0)
+                        if (/^(expand-bottom|truncate|truncate-bottom|collapse-bottom)$/.test(icons[i].getAttribute('data-note-btn') || '')) hasExpand = true;
                     }
                     return 'hasMinus=' + hasMinus + ' hasExpand=' + hasExpand;
                 }

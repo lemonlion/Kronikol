@@ -376,7 +376,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         await HoverNoteRect(0);
         var hasUpArrowJson = await Page.EvaluateAsync<bool>("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲')));
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || ''));
         """);
         Assert.False(hasUpArrowJson, "JSON view of a short note should have no ▲ button");
 
@@ -386,7 +386,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         await HoverNoteRect(0);
         await Page.WaitForFunctionAsync("""
             () => Array.from(document.querySelectorAll('.note-toggle-icon'))
-                .some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▲')));
+                .some(i => /^truncate(-bottom)?$/.test(i.getAttribute('data-note-btn') || ''));
         """, null, new() { Timeout = 10000, PollingInterval = 200 });
     }
 

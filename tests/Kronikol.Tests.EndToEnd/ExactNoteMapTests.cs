@@ -82,7 +82,10 @@ public class ExactNoteMapTests : PlaywrightTestBase
             : ResolvedToggleDefaults.BuiltIn with { SetupShown = false, Details = ReportDetailsState.Expanded });
 
         await ClickMinusAsync(drawnNote);
-        await WaitForReRenderAsync();
+        // the collapsed "1 row" shows all of itself, so it has no buttons to wait for (5.0.0): wait for a note's state
+        await Page.WaitForFunctionAsync(
+            "() => { var c = document.querySelector('[data-plantuml]'); return c && !c._noteRendering && c._noteSteps && Object.keys(c._noteSteps).length > 0; }",
+            null, new() { Timeout = 15000, PollingInterval = 200 });
 
         Assert.NotEqual(0, await StepAsync(sourceNote));
         Assert.Equal(0, await StepAsync(lookalike));

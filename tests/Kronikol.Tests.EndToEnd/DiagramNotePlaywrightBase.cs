@@ -142,16 +142,15 @@ public abstract class DiagramNotePlaywrightBase : PlaywrightTestBase
         // Wait for down arrow to be visible
         await Page.WaitForFunctionAsync(
             "() => { var icons = document.querySelectorAll('.note-toggle-icon'); " +
-            "return Array.from(icons).some(i => { " +
-            "var texts = i.querySelectorAll('text'); " +
-            "return Array.from(texts).some(t => t.textContent.includes('▼')) && i.style.opacity !== '0'; }); }");
+            "return Array.from(icons).some(i => i.getAttribute('data-note-btn') === 'expand-bottom' && i.style.opacity !== '0'); }",
+            null, new() { PollingInterval = 200 });
 
         // Click down arrow via JS
         await Page.EvaluateAsync("""
             () => {
                 var icons = document.querySelectorAll('.note-toggle-icon');
                 var downArrow = Array.from(icons).find(i =>
-                    Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('▼')));
+                    i.getAttribute('data-note-btn') === 'expand-bottom');
                 if (downArrow) {
                     var rect = downArrow.querySelector('rect');
                     rect.dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true}));

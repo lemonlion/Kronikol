@@ -59,7 +59,7 @@ public class NoteExpandArrowHeaderHiddenTests : DiagramNotePlaywrightBase
         var hasDownArrowBefore = await Page.EvaluateAsync<bool>("""
             () => {
                 var icons = Array.from(document.querySelectorAll('.note-toggle-icon'));
-                return icons.some(i => Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('\u25BC')));
+                return icons.some(i => i.getAttribute('data-note-btn') === 'expand-bottom');
             }
         """);
         Assert.True(hasDownArrowBefore, "Down arrow should be present with headers visible (note is truncated)");
@@ -74,7 +74,7 @@ public class NoteExpandArrowHeaderHiddenTests : DiagramNotePlaywrightBase
             () => {
                 var icons = Array.from(document.querySelectorAll('.note-toggle-icon'));
                 return icons.some(i =>
-                    Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('\u25BC'))
+                    i.getAttribute('data-note-btn') === 'expand-bottom'
                     && i.style.opacity !== '0');
             }
         """);
@@ -92,7 +92,7 @@ public class NoteExpandArrowHeaderHiddenTests : DiagramNotePlaywrightBase
             () => {
                 var icons = Array.from(document.querySelectorAll('.note-toggle-icon'));
                 return icons.some(i =>
-                    Array.from(i.querySelectorAll('text')).some(t => t.textContent.includes('\u25BC'))
+                    i.getAttribute('data-note-btn') === 'expand-bottom'
                     && i.style.opacity !== '0');
             }
         """);

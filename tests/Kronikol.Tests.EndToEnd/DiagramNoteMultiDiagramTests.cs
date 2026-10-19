@@ -80,11 +80,12 @@ public class DiagramNoteMultiDiagramTests : DiagramNotePlaywrightBase
                 var first = containers[0];
                 if (!first || !first._noteSteps) return false;
                 // At least one note should be collapsed (step 0)
-                var hasCollapsed = Object.values(first._noteSteps).some(s => s === 0);
-                return hasCollapsed && first.querySelector('[data-note-btn="plus"]') !== null;
+                // (no + where the collapsed note already shows all of itself, since 5.0.0; NoteButtonLayoutTests pins which
+                // notes get one)
+                return Object.values(first._noteSteps).some(s => s === 0);
             }
         """);
-        Assert.True(stateOk, "First diagram should have collapsed note with plus button");
+        Assert.True(stateOk, "First diagram should have a collapsed note");
     }
 
     [Fact]

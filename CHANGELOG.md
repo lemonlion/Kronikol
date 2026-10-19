@@ -78,6 +78,13 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   where 4.x truncated at 40. Steps, Databases, Events and Setup start on, and Headers off, as before. To open a report
   as 4.x did, set `ReportToggleDefaults.AssertionsShown` to `false` and `TruncateLines` to
   `TruncateLineCount.Lines40`.
+- **A note's buttons.** The triangles are drawn, 2 px clear of their button's edges (the top one 3 px); the top-right
+  buttons sit side by side from the note's right edge, with no gap where a hidden one would be, and follow the visible
+  part of a tall note, its triangle too; a truncated note's bottom holds a collapse and an expand button side by side;
+  and a collapsed note that already shows all of itself has no + and no bottom triangle. Every button has a tooltip
+  saying what a click does ("Fold this box to one line", "Show more of this box", "Cut this box back to the line
+  limit", and on the + "Open this box in full", or "Open this box to the line limit" for a note longer than the
+  limit), and a name in `data-note-btn`: `truncate`, `truncate-bottom`, `collapse-bottom` and `expand-bottom` are new.
 - **A collapsed payload's one-line preview leaves out a JSON body's braces.** The opening brace goes, and the closing
   one too when the whole body fits; `{}` stays as it is, and an array keeps its brackets.
 - **The report's look (Option C, in progress on the branch).** Features are cards on a tinted ground, with their
@@ -186,6 +193,10 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **A scenario with one view of its flow keeps its span warning.** The warning that a scenario has ten times the median
   span count was written beside the view tabs only, so a scenario with no sequence diagram and an activity diagram or
   a flame chart alone lost it. It now sits on the diagrams' title.
+- **Making a note shorter from its lower part keeps your place.** Collapsing or truncating a note from its bottom
+  buttons, or by a double-click low in a tall note, pulled what was below it up past the window, so you landed
+  somewhere else, often in another scenario; the note's new bottom is now brought back to where the click was, in a
+  diagram drawn in fragments too.
 - **Hiding assertion notes or step bars keeps the diagram's other statements apart.** Taking a hidden note or bar out
   of a sequence diagram took the line break on both sides of it, so wherever a diagram's lines end in LF (a report
   written on Linux or macOS) the statement before it ran on into the one after it: an arrow's label took in the next

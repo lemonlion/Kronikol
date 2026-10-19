@@ -84,8 +84,10 @@ public class NoteAppearanceScriptTests
         // It is built by the shared glyph factory, which stamps data-note-btn from its btnName.
         Assert.Contains("g.setAttribute('data-note-btn', btnName);", singleQuoted);
         Assert.Contains("'width', appearanceInfo.width !== 'full')", singleQuoted);
-        // …and the tall-note repositioning sweep has to move it with the rest of the cluster.
-        Assert.Contains("btn === 'format' || btn === 'width'", singleQuoted);
+        // …and the tall-note repositioning has to move it with the rest of the cluster: from 5.0.0 every top-right
+        // button is in topRight, which packTopRight moves (plans/OPTION_C_PLAN.md S9, B4).
+        Assert.Contains("topRight.push(widthBtn);", singleQuoted);
+        Assert.Contains("packTopRight(dy);", singleQuoted);
         Assert.DoesNotContain("'mono'", singleQuoted);
     }
 
