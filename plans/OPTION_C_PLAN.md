@@ -1238,3 +1238,24 @@ decision of the owner's, not part of this plan.
   LabsReportTests). Mutations: 3 of 3 killed (the pick not kept, the pick not read, a change of the system's setting
   overruling a stored pick, the last failing the rewritten fact too) (checks/mutate-s14-theme.ps1).
   Checks: the full core suite passes 8,484 with 2 skipped on `c5fab53a` with the change.
+- 2026-10-20, S14, every box of the component diagram and of its diff carries its name at AA, found by the final
+  parity run's contrast check (`checks/svg-contrast.js` on the parity run: 25 names under their minimum, all white on
+  a service box's `#438DD5`, 3.49:1, in both themes): S10a deepened the database, cache and queue boxes for AA and
+  left the service box, the commonest, on C4's blue. A service box is `#3170BA` (5.05:1) edged `#2A61A4`; in
+  `ComponentDiagramDiffer.GenerateDiffPlantUml`'s skin the same, and a new service `#2E7D32` (5.13:1, was `LimeGreen`,
+  2.12:1) and a removed one `#C62828` (5.62:1, was `Red`, 4.00:1), each edged deeper
+  (`edits/s14/component-boxes-at-aa.py`). The arrows keep their colours; two of them are under the 3:1 a line needs
+  (the diff's NEW arrow, `LimeGreen`, 2.12:1, and the hotspot mode's `#Orange`, 1.97:1), both 4.x's, left to the
+  owner. The diff's REMOVED line ends in `#Red` after its label; the page draws the label as the word alone, which the
+  new Playwright fact holds.
+  Tests: core `DiagramLookTests`' new theory (every box of the diagram's and the diff's skin, named, at 4.5:1 or more)
+  and `ComponentDiagramGeneratorTests`' system colour pin moved to `#3170BA`; Playwright
+  `DiagramActivityAndComponentColoursTests`' new theory (the names as the page draws them on the generator's and the
+  diff's output, light and dark, and the diff's labels as words). Red: core 2 of 2 and the moved pin, each on its
+  assertion (3.49:1); Playwright 4 of 4 on the drawn contrast (3.49, 2.12 and 4.00:1). A first Playwright red failed
+  for the wrong reason: the engine draws each word of a label as a text of its own, so two-word names were never
+  found, and the fact names its boxes with one word each now. Green: core 205 of 205 (`DiagramLookTests` and every
+  `ComponentDiagram` class); Playwright 45 of 45 with `DiagramThemeColoursTests`, `ComponentsTabTests` and
+  `DarkThemeColoursTests`. Mutations: 4 of 4 killed on both theories, 8 runs, each failing on the colour it put back
+  (`checks/mutate-s14-contrast.ps1`).
+  Checks: the full core suite passes 8,486 with 2 skipped on `31aac9d5` with the change.

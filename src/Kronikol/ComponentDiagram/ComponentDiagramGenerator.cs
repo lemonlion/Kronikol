@@ -206,12 +206,13 @@ public static partial class ComponentDiagramGenerator
             sb.AppendLine("  StereotypeFontColor #08427B");
             sb.AppendLine("  StereotypeFontSize 0");
             sb.AppendLine("}");
+            // a service a shade deeper than C4's #438DD5 (3.49:1), so its white name reads at AA: 5.05:1 (5.0.0)
             sb.AppendLine("skinparam rectangle<<system>> {");
-            sb.AppendLine("  BackgroundColor #438DD5");
+            sb.AppendLine("  BackgroundColor #3170BA");
             sb.AppendLine("  FontColor #FFFFFF");
-            sb.AppendLine("  BorderColor #3C7FC0");
+            sb.AppendLine("  BorderColor #2A61A4");
             sb.AppendLine("  RoundCorner 25");
-            sb.AppendLine("  StereotypeFontColor #438DD5");
+            sb.AppendLine("  StereotypeFontColor #3170BA");
             sb.AppendLine("  StereotypeFontSize 0");
             sb.AppendLine("}");
             // a shade deeper than the database's arrows, so its white name reads at 6.15:1 (5.0.0, R17.22)

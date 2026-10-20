@@ -383,9 +383,11 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **A scenario with one view of its flow keeps its span warning.** The warning that a scenario has ten times the median
   span count was written beside the view tabs only, so a scenario with no sequence diagram and an activity diagram or
   a flame chart alone lost it. It now sits on the diagrams' title.
-- **A component diagram's cache and queue boxes carry their names at AA.** White on the cache box's `#F39C12`
-  measured 2.19:1 and on the queue box's `#9B59B6` 4.67:1. The boxes are `#B35900` (4.83:1) and `#8E44AD` (5.87:1),
-  each with a deeper edge; the arrows keep the palette's colours.
+- **A component diagram's boxes carry their names at AA, and so do its diff's.** White on a service box's `#438DD5`
+  (C4's blue) measured 3.49:1, on the cache box's `#F39C12` 2.19:1 and on the queue box's `#9B59B6` 4.67:1; in the
+  skin of `ComponentDiagramDiffer.GenerateDiffPlantUml` a new service's `LimeGreen` measured 2.12:1 and a removed
+  one's `Red` 4.00:1. The boxes are `#3170BA` (5.05:1), `#B35900` (4.83:1), `#8E44AD` (5.87:1), `#2E7D32` (5.13:1)
+  and `#C62828` (5.62:1), each with a deeper edge; the arrows keep their colours.
 - **Making a note shorter from its lower part keeps your place.** Collapsing or truncating a note from its bottom
   buttons, or by a double-click low in a tall note, pulled what was below it up past the window, so you landed
   somewhere else, often in another scenario; the note's new bottom is now brought back to where the click was, in a

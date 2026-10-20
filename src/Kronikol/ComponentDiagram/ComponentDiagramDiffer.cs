@@ -102,28 +102,31 @@ public static partial class ComponentDiagramDiffer
             sb.AppendLine("  StereotypeFontColor #08427B");
             sb.AppendLine("  StereotypeFontSize 0");
             sb.AppendLine("}");
+            // a service a shade deeper than C4's #438DD5 (3.49:1), so its white name reads at AA: 5.05:1 (5.0.0)
             sb.AppendLine("skinparam rectangle<<system>> {");
-            sb.AppendLine("  BackgroundColor #438DD5");
+            sb.AppendLine("  BackgroundColor #3170BA");
             sb.AppendLine("  FontColor #FFFFFF");
-            sb.AppendLine("  BorderColor #3C7FC0");
+            sb.AppendLine("  BorderColor #2A61A4");
             sb.AppendLine("  RoundCorner 25");
-            sb.AppendLine("  StereotypeFontColor #438DD5");
+            sb.AppendLine("  StereotypeFontColor #3170BA");
             sb.AppendLine("  StereotypeFontSize 0");
             sb.AppendLine("}");
+            // the new and removed services a shade deeper than LimeGreen (2.12:1) and Red (4.00:1), so their
+            // white names read at AA: 5.13:1 and 5.62:1 (5.0.0)
             sb.AppendLine("skinparam rectangle<<newService>> {");
-            sb.AppendLine("  BackgroundColor #LimeGreen");
+            sb.AppendLine("  BackgroundColor #2E7D32");
             sb.AppendLine("  FontColor #FFFFFF");
-            sb.AppendLine("  BorderColor #2E8B57");
+            sb.AppendLine("  BorderColor #1B5E20");
             sb.AppendLine("  RoundCorner 25");
-            sb.AppendLine("  StereotypeFontColor #LimeGreen");
+            sb.AppendLine("  StereotypeFontColor #2E7D32");
             sb.AppendLine("  StereotypeFontSize 0");
             sb.AppendLine("}");
             sb.AppendLine("skinparam rectangle<<removedService>> {");
-            sb.AppendLine("  BackgroundColor #Red");
+            sb.AppendLine("  BackgroundColor #C62828");
             sb.AppendLine("  FontColor #FFFFFF");
-            sb.AppendLine("  BorderColor #B22222");
+            sb.AppendLine("  BorderColor #9E1F1F");
             sb.AppendLine("  RoundCorner 25");
-            sb.AppendLine("  StereotypeFontColor #Red");
+            sb.AppendLine("  StereotypeFontColor #C62828");
             sb.AppendLine("  StereotypeFontSize 0");
             sb.AppendLine("}");
             sb.AppendLine("skinparam arrow {");

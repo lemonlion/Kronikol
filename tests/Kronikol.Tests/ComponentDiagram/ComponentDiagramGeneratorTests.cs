@@ -805,7 +805,7 @@ public class ComponentDiagramGeneratorTests
         var result = ComponentDiagramGenerator.GeneratePlantUml(relationships, useC4: false);
 
         Assert.Contains("BackgroundColor #08427B", result);  // Person color
-        Assert.Contains("BackgroundColor #438DD5", result);  // System color
+        Assert.Contains("BackgroundColor #3170BA", result);  // System color, a shade deeper than C4's for AA (5.0.0)
         Assert.Contains("RoundCorner 25", result);
         Assert.Contains("skinparam arrow", result);
     }

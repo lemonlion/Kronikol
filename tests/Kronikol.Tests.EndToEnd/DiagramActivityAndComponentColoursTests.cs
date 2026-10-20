@@ -1,3 +1,6 @@
+using System.Globalization;
+using Kronikol.ComponentDiagram;
+using Kronikol.Constants;
 using Kronikol.Reports;
 
 namespace Kronikol.Tests.EndToEnd;
@@ -158,6 +161,96 @@ public class DiagramActivityAndComponentColoursTests : DiagramNotePlaywrightBase
         Assert.Equal(r[1], r[0]);
         Assert.Equal(r[3], r[2]);
         Assert.Equal(r[5], r[4]);
+    }
+
+    // Every box of the component diagram and of its diff, as ComponentDiagramGenerator and ComponentDiagramDiffer write
+    // them and the page draws them, carries its name at AA in both themes: a service's white name sat at 3.49:1 on C4's
+    // blue, and the diff's new and removed services were LimeGreen and Red (S14). A name's box is the last shape drawn
+    // before its text whose box holds the text's centre. The engine draws each word of a label as a text of its own, so
+    // the names are one word each and a two-word label is found by its first.
+    private const string NameContrasts = """
+        (el, names) => {
+            const rgb = s => (s.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+            const lum = c => {
+                const f = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+                const [r, g, b] = rgb(c); return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+            };
+            const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+            const all = Array.from(el.querySelectorAll('*'));
+            return names.map(name => {
+                const t = all.find(e => e.tagName === 'text' && e.textContent.trim() === name);
+                if (!t) return name + ': not drawn, 0';
+                const tb = t.getBoundingClientRect(), cx = tb.left + tb.width / 2, cy = tb.top + tb.height / 2;
+                const under = all.slice(0, all.indexOf(t)).filter(e => /^(rect|path|polygon|ellipse)$/.test(e.tagName)
+                    && getComputedStyle(e).fill !== 'none'
+                    && (b => cx >= b.left && cx <= b.right && cy >= b.top && cy <= b.bottom)(e.getBoundingClientRect()));
+                if (!under.length) return name + ': no box, 0';
+                const ink = getComputedStyle(t).fill, ground = getComputedStyle(under[under.length - 1]).fill;
+                return name + ': ' + ink + ' on ' + ground + ', ' + ratio(ink, ground).toFixed(2);
+            });
+        }
+        """;
+
+    [Theory]
+    [InlineData("diagram", "light")]
+    [InlineData("diagram", "dark")]
+    [InlineData("diff", "light")]
+    [InlineData("diff", "dark")]
+    public async Task Every_component_box_carries_its_name_at_AA_as_the_page_draws_it(string which, string theme)
+    {
+        ComponentRelationship[] baseline =
+        [
+            new("Shop", "Ordering", "HTTP", ["POST"], 2, 1),
+            new("Shop", "Legacy", "HTTP", ["GET"], 1, 1),
+        ];
+        var (plantUml, names) = which == "diagram"
+            ? (ComponentDiagramGenerator.GeneratePlantUml(
+                [
+                    baseline[0],
+                    new("Ordering", "Ledger", "SQL", ["INSERT"], 1, 1, DependencyCategory: DependencyCategories.SQL),
+                    new("Ordering", "Basket", "Redis", ["GET"], 1, 1, DependencyCategory: DependencyCategories.Redis),
+                    new("Ordering", "Events", "ServiceBus", ["Send"], 1, 1, DependencyCategory: DependencyCategories.ServiceBus),
+                ], useC4: false),
+                new[] { "Shop", "[Person]", "Ordering", "[Software", "Ledger", "Basket", "Events" })
+            : (ComponentDiagramDiffer.GenerateDiffPlantUml(
+                ComponentDiagramDiffer.Compare(baseline, [baseline[0], new("Shop", "Billing", "HTTP", ["GET"], 1, 1)]), useC4: false),
+                new[] { "Shop", "Ordering", "Billing", "Legacy" });
+        Feature[] features =
+        [
+            new()
+            {
+                DisplayName = "Orders",
+                Scenarios = [new() { Id = "s1", DisplayName = "Place an order", Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(10) }]
+            }
+        ];
+        var file = $"ComponentNames-{which}-{theme}.html";
+        var path = ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
+            Path.Combine(TempDir, file), "Bakery", true, diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs, componentDiagramPlantUml: plantUml);
+        File.Copy(path, Path.Combine(OutputDir, file), true);
+        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
+        await OpenReportTabAsync("components");
+        await Page.WaitForFunctionAsync("() => !!document.querySelector('#component-diagram .plantuml-browser svg')", null,
+            new() { Timeout = 30000, PollingInterval = 200 });
+
+        var measured = await Page.Locator("#component-diagram .plantuml-browser svg").First
+            .EvaluateAsync<string[]>(NameContrasts, names);
+
+        Assert.Equal(names.Length, measured.Length);
+        var low = measured.Where(m =>
+            double.Parse(m[(m.LastIndexOf(", ", StringComparison.Ordinal) + 2)..], CultureInfo.InvariantCulture) < 4.5).ToArray();
+        Assert.True(low.Length == 0, string.Join("; ", low));
+
+        // the diff's relationship labels read as words, with no quote or colour of their source drawn
+        if (which == "diff")
+        {
+            var texts = await Page.Locator("#component-diagram .plantuml-browser svg").First.EvaluateAsync<string[]>(
+                "el => Array.from(el.querySelectorAll('text')).map(t => t.textContent.trim())");
+            Assert.Contains("NEW", texts);
+            Assert.Contains("REMOVED", texts);
+            Assert.DoesNotContain(texts, s => s.Contains('#') || s.Contains('"'));
+        }
     }
 
     // A note's header line (its method and path, NotePalette.HeaderInk) is drawn in the soft ink of the theme

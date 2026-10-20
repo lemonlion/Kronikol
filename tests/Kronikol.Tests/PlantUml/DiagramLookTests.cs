@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Kronikol.ComponentDiagram;
 using Kronikol.Constants;
 using Kronikol.PlantUml;
@@ -149,6 +150,44 @@ public class DiagramLookTests
         Assert.Contains($"skinparam {shape} {{\n  BackgroundColor {fill}\n  FontColor #FFFFFF\n  BorderColor {edge}\n}}", plantUml);
         Assert.True(Contrast(fill, "#FFFFFF") >= 4.5, $"{shape}: white on {fill} is {Contrast(fill, "#FFFFFF"):0.00}:1");
     }
+
+    // Every box of a component diagram and of its diff carries its name at AA or better, the services too: C4's blue
+    // left a service's white name at 3.49:1, and the diff's new and removed services were LimeGreen (2.12:1) and Red
+    // (4.00:1). The boxes are named, so that a skin which lost one cannot pass for want of it.
+    [Theory]
+    [InlineData("diagram", "rectangle<<person>>,rectangle<<system>>,database,collections,queue")]
+    [InlineData("diff", "rectangle<<person>>,rectangle<<system>>,rectangle<<newService>>,rectangle<<removedService>>")]
+    public void Every_box_of_a_component_diagram_and_of_its_diff_carries_its_name_at_AA(string which, string boxes)
+    {
+        ComponentRelationship[] baseline = [new("App", "Api", "HTTP", ["GET"], 1, 1), new("App", "Old", "HTTP", ["GET"], 1, 1)];
+        var plantUml = (which == "diagram"
+            ? ComponentDiagramGenerator.GeneratePlantUml([baseline[0]], useC4: false)
+            : ComponentDiagramDiffer.GenerateDiffPlantUml(
+                ComponentDiagramDiffer.Compare(baseline, [baseline[0], new("App", "New", "HTTP", ["GET"], 1, 1)]), useC4: false))
+            .ReplaceLineEndings("\n");
+
+        var found = new List<string>();
+        foreach (Match block in Regex.Matches(plantUml, @"^skinparam (\S+) \{\n((?:  .*\n)*?)\}", RegexOptions.Multiline))
+        {
+            var fill = Regex.Match(block.Groups[2].Value, @"^  BackgroundColor (\S+)$", RegexOptions.Multiline);
+            var ink = Regex.Match(block.Groups[2].Value, @"^  FontColor (\S+)$", RegexOptions.Multiline);
+            if (!fill.Success || !ink.Success) continue;
+            found.Add(block.Groups[1].Value);
+            var ratio = Contrast(Hex(fill.Groups[1].Value), Hex(ink.Groups[1].Value));
+            Assert.True(ratio >= 4.5,
+                $"{which}, {block.Groups[1].Value}: {ink.Groups[1].Value} on {fill.Groups[1].Value} is {ratio:0.00}:1");
+        }
+        Assert.Equal(boxes.Split(','), found);
+    }
+
+    // A colour as a skin writes it, #RRGGBB or one of the names the 4.x skins used.
+    private static string Hex(string colour) => colour.ToUpperInvariant() switch
+    {
+        "#LIMEGREEN" => "#32CD32",
+        "#RED" => "#FF0000",
+        var hex when Regex.IsMatch(hex, "^#[0-9A-F]{6}$") => hex,
+        _ => throw new InvalidOperationException($"a colour this test cannot read: {colour}"),
+    };
 
     // WCAG 2 contrast ratio of two sRGB colours written #RRGGBB.
     private static double Contrast(string a, string b)
