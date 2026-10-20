@@ -656,7 +656,7 @@ structure for free, but a plain JUnit reporter reaches the same fidelity through
    first row = header, ragged rows padded, header-only ignored), `stackTrace`, `bypassReason`; `end`:
    `stackTrace`. New model field `Scenario.Description`. Tags follow the ReqNRoll conventions (`@category:`,
    `@endpoint:`, happy-path aliases; a tag present on **every** scenario of a feature also becomes the
-   feature's label). An explicit `background: true` step suppresses the heuristic `BackgroundStepsDetector`
+   feature's label; since 5.0.0 these are one list of tags, `TAGS_PLAN.md`). An explicit `background: true` step suppresses the heuristic `BackgroundStepsDetector`
    entirely, which also declines to run when no step carries a keyword.
 3. **Capitalisation (`StepText`)** — one helper, ported as one function. Upper-case the first *letter* of a
    step or assertion label that carries **no keyword**, after skipping whitespace and the marker glyphs

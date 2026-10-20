@@ -275,8 +275,11 @@ public record ReportConfigurationOptions
     /// When <c>true</c>, every step in the test run report data file carries its full detail: parameters
     /// (inline values, data tables, tree values), text segments, doc string, comments and bypass reason.
     /// This is what makes a parameterised failure legible from the data file alone — without it the inputs
-    /// that produced the failure are only in the HTML. Step detail is measured in kilobytes against
-    /// megabytes of payload, so turn this off only if the file size genuinely matters. Default: <c>true</c>.
+    /// that produced the failure are only in the HTML. In <c>TestRunReport.krkl</c> (<see cref="CompressTestRunReport"/>),
+    /// written compact, a step costs a few hundred bytes before compression however deep it is. The indented
+    /// <c>TestRunReport.json</c> indents every line of a sub-step four spaces further at each level, so there a suite of
+    /// deeply nested composite steps can spend more of the file on steps than on payloads: a LightBDD step 20 levels
+    /// down takes about 5 KB. Turn this off only if the file size genuinely matters. Default: <c>true</c>.
     ///
     /// <para><b>JSON only.</b> The XML and YAML writers emit the reduced step shape whatever this is set
     /// to — they were never handed the flag — so on those formats a step carries keyword, text, status,

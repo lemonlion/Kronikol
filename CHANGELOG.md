@@ -456,6 +456,11 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   `kronikol-test-debugging` skill, name `TestRunReport.krkl` first: the rule forbids opening it as well as the JSON,
   and the skill's examples query the `.krkl` (`plans/REPORT_FORMAT_PLAN.md` 6.3). The text a run writes beside its
   report already named the file that run wrote.
+- `TestRunReportFullStepDetail`'s doc comment and its row on the wiki's Report Configuration page give the cost of
+  step detail as measured. They said it is kilobytes against megabytes of payload, but the indented
+  `TestRunReport.json` indents each line of a step four spaces further at every level of sub-steps, so a LightBDD
+  step 20 levels down takes 5,086 bytes there, against 294 in the compact `TestRunReport.krkl`
+  (`plans/REPORT_FORMAT_PLAN.md` F3).
 
 ## [4.32.1] - 2026-10-19
 

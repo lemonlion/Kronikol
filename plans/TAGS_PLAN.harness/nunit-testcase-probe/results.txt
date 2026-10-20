@@ -1,0 +1,8 @@
+NUnit 4.6.0, .NET SDK 10.0.300, run 2026-10-19 (dotnet run -c Release, from a folder outside the repository):
+
+TestAssembly 'Probe.dll' own: _PID=[66568]; _APPDOMAIN=[Probe]
+  TestFixture 'Probe' own: Category=[FixtureCat]; Endpoint=[/api/x]
+    ParameterizedMethodSuite 'Cases' own: Category=[MethodCat]; Happy Path=[Happy Path]
+      TestMethod 'Cases(1)' own:  | Parent: ParameterizedMethodSuite 'Cases' | AllCategories: [MethodCat,FixtureCat]
+      TestMethod 'Cases(2)' own: Category=[RowCat] | Parent: ParameterizedMethodSuite 'Cases' | AllCategories: [RowCat,MethodCat,FixtureCat]
+    TestMethod 'Plain' own: Category=[MethodCat]; Happy Path=[Happy Path] | Parent: TestFixture 'Probe' | AllCategories: [MethodCat,FixtureCat]
