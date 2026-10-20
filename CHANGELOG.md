@@ -249,6 +249,15 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   is the tab's heading under every renderer; `ComponentDiagram.html` still draws it. A run whose calls give the diagram
   no connection has no Components tab, where it drew the title alone.
 
+### Deprecated
+
+- **`ReportConfigurationOptions.CompressTestRunReportPayloads` and `kronikol ingest --payloads`.** `TestRunReport.krkl`,
+  the default data file from 5.0.0, holds every payload as text inside a file compressed whole, which comes out
+  smaller than payloads compressed one by one (`plans/REPORT_FORMAT_PLAN.md` Q14), so the option reaches only the
+  `TestRunReport.json` a run writes with `CompressTestRunReport` set to `false`. There it works as before. It is
+  `[Obsolete]`, and v6 removes it with the flag (`plans/V6_PLAN.md` item 10). Code that sets or reads it gets warning
+  CS0618 when it builds, which fails a build that treats warnings as errors until the code stops using it.
+
 ### Fixed
 
 - **The summary ring reads 100% only when every scenario passed.** It rounded the pass rate, so 213 passed of 214 read

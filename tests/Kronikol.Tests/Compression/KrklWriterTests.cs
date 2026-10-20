@@ -261,7 +261,9 @@ public class KrklWriterTests : IDisposable
                     InternalFlowTracking = false,
                     GenerateMergeableData = mergeable,
                     GenerateTestRunReportSchema = true,
+#pragma warning disable CS0618 // obsolete from 5.0.0; these facts hold the .krkl to ignoring it
                     CompressTestRunReportPayloads = compressPayloads,
+#pragma warning restore CS0618
                     CompressTestRunReport = compress,
                 });
         }

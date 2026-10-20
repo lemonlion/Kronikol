@@ -1,5 +1,7 @@
+#pragma warning disable CS0618 // CompressTestRunReportPayloads is obsolete from 5.0.0 (it reaches only TestRunReport.json); these facts exercise it on purpose until v6 removes it
 using System.IO.Compression;
 using System.Net;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -33,6 +35,22 @@ public class PayloadCompressionTests : IDisposable
     [Fact]
     // On from 4.0.0 (plans/V4_PLAN.md R8); off through 3.x.
     public void The_option_is_on_by_default() => Assert.True(new ReportConfigurationOptions().CompressTestRunReportPayloads);
+
+    [Fact]
+    // Obsolete from 5.0.0 and removed in v6 (plans/REPORT_FORMAT_PLAN.md Q14): the default TestRunReport.krkl holds every
+    // payload as text, so the option reaches only the JSON file a run writes with CompressTestRunReport off. A warning,
+    // not an error: there it works as before.
+    public void The_option_is_obsolete_from_5_and_says_what_it_still_reaches()
+    {
+        var obsolete = typeof(ReportConfigurationOptions).GetProperty(nameof(ReportConfigurationOptions.CompressTestRunReportPayloads))!
+            .GetCustomAttribute<ObsoleteAttribute>();
+
+        Assert.NotNull(obsolete);
+        Assert.False(obsolete.IsError);
+        Assert.Contains("TestRunReport.krkl", obsolete.Message, StringComparison.Ordinal);
+        Assert.Contains("CompressTestRunReport = false", obsolete.Message, StringComparison.Ordinal);
+        Assert.Contains("removed in v6", obsolete.Message, StringComparison.Ordinal);
+    }
 
     [Fact]
     // 512 through 4.0.1. Zipped, as a CI artifact is, or served gzipped, a report of payloads under a few kilobytes came

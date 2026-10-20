@@ -541,6 +541,7 @@ public static class ReportGenerator
             Add($"{options.YamlSpecificationsFileName}.{specsDataExtension}", () => GenerateSpecificationsData(features, $"{options.YamlSpecificationsFileName}.{specsDataExtension}", options.SpecificationsTitle, options.SpecificationsDataFormat, true));
         }
 
+#pragma warning disable CS0618 // CompressTestRunReportPayloads: obsolete from 5.0.0 for the code that sets it, honoured by the JSON file until v6
         if (options.GenerateTestRunReportData)
         {
             if (options.GenerateMergeableData && options.TestRunReportDataFormat == DataFormat.Json)
@@ -565,6 +566,7 @@ public static class ReportGenerator
                     compressedFile: WritesCompressedReport(options)));
             }
         }
+#pragma warning restore CS0618
 
         if (options.GenerateTestRunReportSchema)
         {

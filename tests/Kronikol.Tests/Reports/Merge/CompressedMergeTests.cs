@@ -30,7 +30,9 @@ public class CompressedMergeTests : IDisposable
     public void A_compressed_shard_merges_with_a_plain_one_and_the_merge_is_compressed()
     {
         // A 4.0.0 shard, written with the default option, beside a 3.x shard, which was written plain.
+#pragma warning disable CS0618 // obsolete from 5.0.0; a 4.x shard was written with it on
         WriteShard("runner1.json", "a1", "Orders", Body("orders"), compress: new ReportConfigurationOptions().CompressTestRunReportPayloads);
+#pragma warning restore CS0618
         WriteShard("runner2.json", "b1", "Payments", Body("payments"), compress: false);
 
         var combined = Merge();

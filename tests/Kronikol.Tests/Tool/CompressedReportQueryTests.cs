@@ -30,7 +30,9 @@ public class CompressedReportQueryTests : IDisposable
         _plain = Write("plain", compress: false);
         // Compressed by the default option (on from 4.0.0), so the theory below is about a report written with no
         // options, and a default turned back off fails the fixture fact.
+#pragma warning disable CS0618 // obsolete from 5.0.0; the JSON file it reaches is still written and read
         _compressed = Write("compressed", compress: new ReportConfigurationOptions().CompressTestRunReportPayloads);
+#pragma warning restore CS0618
     }
 
     public void Dispose()

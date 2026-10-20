@@ -264,9 +264,11 @@ public record ReportConfigurationOptions
     /// <c>kronikol</c> older than 3.35.0 refuses rather than half-reads. The file stays JSON, and
     /// <c>kronikol query</c>, <c>kronikol merge</c> and the <c>query.py</c> of this release read it as they read an
     /// uncompressed one (#85). Default: <c>true</c> from 4.0.0; <c>false</c> through 3.x. Only honoured when the
-    /// format is JSON, and not for a compressed report (<see cref="CompressTestRunReport"/>), whose payloads are text inside
-    /// a file compressed whole.
+    /// format is JSON and <see cref="CompressTestRunReport"/> is <c>false</c>: <c>TestRunReport.krkl</c>, the default from
+    /// 5.0.0, holds every payload as text inside a file compressed whole, which comes out smaller than payloads compressed
+    /// one by one. Obsolete from 5.0.0 for that reason, and removed in v6.
     /// </summary>
+    [Obsolete("TestRunReport.krkl, the default data file from 5.0.0, holds every payload as text inside a file compressed whole, so this reaches only the TestRunReport.json a run writes with CompressTestRunReport = false. It will be removed in v6.")]
     public bool CompressTestRunReportPayloads { get; set; } = true;
 
     /// <summary>

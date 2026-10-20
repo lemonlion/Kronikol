@@ -250,3 +250,8 @@ flip, a CLI flag and an end-to-end proof. The text as it stood is `git show a8ab
    EventBridge, EventHubs, Kafka, MassTransit, MongoDB, PubSub, Redis, S3, SNS, SQS, ServiceBus, Spanner and
    StorageQueues), does nothing; their docs say so. Remove them here (breaking), unless one of those trackers gains
    the implicit action start first. Recommendation: remove them.
+10. **`CompressTestRunReportPayloads` and `kronikol ingest --payloads`** (from `REPORT_FORMAT_PLAN.md` Q14). Both are
+    obsolete from 5.0.0: `TestRunReport.krkl`, the default data file, holds every payload as text inside a file
+    compressed whole, so they reach only the `TestRunReport.json` a run writes with `CompressTestRunReport` off. Remove
+    them here (breaking), and with them the writer's `$z` path (`ReportPayloads` in its compressing mode). The readers
+    keep reading `$z`, which a JSON file written by 3.35.0 or later with the option on holds.

@@ -536,6 +536,11 @@ public class IngestCommandTests : IDisposable
         var usage = new StringWriter();
         IngestCommand.PrintUsage(usage);
         Assert.Contains("--payloads <plain|compressed>", usage.ToString());
+        // Obsolete from 5.0.0 with the option it sets: a .krkl, the default data file, holds every payload as text.
+        var help = usage.ToString();
+        var payloadsHelp = help[help.IndexOf("--payloads <", StringComparison.Ordinal)..help.IndexOf("--data-file <", StringComparison.Ordinal)];
+        Assert.Contains("(--data-file json)", payloadsHelp, StringComparison.Ordinal);
+        Assert.Contains("removed in v6", payloadsHelp, StringComparison.Ordinal);
     }
 
     /// <summary>

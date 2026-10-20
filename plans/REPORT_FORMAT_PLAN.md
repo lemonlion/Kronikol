@@ -1434,6 +1434,10 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
     - 5.0.0, on the same branch: `GenerateTestRunReportSchema` defaults to `false` (Q7). Twelve facts expected the schema;
       the ones about rotation and the folder's files no longer list it, the ones that read it opt in, and `kronikol
       merge` and `kronikol ingest` gained `--schema` so a command line has the same way back.
+    - 5.0.0, on the same branch: `CompressTestRunReportPayloads` is `[Obsolete]` (Q14), its doc and message say it
+      reaches only the JSON file `CompressTestRunReport = false` writes, `kronikol ingest --help` says the same of
+      `--payloads`, and `V6_PLAN.md` item 10 removes both. Five test files that use it on purpose suppress CS0618 where
+      they do.
 
 ## Appendix A. Edit sites at `a8563d21`
 
