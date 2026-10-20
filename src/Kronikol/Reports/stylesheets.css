@@ -323,33 +323,36 @@
             50% { opacity: 0.45; }
         }
 
+        /* The search help, on the theme's tokens (5.0.0, plans/OPTION_C_PLAN.md S13), where its 4.x greys drew a light
+           panel under the dark theme's light ink: the preview's colours (c-extra.css 44-47, c-round5.css 166-169), but
+           for the code, which keeps its chip */
         .search-help-toggle {
             flex-shrink: 0;
             width: 1.6em;
             height: 1.6em;
             border-radius: 50%;
-            border: 1px solid rgb(180, 180, 180);
+            border: 1px solid var(--kron-control-border);
             background: transparent;
             cursor: pointer;
             font-weight: bold;
             font-size: 0.9em;
             line-height: 1;
-            color: rgb(100, 100, 100);
+            color: var(--kron-muted);
             display: flex;
             align-items: center;
             justify-content: center;
         }
         .search-help-toggle:hover {
-            background: rgb(240, 240, 240);
-            color: rgb(50, 50, 50);
+            background: var(--kron-hover);
+            color: var(--kron-ink);
         }
 
         .search-help-panel {
             margin-top: 0.5em;
             padding: 0.8em 1em;
-            border: 1px solid rgb(200, 200, 200);
+            border: 1px solid var(--kron-strip-edge);
             border-radius: 0.5em;
-            background: rgb(250, 250, 250);
+            background: var(--kron-strip);
             font-size: 0.85em;
             line-height: 1.6;
             overflow-x: auto;
@@ -361,31 +364,32 @@
         }
         .search-help-table th {
             text-align: left;
-            border-bottom: 1px solid rgb(200, 200, 200);
+            border-bottom: 1px solid var(--kron-hairline);
             padding: 0.3em 0.6em;
             font-size: 0.9em;
         }
         .search-help-table td {
             padding: 0.25em 0.6em;
-            border-bottom: 1px solid rgb(230, 230, 230);
+            border-bottom: 1px solid var(--kron-hairline-soft);
         }
         .search-help-table code {
-            background: rgb(230, 230, 230);
+            background: var(--kron-code-bg);
             padding: 0.1em 0.3em;
             border-radius: 3px;
             font-size: 0.95em;
         }
         .search-help-note {
             margin: 0.4em 0 0;
-            color: rgb(100, 100, 100);
+            color: var(--kron-muted);
             font-size: 0.9em;
         }
         .search-help-note kbd {
-            background: rgb(230, 230, 230);
-            border: 1px solid rgb(200, 200, 200);
+            background: var(--kron-code-bg);
+            border: 1px solid var(--kron-control-border);
             border-radius: 3px;
             padding: 0.1em 0.4em;
             font-size: 0.9em;
+            color: var(--kron-ink);
         }
 
         .filter-row {

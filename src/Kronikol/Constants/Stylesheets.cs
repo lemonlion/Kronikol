@@ -32,8 +32,8 @@ public class Stylesheets
     public static string HtmlReportStyleSheet => HtmlReportStyleSheetLazy.Value;
 
     /// <summary>The report's colours and type as custom properties, light and dark (5.0.0, plans/OPTION_C_PLAN.md S1). It
-    /// opens a report's styles, so every sheet after it, a theme's and a <see cref="ReportConfigurationOptions.CustomCss"/>
-    /// sheet included, can use the tokens or set them again.</summary>
+    /// opens a report's styles and the labs page's (S13), so every sheet after it, a theme's and a
+    /// <see cref="ReportConfigurationOptions.CustomCss"/> sheet included, can use the tokens or set them again.</summary>
     internal static string ReportTokensStyleSheet => ReportTokensStyleSheetLazy.Value;
 
     /// <summary>The rules of the cross-run history views: the per-scenario sparkline and verdict pill, and the History
@@ -50,93 +50,117 @@ public class Stylesheets
     /// timeline bar (plans/WARM_UP_PLAN.md R2). Carried only by a page that draws a mark.</summary>
     internal static string WarmUpStyleSheet => WarmUpStyleSheetLazy.Value;
 
-    /// <summary>The violet overlay that is the default <see cref="ReportConfigurationOptions.HtmlSpecificationsCustomStyleSheet"/>:
-    /// it recolours <see cref="HtmlReportStyleSheet"/> and the component sheets rather than replacing them, and is
-    /// emitted after them. Its idle hover rules come before its active rules, which must win over them.</summary>
+    /// <summary>The violet theme, the default <see cref="ReportConfigurationOptions.HtmlSpecificationsCustomStyleSheet"/>
+    /// (5.0.0, plans/OPTION_C_PLAN.md S13): it sets the report's colour tokens again, light and dark, in the blocks the
+    /// token sheet uses, and paints in variables of its own what no token carries: the violet cards, and the solid violet
+    /// of a chosen control, kept from 4.x under the ink made for it. It is emitted after the built-in sheets, and its hover
+    /// edges come before its chosen states, which must win over them.</summary>
     public const string VioletThemeStyleSheet =
         """
-                .feature { background-color: #DDD6FE; }
-                .features-table-view { background-color: #DDD6FE; }
-                .test-execution-summary { background-color: #DDD6FE; }
-                .ci-metadata { background-color: #DDD6FE; }
-                .filtering-box { background-color: #DDD6FE; }
-                .example-diagrams { border-color: #DDD6FE; }
+                /* The violet theme (5.0.0, plans/OPTION_C_PLAN.md S13). The report's tokens, light on :root and dark on
+                   :root[data-theme="dark"] and again under prefers-color-scheme, as the token sheet has them: each dark value
+                   is the token sheet's own turned to the theme's hue at the same lightness, and the two dark blocks must stay
+                   identical. Then the theme's own variables, for what no token carries. */
+                :root {
+                    --kron-accent: #6d28d9;
+                    --kron-accent-rail: rgba(109, 40, 217, .18);
+                    --kron-hover: #ede9fe;
+                    --kron-selected: #c4b5fd;
+                    --kron-selected-ink: #5b21b6;
+                    --kron-selected-edge: #8b5cf6;
+                    --kron-field: #f5f3ff;
+                    --kron-strip: #f5f3ff;
+                    --kron-pass: #5b21b6;
+                    --kron-pass-soft: #ede9fe;
+                    --kron-bypass: #5b21b6;
+                    --kron-bypass-soft: #ddd6fe;
+                    --violet-card: #ddd6fe;
+                    --violet-rail: #a78bfa;
+                    --violet-edge: #a78bfa;
+                    --violet-solid: #8b5cf6;
+                    --violet-solid-hover: #7c3aed;
+                }
+                :root[data-theme="dark"] {
+                    --kron-accent: #a998eb;
+                    --kron-accent-rail: rgba(169, 152, 235, .30);
+                    --kron-hover: #2b2837;
+                    --kron-selected: #342b51;
+                    --kron-selected-ink: #cac0f6;
+                    --kron-selected-edge: #8774c8;
+                    --kron-field: #272431;
+                    --kron-strip: #22202b;
+                    --kron-pass: #b7a3ff;
+                    --kron-pass-soft: #2a253e;
+                    --kron-bypass: #b3a4f0;
+                    --kron-bypass-soft: #2c2543;
+                    --violet-card: #1d1b25;
+                    --violet-rail: #3e3b4c;
+                    --violet-edge: #a78bfa;
+                    --violet-solid: #7c3aed;
+                    --violet-solid-hover: #6d28d9;
+                }
+                @media (prefers-color-scheme: dark) {
+                    :root:not([data-theme]) {
+                        --kron-accent: #a998eb;
+                        --kron-accent-rail: rgba(169, 152, 235, .30);
+                        --kron-hover: #2b2837;
+                        --kron-selected: #342b51;
+                        --kron-selected-ink: #cac0f6;
+                        --kron-selected-edge: #8774c8;
+                        --kron-field: #272431;
+                        --kron-strip: #22202b;
+                        --kron-pass: #b7a3ff;
+                        --kron-pass-soft: #2a253e;
+                        --kron-bypass: #b3a4f0;
+                        --kron-bypass-soft: #2c2543;
+                        --violet-card: #1d1b25;
+                        --violet-rail: #3e3b4c;
+                        --violet-edge: #a78bfa;
+                        --violet-solid: #7c3aed;
+                        --violet-solid-hover: #6d28d9;
+                    }
+                }
 
-                /* Idle hovers first: an active rule of the same specificity must come after them. */
+                .feature, .features-table-view, .filtering-box { background-color: var(--violet-card); }
+                @media (max-width: 768px) {
+                    .filter-search { background: var(--violet-card); }
+                }
+                .sub-steps { border-left-color: var(--violet-rail); }
+                .attachment-image { border-color: var(--violet-rail); }
+                .attachment-image-name { color: var(--kron-selected-ink); }
+                span.label { background-color: var(--kron-selected); border-color: var(--kron-selected); color: var(--kron-selected-ink); }
+                #searchbar { border-color: var(--kron-selected-edge); }
+
+                /* Hover edges first: a chosen state of the same specificity must come after them. A hover's tint is the
+                   base sheet's, from --kron-hover. */
                 .happy-seg:hover,
                 .tag-toggle:hover,
                 .dependency-toggle:hover,
+                .status-toggle:hover,
                 .tag-more:hover,
-                .status-toggle:hover {
-                    background: #EDE9FE;
-                    border-color: #A78BFA;
+                .export-btn:hover, .fold-btn:hover, .percentile-btn:hover, .details-radio-btn:hover,
+                .scenario-diagram-controls-toggle:hover, .tag-mode-toggle:hover, .dep-mode-toggle:hover {
+                    border-color: var(--violet-edge);
                 }
-
-                .export-btn:hover, .fold-btn:hover, .percentile-btn:hover, .timeline-toggle:hover,
-                .details-radio-btn:hover, .scenario-diagram-controls-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }
-                .diagram-toggle-btn:hover, .iflow-toggle-btn:hover { background: #EDE9FE; }
-                .dep-mode-toggle:hover, .tag-mode-toggle:hover { background: #EDE9FE; border-color: #A78BFA; }
-                .iflow-rel-summary-table tr:hover td { background: #EDE9FE; }
-                .scenario-link:hover, .copy-scenario-name:hover { background: #EDE9FE; }
+                .iflow-rel-list li:hover { border-color: var(--violet-solid); }
 
                 .happy-seg[aria-pressed="true"],
                 .tag-toggle.tag-active,
                 .dependency-toggle.dependency-active,
-                .status-toggle.status-active {
-                    background: #8B5CF6;
-                    color: white;
-                    border-color: #8B5CF6;
-                }
-                .percentile-btn.percentile-active {
-                    background: #8B5CF6;
-                    color: white;
-                    border-color: #8B5CF6;
-                }
-                .timeline-toggle-active { background: #8B5CF6; color: white; border-color: #8B5CF6; }
-                .timeline-toggle-active:hover { background: #7C3AED; }
-
-                .dep-mode-toggle, .tag-mode-toggle { background: #F5F3FF; }
-                .scenario-focused { outline-color: #8B5CF6; }
-                .step-attachment { color: #8B5CF6; }
-                .attachment-image { border-color: #A78BFA; }
-                .attachment-image-name { color: #A78BFA; }
-
+                .status-toggle.status-active,
+                .percentile-btn.percentile-active,
                 .details-radio-btn.details-active {
-                    background: #8B5CF6;
-                    color: white;
-                    border-color: #8B5CF6;
+                    background: var(--violet-solid);
+                    color: var(--kron-on-solid);
+                    border-color: var(--violet-solid);
                 }
+                .details-radio-btn.toggle-btn.details-active::before { background: var(--kron-on-solid); border-color: var(--kron-on-solid); }
+                .iflow-toggle-active, .diagram-toggle-active { background: var(--violet-solid); color: var(--kron-on-solid); border-color: var(--violet-solid); }
+                .iflow-toggle-active:hover, .diagram-toggle-active:hover { background: var(--violet-solid-hover); color: var(--kron-on-solid); }
 
-                .iflow-toggle-active { background: #8B5CF6; color: #fff; border-color: #8B5CF6; }
-                .iflow-toggle-active:hover { background: #7C3AED; }
-                .diagram-toggle-active { background: #8B5CF6; color: #fff; border-color: #8B5CF6; }
-                .diagram-toggle-active:hover { background: #7C3AED; }
-                .iflow-rel-list li:hover { background: #EDE9FE; border-color: #8B5CF6; }
-
-                .step-status.passed { background: #8B5CF6; }
-                .step-status.bypassed { background: #DDD6FE; color: #5B21B6; }
-                .step-status.passed-bypassed { background: #DDD6FE; color: #5B21B6; }
-
-                .rule { border-left-color: #8B5CF6; }
-                span.label { background-color: #C4B5FD; }
-                #searchbar { border-color: #C4B5FD; }
-                .search-help-toggle { border-color: #C4B5FD; color: #C4B5FD; }
-                .search-help-toggle:hover { background: #3B2F63; color: #E9D5FF; }
-                .search-help-panel { border-color: #5B21B6; background: #1E1534; }
-                .search-help-table th { border-bottom-color: #5B21B6; }
-                .search-help-table td { border-bottom-color: #2E2048; }
-                .search-help-table code { }
-                .search-help-note { color: #A78BFA; }
-                .search-help-note kbd { border-color: #5B21B6; }
-                .sub-steps { border-left-color: #DDD6FE; }
-                .feature-summary-table th { background: #F5F3FF; }
-                .param-success { background: #EDE9FE; }
-                .param-test-table tbody tr.row-search-match { box-shadow: inset 4px 0 0 #8B5CF6; }
-                .duration-fast { background: #EDE9FE; color: #5B21B6; }
-                @media (max-width: 768px) {
-                    .filter-search { background: #DDD6FE; }
-                }
-                .back-to-top { background: #8B5CF6; }
-                .back-to-top:hover { background: #7C3AED; }
+                .step-status.passed { background: var(--violet-solid); color: var(--kron-on-solid); }
+                .param-test-table tbody tr.row-search-match { box-shadow: inset 4px 0 0 var(--violet-solid); }
+                .back-to-top { background: var(--violet-solid); border-color: var(--violet-solid); color: var(--kron-on-solid); }
+                .back-to-top:hover { background: var(--violet-solid-hover); }
         """;
 }

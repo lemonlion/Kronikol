@@ -6,8 +6,8 @@ namespace Kronikol.Tests.EndToEnd;
 /// The History tab's run trend in a browser (5.0.0, plans/OPTION_C_PLAN.md S11; the owner's round 17 items 29 and 30): a ring
 /// per run with its rate inside and a fail arc where the run failed, and a bar per run carrying its time, in the middle of a
 /// tall bar and just above a short one; the rings', bars' and card's colours from the theme's tokens, light and dark; a window
-/// of fifty runs keeping every time legible and opening on the newest; and the labs page, which runs no script, drawing them
-/// the same. In 4.x both charts were bars in a stretched svg.
+/// of fifty runs keeping every time legible and opening on the newest; and the labs page, which runs none of the report's
+/// scripts but the theme's, drawing them the same. In 4.x both charts were bars in a stretched svg.
 /// </summary>
 // The labs fact runs the report pipeline (HistoryReportHelper.GenerateWithLabsPage), whose diagram fetcher and log store are
 // process-wide: in the collection of the other classes that run it, so no two pipelines overlap.
@@ -182,32 +182,35 @@ public class HistoryRingsTests : PlaywrightTestBase
     }
 
     [Fact]
-    public async Task The_labs_page_draws_the_rings_and_the_timed_bars_with_no_script()
+    public async Task The_labs_page_draws_the_rings_and_the_timed_bars_with_none_of_the_reports_scripts()
     {
         var labs = HistoryReportHelper.GenerateWithLabsPage(TempDir, OutputDir, "HistoryRings_Labs.html").Page;
         await Page.GotoAsync(labs);
         await Page.Locator("header.labs-header").WaitForAsync();
 
-        Assert.Equal(0, await Page.Locator("script").CountAsync());
+        // the theme's two scripts and none that draws: the rings and the bars are markup (5.0.0, plans/OPTION_C_PLAN.md S13)
+        Assert.Equal(["kronikol-theme-boot", "kronikol-theme-switch"],
+            await Page.Locator("script").EvaluateAllAsync<string[]>("scripts => scripts.map(s => s.id)"));
         var rings = Page.Locator("#history-section .history-ring");
         await Expect(rings).ToHaveCountAsync(7);
         await Expect(rings.First.Locator("svg")).ToBeVisibleAsync();
         await Expect(Page.Locator("#history-section .history-col .history-time")).ToHaveCountAsync(7);
 
-        // The page carries no token sheet until S13: each colour is the token's light value, through the rule's fallback (a
-        // rule with no fallback would paint no stroke at all).
+        // Since S13 the page carries the token sheet: each colour is the token's, with no fallback (a token the page lacked
+        // would paint no stroke at all), and in a light page the light theme's.
         var paint = await Page.EvaluateAsync<string[]>(
             """
             () => {
                 const probe = v => { const p = document.createElement('div'); p.style.color = v; document.body.appendChild(p); const c = getComputedStyle(p).color; p.remove(); return c; };
                 // a run that passed: a failed run's rate is drawn in the failure ink
                 const ring = document.querySelector('#history-section .history-ring:not(.history-ring-failed)');
-                return [getComputedStyle(ring.querySelector('.ring-pass')).stroke, probe('var(--kron-pass-ring, #3f9a62)'),
-                        getComputedStyle(ring.querySelector('.ring-track')).stroke, probe('var(--kron-track, #edf0f5)'),
-                        getComputedStyle(ring.querySelector('.ring-rate')).fill, probe('var(--kron-ink, #242b36)'),
+                return [getComputedStyle(ring.querySelector('.ring-pass')).stroke, probe('var(--kron-pass-ring)'),
+                        getComputedStyle(ring.querySelector('.ring-track')).stroke, probe('var(--kron-track)'),
+                        getComputedStyle(ring.querySelector('.ring-rate')).fill, probe('var(--kron-ink)'),
                         ring.querySelector('.ring-rate').textContent];
             }
             """);
+        Assert.Equal("rgb(63, 154, 98)", paint[0]);
         Assert.Equal(paint[1], paint[0]);
         Assert.Equal(paint[3], paint[2]);
         Assert.Equal(paint[5], paint[4]);

@@ -12,7 +12,8 @@ namespace Kronikol.Tests.History;
 /// which reads 100% only when every scenario of its run passed and has a fail arc only when the run failed; a bar per run
 /// carrying its time in whole units, cut as the run band cuts a duration, and marked short where the time cannot sit inside
 /// it; each ring and bar keeping its run's 4.x tooltip; and the section's colours, the verdict pills' among them, taken from
-/// the tokens, each with its light value as a fallback for the labs page. In 4.x both charts were bars in a stretched svg.
+/// the tokens, with no fallback: since S13 the labs page carries the token sheet too. In 4.x both charts were bars in a
+/// stretched svg.
 /// </summary>
 public class HistoryRingsMarkupTests : IDisposable
 {
@@ -219,12 +220,13 @@ public class HistoryRingsMarkupTests : IDisposable
     }
 
     /// <summary>
-    /// The verdict pills and the card take their colours from the tokens, each with its light value as a fallback for the
-    /// labs page, which carries no token sheet until S13. Every kind keeps a look of its own, where the preview's card rule
-    /// drew six kinds as the quiet pill (stylesheet inventory 3.8 item 4), and always-failing keeps the failure's look.
+    /// The verdict pills and the card take their colours from the tokens, with no fallback: since S13 every page that
+    /// carries this sheet carries the token sheet, the labs page too, so a fallback would only hide a missing token. Every
+    /// kind keeps a look of its own, where the preview's card rule drew six kinds as the quiet pill (stylesheet inventory
+    /// 3.8 item 4), and always-failing keeps the failure's look.
     /// </summary>
     [Fact]
-    public void Every_verdict_kind_keeps_its_own_look_and_every_colour_is_a_token_with_a_fallback()
+    public void Every_verdict_kind_keeps_its_own_look_and_every_colour_is_a_token()
     {
         var css = Stylesheets.HistoryStyleSheet;
         string Look(string kind) => string.Join(" | ", new[] { "background", "color", "border-color" }.Select(p => CssRules.Value(css, ".history-verdict-" + kind, p) ?? ""));
@@ -243,6 +245,6 @@ public class HistoryRingsMarkupTests : IDisposable
         foreach (var rule in CssRules.Parse(css).Where(r => r.Selectors.Any(s => painted.Any(p => s.StartsWith(p, StringComparison.Ordinal)))))
             foreach (var (property, value) in rule.Declarations.Where(d => d.Key is "background" or "color" or "border" or "border-color" or "border-top" or "fill" or "stroke"))
                 Assert.True(value.Contains("var(--", StringComparison.Ordinal) || value == "transparent", $"{rule.Selectors[0]} {{ {property}: {value} }} is not a token");
-        Assert.DoesNotMatch(@"var\(--[\w-]+\s*\)", css);
+        Assert.DoesNotMatch(@"var\(--[\w-]+\s*,", css);
     }
 }

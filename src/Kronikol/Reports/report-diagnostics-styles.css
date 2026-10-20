@@ -1,12 +1,12 @@
         /* Report diagnostics (capture health, skipped lines, render failures), on the theme's tokens (5.0.0,
            plans/OPTION_C_PLAN.md S11): a card, one rule between items, and each kind in its own colour, a failure red
-           and a degraded capture amber. Each colour falls back to its 4.x value where a page has no token sheet (the
-           labs page, where the heading stays a disclosure). */
+           and a degraded capture amber. Every page that carries this sheet carries the token sheet, the labs page too
+           since S13, where the heading stays a disclosure. */
         .report-diagnostics {
             margin: 1em 0;
-            border: 1px solid var(--kron-hairline, rgb(224, 200, 160));
+            border: 1px solid var(--kron-hairline);
             border-radius: 12px;
-            background: var(--kron-card, rgb(255, 251, 243));
+            background: var(--kron-card);
             padding: 0;
             overflow: hidden;
         }
@@ -14,10 +14,10 @@
             padding: 12px 16px;
             font-weight: 600;
             font-size: 14px;
-            color: var(--kron-ink, rgb(130, 85, 0));
+            color: var(--kron-ink);
             cursor: pointer;
         }
-        .report-diagnostics[open] > summary { border-bottom: 1px solid var(--kron-hairline-soft, rgb(240, 232, 215)); }
+        .report-diagnostics[open] > summary { border-bottom: 1px solid var(--kron-hairline-soft); }
         /* in its tab the heading is no disclosure (report-tabs-script.js keeps it open); on the labs page it stays one */
         .report-panel > .report-diagnostics > summary { list-style: none; cursor: default; }
         .report-panel > .report-diagnostics > summary::-webkit-details-marker { display: none; }
@@ -29,7 +29,7 @@
         }
         .report-diagnostics-list > li {
             padding: 10px 0;
-            border-top: 1px solid var(--kron-hairline-soft, rgb(240, 232, 215));
+            border-top: 1px solid var(--kron-hairline-soft);
             line-height: 1.55;
             color: var(--kron-ink-soft);
             overflow-wrap: anywhere;
@@ -37,8 +37,8 @@
         .report-diagnostics-list > li:first-child { border-top: none; }
         .report-diagnostic-kind {
             display: inline-block;
-            background: var(--kron-strip, rgb(224, 224, 224));
-            color: var(--kron-ink-soft, rgb(60, 60, 60));
+            background: var(--kron-strip);
+            color: var(--kron-ink-soft);
             border-radius: 999px;
             padding: 1px 8px;
             font-family: var(--kron-mono);
@@ -48,17 +48,17 @@
             white-space: nowrap;
         }
         .report-diagnostic-kind-capturedegraded {
-            background: var(--kron-warn-soft, rgb(255, 221, 150));
-            color: var(--kron-warn, rgb(110, 70, 0));
+            background: var(--kron-warn-soft);
+            color: var(--kron-warn);
         }
         .report-diagnostic-kind-renderfailure,
         .report-diagnostic-kind-outputfailure,
         .report-diagnostic-kind-attachmentfailure {
-            background: var(--kron-fail-soft, rgb(255, 210, 210));
-            color: var(--kron-fail, rgb(140, 0, 0));
+            background: var(--kron-fail-soft);
+            color: var(--kron-fail);
         }
         .report-diagnostic-scenario {
-            color: var(--kron-muted, rgb(100, 100, 100));
+            color: var(--kron-muted);
             font-size: 0.85em;
         }
 

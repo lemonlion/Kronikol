@@ -73,7 +73,7 @@ public static class ReportGenerator
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> ResourceCache = new();
 
     // Loads an embedded report asset (externalized inline JS/CSS, JAVA_PORT_PLAN 4.2) by file-name suffix.
-    private static string LoadResource(string name) => ResourceCache.GetOrAdd(name, n =>
+    internal static string LoadResource(string name) => ResourceCache.GetOrAdd(name, n =>
     {
         var assembly = Assembly.GetExecutingAssembly();
         var resourceName = assembly.GetManifestResourceNames()
@@ -91,8 +91,8 @@ public static class ReportGenerator
 
     // The light/dark switch at the right of the title line (5.0.0, plans/OPTION_C_PLAN.md S1): a moon while the page is
     // light, the theme it switches to, and a sun while it is dark. report-theme-switch-script.js keeps aria-pressed and
-    // the title in step with the theme the boot script chose.
-    private const string ThemeSwitchButton =
+    // the title in step with the theme the boot script chose. The labs page's title line carries it too (S13).
+    internal const string ThemeSwitchButton =
         "<button type=\"button\" class=\"theme-toggle\" aria-label=\"Dark theme\" aria-pressed=\"false\" title=\"Switch to the dark theme\">"
         + "<svg class=\"theme-icon theme-moon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z\"/></svg>"
         + "<svg class=\"theme-icon theme-sun\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z\"/>"

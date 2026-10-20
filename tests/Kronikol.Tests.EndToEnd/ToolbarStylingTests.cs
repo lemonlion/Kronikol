@@ -105,8 +105,9 @@ public class ToolbarStylingTests : PlaywrightTestBase
         { false, Hover, "rgba(0, 0, 0, 0)", ".fold-btn" },
         { false, Hover, "rgba(0, 0, 0, 0)", ".export-btn" }, // 5.0.0: a text button in the filter card (OPTION_C_PLAN S2)
         // 5.0.0: the Scenario Timeline toggle is a tab (plans/OPTION_C_PLAN.md S3); a tab not selected takes the hover
-        // tint and has no border. The violet theme's tabs are S13's.
+        // tint and has no border. The violet theme's tint is the hover token it sets (S13).
         { false, Hover, null, ".report-tab[aria-selected=\"false\"]" },
+        { true, Tint, null, ".report-tab[aria-selected=\"false\"]" },
         // 5.0.0: a payload button takes the hover tint on its transparent edge (plans/OPTION_C_PLAN.md S8)
         { false, Hover, None, ".toolbar-right .details-radio-btn:not(.details-active)" },
     };
@@ -157,7 +158,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
     public static TheoryData<bool, bool, string, string, string, string, string?> TabColours => new()
     {
         // violet, flow tracking, idle, idle hovered, active, active hovered, active edge
-        // 5.0.0: the violet theme paints over the C base, whose idle tab has no fill (S8; the theme is S13's)
+        // 5.0.0: the violet theme paints over the C base, whose idle tab has no fill (S8), with the tokens it sets (S13)
         { true, true, None, Tint, Violet, VioletDark, Violet },
         { true, false, None, Tint, Violet, VioletDark, Violet },
         // 5.0.0: a view tab has no fill; the picked one is marked by the accent's ink and underline (S8)

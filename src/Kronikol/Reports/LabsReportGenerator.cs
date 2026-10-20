@@ -14,8 +14,10 @@ namespace Kronikol.Reports;
 /// </summary>
 /// <remarks>
 /// Built only from what a run, <c>kronikol merge</c> and <c>kronikol ingest</c> all have: the history verdicts and
-/// the diagnostic entries. It carries no script: its scenario names link into the report by the <c>#sid-</c> anchor
-/// the report resolves on load, and are text when no report is written beside it.
+/// the diagnostic entries. Of the report's scripts it runs only the theme's (5.0.0, plans/OPTION_C_PLAN.md S13): the boot
+/// script chooses light or dark before the first style, as in the report, whose token sheet opens its styles, and the
+/// switch on its title line flips it. Its scenario names link into the report by the <c>#sid-</c> anchor the report
+/// resolves on load, and are text when no report is written beside it.
 /// </remarks>
 internal static class LabsReportGenerator
 {
@@ -40,7 +42,10 @@ internal static class LabsReportGenerator
         html.Append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n");
         html.Append("<meta name=\"generator\" content=\"Kronikol v").Append(HtmlEncode(ReportGenerator.KronikolVersion)).Append("\" />\n");
         html.Append("<title>Labs · ").Append(title).Append("</title>\n");
+        // light or dark before anything is styled, and the token sheet first, as in the report (5.0.0, plans/OPTION_C_PLAN.md S13)
+        html.Append("<script id=\"kronikol-theme-boot\">").Append(ReportGenerator.LoadResource("report-theme-boot-script.js")).Append("</script>\n");
         html.Append("<style>\n")
+            .Append(Stylesheets.ReportTokensStyleSheet)
             .Append(Stylesheets.HtmlReportStyleSheet).Append('\n')
             .Append(Stylesheets.HistoryStyleSheet).Append('\n')
             .Append(Stylesheets.ReportDiagnosticsStyleSheet).Append('\n')
@@ -49,12 +54,14 @@ internal static class LabsReportGenerator
         if (page.CustomCss is not null)
             html.Append("<style>").Append(page.CustomCss).Append("</style>\n");
         html.Append("<link rel=\"icon\" href=\"").Append(page.CustomFaviconBase64 ?? Constants.DefaultFavicon.DataUri).Append("\">\n");
+        html.Append("<script id=\"kronikol-theme-switch\">").Append(ReportGenerator.LoadResource("report-theme-switch-script.js")).Append("</script>\n");
         html.Append("</head>\n<body>\n");
         if (page.CustomLogoHtml is not null)
             html.Append("<div class=\"custom-logo\">").Append(page.CustomLogoHtml).Append("</div>\n");
 
         html.Append("<header class=\"labs-header\">");
-        html.Append("<h1>").Append(title).Append(" <span class=\"labs-badge\">Labs</span></h1>");
+        html.Append("<div class=\"title-line\"><h1>").Append(title).Append(" <span class=\"labs-badge\">Labs</span></h1>")
+            .Append(ReportGenerator.ThemeSwitchButton).Append("</div>");
         html.Append("<p class=\"labs-about\">Labs: views still being designed. Their layout may change in any release.</p>");
         html.Append("<p class=\"labs-meta\">").Append(string.Join(" · ", Meta(page))).Append("</p>");
         html.Append("</header>\n");

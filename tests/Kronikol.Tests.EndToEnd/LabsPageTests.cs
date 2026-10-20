@@ -76,11 +76,14 @@ public class LabsPageTests : PlaywrightTestBase
             "el => el.closest('details.feature').hasAttribute('open')"));
     }
 
+    /// <summary>Of the report's scripts the page runs only the theme's: the one that chooses light or dark before the first
+    /// style and the one that works the switch on its title line (5.0.0, plans/OPTION_C_PLAN.md S13).</summary>
     [Fact]
-    public async Task The_page_runs_no_script()
+    public async Task The_page_runs_only_the_theme_scripts()
     {
-        await Open("LabsPage_NoScript.html");
+        await Open("LabsPage_ThemeScripts.html");
 
-        Assert.Equal(0, await Page.Locator("script").CountAsync());
+        Assert.Equal(["kronikol-theme-boot", "kronikol-theme-switch"],
+            await Page.Locator("script").EvaluateAllAsync<string[]>("scripts => scripts.map(s => s.id)"));
     }
 }

@@ -17,6 +17,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **Colour and type tokens.** The page's colours and type are CSS custom properties, `--kron-*` for the page and
   `--dg-*` for its diagrams, each with a light and a dark value, defined first in the page's styles, so a theme or a
   `CustomCss` sheet can set them again.
+- **The labs page takes the theme.** `TestRunReport.labs.html` opens light or dark as the report does, with the
+  report's switch at the right of its title, and draws its parts in the report's tokens, its table of every scenario a
+  card as the History section and the diagnostics are. Of the report's scripts it runs only the theme's two.
 - **`kronikol ingest --no-diagnostics-section`** leaves the Diagnostics tab out of the HTML report. Every diagnostic
   is still on the labs page, in `TestRunReport.json` and printed by the command. `--diagnostics-section`, now the
   default, is still taken, so a command line written for 4.x runs unchanged.
@@ -305,6 +308,13 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **The component diagram's title heads the Components tab and leaves its drawing.** `ComponentDiagramOptions.Title`
   is the tab's heading under every renderer; `ComponentDiagram.html` still draws it. A run whose calls give the diagram
   no connection has no Components tab, where it drew the title alone.
+- **The violet theme is written on the tokens.** `Stylesheets.VioletThemeStyleSheet`, the default
+  `HtmlSpecificationsCustomStyleSheet`, sets the report's colour tokens for the light and the dark theme, so a
+  Specifications report opened dark is dark and violet. A chosen control, the passed step and the back-to-top button
+  keep 4.x's solid violet, with white on it (the tick and the arrow included); an attachment's name, a label and the
+  search field's edge take the theme's selected colours. The accent is a darker violet (`#6d28d9`, AA on white and on
+  the violet card), and controls 4.x's rules never named, such as a report tab or More filters, take the theme's
+  colours. A sheet built on the 4.x constant's rules should set the tokens instead.
 
 ### Fixed
 
@@ -368,6 +378,8 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   link label was text only a pointer could open. A link with data is one Tab stop now, named from its label; Enter or
   Space opens its popup, and where links show only on hover, focus shows it. A diagram the Java engine drew keeps its
   links as they were.
+- **The search help reads on the Specifications report.** The violet theme drew its panel dark under dark text, 1.21:1
+  (4.x too). The help takes the report's tokens now, in the light and the dark theme.
 
 ## [4.32.0] - 2026-10-19
 

@@ -47,19 +47,25 @@ public class DiagnosticsCardTests : PlaywrightTestBase
         Assert.Equal("default", r[11]);
     }
 
-    // The labs page has no tabs and no token sheet: there the diagnostics stay a disclosure, in their 4.x colours.
+    // The labs page has no tabs: there the diagnostics stay a disclosure. Since it carries the token sheet (5.0.0,
+    // plans/OPTION_C_PLAN.md S13) they are drawn in the theme's tokens there too, where they kept their 4.x colours.
     [Fact]
-    public async Task On_the_labs_page_the_diagnostics_stay_a_disclosure_in_their_4x_colours()
+    public async Task On_the_labs_page_the_diagnostics_stay_a_disclosure_in_the_themes_tokens()
     {
         ReportTestHelper.GenerateReportWithEverySection(TempDir, OutputDir, "DiagnosticsCard-labs-report.html", labsPageFileName: "DiagnosticsCard-labs.html");
         await Page.GotoAsync(new Uri(Path.Combine(TempDir, "DiagnosticsCard-labs.html")).AbsoluteUri);
 
         var r = await Page.Locator("details.report-diagnostics > summary").First.EvaluateAsync<string[]>("""
-            s => { const cs = getComputedStyle(s); return [cs.listStyleType, cs.cursor, getComputedStyle(s.parentElement).backgroundColor]; }
+            s => {
+                const p = document.createElement('div'); p.style.color = 'var(--kron-card)'; document.body.appendChild(p);
+                const card = getComputedStyle(p).color; p.remove();
+                const cs = getComputedStyle(s); return [cs.listStyleType, cs.cursor, getComputedStyle(s.parentElement).backgroundColor, card];
+            }
             """);
 
         Assert.StartsWith("disclosure", r[0]);
         Assert.Equal("pointer", r[1]);
-        Assert.Equal("rgb(255, 251, 243)", r[2]);
+        Assert.Equal(r[3], r[2]);
+        Assert.Equal("rgb(255, 255, 255)", r[2]);
     }
 }

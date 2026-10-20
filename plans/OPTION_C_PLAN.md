@@ -5,10 +5,11 @@ after round 17 of the preview: "when you're done, put all of this in an (unrelea
 together with the size reduction stuff for a release. If this is all just scratchpad stuff then when you're done
 make sure it's all done properly in the branch ready to be released (with the size reduction stuff)."
 
-5.0.0 is therefore three pieces of work on one branch: this plan, the dependency filter's OR default (`9452ddb5`,
-already on `v5`, under `[Unreleased]` in the changelog), and the report size reduction (`REPORT_FORMAT_PLAN.md`,
-written in its own worktree, `plan/report-format`). The version moves to 5.0.0 when the branch is released, not
-before; until then the changelog collects its entries under `[Unreleased]`.
+5.0.0 is therefore four pieces of work on one branch: this plan, the dependency filter's OR default (`9452ddb5`,
+already on `v5`, under `[Unreleased]` in the changelog), the report size reduction (`REPORT_FORMAT_PLAN.md`, written
+in its own worktree, `plan/report-format`), and labels and categories as one list of tags (`TAGS_PLAN.md`, put in
+5.0.0 by the owner on 2026-10-19 and built on the branch `v5-tags`, which `v5` fast-forwards to). The version moves
+to 5.0.0 when the branch is released, not before; until then the changelog collects its entries under `[Unreleased]`.
 
 ## 1. What "Option C" is, and where its specification lives
 
@@ -1133,3 +1134,48 @@ decision of the owner's, not part of this plan.
   opening nothing, Space opening nothing, a second stop on a link the Java engine drew, focus not showing a hover-only
   link, leaving not putting it at rest, the stop on the link's last text).
   Checks: The Playwright classes above, 122 of 122, on `e8ae26ce`; the full suites run when S12 closes.
+- 2026-10-20, S13 (Q3: the token sheet, the theme, and the violet theme as token overrides, no layout redesign): the
+  Specifications and labs pages on the tokens (`edits/s13/`: `scripts-s13-t2.py`, `tests-s13-t2.py`,
+  `ThemedPagesHtmlTests.cs`, `ThemedPagesTests.cs`, `design.md` with the owner questions in its section 9). The labs
+  page runs the report's theme boot script before its first style, opens its styles with the token sheet, ends its
+  head with the switch script and draws the report's title line (its `h1` and Labs badge, then the switch);
+  `labs-styles.css` is on the tokens, the table of every scenario a card. `history-styles.css` and
+  `report-diagnostics-styles.css` drop their fallbacks. `VioletThemeStyleSheet` sets the tokens for light and both
+  dark forms, `--violet-*` variables, then 17 rules where 4.x had 49, each solid violet under white, the accent
+  `#6d28d9`. The search help is on the tokens and the violet leaves it to them (1.21:1 under 4.x's violet, live on
+  main). Prepared at `db663d88`, ported onto T2 (the tags switch and selectors, T2's switches fact reworked to hold
+  both switches alike) and D49 (the history link's title), dry-run clean on `4e75ce61`.
+  Tests: core `ThemedPagesHtmlTests` (new, 9 facts, 10 cases) and the moved pins (LabsReportTests,
+  HistoryRingsMarkupTests, StylesheetRulesTests): red 15 of 89 before the change, each on its assertion (the new class
+  10 of 10, LabsReportTests 1, HistoryRingsMarkupTests 1, StylesheetRulesTests 3); green 185 of 185 with the classes
+  beside them (section 5 of the design). Playwright `ThemedPagesTests` (new, 6 facts, 12 cases) and the moved pins
+  (LabsPageTests, HistoryRingsTests, DiagnosticsCardTests, ToolbarStylingTests): red 15 of 62 before the change, each
+  on its assertion: ThemedPagesTests 11 of 12 (the labs page off the tokens in both themes, its switch missing and no
+  pick kept over a reload, the Specifications report's dark case on 4.x's light violet, a hovered chosen tab under the
+  accent in both themes, More filters untouched by the violet, and the search help off the tokens in all four cases,
+  unreadable in two: the default theme's dark, 1.17:1, and the violet's light, 1.22:1); the twelfth, the
+  Specifications report's light case, is a guard and passes before as after, holding 4.x's light violet; and the four
+  moved pins (LabsPageTests' scripts, HistoryRingsTests' probes, DiagnosticsCardTests' card, ToolbarStylingTests'
+  violet report tab); green: 119 of 119 with ThemeTests, ViewportSweepTests, MobileFilterLineTests, FilterBarTests,
+  ControlTitlesAuditTests and TagFilterTests. Mutations (`checks/mutate-s13.py`, 35: 23 core, 12 Playwright): 35 of 35
+  killed (the 23 core: the labs page choosing no theme before its styles, the token sheet left out or after the base
+  sheet, the switch left off the title line, the switch script left out (in the new class and in the LabsReportTests
+  pin), the title line not the report's, the badge on 4.x's yellow, the table of every scenario no card, a history
+  colour falling back again (in the new class and in the HistoryRingsMarkupTests pin), a diagnostics colour falling
+  back again, the violet without its dark block or without the system's, a dark card the light one, the accent left
+  blue, the hover token not set, a colour written as a literal again, the passed tick under the pass ink, a hovered
+  chosen tab under the accent, the chosen radio's dot in the accent, the search help back on its light grey, the
+  violet's dark search help back; the 12 Playwright: the token sheet left out (the new class, the HistoryRingsTests
+  and DiagnosticsCardTests pins), the table no card, the switch left off, the switch script left out (the new class
+  and the LabsPageTests pin), the violet without its dark block, a hovered chosen tab under the accent, the selected
+  token not set, the hover token not set, the search help back on its light grey). `checks/css-facts-check.py` runs
+  the stylesheet facts without a build (4 of 15 before, 15 of 15 after); `checks/violet-palette.py` holds the dark
+  values and contrasts. Found on the way and taken as the next item, S13b (design section 8 and after): colours still
+  written as values that read wrongly in the dark theme, in `stylesheets.css`, in the diagram's context menu (white,
+  with no ink of its own) and in the sparkline's run colours `HistoryHtml.Colour` writes inline; and rules and a
+  script for markup no page writes. The header says 5.0.0 is four pieces now, `TAGS_PLAN.md` the fourth (TAGS_PLAN
+  section 7).
+  Checks: Red and the mutations on `4e75ce61`, where the classes above are green and the full core suite passes 8,416
+  with 2 skipped (its one failure TagsMarkupTests' Untagged chip title, which D49 changed and T1 carries the pin for).
+  Carried onto T1 (`34954884`) without a conflict: the core classes 185 of 185, the Playwright classes 119 of 119, the
+  full core suite 8,449 with 2 skipped and no failure; the full Playwright suite runs when S12 closes.

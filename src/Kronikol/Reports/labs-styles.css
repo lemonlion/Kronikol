@@ -1,20 +1,22 @@
-        /* The labs page beside the report: its header, and the table of every scenario's history */
+        /* The labs page beside the report, on the report's tokens (5.0.0, plans/OPTION_C_PLAN.md S13): its header, whose
+           title line carries the report's theme switch, and the table of every scenario's history, a card as the History
+           section and the diagnostics are, since its rules would vanish on the page's ground (1.07:1) */
         .labs-header h1 {
             overflow-wrap: anywhere;
         }
         .labs-badge {
             display: inline-block;
             vertical-align: middle;
-            font-size: 0.45em;
+            font-size: var(--kron-fs-label);
             font-weight: 600;
             padding: 0.2em 0.7em;
             border-radius: 1em;
-            background: rgb(255, 243, 205);
-            color: rgb(122, 92, 0);
-            border: 1px solid rgb(232, 200, 110);
+            background: var(--kron-warn-soft);
+            color: var(--kron-warn);
+            border: 1px solid var(--kron-warn-edge);
         }
         .labs-about, .labs-meta {
-            color: rgb(90, 90, 90);
+            color: var(--kron-muted);
             overflow-wrap: anywhere;
         }
         .labs-meta code {
@@ -22,9 +24,22 @@
         }
         .labs-scenarios {
             margin: 1em 0;
+            border: 1px solid var(--kron-hairline);
+            border-radius: 12px;
+            background: var(--kron-card);
+            box-shadow: var(--kron-card-shadow);
+            overflow: hidden;
+        }
+        .labs-scenarios > summary {
+            padding: 12px 16px;
+        }
+        .labs-scenarios[open] > summary {
+            border-bottom: 1px solid var(--kron-hairline-soft);
         }
         .labs-table-wrap {
             max-width: 100%;
+            box-sizing: border-box;
+            padding: 0 8px 8px;
             overflow-x: auto;
         }
         .labs-scenario-table {
@@ -36,12 +51,12 @@
             text-align: left;
             vertical-align: top;
             padding: 0.3em 0.6em;
-            border-bottom: 1px solid rgb(225, 225, 225);
+            border-bottom: 1px solid var(--kron-hairline-soft);
             overflow-wrap: anywhere;
         }
         .labs-scenario-table .labs-feature th {
-            background: rgb(245, 245, 245);
+            background: var(--kron-strip);
         }
         .labs-stable {
-            color: rgb(120, 120, 120);
+            color: var(--kron-faint);
         }
