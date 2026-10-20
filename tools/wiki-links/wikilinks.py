@@ -1,11 +1,13 @@
-"""Check and fix [[Page#Heading]] wiki links against GitHub's rendering rules.
+"""Check and fix [[Page#Heading]] wiki links against GitHub's rendering rules, and check markdown anchor links.
 
 GitHub renders [[a|b]] as label a, target b, and keeps a #fragment as written apart from
 spaces -> hyphens and '+' dropped, while heading ids are slugs (lower case; everything that is
 not a word character, a hyphen or a space removed; spaces to hyphens; duplicates numbered).
 So a fragment written as the heading text never matches its heading. This script:
 
-  check              report every [[...]] link: ok / relabel / fix / dead / reversed / dead-page
+  check              report every [[...]] link: ok / relabel / fix / dead / reversed / dead-page; and every
+                     markdown link to an anchor, [text](Page#anchor) or [text](#anchor): md-ok / md-dead /
+                     md-dead-page (a markdown fragment is the heading's slug or nothing: never rewritten)
   fix                rewrite the fixable ones in place (label kept; a bare anchor link gets one)
   verify-live X.html Y.md   compare computed heading slugs with the ids in a rendered page
 """
@@ -186,6 +188,39 @@ def analyse(files):
                 yield rec
 
 
+# [text](target), not an image; the target stops at the first space or closing parenthesis.
+MD_LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)")
+
+
+def analyse_markdown(files):
+    """Yield one record per markdown link to a wiki page's anchor ([text](Page#anchor) or [text](#anchor)).
+
+    A link that names a URL, or a path that is not a wiki page (a repository file), is not one. Its fragment
+    must be the heading's slug exactly: unlike [[...]], nothing turns heading text into one.
+    """
+    for stem, path in sorted(files.items()):
+        with open(path, encoding="utf-8") as f:
+            lines = f.read().split("\n")
+        for i, line in strip_fences(lines):
+            masked = mask_code_spans(line)
+            for m in MD_LINK.finditer(masked):
+                target = line[m.start(1):m.end(1)]
+                if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", target) or "#" not in target:
+                    continue
+                page, frag = target.split("#", 1)
+                rec = {"file": stem, "line": i + 1, "target": target}
+                page_path = path if page == "" else resolve_page(page, files, path)
+                if page_path is None:
+                    if "/" in page or "." in page:
+                        continue
+                    rec["status"] = "md-dead-page"
+                elif frag in {s for s, _ in headings(page_path)}:
+                    rec["status"] = "md-ok"
+                else:
+                    rec["status"] = "md-dead"
+                yield rec
+
+
 REWRITTEN = ("fix", "reversed", "relabel", "reversed-page", "alias-page", "self")
 
 
@@ -220,6 +255,10 @@ def cmd_check(files):
         if rec["status"] == "dead":
             extra = " candidates=" + ", ".join(rec["candidates"])
         print(f"{rec['status']:13} {rec['file']}:{rec['line']}  [[{rec['raw']}]]{extra}")
+    for rec in analyse_markdown(files):
+        counts[rec["status"]] = counts.get(rec["status"], 0) + 1
+        if rec["status"] != "md-ok":
+            print(f"{rec['status']:13} {rec['file']}:{rec['line']}  ({rec['target']})")
     print("counts:", counts)
 
 
