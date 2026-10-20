@@ -1212,3 +1212,12 @@ decision of the owner's, not part of this plan.
   Checks: The reds and the mutations ran on T3 (`506b46f4`); carried onto T4 (`09a966e9`) without a conflict, where
   the two red proofs, the greens and the full core suite ran (8,470 passed, 2 skipped, no failure); the full
   Playwright suite runs when S12 closes.
+- 2026-10-20, S12 closed, with S13 and S13b, and S14 begun, checked: S12's items are in (phone part 1 `db663d88`, D43
+  `c7abf98f`, S12a `d385c715`, the img pins `0eeb9644`, the count fix `5f4877d4`, D48 `0bdfe8b6`, D49 `aa0e72b3`,
+  phone part 2 `e8ae26ce`, the keyboard links `4e75ce61`), then S13 (`b7fa97d1`) and S13b (`27ad8430`), with TAGS_PLAN
+  T1 to T4 fast-forwarded between them (`34954884`, `506b46f4`, `09a966e9`, kronikol-89). The full suites pass on
+  `27ad8430`: Playwright 1,357 with 28 skipped, core 8,470 with 2 skipped. One fault found on the way: D49's green ran
+  named classes and missed a title TagsMarkupTests (a T2 file) pinned; T1 carries the pin, and every item since ran
+  the full core suite on its own tree before its commit. PLANS_STATUS.md's row says the same. S14 next: the docs (the
+  wiki over TAGS_PLAN T4's wiki patch, the README's example, the theming page), the Kronikol4J ledger lines, the final
+  parity run and the release check.
