@@ -1115,3 +1115,21 @@ decision of the owner's, not part of this plan.
   only at load, the line showing on a desktop, the inline-style fold back at load).
   Checks: The core classes above, 92 of 92 (run on the same tree in a second worktree, every file of the change
   compared), and the Playwright classes above, 134 of 134, on `aa0e72b3`; the full suites run when S12 closes.
+- 2026-10-20, S12, found while running D48 (its fixture waited for an `<a>` the browser engine never draws): the
+  keyboard reaches an internal-flow link the browser engine draws (`edits/s12keys/`: `scripts-keys.py`,
+  `tests-keys.py`, `IflowLinkKeyboardTests.cs`, `changelog-s12keys.py`). That engine draws a link's label as text,
+  which `bindLink` in `plantuml-browser-render-script.js` binds to the popup, so Tab never reached an internal-flow
+  arrow (4.x too). A link with data is one Tab stop now, its first text, with role link and a name from all its texts;
+  Enter or Space opens the popup; under `ShowLinkOnHover` focus shows the link and leaving puts it at rest. A link
+  with no data, blue text no link markup names, and a link the Java engine drew as an `<a>` take no stop.
+  Tests: Playwright `IflowLinkKeyboardTests` (new, 5 facts, 6 cases, on
+  `TestPageGenerator.GenerateIflowLinkColourPage` with the popup opener recorded): red 5 of 6 before the change, each
+  on its assertion (no stop, role or name in either link mode, Tab landing nowhere, Enter and Space opening nothing,
+  focus showing nothing in a hover-only diagram); the sixth, a link the Java engine drew as an `<a>`, is a guard and
+  passes before as after; green: 122 of 122 with IflowLinkColourTests, ArrowLinkOpensPopupTests,
+  DiagramLinkHoverTests, IflowPopupTests, SharedFlowPopupTests, ExportFilteredHtmlRenderingTests,
+  LongStatementRenderingTests, OnDemandRenderingTests and FocusClearOfTheBarTests. Mutations
+  (`checks/mutate-s12keys.py`, 9): 9 of 9 killed (no Tab stop, no link role, a name from the first text only, Enter
+  opening nothing, Space opening nothing, a second stop on a link the Java engine drew, focus not showing a hover-only
+  link, leaving not putting it at rest, the stop on the link's last text).
+  Checks: The Playwright classes above, 122 of 122, on `e8ae26ce`; the full suites run when S12 closes.

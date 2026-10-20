@@ -320,6 +320,10 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   window, and a page opened wide then narrowed showed its rows under a toggle that did nothing), and they start folded
   from the first paint. The button and the sticky search line take the theme's colours (both were grey in every
   theme).
+- **The keyboard opens an internal-flow arrow's popup.** With the browser engine (BrowserJs, the default) an arrow's
+  link label was text only a pointer could open. A link with data is one Tab stop now, named from its label; Enter or
+  Space opens its popup, and where links show only on hover, focus shows it. A diagram the Java engine drew keeps its
+  links as they were.
 
 ## [4.32.0] - 2026-10-19
 
