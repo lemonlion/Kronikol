@@ -38,7 +38,7 @@ public class CtrfCommandTests : IDisposable
     }
 
     /// <summary>A real run, written to disk with the CTRF output switched on so both writers can be compared.</summary>
-    private void WriteRun()
+    private void WriteRun(bool json = false)
     {
         var testId = "ctrf-" + Guid.NewGuid().ToString("N");
         RequestResponseLogger.LogPair("Pay with an expired card", testId, HttpMethod.Post, new Uri("http://payments/charge"), "payments", "Test");
@@ -73,18 +73,22 @@ public class CtrfCommandTests : IDisposable
             }
         ];
 
+        var options = new ReportConfigurationOptions
+        {
+            ReportsFolderPath = _directory,
+            InternalFlowTracking = false,
+            GenerateComponentDiagram = false,
+            GenerateSpecificationsReport = false,
+            GenerateSpecificationsData = false,
+            GenerateCtrfReport = true
+        };
+        // A fact about what a 4.x writer wrote asks for its file, TestRunReport.json; 5.0.0 writes the .krkl.
+        if (json)
+            options.CompressTestRunReport = false;
         ReportGenerator.CreateStandardReportsWithDiagrams(features,
             new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
             new DateTime(2026, 1, 1, 10, 0, 30, DateTimeKind.Utc),
-            new ReportConfigurationOptions
-            {
-                ReportsFolderPath = _directory,
-                InternalFlowTracking = false,
-                GenerateComponentDiagram = false,
-                GenerateSpecificationsReport = false,
-                GenerateSpecificationsData = false,
-                GenerateCtrfReport = true
-            });
+            options);
     }
 
     /// <summary>The run's data file, in the form it wrote.</summary>
@@ -169,7 +173,7 @@ public class CtrfCommandTests : IDisposable
     {
         // what a 4.x writer wrote: a feature's labels, a scenario's labels and categories, and a retry N label an ingest
         // lane made for each earlier attempt (§4.6, §4.13)
-        WriteRun();
+        WriteRun(json: true);
         var json = JsonNode.Parse(File.ReadAllText(Report))!;
         var feature = QueryTagsTests.WithLabels(json["features"]!.AsArray(), "Checkout", "checkout");
         var scenarios = feature["scenarios"]!.AsArray().Select(s => s!.AsObject()).ToArray();
