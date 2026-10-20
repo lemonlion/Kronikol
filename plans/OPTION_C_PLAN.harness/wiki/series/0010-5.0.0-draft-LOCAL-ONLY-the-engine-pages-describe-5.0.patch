@@ -1,4 +1,4 @@
-From 640e05e23cb4ae2f77a9a12f051a6c899d0e7b3d Mon Sep 17 00:00:00 2001
+From d8c49e03e2199f160832e05f1cc89abbbdff803e Mon Sep 17 00:00:00 2001
 From: Aryeh Citron <aryehcitron@gmail.com>
 Date: Tue, 20 Oct 2026 09:54:50 +0100
 Subject: [PATCH 10/10] 5.0.0 draft, LOCAL ONLY: the engine pages describe
@@ -10,10 +10,11 @@ Subject: [PATCH 10/10] 5.0.0 draft, LOCAL ONLY: the engine pages describe
 
 ---
  Diagnostics-and-Debugging.md           |  2 +-
+ Generated-Reports.md                   |  9 +++---
  Large-Response-and-Diagram-Handling.md |  2 ++
  PlantUML-Browser-Rendering.md          | 40 +++++++++++++++++---------
  Report-Configuration.md                |  2 +-
- 4 files changed, 31 insertions(+), 15 deletions(-)
+ 5 files changed, 36 insertions(+), 19 deletions(-)
 
 diff --git a/Diagnostics-and-Debugging.md b/Diagnostics-and-Debugging.md
 index a3cbb10..1aea4d9 100644
@@ -25,6 +26,26 @@ index a3cbb10..1aea4d9 100644
  
 -**Check:** Open the browser console on the generated report and inspect `window.__kronikolRender`. `mode` says `'worker'` or `'main-thread'` (`'starting'` while undecided, and `'idle'` on a page drawn when it was written until a view first asks for the engine, since 3.31.8), `workers` says how many workers are live, and `fallbackReason` says why the shim fell back to main-thread rendering (Workers, `fetch`, Blob URLs or `OffscreenCanvas` unavailable, `BrowserRenderWorkers = 0`, or an engine that could not be fetched) or why no engine runs at all. `engineIntegrity` and `vizIntegrity` (3.31.1) say whether each engine file matched its known hash: `'verified'`, `'mismatch'`, or `null` before the file arrives and when it could not be fetched. On `'mismatch'` for `plantuml.js`, every diagram says `engine integrity check failed` and `mode` stays `'starting'`: something between the viewer and the CDN changed the file, usually a proxy or a captive portal. On `'mismatch'` for `viz-global.js` only Graphviz is lost: sequence diagrams draw, and the engine lays a component diagram out with its Smetana port. See [[PlantUML Browser Rendering › Engine integrity|PlantUML-Browser-Rendering#engine-integrity-3311]]. `webAssembly` (3.31.3) is `false` where no WebAssembly module compiles (V8's `--jitless`, a content security policy without `'wasm-unsafe-eval'`, a browser setting that turns it off). Graphviz is then not loaded, a component diagram is drawn by Smetana with the same components and edges in another layout, and the console says why. See [[PlantUML Browser Rendering › Without WebAssembly|PlantUML-Browser-Rendering#without-webassembly-3313]].
 +**Check:** Open the browser console on the generated report and inspect `window.__kronikolRender`. `mode` says `'worker'` or `'main-thread'` (`'starting'` while undecided, and `'idle'` on a page drawn when it was written until a view first asks for the engine, since 3.31.8), `workers` says how many workers are live, and `fallbackReason` says why the shim fell back to main-thread rendering (Workers, `fetch`, Blob URLs or `OffscreenCanvas` unavailable, `BrowserRenderWorkers = 0`, or an engine that could not be fetched) or why no engine runs at all. `engineIntegrity` and `vizIntegrity` (3.31.1) say whether each engine file matched its known hash: `'verified'`, `'mismatch'`, or `null` before the file arrives and when it could not be fetched. On `'mismatch'` for `plantuml.js`, every diagram says `engine integrity check failed` and `mode` stays `'starting'`: something between the viewer and the CDN changed the file, usually a proxy or a captive portal. On `'mismatch'` for `viz-global.js` only Graphviz is lost: sequence diagrams draw, and the engine lays a component diagram out with its Smetana port. See [[PlantUML Browser Rendering › Engine integrity|PlantUML-Browser-Rendering#engine-integrity-3311]]. `webAssembly` (3.31.3) is `false` where no WebAssembly module compiles (V8's `--jitless`, a content security policy without `'wasm-unsafe-eval'`, a browser setting that turns it off). Graphviz is then not loaded, a component diagram is drawn by Smetana with the same components and edges in another layout, and the console says why. See [[PlantUML Browser Rendering › Without WebAssembly|PlantUML-Browser-Rendering#without-webassembly-3313]]. `engine` (5.0.0) says which engine draws, `'wasm'` or `'js'`; `engineProblem` why the page is not on the Wasm engine (no Wasm GC, a policy without `'unsafe-eval'`, the main thread, or a Wasm engine that did not start); and `workerCrashes` how many workers an error took down while they drew. See [[PlantUML Browser Rendering › The Wasm engine|PlantUML-Browser-Rendering#the-wasm-engine-500]].
+diff --git a/Generated-Reports.md b/Generated-Reports.md
+index 0058272..61287b9 100644
+--- a/Generated-Reports.md
++++ b/Generated-Reports.md
+@@ -824,10 +824,11 @@ lists what a 4.x stylesheet, script, test or setting has to change.
+   and diagram source. See [[Inline SVG Rendering]] for details. From 5.0.0 the menu is drawn on the page's card in
+   the page's ink, in both themes, and its "in new tab" items open their tab in Firefox too, each tab titled for what
+   it holds ("Diagram (PNG)", "Diagram (SVG)", "PlantUML source", "Box text").
+-- **Internal-flow popup**: with the browser engine (BrowserJs, the default) an arrow's link label is one Tab stop,
+-  named from its label, and Enter or Space opens its popup; where links show only on hover, focus shows it (5.0.0;
+-  before, only a pointer could open it). A diagram the Java engine drew keeps its links as they were. The popup takes
+-  the theme, its Activity and Flame Chart views drawn as tabs (5.0.0). See [[Internal Flow Tracking]].
++- **Internal-flow popup**: an arrow's link label is one Tab stop, named from its whole label, and Enter or Space opens
++  its popup; where links show only on hover, focus shows it (5.0.0; before, the browser engine drew the link as text
++  only a pointer could open, and the Java engine as one link for each line of the label, each named by the segment's
++  id). The popup takes the theme, its Activity and Flame Chart views drawn as tabs (5.0.0). See
++  [[Internal Flow Tracking]].
+ 
+ ### The other tabs
+ 
 diff --git a/Large-Response-and-Diagram-Handling.md b/Large-Response-and-Diagram-Handling.md
 index 51d5c62..30a5ec2 100644
 --- a/Large-Response-and-Diagram-Handling.md
@@ -39,7 +60,7 @@ index 51d5c62..30a5ec2 100644
  
  > **Measuring this is easy to get wrong.** When a message statement is too long the parser falls back to reading the source as a *class* diagram, and that fallback often succeeds — drawing classes named after the tokens, echoing the label text, and emitting no `Syntax Error?` banner at all. A check of the form "is the label in the SVG?" therefore passes for both outcomes. The signal that separates them is that a sequence diagram draws each participant **twice**, as a head box and a foot box.
 diff --git a/PlantUML-Browser-Rendering.md b/PlantUML-Browser-Rendering.md
-index 0f0f6db..47de3bd 100644
+index 0f0f6db..9d5c7ff 100644
 --- a/PlantUML-Browser-Rendering.md
 +++ b/PlantUML-Browser-Rendering.md
 @@ -42,9 +42,10 @@ The default value is `DiagramFormat.PlantUml`, so existing configurations contin
@@ -117,7 +138,7 @@ index 0f0f6db..47de3bd 100644
 +- **A worker that crashes is replaced.** An error that reaches the page from a worker while it draws means the engine in it may never answer again: in Firefox a stack overflow inside the Wasm engine reaches no handler in the worker, only the page. The page lets that worker go, starts another, and draws the diagram it held once more; a diagram that takes a second worker down fails alone, as `Render error: the PlantUML engine crashed drawing this diagram: <the error>`, and every other diagram draws. A crash that names a stack overflow fails its diagram at once, since drawn again it would overflow again, and the report describes it as the engine's stack failure. `workerCrashes` counts the crashes.
 +- **The Node renderer runs `plantuml.js`** of the same tag (see [[Node.js rendering|PlantUML-Browser-Rendering#nodejs-rendering-plantumlrenderingnodejs]]).
 +- **What still runs it out of stack is nesting**, blocks or markup inside one another: from about 1,000 groups the Wasm engine crashes its worker, and the diagram fails at once with the overflow named; the JavaScript engine writes its `RangeError` as text. Either way the report describes it as the engine's stack failure, now saying that something is nested too deeply.
-+- **What the engine draws differently from 4.x's:** each element group carries its source line (`data-source-line`), a participant's groups its qualified name, and an internal-flow link is an `<a>` round its text, as the Java engine draws it, which the report binds by its address. Its TeaVM no longer runs the engine out of stack on a long label, name or block opener (see [[Large Response and Diagram Handling › Statement-Length Limits (3.0.48+)|Large-Response-and-Diagram-Handling#statement-length-limits-3048]]).
++- **What the engine draws differently from 4.x's:** each element group carries its source line (`data-source-line`), a participant's groups its qualified name, and an internal-flow link is an `<a>` round each line of its label, as the Java engine draws it, which the report binds by its address: it takes off the titles that name the link's segment (a browser shows them as the tooltip and reads them as the link's name), names the first anchor from the whole label and leaves it the link's one Tab stop. Its TeaVM no longer runs the engine out of stack on a long label, name or block opener (see [[Large Response and Diagram Handling › Statement-Length Limits (3.0.48+)|Large-Response-and-Diagram-Handling#statement-length-limits-3048]]).
 +
  ---
  

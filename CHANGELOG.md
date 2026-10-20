@@ -142,15 +142,18 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   functions from text, which a content security policy without `'unsafe-eval'` refuses; everywhere else, on the page's
   main thread and in the Node renderer, `plantuml.js` draws. Both are checked against their known hashes. A Wasm engine
   that passes the check and does not start gives way to `plantuml.js`, and a worker an error takes down while it draws
-  is replaced, its diagram drawn once more and then failed alone, naming the error (at once, for a stack overflow). `window.__kronikolRender` says which
-  engine draws (`engine`: `wasm` or `js`), why the page is not on the Wasm one (`engineProblem`) and how many workers
-  crashed (`workerCrashes`). The new TeaVM no longer runs the engine out of stack on a long label, name or block opener,
-  so a diagram that failed with "ran out of stack" in 4.x draws; the statement caps stay where they were. What still
-  runs it out of stack is deep nesting, and the report and the Node renderer now say so when it does. The engine
-  writes a little more into a diagram: each element's source line (`data-source-line`), a participant's qualified name,
-  and an internal-flow link as an `<a>` round its text, as the Java engine draws it, which the report binds by its
-  address. The Node renderer's stand-in DOM gained what the new engine asks of it, so a NodeJs report keeps every
-  link's label, and its SVG declares the `xlink` prefix its links use (`plans/WASM_ENGINE_PLAN.md`).
+  is replaced, its diagram drawn once more and then failed alone, naming the error (at once, for a stack overflow).
+  `window.__kronikolRender` says which engine draws (`engine`: `wasm` or `js`), why the page is not on the Wasm one
+  (`engineProblem`) and how many workers crashed (`workerCrashes`). The new TeaVM no longer runs the engine out of stack
+  on a long label, name or block opener, so a diagram that failed with "ran out of stack" in 4.x draws; the statement
+  caps stay where they were. What still runs it out of stack is deep nesting, and the report and the Node renderer now
+  say so when it does. The engine writes a little more into a diagram: each element's source line
+  (`data-source-line`), a participant's qualified name, and an internal-flow link as an `<a>` round each line of its
+  label, as the Java engine draws it, which the report binds by its address. Each of those anchors names the segment in
+  a title, which a browser shows as the link's tooltip and reads as its name: the report takes the title off, names the
+  first anchor from the whole label and keeps it as the link's one Tab stop. The Node renderer's stand-in DOM gained
+  what the new engine asks of it, so a NodeJs report keeps every link's label, and its SVG declares the `xlink` prefix
+  its links use (`plans/WASM_ENGINE_PLAN.md`).
 - **The data file is `TestRunReport.krkl` by default.** `ReportConfigurationOptions.CompressTestRunReport` defaults to
   `true` (4.x: `false`), so a run whose `TestRunReportDataFormat` is JSON writes the compressed file 4.32.0 introduced in
   place of `TestRunReport.json`: compact, without the keys that hold nothing, every payload as text, in one zstd frame
@@ -445,10 +448,10 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   window, and a page opened wide then narrowed showed its rows under a toggle that did nothing), and they start folded
   from the first paint. The button and the sticky search line take the theme's colours (both were grey in every
   theme).
-- **The keyboard opens an internal-flow arrow's popup.** With the browser engine (BrowserJs, the default) an arrow's
-  link label was text only a pointer could open. A link with data is one Tab stop now, named from its label; Enter or
-  Space opens its popup, and where links show only on hover, focus shows it. A diagram the Java engine drew keeps its
-  links as they were.
+- **The keyboard opens an internal-flow arrow's popup.** With the 4.x browser engine an arrow's link label was text
+  only a pointer could open, and the Java engine (Server, Local) drew a link for each line of the label, each named and
+  titled with the segment's id. A link with data is one Tab stop now, named from its whole label; Enter or Space opens
+  its popup, and where links show only on hover, focus shows it.
 - **The search help reads on the Specifications report.** The violet theme drew its panel dark under dark text, 1.21:1
   (4.x too). The help takes the report's tokens now, in the light and the dark theme.
 - **A diagram's menu reads in the dark theme.** The right-click menu was white and took the page's ink, so in the dark

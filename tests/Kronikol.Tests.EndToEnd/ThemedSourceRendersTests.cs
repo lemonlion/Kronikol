@@ -28,13 +28,16 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
     }
 
     /// <summary>
-    /// The SVG the engine drew, without the processing instruction that encodes its source, and without the empty style
-    /// the page's zoom check leaves on it, which is there or not by when the check's frame came.
+    /// The SVG the engine drew, without the processing instruction that encodes its source, without the empty style
+    /// the page's zoom check leaves on it, which is there or not by when the check's frame came, and without the source
+    /// line each element names (5.0.0's engine writes <c>data-source-line</c>), which the themed source's
+    /// <c>!theme</c> line moves down by one.
     /// </summary>
     private Task<string> EngineSvg(string id) => Page.EvaluateAsync<string>("""
         id => {
             var svg = document.getElementById(id).querySelector('svg').cloneNode(true);
             if (svg.getAttribute('style') === '') svg.removeAttribute('style');
+            svg.querySelectorAll('[data-source-line]').forEach(function (el) { el.removeAttribute('data-source-line'); });
             return svg.outerHTML.replace(/<\?[\s\S]*?\?>/g, '').replace(/<!--[\s\S]*?-->/g, '');
         }
         """, id);

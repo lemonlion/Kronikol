@@ -152,20 +152,8 @@ public class FocusClearOfTheBarTests : PlaywrightTestBase
         var scenario = Scenario("01-1");
         await scenario.EvaluateAsync("d => { d.open = true; }");
         await WaitForDiagramSvg(60000);
-        // The browser engine draws a link's label as text, which the render script binds by itself (no <a>), so the label
-        // is wrapped in the <a> the Java engine writes for it (Server or Local rendering), as IflowPopupTests builds links
-        await scenario.EvaluateAsync("""
-            d => {
-                const ns = 'http://www.w3.org/2000/svg', xlink = 'http://www.w3.org/1999/xlink';
-                const label = Array.from(d.querySelectorAll('.plantuml-browser svg text')).find(t => t.textContent === '201 Created');
-                if (!label) throw new Error('the diagram has no "201 Created" label');
-                const a = document.createElementNS(ns, 'a');
-                a.setAttribute('href', '#d48-link');
-                a.setAttributeNS(xlink, 'xlink:href', '#d48-link');
-                label.parentNode.insertBefore(a, label);
-                a.appendChild(label);
-            }
-            """);
+        // 5.0.0's browser engine draws a link's label inside an <a>, as the Java engine does (Server or Local rendering),
+        // and that <a> is what Tab reaches (the 4.x engine drew the label as text, and this fixture wrapped it in one)
         var link = scenario.Locator(".plantuml-browser svg a[href='#d48-link']");
         await link.WaitForAsync(new() { State = WaitForSelectorState.Attached, Timeout = 60000 });
         await OpenScenarioSettingsAsync(scenario);

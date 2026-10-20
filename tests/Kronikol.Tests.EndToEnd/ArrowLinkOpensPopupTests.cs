@@ -90,7 +90,7 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
         var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, "ArrowLink_Click.html", withFlow: 2, withoutFlow: 1);
         await OpenAndDraw(uri);
 
-        // SVG rule: a dispatched click, on the arrow's own text (the browser engine draws the link as text, no <a>).
+        // SVG rule: a dispatched click, on the arrow's own text, which reaches the <a> 5.0.0's engine draws round it.
         await Page.EvaluateAsync("""
             () => Array.from(document.querySelectorAll('.plantuml-browser:not(.iflow-diagram) svg text'))
                 .find(t => t.textContent.includes('with-flow-0') && !t.textContent.includes('without'))

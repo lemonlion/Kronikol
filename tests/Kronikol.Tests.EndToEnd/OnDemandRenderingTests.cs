@@ -14,7 +14,7 @@ namespace Kronikol.Tests.EndToEnd;
 /// still has views only the page can draw, and until 3.31.8 it carried no engine for them (DIAGRAM_COLOURS_PLAN §12.6):
 /// the Activity tab and the internal-flow popups stayed blank, and so did the embedded component diagram, which was
 /// left for the page under every renderer. Under <c>NodeJs</c> an internal-flow link opened nothing, since the engine
-/// draws a link as blue text and the popup script catches clicks on <c>&lt;a&gt;</c> links only. The page now fetches the
+/// of the day drew a link as blue text and the popup script catches clicks on <c>&lt;a&gt;</c> links only. The page now fetches the
 /// engine the first time one of those views is shown, never when it opens; a NodeJs diagram's links are bound as a
 /// diagram drawn in the page is; and the component diagram is drawn by the report's renderer, as ComponentDiagram.html is.
 /// </summary>

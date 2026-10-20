@@ -66,8 +66,13 @@ release uses 0.17.0-dev-2, and section 7 says when to move.
 - **D8. A link stays the `<a>` the engine draws.** From 1.2026.10 the TeaVM engine draws an internal-flow link as the Java
   engine does, an `<a href="#iflow-…" target="_top">` round its underlined text, where the 4.x engine drew the text
   alone. The report already binds the Java engine's `<a>` by its address (Server and Local rendering; the popup
-  script's capture-phase click handler stops the navigation), so a browser-drawn link now takes that path. The Node renderer keeps the link too
-  (section 4).
+  script's capture-phase click handler stops the navigation), so a browser-drawn link now takes that path. The Node
+  renderer keeps the link too (section 4). The engine draws one `<a>` round each line of a label, and each carries the
+  segment's id in `title` and `xlink:title`, which a browser shows as the tooltip and reads as the link's name: a
+  two-line label was two Tab stops, each read as "#iflow-…", where Option C's S12 promised one stop named from the
+  label. The binder takes the titles off, names the first anchor from the whole label (`aria-label`) and leaves the
+  rest to the pointer (`tabindex="-1"`, `aria-hidden`); where links show only on hover, focus on the first shows the
+  link. The Java engine's anchors take the same path. The SVG a report stores keeps the titles.
 - **D9. The statement caps stay.** The new TeaVM draws far past every stack cap (section 5), but raising them changes
   what every report writes, so it is a change of its own (section 7).
 - **D10. Telemetry.** `window.__kronikolRender` gains `engine` (`wasm` or `js`), `engineProblem` (why the page is not on
@@ -127,7 +132,11 @@ End to end (`Kronikol.Tests.EndToEnd`, `WasmEngineTests`): Chromium draws with t
 fetches `plantuml.js`; the main thread draws with `plantuml.js`; a policy with `'wasm-unsafe-eval'` and without
 `'unsafe-eval'` draws with `plantuml.js` and still loads Graphviz; a Wasm engine that does not start gives way to
 `plantuml.js`; a worker an error takes down is replaced, its diagram fails alone after a second try, and the page goes
-on drawing. The integrity and mirror facts name the engine each path fetches.
+on drawing. The integrity and mirror facts name the engine each path fetches. `IflowLinkKeyboardTests`: anchors drawn as
+the engine draws them, one to a line with the title in each of its three forms, are one stop named from the whole
+label and lose every title, bound twice or with no data; focus on the first shows a link that shows only on hover.
+`ThemedSourceRendersTests` compares a themed and a plain drawing without their source lines, which the `!theme` line
+moves, and `FocusClearOfTheBarTests` tabs to the `<a>` the engine draws (its fixture wrapped the label in a second one).
 
 ## 7. Follow-ups
 
@@ -136,8 +145,6 @@ on drawing. The integrity and mirror facts name the engine each path fetches.
   Wasm files ship in the next release, #2834), move the pin back to npm.
 - **The statement caps:** re-measure in the three browsers' workers on the new engine and raise them.
 - **The Node renderer on the Wasm engine.**
-- **A link's tooltip:** the engine's `title` and `xlink:title` name the segment (`#iflow-…`), as the Java engine's always
-  did.
 - **Nested markup in the Wasm worker:** 5,000 nested `<b>` and 1,400 nested activity `if`s take the worker to its 150 s
   timeout instead of failing fast; find where the time goes and report it upstream.
 
@@ -145,3 +152,10 @@ on drawing. The integrity and mirror facts name the engine each path fetches.
 
 - 2026-10-20: built, published on the fork, measured; Kronikol's side written test first in the worktree
   `Kronikol-v5-wasm` from `v5` (`475410f0`).
+- 2026-10-20, the full suites on the branch merged with `main` (`a48a4582`): core 8,507 passed with 2 skipped;
+  Playwright 1,382 passed, 28 skipped and 3 failed, all from the new engine's output. A themed and a plain drawing
+  differed in their source lines, and a focus fixture wrapped the engine's own `<a>` in a second one; reading why found
+  the anchors' titles and one stop to a line (D8). The binder's facts failed first on the script before the change (all
+  three, for the titles, the name and the focus), and ten of the eleven mutations in `checks/mutate-anchors.py` are
+  killed; the one that survives binds a link's anchors again on every pass, which adds the same name and listeners and
+  no reader can see. The classes that draw links, focus, flows or exports pass: 168 with 4 skipped.

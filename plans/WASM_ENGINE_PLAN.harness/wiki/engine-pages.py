@@ -1,6 +1,7 @@
 # The wiki's 5.0.0 engine pages (plans/WASM_ENGINE_PLAN.md): PlantUML Browser Rendering says which engine draws, from
 # where, how the page chooses, falls back and recovers, and what the telemetry carries; Large Response and Diagram
-# Handling, Diagnostics and Debugging and Report Configuration say the same where they name the engine.
+# Handling, Diagnostics and Debugging and Report Configuration say the same where they name the engine, and Generated
+# Reports says what the keyboard reaches in an internal-flow link the engine draws as anchors.
 # usage: python -I engine-pages.py <wiki folder>
 import sys
 
@@ -82,7 +83,7 @@ From 5.0.0 the engine tag holds two builds of one engine that draw the same SVG:
 - **A worker that crashes is replaced.** An error that reaches the page from a worker while it draws means the engine in it may never answer again: in Firefox a stack overflow inside the Wasm engine reaches no handler in the worker, only the page. The page lets that worker go, starts another, and draws the diagram it held once more; a diagram that takes a second worker down fails alone, as `Render error: the PlantUML engine crashed drawing this diagram: <the error>`, and every other diagram draws. A crash that names a stack overflow fails its diagram at once, since drawn again it would overflow again, and the report describes it as the engine's stack failure. `workerCrashes` counts the crashes.
 - **The Node renderer runs `plantuml.js`** of the same tag (see [[Node.js rendering|PlantUML-Browser-Rendering#nodejs-rendering-plantumlrenderingnodejs]]).
 - **What still runs it out of stack is nesting**, blocks or markup inside one another: from about 1,000 groups the Wasm engine crashes its worker, and the diagram fails at once with the overflow named; the JavaScript engine writes its `RangeError` as text. Either way the report describes it as the engine's stack failure, now saying that something is nested too deeply.
-- **What the engine draws differently from 4.x's:** each element group carries its source line (`data-source-line`), a participant's groups its qualified name, and an internal-flow link is an `<a>` round its text, as the Java engine draws it, which the report binds by its address. Its TeaVM no longer runs the engine out of stack on a long label, name or block opener (see [[Large Response and Diagram Handling › Statement-Length Limits (3.0.48+)|Large-Response-and-Diagram-Handling#statement-length-limits-3048]]).
+- **What the engine draws differently from 4.x's:** each element group carries its source line (`data-source-line`), a participant's groups its qualified name, and an internal-flow link is an `<a>` round each line of its label, as the Java engine draws it, which the report binds by its address: it takes off the titles that name the link's segment (a browser shows them as the tooltip and reads them as the link's name), names the first anchor from the whole label and leaves it the link's one Tab stop. Its TeaVM no longer runs the engine out of stack on a long label, name or block opener (see [[Large Response and Diagram Handling › Statement-Length Limits (3.0.48+)|Large-Response-and-Diagram-Handling#statement-length-limits-3048]]).
 """),
     # the statements that ran the 4.x engine out of stack
     ("Since 4.14.6 a stack failure is reported as one:",
@@ -106,6 +107,19 @@ edit('Diagnostics-and-Debugging.md', [
 """),
 ])
 
+edit('Generated-Reports.md', [
+    ("""- **Internal-flow popup**: with the browser engine (BrowserJs, the default) an arrow's link label is one Tab stop,
+  named from its label, and Enter or Space opens its popup; where links show only on hover, focus shows it (5.0.0;
+  before, only a pointer could open it). A diagram the Java engine drew keeps its links as they were. The popup takes
+  the theme, its Activity and Flame Chart views drawn as tabs (5.0.0). See [[Internal Flow Tracking]].
+""",
+     """- **Internal-flow popup**: an arrow's link label is one Tab stop, named from its whole label, and Enter or Space opens
+  its popup; where links show only on hover, focus shows it (5.0.0; before, the browser engine drew the link as text
+  only a pointer could open, and the Java engine as one link for each line of the label, each named by the segment's
+  id). The popup takes the theme, its Activity and Flame Chart views drawn as tabs (5.0.0). See
+  [[Internal Flow Tracking]].
+"""),
+])
 edit('Report-Configuration.md', [
     ("""`BrowserJs` (default) renders client-side in the browser via the PlantUML TeaVM JS engine.""",
      """`BrowserJs` (default) renders client-side in the browser via PlantUML's TeaVM engine, its Wasm GC build where the browser runs it (5.0.0) and its JavaScript build elsewhere."""),

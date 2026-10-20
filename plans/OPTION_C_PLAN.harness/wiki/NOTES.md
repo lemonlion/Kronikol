@@ -9,7 +9,7 @@
 | `0002` to `0007` | kronikol-39's local wiki clone, branch `v5-on-tags`, `145c8b1..ddef9ff` | The report data file (REPORT_FORMAT_PLAN): `TestRunReport.krkl`, the schema when asked, sub-steps drawn on first open |
 | `0008` | this plan, S14 | The report's 5.0.0 pages: Generated Reports, Report Configuration, Report Themes (new), Migrating to v5 (new, with kronikol-39's data file fragment), Migrating to v5: the report (new), and ten more pages |
 | `0009` | kronikol-89, its fix of the tags page (2026-10-20) | Tags and Attributes: where `endpoint:/x` sets a feature's endpoint, and that NUnit, MSTest, xUnit and TUnit take it from `[Endpoint]` |
-| `0010` | `WASM_ENGINE_PLAN.md` | The engine 5.0.0 draws with: PlantUML Browser Rendering (a new section, The Wasm engine), Large Response and Diagram Handling, Diagnostics and Debugging, Report Configuration |
+| `0010` | `WASM_ENGINE_PLAN.md` | The engine 5.0.0 draws with: PlantUML Browser Rendering (a new section, The Wasm engine), Large Response and Diagram Handling, Diagnostics and Debugging, Report Configuration, and Generated Reports' line on what the keyboard reaches in an internal-flow link |
 
 ## Applying it
 
@@ -19,7 +19,7 @@ git am -3 <repo>/plans/OPTION_C_PLAN.harness/wiki/series/*.patch
 ```
 
 Applied to `7295fb3` in that order, the series gives exactly the tree it was exported from (checked on 2026-10-20, with
-all ten: tree `94a3e5ac`).
+all ten: tree `94a3e5ac`; again after `0010` gained Generated Reports' keyboard line: tree `b9885ddd`).
 `7295fb3` is `b5c9a27` and one line, a 4.x fix the link check found while the series was assembled: Merging Parallel
 Reports linked Querying Reports' compressed reports section by an anchor ending `4290`, from before the section
 shipped as 4.30.0. kronikol-39 put it on the live wiki the same day, and the series was exported again on it.

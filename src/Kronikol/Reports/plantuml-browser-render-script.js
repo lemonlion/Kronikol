@@ -1505,7 +1505,7 @@
             }
             // One link's texts. The highlight is the fill the engine painted the link in, so a theme's link colour
             // survives. A text is bound once in a page: the mark is an expando, which a copy does not carry.
-            function bindLink(groupEls, segId) {
+            function bindLink(groupEls, segId, anchors) {
                 groupEls.forEach(function(el) {
                     if (!el.hasAttribute('data-iflow-fill')) el.setAttribute('data-iflow-fill', el.getAttribute('fill') || '');
                 });
@@ -1552,9 +1552,9 @@
                         if (window._iflowShowPopup) window._iflowShowPopup(segId);
                     });
                 });
-                // The keyboard reaches the link too (5.0.0, S12): the browser engine draws no <a>, so the link's first
-                // text is its one Tab stop, a link named from all its texts, and Enter or Space opens the popup; where
-                // links show only on hover, focus shows it. A link the Java engine drew keeps its <a> as the stop.
+                // The keyboard reaches the link too (5.0.0, S12): an engine that draws no <a> (the 4.x browser engine)
+                // leaves the link's first text as its one Tab stop, a link named from all its texts, and Enter or Space
+                // opens the popup; where links show only on hover, focus shows it. A link drawn as <a> is bound below.
                 var first = groupEls[0], anchor = first.closest ? first.closest('a') : null;
                 var anchored = !!anchor && (anchor.hasAttribute('href') || anchor.hasAttributeNS('http://www.w3.org/1999/xlink', 'href'));
                 if (!anchored && !first._iflowKeys) {
@@ -1568,20 +1568,36 @@
                         if (window._iflowShowPopup) window._iflowShowPopup(segId);
                     });
                     if (hoverOnly) {
-                        first.addEventListener('focus', function() {
-                            groupEls.forEach(function(el, k) {
-                                el.setAttribute('fill', linkFills[k]);
-                                el.setAttribute('text-decoration', 'underline');
-                            });
-                        });
+                        first.addEventListener('focus', showLink);
                         first.addEventListener('blur', atRest);
                     }
+                }
+                // An engine that draws the link as <a> (5.0.0's browser engine, or the Java engine) draws one round each
+                // line of the label, so the first is the link's one stop, named from all its texts, and the rest are
+                // left to the pointer; where links show only on hover, focus on it shows the link.
+                if (anchors && anchors.length > 0 && !anchors[0]._iflowKeys) {
+                    anchors[0]._iflowKeys = true;
+                    anchors[0].setAttribute('aria-label', groupEls.map(function(el) { return el.textContent; }).join(' '));
+                    anchors.slice(1).forEach(function(a) {
+                        a.setAttribute('tabindex', '-1');
+                        a.setAttribute('aria-hidden', 'true');
+                    });
+                    if (hoverOnly) {
+                        anchors[0].addEventListener('focus', showLink);
+                        anchors[0].addEventListener('blur', atRest);
+                    }
+                }
+                function showLink() {
+                    groupEls.forEach(function(el, k) {
+                        el.setAttribute('fill', linkFills[k]);
+                        el.setAttribute('text-decoration', 'underline');
+                    });
                 }
             }
             // The Java engine's <a>, one or more per link (a label wrapped onto lines), each round that line's text. The
             // popup script takes the href of one whose segment has no data (P5 R2), and so does this; its title still
             // names the segment, since the Java engine writes both.
-            var anchorTexts = {}, anchorIds = [];
+            var anchorTexts = {}, anchorIds = [], anchorEls = {};
             container.querySelectorAll('a').forEach(function(a) {
                 var segId = null;
                 [a.getAttribute('href'), a.getAttribute('xlink:href'), a.getAttributeNS('http://www.w3.org/1999/xlink', 'href'),
@@ -1589,17 +1605,23 @@
                     if (!segId && name && name.indexOf('#iflow-') === 0) segId = name.substring(1);
                 });
                 if (!segId) return;
+                // The segment's id is the page's and not the reader's: a browser shows an anchor's title as its tooltip and
+                // reads it as the link's name.
+                a.removeAttribute('title');
+                a.removeAttribute('xlink:title');
+                a.removeAttributeNS('http://www.w3.org/1999/xlink', 'title');
                 if (!hasSegment(segId)) {
                     a.removeAttribute('href');
                     a.removeAttribute('xlink:href');
                     a.removeAttributeNS('http://www.w3.org/1999/xlink', 'href');
                 }
-                if (!anchorTexts[segId]) { anchorTexts[segId] = []; anchorIds.push(segId); }
+                if (!anchorTexts[segId]) { anchorTexts[segId] = []; anchorEls[segId] = []; anchorIds.push(segId); }
+                anchorEls[segId].push(a);
                 a.querySelectorAll('text').forEach(function(t) { anchorTexts[segId].push(t); });
             });
             if (anchorIds.length > 0) {
                 allTexts = Array.from(container.querySelectorAll('text'));
-                anchorIds.forEach(function(segId) { if (anchorTexts[segId].length > 0) bindLink(anchorTexts[segId], segId); });
+                anchorIds.forEach(function(segId) { if (anchorTexts[segId].length > 0) bindLink(anchorTexts[segId], segId, anchorEls[segId]); });
                 return;
             }
             // A fragment is bound from its own source, whatever source it is handed (its diagram's whole one, by the render
@@ -1666,11 +1688,12 @@
             });
         }, { rootMargin: '200px' });
         // A diagram the report drew when it was written (PlantUmlRendering.NodeJs, Server, Local) arrives inline. The
-        // JavaScript engine the Node renderer runs draws a link as blue text and never as an <a>, so the popup script,
-        // which catches clicks on <a> links, had nothing to catch: under NodeJs every internal-flow link was drawn and
-        // opened nothing (3.31.8). Such a diagram's links are bound as a diagram drawn here is, once it comes into view.
-        // So is one holding the Java engine's <a> links (Server, Local), which the binder reads without the source: the
-        // popup script opens them, and the binder gives them the look the mode asks for (3.32.3).
+        // JavaScript engine the Node renderer ran before 5.0.0 drew a link as blue text and never as an <a>, so the popup
+        // script, which catches clicks on <a> links, had nothing to catch: under NodeJs every internal-flow link was drawn
+        // and opened nothing (3.31.8). Such a diagram's links are bound as a diagram drawn here is, once it comes into
+        // view. So is one holding <a> links (the Java engine's under Server and Local, and 5.0.0's engine's everywhere),
+        // which the binder reads without the source: the popup script opens them, and the binder gives them the look the
+        // mode asks for (3.32.3).
         function bindInlineSvg(el) {
             if (el._iflowBinding) return;
             el._iflowBinding = true;
