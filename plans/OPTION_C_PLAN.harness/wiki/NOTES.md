@@ -20,8 +20,6 @@ Applied to `7295fb3` in that order, the series gives exactly the tree it was exp
 `7295fb3` is `b5c9a27` and one line, a 4.x fix the link check found while the series was assembled: Merging Parallel
 Reports linked Querying Reports' compressed reports section by an anchor ending `4290`, from before the section
 shipped as 4.30.0. kronikol-39 put it on the live wiki the same day, and the series was exported again on it.
-The wiki stores some pages with CRLF line ends and the patches carry them, so this folder's `.gitattributes` keeps
-the patches' bytes as written (`*.patch -text`) where the repository's `* text=auto` would strip the CRs.
 Where `master` has moved, `git am -3` merges each patch; a conflict is resolved for the page's newer text, keeping
 what the patch adds. The commit subjects say "LOCAL ONLY"; reword them at publication if the history should not.
 
