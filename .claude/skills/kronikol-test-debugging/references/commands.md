@@ -50,7 +50,7 @@ do read it, and lists what this one accepts. Before 3.1.0 `failures <report> --s
 every failure in the report under a filter that had never run, which reads exactly like "no call to
 payments broke anything".
 
-The distinction worth holding on to: some flags filter **scenarios** (`--result`, `--feature`, `--label`,
+The distinction worth holding on to: some flags filter **scenarios** (`--result`, `--feature`, `--tag`,
 `--slower-than`), others filter **calls** (`--service`, `--status`, `--method`, `--step`). `--grep`
 belongs to both and means different things — a scenario name on `scenarios`, a URI on `interactions`.
 
@@ -118,7 +118,7 @@ warm-up went: `First-call warm-up: 2.65s in 7 scenarios; the most in s49, 1.19s 
 |---|---|
 | `--result Failed` | filter on execution result |
 | `--feature X` | substring match on feature name |
-| `--label L` | matches scenario labels, categories and feature labels |
+| `--tag T` | a tag of the scenario or of its feature holding `T`, in any case; `--label` is its name before 5.0.0 |
 | `--grep T` | substring match on scenario name |
 | `--slower-than 5` | seconds of the scenario's own time: a first-call warm-up it paid is left out, and a note counts the scenarios that took as long only with it |
 

@@ -112,6 +112,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   the number of scenarios it picks out and then what a click does. A composite step's says how many steps it holds,
   given when it is first pointed at or focused. In their tabs, the History and Diagnostics headings say what the
   section is, not that a click opens it.
+- **`kronikol query scenarios --tag T`** keeps the scenarios with a tag holding `T`, in any case, a feature's tags
+  counting as each of its scenarios'. `--label`, the flag's 4.x name, is the same flag, and a listing cut short says
+  `--tag` on its `next:` line whichever name was typed.
 
 ### Changed (breaking)
 
@@ -263,7 +266,7 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **CTRF's `tags` are every tag a scenario has,** its feature's first, and `extra.categories` is gone, in
   `ctrf-report.json` and in `kronikol ctrf`'s output.
 - **`kronikol query scenarios --json` gives a scenario's `tags`,** its feature's first, in place of `labels` and
-  `categories`, and `--label` matches a feature's tags too.
+  `categories`, and `--tag` matches a feature's tags too.
 - **No ingest lane makes `retry N` labels.** `kronikol ingest` gave a retried scenario a `retry N` label for each earlier
   attempt; `Scenario.Attempt` says the same, and the report's badge is drawn from it. The readers leave those labels
   out of a 4.x file's tags where its `attempt` accounts for them, so `kronikol ctrf` and `query` do not offer them as
@@ -318,6 +321,11 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 
 ### Fixed
 
+- **`kronikol merge` keeps each scenario's tags.** A feature that ran in several shards kept the first shard's feature
+  tags, so where the shards gave it different ones, a scenario of a later shard took the first shard's in place of its
+  own shard's. The tests NDJSON lane gives a feature, in each shard, the tags all of that shard's scenarios share, so
+  its shards often differ. The merged feature keeps the tags every shard gives it, and each shard's others move onto
+  that shard's scenarios, so no scenario gains or loses a tag.
 - **A feature's tags pick out its scenarios.** They were drawn on the feature and found by free text, but no chip and no
   `@` search picked out the feature's scenarios.
 - **A tag with a comma in its name is one tag.** The chips, the search and the link split it in two. A double quote in a

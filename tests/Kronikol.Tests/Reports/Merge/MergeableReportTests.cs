@@ -69,6 +69,95 @@ public class MergeableReportTests
         Assert.Null(f.Scenarios.Single(s => s.Id == "a2").Tags);
     }
 
+    // ─── Tags across shards (plans/TAGS_PLAN.md §4.13, F22) ──────────
+
+    private static MergeableReport Shard(params Feature[] features) =>
+        MergeableReportReader.Parse(ReportGenerator.GenerateMergeableReportJson(
+            features,
+            new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
+            Array.Empty<DiagramAsCode>().ToLookup(d => d.TestRuntimeId, d => d.CodeBehind),
+            componentRelationships: [],
+            internalFlowSegmentData: [],
+            wholeTestFlow: [],
+            WholeTestFlowVisualization.None,
+            ciMetadata: null));
+
+    private static string[] EffectiveTags(Feature feature, string id) =>
+        ScenarioTags.Effective(feature, feature.Scenarios.Single(s => s.Id == id));
+
+    [Fact]
+    public void Two_shards_where_only_one_lifts_a_tag_give_the_merged_feature_no_such_tag_and_every_scenario_keeps_its_own()
+    {
+        // the tests NDJSON lane lifts per shard the tags that shard's scenarios share, and they stay on the scenarios
+        var lifted = Shard(new Feature
+        {
+            DisplayName = "Checkout", Tags = ["nightly"],
+            Scenarios =
+            [
+                new Scenario { Id = "s1", DisplayName = "Pay", Result = ExecutionResult.Passed, Tags = ["nightly", "card"] },
+                new Scenario { Id = "s2", DisplayName = "Refund", Result = ExecutionResult.Passed, Tags = ["nightly"] }
+            ]
+        });
+        var other = Shard(new Feature
+        {
+            DisplayName = "Checkout",
+            Scenarios = [new Scenario { Id = "s3", DisplayName = "Browse", Result = ExecutionResult.Passed, Tags = ["slow"] }]
+        });
+
+        foreach (MergeableReport[] shards in new[] { new[] { lifted, other }, new[] { other, lifted } })
+        {
+            var feature = Assert.Single(MergeableReportMerger.Merge(shards).Features);
+
+            Assert.Null(feature.Tags);
+            Assert.Equal(["nightly", "card"], EffectiveTags(feature, "s1"));
+            Assert.Equal(["nightly"], EffectiveTags(feature, "s2"));
+            Assert.Equal(["slow"], EffectiveTags(feature, "s3"));
+        }
+    }
+
+    [Fact]
+    public void A_merged_feature_keeps_the_tags_every_shard_gives_it_and_each_shard_s_others_move_onto_its_scenarios()
+    {
+        // shards of a class-level lane whose class's tags changed between them: no scenario gains or loses a tag
+        var first = Shard(new Feature
+        {
+            DisplayName = "Orders", Tags = ["api", "smoke"],
+            Scenarios = [new Scenario { Id = "a1", DisplayName = "Place", Result = ExecutionResult.Passed, Tags = ["fast"] }]
+        });
+        var second = Shard(new Feature
+        {
+            DisplayName = "Orders", Tags = ["Smoke", "v2"],
+            Scenarios = [new Scenario { Id = "b1", DisplayName = "Cancel", Result = ExecutionResult.Passed }]
+        });
+        var third = Shard(new Feature
+        {
+            DisplayName = "Orders", Tags = ["SMOKE", "api"],
+            Scenarios = [new Scenario { Id = "c1", DisplayName = "Track", Result = ExecutionResult.Passed }]
+        });
+
+        var feature = Assert.Single(MergeableReportMerger.Merge([first, second, third]).Features);
+
+        // the first shard's spelling, as a chip takes the first met, where each shard spells it its own way
+        Assert.Equal(["smoke"], feature.Tags);
+        Assert.Equal(["api", "fast"], feature.Scenarios.Single(s => s.Id == "a1").Tags);
+        Assert.Equal(["v2"], feature.Scenarios.Single(s => s.Id == "b1").Tags);
+        Assert.Equal(["api"], feature.Scenarios.Single(s => s.Id == "c1").Tags);
+        Assert.Equal(["smoke", "api", "fast"], EffectiveTags(feature, "a1"));
+    }
+
+    [Fact]
+    public void Shards_that_agree_on_a_feature_s_tags_keep_them_on_the_feature()
+    {
+        var first = Shard(new Feature { DisplayName = "Orders", Tags = ["api"], Scenarios = [new Scenario { Id = "a1", DisplayName = "Place", Result = ExecutionResult.Passed }] });
+        var second = Shard(new Feature { DisplayName = "Orders", Tags = ["api"], Scenarios = [new Scenario { Id = "b1", DisplayName = "Cancel", Result = ExecutionResult.Passed }] });
+
+        var feature = Assert.Single(MergeableReportMerger.Merge([first, second]).Features);
+
+        Assert.Equal(["api"], feature.Tags);
+        Assert.All(feature.Scenarios, s => Assert.Null(s.Tags));
+    }
+
     [Fact]
     public void Roundtrip_preserves_features_scenarios_and_steps()
     {

@@ -62,7 +62,8 @@ internal static class VerbTable
         new("--lines", "RANGE", "A line range of a payload, like 20-60."),
         new("--result", "RESULT", "Only scenarios with this result: Passed, Failed, Skipped."),
         new("--feature", "TEXT", "Only scenarios whose feature name contains TEXT."),
-        new("--label", "LABEL", "Only scenarios carrying this label or tag."),
+        new("--tag", "TAG", "Only scenarios with a tag holding TAG, in any case; a feature's tags are each of its scenarios'."),
+        new("--label", "TAG", "The same as --tag, by its name before 5.0.0."),
         new("--service", "TEXT", "Only calls whose service name contains TEXT."),
         new("--status", "STATUS", "Only calls with this status: a code (500), a name (InternalServerError) or a class (5xx)."),
         new("--method", "METHOD", "Only calls with this HTTP method or tracker label."),
@@ -129,10 +130,10 @@ internal static class VerbTable
             ["  summary      <report>                        run header, per-feature results, slowest scenarios, diagnostics"]),
 
         new("scenarios", "Overview",
-            "Scenarios, filtered by result, feature, label, name or duration.",
+            "Scenarios, filtered by result, feature, tag, name or duration.",
             ["<report>"],
-            ["--result", "--failed", "--feature", "--label", "--grep", "--slower-than", "--count", "--offset", "--limit", "--json"], Json: true,
-            ["  scenarios    <report> [--result Failed] [--feature X] [--label L] [--grep T] [--slower-than 5]"]),
+            ["--result", "--failed", "--feature", "--tag", "--label", "--grep", "--slower-than", "--count", "--offset", "--limit", "--json"], Json: true,
+            ["  scenarios    <report> [--result Failed] [--feature X] [--tag T] [--grep T] [--slower-than 5]"]),
 
         new("services", "Overview",
             "Per service: calls, status mix, errors, bytes and timings. Absence from the table is the answer to 'did it call X?'.",

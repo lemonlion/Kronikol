@@ -8,7 +8,8 @@ namespace Kronikol.Tests.Tool;
 /// <summary>
 /// What <c>kronikol query</c> reads of a scenario's tags (plans/TAGS_PLAN.md §4.13): its effective tags, its feature's
 /// first, from a file's <c>tags</c> or, in a file written before 5.0.0, from its <c>labels</c> and <c>categories</c>
-/// less the <c>retry N</c> labels its attempt accounts for. <c>--label</c> had no fact before these (F20).
+/// less the <c>retry N</c> labels its attempt accounts for. <c>--tag</c> keeps the scenarios one of those holds a text
+/// in, and <c>--label</c>, its name before 5.0.0, is the same flag (Q2); <c>--label</c> had no fact before these (F20).
 /// </summary>
 public class QueryTagsTests : IDisposable
 {
@@ -88,15 +89,48 @@ public class QueryTagsTests : IDisposable
     }
 
     [Theory]
-    [InlineData("pay", new[] { "Pay" })]
+    [InlineData("--tag", "pay", new[] { "Pay" })]
     // a feature's tag picks out every one of its scenarios
-    [InlineData("CHECK", new[] { "Pay", "Refuse" })]
-    [InlineData("nothing", new string[0])]
-    public void Label_keeps_the_scenarios_with_an_effective_tag_holding_the_text_in_any_case(string text, string[] expected)
+    [InlineData("--tag", "CHECK", new[] { "Pay", "Refuse" })]
+    [InlineData("--tag", "nothing", new string[0])]
+    // --label is the same flag, by its name before 5.0.0, which skills and scripts in the wild type
+    [InlineData("--label", "pay", new[] { "Pay" })]
+    [InlineData("--label", "CHECK", new[] { "Pay", "Refuse" })]
+    public void Tag_and_its_older_name_label_keep_the_scenarios_with_a_tag_holding_the_text_in_any_case(string flag, string text, string[] expected)
     {
         var path = Written(Shop());
 
-        Assert.Equal(expected, TagsByScenario(path, "--label", text).Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(expected, TagsByScenario(path, flag, text).Keys.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void A_listing_cut_short_by_tag_or_label_says_how_to_go_on_with_tag()
+    {
+        // the next: line repeats the filter, by its name since 5.0.0 whichever name was typed
+        var path = Written(Shop());
+
+        foreach (var flag in new[] { "--tag", "--label" })
+        {
+            var text = Query("scenarios", path, flag, "check", "--limit", "1");
+            Assert.Contains("--tag check", text);
+            Assert.DoesNotContain("--label", text);
+        }
+    }
+
+    [Fact]
+    public void Only_the_scenarios_verb_reads_tag()
+    {
+        var path = Written(Shop());
+        var output = new StringWriter();
+        var error = new StringWriter();
+
+        var exit = QueryCommand.Run(["failures", path, "--tag", "pay"], output, error);
+
+        // refused as a flag this verb does not read, naming the verb that does, not as one the tool lacks
+        Assert.NotEqual(0, exit);
+        Assert.Contains("--tag", error.ToString());
+        Assert.Contains("scenarios", error.ToString());
+        Assert.DoesNotContain("Unknown option", error.ToString());
     }
 
     /// <summary>

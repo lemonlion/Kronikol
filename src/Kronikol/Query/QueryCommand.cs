@@ -301,7 +301,7 @@ public static partial class QueryCommand
     /// enforced, so a flag missing from it is refused rather than silently discarded.
     ///
     /// <para>The distinction the table draws is between the flags that filter <em>scenarios</em>
-    /// (<c>--result</c>, <c>--feature</c>, <c>--label</c>, <c>--slower-than</c>) and the flags that filter
+    /// (<c>--result</c>, <c>--feature</c>, <c>--tag</c>, <c>--slower-than</c>) and the flags that filter
     /// <em>calls</em> (<c>--service</c>, <c>--status</c>, <c>--method</c>, <c>--step</c>). They read alike
     /// and they are not interchangeable: <c>--grep</c> matches a scenario name on <c>scenarios</c> and a
     /// URI on <c>interactions</c>, and neither verb has any use for the other's set.</para>

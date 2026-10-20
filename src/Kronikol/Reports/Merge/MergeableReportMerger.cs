@@ -126,17 +126,31 @@ public static class MergeableReportMerger
                 continue;
             }
 
+            // The tags both halves give the feature stay the feature's; each half's others move onto its own scenarios,
+            // so no scenario gains or loses a tag (plans/TAGS_PLAN.md §4.13, F22): the tests NDJSON lane lifts per
+            // shard the tags that shard's scenarios share, and the first shard's set held tags another's lacked.
+            var shared = ScenarioTags.Shared([existing.Tags, feature.Tags]);
             byName[feature.DisplayName] = existing with
             {
-                Scenarios = [.. existing.Scenarios, .. feature.Scenarios],
+                Scenarios = [.. WithFeatureTags(existing.Scenarios, existing.Tags, shared), .. WithFeatureTags(feature.Scenarios, feature.Tags, shared)],
                 Endpoint = existing.Endpoint ?? feature.Endpoint,
                 SourceFile = existing.SourceFile ?? feature.SourceFile,
                 Description = existing.Description ?? feature.Description,
-                Tags = existing.Tags ?? feature.Tags
+                Tags = shared.Length > 0 ? shared : null
             };
         }
 
         return byName.Keys.OrderBy(n => n, StringComparer.Ordinal).Select(n => byName[n]).ToArray();
+    }
+
+    /// <summary>
+    /// A half's scenarios, each given the tags its feature had that the merged feature does not keep, ahead of its own,
+    /// so its effective tags hold what they held.
+    /// </summary>
+    private static IEnumerable<Scenario> WithFeatureTags(Scenario[] scenarios, string[]? featureTags, string[] kept)
+    {
+        var moved = (featureTags ?? []).Except(kept, ScenarioTags.Comparer).ToArray();
+        return moved.Length == 0 ? scenarios : scenarios.Select(s => s with { Tags = ScenarioTags.Merge(moved, s.Tags) });
     }
 
     /// <summary>
