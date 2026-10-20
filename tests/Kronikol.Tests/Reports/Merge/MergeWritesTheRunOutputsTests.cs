@@ -145,12 +145,29 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         WriteShard("runner1.json", "0-1002", "Cart is priced", "Passed", callsInFailingStep: 1, withSteps: true);
         WriteShard("runner2.json", "0-1002", "Discount is applied", "Failed", error: "boom");
 
-        var (exit, _, error) = Merge();
+        // Asked for: from 5.0.0 a merge writes the schema only with --schema, as a run writes it only when asked.
+        var (exit, _, error) = Merge("--schema");
 
         Assert.True(exit == 0, error);
         Assert.True(File.Exists(Out("Combined.schema.json")), "the schema takes the report's name");
         var problems = SchemaValidationTests.Validate(Out("Combined.schema.json"), Out("Combined.json"));
         Assert.True(problems.Count == 0, string.Join("\n", problems));
+    }
+
+    [Fact]
+    public void Without_schema_a_merge_writes_no_schema_and_the_usage_says_how_to_ask()
+    {
+        WriteShard("runner1.json", "0-1002", "Cart is priced", "Passed");
+
+        var (exit, _, error) = Merge();
+
+        Assert.True(exit == 0, error);
+        Assert.True(File.Exists(Out("Combined.json")), "the merge wrote no data file");
+        Assert.False(File.Exists(Out("Combined.schema.json")), "the merge wrote a schema nobody asked for");
+        var usage = new StringWriter();
+        MergeCommand.PrintUsage(usage);
+        Assert.Contains("[--schema]", usage.ToString());
+        Assert.Contains("      --schema ", usage.ToString());
     }
 
     [Fact]

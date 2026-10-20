@@ -10,6 +10,14 @@ public class ReportConfigurationOptionsDefaultsTests
     }
 
     [Fact]
+    public void GenerateTestRunReportSchema_defaults_to_false_from_5()
+    {
+        // Nothing in Kronikol reads the schema file at runtime; from 5.0.0 a run writes it only when asked, for a consumer
+        // who validates the data file it decodes (plans/REPORT_FORMAT_PLAN.md Q7).
+        Assert.False(new ReportConfigurationOptions().GenerateTestRunReportSchema);
+    }
+
+    [Fact]
     public void InternalFlowTracking_defaults_to_true()
     {
         var options = new ReportConfigurationOptions();

@@ -152,12 +152,23 @@ public class ReportToggleTests : IDisposable
         Assert.False(File.Exists(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.krkl")));
     }
 
-    // --- Test Run Report Schema ---
+    // --- Test Run Report Schema (written only when asked from 5.0.0) ---
 
     [Fact]
-    public void TestRunReportSchema_generated_by_default()
+    public void TestRunReportSchema_skipped_by_default()
     {
         var options = MakeOptions();
+
+        ReportGenerator.CreateStandardReportsWithDiagrams(
+            SimpleFeatures, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
+
+        Assert.False(File.Exists(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.schema.json")));
+    }
+
+    [Fact]
+    public void TestRunReportSchema_generated_when_enabled()
+    {
+        var options = MakeOptions(o => o.GenerateTestRunReportSchema = true);
 
         ReportGenerator.CreateStandardReportsWithDiagrams(
             SimpleFeatures, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);

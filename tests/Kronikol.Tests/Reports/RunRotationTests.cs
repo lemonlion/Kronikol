@@ -186,7 +186,7 @@ public class RunRotationTests : IDisposable
         Assert.Equal("local:second:1", Manifest().Run);
         Assert.Equal(0, Manifest().Failed);
         Assert.Equal(
-            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "History.run.json", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "TestRunReport.labs.html", "TestRunReport.schema.json", "query.cs"],
+            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "History.run.json", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "TestRunReport.labs.html", "query.cs"],
             TopLevel(Reports));
     }
 
@@ -410,7 +410,7 @@ public class RunRotationTests : IDisposable
 
         Assert.False(Directory.Exists(Runs), "nothing is rotated at KeepRuns = 0");
         Assert.Equal(
-            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "TestRunReport.schema.json", "query.cs"],
+            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "query.cs"],
             TopLevel(Reports));
         Assert.Equal(LocalId(2), Manifest().Run);
     }
@@ -516,7 +516,7 @@ public class RunRotationTests : IDisposable
         File.WriteAllText(Path.Combine(Reports, "notes.txt"), "somebody's own file");
         Directory.CreateDirectory(Path.Combine(Reports, "attachments"));
         File.WriteAllText(Path.Combine(Reports, "attachments", "old.png"), "from the old run");
-        var old = Snapshot(Reports, "TestRunReport.krkl", "TestRunReport.html", "Failures.md", "Failures.jsonl", "TestRunReport.schema.json");
+        var old = Snapshot(Reports, "TestRunReport.krkl", "TestRunReport.html", "Failures.md", "Failures.jsonl");
         var stamp = File.GetLastWriteTimeUtc(Path.Combine(Reports, "TestRunReport.krkl"));
 
         Run(ExecutionResult.Passed);
@@ -788,6 +788,8 @@ public class RunRotationTests : IDisposable
             o.LocalDiagramRenderer = (_, _) => "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>"u8.ToArray();
             o.PlantUmlImageFormat = PlantUmlImageFormat.Svg;
             o.InlineSvgRendering = true;
+            // Off by default from 5.0.0, and on here with every other output a run can write.
+            o.GenerateTestRunReportSchema = true;
             o.GenerateSpecificationsReport = true;
             o.GenerateSpecificationsData = true;
             o.GenerateSpecificationsMarkdown = true;
@@ -1019,7 +1021,7 @@ public class RunRotationTests : IDisposable
 
         Assert.Equal("not Kronikol's", File.ReadAllText(outside));
         Assert.Equal([LocalName(1)], RetainedNames());
-        Assert.Equal(["Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "TestRunReport.schema.json"], TopLevel(Path.Combine(Runs, LocalName(1))));
+        Assert.Equal(["Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.krkl"], TopLevel(Path.Combine(Runs, LocalName(1))));
         Assert.True(File.Exists(Path.Combine(Reports, "CLAUDE.md")));
     }
 

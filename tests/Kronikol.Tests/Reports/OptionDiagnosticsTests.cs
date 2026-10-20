@@ -129,7 +129,12 @@ public class OptionDiagnosticsTests : IDisposable
     [Fact]
     public void The_entry_reaches_the_written_report_and_its_schema()
     {
-        Run(o => o.PlantUmlTheme = "cerulean");
+        Run(o =>
+        {
+            o.PlantUmlTheme = "cerulean";
+            // The fact reads the schema, which a run writes only when asked from 5.0.0.
+            o.GenerateTestRunReportSchema = true;
+        });
 
         using var report = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_dir, "TestRunReport.json")));
         var entry = Assert.Single(report.RootElement.GetProperty("diagnostics").EnumerateArray(),

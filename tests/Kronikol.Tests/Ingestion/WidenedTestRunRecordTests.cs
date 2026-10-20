@@ -299,6 +299,8 @@ public class WidenedTestRunRecordTests
             var options = IngestPipeline.DefaultOptions();
             options.ReportsFolderPath = directory;
             options.GenerateComponentDiagram = false;
+            // The fact reads the schema, which a run writes only when asked from 5.0.0.
+            options.GenerateTestRunReportSchema = true;
 
             var result = IngestPipeline.Run(new IngestRequest
             {

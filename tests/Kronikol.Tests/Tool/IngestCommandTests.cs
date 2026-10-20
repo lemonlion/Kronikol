@@ -588,6 +588,49 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("--data-file <json|krkl>", usage.ToString());
     }
 
+    /// <summary>
+    /// <c>--schema</c> writes the data file's schema beside it, <c>TestRunReport.schema.json</c>
+    /// (<c>GenerateTestRunReportSchema</c>), which from 5.0.0 a run writes only when asked: without the flag an ingest
+    /// writes none. Nothing in Kronikol reads it; it is for a consumer who validates the data file.
+    /// </summary>
+    [Fact]
+    public void Schema_option_writes_the_schema_beside_the_report_and_without_it_there_is_none()
+    {
+        const string testId = "4d4e5f60718293a4b5c6d7e8f90a1b2c";
+        var captures = Path.Combine(_dir, "captures-schema");
+        Directory.CreateDirectory(captures);
+        var (req, resp) = InteractionRecord.Pair(testId, null, "GET", "http://localhost:8081/stock", "web", "web",
+            requestContent: "", responseContent: "{\"sku\":\"W-1\"}", statusCode: "200",
+            requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        File.WriteAllLines(Path.Combine(captures, "web.ndjson"), [req.ToJson(), resp.ToJson()]);
+        var tests = Path.Combine(captures, "tests.ndjson");
+        File.WriteAllLines(tests,
+        [
+            new TestRunRecord { Event = "start", TestId = testId, TestName = "cli › schema", Feature = "cli.spec.ts", Timestamp = T0 }.ToJson(),
+            new TestRunRecord { Event = "end", TestId = testId, Status = "passed", DurationMs = 10, Timestamp = T0.AddSeconds(1) }.ToJson(),
+        ]);
+        var err = new StringWriter();
+
+        var asked = Path.Combine(_dir, "out-schema");
+        Assert.True(IngestCommand.Run([captures, "--tests", tests, "-o", asked, "--schema"], new StringWriter(), err) == 0, err.ToString());
+
+        var schema = Path.Combine(asked, "TestRunReport.schema.json");
+        Assert.True(File.Exists(schema), "--schema wrote no TestRunReport.schema.json beside the report");
+        // It describes the data file this ingest wrote: that file validates against it.
+        var problems = Reports.SchemaValidationTests.Validate(schema, ReportFile.Resolve(Path.Combine(asked, "TestRunReport.json")));
+        Assert.True(problems.Count == 0, string.Join("\n", problems));
+        Assert.Contains("TestRunReport.schema.json", RunManifest.TryRead(asked)!.Files);
+
+        var unasked = Path.Combine(_dir, "out-no-schema");
+        Assert.True(IngestCommand.Run([captures, "--tests", tests, "-o", unasked], new StringWriter(), err) == 0, err.ToString());
+        Assert.True(File.Exists(Path.Combine(unasked, "TestRunReport.html")));
+        Assert.False(File.Exists(Path.Combine(unasked, "TestRunReport.schema.json")), "the ingest wrote a schema nobody asked for");
+
+        var usage = new StringWriter();
+        IngestCommand.PrintUsage(usage);
+        Assert.Contains("  --schema ", usage.ToString());
+    }
+
     [Fact]
     public void Ingest_command_usage_errors()
     {

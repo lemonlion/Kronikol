@@ -84,6 +84,8 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   Direction Left to right (the start) or Top to bottom, and Call summaries Shown (the start) or Hidden. Filtered draws
   the components and connections used by the scenarios the filters leave showing, read from the run's calls rather
   than matched by name, and a note says how many scenarios it follows.
+- **`kronikol merge --schema` and `kronikol ingest --schema`** write the data file's schema beside it, now that a run
+  writes none unless asked.
 
 ### Changed (breaking)
 
@@ -93,6 +95,11 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   (`plans/REPORT_FORMAT_PLAN.md` 6.2). `kronikol query`, `merge`, `ctrf`, `history gate` and `history import` read it as
   they read the JSON, from 4.30.0, and `kronikol decode` writes the JSON out for a script that reads the file itself. To
   keep the JSON, set `CompressTestRunReport` to `false`.
+- **The schema file is written only when asked.** `ReportConfigurationOptions.GenerateTestRunReportSchema` defaults
+  to `false` (4.x: `true`): nothing in Kronikol reads `TestRunReport.schema.json`, so a run no longer writes it beside
+  every report (`plans/REPORT_FORMAT_PLAN.md` Q7). Set it to `true`, or pass `--schema` to `kronikol merge` or
+  `kronikol ingest`, for a consumer who validates the data file or the JSON `kronikol decode` writes. A schema an
+  earlier run left at the top of the reports folder stays there where no `Run.json` lists it, as with KeepRuns 0.
 - **Every diagram toggle but Headers starts on, and payloads start truncated at 10 lines.** Assertion notes are drawn
   from the first render (from 4.0.0 they started hidden), and the Payloads control starts on Truncated at 10 lines,
   where 4.x truncated at 40. Steps, Databases, Events and Setup start on, and Headers off, as before. To open a report

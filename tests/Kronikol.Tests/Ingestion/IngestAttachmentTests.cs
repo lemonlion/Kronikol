@@ -36,7 +36,8 @@ public class IngestAttachmentTests : IDisposable
         return path;
     }
 
-    private IngestResult Run(string subdirectory, IEnumerable<TestRunRecord> testRecords, string? attachmentsBase = null, bool clean = false)
+    private IngestResult Run(string subdirectory, IEnumerable<TestRunRecord> testRecords, string? attachmentsBase = null, bool clean = false,
+        bool schema = false)
     {
         var (request, response) = InteractionRecord.Pair(TestId, "overview", "GET", "http://localhost/overview", "api", "web",
             responseContent: "{}", statusCode: "200", requestTimestamp: T0.AddSeconds(1), responseTimestamp: T0.AddSeconds(2));
@@ -44,6 +45,7 @@ public class IngestAttachmentTests : IDisposable
         var options = IngestPipeline.DefaultOptions();
         options.ReportsFolderPath = Path.Combine(_dir, subdirectory);
         options.GenerateComponentDiagram = false;
+        options.GenerateTestRunReportSchema = schema;
 
         return IngestPipeline.Run(new IngestRequest
         {
@@ -273,7 +275,8 @@ public class IngestAttachmentTests : IDisposable
             End(),
         };
 
-        var json = Run("data-json", records);
+        // The fact reads the JSON and XML schemas, which a run writes only when asked from 5.0.0.
+        var json = Run("data-json", records, schema: true);
         using var document = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(json.ReportsDirectory, "TestRunReport.json")));
         var attachment = document.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("attachments")[0];
         Assert.Equal("image/png", attachment.GetProperty("mediaType").GetString());
@@ -281,7 +284,7 @@ public class IngestAttachmentTests : IDisposable
         var schema = File.ReadAllText(Path.Combine(json.ReportsDirectory, "TestRunReport.schema.json"));
         Assert.Contains("\"mediaType\"", schema);
 
-        var xml = RunWithFormat("data-xml", records, DataFormat.Xml);
+        var xml = RunWithFormat("data-xml", records, DataFormat.Xml, schema: true);
         Assert.Contains("<MediaType>image/png</MediaType>", File.ReadAllText(Path.Combine(xml.ReportsDirectory, "TestRunReport.xml")));
         Assert.Contains("name=\"MediaType\"", File.ReadAllText(Path.Combine(xml.ReportsDirectory, "TestRunReport.schema.xsd")));
 
@@ -289,7 +292,7 @@ public class IngestAttachmentTests : IDisposable
         Assert.Contains("MediaType: image/png", File.ReadAllText(Path.Combine(yaml.ReportsDirectory, "TestRunReport.yml")));
     }
 
-    private IngestResult RunWithFormat(string subdirectory, IEnumerable<TestRunRecord> testRecords, DataFormat format)
+    private IngestResult RunWithFormat(string subdirectory, IEnumerable<TestRunRecord> testRecords, DataFormat format, bool schema = false)
     {
         var (request, response) = InteractionRecord.Pair(TestId, "overview", "GET", "http://localhost/overview", "api", "web",
             responseContent: "{}", statusCode: "200", requestTimestamp: T0.AddSeconds(1), responseTimestamp: T0.AddSeconds(2));
@@ -298,6 +301,7 @@ public class IngestAttachmentTests : IDisposable
         options.ReportsFolderPath = Path.Combine(_dir, subdirectory);
         options.GenerateComponentDiagram = false;
         options.TestRunReportDataFormat = format;
+        options.GenerateTestRunReportSchema = schema;
 
         return IngestPipeline.Run(new IngestRequest
         {

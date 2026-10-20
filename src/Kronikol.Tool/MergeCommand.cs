@@ -8,8 +8,9 @@ namespace Kronikol.Tool;
 /// Implements <c>kronikol merge</c>: combine several mergeable <c>TestRunReport.json</c> files into a
 /// single combined <c>TestRunReport.html</c> and, beside it, everything a run writes beside its report -
 /// the merged data file, so a sharded run is something <c>kronikol query</c> can read and something a
-/// later run can diff against; the failures digest, the instruction files and the schema, so it is
-/// something an agent can debug from; and the pointer, so the job log says where it all went.
+/// later run can diff against; the failures digest and the instruction files, so it is something an
+/// agent can debug from; the schema when <c>--schema</c> asks for it; and the pointer, so the job log
+/// says where it all went.
 /// Returns a process exit code (0 = success).
 /// </summary>
 internal static class MergeCommand
@@ -27,6 +28,7 @@ internal static class MergeCommand
         string output = "TestRunReport.html";
         string? title = null;
         var writeJson = true;
+        var schema = false;
         var ciSummary = false;
         var publishArtifacts = false;
         string? historyPath = null;
@@ -46,6 +48,9 @@ internal static class MergeCommand
                     break;
                 case "--no-json":
                     writeJson = false;
+                    break;
+                case "--schema":
+                    schema = true;
                     break;
                 case "--ci-summary":
                     ciSummary = true;
@@ -168,6 +173,7 @@ internal static class MergeCommand
         {
             var options = new ReportConfigurationOptions
             {
+                GenerateTestRunReportSchema = schema,
                 WriteCiSummary = ciSummary,
                 PublishCiArtifacts = publishArtifacts
             };
@@ -375,13 +381,13 @@ internal static class MergeCommand
 
     public static void PrintUsage(TextWriter w)
     {
-        w.WriteLine("Usage: kronikol merge <inputs...> [-o <output.html>] [-t <title>] [--no-json] [--ci-summary] [--publish-artifacts] [--history <ledger>]");
+        w.WriteLine("Usage: kronikol merge <inputs...> [-o <output.html>] [-t <title>] [--no-json] [--schema] [--ci-summary] [--publish-artifacts] [--history <ledger>]");
         w.WriteLine();
         w.WriteLine("  Combines several mergeable TestRunReport.json or .krkl files (produced with");
         w.WriteLine("  ReportConfigurationOptions.GenerateMergeableData = true) into one combined HTML report, and");
         w.WriteLine("  writes beside it what a run writes beside its report: the merged data file - readable with");
         w.WriteLine("  `kronikol query`, and usable as the baseline a later run diffs against - plus Failures.md and");
-        w.WriteLine("  Failures.jsonl, CLAUDE.md and AGENTS.md, the data file's schema, and the labs page");
+        w.WriteLine("  Failures.jsonl, CLAUDE.md and AGENTS.md, the data file's schema with --schema, and the labs page");
         w.WriteLine("  (<output>.labs.html) when --history read a ledger or a shard recorded a diagnostic. Ends with the pointer");
         w.WriteLine("  a run prints: where the files are, how big the data file is, what failed, and the command");
         w.WriteLine("  that explains it. A shard given twice - the same artifact in two folders, a previous merge's");
@@ -391,12 +397,14 @@ internal static class MergeCommand
         w.WriteLine("  <inputs...>          Files, directories (searched recursively), or glob patterns.");
         w.WriteLine("                       A `baseline` folder is skipped: it is last-green, not a shard.");
         w.WriteLine("Options:");
-        w.WriteLine("  -o, --output <path>  Output HTML path (default: TestRunReport.html). The data file and its");
-        w.WriteLine("                       schema take the same name with .json and .schema.json extensions; the data");
-        w.WriteLine("                       file is .krkl, compressed, when a shard was or -o names a .krkl.");
+        w.WriteLine("  -o, --output <path>  Output HTML path (default: TestRunReport.html). The data file takes the same");
+        w.WriteLine("                       name with .json (.krkl, compressed, when a shard was or -o names a .krkl),");
+        w.WriteLine("                       and the schema --schema writes takes it with .schema.json.");
         w.WriteLine("  -t, --title <text>   Report title (default: \"Test Run Report\").");
         w.WriteLine("      --no-json        Write the HTML only (the report, and its labs page when it has one): no data");
         w.WriteLine("                       file, and none of the other files beside it.");
+        w.WriteLine("      --schema         Also write the data file's schema beside it, <output>.schema.json; 5.0.0");
+        w.WriteLine("                       writes none unless asked.");
         w.WriteLine("      --ci-summary     Also write CiSummary.md and post it to the CI job summary (GitHub Actions");
         w.WriteLine("                       step summary, Azure DevOps upload). Off, a failing merge on CI still posts");
         w.WriteLine("                       the short \"Debug this run\" section, as a failing run does.");

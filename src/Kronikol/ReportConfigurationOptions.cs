@@ -235,8 +235,13 @@ public record ReportConfigurationOptions
     /// </summary>
     public bool GenerateTestRunReportData { get; set; } = true;
 
-    /// <summary>When <c>true</c>, the test run report schema file is generated. Default: <c>true</c>.</summary>
-    public bool GenerateTestRunReportSchema { get; set; } = true;
+    /// <summary>
+    /// When <c>true</c>, the data file's schema is written beside it: <c>TestRunReport.schema.json</c> for a JSON or
+    /// compressed data file, <c>TestRunReport.schema.xsd</c> for XML. Nothing in Kronikol reads it; it is there for a consumer who validates
+    /// the data file, or the JSON <c>kronikol decode</c> writes from a <c>TestRunReport.krkl</c>. Default: <c>false</c> from
+    /// 5.0.0; <c>true</c> in 4.x.
+    /// </summary>
+    public bool GenerateTestRunReportSchema { get; set; }
 
     /// <summary>
     /// When <c>true</c>, the test run report data file (JSON) is enriched with everything required to

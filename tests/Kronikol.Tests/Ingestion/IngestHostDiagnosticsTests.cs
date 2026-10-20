@@ -38,13 +38,14 @@ public class IngestHostDiagnosticsTests : IDisposable
     private static readonly DiagnosticEntry HostNote = new(DiagnosticKind.Other, "host note <with markup> & symbols", TestId);
 
     private IngestRequest Request(string folder, IReadOnlyList<DiagnosticEntry> hostDiagnostics, bool withTraffic = true,
-        bool showSection = true)
+        bool showSection = true, bool schema = false)
     {
         var options = IngestPipeline.DefaultOptions();
         options.ReportsFolderPath = Path.Combine(_dir, folder);
         options.GenerateComponentDiagram = false;
         // The HTML section is off by default; the tests about what it renders ask for it.
         options.ShowReportDiagnosticsSection = showSection;
+        options.GenerateTestRunReportSchema = schema;
 
         var (req, resp) = InteractionRecord.Pair(TestId, "The overview renders", "GET", "http://data-insights/api/overview", "data-insights", "web",
             statusCode: "200", requestTimestamp: T0.AddSeconds(1), responseTimestamp: T0.AddSeconds(2));
@@ -70,7 +71,8 @@ public class IngestHostDiagnosticsTests : IDisposable
     [Fact]
     public void Host_diagnostics_lead_the_result_and_reach_the_html_and_json_report()
     {
-        var result = IngestPipeline.Run(Request("Host", [DeadTap, HostNote]));
+        // The fact reads the schema, which a run writes only when asked from 5.0.0.
+        var result = IngestPipeline.Run(Request("Host", [DeadTap, HostNote], schema: true));
 
         Assert.True(result.Generated);
         // Verbatim, and first — ahead of anything the ingest itself recorded.

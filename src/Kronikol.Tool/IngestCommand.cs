@@ -34,6 +34,7 @@ internal static class IngestCommand
         // The library's default until the flag says otherwise (#85: off in 3.x, on from 4.0.0).
         bool? compressPayloads = null;
         bool? compressReport = null;
+        var schema = false;
         // The library's default until the flag says otherwise (shown in 3.x, hidden from 4.0.0).
         bool? headersShown = null;
         var componentDiagram = true;
@@ -161,6 +162,9 @@ internal static class IngestCommand
                         return 2;
                     }
                     compressReport = args[i] == "krkl";
+                    break;
+                case "--schema":
+                    schema = true;
                     break;
                 case "--headers":
                     if (++i >= args.Count ||
@@ -402,6 +406,8 @@ internal static class IngestCommand
             options.CompressTestRunReportPayloads = compress;
         if (compressReport is { } compressFile)
             options.CompressTestRunReport = compressFile;
+        if (schema)
+            options.GenerateTestRunReportSchema = true;
         if (headersShown is { } shown)
             options.TestRunReportToggleDefaults.HeadersShown = shown;
         options.GenerateComponentDiagram = componentDiagram;
@@ -679,6 +685,8 @@ internal static class IngestCommand
         w.WriteLine("                           same report compressed whole (a twentieth of the size on a report of small");
         w.WriteLine("                           payloads), read by kronikol 4.30.0 and later (kronikol decode writes its JSON).");
         w.WriteLine("                           Default: krkl from 5.0.0; json in 4.x.");
+        w.WriteLine("  --schema                 Also write the data file's schema beside it, TestRunReport.schema.json; 5.0.0");
+        w.WriteLine("                           writes none unless asked.");
         w.WriteLine("  --headers <shown|hidden>  Whether the browserjs report's diagrams start with request and response");
         w.WriteLine("                           headers in their notes (default: hidden); readers can still switch either way.");
         w.WriteLine("  --no-component-diagram   Skip ComponentDiagram.html.");
