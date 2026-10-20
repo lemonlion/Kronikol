@@ -27,9 +27,17 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
             ids, new() { Timeout = RenderWaitMs, PollingInterval = 200 });
     }
 
-    /// <summary>The SVG the engine drew, without the processing instruction that encodes its source.</summary>
-    private Task<string> EngineSvg(string id) => Page.EvaluateAsync<string>(
-        "id => document.getElementById(id).querySelector('svg').outerHTML.replace(/<\\?[\\s\\S]*?\\?>/g, '').replace(/<!--[\\s\\S]*?-->/g, '')", id);
+    /// <summary>
+    /// The SVG the engine drew, without the processing instruction that encodes its source, and without the empty style
+    /// the page's zoom check leaves on it, which is there or not by when the check's frame came.
+    /// </summary>
+    private Task<string> EngineSvg(string id) => Page.EvaluateAsync<string>("""
+        id => {
+            var svg = document.getElementById(id).querySelector('svg').cloneNode(true);
+            if (svg.getAttribute('style') === '') svg.removeAttribute('style');
+            return svg.outerHTML.replace(/<\?[\s\S]*?\?>/g, '').replace(/<!--[\s\S]*?-->/g, '');
+        }
+        """, id);
 
     [Fact]
     public async Task A_themed_source_renders_unthemed_in_the_worker_and_the_engine_says_why()
@@ -39,6 +47,16 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
 
         await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(("d-themed", Themed), ("d-plain", Plain))));
         await RenderAll("d-themed", "d-plain");
+        // The page measures each diagram a frame after it is drawn, to decide whether it needs a zoom button, and the
+        // measuring leaves an empty style on the svg. A full run under load read the themed diagram after its frame and
+        // the plain one before its own; the plain one is put back as it is before its frame, so that is the case every time.
+        await Page.EvaluateAsync("""
+            () => {
+                window._getDiagramNaturalWidth(document.getElementById('d-themed'));
+                var plain = document.querySelector('#d-plain svg');
+                if (plain.getAttribute('style') === '') plain.removeAttribute('style');
+            }
+            """);
 
         var themed = await EngineSvg("d-themed");
         var plain = await EngineSvg("d-plain");
