@@ -128,8 +128,11 @@ public class ProjectAssetTrackingTests
         return RunGit($"ls-files --error-unmatch \"{fullPath}\"") == 0;
     }
 
+    // Generous: a check of what git tracks has no deadline of its own, and a loaded machine slows git (20 s was not enough).
+    private static readonly TimeSpan GitWait = TimeSpan.FromSeconds(120);
+
     /// <summary>The exit code, or -1 when git could not be started at all.</summary>
-    private static int RunGit(string arguments)
+    private static int RunGit(string arguments, TimeSpan? wait = null)
     {
         // -c safe.directory: the checkout and the build often run as different users on CI, and git
         // refuses to touch a repository it thinks belongs to someone else.
@@ -145,7 +148,13 @@ public class ProjectAssetTrackingTests
         {
             using var process = Process.Start(start);
             if (process is null) return -1;
-            process.WaitForExit(20_000);
+            if (!process.WaitForExit(wait ?? GitWait))
+            {
+                try { process.Kill(entireProcessTree: true); } catch (InvalidOperationException) { }
+                // Not -1: asking a running process for its exit code throws, and the catch below read that as "untracked".
+                throw new TimeoutException($"git {arguments} did not answer within {(wait ?? GitWait).TotalSeconds:0} s, so " +
+                    "whether the file is tracked is unknown, not no. A loaded machine slows git: run the fact again.");
+            }
             return process.ExitCode;
         }
         catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException)
@@ -177,5 +186,20 @@ public class ProjectAssetTrackingTests
         {
             File.Delete(untracked);
         }
+    }
+
+    /// <summary>
+    /// A git call that does not answer in time is a timeout, not an untracked file. Under the load of another session's
+    /// suites one call ran past the old 20-second wait, its exit code was asked of a process still running, and the
+    /// theory above reported a tracked file as untracked. A shell alias that sleeps stands in for the slow call.
+    /// </summary>
+    [Fact]
+    public void A_git_call_that_does_not_answer_in_time_fails_as_a_timeout()
+    {
+        Assert.SkipUnless(GitCanAnswer.Value, "git cannot read this working tree");
+
+        var thrown = Assert.Throws<TimeoutException>(() => RunGit("-c alias.nap=\"!sleep 5\" nap", TimeSpan.FromSeconds(1)));
+
+        Assert.Contains("did not answer", thrown.Message, StringComparison.Ordinal);
     }
 }
