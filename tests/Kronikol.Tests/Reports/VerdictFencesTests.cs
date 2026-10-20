@@ -14,16 +14,19 @@ namespace Kronikol.Tests.Reports;
 /// (plans/OPTION_C_PLAN.md S5 and S6: the filters' flags and readout, the search's qualifiers), and S7 the search
 /// function's help toggle and <c>report-search-index.js</c>'s chip, placed inside the search field, so their pins are
 /// 5.0.0's text, and the Kronikol4J divergence ledger records it; the verdict lines in them are 4.5.0's.
+/// plans/TAGS_PLAN.md T2 changed all four again, outside their fences but for the filter cache's flags: a scenario's
+/// tags read from <c>data-tags</c> in place of <c>data-labels</c> and <c>data-categories</c>, no categories flag, and
+/// <c>@"a tag"</c> for a name with spaces.
 /// </summary>
 public class VerdictFencesTests
 {
     public static TheoryData<string, string, string> Pins => new()
     {
         // script, default variant (no verdicts), verdict variant
-        { "advanced-search.js", "afd1116b5f7503078e8a63e50722369e3172005c172ffbbc6291d24accc40e0f", "8d36e435e27dda669ee677f7076753a2740e56c1beef21ff8b3fe1b367e4f4c5" },
-        { "report-scenario-feature-map-helper.js", "0f83fb801466bf3fad52c3788819899517c3d7f0c44e556fb4762dbcd31391aa", "ac3541490699dcdee5e03e21d4d03167180d7ab720cc95617cd3bc5aa5f94f92" },
-        { "report-search-function.js", "1e17c7045faebd30ccd8cc1ec545b66194e59b5c310faf9c4ab2ba3852a90129", "e89ac8d423e642e456415b93892a00c4a528ad9d43216a90c4e56ca2bd6d9650" },
-        { "report-search-index.js", "60ffc15a794774d06805a2a9fdd3d7c3adfa2052133a6da8600ba842f22244fe", "8b1ae7ed86c1b1dfc8ed7ceada0b3d29266903f9958add7b9e318b343703e58b" },
+        { "advanced-search.js", "bd95ec17e218564784d4868f54985392751c51772ed5ee593cb63fbb8f2c9d34", "f8e26b59e269fcebd3bfc36c251ac06264946049b46c8157cd24740a98fc0c7c" },
+        { "report-scenario-feature-map-helper.js", "9608e6b2db6cf282b1b7430f09d46f818f81bf1cc776d24fd10583b8d9df66dd", "06064d905646232df84e5d66d23febce9b5e845940c1eb3664f67dc6bc3c349c" },
+        { "report-search-function.js", "b5a445852aae96034d70f2f3b5f50066984546cc57334a5443e6e567767872c7", "b706e7c99abefa05a3e08714ede97dff922a6717a5685b4dd835e7adcb3a0bc4" },
+        { "report-search-index.js", "7efeaa109b0ac98cb76f510dc9ea0ddeb0324428bd6c9169e08f8bf85b77028a", "58b3e65874a3a7bce211f85517f802d69f5d27f6b0649e925ead354f26a33bbb" },
     };
 
     private static string Sha256(string text) =>

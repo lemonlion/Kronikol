@@ -271,7 +271,7 @@ public class ParameterValueRendererTests
         var html = sb.ToString();
 
         Assert.Contains("<details class=\"param-expand\">", html);
-        Assert.Contains("<summary>", html);
+        Assert.Contains("<summary title=\"Show or hide the whole value\">", html);
         Assert.Contains("Name:", html);
         Assert.Contains("<div class=\"expand-body\">", html);
         Assert.Contains("</details>", html);
@@ -465,7 +465,7 @@ public class ParameterValueRendererTests
         var result = ParameterValueRenderer.TryRenderFromParsedString(body, value);
         Assert.True(result);
         Assert.Contains("param-expand", body.ToString());
-        Assert.Contains("<summary>", body.ToString());
+        Assert.Contains("<summary title=\"Show or hide the whole value\">", body.ToString());
         Assert.Contains("prop-key", body.ToString());
         Assert.Contains("prop-val", body.ToString());
     }
@@ -508,7 +508,7 @@ public class ParameterValueRendererTests
         };
         ParameterValueRenderer.RenderExpandableFromParsed(body, original, parsed);
         var html = body.ToString();
-        Assert.Contains("<summary>", html);
+        Assert.Contains("<summary title=\"Show or hide the whole value\">", html);
         Assert.Contains("MyType", html);
         Assert.Contains("param-expand", html);
     }

@@ -39,7 +39,7 @@ public sealed record CtrfTest
     /// <summary>The line the scenario is declared on, where the lane supplied one.</summary>
     public int? Line { get; init; }
 
-    /// <summary>The scenario's labels, minus the <c>retry N</c> ones Kronikol generates itself.</summary>
+    /// <summary>The scenario's effective tags: its feature's, then its own (plans/TAGS_PLAN.md §4.12).</summary>
     public IReadOnlyList<string> Tags { get; init; } = [];
 
     /// <summary>Attempts before the one that produced this result; <c>0</c> when the runner said nothing.</summary>
@@ -56,9 +56,6 @@ public sealed record CtrfTest
 
     /// <summary>The scenario's stable id — <c>extra.stableId</c>.</summary>
     public string? StableId { get; init; }
-
-    /// <summary>The scenario's categories — <c>extra.categories</c>, not tags.</summary>
-    public IReadOnlyList<string> Categories { get; init; } = [];
 
     /// <summary>The cross-run verdict — <c>extra.kronikolHistory</c> — when a ledger was read.</summary>
     public ScenarioHistory? History { get; init; }
@@ -154,12 +151,6 @@ public static class CtrfReportGenerator
     /// <summary>The tool name every CTRF document must carry.</summary>
     public const string ToolName = "Kronikol";
 
-    /// <summary>Labels of this shape are Kronikol's own retry bookkeeping, not something an author tagged.</summary>
-    private static bool IsGeneratedRetryLabel(string label) =>
-        label.StartsWith("retry ", StringComparison.Ordinal)
-        && label.Length > 6
-        && label.AsSpan(6).ToString().All(char.IsAsciiDigit);
-
     /// <summary>The CTRF document for a completed run.</summary>
     public static string Generate(Feature[] features, DateTime startRunTime, DateTime endRunTime,
         CiMetadata? ciMetadata, string kronikolVersion, string? suite = null, HistoryVerdicts? history = null)
@@ -176,7 +167,7 @@ public static class CtrfReportGenerator
             foreach (var scenario in feature.Scenarios ?? [])
             {
                 var retries = scenario.Attempt is { } attempt && attempt > 1 ? attempt - 1 : 0;
-                var labels = (scenario.Labels ?? []).Where(l => !IsGeneratedRetryLabel(l)).ToArray();
+                var tags = ScenarioTags.Effective(feature, scenario);
                 var stableId = ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
                 // The ledger's flaky verdict counts as CTRF's flaky flag: a consumer that lists flaky tests
                 // (github-test-reporter's flaky table) then sees what the last runs saw, not only what
@@ -192,13 +183,12 @@ public static class CtrfReportGenerator
                     Trace = Trimmed(scenario.ErrorStackTrace),
                     FilePath = Trimmed(scenario.SourceFile) ?? Trimmed(feature.SourceFile),
                     Line = scenario.SourceFile is { Length: > 0 } ? scenario.SourceLine : null,
-                    Tags = labels,
+                    Tags = tags,
                     Retries = retries,
                     Flaky = retries > 0 && scenario.Result == ExecutionResult.Passed || scenarioHistory?.Has(HistoryVerdictKind.Flaky) == true,
                     RawStatus = scenario.Result.ToString(),
                     Address = "s" + ordinal++,
                     StableId = stableId,
-                    Categories = scenario.Categories ?? [],
                     History = scenarioHistory
                 });
             }
@@ -284,7 +274,6 @@ public static class CtrfReportGenerator
         var extra = new Dictionary<string, object?>();
         Set(extra, "kronikolAddress", test.Address);
         Set(extra, "stableId", test.StableId);
-        if (test.Categories.Count > 0) extra["categories"] = test.Categories;
         if (test.History is { } history)
             extra["kronikolHistory"] = new Dictionary<string, object?>
             {

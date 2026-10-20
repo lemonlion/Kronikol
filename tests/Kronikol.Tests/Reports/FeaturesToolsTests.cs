@@ -132,8 +132,8 @@ public class FeaturesToolsTests
     public void The_table_has_a_row_per_feature_card_in_the_same_order()
     {
         var html = Generate("FeaturesTools_RowOrder.html");
-        InOrder(html, "<tr class=\"failed\"><td><button type=\"button\" class=\"feature-open\">Orders</button></td>",
-            "<tr><td><button type=\"button\" class=\"feature-open\">Refunds</button></td>", "<summary class=\"h2 failed\">Orders", "<summary class=\"h2\">Refunds");
+        InOrder(html, "<tr class=\"failed\"><td><button type=\"button\" class=\"feature-open\" title=\"Open this feature's card in the Full view\">Orders</button></td>",
+            "<tr><td><button type=\"button\" class=\"feature-open\" title=\"Open this feature's card in the Full view\">Refunds</button></td>", "<summary class=\"h2 failed\">Orders", "<summary class=\"h2\">Refunds");
     }
 
     [Fact]

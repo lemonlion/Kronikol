@@ -59,14 +59,14 @@ public class ToggleDefaultsBaselineTests
                 DisplayName = "Ordering Feature",
                 Description = "Orders are placed and confirmed",
                 Endpoint = "/api/orders",
-                Labels = ["team-a"],
+                Tags = ["team-a"],
                 Scenarios =
                 [
                     new Scenario
                     {
                         Id = "s1", DisplayName = "Alpha creates an order", IsHappyPath = true,
                         Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(1200),
-                        Categories = ["smoke"], Labels = ["fast"],
+                        Tags = ["fast", "smoke"],
                         Steps =
                         [
                             new ScenarioStep { Keyword = "Given", Text = "an order request", Status = ExecutionResult.Passed },

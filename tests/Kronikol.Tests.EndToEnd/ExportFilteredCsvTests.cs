@@ -20,12 +20,12 @@ public class ExportFilteredCsvTests : PlaywrightTestBase
         {
             new Feature
             {
-                DisplayName = "Orders", Endpoint = "/api/orders", Labels = ["smoke"],
+                DisplayName = "Orders", Endpoint = "/api/orders", Tags = ["smoke"],
                 Scenarios =
                 [
                     new Scenario
                     {
-                        Id = "csv-pay", DisplayName = "Pay by card", IsHappyPath = true, Labels = ["Payments"],
+                        Id = "csv-pay", DisplayName = "Pay by card", IsHappyPath = true, Tags = ["Payments"],
                         Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(120),
                     },
                     new Scenario

@@ -22,7 +22,7 @@
     min-height: 48px;
     display: flex;
     align-items: center;
-    color: #999;
+    color: var(--kron-faint, #767676);
 }
 .plantuml-browser:not([data-rendered])::before,
 .puml-fragment:not([data-rendered])::before {
@@ -37,7 +37,7 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
     content: 'Rendering diagram\2026';
 }
 .diagram-selected {
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--kron-accent, #3b82f6) 50%, transparent);
     border-radius: 4px;
 }
 .diagram-zoom-controls {
@@ -70,7 +70,7 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
     width: 100px;
     height: 6px;
     cursor: pointer;
-    accent-color: rgb(59, 130, 246);
+    accent-color: var(--kron-accent, rgb(59, 130, 246));
 }
 @media (max-width: 768px) {
     .diagram-zoom-controls {

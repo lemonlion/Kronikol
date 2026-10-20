@@ -31,7 +31,7 @@ public class ScenarioImageLightboxTests : IDisposable
 
         var links = Regex.Matches(html, "<a class=\"attachment-image-link\" [^>]*>").Select(m => m.Value).ToArray();
         foreach (var name in new[] { "own.png", "row.png", "step.png" })
-            Assert.Contains($"<a class=\"attachment-image-link\" href=\"attachments/{name}\" onclick=\"openLightbox(event, this)\">", links);
+            Assert.Contains($"<a class=\"attachment-image-link\" href=\"attachments/{name}\" onclick=\"openLightbox(event, this)\" title=\"Show {name}, an image this {(name == "step.png" ? "step" : "scenario")} attached, at full size\">", links);
         Assert.Equal(3, links.Length);
         Assert.DoesNotContain(links, link => link.Contains("target=", StringComparison.Ordinal));
     }

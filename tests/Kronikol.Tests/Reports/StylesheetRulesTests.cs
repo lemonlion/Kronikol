@@ -128,6 +128,96 @@ public partial class StylesheetRulesTests
     [GeneratedRegex(@"(min|max)-width:\s*([\d.]+)px")]
     private static partial Regex WidthBound();
 
+    /// <summary>More filters' count is text on the accent: in every block of the token sheet (light, the dark one the
+    /// switch sets, and the dark one the system's setting gives a page with no pick) its ink and its ground, resolved
+    /// through the tokens as the cascade does, read at AA (4.5:1). The dark accent is a light blue, so white on it
+    /// read at 2.4:1.</summary>
+    [Theory]
+    [InlineData(":root[data-theme=\"dark\"]", null)]
+    [InlineData(":root:not([data-theme])", "(prefers-color-scheme: dark)")]
+    [InlineData(":root", null)]
+    public void The_more_filters_count_reads_at_AA_in_every_theme(string block, string? media)
+    {
+        var ink = TokenValue(block, media, CssRules.Value(Base, ".more-filters-count", "color"));
+        var ground = TokenValue(block, media, CssRules.Value(Base, ".more-filters-count", "background"));
+
+        var ratio = Contrast(ink, ground);
+        Assert.True(ratio >= 4.5, $"{block}: the count is {ink} on {ground}, {ratio.ToString("0.00", CultureInfo.InvariantCulture)}:1");
+    }
+
+    // WCAG 2.2's contrast ratio of two #rrggbb colours
+    private static double Contrast(string a, string b)
+    {
+        static double Luminance(string hex)
+        {
+            double Channel(int i)
+            {
+                var c = Convert.ToInt32(hex.Substring(1 + 2 * i, 2), 16) / 255.0;
+                return c <= 0.04045 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
+            }
+            return 0.2126 * Channel(0) + 0.7152 * Channel(1) + 0.0722 * Channel(2);
+        }
+        var (la, lb) = (Luminance(a), Luminance(b));
+        return (Math.Max(la, lb) + 0.05) / (Math.Min(la, lb) + 0.05);
+    }
+
+    [GeneratedRegex(@"^var\((--[\w-]+)\)$")]
+    private static partial Regex TokenReference();
+
+    // what a declaration that is one token reference gives in a block of the token sheet, as the cascade resolves it
+    private static string TokenValue(string block, string? media, string? value)
+    {
+        var tokens = Stylesheets.ReportTokensStyleSheet;
+        var m = TokenReference().Match(value ?? "");
+        Assert.True(m.Success, $"'{value}' is not one token");
+        return CssRules.Value(tokens, block, m.Groups[1].Value, media) ?? CssRules.Value(tokens, ":root", m.Groups[1].Value)
+            ?? throw new InvalidOperationException(m.Groups[1].Value + " is not in the token sheet");
+    }
+
+    /// <summary>The filter rows fold with one class at every width: More filters sets it on a desktop and the Filters
+    /// button on a phone, so the rows stay as they were when the window crosses the phone breakpoint, and the search help
+    /// opens while they are folded at either width (on a phone the rows were hidden by an inline style, the help with
+    /// them).</summary>
+    [Fact]
+    public void The_filter_rows_fold_with_one_class_at_every_width()
+    {
+        Assert.Equal("none", CssRules.Value(Base, ".filtering-box.rows-folded:not(.help-open) > .filters", "display"));
+        Assert.Equal("none", CssRules.Value(Base, ".filtering-box.rows-folded.help-open > .filters > :not(.search-help-panel)", "display"));
+        Assert.Null(CssRules.Value(Base, ".filtering-box.rows-folded:not(.help-open) > .filters", "display", "(min-width: 768.02px)"));
+    }
+
+    /// <summary>The phone's Filters button and its sticky search line take their colours from the tokens (they were
+    /// rgb(100, 100, 100) and rgb(224, 224, 224) in every theme): the search line the filter box's own ground, and the
+    /// button the rows' label ink, which reads at AA on that ground in every block of the token sheet.</summary>
+    [Theory]
+    [InlineData(":root[data-theme=\"dark\"]", null)]
+    [InlineData(":root:not([data-theme])", "(prefers-color-scheme: dark)")]
+    [InlineData(":root", null)]
+    public void The_phone_Filters_button_and_search_line_read_in_every_theme(string block, string? media)
+    {
+        var box = CssRules.Value(Base, ".filtering-box", "background");
+        Assert.Equal(box, CssRules.Value(Base, ".filter-search", "background", "(max-width: 768px)"));
+
+        var ink = TokenValue(block, media, CssRules.Value(Base, ".mobile-filter-toggle", "color"));
+        var ground = TokenValue(block, media, box);
+        var ratio = Contrast(ink, ground);
+        Assert.True(ratio >= 4.5, $"{block}: the Filters button is {ink} on {ground}, {ratio.ToString("0.00", CultureInfo.InvariantCulture)}:1");
+    }
+
+    /// <summary>No sheet keeps an empty media block (stylesheets.css held one at min-width 768.02px).</summary>
+    [Fact]
+    public void No_sheet_has_an_empty_media_block()
+    {
+        foreach (var (name, css) in AllSheets.Append(("report-tokens.css", Stylesheets.ReportTokensStyleSheet)))
+            Assert.False(EmptyMedia().IsMatch(CssComment().Replace(css, "")), $"{name} has an empty @media block");
+    }
+
+    [GeneratedRegex(@"@media[^{]*\{\s*\}")]
+    private static partial Regex EmptyMedia();
+
+    [GeneratedRegex(@"/\*.*?\*/", RegexOptions.Singleline)]
+    private static partial Regex CssComment();
+
     [GeneratedRegex(@"matchMedia\(\s*'([^']*)'")]
     private static partial Regex MatchMedia();
 
@@ -164,10 +254,10 @@ public partial class StylesheetRulesTests
     public void The_internal_flow_popup_sheet_holds_no_scenario_toolbar_rule_at_all() =>
         Assert.DoesNotContain(CssRules.Parse(Popup), r => r.Selectors.Any(s => s.Contains(".diagram-toggle")));
 
-    // ── T4: the violet theme's hovers come before its active states (S4) ──
+    // ── T4: the violet theme's hover edges come before its active states (S4); since 5.0.0 it sets the report's tokens (S13) ──
 
     // 5.0.0: the tags are chips of their own, and Happy paths a three-way control (plans/OPTION_C_PLAN.md S6)
-    private static readonly string[] FilterToggles = ["tag", "dependency", "status", "category"];
+    private static readonly string[] FilterToggles = ["tag", "dependency", "status"];
 
     [Fact]
     public void A_violet_filter_toggle_keeps_its_active_colour_while_hovered()
@@ -181,26 +271,38 @@ public partial class StylesheetRulesTests
         }
     }
 
-    private static readonly string[] IdleHovers =
+    [Fact]
+    public void The_violet_theme_grounds_the_tags_switch_as_it_does_the_dependencies_switch()
+    {
+        // Found by plans/TAGS_PLAN.md T2: the violet theme gave .dep-mode-toggle and .cat-mode-toggle their idle ground and
+        // missed .tag-mode-toggle, so the Tags row's ANY / ALL read apart from the Dependencies row's.
+        // 5.0.0 (plans/OPTION_C_PLAN.md S13): the theme sets the report's tokens and grounds neither switch, so the base
+        // sheet's ground holds for both, and both take the theme's hover edge
+        Assert.Equal(CssRules.Value(Violet, ".dep-mode-toggle", "background"), CssRules.Value(Violet, ".tag-mode-toggle", "background"));
+        Assert.NotNull(CssRules.Value(Violet, ".tag-mode-toggle:hover", "border-color"));
+        Assert.Equal(CssRules.Value(Violet, ".dep-mode-toggle:hover", "border-color"), CssRules.Value(Violet, ".tag-mode-toggle:hover", "border-color"));
+    }
+
+    // the hovers whose edge the theme sets; their tint is the base sheet's, read from --kron-hover, which the theme sets
+    private static readonly string[] HoverEdges =
     [
-        ".happy-seg:hover", ".tag-toggle:hover", ".dependency-toggle:hover", ".status-toggle:hover", ".category-toggle:hover",
-        ".export-btn:hover", ".fold-btn:hover", ".percentile-btn:hover", ".timeline-toggle:hover",
-        ".details-radio-btn:hover", ".scenario-diagram-controls-toggle:hover", ".diagram-toggle-btn:hover",
-        ".iflow-toggle-btn:hover", ".dep-mode-toggle:hover", ".cat-mode-toggle:hover", ".iflow-rel-summary-table tr:hover td",
+        ".happy-seg:hover", ".tag-toggle:hover", ".tag-more:hover", ".dependency-toggle:hover", ".status-toggle:hover",
+        ".export-btn:hover", ".fold-btn:hover", ".percentile-btn:hover", ".details-radio-btn:hover",
+        ".scenario-diagram-controls-toggle:hover", ".tag-mode-toggle:hover", ".dep-mode-toggle:hover",
     ];
 
+    // 5.0.0: the Scenario Timeline toggle is a tab (plans/OPTION_C_PLAN.md S3), so the theme has no timeline-toggle rule
     private static readonly string[] ActiveStates =
     [
         ".happy-seg[aria-pressed=\"true\"]", ".tag-toggle.tag-active", ".dependency-toggle.dependency-active", ".status-toggle.status-active",
-        ".category-toggle.category-active", ".percentile-btn.percentile-active", ".details-radio-btn.details-active",
-        ".timeline-toggle-active", ".timeline-toggle-active:hover", ".iflow-toggle-active", ".iflow-toggle-active:hover",
-        ".diagram-toggle-active", ".diagram-toggle-active:hover",
+        ".percentile-btn.percentile-active", ".details-radio-btn.details-active",
+        ".iflow-toggle-active", ".iflow-toggle-active:hover", ".diagram-toggle-active", ".diagram-toggle-active:hover",
     ];
 
     [Fact]
-    public void Every_violet_idle_hover_precedes_every_violet_active_state()
+    public void Every_violet_hover_edge_precedes_every_violet_active_state()
     {
-        var lastIdle = IdleHovers.Max(s =>
+        var lastEdge = HoverEdges.Max(s =>
         {
             var i = CssRules.IndexOf(Violet, s);
             Assert.True(i >= 0, $"the violet theme has no {s} rule");
@@ -210,36 +312,50 @@ public partial class StylesheetRulesTests
         {
             var i = CssRules.IndexOf(Violet, s);
             Assert.True(i >= 0, $"the violet theme has no {s} rule");
-            Assert.True(i > lastIdle, $"{s} must follow every idle hover, or a hover of equal specificity shadows it");
+            Assert.True(i > lastEdge, $"{s} must follow every hover edge, or a hover of equal specificity shadows it");
         }
     }
 
+    /// <summary>Since 5.0.0 a hovered control takes the violet tint from the base sheets' own hover rule, which reads
+    /// <c>--kron-hover</c>: the theme sets the token (plans/OPTION_C_PLAN.md S13), and of a hover only its edge.</summary>
     [Fact]
-    public void Violet_idle_hovers_use_the_themes_own_tint()
+    public void Violet_hovers_take_the_themes_tint_from_its_hover_token()
     {
-        foreach (var s in IdleHovers)
-            Assert.Equal("#ede9fe", CssRules.Value(Violet, s, "background")?.ToLowerInvariant());
+        Assert.Equal("#ede9fe", CssRules.Value(Violet, ":root", "--kron-hover")?.ToLowerInvariant());
+        var sheets = new[] { Base, Popup, DiagramContextMenu.GetCollapsibleNotesStyles() };
+        string[] tinted = [.. HoverEdges.Where(s => s != ".scenario-diagram-controls-toggle:hover"),
+            ".diagram-toggle-btn:hover", ".iflow-toggle-btn:hover", ".iflow-rel-summary-table tr:hover td", ".scenario-link:hover", ".copy-scenario-name:hover"];
+        foreach (var s in tinted)
+        {
+            var background = sheets.Select(css => CssRules.Value(css, s, "background")).LastOrDefault(v => v is not null);
+            Assert.True(background?.StartsWith("var(--kron-hover", StringComparison.Ordinal) == true, $"the base sheets give {s} the background {background ?? "of nothing"}");
+            Assert.Null(CssRules.Value(Violet, s, "background"));
+        }
+        Assert.Equal("var(--violet-edge)", CssRules.Value(Violet, ".happy-seg:hover", "border-color"));
     }
 
     [Fact]
     public void Violet_active_states_are_violet_and_their_hovers_darker()
     {
-        Assert.Equal("#8b5cf6", CssRules.Value(Violet, ".percentile-btn.percentile-active", "border-color")?.ToLowerInvariant());
-        Assert.Equal("#8b5cf6", CssRules.Value(Violet, ".timeline-toggle-active", "background")?.ToLowerInvariant());
-        Assert.Equal("#8b5cf6", CssRules.Value(Violet, ".timeline-toggle-active", "border-color")?.ToLowerInvariant());
-        Assert.Equal("#7c3aed", CssRules.Value(Violet, ".timeline-toggle-active:hover", "background")?.ToLowerInvariant());
-        Assert.Equal("#7c3aed", CssRules.Value(Violet, ".diagram-toggle-active:hover", "background")?.ToLowerInvariant());
+        Assert.Equal("#8b5cf6", CssRules.Value(Violet, ":root", "--violet-solid")?.ToLowerInvariant());
+        Assert.Equal("#7c3aed", CssRules.Value(Violet, ":root", "--violet-solid-hover")?.ToLowerInvariant());
+        Assert.Equal("var(--violet-solid)", CssRules.Value(Violet, ".percentile-btn.percentile-active", "border-color"));
+        Assert.Equal("var(--violet-solid)", CssRules.Value(Violet, ".diagram-toggle-active", "background"));
+        Assert.Equal("var(--violet-solid-hover)", CssRules.Value(Violet, ".diagram-toggle-active:hover", "background"));
+        Assert.Equal("var(--violet-solid-hover)", CssRules.Value(Violet, ".iflow-toggle-active:hover", "background"));
     }
 
-    /// <summary>Q3: the blue the base sheet paints on the scenario's "#" link, its copy-name button and
-    /// a search-matched parameterized row. (The row hover and selected tints are not overridden: every
-    /// emitted row carries a status class, and each status has its own tints, the same in both themes.)</summary>
+    /// <summary>Q3: the blue the base sheet paints on the scenario's "#" link, its copy-name button and a search-matched
+    /// parameterized row. The link and the button read <c>--kron-hover</c>, which the theme sets since 5.0.0 (S13); the row's
+    /// edge is the theme's own. (A row's hover and selected tints read <c>--kron-hover</c> and <c>--kron-selected</c>, which
+    /// the theme sets too.)</summary>
     [Fact]
     public void The_violet_theme_recolours_the_blue_the_base_sheet_paints_outside_the_toolbars()
     {
-        Assert.Equal("#ede9fe", CssRules.Value(Violet, ".scenario-link:hover", "background")?.ToLowerInvariant());
-        Assert.Equal("#ede9fe", CssRules.Value(Violet, ".copy-scenario-name:hover", "background")?.ToLowerInvariant());
-        Assert.Equal("inset 4px 0 0 #8b5cf6", CssRules.Value(Violet, ".param-test-table tbody tr.row-search-match", "box-shadow")?.ToLowerInvariant());
+        Assert.Equal("var(--kron-hover)", CssRules.Value(Base, ".scenario-link:hover", "background"));
+        Assert.Equal("var(--kron-hover)", CssRules.Value(Base, ".copy-scenario-name:hover", "background"));
+        Assert.Equal("#ede9fe", CssRules.Value(Violet, ":root", "--kron-hover")?.ToLowerInvariant());
+        Assert.Equal("inset 4px 0 0 var(--violet-solid)", CssRules.Value(Violet, ".param-test-table tbody tr.row-search-match", "box-shadow"));
     }
 
     // ── The parameterized row's states (roadmap 1.10; 5.0.0) ──

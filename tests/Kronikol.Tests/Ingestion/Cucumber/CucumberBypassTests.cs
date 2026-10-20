@@ -317,7 +317,9 @@ public class CucumberBypassTests
 
         Assert.Equal([ExecutionResult.Passed, ExecutionResult.Passed, ExecutionResult.Passed], Statuses(scenario));
         Assert.Equal(ExecutionResult.Passed, scenario.Result);
-        Assert.Contains("retry 1", scenario.Labels!);
+        // the badge reads retry 1 from the attempt; no tag is made (Q6)
+        Assert.Equal(2, scenario.Attempt);
+        Assert.DoesNotContain("retry 1", scenario.Tags ?? []);
     }
 
     [Fact]
@@ -571,7 +573,7 @@ public class CucumberBypassTests
                 s.DisplayName,
                 Result = s.Result.ToString(),
                 s.ErrorMessage,
-                s.Labels,
+                s.Tags,
                 BackgroundSteps = s.BackgroundSteps?.Select(StepOf).ToArray(),
                 Steps = s.Steps?.Select(StepOf).ToArray(),
             }).ToArray(),

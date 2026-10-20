@@ -123,7 +123,7 @@ public static class MergeableReportReader
                 Endpoint = GetString(fe, "endpoint"),
                 Description = GetString(fe, "description"),
                 SourceFile = GetString(fe, "sourceFile"),
-                Labels = ReadStringArray(fe, "labels"),
+                Tags = ReadTags(fe, attempt: null),
                 Scenarios = scenarios.ToArray()
             });
         }
@@ -248,8 +248,7 @@ public static class MergeableReportReader
         ErrorMessage = GetString(se, "errorMessage"),
         ErrorStackTrace = GetString(se, "errorStackTrace"),
         FailureCause = GetString(se, "failureCause"),
-        Labels = ReadStringArray(se, "labels"),
-        Categories = ReadStringArray(se, "categories"),
+        Tags = ReadTags(se, ReadInt(se, "attempt")),
         Rule = GetString(se, "rule"),
         Attempt = ReadInt(se, "attempt"),
         EndedAt = ReadInstant(se, "endedAt"),
@@ -746,6 +745,20 @@ public static class MergeableReportReader
                 JsonValueKind.Number => v.GetRawText(),
                 _ => null
             };
+
+    /// <summary>
+    /// A feature's or a scenario's tags: <c>tags</c>, or in a file written before 5.0.0 its <c>labels</c> and then its
+    /// <c>categories</c> as one list, less the <c>retry N</c> labels 4.x's ingest lanes made for the attempts before
+    /// <paramref name="attempt"/> (plans/TAGS_PLAN.md §4.13). Null when there are none.
+    /// </summary>
+    private static string[]? ReadTags(JsonElement element, int? attempt)
+    {
+        var tags = ScenarioTags.Merge(
+            ReadStringArray(element, "tags"),
+            ReadStringArray(element, "labels")?.Where(l => !ScenarioTags.IsGeneratedRetryLabel(l, attempt)),
+            ReadStringArray(element, "categories"));
+        return tags.Length > 0 ? tags : null;
+    }
 
     private static string[]? ReadStringArray(JsonElement parent, string name)
     {

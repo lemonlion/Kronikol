@@ -28,7 +28,8 @@ internal sealed class QueryOptions
 
     public string? Result { get; private set; }
     public string? Feature { get; private set; }
-    public string? Label { get; private set; }
+    /// <summary><c>--tag</c>, or <c>--label</c>, its name before 5.0.0 (plans/TAGS_PLAN.md Q2).</summary>
+    public string? Tag { get; private set; }
     public string? Service { get; private set; }
     public string? Status { get; private set; }
     public string? Method { get; private set; }
@@ -171,7 +172,7 @@ internal sealed class QueryOptions
     public static readonly string[] KnownFlags =
     [
         "--max-bytes", "--offset", "--limit", "--slower-than", "--lines", "--out", "--result", "--feature",
-        "--label", "--service", "--status", "--method", "--grep", "--step", "--sort", "--path", "--in",
+        "--tag", "--label", "--service", "--status", "--method", "--grep", "--step", "--sort", "--path", "--in",
         "--where", "--group-by", "--tolerance", "--count", "--json", "--failed", "--errors-only",
         "--headers", "--body", "--keys", "--values", "--group", "--stats", "--request", "--both",
         "--number", "--baseline", "--baseline-run", "--describe", "--history", "--flaky", "--new", "--failing", "--regressed",
@@ -264,7 +265,8 @@ internal sealed class QueryOptions
                 case "--out": if (Next(arg) is not { } output) return null; options.Out = output; break;
                 case "--result": if (Next(arg) is not { } result) return null; options.Result = result; break;
                 case "--feature": if (Next(arg) is not { } feature) return null; options.Feature = feature; break;
-                case "--label": if (Next(arg) is not { } label) return null; options.Label = label; break;
+                case "--tag":
+                case "--label": if (Next(arg) is not { } tag) return null; options.Tag = tag; break;
                 case "--service": if (Next(arg) is not { } service) return null; options.Service = service; break;
                 case "--status": if (Next(arg) is not { } status) return null; options.Status = status; break;
                 case "--method": if (Next(arg) is not { } method) return null; options.Method = method; break;
@@ -473,7 +475,7 @@ internal sealed class QueryOptions
         if (Grep is not null) Flag("--grep", Grep);
         if (Result is not null) Flag("--result", Result);
         if (Feature is not null) Flag("--feature", Feature);
-        if (Label is not null) Flag("--label", Label);
+        if (Tag is not null) Flag("--tag", Tag);
         if (Failed) Flag("--failed");
         if (Group) Flag("--group");
         foreach (var where in Where) Flag("--where", where);

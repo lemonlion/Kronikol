@@ -98,7 +98,7 @@ public class StepRenderingReportTests
         };
         var content = GenerateReport(MakeFeatures(scenario), "CollapsibleSteps.html");
         Assert.Contains("<details class=\"scenario-steps\"", content);
-        Assert.Contains("<summary class=\"h4\">Steps</summary>", content);
+        Assert.Contains("<summary class=\"h4\" title=\"This scenario's steps\">Steps</summary>", content);
     }
 
     [Fact]
@@ -253,7 +253,8 @@ public class StepRenderingReportTests
             ]
         };
         var content = GenerateReport(MakeFeatures(scenario), $"ImgAttach_{fileName}.html");
-        Assert.Contains("<img", content);
+        // the attachment's own image (the page's scripts carry "<img" in their text)
+        Assert.Contains("<img class=\"attachment-image\"", content);
         Assert.Contains($"attachments/{fileName}", content);
         Assert.Contains("attachment-image", content);
     }
@@ -274,7 +275,8 @@ public class StepRenderingReportTests
             ]
         };
         var content = GenerateReport(MakeFeatures(scenario), "NonImgAttach.html");
-        Assert.DoesNotContain("<img", content);
+        // no image, image link or image name for the attachment (the page's scripts carry "<img" in their text)
+        Assert.DoesNotContain("class=\"attachment-image", content);
         Assert.Contains("<a class=\"step-attachment\"", content);
         Assert.Contains("output.txt", content);
     }
@@ -323,7 +325,7 @@ public class StepRenderingReportTests
         var scenario = new Scenario
         {
             Id = "s1", DisplayName = "Test",
-            Labels = ["smoke", "regression"]
+            Tags = ["smoke", "regression"]
         };
         var content = GenerateReport(MakeFeatures(scenario), "ScenarioLabels.html");
         Assert.Contains("smoke", content);
@@ -331,20 +333,20 @@ public class StepRenderingReportTests
     }
 
     [Fact]
-    public void Report_renders_feature_labels()
+    public void Report_renders_feature_tags()
     {
         var features = new[]
         {
             new Feature
             {
                 DisplayName = "Cake",
-                Labels = ["api", "v2"],
+                Tags = ["api", "v2"],
                 Scenarios = [new Scenario { Id = "s1", DisplayName = "Test" }]
             }
         };
         var content = GenerateReport(features, "FeatureLabels.html");
-        Assert.Contains("api", content);
-        Assert.Contains("v2", content);
+        // the feature's badges, not the words: "api" and "v2" are in the page's scripts whatever the feature carries
+        Assert.Contains("Cake <span class=\"label\">api</span> <span class=\"label\">v2</span></summary>", content);
     }
 
     [Fact]
@@ -699,24 +701,16 @@ public class StepRenderingReportTests
     }
 
     [Fact]
-    public void Report_renders_category_filter_when_categories_present()
+    public void A_category_is_a_chip_of_the_tags_row_and_the_report_has_no_categories_row()
     {
         var scenario = new Scenario
         {
             Id = "s1", DisplayName = "Test",
-            Categories = ["Orders"]
+            Tags = ["Orders"]
         };
         var content = GenerateReport(MakeFeatures(scenario), "CategoryFilter.html");
-        Assert.Contains("category-filters", content);
-        Assert.Contains("Orders", content);
-    }
-
-    [Fact]
-    public void Report_does_not_render_category_filter_when_no_categories()
-    {
-        var scenario = new Scenario { Id = "s1", DisplayName = "Test" };
-        var content = GenerateReport(MakeFeatures(scenario), "NoCategoryFilter.html");
-        Assert.DoesNotContain("<div class=\"category-filters\">", content);
+        Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"Orders\"", content);
+        Assert.DoesNotContain("category-filters", content);
     }
 
     [Fact]
@@ -925,7 +919,8 @@ public class StepRenderingReportTests
             ]
         };
         var content = GenerateReport(MakeFeatures(scenario), "ScenarioImgAttach.html");
-        Assert.Contains("<img", content);
+        // the attachment's own image (the page's scripts carry "<img" in their text)
+        Assert.Contains("<img class=\"attachment-image\"", content);
         Assert.Contains("attachment-image", content);
         Assert.Contains("attachments/screenshot.png", content);
     }
@@ -944,7 +939,8 @@ public class StepRenderingReportTests
             ]
         };
         var content = GenerateReport(MakeFeatures(scenario), "ScenarioLinkAttach.html");
-        Assert.DoesNotContain("<img", content);
+        // no image, image link or image name for the attachment (the page's scripts carry "<img" in their text)
+        Assert.DoesNotContain("class=\"attachment-image", content);
         Assert.Contains("step-attachment", content);
         Assert.Contains("output.txt", content);
     }
@@ -981,7 +977,7 @@ public class StepRenderingReportTests
         };
         var content = GenerateReportSeparateBackground(MakeFeatures(scenario), "BgSeparate.html");
         Assert.Contains("<details class=\"scenario-background\">", content);
-        Assert.Contains("<summary class=\"h4\">Background Steps</summary>", content);
+        Assert.Contains("<summary class=\"h4\" title=\"The steps of the feature's background, which run before this scenario's own\">Background Steps</summary>", content);
     }
 
     [Fact]

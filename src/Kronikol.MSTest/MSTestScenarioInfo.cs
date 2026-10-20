@@ -24,4 +24,10 @@ public record MSTestScenarioInfo
     /// <summary>When the test finished, stamped in the cleanup that collects it.</summary>
     public DateTimeOffset? EndedAt { get; init; }
     public string?[]? ParameterNames { get; init; }
+
+    /// <summary>The <c>[TestCategory]</c> values of the test's class, its base classes' included, and of its assembly.</summary>
+    public string[]? FeatureTags { get; init; }
+
+    /// <summary>The <c>[TestCategory]</c> values of the test method.</summary>
+    public string[]? Tags { get; init; }
 }

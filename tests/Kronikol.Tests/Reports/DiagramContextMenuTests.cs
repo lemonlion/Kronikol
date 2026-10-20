@@ -1153,7 +1153,7 @@ public class DiagramContextMenuTests
         Assert.Contains("{ onError: handleRenderFailure }", _plantUmlScript);
         Assert.Contains("function handleRenderFailure(", _plantUmlScript);
         Assert.Contains("Diagram too large for client-side rendering.", _plantUmlScript);
-        Assert.Contains("<summary>Raw PlantUML</summary>", _plantUmlScript);
+        Assert.Contains("<summary title=\"The PlantUML source this diagram was drawn from\">Raw PlantUML</summary>", _plantUmlScript);
     }
 
     [Fact]
@@ -1214,24 +1214,34 @@ public class DiagramContextMenuTests
     }
 
     // ═══════════════════════════════════════════════════════════
-    // Open in new tab — uses blob URLs not data URIs
+    // Open in new tab: the tab opens while the click is handled and the picture or text is written into it
     // ═══════════════════════════════════════════════════════════
 
     [Fact]
-    public void OpenInNewTab_uses_blob_url_not_data_uri()
+    public void OpenInNewTab_opens_the_tab_before_the_picture_is_drawn()
     {
-        // PNG open should use createObjectURL, not FileReader + readAsDataURL
+        // a popup blocker lets through a tab opened while the click is handled; the PNG is drawn after the click
+        foreach (var item in new[] { "'Open as PNG image in new tab'", "'Open as PNG image (no transparency) in new tab'" })
+        {
+            var at = _script.IndexOf(item, StringComparison.Ordinal);
+            Assert.True(at > 0, item);
+            var open = _script.IndexOf("var tab = openTab();", at, StringComparison.Ordinal);
+            var drawn = _script.IndexOf("openPngInTab(tab, canvas)", at, StringComparison.Ordinal);
+            Assert.True(open > at && open < drawn, item);
+        }
         Assert.DoesNotContain("readAsDataURL", _script);
-        // SVG "Open in new tab" should not use window.open('data:image/svg+xml...')
-        // (data:image/svg+xml;base64 still exists in svgToCanvas for img.src, which is fine)
-        Assert.DoesNotContain("window.open('data:image/svg+xml", _script);
+        Assert.DoesNotContain("window.open('data:", _script);
     }
 
     [Fact]
-    public void OpenInNewTab_uses_createObjectURL_for_images()
+    public void OpenInNewTab_writes_into_the_tab_and_opens_a_blob_url_only_where_no_tab_opened()
     {
-        // The "Open image in new tab" submenu items should use URL.createObjectURL
-        Assert.Contains("window.open(URL.createObjectURL(blob))", _script);
+        Assert.Contains("window.open('', '_blank')", _script);
+        Assert.Contains("openSvgInTab(serializeSvg(svg))", _script);
+        Assert.Contains("openTextInTab(source, typeLabel + ' source')", _script);
+        Assert.Contains("openTextInTab(_fullNoteText, 'Box text')", _script);
+        // the three fallbacks (PNG, SVG, text) are the only blob: URLs a tab is opened on
+        Assert.Equal(3, _script.Split("window.open(URL.createObjectURL(").Length - 1);
     }
 
     // ═══════════════════════════════════════════════════════════

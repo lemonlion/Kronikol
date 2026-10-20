@@ -403,13 +403,13 @@ public class MissingAttachmentTests : IDisposable
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs));
 
         // The scenario's own, a step's, and a parameterized row's panel: % first, then # and ?, so nothing is encoded twice.
-        Assert.Contains("href=\"attachments/shot%231.png\" onclick=\"openLightbox(event, this)\"><img class=\"attachment-image\" src=\"attachments/shot%231.png\"", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"attachments/shot%231.png\" onclick=\"openLightbox(event, this)\" title=\"Show shot#1.png, an image this scenario attached, at full size\"><img class=\"attachment-image\" src=\"attachments/shot%231.png\"", html, StringComparison.Ordinal);
         Assert.Contains("src=\"attachments/50%25.png\"", html, StringComparison.Ordinal);
-        Assert.Contains("<a class=\"step-attachment\" href=\"attachments/what%3F.txt\">what?.txt</a>", html, StringComparison.Ordinal);
-        Assert.Contains("<a class=\"step-attachment\" href=\"attachments/a%25%23.log\">a%#.log</a>", html, StringComparison.Ordinal);
+        Assert.Contains("<a class=\"step-attachment\" href=\"attachments/what%3F.txt\" title=\"Open what?.txt, a file this step attached\">what?.txt</a>", html, StringComparison.Ordinal);
+        Assert.Contains("<a class=\"step-attachment\" href=\"attachments/a%25%23.log\" title=\"Open a%#.log, a file this step attached\">a%#.log</a>", html, StringComparison.Ordinal);
         Assert.Contains("src=\"attachments/row%231.png\"", html, StringComparison.Ordinal);
         // A link elsewhere is a URL already: its query and fragment are its own.
-        Assert.Contains("<a class=\"step-attachment\" href=\"https://example.com/trace?id=1#top\">Trace</a>", html, StringComparison.Ordinal);
+        Assert.Contains("<a class=\"step-attachment\" href=\"https://example.com/trace?id=1#top\" title=\"Open Trace, a link this scenario attached\">Trace</a>", html, StringComparison.Ordinal);
         Assert.DoesNotContain("attachments/shot#1.png\"", html, StringComparison.Ordinal);
     }
 

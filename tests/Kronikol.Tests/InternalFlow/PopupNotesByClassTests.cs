@@ -44,7 +44,7 @@ public class PopupNotesByClassTests
             startTab: InternalFlowTab.Activity, suppliedSpans: ingested ? 5 : null);
         var message = Message(data, id);
 
-        Assert.Contains("<details class=\"iflow-diagnostics\"><summary>Diagnostic info</summary>", message);
+        Assert.Contains("<details class=\"iflow-diagnostics\"><summary title=\"Why this call may have no spans: click to show or hide the details\">Diagnostic info</summary>", message);
         Assert.DoesNotContain("style=", message);
     }
 

@@ -199,7 +199,7 @@ internal static class ParameterValueRenderer
             jsonBody = jsonBody[..10000] + "<span class=\"prop-val\">… (truncated)</span>";
 
         body.Append("<details class=\"param-expand\">");
-        body.Append($"<summary>{System.Net.WebUtility.HtmlEncode(preview)}</summary>");
+        body.Append($"<summary title=\"Show or hide the whole value\">{System.Net.WebUtility.HtmlEncode(preview)}</summary>");
         body.Append($"<div class=\"expand-body\">{jsonBody}</div>");
         body.Append("</details>");
     }
@@ -646,7 +646,7 @@ internal static class ParameterValueRenderer
             jsonBody = jsonBody[..10000] + "<span class=\"prop-val\">… (truncated)</span>";
 
         body.Append("<details class=\"param-expand\">");
-        body.Append($"<summary>{System.Net.WebUtility.HtmlEncode(preview)}</summary>");
+        body.Append($"<summary title=\"Show or hide the whole value\">{System.Net.WebUtility.HtmlEncode(preview)}</summary>");
         body.Append($"<div class=\"expand-body\">{jsonBody}</div>");
         body.Append("</details>");
     }

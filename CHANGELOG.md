@@ -17,21 +17,25 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **Colour and type tokens.** The page's colours and type are CSS custom properties, `--kron-*` for the page and
   `--dg-*` for its diagrams, each with a light and a dark value, defined first in the page's styles, so a theme or a
   `CustomCss` sheet can set them again.
+- **The labs page takes the theme.** `TestRunReport.labs.html` opens light or dark as the report does, with the
+  report's switch at the right of its title, and draws its parts in the report's tokens, its table of every scenario a
+  card as the History section and the diagnostics are. Of the report's scripts it runs only the theme's two.
 - **`kronikol ingest --no-diagnostics-section`** leaves the Diagnostics tab out of the HTML report. Every diagnostic
   is still on the labs page, in `TestRunReport.json` and printed by the command. `--diagnostics-section`, now the
   default, is still taken, so a command line written for 4.x runs unchanged.
 - **The features can be sorted.** A Sort dropdown at the right of the Features tab's tools orders the feature cards and
   the features table alike: the report's own order, the feature's name A to Z, failures first, most scenarios, and,
   for a run with durations, slowest total, slowest average and longest scenario.
-- **Tags have a filter row,** as dependencies and categories do: a chip for each tag (its tooltip says how many
-  scenarios carry it), an Untagged chip when a scenario has none, and an ANY / ALL switch, ANY by default. A report with
-  a happy path puts the Happy Path tag's chip first.
-- **A chip can leave its scenarios out.** A chip of the Tags, Dependencies or Categories row goes from off to has (a
-  scenario must have it) to has not (it must not), and back to off; Alt+click or a right-click goes straight to has not.
-  A chosen chip carries its row's 4.x class (`tag-active`, `dependency-active`, `category-active`) and a left-out one a
-  class of its own (`tag-exclude`, `dependency-exclude`, `category-exclude`), with `aria-pressed` `true`, `mixed` or
-  `false`. Each row has a chip for the scenarios with none (Untagged, No dependencies, Uncategorized) and a Clear while
-  one of its chips is set.
+- **Tags have a filter row,** as dependencies do: a chip for each tag (its tooltip says how many scenarios carry it,
+  and what a click does), an Untagged chip when a scenario has none, and an ANY / ALL switch, ANY by default
+  (`ReportToggleDefaults.TagFilterMode`). A report with a happy path puts the Happy Path tag's chip first. A row of more
+  than 30 tags starts with the 30 that the most scenarios carry and a chip that shows the rest (`5 more`, then
+  `Fewer`); a chip that is set always shows.
+- **A chip can leave its scenarios out.** A chip of the Tags or Dependencies row goes from off to has (a scenario must
+  have it) to has not (it must not), and back to off; Alt+click or a right-click goes straight to has not. A chosen
+  chip carries its row's 4.x class (`tag-active`, `dependency-active`) and a left-out one a class of its own
+  (`tag-exclude`, `dependency-exclude`), with `aria-pressed` `true`, `mixed` or `false`. Each row has a chip for the
+  scenarios with none (Untagged, No dependencies) and a Clear while one of its chips is set.
 - **The search takes qualifiers.** `dep:`, `duration:` and `is:happy` narrow a search as the filters do: `dep:payment`
   (part of a dependency's name, case and spaces ignored; quotes for a name with spaces, commas for any of several),
   `duration:>2s`, `duration:<500ms`, `duration:1s..5s` or `duration:>=p90` (a scenario's own time, the first-call
@@ -42,9 +46,20 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   of its examples. Whenever the scenarios shown change, the page raises a `kron-filter-change` event on the document,
   with `{ shown, total }` in its `detail`.
 - **The page's link carries every filter.** What a 4.x link could not say has parameters of its own: `tags=` and
-  `tagx=` for the tags chosen and left out, `tagmode=`, `depx=` and `catx=` for the dependencies and categories left
-  out, and `hpx=1` for happy paths hidden. Every 4.x parameter keeps its meaning (`hp=1` is happy paths only), so a
+  `tagx=` for the tags chosen and left out, `tagmode=`, `depx=` for the dependencies left out, and `hpx=1` for happy
+  paths hidden. Every 4.x parameter keeps its meaning (`hp=1` is happy paths only), so a
   link copied from a 4.x report opens the same view.
+- **`@"two words"` finds a tag with a space,** such as `@"Happy Path"`, on its own or with `&&`, `||` and `!`.
+- **A parameterized scenario shows the tags all its examples carry,** less its feature's; 4.x drew none.
+- **Every adapter reads its framework's own tags.** NUnit's `[Category]` (a `[TestCase]`'s `Category =` too), MSTest's
+  `[TestCategory]`, xUnit's `[Trait("Category", …)]` on v2 and v3, and TUnit's `[Category]` are tags: those on the test
+  are its scenario's, and those on its class, or with NUnit, MSTest and TUnit on its assembly, are its feature's. A
+  BDDfy scenario takes its xUnit test's `Category` traits beside its own tags. A category named as a happy-path marker
+  (`happy-path`, `Happy Path`) marks the happy path, as `@happy-path` does in Gherkin. Kronikol's own `[HappyPath]`
+  and `[Endpoint]` are not tags, and no other trait key or property is read. In 4.x these adapters made no tag at
+  all, though the docs said they made categories.
+- **A Gherkin rule's tags reach its scenarios,** and no others, in the Reqnroll adapters and in `kronikol ingest`'s
+  Cucumber Messages lane, which dropped a plain tag on a `Rule:`.
 - **The duration buttons say what they show.** Each percentile's tooltip names its threshold and its share of the run
   (the slowest half for P50), and that the first-call warm-up is left out when the run had one.
 - **The report bar carries the filters.** Right of the tabs it shows what the filters leave showing (shortened, then
@@ -86,6 +101,22 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   than matched by name, and a note says how many scenarios it follows.
 - **`kronikol merge --schema` and `kronikol ingest --schema`** write the data file's schema beside it, now that a run
   writes none unless asked.
+- **Focus the keyboard moves is never left under the report bar.** Tab or Shift+Tab to a control the pinned bar covers,
+  or a scenario's settings stuck under it, brings the control 12 px below them, and to one cut by the top or the foot of
+  the window, 12 px inside it. For a second after, a control the page moves away, as a diagram drawn above it does, is
+  brought back, until the reader scrolls, points or presses a key. Focus a click or a script gives stays where it lands,
+  as does a control in the bar, in those settings or in the internal-flow popup, and a scenario taller than the window.
+  On a phone, where the bar scrolls away, nothing moves.
+- **Every control says what it does.** Each tab of the report bar, each payload control, each filter, each heading of
+  a scenario's sections, each link and the page's own buttons has a tooltip saying what it does or what it holds. A
+  payload control's tooltip names the diagrams it acts on: every sequence diagram in the report on the report bar,
+  the scenario's own on a scenario's bar. Clear All's names the search and every filter row the box has. A chip's gives
+  the number of scenarios it picks out and then what a click does. A composite step's says how many steps it holds,
+  given when it is first pointed at or focused. In their tabs, the History and Diagnostics headings say what the
+  section is, not that a click opens it.
+- **`kronikol query scenarios --tag T`** keeps the scenarios with a tag holding `T`, in any case, a feature's tags
+  counting as each of its scenarios'. `--label`, the flag's 4.x name, is the same flag, and a listing cut short says
+  `--tag` on its `next:` line whichever name was typed.
 
 ### Changed (breaking)
 
@@ -155,8 +186,8 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   shade deeper, so its white name reads at 6.15:1. `DependencyColors` still overrides it.
 - **A step bar's table or doc string ends at its last row.** The blank line under it is gone; the one above stays.
   A report written before 5.0.0 draws that way too where the page draws its diagrams.
-- **The dependency filter shows a scenario with any of the chosen dependencies by default, as the category (tag) filter
-  does.** `ReportToggleDefaults.DependencyFilterMode` defaults to `FilterCombinationMode.Or` (4.x: `And`, a scenario
+- **The dependency filter shows a scenario with any of the chosen dependencies by default, as the tag filter does.**
+  `ReportToggleDefaults.DependencyFilterMode` defaults to `FilterCombinationMode.Or` (4.x: `And`, a scenario
   with all of them), and the mode button starts on OR. A report that wants the 4.x behaviour sets
   `DependencyFilterMode = FilterCombinationMode.And`. A link made on a 4.x report that chose dependencies with no
   `depmode` meant AND; opened on a 5.0.0 report it means OR. One that says `depmode=OR` still means OR, and a 5.0.0
@@ -209,18 +240,63 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **Happy paths is Show, Only or Hide.** The Happy Paths Only button becomes a three-way control on the Status line,
   which drives the Tags row's Happy Path chip; a report without a happy path has neither. `.happy-path-toggle`,
   `.happy-path-active` and `filter_happy_paths` are gone, and `#hp=1` still opens on Only.
-- **The categories' chips are tri-state, and their All button is gone:** nothing chosen shows every category, as in
-  the other rows.
+- **A category is a tag, and the Categories row is gone.** A scenario's categories are chips of the Tags row, and so
+  are its feature's tags, which now pick out every scenario of the feature; `@` search reads the same tags as the row,
+  Happy Path included. Gone with the row: `report-category-filter-function.js` (`filter_categories`, `toggle_cat_mode`),
+  the `.category-filters`, `.category-toggle`, `.category-active`, `.category-exclude`, `.category-none` and
+  `.cat-mode-toggle` rules a `CustomCss` sheet may target, and `ReportToggleDefaults.CategoryFilterMode`, which
+  `TagFilterMode` replaces.
+- **`data-tags` replaces `data-labels` and `data-categories`.** A scenario's element carries its tags, its feature's
+  first, each spelled as its chip is, percent-encoded and joined with commas
+  (`data-tags="Happy%20Path,checkout,a%2Cb"`), so a comma, a quote or a space in a name survives. A parameterized
+  group's element carries what any of its rows carries.
+- **Tags that differ only in the case of an ASCII letter are one tag:** `Smoke` and `smoke` are one chip, spelled as the
+  report's data first lists it. No other letter folds, so `Über` and `über` are two, since .NET, JavaScript and Java
+  fold the rest of Unicode differently. The chips sort Happy Path first, then by name with its ASCII letters folded,
+  then by code unit, the same under every culture (4.x sorted by the machine's).
+- **The link names each tag on its own.** `tags=` and `tagx=` percent-encode each name and join the names with commas,
+  so `a,b` stays one tag. A 4.x link's `cats=` chooses tags, its `catmode=` sets the tags' mode when the link has no
+  `tagmode=`, and its Uncategorized chip (`__uncategorized__`) is Untagged. A value that does not decode loses only
+  itself.
+- **A retry is a badge, not tags.** The `retry N` labels an ingest lane gives a scenario for each earlier attempt are no
+  longer chips or badges. The scenario shows one badge, `retry 2` for a third attempt, drawn from `Scenario.Attempt`,
+  and its tooltip says the earlier attempts are not in the report; a search for `retry 2` still finds it. An author's
+  own `retry 2` tag is a tag like any other.
+- **Labels and categories are one list, `Tags`.** `Feature.Labels` is `Feature.Tags`, and `Scenario.Labels` and
+  `Scenario.Categories` are `Scenario.Tags`: the tags written at that level, a feature's own and a scenario's own (in
+  Gherkin with its rule's and its Examples block's), each null when empty. A scenario's tags in the report are its
+  feature's, then its own. `ScenarioTags.Classified` is `(Tags, Endpoint, IsHappyPath)`, without `Labels` and
+  `Categories`, and `ScenarioTags.Classify` reads `category:x` as the tag `x`, so `@smoke` and `@category:smoke` are
+  one tag. `ReqNRollConstants.CategoryTagPrefix` is gone; `ScenarioTags.CategoryPrefix` stays, as the prefix that is
+  read and dropped.
+- **The data files write `tags`.** `TestRunReport.json` and the mergeable JSON write a feature's `tags` and a scenario's
+  `tags`, its own, in place of `labels` and `categories`. `TestRunReport.yml` and `.xml` write `Tags`
+  (`<Tags><Tag>smoke</Tag></Tags>`, as the XSD says), and so do `Specifications.json`, `.yml` and `.xml`;
+  `Specifications.md` prints one `Tags:` line where it printed Labels and Categories. The JSON schema declares `tags`
+  and requires neither it nor the keys it replaces; `formatVersion` stays 3. Kronikol.Tool 5.x reads a 4.x file's
+  `labels` and `categories` as its tags, and a 4.x Kronikol.Tool reads a 5.0.0 file as having none. A committed
+  `Specifications.yml` sees its `Labels` and `Categories` keys become `Tags`.
+- **CTRF's `tags` are every tag a scenario has,** its feature's first, and `extra.categories` is gone, in
+  `ctrf-report.json` and in `kronikol ctrf`'s output.
+- **`kronikol query scenarios --json` gives a scenario's `tags`,** its feature's first, in place of `labels` and
+  `categories`, and `--tag` matches a feature's tags too.
+- **No ingest lane makes `retry N` labels.** `kronikol ingest` gave a retried scenario a `retry N` label for each earlier
+  attempt; `Scenario.Attempt` says the same, and the report's badge is drawn from it. The readers leave those labels
+  out of a 4.x file's tags where its `attempt` accounts for them, so `kronikol ctrf` and `query` do not offer them as
+  tags.
+- **`Happy Path` marks the happy path wherever it is written.** `HappyPathDetection` reads `Happy Path`, with its space,
+  beside `happy-path`, `happy_path` and `happypath`. So LightBDD's `[HappyPath]`, the label `Happy Path`, sets the flag
+  and is not a tag: it no longer reaches the data files, CTRF's tags or `Specifications.md`.
+- **`ReportGenerator.GenerateYamlSpecs` is gone.** Nothing called it; `Specifications.yml` is written as before.
 - **The filter rows take Option C's look.** Each row's label is an uppercase word in a column of its own (`Status`,
-  4.x `Status:`), Status, Duration and Happy paths are segmented groups, tags, dependencies and categories are chips,
+  4.x `Status:`), Status, Duration and Happy paths are segmented groups, tags and dependencies are chips,
   every control is 28 px tall (36 px on a phone), and the rows reflow on the filter box's own width, not the window's.
   A row's switch reads ANY or ALL (4.x: OR or AND) and keeps the mode in `data-mode`, which the link writes as before;
   the switches and chips answer one delegated handler rather than an `onclick` each. The exports read Export HTML and
   Export CSV where the box is narrow. A `CustomCss` sheet written against the 4.x rules of `.status-toggle`,
-  `.percentile-btn`, `.dependency-toggle`, `.category-toggle`, `.dep-mode-toggle` or `.cat-mode-toggle` may no longer
-  apply; set the tokens instead.
+  `.percentile-btn`, `.dependency-toggle` or `.dep-mode-toggle` may no longer apply; set the tokens instead.
 - **On a desktop the filter rows fold under More filters.** A More filters button ends the search line, and the rows
-  under it (Status, Duration, Happy paths, Tags, Dependencies, Categories) stay folded until it is pressed; while they
+  under it (Status, Duration, Happy paths, Tags, Dependencies) stay folded until it is pressed; while they
   are folded it counts the filters on in them. The readout and Clear All stay in view either way, and the search help
   opens on its own. The box carries `rows-folded` while they are folded, so a script or test that uses a row's control
   on a desktop opens them first. On a phone (768 px wide or less) the box's own Filters toggle folds them, as before.
@@ -251,6 +327,13 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **Every package targets .NET 10 alone.** net8.0 and net9.0 are dropped (`plans/REPORT_FORMAT_PLAN.md` Q17), so a
   test project on .NET 8 or 9 stays on 4.x; net11.0 joins in a 5.x minor when .NET 11 ships. The templates offer
   `--Framework net10.0` alone, and CI no longer scaffolds them on the older two.
+- **The violet theme is written on the tokens.** `Stylesheets.VioletThemeStyleSheet`, the default
+  `HtmlSpecificationsCustomStyleSheet`, sets the report's colour tokens for the light and the dark theme, so a
+  Specifications report opened dark is dark and violet. A chosen control, the passed step and the back-to-top button
+  keep 4.x's solid violet, with white on it (the tick and the arrow included); an attachment's name, a label and the
+  search field's edge take the theme's selected colours. The accent is a darker violet (`#6d28d9`, AA on white and on
+  the violet card), and controls 4.x's rules never named, such as a report tab or More filters, take the theme's
+  colours. A sheet built on the 4.x constant's rules should set the tokens instead.
 
 ### Deprecated
 
@@ -263,6 +346,24 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 
 ### Fixed
 
+- **`kronikol merge` keeps each scenario's tags.** A feature that ran in several shards kept the first shard's feature
+  tags, so where the shards gave it different ones, a scenario of a later shard took the first shard's in place of its
+  own shard's. The tests NDJSON lane gives a feature, in each shard, the tags all of that shard's scenarios share, so
+  its shards often differ. The merged feature keeps the tags every shard gives it, and each shard's others move onto
+  that shard's scenarios, so no scenario gains or loses a tag.
+- **A feature's tags pick out its scenarios.** They were drawn on the feature and found by free text, but no chip and no
+  `@` search picked out the feature's scenarios.
+- **A tag with a comma in its name is one tag.** The chips, the search and the link split it in two. A double quote in a
+  category's name lost a shared link its category filter and the scenario the link pointed to.
+- **A Reqnroll feature's tags are its own,** `FeatureInfo.Tags`. They were its first scenario's tags less that
+  scenario's own, so a feature tag that scenario repeated was lost, and its rule's tags were the whole feature's. A
+  feature's endpoint is read from its own tags first, then from its scenarios'.
+- **An NUnit `[TestCase]` method keeps its happy path and its fixture's endpoint.** NUnit puts a parameterized method's
+  attributes on the suite that holds its cases, so `[HappyPath]` on a `[TestCase]` method marked none of them, and a
+  fixture whose first captured test was a case lost its `[Endpoint]`.
+- **CTRF keeps an author's `retry 2` tag.** The filter that kept the generated retry labels out of `tags` dropped any tag
+  of that shape.
+- **The schema no longer says that categories come from a framework's category attribute,** which no adapter read.
 - **The summary ring reads 100% only when every scenario passed.** It rounded the pass rate, so 213 passed of 214 read
   100%; a rate under 100 now rounds down and stops at 99%.
 - **A scenario skipped after an earlier failure is counted.** The summary and the ring left out the scenarios a
@@ -291,6 +392,35 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   arrow, which was no longer drawn, or the assertion's source-location comment. As assertions start hidden, this was
   the default. A diagram of nothing but hidden markers reached the engine, which failed on it, in place of the
   "Nothing to draw" message, and that message now names the toggles by the words they show (Assertions, Steps).
+- **A diagram opens in a new tab in Firefox too.** The diagram menu's "in new tab" items open the tab while the click
+  is handled and write the picture or the text into it, titled for what it holds ("Diagram (PNG)", "Diagram (SVG)",
+  "PlantUML source", "Box text"). The PNG items opened their tab only once the picture was drawn, after the click,
+  which Firefox's popup blocker refuses, and every item opened a `blob:` URL, which a report opened from a file makes
+  with an opaque origin. Where no tab opens, the `blob:` URL is tried as before.
+- **Three controls have names.** The back-to-top button (an arrow), the payload line count dropdown and the
+  internal-flow popup's close (a cross) had no name a screen reader could read; they are "Back to top", "Payload
+  length" and "Close".
+- **On a phone the filter rows fold under a real button, and the fold holds at every width.** The Filters toggle is a
+  button the keyboard reaches and a screen reader hears as open or folded, on a line of its own that also says what
+  the filters leave showing. The search help opens while the rows are folded (it could not). Rows opened or folded
+  stay so when the window crosses the phone's width, either way (rows opened on a phone stayed hidden on a wider
+  window, and a page opened wide then narrowed showed its rows under a toggle that did nothing), and they start folded
+  from the first paint. The button and the sticky search line take the theme's colours (both were grey in every
+  theme).
+- **The keyboard opens an internal-flow arrow's popup.** With the browser engine (BrowserJs, the default) an arrow's
+  link label was text only a pointer could open. A link with data is one Tab stop now, named from its label; Enter or
+  Space opens its popup, and where links show only on hover, focus shows it. A diagram the Java engine drew keeps its
+  links as they were.
+- **The search help reads on the Specifications report.** The violet theme drew its panel dark under dark text, 1.21:1
+  (4.x too). The help takes the report's tokens now, in the light and the dark theme.
+- **A diagram's menu reads in the dark theme.** The right-click menu was white and took the page's ink, so in the dark
+  theme its items were light text on white. It is drawn on the page's card in the page's ink, in both themes.
+- **The last fixed colours follow the theme.** A missing attachment's name, a parameter table's flatten toggle, the
+  "No interactions captured" line, the custom duration field and its unit, a diagram's loading text, its selection
+  ring and its zoom slider read the report's tokens, so they read in the dark theme, and the ring and the slider take
+  the violet theme's accent. The loading text was 2.85:1 on white in the light theme too, and is AA now.
+- **The history sparkline takes the theme.** Its runs are drawn in the report's pass, fail, skip and track colours,
+  so a run reads on the dark card; in the light theme its greens and reds are the report's own, where they were 4.x's.
 
 ### Documentation
 

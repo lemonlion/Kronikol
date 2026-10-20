@@ -82,7 +82,16 @@ function advancedSearchTokenise(input) {
             continue;
         }
 
-        // @tag
+        // @tag, or @"a tag" for a name with spaces (plans/TAGS_PLAN.md §4.8)
+        if (str[i] === '@' && str[i + 1] === '"') {
+            var close = str.indexOf('"', i + 2);
+            var quoted = (close < 0 ? str.substring(i + 2) : str.substring(i + 2, close)).trim().toLowerCase();
+            i = close < 0 ? str.length : close + 1;
+            if (quoted.length > 0) {
+                tokens.push({ type: 'tag', value: quoted });
+            }
+            continue;
+        }
         if (str[i] === '@') {
             var start = i + 1;
             i = start;

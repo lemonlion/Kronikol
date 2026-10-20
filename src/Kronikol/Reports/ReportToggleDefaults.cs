@@ -90,8 +90,10 @@ public record ReportToggleDefaults
     /// with any of the chosen dependencies (since 5.0.0; <see cref="FilterCombinationMode.And"/> before it).</summary>
     public FilterCombinationMode? DependencyFilterMode { get; set; }
 
-    /// <summary>The category filter's AND/OR combination mode. Default: <see cref="FilterCombinationMode.Or"/>.</summary>
-    public FilterCombinationMode? CategoryFilterMode { get; set; }
+    /// <summary>The Tags row's AND/OR combination mode: whether a scenario must carry any of the chosen tags or every one
+    /// of them. Default: <see cref="FilterCombinationMode.Or"/>. Since 5.0.0, when a category became one more tag, it
+    /// replaces <c>CategoryFilterMode</c>, which set the Categories row's.</summary>
+    public FilterCombinationMode? TagFilterMode { get; set; }
 
     /// <summary>
     /// The Features tab opens on its Summary view, the features table, in place of the feature cards (test run report

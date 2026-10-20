@@ -52,6 +52,41 @@ public class TestRunReportSchemaContractTests
     }
 
     [Fact]
+    public void The_attempt_description_names_the_retry_badge_the_report_draws()
+    {
+        // No lane writes retry N labels since 5.0.0 (plans/TAGS_PLAN.md §4.6): the report draws a badge from attempt.
+        var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"SchemaAttempt_{Guid.NewGuid():N}.schema.json", DataFormat.Json);
+        using var schema = JsonDocument.Parse(File.ReadAllText(schemaPath));
+
+        var attempt = Assert.Single(Descriptions(schema.RootElement, "attempt"));
+
+        Assert.Contains("the report's retry badge reads retry 1 for a second attempt", attempt);
+        Assert.DoesNotContain("label", attempt);
+    }
+
+    /// <summary>The description of every property named <paramref name="name"/>, wherever the schema declares one.</summary>
+    private static IEnumerable<string> Descriptions(JsonElement element, string name)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in element.EnumerateObject())
+            {
+                if (property.Name == name && property.Value.ValueKind == JsonValueKind.Object
+                    && property.Value.TryGetProperty("description", out var description))
+                    yield return description.GetString()!;
+                foreach (var found in Descriptions(property.Value, name))
+                    yield return found;
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in element.EnumerateArray())
+                foreach (var found in Descriptions(item, name))
+                    yield return found;
+        }
+    }
+
+    [Fact]
     public void Schema_names_the_query_tool_and_the_size_trap()
     {
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"SchemaComment_{Guid.NewGuid():N}.schema.json", DataFormat.Json);
@@ -157,7 +192,7 @@ public class TestRunReportSchemaContractTests
             DisplayName = "Orders",
             Endpoint = "/api/orders",
             Description = "Everything about placing an order.",
-            Labels = ["orders", "smoke"],
+            Tags = ["orders", "smoke"],
             Scenarios =
             [
                 new Scenario
@@ -170,8 +205,7 @@ public class TestRunReportSchemaContractTests
                     Duration = TimeSpan.FromSeconds(2.5),
                     ErrorMessage = "Expected: 4173\nActual: 3902",
                     ErrorStackTrace = "   at OrderTests.Place() in OrderTests.cs:line 42",
-                    Labels = ["checkout"],
-                    Categories = ["API"],
+                    Tags = ["checkout", "API"],
                     Rule = "Totals are exact",
                     OutlineId = "Place an order for <item>",
                     ExamplesBlockName = "Standard items",

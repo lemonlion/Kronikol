@@ -163,9 +163,9 @@ void Gen(string name, string? stylesheet, bool includeRunData, CiMetadata? meta,
     Console.WriteLine($"wrote {path} ({new FileInfo(path).Length} bytes)");
 }
 
-static Scenario Sc(string id, string name, bool happy, ExecutionResult result, int ms, string[] labels) => new()
+static Scenario Sc(string id, string name, bool happy, ExecutionResult result, int ms, string[] tags) => new()
 {
-    Id = id, DisplayName = name, IsHappyPath = happy, Result = result, Duration = TimeSpan.FromMilliseconds(ms), Labels = labels,
+    Id = id, DisplayName = name, IsHappyPath = happy, Result = result, Duration = TimeSpan.FromMilliseconds(ms), Tags = tags,
     Steps =
     [
         new ScenarioStep { Keyword = "Given", Text = "the system is running", Status = ExecutionResult.Passed },

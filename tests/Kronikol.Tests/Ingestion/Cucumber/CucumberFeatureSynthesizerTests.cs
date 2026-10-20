@@ -41,10 +41,10 @@ public class CucumberFeatureSynthesizerTests
     }
 
     [Fact]
-    public void Feature_tags_become_labels_minus_the_kronikol_conventions()
+    public void Feature_tags_are_the_feature_node_s_tags_less_the_kronikol_conventions()
     {
-        // @feature-tag @category:demo → the category is a Category, not a Label.
-        Assert.Equal(["feature-tag"], Feature(CucumberFixtures.DemoFeature).Labels!);
+        // @feature-tag @category:demo: a category is a tag (F1)
+        Assert.Equal(["feature-tag", "demo"], Feature(CucumberFixtures.DemoFeature).Tags);
     }
 
     [Fact]
@@ -89,19 +89,61 @@ public class CucumberFeatureSynthesizerTests
     }
 
     [Fact]
-    public void Scenario_tags_split_into_labels_categories_and_happy_path()
+    public void Scenario_tags_are_the_pickle_s_less_the_feature_s_and_the_happy_path_is_a_flag()
     {
         var happy = Scenario(CucumberFixtures.DemoFeature, CucumberFixtures.SimpleScenario);
         Assert.True(happy.IsHappyPath);
-        Assert.Null(happy.Labels);                       // @happy-path and @endpoint: are conventions, not labels
-        Assert.Equal(["demo"], happy.Categories!);       // inherited from the feature's @category:demo
+        Assert.Null(happy.Tags);                         // @happy-path and @endpoint: are conventions, not tags
 
         var validation = Scenario(CucumberFixtures.DemoFeature, CucumberFixtures.TableScenario);
         Assert.False(validation.IsHappyPath);
-        Assert.Equal(["demo", "validation"], validation.Categories!);
+        // the feature's @category:demo is the feature's, as is every tag the pickle inherits from it
+        Assert.Equal(["validation"], validation.Tags);
 
-        var failing = Scenario(CucumberFixtures.DemoFeature, CucumberFixtures.FailingScenario);
-        Assert.Contains("failing", failing.Labels!);
+        Assert.Equal(["failing"], Scenario(CucumberFixtures.DemoFeature, CucumberFixtures.FailingScenario).Tags);
+        // the outline's own @category:demo repeats the feature's (§4.3)
+        Assert.Null(Outline("overview").Tags);
+    }
+
+    /// <summary>
+    /// A feature with a tag, a rule with a tag and one scenario in it, and a scenario outside the rule. A pickle carries
+    /// every tag in its scope, the feature's and its rule's included.
+    /// </summary>
+    private static string RuleTagsStream() =>
+        """
+        {"gherkinDocument":{"uri":"features/rules.feature","feature":{"keyword":"Feature","name":"Rules","tags":[{"name":"@feature","id":"t-f"}],"children":[{"rule":{"id":"r-1","keyword":"Rule","name":"Refunds need a receipt","tags":[{"name":"@rule-tag","id":"t-r"}],"children":[{"scenario":{"id":"sc-1","keyword":"Scenario","name":"in the rule","tags":[{"name":"@own","id":"t-o"}],"steps":[]}}]}},{"scenario":{"id":"sc-2","keyword":"Scenario","name":"outside the rule","tags":[],"steps":[]}}]}}}
+        {"pickle":{"id":"pk-1","uri":"features/rules.feature","astNodeIds":["sc-1"],"name":"in the rule","language":"en","steps":[],"tags":[{"name":"@feature","astNodeId":"t-f"},{"name":"@rule-tag","astNodeId":"t-r"},{"name":"@own","astNodeId":"t-o"}]}}
+        {"pickle":{"id":"pk-2","uri":"features/rules.feature","astNodeIds":["sc-2"],"name":"outside the rule","language":"en","steps":[],"tags":[{"name":"@feature","astNodeId":"t-f"}]}}
+        {"testCase":{"id":"tc-1","pickleId":"pk-1","testSteps":[]}}
+        {"testCase":{"id":"tc-2","pickleId":"pk-2","testSteps":[]}}
+        {"testCaseStarted":{"id":"att-1","attempt":0,"testCaseId":"tc-1","timestamp":{"seconds":1787393374,"nanos":0}}}
+        {"testCaseFinished":{"testCaseStartedId":"att-1","timestamp":{"seconds":1787393375,"nanos":0}}}
+        {"testCaseStarted":{"id":"att-2","attempt":0,"testCaseId":"tc-2","timestamp":{"seconds":1787393376,"nanos":0}}}
+        {"testCaseFinished":{"testCaseStartedId":"att-2","timestamp":{"seconds":1787393377,"nanos":0}}}
+        """;
+
+    [Fact]
+    public void A_rule_s_tags_reach_its_scenarios_and_no_others()
+    {
+        // F10: 4.x read a scenario's labels from its own tags and its Examples block's, so a rule's tags reached no one
+        var feature = CucumberFeatureSynthesizer.Build(CucumberMessagesReader.Read(new StringReader(RuleTagsStream()))).Features.Single();
+
+        Assert.Equal(["feature"], feature.Tags);
+        Assert.Equal(["rule-tag", "own"], feature.Scenarios.Single(s => s.DisplayName == "in the rule").Tags);
+        Assert.Null(feature.Scenarios.Single(s => s.DisplayName == "outside the rule").Tags);
+    }
+
+    [Fact]
+    public void A_feature_s_or_a_rule_s_happy_path_tag_marks_none_of_its_scenarios()
+    {
+        // §4.5: a scenario's happy path is read from its own tags and its Examples block's, as before; a feature's or a
+        // rule's happy-path tag is neither its scenarios' happy path nor a tag
+        var stream = RuleTagsStream().Replace("@rule-tag", "@happy-path").Replace("\"@feature\"", "\"@happy-path\"");
+        var feature = CucumberFeatureSynthesizer.Build(CucumberMessagesReader.Read(new StringReader(stream))).Features.Single();
+
+        Assert.Null(feature.Tags);
+        Assert.All(feature.Scenarios, s => Assert.False(s.IsHappyPath));
+        Assert.Equal(["own"], feature.Scenarios.Single(s => s.DisplayName == "in the rule").Tags);
     }
 
     // ---- steps ----------------------------------------------------------------------------------
@@ -308,12 +350,15 @@ public class CucumberFeatureSynthesizerTests
     // ---- retries --------------------------------------------------------------------------------
 
     [Fact]
-    public void The_last_attempt_wins_and_the_earlier_one_leaves_a_retry_label()
+    public void The_last_attempt_wins_and_no_retry_tag_is_made()
     {
         var flaky = Scenario(CucumberFixtures.RetryFeature, CucumberFixtures.FlakyScenario);
 
         Assert.Equal(ExecutionResult.Passed, flaky.Result);       // attempt 2 passed
-        Assert.Contains("retry 1", flaky.Labels!);
+        // Q6: the report draws retry 1 from the attempt; a tag would be a chip
+        Assert.Equal(2, flaky.Attempt);
+        Assert.Null(flaky.Tags);
+        Assert.Equal(["retry-demo"], Feature(CucumberFixtures.RetryFeature).Tags);
     }
 
     // ---- attachments and identity ----------------------------------------------------------------
@@ -552,16 +597,14 @@ public class CucumberFeatureSynthesizerTests
     [Fact]
     public void A_retried_scenario_records_which_attempt_finally_ran()
     {
-        // The `retry N` label has always been there; it is a display artefact a filter can match, not
-        // something a consumer of the data file can read. The field says the same thing structurally,
-        // and uses the SAME 1-based numbering as the label - Cucumber's own `attempt` is 0-based, and a
-        // field that disagreed with the label printed beside it would be worse than no field.
+        // 1-based, as the retry N label 4.x made for each earlier attempt was numbered (Attempt + 1 of each), so the
+        // report's badge, retry 1 for a second attempt, reads what the label read. Cucumber's own attempt is 0-based.
         var result = CucumberFixtures.Build();
         var flaky = result.Features.SelectMany(f => f.Scenarios)
             .Single(s => s.DisplayName == CucumberFixtures.FlakyScenario);
 
         Assert.Equal(2, flaky.Attempt);
-        Assert.Contains("retry 1", flaky.Labels ?? []);
+        Assert.DoesNotContain("retry 1", flaky.Tags ?? []);
 
         var first = result.Features.SelectMany(f => f.Scenarios)
             .Single(s => s.DisplayName == CucumberFixtures.SimpleScenario);

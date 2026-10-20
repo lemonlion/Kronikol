@@ -64,10 +64,13 @@ function jump_into_view(target, block) {
     });
 }
 // The page's link carries every filter (5.0.0, plans/OPTION_C_PLAN.md S5, Q5: hash v2). Each 4.x parameter keeps its
-// meaning, so a link copied from a 4.x report opens the same view: deps= and cats= are the chosen chips, hp=1 is Happy
-// paths Only, depmode= and catmode= the modes. What 4.x could not say rides parameters of its own: depx=, catx=, tags=,
-// tagx= for the chips left out and the chosen tags, tagmode=, and hpx=1 for Happy paths Hide. A chip for the scenarios
-// with none is written by its reserved value (__none__, __uncategorized__, __untagged__).
+// meaning, so a link copied from a 4.x report opens the same view: deps= is the chosen dependencies and depmode= their
+// mode, hp=1 is Happy paths Only, and cats= and catmode=, a 4.x report's categories, are read as tags now that a
+// category is a tag (plans/TAGS_PLAN.md §4.10). What 4.x could not say rides parameters of its own: depx= for the
+// dependencies left out, tags= and tagx= for the tags chosen and left out, tagmode=, and hpx=1 for Happy paths Hide. The
+// tags' names are percent-encoded one by one and joined with commas, so a comma inside a name stays in it. A chip for
+// the scenarios with none is written by its reserved value (__none__, __untagged__), and a 4.x link's
+// __uncategorized__ is read as __untagged__.
 function update_url_hash() {
     var parts = [];
     var search = document.getElementById('searchbar');
@@ -76,18 +79,16 @@ function update_url_hash() {
     document.querySelectorAll('.status-toggle.status-active').forEach(function(b) { statuses.push(b.getAttribute('data-status')); });
     if (statuses.length > 0) parts.push('status=' + statuses.join(','));
     function list(key, values) { if (values.length > 0) parts.push(key + '=' + encodeURIComponent(values.join(','))); }
+    function names(key, values) { if (values.length > 0) parts.push(key + '=' + values.map(encodeURIComponent).join(',')); }
     list('deps', chip_values('dependency', 'in'));
     list('depx', chip_values('dependency', 'out'));
     if (_depMode !== _depModeDefault) parts.push('depmode=' + _depMode);
-    if (typeof _catMode !== 'undefined' && _catMode !== _catModeDefault) parts.push('catmode=' + _catMode);
     var happy = find_chip('tag', HAPPY_PATH_TAG), happyState = happy ? chip_state(happy) : 'off';
     if (happyState === 'in') parts.push('hp=1');
     if (happyState === 'out') parts.push('hpx=1');
-    list('cats', chip_values('category', 'in'));
-    list('catx', chip_values('category', 'out'));
     function notHappy(v) { return v !== HAPPY_PATH_TAG; }
-    list('tags', chip_values('tag', 'in').filter(notHappy));
-    list('tagx', chip_values('tag', 'out').filter(notHappy));
+    names('tags', chip_values('tag', 'in').filter(notHappy));
+    names('tagx', chip_values('tag', 'out').filter(notHappy));
     if (_tagMode !== _tagModeDefault) parts.push('tagmode=' + _tagMode);
     var dur = document.getElementById('duration-threshold');
     if (dur && dur.value) parts.push('dur=' + dur.value);
@@ -104,53 +105,73 @@ function parse_url_hash() {
     var hash = window.location.hash.substring(1);
     if (!hash) return;
     var anchor = current_url_anchor();
-    var params = {};
+    // Each parameter is read on its own, so one that does not decode, or a filter that fails on it, loses only itself and
+    // the rest still apply (plans/TAGS_PLAN.md §4.10). raw keeps each value as written: the tags' names decode one by one.
+    var params = {}, raw = {};
     hash.split('&').forEach(function(p) {
         var kv = p.split('=');
-        if (kv.length === 2) params[kv[0]] = decodeURIComponent(kv[1]);
+        if (kv.length !== 2) return;
+        raw[kv[0]] = kv[1];
+        try { params[kv[0]] = decodeURIComponent(kv[1]); } catch (e) { }
     });
-    if (params.q) {
-        var sb = document.getElementById('searchbar');
-        if (sb) { sb.value = params.q; run_search_scenarios(); }
+    function step(apply) { try { apply(); } catch (e) { } }
+    function split(value) { return value === undefined ? undefined : value.split(','); }
+    // the tags' names, each decoded on its own; one that does not decode is left out
+    function tagNames(value) {
+        if (value === undefined) return undefined;
+        return value.split(',').map(function(v) { try { return decodeURIComponent(v); } catch (e) { return null; } })
+            .filter(function(v) { return v !== null && v !== ''; });
     }
-    if (params.status) {
-        params.status.split(',').forEach(function(s) {
-            var btn = document.querySelector('.status-toggle[data-status="' + s + '"]');
-            if (btn) btn.classList.add('status-active');
-        });
-        filter_statuses();
-    }
+    step(function() {
+        if (params.q) {
+            var sb = document.getElementById('searchbar');
+            if (sb) { sb.value = params.q; run_search_scenarios(); }
+        }
+    });
+    step(function() {
+        if (params.status) {
+            params.status.split(',').forEach(function(s) {
+                document.querySelectorAll('.status-toggle').forEach(function(btn) {
+                    if (btn.getAttribute('data-status') === s) btn.classList.add('status-active');
+                });
+            });
+            filter_statuses();
+        }
+    });
     // Both values are accepted symmetrically: a deep link from an AND-default report must
     // force AND on an OR-default report and vice versa (configured defaults mean either
-    // value can differ from this report's own start mode).
+    // value can differ from this report's own start mode). A 4.x link's catmode= sets the tags' mode when it has no tagmode=.
     if (params.depmode === 'OR' || params.depmode === 'AND') {
         _depMode = params.depmode;
         set_mode_button(document.querySelector('.dep-mode-toggle'), _depMode);
     }
-    if (params.catmode === 'AND' || params.catmode === 'OR') {
-        _catMode = params.catmode;
-        set_mode_button(document.querySelector('.cat-mode-toggle'), _catMode);
-    }
-    if (params.tagmode === 'AND' || params.tagmode === 'OR') {
-        _tagMode = params.tagmode;
+    var tagMode = params.tagmode !== undefined ? params.tagmode : params.catmode;
+    if (tagMode === 'AND' || tagMode === 'OR') {
+        _tagMode = tagMode;
         set_mode_button(document.querySelector('.tag-mode-toggle'), _tagMode);
     }
-    // a 4.x report drew the participant of a diagram with no call as a dependency: a link that chose it means none
-    function chips(family, value, state) {
-        if (value === undefined) return false;
-        value.split(',').forEach(function(v) {
+    // a 4.x report drew the participant of a diagram with no call as a dependency: a link that chose it means none, and a
+    // 4.x link's Uncategorized chip is the Untagged one
+    function chips(family, values, state) {
+        if (values === undefined) return false;
+        values.forEach(function(v) {
             var b = find_chip(family, v);
             if (!b && family === 'dependency' && v === '(no interactions)') b = find_chip(family, '__none__');
+            if (!b && family === 'tag' && v === '__uncategorized__') b = find_chip(family, '__untagged__');
             if (b) set_chip_state(b, state);
         });
         return true;
     }
-    var deps = chips('dependency', params.deps, 'in') | chips('dependency', params.depx, 'out');
-    if (deps || params.depmode) filter_dependencies();
-    var tags = chips('tag', params.tags, 'in') | chips('tag', params.tagx, 'out');
-    var happy = find_chip('tag', HAPPY_PATH_TAG);
-    if (happy && (params.hp === '1' || params.hpx === '1')) { set_chip_state(happy, params.hp === '1' ? 'in' : 'out'); tags = true; }
-    if (tags || params.tagmode) filter_tags();
+    step(function() {
+        var deps = chips('dependency', split(params.deps), 'in') | chips('dependency', split(params.depx), 'out');
+        if (deps || params.depmode) filter_dependencies();
+    });
+    step(function() {
+        var tags = chips('tag', tagNames(raw.tags), 'in') | chips('tag', tagNames(raw.tagx), 'out') | chips('tag', split(params.cats), 'in');
+        var happy = find_chip('tag', HAPPY_PATH_TAG);
+        if (happy && (params.hp === '1' || params.hpx === '1')) { set_chip_state(happy, params.hp === '1' ? 'in' : 'out'); tags = true; }
+        if (tags || tagMode) filter_tags();
+    });
     if (params.pctl) {
         document.querySelectorAll('.percentile-btn').forEach(function(b) {
             if (b.textContent === params.pctl) {
@@ -166,8 +187,6 @@ function parse_url_hash() {
         var dur = document.getElementById('duration-threshold');
         if (dur) { dur.value = params.dur; filter_duration(); }
     }
-    var cats = chips('category', params.cats, 'in') | chips('category', params.catx, 'out');
-    if (cats || params.catmode) filter_categories();
     // Last, because a filter pass can collapse what the anchor has to open, and the scroll has to
     // land on the layout the filters produced rather than the one they replaced.
     if (anchor) reveal_url_anchor(anchor);

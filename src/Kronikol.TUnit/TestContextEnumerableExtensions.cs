@@ -15,7 +15,7 @@ internal static class TestContextEnumerableExtensions
             .Select(scenariosForFeature =>
             {
                 var featureClass = scenariosForFeature.First();
-                var categories = featureClass.Metadata.TestDetails.Categories;
+                var featureTags = TestTags.OfFeature(featureClass.Metadata.TestDetails.ClassType);
 
                 string? endpoint = null;
                 if (featureClass.Metadata.TestDetails.CustomProperties.TryGetValue(EndpointAttribute.EndpointPropertyKey, out var endpointValue))
@@ -25,9 +25,10 @@ internal static class TestContextEnumerableExtensions
                 {
                     DisplayName = ScenarioTitleResolver.FormatFeatureName(scenariosForFeature.Key),
                     Endpoint = endpoint,
+                    Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenariosForFeature
                         .DistinctBy(x => x.Id)
-                        .OrderByDescending(x => x.Metadata.TestDetails.Categories.Contains(HappyPathAttribute.HappyPathCategoryKey))
+                        .OrderByDescending(x => TestTags.OfScenario(x.Metadata.TestDetails.Categories, featureTags).IsHappyPath)
                         .ThenBy(x => x.Metadata.DisplayName)
                         .Select(x =>
                         {
@@ -39,13 +40,15 @@ internal static class TestContextEnumerableExtensions
                             var parsed = structuredParams ?? ParameterParser.Parse(displayName);
 
                             var result = x.Execution.Result?.State.ToExecutionResult() ?? ExecutionResult.Skipped;
+                            var own = TestTags.OfScenario(x.Metadata.TestDetails.Categories, featureTags);
 
                             return new Scenario
                             {
                                 Id = x.Id,
                                 Result = result,
                                 DisplayName = displayName,
-                                IsHappyPath = x.Metadata.TestDetails.Categories.Contains(HappyPathAttribute.HappyPathCategoryKey),
+                                IsHappyPath = own.IsHappyPath,
+                                Tags = own.Tags.Length > 0 ? own.Tags : null,
                                 ErrorMessage = ScenarioOutcome.Message(result, x.Execution.Result?.Exception),
                                 ErrorStackTrace = ScenarioOutcome.StackTrace(result, x.Execution.Result?.Exception),
                                 Duration = ScenarioOutcome.Duration(x.Execution.Result?.Duration, x.Execution.Result?.Start),

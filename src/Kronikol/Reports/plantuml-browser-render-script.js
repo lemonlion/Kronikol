@@ -175,7 +175,7 @@
             return '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
                 + '<strong>Diagram too large for client-side rendering.</strong><br>'
                 + 'Use <code>PlantUmlRendering.Server</code> or <code>PlantUmlRendering.Local</code> for large diagrams.'
-                + '<details style="margin-top:0.5em"><summary>Raw PlantUML</summary><pre style="white-space:pre-wrap">'
+                + '<details style="margin-top:0.5em"><summary title="The PlantUML source this diagram was drawn from">Raw PlantUML</summary><pre style="white-space:pre-wrap">'
                 + escapeMarkupText(source || '') + '</pre></details></div>';
         }
         function writeFailure(target, source, message) {
@@ -1166,7 +1166,7 @@
             if (!el) return false;
             var text = el.textContent || '';
             var svg = el.querySelector('svg');
-            var rawDetails = '<details style="margin-top:0.5em"><summary>Raw PlantUML</summary><pre style="white-space:pre-wrap">'
+            var rawDetails = '<details style="margin-top:0.5em"><summary title="The PlantUML source this diagram was drawn from">Raw PlantUML</summary><pre style="white-space:pre-wrap">'
                 + escapeMarkupText(source || el.getAttribute('data-plantuml') || '') + '</pre></details>';
             if (!svg && _engineTooLargeRx.test(text)) {
                 el.innerHTML = '<div class="engine-failure" data-engine-failure="too-large" style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
@@ -1317,7 +1317,7 @@
                     item.el.innerHTML = '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
                         + '<strong>Diagram too large for client-side rendering.</strong><br>'
                         + 'Use <code>PlantUmlRendering.Server</code> or <code>PlantUmlRendering.Local</code> for large diagrams.'
-                        + '<details style="margin-top:0.5em"><summary>Raw PlantUML</summary><pre style="white-space:pre-wrap">'
+                        + '<details style="margin-top:0.5em"><summary title="The PlantUML source this diagram was drawn from">Raw PlantUML</summary><pre style="white-space:pre-wrap">'
                         + escapeMarkupText(item.source) + '</pre></details></div>';
                 } else {
                     item.el.textContent = 'Render error: ' + msg;
@@ -1445,6 +1445,31 @@
                         if (window._iflowShowPopup) window._iflowShowPopup(segId);
                     });
                 });
+                // The keyboard reaches the link too (5.0.0, S12): the browser engine draws no <a>, so the link's first
+                // text is its one Tab stop, a link named from all its texts, and Enter or Space opens the popup; where
+                // links show only on hover, focus shows it. A link the Java engine drew keeps its <a> as the stop.
+                var first = groupEls[0], anchor = first.closest ? first.closest('a') : null;
+                var anchored = !!anchor && (anchor.hasAttribute('href') || anchor.hasAttributeNS('http://www.w3.org/1999/xlink', 'href'));
+                if (!anchored && !first._iflowKeys) {
+                    first._iflowKeys = true;
+                    first.setAttribute('tabindex', '0');
+                    first.setAttribute('role', 'link');
+                    first.setAttribute('aria-label', groupEls.map(function(el) { return el.textContent; }).join(' '));
+                    first.addEventListener('keydown', function(ev) {
+                        if (ev.key !== 'Enter' && ev.key !== ' ') return;
+                        ev.preventDefault();
+                        if (window._iflowShowPopup) window._iflowShowPopup(segId);
+                    });
+                    if (hoverOnly) {
+                        first.addEventListener('focus', function() {
+                            groupEls.forEach(function(el, k) {
+                                el.setAttribute('fill', linkFills[k]);
+                                el.setAttribute('text-decoration', 'underline');
+                            });
+                        });
+                        first.addEventListener('blur', atRest);
+                    }
+                }
             }
             // The Java engine's <a>, one or more per link (a label wrapped onto lines), each round that line's text. The
             // popup script takes the href of one whose segment has no data (P5 R2), and so does this; its title still

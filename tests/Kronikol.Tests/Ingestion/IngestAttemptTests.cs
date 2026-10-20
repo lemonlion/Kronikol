@@ -33,6 +33,12 @@ public class IngestAttemptTests : IDisposable
         try { Directory.Delete(_dir, true); } catch { /* best effort */ }
     }
 
+    /// <summary>A scenario's tags as the data file writes them: absent when it has none.</summary>
+    private static string?[] TagsOf(JsonElement scenario) =>
+        scenario.TryGetProperty("tags", out var tags) && tags.ValueKind == JsonValueKind.Array
+            ? tags.EnumerateArray().Select(t => t.GetString()).ToArray()
+            : [];
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -46,13 +52,17 @@ public class IngestAttemptTests : IDisposable
         Assert.False(scenario.TryGetProperty("errorMessage", out _), "the last attempt passed, so the scenario has no error message");
         // A keyword-less label reads as a sentence in the report (--no-capitalise leaves it).
         Assert.Equal(["Attempt two"], scenario.GetProperty("steps").EnumerateArray().Select(s => s.GetProperty("text").GetString()));
-        Assert.Contains("retry 1", scenario.GetProperty("labels").EnumerateArray().Select(l => l.GetString()));
+        // the badge reads retry 1 from the attempt; the data file holds no retry tag (Q6), nor 4.x's labels key
+        Assert.DoesNotContain("retry 1", TagsOf(scenario));
+        Assert.False(scenario.TryGetProperty("labels", out _));
         var calls = scenario.GetProperty("httpInteractions").EnumerateArray().ToArray();
         Assert.Equal(2, calls.Length);
         Assert.All(calls, c => Assert.StartsWith(T0.AddMilliseconds(4000).ToString("yyyy-MM-ddTHH:mm:ss"), c.GetProperty("timestamp").GetString()));
         Assert.Equal("# No failures", File.ReadLines(Path.Combine(_dir, name, "Failures.md")).First());
 
         Assert.Single(result.Diagnostics, d => d.Message.Contains("2 interaction record(s) of earlier attempts", StringComparison.Ordinal));
+        // no lane makes a retry label since 5.0.0, so no diagnostic may promise one (the badge counts the attempts)
+        Assert.DoesNotContain(result.Diagnostics, d => d.Message.Contains("retry label", StringComparison.Ordinal));
         // Without numbers the second start is read as the retry it most likely is, and the report says it did so.
         Assert.Equal(numbered ? 0 : 1, result.Diagnostics.Count(d => d.Message.Contains("more than one start without an attempt number", StringComparison.Ordinal)));
     }
@@ -141,7 +151,7 @@ public class IngestAttemptTests : IDisposable
         Assert.Equal("second-attempt-id", scenario.Id);
         Assert.Equal(ExecutionResult.Passed, scenario.Result);
         Assert.Equal(2, scenario.Attempt);
-        Assert.Contains("retry 1", scenario.Labels!);
+        Assert.DoesNotContain("retry 1", scenario.Tags ?? []);
         Assert.Equal("# No failures", File.ReadLines(Path.Combine(output, "Failures.md")).First());
         Assert.Single(result.Diagnostics, d => d.Message.Contains("2 interaction record(s) of earlier attempts", StringComparison.Ordinal));
     }

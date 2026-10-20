@@ -2,7 +2,7 @@ namespace Kronikol.Reports;
 
 /// <summary>
 /// Represents a single test scenario in the report, including execution result,
-/// steps, labels, categories, and parameterized example values.
+/// steps, tags, and parameterized example values.
 /// </summary>
 public record Scenario
 {
@@ -37,8 +37,15 @@ public record Scenario
     public ScenarioStep[]? Steps { get; set; }
     public ScenarioStep[]? BackgroundSteps { get; set; }
     public FileAttachment[]? Attachments { get; set; }
-    public string[]? Labels { get; set; }
-    public string[]? Categories { get; set; }
+
+    /// <summary>
+    /// The scenario's own tags: those written on it and, in Gherkin, on its rule and its Examples block, each once in
+    /// the first spelling met (<see cref="ScenarioTags.Comparer"/>). The lanes leave out a tag its feature carries
+    /// (<see cref="Feature.Tags"/>), except the tests NDJSON lane, which lifts the tags every scenario of a feature shares
+    /// to the feature and leaves them here too. Kronikol's own markers, the endpoint and the happy path, are not tags.
+    /// Null when there are none. The report filters and searches on the effective tags: its feature's, then these.
+    /// </summary>
+    public string[]? Tags { get; set; }
     public string? Rule { get; set; }
     public string? OutlineId { get; set; }
     public Dictionary<string, string>? ExampleValues { get; set; }
@@ -59,9 +66,9 @@ public record Scenario
     /// Which run of this scenario produced the result, when the runner retries: 1 for the first, 2 for
     /// the first retry. Null where the runner reports nothing about attempts: every in-process lane today;
     /// the ingest lanes set it from Cucumber Messages and from a tests NDJSON's <c>attempt</c> or its
-    /// repeated <c>start</c> records. <b>1-based deliberately</b>, matching the <c>retry N</c> label rendered
-    /// beside it - Cucumber's own wire value is 0-based, and a field that disagreed with the label on
-    /// the same scenario would be worse than no field.
+    /// repeated <c>start</c> records. <b>1-based deliberately</b>: the report's retry badge reads <c>retry 1</c>
+    /// for a second attempt, as the <c>retry N</c> label 4.x's ingest lanes wrote beside it did. Cucumber's own wire
+    /// value is 0-based.
     /// </summary>
     public int? Attempt { get; set; }
 

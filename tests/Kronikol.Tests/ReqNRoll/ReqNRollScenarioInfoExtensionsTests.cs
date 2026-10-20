@@ -140,7 +140,7 @@ public class ReqNRollScenarioInfoExtensionsTests
     }
 
     [Fact]
-    public void ToFeatures_maps_tags_to_scenario_labels_excluding_special_tags()
+    public void ToFeatures_maps_tags_to_the_scenario_s_tags_less_the_happy_path_and_the_endpoint()
     {
         var info = MakeScenario(
             scenarioTags: ["smoke", "happy-path", "regression"],
@@ -149,18 +149,17 @@ public class ReqNRollScenarioInfoExtensionsTests
         var features = new[] { info }.ToFeatures();
         var scenario = features[0].Scenarios[0];
 
-        Assert.NotNull(scenario.Labels);
-        Assert.Contains("smoke", scenario.Labels!);
-        Assert.Contains("regression", scenario.Labels!);
-        Assert.DoesNotContain("happy-path", scenario.Labels!);
+        Assert.Equal(["smoke", "regression"], scenario.Tags);
+        Assert.True(scenario.IsHappyPath);
+        Assert.Equal("GET /api", features[0].Endpoint);
     }
 
     [Fact]
-    public void ToFeatures_leaves_labels_null_when_only_special_tags()
+    public void ToFeatures_leaves_tags_null_when_only_special_tags()
     {
         var info = MakeScenario(scenarioTags: ["happy-path"]);
         var features = new[] { info }.ToFeatures();
-        Assert.Null(features[0].Scenarios[0].Labels);
+        Assert.Null(features[0].Scenarios[0].Tags);
     }
 
     // ─── Step status mapping ────────────────────────────────
@@ -271,28 +270,17 @@ public class ReqNRollScenarioInfoExtensionsTests
         Assert.Equal("""{"name":"test"}""", features[0].Scenarios[0].Steps![0].DocString);
     }
 
-    // ─── Categories mapping ────────────────────────────────
+    // ─── A category is a tag ────────────────────────────────
 
     [Fact]
-    public void ToFeatures_maps_category_tags_to_scenario_categories()
+    public void ToFeatures_reads_a_category_tag_as_the_tag_it_names()
     {
+        // F1: @category:Integration was a category and @smoke a label; @smoke and @category:smoke are one tag now
         var info = MakeScenario(
-            scenarioTags: ["smoke", "category:Integration"],
-            combinedTags: ["smoke", "category:Integration"]);
-        var features = new[] { info }.ToFeatures();
-        var scenario = features[0].Scenarios[0];
+            scenarioTags: ["smoke", "category:Integration", "category:smoke"],
+            combinedTags: ["smoke", "category:Integration", "category:smoke"]);
 
-        Assert.NotNull(scenario.Categories);
-        Assert.Equal(["Integration"], scenario.Categories!);
-        Assert.DoesNotContain("category:Integration", scenario.Labels!);
-    }
-
-    [Fact]
-    public void ToFeatures_leaves_categories_null_when_no_category_tags()
-    {
-        var info = MakeScenario(scenarioTags: ["smoke"]);
-        var features = new[] { info }.ToFeatures();
-        Assert.Null(features[0].Scenarios[0].Categories);
+        Assert.Equal(["smoke", "Integration"], new[] { info }.ToFeatures()[0].Scenarios[0].Tags);
     }
 
     // ─── Rule mapping ────────────────────────────────
@@ -335,20 +323,78 @@ public class ReqNRollScenarioInfoExtensionsTests
         Assert.Equal("GBP", features[0].Scenarios[0].ExampleValues!["currency"]);
     }
 
-    // ─── Feature labels mapping ────────────────────────────────
+    // ─── Feature tags (plans/TAGS_PLAN.md §4.5, F9) ────────────────────────────────
 
     [Fact]
-    public void ToFeatures_maps_feature_level_labels_from_combined_tags()
+    public void ToFeatures_gives_the_feature_the_tags_of_its_feature_info()
     {
         var info = MakeScenario(
             scenarioTags: ["scenario-tag"],
-            combinedTags: ["feature-api", "scenario-tag", "endpoint:GET /api"]);
+            combinedTags: ["feature-api", "scenario-tag", "endpoint:GET /api"]) with { FeatureTags = ["feature-api", "endpoint:GET /api"] };
         var features = new[] { info }.ToFeatures();
 
-        Assert.NotNull(features[0].Labels);
-        Assert.Contains("feature-api", features[0].Labels!);
-        Assert.DoesNotContain("scenario-tag", features[0].Labels!);
-        Assert.DoesNotContain("endpoint:GET /api", features[0].Labels!);
+        Assert.Equal(["feature-api"], features[0].Tags);
+        Assert.Equal(["scenario-tag"], features[0].Scenarios[0].Tags);
+        Assert.Equal("GET /api", features[0].Endpoint);
+    }
+
+    [Fact]
+    public void A_feature_tag_the_first_scenario_repeats_stays_on_the_feature()
+    {
+        // F9: 4.x took the feature's tags as the first scenario's combined tags less its own, so a feature tag that
+        // scenario also carried left the feature, and every other scenario lost it
+        var first = MakeScenario("s1", "First", scenarioTags: ["api"], combinedTags: ["api", "api"]) with { FeatureTags = ["api"] };
+        var second = MakeScenario("s2", "Second", scenarioTags: [], combinedTags: ["api"]) with { FeatureTags = ["api"] };
+
+        var feature = new[] { first, second }.ToFeatures().Single();
+
+        Assert.Equal(["api"], feature.Tags);
+        // the first scenario's api is the feature's (§4.3)
+        Assert.All(feature.Scenarios, s => Assert.Null(s.Tags));
+    }
+
+    [Fact]
+    public void A_rule_s_tags_reach_that_rule_s_scenarios_and_no_others()
+    {
+        // F9: 4.x lifted the first scenario's rule tags to the feature, so they reached every scenario, other rules' too
+        var inRule = MakeScenario("s1", "In the rule", scenarioTags: ["own"], combinedTags: ["feature", "rule-tag", "own"])
+            with { FeatureTags = ["feature"], Rule = "Refunds" };
+        var outside = MakeScenario("s2", "Outside", scenarioTags: [], combinedTags: ["feature"]) with { FeatureTags = ["feature"] };
+
+        var feature = new[] { inRule, outside }.ToFeatures().Single();
+
+        Assert.Equal(["feature"], feature.Tags);
+        Assert.Equal(["rule-tag", "own"], feature.Scenarios.Single(s => s.Id == "s1").Tags);
+        Assert.Null(feature.Scenarios.Single(s => s.Id == "s2").Tags);
+    }
+
+    [Fact]
+    public void A_feature_s_or_a_rule_s_happy_path_tag_marks_none_of_its_scenarios()
+    {
+        // §4.5: the happy path is read from a scenario's own tags and its Examples block's (ScenarioInfo.Tags), as before
+        var inRule = MakeScenario("s1", "In the rule", scenarioTags: ["own"], combinedTags: ["happy-path", "Happy Path", "own"])
+            with { FeatureTags = ["happy-path"], Rule = "Refunds" };
+        var outside = MakeScenario("s2", "Outside", scenarioTags: [], combinedTags: ["happy-path"]) with { FeatureTags = ["happy-path"] };
+
+        var feature = new[] { inRule, outside }.ToFeatures().Single();
+
+        Assert.Null(feature.Tags);
+        Assert.All(feature.Scenarios, s => Assert.False(s.IsHappyPath));
+        Assert.Equal(["own"], feature.Scenarios.Single(s => s.Id == "s1").Tags);
+    }
+
+    [Fact]
+    public void The_endpoint_is_the_feature_s_and_else_its_first_scenario_s_that_has_one()
+    {
+        var fromFeature = MakeScenario("s1", "A", featureTitle: "One", combinedTags: ["endpoint:/b", "endpoint:/a"])
+            with { FeatureTags = ["endpoint:/a"] };
+        var none = MakeScenario("s2", "B", featureTitle: "Two");
+        var fromScenario = MakeScenario("s3", "C", featureTitle: "Two", combinedTags: ["endpoint:/c"]);
+
+        var features = new[] { fromFeature, none, fromScenario }.ToFeatures();
+
+        Assert.Equal("/a", features.Single(f => f.DisplayName == "One").Endpoint);
+        Assert.Equal("/c", features.Single(f => f.DisplayName == "Two").Endpoint);
     }
 
     // ─── Feature name titleization ────────────────────────────────

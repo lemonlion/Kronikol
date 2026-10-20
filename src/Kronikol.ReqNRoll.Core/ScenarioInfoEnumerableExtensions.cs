@@ -15,20 +15,17 @@ internal static class ScenarioInfoEnumerableExtensions
             .Select(featureGroup =>
             {
                 var firstScenario = featureGroup.First();
-                var endpoint = firstScenario.CombinedTags
-                    .FirstOrDefault(t => t.StartsWith(ReqNRollConstants.EndpointTagPrefix, StringComparison.OrdinalIgnoreCase))
-                    ?[ReqNRollConstants.EndpointTagPrefix.Length..];
-
-                var featureLabels = firstScenario.CombinedTags
-                    .Where(t => !HappyPathDetection.IsHappyPathTag(t)
-                             && !t.StartsWith(ReqNRollConstants.EndpointTagPrefix, StringComparison.OrdinalIgnoreCase)
-                             && !t.StartsWith(ReqNRollConstants.CategoryTagPrefix, StringComparison.OrdinalIgnoreCase)
-                             && !firstScenario.ScenarioTags.Contains(t, StringComparer.OrdinalIgnoreCase))
-                    .ToArray();
+                // The feature's own tags, FeatureInfo.Tags (F9: 4.x took the first scenario's combined tags less its own,
+                // which lost a feature tag it repeated and lifted its rule's to every scenario). The endpoint is the
+                // feature's, else the first scenario's that has one.
+                var feature = ScenarioTags.Classify(firstScenario.FeatureTags);
+                var featureTags = feature.Tags;
+                var endpoint = feature.Endpoint
+                    ?? featureGroup.Select(s => ScenarioTags.Classify(s.CombinedTags).Endpoint).FirstOrDefault(e => e is not null);
 
                 var scenarios = featureGroup
                         .DistinctBy(x => x.ScenarioId)
-                        .OrderByDescending(x => HappyPathDetection.AnyHappyPathTag(x.ScenarioTags))
+                        .OrderByDescending(x => ScenarioTags.Classify(x.ScenarioTags).IsHappyPath)
                         .ThenBy(x => x.ScenarioTitle)
                         // Rows must group by their Examples: block before the value ordering, or
                         // rows from different blocks interleave. Blockless rows sort last (never
@@ -39,23 +36,16 @@ internal static class ScenarioInfoEnumerableExtensions
                             : "")
                         .Select(x =>
                         {
-                            var labels = x.ScenarioTags
-                                .Where(t => !HappyPathDetection.IsHappyPathTag(t)
-                                         && !t.StartsWith(ReqNRollConstants.EndpointTagPrefix, StringComparison.OrdinalIgnoreCase)
-                                         && !t.StartsWith(ReqNRollConstants.CategoryTagPrefix, StringComparison.OrdinalIgnoreCase))
-                                .ToArray();
-
-                            var categories = x.CombinedTags
-                                .Where(t => t.StartsWith(ReqNRollConstants.CategoryTagPrefix, StringComparison.OrdinalIgnoreCase))
-                                .Select(t => t[ReqNRollConstants.CategoryTagPrefix.Length..])
-                                .ToArray();
+                            // its combined tags (its own, its rule's and its Examples block's among them) less its
+                            // feature's (plans/TAGS_PLAN.md §4.5); the happy path from its own and its Examples block's
+                            var tags = ScenarioTags.Classify(x.CombinedTags).Tags.Except(featureTags, ScenarioTags.Comparer).ToArray();
 
                             return new Scenario
                             {
                                 Id = x.ScenarioId,
                                 DisplayName = x.ScenarioTitle,
                                 Description = GherkinText.NullIfBlank(GherkinText.Dedent(x.ScenarioDescription)),
-                                IsHappyPath = HappyPathDetection.AnyHappyPathTag(x.ScenarioTags),
+                                IsHappyPath = ScenarioTags.Classify(x.ScenarioTags).IsHappyPath,
                                 Result = x.ExecutionStatus.ToExecutionResult(),
                                 ErrorMessage = x.TestError?.Message,
                                 ErrorStackTrace = x.TestError?.StackTrace,
@@ -64,8 +54,7 @@ internal static class ScenarioInfoEnumerableExtensions
                                 Steps = x.Steps.Count > 0
                                     ? MapSteps(x.Steps, StepCollector.GetSteps(x.ScenarioId))
                                     : null,
-                                Labels = labels.Length > 0 ? labels : null,
-                                Categories = categories.Length > 0 ? categories : null,
+                                Tags = tags.Length > 0 ? tags : null,
                                 Rule = x.Rule,
                                 SourceFile = x.SourceFile,
                                 SourceLine = x.SourceLine,
@@ -90,7 +79,7 @@ internal static class ScenarioInfoEnumerableExtensions
                     // Scenarios are grouped by feature title, so any member's path is the feature's -
                     // and the first that has one wins, matching the Cucumber lane.
                     SourceFile = featureGroup.Select(x => x.SourceFile).FirstOrDefault(f => f is not null),
-                    Labels = featureLabels.Length > 0 ? featureLabels : null,
+                    Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenarios
                 };
             }).ToArray();

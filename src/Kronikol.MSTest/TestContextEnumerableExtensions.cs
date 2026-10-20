@@ -13,26 +13,31 @@ internal static class TestContextEnumerableExtensions
             .Select(scenariosForFeature =>
             {
                 var firstScenario = scenariosForFeature.First();
+                var featureTags = ScenarioTags.Classify(firstScenario.FeatureTags).Tags;
 
                 return new Feature
                 {
                     DisplayName = firstScenario.TestClassSimpleName.Titleize(),
                     Endpoint = firstScenario.Endpoint,
+                    Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenariosForFeature
                         .DistinctBy(x => x.TestId)
-                        .OrderByDescending(x => x.IsHappyPath)
+                        .OrderByDescending(x => x.IsHappyPath || ScenarioTags.Classify(x.Tags).IsHappyPath)
                         .ThenBy(x => x.TestMethodName)
                         .Select(x =>
                         {
                             var displayName = ScenarioTitleResolver.FormatScenarioDisplayName(x.TestDisplayName ?? x.TestMethodName);
                             var parsed = ParameterParser.Parse(displayName);
                             parsed = RebindParameterNames(parsed, x.ParameterNames);
+                            var classified = ScenarioTags.Classify(x.Tags);
+                            var tags = classified.Tags.Except(featureTags, ScenarioTags.Comparer).ToArray();
                             return new Scenario
                             {
                                 Id = x.TestId,
                                 Result = x.Outcome.ToExecutionResult(),
                                 DisplayName = displayName,
-                                IsHappyPath = x.IsHappyPath,
+                                IsHappyPath = x.IsHappyPath || classified.IsHappyPath,
+                                Tags = tags.Length > 0 ? tags : null,
                                 ErrorMessage = x.ErrorMessage,
                                 ErrorStackTrace = x.ErrorStackTrace,
                                 FailureCause = x.FailureCause,

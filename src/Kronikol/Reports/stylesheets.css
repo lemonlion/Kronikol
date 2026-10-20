@@ -119,12 +119,6 @@
             padding-bottom: 0;
             overflow-x: auto;
         }
-
-        body > details > details > details.example {
-            background-color: white;
-            padding: 1em;
-            margin-top: 0;
-        }
         
         .h2 {
             font-size: 15px;
@@ -186,13 +180,6 @@
         .run-stat dd code { padding: 0; background: none; font-family: var(--kron-mono); font-size: 13px; }
         .run-link { color: var(--kron-accent); font-family: var(--kron-font); text-decoration: none; }
         .run-link:hover { text-decoration: underline; }
-
-
-
-
-
-        @media (min-width: 768.02px) {
-        }
 
         .filtering-box {
             min-width: 0;
@@ -262,7 +249,7 @@
         }
 
         #searchbar:disabled {
-            background: rgb(245, 245, 245);
+            background: var(--kron-strip);
             cursor: not-allowed;
         }
         #searchbar::placeholder { color: var(--kron-faint); opacity: 1; }
@@ -286,14 +273,13 @@
         .more-filters[aria-expanded="true"] svg { transform: rotate(180deg); }
         .more-filters-count {
             display: inline-block; min-width: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px;
-            background: var(--kron-accent); color: var(--kron-on-solid); font-size: var(--kron-fs-label); font-weight: 600;
+            background: var(--kron-accent); color: var(--kron-on-accent); font-size: var(--kron-fs-label); font-weight: 600;
             line-height: 18px; text-align: center; font-variant-numeric: tabular-nums;
         }
         .more-filters-count[hidden] { display: none; }
-        @media (min-width: 768.02px) {
-            .filtering-box.rows-folded:not(.help-open) > .filters { display: none; }
-            .filtering-box.rows-folded.help-open > .filters > :not(.search-help-panel) { display: none; }
-        }
+        /* the rows fold with one class at every width: More filters sets it on a desktop, the Filters button on a phone */
+        .filtering-box.rows-folded:not(.help-open) > .filters { display: none; }
+        .filtering-box.rows-folded.help-open > .filters > :not(.search-help-panel) { display: none; }
         @media (max-width: 768px) { .more-filters { display: none; } }
         @media (prefers-reduced-motion: reduce) { .more-filters svg { transition: none; } }
         /* the deep search's chip sits inside the field, from its own right edge (D17) */
@@ -331,33 +317,36 @@
             50% { opacity: 0.45; }
         }
 
+        /* The search help, on the theme's tokens (5.0.0, plans/OPTION_C_PLAN.md S13), where its 4.x greys drew a light
+           panel under the dark theme's light ink: the preview's colours (c-extra.css 44-47, c-round5.css 166-169), but
+           for the code, which keeps its chip */
         .search-help-toggle {
             flex-shrink: 0;
             width: 1.6em;
             height: 1.6em;
             border-radius: 50%;
-            border: 1px solid rgb(180, 180, 180);
+            border: 1px solid var(--kron-control-border);
             background: transparent;
             cursor: pointer;
             font-weight: bold;
             font-size: 0.9em;
             line-height: 1;
-            color: rgb(100, 100, 100);
+            color: var(--kron-muted);
             display: flex;
             align-items: center;
             justify-content: center;
         }
         .search-help-toggle:hover {
-            background: rgb(240, 240, 240);
-            color: rgb(50, 50, 50);
+            background: var(--kron-hover);
+            color: var(--kron-ink);
         }
 
         .search-help-panel {
             margin-top: 0.5em;
             padding: 0.8em 1em;
-            border: 1px solid rgb(200, 200, 200);
+            border: 1px solid var(--kron-strip-edge);
             border-radius: 0.5em;
-            background: rgb(250, 250, 250);
+            background: var(--kron-strip);
             font-size: 0.85em;
             line-height: 1.6;
             overflow-x: auto;
@@ -369,31 +358,32 @@
         }
         .search-help-table th {
             text-align: left;
-            border-bottom: 1px solid rgb(200, 200, 200);
+            border-bottom: 1px solid var(--kron-hairline);
             padding: 0.3em 0.6em;
             font-size: 0.9em;
         }
         .search-help-table td {
             padding: 0.25em 0.6em;
-            border-bottom: 1px solid rgb(230, 230, 230);
+            border-bottom: 1px solid var(--kron-hairline-soft);
         }
         .search-help-table code {
-            background: rgb(230, 230, 230);
+            background: var(--kron-code-bg);
             padding: 0.1em 0.3em;
             border-radius: 3px;
             font-size: 0.95em;
         }
         .search-help-note {
             margin: 0.4em 0 0;
-            color: rgb(100, 100, 100);
+            color: var(--kron-muted);
             font-size: 0.9em;
         }
         .search-help-note kbd {
-            background: rgb(230, 230, 230);
-            border: 1px solid rgb(200, 200, 200);
+            background: var(--kron-code-bg);
+            border: 1px solid var(--kron-control-border);
             border-radius: 3px;
             padding: 0.1em 0.4em;
             font-size: 0.9em;
+            color: var(--kron-ink);
         }
 
         .filter-row {
@@ -490,16 +480,16 @@
         /* The filter rows (5.0.0, S5 and S6). Each row is a label in a 92 px column and 8 px, then its controls in a
            wrapping flex of their own, so a second line of chips stays in the control column and the label sits on the
            first chip's baseline. Every boxed control is 28 px: a 16 px line, 5 px of padding each side and the border. */
-        .status-filters, .duration-filters, .happy-filters, .tag-filters, .dependency-filters, .category-filters { display: flex; align-items: baseline; column-gap: 0; margin-top: 10px; }
+        .status-filters, .duration-filters, .happy-filters, .tag-filters, .dependency-filters { display: flex; align-items: baseline; column-gap: 0; margin-top: 10px; }
         .filter-row > .status-filters, .filter-row > .duration-filters, .filter-row > .happy-filters { margin-top: 0; }
         .filter-row > .status-filters { flex: none; flex-wrap: nowrap; }
         .filter-row > .duration-filters, .filter-row > .happy-filters { flex-basis: 100%; }
-        .status-filters-label, .duration-filters-label, .happy-filters-label, .tag-filters-label, .dependency-filters-label, .category-filters-label {
+        .status-filters-label, .duration-filters-label, .happy-filters-label, .tag-filters-label, .dependency-filters-label {
             flex: 0 0 92px; margin-right: 8px; color: var(--kron-label);
             font-size: var(--kron-fs-label); font-weight: 600; line-height: 16px; letter-spacing: var(--kron-label-track); text-transform: uppercase;
         }
         .fltr-controls { display: flex; flex: 1 1 0; flex-wrap: wrap; align-items: baseline; min-width: 0; row-gap: 6px; }
-        .tag-filters .fltr-controls, .dependency-filters .fltr-controls, .category-filters .fltr-controls { column-gap: 6px; }
+        .tag-filters .fltr-controls, .dependency-filters .fltr-controls { column-gap: 6px; }
         .filter-row > .status-filters > .fltr-controls, .happy-filters > .fltr-controls { flex: none; flex-wrap: nowrap; }
 
         /* Status, Duration and Happy paths: segmented radio groups, the chosen segment drawn over its neighbours' edge */
@@ -514,27 +504,31 @@
             position: relative; z-index: 1; border-color: var(--kron-selected-edge); background: var(--kron-selected); color: var(--kron-selected-ink); font-weight: 600;
         }
 
-        /* Tags, Dependencies and Categories: word chips. Has is the row's active class, has not its exclude class, a red
+        /* Tags and Dependencies: word chips. Has is the row's active class, has not its exclude class, a red
            tint with no strike through the name; a chip for the scenarios with none is in italics. */
-        .tag-toggle, .dependency-toggle, .category-toggle {
+        .tag-toggle, .dependency-toggle, .tag-more {
             position: relative; padding: 5px 10px; border: 1px solid var(--kron-control-border); border-radius: 999px;
             background: var(--kron-card); color: var(--kron-ink-quiet); font: var(--kron-fs-control)/16px var(--kron-font); cursor: pointer;
         }
-        .tag-toggle:hover, .dependency-toggle:hover, .category-toggle:hover { background: var(--kron-hover); }
-        .tag-toggle.tag-active, .dependency-toggle.dependency-active, .category-toggle.category-active {
+        .tag-toggle:hover, .dependency-toggle:hover, .tag-more:hover { background: var(--kron-hover); }
+        .tag-toggle.tag-active, .dependency-toggle.dependency-active {
             z-index: 1; border-color: var(--kron-selected-edge); background: var(--kron-selected); color: var(--kron-selected-ink);
         }
-        .tag-toggle.tag-exclude, .dependency-toggle.dependency-exclude, .category-toggle.category-exclude {
+        .tag-toggle.tag-exclude, .dependency-toggle.dependency-exclude {
             border-color: var(--kron-exclude-edge); background: var(--kron-exclude-soft); color: var(--kron-exclude-ink);
         }
-        .tag-none, .dependency-none, .category-none { font-style: italic; }
+        .tag-none, .dependency-none { font-style: italic; }
+        /* a long Tags row's More chip shows the chips it starts without (plans/TAGS_PLAN.md §4.8): a control, not a
+           filter, so its edge is dashed and its name in the accent */
+        .tag-more { border-style: dashed; color: var(--kron-accent); }
+        .tag-toggle[hidden], .tag-more[hidden] { display: none; }
 
         /* a row's ANY / ALL switch is a mode, not a filter: a small square button before the chips */
-        .tag-mode-toggle, .dep-mode-toggle, .cat-mode-toggle {
+        .tag-mode-toggle, .dep-mode-toggle {
             margin-right: 2px; padding: 6px 9px 4px; border: 1px solid var(--kron-control-border); border-radius: 6px;
             background: var(--kron-field); color: var(--kron-ink-quiet); font: 600 11px/16px var(--kron-font); letter-spacing: 0.03em; cursor: pointer;
         }
-        .tag-mode-toggle:hover, .dep-mode-toggle:hover, .cat-mode-toggle:hover { background: var(--kron-hover); }
+        .tag-mode-toggle:hover, .dep-mode-toggle:hover { background: var(--kron-hover); }
 
         /* a row's Clear: a text action in the accent after its last chip, there only while one of them is set */
         .group-clear {
@@ -545,8 +539,8 @@
         .group-clear[hidden] { display: none; }
 
         .status-toggle:focus-visible, .percentile-btn:focus-visible, .happy-seg:focus-visible, .tag-toggle:focus-visible,
-        .dependency-toggle:focus-visible, .category-toggle:focus-visible, .tag-mode-toggle:focus-visible, .dep-mode-toggle:focus-visible,
-        .cat-mode-toggle:focus-visible, .group-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+        .dependency-toggle:focus-visible, .tag-mode-toggle:focus-visible, .dep-mode-toggle:focus-visible,
+        .tag-more:focus-visible, .group-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
 
         /* what the filters leave showing, on the FILTERING line left of Clear All, set apart from the actions by a rule */
         .filter-readout {
@@ -574,9 +568,9 @@
             .percentile-btn:last-of-type { grid-column: 1 / -1; }
         }
         @container (max-width: 430px) {
-            .status-filters, .duration-filters, .happy-filters, .tag-filters, .dependency-filters, .category-filters { flex-wrap: wrap; }
-            .status-filters-label, .duration-filters-label, .happy-filters-label, .tag-filters-label, .dependency-filters-label,
-            .category-filters-label { flex-basis: 100%; margin: 0 8px 2px 0; }
+            .status-filters, .duration-filters, .happy-filters, .tag-filters, .dependency-filters { flex-wrap: wrap; }
+            .status-filters-label, .duration-filters-label, .happy-filters-label, .tag-filters-label,
+            .dependency-filters-label { flex-basis: 100%; margin: 0 8px 2px 0; }
             .fltr-controls { flex-basis: 100%; }
             .wide-only { display: none; }
             /* the readout wraps rather than widen the actions past the box */
@@ -625,14 +619,14 @@
         #duration-threshold {
             width: 7em;
             padding: 0.25em 0.4em;
-            border: 1px solid rgb(180, 180, 180);
+            border: 1px solid var(--kron-control-border);
             border-radius: 0.4em;
             font-size: 0.85em;
         }
 
         .duration-filters-unit {
             font-size: 0.85em;
-            color: rgb(100, 100, 100);
+            color: var(--kron-muted);
         }
 
         #custom-duration-wrap {
@@ -1095,7 +1089,7 @@
             margin-left: 1.5em;
             font-size: 0.85em;
             font-style: italic;
-            color: #a33;
+            color: var(--kron-fail);
         }
 
         .attachment-image-container {
@@ -1242,39 +1236,6 @@
             font-size: var(--kron-fs-body);
             font-weight: 600;
             color: var(--kron-ink);
-        }
-
-        .examples-table {
-            border-collapse: collapse;
-            margin: 0.5em 0 0.5em 1em;
-            font-size: 0.9em;
-        }
-
-        .examples-table th, .examples-table td {
-            border: 1px solid #ddd;
-            padding: 0.3em 0.6em;
-            text-align: left;
-        }
-
-        .examples-table thead {
-            background: #f0f0f0;
-        }
-
-        .examples-row-passed { background: #f0fff0; }
-        .examples-row-failed { background: #fff0f0; cursor: pointer; }
-        .examples-row-skipped { background: #fff8e1; }
-        .examples-row-bypassed { background: #f0f0ff; }
-        .examples-row-expandable:hover { background: #ffe0e0; }
-        .examples-row-expanded { background: #ffe0e0; }
-        .examples-detail-row td { padding: 0.5em 1em; background: #fff5f5; }
-
-
-
-
-
-
-        .cat-hidden {
-            display: none !important;
         }
 
 
@@ -1473,8 +1434,6 @@
             text-align: center;
             font-weight: bold;
         }
-        .row-surplus td:first-child { color: green; }
-        .row-missing td:first-child { color: red; }
 
         .step-param-tree {
             margin: 4px 0 4px 24px;
@@ -1866,7 +1825,7 @@
         .param-table-wrapper > .param-test-table tbody tr.examples-block-row td { border-top-width: 0; }
         .flatten-toggle {
             background: none;
-            border: 1px solid #bbb;
+            border: 1px solid var(--kron-control-border);
             border-radius: 3px;
             cursor: pointer;
             font-weight: bold;
@@ -1877,9 +1836,9 @@
             padding: 0;
             margin-right: 0.4em;
             vertical-align: middle;
-            color: #555;
+            color: var(--kron-muted);
         }
-        .flatten-toggle:hover { background: #ddd; color: #333; }
+        .flatten-toggle:hover { background: var(--kron-hover); color: var(--kron-ink); }
 
         /* Status badges */
         .status-badge {
@@ -1977,24 +1936,36 @@
             color: var(--kron-prop-val);
         }
 
-        /* #2 Collapsible filter section — hidden on desktop */
+        /* #2 The phone's Filters button, on a line of its own that the readout rides there (no line on a desktop) */
+        .mobile-filter-line { display: none; }
         .mobile-filter-toggle {
-            display: none;
+            display: inline-flex;
+            flex: none;
             align-items: center;
             gap: 0.5em;
-            cursor: pointer;
             padding: 0.4em 0;
-            font-size: 0.9em;
-            color: rgb(100, 100, 100);
+            border: 0;
+            background: none;
+            color: var(--kron-label);
+            font: inherit;
+            font-size: var(--kron-fs-label);
+            font-weight: 600;
+            letter-spacing: var(--kron-label-track);
+            text-transform: uppercase;
+            cursor: pointer;
             user-select: none;
         }
+        .mobile-filter-toggle:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
         .mobile-filter-toggle::before {
             content: '▸';
             font-size: 0.8em;
             transition: transform 0.15s ease;
         }
-        .mobile-filter-toggle.filter-open::before {
+        .mobile-filter-toggle[aria-expanded="true"]::before {
             transform: rotate(90deg);
+        }
+        .mobile-filter-line > .filter-readout {
+            min-width: 0; margin: 0; padding: 0; border: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
 
         /* #10 Back-to-top FAB */
@@ -2038,7 +2009,7 @@
                 position: sticky;
                 top: 0;
                 z-index: 100;
-                background: rgb(224, 224, 224);
+                background: var(--kron-card);
                 padding: 0.4em 0;
             }
 
@@ -2046,9 +2017,12 @@
                 flex-direction: column;
             }
 
-            /* #2 Collapsible filter section — toggle styling */
-            .mobile-filter-toggle {
+            /* #2 the Filters button's line, with the readout at its right */
+            .mobile-filter-line {
                 display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
             }
 
             .toolbar-row {
@@ -2082,12 +2056,6 @@
             .feature-summary-table {
                 display: block;
                 overflow-x: auto;
-            }
-
-            .examples-table {
-                display: block;
-                overflow-x: auto;
-                margin-left: 0;
             }
 
             .failure-result pre {
@@ -2189,10 +2157,10 @@
             .diagram-toggle-btn { min-height: 34px; }
         
             /* #6 Touch target size bump: every filter control */
-            .status-toggle, .percentile-btn, .happy-seg, .tag-toggle, .dependency-toggle, .category-toggle { min-height: 36px; }
+            .status-toggle, .percentile-btn, .happy-seg, .tag-toggle, .dependency-toggle, .tag-more { min-height: 36px; }
 
             /* #5 Long chip names are cut with an ellipsis inside the box */
-            .tag-toggle, .dependency-toggle, .category-toggle {
+            .tag-toggle, .dependency-toggle {
                 max-width: 100%;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -2201,7 +2169,7 @@
 }
         /* K9: explicit state for scenarios with no tracked interactions */
         .no-interactions {
-            color: #8a8f98;
+            color: var(--kron-faint);
             font-style: italic;
             font-size: 0.9em;
             margin: 4px 0 10px;

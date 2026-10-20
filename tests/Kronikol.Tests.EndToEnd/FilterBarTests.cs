@@ -28,7 +28,7 @@ public class FilterBarTests : PlaywrightTestBase
             Scenarios = Enumerable.Range(1, 10).Select(i => new Scenario
             {
                 Id = $"f{f}s{i}", DisplayName = $"Scenario {f}.{i}", Result = i == 5 && f == 2 ? ExecutionResult.Failed : ExecutionResult.Passed,
-                Duration = TimeSpan.FromMilliseconds(10 * i + f), Labels = i % 3 == 0 ? ["smoke"] : null, IsHappyPath = f == 1 && i == 1,
+                Duration = TimeSpan.FromMilliseconds(10 * i + f), Tags = i % 3 == 0 ? ["smoke"] : null, IsHappyPath = f == 1 && i == 1,
                 ErrorMessage = i == 5 && f == 2 ? "boom" : null
             }).ToArray()
         }).ToArray();

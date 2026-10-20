@@ -105,7 +105,7 @@ public static class ReportTestHelper
                     {
                         Id = "t1", DisplayName = "Create order successfully", IsHappyPath = true,
                         Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2),
-                        Categories = ["Smoke", "API"],
+                        Tags = ["Smoke", "API"],
                         Steps =
                         [
                             new ScenarioStep { Keyword = "Given", Text = "the system is running", Status = ExecutionResult.Passed },
@@ -117,7 +117,7 @@ public static class ReportTestHelper
                     {
                         Id = "t2", DisplayName = "Delete order fails gracefully", IsHappyPath = false,
                         Result = ExecutionResult.Failed, Duration = TimeSpan.FromSeconds(5),
-                        Categories = ["API"],
+                        Tags = ["API"],
                         Steps =
                         [
                             new ScenarioStep { Keyword = "Given", Text = "the system is running", Status = ExecutionResult.Passed },
@@ -129,7 +129,7 @@ public static class ReportTestHelper
                     {
                         Id = "t3", DisplayName = "List orders returns paginated results", IsHappyPath = true,
                         Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
-                        Categories = ["Smoke"]
+                        Tags = ["Smoke"]
                     }
                 ]
             },
@@ -198,7 +198,7 @@ public static class ReportTestHelper
                 return new Scenario
                 {
                     Id = $"f{f}s{s}", DisplayName = name, Result = result,
-                    Duration = TimeSpan.FromMilliseconds(10 * s), Categories = [$"area-{f:00}"],
+                    Duration = TimeSpan.FromMilliseconds(10 * s), Tags = [$"area-{f:00}"],
                     ErrorMessage = result == ExecutionResult.Failed ? "the batch was not baked" : null,
                     Steps = [new ScenarioStep { Keyword = "Then", Text = "it bakes", Status = result }]
                 };
@@ -568,7 +568,7 @@ public static class ReportTestHelper
                 [
                     new Scenario
                     {
-                        Id = "m1", DisplayName = "Create order successfully", IsHappyPath = true, Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2), Categories = ["Smoke"],
+                        Id = "m1", DisplayName = "Create order successfully", IsHappyPath = true, Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2), Tags = ["Smoke"],
                         Steps =
                         [
                             new ScenarioStep
@@ -2733,7 +2733,7 @@ public static class ReportTestHelper
 
         static Scenario Scenario(string id, string name, bool happy, ExecutionResult result, int ms, string[] tags) => new()
         {
-            Id = id, DisplayName = name, IsHappyPath = happy, Result = result, Duration = TimeSpan.FromMilliseconds(ms), Labels = tags,
+            Id = id, DisplayName = name, IsHappyPath = happy, Result = result, Duration = TimeSpan.FromMilliseconds(ms), Tags = tags,
             Steps =
             [
                 new ScenarioStep { Keyword = "Given", Text = "the system is running", Status = ExecutionResult.Passed },
@@ -2863,7 +2863,7 @@ public static class ReportTestHelper
             Id = "wc1", DisplayName = "Every step content kind for " + identifier, IsHappyPath = true,
             Result = ExecutionResult.Failed, Duration = TimeSpan.FromSeconds(3),
             Description = "Checks the order at " + url + " from end to end.",
-            Labels = ["Happy Path", identifier],
+            Tags = ["Happy Path", identifier],
             ErrorMessage = $"Expected: \"{identifier}\"\nActual: \"{identifier}_Mismatch\"",
             ErrorStackTrace = "   at BreakfastProvider.Tests.Component.Orders.OrderLifecycleTests.Then_the_order_is_retrievable_for_" + identifier
                 + "() in /home/runner/work/breakfast-provider/tests/Component/Orders/OrderLifecycleTests.cs:line 142",
@@ -2981,7 +2981,7 @@ public static class ReportTestHelper
                 DisplayName = "Order lifecycle for " + identifier,
                 Description = "Covers the orders API at " + url + ".",
                 Endpoint = "/api/v1/orders/{orderId}/items/" + identifier,
-                Labels = [identifier],
+                Tags = [identifier],
                 Scenarios = [contentKinds, combined]
             },
             new Feature
@@ -3063,7 +3063,7 @@ public static class ReportTestHelper
                 {
                     Id = $"es{i}", DisplayName = Name(i), Result = i == 4 ? ExecutionResult.Passed : ExecutionResult.Failed,
                     Duration = TimeSpan.FromMilliseconds(200 * i), ErrorMessage = i == 4 ? null : error,
-                    Labels = ["Regression"], Categories = ["BreakfastProvider.Tests.Categories.CrossRegionSettlement"],
+                    Tags = ["Regression", "BreakfastProvider.Tests.Categories.CrossRegionSettlement"],
                     Steps = [new ScenarioStep { Keyword = "Given", Text = "the ledger service is available", Status = ExecutionResult.Passed }]
                 })]
             },

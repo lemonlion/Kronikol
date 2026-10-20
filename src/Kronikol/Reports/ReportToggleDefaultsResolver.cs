@@ -31,7 +31,7 @@ public record ResolvedToggleDefaults
     public bool ScenarioTimelineVisible { get; init; }
     public bool ComponentDiagramVisible { get; init; }
     public FilterCombinationMode DependencyFilterMode { get; init; } = FilterCombinationMode.Or;
-    public FilterCombinationMode CategoryFilterMode { get; init; } = FilterCombinationMode.Or;
+    public FilterCombinationMode TagFilterMode { get; init; } = FilterCombinationMode.Or;
     public bool FeaturesSummaryOpen { get; init; }
     public bool FailureClustersOpen { get; init; } = true;
     public bool StepsSectionOpen { get; init; } = true;
@@ -86,7 +86,7 @@ public static class ReportToggleDefaultsResolver
         ScenarioTimelineVisible = overrides.ScenarioTimelineVisible ?? baseline.ScenarioTimelineVisible,
         ComponentDiagramVisible = overrides.ComponentDiagramVisible ?? baseline.ComponentDiagramVisible,
         DependencyFilterMode = Defined(overrides.DependencyFilterMode) ?? baseline.DependencyFilterMode,
-        CategoryFilterMode = Defined(overrides.CategoryFilterMode) ?? baseline.CategoryFilterMode,
+        TagFilterMode = Defined(overrides.TagFilterMode) ?? baseline.TagFilterMode,
         FeaturesSummaryOpen = overrides.FeaturesSummaryOpen ?? baseline.FeaturesSummaryOpen,
         FailureClustersOpen = overrides.FailureClustersOpen ?? baseline.FailureClustersOpen,
         StepsSectionOpen = overrides.StepsSectionOpen ?? baseline.StepsSectionOpen,

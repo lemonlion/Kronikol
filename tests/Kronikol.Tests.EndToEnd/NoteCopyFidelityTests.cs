@@ -91,6 +91,9 @@ public class NoteCopyFidelityTests : DiagramNotePlaywrightBase
         var popup = await popupTask;
         await popup.WaitForLoadStateAsync();
 
+        // the tab is opened in the click and the text written into it, titled for what it holds
+        await popup.WaitForFunctionAsync("() => document.title === 'Box text'", null, new() { Timeout = 15000, PollingInterval = 200 });
+        Assert.False(popup.Url.StartsWith("blob:", StringComparison.Ordinal), "the tab shows " + popup.Url);
         var shown = await popup.EvaluateAsync<string>("() => document.body.innerText");
 
         Assert.Contains(ReportTestHelper.CopyFidelityJwt, shown.Replace("\r\n", "\n").Replace("\n", ""),

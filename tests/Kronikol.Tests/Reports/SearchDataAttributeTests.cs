@@ -198,7 +198,7 @@ public class SearchDataAttributeTests
             new Feature
             {
                 DisplayName = "F1",
-                Labels = ["xylophage", "frobnicate"],
+                Tags = ["xylophage", "frobnicate"],
                 Scenarios =
                 [
                     new Scenario
@@ -231,7 +231,7 @@ public class SearchDataAttributeTests
                     new Scenario
                     {
                         Id = "s1", DisplayName = "Test scenario", Result = ExecutionResult.Passed,
-                        Categories = ["zygomorphic", "plumbus"]
+                        Tags = ["zygomorphic", "plumbus"]
                     }
                 ]
             }
@@ -259,7 +259,7 @@ public class SearchDataAttributeTests
                     new Scenario
                     {
                         Id = "s1", DisplayName = "Test scenario", Result = ExecutionResult.Passed,
-                        Labels = ["quixotic", "barnacle"]
+                        Tags = ["quixotic", "barnacle"]
                     }
                 ]
             }
@@ -283,7 +283,7 @@ public class SearchDataAttributeTests
             {
                 DisplayName = "Waffles Preparation",
                 Description = "Covers all waffle scenarios",
-                Labels = ["breakfast"],
+                Tags = ["breakfast"],
                 Scenarios =
                 [
                     new Scenario
@@ -291,7 +291,7 @@ public class SearchDataAttributeTests
                         Id = "s1", DisplayName = "Make waffles with sugar", Result = ExecutionResult.Passed,
                         OutlineId = "make-waffles",
                         ExampleValues = new Dictionary<string, string> { ["Topping"] = "sugar" },
-                        Categories = ["sweet"],
+                        Tags = ["sweet"],
                         Steps = [new ScenarioStep { Keyword = "Given", Text = "waffle iron is hot", Status = ExecutionResult.Passed }]
                     },
                     new Scenario
@@ -299,7 +299,7 @@ public class SearchDataAttributeTests
                         Id = "s2", DisplayName = "Make waffles with syrup", Result = ExecutionResult.Passed,
                         OutlineId = "make-waffles",
                         ExampleValues = new Dictionary<string, string> { ["Topping"] = "syrup" },
-                        Categories = ["sweet"],
+                        Tags = ["sweet"],
                         Steps = [new ScenarioStep { Keyword = "Given", Text = "waffle iron is hot", Status = ExecutionResult.Passed }]
                     }
                 ]

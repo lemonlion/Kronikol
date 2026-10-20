@@ -91,29 +91,31 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
     }
 
     [Fact]
-    public async Task And_category_mode_default_seeds_button_and_hash_grammar()
+    public async Task And_tag_mode_default_seeds_button_and_hash_grammar()
     {
+        // TagFilterMode replaces CategoryFilterMode (plans/TAGS_PLAN.md §4.11), and the fixture's categories are tags
         var url = ReportTestHelper.GenerateToggleDefaultsReport(
-            TempDir, OutputDir, "FilterMode_CatAnd.html",
-            o => o.TestRunReportToggleDefaults.CategoryFilterMode = Kronikol.Reports.FilterCombinationMode.And);
+            TempDir, OutputDir, "FilterMode_TagAnd.html",
+            o => o.TestRunReportToggleDefaults.TagFilterMode = Kronikol.Reports.FilterCombinationMode.And);
         await Page.GotoAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenFilterRowsAsync();
 
-        var catBtn = Page.Locator(".cat-mode-toggle");
-        Assert.Equal("ALL", (await catBtn.TextContentAsync())!.Trim());
-        Assert.Equal("AND", await Page.EvaluateAsync<string>("() => _catMode"));
+        var tagBtn = Page.Locator(".tag-mode-toggle");
+        Assert.Equal("ALL", (await tagBtn.TextContentAsync())!.Trim());
+        Assert.Equal("AND", await Page.EvaluateAsync<string>("() => _tagMode"));
 
-        // Select a category so the hash is written; AND is the configured default → omitted
-        await Page.Locator(".category-toggle[data-category='Smoke']").ClickAsync();
+        // Select a tag so the hash is written; AND is the configured default → omitted
+        await Page.Locator(".tag-toggle[data-tag='Smoke']").ClickAsync();
         var hash = await Page.EvaluateAsync<string>("() => window.location.hash");
-        Assert.Contains("cats=", hash);
-        Assert.DoesNotContain("catmode", hash);
+        Assert.Contains("tags=Smoke", hash);
+        Assert.DoesNotContain("tagmode", hash);
 
-        // Toggling to OR — historically the silent default — now lands in the hash
-        await catBtn.ClickAsync();
+        // Toggling to OR, the built-in default, now lands in the hash
+        await tagBtn.ClickAsync();
         hash = await Page.EvaluateAsync<string>("() => window.location.hash");
-        Assert.Contains("catmode=OR", hash);
+        Assert.Contains("tagmode=OR", hash);
+        Assert.DoesNotContain("cat", hash);
     }
 
     [Fact]

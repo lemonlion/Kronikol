@@ -54,7 +54,7 @@ public class RunBandTests
                         + "<div class=\"run-stat\"><dt>Branch</dt><dd>main</dd></div>"
                         + "<div class=\"run-stat\"><dt>Commit</dt><dd><code title=\"0ee43e8c0b5d3e85a4a099a20ee4ce37305b6b3f\">0ee43e8</code></dd></div>"
                         + "<div class=\"run-stat\"><dt>Repository</dt><dd>lemonlion/BreakfastProvider</dd></div>"
-                        + "<div class=\"run-stat\"><dt>Run</dt><dd><a class=\"run-link\" href=\"https://github.com/lemonlion/BreakfastProvider/actions/runs/38868550876\" target=\"_blank\" rel=\"noopener noreferrer\">View run</a></dd></div>"
+                        + "<div class=\"run-stat\"><dt>Run</dt><dd><a class=\"run-link\" href=\"https://github.com/lemonlion/BreakfastProvider/actions/runs/38868550876\" target=\"_blank\" rel=\"noopener noreferrer\" title=\"Open the CI run this report came from\">View run</a></dd></div>"
                         + "</dl></div></section>", html);
         Assert.DoesNotContain("class=\"header-row\"", html);
         Assert.DoesNotContain("class=\"test-execution-summary\"", html);

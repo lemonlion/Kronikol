@@ -61,8 +61,8 @@ public record ReportConfigurationOptions
 
     /// <summary>Custom CSS stylesheet for the HTML specifications report, appended after the built-in stylesheets (so its
     /// rules win over theirs at equal specificity) and before <see cref="InternalFlowPopupCustomStyleSheet"/> and
-    /// <see cref="CustomCss"/>. Default: <see cref="Stylesheets.VioletThemeStyleSheet"/>, a violet overlay on the built-in
-    /// sheets; <c>null</c> leaves the report in the built-in blue.</summary>
+    /// <see cref="CustomCss"/>. Default: <see cref="Stylesheets.VioletThemeStyleSheet"/>, the violet theme, which sets the
+    /// report's colour tokens for the light and the dark theme; <c>null</c> leaves the report in the built-in blue.</summary>
     public string? HtmlSpecificationsCustomStyleSheet { get; set; } = Stylesheets.VioletThemeStyleSheet;
 
     /// <summary>File name (without extension) for the YAML specifications data file. Default: <c>"Specifications"</c>.</summary>

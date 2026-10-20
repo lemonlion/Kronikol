@@ -7,8 +7,9 @@ namespace Kronikol.Tests.Reports;
 /// <summary>
 /// The labs page, <c>{report}.labs.html</c> beside the report (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md
 /// section 3.4): the History section, every scenario's sparkline and verdict, and the run's report diagnostics, drawn
-/// by the renderers a report's opt-ins use. It has no script; its scenario names link into the report by the
-/// <c>#sid-</c> anchor the report resolves on load.
+/// by the renderers a report's opt-ins use. Of the report's scripts it runs only the theme's two (5.0.0,
+/// plans/OPTION_C_PLAN.md S13); its scenario names link into the report by the <c>#sid-</c> anchor the report resolves on
+/// load.
 /// </summary>
 public class LabsReportTests : IDisposable
 {
@@ -110,14 +111,17 @@ public class LabsReportTests : IDisposable
     }
 
     [Fact]
-    public void The_names_link_into_the_report_by_stable_id_and_the_page_has_no_script()
+    public void The_names_link_into_the_report_by_stable_id_and_the_page_runs_only_the_theme_scripts()
     {
         var page = Page(Broke(), []);
 
-        Assert.Contains($"<a class=\"history-link\" href=\"TestRunReport.html#sid-{PayId}\">Checkout &rsaquo; Pay by card</a>", page);
+        Assert.Contains($"<a class=\"history-link\" href=\"TestRunReport.html#sid-{PayId}\" title=\"Open this scenario in the report\">Checkout &rsaquo; Pay by card</a>", page);
         Assert.Contains($"href=\"TestRunReport.html#sid-{RefundId}\"", Table(page));
         Assert.DoesNotContain("onclick", page);
-        Assert.DoesNotContain("<script", page);
+        // 5.0.0: the boot script that chooses light or dark and the one that works the switch, and no other
+        // (plans/OPTION_C_PLAN.md S13)
+        Assert.Equal(["<script id=\"kronikol-theme-boot\">", "<script id=\"kronikol-theme-switch\">"],
+            Regex.Matches(page, "<script[^>]*>").Select(m => m.Value).ToArray());
     }
 
     [Fact]

@@ -166,7 +166,8 @@ const path = require('path'), fs = require('fs');
     });
     if (out.widths[w] !== 'hidden') {
       // opened directly: with the bar at the window's bottom edge, Next Failure covers the bar's right end
-      await p.evaluate(() => window.__kronikolNavFilters.open()); await p.waitForTimeout(500);
+      // the Filters button's own click (the preview's window.__kronikolNavFilters.open() is not in the product, D50)
+      await p.evaluate(() => document.querySelector('.nav-filters-toggle').click()); await p.waitForTimeout(500);
       const s = await state(p);
       out.widths[w].box = { dockedH: docked.h, dockedRows: docked.rows, inBarH: s.boxBottom - s.boxTop, inBarRows: s.rowClass, capped: s.boxCapped, bottom: s.boxBottom, gapAbove: s.gapAbove };
       if (w === 900) await p.screenshot({ path: path.join(outDir, 'open-900.png') });

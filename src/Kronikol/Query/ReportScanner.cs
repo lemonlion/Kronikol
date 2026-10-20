@@ -206,8 +206,8 @@ internal static class ReportScanner
         private AttachmentEntry? _attachment;
         private ReportDiagnosticEntry? _diagnostic;
         private string _featureName = "";
-        private string[] _featureLabels = [];
-        private readonly List<string> _pendingFeatureLabels = [];
+        private string[] _featureTags = [];
+        private readonly List<string> _pendingFeatureTags = [];
         private string? _featureSourceFile;
         private int _scenarioOrdinal;
         private int _interactionOrdinal;
@@ -331,7 +331,7 @@ internal static class ReportScanner
                 "durationSeconds", "failureMessage", "sourceFile", "sourceLine", "bypassReason", "docString", "assertion",
                 "id", "stableId", "result", "isHappyPath", "errorMessage", "errorStackTrace", "rule",
                 "features", "scenarios", "httpInteractions", "annotations", "attachments", "diagnostics",
-                "steps", "backgroundSteps", "subSteps", "headers", "labels", "categories", "exampleValues",
+                "steps", "backgroundSteps", "subSteps", "headers", "tags", "labels", "categories", "exampleValues",
                 "diagrams", "comments", "parameters", "attempt", "endedAt",
                 // The first-call warm-up marks (plans/WARM_UP_PLAN.md).
                 "warmUp", "warmUpSeconds", "shape", "baselineMs", "baselineCalls", "first",
@@ -426,12 +426,12 @@ internal static class ReportScanner
             {
                 _featureName = "";
                 _featureSourceFile = null;
-                _featureLabels = [];
-                _pendingFeatureLabels.Clear();
+                _featureTags = [];
+                _pendingFeatureTags.Clear();
             }
             else if (At("scenarios", "#"))
             {
-                _scenario = new ScenarioEntry { Ordinal = _scenarioOrdinal++, FeatureName = _featureName, FeatureLabels = _featureLabels, FeatureSourceFile = _featureSourceFile };
+                _scenario = new ScenarioEntry { Ordinal = _scenarioOrdinal++, FeatureName = _featureName, FeatureTags = _featureTags, FeatureSourceFile = _featureSourceFile };
                 _interactionOrdinal = 0;
                 _stepStack.Clear();
             }
@@ -469,12 +469,15 @@ internal static class ReportScanner
         {
             if (At("features", "#"))
             {
-                _featureLabels = [];
+                _featureTags = [];
             }
             else if (At("scenarios", "#"))
             {
                 if (_scenario is not null)
+                {
+                    _scenario.FoldLegacyTags();
                     index.Scenarios.Add(_scenario);
+                }
                 _scenario = null;
             }
             else if (At("httpInteractions", "#"))
@@ -730,10 +733,11 @@ internal static class ReportScanner
                 return;
             }
 
-            if (At("features", "#", "labels"))
+            // tags, or labels in a file written before 5.0.0
+            if (At("features", "#", "tags") || At("features", "#", "labels"))
             {
-                _pendingFeatureLabels.Add(reader.GetString() ?? "");
-                _featureLabels = _pendingFeatureLabels.ToArray();
+                _pendingFeatureTags.Add(reader.GetString() ?? "");
+                _featureTags = Kronikol.Reports.ScenarioTags.Merge(_pendingFeatureTags);
             }
         }
 
@@ -902,8 +906,9 @@ internal static class ReportScanner
 
         private void Scenario(ScenarioEntry scenario, string key, ref Utf8JsonReader reader, long windowStart)
         {
-            if (At("labels")) { scenario.Labels.Add(reader.GetString() ?? ""); return; }
-            if (At("categories")) { scenario.Categories.Add(reader.GetString() ?? ""); return; }
+            if (At("tags")) { scenario.Tags.Add(reader.GetString() ?? ""); return; }
+            if (At("labels")) { scenario.LegacyLabels.Add(reader.GetString() ?? ""); return; }
+            if (At("categories")) { scenario.LegacyCategories.Add(reader.GetString() ?? ""); return; }
             if (At("exampleValues"))
             {
                 if (reader.TokenType == JsonTokenType.String)

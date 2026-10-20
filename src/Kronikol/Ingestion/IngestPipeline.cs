@@ -482,7 +482,7 @@ public static class IngestPipeline
         if (attempts.InferredRetries > 0)
             diagnostics.Add(DiagnosticKind.Other,
                 $"{attempts.InferredRetries} test(s) had more than one start without an attempt number; each start after a test's first "
-                + "was read as a retry, and the report shows the test's last attempt with a retry label for each earlier one. "
+                + "was read as a retry, and the report shows the test's last attempt, its retry badge counting the earlier ones. "
                 + "Write attempt on start records to say which run each is.");
         var current = attempts.Current(testRecords);
 
@@ -492,7 +492,7 @@ public static class IngestPipeline
         if (earlierAttemptRecords > 0)
             diagnostics.Add(DiagnosticKind.Other,
                 $"{earlierAttemptRecords} interaction record(s) of earlier attempts of retried tests left out: a retried test's "
-                + "scenario shows its last attempt, with a retry label for each earlier one.");
+                + "scenario shows its last attempt, its retry badge counting the earlier ones.");
         AddDiagramMarkers(records, current);
         if (options.SeparateSetup)
             AddSetupBoundaries(records, current);

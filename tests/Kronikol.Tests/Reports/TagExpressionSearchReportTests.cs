@@ -47,7 +47,7 @@ public class TagExpressionSearchReportTests
     }
 
     [Fact]
-    public void Scenarios_have_data_labels_attribute()
+    public void Scenarios_carry_their_tags_in_data_tags()
     {
         var features = new[]
         {
@@ -56,13 +56,14 @@ public class TagExpressionSearchReportTests
                 DisplayName = "F1",
                 Scenarios =
                 [
-                    new Scenario { Id = "s1", DisplayName = "S1", Result = ExecutionResult.Passed, Labels = ["important", "regression"] }
+                    new Scenario { Id = "s1", DisplayName = "S1", Result = ExecutionResult.Passed, Tags = ["important", "regression"] }
                 ]
             }
         };
 
         var content = GenerateReport(features);
-        Assert.Contains("data-labels=\"important,regression\"", content);
+        Assert.Contains("data-tags=\"important,regression\"", content);
+        Assert.DoesNotContain("data-labels=", content);
     }
 
     [Fact]

@@ -376,7 +376,7 @@ public class ExamplesTableReportTests
     }
 
     [Fact]
-    public void Outline_section_has_data_categories_attribute()
+    public void Outline_section_carries_its_rows_tags_with_their_categories()
     {
         var features = new[]
         {
@@ -390,21 +390,22 @@ public class ExamplesTableReportTests
                         Id = "s1", DisplayName = "S1", Result = ExecutionResult.Passed,
                         OutlineId = "outline1",
                         ExampleValues = new Dictionary<string, string> { ["A"] = "1" },
-                        Categories = ["Banking"]
+                        Tags = ["Banking"]
                     },
                     new Scenario
                     {
                         Id = "s2", DisplayName = "S2", Result = ExecutionResult.Passed,
                         OutlineId = "outline1",
                         ExampleValues = new Dictionary<string, string> { ["A"] = "2" },
-                        Categories = ["Banking", "ATM"]
+                        Tags = ["Banking", "ATM"]
                     }
                 ]
             }
         };
 
         var content = GenerateReport(features);
-        Assert.Contains("data-categories=", content);
+        Assert.Contains(" data-tags=\"Banking,ATM\"", content);
+        Assert.DoesNotContain("data-categories=", content);
     }
 
     [Fact]

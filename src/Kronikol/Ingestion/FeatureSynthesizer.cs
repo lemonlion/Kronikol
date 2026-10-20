@@ -49,7 +49,7 @@ public static class FeatureSynthesizer
     /// </summary>
     /// <remarks>
     /// A test with several <c>start</c> records is one test retried (<see cref="TestRunRecord.Attempt"/>): its scenario is
-    /// its last attempt, with <see cref="Scenario.Attempt"/> set and a <c>retry N</c> label for each earlier attempt.
+    /// its last attempt, with <see cref="Scenario.Attempt"/> set, which the report draws its retry badge from.
     /// </remarks>
     public static Result Build(
         IEnumerable<TestRunRecord>? testRecords,
@@ -103,7 +103,7 @@ public static class FeatureSynthesizer
             // blanks the living documentation of an otherwise green run).
             if (!TestRunRecord.IsKnownEvent(record.Event))
                 continue;
-            // A retried test is its last attempt; the earlier ones leave a label, and the time the test began.
+            // A retried test is its last attempt; the earlier ones leave its attempt number, and the time the test began.
             if (attempts.IsEarlier(record))
                 continue;
             var acc = Get(record.TestId);
@@ -184,9 +184,8 @@ public static class FeatureSynthesizer
             var name = acc.Name ?? testId;
             names[testId] = name;
 
+            // An earlier attempt makes no tag (plans/TAGS_PLAN.md §4.6): the attempt number carries it.
             var tags = ScenarioTags.Classify(acc.Tags);
-            // Earlier attempts are not shown as scenarios; a label keeps the flakiness visible (the Cucumber lane's words).
-            var labels = tags.Labels.Concat(attempts.EarlierNumbers(testId).Select(n => $"retry {n}")).ToArray();
             var steps = BuildStepTree(acc.Steps);
             var backgroundSteps = BuildStepTree(acc.BackgroundSteps);
 
@@ -214,8 +213,7 @@ public static class FeatureSynthesizer
                 ExampleFlatValues = acc.ExampleValues is null ? null : new Dictionary<string, string>(acc.ExampleValues, StringComparer.Ordinal),
                 ExampleRawValues = acc.ExampleValues?.ToDictionary(kvp => kvp.Key, kvp => (object?)kvp.Value, StringComparer.Ordinal),
                 IsHappyPath = tags.IsHappyPath,
-                Labels = labels.Length > 0 ? labels : null,
-                Categories = tags.Categories.Length > 0 ? tags.Categories : null,
+                Tags = tags.Tags.Length > 0 ? tags.Tags : null,
                 Attempt = attempts.Number(testId),
                 SourceFile = acc.SourceFile,
                 SourceLine = acc.SourceLine,
@@ -233,7 +231,7 @@ public static class FeatureSynthesizer
             }
 
             list.Add(scenario);
-            featureTags[feature].Add(tags.Labels);
+            featureTags[feature].Add(tags.Tags);
             if (acc.FeatureDescription is { Length: > 0 } description)
                 featureDescriptions.TryAdd(feature, description);
             // The first path seen wins, as on the ReqNRoll lane.
@@ -262,7 +260,8 @@ public static class FeatureSynthesizer
                     Scenarios = scenarios,
                     Description = featureDescriptions.GetValueOrDefault(f),
                     Endpoint = featureEndpoints.GetValueOrDefault(f),
-                    Labels = SharedLabels(featureTags[f]),
+                    // the tags every scenario carries, as Gherkin's feature tags are; they stay on the scenarios (F22)
+                    Tags = ScenarioTags.Shared(featureTags[f]) is { Length: > 0 } shared ? shared : null,
                     SourceFile = featureSources.GetValueOrDefault(f),
                 };
             })
@@ -279,26 +278,6 @@ public static class FeatureSynthesizer
             BlankAttachmentPaths = attachmentPaths.Blank,
             RelativeAttachmentPaths = attachmentPaths.Relative,
         };
-    }
-
-    /// <summary>
-    /// Labels carried by every scenario of a feature — in Gherkin those are exactly the feature's own
-    /// tags, since a scenario inherits them. Null when there are none.
-    /// </summary>
-    private static string[]? SharedLabels(List<string[]> perScenarioLabels)
-    {
-        if (perScenarioLabels.Count == 0 || perScenarioLabels.Any(l => l.Length == 0))
-            return null;
-
-        var shared = perScenarioLabels
-            .Skip(1)
-            .Aggregate(
-                new HashSet<string>(perScenarioLabels[0], StringComparer.OrdinalIgnoreCase),
-                (acc, labels) => { acc.IntersectWith(labels); return acc; });
-
-        return shared.Count == 0
-            ? null
-            : perScenarioLabels[0].Where(shared.Contains).ToArray();
     }
 
     /// <summary>

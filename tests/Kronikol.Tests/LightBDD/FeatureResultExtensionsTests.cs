@@ -49,24 +49,63 @@ public class FeatureResultExtensionsTests
     }
 
     [Fact]
-    public void ToFeatures_maps_feature_labels()
+    public void ToFeatures_maps_the_feature_s_labels_to_its_tags()
     {
         var feature = new StubFeatureResult("Svc", labels: ["api", "v2"])
             .WithScenario(new StubExecutionResult("s1", "Test"));
 
         var features = new[] { feature }.ToFeatures();
-        Assert.Equal(["api", "v2"], features[0].Labels!);
+        Assert.Equal(["api", "v2"], features[0].Tags);
+        Assert.Null(features[0].Scenarios[0].Tags);
     }
 
     [Fact]
-    public void ToFeatures_maps_scenario_labels_and_categories()
+    public void ToFeatures_maps_a_scenario_s_labels_and_categories_to_its_tags()
     {
-        var scenario = new StubExecutionResult("s1", "Test", labels: ["smoke"], categories: ["Orders"]);
+        var scenario = new StubExecutionResult("s1", "Test", labels: ["smoke"], categories: ["Orders", "SMOKE"]);
         var feature = new StubFeatureResult("F").WithScenario(scenario);
 
         var features = new[] { feature }.ToFeatures();
-        Assert.Equal(["smoke"], features[0].Scenarios[0].Labels!);
-        Assert.Equal(["Orders"], features[0].Scenarios[0].Categories!);
+        Assert.Equal(["smoke", "Orders"], features[0].Scenarios[0].Tags);
+        Assert.Null(features[0].Tags);
+    }
+
+    [Fact]
+    public void HappyPath_sets_the_flag_and_is_not_a_tag()
+    {
+        // [HappyPath] is the label Happy Path (HappyPathAttribute), which 4.x also drew as a label chip (F11)
+        var scenario = new StubExecutionResult("s1", "Test", labels: ["Happy Path", "smoke"]);
+
+        var mapped = new[] { new StubFeatureResult("F").WithScenario(scenario) }.ToFeatures()[0].Scenarios[0];
+
+        Assert.True(mapped.IsHappyPath);
+        Assert.Equal(["smoke"], mapped.Tags);
+    }
+
+    [Fact]
+    public void A_scenario_label_that_repeats_its_feature_s_in_another_case_is_the_feature_s()
+    {
+        var scenario = new StubExecutionResult("s1", "Test", labels: ["API", "smoke"]);
+
+        var mapped = new[] { new StubFeatureResult("F", labels: ["api"]).WithScenario(scenario) }.ToFeatures()[0];
+
+        Assert.Equal(["api"], mapped.Tags);
+        Assert.Equal(["smoke"], mapped.Scenarios[0].Tags);
+    }
+
+    [Fact]
+    public void A_category_every_scenario_carries_stays_on_each_scenario()
+    {
+        // Q8: a class-level [ScenarioCategory] reaches every scenario with no level, and LightBDD does not say where it
+        // came from, so it is not lifted to the feature
+        var feature = new StubFeatureResult("F")
+            .WithScenario(new StubExecutionResult("s1", "One", categories: ["Orders"]))
+            .WithScenario(new StubExecutionResult("s2", "Two", categories: ["Orders"]));
+
+        var mapped = new[] { feature }.ToFeatures()[0];
+
+        Assert.Null(mapped.Tags);
+        Assert.All(mapped.Scenarios, s => Assert.Equal(["Orders"], s.Tags));
     }
 
     [Fact]

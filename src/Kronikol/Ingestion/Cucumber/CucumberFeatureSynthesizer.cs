@@ -167,8 +167,8 @@ public sealed record CucumberSynthesisResult(
 /// </para>
 /// <para>
 /// Retries: each <c>TestCaseStarted</c> is one attempt. The last attempt is the verdict and the only one
-/// that contributes steps and diagram markers; earlier attempts leave a <c>retry N</c> label on the
-/// scenario so a flaky test stays visible.
+/// that contributes steps and diagram markers; the scenario's <see cref="Scenario.Attempt"/> says which attempt it
+/// shows, and the report draws a retry badge from it, so a flaky test stays visible.
 /// </para>
 /// <para>
 /// Bypasses: a Gherkin step reported <c>SKIPPED</c> while a later Gherkin step of the same attempt finished
@@ -183,8 +183,6 @@ public sealed record CucumberSynthesisResult(
 /// </remarks>
 public static class CucumberFeatureSynthesizer
 {
-    private const string CategoryTagPrefix = "category:";
-    private const string EndpointTagPrefix = "endpoint:";
 
     /// <summary>Reads the files and synthesises in one step.</summary>
     public static CucumberSynthesisResult BuildFromFiles(IEnumerable<string> paths, CucumberSynthesisOptions? options = null) =>
@@ -710,26 +708,12 @@ public static class CucumberFeatureSynthesizer
         var ownTags = node is null ? [] : node.OwnTagNames(exampleRow?.ExamplesTags);
         var pickleTags = (pickle.Tags ?? []).Select(t => Strip(t.Name)).Where(t => t is not null).Select(t => t!).ToArray();
 
-        var labels = ownTags
-            .Where(t => !HappyPathDetection.IsHappyPathTag(t)
-                        && !t.StartsWith(EndpointTagPrefix, StringComparison.OrdinalIgnoreCase)
-                        && !t.StartsWith(CategoryTagPrefix, StringComparison.OrdinalIgnoreCase))
-            .Distinct(StringComparer.Ordinal)
-            .ToList();
-
-        // Earlier attempts are not shown as scenarios; a label keeps the flakiness visible.
-        for (var i = 0; i < attempts.Count - 1; i++)
-            labels.Add($"retry {attempts[i].Attempt + 1}");
-
-        var categories = pickleTags
-            .Where(t => t.StartsWith(CategoryTagPrefix, StringComparison.OrdinalIgnoreCase))
-            .Select(t => t[CategoryTagPrefix.Length..])
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-
-        var endpoint = pickleTags
-            .FirstOrDefault(t => t.StartsWith(EndpointTagPrefix, StringComparison.OrdinalIgnoreCase))
-            ?[EndpointTagPrefix.Length..];
+        // A scenario's tags are its pickle's (its own, its rule's and its Examples block's among them) less its feature's,
+        // so effective tags are the pickle's, Cucumber's own inheritance (plans/TAGS_PLAN.md §4.5, F10). The happy path
+        // is read from its own and its Examples block's, as before; an earlier attempt makes no tag (Q6).
+        var classified = ScenarioTags.Classify(pickleTags);
+        var tags = classified.Tags.Except(FeatureTagsOf(node?.Feature), ScenarioTags.Comparer).ToArray();
+        var endpoint = classified.Endpoint;
 
         var (exampleValues, exampleRaw) = BuildExampleValues(exampleRow);
 
@@ -738,7 +722,7 @@ public static class CucumberFeatureSynthesizer
             Id = scenarioId,
             DisplayName = displayName,
             Description = NullIfBlank(Dedent(node?.Node.Description)),
-            IsHappyPath = HappyPathDetection.AnyHappyPathTag(ownTags),
+            IsHappyPath = ScenarioTags.Classify(ownTags).IsHappyPath,
             Result = worst,
             ErrorMessage = errorMessage,
             ErrorStackTrace = errorStack,
@@ -747,10 +731,9 @@ public static class CucumberFeatureSynthesizer
             Steps = steps.Count > 0 || hookStepsBefore.Count > 0 || hookStepsAfter.Count > 0 ? [.. hookStepsBefore, .. steps, .. hookStepsAfter] : null,
             BackgroundSteps = backgroundSteps.Count > 0 ? backgroundSteps.ToArray() : null,
             Attachments = scenarioAttachments.Count > 0 ? scenarioAttachments.ToArray() : null,
-            Labels = labels.Count > 0 ? labels.ToArray() : null,
-            Categories = categories.Length > 0 ? categories : null,
+            Tags = tags.Length > 0 ? tags : null,
             Rule = NullIfBlank(node?.Rule),
-            // 1-based, like the `retry N` label above; Cucumber's wire value counts from 0.
+            // 1-based, as the report's retry badge reads it; Cucumber's wire value counts from 0.
             Attempt = winner.Attempt + 1,
             // The pickle carries the uri too, and is the fallback when the gherkinDocument for this
             // scenario never arrived (a producer may emit pickles without documents).
@@ -1143,6 +1126,10 @@ public static class CucumberFeatureSynthesizer
         return string.Join('\n', lines.Select(l => l.Length >= indent ? l[indent..] : l.TrimStart())).Trim('\n');
     }
 
+    /// <summary>A feature node's tags, less Kronikol's markers, each once.</summary>
+    private static string[] FeatureTagsOf(CucumberFeatureNode? feature) =>
+        ScenarioTags.Classify((feature?.Tags ?? []).Select(t => Strip(t.Name)).Where(t => t is not null).Select(t => t!)).Tags;
+
     /// <summary>Collects the scenarios of one feature while they arrive out of the message stream.</summary>
     private sealed class FeatureAccumulator(string name, CucumberFeatureNode? node, string? sourceFile)
     {
@@ -1151,13 +1138,7 @@ public static class CucumberFeatureSynthesizer
 
         public Feature ToFeature()
         {
-            var tags = (node?.Tags ?? []).Select(t => Strip(t.Name)).Where(t => t is not null).Select(t => t!).ToArray();
-            var labels = tags
-                .Where(t => !HappyPathDetection.IsHappyPathTag(t)
-                            && !t.StartsWith(EndpointTagPrefix, StringComparison.OrdinalIgnoreCase)
-                            && !t.StartsWith(CategoryTagPrefix, StringComparison.OrdinalIgnoreCase))
-                .Distinct(StringComparer.Ordinal)
-                .ToArray();
+            var tags = FeatureTagsOf(node);
 
             return new Feature
             {
@@ -1165,7 +1146,7 @@ public static class CucumberFeatureSynthesizer
                 Description = NullIfBlank(Dedent(node?.Description)),
                 Endpoint = Endpoint,
                 SourceFile = sourceFile,
-                Labels = labels.Length > 0 ? labels : null,
+                Tags = tags.Length > 0 ? tags : null,
                 Scenarios = Scenarios.ToArray(),
             };
         }

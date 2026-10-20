@@ -4,7 +4,9 @@
 // and while it floats has Filters, which takes the box into the bar: there it pins with the bar and covers nothing, and
 // Esc, its close, a phone's width or the bar coming to rest puts it back. The Features panel says when no scenario is
 // left. The bar says when it is pinned (D25), and Duration and Happy paths join the Status line when they fit whole,
-// decided on their measured widths (D18). On a phone the bar scrolls away and the box keeps its own Filters toggle.
+// decided on their measured widths (D18). On a phone the bar scrolls away and the box keeps its own Filters button, which
+// folds the rows with More filters' class, so they stay as they were across the phone breakpoint, and whose line the
+// readout rides (5.0.0, S12).
 (function () {
     var doc = document, root = doc.documentElement;
     var phone = window.matchMedia ? window.matchMedia('(max-width: 768px)') : { matches: false };
@@ -52,15 +54,14 @@
 
     // ---- More filters (D15) ----
     function moreFilters() {
-        var more = $('.more-filters', box), count = more && $('.more-filters-count', more);
+        var more = $('.more-filters', box), count = more && $('.more-filters-count', more), phoneToggle = $('.mobile-filter-toggle', box);
         if (!more) return;
         var idle = more.getAttribute('title');
-        // the filters on in the rows: each status, each tag, dependency or category chip set either way, and one for the
+        // the filters on in the rows: each status, each tag or dependency chip set either way, and one for the
         // duration threshold, a percentile or a custom value
         function on() {
             var n = box.querySelectorAll('.status-toggle.status-active, .tag-toggle.tag-active, .tag-toggle.tag-exclude, '
-                + '.dependency-toggle.dependency-active, .dependency-toggle.dependency-exclude, '
-                + '.category-toggle.category-active, .category-toggle.category-exclude').length;
+                + '.dependency-toggle.dependency-active, .dependency-toggle.dependency-exclude').length;
             var dur = $('#duration-threshold', box);
             if ($('.percentile-btn.percentile-active', box) || (dur && dur.value)) n += 1;
             return n;
@@ -68,6 +69,7 @@
         hooks.paint = function () {
             var open = !box.classList.contains('rows-folded'), n = on();
             more.setAttribute('aria-expanded', String(open));
+            if (phoneToggle) phoneToggle.setAttribute('aria-expanded', String(open));
             count.textContent = n ? String(n) : '';
             count.hidden = open || !n;
             more.classList.toggle('has-on', !open && n > 0);
@@ -266,9 +268,24 @@
         scrolled();
     }
 
+    // ---- the phone's Filters line ----
+    // On a phone the rows fold under the Filters button, whose line is otherwise empty: the readout rides it there, so it
+    // costs no height (the preview's c-dom.r5.js), and goes back before Clear All on a wider window. The element itself
+    // moves, so the filters, which write it, and the bar, which copies it, keep it.
+    function placeReadout() {
+        var readout = $('.filter-readout', box), line = $('.mobile-filter-line', box);
+        var clear = $('.filtering-box-export .export-btn[onclick="clear_all_filters()"]', box);
+        if (!readout || !line || !clear) return;
+        if (phone.matches) { if (readout.parentNode !== line) line.appendChild(readout); }
+        else if (readout.nextSibling !== clear) clear.parentNode.insertBefore(readout, clear);
+    }
+
     function start() {
         box = $('.filtering-box');
         if (!box) return;
+        placeReadout();
+        if (phone.addEventListener) phone.addEventListener('change', placeReadout);
+        else if (phone.addListener) phone.addListener(placeReadout);
         nav = $('.toolbar-row.report-nav');
         if (nav) bar();
         moreFilters();
@@ -287,9 +304,10 @@
     }
     // what the filters leave showing changes the bar's copy and the count
     doc.addEventListener('kron-filter-change', function () { hooks.sync(); hooks.paint(); });
-    // More filters answers from the moment the page has it, before the rest of this starts
+    // More filters, and on a phone the Filters button, answer from the moment the page has them, before the rest of this
+    // starts: both set the one fold class
     doc.addEventListener('click', function (e) {
-        var more = e.target && e.target.closest ? e.target.closest('.filtering-box .more-filters') : null;
+        var more = e.target && e.target.closest ? e.target.closest('.filtering-box .more-filters, .filtering-box .mobile-filter-toggle') : null;
         if (!more) return;
         var b = more.closest('.filtering-box'), open = b.classList.contains('rows-folded');
         reflow(function () { b.classList.toggle('rows-folded', !open); hooks.paint(); });

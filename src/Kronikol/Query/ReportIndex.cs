@@ -141,7 +141,8 @@ internal sealed class ScenarioEntry
 {
     public int Ordinal { get; init; }
     public string FeatureName { get; set; } = "";
-    public string[] FeatureLabels { get; set; } = [];
+    /// <summary>The feature's tags: <c>tags</c>, or its <c>labels</c> in a file written before 5.0.0.</summary>
+    public string[] FeatureTags { get; set; } = [];
 
     /// <summary>
     /// Where the feature is written, when the lane supplied it - a project-relative path, the contract
@@ -178,8 +179,31 @@ internal sealed class ScenarioEntry
 
     /// <summary>Which run of this scenario produced the result, 1-based; null when the runner said nothing.</summary>
     public int? Attempt { get; set; }
-    public List<string> Labels { get; } = [];
-    public List<string> Categories { get; } = [];
+
+    /// <summary>
+    /// The scenario's own tags, each once: <c>tags</c>, or in a file written before 5.0.0 its <c>labels</c>, less the
+    /// <c>retry N</c> ones its attempt accounts for, then its <c>categories</c> (plans/TAGS_PLAN.md §4.13).
+    /// </summary>
+    public List<string> Tags { get; } = [];
+
+    /// <summary>The effective tags: the feature's, then the scenario's own, each once.</summary>
+    public string[] EffectiveTags => ScenarioTags.Merge(FeatureTags, Tags);
+
+    // A file written before 5.0.0, read as its keys come and folded into Tags when the scenario ends, once its attempt
+    // is known (the attempt is written after them).
+    internal List<string> LegacyLabels { get; } = [];
+    internal List<string> LegacyCategories { get; } = [];
+
+    internal void FoldLegacyTags()
+    {
+        if (LegacyLabels.Count == 0 && LegacyCategories.Count == 0)
+            return;
+        var own = ScenarioTags.Merge(Tags, LegacyLabels.Where(l => !ScenarioTags.IsGeneratedRetryLabel(l, Attempt)), LegacyCategories);
+        Tags.Clear();
+        Tags.AddRange(own);
+        LegacyLabels.Clear();
+        LegacyCategories.Clear();
+    }
     public Dictionary<string, string> ExampleValues { get; } = [];
     public List<StepEntry> BackgroundSteps { get; } = [];
     public List<StepEntry> Steps { get; } = [];

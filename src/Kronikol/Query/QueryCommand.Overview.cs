@@ -276,8 +276,7 @@ public static partial class QueryCommand
             errorMessage = scenario.ErrorMessage,
             attempt = scenario.Attempt,
             stableIdShared = shared.TryGetValue(scenario.StableId, out var repeats) ? repeats : 1,
-            labels = scenario.Labels,
-            categories = scenario.Categories,
+            tags = scenario.EffectiveTags,
             exampleValues = scenario.ExampleValues
         }));
         NoteWarmedOut();
@@ -303,9 +302,8 @@ public static partial class QueryCommand
             return false;
         if (options.Feature is { } feature && !scenario.FeatureName.Contains(feature, StringComparison.OrdinalIgnoreCase))
             return false;
-        if (options.Label is { } label
-            && !scenario.Labels.Concat(scenario.Categories).Concat(scenario.FeatureLabels)
-                .Any(l => l.Contains(label, StringComparison.OrdinalIgnoreCase)))
+        if (options.Tag is { } tag
+            && !scenario.EffectiveTags.Any(t => t.Contains(tag, StringComparison.OrdinalIgnoreCase)))
             return false;
         if (options.Grep is { } grep && !scenario.Name.Contains(grep, StringComparison.OrdinalIgnoreCase))
             return false;

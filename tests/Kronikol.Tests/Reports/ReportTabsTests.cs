@@ -55,8 +55,18 @@ public class ReportTabsTests
         new(DiagnosticKind.MalformedLine, "Skipped a capture line")
     ];
 
+    // each tab titled with what it shows (5.0.0, plans/OPTION_C_PLAN.md D49); none of these runs paid a warm-up
     private static string Tab(string key, string label, bool selected, string count = "") =>
-        $"<button class=\"report-tab\" id=\"tab-{key}\" role=\"tab\" aria-controls=\"panel-{key}\" aria-selected=\"{(selected ? "true" : "false")}\" tabindex=\"{(selected ? "0" : "-1")}\" data-tab=\"{key}\">{label}{count}</button>";
+        $"<button class=\"report-tab\" id=\"tab-{key}\" role=\"tab\" aria-controls=\"panel-{key}\" aria-selected=\"{(selected ? "true" : "false")}\" tabindex=\"{(selected ? "0" : "-1")}\" data-tab=\"{key}\" title=\"{TabTitle(key)}\">{label}{count}</button>";
+
+    private static string TabTitle(string key) => key switch
+    {
+        "features" => "The features and their scenarios, with the filters applied",
+        "timeline" => "Every scenario as a bar, slowest first",
+        "components" => "The services, databases and queues the scenarios called, drawn as one diagram",
+        "history" => "This run against the earlier runs on the same branch: what is failing, flaky, fixed, slower, new or gone",
+        _ => "What Kronikol noticed while building this report, such as calls it could not put under a scenario"
+    };
 
     private static string Panel(string key, bool shown) =>
         $"<div class=\"report-panel\" id=\"panel-{key}\" role=\"tabpanel\" aria-labelledby=\"tab-{key}\" data-panel=\"{key}\"{(shown ? "" : " hidden")}>";
@@ -85,7 +95,7 @@ public class ReportTabsTests
         var features = html.IndexOf(Panel("features", true), StringComparison.Ordinal);
         var timeline = html.IndexOf(Panel("timeline", false) + "<div id=\"scenario-timeline\" class=\"scenario-timeline\">", StringComparison.Ordinal);
         var components = html.IndexOf(Panel("components", false) + "<div id=\"component-diagram\" class=\"component-diagram-section\">", StringComparison.Ordinal);
-        var diagnostics = html.IndexOf(Panel("diagnostics", false) + "<details class=\"report-diagnostics\" open><summary tabindex=\"-1\">", StringComparison.Ordinal);
+        var diagnostics = html.IndexOf(Panel("diagnostics", false) + "<details class=\"report-diagnostics\" open><summary tabindex=\"-1\" title=\"What Kronikol noticed while building this report, such as calls it could not put under a scenario\">", StringComparison.Ordinal);
         Assert.True(features > panels, "the features panel is in the panels");
         Assert.True(timeline > html.IndexOf("<div id=\"report-content\"", StringComparison.Ordinal), "the timeline panel follows the features");
         Assert.True(components > timeline, "then the components panel");
@@ -150,7 +160,7 @@ public class ReportTabsTests
         Assert.Contains("<div class=\"toolbar-row\">", html);
         // no tab names the panel, so it is no tab panel either; its views, the table and the cards, are (S4)
         // the empty state first (S7)
-        Assert.Contains("<div class=\"report-panels\"><div class=\"report-panel\" id=\"panel-features\" data-panel=\"features\"><div class=\"filters-empty\" hidden><span>No scenarios match the filters.</span><button type=\"button\" class=\"filters-empty-clear\">Clear All</button></div><div class=\"features-panel\">"
+        Assert.Contains("<div class=\"report-panels\"><div class=\"report-panel\" id=\"panel-features\" data-panel=\"features\"><div class=\"filters-empty\" hidden><span>No scenarios match the filters.</span><button type=\"button\" class=\"filters-empty-clear\" title=\"Clear every filter\">Clear All</button></div><div class=\"features-panel\">"
             + "<div class=\"features-table-view\" id=\"features-table-view\" role=\"tabpanel\" aria-labelledby=\"view-summary\" hidden>", html);
     }
 

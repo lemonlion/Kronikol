@@ -85,7 +85,7 @@ public class WidenedTestRunRecordTests
     }
 
     [Fact]
-    public void Tags_follow_the_req_n_roll_conventions()
+    public void Tags_follow_the_classifier_s_conventions()
     {
         var scenario = Build(
             new TestRunRecord
@@ -96,8 +96,7 @@ public class WidenedTestRunRecordTests
             },
             new TestRunRecord { Event = "end", TestId = "t", Status = "passed", Timestamp = T0.AddSeconds(1) });
 
-        Assert.Equal(["gemma"], scenario.Labels!);
-        Assert.Equal(["smoke", "ui"], scenario.Categories!);
+        Assert.Equal(["gemma", "smoke", "ui"], scenario.Tags);
         Assert.True(scenario.IsHappyPath);
     }
 
@@ -112,8 +111,11 @@ public class WidenedTestRunRecordTests
         ], null).Features;
 
         var feature = Assert.Single(features);
-        Assert.Equal(["gemma"], feature.Labels!);
+        Assert.Equal(["gemma"], feature.Tags);
         Assert.Equal("/overview", feature.Endpoint);
+        // the lifted tag stays on each scenario, so a merge that keeps only what every shard lifted loses none (F22)
+        Assert.Equal(["gemma", "slow"], feature.Scenarios.Single(s => s.Id == "a").Tags);
+        Assert.Equal(["gemma"], feature.Scenarios.Single(s => s.Id == "b").Tags);
     }
 
     [Fact]

@@ -97,6 +97,15 @@ internal static class HistoryHtml
     }
 
     /// <summary>
+    /// What the History section shows (5.0.0, plans/OPTION_C_PLAN.md D49): the History tab's title, and its heading's in
+    /// the tab, where the heading is nothing to click.
+    /// </summary>
+    internal const string Description = "This run against the earlier runs on the same branch: what is failing, flaky, fixed, slower, new or gone";
+
+    /// <summary>The heading's title where the section is a disclosure, on the labs page and in <see cref="Section(HistoryVerdicts)"/>.</summary>
+    private const string DisclosureTitle = "This run against the earlier runs on the same branch: click to show or hide the details";
+
+    /// <summary>
     /// The report's History section: the run's summary line, the trend of the last runs, and the lists of what
     /// changed, each scenario linked in the page by its stable id. Open when there is something to say.
     /// </summary>
@@ -134,20 +143,20 @@ internal static class HistoryHtml
     public static string ScenarioLink(string stableId, string html, string? reportHref) =>
         reportHref is null
             ? $"<span class=\"history-name\">{html}</span>"
-            : $"<a class=\"history-link\" href=\"{HtmlEncode(Uri.EscapeDataString(reportHref))}#sid-{HtmlEncode(stableId)}\">{html}</a>";
+            : $"<a class=\"history-link\" href=\"{HtmlEncode(Uri.EscapeDataString(reportHref))}#sid-{HtmlEncode(stableId)}\" title=\"Open this scenario in the report\">{html}</a>";
 
     // Inside the report: the hash handler opens the scenario, and the address bar takes its anchor.
     private static string InPageLink(ScenarioHistory entry)
     {
         var id = entry.StableId;
-        return $"<a class=\"history-link\" href=\"#sid-{id}\" onclick=\"event.preventDefault();if(window.reveal_url_anchor){{reveal_url_anchor('sid-{id}');}}history.replaceState(null,'',location.pathname+location.search+'#sid-{id}');\">{HtmlEncode(entry.Feature)} &rsaquo; {HtmlEncode(entry.Name)}</a>";
+        return $"<a class=\"history-link\" href=\"#sid-{id}\" onclick=\"event.preventDefault();if(window.reveal_url_anchor){{reveal_url_anchor('sid-{id}');}}history.replaceState(null,'',location.pathname+location.search+'#sid-{id}');\" title=\"Go to this scenario on the Features tab\">{HtmlEncode(entry.Feature)} &rsaquo; {HtmlEncode(entry.Name)}</a>";
     }
 
     private static string Section(HistoryVerdicts history, Func<ScenarioHistory, string> link, bool open, bool inTab = false)
     {
         var sb = new StringBuilder();
         sb.Append($"<details id=\"history-section\" class=\"history-section\"{(open ? " open" : "")}>");
-        sb.Append($"<summary class=\"h2\"{(inTab ? " tabindex=\"-1\"" : "")}>History <span class=\"history-summary-line\">{HtmlEncode(HistorySummary.Line(history))}</span></summary>");
+        sb.Append($"<summary class=\"h2\"{(inTab ? " tabindex=\"-1\"" : "")} title=\"{(inTab ? Description : DisclosureTitle)}\">History <span class=\"history-summary-line\">{HtmlEncode(HistorySummary.Line(history))}</span></summary>");
         sb.Append("<div class=\"history-body\">");
         sb.Append($"<p class=\"history-meta\">stream <code>{HtmlEncode(history.Stream)}</code> · run <code>{HtmlEncode(history.RunId)}</code> · {history.RunsRecorded.ToString(CultureInfo.InvariantCulture)} earlier run{(history.RunsRecorded == 1 ? "" : "s")} in the window");
         if (history.Partial)
@@ -359,12 +368,12 @@ internal static class HistoryHtml
     /// <summary>The colours the timeline bars use, so the sparkline reads like the rest of the report.</summary>
     private static string Colour(char result) => result switch
     {
-        HistoryFormat.Passed => "#228b22",
-        HistoryFormat.Failed => "#bf0000",
-        HistoryFormat.Skipped or HistoryFormat.SkippedAfterFailure => "#949494",
-        HistoryFormat.Absent => "#e6e6e6",
-        HistoryFormat.Unknown => "#c8c8c8",
-        HistoryFormat.NotATest => "#dcdcdc",
-        _ => "#b8a000"
+        HistoryFormat.Passed => "var(--sp)",
+        HistoryFormat.Failed => "var(--sf)",
+        HistoryFormat.Skipped or HistoryFormat.SkippedAfterFailure => "var(--ss)",
+        HistoryFormat.Absent => "var(--sa)",
+        HistoryFormat.Unknown => "var(--su)",
+        HistoryFormat.NotATest => "var(--sn)",
+        _ => "var(--so)"
     };
 }

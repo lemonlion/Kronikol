@@ -5,10 +5,11 @@ after round 17 of the preview: "when you're done, put all of this in an (unrelea
 together with the size reduction stuff for a release. If this is all just scratchpad stuff then when you're done
 make sure it's all done properly in the branch ready to be released (with the size reduction stuff)."
 
-5.0.0 is therefore three pieces of work on one branch: this plan, the dependency filter's OR default (`9452ddb5`,
-already on `v5`, under `[Unreleased]` in the changelog), and the report size reduction (`REPORT_FORMAT_PLAN.md`,
-written in its own worktree, `plan/report-format`). The version moves to 5.0.0 when the branch is released, not
-before; until then the changelog collects its entries under `[Unreleased]`.
+5.0.0 is therefore four pieces of work on one branch: this plan, the dependency filter's OR default (`9452ddb5`,
+already on `v5`, under `[Unreleased]` in the changelog), the report size reduction (`REPORT_FORMAT_PLAN.md`, written
+in its own worktree, `plan/report-format`), and labels and categories as one list of tags (`TAGS_PLAN.md`, put in
+5.0.0 by the owner on 2026-10-19 and built on the branch `v5-tags`, which `v5` fast-forwards to). The version moves
+to 5.0.0 when the branch is released, not before; until then the changelog collects its entries under `[Unreleased]`.
 
 ## 1. What "Option C" is, and where its specification lives
 
@@ -971,3 +972,243 @@ decision of the owner's, not part of this plan.
   case). Green: 17 of 17 (the AttachmentRendering class and both cases of the popup theory). Lesson: a stage's
   neighbour checks pick the classes by name, and this class's name gave no hint it reads the popup; the full suite
   after each stage is what catches such a test.
+- 2026-10-19, S12 D43: the diagram menu's "in new tab" items open the tab in the click (R17.21; the preview's
+  `c-round17.js` 1-29 and `build.js` 203-226; `script-patches-and-diagrams.md` P13), applied with
+  `edits/scripts-s12d43.py` and `edits/tests-s12d43.py`. The helpers sit inside `context-menu-script.js`'s wrapper,
+  not on `window`: `openTab` opens `about:blank` while the click is handled (`createMenuItem` runs the action in the
+  click), `writeTab` writes a page into it, `openPngInTab` writes the canvas as a PNG data URL once it is drawn, and
+  `openSvgInTab` and `openTextInTab` write an SVG data URL or the escaped text; each falls back to the `blob:` URL
+  when no tab opened. All nine sites go through them.
+  Deviations: the box text's tabs are titled "Box text" and a source's "PlantUML source" (the preview titled every
+  text tab "Diagram source", its F12).
+  Tests: Playwright `OpenInNewTabTests` (new, 3 facts, 4 cases: the tab opens before the picture is drawn, its title,
+  an image from a data URL that loads, and a source written as text equal to the diagram's) and
+  `NoteCopyFidelityTests`' box-text fact (its tab's title, and no `blob:` URL); core `DiagramContextMenuTests`' two
+  facts turned round (they held "blob URLs, not data URIs"), failing 2 of 2 before the change. Red with the menu
+  script at its last commit: the four OpenInNewTabTests cases and the box-text fact fail, each tab's title never
+  coming. Green: 4 of 4, with the box-text fact and the menu's neighbours (ContextMenuExtended, IflowPopup,
+  NoteCopyFidelity, DiagramExportLook). Mutations: 7 of 7 killed (checks/mutate-s12d43.py). Found while running them:
+  the first green ran on a stale build (the chain put the script back with a copy that kept its old time, so the build
+  skipped the compile); the order check first recorded toDataURL, which comes after the tab opens even when the tab
+  opens late, and records drawImage now, which killed the two mutations that had survived; and the source fact's
+  fixture held no markup, so the fact now writes some into the source it opens.
+  Checks: the context menu's core tests pass, 130 of 130 (the DiagramContextMenu, ContextMenu and
+  NoteCopyFidelityScript classes). The full suites run on v5 with this commit.
+- 2026-10-19, S12 steps alignment (R17.18; the preview's `c-round17.css` 26-28, 37-40 and 53-66): regression facts for
+  the rules S1 ported (`fc254b55`), the brief having found no CSS left to port. `StepAlignmentTests` (new, Playwright,
+  2 facts): the four headings' triangles share one column, a collapsible step's triangle sits in it, and each
+  heading's first letter starts where the status circles do (the background step's among them), in Chromium and in
+  Playwright's Firefox (skipped where it is missing). The facts pass on the unchanged code, so their red is their
+  mutations: 5 of 5 killed (a sixth, the Steps heading's own left padding, survived as an equivalent mutation: the
+  shared heading rule after it sets the same side again, so it is not kept) (`checks/mutate-s12a.py`). Not covered:
+  the Specifications page, where step numbers precede the circle and the heading's letter and the circle do not share
+  a column (S13).
+  Checks: the facts pass in both browsers, with BaseSurfaceStyleTests, 11 of 11. Found while running them: Playwright
+  cannot fill a positional record from an evaluation (Return type mismatch), so the layout comes back as JSON.
+- 2026-10-19, S12 D43 follow-up (found by the full core suite on `d385c715`, its only 2 failures): four
+  `StepRenderingReportTests` pins read "<img" anywhere in the page, which D43's menu script now carries in its text,
+  so the two "no image" facts failed and the two "an image" facts could not fail. They read the attachment's own
+  markup now (`edits/tests-img-pins.py`); renaming the attachment image's class fails the image facts, 6 of 6 cases,
+  and the class and the attachment tests pass, 237 of 237. The lesson is the one the Report-HTML substring rule
+  states: a pin reads an emitted attribute, never a bare substring of the page.
+- 2026-10-19, S11 closed and S12 begun, checked: origin/main merged into v5 at 4.31.1 (`9bb77de6`) and at 4.32.0
+  (`c010bcb6`, REPORT_FORMAT_PLAN R4, which that plan's 5.0.0 flips build on); two test faults the first merge and
+  S11c left, found by kronikol-89's full Playwright run, fixed (`7200017e`); the full suites pass: core 8,327 with 2
+  skipped on `0eeb9644`, Playwright 1,285 with 28 skipped on `d385c715` (the commit before it, which differs only in a
+  core test). The core suite on `d385c715` had failed 2, the attachment pins D43's script text broke (fixed in
+  `0eeb9644`).
+- 2026-10-19, S11e follow-up (S11e's Playwright mutations, run with the full suites on `d385c715`: 10 of 11 killed):
+  the survivor turned off the IntersectionObserver that draws a change made while the Components tab is hidden, and
+  `A_filter_changed_on_another_tab_reaches_the_diagram_when_its_tab_opens` still passed, because it opened the tab
+  within the filter change's 150 ms settle and the settle drew the change itself. The fact now waits for the hidden
+  tab's note to say the change was taken before it opens the tab. Mutation: the survivor is killed now, 1 of 1, so
+  S11e's Playwright mutations stand at 11 of 11. Checks: the ComponentsTab class passes, 12 of 12.
+- 2026-10-19, a v5 contrast fix the S13 preparation found: More filters' count, white (`--kron-on-solid`) on the
+  accent, read at 2.44:1 in both dark blocks, the dark accent being a light blue. A new token, `--kron-on-accent`, is
+  white in the light block and `#10161e` in both dark ones (7.5:1) (`edits/scripts-count-contrast.py`).
+  `StylesheetRulesTests.The_more_filters_count_reads_at_AA_in_every_theme` (new, 3 cases,
+  `edits/tests-count-contrast.py`) resolves the count's ink and ground through each block of the token sheet; it
+  failed 2 of 3 before the change and passes with the StylesheetRules, token, theme and filter bar classes, 133 of
+  133, on `3fce16bb`; on `f077cda6` (T2), with D48 beside it, 90 of 90 with D48's neighbours. Mutations: 4 of 4 killed
+  (`checks/mutate-count-contrast.py`: each block's ink set to one that fails AA, and the count back on
+  `--kron-on-solid`).
+- 2026-10-19, S12 D48: focus the keyboard moves is never left under the report bar (R17.20; the preview's
+  `c-round13.js` 58-114), prepared in the session's scratch and applied with `edits/s12d48/scripts-s12d48.py` and
+  `edits/s12d48/tests-s12d48.py`. `report-focus-script.js` (new) loads in the head of a page with the report bar,
+  after the tabs script. Tab or Shift+Tab focus only: a click's and a script's are left where they land. The free band
+  starts 12 px below the pinned bar, or below a scenario's open settings stuck under it for a control after them
+  (decision a), and ends 12 px above the window's foot; a control in the bar, in those settings or in anything fixed
+  is left alone, as is one taller than the band that already shows in it. For a second after, every scroll and timers
+  at 150, 400 and 800 ms check the control again, until the reader scrolls, points or presses a key, or focus moves
+  on.
+  Deviations: the bar counts only while it is pinned (the preview scrolled the page up for a control above the bar at
+  rest); a pointer press or any key ends the watch; no script where there is no bar; a pixel's grace for the bar's
+  rounded height.
+  Tests: core `FocusScriptTests` (new, 4 cases), red 2 of 4 before the change (the 2 absence cases are guards), green
+  with the ReportTabs, VerdictFences and ComponentsTabHtml classes, 44 of 44; Playwright `FocusClearOfTheBarTests`
+  (new, 13 facts): red 4 of 13 before the change, each on its assertion (a link under the stuck settings 6 px short of
+  the band, a scenario ending in the window's last 12 px, one pushed 1,950 px away, the search 0.09 px into the
+  window), the other 9 guards; green with the FeaturesTools, ReportTabs and ScenarioSettings classes, 46 of 46. The
+  Firefox fact is a guard as well: Playwright's Firefox already brings a scenario half under the bar below it (the
+  package's risk 1). The fixture wraps the diagram's linked label in the `<a>` the Java engine writes, as
+  `IflowPopupTests` builds its links: the browser engine draws a link's label as text the render script binds, so the
+  first run's two settings facts waited 60 s for an `<a>` that never came. `checks/focus-script-check.js` holds the
+  timing paths under node (19 checks, 16 probes caught). Mutations: 14 of 14 killed (the 3 core on 3fce16bb; the 11
+  Playwright on f077cda6: a click's focus moved, a control taller than the band moved, one in anything fixed moved, no
+  check after the first frame, no room at the window's foot, stuck settings covering nothing, the bar covering the
+  window's top at rest, no room at the top while the bar rests, the bar's own controls moved, a control in the stuck
+  settings moved, a phone's page moved) (`checks/mutate-s12d48.py`). Owner questions (seven): Tab only, the settings
+  band, the window's top at rest, what ends the watch, S7's empty state from the keyboard, pages without the bar, the
+  phone's sticky search line (phone part 2).
+  Checks: The classes above, core and Playwright, on f077cda6 (T2); the full suites run when S12 closes.
+- 2026-10-20, S12 D49 and D50: a title on every control (the 53 rows of `inventory/structure-and-behaviour.md` 3.1: 36
+  added, 7 changed, 10 already there; 8 controls outside the table), the where-words from the C#, the scripts only for
+  what they draw; three controls get names (Back to top, Payload length, the popup's Close); D50 settled (no debug
+  global; `checks/nav-check.js` and `checks/q-test.js` use the product's controls). Prepared in the session's scratch
+  at `a1235d98` and `d385c715`, then ported to T2 (`f077cda6`) before it was applied: the rows title has no Categories
+  row (a category is a tag), `FilterChip` keeps T2's `more` parameter, `FilterRowsTests` pins 18 chip titles, and
+  `ControlTitlesTests` names the rows as T2 has them (`edits/s12d49/`: `scripts-s12d49.py`, `tests-s12d49.py` and the
+  two new test files, all as ported; `design.md` has the nine owner questions, Q7 the bytes: 2,023 to 2,962 per
+  scenario bar with a sequence diagram).
+  Tests: `ControlTitlesTests` (new, 18 facts and a theory, 20 cases), red 20 of 20; with the 22 pinned classes (90 pin
+  lines), 81 of 569 failed before the change and 569 of 569 after (the first green run failed 2: Clear All pins in
+  FilterBarTests and FilterRowsTests still named a Categories row; ported, those classes and ControlTitlesTests pass,
+  42 of 42). `ControlTitlesAuditTests` (new, 3 Playwright facts): red 3 of 3 before the change, each on its assertion
+  (the audit listed the controls left without a title, View run and Clear All first; the composite step's summary had
+  none; the popup's close had no name); green with the 13 classes that assert a title and IflowPopupTests, 164 of 164.
+  The audit fact's first form counted the settings bars with :visible, and a closed bar is 0 px tall, so it failed
+  before and after the change on "0 scenario settings show" (the package could not run Playwright): it counts the
+  gears now, found by its first run and fixed before the red counted. Mutations (`checks/mutate-s12d49.py`, 101): the
+  93 core killed in the package's scratch runner on `d385c715`'s code, anchors found once each on `f077cda6`
+  (`edits/s12d49/mutate-scratch.txt`); on the real tree, the 17 under or beside T2's code: 17 of 17 killed; the 8
+  Playwright killed, 8 of 8 (the popup's cross with no name and with no title, its view tabs with no title and with
+  their titles swapped, a composite step's summary never titled and one step inside counted as many, a feature's name
+  with no title in the Summary view, back to top with neither name nor title).
+  Checks: The core classes above, 569 of 569, and the Playwright classes above, 164 of 164, on `0bdfe8b6` (the count
+  fix and D48 over T2); the full suites run when S12 closes.
+- 2026-10-20, S12 phone layout, part 2 (`edits/s12p2/`: `scripts-s12p2.py`, `tests-s12p2-core.py`,
+  `tests-s12p2-e2e.py`, `MobileFilterLineTests.cs`, `changelog-s12p2.py`, and `design.md` with the decisions): on a
+  phone the filter rows fold under a Filters button on a line of its own, which the readout rides (the preview's
+  `c-dom.r5.js` 390-404 and `c-round5.css` 42-45; the product emits the line, the filter bar script moves the readout,
+  the same element, while the phone breakpoint holds). The button folds the rows with More filters' class,
+  `rows-folded`, whose rules now hold at every width, in place of the inline-style fold the init script added on a
+  phone at load. That fixes four bugs: the search help, inside the rows, could not open on a phone while they were
+  folded; rows opened on a phone stayed hidden behind the inline style on a wider window; a page opened wide then
+  narrowed showed its rows under a toggle with no listener; and a phone painted the rows open until its script ran.
+  The button takes the rows' label look in `--kron-label` (it was `rgb(100, 100, 100)`), the phone's sticky search
+  line the box's `--kron-card` (it was `rgb(224, 224, 224)`), and an empty media block goes. `ViewportSweepTests`'
+  1160 px constant says what it is now.
+  Tests: core, `FilterBarTests.On_a_phone_the_rows_fold_under_a_Filters_button_on_its_own_line` and three
+  `StylesheetRulesTests` facts (one fold class at every width; the phone's button and search line in every theme, 3
+  cases, through a token lookup now shared with the count theory; no empty media block in any sheet): red 6 of 45
+  before the change (the 6 new cases, every one; the classes' other 39 pass), and with the product 92 of 92 with
+  FilterRowsTests, ControlTitlesTests, ReportThemeTests and FocusScriptTests. Playwright `MobileFilterLineTests` (new,
+  8 facts): red 8 of 8 before the change, each on its assertion (the dark search line on rgb(224, 224, 224), the
+  readout before Clear All on a phone and not following the width, Tab not reaching the toggle, the help hidden while
+  the rows are folded, More filters saying folded over rows the inline style opened, a narrowed page's rows showing
+  and a widened one's staying hidden); MobileResponsiveTests passes, 32 of 32, before the change as after.
+  `MobileResponsiveTests`' two fold facts read the computed display (the old pins read the inline style). Green:
+  Playwright, 134 of 134 with MobileResponsiveTests, ViewportSweepTests, FilterBarTests, ToolbarStylingTests,
+  ControlTitlesAuditTests, FocusClearOfTheBarTests and TagFilterTests. Mutations (`checks/mutate-s12p2.py`, 11: 5
+  core, 6 Playwright): 11 of 11 killed (the 5 core: the fold back to a desktop only, the phone's search line grey
+  again, the button's ink a literal grey, an empty media block back, the toggle a div again; the 6 Playwright: the
+  button not folding the rows, its aria-expanded never painted, the readout never riding the line, the readout placed
+  only at load, the line showing on a desktop, the inline-style fold back at load).
+  Checks: The core classes above, 92 of 92 (run on the same tree in a second worktree, every file of the change
+  compared), and the Playwright classes above, 134 of 134, on `aa0e72b3`; the full suites run when S12 closes.
+- 2026-10-20, S12, found while running D48 (its fixture waited for an `<a>` the browser engine never draws): the
+  keyboard reaches an internal-flow link the browser engine draws (`edits/s12keys/`: `scripts-keys.py`,
+  `tests-keys.py`, `IflowLinkKeyboardTests.cs`, `changelog-s12keys.py`). That engine draws a link's label as text,
+  which `bindLink` in `plantuml-browser-render-script.js` binds to the popup, so Tab never reached an internal-flow
+  arrow (4.x too). A link with data is one Tab stop now, its first text, with role link and a name from all its texts;
+  Enter or Space opens the popup; under `ShowLinkOnHover` focus shows the link and leaving puts it at rest. A link
+  with no data, blue text no link markup names, and a link the Java engine drew as an `<a>` take no stop.
+  Tests: Playwright `IflowLinkKeyboardTests` (new, 5 facts, 6 cases, on
+  `TestPageGenerator.GenerateIflowLinkColourPage` with the popup opener recorded): red 5 of 6 before the change, each
+  on its assertion (no stop, role or name in either link mode, Tab landing nowhere, Enter and Space opening nothing,
+  focus showing nothing in a hover-only diagram); the sixth, a link the Java engine drew as an `<a>`, is a guard and
+  passes before as after; green: 122 of 122 with IflowLinkColourTests, ArrowLinkOpensPopupTests,
+  DiagramLinkHoverTests, IflowPopupTests, SharedFlowPopupTests, ExportFilteredHtmlRenderingTests,
+  LongStatementRenderingTests, OnDemandRenderingTests and FocusClearOfTheBarTests. Mutations
+  (`checks/mutate-s12keys.py`, 9): 9 of 9 killed (no Tab stop, no link role, a name from the first text only, Enter
+  opening nothing, Space opening nothing, a second stop on a link the Java engine drew, focus not showing a hover-only
+  link, leaving not putting it at rest, the stop on the link's last text).
+  Checks: The Playwright classes above, 122 of 122, on `e8ae26ce`; the full suites run when S12 closes.
+- 2026-10-20, S13 (Q3: the token sheet, the theme, and the violet theme as token overrides, no layout redesign): the
+  Specifications and labs pages on the tokens (`edits/s13/`: `scripts-s13-t2.py`, `tests-s13-t2.py`,
+  `ThemedPagesHtmlTests.cs`, `ThemedPagesTests.cs`, `design.md` with the owner questions in its section 9). The labs
+  page runs the report's theme boot script before its first style, opens its styles with the token sheet, ends its
+  head with the switch script and draws the report's title line (its `h1` and Labs badge, then the switch);
+  `labs-styles.css` is on the tokens, the table of every scenario a card. `history-styles.css` and
+  `report-diagnostics-styles.css` drop their fallbacks. `VioletThemeStyleSheet` sets the tokens for light and both
+  dark forms, `--violet-*` variables, then 17 rules where 4.x had 49, each solid violet under white, the accent
+  `#6d28d9`. The search help is on the tokens and the violet leaves it to them (1.21:1 under 4.x's violet, live on
+  main). Prepared at `db663d88`, ported onto T2 (the tags switch and selectors, T2's switches fact reworked to hold
+  both switches alike) and D49 (the history link's title), dry-run clean on `4e75ce61`.
+  Tests: core `ThemedPagesHtmlTests` (new, 9 facts, 10 cases) and the moved pins (LabsReportTests,
+  HistoryRingsMarkupTests, StylesheetRulesTests): red 15 of 89 before the change, each on its assertion (the new class
+  10 of 10, LabsReportTests 1, HistoryRingsMarkupTests 1, StylesheetRulesTests 3); green 185 of 185 with the classes
+  beside them (section 5 of the design). Playwright `ThemedPagesTests` (new, 6 facts, 12 cases) and the moved pins
+  (LabsPageTests, HistoryRingsTests, DiagnosticsCardTests, ToolbarStylingTests): red 15 of 62 before the change, each
+  on its assertion: ThemedPagesTests 11 of 12 (the labs page off the tokens in both themes, its switch missing and no
+  pick kept over a reload, the Specifications report's dark case on 4.x's light violet, a hovered chosen tab under the
+  accent in both themes, More filters untouched by the violet, and the search help off the tokens in all four cases,
+  unreadable in two: the default theme's dark, 1.17:1, and the violet's light, 1.22:1); the twelfth, the
+  Specifications report's light case, is a guard and passes before as after, holding 4.x's light violet; and the four
+  moved pins (LabsPageTests' scripts, HistoryRingsTests' probes, DiagnosticsCardTests' card, ToolbarStylingTests'
+  violet report tab); green: 119 of 119 with ThemeTests, ViewportSweepTests, MobileFilterLineTests, FilterBarTests,
+  ControlTitlesAuditTests and TagFilterTests. Mutations (`checks/mutate-s13.py`, 35: 23 core, 12 Playwright): 35 of 35
+  killed (the 23 core: the labs page choosing no theme before its styles, the token sheet left out or after the base
+  sheet, the switch left off the title line, the switch script left out (in the new class and in the LabsReportTests
+  pin), the title line not the report's, the badge on 4.x's yellow, the table of every scenario no card, a history
+  colour falling back again (in the new class and in the HistoryRingsMarkupTests pin), a diagnostics colour falling
+  back again, the violet without its dark block or without the system's, a dark card the light one, the accent left
+  blue, the hover token not set, a colour written as a literal again, the passed tick under the pass ink, a hovered
+  chosen tab under the accent, the chosen radio's dot in the accent, the search help back on its light grey, the
+  violet's dark search help back; the 12 Playwright: the token sheet left out (the new class, the HistoryRingsTests
+  and DiagnosticsCardTests pins), the table no card, the switch left off, the switch script left out (the new class
+  and the LabsPageTests pin), the violet without its dark block, a hovered chosen tab under the accent, the selected
+  token not set, the hover token not set, the search help back on its light grey). `checks/css-facts-check.py` runs
+  the stylesheet facts without a build (4 of 15 before, 15 of 15 after); `checks/violet-palette.py` holds the dark
+  values and contrasts. Found on the way and taken as the next item, S13b (design section 8 and after): colours still
+  written as values that read wrongly in the dark theme, in `stylesheets.css`, in the diagram's context menu (white,
+  with no ink of its own) and in the sparkline's run colours `HistoryHtml.Colour` writes inline; and rules and a
+  script for markup no page writes. The header says 5.0.0 is four pieces now, `TAGS_PLAN.md` the fourth (TAGS_PLAN
+  section 7).
+  Checks: Red and the mutations on `4e75ce61`, where the classes above are green and the full core suite passes 8,416
+  with 2 skipped (its one failure TagsMarkupTests' Untagged chip title, which D49 changed and T1 carries the pin for).
+  Carried onto T1 (`34954884`) without a conflict: the core classes 185 of 185, the Playwright classes 119 of 119, the
+  full core suite 8,449 with 2 skipped and no failure; the full Playwright suite runs when S12 closes.
+- 2026-10-20, S13b, found while preparing S13 (its design section 8) and while scoping this (`edits/s13b/`:
+  `scripts-s13b.py`, `tests-s13b.py`, `ReportSheetColoursTests.cs`, `DarkThemeColoursTests.cs`, `changelog-s13b.py`,
+  `design.md`): the colours the tokens never reached. The diagram's right-click menu (`context-menu-styles.css`) was
+  white and set no ink, so the dark theme drew its light ink on white (1.22:1); it is on `--kron-card` under
+  `--kron-ink`, every value with today's as its fallback (the component diagram's page carries the sheet without the
+  token sheet). `stylesheets.css`: a missing attachment, the flatten toggle and its hover, the "No interactions
+  captured" line, the duration field's edge and unit and the disabled search on tokens. `inline-svg-styles.css`: the
+  loading text (`#999`, 2.85:1 on white) on `--kron-faint`, the selection ring and the zoom slider on `--kron-accent`,
+  with fallbacks. The sparkline's runs are seven variables of `history-styles.css`, each a token, which
+  `HistoryHtml.Colour` writes by name; the sheet's grey ground goes, since the inline background shorthand always hid
+  it. Removed as dead: the `.examples-table` rules and their tints, `.row-surplus`/`.row-missing`, `body > details >
+  details > details.example`, and `report-toggle-examples-detail-function.js` (embedded in every report, called by
+  nothing). Kept as values meant for both themes, named in the test: the lightbox's scrim and shadow, the jump
+  button's darkened hover, the menu's and the popup's shadows, the warm-up hatch.
+  Tests: core `ReportSheetColoursTests` (new; a theory over nine sheets, the both-themes list held to its rules, the
+  menu, the sparkline's variables, the dead code gone) and HistoryHtmlTests' two sparkline pins: red 8 of 21 before
+  the change, each on its assertion, and the not-a-test pin, moved after the first green found it, 1 of 1 on its own
+  run. Playwright `DarkThemeColoursTests` (new, 5 facts, 10 cases) and the pins moved in HistorySparklineTests and
+  GradualZoomTests: red 11 of 14 before the change, each on its assertion (the light menu case a guard), and the glow
+  pin, moved after the first green found it, 1 of 1 on its own run. Green: core 174 of 174 and Playwright 205 of 205
+  with the classes beside them. Mutations (`checks/mutate-s13b.py`, 27: 20 core, 7 Playwright): 27 of 27 killed (the
+  20 core: the disabled search, the duration field's edge and unit, a missing attachment, the flatten toggle's edge
+  and hover, the no-interactions line, the menu's ground and hover, the loading text, the selection ring and the zoom
+  slider each back on its 4.x colour, a kind of run written as a colour, the menu without its ink, the sparkline's
+  dead ground back, an examples row and the example rule under the body back, the scrim no longer a value, the page
+  writing a failure's and a not-a-test colour again; the 7 Playwright: the menu back on white, a missing attachment
+  back on its red, the flatten toggle's ink back on its grey, the no-interactions line back on its grey, a kind of run
+  written as a colour, the page writing a failure's colour again, a pass written as 4.x's green). Two pins were found
+  only by the greens (HistoryHtmlTests' not-a-test colour, GradualZoomTests' glow, a regex on 4.x's blue): a search
+  for the old values must match the forms a test writes them in, not only the literal.
+  Checks: The reds and the mutations ran on T3 (`506b46f4`); carried onto T4 (`09a966e9`) without a conflict, where
+  the two red proofs, the greens and the full core suite ran (8,470 passed, 2 skipped, no failure); the full
+  Playwright suite runs when S12 closes.

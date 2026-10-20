@@ -13,8 +13,8 @@ internal sealed record GherkinScenario(
 {
     /// <summary>
     /// The tags the scenario declares itself (plus the tags of the <c>Examples:</c> block the pickle came
-    /// from), with the leading <c>@</c> removed — feature and rule tags are deliberately excluded, which
-    /// is what makes <c>Labels</c> and happy-path detection behave the way the ReqNRoll adapter does.
+    /// from), with the leading <c>@</c> removed. Feature and rule tags are deliberately excluded, which
+    /// is what makes happy-path detection behave the way the ReqNRoll adapter does.
     /// </summary>
     public string[] OwnTagNames(IEnumerable<string>? examplesTags)
     {

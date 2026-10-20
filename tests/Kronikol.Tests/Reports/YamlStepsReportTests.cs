@@ -28,7 +28,7 @@ public class YamlStepsReportTests
             }
         };
 
-        var path = ReportGenerator.GenerateYamlSpecs([], features, "YamlSteps.yml", "Test");
+        var path = ReportGenerator.GenerateSpecificationsData(features, "YamlSteps.yml", "Test", DataFormat.Yaml);
         var content = File.ReadAllText(path);
 
         Assert.Contains("Steps:", content);
@@ -49,7 +49,7 @@ public class YamlStepsReportTests
             }
         };
 
-        var path = ReportGenerator.GenerateYamlSpecs([], features, "YamlNoSteps.yml", "Test");
+        var path = ReportGenerator.GenerateSpecificationsData(features, "YamlNoSteps.yml", "Test", DataFormat.Yaml);
         var content = File.ReadAllText(path);
 
         Assert.DoesNotContain("Steps:", content);
@@ -68,41 +68,10 @@ public class YamlStepsReportTests
             }
         };
 
-        var path = ReportGenerator.GenerateYamlSpecs([], features, "YamlDesc.yml", "Test");
+        var path = ReportGenerator.GenerateSpecificationsData(features, "YamlDesc.yml", "Test", DataFormat.Yaml);
         var content = File.ReadAllText(path);
 
         Assert.Contains("Description:", content);
         Assert.Contains("As a user I want to order cakes", content);
-    }
-
-    [Fact]
-    public void Yaml_includes_labels_and_categories()
-    {
-        var features = new[]
-        {
-            new Feature
-            {
-                DisplayName = "Orders",
-                Labels = ["api"],
-                Scenarios =
-                [
-                    new Scenario
-                    {
-                        Id = "s1", DisplayName = "S",
-                        Labels = ["smoke"],
-                        Categories = ["Ordering"]
-                    }
-                ]
-            }
-        };
-
-        var path = ReportGenerator.GenerateYamlSpecs([], features, "YamlLabels.yml", "Test");
-        var content = File.ReadAllText(path);
-
-        Assert.Contains("Labels:", content);
-        Assert.Contains("api", content);
-        Assert.Contains("smoke", content);
-        Assert.Contains("Categories:", content);
-        Assert.Contains("Ordering", content);
     }
 }

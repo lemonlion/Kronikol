@@ -36,6 +36,7 @@
     --kron-label-soft: #616a7a;
     --kron-faint: #626b7a;
     --kron-on-solid: #ffffff;
+    --kron-on-accent: #ffffff;
     --kron-pass: #276c44;
     --kron-pass-soft: #e6f3ec;
     --kron-pass-ring: #3f9a62;
@@ -147,6 +148,7 @@
     --kron-label-soft: #98a2b0;
     --kron-faint: #949eac;
     --kron-on-solid: #ffffff;
+    --kron-on-accent: #10161e;
     --kron-pass: #62cd8f;
     --kron-pass-soft: #15301f;
     --kron-pass-ring: #3fa66a;
@@ -246,6 +248,7 @@
         --kron-label-soft: #98a2b0;
         --kron-faint: #949eac;
         --kron-on-solid: #ffffff;
+        --kron-on-accent: #10161e;
         --kron-pass: #62cd8f;
         --kron-pass-soft: #15301f;
         --kron-pass-ring: #3fa66a;

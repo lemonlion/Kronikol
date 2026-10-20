@@ -99,7 +99,7 @@ public class HistoryHtmlTests : IDisposable
         Assert.Contains("data-history-verdicts=\"broke\"", pay);
         Assert.Contains("class=\"history-sparkline\"", pay);
         Assert.Contains("linear-gradient(90deg,", pay);
-        Assert.Contains("#bf0000 75%,#bf0000 100%", pay); // the current failure is the rightmost stop
+        Assert.Contains("var(--sf) 75%,var(--sf) 100%", pay); // the current failure is the rightmost stop
         Assert.Contains("PPPF", pay); // the tooltip carries the series
         Assert.Contains("broke: passed in test:3:1", pay);
         Assert.Contains("history-verdict-broke\"", pay);
@@ -121,9 +121,9 @@ public class HistoryHtmlTests : IDisposable
         var features = Features(pay: ExecutionResult.Passed);
         var html = Html(features, Verdicts(features, "PPP", "PPP", "PPP"));
 
-        Assert.Contains("<button class=\"report-tab\" id=\"tab-history\" role=\"tab\" aria-controls=\"panel-history\" aria-selected=\"false\" tabindex=\"-1\" data-tab=\"history\">History</button>", html);
+        Assert.Contains("<button class=\"report-tab\" id=\"tab-history\" role=\"tab\" aria-controls=\"panel-history\" aria-selected=\"false\" tabindex=\"-1\" data-tab=\"history\" title=\"This run against the earlier runs on the same branch: what is failing, flaky, fixed, slower, new or gone\">History</button>", html);
         Assert.Contains("<div class=\"report-panel\" id=\"panel-history\" role=\"tabpanel\" aria-labelledby=\"tab-history\" data-panel=\"history\" hidden>"
-                        + "<details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\">History ", html);
+                        + "<details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\" title=\"This run against the earlier runs on the same branch: what is failing, flaky, fixed, slower, new or gone\">History ", html);
     }
 
     [Fact]
@@ -138,7 +138,7 @@ public class HistoryHtmlTests : IDisposable
         var head = ScenarioHead(html, PayId);
         Assert.Contains("not a test", head);
         Assert.DoesNotContain("bypassed", head);
-        Assert.Contains("#dcdcdc", head);
+        Assert.Contains("var(--sn)", head); // the not-a-test colour's name
     }
 
     [Fact]
