@@ -1660,7 +1660,8 @@ public static class ReportGenerator
         // The report's tabs (5.0.0, plans/OPTION_C_PLAN.md S3, D20): each section that sat above the features as a
         // panel of its own (the Scenario Timeline, the Component Diagram, History, Report diagnostics) is a tab of the
         // bar, and the features, with the failure clusters and the background calls at their top (Q4), are the Features
-        // tab. A page with nothing beside its features has no tabs, and so no bar.
+        // tab; the clusters show over the cards, never over the Summary view's table (5.1.0). A page with nothing beside
+        // its features has no tabs, and so no bar.
         var hasComponentTab = !string.IsNullOrEmpty(componentDiagramPlantUml);
         var hasHistoryTab = history is not null && showHistorySection;
         var hasDiagnosticsTab = includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 };
@@ -2134,7 +2135,8 @@ public static class ReportGenerator
             foreach (var scenario in feature.Scenarios)
                 scenarioFeatureLookup[scenario.Id] = feature.DisplayName;
 
-            body.Append($"<details class=\"failure-clusters\"{(toggles.FailureClustersOpen ? " open" : "")}>");
+            // they go with the cards: the Summary view is the features table alone (5.1.0)
+            body.Append($"<details class=\"failure-clusters\"{(toggles.FailureClustersOpen ? " open" : "")}{(summaryStart ? " hidden" : "")}>");
             body.Append($"<summary>Failure Clusters ({clusters.Length} root cause{(clusters.Length == 1 ? "" : "s")})</summary>");
             foreach (var cluster in clusters)
             {
@@ -2194,7 +2196,7 @@ public static class ReportGenerator
                     // A page that draws a warm-up stripe says what it is (until 4.16.3 the legend named every colour but it).
                     + (warmUp.ScenarioMs.Count > 0 ? " A striped start is the first-call warm-up the scenario paid; hover over the bar for its calls." : "")
                     + "\">&#x1F6C8;</span>" + TimelineControls(timelineWarmUp) + "</div>");
-                timelineHtml.Append(TimelineFilteredNote);
+                timelineHtml.Append(FilteredNote);
                 foreach (var (featureName, scenario) in timelineScenarios)
                 {
                     var durationMs = scenario.Duration!.Value.TotalMilliseconds;
@@ -2253,7 +2255,7 @@ public static class ReportGenerator
             // connection's calls.
             var componentUsage = componentControls ? ComponentUsage(componentDiagram!, features, suite) : null;
             var componentHeader = ComponentHeader(componentDiagram?.Heading ?? EmbeddedComponentDiagram.DefaultHeading, componentControls, componentUsage is not null);
-            var componentNote = componentUsage is not null ? TimelineFilteredNote : "";
+            var componentNote = componentUsage is not null ? FilteredNote : "";
             componentHtml = $"""<div id="component-diagram" class="component-diagram-section">{componentHeader}{componentNote}{componentDiagramHtml}</div>""";
             if (componentControls)
                 componentHtml += $"""<script id="component-diagram-model" type="application/json">{ComponentModelJson(componentDiagram!, componentUsage)}</script>""";
@@ -2863,8 +2865,11 @@ public static class ReportGenerator
 
     /// <summary>What Filtered leaves out, said under the timeline's header line while it draws fewer rows than it has
     /// (D27); report-timeline-script.js writes the words. The Components tab says it under its own header line (D28), in
-    /// words report-components-script.js writes.</summary>
-    private const string TimelineFilteredNote = "<div class=\"filtered-note\" role=\"status\" hidden></div>";
+    /// words report-components-script.js writes. The sentence is what a screen reader announces, and straight after it
+    /// is the way back, Clear All, as where no scenario is left (5.1.0).</summary>
+    private const string FilteredNote =
+        "<div class=\"filtered-note\" hidden><span class=\"filtered-note-text\" role=\"status\"></span>"
+        + "<button type=\"button\" class=\"filtered-note-clear\" title=\"Clear every filter\">Clear All</button></div>";
 
     /// <summary>
     /// The Components tab's header line (5.0.0, plans/OPTION_C_PLAN.md S11, D26, D28): its heading, which is the diagram's

@@ -4,6 +4,72 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.1.0] - 2026-10-20
+
+The minor part moves (5.0.0 to 5.1.0): the note a tab writes while the filters leave scenarios out now ends with a
+Clear All button, a new control. Everything else in this release is a fix.
+
+### Added
+
+- **Clear All after a Filtered note.** While the filters leave scenarios out, the Timeline and Components tabs say so
+  under their header line ("Filtered: this timeline shows the 3 of 40 scenarios that match the filters."). The note
+  now ends with Clear All, which clears every filter, as the button where no scenario is left does; the note goes with
+  the filters, and focus goes to the search where it shows. The sentence is the part a screen reader announces:
+  `role="status"` moved from the note (`.filtered-note`) to its text (`.filtered-note-text`), and the button is
+  `.filtered-note-clear`.
+
+### Fixed
+
+- **The Features tab and the features sort no longer hold the page on a large report.** On a report of 750
+  payload-dense scenarios with internal flow, opening the Features tab and sorting the features held the page for
+  seconds in 5.0.0, as did every click anywhere once the tab had shown. Three causes, each fixed and each held by a
+  test that measures the longest main-thread task (`FeaturesTabResponsivenessTests`, budgets scaled by the run's
+  measured contention):
+  - Opening the tab asked every diagram in it whether it was shown. Chrome's `checkVisibility` works out the styles
+    of a closed scenario's content to answer, half a millisecond a diagram, so the tab alone held the page for 864 ms
+    with every scenario closed. A diagram in a closed `<details>` or a hidden panel is now passed over on the page's
+    structure, at no cost.
+  - Every click, resize and toggle laid out every scenario's diagram tab bar (Sequence, Activity, Flame) one at a
+    time, the page laid out again for each: 7.8 s on opening the tab. The bars are now tried, measured and placed
+    together, in one layout.
+  - With scenarios open, the browser lays out only the features and scenarios near the screen
+    (`content-visibility: auto`), and each box read in one it had skipped laid that one out for the reading: the tab
+    took 7.3 s and the sort 6.9 s with every scenario open. The tab's drawing pass and the bars' layout now read a
+    feature's box before anything in it, then its scenario's, and read nothing in one far from the screen; what they
+    pass over is drawn or laid out as it comes near. Measured on the same report: the tab 62 ms and the sort 91 ms
+    with every scenario open, 42 ms and 73 ms with all closed.
+- **A note keeps its colour through format switches.** In a diagram long enough to be split into fragments, switching
+  a note between JSON and YAML (its button, or the report's list) gave notes the engine's own yellow again, more of
+  them at each switch. A fragment the page had drawn before was put back from its cache without the engine, into a
+  new fragment that nothing marked as a sequence diagram's, so the pass that makes notes cards passed it over. That
+  pass now reads whether a picture is a sequence diagram's from the source it was drawn from.
+- **The Summary view shows no failure clusters.** The Features tab's failure clusters sat above both of its views,
+  so the Summary view, which is the features table, carried them too. They now go with the cards: hidden while
+  Summary shows, and written hidden where the page opens on it (`FeaturesSummaryOpen`), so they never flash there.
+- **The Dependencies label no longer breaks.** In a face that draws DEPENDENCIES wider than the filter rows' 92 px
+  label column, the page broke the word where it ran out and its S went to a line of its own. A label now never
+  breaks, and its column widens for it; where the labels fit, every column is 92 px as before.
+
+### Tests
+
+FeaturesTabResponsivenessTests, on two reports DenseReportFixture writes through the whole pipeline (75 features of
+10 scenarios with internal flow, and one feature of 300): the longest main-thread task opening the Features tab,
+sorting the features and clicking, with every scenario closed and with every scenario open (the open ones took 8,409
+and 6,670 ms on the code before the third fix), and the work the page now leaves until it is needed (a bar far down
+the page is laid out once it comes near; the bars a sort brings onto the screen are laid out). Of nine mutations of
+the new code seven fail them. The two that pass change no outcome: the tab's own pass drawing nothing in a feature
+(the page's observer draws the same diagrams a frame later), and an observer added for the bars, then taken out, since
+the ResizeObserver already lays a bar out as its scenario is laid out (removing that fails both facts for the work
+left until needed). NoteFormatCardColourTests: four switches of a note's format on a diagram split into fragments, by
+the note's button and by the report's list, both failing on 5.0.0 at the third switch, and on one that is not split.
+FilterRowLabelTests: every label on one line in a face wider than this one (on 5.0.0 Dependencies took two), and every
+column 92 px where the labels fit; StylesheetRulesTests pins the rule, a minimum width, which keeps the preview's
+round 6 fix for Firefox (measured there: the Status group's last button ends at its edge, where a 92 px basis over a
+width of auto runs it 50 px past). TimelineTabTests and ComponentsTabTests: the note's Clear All, after its sentence
+and on its line, clears the filters and the note goes (both failing on 5.0.0); ComponentsTabHtmlTests and
+TimelineControlsTests hold the note's markup. FeaturesToolsTests, in both suites: the failure clusters show in Full
+and never in Summary, from the first paint where the page opens on Summary (all three failing on 5.0.0).
+
 ## [5.0.0] - 2026-10-20
 
 The major part moves (4.32.1 to 5.0.0): this release changes defaults and public surface that existing code and

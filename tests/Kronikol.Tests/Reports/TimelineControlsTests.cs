@@ -81,9 +81,8 @@ public class TimelineControlsTests : IDisposable
         var note = header.NextElementSibling!;
         Assert.Equal("div", note.LocalName);
         Assert.Contains("filtered-note", note.ClassList);
-        Assert.Equal("status", note.GetAttribute("role"));
         Assert.True(note.HasAttribute("hidden"), "the note starts hidden");
-        Assert.Equal("", note.TextContent);
+        FilteredNoteMarkup.AssertEmptyWithClearAll(note);
         Assert.Contains("timeline-row", note.NextElementSibling!.ClassList);
     }
 

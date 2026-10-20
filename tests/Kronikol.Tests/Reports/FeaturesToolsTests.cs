@@ -118,6 +118,33 @@ public class FeaturesToolsTests
         Assert.Contains("<div id=\"report-content\" role=\"tabpanel\" aria-labelledby=\"view-full\" hidden>", html);
     }
 
+    // The failure clusters go with the cards: the Summary view is the features table alone, from the page's first
+    // paint where it opens there (5.1.0)
+    [Fact]
+    public void The_failure_clusters_are_hidden_where_the_page_opens_on_the_Summary_view_and_only_there()
+    {
+        // two failures with one message: a cluster
+        Feature[] alike =
+        [
+            new Feature
+            {
+                DisplayName = "Orders",
+                Scenarios =
+                [
+                    new Scenario { Id = "a", DisplayName = "Create order", Result = ExecutionResult.Failed, ErrorMessage = "boom", Duration = TimeSpan.FromMilliseconds(120) },
+                    new Scenario { Id = "b", DisplayName = "Reject order", Result = ExecutionResult.Failed, ErrorMessage = "boom", Duration = TimeSpan.FromMilliseconds(80) }
+                ]
+            }
+        ];
+        var opening = new System.Text.RegularExpressions.Regex("<details class=\"failure-clusters\"[^>]*>");
+        var summary = opening.Match(Generate("FeaturesTools_ClustersSummary.html", alike, toggles: new ReportToggleDefaults { FeaturesSummaryOpen = true }));
+        var full = opening.Match(Generate("FeaturesTools_ClustersFull.html", alike));
+
+        Assert.True(summary.Success && full.Success, "two failures with one message make a cluster on both pages");
+        Assert.Matches(@"\shidden[\s>]", summary.Value);
+        Assert.DoesNotMatch(@"\shidden[\s>]", full.Value);
+    }
+
     [Fact]
     public void The_table_names_its_column_groups_and_each_group_starts_with_Total()
     {

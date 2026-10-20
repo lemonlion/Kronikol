@@ -93,6 +93,11 @@ public class ComponentsTabTests : PlaywrightTestBase
 
     private ILocator Note => Page.Locator("#component-diagram > .filtered-note");
 
+    // the note's sentence, and after it the way back: Clear All, as where no scenario is left (5.1.0)
+    private ILocator NoteText => Note.Locator(":scope > .filtered-note-text");
+
+    private ILocator NoteClear => Note.Locator(":scope > .filtered-note-text + .filtered-note-clear");
+
     private ILocator Diagram => Page.Locator("#component-diagram .plantuml-browser");
 
     /// <summary>
@@ -179,7 +184,7 @@ public class ComponentsTabTests : PlaywrightTestBase
         // Ships alone: the shop's call to Payments was Pays', so Payments and the connection to it are left out
         await DrawingAsync([run.Shop, run.Orders, run.Stock], [run.Payments]);
         await Expect(Note).ToBeVisibleAsync();
-        await Expect(Note).ToHaveTextAsync(OneScenarioNote);
+        await Expect(NoteText).ToHaveTextAsync(OneScenarioNote);
         await Expect(Segment("view", "filtered")).ToHaveAttributeAsync("aria-pressed", "true");
 
         // a change made while the tab shows: Clear All puts the whole run back, and the note goes
@@ -187,6 +192,32 @@ public class ComponentsTabTests : PlaywrightTestBase
 
         await DrawingAsync([run.Shop, run.Payments, run.Orders, run.Stock], []);
         await Expect(Note).ToBeHiddenAsync();
+    }
+
+    [Fact]
+    public async Task The_note_ends_with_Clear_All_which_draws_the_whole_run_again()
+    {
+        var run = Write("ComponentsNoteClear.html");
+        await OpenAsync(run.Url);
+        await ShowOnlyAsync("Failed");
+        await OpenReportTabAsync("components");
+        await DrawingAsync([run.Shop, run.Orders, run.Stock], [run.Payments]);
+
+        // straight after the sentence, on its line
+        await Expect(NoteText).ToHaveTextAsync(OneScenarioNote);
+        await Expect(NoteClear).ToBeVisibleAsync();
+        await Expect(NoteClear).ToHaveTextAsync("Clear All");
+        await Expect(NoteClear).ToHaveAttributeAsync("title", "Clear every filter");
+        var text = (await NoteText.BoundingBoxAsync())!;
+        var clear = (await NoteClear.BoundingBoxAsync())!;
+        Assert.True(clear.X > text.X, "the button comes after the sentence");
+        Assert.InRange(clear.Y + clear.Height / 2, text.Y, text.Y + text.Height);
+
+        await NoteClear.ClickAsync();
+
+        await DrawingAsync([run.Shop, run.Payments, run.Orders, run.Stock], []);
+        await Expect(Note).ToBeHiddenAsync();
+        await Expect(Page.Locator(".status-toggle.status-active")).ToHaveCountAsync(0);
     }
 
     [Fact]
@@ -208,7 +239,7 @@ public class ComponentsTabTests : PlaywrightTestBase
         await Segment("view", "filtered").ClickAsync();
 
         await DrawingAsync([run.Orders], [run.Payments]);
-        await Expect(Note).ToHaveTextAsync(OneScenarioNote);
+        await Expect(NoteText).ToHaveTextAsync(OneScenarioNote);
     }
 
     [Fact]
@@ -267,11 +298,11 @@ public class ComponentsTabTests : PlaywrightTestBase
         await ShowOnlyAsync("Failed");
         // the change is taken while the tab is hidden (its note says so) and drawn only when the tab shows again;
         // opening the tab within the change's 150 ms settle would have it drawn by the settle itself
-        await Expect(Note).ToHaveTextAsync(OneScenarioNote);
+        await Expect(NoteText).ToHaveTextAsync(OneScenarioNote);
         await OpenReportTabAsync("components");
 
         await DrawingAsync([run.Orders], [run.Payments]);
-        await Expect(Note).ToHaveTextAsync(OneScenarioNote);
+        await Expect(NoteText).ToHaveTextAsync(OneScenarioNote);
     }
 
     [Fact]
@@ -292,7 +323,7 @@ public class ComponentsTabTests : PlaywrightTestBase
         await OpenReportTabAsync("components");
 
         await DrawingAsync([run.Orders], [run.Payments]);
-        await Expect(Note).ToHaveTextAsync(OneScenarioNote);
+        await Expect(NoteText).ToHaveTextAsync(OneScenarioNote);
     }
 
     [Fact]
@@ -306,7 +337,7 @@ public class ComponentsTabTests : PlaywrightTestBase
         await OpenReportTabAsync("components");
 
         await DrawingAsync([run.Shop, run.Payments], [run.Orders]);
-        await Expect(Note).ToHaveTextAsync("Filtered: only the components and connections used by the 2 scenarios that match the filters. The call counts on the connections are for the whole run.");
+        await Expect(NoteText).ToHaveTextAsync("Filtered: only the components and connections used by the 2 scenarios that match the filters. The call counts on the connections are for the whole run.");
     }
 
     [Fact]
@@ -320,7 +351,7 @@ public class ComponentsTabTests : PlaywrightTestBase
         await ShowOnlyAsync("Skipped");
 
         await Expect(Diagram).ToBeHiddenAsync();
-        await Expect(Note).ToHaveTextAsync("Filtered: the 1 scenario that matches the filters made none of the calls this diagram draws.");
+        await Expect(NoteText).ToHaveTextAsync("Filtered: the 1 scenario that matches the filters made none of the calls this diagram draws.");
 
         await Segment("view", "full").ClickAsync();
 

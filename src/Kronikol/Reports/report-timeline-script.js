@@ -92,7 +92,8 @@
             if (note) {
                 var partial = !full && shown < rows.length;
                 note.hidden = !partial;
-                note.textContent = partial
+                // the note's sentence; Clear All after it stays as written
+                (note.querySelector(':scope > .filtered-note-text') || note).textContent = partial
                     ? 'Filtered: this timeline shows the ' + shown + ' of ' + rows.length + ' scenarios that match the filters.'
                     : '';
             }

@@ -172,8 +172,7 @@ public class ComponentsTabHtmlTests : IDisposable
         // under the header line the note, empty and hidden until Filtered leaves something out; then the diagram
         var note = section.QuerySelector(":scope > .timeline-header + .filtered-note")!;
         Assert.True(note.HasAttribute("hidden"));
-        Assert.Equal("status", note.GetAttribute("role"));
-        Assert.Equal("", note.TextContent);
+        FilteredNoteMarkup.AssertEmptyWithClearAll(note);
         Assert.NotNull(section.QuerySelector(":scope > .filtered-note + .plantuml-browser[data-diagram-type='plantuml']"));
 
         // the model beside the section, and the script that reads it, after the timeline's in the head

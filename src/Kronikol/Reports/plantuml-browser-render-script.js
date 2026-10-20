@@ -1723,18 +1723,47 @@
         }, { rootMargin: '200px' });
         // An on-demand page draws only what is shown: a view still hidden is left to the observer, which draws it when
         // it appears, so a row or a toggle that renders a whole container never fetches the engine for a hidden tab.
-        // checkVisibility first: Chrome hides a closed <details>' content with content-visibility, where getClientRects
-        // still reports a box, so a diagram in a closed scenario read as shown (5.0.0)
-        function isShown(el) { return typeof el.checkVisibility === 'function' ? el.checkVisibility() : el.getClientRects().length > 0; }
+        // A diagram in a closed <details> or a hidden panel is never shown, and the page's structure says so at no cost,
+        // where Chrome's checkVisibility works out the styles of the closed scenario's content to answer: half a
+        // millisecond a diagram, so opening the Features tab of 750 scenarios held the page for most of a second
+        // (5.1.0). Nor is one in a feature or scenario far from the screen, which the observer draws as it comes near:
+        // the page lays out only the features and scenarios near the screen (content-visibility: auto), and a box read in
+        // one it skipped lays that one out for the reading, so with every scenario open the tab held the page for seconds
+        // (5.1.0). A feature's box is read before anything in it, then its scenario's, so nothing is read in one far
+        // from the screen. checkVisibility for the rest: Chrome hides a closed <details>' content with
+        // content-visibility, where getClientRects still reports a box, so a diagram in a closed scenario read as shown
+        // (5.0.0)
+        var NEAR_PX = 200; // the observer's margin
+        // one pass's test: a feature or scenario's box is read once, however many diagrams it holds
+        function shownTest() {
+            var near = new Map();
+            function isNear(section) {
+                if (!section) return true;
+                var v = near.get(section);
+                if (v === undefined) {
+                    var r = section.getBoundingClientRect();
+                    v = r.bottom >= -NEAR_PX && r.top <= window.innerHeight + NEAR_PX;
+                    near.set(section, v);
+                }
+                return v;
+            }
+            return function(el) {
+                if (el.closest('details:not([open]), [hidden]')) return false;
+                if (!isNear(el.closest('.feature')) || !isNear(el.closest('.scenario'))) return false;
+                return typeof el.checkVisibility === 'function' ? el.checkVisibility() : el.getClientRects().length > 0;
+            };
+        }
         // decompressGzipBase64 comes from the always-included shared helper
         // (report-decompress-helper.js).
         // shownOnly (5.0.0): draw only what shows, as a page that draws on demand always does. A tab or a view coming
         // into sight asks for it: drawing everything it holds would queue every diagram in every closed scenario.
         window._renderDiagramsInContainer = function(container, shownOnly) {
             if (!container) return;
-            container.querySelectorAll('.plantuml-browser').forEach(function(el) {
-                if (el.dataset.queued) return;
-                if ((_onDemand || shownOnly) && !isShown(el)) return;
+            // every diagram is asked first and queued after, so no write of a queued one comes between two reads
+            var isShown = (_onDemand || shownOnly) ? shownTest() : null;
+            Array.prototype.filter.call(container.querySelectorAll('.plantuml-browser'), function(el) {
+                return !el.dataset.queued && (!isShown || isShown(el));
+            }).forEach(function(el) {
                 el.dataset.queued = '1';
                 observer.unobserve(el);
                 enqueueElement(el);
@@ -1828,9 +1857,24 @@
     // Three phases, so the browser lays the drawing out once: every measurement first (READS), then the decisions,
     // then every change (WRITES). Measuring and changing element by element laid the whole diagram out again before
     // each measurement: 117 ms on a 2,400-element diagram, measured in the preview.
+    // The element a picture was drawn for, where it is a sequence diagram's: the nearest holding the picture's source
+    // (a fragment's own, else the diagram's), marked once its source says so. The shim marks the element it draws into,
+    // and the notes script puts a fragment it drew before back from its own cache, into a new fragment the shim never
+    // saw: nothing marked it, none of its notes became cards, and each switch of a note between JSON and YAML in a
+    // diagram split into fragments gave more of them the engine's yellow again (5.1.0). An element the shim marked
+    // without a source of its own (a redraw's temporary child) is found as before. Only a diagram the page draws: one
+    // drawn when the report was written (.plantuml-inline-svg) keeps the look it was drawn with.
+    function sequenceHost(svg) {
+        if (!svg || !svg.closest) return null;
+        var drawn = svg.closest('.plantuml-browser[data-plantuml], .plantuml-browser [data-plantuml]');
+        if (drawn && !drawn.hasAttribute('data-k-sequence')
+            && isSequence((drawn.getAttribute('data-plantuml') || '').split('\n', 6))) drawn.setAttribute('data-k-sequence', '1');
+        return drawn && drawn.hasAttribute('data-k-sequence') ? drawn : svg.closest('[data-k-sequence]');
+    }
+
     function tagRoles(svg) {
         if (!svg || svg.getAttribute('data-k-roles')) return true;
-        var host = svg.closest('[data-k-sequence]');
+        var host = sequenceHost(svg);
         if (!host) return true;
         var main = null;
         for (var i = 0; i < svg.children.length; i++) if (tag(svg.children[i]) === 'g') { main = svg.children[i]; break; }
@@ -2050,7 +2094,7 @@
     function visit(root) {
         var svgs = tag(root) === 'svg' ? [root] : (root.querySelectorAll ? root.querySelectorAll('svg') : []);
         Array.prototype.forEach.call(svgs, function(svg) {
-            if (!svg.closest || !svg.closest('[data-k-sequence]')) return;
+            if (!sequenceHost(svg)) return;
             if (!tagRoles(svg) && waiting) waiting.observe(svg);
         });
     }

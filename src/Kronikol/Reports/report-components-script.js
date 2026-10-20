@@ -100,12 +100,14 @@
             return { source: out.join('\n'), filtering: filtering, shown: count.shown, empty: kept === 0 };
         }
 
+        // the note's sentence; Clear All after it stays as written
         function tell(f) {
             if (!note) return;
+            var text = note.querySelector(':scope > .filtered-note-text') || note;
             note.hidden = !f.filtering;
-            if (!f.filtering) { note.textContent = ''; return; }
+            if (!f.filtering) { text.textContent = ''; return; }
             var who = f.shown === 1 ? 'the 1 scenario that matches the filters' : 'the ' + f.shown + ' scenarios that match the filters';
-            note.textContent = f.shown === 0 ? 'Filtered: no scenario matches the filters.'
+            text.textContent = f.shown === 0 ? 'Filtered: no scenario matches the filters.'
                 : f.empty ? 'Filtered: ' + who + ' made none of the calls this diagram draws.'
                 : 'Filtered: only the components and connections used by ' + who + '.'
                     + (state.calls === 'shown' ? ' The call counts on the connections are for the whole run.' : '');

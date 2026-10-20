@@ -21,6 +21,9 @@
         if (!table || !cards || cards.hidden === summary) return;
         table.hidden = !summary;
         cards.hidden = summary;
+        // the failure clusters go with the cards: the Summary view is the features table alone (5.1.0)
+        var clusters = document.querySelector('.failure-clusters');
+        if (clusters) clusters.hidden = summary;
         var bar = sw.closest('.toolbar-row');
         if (bar) bar.classList.toggle('features-table-mode', summary);
         // a diagram the cards hid while the page opened on the table is drawn once it shows, and only one that shows

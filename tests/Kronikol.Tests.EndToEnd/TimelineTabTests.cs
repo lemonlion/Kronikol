@@ -69,6 +69,11 @@ public class TimelineTabTests : PlaywrightTestBase
 
     private ILocator Note => Page.Locator("#scenario-timeline > .filtered-note");
 
+    // the note's sentence, and after it the way back: Clear All, as where no scenario is left (5.1.0)
+    private ILocator NoteText => Note.Locator(":scope > .filtered-note-text");
+
+    private ILocator NoteClear => Note.Locator(":scope > .filtered-note-text + .filtered-note-clear");
+
     /// <summary>The rows the timeline shows, top to bottom: each one's name, the time it reads, and its bar's painted share
     /// of its track, to three places.</summary>
     private Task<string[][]> ShownRowsAsync() => Page.EvaluateAsync<string[][]>("""
@@ -111,6 +116,30 @@ public class TimelineTabTests : PlaywrightTestBase
     // (1 s), "Process payment" (500 ms) and "Refund payment" (100 ms, skipped). Nothing in it paid a warm-up.
 
     [Fact]
+    public async Task The_note_ends_with_Clear_All_which_puts_every_row_back()
+    {
+        await OpenAsync(GenerateReport("TimelineNoteClear.html"));
+        await ShowOnlyAsync("Failed");
+        await OpenReportTabAsync("timeline");
+
+        // straight after the sentence, on its line
+        await Expect(NoteText).ToHaveTextAsync("Filtered: this timeline shows the 1 of 5 scenarios that match the filters.");
+        await Expect(NoteClear).ToBeVisibleAsync();
+        await Expect(NoteClear).ToHaveTextAsync("Clear All");
+        await Expect(NoteClear).ToHaveAttributeAsync("title", "Clear every filter");
+        var text = (await NoteText.BoundingBoxAsync())!;
+        var clear = (await NoteClear.BoundingBoxAsync())!;
+        Assert.True(clear.X > text.X, "the button comes after the sentence");
+        Assert.InRange(clear.Y + clear.Height / 2, text.Y, text.Y + text.Height);
+
+        await NoteClear.ClickAsync();
+
+        Assert.Equal(5, (await ShownRowsAsync()).Length);
+        await Expect(Note).ToBeHiddenAsync();
+        await Expect(Page.Locator(".status-toggle.status-active")).ToHaveCountAsync(0);
+    }
+
+    [Fact]
     public async Task Filtered_is_the_start_and_the_timeline_follows_the_filters()
     {
         await OpenAsync(GenerateReport("TimelineFiltered.html"));
@@ -119,7 +148,7 @@ public class TimelineTabTests : PlaywrightTestBase
 
         Assert.Equal(["Delete order fails gracefully"], await ShownNamesAsync());
         await Expect(Note).ToBeVisibleAsync();
-        await Expect(Note).ToHaveTextAsync("Filtered: this timeline shows the 1 of 5 scenarios that match the filters.");
+        await Expect(NoteText).ToHaveTextAsync("Filtered: this timeline shows the 1 of 5 scenarios that match the filters.");
         await Expect(Segment("view", "filtered")).ToHaveAttributeAsync("aria-pressed", "true");
         await Expect(Segment("view", "full")).ToHaveAttributeAsync("aria-pressed", "false");
 
@@ -163,7 +192,7 @@ public class TimelineTabTests : PlaywrightTestBase
         await OpenReportTabAsync("timeline");
 
         Assert.Equal(["Delete order fails gracefully"], await ShownNamesAsync());
-        await Expect(Note).ToHaveTextAsync("Filtered: this timeline shows the 1 of 5 scenarios that match the filters.");
+        await Expect(NoteText).ToHaveTextAsync("Filtered: this timeline shows the 1 of 5 scenarios that match the filters.");
     }
 
     [Fact]
@@ -265,7 +294,7 @@ public class TimelineTabTests : PlaywrightTestBase
         Share(row, 1.0);
         await Expect(Page.Locator("#scenario-timeline > .timeline-row.timeline-row-failed")).ToBeVisibleAsync();
         await Expect(Note).ToBeVisibleAsync();
-        await Expect(Note).ToHaveTextAsync("Filtered: this timeline shows the 1 of 3 scenarios that match the filters.");
+        await Expect(NoteText).ToHaveTextAsync("Filtered: this timeline shows the 1 of 3 scenarios that match the filters.");
     }
 
     [Fact]
@@ -288,7 +317,7 @@ public class TimelineTabTests : PlaywrightTestBase
 
         Assert.Equal(["Discount applies", "Discount applies"], await ShownNamesAsync());
         await Expect(Note).ToBeVisibleAsync();
-        await Expect(Note).ToHaveTextAsync("Filtered: this timeline shows the 2 of 3 scenarios that match the filters.");
+        await Expect(NoteText).ToHaveTextAsync("Filtered: this timeline shows the 2 of 3 scenarios that match the filters.");
 
         await Page.Locator(".status-toggle[data-status='Passed']").ClickAsync();
         await Page.Locator(".status-toggle[data-status='Failed']").ClickAsync();

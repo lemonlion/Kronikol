@@ -484,11 +484,13 @@
         .filter-row > .status-filters, .filter-row > .duration-filters, .filter-row > .happy-filters { margin-top: 0; }
         .filter-row > .status-filters { flex: none; flex-wrap: nowrap; }
         .filter-row > .duration-filters, .filter-row > .happy-filters { flex-basis: 100%; }
-        /* 92px as a width too, not only as a flex basis: Firefox takes a flex item's max-content contribution from its
-           width, so the Status group was sized from its label's text while the label was laid out at 92px, and its
-           buttons ran 50px past the group and under Duration (the preview's round 6) */
+        /* At least 92px, on one line: a label never breaks, and its column widens for one that needs more. A face that
+           draws DEPENDENCIES wider than 92px broke the word where it ran out, and its S took a line of its own (5.1.0).
+           The 92px is a minimum, which both engines size the row from: Firefox takes a flex item's max-content
+           contribution from its width, so a 92px basis over a width that was its text's sized the Status group from the
+           text, and its buttons ran 50px past the group and under Duration (the preview's round 6) */
         .status-filters-label, .duration-filters-label, .happy-filters-label, .tag-filters-label, .dependency-filters-label {
-            flex: 0 0 92px; width: 92px; margin-right: 8px; color: var(--kron-label);
+            flex: 0 0 auto; width: auto; min-width: 92px; white-space: nowrap; margin-right: 8px; color: var(--kron-label);
             font-size: var(--kron-fs-label); font-weight: 600; line-height: 16px; letter-spacing: var(--kron-label-track); text-transform: uppercase;
         }
         .fltr-controls { display: flex; flex: 1 1 0; flex-wrap: wrap; align-items: baseline; min-width: 0; row-gap: 6px; }
@@ -1670,6 +1672,13 @@
             margin: 0 0 10px; padding: 7px 10px; border: 1px solid var(--kron-warn-edge); border-radius: 6px;
             background: var(--kron-warn-soft); color: var(--kron-warn); font-size: 12.5px; font-weight: 700; line-height: 1.4;
         }
+        /* straight after its sentence, the way back (5.1.0) */
+        .filtered-note-clear {
+            margin-left: 8px; padding: 0 7px; border: 1px solid var(--kron-warn-edge); border-radius: 5px;
+            background: var(--kron-card); color: var(--kron-warn); font: inherit; font-weight: 600; cursor: pointer;
+        }
+        .filtered-note-clear:hover { background: var(--kron-hover); }
+        .filtered-note-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
         .timeline-row {
             display: flex;
             align-items: center;

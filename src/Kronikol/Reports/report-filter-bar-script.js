@@ -298,6 +298,15 @@
             var search = doc.getElementById('searchbar');
             if (search && search.getClientRects().length) search.focus({ preventScroll: true });
         });
+        // the note a tab that follows the filters writes while they leave scenarios out ends with the same way back
+        // (5.1.0), and focus goes the same way, the note going with the filters it reported
+        doc.addEventListener('click', function (e) {
+            var clear = e.target && e.target.closest ? e.target.closest('.filtered-note-clear') : null;
+            if (!clear) return;
+            clear_all_filters();
+            var search = doc.getElementById('searchbar');
+            if (search && search.getClientRects().length) search.focus({ preventScroll: true });
+        });
         // a link's filters were read before this started
         emptyState();
         if (nav) bar();

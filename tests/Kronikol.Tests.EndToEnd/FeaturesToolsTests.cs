@@ -37,11 +37,13 @@ public class FeaturesToolsTests : PlaywrightTestBase
         }
     ];
 
-    private string Generate(string fileName, Feature[] features)
+    private string Generate(string fileName, Feature[] features, ReportToggleDefaults? toggles = null)
     {
         var path = ReportGenerator.GenerateHtmlReport(
             [], features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Bakery", true,
-            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            toggleDefaults: toggles is null ? null
+                : ReportToggleDefaultsResolver.Resolve(new ReportConfigurationOptions { TestRunReportToggleDefaults = toggles }, specifications: false));
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
     }
@@ -184,6 +186,33 @@ public class FeaturesToolsTests : PlaywrightTestBase
         Assert.True(await Page.EvaluateAsync<bool>("() => Array.from(document.querySelectorAll('details.scenario')).every(d => d.open)"));
         await Expect(Page.Locator("button.fold-expand[data-fold='features']")).ToHaveAttributeAsync("aria-disabled", "true");
         await Expect(Page.Locator("button.fold-expand[data-fold='scenarios']")).ToHaveAttributeAsync("aria-disabled", "true");
+    }
+
+    // The failure clusters go with the cards: the Summary view is the features table alone (5.1.0)
+    [Fact]
+    public async Task The_failure_clusters_show_in_Full_and_never_in_Summary()
+    {
+        await OpenBakery("FeaturesTools_Clusters.html");
+        var clusters = Page.Locator(".failure-clusters");
+        await Expect(clusters).ToBeVisibleAsync();
+
+        await Page.Locator("#view-summary").ClickAsync();
+        await Expect(Page.Locator("#features-table-view")).ToBeVisibleAsync();
+        await Expect(clusters).ToBeHiddenAsync();
+
+        await Page.Locator("#view-full").ClickAsync();
+        await Expect(clusters).ToBeVisibleAsync();
+    }
+
+    [Fact]
+    public async Task A_page_that_opens_on_Summary_shows_no_failure_clusters_until_Full()
+    {
+        await Page.GotoAsync(Generate("FeaturesTools_ClustersSummaryStart.html", Bakery(), new ReportToggleDefaults { FeaturesSummaryOpen = true }));
+        await Expect(Page.Locator("#features-table-view")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".failure-clusters")).ToBeHiddenAsync();
+
+        await Page.Locator("#view-full").ClickAsync();
+        await Expect(Page.Locator(".failure-clusters")).ToBeVisibleAsync();
     }
 
     [Fact]

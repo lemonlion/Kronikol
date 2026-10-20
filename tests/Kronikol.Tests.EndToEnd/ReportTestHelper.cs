@@ -4021,13 +4021,15 @@ public static class ReportTestHelper
         @enduml
         """;
 
+    /// <param name="teoz">Writes the source with the teoz pragma every sequence diagram Kronikol writes opens with, so
+    /// the page draws it with the report's look (its notes as cards); the source as written has none.</param>
     public static string GenerateReportWithJsonYamlNotes(string tempDir, string outputDir, string fileName,
-        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json)
+        NotePayloadFormat notePayloadFormat = NotePayloadFormat.Json, bool teoz = false)
     {
         var (features, _) = CreateTestData();
         var diagrams = new[]
         {
-            new DiagramAsCode("t1", "", JsonYamlNotePlantUmlSource)
+            new DiagramAsCode("t1", "", teoz ? JsonYamlNotePlantUmlSource.Replace("@startuml\n", "@startuml\n!pragma teoz true\n") : JsonYamlNotePlantUmlSource)
         };
 
         var path = ReportGenerator.GenerateHtmlReport(

@@ -178,16 +178,25 @@ public partial class StylesheetRulesTests
     /// button on a phone, so the rows stay as they were when the window crosses the phone breakpoint, and the search help
     /// opens while they are folded at either width (on a phone the rows were hidden by an inline style, the help with
     /// them).</summary>
-    /// <summary>The filter rows' label column is 92 px as a width, not only as a flex basis (the preview's round 6,
-    /// <c>c-round6.css</c>; found missing by S14's parity run): Firefox takes a flex item's max-content contribution
-    /// from its width, so the Status group, sized to its content, was sized from its label's text (about 42 px) while
-    /// the label was laid out at 92 px, and its buttons ran 50 px past the group and under Duration. A label inline beside
-    /// Status, or on a line of its own in a narrow box, is as wide as its text.</summary>
+    /// <summary>The filter rows' label column is at least 92 px, and a label never breaks (5.1.0): a face wider than
+    /// the one the column was set in drew DEPENDENCIES wider than 92 px, and the page broke the word with its S on a line
+    /// of its own; the column now widens for such a label. The 92 px is a minimum width, not a flex basis over a width
+    /// of auto (the preview's round 6, <c>c-round6.css</c>; found missing by S14's parity run): Firefox takes a flex
+    /// item's max-content contribution from its width, so the Status group, sized to its content, was sized from its
+    /// label's text (about 42 px) while the label was laid out at 92 px, and its buttons ran 50 px past the group and
+    /// under Duration. A contribution is held to the minimum: measured in Firefox, the group's last button ends at its
+    /// edge with this rule and 50 px past it with that one. A label inline beside Status, or on a line of its own in a
+    /// narrow box, is as wide as its text.</summary>
     [Fact]
-    public void The_filter_rows_label_column_is_a_width_too_and_a_label_inline_or_alone_is_its_text()
+    public void The_filter_rows_label_column_is_a_minimum_width_and_a_label_inline_or_alone_is_its_text()
     {
         foreach (var label in new[] { ".status-filters-label", ".duration-filters-label", ".happy-filters-label", ".tag-filters-label", ".dependency-filters-label" })
-            Assert.Equal("92px", CssRules.Value(Base, label, "width"));
+        {
+            Assert.Equal("92px", CssRules.Value(Base, label, "min-width"));
+            Assert.Equal("auto", CssRules.Value(Base, label, "width"));
+            Assert.Equal("0 0 auto", CssRules.Value(Base, label, "flex"));
+            Assert.Equal("nowrap", CssRules.Value(Base, label, "white-space"));
+        }
         Assert.Equal("auto", CssRules.Value(Base, ".filter-row.pair-fits .duration-filters-label", "width"));
         Assert.Equal("auto", CssRules.Value(Base, ".filter-row.trio-fits .happy-filters-label", "width"));
 
