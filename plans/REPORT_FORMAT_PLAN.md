@@ -587,6 +587,10 @@ superset. It differs in four ways.
        and `calls` (`:6477`);
      - a feature's `name`, `labels` and `scenarios`, and a scenario's `id`, `stableId`, `name`, `result`,
        `durationSeconds`, `isHappyPath`, `labels`, `categories` and `steps` (`:6547`, `:6562`);
+     - in 5.0.0 a feature and a scenario write `tags` in place of `labels` and `categories`, and the schema requires
+       none of the three (`TAGS_PLAN.md` T1), so the `.krkl` leaves out an empty `tags`; a reader takes `tags` or,
+       in a file written before 5.0.0, `labels` and `categories`. Neither number moves for it: the JSON stays at
+       `formatVersion` 1 (2 when it holds `$z`) and the `.krkl` at 3;
      - a step parameter's required keys (`:6674`, `:6684`, `:6694`, `:6710`, `:6727`, `:6741`, `:6754`), and those
        of component relationships, diagnostics and warm-up marks (`:6515`, `:6783`, `:6872`).
 
@@ -1150,7 +1154,7 @@ old 5.0.0 is 5.0.0's.
 
 **The `v5` branch.** The UI session's plan, `OPTION_C_PLAN.md` (committed on the local branch `v5` as `5594a857`,
 green-lit on 2026-10-18), sets 5.0.0 as three pieces of work on one branch: all of Option C, the dependency filter's
-OR default (`9452ddb5`), and this plan. The branch was cut from `origin/main` at 4.26.9 (`354cb998`) in the worktree
+OR default (`9452ddb5`), and this plan. On 2026-10-19 the owner made the tags of `TAGS_PLAN.md` a fourth (`ROADMAP.md` D40). The branch was cut from `origin/main` at 4.26.9 (`354cb998`) in the worktree
 `Kronikol-v5`. It is not pushed (that plan's Q8), and its changelog collects entries under `[Unreleased]` until
 5.0.0.
 - R1 to R4, R6 and R7 ship from `main` as 4.x releases, and reach `v5` when `main` is merged into it.

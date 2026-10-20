@@ -1,0 +1,7 @@
+Run 2026-10-19 on Windows 11: PowerShell 7 (.NET), Node, OpenJDK 25 (java Fold.java).
+
+dotnet OrdinalIgnoreCase: dotless i == i -> False; dotless i == I -> False; Kelvin == k -> False
+js toLowerCase: dotless i == i false ; Kelvin == k true
+java equalsIgnoreCase Kelvin==k: true
+java CASE_INSENSITIVE_ORDER Kelvin vs k: 0
+java dotless i == i: true
