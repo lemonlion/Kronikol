@@ -1,0 +1,99 @@
+diff --git a/Merging-Parallel-Reports.md b/Merging-Parallel-Reports.md
+index 7e84e91..67b939f 100644
+--- a/Merging-Parallel-Reports.md
++++ b/Merging-Parallel-Reports.md
+@@ -37,7 +37,10 @@ Each fragment carries the complete model, not a summary:
+ 
+ Reconciliation: features are emitted **alphabetically** (matching the report's own ordering), scenarios
+ are unioned by test id (first wins), earliest start / latest end are reconciled, and the first captured
+-CI metadata / whole-test-flow visualization is used. The whole fragment round-trips through a generic
++CI metadata / whole-test-flow visualization is used. A feature that ran in several shards keeps the tags
++every shard gives it, in the first shard's spelling, and each shard's other feature tags move onto that
++shard's own scenarios, so no scenario gains or loses a tag; a fragment written before the tags change
++reads its labels and categories as tags. The whole fragment round-trips through a generic
+ record↔JSON converter, so adding model fields needs no fragment-format changes.
+ 
+ ## GitHub Actions example
+diff --git a/Rendering-and-Offline-Reports.md b/Rendering-and-Offline-Reports.md
+index cc85550..32a4f14 100644
+--- a/Rendering-and-Offline-Reports.md
++++ b/Rendering-and-Offline-Reports.md
+@@ -10,10 +10,17 @@ Diagrams render **in the browser**: each diagram's PlantUML source is gzip+base6
+ report's `#puml-data` JSON island, and the bundled PlantUML-WASM library paints each
+ `.plantuml-browser` element client-side — no server, no Java/Graphviz render step. Features and
+ scenarios are collapsible `<details>` behind a full filtering toolbar (text/`@tag`/`$status` search,
+-happy-path, duration, **dependency and category** filters, a scenario timeline, a **Failure Clusters**
++happy-path, duration and **dependency** filters, a scenario timeline, a **Failure Clusters**
+ section that groups failed scenarios by normalised root cause, and expand/collapse-all), and a run-level
+ component diagram toggles into view on demand.
+ 
++> **Tags (.NET 5.0.0).** A report has one list of tags where it had labels and categories
++> ([Report Data Formats](Report-Data-Formats#tags)). The page stays .NET 3.0.43's, with a feature's and a
++> scenario's tags drawn where it drew their labels (the chips beside the name, the `@tag` search and
++> `data-labels`), and without its Categories row and `data-categories`. That is a deliberate divergence from
++> the 3.0.43 golden until the v5 report, with its one Tags row, is ported; a report with no categories is
++> drawn as before.
++
+ ### Byte-parity coverage
+ 
+ Each report feature is proven byte-identical against its own golden fixture (captured from the real
+diff --git a/Report-Data-Formats.md b/Report-Data-Formats.md
+index 04e1824..4a0bce6 100644
+--- a/Report-Data-Formats.md
++++ b/Report-Data-Formats.md
+@@ -5,8 +5,28 @@ same run as machine-readable **data files** for CI tooling and programmatic cons
+ `TestRunReport.json`, `TestRunReport.xml`, and `TestRunReport.yaml`. Each is **byte-for-byte aligned**
+ with the .NET `GenerateTestRunReportData` output (verified by the golden-file parity suite).
+ 
+-The data files carry the full run: per feature/scenario the result, duration, stable id, labels,
+-categories, rule, BDD steps + attachments, the per-test diagrams, and the tracked HTTP interactions.
++The data files carry the full run: per feature its tags, and per scenario the result, duration, stable id,
++tags, rule, BDD steps + attachments, the per-test diagrams, and the tracked HTTP interactions.
++
++### Tags
++
++.NET Kronikol 5.0.0 made a scenario's labels and categories one list of tags, and the data files hold
++them as it writes them. Each level holds its own:
++
++- a **feature's** `tags` are its test class's (JUnit 5 and Spock `@Tag`s, TestNG class-level groups) or
++  its Gherkin `Feature:` line's;
++- a **scenario's** `tags` are its own less its feature's: a test method's, or in Gherkin its scenario's,
++  its rule's and its Examples block's.
++
++A scenario's effective tags are its feature's, then its own. In JSON both lists are always written, `[]`
++when empty (a feature's after `description`, before `scenarios`; a scenario's after `errorStackTrace`,
++before `rule`); XML writes `<Tags><Tag>` and YAML `Tags:` in the same places, and leaves an empty list out
++as it does every empty list. `formatVersion` is unchanged.
++
++Two names are one tag when they are equal once their ASCII letters are folded (`Smoke` and `smoke`); no
++other letter is folded, as .NET's `OrdinalIgnoreCase` folds none. Kronikol's own markers are not tags:
++`endpoint:x` is the feature's endpoint, `happy-path` (or `happy_path`, `happypath`, `Happy Path`) marks a
++test the happy path, and `category:x` is the tag `x`. A leading `@` is dropped.
+ 
+ ## Enabling
+ 
+diff --git a/Tracking-Adapters.md b/Tracking-Adapters.md
+index 4b22a75..9e3e85d 100644
+--- a/Tracking-Adapters.md
++++ b/Tracking-Adapters.md
+@@ -13,6 +13,20 @@ your app.
+ | `kronikol4j-cucumber` | add `KronikolCucumberPlugin` (Given/When/Then → Setup/Action phases) |
+ | `kronikol4j-spock` | auto-registers via ServiceLoader (given/setup → Setup, when/then/expect → Action) |
+ 
++Each framework's own tags become the report's tags ([Report Data Formats](Report-Data-Formats#tags)), a
++feature's and a scenario's apart:
++
++| Module | Feature tags | Scenario tags |
++|---|---|---|
++| `kronikol4j-junit5` | the class's `@Tag`s, with those JUnit gives it from its superclasses, interfaces and enclosing classes | the test method's own `@Tag`s |
++| `kronikol4j-testng` | the groups of the class-level `@Test` (the nearest one up the superclasses) | the method `@Test`'s groups |
++| `kronikol4j-spock` | the spec's `@Tag`s, then its super specs' | the feature method's `@Tag`s |
++| `kronikol4j-cucumber` | the `Feature:` line's tags | the pickle's tags: the scenario's, its rule's and its Examples block's |
++
++A scenario does not repeat a tag its feature carries. `endpoint:x` is the feature's endpoint and not a
++tag. `happy-path` on a test, a Gherkin scenario or an Examples block marks it the happy path; on a class,
++a spec, a feature file or a rule it marks no scenario.
++
+ ## Dependency trackers
+ | Module | Entry point | Diagram shape |
+ |---|---|---|

@@ -1,7 +1,8 @@
 # Tags: one list in place of labels and categories (v5)
 
 **Date:** 2026-10-19, reviewed the same day (§11) · **Repo version:** 4.30.0 (`origin/main` at `aa311cd7`) · **Status:
-executing** (the owner's ask of 2026-10-19, in full, with §9's recommendations; §11).
+executed on `v5`** (the owner's ask of 2026-10-19, in full, with §9's recommendations; T1 to T4 by 2026-10-20,
+§11; the wiki publishes with 5.0.0, and the Kronikol4J port waits on its branch).
 
 **Line numbers.**
 - **Plain** ones are for 4.27.0, `6f6043e2`. Of the files cited, 4.27.1 to 4.30.0 changed these, so T1 re-takes the
@@ -983,6 +984,29 @@ there until 5.0.0, and the changelog says so for the ones that change what an ex
     alone would have taken a class-level shard's feature tag off its scenarios wherever another shard's feature lacked it.
   - **Proofs:** 7 of the 55 cases red on T1; 13 of 13 mutations killed, one only after the three-shard fact gave each
     shard a spelling of its own (see the commit).
+- **2026-10-20, T4** (`v5-tags`, `09a966e9`; the wiki and Kronikol4J as below).
+  - **The schema's `attempt` text** said it matched "the retry N label in the HTML"; it names the badge T2 draws now
+    (`09a966e9`, with a fact in TestRunReportSchemaContractTests).
+  - **The wiki, as a patch for the release, not published:** 29 pages and a page of its own, "Migrating to v5: tags",
+    against the live wiki at `450844e`, in `TAGS_PLAN.harness/wiki/` with its notes and the answers to its eight
+    questions. `patch -p1` applies it to a checkout of `450844e`, and the links check clean (260 ok, 676 page-ok). The
+    Option C session writes its own wiki edits over it, the Happy paths control's wording among them.
+  - **The tagging recipes** of Marking-New-and-Changed-Tests.md were checked on a 5.0.0 build: a tests capture, a
+    playwright-bdd run's Messages and a data file tagged by source location and by name each give
+    `query scenarios --tag pr-` the tests marked and no others (`TAGS_PLAN.harness/wiki/recipes/`). jq is not installed
+    on the machine, so a script of the same logic made the edits, and the page says so.
+  - **Placed on `main`** as `47c250ec`: D40 and 1e.9, V5_PLAN's four pieces, CLAUDE.md's MAJOR line, and REPORT_FORMAT_PLAN
+    §4.2, where neither `formatVersion` moves for the tags.
+  - **Kronikol4J:** ported on Kronikol4J's branch `tags-5.0.0`, on its `origin/main` `1a62e28`, not pushed or released: `0bfe7cd`,
+    with `6a90931`, a Spock fix found on the way (an inherited feature method was recorded under its abstract base
+    spec). The data files match .NET 5.0.0's; the HTML keeps .NET 3.0.43's page with tags drawn where labels were, so
+    one golden changes (`report-filterstoggles.html`, by three edits); the JUnit 5, TestNG, Spock and Cucumber-JVM
+    adapters map tags for the first time; the merge follows F22; the ledger records it. `./gradlew build` passes, 1,015
+    tests with 17 skipped; 68 of the first 84 facts failed red, and 115 of 116 mutations by hand are killed, the 116th
+    showing a redundant check, since removed. Its wiki edits are a patch, `TAGS_PLAN.harness/wiki/kronikol4j-wiki.patch`
+    (4 pages, against the Kronikol4J wiki at `ba1bd8d`). Open, for the owner: a class-level `endpoint:x` tag sets the
+    endpoint in Java, where .NET's class-level lanes leave it out of the tags without setting one, against the
+    classifier's rule that the first `endpoint:x` sets the endpoint.
 
 ## Appendix A. Edit sites
 
