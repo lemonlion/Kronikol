@@ -2149,7 +2149,7 @@ public static class ReportGenerator
 
         // The Diagnostics tab (ReportConfigurationOptions.ShowReportDiagnosticsSection, on by default since 5.0.0): a
         // healthy run has nothing to list and no tab, and every diagnostic is also on the labs page beside the report,
-        // in TestRunReport.json's diagnostics array and in the run's own result. In its tab the section is always
+        // in the data file's diagnostics array and in the run's own result. In its tab the section is always
         // open: the tab is its disclosure, so DiagnosticsOpen has nothing left to open.
         var diagnosticsHtml = hasDiagnosticsTab ? RenderReportDiagnostics(diagnostics!, open: true, inTab: true) : "";
 

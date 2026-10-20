@@ -255,8 +255,8 @@ public sealed class IngestRequest
     /// taps (<see cref="DiagnosticKind.CaptureDegraded"/>: a decoder that gave up on a connection, oversize
     /// payloads skipped, export payloads dropped), but any <see cref="DiagnosticEntry"/> is accepted. They
     /// are carried verbatim into <see cref="IngestResult.Diagnostics"/> (first, ahead of what the ingest
-    /// itself records), into the top-level <c>diagnostics</c> array of <c>TestRunReport.json</c>, onto the labs
-    /// page beside the report (<c>TestRunReport.labs.html</c>, unless
+    /// itself records), into the top-level <c>diagnostics</c> array of the data file (<c>TestRunReport.krkl</c>, or
+    /// <c>TestRunReport.json</c>), onto the labs page beside the report (<c>TestRunReport.labs.html</c>, unless
     /// <see cref="ReportConfigurationOptions.GenerateLabsReport"/> is off), and into the Diagnostics tab of
     /// <c>TestRunReport.html</c> unless <see cref="ReportConfigurationOptions.ShowReportDiagnosticsSection"/> is off.
     /// Default empty: nothing changes when a host hands in nothing.

@@ -740,10 +740,10 @@ internal static class IngestCommand
         w.WriteLine("  --diagnostic <kind>:<msg> Carry a host diagnostic into the report (repeatable) — e.g. a tap's capture");
         w.WriteLine("                           health: \"CaptureDegraded:tap-di-redis: decoding disabled on 1 connection\".");
         w.WriteLine("                           kind = a DiagnosticKind name (unknown → Other); it lands in IngestResult.Diagnostics");
-        w.WriteLine("                           and TestRunReport.json's diagnostics array, on the labs page beside the report");
+        w.WriteLine("                           and the data file's diagnostics array, on the labs page beside the report");
         w.WriteLine("                           (TestRunReport.labs.html), and in the HTML report's Diagnostics tab.");
         w.WriteLine("  --no-diagnostics-section Leave the Diagnostics tab out of the HTML report: every diagnostic is still on the");
-        w.WriteLine("                           labs page, in TestRunReport.json and printed here. --diagnostics-section, the");
+        w.WriteLine("                           labs page, in the data file and printed here. --diagnostics-section, the");
         w.WriteLine("                           default since 5.0.0, is still taken.");
         w.WriteLine("  -h, --help               Show this help.");
         w.WriteLine();

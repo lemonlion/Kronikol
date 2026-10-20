@@ -66,7 +66,7 @@ internal static class CtrfCommand
 
         if (input is null)
         {
-            error.WriteLine("No report given. Pass a TestRunReport.json, or a directory holding one.");
+            error.WriteLine("No report given. Pass a TestRunReport.json or TestRunReport.krkl, or a directory holding one.");
             return 2;
         }
 
@@ -196,15 +196,15 @@ internal static class CtrfCommand
     {
         w.WriteLine("Usage: kronikol ctrf <report> [--out <file>]");
         w.WriteLine();
-        w.WriteLine("  Converts a TestRunReport.json into a Common Test Report Format document, so CI tooling that");
-        w.WriteLine("  already speaks CTRF - annotation actions, PR comment bots, flaky-test dashboards - can read a");
-        w.WriteLine("  Kronikol run. One CTRF test per scenario, with its status, duration, failure message and trace,");
-        w.WriteLine("  plus the sN address that leads back into `kronikol query`.");
+        w.WriteLine("  Converts a report data file, TestRunReport.krkl or TestRunReport.json, into a Common Test Report");
+        w.WriteLine("  Format document, so CI tooling that already speaks CTRF - annotation actions, PR comment bots,");
+        w.WriteLine("  flaky-test dashboards - can read a Kronikol run. One CTRF test per scenario, with its status,");
+        w.WriteLine("  duration, failure message and trace, plus the sN address that leads back into `kronikol query`.");
         w.WriteLine();
         w.WriteLine("  A run can write this file itself instead: set GenerateCtrfReport in ReportConfigurationOptions.");
         w.WriteLine();
         w.WriteLine("Arguments:");
-        w.WriteLine("  <report>                 A TestRunReport.json, or the directory holding one.");
+        w.WriteLine("  <report>                 A TestRunReport.krkl or TestRunReport.json, or the directory holding one.");
         w.WriteLine("Options:");
         w.WriteLine("  -o, --out <file>         Write the document to a file instead of stdout.");
         w.WriteLine("  -h, --help               Show this help.");

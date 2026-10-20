@@ -10,7 +10,7 @@ namespace Kronikol.Ingestion;
 /// <summary>
 /// One line of the language-neutral NDJSON capture format: a single tracked request <em>or</em> response,
 /// shaped exactly like the <c>httpInteraction</c> objects Kronikol already publishes in
-/// <c>TestRunReport.json</c> (same property names), plus the attribution fields a capturer outside the
+/// the report data file (same property names), plus the attribution fields a capturer outside the
 /// test process needs to supply (<see cref="TestId"/>, <see cref="TestName"/>) and a few optional extras.
 /// Any capturer in any language that can write one JSON object per line can feed Kronikol via
 /// <c>kronikol ingest</c> or <see cref="IngestPipeline"/>.
