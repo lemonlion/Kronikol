@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Documentation
+
+- `TestRunReportFullStepDetail`'s doc comment and its row on the wiki's Report Configuration page give the cost of
+  step detail as measured. They said it is kilobytes against megabytes of payload, but the indented
+  `TestRunReport.json` indents each line of a step four spaces further at every level of sub-steps, so a LightBDD
+  step 20 levels down takes 5,086 bytes there, against 294 in the compact `TestRunReport.krkl`
+  (`plans/REPORT_FORMAT_PLAN.md` F3).
+
 ## [4.32.1] - 2026-10-19
 
 **Patch - a read-only `TestRunReport.krkl` is left as it is (`plans/REPORT_FORMAT_PLAN.md` R4).** A fix to 4.32.0's
