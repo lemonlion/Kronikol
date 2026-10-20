@@ -412,10 +412,10 @@ internal static class MergeCommand
         w.WriteLine("                       Hand the output directory to the CI artifact upload (GitHub Actions");
         w.WriteLine("                       `reports-path` output, Azure DevOps artifact.upload).");
         w.WriteLine("      --history <path> Read the cross-run ledger (.kronikol/history.jsonl) and show what the last runs");
-        w.WriteLine("                       said: the History section, sparklines and verdicts on the labs page beside the");
-        w.WriteLine("                       report, and the history lines in Failures.md and the pointer. The report itself");
-        w.WriteLine("                       carries no history. Never writes to the ledger; `kronikol history record` folds");
-        w.WriteLine("                       the shards' History.run.json fragments into it.");
+        w.WriteLine("                       said: the report's History tab, the History section, sparklines and verdicts");
+        w.WriteLine("                       on the labs page beside it, and the history lines in Failures.md and the");
+        w.WriteLine("                       pointer. Never writes to the ledger; `kronikol history record` folds the");
+        w.WriteLine("                       shards' History.run.json fragments into it.");
         w.WriteLine("  -h, --help           Show this help.");
         w.WriteLine();
         w.WriteLine("Example:");

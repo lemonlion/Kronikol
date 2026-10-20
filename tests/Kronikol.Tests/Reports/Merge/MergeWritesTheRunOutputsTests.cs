@@ -170,6 +170,19 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         Assert.Contains("      --schema ", usage.ToString());
     }
 
+    // --history's help says what the merged report shows: a History tab (5.0.0), as the run's own report does. It said
+    // the report itself carried no history, 4.x's default.
+    [Fact]
+    public void The_help_says_history_reaches_the_merged_reports_History_tab()
+    {
+        var usage = new StringWriter();
+        MergeCommand.PrintUsage(usage);
+        var help = string.Join(" ", usage.ToString().Split('\n').Select(line => line.Trim()));
+
+        Assert.Contains("the report's History tab", help);
+        Assert.DoesNotContain("carries no history", help);
+    }
+
     [Fact]
     public void No_json_writes_the_html_alone()
     {

@@ -513,9 +513,10 @@ public record ReportConfigurationOptions
 
     /// <summary>
     /// Whether the run writes the labs page beside its report, <c>{HtmlTestRunReportFileName}.labs.html</c>
-    /// (<c>TestRunReport.labs.html</c> by default): the views still being designed, which a default report does not
-    /// carry. It holds the History section and every scenario's sparkline and verdict when the run read history and
-    /// <see cref="EmbedHistoryInReport"/> is on, and the Report diagnostics list when the run recorded a diagnostic;
+    /// (<c>TestRunReport.labs.html</c> by default): the views still being designed. It holds the History section and
+    /// every scenario's sparkline and verdict when the run read history and <see cref="EmbedHistoryInReport"/> is on
+    /// (a default report carries the section as its History tab, and the sparklines and verdicts only where
+    /// <see cref="ShowScenarioHistory"/> asks), and the Report diagnostics list when the run recorded a diagnostic;
     /// with neither, no page is written. Its only scripts are the report's two for the theme, and its scenario names
     /// link into the report.
     /// Default: <c>true</c>.

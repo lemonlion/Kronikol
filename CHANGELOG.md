@@ -223,7 +223,7 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   has nothing left to open. A page with nothing beside its features has no tabs, and so no bar; the Specifications
   report's only other tab is the Timeline, where its scenarios carry durations.
 - **History and diagnostics are back in the report, as its History and Diagnostics tabs.**
-  `ReportConfigurationOptions.ShowHistorySection` and `ShowReportDiagnosticsSection` default to `true` (4.6.0 to 4.x:
+  `ReportConfigurationOptions.ShowHistorySection` and `ShowReportDiagnosticsSection` default to `true` (3.21.0 to 4.x:
   `false`): a run that read history has a History tab, and one that recorded a diagnostic has a Diagnostics tab with
   their count on it. Nothing of history is in the features unless `ShowScenarioHistory` asks, and a run that read no
   history and recorded no diagnostic still carries neither anywhere in the file. The labs page beside the report
@@ -253,7 +253,7 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   then the toggles, and on a phone (768 px wide or less) they show behind a Display settings gear.
 - **Happy paths is Show, Only or Hide.** The Happy Paths Only button becomes a three-way control on the Status line,
   which drives the Tags row's Happy Path chip; a report without a happy path has neither. `.happy-path-toggle`,
-  `.happy-path-active` and `filter_happy_paths` are gone, and `#hp=1` still opens on Only.
+  `.happy-path-active`, `toggle_happy_paths` and `filter_happy_paths` are gone, and `#hp=1` still opens on Only.
 - **A category is a tag, and the Categories row is gone.** A scenario's categories are chips of the Tags row, and so
   are its feature's tags, which now pick out every scenario of the feature; `@` search reads the same tags as the row,
   Happy Path included. Gone with the row: `report-category-filter-function.js` (`filter_categories`, `toggle_cat_mode`),
@@ -306,9 +306,10 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   4.x `Status:`), Status, Duration and Happy paths are segmented groups, tags and dependencies are chips,
   every control is 28 px tall (36 px on a phone), and the rows reflow on the filter box's own width, not the window's.
   A row's switch reads ANY or ALL (4.x: OR or AND) and keeps the mode in `data-mode`, which the link writes as before;
-  the switches and chips answer one delegated handler rather than an `onclick` each. The exports read Export HTML and
-  Export CSV where the box is narrow. A `CustomCss` sheet written against the 4.x rules of `.status-toggle`,
-  `.percentile-btn`, `.dependency-toggle` or `.dep-mode-toggle` may no longer apply; set the tokens instead.
+  the switches and chips answer one delegated handler rather than an `onclick` each, so `toggle_dependency` is gone.
+  The exports read Export HTML and Export CSV where the box is narrow. A `CustomCss` sheet written against the 4.x
+  rules of `.status-toggle`, `.percentile-btn`, `.dependency-toggle` or `.dep-mode-toggle` may no longer apply; set
+  the tokens instead.
 - **On a desktop the filter rows fold under More filters.** A More filters button ends the search line, and the rows
   under it (Status, Duration, Happy paths, Tags, Dependencies) stay folded until it is pressed; while they
   are folded it counts the filters on in them. The readout and Clear All stay in view either way, and the search help
@@ -348,6 +349,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   search field's edge take the theme's selected colours. The accent is a darker violet (`#6d28d9`, AA on white and on
   the violet card), and controls 4.x's rules never named, such as a report tab or More filters, take the theme's
   colours. A sheet built on the 4.x constant's rules should set the tokens instead.
+- **`toggle_examples_detail` is gone,** with the `.examples-table` rules and `body > details > details >
+  details.example`: no page writes the markup they served, and nothing in a report called the function, which every
+  4.x report carried.
 
 ### Deprecated
 
