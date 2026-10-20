@@ -1,8 +1,8 @@
 # Tags: one list in place of labels and categories (v5)
 
 **Date:** 2026-10-19, reviewed the same day (§11) · **Repo version:** 4.30.0 (`origin/main` at `aa311cd7`) · **Status:
-executed on `v5`** (the owner's ask of 2026-10-19, in full, with §9's recommendations; T1 to T4 by 2026-10-20,
-§11; the wiki publishes with 5.0.0, and the Kronikol4J port waits on its branch).
+executed and released in 5.0.0 (2026-10-20)** (the owner's ask of 2026-10-19, in full, with §9's recommendations;
+T1 to T4 by 2026-10-20, §11; the wiki published with the release, and the Kronikol4J port waits on its branch).
 
 **Line numbers.**
 - **Plain** ones are for 4.27.0, `6f6043e2`. Of the files cited, 4.27.1 to 4.30.0 changed these, so T1 re-takes the
@@ -1007,6 +1007,12 @@ there until 5.0.0, and the changelog says so for the ones that change what an ex
     (4 pages, against the Kronikol4J wiki at `ba1bd8d`). Open, for the owner: a class-level `endpoint:x` tag sets the
     endpoint in Java, where .NET's class-level lanes leave it out of the tags without setting one, against the
     classifier's rule that the first `endpoint:x` sets the endpoint.
+- **2026-10-20, released in 5.0.0** (`f2f71790`, tagged `v5.0.0`). The wiki's 5.0.0 series (`7295fb3..2e58e39`)
+  starts with this plan's pages, and carries a fix found while the release was checked: Tags-and-Attributes.md said
+  that `endpoint:/x` sets the endpoint on every lane, where only ReqNRoll, Cucumber, BDDfy and a tests capture read
+  it, and NUnit, MSTest, xUnit, TUnit and LightBDD leave it out of the tags without setting one. Whether those lanes
+  should read it is the owner's question, for a later minor. The Kronikol4J port is rebased onto its `main` at
+  `52578de`, as `dbbcf66` and `95597b9` on `tags-5.0.0`, not pushed or released.
 
 ## Appendix A. Edit sites
 
