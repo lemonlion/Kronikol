@@ -445,6 +445,10 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   while the label was laid out at 92 px, so the Status buttons ran 50 px past the group and, where Duration shares the
   line, under it. The label column is 92 px as a width as well as a basis, and a label inline or alone on its line is
   as wide as its text.
+- **"No scenarios match the filters." shows on a page without the report bar too.** Only the bar answered the filters
+  for the empty state, and a page with nothing beside its features has no tabs and so no bar, as a Specifications report
+  is where no scenario recorded a duration: there the Features panel stayed blank when the filters left nothing. The
+  empty state now reads the filters itself on every page, and a link whose filters leave nothing opens on it.
 
 ### Documentation
 

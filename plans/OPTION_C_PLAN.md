@@ -1294,3 +1294,19 @@ decision of the owner's, not part of this plan.
   Mutations: 3 of 3 killed, 4 runs (the label rule's width gone: core and Firefox; the inline label's auto gone and
   the narrow box's auto gone: core, as the Firefox fact's 1,400 px reaches neither) (`checks/mutate-s14-label.ps1`).
   Checks: the full core suite passes 8,488 with 2 skipped on `a07b9230` with the change.
+- 2026-10-20, S14, "No scenarios match the filters." on a page without the report bar, found by the review of the
+  wiki's 5.0.0 pages (Generated-Reports says the Features tab says when the filters leave no scenario). Only the bar's
+  sync showed the empty state, and `bar()` runs only where the page has `.toolbar-row.report-nav`, which a page with
+  nothing beside its features does not have (no tabs, so no bar: a Specifications report where no scenario recorded a
+  duration). There the panel stayed blank. The empty state now reads the readout on its own (`emptyState()` in
+  `report-filter-bar-script.js`), on every `kron-filter-change` and once when the script starts, since the report
+  reads a link's filters before then, and its Clear All is wired with or without the bar
+  (`edits/s14/empty-state-without-bar.py`). Tests: Playwright `FilterBarTests`' new fact (a page without durations, so
+  without the bar: filters typed that leave nothing show the empty state, and its Clear All hides it, empties the
+  search and focuses it) and new theory (a link whose search leaves nothing opens on the empty state, with the bar and
+  without it). Red: 2 of 3 on the unchanged script, both at the empty state's visibility; the link with the bar passed
+  there, as a guard. Green: Playwright 43 of 43 (`FilterBarTests`, `ControlTitlesAuditTests` and
+  `FilterPipelineTests`); core 27 of 27 (`FilterBarTests` and `ControlTitlesTests`). Mutations: 4 of 4 killed (the
+  change listener not reading the empty state: the two typed facts; no read at start: the link, both ways; Clear All
+  wired only with the bar: the fact without it; an empty state that never hides again: the two typed facts)
+  (`checks/mutate-s14-empty.ps1`).

@@ -14,6 +14,7 @@
     function $$(s, r) { return Array.prototype.slice.call((r || doc).querySelectorAll(s)); }
     var box, nav, riding = false;
     var hooks = { paint: function () {}, sync: function () {} };
+    var empty = null;
 
     // ---- the measured layout (D18): Duration beside Status when both runs fit whole, Happy paths when all three do ----
     var needs = null;
@@ -90,7 +91,7 @@
         if (!row || !tabs || !group || !mark || !readout) return;
         var text = $('.nav-readout', group), long = $('.nav-readout-long', group), short = $('.nav-readout-short', group);
         var clear = $('.nav-clear', group), toggle = $('.nav-filters-toggle', group), closeBtn = $('.filters-close', box);
-        var empty = $('.filters-empty'), home = { parent: box.parentNode, next: box.nextSibling };
+        var home = { parent: box.parentNode, next: box.nextSibling };
         function stick() { return parseFloat(getComputedStyle(nav).top) || 0; }
         function pinAt() { return mark.getBoundingClientRect().top + window.pageYOffset - stick(); }
 
@@ -148,17 +149,10 @@
             text.classList.toggle('is-filtered', filtered);
             toggle.classList.toggle('is-active', filtered);
             clear.hidden = !filtered;
-            if (empty) empty.hidden = !(filtered && m && m[1] === '0');
             fit();
             settle();
         };
         clear.addEventListener('click', function () { clear_all_filters(); });
-        if (empty) $('.filters-empty-clear', empty).addEventListener('click', function () {
-            clear_all_filters();
-            // the empty state goes with the filters it reported, and focus with it: to the search, where a reader starts again
-            var search = doc.getElementById('searchbar');
-            if (search && search.getClientRects().length) search.focus({ preventScroll: true });
-        });
 
         // what was being read just below a pinned bar stays just below it when the bar changes height
         function reading() {
@@ -280,6 +274,16 @@
         else if (readout.nextSibling !== clear) clear.parentNode.insertBefore(readout, clear);
     }
 
+    // ---- the empty state ----
+    // the Features panel says when the filters leave no scenario, on a page with the bar and on one without it (a page
+    // with nothing beside its features has no tabs, and so no bar)
+    function emptyState() {
+        var readout = empty && $('.filter-readout', box);
+        if (!readout) return;
+        var m = /(\d+) of (\d+) scenarios?/.exec(readout.textContent);
+        empty.hidden = !(readout.classList.contains('is-filtered') && m && m[1] === '0');
+    }
+
     function start() {
         box = $('.filtering-box');
         if (!box) return;
@@ -287,6 +291,15 @@
         if (phone.addEventListener) phone.addEventListener('change', placeReadout);
         else if (phone.addListener) phone.addListener(placeReadout);
         nav = $('.toolbar-row.report-nav');
+        empty = $('.filters-empty');
+        if (empty) $('.filters-empty-clear', empty).addEventListener('click', function () {
+            clear_all_filters();
+            // the empty state goes with the filters it reported, and focus with it: to the search, where a reader starts again
+            var search = doc.getElementById('searchbar');
+            if (search && search.getClientRects().length) search.focus({ preventScroll: true });
+        });
+        // a link's filters were read before this started
+        emptyState();
         if (nav) bar();
         moreFilters();
         relayout();
@@ -302,8 +315,8 @@
         }
         if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(remeasure);
     }
-    // what the filters leave showing changes the bar's copy and the count
-    doc.addEventListener('kron-filter-change', function () { hooks.sync(); hooks.paint(); });
+    // what the filters leave showing changes the empty state, the bar's copy and the count
+    doc.addEventListener('kron-filter-change', function () { emptyState(); hooks.sync(); hooks.paint(); });
     // More filters, and on a phone the Filters button, answer from the moment the page has them, before the rest of this
     // starts: both set the one fold class
     doc.addEventListener('click', function (e) {

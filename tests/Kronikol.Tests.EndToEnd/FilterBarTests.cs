@@ -20,7 +20,7 @@ public class FilterBarTests : PlaywrightTestBase
 
     // thirty scenarios in three features, so the page scrolls past the bar; every third tagged smoke, one a happy path,
     // and one with a diagram, for the deep search
-    private string Generate(string fileName)
+    private string Generate(string fileName, bool durations = true)
     {
         var features = Enumerable.Range(1, 3).Select(f => new Feature
         {
@@ -28,7 +28,7 @@ public class FilterBarTests : PlaywrightTestBase
             Scenarios = Enumerable.Range(1, 10).Select(i => new Scenario
             {
                 Id = $"f{f}s{i}", DisplayName = $"Scenario {f}.{i}", Result = i == 5 && f == 2 ? ExecutionResult.Failed : ExecutionResult.Passed,
-                Duration = TimeSpan.FromMilliseconds(10 * i + f), Tags = i % 3 == 0 ? ["smoke"] : null, IsHappyPath = f == 1 && i == 1,
+                Duration = durations ? TimeSpan.FromMilliseconds(10 * i + f) : null, Tags = i % 3 == 0 ? ["smoke"] : null, IsHappyPath = f == 1 && i == 1,
                 ErrorMessage = i == 5 && f == 2 ? "boom" : null
             }).ToArray()
         }).ToArray();
@@ -222,6 +222,44 @@ public class FilterBarTests : PlaywrightTestBase
         await Expect(empty).ToBeHiddenAsync();
         await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
         await Expect(Page.Locator("#searchbar")).ToBeFocusedAsync();
+    }
+
+    // A page with nothing beside its features has no report bar (here a run without durations, as the Specifications
+    // report is where no scenario recorded one), and its empty state answered the filters only through the bar, so it
+    // never showed (S14, found by the review of the wiki's 5.0.0 pages)
+    [Fact]
+    public async Task On_a_page_without_the_bar_no_scenario_left_still_shows_the_empty_state()
+    {
+        await Page.SetViewportSizeAsync(1400, 700);
+        await Page.GotoAsync(Generate("FilterBar_Empty_NoBar.html", durations: false));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await Expect(Page.Locator(".toolbar-row.report-nav")).ToHaveCountAsync(0);
+        var empty = Page.Locator(".filters-empty");
+        await Expect(empty).ToBeHiddenAsync();
+
+        await FillSearchBar("nothing-matches-this");
+        await Expect(empty).ToBeVisibleAsync();
+        await Expect(empty).ToContainTextAsync("No scenarios match the filters.");
+
+        await Page.Locator(".filters-empty-clear").ClickAsync();
+        await Expect(empty).ToBeHiddenAsync();
+        await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
+        await Expect(Page.Locator("#searchbar")).ToBeFocusedAsync();
+    }
+
+    // the report reads the filters from the link before the filter bar's script starts, so a link that leaves no scenario
+    // has already answered when the empty state is wired: the page opens on it, with the bar and without it
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task A_link_whose_filters_leave_no_scenario_opens_on_the_empty_state(bool bar)
+    {
+        await Page.SetViewportSizeAsync(1400, 700);
+        await Page.GotoAsync(Generate(bar ? "FilterBar_Empty_Link.html" : "FilterBar_Empty_Link_NoBar.html", durations: bar) + "#q=nothing-matches-this");
+        await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("nothing-matches-this");
+        await Expect(Page.Locator(".toolbar-row.report-nav")).ToHaveCountAsync(bar ? 1 : 0);
+        await Expect(Page.Locator(".filters-empty")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".filter-readout")).ToContainTextAsync("0 of 30 scenarios");
     }
 
     [Fact]
