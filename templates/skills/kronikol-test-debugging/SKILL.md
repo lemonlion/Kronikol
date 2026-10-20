@@ -1,10 +1,10 @@
 ---
 name: kronikol-test-debugging
 description: >
-  Debug a test run from a Kronikol report (TestRunReport.json) — why a test failed, what a service actually
+  Debug a test run from a Kronikol report (TestRunReport.krkl, or TestRunReport.json) — why a test failed, what a service actually
   returned, where a wrong value came from, what changed between runs, what was slow. Use whenever a
   Kronikol report exists (.logs/kronikol/, Reports/, TestResults/) and the question is about test
-  behaviour. Never read TestRunReport.json directly: reports reach tens of megabytes (2.7M tokens per 10 MB)
+  behaviour. Never read TestRunReport.krkl or TestRunReport.json directly: reports reach tens of megabytes (2.7M tokens per 10 MB)
   and a single embedded diagram can be 166k tokens.
 ---
 
@@ -12,7 +12,7 @@ description: >
 
 ## The rule
 
-**Never `Read`, `cat`, `Grep` or otherwise open `TestRunReport.json`, `TestRunReport.html`, or a diagram.**
+**Never `Read`, `cat`, `Grep` or otherwise open `TestRunReport.krkl`, `TestRunReport.json`, `TestRunReport.html`, or a diagram.**
 
 Not "prefer not to" — it does not work. A measured report was **10.7 MB ≈ 2.7 million tokens**, with one
 embedded PlantUML diagram of **663 KB ≈ 166,000 tokens**: a single diagram larger than most context
@@ -22,14 +22,14 @@ the question unanswered.
 Use `kronikol query` instead; the `query.cs` beside every report runs it with nothing installed. Every
 command prints an answer plus the addresses that fetch the next thing.
 
-A run with `CompressTestRunReport` on writes `TestRunReport.krkl` in place of the JSON: compressed, so a text
-tool finds nothing in it, and every command here takes it as it takes the JSON.
+From 5.0.0 a run writes `TestRunReport.krkl`, compressed, so a text tool finds nothing in it; with
+`CompressTestRunReport` off it writes `TestRunReport.json` as before. Every command here takes either.
 
 ```
 dotnet run --file .logs/kronikol/query.cs -- summary .logs/kronikol   # nothing to install, no network: the report's own query.cs
-kronikol query summary .logs/kronikol/TestRunReport.json              # the same, where the tool is installed
+kronikol query summary .logs/kronikol/TestRunReport.krkl              # the same, where the tool is installed
 dotnet tool install -g Kronikol.Tool      # once, for `kronikol` on PATH in every repository
-dnx Kronikol.Tool query summary .logs/kronikol/TestRunReport.json   # no install: the .NET 10 SDK runs the last published version
+dnx Kronikol.Tool query summary .logs/kronikol/TestRunReport.krkl   # no install: the .NET 10 SDK runs the last published version
 ```
 
 **`query.cs` needs nothing installed and no network.** Every run writes it beside its report, and it runs

@@ -292,6 +292,13 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   the default. A diagram of nothing but hidden markers reached the engine, which failed on it, in place of the
   "Nothing to draw" message, and that message now names the toggles by the words they show (Assertions, Steps).
 
+### Documentation
+
+- The block `kronikol init-agents` writes into a repository's `CLAUDE.md` and `AGENTS.md`, and the
+  `kronikol-test-debugging` skill, name `TestRunReport.krkl` first: the rule forbids opening it as well as the JSON,
+  and the skill's examples query the `.krkl` (`plans/REPORT_FORMAT_PLAN.md` 6.3). The text a run writes beside its
+  report already named the file that run wrote.
+
 ## [4.32.1] - 2026-10-19
 
 **Patch - a read-only `TestRunReport.krkl` is left as it is (`plans/REPORT_FORMAT_PLAN.md` R4).** A fix to 4.32.0's

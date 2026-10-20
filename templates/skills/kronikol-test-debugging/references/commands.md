@@ -2,7 +2,7 @@
 
 `kronikol query <command> <report> [args]`
 
-`<report>` is a `TestRunReport.json`, or a directory holding one. When a directory holds several the tool
+`<report>` is a `TestRunReport.krkl` or `TestRunReport.json`, or a directory holding one. When a directory holds several the tool
 lists them, each with its size and, from the `Run.json` beside it, its suite and failure count (the first
 twenty, then how many more), and stops rather than guessing.
 
@@ -540,7 +540,7 @@ one absence that is not a loss is a side that cannot carry traffic at all (a mer
 before 3.1.0); that side is noted and the section skipped.
 
 **`--baseline`** names only the current report and resolves the other side itself:
-`<reports>/baseline/TestRunReport.json` beside it, else `$KRONIKOL_BASELINE` (a report, or a directory
+`<reports>/baseline/TestRunReport.krkl` (or `.json`) beside it, else `$KRONIKOL_BASELINE` (a report, or a directory
 holding one), else exit 2 naming both. The argument order inverts on purpose — `diff old new` names the
 old report first, `diff <report> --baseline` names the current one — but the output is oriented the same
 way either way: `-` is the older run, `+` the newer, `BROKE` means it passed then and fails now.

@@ -1,7 +1,7 @@
 <!-- kronikol:begin -->
 ## Debugging a test run (Kronikol)
 
-These tests write a Kronikol report. **Never open `TestRunReport.json`, `TestRunReport.html` or a
+These tests write a Kronikol report. **Never open `TestRunReport.krkl`, `TestRunReport.json`, `TestRunReport.html` or a
 diagram.** Not "prefer not to" — it does not work: a measured report was 10.7 MB, about 2.7 million
 tokens, with one embedded PlantUML diagram of 663 KB — a single diagram larger than most context
 windows. Opening the file is not a slow way to answer a question about the run, it is a way to end the

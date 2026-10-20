@@ -1446,6 +1446,8 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
       made the default. The xUnit2 lane, run for the commit before, failed 31 facts on it and now decodes the `.krkl`;
       ProxyTap's report fact asks for the JSON it reads as text. A default flip has to run every test project that
       reads the data file, which a search for its name finds.
+    - 5.0.0, on the same branch: the init-agents block (and this repository's copy in `CLAUDE.md`) and the skill name
+      `TestRunReport.krkl` first (section 6.3); `AgentTextNamesTheDataFileTests` holds both.
 
 ## Appendix A. Edit sites at `a8563d21`
 
