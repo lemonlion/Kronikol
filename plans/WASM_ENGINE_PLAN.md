@@ -160,3 +160,6 @@ moves, and `FocusClearOfTheBarTests` tabs to the `<a>` the engine draws (its fix
   killed; the one that survives binds a link's anchors again on every pass, which adds the same name and listeners and
   no reader can see. The classes that draw links, focus, flows or exports pass: 168 with 4 skipped.
 - 2026-10-20: released in 5.0.0.
+- 2026-10-20, published: `v5.0.0` tagged at `f2f71790`, on NuGet from the Release workflow's run 39407352786;
+  the wiki's engine pages with the 5.0.0 series (wiki `2e58e39`), the Kronikol4J ledger entry (`52578de`),
+  and BreakfastProvider on 5.0.0 (`a631930`, its CI run 39409887314).

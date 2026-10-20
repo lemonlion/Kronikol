@@ -1,7 +1,9 @@
 # The 5.0.0 wiki, as one series
 
 `series/` holds the wiki's 5.0.0 pages as ten patches on the live wiki's `master` at `7295fb3` (its head on
-2026-10-20). Nothing in it is pushed: the wiki describes 5.0.0 only once 5.0.0 ships, and pushing is the owner's call.
+2026-10-20). Published on 2026-10-20, once 5.0.0 was on NuGet, as the live wiki's `7295fb3..2e58e39`: each
+subject reworded "5.0.0: ...", the author set to the live wiki's, and one commit on top moving the pages' package
+references from 4.14.11 and 4.* to 5.0.0 and 5.* (`plans/WASM_ENGINE_PLAN.harness/wiki/wiki-publish.sh`).
 
 | Patch | From | What |
 |---|---|---|

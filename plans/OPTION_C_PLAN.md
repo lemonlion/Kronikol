@@ -1327,3 +1327,7 @@ decision of the owner's, not part of this plan.
   suite passes 1,377 with 28 skipped and the full core suite 8,499 with 2 skipped. Nothing is pushed: the branch, the
   wiki series and the ledger entry wait for 5.0.0.
 - 2026-10-20: released as 5.0.0, with the report data file, the tags and the Wasm engine; the wiki series (ten patches) and the Kronikol4J ledger entries publish with it.
+- 2026-10-20, published with 5.0.0: the wiki series as the live wiki's `7295fb3..2e58e39`, each
+  subject reworded "5.0.0: ..." and one commit on top moving the pages' package references to 5.0.0 (they named
+  4.14.11, and Assertion Tracking 4.*); the Kronikol4J ledger entries as `52578de`, kronikol-39's in the form it
+  sent that day, with its code names in backticks.
