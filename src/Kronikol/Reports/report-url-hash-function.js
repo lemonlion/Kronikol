@@ -64,7 +64,8 @@ function jump_into_view(target, block) {
     });
 }
 // The page's link carries every filter (5.0.0, plans/OPTION_C_PLAN.md S5, Q5: hash v2). Each 4.x parameter keeps its
-// meaning, so a link copied from a 4.x report opens the same view: deps= is the chosen dependencies and depmode= their
+// meaning, so a link copied from a 4.x report opens the same view (but for one with deps= and no depmode=: it meant
+// AND, and now means OR, the filter's default): deps= is the chosen dependencies and depmode= their
 // mode, hp=1 is Happy paths Only, and cats= and catmode=, a 4.x report's categories, are read as tags now that a
 // category is a tag (plans/TAGS_PLAN.md §4.10). What 4.x could not say rides parameters of its own: depx= for the
 // dependencies left out, tags= and tagx= for the tags chosen and left out, tagmode=, and hpx=1 for Happy paths Hide. The

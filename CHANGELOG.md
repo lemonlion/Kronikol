@@ -49,8 +49,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   with `{ shown, total }` in its `detail`.
 - **The page's link carries every filter.** What a 4.x link could not say has parameters of its own: `tags=` and
   `tagx=` for the tags chosen and left out, `tagmode=`, `depx=` for the dependencies left out, and `hpx=1` for happy
-  paths hidden. Every 4.x parameter keeps its meaning (`hp=1` is happy paths only), so a
-  link copied from a 4.x report opens the same view.
+  paths hidden. Every 4.x parameter keeps its meaning (`hp=1` is happy paths only), so a link copied from a 4.x
+  report opens the same view, but for one that names dependencies and no `depmode`: it meant AND, and now means OR
+  (the dependency filter's item below).
 - **`@"two words"` finds a tag with a space,** such as `@"Happy Path"`, on its own or with `&&`, `||` and `!`.
 - **A parameterized scenario shows the tags all its examples carry,** less its feature's; 4.x drew none.
 - **Every adapter reads its framework's own tags.** NUnit's `[Category]` (a `[TestCase]`'s `Category =` too), MSTest's
@@ -209,7 +210,8 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   or a scenario's address goes to the Features tab first. The Scenario Timeline and Component Diagram toggles are gone,
   with `toggle_timeline` and `toggle_component_diagram`. `ReportToggleDefaults.ScenarioTimelineVisible` and
   `ComponentDiagramVisible` choose the tab the page opens on (the timeline when both are set), and `DiagnosticsOpen`
-  has nothing left to open. A page with nothing beside its features, such as the Specifications report, has no tabs.
+  has nothing left to open. A page with nothing beside its features has no tabs, and so no bar; the Specifications
+  report's only other tab is the Timeline, where its scenarios carry durations.
 - **History and diagnostics are back in the report, as its History and Diagnostics tabs.**
   `ReportConfigurationOptions.ShowHistorySection` and `ShowReportDiagnosticsSection` default to `true` (4.6.0 to 4.x:
   `false`): a run that read history has a History tab, and one that recorded a diagnostic has a Diagnostics tab with
