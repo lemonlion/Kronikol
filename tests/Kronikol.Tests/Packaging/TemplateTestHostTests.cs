@@ -58,9 +58,11 @@ public class TemplateTestHostTests
     [Fact]
     public void Every_template_takes_the_Mvc_Testing_version_for_the_framework_it_was_created_for()
     {
-        // Microsoft.AspNetCore.Mvc.Testing ships a major version per .NET version, for its own framework only, so a pin
-        // of 10.x failed restore in every scaffold made with --Framework net8.0 or net9.0. The template's Framework option
-        // rewrites every "net10.0" in the project, so no condition may name it.
+        // Microsoft.AspNetCore.Mvc.Testing ships a major version per .NET version, for its own framework only, so through
+        // 4.x a pin of 10.x failed restore in every scaffold made with --Framework net8.0 or net9.0, and each took its own
+        // version by condition. 5.0.0 offers net10.0 alone, so no condition is left for those two; a framework the
+        // templates offer later (net11.0, R7) takes one of its own. The Framework option rewrites every "net10.0" in the
+        // project, so no condition may name it.
         var projects = ProjectFiles().ToList();
 
         Assert.NotEmpty(projects);
@@ -70,8 +72,7 @@ public class TemplateTestHostTests
             var name = Path.GetFileName(Path.GetDirectoryName(project));
             Assert.True(Regex.IsMatch(text, @"<PackageReference\s+Include=""Microsoft\.AspNetCore\.Mvc\.Testing""\s+Version=""\$\(MvcTestingVersion\)"""),
                 $"{name} pins Microsoft.AspNetCore.Mvc.Testing instead of taking $(MvcTestingVersion)");
-            Assert.Matches(@"<MvcTestingVersion Condition=""\$\(TargetFramework\.StartsWith\('net8'\)\)"">8\.", text);
-            Assert.Matches(@"<MvcTestingVersion Condition=""\$\(TargetFramework\.StartsWith\('net9'\)\)"">9\.", text);
+            Assert.DoesNotMatch(@"StartsWith\('net[89]'\)", text);
             Assert.Matches(@"<MvcTestingVersion>10\.", text);
         });
     }

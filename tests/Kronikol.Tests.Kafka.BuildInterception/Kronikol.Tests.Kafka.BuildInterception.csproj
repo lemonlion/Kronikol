@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- The runtime this suite's reporter runs (.NET 8) and the newest: tier-up (F2) depends on the runtime. -->
+    <!-- Tier-up (F2) depends on the runtime. Through 4.x this suite ran on .NET 8 too, its reporter's runtime; 5.0.0
+         targets .NET 10 alone. -->
     <TargetFramework />
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <!-- These facts build hundreds of clients: with quick JIT on, the runtime recompiles the patched Build() after a few

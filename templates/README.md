@@ -45,7 +45,7 @@ dotnet new kronikol-xunit3 --name MyService.Tests.Component \
 | `--serviceName` | MyApi | Name of your service (appears in diagrams) |
 | `--downstreamService` | DownstreamService | Name of a downstream dependency |
 | `--downstreamPort` | 15050 | Port for downstream service HTTP fake |
-| `--Framework` | net10.0 | Target framework (net8.0/net9.0/net10.0) |
+| `--Framework` | net10.0 | Target framework (net10.0 from 5.0.0) |
 
 ## What's Included
 

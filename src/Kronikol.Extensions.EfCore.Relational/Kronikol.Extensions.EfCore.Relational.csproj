@@ -9,8 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.15" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.*" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
 

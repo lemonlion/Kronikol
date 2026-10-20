@@ -248,6 +248,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **The component diagram's title heads the Components tab and leaves its drawing.** `ComponentDiagramOptions.Title`
   is the tab's heading under every renderer; `ComponentDiagram.html` still draws it. A run whose calls give the diagram
   no connection has no Components tab, where it drew the title alone.
+- **Every package targets .NET 10 alone.** net8.0 and net9.0 are dropped (`plans/REPORT_FORMAT_PLAN.md` Q17), so a
+  test project on .NET 8 or 9 stays on 4.x; net11.0 joins in a 5.x minor when .NET 11 ships. The templates offer
+  `--Framework net10.0` alone, and CI no longer scaffolds them on the older two.
 
 ### Deprecated
 

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Version>4.32.1</Version>
     <TargetFramework>net10.0</TargetFramework>
-    <MultiTargetFrameworks>net8.0;net9.0;net10.0</MultiTargetFrameworks>
+    <MultiTargetFrameworks>net10.0</MultiTargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>

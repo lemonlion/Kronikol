@@ -13,7 +13,7 @@
     "serviceName": { "type": "parameter", "datatype": "string", "defaultValue": "MyApi", "replaces": "SERVICE_NAME", "description": "Name of the service under test" },
     "downstreamService": { "type": "parameter", "datatype": "string", "defaultValue": "DownstreamService", "replaces": "DOWNSTREAM_SERVICE", "description": "Name of a downstream dependency service" },
     "downstreamPort": { "type": "parameter", "datatype": "int", "defaultValue": "15050", "replaces": "15050", "description": "Port number for the downstream service HTTP fake" },
-    "Framework": { "type": "parameter", "datatype": "choice", "choices": [{ "choice": "net8.0" }, { "choice": "net9.0" }, { "choice": "net10.0" }], "defaultValue": "net10.0", "replaces": "net10.0" }
+    "Framework": { "type": "parameter", "datatype": "choice", "choices": [{ "choice": "net10.0" }], "defaultValue": "net10.0", "replaces": "net10.0" }
   },
   "sources": [{ "modifiers": [{ "exclude": ["**/bin/**", "**/obj/**"] }] }]
 }

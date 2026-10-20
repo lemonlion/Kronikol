@@ -312,7 +312,7 @@ In short: use deterministic diagrams as the source of truth, and let AI tools bu
 | **CLI** | `Kronikol.Tool` | `kronikol merge` (combine parallel runners' reports), `kronikol ingest` (replay language-neutral NDJSON captures into a full report), `kronikol query` (debug a run without reading the report), `kronikol export` (push NDJSON captures to an OTLP collector as OTel spans) and `kronikol init-agents` (install the test-debugging skill and CLAUDE.md/AGENTS.md block into a repository) | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Tool)](https://www.nuget.org/packages/Kronikol.Tool) |
 | **Step Tracking** | `Kronikol.StepTracking` | IL weaver that instruments `[GivenStep]`, `[WhenStep]`, `[ThenStep]` methods with BDD step tracking and timing | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.StepTracking)](https://www.nuget.org/packages/Kronikol.StepTracking) |
 
-All packages from 1.23.X onwards target **.NET 8.0**, **.NET 9.0**, and **.NET 10.0** (multi-target).
+From 5.0.0 every package targets **.NET 10.0** alone. From 1.23.X through 4.x they target **.NET 8.0**, **.NET 9.0** and **.NET 10.0** (multi-target).
 
 ---
 

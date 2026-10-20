@@ -391,18 +391,3 @@ jobs:
             esac
             echo "::endgroup::"
           done
-          # The other frameworks a template offers. Microsoft.AspNetCore.Mvc.Testing ships a major version per .NET
-          # version, for its own framework only, so a scaffold made with --Framework net8.0 or net9.0 failed restore
-          # until the templates chose its version by framework; the loop above makes only the default.
-          for pair in kronikol-xunit3:net8.0 kronikol-tunit:net9.0; do
-            short=${pair%%:*}
-            fw=${pair##*:}
-            echo "::group::Instantiating, building & testing $short on $fw"
-            dotnet new "$short" -n ScaffoldSmoke -o "$RUNNER_TEMP/tpl-smoke-fw/$short" --Framework "$fw"
-            dotnet build "$RUNNER_TEMP/tpl-smoke-fw/$short" --configuration Release
-            case "$short" in
-              *tunit*) dotnet run --project "$RUNNER_TEMP/tpl-smoke-fw/$short" --configuration Release --no-build ;;
-              *) dotnet test "$RUNNER_TEMP/tpl-smoke-fw/$short" --configuration Release --no-build -- RunConfiguration.TreatNoTestsAsError=true ;;
-            esac
-            echo "::endgroup::"
-          done

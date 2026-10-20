@@ -1438,6 +1438,10 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
       reaches only the JSON file `CompressTestRunReport = false` writes, `kronikol ingest --help` says the same of
       `--payloads`, and `V6_PLAN.md` item 10 removes both. Five test files that use it on purpose suppress CS0618 where
       they do.
+    - 5.0.0, on the same branch: every package targets net10.0 alone (Q17). `MultiTargetFrameworks` names it alone, the
+      extensions' and the core's references for net8.0 and net9.0 are gone, the templates offer `--Framework net10.0`
+      alone, CI's scaffold loop for the older two is gone, and the test projects that built on them build on net10.0.
+      `TargetFrameworksTests` holds all four places.
 
 ## Appendix A. Edit sites at `a8563d21`
 

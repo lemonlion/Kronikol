@@ -13,8 +13,6 @@
        the one matching the framework the project was created for (the template's Framework option). -->
   <PropertyGroup>
     <MvcTestingVersion>10.0.7</MvcTestingVersion>
-    <MvcTestingVersion Condition="$(TargetFramework.StartsWith('net9'))">9.0.20</MvcTestingVersion>
-    <MvcTestingVersion Condition="$(TargetFramework.StartsWith('net8'))">8.0.31</MvcTestingVersion>
   </PropertyGroup>
 
   <ItemGroup>

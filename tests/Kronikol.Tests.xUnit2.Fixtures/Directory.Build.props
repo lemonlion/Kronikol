@@ -5,11 +5,11 @@
     auto-discovery skips this folder, since no project file sits at its top.
 
     MSBuild imports the first Directory.Build.props it finds walking up from a project, so this file stops
-    the search here and each fixture builds as a consumer's suite would, on net8.0 (the oldest target
-    Kronikol.xUnit2 ships) with xunit 2.9.3. src/Kronikol.xUnit2 still builds with the repo's own props.
+    the search here and each fixture builds as a consumer's suite would, on net10.0 (the one target
+    Kronikol.xUnit2 ships from 5.0.0) with xunit 2.9.3. src/Kronikol.xUnit2 still builds with the repo's own props.
   -->
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
