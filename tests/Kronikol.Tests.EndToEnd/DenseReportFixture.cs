@@ -56,11 +56,13 @@ public static class DenseReportFixture
     /// so every scenario has three diagram views (Sequence, Activity, Flame) on a tab bar, as in a consumer's report
     /// with internal flow. With <paramref name="everyFilter"/> each scenario also draws its Given, When and Then step
     /// bars, reads its basket from a database before the When step (its setup), publishes an event and reads the order
-    /// back, so the report has every filter toggle a consumer's has: Steps, Databases, Events and Setup.
+    /// back, so the report has every filter toggle a consumer's has: Steps, Databases, Events and Setup. Without
+    /// <paramref name="internalFlow"/> no spans are recorded and tracking is off, so each scenario has its sequence
+    /// diagram alone: half the diagrams to draw where a test draws every one.
     /// </summary>
     public static string GenerateWithFlows(string tempDir, string outputDir, string fileName, int features = DefaultFeatures,
         int scenariosPerFeature = DefaultScenariosPerFeature, int callsPerScenario = DefaultCallsPerScenario,
-        bool everyFilter = false)
+        bool everyFilter = false, bool internalFlow = true)
     {
         var reportsDir = Path.Combine(tempDir, "dense-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(reportsDir);
@@ -117,8 +119,11 @@ public static class DenseReportFixture
                             JsonBody(rng, index, c, "response"), new Uri("http://orders" + path), [], "Orders", "Caller",
                             RequestResponseType.Response, Guid.NewGuid(), id, false, HttpStatusCode.Created)
                             { Timestamp = t.AddMilliseconds(100), ActivityTraceId = trace.ToString() });
-                        Span("POST " + path, trace, t.AddMilliseconds(1), 60);
-                        Span("INSERT orders " + index + "-" + c, trace, t.AddMilliseconds(10), 20);
+                        if (internalFlow)
+                        {
+                            Span("POST " + path, trace, t.AddMilliseconds(1), 60);
+                            Span("INSERT orders " + index + "-" + c, trace, t.AddMilliseconds(10), 20);
+                        }
                     }
                     if (everyFilter)
                     {
@@ -147,7 +152,7 @@ public static class DenseReportFixture
                 {
                     ReportsFolderPath = reportsDir,
                     PlantUmlRendering = PlantUmlRendering.BrowserJs,
-                    InternalFlowTracking = true,
+                    InternalFlowTracking = internalFlow,
                     InternalFlowSpanGranularity = InternalFlowSpanGranularity.Full,
                     GenerateComponentDiagram = false,
                     GenerateSpecificationsReport = false,

@@ -27,15 +27,16 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
     /// <summary>The longest main-thread task a toggle may cost, before the contention scale.</summary>
     private const double TaskBudgetMs = 200;
 
-    private const int Diagrams = 200;
+    private const int Diagrams = 60;
 
     // written once for the class, outside any test's folder
     private static readonly Lazy<string> Report = new(() =>
     {
         var dir = Path.Combine(Path.GetTempPath(), "kronikol-toggles-" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(dir);
-        return DenseReportFixture.GenerateWithFlows(dir, OutputDir, "Dense_Toggles.html", features: 20, scenariosPerFeature: 10,
-            everyFilter: true);
+        // sequence diagrams alone: a CI runner draws a few a second, and the facts below wait for every one
+        return DenseReportFixture.GenerateWithFlows(dir, OutputDir, "Dense_Toggles.html", features: 6, scenariosPerFeature: 10,
+            everyFilter: true, internalFlow: false);
     }, LazyThreadSafetyMode.ExecutionAndPublication);
 
     // two scenarios: a toggle's queue with nothing to wait for but the engine
@@ -138,7 +139,7 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
     {
         await OpenAllDrawnAsync();
         // the reader is halfway down the report
-        await Page.EvaluateAsync("() => document.querySelectorAll('.plantuml-browser[data-k-sequence]')[100].scrollIntoView({ block: 'center' })");
+        await Page.EvaluateAsync("() => document.querySelectorAll('.plantuml-browser[data-k-sequence]')[30].scrollIntoView({ block: 'center' })");
         await SettleAsync();
         // the order the sequence diagrams get their new pictures in
         await Page.EvaluateAsync("""
@@ -160,7 +161,7 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
             }
             """);
         // a few diagrams in, the reader jumps to the last one
-        await Page.WaitForFunctionAsync("() => window.__order.length >= 10", null, new() { Timeout = 120_000, PollingInterval = 200 });
+        await Page.WaitForFunctionAsync("() => window.__order.length >= 5", null, new() { Timeout = 120_000, PollingInterval = 200 });
         var scrolledAt = await Page.EvaluateAsync<int>("""
             () => {
                 var seq = document.querySelectorAll('.plantuml-browser[data-k-sequence]');
@@ -172,11 +173,11 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
             null, new() { Timeout = 300_000, PollingInterval = 200 });
         var order = (await Page.EvaluateAsync<int[]>("() => window.__order")).ToList();
 
-        // the diagram on screen was drawn first, though a hundred come before it on the page (5.1.0 drew them in page
+        // the diagram on screen was drawn first, though thirty come before it on the page (5.1.0 drew them in page
         // order), and the one jumped to went next instead of waiting for every diagram nearer the middle
         Assert.Equal(Diagrams, order.Count);
-        Assert.InRange(order[0], 99, 101);
-        Assert.InRange(order.IndexOf(Diagrams - 1), 0, scrolledAt + 30);
+        Assert.InRange(order[0], 29, 31);
+        Assert.InRange(order.IndexOf(Diagrams - 1), 0, scrolledAt + 10);
 
         // the first diagram, far from where the reader was: reached in one task, it holds its new picture with its notes
         // as cards, and has no note buttons yet; they arrive as it comes near, and show on hover

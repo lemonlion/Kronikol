@@ -45,14 +45,15 @@ opened from the keyboard.
 
 ### Tests
 
-- `ReportToggleResponsivenessTests` (new): on 200 scenarios with every diagram drawn, Databases, Setup and Events
+- `ReportToggleResponsivenessTests` (new): on 60 scenarios with every diagram drawn, Databases, Setup and Events
   switched off and back run no task over the contention-scaled budget; the diagram on screen is drawn first and one
   scrolled to next, and a far diagram reached in one task holds its new picture with its cards and gets its buttons as
   it comes near; on two scenarios, Headers (whose payloads carry none) keeps every picture, Databases keeps the
   activity diagrams' and starts the next drawing ahead, a picture replaced since is drawn again, a zoomed diagram drawn
   again far from the screen keeps its width, and a drawing the engine refuses at once leaves no poll running.
 - `DenseReportFixture.GenerateWithFlows` takes `everyFilter`: step bars, database calls and an event in every scenario,
-  so the report has every filter toggle.
+  so the report has every filter toggle; and `internalFlow`, which leaves the activity diagrams out where a test draws
+  every diagram (a CI runner drew the 400 diagrams of 200 scenarios too slowly for the facts' five minutes).
 - `HeadersDetailsInterferenceReportTests` reads `_preProcessSource` from its definition to the next function's. It read
   from the name's first mention to the next mention of `processRenderQueue`, which the new comments put earlier in the
   page, so it read nothing.
