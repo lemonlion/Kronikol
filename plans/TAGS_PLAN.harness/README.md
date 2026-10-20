@@ -15,7 +15,9 @@ characters outside ASCII, the Kelvin sign and the dotless ı. They disagree, whi
 
 `wiki/` holds T4's wiki edits for the release, not yet published: `wiki-tags.patch` (29 pages and the new
 `Migrating-to-v5-Tags.md`, made with `diff -ruN` against the live wiki at `450844e`; `patch -p1` applies it to a
-checkout of that commit), `NOTES.md` (what each page says and the answers to its eight questions) and
+checkout of that commit; `wiki-tags-on-b5c9a27.patch` is the same edits for the wiki's `origin/master` at
+`b5c9a27`, 11 commits newer, where one `Querying-Reports.md` hunk had moved: `git apply` takes it, and the pages
+it gives match `wiki-tags.patch`'s, line for line), `NOTES.md` (what each page says and the answers to its eight questions) and
 `kronikol4j-wiki.patch` (Kronikol4J's 4 pages, against its wiki at `ba1bd8d`). `wiki/recipes/` checked the tagging
 recipes of `Marking-New-and-Changed-Tests.md` on a 5.0.0 build, the `Kronikol-tags` worktree's: `check.py` (a tests
 capture and a playwright-bdd run's Messages, through `kronikol ingest`), `check_c.py` (a mergeable data file through
