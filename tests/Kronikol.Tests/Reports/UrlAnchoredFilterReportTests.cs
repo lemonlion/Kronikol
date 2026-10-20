@@ -42,11 +42,11 @@ public class UrlAnchoredFilterReportTests
     }
 
     [Fact]
-    public void Report_contains_parse_url_hash_function()
+    public void Report_contains_apply_url_hash_function()
     {
         var features = MakeFeatures(("t1", "Create order", ExecutionResult.Passed));
         var content = GenerateReport(features, "UrlHashParse.html");
-        Assert.Contains("parse_url_hash", content);
+        Assert.Contains("function apply_url_hash(", content);
     }
 
     [Fact]
@@ -54,7 +54,11 @@ public class UrlAnchoredFilterReportTests
     {
         var features = MakeFeatures(("t1", "Create order", ExecutionResult.Passed));
         var content = GenerateReport(features, "UrlHashOnFilter.html");
-        Assert.Contains("history.replaceState", content);
+        // since 5.2.0 through the navigation script, the page's one writer of the session history, with absolute addresses
+        Assert.Contains("window.kronikol_nav.wrote(url_hash_filters().join('&'))", content);
+        Assert.Contains("sh.replaceState(wrapped(entry, true), '', hrefOf(hash))", content);
+        Assert.Contains("sh.pushState(wrapped(entry, false), '', hrefOf(hash))", content);
+        Assert.DoesNotContain("history.replaceState(null", content);
     }
 
     [Fact]
@@ -62,7 +66,8 @@ public class UrlAnchoredFilterReportTests
     {
         var features = MakeFeatures(("t1", "Create order", ExecutionResult.Passed));
         var content = GenerateReport(features, "UrlHashRestore.html");
-        // On load, should parse hash and apply filters
-        Assert.Contains("parse_url_hash", content);
+        // On load the navigation script puts the address on the page, its filters through apply_url_hash
+        Assert.Contains("window.kronikol_nav.start()", content);
+        Assert.Contains("apply_url_hash(a.filters)", content);
     }
 }

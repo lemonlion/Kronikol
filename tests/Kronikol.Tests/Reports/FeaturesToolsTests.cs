@@ -90,7 +90,7 @@ public class FeaturesToolsTests
     public void Full_and_Summary_are_tabs_with_Full_selected()
     {
         var html = Generate("FeaturesTools_Views.html");
-        Assert.Contains("<div class=\"view-switch\" role=\"tablist\" aria-label=\"Features view\">"
+        Assert.Contains("<div class=\"view-switch\" role=\"tablist\" aria-label=\"Features view\" data-start-view=\"full\">"
             + "<button type=\"button\" class=\"view-btn\" id=\"view-full\" role=\"tab\" aria-controls=\"report-content\" aria-selected=\"true\" tabindex=\"0\" data-view=\"full\" title=\"Each feature as a card with its scenarios\">Full</button>"
             + "<button type=\"button\" class=\"view-btn\" id=\"view-summary\" role=\"tab\" aria-controls=\"features-table-view\" aria-selected=\"false\" tabindex=\"-1\" data-view=\"summary\" title=\"One table row per feature, with its counts and times\">Summary</button></div>", html);
     }
@@ -168,7 +168,7 @@ public class FeaturesToolsTests
     {
         // Report order is the page's own; Feature A-Z sorts by name (the preview's Feature A-Z was the report's order)
         var html = Generate("FeaturesTools_Sort.html");
-        Assert.Contains("<select id=\"features-sort\" class=\"sort-select\" aria-label=\"Sort features\" title=\"The order the features are listed in\">"
+        Assert.Contains("<select id=\"features-sort\" class=\"sort-select\" autocomplete=\"off\" aria-label=\"Sort features\" title=\"The order the features are listed in\">"
             + "<option value=\"order\">Report order</option><option value=\"name\" data-col=\"0\">Feature A–Z</option>"
             + "<option value=\"failed\" data-col=\"3\">Failures first</option><option value=\"scenarios\" data-col=\"1\">Most scenarios</option>"
             + "<option value=\"duration\" data-col=\"5\">Slowest total</option><option value=\"average\" data-col=\"6\">Slowest average</option>"

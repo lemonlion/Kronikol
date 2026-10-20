@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Click then timers</title>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body { font: 14px/1.4 sans-serif; }
+  #spacer { position: relative; height: 12000px; }
+  .mark { position: absolute; left: 0; width: 300px; height: 40px; background: #ddd; }
+  #link { position: absolute; top: 1000px; left: 10px; }
+  #to-other { position: absolute; top: 40px; left: 10px; }
+</style>
+<script>
+(function () {
+  var log = [];
+  window.__log = log;
+  window.__jsState = { createdAt: Date.now(), counter: 0, rand: Math.random() };
+  window.__interceptMode = false;
+  var t0 = performance.now();
+  var where;
+  try { where = window === window.top ? 'top' : 'child'; } catch (e) { where = 'child'; }
+  function st() { try { return history.state; } catch (e) { return 'ERR:' + e.name; } }
+  function rec(type, extra) {
+    var e = { type: type, where: where, t: Math.round(performance.now() - t0), hash: location.hash, state: st(),
+              len: history.length, y: Math.round(window.scrollY) };
+    if (extra) for (var k in extra) e[k] = extra[k];
+    log.push(e);
+    try { console.log('EVT ' + JSON.stringify(e)); } catch (x) {}
+  }
+  window.__rec = rec;
+  addEventListener('popstate', function (ev) { rec('popstate', { evState: ev.state }); });
+  addEventListener('hashchange', function (ev) { rec('hashchange', { oldURL: ev.oldURL, newURL: ev.newURL }); });
+  addEventListener('pageshow', function (ev) { rec('pageshow', { persisted: ev.persisted }); });
+  addEventListener('pagehide', function (ev) { rec('pagehide', { persisted: ev.persisted }); });
+  var nav = window.navigation;
+  if (nav && typeof nav.addEventListener === 'function') {
+    nav.addEventListener('navigate', function (ev) {
+      var d = { navigationType: ev.navigationType, destUrl: ev.destination ? ev.destination.url : null,
+                destSameDocument: ev.destination ? ev.destination.sameDocument : null, hashChange: ev.hashChange,
+                canIntercept: ev.canIntercept, userInitiated: ev.userInitiated };
+      try { d.destState = ev.destination.getState(); } catch (x) { d.destStateErr = x.name; }
+      if (window.__interceptMode) {
+        try { ev.intercept({ handler: function () { return Promise.resolve(); } }); d.intercepted = true; }
+        catch (x) { d.interceptError = x.name + ': ' + x.message; }
+      }
+      rec('navigate', d);
+    });
+    nav.addEventListener('navigatesuccess', function () { rec('navigatesuccess'); });
+    nav.addEventListener('navigateerror', function (ev) { rec('navigateerror', { message: ev.message }); });
+    nav.addEventListener('currententrychange', function (ev) { rec('currententrychange', { navigationType: ev.navigationType }); });
+  }
+})();
+</script>
+</head>
+<body>
+<div id="spacer">
+  <a id="to-other" href="other.html">to other.html</a>
+  <a id="link" href="#target">to #target</a>
+  <div id="c" class="mark" style="top:3000px">#c</div>
+  <div id="target" class="mark" style="top:6000px">#target</div>
+</div>
+<button id="go" style="position:fixed;top:8px;right:8px">go</button>
+<script>
+document.getElementById('go').addEventListener('click', function () {
+  __rec('clicked');
+  setTimeout(function () {
+    history.pushState({ na: 1 }, '', '#na1'); __rec('pushed', { n: 1 });
+    setTimeout(function () { history.pushState({ na: 2 }, '', '#na2'); __rec('pushed', { n: 2 }); }, 50);
+  }, 6000);
+});
+</script>
+</body>
+</html>

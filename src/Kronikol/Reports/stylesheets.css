@@ -897,6 +897,17 @@
             padding: 4px 10px; font: 400 var(--kron-fs-control)/18px var(--kron-font); cursor: pointer;
         }
         .filters-empty-clear:hover { background: var(--kron-hover); }
+        /* a link's scenario the filters hide (5.2.0): said where it would be, with the way to it */
+        .filtered-out-note {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 10px; padding: 12px 16px;
+            background: var(--kron-card); border: 1px dashed var(--kron-control-border); border-radius: 12px; color: var(--kron-muted); font-size: var(--kron-fs-body);
+        }
+        .filtered-out-clear {
+            border: 1px solid var(--kron-control-border); border-radius: 6px; background: var(--kron-field); color: var(--kron-ink-soft);
+            padding: 4px 10px; font: 400 var(--kron-fs-control)/18px var(--kron-font); cursor: pointer;
+        }
+        .filtered-out-clear:hover { background: var(--kron-hover); }
+        .filtered-out-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
         .nav-mark { height: 0; }
         @media (min-width: 768.02px) {
             /* Filters only while the bar floats: at rest the box is in view above it. Pinned, the bar squares its corners and

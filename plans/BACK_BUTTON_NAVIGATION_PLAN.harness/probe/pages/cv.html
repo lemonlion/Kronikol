@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Content visibility probe</title>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body { font: 14px/1.4 sans-serif; }
+  section { content-visibility: auto; contain-intrinsic-size: auto 500px; }
+  .row { height: 60px; box-sizing: border-box; border-bottom: 1px solid #ccc; padding: 4px 8px; }
+</style>
+<script>
+  // The section at the top edge of the viewport and how far into it the viewport starts.
+  window.__topSection = function () {
+    var secs = document.querySelectorAll('section');
+    for (var i = 0; i < secs.length; i++) {
+      var r = secs[i].getBoundingClientRect();
+      if (r.bottom > 0.5) return { id: secs[i].id, offset: Math.round(-r.top), height: Math.round(r.height) };
+    }
+    return null;
+  };
+  window.__layout = function () {
+    var secs = document.querySelectorAll('section'), n60 = 0, n500 = 0, other = 0;
+    for (var i = 0; i < secs.length; i++) {
+      var h = Math.round(secs[i].getBoundingClientRect().height);
+      if (h === 60) n60++; else if (h === 500) n500++; else other++;
+    }
+    var el = document.elementFromPoint(5, 1);
+    var sec = el && el.closest ? el.closest('section') : null;
+    return { n60: n60, n500: n500, other: other, docH: document.documentElement.scrollHeight,
+             y: Math.round(scrollY), fromPoint: sec ? sec.id : null };
+  };
+</script>
+<script>
+(function () {
+  var log = [];
+  window.__log = log;
+  window.__jsState = { createdAt: Date.now(), counter: 0, rand: Math.random() };
+  window.__interceptMode = false;
+  var t0 = performance.now();
+  var where;
+  try { where = window === window.top ? 'top' : 'child'; } catch (e) { where = 'child'; }
+  function st() { try { return history.state; } catch (e) { return 'ERR:' + e.name; } }
+  function rec(type, extra) {
+    var e = { type: type, where: where, t: Math.round(performance.now() - t0), hash: location.hash, state: st(),
+              len: history.length, y: Math.round(window.scrollY) };
+    if (extra) for (var k in extra) e[k] = extra[k];
+    log.push(e);
+    try { console.log('EVT ' + JSON.stringify(e)); } catch (x) {}
+  }
+  window.__rec = rec;
+  addEventListener('popstate', function (ev) { rec('popstate', { evState: ev.state }); });
+  addEventListener('hashchange', function (ev) { rec('hashchange', { oldURL: ev.oldURL, newURL: ev.newURL }); });
+  addEventListener('pageshow', function (ev) { rec('pageshow', { persisted: ev.persisted }); });
+  addEventListener('pagehide', function (ev) { rec('pagehide', { persisted: ev.persisted }); });
+  var nav = window.navigation;
+  if (nav && typeof nav.addEventListener === 'function') {
+    nav.addEventListener('navigate', function (ev) {
+      var d = { navigationType: ev.navigationType, destUrl: ev.destination ? ev.destination.url : null,
+                destSameDocument: ev.destination ? ev.destination.sameDocument : null, hashChange: ev.hashChange,
+                canIntercept: ev.canIntercept, userInitiated: ev.userInitiated };
+      try { d.destState = ev.destination.getState(); } catch (x) { d.destStateErr = x.name; }
+      if (window.__interceptMode) {
+        try { ev.intercept({ handler: function () { return Promise.resolve(); } }); d.intercepted = true; }
+        catch (x) { d.interceptError = x.name + ': ' + x.message; }
+      }
+      rec('navigate', d);
+    });
+    nav.addEventListener('navigatesuccess', function () { rec('navigatesuccess'); });
+    nav.addEventListener('navigateerror', function (ev) { rec('navigateerror', { message: ev.message }); });
+    nav.addEventListener('currententrychange', function (ev) { rec('currententrychange', { navigationType: ev.navigationType }); });
+  }
+})();
+</script>
+</head>
+<body>
+<section id="s0"><div class="row">Section 0</div></section>
+<section id="s1"><div class="row">Section 1</div></section>
+<section id="s2"><div class="row">Section 2</div></section>
+<section id="s3"><div class="row">Section 3</div></section>
+<section id="s4"><div class="row">Section 4</div></section>
+<section id="s5"><div class="row">Section 5</div></section>
+<section id="s6"><div class="row">Section 6</div></section>
+<section id="s7"><div class="row">Section 7</div></section>
+<section id="s8"><div class="row">Section 8</div></section>
+<section id="s9"><div class="row">Section 9</div></section>
+<section id="s10"><div class="row">Section 10</div></section>
+<section id="s11"><div class="row">Section 11</div></section>
+<section id="s12"><div class="row">Section 12</div></section>
+<section id="s13"><div class="row">Section 13</div></section>
+<section id="s14"><div class="row">Section 14</div></section>
+<section id="s15"><div class="row">Section 15</div></section>
+<section id="s16"><div class="row">Section 16</div></section>
+<section id="s17"><div class="row">Section 17</div></section>
+<section id="s18"><div class="row">Section 18</div></section>
+<section id="s19"><div class="row">Section 19</div></section>
+<section id="s20"><div class="row">Section 20</div></section>
+<section id="s21"><div class="row">Section 21</div></section>
+<section id="s22"><div class="row">Section 22</div></section>
+<section id="s23"><div class="row">Section 23</div></section>
+<section id="s24"><div class="row">Section 24</div></section>
+<section id="s25"><div class="row">Section 25</div></section>
+<section id="s26"><div class="row">Section 26</div></section>
+<section id="s27"><div class="row">Section 27</div></section>
+<section id="s28"><div class="row">Section 28</div></section>
+<section id="s29"><div class="row">Section 29</div></section>
+<section id="s30"><div class="row">Section 30</div></section>
+<section id="s31"><div class="row">Section 31</div></section>
+<section id="s32"><div class="row">Section 32</div></section>
+<section id="s33"><div class="row">Section 33</div></section>
+<section id="s34"><div class="row">Section 34</div></section>
+<section id="s35"><div class="row">Section 35</div></section>
+<section id="s36"><div class="row">Section 36</div></section>
+<section id="s37"><div class="row">Section 37</div></section>
+<section id="s38"><div class="row">Section 38</div></section>
+<section id="s39"><div class="row">Section 39</div></section>
+<section id="s40"><div class="row">Section 40</div></section>
+<section id="s41"><div class="row">Section 41</div></section>
+<section id="s42"><div class="row">Section 42</div></section>
+<section id="s43"><div class="row">Section 43</div></section>
+<section id="s44"><div class="row">Section 44</div></section>
+<section id="s45"><div class="row">Section 45</div></section>
+<section id="s46"><div class="row">Section 46</div></section>
+<section id="s47"><div class="row">Section 47</div></section>
+<section id="s48"><div class="row">Section 48</div></section>
+<section id="s49"><div class="row">Section 49</div></section>
+<section id="s50"><div class="row">Section 50</div></section>
+<section id="s51"><div class="row">Section 51</div></section>
+<section id="s52"><div class="row">Section 52</div></section>
+<section id="s53"><div class="row">Section 53</div></section>
+<section id="s54"><div class="row">Section 54</div></section>
+<section id="s55"><div class="row">Section 55</div></section>
+<section id="s56"><div class="row">Section 56</div></section>
+<section id="s57"><div class="row">Section 57</div></section>
+<section id="s58"><div class="row">Section 58</div></section>
+<section id="s59"><div class="row">Section 59</div></section>
+<section id="s60"><div class="row">Section 60</div></section>
+<section id="s61"><div class="row">Section 61</div></section>
+<section id="s62"><div class="row">Section 62</div></section>
+<section id="s63"><div class="row">Section 63</div></section>
+<section id="s64"><div class="row">Section 64</div></section>
+<section id="s65"><div class="row">Section 65</div></section>
+<section id="s66"><div class="row">Section 66</div></section>
+<section id="s67"><div class="row">Section 67</div></section>
+<section id="s68"><div class="row">Section 68</div></section>
+<section id="s69"><div class="row">Section 69</div></section>
+<section id="s70"><div class="row">Section 70</div></section>
+<section id="s71"><div class="row">Section 71</div></section>
+<section id="s72"><div class="row">Section 72</div></section>
+<section id="s73"><div class="row">Section 73</div></section>
+<section id="s74"><div class="row">Section 74</div></section>
+<section id="s75"><div class="row">Section 75</div></section>
+<section id="s76"><div class="row">Section 76</div></section>
+<section id="s77"><div class="row">Section 77</div></section>
+<section id="s78"><div class="row">Section 78</div></section>
+<section id="s79"><div class="row">Section 79</div></section>
+<section id="s80"><div class="row">Section 80</div></section>
+<section id="s81"><div class="row">Section 81</div></section>
+<section id="s82"><div class="row">Section 82</div></section>
+<section id="s83"><div class="row">Section 83</div></section>
+<section id="s84"><div class="row">Section 84</div></section>
+<section id="s85"><div class="row">Section 85</div></section>
+<section id="s86"><div class="row">Section 86</div></section>
+<section id="s87"><div class="row">Section 87</div></section>
+<section id="s88"><div class="row">Section 88</div></section>
+<section id="s89"><div class="row">Section 89</div></section>
+<section id="s90"><div class="row">Section 90</div></section>
+<section id="s91"><div class="row">Section 91</div></section>
+<section id="s92"><div class="row">Section 92</div></section>
+<section id="s93"><div class="row">Section 93</div></section>
+<section id="s94"><div class="row">Section 94</div></section>
+<section id="s95"><div class="row">Section 95</div></section>
+<section id="s96"><div class="row">Section 96</div></section>
+<section id="s97"><div class="row">Section 97</div></section>
+<section id="s98"><div class="row">Section 98</div></section>
+<section id="s99"><div class="row">Section 99</div></section>
+<section id="s100"><div class="row">Section 100</div></section>
+<section id="s101"><div class="row">Section 101</div></section>
+<section id="s102"><div class="row">Section 102</div></section>
+<section id="s103"><div class="row">Section 103</div></section>
+<section id="s104"><div class="row">Section 104</div></section>
+<section id="s105"><div class="row">Section 105</div></section>
+<section id="s106"><div class="row">Section 106</div></section>
+<section id="s107"><div class="row">Section 107</div></section>
+<section id="s108"><div class="row">Section 108</div></section>
+<section id="s109"><div class="row">Section 109</div></section>
+<section id="s110"><div class="row">Section 110</div></section>
+<section id="s111"><div class="row">Section 111</div></section>
+<section id="s112"><div class="row">Section 112</div></section>
+<section id="s113"><div class="row">Section 113</div></section>
+<section id="s114"><div class="row">Section 114</div></section>
+<section id="s115"><div class="row">Section 115</div></section>
+<section id="s116"><div class="row">Section 116</div></section>
+<section id="s117"><div class="row">Section 117</div></section>
+<section id="s118"><div class="row">Section 118</div></section>
+<section id="s119"><div class="row">Section 119</div></section>
+<section id="s120"><div class="row">Section 120</div></section>
+<section id="s121"><div class="row">Section 121</div></section>
+<section id="s122"><div class="row">Section 122</div></section>
+<section id="s123"><div class="row">Section 123</div></section>
+<section id="s124"><div class="row">Section 124</div></section>
+<section id="s125"><div class="row">Section 125</div></section>
+<section id="s126"><div class="row">Section 126</div></section>
+<section id="s127"><div class="row">Section 127</div></section>
+<section id="s128"><div class="row">Section 128</div></section>
+<section id="s129"><div class="row">Section 129</div></section>
+<section id="s130"><div class="row">Section 130</div></section>
+<section id="s131"><div class="row">Section 131</div></section>
+<section id="s132"><div class="row">Section 132</div></section>
+<section id="s133"><div class="row">Section 133</div></section>
+<section id="s134"><div class="row">Section 134</div></section>
+<section id="s135"><div class="row">Section 135</div></section>
+<section id="s136"><div class="row">Section 136</div></section>
+<section id="s137"><div class="row">Section 137</div></section>
+<section id="s138"><div class="row">Section 138</div></section>
+<section id="s139"><div class="row">Section 139</div></section>
+<section id="s140"><div class="row">Section 140</div></section>
+<section id="s141"><div class="row">Section 141</div></section>
+<section id="s142"><div class="row">Section 142</div></section>
+<section id="s143"><div class="row">Section 143</div></section>
+<section id="s144"><div class="row">Section 144</div></section>
+<section id="s145"><div class="row">Section 145</div></section>
+<section id="s146"><div class="row">Section 146</div></section>
+<section id="s147"><div class="row">Section 147</div></section>
+<section id="s148"><div class="row">Section 148</div></section>
+<section id="s149"><div class="row">Section 149</div></section>
+<section id="s150"><div class="row">Section 150</div></section>
+<section id="s151"><div class="row">Section 151</div></section>
+<section id="s152"><div class="row">Section 152</div></section>
+<section id="s153"><div class="row">Section 153</div></section>
+<section id="s154"><div class="row">Section 154</div></section>
+<section id="s155"><div class="row">Section 155</div></section>
+<section id="s156"><div class="row">Section 156</div></section>
+<section id="s157"><div class="row">Section 157</div></section>
+<section id="s158"><div class="row">Section 158</div></section>
+<section id="s159"><div class="row">Section 159</div></section>
+<section id="s160"><div class="row">Section 160</div></section>
+<section id="s161"><div class="row">Section 161</div></section>
+<section id="s162"><div class="row">Section 162</div></section>
+<section id="s163"><div class="row">Section 163</div></section>
+<section id="s164"><div class="row">Section 164</div></section>
+<section id="s165"><div class="row">Section 165</div></section>
+<section id="s166"><div class="row">Section 166</div></section>
+<section id="s167"><div class="row">Section 167</div></section>
+<section id="s168"><div class="row">Section 168</div></section>
+<section id="s169"><div class="row">Section 169</div></section>
+<section id="s170"><div class="row">Section 170</div></section>
+<section id="s171"><div class="row">Section 171</div></section>
+<section id="s172"><div class="row">Section 172</div></section>
+<section id="s173"><div class="row">Section 173</div></section>
+<section id="s174"><div class="row">Section 174</div></section>
+<section id="s175"><div class="row">Section 175</div></section>
+<section id="s176"><div class="row">Section 176</div></section>
+<section id="s177"><div class="row">Section 177</div></section>
+<section id="s178"><div class="row">Section 178</div></section>
+<section id="s179"><div class="row">Section 179</div></section>
+<section id="s180"><div class="row">Section 180</div></section>
+<section id="s181"><div class="row">Section 181</div></section>
+<section id="s182"><div class="row">Section 182</div></section>
+<section id="s183"><div class="row">Section 183</div></section>
+<section id="s184"><div class="row">Section 184</div></section>
+<section id="s185"><div class="row">Section 185</div></section>
+<section id="s186"><div class="row">Section 186</div></section>
+<section id="s187"><div class="row">Section 187</div></section>
+<section id="s188"><div class="row">Section 188</div></section>
+<section id="s189"><div class="row">Section 189</div></section>
+<section id="s190"><div class="row">Section 190</div></section>
+<section id="s191"><div class="row">Section 191</div></section>
+<section id="s192"><div class="row">Section 192</div></section>
+<section id="s193"><div class="row">Section 193</div></section>
+<section id="s194"><div class="row">Section 194</div></section>
+<section id="s195"><div class="row">Section 195</div></section>
+<section id="s196"><div class="row">Section 196</div></section>
+<section id="s197"><div class="row">Section 197</div></section>
+<section id="s198"><div class="row">Section 198</div></section>
+<section id="s199"><div class="row">Section 199</div></section>
+<section id="s200"><div class="row">Section 200</div></section>
+<section id="s201"><div class="row">Section 201</div></section>
+<section id="s202"><div class="row">Section 202</div></section>
+<section id="s203"><div class="row">Section 203</div></section>
+<section id="s204"><div class="row">Section 204</div></section>
+<section id="s205"><div class="row">Section 205</div></section>
+<section id="s206"><div class="row">Section 206</div></section>
+<section id="s207"><div class="row">Section 207</div></section>
+<section id="s208"><div class="row">Section 208</div></section>
+<section id="s209"><div class="row">Section 209</div></section>
+<section id="s210"><div class="row">Section 210</div></section>
+<section id="s211"><div class="row">Section 211</div></section>
+<section id="s212"><div class="row">Section 212</div></section>
+<section id="s213"><div class="row">Section 213</div></section>
+<section id="s214"><div class="row">Section 214</div></section>
+<section id="s215"><div class="row">Section 215</div></section>
+<section id="s216"><div class="row">Section 216</div></section>
+<section id="s217"><div class="row">Section 217</div></section>
+<section id="s218"><div class="row">Section 218</div></section>
+<section id="s219"><div class="row">Section 219</div></section>
+<section id="s220"><div class="row">Section 220</div></section>
+<section id="s221"><div class="row">Section 221</div></section>
+<section id="s222"><div class="row">Section 222</div></section>
+<section id="s223"><div class="row">Section 223</div></section>
+<section id="s224"><div class="row">Section 224</div></section>
+<section id="s225"><div class="row">Section 225</div></section>
+<section id="s226"><div class="row">Section 226</div></section>
+<section id="s227"><div class="row">Section 227</div></section>
+<section id="s228"><div class="row">Section 228</div></section>
+<section id="s229"><div class="row">Section 229</div></section>
+<section id="s230"><div class="row">Section 230</div></section>
+<section id="s231"><div class="row">Section 231</div></section>
+<section id="s232"><div class="row">Section 232</div></section>
+<section id="s233"><div class="row">Section 233</div></section>
+<section id="s234"><div class="row">Section 234</div></section>
+<section id="s235"><div class="row">Section 235</div></section>
+<section id="s236"><div class="row">Section 236</div></section>
+<section id="s237"><div class="row">Section 237</div></section>
+<section id="s238"><div class="row">Section 238</div></section>
+<section id="s239"><div class="row">Section 239</div></section>
+<section id="s240"><div class="row">Section 240</div></section>
+<section id="s241"><div class="row">Section 241</div></section>
+<section id="s242"><div class="row">Section 242</div></section>
+<section id="s243"><div class="row">Section 243</div></section>
+<section id="s244"><div class="row">Section 244</div></section>
+<section id="s245"><div class="row">Section 245</div></section>
+<section id="s246"><div class="row">Section 246</div></section>
+<section id="s247"><div class="row">Section 247</div></section>
+<section id="s248"><div class="row">Section 248</div></section>
+<section id="s249"><div class="row">Section 249</div></section>
+<section id="s250"><div class="row">Section 250</div></section>
+<section id="s251"><div class="row">Section 251</div></section>
+<section id="s252"><div class="row">Section 252</div></section>
+<section id="s253"><div class="row">Section 253</div></section>
+<section id="s254"><div class="row">Section 254</div></section>
+<section id="s255"><div class="row">Section 255</div></section>
+<section id="s256"><div class="row">Section 256</div></section>
+<section id="s257"><div class="row">Section 257</div></section>
+<section id="s258"><div class="row">Section 258</div></section>
+<section id="s259"><div class="row">Section 259</div></section>
+<section id="s260"><div class="row">Section 260</div></section>
+<section id="s261"><div class="row">Section 261</div></section>
+<section id="s262"><div class="row">Section 262</div></section>
+<section id="s263"><div class="row">Section 263</div></section>
+<section id="s264"><div class="row">Section 264</div></section>
+<section id="s265"><div class="row">Section 265</div></section>
+<section id="s266"><div class="row">Section 266</div></section>
+<section id="s267"><div class="row">Section 267</div></section>
+<section id="s268"><div class="row">Section 268</div></section>
+<section id="s269"><div class="row">Section 269</div></section>
+<section id="s270"><div class="row">Section 270</div></section>
+<section id="s271"><div class="row">Section 271</div></section>
+<section id="s272"><div class="row">Section 272</div></section>
+<section id="s273"><div class="row">Section 273</div></section>
+<section id="s274"><div class="row">Section 274</div></section>
+<section id="s275"><div class="row">Section 275</div></section>
+<section id="s276"><div class="row">Section 276</div></section>
+<section id="s277"><div class="row">Section 277</div></section>
+<section id="s278"><div class="row">Section 278</div></section>
+<section id="s279"><div class="row">Section 279</div></section>
+<section id="s280"><div class="row">Section 280</div></section>
+<section id="s281"><div class="row">Section 281</div></section>
+<section id="s282"><div class="row">Section 282</div></section>
+<section id="s283"><div class="row">Section 283</div></section>
+<section id="s284"><div class="row">Section 284</div></section>
+<section id="s285"><div class="row">Section 285</div></section>
+<section id="s286"><div class="row">Section 286</div></section>
+<section id="s287"><div class="row">Section 287</div></section>
+<section id="s288"><div class="row">Section 288</div></section>
+<section id="s289"><div class="row">Section 289</div></section>
+<section id="s290"><div class="row">Section 290</div></section>
+<section id="s291"><div class="row">Section 291</div></section>
+<section id="s292"><div class="row">Section 292</div></section>
+<section id="s293"><div class="row">Section 293</div></section>
+<section id="s294"><div class="row">Section 294</div></section>
+<section id="s295"><div class="row">Section 295</div></section>
+<section id="s296"><div class="row">Section 296</div></section>
+<section id="s297"><div class="row">Section 297</div></section>
+<section id="s298"><div class="row">Section 298</div></section>
+<section id="s299"><div class="row">Section 299</div></section>
+</body>
+</html>

@@ -46,8 +46,19 @@ function search_tags(el) {
 }
 // Every filter has a flag of its own on each scenario: the tags (with Happy paths), dependencies, status, the search,
 // duration and the search's qualifiers. A scenario shows while no flag hides it, a rule or a feature while one of its
-// scenarios shows.
+// scenarios shows. While an address's filters are put on together (apply_url_hash), the scenarios are shown or hidden
+// once, at the end: each filter's own pass would tell the timeline and the components of every step on the way.
+var _visibilityHold = 0, _visibilityHeld = null;
+function hold_visibility() { _visibilityHold++; }
+function release_visibility() {
+    if (_visibilityHold > 0) _visibilityHold--;
+    if (_visibilityHold > 0 || !_visibilityHeld) return;
+    var c = _visibilityHeld;
+    _visibilityHeld = null;
+    applyVisibility(c);
+}
 function applyVisibility(c) {
+    if (_visibilityHold > 0) { _visibilityHeld = c; return; }
     for (var i = 0; i < c.items.length; i++) {
         var d = c.items[i];
         var hidden = d.tag || d.dep || d.st || d.sr || d.dur || d.q;

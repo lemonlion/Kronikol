@@ -1,0 +1,202 @@
+[
+  {
+    "engine": "chromium",
+    "version": "147.0.7727.15",
+    "link": "cancelled",
+    "how": "ctrl",
+    "newPages": 0,
+    "urls": [],
+    "hashAfter": "#sid-0123456789abcdef",
+    "err": null
+  },
+  {
+    "engine": "chromium",
+    "version": "147.0.7727.15",
+    "link": "cancelled",
+    "how": "shift",
+    "newPages": 0,
+    "urls": [],
+    "hashAfter": "#sid-0123456789abcdef",
+    "err": null
+  },
+  {
+    "engine": "chromium",
+    "version": "147.0.7727.15",
+    "link": "cancelled",
+    "how": "middle",
+    "newPages": 1,
+    "urls": [
+      "file:///C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/061484ac-a560-45bf-a368-1d28cad0e7d2/scratchpad/s20/page.html#sid-0123456789abcdef"
+    ],
+    "hashAfter": "",
+    "err": null
+  },
+  {
+    "engine": "chromium",
+    "version": "147.0.7727.15",
+    "link": "plain",
+    "how": "ctrl",
+    "newPages": 1,
+    "urls": [
+      "file:///C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/061484ac-a560-45bf-a368-1d28cad0e7d2/scratchpad/s20/page.html#sid-0123456789abcdef"
+    ],
+    "hashAfter": "",
+    "err": null
+  },
+  {
+    "engine": "chromium",
+    "version": "147.0.7727.15",
+    "link": "plain",
+    "how": "shift",
+    "newPages": 1,
+    "urls": [
+      "file:///C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/061484ac-a560-45bf-a368-1d28cad0e7d2/scratchpad/s20/page.html#sid-0123456789abcdef"
+    ],
+    "hashAfter": "",
+    "err": null
+  },
+  {
+    "engine": "chromium",
+    "version": "147.0.7727.15",
+    "link": "plain",
+    "how": "middle",
+    "newPages": 1,
+    "urls": [
+      "file:///C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/061484ac-a560-45bf-a368-1d28cad0e7d2/scratchpad/s20/page.html#sid-0123456789abcdef"
+    ],
+    "hashAfter": "",
+    "err": null
+  },
+  {
+    "engine": "firefox",
+    "version": "148.0.2",
+    "link": "cancelled",
+    "how": "ctrl",
+    "newPages": 0,
+    "urls": [],
+    "hashAfter": "#sid-0123456789abcdef",
+    "err": null
+  },
+  {
+    "engine": "firefox",
+    "version": "148.0.2",
+    "link": "cancelled",
+    "how": "shift",
+    "newPages": 0,
+    "urls": [],
+    "hashAfter": "#sid-0123456789abcdef",
+    "err": null
+  },
+  {
+    "engine": "firefox",
+    "version": "148.0.2",
+    "link": "cancelled",
+    "how": "middle",
+    "newPages": 1,
+    "urls": [
+      "file:///C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/061484ac-a560-45bf-a368-1d28cad0e7d2/scratchpad/s20/page.html#sid-0123456789abcdef"
+    ],
+    "hashAfter": "",
+    "err": null
+  },
+  {
+    "engine": "firefox",
+    "version": "148.0.2",
+    "link": "plain",
+    "how": "ctrl",
+    "newPages": 1,
+    "urls": [
+      "file:///C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/061484ac-a560-45bf-a368-1d28cad0e7d2/scratchpad/s20/page.html#sid-0123456789abcdef"
+    ],
+    "hashAfter": "",
+    "err": null
+  },
+  {
+    "engine": "firefox",
+    "version": "148.0.2",
+    "link": "plain",
+    "how": "shift",
+    "newPages": 1,
+    "urls": [
+      "file:///C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/061484ac-a560-45bf-a368-1d28cad0e7d2/scratchpad/s20/page.html#sid-0123456789abcdef"
+    ],
+    "hashAfter": "",
+    "err": null
+  },
+  {
+    "engine": "firefox",
+    "version": "148.0.2",
+    "link": "plain",
+    "how": "middle",
+    "newPages": 1,
+    "urls": [
+      "file:///C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/061484ac-a560-45bf-a368-1d28cad0e7d2/scratchpad/s20/page.html#sid-0123456789abcdef"
+    ],
+    "hashAfter": "",
+    "err": null
+  },
+  {
+    "engine": "webkit",
+    "version": "26.4",
+    "link": "cancelled",
+    "how": "ctrl",
+    "newPages": 0,
+    "urls": [],
+    "hashAfter": "#sid-0123456789abcdef",
+    "err": null
+  },
+  {
+    "engine": "webkit",
+    "version": "26.4",
+    "link": "cancelled",
+    "how": "shift",
+    "newPages": 0,
+    "urls": [],
+    "hashAfter": "#sid-0123456789abcdef",
+    "err": null
+  },
+  {
+    "engine": "webkit",
+    "version": "26.4",
+    "link": "cancelled",
+    "how": "middle",
+    "newPages": 0,
+    "urls": [],
+    "hashAfter": "#sid-0123456789abcdef",
+    "err": null
+  },
+  {
+    "engine": "webkit",
+    "version": "26.4",
+    "link": "plain",
+    "how": "ctrl",
+    "newPages": 1,
+    "urls": [
+      "file:///C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/061484ac-a560-45bf-a368-1d28cad0e7d2/scratchpad/s20/page.html#sid-0123456789abcdef"
+    ],
+    "hashAfter": "",
+    "err": null
+  },
+  {
+    "engine": "webkit",
+    "version": "26.4",
+    "link": "plain",
+    "how": "shift",
+    "newPages": 1,
+    "urls": [
+      "file:///C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/061484ac-a560-45bf-a368-1d28cad0e7d2/scratchpad/s20/page.html#sid-0123456789abcdef"
+    ],
+    "hashAfter": "",
+    "err": null
+  },
+  {
+    "engine": "webkit",
+    "version": "26.4",
+    "link": "plain",
+    "how": "middle",
+    "newPages": 0,
+    "urls": [],
+    "hashAfter": "#sid-0123456789abcdef",
+    "err": null
+  }
+]

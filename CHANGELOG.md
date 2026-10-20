@@ -4,6 +4,105 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.2.0] - 2026-10-20
+
+The minor part moves (5.1.1 to 5.2.0): the browser's Back and Forward buttons are the report's navigation, and its
+address names the tab and the Features tab's view (`tab=`, `view=`), new keys of a documented address
+(plans/BACK_BUTTON_NAVIGATION_PLAN.md). The rest of the release fixes defects found in the same code.
+
+### Added
+
+- **Back and Forward move between the places a reader has been in the report**, as they do between the pages of a
+  site. Until now the report added nothing to the browser's history, so Back left the report from wherever the reader
+  was: following a History tab entry to its scenario and pressing Back went to the page the report was opened from.
+  Now a tab, the Full or Summary view, a scenario reached by any link (a History tab entry, a failure cluster's
+  scenario, a scenario's link button), a feature opened from the Summary table and each press of *Next Failure* are a
+  step Back returns from; so is each filter control used, a run of changes to one control being one step (a word typed
+  in the search, a chip clicked through its states), and Clear All. The image lightbox and the internal-flow popup are
+  a step while they are open: Back closes them (on a phone it left the report with the image still showing), Forward
+  opens them again, and closing one with its own button, Esc or a click beside it takes its step back out. Going back
+  or forward puts back the tab, the view, the filters and the image or popup, then the scroll position (by an element near
+  the top of the window and its distance below the bar, which holds where the features the browser has not drawn
+  change height, kept in the step whenever the reader stops scrolling) and the control that had the focus, and a status line (`role="status"`) tells a screen reader what changed.
+  Opening or closing a section, the sort, the display settings, a scenario's own views and the theme add no step. A
+  reload, or a return by Back from a page the report opened (a file an attachment links), opens the same place scrolled
+  where the reader was, and a tab clicked again opens where the reader left it. One new script,
+  `report-navigation-script.js`, is the page's only writer of the session history; it writes absolute addresses,
+  keeps under the 100 writes in ten seconds that WebKit allows, and carries on without steps wherever the host forbids
+  them.
+- **The address names the tab and the view**: `tab=` and `view=` follow the anchor, each written only where it says
+  something the address would not say without it, so a reload or a copied address opens the same tab and view, the
+  address of the place a report opens on is still the bare file name, and a scenario's is still `#sid-<id>`. An
+  address written before keeps its meaning. The generator writes where the page opens as `data-start-tab` on
+  `.report-tabs` and `data-start-view` on `.view-switch`.
+
+### Fixed
+
+- **Inside an Azure DevOps viewer extension (an `<iframe srcdoc>`) every change of the address threw** `SecurityError`
+  in Chromium and WebKit, since the address was built relative to the page and resolved against the viewer's; the throw
+  stopped a search before it opened the one scenario it found, marked the matching example rows or reset the deep
+  search. The address is now absolute, and a write a host forbids is caught. 4.x has the same defect.
+- **An address with filters reached by Back, or typed into an open report, kept the page's own filters**: the filters
+  it carried were ignored, and on a load they were only ever added to the page's. An address is now applied exactly.
+- **A link to a scenario the filters hide did nothing anyone could see.** A line where the scenario would be says so,
+  with a button that clears the filters and shows it.
+- **A search with one match opened it inside its feature without opening the feature**, so on a report whose features
+  start closed the match opened out of sight. The feature and the rule round it open with it now.
+- **Emptying the search closed every scenario**, the one a link had just opened too. It closes what the search
+  opened, the feature and rule round a match included, and nothing else.
+- **A History tab link or a failure cluster's link could not be opened in a new tab** with Ctrl or Shift: its own
+  script cancelled every click. Both are plain links now, and the in-page links keep the filters in the address, which
+  they dropped.
+- **A failure cluster's link to an example row of an outline shown flat selected the hidden grouped copy** and scrolled
+  nowhere; it now goes the one way every link goes, which finds the row that shows. A link puts its scenario in the
+  middle of the window, or its title under the bar when the scenario is taller than the window (a tall open scenario
+  had its title above it).
+- **As a report opened at a scenario's address, the scenario was revealed before the Features tab showed** (on a page
+  that opens on another tab), and only the re-aim that follows a jump brought it into view. The tab and the view are
+  put on first now.
+- **Two parameterized groups of one name shared an id**, so a link to the second reached the first. A group's id is
+  made unique as a scenario's is. A group whose example rows carry its own name now takes a numbered id too, since its
+  first row holds the plain one: a link to that row (a failure cluster's) reached the group, and a link copied before
+  5.2.0 with the plain id now opens the group at that row.
+- **The arrow keys moved the chosen scenario in the hidden Features panel while a tab had the focus.**
+- **The features sort could be restored by the browser** to an order the cards were not in: it was the one control
+  without `autocomplete="off"`.
+
+### Tests
+
+- `BackForwardPlacesTests`, `BackForwardFilterTests`, `BackForwardLayerTests` and `BackForwardRestoreTests` (new, on
+  `BackForwardTestBase`), 65 cases. The places: a History link and Back, the tabs and the views and a run of arrow keys
+  across them, a Summary row, a failure cluster's link, the link button with filters on, Next Failure, a reload, an
+  address that names a tab, addresses written before 5.2.0, and Ctrl and Shift clicks. The filters: a chip, a word
+  typed, a chip's three states, Clear All, Back to an entry without a filter, an address typed into an open report, a
+  link to a scenario they hide, emptying the search, a filter changed after Back, and a search with one match. The
+  layers: Back, Esc, the backdrop and Forward on the lightbox, the internal-flow popup, a reload, and a bare fragment.
+  What is put back: the position far down a long report, a tab clicked again, the focus, Back from a file an attachment
+  opened, a report in a frame, a page without tabs and an exported page, the Timeline as the start tab, two groups of
+  one name, a cluster's link to a row shown flat, the arrow keys on a tab, an `<iframe srcdoc>` viewer, the status
+  line, WebKit's write limit (a burst of 150 clicks in one task), Enter in the search, a scenario taller than the
+  window, Back after the features above a scenario were drawn, and a reload after reading down a long report. P1, P5,
+  F5, L1, R1, R11, R16 and R17 run in Chromium, Firefox and WebKit, R13 in WebKit, the rest in Chromium.
+- `BackNavigationReportTests` (new): the script in the head of a run report and of the Specifications report, the
+  failure clusters' plain links, `data-start-tab` and `data-start-view`, a script that names no tab, two ids for two
+  groups of one name, and the sort's `autocomplete`. `HistoryHtmlTests`: the History tab's links are plain.
+- Pins that move: `FailureClusterReportTests` (the facts on the link's `onclick` become the plain link's; the one that
+  read the `onclick`'s target goes, since `Report_cluster_link_href_matches_scenario_element_id` reads the same
+  fixture's `href`), `ClearAllFiltersReportTests`, `DeepLinkReportTests`, `UrlAnchoredFilterReportTests`,
+  `PersistentFilterStateReportTests` and `UrlHashFilterTests` (`apply_url_hash`, `url_hash_filters` and the writer),
+  `ReportTabsTests` and `FeaturesToolsTests` (`data-start-*`, the sort), `ToggleDefaultsMarkupTests` (the single match
+  opens its feature) and `VerdictFencesTests` (the bytes of the filter helper and the search function, which changed
+  outside their fences).
+- Proofs: run on 5.1.0's code, 50 of the 57 browser cases written before the code fail, and so do all 22 core facts
+  written or moved. The 7 that pass guard what 5.1.0 already did: Esc and a click beside the lightbox leave no entry,
+  nor does a reload with it open, older addresses open as before, the tab already selected adds nothing, Back from an
+  attachment's file returns to the scenario, and WebKit throws nothing. F10 and L6 came with defects found while making
+  the rest pass. 21 of 22 mutations of the new code each make the facts that hold them fail. The one that survives
+  leaves the browser's own scroll restoration on, which no fact can see: in all three engines the page puts the
+  position back after the browser does. Four facts were made sharper when their mutations first survived: R16 and
+  R17 for the position, P1 and P6 for the focus, and R13's burst for the write budget.
+- Checks: the core suite passes 8,516 with 2 skipped, and the full Playwright suite 1,471 with 28 skipped.
+
 ## [5.1.1] - 2026-10-20
 
 The patch part moves (5.1.0 to 5.1.1): performance work and a fix, with nothing new to call or configure.

@@ -132,27 +132,6 @@ public class FailureClusterReportTests
     }
 
     [Fact]
-    public void Report_cluster_link_onclick_uses_correct_anchor_id()
-    {
-        var features = MakeFeatures(
-            ("t1", "Caller Uses Authorise Client Endpoint", ExecutionResult.Failed, "Connection refused"),
-            ("t2", "Caller Submits Payment Request", ExecutionResult.Failed, "Connection refused"));
-        var content = GenerateReport(features, "ClusterLinkOnclick.html");
-
-        // Extract the getElementById argument from the onclick handler
-        var onclickMatch = Regex.Match(content, @"onclick=""[^""]*document\.getElementById\('([^']+)'\)");
-        Assert.True(onclickMatch.Success, "Could not find onclick getElementById in cluster link");
-        var onclickId = onclickMatch.Groups[1].Value;
-
-        // Extract all scenario element ids
-        var idMatches = Regex.Matches(content, @"<details\s+class=""scenario[^""]*""[^>]*\sid=""([^""]+)""");
-        var elementIds = idMatches.Select(m => m.Groups[1].Value).ToHashSet();
-
-        Assert.True(elementIds.Contains(onclickId),
-            $"onclick targets '{onclickId}' but no scenario element has that id. Available ids: {string.Join(", ", elementIds)}");
-    }
-
-    [Fact]
     public void Report_cluster_link_href_matches_element_id_for_parameterized_scenarios()
     {
         var features = new[]
@@ -197,7 +176,7 @@ public class FailureClusterReportTests
     }
 
     [Fact]
-    public void Report_cluster_link_onclick_opens_ancestor_details_for_parameterized_row()
+    public void Report_cluster_link_to_a_parameterized_row_is_plain_and_names_a_row_that_exists()
     {
         var features = new[]
         {
@@ -223,54 +202,37 @@ public class FailureClusterReportTests
         };
         var content = GenerateReport(features, "ClusterLinkParamOnclick.html");
 
-        // The onclick handler must call selectRow for parameterized row navigation
-        var onclickMatches = Regex.Matches(content, @"class=""failure-cluster-scenario-link""[^>]*onclick=""([^""]+)""");
-        Assert.True(onclickMatches.Count >= 2, $"Expected at least 2 onclick handlers, found {onclickMatches.Count}");
-
-        foreach (Match m in onclickMatches)
+        // Since 5.2.0 the link is plain and the report's navigation script takes it to reveal_url_anchor, the one way to a
+        // scenario, which opens every enclosing section, clicks the example row and picks the copy that shows
+        // (plans/BACK_BUTTON_NAVIGATION_PLAN.md S6, S16; ParameterizedGroupRenderTests pins the row resolution, and
+        // FailureClusterLinkTests and BackForwardRestoreTests.R9 what the browser does): each link names a row that exists
+        var links = Regex.Matches(content, @"<a class=""failure-cluster-scenario-link"" href=""#([^""]+)""[^>]*>");
+        Assert.True(links.Count >= 2, $"Expected at least 2 cluster links, found {links.Count}");
+        foreach (Match m in links)
         {
-            var onclick = m.Groups[1].Value;
-            // Must open all ancestor details AND trigger click for parameterized row navigation
-            Assert.Contains("el.click()", onclick);
+            Assert.DoesNotContain("onclick", m.Value);
+            Assert.Matches(new Regex($@"<tr[^>]+id=""{Regex.Escape(m.Groups[1].Value)}"""), content);
         }
     }
 
     [Fact]
-    public void Report_cluster_link_onclick_jumps_into_view()
+    public void Report_cluster_links_are_plain_links_the_navigation_script_takes()
     {
+        // Since 5.2.0 (plans/BACK_BUTTON_NAVIGATION_PLAN.md S2, S16, S20): the link's own script replaced the address and
+        // cancelled every click, so Back left the report and Ctrl+click could not open a new tab. The navigation script
+        // takes a same-page link to a scenario, leaves a click with a modifier key to the browser, and reaches the scenario
+        // through reveal_url_anchor and jump_into_view, never smoothly (a smooth scroll ended past a scenario far down a
+        // long report, plans/DOORSTEP_PLAN.md F28; DeepLinkReportTests pins the jump)
         var features = MakeFeatures(
             ("t1", "Test 1", ExecutionResult.Failed, "Connection refused"),
             ("t2", "Test 2", ExecutionResult.Failed, "Connection refused"));
-        var content = GenerateReport(features, "ClusterLinkScroll.html");
+        var content = GenerateReport(features, "ClusterLinkPlain.html");
 
-        var onclickMatches = Regex.Matches(content, @"class=""failure-cluster-scenario-link""[^>]*onclick=""([^""]+)""");
-        Assert.True(onclickMatches.Count >= 2, $"Expected at least 2 onclick handlers, found {onclickMatches.Count}");
-
-        foreach (Match m in onclickMatches)
-        {
-            var onclick = m.Groups[1].Value;
-            // Through jump_into_view, which jumps rather than scrolls: a smooth scroll ended past a scenario
-            // far down a long report (plans/DOORSTEP_PLAN.md F28).
-            Assert.Contains("jump_into_view(el,'start')", onclick);
-        }
-    }
-
-    [Fact]
-    public void Report_cluster_link_onclick_prevents_default_for_reliable_scrolling()
-    {
-        var features = MakeFeatures(
-            ("t1", "Test 1", ExecutionResult.Failed, "Connection refused"),
-            ("t2", "Test 2", ExecutionResult.Failed, "Connection refused"));
-        var content = GenerateReport(features, "ClusterLinkPreventDefault.html");
-
-        var onclickMatches = Regex.Matches(content, @"class=""failure-cluster-scenario-link""[^>]*onclick=""([^""]+)""");
-        Assert.True(onclickMatches.Count >= 2);
-
-        foreach (Match m in onclickMatches)
-        {
-            var onclick = m.Groups[1].Value;
-            // Must prevent default to avoid native anchor behavior racing with scrollIntoView
-            Assert.Contains("event.preventDefault()", onclick);
-        }
+        var links = Regex.Matches(content, @"<a class=""failure-cluster-scenario-link""[^>]*>");
+        Assert.Equal(2, links.Count);
+        Assert.All(links, m => Assert.DoesNotContain("onclick", m.Value));
+        var script = ReportGenerator.LoadResource("report-navigation-script.js");
+        Assert.Contains("closest('a[href^=\"#scenario-\"], a[href^=\"#sid-\"]')", script);
+        Assert.Contains("e.ctrlKey || e.metaKey || e.shiftKey || e.altKey", script);
     }
 }

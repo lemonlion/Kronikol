@@ -65,11 +65,12 @@ public class DeepLinkReportTests
 
         // Anchored inside the two functions that do the work. The old assertion was a bare
         // `Contains("location.hash")` over the whole report, which any other mention satisfied.
-        var parse = ExtractFunctionBody(content, "parse_url_hash");
+        var parse = ExtractFunctionBody(content, "apply_url_hash");
         Assert.Contains("reveal_url_anchor(anchor)", parse);
         var reveal = ExtractFunctionBody(content, "reveal_url_anchor");
         Assert.Contains("setAttribute('open', '')", reveal);
-        Assert.Contains("jump_into_view(target, 'center')", reveal);
+        // centred, or from its top when taller than the window below the bar (5.2.0)
+        Assert.Contains("jump_into_view(target, target.getBoundingClientRect().height > room ? 'start' : 'center')", reveal);
         // At once, never smoothly: a smooth scroll is aimed at the content-visibility placeholders of the
         // features it crosses and ends past the scenario (plans/DOORSTEP_PLAN.md F28; the browser facts
         // are StableIdDeepLinkTests in the end-to-end project).

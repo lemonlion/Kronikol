@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parent sandbox</title>
+<style>body{margin:0;font:14px sans-serif}</style>
+<script>
+(function () {
+  var log = [];
+  window.__log = log;
+  window.__jsState = { createdAt: Date.now(), counter: 0, rand: Math.random() };
+  window.__interceptMode = false;
+  var t0 = performance.now();
+  var where;
+  try { where = window === window.top ? 'top' : 'child'; } catch (e) { where = 'child'; }
+  function st() { try { return history.state; } catch (e) { return 'ERR:' + e.name; } }
+  function rec(type, extra) {
+    var e = { type: type, where: where, t: Math.round(performance.now() - t0), hash: location.hash, state: st(),
+              len: history.length, y: Math.round(window.scrollY) };
+    if (extra) for (var k in extra) e[k] = extra[k];
+    log.push(e);
+    try { console.log('EVT ' + JSON.stringify(e)); } catch (x) {}
+  }
+  window.__rec = rec;
+  addEventListener('popstate', function (ev) { rec('popstate', { evState: ev.state }); });
+  addEventListener('hashchange', function (ev) { rec('hashchange', { oldURL: ev.oldURL, newURL: ev.newURL }); });
+  addEventListener('pageshow', function (ev) { rec('pageshow', { persisted: ev.persisted }); });
+  addEventListener('pagehide', function (ev) { rec('pagehide', { persisted: ev.persisted }); });
+  var nav = window.navigation;
+  if (nav && typeof nav.addEventListener === 'function') {
+    nav.addEventListener('navigate', function (ev) {
+      var d = { navigationType: ev.navigationType, destUrl: ev.destination ? ev.destination.url : null,
+                destSameDocument: ev.destination ? ev.destination.sameDocument : null, hashChange: ev.hashChange,
+                canIntercept: ev.canIntercept, userInitiated: ev.userInitiated };
+      try { d.destState = ev.destination.getState(); } catch (x) { d.destStateErr = x.name; }
+      if (window.__interceptMode) {
+        try { ev.intercept({ handler: function () { return Promise.resolve(); } }); d.intercepted = true; }
+        catch (x) { d.interceptError = x.name + ': ' + x.message; }
+      }
+      rec('navigate', d);
+    });
+    nav.addEventListener('navigatesuccess', function () { rec('navigatesuccess'); });
+    nav.addEventListener('navigateerror', function (ev) { rec('navigateerror', { message: ev.message }); });
+    nav.addEventListener('currententrychange', function (ev) { rec('currententrychange', { navigationType: ev.navigationType }); });
+  }
+})();
+</script>
+</head>
+<body>
+<p>parent page</p>
+<iframe id="f" src="report.html" sandbox="allow-scripts" style="width:900px;height:500px"></iframe>
+</body>
+</html>

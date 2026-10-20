@@ -593,6 +593,8 @@ public class ToggleDefaultsMarkupTests
         var content = Generate();
         Assert.Contains("function revealSingleMatch(", content);
         Assert.Contains("closest('details.rule')", content);
+        // the feature round the match too (5.2.0): where features start closed, the match opened out of sight
+        Assert.Contains("[el.closest('details.feature'), el.closest('details.rule'), el].forEach(", content);
         Assert.Contains("'details.example-diagrams', 'details.scenario-steps', 'details.scenario-background'", content);
     }
 

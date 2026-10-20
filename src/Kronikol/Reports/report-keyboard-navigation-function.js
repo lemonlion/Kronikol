@@ -1,6 +1,8 @@
 document.addEventListener('keydown', function(e) {
     // a field keeps its keys: until 5.0.0 a dropdown's arrow keys moved between scenarios instead of changing its value
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    // nor does a tab list: Up and Down on a report tab moved a scenario inside the hidden Features panel (5.2.0, S11)
+    if (e.target.closest && e.target.closest('[role="tablist"]')) return;
     if (e.key === '/') {
         e.preventDefault();
         var sb = document.getElementById('searchbar');

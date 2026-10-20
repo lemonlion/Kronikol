@@ -193,6 +193,19 @@ public class HistoryHtmlTests : IDisposable
     }
 
     [Fact]
+    public void The_history_tabs_links_are_plain_links_that_keep_their_address()
+    {
+        // 5.2.0 (plans/BACK_BUTTON_NAVIGATION_PLAN.md S1, S2, S20, C2): the report's navigation script takes the link and
+        // adds the entry Back returns by; the link's own script replaced the address, so Back left the report, and it
+        // cancelled every click, so Ctrl+click could not open the scenario in a new tab
+        var features = Features(pay: ExecutionResult.Failed);
+        var html = Html(features, Verdicts(features, "PPP", "PPP", "PPP"));
+
+        Assert.Contains($"<a class=\"history-link\" href=\"#sid-{PayId}\" title=\"Go to this scenario on the Features tab\">Checkout &rsaquo; Pay by card</a>", html);
+        Assert.DoesNotMatch("<a class=\"history-link\"[^>]*onclick", html);
+    }
+
+    [Fact]
     public void A_fixed_scenario_is_listed_as_newly_fixed_and_a_stable_run_says_nothing_changed()
     {
         var fixedRun = Features(pay: ExecutionResult.Passed);

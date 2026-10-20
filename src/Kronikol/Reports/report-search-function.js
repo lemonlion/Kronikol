@@ -13,24 +13,49 @@ function toggle_search_help() {
 // (steps, background steps, diagrams), plus an enclosing rule section — a match inside a
 // closed rule would otherwise stay invisible. Raw Plant UML disclosures deliberately stay
 // closed (they always were; a deep hit on diagram source is one click away, documented).
+// What the search opened: emptying the search closes those, and only those (5.2.0): until then it closed every scenario, the
+// one a link had just opened too (plans/BACK_BUTTON_NAVIGATION_PLAN.md S8)
+var _openedBySearch = [];
 function revealSingleMatch(el) {
-    var rule = el.closest('details.rule');
-    if (rule) rule.setAttribute('open', '');
-    el.setAttribute('open', '');
+    // the match shows: its feature (closed from the start on a long report, so until 5.2.0 the match opened out of
+    // sight), its rule and the scenario
+    [el.closest('details.feature'), el.closest('details.rule'), el].forEach(function(d) {
+        if (d && !d.open) { _openedBySearch.push(d); d.setAttribute('open', ''); }
+    });
     ['details.example-diagrams', 'details.scenario-steps', 'details.scenario-background'].forEach(function(sel) {
         var section = el.querySelector(sel);
         if (section) section.setAttribute('open', '');
     });
 }
 
+function close_opened_by_search() {
+    _openedBySearch.forEach(function(d) { d.removeAttribute('open'); });
+    _openedBySearch = [];
+}
+
 function search_scenarios() {
     if (searchTimeoutId)
         clearTimeout(searchTimeoutId);
+    searchTimeoutId = null;
+    // an emptied search answers at once (5.2.0): it is the end of the run, and Back right after it has to see it
+    var bar = document.getElementById('searchbar');
+    if (bar && !bar.value) { run_search_scenarios(); return; }
 
     searchTimeoutId = setTimeout(function () {
+        searchTimeoutId = null;
         run_search_scenarios();
     }, 300);
 }
+// Enter, and leaving the field, answer at once (5.2.0, plans/BACK_BUTTON_NAVIGATION_PLAN.md 4.8): a word typed is one
+// entry of the session history, and Back right after Enter undoes it with no wait.
+function flush_search() {
+    if (!searchTimeoutId) return;
+    clearTimeout(searchTimeoutId);
+    searchTimeoutId = null;
+    run_search_scenarios();
+}
+document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target && e.target.id === 'searchbar') flush_search(); }, true);
+document.addEventListener('change', function (e) { if (e.target && e.target.id === 'searchbar') flush_search(); }, true);
 
 // Every filter can be written in the search (5.0.0, plans/OPTION_C_PLAN.md S6, D16): tags (@tag) and statuses ($status)
 // could already, and dependencies, duration and happy paths are qualifiers, a key and a colon, as GitHub's search writes
@@ -131,8 +156,8 @@ function run_search_scenarios() {
         if (input.length === 0) {
             for (let i = 0; i < c.items.length; i++) {
                 c.items[i].sr = false;
-                c.items[i].el.removeAttribute('open');
             }
+            close_opened_by_search();
             applyVisibility(c);
             update_url_hash();
             if (window._kronDeepReset) window._kronDeepReset();
@@ -214,8 +239,8 @@ function run_search_scenarios() {
     if (searchTokens.length === 0 && !tagExpr) {
         for (let i = 0; i < c.items.length; i++) {
             c.items[i].sr = false;
-            c.items[i].el.removeAttribute('open');
         }
+        close_opened_by_search();
         applyVisibility(c);
         update_url_hash();
         if (window._kronDeepReset) window._kronDeepReset();

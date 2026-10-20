@@ -68,8 +68,15 @@ public class ClearAllFiltersReportTests
         // Since 3.1.0 the fragment is not simply wiped: a `#sid-`/`#scenario-` anchor is not filter
         // state, and somebody who followed a link to one scenario and then pressed Clear All has
         // cleared filters, not navigated away from it.
+        // Since 5.2.0 Clear All writes the address as every filter does, through update_url_hash, and the navigation
+        // script keeps the anchor in front (StableIdDeepLinkTests' Clearing_every_filter_keeps_the_link_but_drops_the_filters
+        // holds what the browser shows); Clear All is then an entry of its own, so Back puts the filters back.
         var content = GenerateReport("ClearAllUrl.html");
-        Assert.Contains("var keptAnchor = current_url_anchor();", content);
-        Assert.Contains("history.replaceState(null, '', window.location.pathname + window.location.search + (keptAnchor ? '#' + keptAnchor : ''))", content);
+        var start = content.IndexOf("function clear_all_filters() {", StringComparison.Ordinal);
+        Assert.True(start >= 0, "clear_all_filters is in the page");
+        var body = content[start..content.IndexOf("\n}", start, StringComparison.Ordinal)];
+        Assert.Contains("reset_filters();", body);
+        Assert.Contains("update_url_hash();", body);
+        Assert.DoesNotContain("replaceState", body);
     }
 }

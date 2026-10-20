@@ -48,7 +48,25 @@
     window._iflowLoadSegments = loadSegments;
     window._iflowHasSegment = hasSegment;
 
-    function showPopup(segmentId) {
+    // The popup is a layer of the session history (5.2.0, plans/BACK_BUTTON_NAVIGATION_PLAN.md 4.7): opening it adds an
+    // entry, so Back closes it rather than leaving the report, and Forward opens it again; one popup replacing another
+    // takes its entry. Closed by its cross, its backdrop or Esc, it takes its entry back out, and the focus returns to the
+    // arrow that opened it.
+    function closePopup() {
+        var overlay = document.querySelector('.iflow-overlay');
+        if (!overlay) return;
+        overlay.remove();
+        if (window.kronikol_nav) window.kronikol_nav.layer('iflow', null, false);
+    }
+    window.kronikol_layers = window.kronikol_layers || {};
+    window.kronikol_layers.iflow = {
+        isOpen: function() { return !!document.querySelector('.iflow-overlay'); },
+        open: function(data) { if (data && data.segment && hasSegment(data.segment)) showPopup(data.segment, true); },
+        close: function() { var overlay = document.querySelector('.iflow-overlay'); if (overlay) overlay.remove(); }
+    };
+
+    function showPopup(segmentId, restoring) {
+        var opener = document.activeElement;
         var existing = document.querySelector('.iflow-overlay');
         if (existing) existing.remove();
 
@@ -64,7 +82,7 @@
         // the cross's name and title (5.0.0, plans/OPTION_C_PLAN.md D49)
         closeBtn.setAttribute('aria-label', 'Close');
         closeBtn.title = 'Close (Esc)';
-        closeBtn.onclick = function() { overlay.remove(); };
+        closeBtn.onclick = closePopup;
         popup.appendChild(closeBtn);
 
         // The popup is in the page before anything renders in it: the render shim finds its target by id when it is
@@ -75,9 +93,10 @@
         popup.appendChild(loading);
         overlay.appendChild(popup);
         overlay.addEventListener('click', function(e) {
-            if (e.target === overlay) overlay.remove();
+            if (e.target === overlay) closePopup();
         });
         document.body.appendChild(overlay);
+        if (!restoring && window.kronikol_nav) window.kronikol_nav.layer('iflow', { segment: segmentId }, true, opener);
 
         loadSegments().then(function(map) {
             if (!overlay.isConnected) return; // closed, or replaced by another popup, while the map decoded
@@ -262,10 +281,7 @@
     }, true);
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            var overlay = document.querySelector('.iflow-overlay');
-            if (overlay) overlay.remove();
-        }
+        if (e.key === 'Escape') closePopup();
     });
 })();
 </script>

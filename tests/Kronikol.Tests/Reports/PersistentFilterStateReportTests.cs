@@ -62,6 +62,6 @@ public class PersistentFilterStateReportTests
     {
         var features = MakeFeatures(("t1", "Create order", ExecutionResult.Passed));
         var content = GenerateReport(features, "UrlHashOnLoad.html");
-        Assert.Contains("parse_url_hash", content);
+        Assert.Contains("function apply_url_hash(", content);
     }
 }

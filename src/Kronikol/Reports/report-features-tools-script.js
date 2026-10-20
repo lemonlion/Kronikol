@@ -31,6 +31,12 @@
         window.dispatchEvent(new Event('resize'));
     }
     window.kronikol_set_features_view = function (view) { setView(view); };
+    // a view chosen by the reader is a place (5.2.0, plans/BACK_BUTTON_NAVIGATION_PLAN.md Q14): Back returns to the one
+    // before; run names a run of arrow keys, which is one entry
+    function go(view, run) {
+        if (window.kronikol_nav) window.kronikol_nav.go({ view: view }, run ? { key: run } : null);
+        else setView(view);
+    }
 
     // Each row of the table beside its card, paired once as the page opens: both are written in the same order, and a
     // click on a column heading reorders the rows later. A pair is found by position, never by name, so two features
@@ -93,6 +99,7 @@
             return;
         }
     }
+    window.kronikol_open_row = openRow;
 
     // A fold button with nothing to do is dimmed: expand while every one is open, collapse while none is. Checked once a
     // frame, however many details a click opens.
@@ -139,7 +146,7 @@
             return;
         }
         var tab = t.closest('.view-switch > .view-btn');
-        if (tab) { setView(tab.getAttribute('data-view')); return; }
+        if (tab) { go(tab.getAttribute('data-view')); return; }
         var gear = t.closest('.tools-gear');
         if (gear) {
             var bar = gear.closest('.toolbar-row');
@@ -147,10 +154,13 @@
             gear.setAttribute('aria-expanded', open ? 'true' : 'false');
             return;
         }
+        // a row opening its card is a place: Back shows the table where it was (5.2.0)
         var row = t.closest('#features-table-view tbody tr');
-        if (row) { openRow(row); return; }
-        // what goes to a scenario goes to its card (S3 takes it to the Features tab first)
-        if (t.closest('.jump-to-failure, a[href^="#scenario-"], a[href^="#sid-"]')) setView('full');
+        if (row) {
+            if (window.kronikol_nav) window.kronikol_nav.go({ row: row });
+            else openRow(row);
+            return;
+        }
     }, true);
     document.addEventListener('keydown', function (e) {
         var t = e.target;
@@ -163,26 +173,27 @@
             else if (e.key === 'End') j = all.length - 1;
             if (j < 0) return;
             e.preventDefault();
-            setView(all[j].getAttribute('data-view'), true);
+            go(all[j].getAttribute('data-view'), 'view-keys');
+            all[j].focus();
             return;
         }
-        // the arrow keys move between scenarios, which are in the cards
-        if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !/^(input|select|textarea)$/i.test((document.activeElement || {}).tagName || '')) setView('full');
+        // the arrow keys move between scenarios, which are in the cards (not while a tab list has the focus, S11)
+        if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !(t && t.closest && t.closest('[role="tablist"]'))
+            && !/^(input|select|textarea)$/i.test((document.activeElement || {}).tagName || '')) {
+            // on another tab, the tabs script takes the reader to the Features tab and this view in one step
+            var away = document.querySelector('.report-tabs > .report-tab[aria-selected="true"]:not([data-tab="features"])');
+            var shown = viewSwitch() && viewSwitch().querySelector('.view-btn[aria-selected="true"]');
+            if (!away && shown && shown.getAttribute('data-view') !== 'full') go('full');
+        }
     }, true);
     document.addEventListener('change', function (e) {
         if (e.target && e.target.id === 'features-sort') sortBy(e.target);
     });
     document.addEventListener('toggle', queueSync, true);
 
-    function scenarioInHash() {
-        var first = window.location.hash.substring(1).split('&')[0];
-        return first.indexOf('scenario-') === 0 || first.indexOf('sid-') === 0;
-    }
-    window.addEventListener('hashchange', function () { if (scenarioInHash()) setView('full'); });
-
+    // the view an address names is put on by the navigation script, with the tab, as the page opens and on Back
     function start() {
         pair();
-        if (scenarioInHash()) setView('full');
         syncFolds();
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

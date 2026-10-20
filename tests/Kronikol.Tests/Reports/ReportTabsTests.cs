@@ -77,7 +77,7 @@ public class ReportTabsTests
         var html = Generate("Tabs_All.html", Features(), diagnostics: TwoDiagnostics);
 
         // the tabs share the bar's top row with its filters (S7, D24), after the mark where the bar pins
-        Assert.Contains("<div class=\"nav-mark\" aria-hidden=\"true\"></div><div class=\"toolbar-row report-nav on-features\"><div class=\"nav-row\"><div class=\"report-tabs\" role=\"tablist\" aria-label=\"Report sections\">"
+        Assert.Contains("<div class=\"nav-mark\" aria-hidden=\"true\"></div><div class=\"toolbar-row report-nav on-features\"><div class=\"nav-row\"><div class=\"report-tabs\" role=\"tablist\" aria-label=\"Report sections\" data-start-tab=\"features\">"
                         + Tab("features", "Features", true, "<span class=\"tab-n\">2</span>")
                         + Tab("timeline", "Timeline", false)
                         + Tab("components", "Components", false)

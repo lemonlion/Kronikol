@@ -1537,6 +1537,10 @@ public static class ReportGenerator
         // URL-anchored filters
         var urlHashFunction = LoadResource("report-url-hash-function.js");
 
+        // Back and Forward as the report's navigation (5.2.0, plans/BACK_BUTTON_NAVIGATION_PLAN.md): the one script that
+        // writes the session history, in every page these scripts run in
+        var navigationScript = LoadResource("report-navigation-script.js");
+
         // Keyboard navigation
         var keyboardNavigationFunction = LoadResource("report-keyboard-navigation-function.js");
 
@@ -1722,6 +1726,7 @@ public static class ReportGenerator
                                 {{exportFunction}}
                                 {{persistentFilterFunction}}
                                 {{urlHashFunction}}
+                                {{navigationScript}}
                                 {{keyboardNavigationFunction}}
                                 {{initScript}}
                                 {{enrichSearchDataScript}}
@@ -2007,7 +2012,8 @@ public static class ReportGenerator
         body.Append(useTabs ? $"""<div class="toolbar-row report-nav{(startTab == "features" ? " on-features" : "")}{tableMode}">""" : $"""<div class="toolbar-row{tableMode}">""");
         if (useTabs)
         {
-            body.Append("""<div class="nav-row"><div class="report-tabs" role="tablist" aria-label="Report sections">""");
+            // where the page opens, for the navigation script: the scripts change the selected tab before the page settles
+            body.Append($"""<div class="nav-row"><div class="report-tabs" role="tablist" aria-label="Report sections" data-start-tab="{startTab}">""");
             // each tab titled with what it shows (D49); the timeline's names the warm-up only where a scenario paid one
             body.Append(ReportTab("features", "Features", "The features and their scenarios, with the filters applied", startTab, features.Length));
             if (hasDurations) body.Append(ReportTab("timeline", "Timeline", "Every scenario as a bar, slowest first" + (warmUp.ScenarioMs.Count > 0 ? ", with the first-call warm-up it paid" : ""), startTab));
@@ -2111,6 +2117,8 @@ public static class ReportGenerator
                 scenarioAnchorIds[scenario.Id] = baseAnchor;
             }
         }
+        // every id a scenario took, so that a parameterized group's is unique too (UniqueAnchorId)
+        var takenAnchorIds = new HashSet<string>(scenarioAnchorIds.Values, StringComparer.Ordinal);
 
         // Deep-search index (SEARCH_INDEX_PLAN): corpus pieces are collected at the exact emission
         // sites of the client-readable surfaces (data-search, puml-data / raw-plantuml source,
@@ -2144,11 +2152,12 @@ public static class ReportGenerator
                 {
                     var anchorId = scenarioAnchorIds[s.Id];
                     var featureName = scenarioFeatureLookup.GetValueOrDefault(s.Id, "");
-                    // The link jumps rather than scrolls smoothly: a smooth scroll across features the browser
-                    // has never drawn is aimed at their content-visibility placeholders, and ends past the
-                    // scenario (jump_into_view, in report-url-hash-function.js, says why).
+                    // A plain link (5.2.0): the navigation script takes it, adds the entry Back returns by, keeps the
+                    // filters in the address and opens the scenario the one way every link does (reveal_url_anchor, which
+                    // finds the example row that shows); a click with Ctrl or Shift opens it in a new tab
+                    // (plans/BACK_BUTTON_NAVIGATION_PLAN.md S2, S6, S16, S20).
                     var prefix = featureName.Length > 0 ? $"<span class=\"failure-cluster-feature\">{System.Net.WebUtility.HtmlEncode(featureName)} &rsaquo;</span> " : "";
-                    return $"<li>{prefix}<a class=\"failure-cluster-scenario-link\" href=\"#{anchorId}\" onclick=\"event.preventDefault();var el=document.getElementById('{anchorId}');if(el){{var p=el;while(p){{if(p.tagName==='DETAILS')p.setAttribute('open','');p=p.parentElement;}}if(el.tagName==='TR')el.click();else el.setAttribute('open','');jump_into_view(el,'start');history.replaceState(null,'',location.pathname+location.search+'#{anchorId}');}}\" title=\"Go to this scenario\">{System.Net.WebUtility.HtmlEncode(s.DisplayName)}</a></li>";
+                    return $"<li>{prefix}<a class=\"failure-cluster-scenario-link\" href=\"#{anchorId}\" title=\"Go to this scenario\">{System.Net.WebUtility.HtmlEncode(s.DisplayName)}</a></li>";
                 }));
                 body.Append($"<details class=\"failure-cluster\"><summary>{System.Net.WebUtility.HtmlEncode(cluster.ClusterKey)}<span class=\"failure-cluster-count\">{cluster.Scenarios.Length} scenarios</span></summary>");
                 body.Append($"<ul class=\"failure-cluster-scenarios\">{anchorLinks}</ul></details>");
@@ -2354,6 +2363,7 @@ public static class ReportGenerator
                         titleizeParameterNames,
                         showNoInteractionsMarker: showNoInteractionsMarker,
                         scenarioAnchorIds: scenarioAnchorIds,
+                        takenAnchorIds: takenAnchorIds,
                         featureDisplayName: feature.DisplayName,
                         featureDescription: feature.Description,
                         featureEndpoint: feature.Endpoint,
@@ -3058,7 +3068,7 @@ public static class ReportGenerator
 
     /// <summary>The Features tab's views, Full (the cards) and Summary (the features table), as tabs (S4, D21).</summary>
     private static string FeaturesViewSwitch(bool summary) =>
-        "<div class=\"view-switch\" role=\"tablist\" aria-label=\"Features view\">"
+        $"<div class=\"view-switch\" role=\"tablist\" aria-label=\"Features view\" data-start-view=\"{(summary ? "summary" : "full")}\">"
         + ViewTab("full", "Full", "report-content", "Each feature as a card with its scenarios", !summary)
         + ViewTab("summary", "Summary", "features-table-view", "One table row per feature, with its counts and times", summary)
         + "</div>";
@@ -3096,7 +3106,7 @@ public static class ReportGenerator
             + "<option value=\"failed\" data-col=\"3\">Failures first</option><option value=\"scenarios\" data-col=\"1\">Most scenarios</option>");
         if (durationCol is { } d)
             options.Append(CultureInfo.InvariantCulture, $"<option value=\"duration\" data-col=\"{d}\">Slowest total</option><option value=\"average\" data-col=\"{d + 1}\">Slowest average</option><option value=\"longest\" data-col=\"{d + 2}\">Longest scenario</option>");
-        return "<label class=\"sort-group\"><span class=\"sort-label\">Sort</span><select id=\"features-sort\" class=\"sort-select\" aria-label=\"Sort features\" title=\"The order the features are listed in\">"
+        return "<label class=\"sort-group\"><span class=\"sort-label\">Sort</span><select id=\"features-sort\" class=\"sort-select\" autocomplete=\"off\" aria-label=\"Sort features\" title=\"The order the features are listed in\">"
             + options + "</select></label>";
     }
 
@@ -3360,6 +3370,21 @@ public static class ReportGenerator
         body.Append("</td></tr>");
     }
 
+    /// <summary>
+    /// A parameterized group's id, unique as a scenario's is (5.2.0, plans/BACK_BUTTON_NAVIGATION_PLAN.md S9): two groups
+    /// of one name, or a group named as a scenario is, shared an id, and a link to the second reached the first. The
+    /// first keeps the plain id, the next take <c>-2</c>, <c>-3</c> and on, as scenarios do.
+    /// </summary>
+    private static string UniqueAnchorId(string baseAnchor, HashSet<string>? taken)
+    {
+        if (taken is null)
+            return baseAnchor;
+        var id = baseAnchor;
+        for (var n = 2; !taken.Add(id); n++)
+            id = string.Create(CultureInfo.InvariantCulture, $"{baseAnchor}-{n}");
+        return id;
+    }
+
     private static void RenderParameterizedGroup(
         StringBuilder body,
         ParameterizedGroup group,
@@ -3379,6 +3404,7 @@ public static class ReportGenerator
         int medianSpanCount,
         bool titleizeParameterNames = true,
         Dictionary<string, string>? scenarioAnchorIds = null,
+        HashSet<string>? takenAnchorIds = null,
         string? featureDisplayName = null,
         string? featureDescription = null,
         string? featureEndpoint = null,
@@ -3494,7 +3520,7 @@ public static class ReportGenerator
         summaryParts.Add($"{passCount}/{scenarios.Length} passed");
         var summaryText = $" <span class=\"label\">{string.Join(", ", summaryParts)}</span>";
 
-        var anchorId = GenerateScenarioAnchorId(group.GroupDisplayName);
+        var anchorId = UniqueAnchorId(GenerateScenarioAnchorId(group.GroupDisplayName), takenAnchorIds);
         var encodedGroupName = System.Net.WebUtility.HtmlEncode(group.GroupDisplayName);
         var isGroupHappyPath = scenarios.Any(s => s.IsHappyPath);
         var happyPathClass = isGroupHappyPath ? " happy-path" : "";

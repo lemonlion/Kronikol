@@ -74,7 +74,7 @@ public class UrlHashFilterTests
         // 5.0.0: Happy paths is the Happy Path tag chip, so filter_tags writes it (hp=1 Only, hpx=1 Hide)
         var content = GenerateReport("UrlHashHappyPath.html");
         Assert.Contains("update_url_hash()", ExtractFunctionBody(content, "filter_tags"));
-        var hash = ExtractFunctionBody(content, "update_url_hash");
+        var hash = ExtractFunctionBody(content, "url_hash_filters");
         Assert.Contains("parts.push('hp=1')", hash);
         Assert.Contains("parts.push('hpx=1')", hash);
     }
@@ -101,20 +101,20 @@ public class UrlHashFilterTests
     public void Update_url_hash_saves_the_tags_and_writes_no_categories()
     {
         var content = GenerateReport("UrlHashSavesTags.html");
-        var body = ExtractFunctionBody(content, "update_url_hash");
+        var body = ExtractFunctionBody(content, "url_hash_filters");
         Assert.Contains("names('tags', chip_values('tag', 'in').filter(notHappy));", body);
         Assert.Contains("names('tagx', chip_values('tag', 'out').filter(notHappy));", body);
         Assert.DoesNotContain("cats", body);
         Assert.DoesNotContain("catmode", body);
     }
 
-    // --- Bug 2: parse_url_hash should restore a 4.x link's categories, as tags ---
+    // --- Bug 2: apply_url_hash (parse_url_hash until 5.2.0) should restore a 4.x link's categories, as tags ---
 
     [Fact]
     public void Parse_url_hash_reads_a_4x_link_s_categories_as_tags()
     {
         var content = GenerateReport("UrlHashRestoresCats.html");
-        var body = ExtractFunctionBody(content, "parse_url_hash");
+        var body = ExtractFunctionBody(content, "apply_url_hash");
         Assert.Contains("params.cats", body);
         Assert.Contains("params.catmode", body);
         Assert.DoesNotContain("filter_categories", body);

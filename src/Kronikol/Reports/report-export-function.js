@@ -1,4 +1,6 @@
-function clear_all_filters() {
+// Every filter back to where the page starts, without writing the address and without closing a scenario: Clear All, and
+// an address put on the page exactly (apply_url_hash).
+function reset_filters() {
     var c = fc();
     // Clear search, and the qualifiers it held
     var sb = document.getElementById('searchbar');
@@ -26,11 +28,13 @@ function clear_all_filters() {
     sync_group_clears();
     // Clear deep-search state (chip + in-flight queries)
     if (window._kronDeepReset) window._kronDeepReset();
-    // Apply and clear URL. The anchor is not filter state: somebody who followed a link to one
-    // scenario and then pressed Clear All has cleared filters, not navigated away from it.
-    applyVisibility(c);
-    var keptAnchor = current_url_anchor();
-    history.replaceState(null, '', window.location.pathname + window.location.search + (keptAnchor ? '#' + keptAnchor : ''));
+}
+function clear_all_filters() {
+    reset_filters();
+    applyVisibility(fc());
+    // The address keeps its anchor: somebody who followed a link to one scenario and then pressed Clear All has cleared
+    // filters, not navigated away from it. Clear All is a change of its own, so Back puts the filters back (5.2.0).
+    update_url_hash();
 }
 // Everything a diagram needs in order to draw itself is in the head — except its source. Under
 // BrowserJs rendering the element is an empty `<div class="plantuml-browser" id="puml-N">`, and every

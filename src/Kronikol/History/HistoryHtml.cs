@@ -145,11 +145,14 @@ internal static class HistoryHtml
             ? $"<span class=\"history-name\">{html}</span>"
             : $"<a class=\"history-link\" href=\"{HtmlEncode(Uri.EscapeDataString(reportHref))}#sid-{HtmlEncode(stableId)}\" title=\"Open this scenario in the report\">{html}</a>";
 
-    // Inside the report: the hash handler opens the scenario, and the address bar takes its anchor.
+    // Inside the report: a plain link (5.2.0). The report's navigation script takes it, adds the entry the browser's Back
+    // returns by (to this tab, where the reader was), keeps the filters in the address and opens the scenario; a click
+    // with Ctrl or Shift opens it in a new tab (plans/BACK_BUTTON_NAVIGATION_PLAN.md S1, S2, S20). Until 5.2.0 the link's
+    // own script replaced the address, so Back left the report.
     private static string InPageLink(ScenarioHistory entry)
     {
         var id = entry.StableId;
-        return $"<a class=\"history-link\" href=\"#sid-{id}\" onclick=\"event.preventDefault();if(window.reveal_url_anchor){{reveal_url_anchor('sid-{id}');}}history.replaceState(null,'',location.pathname+location.search+'#sid-{id}');\" title=\"Go to this scenario on the Features tab\">{HtmlEncode(entry.Feature)} &rsaquo; {HtmlEncode(entry.Name)}</a>";
+        return $"<a class=\"history-link\" href=\"#sid-{id}\" title=\"Go to this scenario on the Features tab\">{HtmlEncode(entry.Feature)} &rsaquo; {HtmlEncode(entry.Name)}</a>";
     }
 
     private static string Section(HistoryVerdicts history, Func<ScenarioHistory, string> link, bool open, bool inTab = false)
