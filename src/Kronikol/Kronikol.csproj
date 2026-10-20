@@ -26,6 +26,8 @@
 		<InternalsVisibleTo Include="Kronikol.Extensions.ClickHouse.Driver" />
 		<!-- ScenarioTitleResolver.FormatXunitDisplayName: an xUnit display name read with the test's own DisplayName -->
 		<InternalsVisibleTo Include="Kronikol.xUnit2" />
+		<!-- ReportFileFormat: the xUnit2 lane reads the TestRunReport.krkl its fixtures write -->
+		<InternalsVisibleTo Include="Kronikol.Tests.xUnit2" />
 		<InternalsVisibleTo Include="Kronikol.xUnit3" />
 		<!-- ProcessDiagnostics: build interception records at setup that tiered compilation can end it -->
 		<InternalsVisibleTo Include="Kronikol.Extensions.Kafka.BuildInterception" />

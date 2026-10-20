@@ -47,7 +47,7 @@ public class OtherFrameworksLaneTests
         var waits = File.Exists(delays) ? File.ReadAllLines(delays).Length : 0;
         Assert.True(waits >= 10, $"The report waited {waits} times; a slow report needs at least 10.{Environment.NewLine}{run.Describe()}");
 
-        foreach (var file in new[] { "TestRunReport.json", "TestRunReport.html", "Failures.md", "Run.json" })
+        foreach (var file in new[] { "TestRunReport.krkl", "TestRunReport.html", "Failures.md", "Run.json" })
             Assert.True(run.ReadReportFile(file) is { Length: > 0 }, $"{file} was not written.{Environment.NewLine}{run.Describe()}");
         Expected.EveryTrackedTestIsItsOwnScenario(run, "AssemblyFixtureUsers");
     }

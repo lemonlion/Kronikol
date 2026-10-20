@@ -24,8 +24,9 @@ public sealed record BackgroundCall(string Path, string? ExpiredFrom);
 public sealed record ReportDiagnostic(string Kind, string Message);
 
 /// <summary>
-/// The fields of a TestRunReport.json the lane compares with the runner's results, read as JSON one field at a
-/// time. The file is never printed: failure messages describe it by these fields.
+/// The fields of the run's data file the lane compares with the runner's results, read as JSON one field at a time:
+/// TestRunReport.krkl, the default from 5.0.0, decoded, or TestRunReport.json. The file is never printed: failure
+/// messages describe it by these fields.
 /// </summary>
 public sealed class ReportFile
 {
@@ -37,14 +38,14 @@ public sealed class ReportFile
 
     public static ReportFile Read(string path)
     {
-        using var document = JsonDocument.Parse(File.ReadAllBytes(path));
+        using var document = JsonDocument.Parse(Bytes(path));
         var root = document.RootElement;
 
         var scenarios = new List<ReportScenario>();
-        foreach (var feature in root.GetProperty("features").EnumerateArray())
+        foreach (var feature in Items(root, "features"))
         {
             var featureName = feature.GetProperty("name").GetString() ?? "";
-            foreach (var scenario in feature.GetProperty("scenarios").EnumerateArray())
+            foreach (var scenario in Items(feature, "scenarios"))
             {
                 scenarios.Add(new ReportScenario(
                     Id: scenario.GetProperty("id").GetString() ?? "",
@@ -93,6 +94,24 @@ public sealed class ReportFile
             yield return new BackgroundCall(new Uri(uri).AbsolutePath, String(interaction, "expiredFrom"));
         }
     }
+
+    // A .krkl is the same JSON compressed whole, written without the keys that hold nothing, so an array may be absent.
+    private static byte[] Bytes(string path)
+    {
+        if (!path.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase))
+            return File.ReadAllBytes(path);
+
+        using var file = File.OpenRead(path);
+        using var content = Kronikol.Compression.ReportFileFormat.Open(file);
+        using var decoded = new MemoryStream();
+        content.Stream.CopyTo(decoded);
+        return decoded.ToArray();
+    }
+
+    private static IEnumerable<JsonElement> Items(JsonElement owner, string property) =>
+        owner.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.Array
+            ? value.EnumerateArray()
+            : Enumerable.Empty<JsonElement>();
 
     private static string? String(JsonElement owner, string property) =>
         owner.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;

@@ -43,11 +43,15 @@ public sealed class FixtureRun
 
     private ReportFile? _report;
 
-    /// <summary>The run's TestRunReport.json, read field by field.</summary>
+    /// <summary>The run's data file, read field by field: TestRunReport.krkl, the default from 5.0.0, or TestRunReport.json.</summary>
     public ReportFile Report =>
-        _report ??= ReportsDirectory is { } directory && File.Exists(Path.Combine(directory, "TestRunReport.json"))
-            ? ReportFile.Read(Path.Combine(directory, "TestRunReport.json"))
-            : throw new InvalidOperationException($"{Variant} wrote no TestRunReport.json.{Environment.NewLine}{Describe()}");
+        _report ??= ReportsDirectory is { } directory && DataFile(directory) is { } file
+            ? ReportFile.Read(file)
+            : throw new InvalidOperationException(
+                $"{Variant} wrote no data file (TestRunReport.krkl or TestRunReport.json).{Environment.NewLine}{Describe()}");
+
+    private static string? DataFile(string directory) =>
+        new[] { "TestRunReport.krkl", "TestRunReport.json" }.Select(name => Path.Combine(directory, name)).FirstOrDefault(File.Exists);
 
     public string? ReadReportFile(string name) =>
         ReportsDirectory is { } directory && File.Exists(Path.Combine(directory, name))

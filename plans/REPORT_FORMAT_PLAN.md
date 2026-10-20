@@ -1442,6 +1442,10 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
       extensions' and the core's references for net8.0 and net9.0 are gone, the templates offer `--Framework net10.0`
       alone, CI's scaffold loop for the older two is gone, and the test projects that built on them build on net10.0.
       `TargetFrameworksTests` holds all four places.
+    - 5.0.0, on the same branch: the test projects outside the core and Playwright suites read the data file the flip
+      made the default. The xUnit2 lane, run for the commit before, failed 31 facts on it and now decodes the `.krkl`;
+      ProxyTap's report fact asks for the JSON it reads as text. A default flip has to run every test project that
+      reads the data file, which a search for its name finds.
 
 ## Appendix A. Edit sites at `a8563d21`
 

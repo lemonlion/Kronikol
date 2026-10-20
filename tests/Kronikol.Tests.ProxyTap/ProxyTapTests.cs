@@ -422,7 +422,11 @@ public class ProxyTapTests
         var dir = Path.Combine(Path.GetTempPath(), "kronikol-tap-report-" + Guid.NewGuid().ToString("N"));
         try
         {
-            var options = new ReportConfigurationOptions { ReportsFolderPath = dir, InternalFlowTracking = false, GenerateComponentDiagram = true };
+            // The data file is read as text here, so the run writes the JSON; the .krkl, the default from 5.0.0, is compressed.
+            var options = new ReportConfigurationOptions
+            {
+                ReportsFolderPath = dir, InternalFlowTracking = false, GenerateComponentDiagram = true, CompressTestRunReport = false,
+            };
             DefaultDiagramsFetcher.Reset();
             ReportGenerator.CreateStandardReportsWithDiagrams(
                 [new Feature { DisplayName = "E2E", Scenarios = [new Scenario { Id = testId, DisplayName = "overview renders", Result = ExecutionResult.Passed }] }],
