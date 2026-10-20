@@ -66,14 +66,14 @@ public class HistorySparklineTests : PlaywrightTestBase
         Assert.Equal("0", parts[0]); // no children: the runs are paint, not nodes
         Assert.Contains("linear-gradient", parts[1]);
         // Six passes and one failure: the failure's colour appears as one hard-stop pair, the pass colour as six.
-        Assert.Equal(2, CountOf(parts[1], "rgb(191, 0, 0)"));
-        Assert.Equal(12, CountOf(parts[1], "rgb(34, 139, 34)"));
+        Assert.Equal(2, CountOf(parts[1], "rgb(179, 55, 46)"));
+        Assert.Equal(12, CountOf(parts[1], "rgb(63, 154, 98)"));
 
         // A flaky scenario reads its flips the same way.
         var flaky = await Page.EvaluateAsync<string>($$"""
             () => getComputedStyle(document.querySelector("details.scenario[data-stable-id='{{HistoryReportHelper.RetryId}}'] .history-sparkline")).backgroundImage
         """);
-        Assert.Equal(6, CountOf(flaky, "rgb(191, 0, 0)"));
+        Assert.Equal(6, CountOf(flaky, "rgb(179, 55, 46)"));
     }
 
     [Fact]
@@ -99,10 +99,11 @@ public class HistorySparklineTests : PlaywrightTestBase
         var painted = await Page.EvaluateAsync<string>($$"""
             () => getComputedStyle(document.querySelector("details.scenario[data-stable-id='{{HistoryReportHelper.RefundId}}'] .history-sparkline")).backgroundImage
         """);
-        // One hard-stop pair in the not-a-test grey, six passes, and nothing in the bypassed yellow.
-        Assert.Equal(2, CountOf(painted, "rgb(220, 220, 220)"));
-        Assert.Equal(12, CountOf(painted, "rgb(34, 139, 34)"));
-        Assert.Equal(0, CountOf(painted, "rgb(184, 160, 0)"));
+        // One hard-stop pair in the not-a-test grey, six passes, and nothing in the colour a bypassed run takes
+        // (the tokens' light values: --kron-hairline-soft, --kron-pass-ring, --kron-warn).
+        Assert.Equal(2, CountOf(painted, "rgb(226, 231, 238)"));
+        Assert.Equal(12, CountOf(painted, "rgb(63, 154, 98)"));
+        Assert.Equal(0, CountOf(painted, "rgb(138, 90, 23)"));
         // An N is no verdict: the scenario is as stable as it was.
         await Expect(refund).ToHaveAttributeAsync("data-history-verdicts", "stable");
     }

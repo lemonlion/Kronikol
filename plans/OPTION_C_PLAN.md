@@ -1179,3 +1179,36 @@ decision of the owner's, not part of this plan.
   with 2 skipped (its one failure TagsMarkupTests' Untagged chip title, which D49 changed and T1 carries the pin for).
   Carried onto T1 (`34954884`) without a conflict: the core classes 185 of 185, the Playwright classes 119 of 119, the
   full core suite 8,449 with 2 skipped and no failure; the full Playwright suite runs when S12 closes.
+- 2026-10-20, S13b, found while preparing S13 (its design section 8) and while scoping this (`edits/s13b/`:
+  `scripts-s13b.py`, `tests-s13b.py`, `ReportSheetColoursTests.cs`, `DarkThemeColoursTests.cs`, `changelog-s13b.py`,
+  `design.md`): the colours the tokens never reached. The diagram's right-click menu (`context-menu-styles.css`) was
+  white and set no ink, so the dark theme drew its light ink on white (1.22:1); it is on `--kron-card` under
+  `--kron-ink`, every value with today's as its fallback (the component diagram's page carries the sheet without the
+  token sheet). `stylesheets.css`: a missing attachment, the flatten toggle and its hover, the "No interactions
+  captured" line, the duration field's edge and unit and the disabled search on tokens. `inline-svg-styles.css`: the
+  loading text (`#999`, 2.85:1 on white) on `--kron-faint`, the selection ring and the zoom slider on `--kron-accent`,
+  with fallbacks. The sparkline's runs are seven variables of `history-styles.css`, each a token, which
+  `HistoryHtml.Colour` writes by name; the sheet's grey ground goes, since the inline background shorthand always hid
+  it. Removed as dead: the `.examples-table` rules and their tints, `.row-surplus`/`.row-missing`, `body > details >
+  details > details.example`, and `report-toggle-examples-detail-function.js` (embedded in every report, called by
+  nothing). Kept as values meant for both themes, named in the test: the lightbox's scrim and shadow, the jump
+  button's darkened hover, the menu's and the popup's shadows, the warm-up hatch.
+  Tests: core `ReportSheetColoursTests` (new; a theory over nine sheets, the both-themes list held to its rules, the
+  menu, the sparkline's variables, the dead code gone) and HistoryHtmlTests' two sparkline pins: red 8 of 21 before
+  the change, each on its assertion, and the not-a-test pin, moved after the first green found it, 1 of 1 on its own
+  run. Playwright `DarkThemeColoursTests` (new, 5 facts, 10 cases) and the pins moved in HistorySparklineTests and
+  GradualZoomTests: red 11 of 14 before the change, each on its assertion (the light menu case a guard), and the glow
+  pin, moved after the first green found it, 1 of 1 on its own run. Green: core 174 of 174 and Playwright 205 of 205
+  with the classes beside them. Mutations (`checks/mutate-s13b.py`, 27: 20 core, 7 Playwright): 27 of 27 killed (the
+  20 core: the disabled search, the duration field's edge and unit, a missing attachment, the flatten toggle's edge
+  and hover, the no-interactions line, the menu's ground and hover, the loading text, the selection ring and the zoom
+  slider each back on its 4.x colour, a kind of run written as a colour, the menu without its ink, the sparkline's
+  dead ground back, an examples row and the example rule under the body back, the scrim no longer a value, the page
+  writing a failure's and a not-a-test colour again; the 7 Playwright: the menu back on white, a missing attachment
+  back on its red, the flatten toggle's ink back on its grey, the no-interactions line back on its grey, a kind of run
+  written as a colour, the page writing a failure's colour again, a pass written as 4.x's green). Two pins were found
+  only by the greens (HistoryHtmlTests' not-a-test colour, GradualZoomTests' glow, a regex on 4.x's blue): a search
+  for the old values must match the forms a test writes them in, not only the literal.
+  Checks: The reds and the mutations ran on T3 (`506b46f4`); carried onto T4 (`09a966e9`) without a conflict, where
+  the two red proofs, the greens and the full core suite ran (8,470 passed, 2 skipped, no failure); the full
+  Playwright suite runs when S12 closes.

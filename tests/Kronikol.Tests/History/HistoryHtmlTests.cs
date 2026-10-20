@@ -99,7 +99,7 @@ public class HistoryHtmlTests : IDisposable
         Assert.Contains("data-history-verdicts=\"broke\"", pay);
         Assert.Contains("class=\"history-sparkline\"", pay);
         Assert.Contains("linear-gradient(90deg,", pay);
-        Assert.Contains("#bf0000 75%,#bf0000 100%", pay); // the current failure is the rightmost stop
+        Assert.Contains("var(--sf) 75%,var(--sf) 100%", pay); // the current failure is the rightmost stop
         Assert.Contains("PPPF", pay); // the tooltip carries the series
         Assert.Contains("broke: passed in test:3:1", pay);
         Assert.Contains("history-verdict-broke\"", pay);
@@ -138,7 +138,7 @@ public class HistoryHtmlTests : IDisposable
         var head = ScenarioHead(html, PayId);
         Assert.Contains("not a test", head);
         Assert.DoesNotContain("bypassed", head);
-        Assert.Contains("#dcdcdc", head);
+        Assert.Contains("var(--sn)", head); // the not-a-test colour's name
     }
 
     [Fact]

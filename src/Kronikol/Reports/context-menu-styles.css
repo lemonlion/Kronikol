@@ -1,7 +1,8 @@
 .diagram-ctx-menu {
     position: fixed;
-    background: #fff;
-    border: 1px solid #ccc;
+    background: var(--kron-card, #fff);
+    border: 1px solid var(--kron-hairline, #ccc);
+    color: var(--kron-ink, #242b36);
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     padding: 4px 0;
@@ -15,12 +16,12 @@
     white-space: nowrap;
 }
 .diagram-ctx-menu > div:hover {
-    background: #e8f0fe;
+    background: var(--kron-hover, #e8f0fe);
 }
 .diagram-ctx-menu hr {
     margin: 4px 0;
     border: none;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--kron-hairline-soft, #e0e0e0);
 }
 .diagram-ctx-menu .submenu-parent {
     position: relative;
@@ -33,15 +34,15 @@
     top: 50%;
     transform: translateY(-50%);
     font-size: 8px;
-    color: #666;
+    color: var(--kron-muted, #666);
 }
 .diagram-ctx-menu .submenu {
     display: none;
     position: absolute;
     left: 100%;
     top: -4px;
-    background: #fff;
-    border: 1px solid #ccc;
+    background: var(--kron-card, #fff);
+    border: 1px solid var(--kron-hairline, #ccc);
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     padding: 4px 0;
@@ -61,7 +62,7 @@
     white-space: nowrap;
 }
 .diagram-ctx-menu .submenu > div:hover {
-    background: #e8f0fe;
+    background: var(--kron-hover, #e8f0fe);
 }
 @media (max-width: 768px) {
     .diagram-ctx-menu {

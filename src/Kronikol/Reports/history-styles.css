@@ -5,9 +5,17 @@
             height: 0.8em;
             margin-left: 0.5em;
             border-radius: 0.2em;
-            border: 1px solid rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--kron-hairline);
             vertical-align: middle;
-            background: rgb(230, 230, 230);
+            /* each kind of run, by the names HistoryHtml writes into the gradient, which is the whole paint (the inline
+               background shorthand leaves no ground of this sheet's under it) (5.0.0, plans/OPTION_C_PLAN.md S13b) */
+            --sp: var(--kron-pass-ring);
+            --sf: var(--kron-fail-solid);
+            --ss: var(--kron-skip);
+            --sa: var(--kron-track);
+            --su: var(--kron-hairline);
+            --sn: var(--kron-hairline-soft);
+            --so: var(--kron-warn);
         }
         /* The verdict pill: each kind's colours from the report's tokens (5.0.0, plans/OPTION_C_PLAN.md S11), every kind drawn
            apart as 4.x drew them, where the preview's one card rule drew six kinds as the quiet pill (stylesheet inventory 3.8

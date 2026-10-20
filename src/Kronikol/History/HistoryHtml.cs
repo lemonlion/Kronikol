@@ -368,12 +368,12 @@ internal static class HistoryHtml
     /// <summary>The colours the timeline bars use, so the sparkline reads like the rest of the report.</summary>
     private static string Colour(char result) => result switch
     {
-        HistoryFormat.Passed => "#228b22",
-        HistoryFormat.Failed => "#bf0000",
-        HistoryFormat.Skipped or HistoryFormat.SkippedAfterFailure => "#949494",
-        HistoryFormat.Absent => "#e6e6e6",
-        HistoryFormat.Unknown => "#c8c8c8",
-        HistoryFormat.NotATest => "#dcdcdc",
-        _ => "#b8a000"
+        HistoryFormat.Passed => "var(--sp)",
+        HistoryFormat.Failed => "var(--sf)",
+        HistoryFormat.Skipped or HistoryFormat.SkippedAfterFailure => "var(--ss)",
+        HistoryFormat.Absent => "var(--sa)",
+        HistoryFormat.Unknown => "var(--su)",
+        HistoryFormat.NotATest => "var(--sn)",
+        _ => "var(--so)"
     };
 }

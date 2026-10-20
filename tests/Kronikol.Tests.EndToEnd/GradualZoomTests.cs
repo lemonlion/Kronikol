@@ -44,10 +44,12 @@ public class GradualZoomTests : PlaywrightTestBase
 
         await container.EvaluateAsync("el => el.click()");
 
-        var boxShadow = await container.EvaluateAsync<string>(
-            "e => window.getComputedStyle(e).boxShadow");
-        // Should contain a blue-ish rgba value in the box-shadow
-        Assert.Matches(new Regex(@"rgba?\(59,\s*130,\s*246"), boxShadow);
+        var glow = await container.EvaluateAsync<string[]>(
+            "e => { const p = document.createElement('div'); p.style.color = 'color-mix(in srgb, var(--kron-accent) 50%, transparent)'; "
+            + "document.body.appendChild(p); const ring = getComputedStyle(p).color; p.remove(); return [getComputedStyle(e).boxShadow, ring]; }");
+        // the theme's accent at half strength, blue in the default theme (5.0.0, plans/OPTION_C_PLAN.md S13b: 4.x wrote
+        // rgba(59, 130, 246, 0.5) in every theme)
+        Assert.StartsWith(glow[1], glow[0]);
     }
 
     [Fact]

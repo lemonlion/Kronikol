@@ -388,6 +388,14 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   links as they were.
 - **The search help reads on the Specifications report.** The violet theme drew its panel dark under dark text, 1.21:1
   (4.x too). The help takes the report's tokens now, in the light and the dark theme.
+- **A diagram's menu reads in the dark theme.** The right-click menu was white and took the page's ink, so in the dark
+  theme its items were light text on white. It is drawn on the page's card in the page's ink, in both themes.
+- **The last fixed colours follow the theme.** A missing attachment's name, a parameter table's flatten toggle, the
+  "No interactions captured" line, the custom duration field and its unit, a diagram's loading text, its selection
+  ring and its zoom slider read the report's tokens, so they read in the dark theme, and the ring and the slider take
+  the violet theme's accent. The loading text was 2.85:1 on white in the light theme too, and is AA now.
+- **The history sparkline takes the theme.** Its runs are drawn in the report's pass, fail, skip and track colours,
+  so a run reads on the dark card; in the light theme its greens and reds are the report's own, where they were 4.x's.
 
 ## [4.32.0] - 2026-10-19
 
