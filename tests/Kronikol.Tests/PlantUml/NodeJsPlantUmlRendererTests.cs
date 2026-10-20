@@ -90,9 +90,27 @@ public class NodeJsPlantUmlRendererTests
     {
         Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
 
-        // Past its stack the engine draws a picture of its own error (RangeError: Maximum call stack size exceeded), an
-        // SVG the batch returned as the drawn diagram.
-        var results = NodeJsPlantUmlRenderer.RenderMany([Seq("First", "One"), OverflowingComponentDiagram(4000), Seq("Third", "Three")]);
+        // Past its stack the 4.x engine drew a picture of its own error (RangeError: Maximum call stack size exceeded), an
+        // SVG the batch returned as the drawn diagram. 5.0.0's engine draws that picture for no source Kronikol writes (its
+        // TeaVM's regular expressions no longer recurse once per character, plans/WASM_ENGINE_PLAN.md), so a stub engine
+        // draws the 4.x engine's picture for the overflowing diagram and the sources' arrows for the others.
+        var engine = StubEngineCache("""
+            var t=document.getElementById(id), source=lines.join('\n');
+            var texts = source.indexOf('INSERT INTO') >= 0
+                ? ['PlantUML version 1.2026.8', '[From textarea (line 6) ]', '@startuml', 'caller -[#E74C3C]-&gt; warehouse : "ClickHouse: INSERT INTO ...',
+                   ' java.lang.RuntimeException: (JavaScript) RangeError: Maximum call stack size exceeded (Assumed diagram type: component)']
+                : lines.filter(function(l){ return l.indexOf('->') >= 0; });
+            t.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg"><g>' + texts.map(function(l,i){ return '<text x="5" y="' + (14*(i+1)) + '">' + l + '</text>'; }).join('') + '</g></svg>';
+            """, out var directory);
+        IReadOnlyList<NodeJsPlantUmlRenderer.NodeRenderResult> results;
+        try
+        {
+            results = NodeJsPlantUmlRenderer.RenderMany([Seq("First", "One"), OverflowingComponentDiagram(4000), Seq("Third", "Three")], engine);
+        }
+        finally
+        {
+            try { Directory.Delete(directory, true); } catch { /* best effort */ }
+        }
 
         Assert.Equal(3, results.Count);
         Assert.True(results[0].Succeeded, results[0].Error);
@@ -109,10 +127,10 @@ public class NodeJsPlantUmlRendererTests
     {
         Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
 
-        // A coloured note bar past the stack fails as text, which the batch already returned as the diagram's error,
-        // with nothing to say that the engine ran out of stack.
-        var bar = "hnote across #black:<color:white>" + string.Concat(Enumerable.Repeat("{\"sku\":\"SKU-0001\",\"n\":1},", 200)) + "</color>";
-        var results = NodeJsPlantUmlRenderer.RenderMany(["@startuml\nparticipant Api\nparticipant Orders\nApi -> Orders: GET /orders\n" + bar + "\n@enduml"]);
+        // A diagram past the engine's stack fails as text, which the batch already returned as the diagram's error, with
+        // nothing to say that the engine ran out of stack. On the 4.x engine a long coloured note bar did it; 5.0.0's
+        // engine draws any length of one (plans/WASM_ENGINE_PLAN.md), and runs out of stack only on nesting this deep.
+        var results = NodeJsPlantUmlRenderer.RenderMany([NestedGroupsDiagram(3000)]);
 
         Assert.False(results[0].Succeeded);
         Assert.Contains("ran out of stack", results[0].Error);
@@ -128,7 +146,7 @@ public class NodeJsPlantUmlRendererTests
         var collector = new ReportDiagnosticsCollector();
         ComponentDiagramReportGenerator.DrawnDiagram? drawn;
         using (ReportDiagnosticsScope.Begin(collector))
-            drawn = ComponentDiagramReportGenerator.DrawEmbedded(OverflowingComponentDiagram(4000),
+            drawn = ComponentDiagramReportGenerator.DrawEmbedded(NestedBoldComponentDiagram(5000),
                 new ReportConfigurationOptions { PlantUmlRendering = PlantUmlRendering.NodeJs, InlineSvgRendering = true });
 
         Assert.NotNull(drawn);
@@ -137,6 +155,40 @@ public class NodeJsPlantUmlRendererTests
         Assert.Contains("ran out of stack", drawn.Failure);
         var entry = Assert.Single(collector.Entries, e => e.Kind == DiagnosticKind.RenderFailure);
         Assert.Contains("Drawing the embedded component diagram failed", entry.Message);
+    }
+
+    /// <summary>
+    /// A sequence diagram whose one message sits inside <paramref name="depth"/> nested groups: from about 2,000 deep it is
+    /// past node's stack on 5.0.0's engine, which fails it as text (measured 2026-10-20, plans/WASM_ENGINE_PLAN.md).
+    /// </summary>
+    private static string NestedGroupsDiagram(int depth) =>
+        "@startuml\n" + string.Concat(Enumerable.Repeat("group g\n", depth)) + "a -> b: x\n" + string.Concat(Enumerable.Repeat("end\n", depth)) + "@enduml";
+
+    /// <summary>
+    /// A component diagram whose one edge's label is bold <paramref name="depth"/> times over: at 5,000 it is past node's
+    /// stack on 5.0.0's engine, which fails it as text (measured 2026-10-20).
+    /// </summary>
+    private static string NestedBoldComponentDiagram(int depth) =>
+        "@startuml\nleft to right direction\nrectangle \"Caller\" as caller\ndatabase \"Warehouse\" as warehouse\ncaller --> warehouse : \""
+        + string.Concat(Enumerable.Repeat("<b>", depth)) + "x" + string.Concat(Enumerable.Repeat("</b>", depth)) + "\"\n@enduml";
+
+    /// <summary>
+    /// The engine files of a stub engine whose render runs <paramref name="renderBody"/> (<c>lines</c>, <c>id</c> and
+    /// <c>options</c> in scope), kept in <paramref name="directory"/>, which the caller deletes: for the batch's handling
+    /// of an answer 5.0.0's engine gives for no source Kronikol writes.
+    /// </summary>
+    private static EngineCache StubEngineCache(string renderBody, out string directory)
+    {
+        directory = Directory.CreateTempSubdirectory("kronikol-stub-batch-").FullName;
+        var files = new Dictionary<string, byte[]>
+        {
+            ["viz-global.js"] = System.Text.Encoding.UTF8.GetBytes(
+                "globalThis.Viz = { instance: function () { return Promise.resolve({ renderString: function () { return '<svg xmlns=\"http://www.w3.org/2000/svg\"/>'; } }); } };"),
+            ["plantuml.js"] = System.Text.Encoding.UTF8.GetBytes(
+                "\"use strict\";\nlet C=(lines,id,options)=>{" + renderBody + "},D=(lines,options)=>'unused';\nexport{C as render,D as renderToString};\n"),
+        };
+        return new EngineCache(directory, url => files[url[(url.LastIndexOf('/') + 1)..]], "https://stub.invalid",
+            files.ToDictionary(f => f.Key, f => EngineCache.Integrity(f.Value)));
     }
 
     private static string Picture(params string[] lines) =>
@@ -187,6 +239,9 @@ public class NodeJsPlantUmlRendererTests
 
         Assert.Contains($"on line {engineLine}, a statement of {edge.Length} characters", error);
         Assert.Contains("(RangeError: Maximum call stack size exceeded)", error);
+        // what runs 5.0.0's engine out of stack is nesting, not a long statement (plans/WASM_ENGINE_PLAN.md)
+        Assert.Contains("nested too deeply for it", error);
+        Assert.DoesNotContain("one character at a time", error);
         // CRLF line endings count the same.
         Assert.Contains($"on line {engineLine}, a statement of {edge.Length} characters",
             NodeJsPlantUmlRenderer.StackOverflowError(source.Replace("\n", "\r\n"), picture));
@@ -285,6 +340,9 @@ public class NodeJsPlantUmlRendererTests
     private static string WithoutProcessingInstructions(string svg) =>
         System.Text.RegularExpressions.Regex.Replace(svg, @"<\?[\s\S]*?\?>", "");
 
+    private static string WithoutSourceLines(string svg) =>
+        System.Text.RegularExpressions.Regex.Replace(svg, " data-source-line=\"[0-9]+\"", "");
+
     [Fact]
     [Trait("Category", "Integration")]
     public void A_themed_source_renders_unthemed_instead_of_timing_out()
@@ -308,8 +366,9 @@ public class NodeJsPlantUmlRendererTests
 
             Assert.All(results, r => Assert.True(r.Succeeded, r.Error));
             // The theme bundle cannot load here, so the engine draws the diagram without it, exactly as the
-            // unthemed source draws.
-            Assert.Equal(WithoutProcessingInstructions(results[1].Svg!), WithoutProcessingInstructions(results[0].Svg!));
+            // unthemed source draws but for the source line 5.0.0's engine writes on each element, one more for the
+            // !theme line.
+            Assert.Equal(WithoutSourceLines(WithoutProcessingInstructions(results[1].Svg!)), WithoutSourceLines(WithoutProcessingInstructions(results[0].Svg!)));
             if (watch.ElapsedMilliseconds < 10_000)
                 return;
             attempts.Add(watch.ElapsedMilliseconds);
@@ -579,38 +638,38 @@ public class NodeJsPlantUmlRendererTests
 
     [Fact]
     [Trait("Category", "Integration")]
-    public void A_block_opener_caps_lower_than_a_message_statement()
+    public void A_block_opener_draws_at_its_cap_and_far_past_it()
     {
         Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
 
         // On the 1.2026.6 build this was a parse limit around 1476 (loop) to 1484 (opt); from the
-        // 1.2026.8beta1 build the parse accepts far more but the engine crashes on its own JS stack
+        // 1.2026.8beta1 build the parse accepts far more but the engine crashed on its own JS stack
         // instead (RangeError): about 2,000 on node 25.9 with its default stack on both 1.2026.8 builds,
-        // 3660 to 5641 on the runtime of 2026-09-04 (plans/ENGINE_PIN_PLAN.md §1.11). A stack edge moves
-        // with the runtime and wobbles between processes. The constant sits well under the lowest measurement
-        // rather than on it, so the pins are the two facts that matter and survive a small engine
-        // drift: the constant parses, and a runaway block label still kills the whole diagram.
+        // 3660 to 5641 on the runtime of 2026-09-04 (plans/ENGINE_PIN_PLAN.md §1.11). 5.0.0's engine, on TeaVM
+        // 0.17.0-dev-2, draws an opener of 16,000 characters in node, and fails past that only when the diagram is
+        // wider than its size limit (measured 2026-10-20, plans/WASM_ENGINE_PLAN.md). The cap stays where the 4.x
+        // engine's render worker put it, so the pins are that the capped opener draws, and that one far past it does too.
         var safe = StatementOf("loop ", PlantUmlStatementLimits.MaxBlockLabelChars);
-        var runaway = StatementOf("loop ", 8000);
+        var long8000 = StatementOf("loop ", 8000);
 
         Assert.True(Renders($"a -> b: x\n{safe}\na -> b: y\nend"), $"{PlantUmlStatementLimits.MaxBlockLabelChars} should parse");
-        Assert.False(Renders($"a -> b: x\n{runaway}\na -> b: y\nend"),
-            "8000 should not — an over-long block opener still takes the diagram down");
+        Assert.True(Renders($"a -> b: x\n{long8000}\na -> b: y\nend"), "an opener of 8000 draws on 5.0.0's engine");
     }
 
     [Fact]
     [Trait("Category", "Integration")]
-    public void A_coloured_note_bar_crashes_the_engine_rather_than_reporting_a_syntax_error()
+    public void A_coloured_note_bar_draws_at_its_cap_and_far_past_it()
     {
         Assert.SkipWhen(!IsNodeAvailable(), "Node.js not available on PATH");
 
-        // The step-delimiter bar's own form. Past the cap the engine throws `RangeError: Maximum call
-        // stack size exceeded` and returns no SVG at all, so the scenario loses every diagram it had
+        // The step-delimiter bar's own form. Past its stack the 4.x engine threw `RangeError: Maximum call
+        // stack size exceeded` and returned no SVG at all, so the scenario lost every diagram it had
         // rather than one statement. Measured 1458 on the 1.2026.6 build, around 4124 on 1.2026.8beta1
         // on 2026-09-04 and 2005 to 2008 on node 25.9 with both 1.2026.8 builds, and in the render worker,
         // whose stack is half node's, from 880 with V8's optimizing compilers off (plans/LONG_COMPONENT_EDGE_PLAN.md
-        // R3): a stack-overflow edge, so it moves with the runtime; the crash probe sits far past it and the
-        // constant far under it. The bar is a step written as one token, a JSON array, which keeps the
+        // R3). 5.0.0's engine, on TeaVM 0.17.0-dev-2, draws a bar of 6,000 and fails past that only when the diagram
+        // is wider than its size limit (measured 2026-10-20, plans/WASM_ENGINE_PLAN.md); the constant stays where the
+        // 4.x worker put it. The bar is a step written as one token, a JSON array, which keeps the
         // coloured form at any length: a step with a space wraps, and a wrapped step takes the styled form.
         var token = "[" + string.Join(",", Enumerable.Range(1, 60).Select(i => $"{{\"sku\":\"SKU-{i:D4}\"}}")) + "]";
         var safe = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml(null, token);
@@ -618,7 +677,7 @@ public class NodeJsPlantUmlRendererTests
         Assert.Equal(PlantUmlStatementLimits.MaxColouredNoteBarChars, safe.Length);
 
         Assert.True(Renders($"a -> b: x\n{safe}"), "the capped bar renders");
-        Assert.Equal("", RenderBody("a -> b: x\nhnote across <<stepDelimiter>> #black:<color:white>" + new string('s', 6000)));
+        Assert.True(Renders("a -> b: x\nhnote across <<stepDelimiter>> #black:<color:white>" + new string('s', 6000)), "a bar of 6000 draws on 5.0.0's engine");
     }
 
     [Fact]
@@ -686,9 +745,10 @@ public class NodeJsPlantUmlRendererTests
         Assert.DoesNotContain("Syntax Error", svg);
         Assert.True(System.Text.RegularExpressions.Regex.Matches(svg, ">OrderService</text>").Count >= 2,
             "the sequence diagram was not drawn (a sequence diagram draws each participant twice)");
-        // The engine draws a link as underlined text (the page binds it by its text, there is no <a>), and the
-        // whole path is in the note beside the arrow.
-        Assert.Matches("text-decoration=\"underline\"[^>]*>GET: /orders/search\\?filter0=value0", svg);
+        // 5.0.0's engine draws a link as the Java engine does, an <a> round its underlined text (the page binds it by its
+        // href), and the whole path is in the note beside the arrow. The SVG declares the xlink prefix the link uses.
+        Assert.Matches($"<a [^>]*href=\"#iflow-{pairId}\"[^>]*><text [^>]*text-decoration=\"underline\"[^>]*>GET: /orders/search\\?filter0=value0", svg);
+        Assert.NotNull(System.Xml.Linq.XDocument.Parse(svg).Root);
         Assert.Contains(">[Full<", svg);
     }
 
@@ -919,6 +979,93 @@ public class NodeJsPlantUmlRendererTests
     }
 
     [Fact]
+    public void A_link_the_engine_writes_with_its_xlink_namespace_keeps_its_target()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        // From 1.2026.10 the engine sets a link's xlink: attributes with setAttributeNS (SvgGraphicsJs.setXlinkAttribute,
+        // and an embedded image's xlink:href beside its href). The mock element had no setAttributeNS, so in node every
+        // diagram with a link failed with "c.setAttributeNS is not a function": each internal-flow arrow's [[#iflow-…]]
+        // among them (5.0.0, the engine move).
+        var stdout = RunWithStubEngine("""
+            var NS='http://www.w3.org/2000/svg', XL='http://www.w3.org/1999/xlink', t=document.getElementById(id);
+            var svg=document.createElementNS(NS,'svg'); svg.setAttribute('xmlns', NS); svg.setAttribute('xmlns:xlink', XL);
+            var a=document.createElementNS(NS,'a'); a.setAttributeNS(XL,'xlink:href','#iflow-1'); a.setAttributeNS(XL,'xlink:title','GET /orders & more');
+            a.appendChild(document.createTextNode('GET /orders'));
+            svg.appendChild(a); t.appendChild(svg);
+            """);
+
+        var link = System.Xml.Linq.XDocument.Parse(stdout).Root!.Elements().Single();
+        System.Xml.Linq.XNamespace xlink = "http://www.w3.org/1999/xlink";
+        Assert.Equal("#iflow-1", link.Attribute(xlink + "href")!.Value);
+        Assert.Equal("GET /orders & more", link.Attribute(xlink + "title")!.Value);
+        Assert.Equal("GET /orders", link.Value);
+    }
+
+    [Fact]
+    public void A_link_keeps_its_text_when_the_engine_asks_whether_it_has_any()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        // When the engine closes a link (from 1.2026.10, SvgGraphicsJs.closeLink) it reads the <a>'s firstChild and keeps
+        // only a link that holds something. The mock element had no firstChild, so every link read as empty and was
+        // dropped with its text: an internal-flow arrow drew in node with no label at all (5.0.0, the engine move).
+        var stdout = RunWithStubEngine("""
+            var NS='http://www.w3.org/2000/svg', t=document.getElementById(id);
+            var svg=document.createElementNS(NS,'svg'); svg.setAttribute('xmlns', NS);
+            var a=document.createElementNS(NS,'a'); a.setAttribute('href','#iflow-1');
+            var text=document.createElementNS(NS,'text'); text.appendChild(document.createTextNode('GET /orders'));
+            a.appendChild(text);
+            if (a.firstChild !== null && a.firstChild !== undefined && a.lastChild === text) svg.appendChild(a);
+            t.appendChild(svg);
+            """);
+
+        var link = System.Xml.Linq.XDocument.Parse(stdout).Root!.Elements().Single();
+        Assert.Equal("a", link.Name.LocalName);
+        Assert.Equal("#iflow-1", link.Attribute("href")!.Value);
+        Assert.Equal("GET /orders", link.Value);
+    }
+
+    [Fact]
+    public void An_svg_whose_links_use_the_xlink_prefix_declares_it()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        // The engine writes a link's xlink:href, xlink:title and the rest with setAttributeNS and never declares the
+        // prefix on the <svg>. An HTML page reading the SVG inline does not need the declaration; an XML reader does,
+        // and so does a browser drawing the SVG as an image, which refuses the whole picture without it.
+        var stdout = RunWithStubEngine("""
+            var NS='http://www.w3.org/2000/svg', XL='http://www.w3.org/1999/xlink', t=document.getElementById(id);
+            var svg=document.createElementNS(NS,'svg'); svg.setAttribute('xmlns', NS);
+            var g=document.createElementNS(NS,'g');
+            var a=document.createElementNS(NS,'a'); a.setAttribute('href','#iflow-1'); a.setAttributeNS(XL,'xlink:href','#iflow-1');
+            a.appendChild(document.createTextNode('GET /orders'));
+            g.appendChild(a); svg.appendChild(g); t.appendChild(svg);
+            """);
+
+        var root = System.Xml.Linq.XDocument.Parse(stdout).Root!;
+        System.Xml.Linq.XNamespace xlink = "http://www.w3.org/1999/xlink";
+        Assert.Equal("#iflow-1", root.Descendants().Single(e => e.Name.LocalName == "a").Attribute(xlink + "href")!.Value);
+        Assert.Single(root.Attributes(), at => at.IsNamespaceDeclaration && at.Value == xlink.NamespaceName);
+    }
+
+    [Fact]
+    public void An_svg_without_links_declares_no_xlink_prefix()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        var stdout = RunWithStubEngine("""
+            var NS='http://www.w3.org/2000/svg', t=document.getElementById(id);
+            var svg=document.createElementNS(NS,'svg'); svg.setAttribute('xmlns', NS);
+            var text=document.createElementNS(NS,'text'); text.appendChild(document.createTextNode('xlink:href="not an attribute"'));
+            svg.appendChild(text); t.appendChild(svg);
+            """);
+
+        Assert.DoesNotContain("xmlns:xlink", stdout);
+        Assert.Equal("xlink:href=\"not an attribute\"", System.Xml.Linq.XDocument.Parse(stdout).Root!.Value);
+    }
+
+    [Fact]
     public void An_element_that_is_not_a_script_gets_no_answer_from_head()
     {
         Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
@@ -1115,9 +1262,9 @@ public class NodeJsPlantUmlRendererTests
         var tag = Kronikol.Constants.TrackingDefaults.PlantUmlJsCdnBase.Split('/')[^1].Split('@')[^1];
         Assert.Contains($"{Path.DirectorySeparatorChar}{tag}{Path.DirectorySeparatorChar}",
             NodeJsPlantUmlRenderer.CodeCachePath);
-        // On the npm route the last segment is `core@1.2026.8`: the directory is the release version, distinct
-        // from every fork tag's directory (plans/ENGINE_PIN_PLAN.md §1.6).
-        Assert.Equal("1.2026.8", tag);
+        // On the fork's route the last segment is `<repo>@<tag>`: the directory is the tag, which names the engine's
+        // build, distinct from 3.31.1 to 4.x's `1.2026.8` (the npm route's) and from every earlier fork tag's.
+        Assert.Equal("v1.2026.10beta1-f44b054-teavm0.17.0-dev-2", tag);
     }
 
     [Fact]

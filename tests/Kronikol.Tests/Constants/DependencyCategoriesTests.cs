@@ -57,11 +57,15 @@ public class DependencyCategoriesTests
     }
 
     [Fact]
-    public void TrackingDefaults_PlantUmlJsCdnBase_is_the_npm_route_at_a_release_version()
+    public void TrackingDefaults_PlantUmlJsCdnBase_is_the_engine_fork_at_a_tag_naming_its_build()
     {
-        // The published package on jsDelivr's /npm/ route, at a release version: the registry never lets a
-        // name@version hold other bytes (plans/ENGINE_PIN_PLAN.md §1.5). A personal build (a fork tag, a beta, a
-        // -<sha> suffix) cannot come back without changing this fact.
-        Assert.Matches(@"^https://cdn\.jsdelivr\.net/npm/@plantuml/core@\d+\.\d+\.\d+$", TrackingDefaults.PlantUmlJsCdnBase);
+        // From 5.0.0 the engine is a build of Kronikol's own (plans/WASM_ENGINE_PLAN.md): upstream master compiled with
+        // a TeaVM build that npm's @plantuml/core does not ship, with its Wasm GC engine, on the engine fork's tag, on
+        // jsDelivr's /gh/ route. The tag names the PlantUML version, the upstream commit and the TeaVM build, so the URL
+        // says what draws the diagrams. jsDelivr keeps a file it has served (plans/ENGINE_PIN_PLAN.md §1.5) and the page
+        // and the Node cache check every file against its known hash, so a moved tag changes nothing a report loads.
+        // 3.31.1 to 4.x pinned the npm route at a release version.
+        Assert.Matches(@"^https://cdn\.jsdelivr\.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v\d+\.\d+\.\d+(beta\d+)?-[0-9a-f]{7}-teavm\d+\.\d+\.\d+(-dev-\d+)?$",
+            TrackingDefaults.PlantUmlJsCdnBase);
     }
 }

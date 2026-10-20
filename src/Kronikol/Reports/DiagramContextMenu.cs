@@ -34,7 +34,8 @@ public static class DiagramContextMenu
     private const string PlantUmlJsCdnBase = TrackingDefaults.PlantUmlJsCdnBase;
 
     /// <summary>
-    /// The Web Worker host for the TeaVM plantuml.js engine: the minimal DOM the engine needs, an SVG
+    /// The Web Worker host for the TeaVM engine (plantuml.js, or from 5.0.0 its Wasm build wherever the browser runs
+    /// Wasm GC): the minimal DOM the engine needs, an SVG
     /// serializer and the render protocol. The browser render script inlines it (JSON-escaped) into the
     /// Blob it builds each worker from, together with the engine fetched from the CDN — a worker created
     /// by a <c>file://</c> page cannot load anything over the network itself.
@@ -71,6 +72,7 @@ public static class DiagramContextMenu
             .Replace("__BROWSER_FRAGMENT_MAX_HEIGHT__", (browserFragmentMaxHeight > 0 ? browserFragmentMaxHeight : TrackingDefaults.BrowserFragmentMaxHeight).ToString(System.Globalization.CultureInfo.InvariantCulture))
             .Replace("__PLANTUML_CDN_BASE__", PlantUmlJsCdnBase)
             .Replace("__PLANTUML_ENGINE_INTEGRITY__", TrackingDefaults.PlantUmlJsIntegrity)
+            .Replace("__PLANTUML_WASM_ENGINE_INTEGRITY__", TrackingDefaults.PlantUmlWasmEngineIntegrity)
             .Replace("__PLANTUML_VIZ_INTEGRITY__", TrackingDefaults.VizGlobalJsIntegrity)
             .Replace("__PLANTUML_WORKER_HOST_SOURCE__", hostLiteral)
             .Replace("__PLANTUML_ON_DEMAND__", onDemand ? "true" : "false")

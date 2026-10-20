@@ -984,8 +984,20 @@ public class DiagramContextMenuTests
         Assert.Contains("fetch(", _plantUmlScript);
         Assert.Contains("new Worker(", _plantUmlScript);
         Assert.Contains("URL.createObjectURL(new Blob(", _plantUmlScript);
-        Assert.Contains("https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8/viz-global.js", _plantUmlScript);
-        Assert.Contains("https://cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8/plantuml.js", _plantUmlScript);
+        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.10beta1-f44b054-teavm0.17.0-dev-2/viz-global.js", _plantUmlScript);
+        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.10beta1-f44b054-teavm0.17.0-dev-2/plantuml.js", _plantUmlScript);
+        Assert.Contains("https://cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.10beta1-f44b054-teavm0.17.0-dev-2/plantuml-wasm-bundle.js", _plantUmlScript);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void The_wasm_engine_on_the_cdn_hashes_to_its_known_constant()
+    {
+        // The page hands this constant to the browser's own integrity check; one wrong character would send every browser
+        // that runs Wasm GC to the JavaScript engine instead. Checked against what the CDN serves.
+        using var http = new HttpClient();
+        var bytes = http.GetByteArrayAsync($"{Kronikol.Constants.TrackingDefaults.PlantUmlJsCdnBase}/plantuml-wasm-bundle.js").GetAwaiter().GetResult();
+        Assert.Equal(Kronikol.Constants.TrackingDefaults.PlantUmlWasmEngineIntegrity, Kronikol.PlantUml.EngineCache.Integrity(bytes));
     }
 
     [Fact]
@@ -1015,8 +1027,11 @@ public class DiagramContextMenuTests
         // portal's login page or a damaged cache entry ran as the engine or failed as a syntax error, and the
         // fallback then fetched the same bytes. The browser checks each file against its known hash now, on the
         // worker path's fetch and on the fallback's tags, and a file that fails is never evaluated.
+        // From 5.0.0 the page draws with the Wasm GC engine where the browser can run it, and with the JavaScript engine of
+        // the same build everywhere else (plans/WASM_ENGINE_PLAN.md), so it holds both engines' hashes.
         Assert.Contains($"var VIZ_INTEGRITY = '{Kronikol.Constants.TrackingDefaults.VizGlobalJsIntegrity}';", _plantUmlScript);
-        Assert.Contains($"var ENGINE_INTEGRITY = '{Kronikol.Constants.TrackingDefaults.PlantUmlJsIntegrity}';", _plantUmlScript);
+        Assert.Contains($"var JS_ENGINE_INTEGRITY = '{Kronikol.Constants.TrackingDefaults.PlantUmlJsIntegrity}';", _plantUmlScript);
+        Assert.Contains($"var WASM_ENGINE_INTEGRITY = '{Kronikol.Constants.TrackingDefaults.PlantUmlWasmEngineIntegrity}';", _plantUmlScript);
         Assert.DoesNotContain("__PLANTUML_", _plantUmlScript);
 
         Assert.Contains("fetch(url, { integrity: integrity })", ShimFunction("fetchVerified"));
@@ -1040,8 +1055,63 @@ public class DiagramContextMenuTests
         var message = ShimFunction("integrityMessage");
         Assert.Contains("'engine integrity check failed: ' + file + ' from ' + url + ' does not match ' + expected", message);
         Assert.Contains("the browser console names the hash it computed", message);
-        Assert.Contains("integrityMessage('plantuml.js', ENGINE_URL, ENGINE_INTEGRITY)", _plantUmlScript);
+        // the engine the page draws with names its own file (The_engine_the_page_draws_with_brings_its_file_url_and_hash)
+        Assert.Contains("integrityMessage(ENGINE_FILE, ENGINE_URL, ENGINE_INTEGRITY)", _plantUmlScript);
+        Assert.Contains("tagFailure(ENGINE_URL, ENGINE_INTEGRITY, ENGINE_FILE, 'engineIntegrity', e)", ShimFunction("loadEngineScripts"));
         Assert.Contains("integrityMessage('viz-global.js', VIZ_URL, VIZ_INTEGRITY)", _plantUmlScript);
+    }
+
+    [Fact]
+    public void The_engine_the_page_draws_with_brings_its_file_url_and_hash()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        // Every fetch, tag, hash check and refusal reads the engine's file, address and hash from one place, which
+        // useEngine sets, and the telemetry says which engine it is.
+        const string constants = "var JS_ENGINE_URL = 'base/plantuml.js', WASM_ENGINE_URL = 'base/plantuml-wasm-bundle.js',"
+            + " JS_ENGINE_INTEGRITY = 'sha256-js', WASM_ENGINE_INTEGRITY = 'sha256-wasm', ENGINE_URL, ENGINE_INTEGRITY, ENGINE_FILE, telemetry = {};\n";
+        const string report = "\nvar seen = [];\nuseEngine('wasm'); seen.push([ENGINE_FILE, ENGINE_URL, ENGINE_INTEGRITY, telemetry.engine]);"
+            + "\nuseEngine('js'); seen.push([ENGINE_FILE, ENGINE_URL, ENGINE_INTEGRITY, telemetry.engine]);"
+            + "\nprocess.stdout.write(JSON.stringify(seen));";
+
+        Assert.Equal(
+            "[[\"plantuml-wasm-bundle.js\",\"base/plantuml-wasm-bundle.js\",\"sha256-wasm\",\"wasm\"],"
+            + "[\"plantuml.js\",\"base/plantuml.js\",\"sha256-js\",\"js\"]]",
+            NodeProbe.Run(constants + ShimFunction("useEngine") + report));
+        Assert.Contains("useEngine(WASM_ENGINE_PROBLEM === null ? 'wasm' : 'js');", _plantUmlScript);
+        Assert.Contains("var WASM_ENGINE_URL = 'https://cdn.jsdelivr.net/gh/", _plantUmlScript);
+    }
+
+    [Fact]
+    public void The_page_finds_out_whether_the_wasm_engine_can_run_before_it_fetches_an_engine()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+
+        // The Wasm engine needs WebAssembly, the GC proposal (Chrome 119, Firefox 120, Safari 18.2), and functions built
+        // from text, which its runtime is made of and a content security policy without 'unsafe-eval' refuses. Where one
+        // is missing the page fetches the JavaScript engine instead, and the probe's answer says why.
+        var probe = ShimFunction("webAssemblyUnavailable") + "\n" + ShimFunction("wasmEngineUnavailable");
+        const string report = "\nvar WEBASSEMBLY_PROBLEM = webAssemblyUnavailable();\nprocess.stdout.write(JSON.stringify(wasmEngineUnavailable()));";
+
+        Assert.Equal("null", NodeProbe.Run(probe + report));
+        Assert.Equal("\"WebAssembly is not defined\"", NodeProbe.RunCaptured(["--jitless"], probe + report, null).Stdout);
+        Assert.Equal("\"Wasm GC is not supported\"", NodeProbe.Run(
+            "WebAssembly.validate = function () { return false; };\n" + probe + report));
+        Assert.Equal("\"functions cannot be built from text: refused by the page's policy\"", NodeProbe.Run(
+            "globalThis.Function = function () { throw new EvalError(\"refused by the page's policy\"); };\n" + probe + report));
+    }
+
+    [Fact]
+    public void The_main_thread_draws_with_the_javascript_engine()
+    {
+        // The Wasm engine's wrapper takes any error that reaches the global scope while a diagram waits for the engine's
+        // own crash, and starts the engine again. In a worker every such error is the engine's; on the page it can be any
+        // script's, so the fallback that draws on the page's own thread draws with the JavaScript engine.
+        var fallback = ShimFunction("useMainThreadEngine");
+        Assert.Contains("if (telemetry.engine === 'wasm') { useEngine('js'); telemetry.engineProblem = 'the page draws on its main thread'; }", fallback);
+        Assert.True(fallback.IndexOf("useEngine('js')", StringComparison.Ordinal) < fallback.IndexOf("loadEngineScripts();", StringComparison.Ordinal),
+            "the engine is chosen before its tags are added");
+        Assert.DoesNotContain("__plantumlEngineReady", ShimFunction("loadEngineScripts"));
     }
 
     [Fact]
@@ -1049,8 +1119,12 @@ public class DiagramContextMenuTests
     {
         // A Function constructor is refused by any content security policy without unsafe-eval, one of the
         // hosted-report cases the fallback exists for. The classic-build branch (realLoad) cannot run behind a
-        // module tag, and the pin has been an ES-module build since 3.0.76 (plans/ENGINE_PIN_PLAN.md S2).
-        Assert.DoesNotContain("new Function", _plantUmlScript);
+        // module tag, and the pin has been an ES-module build since 3.0.76 (plans/ENGINE_PIN_PLAN.md S2). The one
+        // Function constructor left is the probe that asks whether such a policy is there, inside a try (5.0.0).
+        var at = _plantUmlScript.IndexOf("new Function", StringComparison.Ordinal);
+        Assert.True(at >= 0 && _plantUmlScript.IndexOf("new Function", at + 1, StringComparison.Ordinal) < 0, "one Function constructor, the probe's");
+        var probe = ShimFunction("wasmEngineUnavailable");
+        Assert.Contains("try {\n                new Function('return 0');\n            } catch (e) {", probe);
         Assert.DoesNotContain("realLoad", _plantUmlScript);
     }
 

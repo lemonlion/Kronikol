@@ -156,12 +156,12 @@ public class NonSecureOriginTests : PlaywrightTestBase
     {
         // The refusal is told from a network failure by a plain fetch of the same URL, which needs no secure context either.
         await using var lan = await OpenOnTheLanHost(
-            BrowserRenderWorkerTests.WithWrongHash(GenerateReport("LanHostWrongHash.html"), TrackingDefaults.PlantUmlJsIntegrity));
+            BrowserRenderWorkerTests.WithWrongHash(GenerateReport("LanHostWrongHash.html"), TrackingDefaults.PlantUmlWasmEngineIntegrity));
 
         var diagrams = await RenderEveryDiagram(lan.Page);
 
-        BrowserRenderWorkerTests.AssertEveryDiagramNamesTheRefusedEngine(diagrams.Select(d => d.Text).ToArray());
-        BrowserRenderWorkerTests.AssertTheConsoleNamesTheRefusedEngine(lan.ConsoleErrors);
+        BrowserRenderWorkerTests.AssertEveryDiagramNamesTheRefusedEngine(diagrams.Select(d => d.Text).ToArray(), BrowserRenderWorkerTests.WorkerEngineFile);
+        BrowserRenderWorkerTests.AssertTheConsoleNamesTheRefusedEngine(lan.ConsoleErrors, BrowserRenderWorkerTests.WorkerEngineFile);
         var r = await lan.Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
         Assert.Equal("mismatch", r.GetProperty("engineIntegrity").GetString());
     }

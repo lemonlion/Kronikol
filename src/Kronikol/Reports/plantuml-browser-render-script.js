@@ -24,8 +24,10 @@
     //   window.plantumlLoad()  — a no-op kept for compatibility; the shim owns the engine lifecycle.
     //   window.__kronikolRender  — telemetry: { mode: 'worker' | 'main-thread', workers, renders,
     //       cacheHits, workerMs, injectMs, errors, inFlight, maxInFlight, engineFetchMs, fallbackReason,
-    //       engineIntegrity, vizIntegrity, webAssembly }. `errors` counts the engine's stack failures too (since
-    //       4.14.6): its RangeError text or picture, which is described in the page and never cached.
+    //       engineIntegrity, vizIntegrity, webAssembly, engine, engineProblem, workerCrashes }. `errors` counts the
+    //       engine's stack failures too (since 4.14.6): its RangeError text or picture, which is described in the page
+    //       and never cached. `engine` is 'wasm' or 'js' (5.0.0), `engineProblem` says why the page is not on the Wasm
+    //       engine (null while it is), and `workerCrashes` counts the workers an error took down while they drew.
     //   window._isStackOverflow(result)  — whether an engine answer (an SVG or text) is its stack failure.
     //
     // Both files are checked against their known hashes (TrackingDefaults) by the browser itself: the
@@ -40,6 +42,13 @@
     // back to Smetana only when Graphviz is absent, not when it cannot run. So viz-global.js is fetched only
     // where a module compiles; `webAssembly` in the telemetry says which, and the console says why.
     //
+    // The engine (5.0.0, plans/WASM_ENGINE_PLAN.md) is PlantUML's Wasm GC build wherever the browser runs Wasm GC and
+    // lets a script build functions from text, and plantuml.js of the same build everywhere else; the two draw the same
+    // SVG. The Wasm build comes packed into one script, plantuml-wasm-bundle.js, which inlines into the worker Blob as
+    // plantuml.js does. A Wasm engine that passes its hash check and then does not start gives way to plantuml.js, and
+    // a worker that an error reaches while it draws is replaced, its diagram drawn once more and then failed. The main
+    // thread (the fallback below) draws with plantuml.js.
+    //
     // Fallback: when Workers, fetch, Blob URLs or OffscreenCanvas are unavailable, when
     // BrowserRenderWorkers is 0, or when the engine cannot be fetched (offline with a cold cache, a CDN
     // host without CORS), the shim injects a viz script tag (where WebAssembly compiles) and an engine
@@ -53,9 +62,14 @@
     (function () {
         var ON_DEMAND = __PLANTUML_ON_DEMAND__;
         var VIZ_URL = '__PLANTUML_CDN_BASE__/viz-global.js';
-        var ENGINE_URL = '__PLANTUML_CDN_BASE__/plantuml.js';
+        var JS_ENGINE_URL = '__PLANTUML_CDN_BASE__/plantuml.js';
+        var WASM_ENGINE_URL = '__PLANTUML_CDN_BASE__/plantuml-wasm-bundle.js';
         var VIZ_INTEGRITY = '__PLANTUML_VIZ_INTEGRITY__';
-        var ENGINE_INTEGRITY = '__PLANTUML_ENGINE_INTEGRITY__';
+        var JS_ENGINE_INTEGRITY = '__PLANTUML_ENGINE_INTEGRITY__';
+        var WASM_ENGINE_INTEGRITY = '__PLANTUML_WASM_ENGINE_INTEGRITY__';
+        // The engine the page draws with (useEngine): PlantUML's Wasm GC build where it can run here, and the JavaScript
+        // build of the same commit everywhere else; the two draw the same SVG (5.0.0, plans/WASM_ENGINE_PLAN.md).
+        var ENGINE_URL, ENGINE_INTEGRITY, ENGINE_FILE;
         var WORKERS_REQUESTED = __BROWSER_RENDER_WORKERS__;
         var CACHE_MEGABYTES = __BROWSER_RENDER_CACHE_MB__;
         var WORKER_HOST_SOURCE = __PLANTUML_WORKER_HOST_SOURCE__;
@@ -64,6 +78,8 @@
         var targetWorkers = WORKERS_REQUESTED > 0 ? Math.max(1, Math.min(WORKERS_REQUESTED, hardware)) : 0;
         // Why no WebAssembly module compiles here, or null when one does: Graphviz is loaded only then.
         var WEBASSEMBLY_PROBLEM = webAssemblyUnavailable();
+        // Why the Wasm GC engine cannot run here, or null when it can.
+        var WASM_ENGINE_PROBLEM = wasmEngineUnavailable();
 
         var telemetry = window.__kronikolRender = {
             mode: ON_DEMAND ? 'idle' : 'starting', workers: 0, workersRequested: WORKERS_REQUESTED, workersTarget: targetWorkers,
@@ -72,8 +88,15 @@
             // 'verified' | 'mismatch' | null: null until the file's fetch settles, after a network failure, and
             // for viz-global.js when it is not fetched (no WebAssembly).
             engineIntegrity: null, vizIntegrity: null,
-            webAssembly: WEBASSEMBLY_PROBLEM === null
+            webAssembly: WEBASSEMBLY_PROBLEM === null,
+            // 'wasm' | 'js', and why the page is not on the Wasm engine (null while it is); workers replaced after a crash
+            engine: null, engineProblem: WASM_ENGINE_PROBLEM, workerCrashes: 0
         };
+        useEngine(WASM_ENGINE_PROBLEM === null ? 'wasm' : 'js');
+        if (WASM_ENGINE_PROBLEM !== null) {
+            console.info('Kronikol: the PlantUML Wasm engine cannot run here (' + WASM_ENGINE_PROBLEM + '), so the page draws'
+                + ' with its JavaScript build.');
+        }
         if (WEBASSEMBLY_PROBLEM !== null) {
             console.warn('Kronikol: WebAssembly is not available here (' + WEBASSEMBLY_PROBLEM + '), so Graphviz is not loaded:'
                 + ' the engine lays diagrams out with its Smetana port instead.');
@@ -88,6 +111,7 @@
         var firstDone = false;
         var blobUrl = null;
         var esmMode = false;
+        var anyWorkerReady = false; // whether a worker has started on the engine the page draws with
         var engineRender = null;    // main-thread mode: the real engine's render
         var engineReady = false;
         var engineError = null;
@@ -114,6 +138,31 @@
             } catch (e) {
                 return String(e && e.message ? e.message : e);
             }
+        }
+        // The Wasm GC engine needs WebAssembly, the GC proposal (Chrome 119, Firefox 120, Safari 18.2) and functions
+        // built from text, which its runtime's glue is made of and which a content security policy without
+        // 'unsafe-eval' refuses. A blob worker inherits the page's policy and runs on the same browser, so here too the
+        // page's answer is the worker's.
+        function wasmEngineUnavailable() {
+            if (WEBASSEMBLY_PROBLEM !== null) return WEBASSEMBLY_PROBLEM;
+            try {
+                // the smallest module that declares a GC struct type: it validates only where the browser runs Wasm GC
+                if (!WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 95, 1, 120, 0]))) return 'Wasm GC is not supported';
+            } catch (e) {
+                return 'Wasm GC is not supported: ' + (e && e.message ? e.message : e);
+            }
+            try {
+                new Function('return 0');
+            } catch (e) {
+                return 'functions cannot be built from text: ' + (e && e.message ? e.message : e);
+            }
+            return null;
+        }
+        function useEngine(kind) {
+            ENGINE_URL = kind === 'wasm' ? WASM_ENGINE_URL : JS_ENGINE_URL;
+            ENGINE_INTEGRITY = kind === 'wasm' ? WASM_ENGINE_INTEGRITY : JS_ENGINE_INTEGRITY;
+            ENGINE_FILE = kind === 'wasm' ? 'plantuml-wasm-bundle.js' : 'plantuml.js';
+            telemetry.engine = kind;
         }
 
         // --- cache (bytes-bounded, least-recently-used first) ---------------------------------
@@ -201,13 +250,15 @@
             w.onmessage = function (ev) { onWorkerMessage(rec, ev.data || {}); };
             w.onerror = function (ev) {
                 var msg = (ev && ev.message) ? ev.message : 'worker error';
-                if (!rec.ready) workerDied(rec, msg); else console.error('Kronikol render worker: ' + msg);
+                if (!rec.ready) workerDied(rec, msg); else workerCrashed(rec, msg);
             };
             workers.push(rec);
             w.postMessage({ type: 'init', esm: esmMode });
             return rec;
         }
         function workerDied(rec, message) {
+            // The Wasm engine fetched and checked, and did not start: the page draws with the JavaScript engine instead.
+            if (telemetry.engine === 'wasm' && !anyWorkerReady) { fallBackToJsEngine('it did not start in a worker: ' + message); return; }
             console.error('Kronikol render worker failed: ' + message);
             var i = workers.indexOf(rec);
             if (i >= 0) workers.splice(i, 1);
@@ -222,9 +273,56 @@
             if (workers.length === 0) useMainThreadEngine('render worker failed: ' + message);
             else pumpWorkers();
         }
+        // An error that reaches the page from a worker while it draws. The engine in it may never answer again (a Wasm
+        // engine's stack overflow in Firefox reaches no handler inside the worker, only this one), so the worker goes and
+        // another takes its place. What it was drawing is drawn again once, and a diagram that takes a second worker
+        // down fails alone, naming the error. A stack overflow is the source's, not the worker's, so its diagram fails at
+        // once: drawn again, it would overflow again.
+        function workerCrashed(rec, message) {
+            console.error('Kronikol render worker crashed: ' + message);
+            telemetry.workerCrashes++;
+            var i = workers.indexOf(rec);
+            if (i >= 0) workers.splice(i, 1);
+            try { rec.w.terminate(); } catch (e) { /* best effort */ }
+            var keys = Object.keys(pending);
+            for (var k = 0; k < keys.length; k++) {
+                var job = pending[keys[k]];
+                if (job.worker !== rec) continue;
+                delete pending[keys[k]]; job.worker = null;
+                job.crashes = (job.crashes || 0) + 1;
+                if (job.crashes < 2 && !_stackOverflowRx.test(message)) { queue.unshift(job); continue; }
+                if (inflightByKey[job.key] === job) delete inflightByKey[job.key];
+                telemetry.errors++;
+                for (var t = 0; t < job.targets.length; t++) writeFailure(job.targets[t], job.key, 'the PlantUML engine crashed drawing this diagram: ' + message);
+            }
+            telemetry.workers = readyCount(); telemetry.inFlight = busyCount();
+            if (workers.length < targetWorkers) startWorker();
+            pumpWorkers();
+        }
+        // The JavaScript engine in the Wasm engine's place: the workers start again on it, and what they held is drawn by it.
+        function fallBackToJsEngine(reason) {
+            console.warn('Kronikol: the PlantUML Wasm engine did not start (' + reason + '), so the page draws with its JavaScript build.');
+            telemetry.engineProblem = reason;
+            useEngine('js');
+            for (var i = 0; i < workers.length; i++) { try { workers[i].w.terminate(); } catch (e) { /* best effort */ } }
+            workers = []; telemetry.workers = 0; telemetry.inFlight = 0;
+            if (blobUrl) { try { URL.revokeObjectURL(blobUrl); } catch (e) { /* best effort */ } blobUrl = null; }
+            var requeue = [];
+            var keys = Object.keys(pending);
+            for (var k = 0; k < keys.length; k++) { pending[keys[k]].worker = null; requeue.push(pending[keys[k]]); }
+            pending = {};
+            requeue.sort(function (a, b) { return a.seq - b.seq; });
+            queue = requeue.concat(queue);
+            esmMode = false;
+            mode = null; telemetry.mode = 'starting';
+            acquireEngine();
+        }
         function onWorkerMessage(rec, m) {
+            // A worker the page let go of (crashed, or on the engine the page no longer draws with) may still have
+            // answers on their way; a diagram it held is drawn again elsewhere under the same number.
+            if (workers.indexOf(rec) < 0) return;
             if (m.type === 'ready') {
-                rec.ready = true; telemetry.workers = readyCount();
+                rec.ready = true; anyWorkerReady = true; telemetry.workers = readyCount();
                 if (telemetry.engineReadyAt === null) telemetry.engineReadyAt = now();
                 pumpWorkers();
                 return;
@@ -312,7 +410,7 @@
                 var viz = parts[0], engine = parts[1];
                 if (engine === null) {
                     // No fallback: the script tags would fetch the same bytes and fail the same check.
-                    engineFailed(new Error(integrityMessage('plantuml.js', ENGINE_URL, ENGINE_INTEGRITY)));
+                    engineFailed(new Error(integrityMessage(ENGINE_FILE, ENGINE_URL, ENGINE_INTEGRITY)));
                     return;
                 }
                 if (viz === null) vizMissing(integrityMessage('viz-global.js', VIZ_URL, VIZ_INTEGRITY));
@@ -358,6 +456,10 @@
                 for (var t = 0; t < queue[q].targets.length; t++) expanded.push(newJob(queue[q].key, queue[q].lines, [queue[q].targets[t]]));
             }
             queue = expanded;
+            // The main thread draws with the JavaScript engine. The Wasm engine's wrapper takes any error that reaches the
+            // global scope while a diagram waits for the engine's own crash and starts again: in a worker every such error
+            // is the engine's, on the page it can be any script's.
+            if (telemetry.engine === 'wasm') { useEngine('js'); telemetry.engineProblem = 'the page draws on its main thread'; }
             loadEngineScripts();
         }
         function addScript(src, integrity, type) {
@@ -396,7 +498,7 @@
                 telemetry.engineIntegrity = 'verified';
                 return import(ENGINE_URL);
             }, function (e) {
-                return tagFailure(ENGINE_URL, ENGINE_INTEGRITY, 'plantuml.js', 'engineIntegrity', e).then(function (failure) {
+                return tagFailure(ENGINE_URL, ENGINE_INTEGRITY, ENGINE_FILE, 'engineIntegrity', e).then(function (failure) {
                     throw failure;
                 });
             }).then(function (mod) {
@@ -1189,12 +1291,14 @@
                 var stackSource = source || el.getAttribute('data-plantuml') || '';
                 var past = findOverLongStatement(stackSource);
                 var longest = past ? null : findLongestStatement(stackSource);
+                // 5.0.0's engine reads no statement one character at a time on its stack, as the 4.x engine's did: what
+                // runs it out of stack is nesting (plans/WASM_ENGINE_PLAN.md).
                 var cause = '<strong>The diagram engine ran out of stack.</strong> '
-                    + 'Its JavaScript build reads some statements one character at a time on its stack, so one long statement '
-                    + 'can exhaust it, soonest in the Web Worker a report draws in. '
+                    + 'Something in this diagram is nested too deeply for it, such as blocks or markup inside one another, '
+                    + 'soonest in the Web Worker a report draws in. '
                     + (past ? 'Line ' + past.line + ' is ' + withArticle(past.kind) + ' of ' + past.length + ' characters (limit ' + past.limit + '). '
                        : longest ? 'Its longest statement is line ' + longest.line + ', of ' + longest.length + ' characters. ' : '')
-                    + '<code>PlantUmlRendering.Server</code> and <code>PlantUmlRendering.Local</code> draw it.';
+                    + '<code>PlantUmlRendering.Server</code> and <code>PlantUmlRendering.Local</code> run the engine on the JVM instead.';
                 if (svg) {
                     // Kronikol's line above, the engine's own picture below it.
                     var stack = document.createElement('div');
@@ -1321,6 +1425,9 @@
                         + escapeMarkupText(item.source) + '</pre></details></div>';
                 } else {
                     item.el.textContent = 'Render error: ' + msg;
+                    // A failure handed over rather than drawn is described as a drawn one is: from 5.0.0 a stack overflow
+                    // that takes a worker down arrives here (plans/WASM_ENGINE_PLAN.md).
+                    describeEngineFailure(item.el, item.source);
                 }
                 processQueue();
                 return true;

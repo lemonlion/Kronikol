@@ -52,7 +52,14 @@ class MockElement {
         this._attributes = {};
     }
     setAttribute(name, value) { this._attributes[name] = value; }
+    // The engine sets a link's xlink: attributes this way (5.0.0's engine, from PlantUML 1.2026.10); the name
+    // carries its prefix, so it is written as the qualified name it is, as the worker host's mock does.
+    setAttributeNS(namespace, name, value) { this.setAttribute(name, value); }
     getAttribute(name) { return this._attributes[name] || null; }
+    // The engine reads a link's firstChild when it closes the link and keeps only a link that holds something (5.0.0's
+    // engine): without these every link read as empty and was dropped with its text.
+    get firstChild() { return this.childNodes[0] || null; }
+    get lastChild() { return this.childNodes[this.childNodes.length - 1] || null; }
     removeAttribute(name) { delete this._attributes[name]; }
     hasAttribute(name) { return name in this._attributes; }
     appendChild(child) {
@@ -145,14 +152,21 @@ function xmlChars(s) {
 }
 function escXml(v) { return xmlChars(String(v)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function escXmlAttr(v) { return escXml(v).replace(/"/g, '&quot;'); }
-function serializeElement(el) {
+// The engine writes a link's xlink:href, xlink:title and the rest with setAttributeNS (5.0.0's engine) and never declares
+// the prefix. An HTML page reading the SVG inline needs no declaration; an XML reader does, and so does a browser drawing
+// the SVG as an image, which refuses the whole picture without it. So the root of a tree that uses it declares it.
+var XLINK_NS = 'http://www.w3.org/1999/xlink';
+var xlinkUsed = false;
+function serializeElement(el, isRoot) {
     if (!el || typeof el !== 'object') return '';
     if (el.nodeType === 3) return escXml(el.textContent || el.data || '');
     if (el.nodeType === 7) return '';
+    if (isRoot) xlinkUsed = false;
     var tag = (el.tagName || 'div').toLowerCase();
     var attrs = '';
     if (el._attributes) {
         for (var k in el._attributes) {
+            if (k.lastIndexOf('xlink:', 0) === 0) xlinkUsed = true;
             attrs += ' ' + k + '="' + escXmlAttr(el._attributes[k]) + '"';
         }
     }
@@ -162,6 +176,7 @@ function serializeElement(el) {
             children += serializeElement(el.childNodes[i]);
         }
     }
+    if (isRoot && xlinkUsed && !(el._attributes && 'xmlns:xlink' in el._attributes)) attrs += ' xmlns:xlink="' + XLINK_NS + '"';
     var text = (!el.childNodes || el.childNodes.length === 0) ? escXml(el.textContent || '') : '';
     return '<' + tag + attrs + '>' + text + children + '</' + tag + '>';
 }
@@ -459,7 +474,7 @@ function renderOne(renderer, plantUml) {
         target.appendChild = function(child) {
             origAppendChild(child);
             // PlantUML builds SVG via DOM APIs; serialize the appended tree
-            var s = serializeElement(child);
+            var s = serializeElement(child, true);
             if (s && s.indexOf('<svg') !== -1) {
                 svgResult = s;
             }
@@ -487,7 +502,7 @@ function renderOne(renderer, plantUml) {
                 if (target.childNodes.length > 0) {
                     var built = '';
                     for (var i = 0; i < target.childNodes.length; i++) {
-                        built += serializeElement(target.childNodes[i]);
+                        built += serializeElement(target.childNodes[i], true);
                     }
                     if (built && built.indexOf('<svg') !== -1) {
                         svgResult = built;

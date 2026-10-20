@@ -117,7 +117,8 @@ public class OnDemandRenderingTests : PlaywrightTestBase
     private void WatchEngineRequests() =>
         Page.Request += (_, request) =>
         {
-            if (request.Url.EndsWith("/plantuml.js", StringComparison.Ordinal) || request.Url.EndsWith("/viz-global.js", StringComparison.Ordinal))
+            if (request.Url.EndsWith("/plantuml.js", StringComparison.Ordinal) || request.Url.EndsWith("/plantuml-wasm-bundle.js", StringComparison.Ordinal)
+                || request.Url.EndsWith("/viz-global.js", StringComparison.Ordinal))
                 lock (_engineRequests) _engineRequests.Add(request.Url);
         };
 

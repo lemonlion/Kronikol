@@ -426,19 +426,25 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         return errors;
     }
 
-    internal static void AssertTheConsoleNamesTheRefusedEngine(List<string> errors)
+    /// <summary>
+    /// The engine file the render workers fetch in the suite's Chromium, which runs Wasm GC: from 5.0.0 the Wasm engine
+    /// (plans/WASM_ENGINE_PLAN.md). The main thread fetches plantuml.js.
+    /// </summary>
+    internal const string WorkerEngineFile = "plantuml-wasm-bundle.js";
+
+    internal static void AssertTheConsoleNamesTheRefusedEngine(List<string> errors, string engineFile)
     {
         lock (errors)
-            Assert.Contains(errors, e => e.StartsWith("Kronikol: PlantUML engine unavailable: engine integrity check failed: plantuml.js from "
-                                                      + $"{Constants.TrackingDefaults.PlantUmlJsCdnBase}/plantuml.js does not match {WrongHash}", StringComparison.Ordinal));
+            Assert.Contains(errors, e => e.StartsWith($"Kronikol: PlantUML engine unavailable: engine integrity check failed: {engineFile} from "
+                                                      + $"{Constants.TrackingDefaults.PlantUmlJsCdnBase}/{engineFile} does not match {WrongHash}", StringComparison.Ordinal));
     }
 
-    internal static void AssertEveryDiagramNamesTheRefusedEngine(string[] diagrams)
+    internal static void AssertEveryDiagramNamesTheRefusedEngine(string[] diagrams, string engineFile)
     {
         Assert.NotEmpty(diagrams);
         Assert.All(diagrams, text =>
         {
-            Assert.Contains($"engine integrity check failed: plantuml.js from {Constants.TrackingDefaults.PlantUmlJsCdnBase}/plantuml.js", text);
+            Assert.Contains($"engine integrity check failed: {engineFile} from {Constants.TrackingDefaults.PlantUmlJsCdnBase}/{engineFile}", text);
             Assert.Contains($"does not match {WrongHash}", text);
         });
     }
@@ -448,14 +454,15 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     {
         // A proxy's rewrite, a captive portal's login page or a damaged cache entry used to be evaluated as the
         // engine, usually failing as a syntax error, and the fallback then fetched the same bytes. Now the browser
-        // refuses them, the engine is never evaluated, and every diagram says which file failed.
+        // refuses them, the engine is never evaluated, and every diagram says which file failed: here the Wasm engine the
+        // workers fetch, which gives way to no other engine, since the same mirror serves both.
         var errors = ConsoleErrors();
-        await Page.GotoAsync(WithWrongHash(GenerateReport("EngineWrongHash.html"), Constants.TrackingDefaults.PlantUmlJsIntegrity));
+        await Page.GotoAsync(WithWrongHash(GenerateReport("EngineWrongHash.html"), Constants.TrackingDefaults.PlantUmlWasmEngineIntegrity));
 
         var diagrams = await RenderEveryDiagramAndReadIt();
 
-        AssertEveryDiagramNamesTheRefusedEngine(diagrams);
-        AssertTheConsoleNamesTheRefusedEngine(errors);
+        AssertEveryDiagramNamesTheRefusedEngine(diagrams, WorkerEngineFile);
+        AssertTheConsoleNamesTheRefusedEngine(errors, WorkerEngineFile);
         var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
         Assert.Equal("mismatch", r.GetProperty("engineIntegrity").GetString());
         Assert.Equal(0, r.GetProperty("workers").GetInt32());
@@ -464,19 +471,20 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // No fallback either: its tags would fetch the same bytes and fail the same check. The telemetry reads as the wiki
         // documents it: mode stays 'starting', and fallbackReason carries the refusal.
         Assert.Equal("starting", r.GetProperty("mode").GetString());
-        Assert.Contains("engine integrity check failed: plantuml.js", r.GetProperty("fallbackReason").GetString());
-        Assert.Equal(0, await Page.EvaluateAsync<int>("() => document.querySelectorAll('script[src*=\"plantuml.js\"]').length"));
+        Assert.Contains($"engine integrity check failed: {WorkerEngineFile}", r.GetProperty("fallbackReason").GetString());
+        Assert.Equal(0, await Page.EvaluateAsync<int>("() => document.querySelectorAll('script[src*=\"plantuml\"]').length"));
     }
 
     /// <summary>
-    /// Points a written report's two engine URLs at <paramref name="engineBase"/>, as a mirror or a proxy in jsDelivr's
-    /// place would serve them. The render script sits in the page as plain text, and no request is touched.
+    /// Points a written report's engine URLs (Graphviz, and both engines from 5.0.0) at <paramref name="engineBase"/>, as
+    /// a mirror or a proxy in jsDelivr's place would serve them. The render script sits in the page as plain text, and no
+    /// request is touched.
     /// </summary>
     internal static string WithEngineBase(string reportUrl, string engineBase)
     {
         var path = new Uri(reportUrl).LocalPath;
         var html = File.ReadAllText(path);
-        foreach (var file in new[] { "viz-global.js", "plantuml.js" })
+        foreach (var file in new[] { "viz-global.js", "plantuml.js", WorkerEngineFile })
         {
             var quoted = $"'{Constants.TrackingDefaults.PlantUmlJsCdnBase}/{file}'";
             var at = html.IndexOf(quoted, StringComparison.Ordinal);
@@ -558,8 +566,9 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
 
         var diagrams = await RenderEveryDiagramAndReadIt();
 
-        AssertEveryDiagramNamesTheRefusedEngine(diagrams);
-        AssertTheConsoleNamesTheRefusedEngine(errors);
+        // the main thread draws with plantuml.js
+        AssertEveryDiagramNamesTheRefusedEngine(diagrams, "plantuml.js");
+        AssertTheConsoleNamesTheRefusedEngine(errors, "plantuml.js");
         var r = await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender");
         Assert.Equal("main-thread", r.GetProperty("mode").GetString());
         Assert.Equal("mismatch", r.GetProperty("engineIntegrity").GetString());
@@ -688,7 +697,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     {
         // The refusal is told from a network failure by a plain fetch of the same URL; on an http origin that fetch
         // is a real cross-origin request, and it must still find the file.
-        var file = new Uri(WithWrongHash(GenerateReport("ServedOverHttpWrongHash.html"), Constants.TrackingDefaults.PlantUmlJsIntegrity)).LocalPath;
+        var file = new Uri(WithWrongHash(GenerateReport("ServedOverHttpWrongHash.html"), Constants.TrackingDefaults.PlantUmlWasmEngineIntegrity)).LocalPath;
         await using var server = LoopbackFileServer.Start(Path.GetDirectoryName(file)!);
         var errors = ConsoleErrors();
         await Page.GotoAsync(server.UrlOf(Path.GetFileName(file)));
@@ -696,8 +705,8 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         var diagrams = await RenderEveryDiagramAndReadIt();
 
         Assert.Equal("http:", await Page.EvaluateAsync<string>("() => location.protocol"));
-        AssertEveryDiagramNamesTheRefusedEngine(diagrams);
-        AssertTheConsoleNamesTheRefusedEngine(errors);
+        AssertEveryDiagramNamesTheRefusedEngine(diagrams, WorkerEngineFile);
+        AssertTheConsoleNamesTheRefusedEngine(errors, WorkerEngineFile);
         Assert.Equal("mismatch", (await Page.EvaluateAsync<JsonElement>("() => window.__kronikolRender")).GetProperty("engineIntegrity").GetString());
     }
 

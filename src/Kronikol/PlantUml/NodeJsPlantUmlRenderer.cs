@@ -198,9 +198,11 @@ public static partial class NodeJsPlantUmlRenderer
             ? $" on line {line}, a statement of {lines[line - 1].Trim().Length} characters"
             : "";
         var words = StackOverflowRegex().Match(WebUtility.HtmlDecode(result)).Value;
-        return $"The PlantUML engine ran out of stack{where} ({words}): its JavaScript build reads some statements one "
-               + "character at a time on its stack, so one long statement can exhaust it. PlantUmlRendering.Server and "
-               + "PlantUmlRendering.Local draw it.";
+        // 5.0.0's engine reads no statement one character at a time on its stack, as the 4.x engine's did: what runs it out
+        // of stack is nesting (plans/WASM_ENGINE_PLAN.md).
+        return $"The PlantUML engine ran out of stack{where} ({words}): something in the diagram is nested too deeply for "
+               + "it, such as blocks or markup inside one another. PlantUmlRendering.Server and PlantUmlRendering.Local run "
+               + "the engine on the JVM instead.";
     }
 
     private sealed record BatchLine(string id, string source);

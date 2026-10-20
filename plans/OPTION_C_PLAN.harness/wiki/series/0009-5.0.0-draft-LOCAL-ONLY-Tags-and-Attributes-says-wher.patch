@@ -1,0 +1,28 @@
+From a8f671c2f0aa6ec19f41f86c5fdc653fa4213476 Mon Sep 17 00:00:00 2001
+From: Aryeh Citron <aryehcitron@gmail.com>
+Date: Tue, 20 Oct 2026 09:54:01 +0100
+Subject: [PATCH 09/10] 5.0.0 draft, LOCAL ONLY: Tags and Attributes says where
+ endpoint:/x sets a feature's endpoint, the frameworks whose tags are their
+ own markup, and that NUnit, MSTest, xUnit and TUnit take it from [Endpoint]
+ (kronikol-89's fix of the tags page)
+
+---
+ Tags-and-Attributes.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Tags-and-Attributes.md b/Tags-and-Attributes.md
+index 686f7ab..f038b3b 100644
+--- a/Tags-and-Attributes.md
++++ b/Tags-and-Attributes.md
+@@ -51,7 +51,7 @@ A tag is a name on a feature or on a scenario, given through the framework's own
+ | **Tests NDJSON** (`kronikol ingest`) | the `tags` of the test's `start` record | the tags every scenario of the feature carries |
+ 
+ - **The `category:` prefix is read and dropped.** `@category:smoke` in Gherkin and `.WithTags("category:smoke")` in BDDfy are the tag `smoke`, with no warning, so a scenario tagged both `@smoke` and `@category:smoke` has one tag. A `category:` value is a tag whatever it spells: `@category:happy-path` is the tag `happy-path`, not the happy path.
+-- **Kronikol's markers are not tags.** A happy-path name sets the happy-path flag (see [Happy Path](#happy-path)) and `endpoint:/x` sets the feature's endpoint. No xUnit trait key other than `Category` is read, and no NUnit or TUnit property, so `[HappyPath]`, `[Endpoint]` and a trait such as `[Trait("Produces", "openapi.json")]` add no tag.
++- **Kronikol's markers are not tags.** A happy-path name sets the happy-path flag (see [Happy Path](#happy-path)). `endpoint:/x` sets the feature's endpoint where tags are the framework's own markup: ReqNRoll's and Cucumber's Gherkin tags, BDDfy's tags and a tests capture's `tags`. NUnit, MSTest, xUnit and TUnit take the endpoint from `[Endpoint]` (see [Endpoint](#endpoint)), and a category or a LightBDD label written `endpoint:/x` is neither a tag nor the endpoint. No xUnit trait key other than `Category` is read, and no NUnit or TUnit property, so `[HappyPath]`, `[Endpoint]` and a trait such as `[Trait("Produces", "openapi.json")]` add no tag.
+ - **Case.** Tags that differ only in the case of an ASCII letter are one tag (`Smoke` and `smoke`), spelled as the report first meets it. Other letters do not fold: `Über` and `über` are two tags.
+ - **A feature's tags count for every one of its scenarios** and are drawn once, on the feature. A tag a scenario repeats from its feature is the feature's and is not drawn again on the scenario.
+ - **Gherkin.** A `Rule:`'s tags reach its scenarios and no others. The happy path is read from a scenario's own tags and its `Examples:` block's only.
+-- 
+2.53.0.windows.3
+

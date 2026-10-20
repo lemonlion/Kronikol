@@ -66,9 +66,10 @@ public static class ComponentDiagramReportGenerator
 
     /// <summary>
     /// Whether the component diagram is written with the C4 library for <paramref name="rendering"/>: only where the Java
-    /// engine draws it (Server, Local). Both JavaScript engines (the page's and the Node renderer's) run plantuml.js,
-    /// which cannot load the C4 stdlib: until 3.29.6 the include hung the render until its timeout, and since then it
-    /// draws the engine's error picture, so they are given the plain component syntax.
+    /// engine draws it (Server, Local). The engines that run in a browser or in node (the page's, plantuml.js or from
+    /// 5.0.0 its Wasm build, and the Node renderer's plantuml.js) cannot load the C4 stdlib: until 3.29.6 the include hung
+    /// the render until its timeout, and since then it draws the engine's error picture, so they are given the plain
+    /// component syntax.
     /// </summary>
     internal static bool UsesC4(PlantUmlRendering rendering) => rendering is PlantUmlRendering.Server or PlantUmlRendering.Local;
 

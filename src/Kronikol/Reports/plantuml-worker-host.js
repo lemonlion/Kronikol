@@ -1,9 +1,11 @@
 'use strict';
-// Kronikol — Web Worker host for the TeaVM-compiled plantuml.js engine.
+// Kronikol — Web Worker host for the TeaVM-compiled PlantUML engine (plantuml.js, or its Wasm build).
 //
 // The report page (plantuml-browser-render-script.js) fetches viz-global.js + plantuml.js as text and
 // builds each worker from ONE Blob: this file, then viz, then the engine. Nothing here touches the
 // network — a Blob worker created by a file:// document cannot (importScripts of any origin fails).
+// From 5.0.0 the engine is plantuml-wasm-bundle.js wherever the browser runs Wasm GC: PlantUML's Wasm
+// engine with the module embedded, the same API, and a render that answers with a promise.
 //
 // What the engine needs from a DOM, and what this host gives it:
 //   document.getElementById(target)            → the per-render mock target element
@@ -212,7 +214,10 @@
             if (!ex || typeof ex.render !== 'function') return Promise.reject(new Error('ESM engine exports missing'));
             // Stock engine builds refuse diagrams past 8192px by default; Kronikol's limit is 98304px.
             self.plantuml = { render: function (lines, id) { return ex.render(lines, id, { maxSvgSize: 98304 }); } };
-            return Promise.resolve();
+            // The Wasm engine's bundle says when its module is ready, or why it cannot load (5.0.0): the worker answers
+            // 'ready' only then, and a module that does not load is the worker's 'fatal', so the page can draw with the
+            // JavaScript engine instead.
+            return typeof self.__plantumlEngineReady === 'function' ? self.__plantumlEngineReady() : Promise.resolve();
         }
         if (typeof self.plantumlLoad !== 'function') return Promise.reject(new Error('plantumlLoad is not defined after loading the engine'));
         return new Promise(function (resolve, reject) {
@@ -250,7 +255,9 @@
             if (c.nodeType === 1 && c.tagName === 'svg') setTimeout(function () { finish(serializeChildren(target)); }, 0);
         };
         try {
-            self.plantuml.render(job.lines, id);
+            // the Wasm engine's render returns a promise, which rejects when its module cannot load
+            var answer = self.plantuml.render(job.lines, id);
+            if (answer && typeof answer.then === 'function') answer.then(null, function (e) { fail(e && e.message ? e.message : e); });
         } catch (e) {
             fail(e && e.message ? e.message : e);
             return;

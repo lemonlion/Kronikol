@@ -38,8 +38,9 @@ public class PlantUmlBrowserReportGeneratorTests
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
         var content = File.ReadAllText(html);
-        Assert.Contains("cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8/plantuml.js", content);
-        Assert.Contains("cdn.jsdelivr.net/npm/@plantuml/core@1.2026.8/viz-global.js", content);
+        Assert.Contains("cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.10beta1-f44b054-teavm0.17.0-dev-2/plantuml.js", content);
+        Assert.Contains("cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.10beta1-f44b054-teavm0.17.0-dev-2/plantuml-wasm-bundle.js", content);
+        Assert.Contains("cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.10beta1-f44b054-teavm0.17.0-dev-2/viz-global.js", content);
     }
 
     [Fact]
