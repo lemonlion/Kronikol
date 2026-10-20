@@ -4,7 +4,10 @@
 (function () {
     var root = document.documentElement;
     var system = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    // the reader's pick on this page, which holds where the browser refuses to store it
+    var picked = null;
     function stored() {
+        if (picked) return picked;
         try { var t = localStorage.getItem('kronikol.theme'); return t === 'dark' || t === 'light' ? t : null; }
         catch (e) { return null; }
     }
@@ -18,7 +21,10 @@
     }
     function set(t, keep) {
         root.setAttribute('data-theme', t);
-        if (keep) { try { localStorage.setItem('kronikol.theme', t); } catch (e) { /* a private window: this page only */ } }
+        if (keep) {
+            picked = t;
+            try { localStorage.setItem('kronikol.theme', t); } catch (e) { /* storage refused: this page only */ }
+        }
         sync();
     }
     // a copy of the page whose head lost the boot script

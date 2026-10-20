@@ -13,7 +13,9 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
 - **Light and dark themes.** A report follows the system's light or dark setting until the reader picks one with the
   switch at the right of its title, and then keeps that pick, over a reload and over the system's setting. The theme
   is chosen in the page's head, before anything is drawn. The pick is the one thing a report stores in the browser
-  (`kronikol.theme` in local storage); filters and toggles still live only in the page's link.
+  (`kronikol.theme` in local storage); the filters still live only in the page's link. Where the browser refuses the
+  page its storage, the pick holds while the page is open, over the system's setting too, and the next load follows
+  the system again.
 - **Colour and type tokens.** The page's colours and type are CSS custom properties, `--kron-*` for the page and
   `--dg-*` for its diagrams, each with a light and a dark value, defined first in the page's styles, so a theme or a
   `CustomCss` sheet can set them again.

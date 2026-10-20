@@ -1221,3 +1221,20 @@ decision of the owner's, not part of this plan.
   the full core suite on its own tree before its commit. PLANS_STATUS.md's row says the same. S14 next: the docs (the
   wiki over TAGS_PLAN T4's wiki patch, the README's example, the theming page), the Kronikol4J ledger lines, the final
   parity run and the release check.
+- 2026-10-20, S14, the theme switch where the browser refuses storage, found while checking the wiki's new Report
+  Themes page against the code: the switch read the reader's pick back from local storage only, so where the browser
+  refuses the page its storage (every access throws, or only a write does), a change of the system's setting overrode
+  the pick on the open page. The pick is kept on the page too (`report-theme-switch-script.js`), and the changelog's
+  theme item says so, and that only the filters live in the page's link (it said filters and toggles).
+  Bugs: ThemeTests' fact that a stored pick holds over the system emulated two changes in a row, which reach the page
+  as one evaluation of its media queries with the setting back where it was, so no change event fired and the fact
+  held with or without the rule it was there for. It and the new theory now wait for each change, counted by a
+  listener of their own.
+  Tests: Playwright ThemeTests' new theory (storage refused two ways: the pick holds over two changes of the system's
+  setting, and the next load follows the system) and the rewritten fact. Red: a first run with the old waits passed on
+  the unchanged script, which is how the gap was found; with the waits, 2 of 6 failed there, the theory's two cases,
+  each on its assertion ("dark" wanted, "light" found). Green: 38 of 38 with ThemedPagesTests, LabsPageTests,
+  HistoryRingsTests and DarkThemeColoursTests; core 31 of 31 (ThemedPagesHtmlTests, ReportThemeTests,
+  LabsReportTests). Mutations: 3 of 3 killed (the pick not kept, the pick not read, a change of the system's setting
+  overruling a stored pick, the last failing the rewritten fact too) (checks/mutate-s14-theme.ps1).
+  Checks: the full core suite passes 8,484 with 2 skipped on `c5fab53a` with the change.

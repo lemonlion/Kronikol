@@ -27,6 +27,19 @@ public class ThemeTests : PlaywrightTestBase
         Page.WaitForFunctionAsync($"() => document.documentElement.getAttribute('data-theme') === '{theme}'", null,
             new() { PollingInterval = 200, Timeout = 10000 });
 
+    // Counts the changes of the system's setting the page is told of. Two emulations in a row can land in one
+    // evaluation of the page's media queries, where the setting is back where it was and no change event fires, so a
+    // test waits for each change before the next. This listener comes before the page's, in the same dispatch.
+    private const string CountSystemChanges =
+        "window.__systemChanges = 0; matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => window.__systemChanges++);";
+
+    private async Task SystemChangesToAsync(ColorScheme scheme, int changesSeen)
+    {
+        await Page.EmulateMediaAsync(new() { ColorScheme = scheme });
+        await Page.WaitForFunctionAsync($"() => window.__systemChanges === {changesSeen}", null,
+            new() { PollingInterval = 200, Timeout = 10000 });
+    }
+
     // The colour the page paints behind everything, and the dark token it should be: a probe element resolves the
     // token to the same rgb() form the computed style uses.
     private Task<string[]> GroundAndDarkTokenAsync() =>
@@ -73,6 +86,7 @@ public class ThemeTests : PlaywrightTestBase
     [Fact]
     public async Task The_switch_flips_the_theme_and_the_pick_is_kept_over_a_reload_and_the_system()
     {
+        await Context.AddInitScriptAsync(CountSystemChanges);
         await OpenAsync("Theme_Switch.html", ColorScheme.Light);
         var lightGround = (await GroundAndDarkTokenAsync())[0];
 
@@ -85,10 +99,9 @@ public class ThemeTests : PlaywrightTestBase
         await Switch.WaitForAsync();
         Assert.Equal("dark", await ThemeAsync());
 
-        // a stored pick is not overruled by the system's setting changing
-        await Page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Dark });
-        await Page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Light });
-        await TwoAnimationFramesAsync(Page);
+        // a stored pick is not overruled by the system's setting changing (the counter starts again on the reload)
+        await SystemChangesToAsync(ColorScheme.Dark, 1);
+        await SystemChangesToAsync(ColorScheme.Light, 2);
         Assert.Equal("dark", await ThemeAsync());
 
         await Switch.ClickAsync();
@@ -109,5 +122,32 @@ public class ThemeTests : PlaywrightTestBase
         Assert.Equal("light", await ThemeAsync());
         Assert.Equal("light", await Page.EvaluateAsync<string?>("() => window.__themeAtParse"));
         Assert.Equal("false", await Switch.GetAttributeAsync("aria-pressed"));
+    }
+
+    // A browser that refuses the page its storage: every access throws (all cookies blocked, a sandboxed frame), or
+    // only a write does (a full quota, an older Safari's private window).
+    [Theory]
+    [InlineData("Object.defineProperty(window, 'localStorage', { configurable: true, get() { throw new DOMException('The operation is insecure.', 'SecurityError'); } });")]
+    [InlineData("Storage.prototype.setItem = function () { throw new DOMException('The quota has been exceeded.', 'QuotaExceededError'); };")]
+    public async Task Where_storage_is_refused_the_pick_holds_on_the_open_page_and_the_next_load_follows_the_system(string refuse)
+    {
+        await Context.AddInitScriptAsync(refuse);
+        await Context.AddInitScriptAsync(CountSystemChanges);
+        await OpenAsync("Theme_StorageRefused.html", ColorScheme.Light);
+        Assert.Equal("light", await ThemeAsync());
+
+        await Switch.ClickAsync();
+        Assert.Equal("dark", await ThemeAsync());
+
+        // the system's setting changing does not overrule the pick on the open page
+        await SystemChangesToAsync(ColorScheme.Dark, 1);
+        await SystemChangesToAsync(ColorScheme.Light, 2);
+        Assert.Equal("dark", await ThemeAsync());
+        Assert.Equal("true", await Switch.GetAttributeAsync("aria-pressed"));
+
+        // nothing was kept, so the next load follows the system's setting again
+        await Page.ReloadAsync();
+        await Switch.WaitForAsync();
+        Assert.Equal("light", await ThemeAsync());
     }
 }
