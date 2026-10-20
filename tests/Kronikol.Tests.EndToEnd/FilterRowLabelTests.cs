@@ -25,10 +25,15 @@ public class FilterRowLabelTests : PlaywrightTestBase
             })
         """);
 
-    private Task<double[]> ColumnWidthsAsync() => Page.EvaluateAsync<double[]>("""
+    /// <summary>Each shown label's column width, and the width of its text on one line.</summary>
+    private Task<double[][]> ColumnsAsync() => Page.EvaluateAsync<double[][]>("""
         () => Array.from(document.querySelectorAll('.filtering-box [class$="-filters-label"]'))
             .filter(l => l.getClientRects().length && !l.classList.contains('more-filters-label'))
-            .map(l => Math.round(l.getBoundingClientRect().width))
+            .map(l => {
+                const range = document.createRange();
+                range.selectNodeContents(l);
+                return [l.getBoundingClientRect().width, range.getBoundingClientRect().width];
+            })
         """);
 
     [Fact]
@@ -43,18 +48,25 @@ public class FilterRowLabelTests : PlaywrightTestBase
 
         Assert.Contains(labels, l => l.StartsWith("Dependencies", StringComparison.Ordinal));
         Assert.All(labels, l => Assert.EndsWith(": 1 line", l));
+        // and the column widens for it: no label runs under its row's controls
+        var columns = await ColumnsAsync();
+        Assert.Contains(columns, c => c[1] > 92);
+        Assert.All(columns, c => Assert.InRange(c[0], Math.Max(92, c[1]) - 0.5, Math.Max(92, c[1]) + 0.5));
     }
 
+    // 92 px where the label fits, so the rows' controls line up; the label's own width where it does not (the face of
+    // CI's Linux runner draws DEPENDENCIES 95 px wide, the one this fact first assumed would fit)
     [Fact]
-    public async Task Where_the_labels_fit_every_column_is_92_px()
+    public async Task Each_column_is_92_px_or_its_label_s_width_where_that_is_more()
     {
         await Page.GotoAsync(GenerateReport("FilterLabels_Fit.html"));
         await OpenFilterRowsAsync();
 
-        var widths = await ColumnWidthsAsync();
+        var columns = await ColumnsAsync();
 
-        Assert.NotEmpty(widths);
-        Assert.All(widths, w => Assert.Equal(92, w));
+        Assert.NotEmpty(columns);
+        Assert.All(columns, c => Assert.InRange(c[0], Math.Max(92, c[1]) - 0.5, Math.Max(92, c[1]) + 0.5));
+        Assert.Contains(columns, c => c[1] < 92); // a label that fits keeps the 92 px column
         Assert.All(await LabelsAsync(), l => Assert.EndsWith(": 1 line", l));
     }
 }

@@ -47,7 +47,8 @@ Clear All button, a new control. Everything else in this release is a fix.
   so the Summary view, which is the features table, carried them too. They now go with the cards: hidden while
   Summary shows, and written hidden where the page opens on it (`FeaturesSummaryOpen`), so they never flash there.
 - **The Dependencies label no longer breaks.** In a face that draws DEPENDENCIES wider than the filter rows' 92 px
-  label column, the page broke the word where it ran out and its S went to a line of its own. A label now never
+  label column (the default face of a Linux machine does: 95 px on CI's runner), the page broke the word where it ran
+  out and its S went to a line of its own. A label now never
   breaks, and its column widens for it; where the labels fit, every column is 92 px as before.
 
 ### Tests
@@ -62,8 +63,8 @@ the new code seven fail them. The two that pass change no outcome: the tab's own
 the ResizeObserver already lays a bar out as its scenario is laid out (removing that fails both facts for the work
 left until needed). NoteFormatCardColourTests: four switches of a note's format on a diagram split into fragments, by
 the note's button and by the report's list, both failing on 5.0.0 at the third switch, and on one that is not split.
-FilterRowLabelTests: every label on one line in a face wider than this one (on 5.0.0 Dependencies took two), and every
-column 92 px where the labels fit; StylesheetRulesTests pins the rule, a minimum width, which keeps the preview's
+FilterRowLabelTests: every label on one line in a face wider than this one (on 5.0.0 Dependencies took two), its
+column as wide as it needs, and every column 92 px or its label's width where that is more; StylesheetRulesTests pins the rule, a minimum width, which keeps the preview's
 round 6 fix for Firefox (measured there: the Status group's last button ends at its edge, where a 92 px basis over a
 width of auto runs it 50 px past). TimelineTabTests and ComponentsTabTests: the note's Clear All, after its sentence
 and on its line, clears the filters and the note goes (both failing on 5.0.0); ComponentsTabHtmlTests and
