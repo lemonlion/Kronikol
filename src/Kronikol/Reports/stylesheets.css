@@ -289,7 +289,7 @@
            report-filter-bar-script.js measures them (D18); otherwise each keeps a line of its own */
         .filter-row.pair-fits { column-gap: 28px; }
         .filter-row.pair-fits > .duration-filters, .filter-row.trio-fits > .happy-filters { flex-basis: auto; }
-        .filter-row.pair-fits .duration-filters-label, .filter-row.trio-fits .happy-filters-label { flex-basis: auto; }
+        .filter-row.pair-fits .duration-filters-label, .filter-row.trio-fits .happy-filters-label { flex-basis: auto; width: auto; }
 
         /* Deep-search status chip ("+N more found in payloads & diagrams") */
         .kron-deep-chip {
@@ -484,8 +484,11 @@
         .filter-row > .status-filters, .filter-row > .duration-filters, .filter-row > .happy-filters { margin-top: 0; }
         .filter-row > .status-filters { flex: none; flex-wrap: nowrap; }
         .filter-row > .duration-filters, .filter-row > .happy-filters { flex-basis: 100%; }
+        /* 92px as a width too, not only as a flex basis: Firefox takes a flex item's max-content contribution from its
+           width, so the Status group was sized from its label's text while the label was laid out at 92px, and its
+           buttons ran 50px past the group and under Duration (the preview's round 6) */
         .status-filters-label, .duration-filters-label, .happy-filters-label, .tag-filters-label, .dependency-filters-label {
-            flex: 0 0 92px; margin-right: 8px; color: var(--kron-label);
+            flex: 0 0 92px; width: 92px; margin-right: 8px; color: var(--kron-label);
             font-size: var(--kron-fs-label); font-weight: 600; line-height: 16px; letter-spacing: var(--kron-label-track); text-transform: uppercase;
         }
         .fltr-controls { display: flex; flex: 1 1 0; flex-wrap: wrap; align-items: baseline; min-width: 0; row-gap: 6px; }
@@ -570,7 +573,7 @@
         @container (max-width: 430px) {
             .status-filters, .duration-filters, .happy-filters, .tag-filters, .dependency-filters { flex-wrap: wrap; }
             .status-filters-label, .duration-filters-label, .happy-filters-label, .tag-filters-label,
-            .dependency-filters-label { flex-basis: 100%; margin: 0 8px 2px 0; }
+            .dependency-filters-label { flex-basis: 100%; width: auto; margin: 0 8px 2px 0; }
             .fltr-controls { flex-basis: 100%; }
             .wide-only { display: none; }
             /* the readout wraps rather than widen the actions past the box */

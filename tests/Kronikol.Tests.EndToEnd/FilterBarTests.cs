@@ -253,6 +253,40 @@ public class FilterBarTests : PlaywrightTestBase
         Assert.True(await Page.EvaluateAsync<bool>("() => document.querySelector('.duration-filters').getBoundingClientRect().top > document.querySelector('.status-filters').getBoundingClientRect().bottom - 1"));
     }
 
+    // Firefox takes a flex item's max-content contribution from its width, not its flex basis: the Status group was sized
+    // from its label's text (about 42 px) while the label was laid out at 92 px, so its buttons ran 50 px past the group
+    // and under Duration where the pair shares the line (the preview's round 6; found missing by S14's parity run).
+    // Playwright's own Firefox, skipped where it is not installed (CI installs Chromium only; StylesheetRulesTests holds
+    // the rule there).
+    [Fact]
+    public async Task In_Firefox_the_Status_group_holds_its_buttons_and_Duration_starts_after_them()
+    {
+        using var playwright = await Playwright.CreateAsync();
+        IBrowser? firefox = null;
+        try { firefox = await playwright.Firefox.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true }); }
+        catch (PlaywrightException) { firefox = null; }
+        Assert.SkipWhen(firefox is null, "Firefox is not installed (CI installs chromium only)");
+        await using var _ = firefox!;
+        var page = await OpenPageAsync(firefox!, new BrowserNewPageOptions { ViewportSize = new() { Width = 1400, Height = 700 } });
+        await page.GotoAsync(Generate("FilterBar_Firefox_Status.html"));
+        await page.Locator("details.feature").First.WaitForAsync();
+        await page.Locator(".filtering-box .more-filters").ClickAsync();
+        await Expect(page.Locator(".filter-row")).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\bpair-fits\\b"));
+        await TwoAnimationFramesAsync(page);
+
+        var m = await page.EvaluateAsync<double[]>("""
+            () => {
+                const group = document.querySelector('.filter-row > .status-filters').getBoundingClientRect();
+                const ends = Array.from(document.querySelectorAll('.filter-row > .status-filters button')).map(b => b.getBoundingClientRect().right);
+                const duration = document.querySelector('.filter-row > .duration-filters').getBoundingClientRect();
+                return [group.right, Math.max(...ends), duration.left];
+            }
+            """);
+
+        Assert.True(m[1] <= m[0] + 0.5, $"the Status buttons end at {m[1]}, past the group's edge at {m[0]}");
+        Assert.True(m[2] >= m[1], $"Duration starts at {m[2]}, under the Status buttons, which end at {m[1]}");
+    }
+
     // the row's width as the tabs' own (measured without their stretch) plus the filter group (when slack is not -1) plus
     // the slack; with -1, the tabs and 26 px, room for the tabs alone
     private const string Narrow = """

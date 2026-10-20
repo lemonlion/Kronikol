@@ -49,9 +49,16 @@ const path = require('path');
     await press(key); await wait(+(process.env.STEP_MS || 70));
     const s = await check(); tally[dir][s] = (tally[dir][s] || 0) + 1;
     if ((s === 'hidden' || s === 'partly' || s === 'offscreen') && tally.examples.length < 6) tally.examples.push(dir + ' ' + s + ' ' + await p.evaluate(() => { const a = document.activeElement; const r = a.getBoundingClientRect(); return a.tagName + '.' + String(a.className.baseVal !== undefined ? a.className.baseVal : a.className).split(' ')[0] + ' "' + (a.textContent || '').trim().slice(0, 24) + '" at ' + Math.round(r.left) + ',' + Math.round(r.top) + ' in ' + (a.closest('svg') ? 'svg' : a.parentElement.className); }));
+    return s;
   };
-  for (let i = 0; i < 50; i++) await step('Tab', 'forward');
-  for (let i = 0; i < 80; i++) await step('Shift+Tab', 'back');
+  // S14: a run that Tabs past the page's last control leaves the page, and a headless Firefox sends the page no focus
+  // event after that (bringing the tab to the front does not restore them), so the page's own focus script never runs
+  // again and every later step reads as the browser left it. The back run goes first, from the start; the forward run
+  // starts there again; each ends where it leaves the page.
+  const refocus = () => p.evaluate(() => document.querySelector('details.scenario[data-status="Failed"] details.scenario-steps > summary').focus());
+  for (let i = 0; i < 80; i++) if ((await step('Shift+Tab', 'back')) === 'none') { tally.backLeftThePage = i + 1; break; }
+  await refocus();
+  for (let i = 0; i < 50; i++) if ((await step('Tab', 'forward')) === 'none') { tally.forwardLeftThePage = i + 1; break; }
   console.log(which + ' ' + path.basename(page) + ' ' + JSON.stringify(tally));
   await close();
 })();

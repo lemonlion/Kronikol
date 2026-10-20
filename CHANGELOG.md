@@ -441,6 +441,10 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   the violet theme's accent. The loading text was 2.85:1 on white in the light theme too, and is AA now.
 - **The history sparkline takes the theme.** Its runs are drawn in the report's pass, fail, skip and track colours,
   so a run reads on the dark card; in the light theme its greens and reds are the report's own, where they were 4.x's.
+- **In Firefox the Status filter group holds its buttons.** Firefox sized the group from its label's text (about 42 px)
+  while the label was laid out at 92 px, so the Status buttons ran 50 px past the group and, where Duration shares the
+  line, under it. The label column is 92 px as a width as well as a basis, and a label inline or alone on its line is
+  as wide as its text.
 
 ### Documentation
 

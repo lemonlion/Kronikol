@@ -178,6 +178,26 @@ public partial class StylesheetRulesTests
     /// button on a phone, so the rows stay as they were when the window crosses the phone breakpoint, and the search help
     /// opens while they are folded at either width (on a phone the rows were hidden by an inline style, the help with
     /// them).</summary>
+    /// <summary>The filter rows' label column is 92 px as a width, not only as a flex basis (the preview's round 6,
+    /// <c>c-round6.css</c>; found missing by S14's parity run): Firefox takes a flex item's max-content contribution
+    /// from its width, so the Status group, sized to its content, was sized from its label's text (about 42 px) while
+    /// the label was laid out at 92 px, and its buttons ran 50 px past the group and under Duration. A label inline beside
+    /// Status, or on a line of its own in a narrow box, is as wide as its text.</summary>
+    [Fact]
+    public void The_filter_rows_label_column_is_a_width_too_and_a_label_inline_or_alone_is_its_text()
+    {
+        foreach (var label in new[] { ".status-filters-label", ".duration-filters-label", ".happy-filters-label", ".tag-filters-label", ".dependency-filters-label" })
+            Assert.Equal("92px", CssRules.Value(Base, label, "width"));
+        Assert.Equal("auto", CssRules.Value(Base, ".filter-row.pair-fits .duration-filters-label", "width"));
+        Assert.Equal("auto", CssRules.Value(Base, ".filter-row.trio-fits .happy-filters-label", "width"));
+
+        // CssRules reads no @container block: the narrow box's own rule, by its text
+        var at = Base.IndexOf("@container (max-width: 430px) {", StringComparison.Ordinal);
+        Assert.True(at >= 0, "the narrow box's container block is gone");
+        var narrow = Base[at..Base.IndexOf("\n        }", at, StringComparison.Ordinal)];
+        Assert.Matches(@"\.dependency-filters-label\s*\{[^}]*\bwidth:\s*auto", narrow);
+    }
+
     [Fact]
     public void The_filter_rows_fold_with_one_class_at_every_width()
     {

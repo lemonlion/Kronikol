@@ -1259,3 +1259,38 @@ decision of the owner's, not part of this plan.
   `DarkThemeColoursTests`. Mutations: 4 of 4 killed on both theories, 8 runs, each failing on the colour it put back
   (`checks/mutate-s14-contrast.ps1`).
   Checks: the full core suite passes 8,486 with 2 skipped on `31aac9d5` with the change.
+- 2026-10-20, S14, the final parity run (`run-parity.sh` in the session's scratch: the round-17 regression checks,
+  then `checks/style-parity.js` on every surface and `checks/pseudo-parity.js`, light and dark, against v5's render of
+  the parity run, `kronikol merge` at `c5fab53a`, equal to S13b's but for the version and the page name). Accounted
+  for by this log: the export buttons' `nowrap`, the fold label's line height, the bands, the capitals by
+  `text-transform`, the diff's monospace, the phone pills, margins and rows of S5 to S7, the summary gear, the Rule
+  label's 11 px, the missing endpoint and expand cells. Checks written for the preview that the product departs from
+  on purpose: the Events and Setup toggles in every scenario where the run has them (S9a, F11) and the search help's
+  qualifier rows without the preview's class. The diagrams' heights (deferred to S10 at its entry) are left as
+  measured. Found and fixed: the component diagram's service box (the entry before this) and the filter rows' label
+  column (this entry). The obscured check's Firefox count (back: 6 controls partly and 2 wholly under the bar, the
+  preview 0) was the check's own: its forward run Tabbed past the page's last control, and once focus has left the
+  page a headless Firefox sends it no focus event (bringing the tab to the front does not restore them), so the page's
+  focus script never ran again. A back run from the start finds 80 of 80 clear, and `checks/obscured-check.js` now
+  runs back first and ends each run where focus leaves the page: back 80 clear and forward 44 clear before it leaves
+  at the 45th Tab, in Chrome and Firefox alike. Found and left to the owner: the filter header's phone grid (left to
+  S6 and S12 at S2's entry and done by neither; at 400 px the product puts Clear All and both exports on one line
+  under the title, where the preview has Clear All beside the title and the exports spread), the search line's 6 px
+  gaps where the preview has 5.6, the status and dependency rows' 4.2 px row gap, the readout's 20 px line on a phone
+  (18.6 in the preview), the search line's 5.6 px padding on a phone (0 in the preview), and the parameter table's
+  header rows 0.75 px shorter. The filter rows' label column: the preview's round 6 made the label 92 px as a width,
+  not only as a flex basis (`c-round6.css` 4-20; the stylesheet inventory's 3.9 "Measured browser workarounds to
+  keep"), and the port kept only the basis. Firefox takes a flex item's max-content contribution from its width, so
+  the Status group was sized from its label's text while the label was laid out at 92 px: measured in Firefox, its
+  buttons ran 50 px past the group at every width from 800 to 1,400 px, and under Duration where the pair shares the
+  line; Chromium was clean. The labels are `width: 92px` too, and a label inline beside Status or alone on its line in
+  a narrow box `width: auto` (`edits/s14/label-width.py`).
+  Tests: core `StylesheetRulesTests`' new fact (the label column is a width, the inline and narrow labels auto);
+  Playwright `FilterBarTests`' new Firefox fact (Playwright's own Firefox, skipped where it is not installed, as the
+  suite's other Firefox facts are: the Status buttons end inside their group, and Duration starts after them). Red:
+  core 1 of 1 ("92px" wanted, no width), Playwright 1 of 1 (the buttons ended at 399.95 px, the group at 349.58).
+  Green: core 68 of 68 with `ReportSheetColoursTests` and `FilterRowsTests`; Playwright 101 of 101 (`FilterBarTests`
+  with the Firefox fact run, not skipped, `TagFilterTests`, `MobileResponsiveTests` and `ToolbarStylingTests`).
+  Mutations: 3 of 3 killed, 4 runs (the label rule's width gone: core and Firefox; the inline label's auto gone and
+  the narrow box's auto gone: core, as the Firefox fact's 1,400 px reaches neither) (`checks/mutate-s14-label.ps1`).
+  Checks: the full core suite passes 8,488 with 2 skipped on `a07b9230` with the change.
