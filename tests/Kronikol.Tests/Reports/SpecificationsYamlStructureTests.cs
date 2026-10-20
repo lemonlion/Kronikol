@@ -115,23 +115,27 @@ public class SpecificationsYamlStructureTests
         Assert.Equal("When the order is placed", ((YamlScalarNode)steps[0]).Value);
     }
 
-    /// <summary>The public entry point shares the writer, so it has to share the fix.</summary>
     [Fact]
-    public void The_public_GenerateYamlSpecs_writes_the_same_shape()
+    public void Tags_are_one_sequence_at_each_level()
     {
         var features = new[]
         {
             new Feature
             {
-                DisplayName = "Cake",
-                Description = "Line one\nLine two",
-                Scenarios = [new Scenario { Id = "s1", DisplayName = "Bake", Result = ExecutionResult.Passed }]
+                DisplayName = "Orders",
+                Tags = ["api"],
+                Scenarios = [new Scenario { Id = "s1", DisplayName = "S", Tags = ["smoke", "Ordering"] }]
             }
         };
 
-        var path = ReportGenerator.GenerateYamlSpecs([], features, $"SpecsYaml_public_{Guid.NewGuid():N}.yml", "Specs");
+        var feature = Load(features, $"SpecsYaml_tags_{Guid.NewGuid():N}.yml");
+        var scenario = (YamlMappingNode)((YamlSequenceNode)feature["Scenarios"])[0];
 
-        Assert.Equal("Line one\nLine two", Scalar(FirstFeature(path), "Description"));
+        Assert.Equal(["api"], ((YamlSequenceNode)feature["Tags"]).Select(n => ((YamlScalarNode)n).Value));
+        Assert.Equal(["smoke", "Ordering"], ((YamlSequenceNode)scenario["Tags"]).Select(n => ((YamlScalarNode)n).Value));
+        Assert.False(feature.Children.ContainsKey(new YamlScalarNode("Labels")));
+        Assert.False(scenario.Children.ContainsKey(new YamlScalarNode("Labels")));
+        Assert.False(scenario.Children.ContainsKey(new YamlScalarNode("Categories")));
     }
 
     private static YamlMappingNode Load(Feature[] features, string fileName) =>

@@ -33,7 +33,7 @@ var features = new[]
         {
             Id = $"s{i}", DisplayName = i == 2 ? "BreakfastProvider.Tests.Component.Orders.OrderReconciliationTests.Reconciling_the_nightly_settlement_batches_settles_each_order_exactly_once" : LongName(i), Result = i == 4 ? ExecutionResult.Passed : ExecutionResult.Failed,
             Duration = TimeSpan.FromMilliseconds(200 * i), ErrorMessage = i == 4 ? null : Error,
-            Labels = ["Regression", "BreakfastProvider.Tests.Component.Traits.NightlySettlementReconciliation"], Categories = ["BreakfastProvider.Tests.Categories.CrossRegionSettlement"],
+            Tags = ["Regression", "BreakfastProvider.Tests.Component.Traits.NightlySettlementReconciliation", "BreakfastProvider.Tests.Categories.CrossRegionSettlement"],
             Steps = [new ScenarioStep { Keyword = "Given", Text = "the ledger service is available", Status = ExecutionResult.Passed }]
         })]
     },

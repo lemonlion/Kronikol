@@ -17,6 +17,13 @@ public class DiagramCapturingProcessor : IProcessor
 
     public ProcessType ProcessType => ProcessType.Report;
 
+    /// <summary>
+    /// A story scenario's tags, then the running xUnit test's <c>Category</c> traits (Q11): a BDDfy test is an xUnit test,
+    /// and those are the tags the other xUnit lanes read. No other trait key is a tag (Q7).
+    /// </summary>
+    internal static string[] TagsOf(IEnumerable<string>? scenarioTags, Xunit.Sdk.ITest? test) =>
+        [.. scenarioTags ?? [], .. (test is not null && test.Traits.TryGetValue("Category", out var categories) ? categories : [])];
+
     public void Process(Story story)
     {
         var testContext = Xunit.TestContext.Current;
@@ -71,7 +78,7 @@ public class DiagramCapturingProcessor : IProcessor
                 StoryTitle = storyTitle,
                 StoryDescription = storyDescription,
                 ScenarioTitle = resolvedTitle,
-                Tags = scenario.Tags?.ToArray() ?? [],
+                Tags = TagsOf(scenario.Tags, testContext.Test),
                 Steps = steps,
                 Result = scenario.Result,
                 Duration = scenario.Duration,

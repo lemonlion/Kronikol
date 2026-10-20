@@ -301,7 +301,7 @@ public class ShowcaseReportTests : PlaywrightTestBase
                         Id = "order-1", DisplayName = "Creating an order reserves stock and publishes event",
                         IsHappyPath = true, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(342),
-                        Categories = ["Smoke", "Orders"],
+                        Tags = ["Smoke", "Orders"],
                         Steps =
                         [
                             new ScenarioStep { Keyword = "Given", Text = "the Orders API is running", Status = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(12) },
@@ -316,7 +316,7 @@ public class ShowcaseReportTests : PlaywrightTestBase
                         Id = "order-2", DisplayName = "Insufficient stock returns 409 Conflict",
                         IsHappyPath = false, Result = ExecutionResult.Failed,
                         Duration = TimeSpan.FromMilliseconds(1204),
-                        Categories = ["Orders", "ErrorHandling"],
+                        Tags = ["Orders", "ErrorHandling"],
                         ErrorMessage = "Expected status code 409, but got 500.\nResponse body: {\"error\":\"Internal Server Error\"}",
                         ErrorStackTrace = "   at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)\n   at OrderTests.Insufficient_stock_returns_409() in /src/Tests/OrderTests.cs:line 87",
                         Steps =
@@ -332,14 +332,14 @@ public class ShowcaseReportTests : PlaywrightTestBase
                         Id = "order-3", DisplayName = "Listing orders returns paginated results",
                         IsHappyPath = true, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(189),
-                        Categories = ["Smoke", "Orders"]
+                        Tags = ["Smoke", "Orders"]
                     },
                     new Scenario
                     {
                         Id = "order-param-1", DisplayName = "Order validation(Amount: 100, Currency: GBP, Region: EU)",
                         OutlineId = "Order validation", IsHappyPath = true, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(34),
-                        Categories = ["Orders", "Validation"],
+                        Tags = ["Orders", "Validation"],
                         ExampleValues = new() { ["Amount"] = "100.00", ["Currency"] = "GBP", ["Region"] = "EU" }
                     },
                     new Scenario
@@ -347,7 +347,7 @@ public class ShowcaseReportTests : PlaywrightTestBase
                         Id = "order-param-2", DisplayName = "Order validation(Amount: 250.50, Currency: USD, Region: US)",
                         OutlineId = "Order validation", IsHappyPath = true, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(28),
-                        Categories = ["Orders", "Validation"],
+                        Tags = ["Orders", "Validation"],
                         ExampleValues = new() { ["Amount"] = "250.50", ["Currency"] = "USD", ["Region"] = "US" }
                     },
                     new Scenario
@@ -355,7 +355,7 @@ public class ShowcaseReportTests : PlaywrightTestBase
                         Id = "order-param-3", DisplayName = "Order validation(Amount: 999.99, Currency: EUR, Region: APAC)",
                         OutlineId = "Order validation", IsHappyPath = false, Result = ExecutionResult.Failed,
                         Duration = TimeSpan.FromMilliseconds(1102),
-                        Categories = ["Orders", "Validation"],
+                        Tags = ["Orders", "Validation"],
                         ExampleValues = new() { ["Amount"] = "999.99", ["Currency"] = "EUR", ["Region"] = "APAC" },
                         ErrorMessage = "Expected 200 OK but got 502 Bad Gateway"
                     },
@@ -364,7 +364,7 @@ public class ShowcaseReportTests : PlaywrightTestBase
                         Id = "order-param-4", DisplayName = "Order validation(Amount: 0.01, Currency: JPY, Region: APAC)",
                         OutlineId = "Order validation", IsHappyPath = true, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(31),
-                        Categories = ["Orders", "Validation"],
+                        Tags = ["Orders", "Validation"],
                         ExampleValues = new() { ["Amount"] = "0.01", ["Currency"] = "JPY", ["Region"] = "APAC" }
                     }
                 ]
@@ -380,7 +380,7 @@ public class ShowcaseReportTests : PlaywrightTestBase
                         Id = "pay-1", DisplayName = "Processing a payment charges Stripe and records transaction",
                         IsHappyPath = true, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(456),
-                        Categories = ["Smoke", "Payments"],
+                        Tags = ["Smoke", "Payments"],
                         Steps =
                         [
                             new ScenarioStep { Keyword = "Given", Text = "the Payment API is running", Status = ExecutionResult.Passed },
@@ -394,14 +394,14 @@ public class ShowcaseReportTests : PlaywrightTestBase
                         Id = "pay-2", DisplayName = "Refund reverses the charge",
                         IsHappyPath = true, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(312),
-                        Categories = ["Payments"]
+                        Tags = ["Payments"]
                     },
                     new Scenario
                     {
                         Id = "pay-3", DisplayName = "Payment timeout retries three times",
                         IsHappyPath = false, Result = ExecutionResult.Skipped,
                         Duration = TimeSpan.FromMilliseconds(50),
-                        Categories = ["Payments", "ErrorHandling"]
+                        Tags = ["Payments", "ErrorHandling"]
                     }
                 ]
             },
@@ -415,21 +415,21 @@ public class ShowcaseReportTests : PlaywrightTestBase
                         Id = "auth-1", DisplayName = "Login with valid credentials returns JWT",
                         IsHappyPath = true, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(95),
-                        Categories = ["Smoke", "Auth"]
+                        Tags = ["Smoke", "Auth"]
                     },
                     new Scenario
                     {
                         Id = "auth-2", DisplayName = "Login with invalid credentials returns 401",
                         IsHappyPath = false, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(78),
-                        Categories = ["Auth", "ErrorHandling"]
+                        Tags = ["Auth", "ErrorHandling"]
                     },
                     new Scenario
                     {
                         Id = "auth-3", DisplayName = "Expired token is rejected with 403",
                         IsHappyPath = false, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(62),
-                        Categories = ["Auth"]
+                        Tags = ["Auth"]
                     }
                 ]
             },
@@ -443,14 +443,14 @@ public class ShowcaseReportTests : PlaywrightTestBase
                         Id = "inv-1", DisplayName = "Stock level decreases after order",
                         IsHappyPath = true, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(220),
-                        Categories = ["Inventory"]
+                        Tags = ["Inventory"]
                     },
                     new Scenario
                     {
                         Id = "inv-2", DisplayName = "Restock event increases available units",
                         IsHappyPath = true, Result = ExecutionResult.Passed,
                         Duration = TimeSpan.FromMilliseconds(145),
-                        Categories = ["Inventory"]
+                        Tags = ["Inventory"]
                     }
                 ]
             }

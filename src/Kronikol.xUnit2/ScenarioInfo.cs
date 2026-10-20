@@ -13,6 +13,12 @@ public class ScenarioInfo
     public required string MethodMatchKey { get; init; }
     public string? Endpoint { get; init; }
     public bool IsHappyPath { get; init; }
+
+    /// <summary>The <c>Category</c> traits of the test's class and its base classes (<see cref="CategoryTraits"/>).</summary>
+    public string[]? FeatureTags { get; init; }
+
+    /// <summary>The <c>Category</c> traits of the test method.</summary>
+    public string[]? Tags { get; init; }
     public ExecutionResult Result { get; set; } = ExecutionResult.Passed;
     public string? ErrorMessage { get; set; }
     public string? ErrorStackTrace { get; set; }

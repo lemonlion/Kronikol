@@ -43,6 +43,9 @@
       "Id": "0e7471099be0982b536bdbe46e899a21",
       "DisplayName": "A scenario with a data table and a doc string",
       "Result": "Passed",
+      "Tags": [
+        "validation"
+      ],
       "BackgroundSteps": [
         {
           "Keyword": "Given",
@@ -73,9 +76,8 @@
       "DisplayName": "A failing scenario",
       "Result": "Failed",
       "ErrorMessage": "Error: Deliberate failure: the widget did not appear\n\n   at ..\\steps\\steps.ts:55\n\n  53 |\n  54 | When('the step blows up', async ({}) => {\n> 55 |   throw new Error('Deliberate failure: the widget did not appear');\n     |         ^\n  56 | });\n  57 |\n  58 | When('the flaky step runs', async ({ $testInfo }) => {",
-      "Labels": [
-        "failing",
-        "retry 1"
+      "Tags": [
+        "failing"
       ],
       "BackgroundSteps": [
         {
@@ -168,9 +170,6 @@
       "Id": "ae698eda4d8551faaa82efb9eb80c4d4",
       "DisplayName": "A flaky scenario that passes on the second attempt",
       "Result": "Passed",
-      "Labels": [
-        "retry 1"
-      ],
       "Steps": [
         {
           "Keyword": "Given",

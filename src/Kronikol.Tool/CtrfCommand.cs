@@ -146,13 +146,13 @@ internal static class CtrfCommand
             Trace = Trimmed(scenario.ErrorStackTrace),
             FilePath = filePath,
             Line = scenario.SourceFile is { Length: > 0 } ? scenario.SourceLine : null,
-            Tags = [.. scenario.Labels.Where(l => !IsGeneratedRetryLabel(l))],
+            // the effective tags; the scanner left out a 4.x file's generated retry N labels (plans/TAGS_PLAN.md §4.13)
+            Tags = scenario.EffectiveTags,
             Retries = retries,
             Flaky = retries > 0 && result == ExecutionResult.Passed,
             RawStatus = scenario.Result,
             Address = scenario.Address,
-            StableId = Trimmed(scenario.StableId),
-            Categories = [.. scenario.Categories]
+            StableId = Trimmed(scenario.StableId)
         };
     }
 
@@ -179,12 +179,6 @@ internal static class CtrfCommand
         };
         return environment.IsEmpty ? null : environment;
     }
-
-    /// <summary>Mirrors <c>CtrfReportGenerator.IsGeneratedRetryLabel</c>; see the note on tags there.</summary>
-    private static bool IsGeneratedRetryLabel(string label) =>
-        label.StartsWith("retry ", StringComparison.Ordinal)
-        && label.Length > 6
-        && label.AsSpan(6).ToString().All(char.IsAsciiDigit);
 
     private static string? Trimmed(string? value) => string.IsNullOrEmpty(value) ? null : value;
 

@@ -157,7 +157,7 @@ public class TestRunReportSchemaContractTests
             DisplayName = "Orders",
             Endpoint = "/api/orders",
             Description = "Everything about placing an order.",
-            Labels = ["orders", "smoke"],
+            Tags = ["orders", "smoke"],
             Scenarios =
             [
                 new Scenario
@@ -170,8 +170,7 @@ public class TestRunReportSchemaContractTests
                     Duration = TimeSpan.FromSeconds(2.5),
                     ErrorMessage = "Expected: 4173\nActual: 3902",
                     ErrorStackTrace = "   at OrderTests.Place() in OrderTests.cs:line 42",
-                    Labels = ["checkout"],
-                    Categories = ["API"],
+                    Tags = ["checkout", "API"],
                     Rule = "Totals are exact",
                     OutlineId = "Place an order for <item>",
                     ExamplesBlockName = "Standard items",

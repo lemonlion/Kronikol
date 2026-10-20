@@ -23,7 +23,7 @@ public class MobileFilterLineTests : PlaywrightTestBase
             Scenarios = Enumerable.Range(1, 6).Select(i => new Scenario
             {
                 Id = $"f{f}s{i}", DisplayName = $"Scenario {f}.{i}", Result = ExecutionResult.Passed,
-                Duration = TimeSpan.FromMilliseconds(10 * i + f), Labels = i % 3 == 0 ? ["smoke"] : null, IsHappyPath = f == 1 && i == 1
+                Duration = TimeSpan.FromMilliseconds(10 * i + f), Tags = i % 3 == 0 ? ["smoke"] : null, IsHappyPath = f == 1 && i == 1
             }).ToArray()
         }).ToArray();
         var path = ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Bakery", true,

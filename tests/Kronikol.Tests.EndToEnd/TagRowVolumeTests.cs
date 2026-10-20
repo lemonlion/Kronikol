@@ -38,7 +38,7 @@ public class TagRowVolumeTests : PlaywrightTestBase
             scenarios.Add(new Scenario
             {
                 Id = $"v{i}", DisplayName = string.Create(CultureInfo.InvariantCulture, $"Scenario {i:000}"), Result = ExecutionResult.Passed,
-                Duration = TimeSpan.FromMilliseconds(10), Labels = i < tags || tags == 9 ? labels : null, IsHappyPath = tags == 9 && i == 0
+                Duration = TimeSpan.FromMilliseconds(10), Tags = i < tags || tags == 9 ? labels : null, IsHappyPath = tags == 9 && i == 0
             });
         }
         var fileName = $"TagVolume_{tags}.html";

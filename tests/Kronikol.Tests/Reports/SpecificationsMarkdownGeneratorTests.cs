@@ -22,7 +22,7 @@ public class SpecificationsMarkdownGeneratorTests
             DisplayName = "Checkout",
             Endpoint = "payments",
             Description = "How a customer pays.",
-            Labels = ["billing"],
+            Tags = ["billing"],
             Scenarios =
             [
                 new Scenario
@@ -40,7 +40,7 @@ public class SpecificationsMarkdownGeneratorTests
                     Id = "c2", DisplayName = "Pay with a valid card", IsHappyPath = true,
                     Result = ExecutionResult.Passed,
                     Description = "The ordinary path, and the one most orders take.",
-                    Labels = ["smoke"], Categories = ["payments"],
+                    Tags = ["smoke", "payments"],
                     BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "the shop is open" }],
                     Steps =
                     [
@@ -103,7 +103,7 @@ public class SpecificationsMarkdownGeneratorTests
     }
 
     [Fact]
-    public void A_feature_carries_its_endpoint_description_and_labels()
+    public void A_feature_carries_its_endpoint_description_and_tags()
     {
         var markdown = Generate(Shop());
 
@@ -111,7 +111,7 @@ public class SpecificationsMarkdownGeneratorTests
         // Author prose is quoted, so a heading inside somebody's Gherkin description cannot restructure
         // the document around it.
         Assert.Contains("> How a customer pays.", markdown);
-        Assert.Contains("`billing`", markdown);
+        Assert.Contains("\nTags: `billing`\n", markdown);
     }
 
     [Fact]
@@ -124,13 +124,15 @@ public class SpecificationsMarkdownGeneratorTests
     }
 
     [Fact]
-    public void A_scenario_carries_its_own_description_labels_and_categories()
+    public void A_scenario_carries_its_own_description_and_its_tags_on_one_line()
     {
         var markdown = Generate(Shop());
 
         Assert.Contains("> The ordinary path, and the one most orders take.", markdown);
-        Assert.Contains("`smoke`", markdown);
-        Assert.Contains("`payments`", markdown);
+        // 4.x printed a Labels line and a Categories line (plans/TAGS_PLAN.md §4.12)
+        Assert.Contains("\nTags: `smoke`, `payments`\n", markdown);
+        Assert.DoesNotContain("Labels:", markdown);
+        Assert.DoesNotContain("Categories:", markdown);
     }
 
     // ─── Steps ─────────────────────────────────────────────────

@@ -125,7 +125,7 @@ public class ControlTitlesAuditTests : PlaywrightTestBase
                     new Scenario
                     {
                         Id = "pay", DisplayName = "Pays for an order", Result = ExecutionResult.Passed, IsHappyPath = true,
-                        Duration = TimeSpan.FromMilliseconds(2000), Labels = ["fast"], Categories = ["smoke"],
+                        Duration = TimeSpan.FromMilliseconds(2000), Tags = ["fast", "smoke"],
                         Attachments = [new FileAttachment("order.json", Source("order.json", json)), new FileAttachment("screen.png", Source("screen.png", ReportTestHelper.OnePixelPng), "image/png")],
                         BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "the shop is open", Status = ExecutionResult.Passed }],
                         Steps =

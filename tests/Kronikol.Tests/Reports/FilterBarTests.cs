@@ -14,10 +14,10 @@ public class FilterBarTests
 {
     private static readonly DateTime Start = new(2026, 10, 16, 17, 27, 11, DateTimeKind.Utc);
 
-    private static Scenario Run(string id, string name, int? ms, string[]? labels = null, string[]? categories = null, bool happy = false) => new()
+    private static Scenario Run(string id, string name, int? ms, string[]? tags = null, bool happy = false) => new()
     {
         Id = id, DisplayName = name, Result = ExecutionResult.Passed, Duration = ms is null ? null : TimeSpan.FromMilliseconds(ms.Value),
-        Labels = labels, Categories = categories, IsHappyPath = happy
+        Tags = tags, IsHappyPath = happy
     };
 
     private static Feature[] Bakery(bool durations = true) =>
@@ -27,7 +27,7 @@ public class FilterBarTests
             DisplayName = "Orders",
             Scenarios =
             [
-                Run("s1", "Create order", durations ? 100 : null, ["smoke"], ["Fast"], happy: true),
+                Run("s1", "Create order", durations ? 100 : null, ["smoke", "Fast"], happy: true),
                 Run("s2", "Reject order", durations ? 300 : null)
             ]
         }

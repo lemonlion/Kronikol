@@ -20,10 +20,10 @@ public class TagFilterTests : PlaywrightTestBase
     private const string Pay = "scenario-pay-by-card", Refuse = "scenario-refuse-a-card", Leave = "scenario-leave", Look = "scenario-look-around";
     private static readonly string[] All = [Pay, Refuse, Leave, Look];
 
-    private static Scenario Run(string id, string name, string[]? labels = null, string[]? categories = null, bool happy = false, int? attempt = null) => new()
+    private static Scenario Run(string id, string name, string[]? tags = null, bool happy = false, int? attempt = null) => new()
     {
-        Id = id, DisplayName = name, Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(20), Labels = labels,
-        Categories = categories, IsHappyPath = happy, Attempt = attempt
+        Id = id, DisplayName = name, Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(20), Tags = tags,
+        IsHappyPath = happy, Attempt = attempt
     };
 
     private string Generate(string fileName)
@@ -32,18 +32,18 @@ public class TagFilterTests : PlaywrightTestBase
         [
             new()
             {
-                DisplayName = "Checkout", Labels = ["checkout"],
+                DisplayName = "Checkout", Tags = ["checkout"],
                 Scenarios =
                 [
                     Run("c1", "Pay by card", ["a,b", "x y"], happy: true),
                     // the words of Pay's tag "x y" in its text, not in its tags: a quoted @ must not read as a quoted word search
-                    Run("c2", "Refuse a card", ["say \"hi\""], ["Slow"]) with { Description = "Says x y." }
+                    Run("c2", "Refuse a card", ["say \"hi\"", "Slow"]) with { Description = "Says x y." }
                 ]
             },
             new()
             {
                 DisplayName = "Browse",
-                Scenarios = [Run("b1", "Look around", ["smoke"]), Run("b2", "Leave", ["retry 1", "retry 2"], attempt: 3)]
+                Scenarios = [Run("b1", "Look around", ["smoke"]), Run("b2", "Leave", attempt: 3)]
             }
         ];
         var path = ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Shop", true,

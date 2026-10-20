@@ -1,6 +1,8 @@
 using Kronikol.Reports;
 using Kronikol.Tracking;
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
+using NUnit.Framework.Internal;
 
 namespace Kronikol.NUnit4;
 
@@ -14,18 +16,16 @@ internal static class TestContextEnumerableExtensions
             .Select(scenariosForFeature =>
             {
                 var firstScenarioForFeature = scenariosForFeature.First();
-
-                string? endpoint = null;
-                if (firstScenarioForFeature.Test.Parent!.Properties.ContainsKey(EndpointAttribute.EndpointPropertyKey))
-                    endpoint = firstScenarioForFeature.Test.Parent.Properties[EndpointAttribute.EndpointPropertyKey][0]?.ToString();
+                var featureTags = ScenarioTags.Classify(Levels(firstScenarioForFeature.Test).Feature).Tags;
 
                 return new Feature
                 {
                     DisplayName = firstScenarioForFeature.Test.DisplayName!.Titleize(),
-                    Endpoint = endpoint,
+                    Endpoint = EndpointOf(firstScenarioForFeature.Test),
+                    Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenariosForFeature
                         .DistinctBy(x => x.Test.ID)
-                        .OrderByDescending(x => x.Test.Properties.ContainsKey(HappyPathAttribute.HappyPathPropertyKey))
+                        .OrderByDescending(x => IsHappyPath(x.Test))
                         .ThenBy(x => x.Test.MethodName)
                         .Select(x =>
                         {
@@ -35,13 +35,15 @@ internal static class TestContextEnumerableExtensions
                             var structuredParams = structuredResult?.StringValues;
                             Dictionary<string, object?>? rawValues = structuredResult?.RawValues;
                             var parsed = structuredParams ?? ParameterParser.Parse(displayName);
+                            var tags = ScenarioTags.Classify(Levels(x.Test).Scenario).Tags.Except(featureTags, ScenarioTags.Comparer).ToArray();
 
                             return new Scenario
                             {
                                 Id = x.Test.ID,
                                 Result = x.Result.Outcome.Status.ToExecutionResult(),
                                 DisplayName = displayName,
-                                IsHappyPath = x.Test.Properties.ContainsKey(HappyPathAttribute.HappyPathPropertyKey),
+                                IsHappyPath = IsHappyPath(x.Test),
+                                Tags = tags.Length > 0 ? tags : null,
                                 ErrorMessage = ScenarioOutcome.Message(x.Result.Outcome.Status, x.Result.Message),
                                 ErrorStackTrace = ScenarioOutcome.StackTrace(x.Result.Outcome.Status, x.Result.StackTrace),
                                 Duration = DiagrammedTestRun.TestDurations.TryGetValue(x.Test.ID, out var dur) ? dur : null,
@@ -55,6 +57,45 @@ internal static class TestContextEnumerableExtensions
                         }).ToArray()
                 };
             }).ToArray();
+    }
+
+    /// <summary>
+    /// A test's categories by level (plans/TAGS_PLAN.md §4.7): the test's own and, for a <c>[TestCase]</c>, its method
+    /// suite's (which holds the method's <c>[Category]</c>) are the scenario's, nearest first as NUnit's
+    /// <c>AllCategories()</c> lists them; the fixture's and every suite above it, a set-up fixture and the assembly (Q12),
+    /// are the feature's.
+    /// </summary>
+    private static (List<string> Scenario, List<string> Feature) Levels(TestContext.TestAdapter test)
+    {
+        var scenario = new List<string>(Categories(test.Properties));
+        var feature = new List<string>();
+        for (var suite = test.Parent; suite is not null; suite = suite.Parent)
+            (suite.Method is not null ? scenario : feature).AddRange(Categories(suite.Properties));
+        return (scenario, feature);
+    }
+
+    private static IEnumerable<string> Categories(IPropertyBag properties) =>
+        properties.ContainsKey(PropertyNames.Category) ? properties[PropertyNames.Category].OfType<string>() : [];
+
+    private static IEnumerable<string> Categories(TestContext.PropertyBagAdapter properties) =>
+        properties.ContainsKey(PropertyNames.Category) ? properties[PropertyNames.Category].OfType<string>() : [];
+
+    /// <summary>
+    /// <c>[HappyPath]</c> on the test, or on a <c>[TestCase]</c> method, whose cases do not carry it (F14), or a happy-path
+    /// category.
+    /// </summary>
+    private static bool IsHappyPath(TestContext.TestAdapter test) =>
+        test.Properties.ContainsKey(HappyPathAttribute.HappyPathPropertyKey)
+        || test.Parent is { Method: not null } suite && suite.Properties.ContainsKey(HappyPathAttribute.HappyPathPropertyKey)
+        || ScenarioTags.Classify(Levels(test).Scenario).IsHappyPath;
+
+    /// <summary>The nearest suite's <c>[Endpoint]</c>: a <c>[TestCase]</c>'s parent is its method suite, not its fixture (F14).</summary>
+    private static string? EndpointOf(TestContext.TestAdapter test)
+    {
+        for (var suite = test.Parent; suite is not null; suite = suite.Parent)
+            if (suite.Properties.ContainsKey(EndpointAttribute.EndpointPropertyKey))
+                return suite.Properties[EndpointAttribute.EndpointPropertyKey][0]?.ToString();
+        return null;
     }
 
     private static (Dictionary<string, string> StringValues, Dictionary<string, object?> RawValues)? TryExtractStructuredParametersWithRaw(TestContext context)

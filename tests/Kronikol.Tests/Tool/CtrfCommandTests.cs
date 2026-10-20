@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Kronikol.Reports;
 using Kronikol.Tool;
 using Kronikol.Tracking;
@@ -47,19 +48,20 @@ public class CtrfCommandTests : IDisposable
             {
                 DisplayName = "Checkout",
                 SourceFile = "Features/Checkout.feature",
+                Tags = ["checkout"],
                 Scenarios =
                 [
                     new Scenario
                     {
                         Id = testId, DisplayName = "Pay with an expired card", Result = ExecutionResult.Failed,
                         Duration = TimeSpan.FromMilliseconds(1250), ErrorMessage = "Assert.Equal() Failure",
-                        ErrorStackTrace = "at Checkout.Pay()", Labels = ["smoke"], Categories = ["payments"],
+                        ErrorStackTrace = "at Checkout.Pay()", Tags = ["smoke", "payments"],
                         SourceFile = "Features/Checkout.feature", SourceLine = 12
                     },
                     new Scenario
                     {
                         Id = "ctrf-pass", DisplayName = "Pay with a valid card", Result = ExecutionResult.Passed,
-                        Duration = TimeSpan.FromMilliseconds(300), Attempt = 2, Labels = ["retry 1"]
+                        Duration = TimeSpan.FromMilliseconds(300), Attempt = 2
                     },
                     new Scenario { Id = "ctrf-skip", DisplayName = "Pay in yen", Result = ExecutionResult.Skipped }
                 ]
@@ -127,6 +129,63 @@ public class CtrfCommandTests : IDisposable
         Assert.Equal(0, exit);
         Assert.Equal("", output.Trim());
         Assert.Equal(File.ReadAllText(Path.Combine(_directory, "ctrf-report.json")), File.ReadAllText(target));
+    }
+
+    // ─── Tags ──────────────────────────────────────────────────
+
+    /// <summary>The CTRF tests the verb makes of <see cref="Report"/>, by name.</summary>
+    private Dictionary<string, JsonElement> ConvertedTests()
+    {
+        var (output, error, exit) = Run(Report);
+        Assert.True(exit == 0, $"exit {exit}: {error}");
+        using var document = JsonDocument.Parse(output);
+        return document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()
+            .ToDictionary(t => t.GetProperty("name").GetString()!, t => t.Clone());
+    }
+
+    private static string?[] TagsOf(JsonElement test) =>
+        test.TryGetProperty("tags", out var tags) ? [.. tags.EnumerateArray().Select(t => t.GetString())] : [];
+
+    private static bool HasExtraCategories(JsonElement test) =>
+        test.TryGetProperty("extra", out var extra) && extra.TryGetProperty("categories", out _);
+
+    [Fact]
+    public void A_scenario_s_tags_are_its_feature_s_then_its_own()
+    {
+        // plans/TAGS_PLAN.md §4.12: a category is a tag, and a feature's tags are each of its scenarios'
+        WriteRun();
+
+        var tests = ConvertedTests();
+
+        Assert.Equal(["checkout", "smoke", "payments"], TagsOf(tests["Pay with an expired card"]));
+        Assert.Equal(["checkout"], TagsOf(tests["Pay with a valid card"]));
+        Assert.Empty(TagsOf(tests["Browse"]));
+        Assert.DoesNotContain(tests.Values, HasExtraCategories);
+    }
+
+    [Fact]
+    public void A_4x_report_s_labels_and_categories_are_its_tags_less_the_retry_labels_its_attempts_account_for()
+    {
+        // what a 4.x writer wrote: a feature's labels, a scenario's labels and categories, and a retry N label an ingest
+        // lane made for each earlier attempt (§4.6, §4.13)
+        WriteRun();
+        var json = JsonNode.Parse(File.ReadAllText(Report))!;
+        var feature = QueryTagsTests.WithLabels(json["features"]!.AsArray(), "Checkout", "checkout");
+        var scenarios = feature["scenarios"]!.AsArray().Select(s => s!.AsObject()).ToArray();
+        foreach (var scenario in scenarios)
+            scenario.Remove("tags");
+        var expired = scenarios.Single(s => (string?)s["name"] == "Pay with an expired card");
+        expired["labels"] = new JsonArray("smoke", "retry 2");
+        expired["categories"] = new JsonArray("payments");
+        scenarios.Single(s => (string?)s["id"] == "ctrf-pass")["labels"] = new JsonArray("retry 1", "slow");
+        File.WriteAllText(Report, json.ToJsonString());
+
+        var tests = ConvertedTests();
+
+        // The expired card ran once, so its retry 2 is its author's; the valid card's retry 1 is its first attempt.
+        Assert.Equal(["checkout", "smoke", "retry 2", "payments"], TagsOf(tests["Pay with an expired card"]));
+        Assert.Equal(["checkout", "slow"], TagsOf(tests["Pay with a valid card"]));
+        Assert.DoesNotContain(tests.Values, HasExtraCategories);
     }
 
     [Fact]

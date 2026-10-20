@@ -54,7 +54,7 @@ public static class SpecificationsMarkdownGenerator
                 markdown.Append("\nEndpoint: `").Append(Inline(feature.Endpoint)).Append("`\n");
 
             AppendProse(markdown, feature.Description);
-            AppendTags(markdown, "Labels", feature.Labels);
+            AppendTags(markdown, "Tags", feature.Tags);
 
             foreach (var group in Grouped(feature.Scenarios ?? []))
             {
@@ -67,8 +67,7 @@ public static class SpecificationsMarkdownGenerator
                     markdown.Append(heading).Append(Heading(scenario.DisplayName)).Append('\n');
 
                     AppendProse(markdown, scenario.Description);
-                    AppendTags(markdown, "Labels", scenario.Labels);
-                    AppendTags(markdown, "Categories", scenario.Categories);
+                    AppendTags(markdown, "Tags", scenario.Tags);
                     AppendExamples(markdown, scenario);
 
                     // Kept apart for the same reason every data writer keeps them apart: merged, a reader

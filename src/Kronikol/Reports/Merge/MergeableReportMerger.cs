@@ -132,7 +132,7 @@ public static class MergeableReportMerger
                 Endpoint = existing.Endpoint ?? feature.Endpoint,
                 SourceFile = existing.SourceFile ?? feature.SourceFile,
                 Description = existing.Description ?? feature.Description,
-                Labels = existing.Labels ?? feature.Labels
+                Tags = existing.Tags ?? feature.Tags
             };
         }
 

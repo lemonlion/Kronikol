@@ -119,10 +119,11 @@ public sealed record TestRunRecord
     [JsonPropertyName("rule")] public string? Rule { get; init; }
 
     /// <summary>
-    /// <c>start</c> only: the scenario's tags, with or without a leading <c>@</c>. The ReqNRoll
-    /// conventions apply: <c>@category:x</c> becomes a category, <c>@endpoint:x</c> the feature's
-    /// endpoint, <c>@happy-path</c> (also <c>happy_path</c>, <c>happypath</c>) marks the happy path, and
-    /// everything else is a label. Tags carried by every scenario of a feature also become the feature's labels.
+    /// <c>start</c> only: the scenario's tags, with or without a leading <c>@</c>, read by
+    /// <see cref="Kronikol.Reports.ScenarioTags.Classify"/>: <c>@endpoint:x</c> is the feature's endpoint,
+    /// <c>@happy-path</c> (also <c>happy_path</c>, <c>happypath</c>, <c>Happy Path</c>) marks the happy path,
+    /// <c>@category:x</c> is the tag <c>x</c>, and everything else is a tag. Tags carried by every scenario of a
+    /// feature are also the feature's.
     /// </summary>
     [JsonPropertyName("tags")] public string[]? Tags { get; init; }
 
@@ -172,7 +173,7 @@ public sealed record TestRunRecord
     /// <c>start</c> (and optionally <c>end</c>, <c>step</c>, <c>assertion</c>): which run of the test this is, 1-based —
     /// 1 for the first run, 2 for the first retry — as the runner's own retries count it within one run (Jest's
     /// <c>retryTimes</c>, Playwright's <c>retries</c>). Every <c>start</c> of one test id opens an attempt; the report shows
-    /// the last one, with a <c>retry N</c> label for each earlier one, and <see cref="Kronikol.Reports.Scenario.Attempt"/>
+    /// the last one, with <see cref="Kronikol.Reports.Scenario.Attempt"/>
     /// set, which history reads as "passed on retry" and CTRF as its <c>retries</c>. A second <c>start</c> without it is
     /// read as the next attempt, and a diagnostic says so. A record other than a <c>start</c> that carries it belongs to
     /// that attempt, whatever its timestamp. Not a CI re-run of the job: that is the history run id.

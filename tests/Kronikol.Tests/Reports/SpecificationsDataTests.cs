@@ -40,13 +40,13 @@ public class SpecificationsDataTests
                 DisplayName = "Orders",
                 Endpoint = "POST /api/orders",
                 Description = "Order management",
-                Labels = ["api"],
+                Tags = ["api"],
                 Scenarios =
                 [
                     new Scenario
                     {
                         Id = "s1", DisplayName = "Place order", IsHappyPath = true,
-                        Labels = ["smoke"], Categories = ["Integration"],
+                        Tags = ["smoke", "Integration"],
                         Steps = [new ScenarioStep { Keyword = "Given", Text = "a request" }]
                     }
                 ]
@@ -64,13 +64,14 @@ public class SpecificationsDataTests
         Assert.Equal("Orders", feature.GetProperty("name").GetString());
         Assert.Equal("POST /api/orders", feature.GetProperty("endpoint").GetString());
         Assert.Equal("Order management", feature.GetProperty("description").GetString());
-        Assert.Equal("api", feature.GetProperty("labels")[0].GetString());
+        Assert.Equal(["api"], feature.GetProperty("tags").EnumerateArray().Select(t => t.GetString()));
 
         var scenario = feature.GetProperty("scenarios")[0];
         Assert.Equal("Place order", scenario.GetProperty("name").GetString());
         Assert.True(scenario.GetProperty("isHappyPath").GetBoolean());
-        Assert.Equal("smoke", scenario.GetProperty("labels")[0].GetString());
-        Assert.Equal("Integration", scenario.GetProperty("categories")[0].GetString());
+        Assert.Equal(["smoke", "Integration"], scenario.GetProperty("tags").EnumerateArray().Select(t => t.GetString()));
+        Assert.False(scenario.TryGetProperty("labels", out _));
+        Assert.False(scenario.TryGetProperty("categories", out _));
 
         var step = scenario.GetProperty("steps")[0];
         Assert.Equal("Given a request", step.GetString());
@@ -115,46 +116,6 @@ public class SpecificationsDataTests
         Assert.Equal(string.Empty, content);
     }
 
-    [Fact]
-    public void GenerateSpecificationsData_yaml_matches_existing_yaml_specs_format()
-    {
-        var features = new[]
-        {
-            new Feature
-            {
-                DisplayName = "Orders",
-                Endpoint = "POST /api/orders",
-                Description = "Manage orders",
-                Labels = ["api"],
-                Scenarios =
-                [
-                    new Scenario
-                    {
-                        Id = "s1", DisplayName = "Place order", IsHappyPath = true,
-                        Labels = ["smoke"], Categories = ["Ordering"],
-                        Steps =
-                        [
-                            new ScenarioStep { Keyword = "Given", Text = "a valid request" },
-                            new ScenarioStep
-                            {
-                                Keyword = "When", Text = "the order is placed",
-                                SubSteps = [new ScenarioStep { Keyword = "And", Text = "payment processed" }]
-                            }
-                        ]
-                    }
-                ]
-            }
-        };
-
-        // YAML format should match the existing GenerateYamlSpecs output
-        var existingPath = ReportGenerator.GenerateYamlSpecs([], features, "SpecsData_existing.yml", "Service Specs");
-        var existingContent = File.ReadAllText(existingPath);
-
-        var newPath = ReportGenerator.GenerateSpecificationsData(features, "SpecsData_new.yml", "Service Specs", DataFormat.Yaml);
-        var newContent = File.ReadAllText(newPath);
-
-        Assert.Equal(existingContent, newContent);
-    }
     // ── Background steps in the Specifications data files ────────────────────────────────────────
     //
     // The Specifications HTML has always shown a scenario's background steps; the .yml/.json/.xml
@@ -195,16 +156,6 @@ public class SpecificationsDataTests
         Assert.Contains("Steps:", content);
         Assert.Contains("When the order is placed", content);
         Assert.True(content.IndexOf("BackgroundSteps:", StringComparison.Ordinal) < content.IndexOf("        Steps:", StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public void GenerateYamlSpecs_emits_background_steps()
-    {
-        var path = ReportGenerator.GenerateYamlSpecs([], FeatureWithBackground(), "SpecsData_bg_public.yml", "Specs");
-        var content = File.ReadAllText(path);
-
-        Assert.Contains("BackgroundSteps:", content);
-        Assert.Contains("Given the ordering service is running", content);
     }
 
     [Fact]

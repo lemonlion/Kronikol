@@ -14,7 +14,11 @@ public class HappyPathDetectionTests
     [InlineData("Happy-Path", true)]
     [InlineData("Happy_Path", true)]
     [InlineData("HappyPath", true)]
-    [InlineData("happy path", false)]
+    // LightBDD's [HappyPath] label and TUnit's category, so every lane reads Happy Path one way (plans/TAGS_PLAN.md F11)
+    [InlineData("Happy Path", true)]
+    [InlineData("happy path", true)]
+    [InlineData("HAPPY PATH", true)]
+    [InlineData("happy  path", false)]
     [InlineData("happy--path", false)]
     [InlineData("not-happy-path", false)]
     [InlineData("happy-paths", false)]

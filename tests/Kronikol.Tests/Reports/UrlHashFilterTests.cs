@@ -19,7 +19,7 @@ public class UrlHashFilterTests
                     IsHappyPath = true,
                     Result = ExecutionResult.Passed,
                     Duration = TimeSpan.FromSeconds(1),
-                    Categories = ["Smoke"]
+                    Tags = ["Smoke"]
                 }
             ]
         }

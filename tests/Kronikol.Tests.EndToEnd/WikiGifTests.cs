@@ -565,14 +565,14 @@ public class WikiGifTests : PlaywrightTestBase
     private static Scenario Sc(string id, string name, bool happy, ExecutionResult result, int ms, string[] cats,
         ScenarioStep[]? steps = null, string? error = null, string? stack = null)
         => new() { Id = id, DisplayName = name, IsHappyPath = happy, Result = result,
-            Duration = TimeSpan.FromMilliseconds(ms), Categories = cats, Steps = steps,
+            Duration = TimeSpan.FromMilliseconds(ms), Tags = cats, Steps = steps,
             ErrorMessage = error, ErrorStackTrace = stack };
 
     private static Scenario ScParam(string id, string outlineId, string suffix, ExecutionResult result, int ms, string[] cats,
         Dictionary<string, string> values, string? error = null)
         => new() { Id = id, DisplayName = $"{outlineId}({suffix})", OutlineId = outlineId,
             IsHappyPath = result == ExecutionResult.Passed, Result = result,
-            Duration = TimeSpan.FromMilliseconds(ms), Categories = cats, ExampleValues = values,
+            Duration = TimeSpan.FromMilliseconds(ms), Tags = cats, ExampleValues = values,
             ErrorMessage = error };
 
     private static ScenarioStep[] Steps(params string[] kwText)

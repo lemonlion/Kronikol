@@ -101,27 +101,15 @@ public class ScenarioStepModelTests
     }
 
     [Fact]
-    public void Scenario_supports_labels()
+    public void Scenario_supports_tags()
     {
         var scenario = new Scenario
         {
             Id = "test-1",
             DisplayName = "Test",
-            Labels = ["smoke", "regression"]
+            Tags = ["smoke", "Orders"]
         };
-        Assert.Equal(2, scenario.Labels!.Length);
-    }
-
-    [Fact]
-    public void Scenario_supports_categories()
-    {
-        var scenario = new Scenario
-        {
-            Id = "test-1",
-            DisplayName = "Test",
-            Categories = ["Orders", "Payments"]
-        };
-        Assert.Equal(2, scenario.Categories!.Length);
+        Assert.Equal(["smoke", "Orders"], scenario.Tags);
     }
 
     [Fact]
@@ -136,14 +124,14 @@ public class ScenarioStepModelTests
     }
 
     [Fact]
-    public void Feature_supports_labels()
+    public void Feature_supports_tags()
     {
         var feature = new Feature
         {
             DisplayName = "Cake",
-            Labels = ["api", "v2"]
+            Tags = ["api", "v2"]
         };
-        Assert.Equal(2, feature.Labels!.Length);
+        Assert.Equal(["api", "v2"], feature.Tags);
     }
 
     [Fact]

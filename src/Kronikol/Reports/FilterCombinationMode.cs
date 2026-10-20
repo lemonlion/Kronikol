@@ -1,9 +1,9 @@
 namespace Kronikol.Reports;
 
 /// <summary>
-/// How a multi-select filter (dependencies, categories) combines its selected chips. The
-/// built-in default lives with each setting, not in this enum's ordering: the dependency
-/// filter defaults to <see cref="And"/>, the category filter to <see cref="Or"/>.
+/// How a multi-select filter (dependencies, tags) combines its selected chips. The built-in
+/// default lives with each setting, not in this enum's ordering: since 5.0.0 the dependency
+/// filter and the tag filter both default to <see cref="Or"/>.
 /// </summary>
 public enum FilterCombinationMode
 {

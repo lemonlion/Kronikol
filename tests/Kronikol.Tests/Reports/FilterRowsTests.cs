@@ -19,16 +19,15 @@ public class FilterRowsTests
     private const string PaymentSource = "@startuml\nactor \"Caller\" as caller\nparticipant \"Payment Service\" as pay\ncaller -> pay : POST /refunds\n@enduml";
     private static readonly string MarkerOnlySource = "@startuml\n" + global::Kronikol.PlantUml.PlantUmlCreator.MarkerOnlyParticipant + "\n@enduml";
 
-    private static Scenario Run(string id, string name, ExecutionResult result, int ms, string[]? labels = null, string[]? categories = null,
+    private static Scenario Run(string id, string name, ExecutionResult result, int ms, string[]? tags = null,
         bool happy = false, string? outline = null) => new()
     {
-        Id = id, DisplayName = name, Result = result, Duration = TimeSpan.FromMilliseconds(ms), Labels = labels, Categories = categories,
+        Id = id, DisplayName = name, Result = result, Duration = TimeSpan.FromMilliseconds(ms), Tags = tags,
         IsHappyPath = happy, OutlineId = outline, ExampleValues = outline is null ? null : new() { ["size"] = name[^2..^1] },
         ErrorMessage = result == ExecutionResult.Failed ? "boom" : null
     };
 
-    // five runs in two features: a parameterized scenario of two examples with no tag, a marker-only diagram, and
-    // categories, which are tags
+    // five runs in two features: a parameterized scenario of two examples with no tag, and a marker-only diagram
     private static Feature[] Bakery() =>
     [
         new Feature
@@ -36,13 +35,13 @@ public class FilterRowsTests
             DisplayName = "Orders",
             Scenarios =
             [
-                Run("s1", "Create order", ExecutionResult.Passed, 100, ["smoke", "api"], ["Fast"], happy: true),
+                Run("s1", "Create order", ExecutionResult.Passed, 100, ["smoke", "api", "Fast"], happy: true),
                 Run("s2", "Reject order", ExecutionResult.Failed, 300, ["api"]),
                 Run("s3", "Price(size: S)", ExecutionResult.Passed, 50, outline: "Price"),
                 Run("s4", "Price(size: L)", ExecutionResult.Passed, 50, outline: "Price")
             ]
         },
-        new Feature { DisplayName = "Refunds", Scenarios = [Run("s5", "Refund", ExecutionResult.Passed, 20, ["smoke"], ["Fast", "Slow"])] }
+        new Feature { DisplayName = "Refunds", Scenarios = [Run("s5", "Refund", ExecutionResult.Passed, 20, ["smoke", "Fast", "Slow"])] }
     ];
 
     private static string Generate(string fileName, Feature[]? features = null, bool includeTestRunData = true)
@@ -132,10 +131,11 @@ public class FilterRowsTests
     }
 
     [Fact]
-    public void A_category_is_a_tag_and_the_report_has_no_categories_row()
+    public void The_report_has_no_categories_row()
     {
         var html = Generate("FilterRows_Cats.html");
         var box = Box(html);
+        // Fast is the tag a 4.x run held as a category
         Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"Fast\" aria-pressed=\"false\" title=\"2 scenarios. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Fast</button>", box);
         // (a 4.x link's __uncategorized__ is still read, as the Untagged chip)
         foreach (var gone in new[] { "category-filters", "category-toggle", "cat-mode-toggle", "data-category=", "data-categories=", "_catMode" })
@@ -149,7 +149,7 @@ public class FilterRowsTests
         [
             new Feature
             {
-                DisplayName = "Checkout", Labels = ["checkout"],
+                DisplayName = "Checkout", Tags = ["checkout"],
                 Scenarios = [Run("c1", "Pay", ExecutionResult.Passed, 5, ["smoke"]), Run("c2", "Refuse", ExecutionResult.Passed, 5)]
             },
             new Feature { DisplayName = "Other", Scenarios = [Run("o1", "Browse", ExecutionResult.Passed, 5)] }
@@ -166,7 +166,7 @@ public class FilterRowsTests
         Feature[] features =
         [
             new Feature { DisplayName = "A", Scenarios = [Run("a1", "First", ExecutionResult.Passed, 5, ["Smoke"])] },
-            new Feature { DisplayName = "B", Scenarios = [Run("b1", "Second", ExecutionResult.Passed, 5, ["smoke"], ["SMOKE", "über"]), Run("b2", "Third", ExecutionResult.Passed, 5, ["Über"])] }
+            new Feature { DisplayName = "B", Scenarios = [Run("b1", "Second", ExecutionResult.Passed, 5, ["smoke", "SMOKE", "über"]), Run("b2", "Third", ExecutionResult.Passed, 5, ["Über"])] }
         ];
         var box = Box(Generate("FilterRows_Case.html", features));
         Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"Smoke\" aria-pressed=\"false\" title=\"2 scenarios. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Smoke</button>", box);

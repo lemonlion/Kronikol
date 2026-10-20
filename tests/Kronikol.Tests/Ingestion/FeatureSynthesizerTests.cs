@@ -170,8 +170,8 @@ public class FeatureSynthesizerTests
         Assert.Equal(2, scenario.Attempt);
         Assert.Equal(TimeSpan.FromMilliseconds(1500), scenario.Duration);
         Assert.Equal(["attempt two"], scenario.Steps!.Select(s => s.Text));
-        // The tags are the winning start's, once; each earlier attempt is a label.
-        Assert.Equal(["payments", "retry 1"], scenario.Labels);
+        // The tags are the winning start's, once; an earlier attempt makes no tag, the attempt carries it (Q6).
+        Assert.Equal(["payments"], scenario.Tags);
         // The run began with the first attempt.
         Assert.Equal(T0.UtcDateTime, result.Start);
     }
@@ -202,7 +202,7 @@ public class FeatureSynthesizerTests
         {
             new() { Event = "start", TestId = "once", TestName = "ran once", Timestamp = T0 },
             new() { Event = "end", TestId = "once", Status = "passed", Timestamp = T0.AddSeconds(1) },
-            // A producer that reports only the attempt that counted: the number is kept, no label is invented.
+            // A producer that reports only the attempt that counted: the number is kept, no tag is invented.
             new() { Event = "start", TestId = "third", TestName = "third time lucky", Attempt = 3, Timestamp = T0.AddSeconds(2) },
             new() { Event = "end", TestId = "third", Status = "passed", Timestamp = T0.AddSeconds(3) },
         };
@@ -212,7 +212,7 @@ public class FeatureSynthesizerTests
         Assert.Null(scenarios.Single(s => s.Id == "once").Attempt);
         var third = scenarios.Single(s => s.Id == "third");
         Assert.Equal(3, third.Attempt);
-        Assert.Null(third.Labels);
+        Assert.Null(third.Tags);
     }
 
     [Fact]

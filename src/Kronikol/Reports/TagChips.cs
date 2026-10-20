@@ -18,7 +18,7 @@ internal sealed class TagChips
         foreach (var feature in features)
             foreach (var scenario in feature.Scenarios)
             {
-                var tags = RowTagsOf(feature.Labels, scenario);
+                var tags = RowTagsOf(feature.Tags, scenario);
                 foreach (var tag in tags)
                 {
                     _spelling.TryAdd(tag, tag);

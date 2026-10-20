@@ -48,6 +48,15 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   link copied from a 4.x report opens the same view.
 - **`@"two words"` finds a tag with a space,** such as `@"Happy Path"`, on its own or with `&&`, `||` and `!`.
 - **A parameterized scenario shows the tags all its examples carry,** less its feature's; 4.x drew none.
+- **Every adapter reads its framework's own tags.** NUnit's `[Category]` (a `[TestCase]`'s `Category =` too), MSTest's
+  `[TestCategory]`, xUnit's `[Trait("Category", …)]` on v2 and v3, and TUnit's `[Category]` are tags: those on the test
+  are its scenario's, and those on its class, or with NUnit, MSTest and TUnit on its assembly, are its feature's. A
+  BDDfy scenario takes its xUnit test's `Category` traits beside its own tags. A category named as a happy-path marker
+  (`happy-path`, `Happy Path`) marks the happy path, as `@happy-path` does in Gherkin. Kronikol's own `[HappyPath]`
+  and `[Endpoint]` are not tags, and no other trait key or property is read. In 4.x these adapters made no tag at
+  all, though the docs said they made categories.
+- **A Gherkin rule's tags reach its scenarios,** and no others, in the Reqnroll adapters and in `kronikol ingest`'s
+  Cucumber Messages lane, which dropped a plain tag on a `Rule:`.
 - **The duration buttons say what they show.** Each percentile's tooltip names its threshold and its share of the run
   (the slowest half for P50), and that the first-call warm-up is left out when the run had one.
 - **The report bar carries the filters.** Right of the tabs it shows what the filters leave showing (shortened, then
@@ -234,6 +243,32 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   longer chips or badges. The scenario shows one badge, `retry 2` for a third attempt, drawn from `Scenario.Attempt`,
   and its tooltip says the earlier attempts are not in the report; a search for `retry 2` still finds it. An author's
   own `retry 2` tag is a tag like any other.
+- **Labels and categories are one list, `Tags`.** `Feature.Labels` is `Feature.Tags`, and `Scenario.Labels` and
+  `Scenario.Categories` are `Scenario.Tags`: the tags written at that level, a feature's own and a scenario's own (in
+  Gherkin with its rule's and its Examples block's), each null when empty. A scenario's tags in the report are its
+  feature's, then its own. `ScenarioTags.Classified` is `(Tags, Endpoint, IsHappyPath)`, without `Labels` and
+  `Categories`, and `ScenarioTags.Classify` reads `category:x` as the tag `x`, so `@smoke` and `@category:smoke` are
+  one tag. `ReqNRollConstants.CategoryTagPrefix` is gone; `ScenarioTags.CategoryPrefix` stays, as the prefix that is
+  read and dropped.
+- **The data files write `tags`.** `TestRunReport.json` and the mergeable JSON write a feature's `tags` and a scenario's
+  `tags`, its own, in place of `labels` and `categories`. `TestRunReport.yml` and `.xml` write `Tags`
+  (`<Tags><Tag>smoke</Tag></Tags>`, as the XSD says), and so do `Specifications.json`, `.yml` and `.xml`;
+  `Specifications.md` prints one `Tags:` line where it printed Labels and Categories. The JSON schema declares `tags`
+  and requires neither it nor the keys it replaces; `formatVersion` stays 3. Kronikol.Tool 5.x reads a 4.x file's
+  `labels` and `categories` as its tags, and a 4.x Kronikol.Tool reads a 5.0.0 file as having none. A committed
+  `Specifications.yml` sees its `Labels` and `Categories` keys become `Tags`.
+- **CTRF's `tags` are every tag a scenario has,** its feature's first, and `extra.categories` is gone, in
+  `ctrf-report.json` and in `kronikol ctrf`'s output.
+- **`kronikol query scenarios --json` gives a scenario's `tags`,** its feature's first, in place of `labels` and
+  `categories`, and `--label` matches a feature's tags too.
+- **No ingest lane makes `retry N` labels.** `kronikol ingest` gave a retried scenario a `retry N` label for each earlier
+  attempt; `Scenario.Attempt` says the same, and the report's badge is drawn from it. The readers leave those labels
+  out of a 4.x file's tags where its `attempt` accounts for them, so `kronikol ctrf` and `query` do not offer them as
+  tags.
+- **`Happy Path` marks the happy path wherever it is written.** `HappyPathDetection` reads `Happy Path`, with its space,
+  beside `happy-path`, `happy_path` and `happypath`. So LightBDD's `[HappyPath]`, the label `Happy Path`, sets the flag
+  and is not a tag: it no longer reaches the data files, CTRF's tags or `Specifications.md`.
+- **`ReportGenerator.GenerateYamlSpecs` is gone.** Nothing called it; `Specifications.yml` is written as before.
 - **The filter rows take Option C's look.** Each row's label is an uppercase word in a column of its own (`Status`,
   4.x `Status:`), Status, Duration and Happy paths are segmented groups, tags and dependencies are chips,
   every control is 28 px tall (36 px on a phone), and the rows reflow on the filter box's own width, not the window's.
@@ -277,6 +312,15 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   `@` search picked out the feature's scenarios.
 - **A tag with a comma in its name is one tag.** The chips, the search and the link split it in two. A double quote in a
   category's name lost a shared link its category filter and the scenario the link pointed to.
+- **A Reqnroll feature's tags are its own,** `FeatureInfo.Tags`. They were its first scenario's tags less that
+  scenario's own, so a feature tag that scenario repeated was lost, and its rule's tags were the whole feature's. A
+  feature's endpoint is read from its own tags first, then from its scenarios'.
+- **An NUnit `[TestCase]` method keeps its happy path and its fixture's endpoint.** NUnit puts a parameterized method's
+  attributes on the suite that holds its cases, so `[HappyPath]` on a `[TestCase]` method marked none of them, and a
+  fixture whose first captured test was a case lost its `[Endpoint]`.
+- **CTRF keeps an author's `retry 2` tag.** The filter that kept the generated retry labels out of `tags` dropped any tag
+  of that shape.
+- **The schema no longer says that categories come from a framework's category attribute,** which no adapter read.
 - **The summary ring reads 100% only when every scenario passed.** It rounded the pass rate, so 213 passed of 214 read
   100%; a rate under 100 now rounds down and stops at 99%.
 - **A scenario skipped after an earlier failure is counted.** The summary and the ring left out the scenarios a

@@ -15,11 +15,11 @@ public class TagsMarkupTests
 {
     private static readonly DateTime Start = new(2026, 10, 19, 9, 0, 0, DateTimeKind.Utc);
 
-    private static Scenario Run(string id, string name, string[]? labels = null, string[]? categories = null, bool happy = false,
+    private static Scenario Run(string id, string name, string[]? tags = null, bool happy = false,
         string? outline = null, int? attempt = null) => new()
     {
-        Id = id, DisplayName = name, Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(10), Labels = labels,
-        Categories = categories, IsHappyPath = happy, Attempt = attempt, OutlineId = outline,
+        Id = id, DisplayName = name, Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(10), Tags = tags,
+        IsHappyPath = happy, Attempt = attempt, OutlineId = outline,
         ExampleValues = outline is null ? null : new() { ["size"] = name[^2..^1] }
     };
 
@@ -70,8 +70,8 @@ public class TagsMarkupTests
     {
         var html = Generate("Tags_DataTags.html", new Feature
         {
-            DisplayName = "Shop", Labels = ["checkout"],
-            Scenarios = [Run("s1", "Pay", ["a,b", "say \"hi\"", "x y"], ["50%", "Checkout"], happy: true)]
+            DisplayName = "Shop", Tags = ["checkout"],
+            Scenarios = [Run("s1", "Pay", ["a,b", "say \"hi\"", "x y", "50%", "Checkout"], happy: true)]
         });
         var element = ScenarioElement(html, "Pay");
         Assert.Contains(" data-tags=\"Happy%20Path,checkout,a%2Cb,say%20%22hi%22,x%20y,50%25\"", element);
@@ -102,8 +102,8 @@ public class TagsMarkupTests
     {
         var html = Generate("Tags_Badges.html", new Feature
         {
-            DisplayName = "Shop", Labels = ["checkout"],
-            Scenarios = [Run("s1", "Pay", ["Checkout", "smoke"], ["Slow"], happy: true)]
+            DisplayName = "Shop", Tags = ["checkout"],
+            Scenarios = [Run("s1", "Pay", ["Checkout", "smoke", "Slow"], happy: true)]
         });
         Assert.Contains(" <span class=\"label\">checkout</span>", FeatureSummary(html, "Shop"));
         var summary = ScenarioSummary(html, "Pay");
@@ -118,7 +118,7 @@ public class TagsMarkupTests
         var html = Generate("Tags_Retry.html", new Feature
         {
             DisplayName = "Shop",
-            Scenarios = [Run("s1", "Pay", ["retry 1", "flaky", "retry 2"], attempt: 3), Run("s2", "Browse", attempt: 2), Run("s3", "Look"),
+            Scenarios = [Run("s1", "Pay", ["flaky"], attempt: 3), Run("s2", "Browse", attempt: 2), Run("s3", "Look"),
                 Run("s4", "Once", attempt: 1)]
         });
         Assert.Contains("<span class=\"label\">flaky</span> <span class=\"label retry-label\" title=\"Shown: attempt 3. The attempts before it are not in the report.\">retry 2</span>",
@@ -137,11 +137,11 @@ public class TagsMarkupTests
     [Fact]
     public void A_parameterized_group_is_found_by_its_rows_tags()
     {
-        // the group's own search text holds every row's tags, its categories with them, as 4.x's did
+        // the group's own search text holds every row's tags, as 4.x's held their labels and categories
         var html = Generate("Tags_GroupSearch.html", new Feature
         {
             DisplayName = "Shop",
-            Scenarios = [Run("s1", "Price(size: S)", ["smoke"], outline: "Price"), Run("s2", "Price(size: L)", null, ["Slow"], outline: "Price")]
+            Scenarios = [Run("s1", "Price(size: S)", ["smoke"], outline: "Price"), Run("s2", "Price(size: L)", ["Slow"], outline: "Price")]
         });
         var open = html.IndexOf("<details class=\"scenario scenario-parameterized", StringComparison.Ordinal);
         Assert.True(open >= 0, "no parameterized group");
@@ -172,7 +172,7 @@ public class TagsMarkupTests
     [Fact]
     public void A_report_whose_only_tags_are_a_feature_s_names_tags_in_the_filter_rows_title()
     {
-        var html = Generate("Tags_FeatureOnlyTitle.html", new Feature { DisplayName = "Shop", Labels = ["checkout"], Scenarios = [Run("s1", "Pay")] });
+        var html = Generate("Tags_FeatureOnlyTitle.html", new Feature { DisplayName = "Shop", Tags = ["checkout"], Scenarios = [Run("s1", "Pay")] });
         Assert.Contains("aria-controls=\"filter-rows\" aria-expanded=\"false\" title=\"Status, duration and tags\"", html);
         Assert.Contains("<div class=\"tag-filters\">", html);
     }
@@ -208,7 +208,7 @@ public class TagsMarkupTests
         Assert.Equal(hidden, row.Where(c => c.Hidden).Select(c => c.Tag));
         // after Untagged, before the row's Clear
         Assert.Contains(string.Create(CultureInfo.InvariantCulture,
-            $"data-none=\"1\" aria-pressed=\"false\" title=\"1 scenario\">Untagged</button><button type=\"button\" class=\"tag-more\" data-shown=\"{shown}\" aria-expanded=\"false\" title=\"Show the other 5 tags. The row starts with the {shown} tags the most scenarios carry.\">5 more</button><button type=\"button\" class=\"group-clear\""),
+            $"data-none=\"1\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Untagged</button><button type=\"button\" class=\"tag-more\" data-shown=\"{shown}\" aria-expanded=\"false\" title=\"Show the other 5 tags. The row starts with the {shown} tags the most scenarios carry.\">5 more</button><button type=\"button\" class=\"group-clear\""),
             html);
     }
 
@@ -252,8 +252,8 @@ public class TagsMarkupTests
     {
         var html = Generate("Tags_Group.html", new Feature
         {
-            DisplayName = "Shop", Labels = ["checkout"],
-            Scenarios = [Run("s1", "Price(size: S)", ["smoke", "fast", "checkout"], outline: "Price"), Run("s2", "Price(size: L)", ["Smoke", "Checkout"], ["slow"], outline: "Price")]
+            DisplayName = "Shop", Tags = ["checkout"],
+            Scenarios = [Run("s1", "Price(size: S)", ["smoke", "fast", "checkout"], outline: "Price"), Run("s2", "Price(size: L)", ["Smoke", "Checkout", "slow"], outline: "Price")]
         });
         var open = html.IndexOf("<details class=\"scenario scenario-parameterized", StringComparison.Ordinal);
         Assert.True(open >= 0, "no parameterized group");

@@ -15,10 +15,10 @@ public class MergeableReportTests
             DisplayName = "Orders",
             Endpoint = "/orders",
             Description = "Order flows",
-            Labels = ["api"],
+            Tags = ["api"],
             Scenarios =
             [
-                new Scenario { Id = "a1", DisplayName = "Place order", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2), IsHappyPath = true, Categories = ["smoke"] },
+                new Scenario { Id = "a1", DisplayName = "Place order", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2), IsHappyPath = true, Tags = ["smoke"] },
                 new Scenario { Id = "a2", DisplayName = "Cancel order", Result = ExecutionResult.Failed, ErrorMessage = "boom", Duration = TimeSpan.FromSeconds(1),
                     Steps = [ new ScenarioStep { Keyword = "Given", Text = "an order", Status = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(0.5) } ] }
             ]
@@ -47,6 +47,29 @@ public class MergeableReportTests
             new CiMetadata(CiEnvironment.GitHubActions, "42", "main", "abc123", "https://gh/run/1", "owner/repo", "1", "2"));
 
     [Fact]
+    public void A_4x_file_s_labels_and_categories_read_as_one_tag_list_less_its_generated_retry_labels()
+    {
+        // plans/TAGS_PLAN.md §4.13: what a 4.x writer wrote, the same report with labels and categories in place of tags
+        var json = System.Text.Json.Nodes.JsonNode.Parse(SerializeA())!;
+        var feature = json["features"]![0]!.AsObject();
+        feature.Remove("tags");
+        feature["labels"] = new System.Text.Json.Nodes.JsonArray("api");
+        var scenario = feature["scenarios"]!.AsArray().Single(s => (string?)s!["id"] == "a1")!.AsObject();
+        scenario.Remove("tags");
+        // a second attempt: 4.x's ingest lanes wrote retry 1 for the first
+        scenario["attempt"] = 2;
+        scenario["labels"] = new System.Text.Json.Nodes.JsonArray("retry 1", "fast");
+        scenario["categories"] = new System.Text.Json.Nodes.JsonArray("smoke", "FAST");
+
+        var report = MergeableReportReader.Parse(json.ToJsonString());
+
+        var f = Assert.Single(report.Features);
+        Assert.Equal(["api"], f.Tags);
+        Assert.Equal(["fast", "smoke"], f.Scenarios.Single(s => s.Id == "a1").Tags);
+        Assert.Null(f.Scenarios.Single(s => s.Id == "a2").Tags);
+    }
+
+    [Fact]
     public void Roundtrip_preserves_features_scenarios_and_steps()
     {
         var report = MergeableReportReader.Parse(SerializeA());
@@ -56,7 +79,7 @@ public class MergeableReportTests
         Assert.Equal("Orders", f.DisplayName);
         Assert.Equal("/orders", f.Endpoint);
         Assert.Equal("Order flows", f.Description);
-        Assert.Equal(["api"], f.Labels!);
+        Assert.Equal(["api"], f.Tags);
         Assert.Equal(2, f.Scenarios.Length);
 
         var s1 = f.Scenarios.Single(s => s.Id == "a1");
@@ -64,7 +87,7 @@ public class MergeableReportTests
         Assert.Equal(ExecutionResult.Passed, s1.Result);
         Assert.True(s1.IsHappyPath);
         Assert.Equal(TimeSpan.FromSeconds(2), s1.Duration);
-        Assert.Equal(["smoke"], s1.Categories!);
+        Assert.Equal(["smoke"], s1.Tags);
 
         var s2 = f.Scenarios.Single(s => s.Id == "a2");
         Assert.Equal(ExecutionResult.Failed, s2.Result);

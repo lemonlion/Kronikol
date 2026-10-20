@@ -9,7 +9,13 @@ public record Feature
     public string? Endpoint { get; set; }
     public Scenario[] Scenarios { get; set; } = [];
     public string? Description { get; set; }
-    public string[]? Labels { get; set; }
+
+    /// <summary>
+    /// The feature's own tags: those of its class, its fixture or its <c>Feature:</c>, each once in the first spelling
+    /// met, and on the tests NDJSON lane those every one of its scenarios carries. Every scenario of the feature carries
+    /// them first among its effective tags. Null when there are none.
+    /// </summary>
+    public string[]? Tags { get; set; }
 
     /// <summary>
     /// Where the feature is written, as the runner reports it: a project-relative path with forward

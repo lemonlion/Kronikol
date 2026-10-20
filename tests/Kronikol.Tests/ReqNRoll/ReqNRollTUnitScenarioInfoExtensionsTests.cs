@@ -84,7 +84,7 @@ public class ReqNRollTUnitScenarioInfoExtensionsTests
     }
 
     [Fact]
-    public void ToFeatures_maps_tags_to_scenario_labels_excluding_special_tags()
+    public void ToFeatures_maps_tags_to_the_scenario_s_tags_less_the_happy_path_and_the_endpoint()
     {
         var info = MakeScenario(
             scenarioTags: ["smoke", "happy-path", "regression"],
@@ -93,10 +93,9 @@ public class ReqNRollTUnitScenarioInfoExtensionsTests
         var features = new[] { info }.ToFeatures();
         var scenario = features[0].Scenarios[0];
 
-        Assert.NotNull(scenario.Labels);
-        Assert.Contains("smoke", scenario.Labels!);
-        Assert.Contains("regression", scenario.Labels!);
-        Assert.DoesNotContain("happy-path", scenario.Labels!);
+        Assert.Equal(["smoke", "regression"], scenario.Tags);
+        Assert.True(scenario.IsHappyPath);
+        Assert.Equal("GET /api", features[0].Endpoint);
     }
 
     // ─── Step status mapping ────────────────────────────────

@@ -3,8 +3,8 @@ namespace Kronikol.Ingestion;
 /// <summary>
 /// The attempts a tests file records for each test: every <c>start</c> of one test id opens an attempt, as a runner's
 /// own retries within one run keep the test's id (Jest's <c>retryTimes</c>, Playwright's <c>retries</c>). The report
-/// shows the last attempt, as the Cucumber Messages lane always has: its records build the scenario, each earlier
-/// attempt leaves a <c>retry N</c> label, and the earlier attempts' calls are left out.
+/// shows the last attempt, as the Cucumber Messages lane always has: its records build the scenario, its number is the
+/// scenario's attempt, and the earlier attempts' calls are left out.
 /// </summary>
 /// <remarks>
 /// A record goes to the attempt its own <see cref="TestRunRecord.Attempt"/> names, when a <c>start</c> carries that

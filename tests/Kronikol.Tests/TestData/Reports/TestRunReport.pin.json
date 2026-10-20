@@ -20,7 +20,7 @@
       "endpoint": "/api/orders",
       "description": "Everything about placing an order.",
       "sourceFile": null,
-      "labels": [
+      "tags": [
         "orders",
         "smoke"
       ],
@@ -37,10 +37,8 @@
           "errorMessage": "Expected: 4173\nActual: 3902",
           "errorStackTrace": "   at OrderTests.Place() in OrderTests.cs:line 42",
           "failureCause": null,
-          "labels": [
-            "checkout"
-          ],
-          "categories": [
+          "tags": [
+            "checkout",
             "API"
           ],
           "rule": "Totals are exact",

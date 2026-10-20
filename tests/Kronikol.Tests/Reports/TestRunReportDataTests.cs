@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using System.Xml.Linq;
 using System.Xml.Schema;
+using YamlDotNet.RepresentationModel;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 using static Kronikol.DefaultDiagramsFetcher;
@@ -148,21 +149,21 @@ public class TestRunReportDataTests
     }
 
     [Fact]
-    public void GenerateTestRunReportData_includes_labels_categories_and_error_stack_trace()
+    public void GenerateTestRunReportData_includes_tags_and_error_stack_trace()
     {
         var features = new[]
         {
             new Feature
             {
                 DisplayName = "F1",
-                Labels = ["api"],
+                Tags = ["api"],
                 Scenarios =
                 [
                     new Scenario
                     {
                         Id = "s1", DisplayName = "S1", Result = ExecutionResult.Failed,
                         ErrorMessage = "NullRef", ErrorStackTrace = "at Foo.Bar()",
-                        Labels = ["smoke"], Categories = ["Integration"],
+                        Tags = ["smoke", "Integration"],
                         IsHappyPath = true
                     }
                 ]
@@ -177,14 +178,72 @@ public class TestRunReportDataTests
 
         var doc = JsonDocument.Parse(content);
         var feature = doc.RootElement.GetProperty("features")[0];
-        Assert.Equal("api", feature.GetProperty("labels")[0].GetString());
+        Assert.Equal(["api"], feature.GetProperty("tags").EnumerateArray().Select(t => t.GetString()));
 
         var scenario = feature.GetProperty("scenarios")[0];
-        Assert.Equal("smoke", scenario.GetProperty("labels")[0].GetString());
-        Assert.Equal("Integration", scenario.GetProperty("categories")[0].GetString());
+        // each level's own: the feature's tags are written once, on the feature (plans/TAGS_PLAN.md §4.12)
+        Assert.Equal(["smoke", "Integration"], scenario.GetProperty("tags").EnumerateArray().Select(t => t.GetString()));
+        foreach (var gone in new[] { "labels", "categories" })
+        {
+            Assert.False(feature.TryGetProperty(gone, out _), gone);
+            Assert.False(scenario.TryGetProperty(gone, out _), gone);
+        }
         Assert.True(scenario.GetProperty("isHappyPath").GetBoolean());
         Assert.Equal("NullRef", scenario.GetProperty("errorMessage").GetString());
         Assert.Equal("at Foo.Bar()", scenario.GetProperty("errorStackTrace").GetString());
+    }
+
+    [Fact]
+    public void A_feature_s_tags_are_written_before_its_scenarios()
+    {
+        // the query index is built in one pass and copies a feature's tags into each scenario as it starts (§4.12)
+        var features = new[] { new Feature { DisplayName = "F1", Tags = ["api"], Scenarios = [new Scenario { Id = "s1", DisplayName = "S1" }] } };
+
+        var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_tag_order.json", DataFormat.Json);
+        var keys = JsonDocument.Parse(File.ReadAllText(path)).RootElement.GetProperty("features")[0].EnumerateObject().Select(p => p.Name).ToList();
+
+        Assert.True(keys.Contains("tags") && keys.IndexOf("tags") < keys.IndexOf("scenarios"), string.Join(", ", keys));
+    }
+
+    [Fact]
+    public void A_feature_and_a_scenario_with_no_tags_write_an_empty_list()
+    {
+        // as labels was: the JSON writes every key, and a compressed report leaves an empty optional one out
+        var features = new[] { new Feature { DisplayName = "F1", Scenarios = [new Scenario { Id = "s1", DisplayName = "S1" }] } };
+
+        var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_no_tags.json", DataFormat.Json);
+        var feature = JsonDocument.Parse(File.ReadAllText(path)).RootElement.GetProperty("features")[0];
+
+        Assert.Equal(JsonValueKind.Array, feature.GetProperty("tags").ValueKind);
+        Assert.Empty(feature.GetProperty("tags").EnumerateArray());
+        Assert.Empty(feature.GetProperty("scenarios")[0].GetProperty("tags").EnumerateArray());
+    }
+
+    [Fact]
+    public void The_xml_and_yaml_data_files_carry_tags_at_each_level()
+    {
+        var features = new[]
+        {
+            new Feature { DisplayName = "F1", Tags = ["api"], Scenarios = [new Scenario { Id = "s1", DisplayName = "S1", Tags = ["smoke", "Integration"] }] }
+        };
+
+        var xml = XDocument.Parse(File.ReadAllText(
+            ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_tags.xml", DataFormat.Xml)));
+        var xmlFeature = xml.Descendants("Feature").Single();
+        Assert.Equal(["api"], xmlFeature.Element("Tags")!.Elements("Tag").Select(t => t.Value));
+        Assert.Equal(["smoke", "Integration"], xmlFeature.Descendants("Scenario").Single().Element("Tags")!.Elements("Tag").Select(t => t.Value));
+        Assert.Empty(xml.Descendants("Labels"));
+        Assert.Empty(xml.Descendants("Categories"));
+
+        var yaml = new YamlStream();
+        yaml.Load(new StringReader(File.ReadAllText(
+            ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_tags.yml", DataFormat.Yaml))));
+        var yamlFeature = (YamlMappingNode)((YamlSequenceNode)((YamlMappingNode)yaml.Documents[0].RootNode)["Features"])[0];
+        var yamlScenario = (YamlMappingNode)((YamlSequenceNode)yamlFeature["Scenarios"])[0];
+        Assert.Equal(["api"], ((YamlSequenceNode)yamlFeature["Tags"]).Select(n => ((YamlScalarNode)n).Value));
+        Assert.Equal(["smoke", "Integration"], ((YamlSequenceNode)yamlScenario["Tags"]).Select(n => ((YamlScalarNode)n).Value));
+        Assert.False(yamlScenario.Children.ContainsKey(new YamlScalarNode("Labels")));
+        Assert.False(yamlScenario.Children.ContainsKey(new YamlScalarNode("Categories")));
     }
 
     [Fact]

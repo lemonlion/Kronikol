@@ -390,14 +390,14 @@ public class ExamplesTableReportTests
                         Id = "s1", DisplayName = "S1", Result = ExecutionResult.Passed,
                         OutlineId = "outline1",
                         ExampleValues = new Dictionary<string, string> { ["A"] = "1" },
-                        Categories = ["Banking"]
+                        Tags = ["Banking"]
                     },
                     new Scenario
                     {
                         Id = "s2", DisplayName = "S2", Result = ExecutionResult.Passed,
                         OutlineId = "outline1",
                         ExampleValues = new Dictionary<string, string> { ["A"] = "2" },
-                        Categories = ["Banking", "ATM"]
+                        Tags = ["Banking", "ATM"]
                     }
                 ]
             }

@@ -14,6 +14,8 @@ public record ReqNRollScenarioInfo
     public string? FeatureDescription { get; init; }
     public required string[] ScenarioTags { get; init; }
     public required string[] CombinedTags { get; init; }
+    /// <summary>The feature's own tags, <c>FeatureInfo.Tags</c>; a scenario's combined tags hold them too.</summary>
+    public string[] FeatureTags { get; init; } = [];
     public Exception? TestError { get; init; }
     public ScenarioExecutionStatus ExecutionStatus { get; init; }
     public TimeSpan? Duration { get; init; }

@@ -27,10 +27,10 @@ public class FilterPipelineTests : PlaywrightTestBase
     private const string A = "scenario-create-order", B = "scenario-reject-order", P = "scenario-price", R = "scenario-refund";
     private static readonly string[] All = [A, P, B, R];
 
-    private static Scenario Run(string id, string name, ExecutionResult result, int ms, string[]? labels = null, string[]? categories = null,
+    private static Scenario Run(string id, string name, ExecutionResult result, int ms, string[]? tags = null,
         bool happy = false, string? outline = null) => new()
     {
-        Id = id, DisplayName = name, Result = result, Duration = TimeSpan.FromMilliseconds(ms), Labels = labels, Categories = categories,
+        Id = id, DisplayName = name, Result = result, Duration = TimeSpan.FromMilliseconds(ms), Tags = tags,
         IsHappyPath = happy, OutlineId = outline, ExampleValues = outline is null ? null : new() { ["size"] = name[^2..^1] },
         ErrorMessage = result == ExecutionResult.Failed ? "boom" : null
     };
@@ -44,13 +44,13 @@ public class FilterPipelineTests : PlaywrightTestBase
                 DisplayName = "Orders",
                 Scenarios =
                 [
-                    Run("s1", "Create order", ExecutionResult.Passed, 100, ["smoke", "api"], ["Fast"], happy: true),
+                    Run("s1", "Create order", ExecutionResult.Passed, 100, ["smoke", "api", "Fast"], happy: true),
                     Run("s2", "Reject order", ExecutionResult.Failed, 300, ["api"]),
                     Run("s3", "Price(size: S)", ExecutionResult.Passed, 50, outline: "Price"),
                     Run("s4", "Price(size: L)", ExecutionResult.Passed, 50, outline: "Price")
                 ]
             },
-            new() { DisplayName = "Refunds", Scenarios = [Run("s5", "Refund", ExecutionResult.Passed, 20, ["smoke"], ["Fast", "Slow"])] }
+            new() { DisplayName = "Refunds", Scenarios = [Run("s5", "Refund", ExecutionResult.Passed, 20, ["smoke", "Fast", "Slow"])] }
         ];
         var path = ReportGenerator.GenerateHtmlReport(
             [new DefaultDiagramsFetcher.DiagramAsCode("s1", "", OrderSource), new DefaultDiagramsFetcher.DiagramAsCode("s2", "", MarkerOnlySource),

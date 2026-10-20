@@ -2269,7 +2269,7 @@ public static class ReportGenerator
             var featureAllSkipped = !featureHasFailures && feature.Scenarios.All(s => s.Result == ExecutionResult.Skipped);
             body.Append($"""
                      <details class="feature"{(toggles.FeaturesExpanded ? " open" : "")}>
-                        <summary class="h2{(featureHasFailures ? " failed" : featureAllSkipped ? " skipped" : "")}">{System.Net.WebUtility.HtmlEncode(feature.DisplayName)}{(feature.Endpoint is null ? "" : $" <div class=\"endpoint\">{System.Net.WebUtility.HtmlEncode(feature.Endpoint)}</div>")}{(feature.Labels is { Length: > 0 } fl ? string.Concat(fl.Select(l => $" <span class=\"label\">{System.Net.WebUtility.HtmlEncode(l)}</span>")) : "")}</summary>
+                        <summary class="h2{(featureHasFailures ? " failed" : featureAllSkipped ? " skipped" : "")}">{System.Net.WebUtility.HtmlEncode(feature.DisplayName)}{(feature.Endpoint is null ? "" : $" <div class=\"endpoint\">{System.Net.WebUtility.HtmlEncode(feature.Endpoint)}</div>")}{(feature.Tags is { Length: > 0 } fl ? string.Concat(fl.Select(l => $" <span class=\"label\">{System.Net.WebUtility.HtmlEncode(l)}</span>")) : "")}</summary>
                      """);
 
             if (feature.Description is not null)
@@ -2350,7 +2350,7 @@ public static class ReportGenerator
                         featureDisplayName: feature.DisplayName,
                         featureDescription: feature.Description,
                         featureEndpoint: feature.Endpoint,
-                        featureLabels: feature.Labels,
+                        featureTags: feature.Tags,
                         tagChips: tagChips,
                         precomputedWholeTestContent: precomputedWholeTestContent,
                         separateBackgroundSteps: separateBackgroundSteps,
@@ -2412,10 +2412,10 @@ public static class ReportGenerator
 
                 // Its effective tags in their chips' spellings (plans/TAGS_PLAN.md §4.9), which the chips, @tag and the
                 // link read; its badges are its own tags, its feature's being on the feature, then the retry badge (§4.6).
-                var tagsAttr = tagChips.Attribute(feature.Labels, scenario);
+                var tagsAttr = tagChips.Attribute(feature.Tags, scenario);
 
                 var encodedName = System.Net.WebUtility.HtmlEncode(scenario.DisplayName);
-                var scenarioLabelsHtml = TagChips.Badges(TagChips.BadgeTags(feature.Labels, scenario)) + TagChips.RetryBadge(scenario);
+                var scenarioLabelsHtml = TagChips.Badges(TagChips.BadgeTags(feature.Tags, scenario)) + TagChips.RetryBadge(scenario);
 
                 var scenarioTooltip = scenario.Result switch
                 {
@@ -2739,81 +2739,6 @@ public static class ReportGenerator
             searchParts.AddRange(scenario.ExampleFlatValues.Values.Where(v => !string.IsNullOrEmpty(v)));
         else if (scenario.ExampleValues is { Count: > 0 })
             searchParts.AddRange(scenario.ExampleValues.Values.Where(v => !string.IsNullOrEmpty(v)));
-    }
-
-    public static string GenerateYamlSpecs(DefaultDiagramsFetcher.DiagramAsCode[] diagrams,
-        Feature[] features,
-        string fileName,
-        string title,
-        bool generateBlankOnFailedTests = false)
-    {
-        if (generateBlankOnFailedTests && CannotVouchForSpecifications(features))
-            return WriteFile(string.Empty, fileName);
-
-        var yml = new StringBuilder();
-        yml.Append("Title: " + title + "\n");
-        yml.Append("Features:\n");
-
-        foreach (var feature in features.OrderBy(x => x.DisplayName))
-        {
-            AppendYaml(yml, "  - Feature: ", feature.DisplayName);
-
-            if (feature.Endpoint is not null)
-                yml.Append("    Endpoint: " + feature.Endpoint + "\n");
-
-            if (feature.Description is not null)
-                AppendYaml(yml, "    Description: ", feature.Description);
-
-            if (feature.Labels is { Length: > 0 })
-            {
-                yml.Append("    Labels:\n");
-                foreach (var label in feature.Labels)
-                    AppendYaml(yml, "      - ", label);
-            }
-
-            yml.Append("    Scenarios:\n");
-
-            var orderedScenarios = feature.Scenarios.OrderByDescending(x => x.IsHappyPath).ThenBy(x => x.DisplayName);
-            foreach (var scenario in orderedScenarios)
-            {
-                AppendYaml(yml, "      - Scenario: ", scenario.DisplayName);
-                yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLowerInvariant() + "\n");
-
-                if (scenario.Labels is { Length: > 0 })
-                {
-                    yml.Append("        Labels:\n");
-                    foreach (var label in scenario.Labels)
-                        AppendYaml(yml, "          - ", label);
-                }
-
-                if (scenario.Categories is { Length: > 0 })
-                {
-                    yml.Append("        Categories:\n");
-                    foreach (var cat in scenario.Categories)
-                        AppendYaml(yml, "          - ", cat);
-                }
-
-                // Emitted as a sibling of Steps, matching the TestRunReport writers: merging the two would
-                // lose the b{i}/{i} split the step paths and interaction attribution depend on.
-                if (scenario.BackgroundSteps is { Length: > 0 })
-                {
-                    yml.Append("        BackgroundSteps:\n");
-                    foreach (var step in scenario.BackgroundSteps)
-                        AppendYamlStep(yml, step, "          ");
-                }
-
-                if (scenario.Steps is { Length: > 0 })
-                {
-                    yml.Append("        Steps:\n");
-                    foreach (var step in scenario.Steps)
-                        AppendYamlStep(yml, step, "          ");
-                }
-
-                yml.Append("\n");
-            }
-        }
-
-        return WriteFile(yml.ToString(), fileName);
     }
 
     /// <summary>
@@ -3440,7 +3365,7 @@ public static class ReportGenerator
         string? featureDisplayName = null,
         string? featureDescription = null,
         string? featureEndpoint = null,
-        string[]? featureLabels = null,
+        string[]? featureTags = null,
         TagChips? tagChips = null,
         Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null,
         bool showNoInteractionsMarker = false,
@@ -3496,7 +3421,7 @@ public static class ReportGenerator
         if (featureDisplayName is not null) searchParts.Add(featureDisplayName);
         if (featureDescription is not null) searchParts.Add(featureDescription);
         if (featureEndpoint is not null) searchParts.Add(featureEndpoint);
-        if (featureLabels is { Length: > 0 }) searchParts.AddRange(featureLabels);
+        if (featureTags is { Length: > 0 }) searchParts.AddRange(featureTags);
         foreach (var s in scenarios)
         {
             searchParts.Add(s.DisplayName);
@@ -3526,8 +3451,8 @@ public static class ReportGenerator
 
         // Aggregate tags and dependencies: the group matches a chip any of its rows matches (plans/TAGS_PLAN.md §4.8),
         // and shows the tags all its rows share (F23)
-        var tagsAttr = tagChips?.GroupAttribute(featureLabels, scenarios) ?? "";
-        var groupTagBadges = TagChips.Badges(TagChips.GroupBadgeTags(featureLabels, scenarios));
+        var tagsAttr = tagChips?.GroupAttribute(featureTags, scenarios) ?? "";
+        var groupTagBadges = TagChips.Badges(TagChips.GroupBadgeTags(featureTags, scenarios));
         var allDeps = scenarios.Where(s => scenarioDependencies.ContainsKey(s.Id)).SelectMany(s => scenarioDependencies[s.Id]).Distinct().OrderBy(d => d).ToArray();
         var depsAttr = allDeps.Length > 0 ? $" data-dependencies=\"{System.Net.WebUtility.HtmlEncode(string.Join(",", allDeps))}\"" : "";
 
@@ -3620,7 +3545,7 @@ public static class ReportGenerator
                 if (featureDescription is not null) rowSearchParts.Add(featureDescription);
                 if (featureEndpoint is not null) rowSearchParts.Add(featureEndpoint);
                 if (!string.IsNullOrWhiteSpace(s.Description)) rowSearchParts.Add(s.Description);
-                if (featureLabels is { Length: > 0 }) rowSearchParts.AddRange(featureLabels);
+                if (featureTags is { Length: > 0 }) rowSearchParts.AddRange(featureTags);
                 rowSearchParts.AddRange(ScenarioTags.OwnOf(s));
                 if (TagChips.RetryText(s) is { } rowRetried) rowSearchParts.Add(rowRetried);
                 if (s.ErrorMessage is not null) rowSearchParts.Add(s.ErrorMessage);
@@ -3723,7 +3648,7 @@ public static class ReportGenerator
             if (featureDescription is not null) rowSearchParts.Add(featureDescription);
             if (featureEndpoint is not null) rowSearchParts.Add(featureEndpoint);
             if (!string.IsNullOrWhiteSpace(s.Description)) rowSearchParts.Add(s.Description);
-            if (featureLabels is { Length: > 0 }) rowSearchParts.AddRange(featureLabels);
+            if (featureTags is { Length: > 0 }) rowSearchParts.AddRange(featureTags);
             rowSearchParts.AddRange(ScenarioTags.OwnOf(s));
             if (TagChips.RetryText(s) is { } rowRetried) rowSearchParts.Add(rowRetried);
             if (s.ErrorMessage is not null) rowSearchParts.Add(s.ErrorMessage);
@@ -5300,7 +5225,7 @@ public static class ReportGenerator
             ["endpoint"] = f.Endpoint,
             ["description"] = f.Description,
             ["sourceFile"] = f.SourceFile,
-            ["labels"] = f.Labels ?? [],
+            ["tags"] = f.Tags ?? [],
             ["scenarios"] = f.Scenarios.Select(s =>
             {
                 var scenario = new Dictionary<string, object?>
@@ -5316,8 +5241,7 @@ public static class ReportGenerator
                     ["errorMessage"] = s.ErrorMessage,
                     ["errorStackTrace"] = s.ErrorStackTrace,
                     ["failureCause"] = s.FailureCause,
-                    ["labels"] = s.Labels ?? [],
-                    ["categories"] = s.Categories ?? [],
+                    ["tags"] = s.Tags ?? [],
                     ["rule"] = s.Rule,
                     ["attempt"] = s.Attempt,
                     ["sourceFile"] = s.SourceFile,
@@ -5883,7 +5807,7 @@ public static class ReportGenerator
                             f.Endpoint != null ? new XElement("Endpoint", f.Endpoint) : null,
                             f.Description != null ? new XElement("Description", f.Description) : null,
                             f.SourceFile != null ? new XElement("SourceFile", f.SourceFile) : null,
-                            (f.Labels is { Length: > 0 }) ? new XElement("Labels", f.Labels.Select(l => new XElement("Label", l))) : null,
+                            (f.Tags is { Length: > 0 }) ? new XElement("Tags", f.Tags.Select(t => new XElement("Tag", t))) : null,
                             new XElement("Scenarios",
                                 f.Scenarios.Select(s =>
                                 {
@@ -5902,8 +5826,7 @@ public static class ReportGenerator
                                         s.ErrorMessage != null ? new XElement("ErrorMessage", s.ErrorMessage) : null,
                                         s.ErrorStackTrace != null ? new XElement("ErrorStackTrace", s.ErrorStackTrace) : null,
                                         s.FailureCause != null ? new XElement("FailureCause", s.FailureCause) : null,
-                                        (s.Labels is { Length: > 0 }) ? new XElement("Labels", s.Labels.Select(l => new XElement("Label", l))) : null,
-                                        (s.Categories is { Length: > 0 }) ? new XElement("Categories", s.Categories.Select(c => new XElement("Category", c))) : null,
+                                        (s.Tags is { Length: > 0 }) ? new XElement("Tags", s.Tags.Select(t => new XElement("Tag", t))) : null,
                                         s.Rule != null ? new XElement("Rule", s.Rule) : null,
                                         s.Attempt != null ? new XElement("Attempt", s.Attempt.Value.ToString(CultureInfo.InvariantCulture)) : null,
                                         s.EndedAt is { } xmlEndedAt ? new XElement("EndedAt", FormatInstant(xmlEndedAt)) : null,
@@ -6116,10 +6039,9 @@ public static class ReportGenerator
     /// </summary>
     /// <remarks>
     /// An empty block sequence cannot be expressed - there is nothing to indent - so an empty one is
-    /// written in flow form as <c>[]</c>. It has to be written at all because the schema marks these
-    /// keys required, and it is required because the JSON writer emits them unconditionally: the two
-    /// files are the same report, and a consumer should not have to ask which format it is holding
-    /// before it knows whether a missing `labels` means "none" or "not recorded".
+    /// written in flow form as <c>[]</c>. It is written at all because the JSON writer emits these keys
+    /// unconditionally: the two files are the same report, and a consumer should not have to ask which
+    /// format it is holding before it knows whether a missing <c>Tags</c> means "none" or "not recorded".
     /// </remarks>
     private static void AppendYamlSequence(StringBuilder yml, string indent, string key, IEnumerable<string>? values)
     {
@@ -6176,7 +6098,7 @@ public static class ReportGenerator
             if (feature.SourceFile is not null)
                 AppendYaml(yml, "    SourceFile: ", feature.SourceFile);
 
-            AppendYamlSequence(yml, "    ", "Labels", feature.Labels);
+            AppendYamlSequence(yml, "    ", "Tags", feature.Tags);
 
             yml.Append("    Scenarios:\n");
             foreach (var scenario in feature.Scenarios)
@@ -6209,8 +6131,7 @@ public static class ReportGenerator
                 if (scenario.FailureCause is not null)
                     AppendYaml(yml, "        FailureCause: ", scenario.FailureCause);
 
-                AppendYamlSequence(yml, "        ", "Labels", scenario.Labels);
-                AppendYamlSequence(yml, "        ", "Categories", scenario.Categories);
+                AppendYamlSequence(yml, "        ", "Tags", scenario.Tags);
 
                 if (scenario.Rule is not null)
                     AppendYaml(yml, "        Rule: ", scenario.Rule);
@@ -6482,11 +6403,11 @@ public static class ReportGenerator
             if (feature.Description is not null)
                 AppendYaml(yml, "    Description: ", feature.Description);
 
-            if (feature.Labels is { Length: > 0 })
+            if (feature.Tags is { Length: > 0 })
             {
-                yml.Append("    Labels:\n");
-                foreach (var label in feature.Labels)
-                    AppendYaml(yml, "      - ", label);
+                yml.Append("    Tags:\n");
+                foreach (var tag in feature.Tags)
+                    AppendYaml(yml, "      - ", tag);
             }
 
             yml.Append("    Scenarios:\n");
@@ -6497,18 +6418,11 @@ public static class ReportGenerator
                 AppendYaml(yml, "      - Scenario: ", scenario.DisplayName);
                 yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLowerInvariant() + "\n");
 
-                if (scenario.Labels is { Length: > 0 })
+                if (scenario.Tags is { Length: > 0 })
                 {
-                    yml.Append("        Labels:\n");
-                    foreach (var label in scenario.Labels)
-                        AppendYaml(yml, "          - ", label);
-                }
-
-                if (scenario.Categories is { Length: > 0 })
-                {
-                    yml.Append("        Categories:\n");
-                    foreach (var cat in scenario.Categories)
-                        AppendYaml(yml, "          - ", cat);
+                    yml.Append("        Tags:\n");
+                    foreach (var tag in scenario.Tags)
+                        AppendYaml(yml, "          - ", tag);
                 }
 
                 // Emitted as a sibling of Steps, matching the TestRunReport writers: merging the two would
@@ -6545,13 +6459,12 @@ public static class ReportGenerator
                 Name = f.DisplayName,
                 f.Endpoint,
                 f.Description,
-                Labels = f.Labels ?? [],
+                Tags = f.Tags ?? [],
                 Scenarios = f.Scenarios.OrderByDescending(s => s.IsHappyPath).ThenBy(s => s.DisplayName).Select(s => new
                 {
                     Name = s.DisplayName,
                     s.IsHappyPath,
-                    Labels = s.Labels ?? [],
-                    Categories = s.Categories ?? [],
+                    Tags = s.Tags ?? [],
                     BackgroundSteps = (s.BackgroundSteps ?? []).Select(MapSpecStepJson).ToArray(),
                     Steps = (s.Steps ?? []).Select(MapSpecStepJson).ToArray()
                 }).ToArray()
@@ -6579,14 +6492,13 @@ public static class ReportGenerator
                             new XElement("Name", f.DisplayName),
                             f.Endpoint != null ? new XElement("Endpoint", f.Endpoint) : null,
                             f.Description != null ? new XElement("Description", f.Description) : null,
-                            (f.Labels is { Length: > 0 }) ? new XElement("Labels", f.Labels.Select(l => new XElement("Label", l))) : null,
+                            (f.Tags is { Length: > 0 }) ? new XElement("Tags", f.Tags.Select(t => new XElement("Tag", t))) : null,
                             new XElement("Scenarios",
                                 f.Scenarios.OrderByDescending(s => s.IsHappyPath).ThenBy(s => s.DisplayName).Select(s =>
                                     new XElement("Scenario",
                                         new XElement("Name", s.DisplayName),
                                         new XElement("IsHappyPath", s.IsHappyPath.ToString().ToLowerInvariant()),
-                                        (s.Labels is { Length: > 0 }) ? new XElement("Labels", s.Labels.Select(l => new XElement("Label", l))) : null,
-                                        (s.Categories is { Length: > 0 }) ? new XElement("Categories", s.Categories.Select(c => new XElement("Category", c))) : null,
+                                        (s.Tags is { Length: > 0 }) ? new XElement("Tags", s.Tags.Select(t => new XElement("Tag", t))) : null,
                                         (s.BackgroundSteps is { Length: > 0 }) ? new XElement("BackgroundSteps", s.BackgroundSteps.Select(MapSpecStepXml)) : null,
                                         (s.Steps is { Length: > 0 }) ? new XElement("Steps", s.Steps.Select(MapSpecStepXml)) : null
                                     )
@@ -7273,14 +7185,14 @@ public static class ReportGenerator
                     ["items"] = new Dictionary<string, object?>
                     {
                         ["type"] = "object",
-                        ["required"] = new[] { "name", "labels", "scenarios" },
+                        ["required"] = new[] { "name", "scenarios" },
                         ["properties"] = new Dictionary<string, object?>
                         {
                             ["name"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Feature display name: the test class, or the title after Feature: in Gherkin" },
                             ["endpoint"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The endpoint or component the feature covers, when declared (an @endpoint: tag, or the adapter's attribute)" },
                             ["description"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Free text under the Feature: line, dedented" },
                             ["sourceFile"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Where the feature is written: a project-relative path with forward slashes, from the Gherkin document, or from the first sourceFile a tests NDJSON start record gives one of its scenarios. Null on the lanes that cannot supply one (unit-test adapters, a tests NDJSON without sourceFile). Features are grouped by display name, so two files sharing a Feature: title collapse into one entry and the first path seen wins.", ["examples"] = new[] { "Features/Cake.feature" } },
-                            ["labels"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "Feature-level tags (in Gherkin the feature's own tags; otherwise the labels every scenario shares)", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
+                            ["tags"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "The feature's own tags: in Gherkin the feature's, otherwise its class's or its fixture's, and on the tests NDJSON lane those every one of its scenarios carries. They come first among each of its scenarios' effective tags. A file written before 5.0.0 holds labels here instead", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
                             ["scenarios"] = new Dictionary<string, object?>
                             {
                                 ["type"] = "array",
@@ -7288,7 +7200,7 @@ public static class ReportGenerator
                                 ["items"] = new Dictionary<string, object?>
                                 {
                                     ["type"] = "object",
-                                    ["required"] = new[] { "id", "stableId", "name", "result", "durationSeconds", "isHappyPath", "labels", "categories", "steps" },
+                                    ["required"] = new[] { "id", "stableId", "name", "result", "durationSeconds", "isHappyPath", "steps" },
                                     ["properties"] = new Dictionary<string, object?>
                                     {
                                         ["id"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The runtime id the test framework gave this scenario (a test case id, a pickle id). Unique within the run but not stable across runs; use stableId for that." },
@@ -7303,8 +7215,7 @@ public static class ReportGenerator
                                         ["errorMessage"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The failure message the framework reported, when the scenario failed" },
                                         ["errorStackTrace"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The stack trace the framework reported, when the scenario failed" },
                                         ["failureCause"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The framework's CLASSIFICATION of the failure (xUnit v3: Assertion, Exception, Timeout, Other; MSTest: the exception type name), null where the framework does not classify. A category, not a cause - it says an assertion failed, never which one - so it is never a grouping key" },
-                                        ["labels"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "Scenario-level tags (feature tags are on the feature)", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
-                                        ["categories"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "Category tags (@category: in Gherkin, the framework's category attribute otherwise); the report's category filter reads these", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
+                                        ["tags"] = new Dictionary<string, object?> { ["type"] = "array", ["description"] = "The scenario's own tags (in Gherkin its own, its rule's and its Examples block's); its effective tags are its feature's, then these. A file written before 5.0.0 holds labels and categories here instead", ["items"] = new Dictionary<string, object?> { ["type"] = "string" } },
                                         ["rule"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Gherkin Rule grouping this scenario belongs to" },
                                         ["attempt"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "Which run of this scenario produced the result, when the runner retries: 1 for the first, 2 for the first retry. 1-based, matching the retry N label in the HTML (Cucumber's own wire value is 0-based). Null where the runner reports nothing about attempts." },
                                         ["sourceFile"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Where the scenario is written, matching the feature's sourceFile. NOT the same contract as a step's sourceFile, which is a bare file name from [CallerFilePath] on the build machine.", ["examples"] = new[] { "Features/Cake.feature" } },
@@ -7823,17 +7734,10 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "ErrorMessage"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "ErrorStackTrace"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "FailureCause"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
-                new XElement(xs + "element", new XAttribute("name", "Labels"), new XAttribute("minOccurs", "0"),
+                new XElement(xs + "element", new XAttribute("name", "Tags"), new XAttribute("minOccurs", "0"),
                     new XElement(xs + "complexType",
                         new XElement(xs + "sequence",
-                            new XElement(xs + "element", new XAttribute("name", "Label"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))
-                        )
-                    )
-                ),
-                new XElement(xs + "element", new XAttribute("name", "Categories"), new XAttribute("minOccurs", "0"),
-                    new XElement(xs + "complexType",
-                        new XElement(xs + "sequence",
-                            new XElement(xs + "element", new XAttribute("name", "Category"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))
+                            new XElement(xs + "element", new XAttribute("name", "Tag"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))
                         )
                     )
                 ),
@@ -7920,10 +7824,10 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "Endpoint"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "Description"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "SourceFile"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
-                new XElement(xs + "element", new XAttribute("name", "Labels"), new XAttribute("minOccurs", "0"),
+                new XElement(xs + "element", new XAttribute("name", "Tags"), new XAttribute("minOccurs", "0"),
                     new XElement(xs + "complexType",
                         new XElement(xs + "sequence",
-                            new XElement(xs + "element", new XAttribute("name", "Label"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))
+                            new XElement(xs + "element", new XAttribute("name", "Tag"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))
                         )
                     )
                 ),

@@ -93,25 +93,60 @@ public class BDDfyScenarioInfoExtensionsTests
     }
 
     [Fact]
-    public void ToFeatures_maps_tags_to_scenario_labels_excluding_special_tags()
+    public void ToFeatures_maps_tags_to_the_scenario_s_tags_less_the_happy_path_and_the_endpoint()
     {
         var info = MakeScenario(tags: ["smoke", "happy-path", "endpoint:GET /api", "regression"]);
         var features = new[] { info }.ToFeatures();
         var scenario = features[0].Scenarios[0];
 
-        Assert.NotNull(scenario.Labels);
-        Assert.Contains("smoke", scenario.Labels!);
-        Assert.Contains("regression", scenario.Labels!);
-        Assert.DoesNotContain("happy-path", scenario.Labels!);
-        Assert.DoesNotContain("endpoint:GET /api", scenario.Labels!);
+        Assert.Equal(["smoke", "regression"], scenario.Tags);
+        Assert.True(scenario.IsHappyPath);
+        Assert.Equal("GET /api", features[0].Endpoint);
+        // a story has no tags (plans/TAGS_PLAN.md §4.7)
+        Assert.Null(features[0].Tags);
     }
 
     [Fact]
-    public void ToFeatures_leaves_labels_null_when_no_non_special_tags()
+    public void ToFeatures_reads_a_category_prefix_as_the_tag_it_names_once()
+    {
+        // F1: BDDfy kept category:Orders as a label, prefix and all, beside the other lanes' category Orders
+        var info = MakeScenario(tags: ["category:Orders", "smoke", "@category:SMOKE", "orders"]);
+
+        Assert.Equal(["Orders", "smoke"], new[] { info }.ToFeatures()[0].Scenarios[0].Tags);
+    }
+
+    [Fact]
+    public void ToFeatures_leaves_tags_null_when_no_non_special_tags()
     {
         var info = MakeScenario(tags: ["happy-path"]);
         var features = new[] { info }.ToFeatures();
-        Assert.Null(features[0].Scenarios[0].Labels);
+        Assert.Null(features[0].Scenarios[0].Tags);
+    }
+
+    [Fact]
+    [Trait("Category", "Nightly")]
+    [Trait("Category", "smoke")]
+    [Trait("Produces", "Orders")]
+    public void The_processor_adds_the_running_test_s_category_traits_to_the_story_scenario_s_tags()
+    {
+        // Q11: a BDDfy test is an xUnit test, and its Category traits are the tags the other xUnit lanes read; no other key
+        Assert.Equal(["smoke", "Nightly", "smoke"], DiagramCapturingProcessor.TagsOf(["smoke"], TestContext.Current.Test));
+        Assert.Equal(["Nightly", "smoke"], DiagramCapturingProcessor.TagsOf(null, TestContext.Current.Test));
+        Assert.Equal(["smoke"], DiagramCapturingProcessor.TagsOf(["smoke"], test: null));
+    }
+
+    [Fact]
+    [Trait("Category", "Nightly")]
+    public void The_processor_gives_a_story_scenario_its_tags_then_the_running_test_s_category_traits()
+    {
+        // Q11, through Process as a BDDfy run calls it, on a story built by hand so that no BDDfy configuration is shared
+        // with the rest of the assembly
+        var story = new TestStack.BDDfy.Story(null!, new TestStack.BDDfy.Scenario(this, [], "Pay with a card", ["smoke"]));
+
+        new DiagramCapturingProcessor().Process(story);
+
+        var captured = BDDfyScenarioCollector.GetAll().Last(s => s.TestId == TestContext.Current.Test!.UniqueID);
+        Assert.Equal(["smoke", "Nightly"], captured.Tags);
     }
 
     [Fact]

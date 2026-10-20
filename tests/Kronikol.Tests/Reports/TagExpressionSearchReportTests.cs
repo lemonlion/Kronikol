@@ -56,7 +56,7 @@ public class TagExpressionSearchReportTests
                 DisplayName = "F1",
                 Scenarios =
                 [
-                    new Scenario { Id = "s1", DisplayName = "S1", Result = ExecutionResult.Passed, Labels = ["important", "regression"] }
+                    new Scenario { Id = "s1", DisplayName = "S1", Result = ExecutionResult.Passed, Tags = ["important", "regression"] }
                 ]
             }
         };

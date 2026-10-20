@@ -40,6 +40,7 @@ public abstract class DiagrammedComponentTest
         var isHappyPath = methodInfo?.GetCustomAttribute<HappyPathAttribute>() is not null;
         var parameterNames = methodInfo?.GetParameters().Select(p => p.Name).ToArray();
         var failed = TestContext.CurrentTestOutcome.ToExecutionResult() == ExecutionResult.Failed;
+        var (featureTags, tags) = TestCategories(type, methodInfo);
 
         DiagrammedTestRun.TestContexts.Enqueue(new MSTestScenarioInfo
         {
@@ -65,8 +66,25 @@ public abstract class DiagrammedComponentTest
             IsHappyPath = isHappyPath,
             Duration = _stopwatch?.Elapsed,
             EndedAt = DateTimeOffset.UtcNow,
-            ParameterNames = parameterNames
+            ParameterNames = parameterNames,
+            FeatureTags = featureTags,
+            Tags = tags
         });
+    }
+
+    /// <summary>
+    /// A test's <c>[TestCategory]</c> values by level (plans/TAGS_PLAN.md §4.7): the class's, its base classes' included,
+    /// then the assembly's (Q12) are the feature's; the method's are the scenario's. Any
+    /// <see cref="TestCategoryBaseAttribute"/> counts, as MSTest counts it.
+    /// </summary>
+    internal static (string[]? Feature, string[]? Scenario) TestCategories(Type type, MethodInfo? method)
+    {
+        var feature = type.GetCustomAttributes<TestCategoryBaseAttribute>(inherit: true)
+            .Concat(type.Assembly.GetCustomAttributes<TestCategoryBaseAttribute>())
+            .SelectMany(a => a.TestCategories)
+            .ToArray();
+        var scenario = method?.GetCustomAttributes<TestCategoryBaseAttribute>(inherit: true).SelectMany(a => a.TestCategories).ToArray() ?? [];
+        return (feature.Length > 0 ? feature : null, scenario.Length > 0 ? scenario : null);
     }
 
     internal static TestContext? GetCurrentTestContext() => CurrentContext.Value;

@@ -364,7 +364,7 @@ public class ToggleDefaultsMarkupTests
                     new Scenario
                     {
                         Id = "s1", DisplayName = "S1", Result = ExecutionResult.Passed,
-                        Labels = ["smoke"]
+                        Tags = ["smoke"]
                     }
                 ]
             }

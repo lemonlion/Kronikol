@@ -63,6 +63,7 @@ public sealed class TestTrackingAttribute : BeforeAfterTestAttribute
             .Any();
 
         var methodMatchKey = $"{(methodUnderTest.ReflectedType ?? methodUnderTest.DeclaringType)!.FullName}.{methodUnderTest.Name}";
+        var (featureTags, tags) = CategoryTraits.Of(methodUnderTest.ReflectedType ?? methodUnderTest.DeclaringType, methodUnderTest);
 
         XUnit2TestTrackingContext.CollectedScenarios[testId] = new ScenarioInfo
         {
@@ -72,6 +73,8 @@ public sealed class TestTrackingAttribute : BeforeAfterTestAttribute
             MethodMatchKey = methodMatchKey,
             Endpoint = endpointAttr?.Endpoint,
             IsHappyPath = isHappyPath,
+            FeatureTags = featureTags,
+            Tags = tags,
         };
     }
 

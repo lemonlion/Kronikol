@@ -325,7 +325,7 @@ public class StepRenderingReportTests
         var scenario = new Scenario
         {
             Id = "s1", DisplayName = "Test",
-            Labels = ["smoke", "regression"]
+            Tags = ["smoke", "regression"]
         };
         var content = GenerateReport(MakeFeatures(scenario), "ScenarioLabels.html");
         Assert.Contains("smoke", content);
@@ -333,20 +333,20 @@ public class StepRenderingReportTests
     }
 
     [Fact]
-    public void Report_renders_feature_labels()
+    public void Report_renders_feature_tags()
     {
         var features = new[]
         {
             new Feature
             {
                 DisplayName = "Cake",
-                Labels = ["api", "v2"],
+                Tags = ["api", "v2"],
                 Scenarios = [new Scenario { Id = "s1", DisplayName = "Test" }]
             }
         };
         var content = GenerateReport(features, "FeatureLabels.html");
-        Assert.Contains("api", content);
-        Assert.Contains("v2", content);
+        // the feature's badges, not the words: "api" and "v2" are in the page's scripts whatever the feature carries
+        Assert.Contains("Cake <span class=\"label\">api</span> <span class=\"label\">v2</span></summary>", content);
     }
 
     [Fact]
@@ -706,7 +706,7 @@ public class StepRenderingReportTests
         var scenario = new Scenario
         {
             Id = "s1", DisplayName = "Test",
-            Categories = ["Orders"]
+            Tags = ["Orders"]
         };
         var content = GenerateReport(MakeFeatures(scenario), "CategoryFilter.html");
         Assert.Contains("<button type=\"button\" class=\"tag-toggle\" data-tag=\"Orders\"", content);

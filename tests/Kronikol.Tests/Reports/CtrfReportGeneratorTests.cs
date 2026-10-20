@@ -36,7 +36,7 @@ public class CtrfReportGeneratorTests
                 new Scenario
                 {
                     Id = "s-pass", DisplayName = "Pay with a valid card", Result = ExecutionResult.Passed,
-                    Duration = TimeSpan.FromMilliseconds(1500), Labels = ["smoke"], Categories = ["payments"],
+                    Duration = TimeSpan.FromMilliseconds(1500), Tags = ["smoke", "payments"],
                     SourceFile = "Features/Checkout.feature", SourceLine = 12
                 },
                 new Scenario
@@ -190,14 +190,13 @@ public class CtrfReportGeneratorTests
     }
 
     [Fact]
-    public void The_retry_labels_kronikol_generates_are_not_offered_as_tags()
+    public void An_author_s_retry_tag_is_a_tag()
     {
-        // Cucumber ingest folds earlier attempts into one scenario and records them as "retry N" labels.
-        // They are a rendering device, not something an author tagged, and as CTRF tags they would grow a
-        // new junk tag on every retry. retries already carries the fact.
+        // F13: 4.x dropped every retry N from the tags, an author's own with the ones the ingest lanes generated. The
+        // lanes generate none now (the report draws the retry from the attempt), so a retry 2 is the author's.
         var tags = Tests(Flaky())[0].GetProperty("tags").EnumerateArray().Select(t => t.GetString()!).ToArray();
 
-        Assert.Equal(["slow"], tags);
+        Assert.Equal(["retry 2", "slow"], tags);
     }
 
     private static Feature[] Flaky() =>
@@ -207,26 +206,43 @@ public class CtrfReportGeneratorTests
             DisplayName = "Flaky",
             Scenarios =
             [
-                new Scenario { Id = "f1", DisplayName = "Eventually passes", Result = ExecutionResult.Passed, Attempt = 3, Labels = ["retry 1", "retry 2", "slow"] },
-                new Scenario { Id = "f2", DisplayName = "Never passes", Result = ExecutionResult.Failed, Attempt = 2, Labels = ["retry 1"] },
+                new Scenario { Id = "f1", DisplayName = "Eventually passes", Result = ExecutionResult.Passed, Attempt = 3, Tags = ["retry 2", "slow"] },
+                new Scenario { Id = "f2", DisplayName = "Never passes", Result = ExecutionResult.Failed, Attempt = 2 },
                 new Scenario { Id = "f3", DisplayName = "Ran once", Result = ExecutionResult.Passed }
             ]
         }
     ];
 
-    // ─── Tags and categories ───────────────────────────────────
+    // ─── Tags ──────────────────────────────────────────────────
 
     [Fact]
-    public void Categories_travel_in_extra_rather_than_pretending_to_be_tags()
+    public void Every_effective_tag_is_a_CTRF_tag_the_feature_s_first()
     {
-        // A Kronikol category comes from an @category: tag and is a different axis from a label. Flattening
-        // the two into CTRF tags would make "payments" indistinguishable from a label somebody wrote.
-        var tests = Tests(OneOfEach());
+        // F13: 4.x sent a scenario's labels as tags and its categories in extra.categories, and left its feature's
+        // labels out; a category is a tag now (plans/TAGS_PLAN.md §4.12)
+        Feature[] features =
+        [
+            new Feature
+            {
+                DisplayName = "Checkout", Tags = ["checkout", "Smoke"],
+                Scenarios =
+                [
+                    new Scenario { Id = "t1", DisplayName = "Pay", Result = ExecutionResult.Passed, Tags = ["smoke", "payments"] },
+                    new Scenario { Id = "t2", DisplayName = "Refuse", Result = ExecutionResult.Passed }
+                ]
+            },
+            new Feature { DisplayName = "Browse", Scenarios = [new Scenario { Id = "t3", DisplayName = "Look around", Result = ExecutionResult.Passed }] }
+        ];
 
-        Assert.Equal(["smoke"], tests[0].GetProperty("tags").EnumerateArray().Select(t => t.GetString()));
-        Assert.Equal(["payments"], tests[0].GetProperty("extra").GetProperty("categories").EnumerateArray().Select(t => t.GetString()));
-        // Nothing empty is emitted: a scenario with neither carries neither.
-        Assert.False(tests[2].TryGetProperty("tags", out _));
+        var tests = Tests(features);
+        JsonElement Named(string name) => tests.Single(t => t.GetProperty("name").GetString() == name);
+        string?[] TagsOf(string name) => [.. Named(name).GetProperty("tags").EnumerateArray().Select(t => t.GetString())];
+
+        Assert.Equal(["checkout", "Smoke", "payments"], TagsOf("Pay"));
+        Assert.Equal(["checkout", "Smoke"], TagsOf("Refuse"));
+        // Nothing empty is emitted: a scenario with no tag carries none.
+        Assert.False(Named("Look around").TryGetProperty("tags", out _));
+        Assert.All(tests, t => Assert.False(t.TryGetProperty("extra", out var extra) && extra.TryGetProperty("categories", out _)));
     }
 
     // ─── The way back into the report ──────────────────────────

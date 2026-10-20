@@ -113,7 +113,7 @@ public class ControlTitlesTests : IDisposable
                 new Scenario
                 {
                     Id = "pay", DisplayName = "Pays for an order", Result = ExecutionResult.Passed, IsHappyPath = true,
-                    Duration = TimeSpan.FromMilliseconds(1200), Labels = ["fast"], Categories = ["smoke"],
+                    Duration = TimeSpan.FromMilliseconds(1200), Tags = ["fast", "smoke"],
                     Attachments = [new FileAttachment("order.json", "attachments/order.json"), new FileAttachment("screen.png", "attachments/screen.png", "image/png")],
                     BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "the shop is open", Status = ExecutionResult.Passed }],
                     Steps =

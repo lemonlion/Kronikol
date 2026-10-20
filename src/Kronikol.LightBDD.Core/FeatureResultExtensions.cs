@@ -26,26 +26,29 @@ internal static class FeatureResultExtensions
             .OrderBy(f => f.Info.Name.ToString())
             .Select(f =>
             {
-                var labels = f.Info.Labels.ToArray();
+                // the class's [Label]s; a class-level [ScenarioCategory] reaches every scenario with no level, and stays
+                // on each (plans/TAGS_PLAN.md §4.7, Q8)
+                var featureTags = ScenarioTags.Classify(f.Info.Labels).Tags;
                 var scenarios = f.GetScenarios()
                         .OrderBy(s => s.Info.Name.ToString())
-                        .Select(MapScenario)
+                        .Select(s => MapScenario(s, featureTags))
                         .ToArray();
 
                     return new Feature
                 {
                     DisplayName = f.Info.Name.ToString().Titleize(),
                     Description = f.Info.Description,
-                    Labels = labels.Length > 0 ? labels : null,
+                    Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenarios
                 };
             }).ToArray();
     }
 
-    private static Scenario MapScenario(IScenarioResult result)
+    private static Scenario MapScenario(IScenarioResult result, string[] featureTags)
     {
-        var labels = result.Info.Labels.ToArray();
-        var categories = result.Info.Categories.ToArray();
+        // [HappyPath] is the label Happy Path, which the classifier reads as the flag and not a tag (F11)
+        var classified = ScenarioTags.Classify(result.Info.Labels.Concat(result.Info.Categories));
+        var tags = classified.Tags.Except(featureTags, ScenarioTags.Comparer).ToArray();
 
         var failedException = result.Status == ExecutionStatus.Failed
             ? FindFirstFailedException(result.GetSteps())
@@ -88,9 +91,8 @@ internal static class FeatureResultExtensions
             EndedAt = result.ExecutionTime?.End,
             Steps = MapSteps(result.GetSteps(), result.Status is ExecutionStatus.Ignored or ExecutionStatus.NotRun,
                 StepCollector.GetSteps(result.Info.RuntimeId.ToString())),
-            IsHappyPath = labels.Contains("Happy Path"),
-            Labels = labels.Length > 0 ? labels : null,
-            Categories = categories.Length > 0 ? categories : null,
+            IsHappyPath = classified.IsHappyPath,
+            Tags = tags.Length > 0 ? tags : null,
             OutlineId = outlineId,
             ExampleValues = exampleValues is { Count: > 0 } ? exampleValues : null,
             ExampleRawValues = exampleRawValues,

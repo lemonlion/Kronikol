@@ -17,13 +17,16 @@ internal static class TestContextEnumerableExtensions
             .Select(scenariosForFeature =>
             {
                 var featureClass = scenariosForFeature.First().TestClass!;
+                // xUnit merges the class's traits into each test's, so the scenario's own are the test's less these
+                var featureTags = ScenarioTags.Classify(CategoryTraits(featureClass.Traits)).Tags;
                 return new Feature
                 {
                     DisplayName = ScenarioTitleResolver.FormatFeatureName(scenariosForFeature.Key),
                     Endpoint = featureClass.Traits.SingleOrDefault(y => y.Key == EndpointAttribute.EndpointTraitKey).Value?.FirstOrDefault(),
+                    Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenariosForFeature
                         .DistinctBy(x => x.Test!.UniqueID)
-                        .OrderByDescending(x => x.TestMethod!.Traits.ContainsKey(HappyPathAttribute.HappyPathTraitKey))
+                        .OrderByDescending(IsHappyPath)
                         .ThenBy(x => x.Test?.TestDisplayName)
                         .Select(x =>
                         {
@@ -34,13 +37,15 @@ internal static class TestContextEnumerableExtensions
                             var structuredParams = structuredResult?.StringValues;
                             Dictionary<string, object?>? rawValues = structuredResult?.RawValues;
                             var parsed = structuredParams ?? ParameterParser.Parse(displayName);
+                            var tags = ScenarioTags.Classify(CategoryTraits(x.Test!.Traits)).Tags.Except(featureTags, ScenarioTags.Comparer).ToArray();
 
                             return new Scenario
                             {
                                 Id = x.Test!.UniqueID,
                                 Result = x.TestState!.Result.ToExecutionResult(),
                                 DisplayName = displayName,
-                                IsHappyPath = x.Test!.Traits.ContainsKey(HappyPathAttribute.HappyPathTraitKey),
+                                IsHappyPath = IsHappyPath(x),
+                                Tags = tags.Length > 0 ? tags : null,
                                 // The message is what was thrown, and nothing else. Until 3.1.0 the
                                 // FailureCause enum was joined onto the front of it, which made the first
                                 // line of every failure in the run the same word - and the first line is
@@ -67,6 +72,14 @@ internal static class TestContextEnumerableExtensions
                 };
             }).ToArray();
     }
+
+    /// <summary>A trait list's <c>Category</c> values (plans/TAGS_PLAN.md §4.7); no other key is a tag (Q7).</summary>
+    private static IEnumerable<string> CategoryTraits(IReadOnlyDictionary<string, IReadOnlyCollection<string>> traits) =>
+        traits.TryGetValue("Category", out var values) ? values : [];
+
+    /// <summary><c>[HappyPath]</c>, or a happy-path <c>Category</c> trait.</summary>
+    private static bool IsHappyPath(ITestContext x) =>
+        x.Test!.Traits.ContainsKey(HappyPathAttribute.HappyPathTraitKey) || ScenarioTags.Classify(CategoryTraits(x.Test.Traits)).IsHappyPath;
 
     private static (Dictionary<string, string> StringValues, Dictionary<string, object?> RawValues)? TryExtractStructuredParametersWithRaw(ITestContext context)
     {

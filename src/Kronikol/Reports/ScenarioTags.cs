@@ -3,23 +3,28 @@ using System.Globalization;
 namespace Kronikol.Reports;
 
 /// <summary>
-/// The tag conventions Kronikol's Gherkin adapters share, in one place so an external producer
-/// (the widened tests NDJSON, a Cucumber Messages importer, a Playwright reporter) classifies tags
-/// exactly the way <c>Kronikol.ReqNRoll</c> does, and the one rule every reader of a report uses
-/// to tell whether two tags are the same tag (<see cref="Comparer"/>).
+/// The tag conventions Kronikol's adapters share, in one place so an external producer (the widened tests NDJSON, a
+/// Cucumber Messages importer, a Playwright reporter) classifies tags exactly the way the adapters do, and the one rule
+/// every reader of a report uses to tell whether two tags are the same tag (<see cref="Comparer"/>).
 /// </summary>
 /// <remarks>
 /// <list type="bullet">
-/// <item><c>@category:x</c> — a report category (the category filter chips).</item>
-/// <item><c>@endpoint:x</c> — the feature's endpoint.</item>
-/// <item><c>@happy-path</c> (also <c>@happy_path</c>, <c>@happypath</c>) — marks the happy path.</item>
-/// <item>anything else — a label.</item>
+/// <item><c>@endpoint:x</c>: the feature's endpoint, not a tag.</item>
+/// <item><c>@happy-path</c> (also <c>@happy_path</c>, <c>@happypath</c> and <c>Happy Path</c>): marks the happy path, not
+/// a tag.</item>
+/// <item><c>@category:x</c>: the tag <c>x</c>, whatever <c>x</c> spells. 4.x read it as a category; a category is a tag
+/// in 5.0.0, so the prefix is accepted and dropped.</item>
+/// <item>anything else: a tag.</item>
 /// </list>
-/// A leading <c>@</c> is optional and stripped; matching is case-insensitive.
+/// A leading <c>@</c> and surrounding whitespace are removed; the prefixes and the happy-path names match whatever their
+/// case.
 /// </remarks>
 public static class ScenarioTags
 {
-    /// <summary>Prefix of a category tag (<c>@category:smoke</c>).</summary>
+    /// <summary>
+    /// The prefix 4.x gave a category tag (<c>@category:smoke</c>). A category is a tag in 5.0.0: the prefix is accepted
+    /// and dropped, so <c>@category:smoke</c> is the tag <c>smoke</c>.
+    /// </summary>
     public const string CategoryPrefix = "category:";
 
     /// <summary>Prefix of an endpoint tag (<c>@endpoint:/customers</c>).</summary>
@@ -28,21 +33,20 @@ public static class ScenarioTags
     /// <summary>The name the report gives the happy-path flag where it shows it as a tag: its chip, its badge.</summary>
     internal const string HappyPathTag = "Happy Path";
 
-    /// <summary>What <see cref="Classify"/> made of a scenario's tags.</summary>
-    /// <param name="Labels">Tags that are neither category, endpoint nor happy-path markers.</param>
-    /// <param name="Categories">Values of the <c>@category:</c> tags.</param>
+    /// <summary>What <see cref="Classify"/> made of a scenario's or a feature's tags.</summary>
+    /// <param name="Tags">The tags, each once under <see cref="Comparer"/> in the first spelling met, in source order.</param>
     /// <param name="Endpoint">Value of the first <c>@endpoint:</c> tag, if any.</param>
     /// <param name="IsHappyPath">Whether a happy-path tag was present.</param>
-    public sealed record Classified(string[] Labels, string[] Categories, string? Endpoint, bool IsHappyPath);
+    public sealed record Classified(string[] Tags, string? Endpoint, bool IsHappyPath);
 
     /// <summary>Strips a leading <c>@</c> and surrounding whitespace from a tag.</summary>
     public static string Normalise(string tag) => tag.Trim().TrimStart('@');
 
-    /// <summary>Splits raw tags into labels, categories, the endpoint and the happy-path flag.</summary>
+    /// <summary>Splits raw tags into the tags, the endpoint and the happy-path flag.</summary>
     public static Classified Classify(IEnumerable<string>? tags)
     {
-        var labels = new List<string>();
-        var categories = new List<string>();
+        var kept = new List<string>();
+        var seen = new HashSet<string>(Comparer);
         string? endpoint = null;
         var happyPath = false;
 
@@ -52,30 +56,23 @@ public static class ScenarioTags
                 continue;
 
             var tag = Normalise(raw);
+            // A value written with the category prefix is a tag whatever it spells: 4.x never read @category:happy-path
+            // as the happy path, nor @category:endpoint:/x as the endpoint.
+            var category = tag.StartsWith(CategoryPrefix, StringComparison.OrdinalIgnoreCase);
+            if (category)
+                tag = tag[CategoryPrefix.Length..].Trim();
             if (tag.Length == 0)
                 continue;
 
-            if (tag.StartsWith(CategoryPrefix, StringComparison.OrdinalIgnoreCase))
-            {
-                var value = tag[CategoryPrefix.Length..].Trim();
-                if (value.Length > 0)
-                    categories.Add(value);
-            }
-            else if (tag.StartsWith(EndpointPrefix, StringComparison.OrdinalIgnoreCase))
-            {
+            if (!category && tag.StartsWith(EndpointPrefix, StringComparison.OrdinalIgnoreCase))
                 endpoint ??= tag[EndpointPrefix.Length..].Trim() is { Length: > 0 } value ? value : null;
-            }
-            else if (HappyPathDetection.IsHappyPathTag(tag))
-            {
+            else if (!category && HappyPathDetection.IsHappyPathTag(tag))
                 happyPath = true;
-            }
-            else
-            {
-                labels.Add(tag);
-            }
+            else if (seen.Add(tag))
+                kept.Add(tag);
         }
 
-        return new Classified(labels.ToArray(), categories.ToArray(), endpoint, happyPath);
+        return new Classified(kept.ToArray(), endpoint, happyPath);
     }
 
     /// <summary>
@@ -148,21 +145,18 @@ public static class ScenarioTags
 
     /// <summary>
     /// A scenario's effective tags: its feature's, then its own, each once (<see cref="Merge"/>), which is what the
-    /// report's Tags row, its <c>@tag</c> search and its link filter on. Its own are its labels and its categories,
-    /// less the <c>retry N</c> labels its <see cref="Scenario.Attempt"/> accounts for, which the report draws from the
-    /// attempt instead (<see cref="IsGeneratedRetryLabel"/>).
+    /// report's Tags row, its <c>@tag</c> search and its link filter on, and what CTRF sends as tags.
     /// </summary>
-    internal static string[] Effective(Feature feature, Scenario scenario) =>
-        Merge(feature.Labels, OwnOf(scenario));
+    internal static string[] Effective(Feature feature, Scenario scenario) => Merge(feature.Tags, scenario.Tags);
 
-    /// <summary>A scenario's own tags: its labels and its categories, less the retry labels its attempt accounts for.</summary>
-    internal static string[] OwnOf(Scenario scenario) =>
-        Merge(scenario.Labels?.Where(l => !IsGeneratedRetryLabel(l, scenario.Attempt)), scenario.Categories);
+    /// <summary>A scenario's own tags, each once.</summary>
+    internal static string[] OwnOf(Scenario scenario) => Merge(scenario.Tags);
 
     /// <summary>
-    /// Whether <paramref name="label"/> is one of the <c>retry N</c> labels the ingest lanes give a scenario for each
-    /// attempt before the one it shows: <c>retry k</c> with <c>k</c> from 1 to one less than
-    /// <paramref name="attempt"/>. Any other <c>retry 2</c> is an author's own tag.
+    /// Whether <paramref name="label"/> is one of the <c>retry N</c> labels 4.x's ingest lanes gave a scenario for each
+    /// attempt before the one it shows: <c>retry k</c> with <c>k</c> from 1 to one less than <paramref name="attempt"/>.
+    /// No lane makes them in 5.0.0 (the report draws the retry from <see cref="Scenario.Attempt"/>); the readers of a 4.x
+    /// file leave them out of its tags with this. Any other <c>retry 2</c> is an author's own tag.
     /// </summary>
     internal static bool IsGeneratedRetryLabel(string label, int? attempt) =>
         attempt is > 1

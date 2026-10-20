@@ -38,7 +38,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
                 {
                     Id = "c1", DisplayName = "Pay", Result = ExecutionResult.Failed,
                     Duration = TimeSpan.FromSeconds(2), ErrorMessage = "card declined",
-                    Categories = ["billing"],
+                    Tags = ["billing"],
                     Steps = [new ScenarioStep { Keyword = "Then", Text = "it charges", Status = ExecutionResult.Failed }]
                 }
             ]
@@ -51,7 +51,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
                 new Scenario
                 {
                     Id = "r1", DisplayName = "Pay", Result = ExecutionResult.Passed,
-                    Duration = TimeSpan.FromSeconds(1), Categories = ["billing"],
+                    Duration = TimeSpan.FromSeconds(1), Tags = ["billing"],
                     Steps = [new ScenarioStep { Keyword = "Then", Text = "it refunds", Status = ExecutionResult.Passed }]
                 }
             ]

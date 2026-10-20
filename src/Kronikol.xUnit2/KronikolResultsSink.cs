@@ -115,6 +115,7 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
         if (type is null || method is null || !Tracked.GetOrAdd((type, method), key => AppliesTo(key.Type, key.Method, testMethod)))
             return;
 
+        var (featureTags, tags) = CategoryTraits.Of(type, method);
         var scenario = new ScenarioInfo
         {
             Id = Guid.NewGuid().ToString(),
@@ -126,6 +127,8 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
             MethodMatchKey = $"{type.FullName}.{method.Name}",
             Endpoint = type.GetCustomAttributes(inherit: true).OfType<EndpointAttribute>().FirstOrDefault()?.Endpoint,
             IsHappyPath = method.GetCustomAttributes(inherit: true).OfType<HappyPathAttribute>().Any(),
+            FeatureTags = featureTags,
+            Tags = tags,
             MadeAtTestStarting = true,
         };
 

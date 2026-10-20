@@ -34,6 +34,72 @@ public class ScenarioTagsTests
         Assert.False(ScenarioTags.Comparer.Equals(x, y));
     }
 
+    // ── Classify (plans/TAGS_PLAN.md §4.4) ──
+
+    [Fact]
+    public void A_category_prefix_is_dropped_and_a_tag_written_both_ways_is_one_tag()
+    {
+        var classified = ScenarioTags.Classify(["@smoke", "@category:smoke", "category:Slow", "@CATEGORY: fast "]);
+        Assert.Equal(["smoke", "Slow", "fast"], classified.Tags);
+    }
+
+    [Fact]
+    public void The_endpoint_and_the_happy_path_are_not_tags()
+    {
+        var classified = ScenarioTags.Classify(["@endpoint:/orders", "api", "@happy-path", "@endpoint:/later"]);
+        Assert.Equal(["api"], classified.Tags);
+        Assert.Equal("/orders", classified.Endpoint);
+        Assert.True(classified.IsHappyPath);
+    }
+
+    [Theory]
+    [InlineData("happy-path")]
+    [InlineData("@happy_path")]
+    [InlineData("HappyPath")]
+    [InlineData("Happy Path")]
+    [InlineData("@happy path")]
+    public void Every_happy_path_name_sets_the_flag_and_is_not_a_tag(string name)
+    {
+        var classified = ScenarioTags.Classify([name, "smoke"]);
+        Assert.True(classified.IsHappyPath);
+        Assert.Equal(["smoke"], classified.Tags);
+    }
+
+    [Fact]
+    public void A_category_named_like_a_marker_is_a_tag()
+    {
+        // 4.x made @category:happy-path a category, not the happy path, and a category is a tag now
+        var classified = ScenarioTags.Classify(["@category:happy-path", "@category:endpoint:/x"]);
+        Assert.Equal(["happy-path", "endpoint:/x"], classified.Tags);
+        Assert.False(classified.IsHappyPath);
+        Assert.Null(classified.Endpoint);
+    }
+
+    [Fact]
+    public void Empty_names_are_skipped()
+    {
+        var classified = ScenarioTags.Classify(["", " ", "@", "@category:", "category:  ", "@endpoint:"]);
+        Assert.Empty(classified.Tags);
+        Assert.Null(classified.Endpoint);
+        Assert.False(classified.IsHappyPath);
+    }
+
+    [Fact]
+    public void Classify_keeps_the_first_spelling_and_the_source_order()
+    {
+        Assert.Equal(["Smoke", "api", "fast"], ScenarioTags.Classify(["Smoke", "api", "smoke", "API", "@fast"]).Tags);
+        Assert.Empty(ScenarioTags.Classify(null).Tags);
+    }
+
+    [Fact]
+    public void Classify_keeps_letters_apart_that_only_other_runtimes_fold()
+    {
+        // the Kelvin sign and k, the dotless i and i: .NET keeps both pairs apart, and so does the tag fold
+        Assert.Equal(["\u212A", "k", "\u0131", "i"], ScenarioTags.Classify(["\u212A", "k", "\u0131", "i"]).Tags);
+    }
+
+    // ── lists ──
+
     [Fact]
     public void Merge_keeps_the_first_spelling_and_the_order_the_names_are_met_in()
     {
@@ -98,8 +164,8 @@ public class ScenarioTagsTests
     [Fact]
     public void A_scenario_s_effective_tags_are_its_feature_s_then_its_own_each_once()
     {
-        var feature = new Feature { DisplayName = "F", Labels = ["Checkout", "api"] };
-        var scenario = new Scenario { Id = "s", DisplayName = "S", Labels = ["smoke", "checkout"], Categories = ["API", "Slow"] };
+        var feature = new Feature { DisplayName = "F", Tags = ["Checkout", "api"] };
+        var scenario = new Scenario { Id = "s", DisplayName = "S", Tags = ["smoke", "checkout", "API", "Slow"] };
         Assert.Equal(["Checkout", "api", "smoke", "Slow"], ScenarioTags.Effective(feature, scenario));
     }
 
@@ -110,14 +176,12 @@ public class ScenarioTagsTests
     }
 
     [Fact]
-    public void The_retry_labels_an_attempt_accounts_for_are_not_tags_and_an_author_s_own_are()
+    public void A_tag_named_retry_is_a_tag_whatever_the_attempt()
     {
-        var feature = new Feature { DisplayName = "F" };
-        var retried = new Scenario { Id = "s", DisplayName = "S", Attempt = 3, Labels = ["retry 1", "flaky", "retry 2", "retry 3"] };
-        Assert.Equal(["flaky", "retry 3"], ScenarioTags.Effective(feature, retried));
-
-        var never = new Scenario { Id = "t", DisplayName = "T", Labels = ["retry 2"] };
-        Assert.Equal(["retry 2"], ScenarioTags.Effective(feature, never));
+        // 5.0.0's lanes give a retried scenario no retry N labels (§4.6), so a tag of that shape is the author's; the
+        // readers drop the ones a 4.x file's attempt accounts for (IsGeneratedRetryLabel)
+        var retried = new Scenario { Id = "s", DisplayName = "S", Attempt = 3, Tags = ["retry 1", "flaky"] };
+        Assert.Equal(["retry 1", "flaky"], ScenarioTags.Effective(new Feature { DisplayName = "F" }, retried));
     }
 
     [Theory]

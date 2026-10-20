@@ -14,21 +14,16 @@ internal static class ScenarioInfoExtensions
             .Select(featureGroup =>
             {
                 var firstScenario = featureGroup.First();
-                var endpoint = featureGroup
-                    .SelectMany(s => s.Tags)
-                    .FirstOrDefault(t => t.StartsWith(BDDfyConstants.EndpointTagPrefix, StringComparison.OrdinalIgnoreCase))
-                    ?[BDDfyConstants.EndpointTagPrefix.Length..];
+                var endpoint = featureGroup.Select(s => ScenarioTags.Classify(s.Tags).Endpoint).FirstOrDefault(e => e is not null);
 
                 var scenarios = DeduplicateScenarioTitles(featureGroup
                         .DistinctBy(x => x.TestId)
-                        .OrderByDescending(x => HappyPathDetection.AnyHappyPathTag(x.Tags))
+                        .OrderByDescending(x => ScenarioTags.Classify(x.Tags).IsHappyPath)
                         .ThenBy(x => x.ScenarioTitle)
                         .Select(x =>
                         {
-                            var labels = x.Tags
-                                .Where(t => !HappyPathDetection.IsHappyPathTag(t)
-                                         && !t.StartsWith(BDDfyConstants.EndpointTagPrefix, StringComparison.OrdinalIgnoreCase))
-                                .ToArray();
+                            // a story has no tags, so they are all the scenario's; category:x is the tag x (F1)
+                            var classified = ScenarioTags.Classify(x.Tags);
 
                             // Prefer structured extraction from raw arguments (same mechanism as the
                             // non-BDDfy adapters) for rich sub-table rendering of complex objects.
@@ -60,7 +55,7 @@ internal static class ScenarioInfoExtensions
                             {
                                 Id = x.TestId,
                                 DisplayName = x.ScenarioTitle,
-                                IsHappyPath = HappyPathDetection.AnyHappyPathTag(x.Tags),
+                                IsHappyPath = classified.IsHappyPath,
                                 Result = x.Steps.Count == 0 && x.Result == TestStack.BDDfy.Result.NotExecuted
                                     ? ExecutionResult.Passed
                                     : x.Result.ToExecutionResult(),
@@ -71,7 +66,7 @@ internal static class ScenarioInfoExtensions
                                 Steps = x.Steps.Count > 0
                                     ? MapSteps(x.Steps, StepCollector.GetSteps(x.TestId))
                                     : StepCollector.GetSteps(x.TestId) is { Length: > 0 } collectedSteps ? collectedSteps : null,
-                                Labels = labels.Length > 0 ? labels : null,
+                                Tags = classified.Tags.Length > 0 ? classified.Tags : null,
                                 OutlineId = outlineId,
                                 ExampleValues = exampleValues is { Count: > 0 } ? exampleValues : null,
                                 ExampleRawValues = exampleRawValues,

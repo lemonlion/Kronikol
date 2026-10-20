@@ -201,6 +201,7 @@ public class ReqNRollTrackingHooks
             FeatureDescription = _featureContext.FeatureInfo.Description,
             ScenarioTags = _scenarioContext.ScenarioInfo.Tags,
             CombinedTags = _scenarioContext.ScenarioInfo.CombinedTags,
+            FeatureTags = _featureContext.FeatureInfo.Tags,
             TestError = _scenarioContext.TestError,
             ExecutionStatus = _scenarioContext.ScenarioExecutionStatus,
             Duration = _stopwatch?.Elapsed,

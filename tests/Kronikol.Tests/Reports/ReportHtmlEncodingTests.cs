@@ -32,14 +32,14 @@ public class ReportHtmlEncodingTests : IDisposable
             DisplayName = "Feature " + M("feature-name"),
             Description = "About " + M("feature-description"),
             Endpoint = "/api/" + M("feature-endpoint"),
-            Labels = ["label " + M("feature-label")],
+            Tags = ["label " + M("feature-label")],
             Scenarios =
             [
                 new Scenario
                 {
                     Id = "enc-1", DisplayName = "Place an order for " + M("scenario-name"),
                     Description = "About " + M("scenario-description"),
-                    Labels = ["label " + M("scenario-label")], Categories = ["cat " + M("scenario-category")],
+                    Tags = ["label " + M("scenario-label"), "cat " + M("scenario-category")],
                     Result = ExecutionResult.Failed, Duration = TimeSpan.FromMilliseconds(12),
                     ErrorMessage = "Expected " + M("error-message"), ErrorStackTrace = "at " + M("stack-trace"),
                     Steps = [new ScenarioStep { Keyword = "Given", Text = "a step " + M("step-text"), Status = ExecutionResult.Failed }],

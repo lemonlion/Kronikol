@@ -13,22 +13,27 @@ internal static class ScenarioInfoCollectionExtensions
             .Select(scenariosForFeature =>
             {
                 var first = scenariosForFeature.First();
+                var featureTags = ScenarioTags.Classify(first.FeatureTags).Tags;
                 return new Feature
                 {
                     DisplayName = first.FeatureName,
                     Endpoint = first.Endpoint,
+                    Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenariosForFeature
-                        .OrderByDescending(x => x.IsHappyPath)
+                        .OrderByDescending(x => x.IsHappyPath || ScenarioTags.Classify(x.Tags).IsHappyPath)
                         .ThenBy(x => x.ScenarioName)
                         .Select(x =>
                         {
                             var parsed = ParameterParser.Parse(x.ScenarioName);
+                            var classified = ScenarioTags.Classify(x.Tags);
+                            var tags = classified.Tags.Except(featureTags, ScenarioTags.Comparer).ToArray();
                             return new Scenario
                             {
                                 Id = x.Id,
                                 Result = x.Result,
                                 DisplayName = x.ScenarioName,
-                                IsHappyPath = x.IsHappyPath,
+                                IsHappyPath = x.IsHappyPath || classified.IsHappyPath,
+                                Tags = tags.Length > 0 ? tags : null,
                                 // Null when there is nothing to report, the rule every failure field follows
                                 // (FailureText.OrNull): an empty string here gave every passing xUnit v2
                                 // scenario an errorMessage of "".
