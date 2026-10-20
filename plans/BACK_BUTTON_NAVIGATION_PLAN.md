@@ -740,11 +740,11 @@ Work proceeds on each recommendation unless the owner says otherwise.
   57 browser cases written first failed and all 22 core facts written or moved; the 7 that passed are guards of what
   5.1.0 already did. Of the 22 mutations (the harness's `checks/mutate-backnav.py`), 18 were killed at the first run;
   three of the four that survived showed facts that could not tell (R1 draws nothing between leaving and returning, R3
-  is met by the tab's focus, and R13's clicks never reached WebKit's limit), so R16 and R17 were written for the
+  is met by the tab's focus, and R13's clicks never reached WebKit's limit), so R16 was written for the
   position, P1 and P6 now hold the focus mutation and R13 clicks 150 times in one task: 21 of 22 are killed. The
   survivor leaves the browser's own scroll restoration on (`auto`), which no fact can see, since the page puts the
   position back after the browser in all three engines; `manual` stays, as 4.5 says. Checks: the core suite passes
-  8,516 with 2 skipped, the full Playwright suite 1,471 with 28 skipped, and the Back and Forward classes 65 of 65
+  8,516 with 2 skipped, the full Playwright suite 1,471 with 28 skipped, and the Back and Forward classes 62 of 62
   on 5.1.1's `1f190827`.
 
 ## Appendix A. The harness

@@ -30,7 +30,7 @@ MUTATIONS = [
     ("scroll restoration is left 'auto'", NAV,
      "        try { if (sh.scrollRestoration !== 'manual') sh.scrollRestoration = 'manual'; } catch (e) { }\n        if (typeof window.kronikol_measure_bar",
      "        if (typeof window.kronikol_measure_bar",
-     [RS + 'R17_A_reload_far_down_a_long_report_read_through_opens_at_the_same_feature']),
+     [RS + 'R1_Back_lands_on_the_same_feature_far_down_a_long_report', P + 'P1_Back_from_the_scenario_a_History_link_opened_shows_the_History_tab_where_the_reader_was']),
     ('a run of one control is not one entry', NAV,
      "        if (live && current.key === key) { replaceSoon(hash); return; }",
      "",

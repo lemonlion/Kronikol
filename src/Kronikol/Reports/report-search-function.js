@@ -54,8 +54,11 @@ function flush_search() {
     searchTimeoutId = null;
     run_search_scenarios();
 }
-document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target && e.target.id === 'searchbar') flush_search(); }, true);
-document.addEventListener('change', function (e) { if (e.target && e.target.id === 'searchbar') flush_search(); }, true);
+// only where there is a page: the search's own tests load this file with none (tests/Kronikol.Tests.SearchEngine)
+if (typeof document !== 'undefined') {
+    document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target && e.target.id === 'searchbar') flush_search(); }, true);
+    document.addEventListener('change', function (e) { if (e.target && e.target.id === 'searchbar') flush_search(); }, true);
+}
 
 // Every filter can be written in the search (5.0.0, plans/OPTION_C_PLAN.md S6, D16): tags (@tag) and statuses ($status)
 // could already, and dependencies, duration and happy paths are qualifiers, a key and a colon, as GitHub's search writes

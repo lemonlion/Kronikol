@@ -71,7 +71,7 @@ address names the tab and the Features tab's view (`tab=`, `view=`), new keys of
 ### Tests
 
 - `BackForwardPlacesTests`, `BackForwardFilterTests`, `BackForwardLayerTests` and `BackForwardRestoreTests` (new, on
-  `BackForwardTestBase`), 65 cases. The places: a History link and Back, the tabs and the views and a run of arrow keys
+  `BackForwardTestBase`), 62 cases. The places: a History link and Back, the tabs and the views and a run of arrow keys
   across them, a Summary row, a failure cluster's link, the link button with filters on, Next Failure, a reload, an
   address that names a tab, addresses written before 5.2.0, and Ctrl and Shift clicks. The filters: a chip, a word
   typed, a chip's three states, Clear All, Back to an entry without a filter, an address typed into an open report, a
@@ -81,8 +81,8 @@ address names the tab and the Features tab's view (`tab=`, `view=`), new keys of
   opened, a report in a frame, a page without tabs and an exported page, the Timeline as the start tab, two groups of
   one name, a cluster's link to a row shown flat, the arrow keys on a tab, an `<iframe srcdoc>` viewer, the status
   line, WebKit's write limit (a burst of 150 clicks in one task), Enter in the search, a scenario taller than the
-  window, Back after the features above a scenario were drawn, and a reload after reading down a long report. P1, P5,
-  F5, L1, R1, R11, R16 and R17 run in Chromium, Firefox and WebKit, R13 in WebKit, the rest in Chromium.
+  window, and Back after the features above a scenario were drawn. P1, P5, F5, L1, R1, R11 and R16 run in Chromium,
+  Firefox and WebKit, R13 in WebKit, the rest in Chromium.
 - `BackNavigationReportTests` (new): the script in the head of a run report and of the Specifications report, the
   failure clusters' plain links, `data-start-tab` and `data-start-view`, a script that names no tab, two ids for two
   groups of one name, and the sort's `autocomplete`. `HistoryHtmlTests`: the History tab's links are plain.
@@ -99,9 +99,12 @@ address names the tab and the Features tab's view (`tab=`, `view=`), new keys of
   attachment's file returns to the scenario, and WebKit throws nothing. F10 and L6 came with defects found while making
   the rest pass. 21 of 22 mutations of the new code each make the facts that hold them fail. The one that survives
   leaves the browser's own scroll restoration on, which no fact can see: in all three engines the page puts the
-  position back after the browser does. Four facts were made sharper when their mutations first survived: R16 and
-  R17 for the position, P1 and P6 for the focus, and R13's burst for the write budget.
-- Checks: the core suite passes 8,516 with 2 skipped, and the full Playwright suite 1,471 with 28 skipped.
+  position back after the browser does. Three facts were made sharper when their mutations first survived: R16 for
+  the position, P1 and P6 for the focus, and R13's burst for the write budget.
+- `Kronikol.Tests.SearchEngine` loads the search function in Jint, with no page: the two listeners that answer Enter
+  and a change of the field are registered only where there is a document.
+- Checks: the core suite passes 8,516 with 2 skipped, the full Playwright suite 1,471 with 28 skipped, and
+  `Kronikol.Tests.SearchEngine` 214 of 214.
 
 ## [5.1.1] - 2026-10-20
 
