@@ -1465,6 +1465,8 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
       change over found two more: with `SeparateBackgroundSteps` a row synced the background's first composite and the
       scenario's first as one step (their paths now differ, the background's starting with `b` as its address does),
       and an export taken while a step was being drawn copied its `data-drawing` mark, so the copy never drew it.
+- **2026-10-20, release:** the v5 part released in 5.0.0, with Option C, the tags and the Wasm engine
+  (`V5_PLAN.md`). R6 is on Kronikol4J's `main` for 0.1.25, and R7 waits for .NET 11.
 
 ## Appendix A. Edit sites at `a8563d21`
 

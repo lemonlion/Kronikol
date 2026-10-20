@@ -28,7 +28,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="$(MvcTestingVersion)" />
     <PackageReference Include="Reqnroll" Version="3.3.4" />
     <PackageReference Include="Reqnroll.TUnit" Version="3.3.4" />
-    <PackageReference Include="Kronikol.ReqNRoll.TUnit" Version="4.32.0" />
+    <PackageReference Include="Kronikol.ReqNRoll.TUnit" Version="4.32.1" />
     <PackageReference Include="TUnit" Version="1.53.0" />
   </ItemGroup>
 

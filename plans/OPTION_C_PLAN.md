@@ -1326,3 +1326,4 @@ decision of the owner's, not part of this plan.
   PLANS_STATUS's new TAGS_PLAN row beside v5's REPORT_FORMAT_PLAN row). Checks: on `7e673e70` the full Playwright
   suite passes 1,377 with 28 skipped and the full core suite 8,499 with 2 skipped. Nothing is pushed: the branch, the
   wiki series and the ledger entry wait for 5.0.0.
+- 2026-10-20: released as 5.0.0, with the report data file, the tags and the Wasm engine; the wiki series (ten patches) and the Kronikol4J ledger entries publish with it.

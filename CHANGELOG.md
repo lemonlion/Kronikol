@@ -4,9 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [5.0.0] - 2026-10-20
 
-For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work and is released as 5.0.0, not before.
+The major part moves (4.32.1 to 5.0.0): this release changes defaults and public surface that existing code and
+existing reports read. The data file is `TestRunReport.krkl` by default and its schema is written only when asked;
+labels and categories are one list of tags (`Feature.Tags`, `Scenario.Tags`, `data-tags`, the data files' `tags`);
+every package targets .NET 10 alone; the report is the Option C redesign, with its diagram toggles' start states, its
+tabs and its colours, so a test or a script that reads the page's markup or the diagrams' source meets new shapes; and
+the browser engine is PlantUML's Wasm GC build of a newer PlantUML (`TrackingDefaults.PlantUmlJsCdnBase` names
+another address). Each change is under Changed (breaking) below, with the setting that keeps the 4.x behaviour where
+one does; the wiki's Migrating to v5 page gathers them. Everything here was merged on the branch `v5` and is released
+for the first time in this version (`plans/V5_PLAN.md`).
 
 ### Added
 
@@ -179,7 +187,7 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   limit), and a name in `data-note-btn`: `truncate`, `truncate-bottom`, `collapse-bottom` and `expand-bottom` are new.
 - **A collapsed payload's one-line preview leaves out a JSON body's braces.** The opening brace goes, and the closing
   one too when the whole body fits; `{}` stays as it is, and an array keeps its brackets.
-- **The report's look (Option C, in progress on the branch).** Features are cards on a tinted ground, with their
+- **The report's look (Option C).** Features are cards on a tinted ground, with their
   scenarios as rows inside them and a cross before a failed one; steps line up on one column with their status
   circles, the triangles of collapsible steps in the gutter beside it; a failure shows its diff with the expected
   text green and the actual text red, under the labels Expected and Actual (no longer followed by a colon); the

@@ -92,3 +92,8 @@ log_line('plans/OPTION_C_PLAN.md', '- ' + DATE + ': released as 5.0.0, with the 
          'series (ten patches) and the Kronikol4J ledger entries publish with it.')
 log_line('plans/WASM_ENGINE_PLAN.md', '- ' + DATE + ': released in 5.0.0.')
 print('ok', pins, 'template pins')
+
+# Added after the first run: two phrases of the report format plan's row still placed its v5 part on the local branch.
+# Applied by hand on 2026-10-20 (the script had already run), kept here as the record of the edit:
+#   "On the local `v5` branch (5.0.0, unreleased): the `.krkl` ..." -> "In 5.0.0 (released 2026-10-20): the `.krkl` ..."
+#   "On the local `v5` branch it is one of 5.0.0's three pieces" -> "In 5.0.0 it is one of the release's pieces"

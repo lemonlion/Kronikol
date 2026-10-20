@@ -159,3 +159,4 @@ moves, and `FocusClearOfTheBarTests` tabs to the `<a>` the engine draws (its fix
   three, for the titles, the name and the focus), and ten of the eleven mutations in `checks/mutate-anchors.py` are
   killed; the one that survives binds a link's anchors again on every pass, which adds the same name and listeners and
   no reader can see. The classes that draw links, focus, flows or exports pass: 168 with 4 skipped.
+- 2026-10-20: released in 5.0.0.
