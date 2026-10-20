@@ -489,6 +489,8 @@
         setTimeout(function() { toast.remove(); }, 3000);
     }
 
+    // A right-click only: no key opens this menu, though it holds every note action. "Accessibility" above
+    // processRenderQueue (collapsible-notes-script.js) says what a keyboard route needs (5.1.1).
     document.addEventListener('contextmenu', function(e) {
         var container = findDiagramContainer(e.target);
         if (!container) return;
@@ -1176,6 +1178,8 @@
     })();
 
     window._addZoomButton = addZoomButton;
+    // the zoom a diagram drawn again keeps, for one whose zoom slider waits until it is near the screen (5.1.1)
+    window._restoreZoomState = restoreZoomState;
 
     // The diagram's NATURAL width in CSS pixels — what it would draw at with the container's
     // `max-width: 100%` lifted. The note full-width control needs exactly this number to work out

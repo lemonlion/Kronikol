@@ -106,8 +106,12 @@ public class HeadersDetailsInterferenceReportTests
         // where state === 'expanded' && !window._headersHidden (which previously skipped it).
         var content = GenerateReport("HD_PreProcess.html");
 
-        var preProcessIdx = content.IndexOf("_preProcessSource");
-        var preProcessEnd = content.IndexOf("processRenderQueue", preProcessIdx);
+        // the definition up to the next function's: a name alone also stands in comments and calls elsewhere (5.1.1's
+        // note above the render queue names it), which cut the body short
+        var preProcessIdx = content.IndexOf("window._preProcessSource = function");
+        Assert.True(preProcessIdx >= 0, "the page defines _preProcessSource");
+        var preProcessEnd = content.IndexOf("function processRenderQueue", preProcessIdx);
+        Assert.True(preProcessEnd > preProcessIdx, "processRenderQueue is defined after _preProcessSource");
         var preProcessBody = content[preProcessIdx..preProcessEnd];
 
         // The function should set _headersHidden in all paths, not just the processing path

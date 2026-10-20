@@ -1365,7 +1365,13 @@
                 var hookTarget = item.isFragment ? item.el : item.el;
                 var iflowSource = item.parentEl ? item.parentEl._fullSource || item.source : item.source;
                 try {
-                    describeEngineFailure(item.el, item.source);
+                    var failed = describeEngineFailure(item.el, item.source);
+                    // the source a whole diagram's picture was drawn from, so a toggle that leaves it as it was passes it over.
+                    // The one piece drawn is the diagram's source with some line ends written \n where the source has \r\n,
+                    // which draws the same picture; the source is what the notes script builds the next drawing from.
+                    var whole = item.el.getAttribute('data-plantuml');
+                    if (!failed && !item.isFragment && window._recordDrawnSource && whole && item.el.querySelector('svg')
+                        && item.source.replace(/\r/g, '') === whole.replace(/\r/g, '')) window._recordDrawnSource(item.el, whole);
                     bindIflowLinks(hookTarget, iflowSource);
                     if (window._makeNotesCollapsible) window._makeNotesCollapsible(hookTarget);
                     if (window._addAssertionTooltips) window._addAssertionTooltips(hookTarget);

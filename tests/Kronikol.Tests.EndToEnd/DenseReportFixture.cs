@@ -54,10 +54,13 @@ public static class DenseReportFixture
     /// The same suite written by the whole pipeline with internal-flow tracking on: each scenario makes
     /// <c>callsPerScenario</c> calls whose request and response carry JSON bodies of several KB, with spans under each,
     /// so every scenario has three diagram views (Sequence, Activity, Flame) on a tab bar, as in a consumer's report
-    /// with internal flow.
+    /// with internal flow. With <paramref name="everyFilter"/> each scenario also draws its Given, When and Then step
+    /// bars, reads its basket from a database before the When step (its setup), publishes an event and reads the order
+    /// back, so the report has every filter toggle a consumer's has: Steps, Databases, Events and Setup.
     /// </summary>
     public static string GenerateWithFlows(string tempDir, string outputDir, string fileName, int features = DefaultFeatures,
-        int scenariosPerFeature = DefaultScenariosPerFeature, int callsPerScenario = DefaultCallsPerScenario)
+        int scenariosPerFeature = DefaultScenariosPerFeature, int callsPerScenario = DefaultCallsPerScenario,
+        bool everyFilter = false)
     {
         var reportsDir = Path.Combine(tempDir, "dense-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(reportsDir);
@@ -95,6 +98,12 @@ public static class DenseReportFixture
                     var scenario = NewScenario($"dense-{f}-{s}-" + Guid.NewGuid().ToString("N")[..8], f, s, index);
                     var rng = new Random(1000 + index);
                     var start = at.AddSeconds(index);
+                    if (everyFilter)
+                    {
+                        Step(scenario, "Given a customer with a basket");
+                        Database(scenario, rng, index, "basket", start.AddMilliseconds(-150));
+                        Step(scenario, "When the order is placed");
+                    }
                     for (var c = 0; c < callsPerScenario; c++)
                     {
                         var path = $"/orders/{index}-{c}";
@@ -110,6 +119,21 @@ public static class DenseReportFixture
                             { Timestamp = t.AddMilliseconds(100), ActivityTraceId = trace.ToString() });
                         Span("POST " + path, trace, t.AddMilliseconds(1), 60);
                         Span("INSERT orders " + index + "-" + c, trace, t.AddMilliseconds(10), 20);
+                    }
+                    if (everyFilter)
+                    {
+                        var published = start.AddMilliseconds(callsPerScenario * 200);
+                        var eventId = Guid.NewGuid();
+                        RequestResponseLogger.Log(new RequestResponseLog(scenario.DisplayName, scenario.Id, "Publish OrderPlaced",
+                            JsonBody(rng, index, callsPerScenario, "event"), new Uri("amqp:///order-events"), [], "Order Events", "Orders",
+                            RequestResponseType.Request, Guid.NewGuid(), eventId, false, MetaType: RequestResponseMetaType.Event,
+                            DependencyCategory: Constants.DependencyCategories.MessageQueue) { Timestamp = published });
+                        RequestResponseLogger.Log(new RequestResponseLog(scenario.DisplayName, scenario.Id, "Publish OrderPlaced", null,
+                            new Uri("amqp:///order-events"), [], "Order Events", "Orders", RequestResponseType.Response, Guid.NewGuid(),
+                            eventId, false, MetaType: RequestResponseMetaType.Event,
+                            DependencyCategory: Constants.DependencyCategories.MessageQueue) { Timestamp = published.AddMilliseconds(5) });
+                        Step(scenario, "Then the order is created");
+                        Database(scenario, rng, index, "order", published.AddMilliseconds(50));
                     }
                     scenarios.Add(scenario);
                 }
@@ -136,6 +160,23 @@ public static class DenseReportFixture
         var html = Path.Combine(reportsDir, "TestRunReport.html");
         File.Copy(html, Path.Combine(outputDir, fileName), true);
         return new Uri(html).AbsoluteUri;
+    }
+
+    /// <summary>A step bar in the scenario's sequence diagram, as Kronikol's step tracking draws one.</summary>
+    private static void Step(Scenario scenario, string text) =>
+        DefaultTrackingDiagramOverride.InsertPlantUml(scenario.Id, Kronikol.PlantUml.StepBarPlantUml.Build(text), DiagramMarkerKind.Step);
+
+    /// <summary>A query of the orders database whose rows come back as a JSON body of several KB.</summary>
+    private static void Database(Scenario scenario, Random rng, int index, string what, DateTimeOffset at)
+    {
+        var id = Guid.NewGuid();
+        var query = $"SELECT * FROM {what}s WHERE customer_id = {index}";
+        var uri = new Uri($"postgres://orders-db/{what}s");
+        RequestResponseLogger.Log(new RequestResponseLog(scenario.DisplayName, scenario.Id, "SELECT", query, uri, [], "Orders DB", "Orders",
+            RequestResponseType.Request, Guid.NewGuid(), id, false, DependencyCategory: Constants.DependencyCategories.SQL) { Timestamp = at });
+        RequestResponseLogger.Log(new RequestResponseLog(scenario.DisplayName, scenario.Id, "SELECT", JsonBody(rng, index, 9, what), uri, [],
+            "Orders DB", "Orders", RequestResponseType.Response, Guid.NewGuid(), id, false,
+            DependencyCategory: Constants.DependencyCategories.SQL) { Timestamp = at.AddMilliseconds(20) });
     }
 
     private static Scenario NewScenario(string id, int feature, int number, int index)

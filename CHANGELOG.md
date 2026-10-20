@@ -4,6 +4,64 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.1.1] - 2026-10-20
+
+The patch part moves (5.1.0 to 5.1.1): performance work and a fix, with nothing new to call or configure.
+
+### Fixed
+
+- **The report's toggles no longer hold the page when many diagrams are drawn.** Databases, Events, Setup, Steps,
+  Headers, Assertions, the Details choice and the payload format, length and width each draw every diagram the page
+  has drawn again. On a report of 750 payload-heavy scenarios with ten of them open, switching a control ran tasks of
+  up to 469 ms in 5.1.0, and switching one back showed the diagram on screen changed only after up to 449 ms; with
+  every scenario open, tasks of up to 336 ms. Five changes, each held by a test (`ReportToggleResponsivenessTests`):
+  - After each drawing the page placed the note buttons, the notes' hover areas, the assertion tooltips and the zoom
+    slider, each by measuring the drawing. A diagram far from the screen sits in a feature or scenario the browser does
+    not lay out (`content-visibility: auto`), so each measurement laid that one out, though none of these shows until
+    the pointer is over the diagram. A diagram far from the screen is still drawn again at once, so it never shows its
+    old state or changes size as it is reached, and it gets them as it comes near, or as the pointer or a right-click
+    reaches it. What shows without the pointer is still done at once: the card colours, a zoomed diagram's width, and
+    the second pass that fits a widened note.
+  - A drawing put back from the page's cache costs no engine time, so switching a control back put every diagram back
+    in one task, as long as all of them together. The drawings now give the page a turn every 10 ms.
+  - The diagrams were drawn again in page order, so the one on screen waited for every diagram above it. They are now
+    drawn nearest the screen first, and one the reader scrolls to while others wait goes next.
+  - A diagram the change leaves as it was is no longer drawn again: an activity diagram under every filter, a sequence
+    diagram with no database calls under Databases, and any diagram under Headers when its payloads carry no headers.
+  - The queue waited for each engine drawing in turn, while the workers can draw several at once. The next diagrams'
+    sources now go to the workers once the current one has gone to the engine, so it never waits behind them.
+
+  Measured on the same report in 5.1.1: with ten scenarios open no task runs over 133 ms but one, and with every
+  scenario open none over 112 ms; switching a control back shows the diagram on screen changed within 120 ms. The one
+  is setting the payload width to Wide, 194 ms with ten open (247 ms in 5.1.0): it fits every note to its diagram at
+  once, which shows. With one scenario open every control answered within 100 ms in both versions.
+- **A drawing the diagram engine refuses at once no longer starts its toggle's queue again 30 s later.** Its poll ran on
+  after the queue had moved past it, and when it gave up it started the finished queue a second time.
+
+The note buttons are for the mouse only, as before. A comment above `processRenderQueue` in
+`collapsible-notes-script.js` says what keyboard access would need now that a diagram far from the screen gets its
+buttons only as it comes near: one Tab stop per diagram that builds its buttons on focus, or the diagram's context menu
+opened from the keyboard.
+
+### Tests
+
+- `ReportToggleResponsivenessTests` (new): on 200 scenarios with every diagram drawn, Databases, Setup and Events
+  switched off and back run no task over the contention-scaled budget; the diagram on screen is drawn first and one
+  scrolled to next, and a far diagram reached in one task holds its new picture with its cards and gets its buttons as
+  it comes near; on two scenarios, Headers (whose payloads carry none) keeps every picture, Databases keeps the
+  activity diagrams' and starts the next drawing ahead, a picture replaced since is drawn again, a zoomed diagram drawn
+  again far from the screen keeps its width, and a drawing the engine refuses at once leaves no poll running.
+- `DenseReportFixture.GenerateWithFlows` takes `everyFilter`: step bars, database calls and an event in every scenario,
+  so the report has every filter toggle.
+- `HeadersDetailsInterferenceReportTests` reads `_preProcessSource` from its definition to the next function's. It read
+  from the name's first mention to the next mention of `processRenderQueue`, which the new comments put earlier in the
+  page, so it read nothing.
+- Proofs: run on 5.1.0's scripts, every fact fails but the replaced-picture one, which guards the new pass-over and
+  which 5.1.0 meets by drawing everything again. The facts for the long tasks, the far diagram's picture and buttons,
+  and the engine's refusal were written before the code; those for the order, the pass-over, the drawings ahead, the
+  zoom and the replaced picture came with theirs. Each of 12 mutations of the new code makes the facts that hold it
+  fail.
+
 ## [5.1.0] - 2026-10-20
 
 The minor part moves (5.0.0 to 5.1.0): the note a tab writes while the filters leave scenarios out now ends with a

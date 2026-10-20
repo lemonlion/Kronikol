@@ -337,6 +337,8 @@
         return !shown.length || getNotePreview(contentLines) === shown[0];
     }
 
+    // For the mouse only: no tabindex, role or key handling, shown on hover. A diagram far from the screen gets its buttons
+    // only as it comes near; "Accessibility" above processRenderQueue says what a keyboard route needs (5.1.1).
     function createNoteButtons(svg, bbox, noteStep, onExpand, onContract, onTruncate, onCycle, contentLines, grp, container, forceIsLong, formatInfo, appearanceInfo) {
         var size = 12;
         var topSize = 14;
@@ -1986,6 +1988,20 @@
 
     var _svgCache = {};
 
+    // The source a diagram's picture was drawn from, kept with the picture (5.1.1). Drawing the same source again draws
+    // the same picture, so a toggle passes over a diagram it leaves as it was: an activity diagram under every filter,
+    // a sequence diagram with no database calls under Databases. The picture is kept as well, so one replaced since by
+    // anything else (an engine failure, a message, a note's own redraw) is drawn again.
+    function recordDrawn(container, source) {
+        container._drawnSource = source;
+        container._drawnSvg = container.querySelector('svg');
+    }
+    function drawnFrom(container, source) {
+        return container._drawnSource === source && !!container._drawnSvg && container.querySelector('svg') === container._drawnSvg;
+    }
+    // for a diagram's first drawing (plantuml-browser-render-script.js)
+    window._recordDrawnSource = recordDrawn;
+
     function setNoteState(container, noteIdx, targetStep) {
         if (container._noteRendering || window._plantumlRendering) return;
         if (!container._noteSteps) container._noteSteps = {};
@@ -2669,9 +2685,171 @@
         return renderSource;
     };
 
+    // ── What a redraw leaves until its diagram is near the screen (5.1.1) ──────────────────────────────
+    // A report-level toggle, dropdown or Details command draws every diagram the page has drawn again. After each one
+    // the page placed the note buttons, the notes' hover areas, the assertion tooltips and the zoom slider, each by
+    // measuring the drawing. A diagram far from the screen sits in a feature or scenario the page does not lay out
+    // (content-visibility: auto), and each measurement laid that one out, about 3 ms, so on a report with hundreds of
+    // diagrams drawn a toggle held the page for seconds. None of these shows until the pointer is over the diagram.
+    // A diagram far from the screen is still drawn again at once, so it never shows its old state and never changes
+    // size as it is reached, and it gets them as it comes near. What shows without the pointer is done at once: the
+    // card colours (the role pass runs on every picture added), a zoomed diagram's width, and the second pass that fits
+    // a widened note to its diagram.
+    //
+    // Accessibility: the note buttons are for the mouse today. They are drawn in the SVG with no tabindex, role or key
+    // handling, show on hover only, and the diagram's context menu opens on a right-click only. A diagram far from the
+    // screen has no buttons until it comes near, so a keyboard route added later has to build them on the way in:
+    //   - Give each diagram one Tab stop, its container (always in the page, drawn or not), with the arrow keys moving
+    //     between its notes' buttons inside it (a roving tabindex) rather than a Tab stop per button. A focusin handler
+    //     on the container calls decorateNow for a diagram still waiting, before the next key press; the browser
+    //     scrolls a focused container into view, which brings it near in any case.
+    //   - The buttons then need a role and an accessible name, Enter and Space to press them, and to show on
+    //     :focus-within as they do on hover.
+    //   - Or, simpler: open the diagram's context menu from the keyboard (the Menu key, or Shift+F10 on the focused
+    //     container). It already holds every note action (context-menu-script.js); its items would need focus and the
+    //     arrow keys, and Escape already closes it. Keyboard zoom (Ctrl and + or -) works only on a diagram selected by
+    //     a click today.
+    var NEAR_SCREENS = 0.5; // of the window's height, above and below it: about what the page lays out
+    var REDRAW_SLICE_MS = 10;
+
+    // How far a diagram is from the screen, in pixels (0 on it), reading nothing in a section the page does not lay
+    // out: the feature's box first, then the scenario's, then the diagram's own, each only when the one around it is
+    // near. Infinity for one that cannot show (a closed scenario, a hidden panel). `boxes` keeps one pass's readings.
+    function screenDistance(el, boxes) {
+        if (!el.isConnected || el.closest('details:not([open]), [hidden]')) return Infinity;
+        var h = window.innerHeight, margin = h * NEAR_SCREENS;
+        function away(node) {
+            var d = boxes.get(node);
+            if (d === undefined) {
+                var r = node.getBoundingClientRect();
+                d = !r.width && !r.height ? Infinity : r.bottom < 0 ? -r.bottom : r.top > h ? r.top - h : 0;
+                boxes.set(node, d);
+            }
+            return d;
+        }
+        var feature = el.closest('.feature'), scenario = el.closest('.scenario');
+        if (feature) { var df = away(feature); if (df > margin) return df; }
+        if (scenario) { var ds = away(scenario); if (ds > margin) return ds; }
+        return away(el);
+    }
+
+    // One observer for every diagram a queue holds or whose hover-only work waits: it says which are near the screen
+    // (_kNear), and does the waiting work for one as it comes near.
+    var nearWatch = window.IntersectionObserver ? new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+            e.target._kNear = e.isIntersecting;
+            if (e.isIntersecting && e.target._kDecorate) decorateNow(e.target);
+        });
+    }, { rootMargin: (NEAR_SCREENS * 100) + '% 0px' }) : null;
+    function watchNear(el) {
+        if (nearWatch && !el._kWatched) { el._kWatched = true; nearWatch.observe(el); }
+    }
+    function unwatchNear(el) {
+        if (nearWatch && el._kWatched && !el._kDecorate && !el._kQueued) {
+            el._kWatched = false;
+            el._kNear = undefined;
+            nearWatch.unobserve(el);
+        }
+    }
+
+    // The hover-only work after a drawing: the note buttons and hover areas, the assertion tooltips, the zoom slider.
+    function decorateNow(el) {
+        el._kDecorate = false;
+        unwatchNear(el);
+        if (!el.isConnected) return;
+        makeNotesCollapsible(el);
+        addAssertionTooltips(el);
+        requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(el); });
+    }
+
+    // After a redraw of `el` (the diagram, or one of its fragments) for the diagram `owner`: the internal-flow links
+    // and what shows at once, then the hover-only work now when it is near the screen, else as it comes near.
+    function afterRedraw(el, owner, near) {
+        if (window._iflowBindLinks) window._iflowBindLinks(el, owner._noteOriginalSource);
+        // The card colours now, inside the slice that drew the picture, so the slice's time counts them: the role pass
+        // otherwise runs after the slice, on every picture it added. It runs before the notes' buttons are placed, as on
+        // a diagram's first drawing.
+        var roles = window._diagramRoles;
+        if (roles) Array.prototype.forEach.call(el.querySelectorAll('svg'), function(svg) { roles.tagRoles(svg); });
+        if (near || owner._refineNoteWidth || !nearWatch) { decorateNow(el); return; }
+        if (el.classList.contains('diagram-natural-size') && window._restoreZoomState) window._restoreZoomState(el);
+        el._kDecorate = true;
+        watchNear(el);
+    }
+
+    // A pointer reaching a diagram whose hover-only work is still waiting (before the observer has said it is near)
+    // gets it first, and so does a right-click: the context menu reads the note it was opened on from that work.
+    ['mouseover', 'contextmenu'].forEach(function(type) {
+        window.addEventListener(type, function(e) {
+            var el = e.target && e.target.closest ? e.target.closest('.puml-fragment, .plantuml-browser') : null;
+            if (el && el._kDecorate) decorateNow(el);
+        }, true);
+    });
+
+    // Whether this task has redrawn for REDRAW_SLICE_MS already. A task's first call opens its slice, and a zero-delay
+    // timer, which runs in a later task, closes it.
+    var sliceOpen = false, sliceStart = 0;
+    function redrawSliceSpent() {
+        var now = performance.now();
+        if (!sliceOpen) {
+            sliceOpen = true;
+            sliceStart = now;
+            setTimeout(function() { sliceOpen = false; }, 0);
+            return false;
+        }
+        return now - sliceStart > REDRAW_SLICE_MS;
+    }
+
     // Shared serialized render queue — TeaVM engine uses shared global state
     function processRenderQueue(queue, onAllDone) {
         var renderWaitCount = 0;
+        // Nearest the screen first (5.1.1), so what the reader is looking at shows the new state first however many
+        // diagrams come after it. Every box is read before anything is written.
+        var boxes = new Map();
+        queue.forEach(function(item, i) {
+            item.order = i;
+            item.distance = screenDistance(item.container, boxes);
+            item.container._kQueued = (item.container._kQueued || 0) + 1;
+            watchNear(item.container);
+        });
+        queue.sort(function(a, b) { return (a.distance - b.distance) || (a.order - b.order); });
+        var nearPx = window.innerHeight * NEAR_SCREENS;
+        // the next diagram to draw: one the observer has seen come near the screen since, else the nearest
+        function takeNext() {
+            for (var i = 0; i < queue.length; i++) if (queue[i].container._kNear) return queue.splice(i, 1)[0];
+            return queue.shift();
+        }
+        // whether a diagram is near the screen now: the observer's word once it has spoken, else this pass's reading
+        function isNear(item) {
+            var c = item.container;
+            return c._kNear !== undefined ? c._kNear : item.distance <= nearPx;
+        }
+        function settled(item) {
+            item.container._kQueued--;
+            unwatchNear(item.container);
+        }
+        // The engine draws on several workers at once, and the queue waits for each drawing in turn, so a toggle that
+        // changed every diagram took as long as all their drawings one after another. The next few diagrams' sources go
+        // to the workers ahead of their turn (5.1.1), and their turn finds them drawn or drawing. It is called once the
+        // diagram whose turn it is has gone to the engine, so that one is never queued behind them, and builds two
+        // sources a call at most, so the turn it is called in stays short. Each source is built again at its turn, as
+        // the state may have changed since.
+        var ahead = 2 * Math.max(1, (window.plantuml && window.plantuml.maxParallel) || 1);
+        function startAhead() {
+            if (!window.plantuml || !window.plantuml.prefetch) return;
+            var sources = [], built = 0;
+            for (var i = 0; i < queue.length && i < ahead && built < 2; i++) {
+                var next = queue[i], c = next.container;
+                if (next.started || !c._noteOriginalSource) continue;
+                next.started = true;
+                built++;
+                var src = composeNoteSource(c, c._noteOriginalSource, parseNoteBlocks(c._noteOriginalSource));
+                if (drawnFrom(c, src) || _svgCache[src]) continue;
+                var parts = window._splitWithChunkedNotes ? window._splitWithChunkedNotes(src) : [src];
+                Array.prototype.push.apply(sources, parts.length > 1 ? parts : [src]);
+            }
+            if (sources.length) window.plantuml.prefetch(sources);
+        }
         function processNext() {
             if (queue.length === 0) { window._renderCompleteCount = (window._renderCompleteCount || 0) + 1; if (onAllDone) onAllDone(); return; }
             // Wait for any in-flight initial render to complete before proceeding
@@ -2686,19 +2864,26 @@
                 }
             }
             renderWaitCount = 0;
-            var item = queue.shift();
+            // A drawing put back from the cache costs no engine time, so a run of them was one task as long as all of them
+            // together: seconds on a large report with every diagram drawn (5.1.1). The page gets a turn every
+            // REDRAW_SLICE_MS, and a diagram that has come near the screen meanwhile goes next.
+            if (redrawSliceSpent()) { setTimeout(processNext, 0); return; }
+            var item = takeNext();
             var container = item.container;
             var origNoteBlocks = parseNoteBlocks(container._noteOriginalSource);
             var newSource = composeNoteSource(container, container._noteOriginalSource, origNoteBlocks);
             container.setAttribute('data-plantuml', newSource);
+            // the picture on the page was drawn from this very source: drawing it again would draw it again
+            if (drawnFrom(container, newSource)) { settled(item); processNext(); return; }
 
             // Re-split into fragments if needed
             if (window._splitWithChunkedNotes) {
                 var fragments = window._splitWithChunkedNotes(newSource);
                 if (fragments.length > 1 || container.querySelector('.puml-fragment')) {
                     container._fragments = fragments;
-                    // Preserve container height to prevent layout shift during re-render
-                    container.style.minHeight = container.offsetHeight + 'px';
+                    // Preserve container height to prevent layout shift during re-render (one far from the screen is not
+                    // read: the reading would lay its scenario out, and nobody sees it shift)
+                    if (isNear(item)) container.style.minHeight = container.offsetHeight + 'px';
                     // Keep old children visible until new fragments are rendered
                     var oldChildren = Array.from(container.children);
                     container.dataset.rendered = '1';
@@ -2715,12 +2900,16 @@
                     }
                     // Render every new fragment in parallel on the workers; the loop below serves cache hits.
                     if (window.plantuml && window.plantuml.prefetch) window.plantuml.prefetch(fragList.map(function (f) { return f.source; }));
+                    startAhead();
                     var fragI = 0;
                     function renderNextFragment() {
                         if (fragI >= fragList.length) {
                             // All new fragments rendered — swap: remove old, show new
                             for (var oi = 0; oi < oldChildren.length; oi++) {
                                 if (oldChildren[oi].parentNode === container) container.removeChild(oldChildren[oi]);
+                                // a fragment drawn before whose hover-only work was still waiting goes with it
+                                oldChildren[oi]._kDecorate = false;
+                                unwatchNear(oldChildren[oi]);
                             }
                             var newFrags = container.querySelectorAll('.puml-fragment-new');
                             for (var ni = 0; ni < newFrags.length; ni++) {
@@ -2729,13 +2918,11 @@
                                 newFrags[ni].id = container.id + '-frag-' + ni;
                             }
                             // Apply post-render hooks after fragments are visible (getBBox needs visible elements)
-                            for (var pi = 0; pi < fragList.length; pi++) {
-                                if (window._iflowBindLinks) window._iflowBindLinks(fragList[pi].el, container._noteOriginalSource);
-                                makeNotesCollapsible(fragList[pi].el);
-                                addAssertionTooltips(fragList[pi].el);
-                                (function(el) { requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(el); }); })(fragList[pi].el);
-                            }
+                            var fragsNear = isNear(item);
+                            for (var pi = 0; pi < fragList.length; pi++) afterRedraw(fragList[pi].el, container, fragsNear);
+                            if (fragList.every(function(f) { return f.el.querySelector('svg'); })) recordDrawn(container, newSource);
                             container.style.minHeight = '';
+                            settled(item);
                             processNext();
                             return;
                         }
@@ -2803,17 +2990,16 @@
             // Check SVG cache first
             if (_svgCache[newSource]) {
                 container.innerHTML = _svgCache[newSource];
-                if (window._iflowBindLinks) window._iflowBindLinks(container, container._noteOriginalSource);
-                makeNotesCollapsible(container);
-                addAssertionTooltips(container);
-                requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(container); });
+                recordDrawn(container, newSource);
+                afterRedraw(container, container, isNear(item));
+                settled(item);
                 processNext();
                 return;
             }
             container._noteRendering = true;
             window._plantumlRendering = true;
-            // Preserve container height to prevent layout shift during re-render
-            container.style.minHeight = container.offsetHeight + 'px';
+            // Preserve container height to prevent layout shift during re-render (not read far from the screen, as above)
+            if (isNear(item)) container.style.minHeight = container.offsetHeight + 'px';
             // Render into temporary child to keep old SVG visible until new one is ready
             // Use unique ID per render to prevent TeaVM global state leaking between sequential renders
             window._renderTmpCounter = (window._renderTmpCounter || 0) + 1;
@@ -2828,14 +3014,12 @@
                 var failed = window._describeEngineFailure ? window._describeEngineFailure(renderTarget, newSource) : false;
                 var newSvg = renderTarget.innerHTML;
                 container.innerHTML = newSvg;
-                if (!failed && renderTarget.querySelector('svg')) _svgCache[newSource] = newSvg;
+                if (!failed && renderTarget.querySelector('svg')) { _svgCache[newSource] = newSvg; recordDrawn(container, newSource); }
                 container._noteRendering = false;
                 window._plantumlRendering = false;
                 container.style.minHeight = '';
-                if (window._iflowBindLinks) window._iflowBindLinks(container, container._noteOriginalSource);
-                makeNotesCollapsible(container);
-                addAssertionTooltips(container);
-                requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(container); });
+                afterRedraw(container, container, isNear(item));
+                settled(item);
                 processNext();
             }
             var mo = new MutationObserver(function() {
@@ -2845,14 +3029,14 @@
                 afterRender();
             });
             mo.observe(renderTarget, { childList: true, subtree: true });
-            try { window.plantuml.render(newSource.split('\n'), renderTarget.id); } catch(e) { mo.disconnect(); if (renderTarget.parentNode) renderTarget.parentNode.removeChild(renderTarget); container._noteRendering = false; window._plantumlRendering = false; container.style.minHeight = ''; processNext(); }
+            try { window.plantuml.render(newSource.split('\n'), renderTarget.id); startAhead(); } catch(e) { mo.disconnect(); if (renderTarget.parentNode) renderTarget.parentNode.removeChild(renderTarget); container._noteRendering = false; window._plantumlRendering = false; container.style.minHeight = ''; done = true; settled(item); processNext(); }
             var pollCount = 0;
             var poll = setInterval(function() {
                 pollCount++;
                 if (done) { clearInterval(poll); return; }
                 var svg = renderTarget.querySelector('svg');
                 if (svg && !svg.querySelector('.note-toggle-icon')) { clearInterval(poll); mo.disconnect(); afterRender(); }
-                if (pollCount > 120) { clearInterval(poll); mo.disconnect(); if (renderTarget.parentNode) renderTarget.parentNode.removeChild(renderTarget); container._noteRendering = false; window._plantumlRendering = false; container.style.minHeight = ''; processNext(); }
+                if (pollCount > 120) { clearInterval(poll); mo.disconnect(); if (renderTarget.parentNode) renderTarget.parentNode.removeChild(renderTarget); container._noteRendering = false; window._plantumlRendering = false; container.style.minHeight = ''; done = true; settled(item); processNext(); }
             }, 250);
         }
         processNext();
@@ -3087,10 +3271,11 @@
             // A container with no state of its own is drawn again with the new one.
             if (container[flag] !== undefined && !!container[flag] === showing) return;
             container[flag] = showing;
-            var noteBlocks = parseNoteBlocks(applyFilters(container._noteOriginalSource, container));
             if (container._truncateLines === undefined) container._truncateLines = window._truncateLines;
             if (!container._noteSteps) container._noteSteps = {};
-            queue.push({ container: container, noteBlocks: noteBlocks });
+            // (each diagram's source is built as the queue draws it, so none is filtered or parsed here: that was done
+            // twice, and nothing read this copy)
+            queue.push({ container: container });
         });
         return queue;
     }
