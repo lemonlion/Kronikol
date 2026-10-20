@@ -1,7 +1,8 @@
 # wiki-links
 
 Checks and fixes every `[[...]]` link in the wiki checkout at `../Kronikol.wiki` against GitHub's
-rendering rules, which were measured on the rendered wiki on 2026-09-22:
+rendering rules, which were measured on the rendered wiki on 2026-09-22, and checks every markdown link to an
+anchor, `[text](Page#anchor)` or `[text](#anchor)`, whose fragment must be the heading's slug exactly:
 
 - `[[a|b]]` is label `a`, target `b`. A link written target-first lands on an absent page.
 - A `[[Page#Fragment]]` fragment is kept as written (spaces to hyphens, `+` dropped, case and
@@ -16,8 +17,11 @@ python tools/wiki-links/wikilinks.py fix                        # rewrite what c
 python tools/wiki-links/wikilinks.py verify-live page.html Page.md   # compare slugs with a saved rendered page
 ```
 
-`check` should print `counts: {'ok': N, 'page-ok': M}` and nothing else. A `dead` line names a
+`check` should print `counts: {'ok': N, 'page-ok': M, 'md-ok': K}` and nothing else. A `dead` line names a
 heading that no longer exists and needs a hand fix; a `dead-page` line names a page that does not
-exist under that spelling (add it to `PAGE_ALIASES` if it exists under another).
+exist under that spelling (add it to `PAGE_ALIASES` if it exists under another). An `md-dead` line is a markdown
+link whose fragment is no heading's slug (Merging-Parallel-Reports linked `...-4290` for a heading slugged
+`...-4300` from 4.30.0 until 2026-10-20, unseen while only `[[...]]` links were checked), and `md-dead-page` one
+whose page does not exist; `fix` leaves both to a hand fix. Set `KRONIKOL_WIKI` to check another checkout.
 
 Run with `PYTHONUTF8=1` on Windows, or the console code page rejects the labels the script prints.
