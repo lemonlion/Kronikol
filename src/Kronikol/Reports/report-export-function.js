@@ -47,18 +47,23 @@ function export_data_scripts(exported) {
     // The ids are read off the live elements rather than by re-parsing the serialised markup, which for
     // a large report is megabytes of needless work.
     var wanted = {};
+    // The sub-steps the page holds until their step is first opened (`#step-data`, 5.0.0) go the same way: only the
+    // entries of holders still undrawn in the exported markup. A holder already drawn went in as the steps it drew.
+    var heldSteps = {};
     for (var i = 0; i < exported.length; i++) {
         if (exported[i].id) wanted[exported[i].id] = true;
         exported[i].querySelectorAll('[id]').forEach(function (el) { wanted[el.id] = true; });
+        exported[i].querySelectorAll('.sub-steps[data-steps]').forEach(function (el) { heldSteps[el.getAttribute('data-steps')] = true; });
     }
 
     var out = '';
     document.body.querySelectorAll(':scope > script').forEach(function (s) {
-        if (s.id !== 'puml-data') { out += s.outerHTML; return; }
+        var keep = s.id === 'puml-data' ? wanted : s.id === 'step-data' ? heldSteps : null;
+        if (!keep) { out += s.outerHTML; return; }
         var all;
         try { all = JSON.parse(s.textContent); } catch (e) { out += s.outerHTML; return; }
         var kept = {};
-        for (var k in all) if (wanted[k]) kept[k] = all[k];
+        for (var k in all) if (keep[k]) kept[k] = all[k];
         // Clone the element and swap its text rather than writing the tag out by hand: the attributes
         // come from the real thing, and the report does not end up carrying a second, decoy
         // `<script id="puml-data">` in its source for anything scanning the file to trip over.
@@ -95,6 +100,10 @@ function export_undrawn(feature) {
     });
     copy.querySelectorAll('.plantuml-inline-svg[data-iflow-bound]').forEach(function (el) {
         el.removeAttribute('data-iflow-bound');
+    });
+    // Held sub-steps this page was drawing when the copy was taken: the copy draws them itself, once opened.
+    copy.querySelectorAll('.sub-steps[data-drawing]').forEach(function (el) {
+        el.removeAttribute('data-drawing');
     });
     return copy.outerHTML;
 }

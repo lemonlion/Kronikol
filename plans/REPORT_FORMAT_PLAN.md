@@ -1448,6 +1448,19 @@ v5 also drops net8.0 and net9.0 from Kronikol's targets (Q17, decided).
       reads the data file, which a search for its name finds.
     - 5.0.0, on the same branch: the init-agents block (and this repository's copy in `CLAUDE.md`) and the skill name
       `TestRunReport.krkl` first (section 6.3); `AgentTextNamesTheDataFileTests` holds both.
+    - 5.0.0, on the same branch: R5 (section 4.8 part b, Q8). A closed composite step's sub-steps of 2 KB or more are
+      held in the page's `#step-data`, one entry for a chain, and drawn when the step first opens; a failed path stays
+      drawn and open, and `RenderCollapsedSubStepsOnExpand = false` draws every step. D49's tooltip reads the held
+      count, Export Filtered HTML prunes `#step-data` to the holders it exports, and `selectRow` syncs a composite step
+      by its path among the steps, following each level as it is drawn. `SubStepsOnExpandTests` and
+      `HeldSubStepsTests` hold it. Checked against section 5's R5 list before the commit, three gaps were closed: the
+      specifications page was not handed the option (its call at `ReportGenerator.cs:531`), the decompressor threw
+      before its promise where the browser has no `DecompressionStream`, so an opened step stayed empty, not showing
+      the failure line, and no fact compared a drawn entry with the page the option turned off writes (now one does,
+      numbered, with a doc string, comments, a bypass, an assertion and a duration in the held subtree). Reading the
+      change over found two more: with `SeparateBackgroundSteps` a row synced the background's first composite and the
+      scenario's first as one step (their paths now differ, the background's starting with `b` as its address does),
+      and an export taken while a step was being drawn copied its `data-drawing` mark, so the copy never drew it.
 
 ## Appendix A. Edit sites at `a8563d21`
 

@@ -135,6 +135,7 @@ public static class MergeableReportRenderer
             history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history : null,
             showHistorySection: options.ShowHistorySection,
             showReportDiagnostics: options.ShowReportDiagnosticsSection,
+            renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand,
             showScenarioHistory: options.ShowScenarioHistory,
             // The shards' own marks, carried as the data file carries them.
             warmUp: report.WarmUp);

@@ -11,6 +11,9 @@
     function giveSummaryTitle(summary) {
         if (summary.hasAttribute('title')) return;
         var n = summary.parentNode.querySelectorAll(':scope > .sub-steps > .step').length;
+        // Sub-steps the page holds until the step is first opened are not drawn yet: their holder says how many.
+        var held = n === 0 && summary.parentNode.querySelector(':scope > .sub-steps[data-count]');
+        if (held) n = parseInt(held.getAttribute('data-count'), 10) || 0;
         if (n === 0) return;
         summary.setAttribute('title', n === 1
             ? 'This step has one step inside it: click to show or hide it'

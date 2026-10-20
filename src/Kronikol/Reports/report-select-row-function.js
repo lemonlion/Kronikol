@@ -14,20 +14,30 @@ function selectRow(clickedRow, prefix) {
     for (var i = 0; i < panels.length; i++) {
         if (panels[i].style.display !== 'none') { outgoing = panels[i]; break; }
     }
+    // A composite step's state goes by its place among the steps: a panel draws a closed one's sub-steps only when it is
+    // first opened (5.0.0, plans/REPORT_FORMAT_PLAN.md 4.8), so counted by position an undrawn subtree would shift every
+    // state after it. The other <details> keep their order, which nothing changes.
     var detailStates = [];
+    var stepStates = {};
     if (outgoing && outgoing !== activePanel) {
-        outgoing.querySelectorAll('details').forEach(function(d) { detailStates.push(d.open); });
+        outgoing.querySelectorAll('details').forEach(function(d) {
+            if (d.classList.contains('step-collapsible')) stepStates[selectRowStepPath(d, outgoing)] = d.open;
+            else detailStates.push(d.open);
+        });
     }
     // Switch detail panels
     for (var i = 0; i < panels.length; i++) panels[i].style.display = 'none';
     if (activePanel) {
         // Sync <details> open states from outgoing panel
         if (detailStates.length > 0) {
-            var incoming = activePanel.querySelectorAll('details');
+            var incoming = Array.prototype.filter.call(activePanel.querySelectorAll('details'), function(d) {
+                return !d.classList.contains('step-collapsible');
+            });
             for (var i = 0; i < incoming.length && i < detailStates.length; i++) {
                 incoming[i].open = detailStates[i];
             }
         }
+        selectRowSyncSteps(activePanel, stepStates);
         activePanel.style.display = '';
     }
     // Switch diagram divs (sequence)
@@ -84,4 +94,36 @@ function highlightColumns(table, prefix) {
             });
         }
     });
+}
+
+// A composite step's place among the steps of `panel`: its index, and that of each composite above it, among its
+// siblings, so the same step in two rows' panels has the same path whether or not its sub-steps are drawn yet. A step of
+// the background's own section starts with 'b', as its address in the data file does, so the first step there and the
+// first of the scenario's own are two steps.
+function selectRowStepPath(details, panel) {
+    var path = [];
+    for (var node = details; node && node !== panel; node = node.parentElement) {
+        if (node.classList && node.classList.contains('step-collapsible')) {
+            path.unshift(Array.prototype.indexOf.call(node.parentElement.querySelectorAll(':scope > .step'), node));
+        } else if (node.classList && node.classList.contains('scenario-background')) {
+            path.unshift('b');
+        }
+    }
+    return path.join('.');
+}
+
+// Gives the composite steps in `panel` the states they had in the panel left, and does the same for the sub-steps of
+// each as they are drawn (report-sub-steps-on-expand.js says so with kron-steps-drawn). One listener per panel, replaced
+// each time a row is chosen; it touches only the steps just drawn, so a step the reader closes later stays closed.
+function selectRowSyncSteps(panel, states) {
+    function apply(root) {
+        root.querySelectorAll('details.step-collapsible').forEach(function(d) {
+            var open = states[selectRowStepPath(d, panel)];
+            if (open !== undefined && d.open !== open) d.open = open;
+        });
+    }
+    if (panel._kronStepSync) panel.removeEventListener('kron-steps-drawn', panel._kronStepSync);
+    panel._kronStepSync = function(event) { apply(event.target); };
+    panel.addEventListener('kron-steps-drawn', panel._kronStepSync);
+    apply(panel);
 }

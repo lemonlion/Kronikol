@@ -105,12 +105,12 @@ public class StepStatusTooltipTests(PlaywrightFixture fixture) : PlaywrightTestB
     private ILocator Icon(string step) =>
         Page.Locator($"xpath=//span[contains(concat(' ', @class, ' '), ' step-status ')][following-sibling::{StepText}[normalize-space(.)='{step}']]").First;
 
-    private async Task OpenEveryStep()
-    {
-        await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
-        await Page.WaitForFunctionAsync("() => document.querySelectorAll('.step-status').length > 0", null,
-            new() { PollingInterval = 200 });
-    }
+    // Opens until nothing is closed or held: from 5.0.0 a closed chain's sub-steps are drawn as it opens.
+    private async Task OpenEveryStep() =>
+        await Page.WaitForFunctionAsync(
+            "() => { var closed = document.querySelectorAll('details:not([open])'); closed.forEach(d => d.open = true); "
+            + "return closed.length === 0 && !document.querySelector('.sub-steps[data-steps]') && document.querySelectorAll('.step-status').length > 0; }",
+            null, new() { PollingInterval = 200 });
 
     private string Generate(string fileName)
     {

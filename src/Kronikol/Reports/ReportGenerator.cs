@@ -528,12 +528,12 @@ public static class ReportGenerator
 
         if (options.GenerateSpecificationsReport)
         {
-            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(options.HtmlSpecificationsCustomStyleSheet, options), $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), suite: suite, warmUp: warmUp));
+            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(options.HtmlSpecificationsCustomStyleSheet, options), $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), suite: suite, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, warmUp: warmUp));
         }
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, componentDiagram: ShouldEmbedComponentDiagram(options) ? componentDiagram : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, componentDiagram: ShouldEmbedComponentDiagram(options) ? componentDiagram : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp));
         }
 
         if (options.GenerateSpecificationsData)
@@ -1329,7 +1329,8 @@ public static class ReportGenerator
         string? suite = null,
         HistoryVerdicts? history = null,
         bool showHistorySection = false,
-        bool showReportDiagnostics = false) =>
+        bool showReportDiagnostics = false,
+        bool renderCollapsedSubStepsOnExpand = true) =>
         GenerateHtmlReportCore(
             diagrams: diagrams,
             features: features,
@@ -1375,6 +1376,7 @@ public static class ReportGenerator
             history: history,
             showHistorySection: showHistorySection,
             showReportDiagnostics: showReportDiagnostics,
+            renderCollapsedSubStepsOnExpand: renderCollapsedSubStepsOnExpand,
             // A caller that hands this method verdicts gets the per-scenario history, as before 4.6.0.
             showScenarioHistory: history is not null);
 
@@ -1429,6 +1431,7 @@ public static class ReportGenerator
         HistoryVerdicts? history = null,
         bool showHistorySection = false,
         bool showReportDiagnostics = false,
+        bool renderCollapsedSubStepsOnExpand = true,
         ComponentDiagramReportGenerator.DrawnDiagram? componentDiagramDrawn = null,
         bool showScenarioHistory = false,
         WarmUpResult? warmUp = null,
@@ -1507,6 +1510,7 @@ public static class ReportGenerator
 
         // Step status tooltips, held once for the page
         var stepStatusTitlesScript = StepStatusTitlesScript();
+        var subStepsOnExpandScript = LoadResource("report-sub-steps-on-expand.js");
 
         // Toggle between grouped and flat parameter tables
         var toggleFlattenParamsJs = LoadResource("report-toggle-flatten-params-js.js");
@@ -1709,6 +1713,7 @@ public static class ReportGenerator
                                 {{copyScenarioNameFunction}}
                                 {{selectRowFunction}}
                                 {{stepStatusTitlesScript}}
+                                {{subStepsOnExpandScript}}
                                 {{toggleFlattenParamsJs}}
                                 {{paramExpandJs}}
                                 {{jumpToFailureFunction}}
@@ -2059,6 +2064,8 @@ public static class ReportGenerator
 
         var plantUmlBrowserCounter = 0;
         var diagramDataMap = new Dictionary<string, string>();
+        // Closed composite steps' sub-steps held until first opened (5.0.0, plans/REPORT_FORMAT_PLAN.md 4.8 part b).
+        var stepDeferral = renderCollapsedSubStepsOnExpand ? new StepDeferral() : null;
 
         // Pre-compute median span count for outlier detection
         var medianSpanCount = 0;
@@ -2362,7 +2369,8 @@ public static class ReportGenerator
                         suite: suite,
                         history: scenarioHistory,
                         historySlots: historySlots,
-                        warmUp: warmUp);
+                        warmUp: warmUp,
+                        stepDeferral: stepDeferral);
                     continue;
                 }
 
@@ -2472,7 +2480,7 @@ public static class ReportGenerator
                     body.Append($"""<div class="scenario-description">{System.Net.WebUtility.HtmlEncode(scenario.Description)}</div>""");
 
                 RenderScenarioStepSections(body, scenario, showStepNumbers, separateBackgroundSteps, collapseRepeatedStepKeywords,
-                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen);
+                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen, stepDeferral);
 
                 if (scenario.Attachments is { Length: > 0 })
                 {
@@ -2632,6 +2640,12 @@ public static class ReportGenerator
         {
             html += "<script id=\"puml-data\" type=\"application/json\">";
             html += System.Text.Json.JsonSerializer.Serialize(diagramDataMap);
+            html += "</script>";
+        }
+        if (stepDeferral is { Map.Count: > 0 })
+        {
+            html += "<script id=\"step-data\" type=\"application/json\">";
+            html += System.Text.Json.JsonSerializer.Serialize(stepDeferral.Map);
             html += "</script>";
         }
         if (buildSearchIndex)
@@ -3375,7 +3389,8 @@ public static class ReportGenerator
         string? suite = null,
         HistoryVerdicts? history = null,
         Dictionary<string, int>? historySlots = null,
-        WarmUpResult? warmUp = null)
+        WarmUpResult? warmUp = null,
+        StepDeferral? stepDeferral = null)
     {
         var toggles = toggleDefaults ?? ResolvedToggleDefaults.BuiltIn;
         var scenarios = group.Scenarios;
@@ -3746,7 +3761,7 @@ public static class ReportGenerator
                     body.Append($"""<div class="scenario-description">{System.Net.WebUtility.HtmlEncode(s.Description)}</div>""");
 
                 RenderScenarioStepSections(body, s, showStepNumbers, separateBackgroundSteps, collapseRepeatedStepKeywords,
-                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen);
+                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen, stepDeferral);
 
                 if (s.Attachments is { Length: > 0 })
                 {
@@ -4010,7 +4025,8 @@ public static class ReportGenerator
         bool separateBackgroundSteps,
         bool collapseRepeatedStepKeywords,
         bool stepsSectionOpen = true,
-        bool backgroundStepsOpen = false)
+        bool backgroundStepsOpen = false,
+        StepDeferral? deferral = null)
     {
         var background = scenario.BackgroundSteps ?? [];
         var steps = scenario.Steps ?? [];
@@ -4027,13 +4043,13 @@ public static class ReportGenerator
                 {
                     var numberPrefix = showStepNumbers ? $"{bi + 1}." : null;
                     RenderStep(body, background[bi], numberPrefix, skipTabularInline: false,
-                        displayKeyword: backgroundKeywords?[bi], isBackground: true);
+                        displayKeyword: backgroundKeywords?[bi], isBackground: true, deferral: deferral);
                 }
                 body.Append("</details>");
             }
 
             if (steps.Length > 0)
-                RenderStepsList(body, steps, showStepNumbers, background.Length, backgroundCount: 0, collapseRepeatedStepKeywords, stepsSectionOpen);
+                RenderStepsList(body, steps, showStepNumbers, background.Length, backgroundCount: 0, collapseRepeatedStepKeywords, stepsSectionOpen, deferral);
 
             return;
         }
@@ -4045,7 +4061,7 @@ public static class ReportGenerator
         if (combined.Length == 0)
             return;
 
-        RenderStepsList(body, combined, showStepNumbers, numberOffset: 0, backgroundCount: background.Length, collapseRepeatedStepKeywords, stepsSectionOpen);
+        RenderStepsList(body, combined, showStepNumbers, numberOffset: 0, backgroundCount: background.Length, collapseRepeatedStepKeywords, stepsSectionOpen, deferral);
     }
 
     /// <summary>
@@ -4059,7 +4075,8 @@ public static class ReportGenerator
         int numberOffset,
         int backgroundCount,
         bool collapseRepeatedStepKeywords,
-        bool open = true)
+        bool open = true,
+        StepDeferral? deferral = null)
     {
         var displayKeywords = collapseRepeatedStepKeywords ? StepKeywordCollapser.DisplayKeywords(steps) : null;
 
@@ -4082,7 +4099,7 @@ public static class ReportGenerator
 
             var numberPrefix = showStepNumbers ? $"{numberOffset + si + 1}." : null;
             RenderStep(body, steps[si], numberPrefix, skipTabularInline: renderCombined && afterThen,
-                displayKeyword: displayKeywords?[si], isBackground: si < backgroundCount);
+                displayKeyword: displayKeywords?[si], isBackground: si < backgroundCount, deferral: deferral);
         }
 
         if (renderCombined)
@@ -4128,7 +4145,7 @@ public static class ReportGenerator
     /// </para>
     /// </summary>
     private static void RenderStep(StringBuilder body, ScenarioStep step, string? numberPrefix = null, bool skipTabularInline = true,
-        string? displayKeyword = null, bool isBackground = false)
+        string? displayKeyword = null, bool isBackground = false, StepDeferral? deferral = null)
     {
         var statusClass = step.Status switch
         {
@@ -4338,15 +4355,36 @@ public static class ReportGenerator
         if (hasSubSteps)
         {
             body.Append("</summary>");
-            body.Append("<div class=\"sub-steps\">");
-            for (var ssi = 0; ssi < step.SubSteps!.Length; ssi++)
+            // A closed composite (none of its steps failed) outside a held subtree renders its sub-steps apart, and the page
+            // holds them until the step is first opened when they come to StepDeferral.Threshold or more; one inside a held
+            // subtree goes into the same entry (5.0.0, plans/REPORT_FORMAT_PLAN.md 4.8 part b).
+            var held = deferral is { Inside: false } && !HasAnyFailed(step);
+            var subSteps = held ? new StringBuilder() : body;
+            if (!held)
+                body.Append("<div class=\"sub-steps\">");
+            if (held)
+                deferral!.Inside = true;
+            try
             {
-                var subPrefix = numberPrefix is not null ? $"{numberPrefix}{ssi + 1}." : null;
-                // Its tables inline: the combined table under a scenario's steps gathers top-level steps' only, so a
-                // sub-step left to the default skipped its tables and drew them nowhere (until 4.27.1).
-                RenderStep(body, step.SubSteps[ssi], subPrefix, skipTabularInline: false, isBackground: isBackground);
+                for (var ssi = 0; ssi < step.SubSteps!.Length; ssi++)
+                {
+                    var subPrefix = numberPrefix is not null ? $"{numberPrefix}{ssi + 1}." : null;
+                    // Its tables inline: the combined table under a scenario's steps gathers top-level steps' only, so a
+                    // sub-step left to the default skipped its tables and drew them nowhere (until 4.27.1).
+                    RenderStep(subSteps, step.SubSteps[ssi], subPrefix, skipTabularInline: false, isBackground: isBackground, deferral: deferral);
+                }
             }
-            body.Append("</div>");
+            finally
+            {
+                if (held)
+                    deferral!.Inside = false;
+            }
+            if (!held)
+                body.Append("</div>");
+            else if (subSteps.Length >= StepDeferral.Threshold)
+                body.Append($"<div class=\"sub-steps\" data-steps=\"{deferral!.Add(subSteps.ToString())}\" data-count=\"{step.SubSteps!.Length}\"></div>");
+            else
+                body.Append("<div class=\"sub-steps\">").Append(subSteps).Append("</div>");
             body.Append("</details>");
         }
         else

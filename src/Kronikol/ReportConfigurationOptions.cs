@@ -466,6 +466,15 @@ public record ReportConfigurationOptions
     /// </summary>
     public bool CompressTestRunReport { get; set; } = true;
 
+    /// <summary>
+    /// When <c>true</c>, the sub-steps of a closed composite step whose HTML is 2 KB or more are written compressed into
+    /// the HTML reports and drawn the first time the step is opened, so a report of deeply nested composite steps stays
+    /// small. A step on the way to a failure is drawn and open, as before. The browser's own find (Ctrl+F) cannot see the
+    /// text of a step nobody has opened; the report's search box still finds it. Set it to <c>false</c> to draw every step
+    /// as 4.x did. Default: <c>true</c> (5.0.0).
+    /// </summary>
+    public bool RenderCollapsedSubStepsOnExpand { get; set; } = true;
+
     /// <summary>Data format for the specifications data output. Default: <see cref="DataFormat.Yaml"/>.</summary>
     public DataFormat SpecificationsDataFormat { get; set; } = DataFormat.Yaml;
 

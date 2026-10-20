@@ -104,6 +104,16 @@ For 5.0.0 only: this section is on the branch `v5`, which carries the 5.0.0 work
   than matched by name, and a note says how many scenarios it follows.
 - **`kronikol merge --schema` and `kronikol ingest --schema`** write the data file's schema beside it, now that a run
   writes none unless asked.
+- **A closed composite step's sub-steps are drawn the first time it opens.** Where they come to 2 KB of HTML or more,
+  the page holds them gzipped in `#step-data` and draws them when the step is opened, so a report of deeply nested
+  composite steps (a LightBDD suite 20 levels deep, `plans/REPORT_FORMAT_PLAN.md` 4.8) stays small. A step on the way
+  to a failure is drawn and open as before. The step's tooltip still says how many steps it holds, the report's
+  search box still finds a word in a step nobody opened, Export Filtered HTML carries the held steps its scenarios
+  need and no other, and a row of a parameterized group opens the steps that were open in the row it replaced. Both
+  HTML reports do it, the test run report and the specifications. A browser that cannot decompress them (Chrome
+  before 80, Firefox before 113, Safari before 16.4) shows a line saying so in their place. The browser's own find
+  (Ctrl+F) cannot see a step nobody opened: `ReportConfigurationOptions.RenderCollapsedSubStepsOnExpand = false`
+  draws every step on both pages as 4.x did (Q8).
 - **Focus the keyboard moves is never left under the report bar.** Tab or Shift+Tab to a control the pinned bar covers,
   or a scenario's settings stuck under it, brings the control 12 px below them, and to one cut by the top or the foot of
   the window, 12 px inside it. For a second after, a control the page moves away, as a diagram drawn above it does, is

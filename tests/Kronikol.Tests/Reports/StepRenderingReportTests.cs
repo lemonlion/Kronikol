@@ -13,13 +13,14 @@ public class StepRenderingReportTests
         }
     ];
 
-    private static string GenerateReport(Feature[] features, string fileName)
+    private static string GenerateReport(Feature[] features, string fileName, bool renderCollapsedSubStepsOnExpand = true)
     {
         var path = ReportGenerator.GenerateHtmlReport(
             [], features,
             DateTime.UtcNow, DateTime.UtcNow,
             null, fileName, "Test", true,
-            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
+            renderCollapsedSubStepsOnExpand: renderCollapsedSubStepsOnExpand);
         return File.ReadAllText(path);
     }
 
@@ -656,7 +657,8 @@ public class StepRenderingReportTests
             leaf = new ScenarioStep { Keyword = "And", Text = $"level {depth}", Status = ExecutionResult.Passed, SubSteps = [leaf] };
         var scenario = new Scenario { Id = "deep", DisplayName = "Deep chain", Steps = [leaf] };
 
-        var content = GenerateReport(MakeFeatures(scenario), "StatusTitlesDeep.html");
+        // Every step drawn: from 5.0.0 a closed chain this deep is held until it is opened (SubStepsOnExpandTests).
+        var content = GenerateReport(MakeFeatures(scenario), "StatusTitlesDeep.html", renderCollapsedSubStepsOnExpand: false);
 
         Assert.Equal(20, System.Text.RegularExpressions.Regex.Matches(content, "<span class=\"step-status passed-skipped\">").Count);
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(content, "with skipped sub-steps"));
